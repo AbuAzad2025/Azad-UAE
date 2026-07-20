@@ -63,9 +63,7 @@ class AzadSubscriptionFeeService:
         if amount is None:
             amount = cls._settings_amount(fee_type)
         if amount is None or amount <= Decimal("0"):
-            current_app.logger.info(
-                "Subscription fee skipped: no amount configured for %s", fee_type
-            )
+            current_app.logger.info("Subscription fee skipped: no amount configured for %s", fee_type)
             return None
 
         amount = Decimal(str(amount)).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
@@ -136,9 +134,7 @@ class AzadSubscriptionFeeService:
         if not fee:
             raise ValueError(f"Subscription fee {fee_id} not found")
         if fee.status != "accrued":
-            raise ValueError(
-                f"Subscription fee must be accrued before payment (current: {fee.status})"
-            )
+            raise ValueError(f"Subscription fee must be accrued before payment (current: {fee.status})")
 
         amount = paid_amount_aed
         if amount is None:
@@ -156,9 +152,7 @@ class AzadSubscriptionFeeService:
                 tenant_id=tid,
                 missing_ok=True,
             )
-            credit_code = (
-                credit_account.code if credit_account else GL_ACCOUNTS.get("cash")
-            )
+            credit_code = credit_account.code if credit_account else GL_ACCOUNTS.get("cash")
         else:
             credit_code = GL_ACCOUNTS.get("cash")
 
@@ -203,9 +197,7 @@ class AzadSubscriptionFeeService:
         return fee
 
     @classmethod
-    def waive_fee(
-        cls, fee_id: int, *, notes: str | None = None, tenant_id: int | None = None
-    ) -> AzadSubscriptionFee:
+    def waive_fee(cls, fee_id: int, *, notes: str | None = None, tenant_id: int | None = None) -> AzadSubscriptionFee:
         """Waive / cancel a subscription fee and reverse its GL entry."""
         fee = db.session.get(AzadSubscriptionFee, fee_id)
         if not fee:

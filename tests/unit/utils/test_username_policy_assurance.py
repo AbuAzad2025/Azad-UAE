@@ -147,12 +147,7 @@ class TestIsPlatformUser:
         assert is_platform_user(SimpleNamespace(is_owner=True, username="x")) is True
 
     def test_reserved_username(self):
-        assert (
-            is_platform_user(SimpleNamespace(is_owner=False, username="azad")) is True
-        )
+        assert is_platform_user(SimpleNamespace(is_owner=False, username="azad")) is True
 
     def test_regular_user(self):
-        assert (
-            is_platform_user(SimpleNamespace(is_owner=False, username="def_ahmad"))
-            is False
-        )
+        assert is_platform_user(SimpleNamespace(is_owner=False, username="def_ahmad")) is False

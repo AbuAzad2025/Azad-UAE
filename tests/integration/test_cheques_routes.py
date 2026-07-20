@@ -108,15 +108,11 @@ class TestChequesCreate:
         assert len(gl_entries) >= 1
         total_debit = sum((e.total_debit or 0) for e in gl_entries)
         total_credit = sum((e.total_credit or 0) for e in gl_entries)
-        assert total_debit == total_credit, (
-            f"GL unbalanced: {total_debit} vs {total_credit}"
-        )
+        assert total_debit == total_credit, f"GL unbalanced: {total_debit} vs {total_credit}"
         assert total_debit == Decimal("5000.00")
 
         lines = (
-            GLJournalLine.query.join(
-                GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id
-            )
+            GLJournalLine.query.join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
             .filter(
                 GLJournalEntry.reference_type == "ChequeReceive",
                 GLJournalEntry.reference_id == cheque.id,
@@ -124,9 +120,7 @@ class TestChequesCreate:
             .all()
         )
         assert len(lines) >= 2
-        accounts = [
-            (line.account.code, line.debit or 0, line.credit or 0) for line in lines
-        ]
+        accounts = [(line.account.code, line.debit or 0, line.credit or 0) for line in lines]
         has_cuc = any("1150" in str(acc) and d > 0 for acc, d, c in accounts)
         has_ar = any(c > 0 for acc, d, c in accounts if c > 0)
         assert has_cuc, f"Expected Dr ChequesUnderCollection, got {accounts}"
@@ -239,18 +233,14 @@ class TestChequesCreate:
         assert total_debit == Decimal("3000.00")
 
         lines = (
-            GLJournalLine.query.join(
-                GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id
-            )
+            GLJournalLine.query.join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
             .filter(
                 GLJournalEntry.reference_type == "ChequeIssue",
                 GLJournalEntry.reference_id == cheque.id,
             )
             .all()
         )
-        accounts = [
-            (line.account.code, line.debit or 0, line.credit or 0) for line in lines
-        ]
+        accounts = [(line.account.code, line.debit or 0, line.credit or 0) for line in lines]
         has_deferred = any("2130" in str(acc) and c > 0 for acc, d, c in accounts)
         assert has_deferred, f"Expected Cr DeferredCheques, got {accounts}"
 
@@ -377,19 +367,13 @@ class TestChequesLifecycle:
 
         total_debit_all = sum((e.total_debit or 0) for e in gl_entries)
         total_credit_all = sum((e.total_credit or 0) for e in gl_entries)
-        assert total_debit_all == total_credit_all, (
-            f"Total GL unbalanced: {total_debit_all} vs {total_credit_all}"
-        )
+        assert total_debit_all == total_credit_all, f"Total GL unbalanced: {total_debit_all} vs {total_credit_all}"
 
-        receive_entry = next(
-            (e for e in gl_entries if e.reference_type == "ChequeReceive"), None
-        )
+        receive_entry = next((e for e in gl_entries if e.reference_type == "ChequeReceive"), None)
         assert receive_entry is not None
         assert receive_entry.total_debit == Decimal("8000.00")
 
-        clearing_entry = next(
-            (e for e in gl_entries if e.reference_type == "ChequeClear"), None
-        )
+        clearing_entry = next((e for e in gl_entries if e.reference_type == "ChequeClear"), None)
         assert clearing_entry is not None
         assert clearing_entry.total_debit == Decimal("8000.00")
 
@@ -511,18 +495,14 @@ class TestChequesLifecycle:
         assert total_debit == Decimal("2000.00")
 
         lines = (
-            GLJournalLine.query.join(
-                GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id
-            )
+            GLJournalLine.query.join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
             .filter(
                 GLJournalEntry.reference_type == "ChequeBounce",
                 GLJournalEntry.reference_id == cheque.id,
             )
             .all()
         )
-        accounts = [
-            (line.account.code, line.debit or 0, line.credit or 0) for line in lines
-        ]
+        accounts = [(line.account.code, line.debit or 0, line.credit or 0) for line in lines]
         has_ar_debit = any("1130" in str(acc) and d > 0 for acc, d, c in accounts)
         has_cuc_credit = any("1150" in str(acc) and c > 0 for acc, d, c in accounts)
         assert has_ar_debit, f"Expected Dr AR on bounce, got {accounts}"
@@ -571,11 +551,7 @@ class TestChequesViewEdit:
             )
             resp = client.get("/cheques/")
         assert resp.status_code == 200
-        assert (
-            b"cheque" in resp.data.lower()
-            or b"chq" in resp.data.lower()
-            or "شيك".encode("utf-8") in resp.data
-        )
+        assert b"cheque" in resp.data.lower() or b"chq" in resp.data.lower() or "شيك".encode("utf-8") in resp.data
 
     def test_cheque_create_page_renders(self, app, db_session, client):
         from models import Tenant, Branch, User, Role

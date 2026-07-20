@@ -19,11 +19,7 @@ class CRMLeadService:
         if is_global_user(user):
             return
         scoped = branch_scope_id_for(user)
-        if (
-            scoped is not None
-            and branch_id is not None
-            and int(branch_id) != int(scoped)
-        ):
+        if scoped is not None and branch_id is not None and int(branch_id) != int(scoped):
             raise ValueError("لا يمكنك التعامل مع عميل متوقع من فرع آخر.")
 
     @staticmethod
@@ -59,9 +55,7 @@ class CRMLeadService:
             customer_id=int(data["customer_id"]) if data.get("customer_id") else None,
             stage_id=int(stage_id) if stage_id else None,
             team_id=int(data["team_id"]) if data.get("team_id") else None,
-            assigned_user_id=(
-                int(data["assigned_user_id"]) if data.get("assigned_user_id") else None
-            ),
+            assigned_user_id=(int(data["assigned_user_id"]) if data.get("assigned_user_id") else None),
             expected_revenue=Decimal(str(data.get("expected_revenue", 0))),
             priority=data.get("priority", "medium"),
             source=data.get("source"),
@@ -92,9 +86,7 @@ class CRMLeadService:
         if "customer_id" in data:
             lead.customer_id = int(data["customer_id"]) if data["customer_id"] else None
         if "assigned_user_id" in data:
-            lead.assigned_user_id = (
-                int(data["assigned_user_id"]) if data["assigned_user_id"] else None
-            )
+            lead.assigned_user_id = int(data["assigned_user_id"]) if data["assigned_user_id"] else None
         if data.get("stage_id"):
             stage = db.session.get(CRMStage, int(data["stage_id"]))
             if not stage:
@@ -165,9 +157,7 @@ class CRMLeadService:
         if filters.get("status"):
             query = query.filter(CRMLead.status == filters["status"])
         if filters.get("assigned_user_id"):
-            query = query.filter(
-                CRMLead.assigned_user_id == int(filters["assigned_user_id"])
-            )
+            query = query.filter(CRMLead.assigned_user_id == int(filters["assigned_user_id"]))
         if filters.get("search"):
             q = f"%{filters['search']}%"
             query = query.filter(
@@ -246,9 +236,7 @@ class CRMLeadService:
         if len(dup_filters) > 1:
             existing = Customer.query.filter(db.or_(*dup_filters)).first()
             if existing:
-                raise ValueError(
-                    "يوجد عميل مسجل بالفعل بنفس البريد الإلكتروني أو رقم الهاتف."
-                )
+                raise ValueError("يوجد عميل مسجل بالفعل بنفس البريد الإلكتروني أو رقم الهاتف.")
         customer = Customer(
             tenant_id=tenant_id,
             name=lead.name,
@@ -300,11 +288,7 @@ class CRMLeadService:
         total_leads = total_q.count()
         rate = Decimal("0")
         if total_leads > 0:
-            rate = (
-                Decimal(str(total_converted))
-                / Decimal(str(total_leads))
-                * Decimal("100")
-            ).quantize(Decimal("0.1"))
+            rate = (Decimal(str(total_converted)) / Decimal(str(total_leads)) * Decimal("100")).quantize(Decimal("0.1"))
         return {
             "total_converted": total_converted,
             "total_leads": total_leads,
@@ -312,18 +296,14 @@ class CRMLeadService:
         }
 
     @staticmethod
-    def compute_goal_achievement_rating(
-        user, target_conversions, period_start=None, period_end=None
-    ):
+    def compute_goal_achievement_rating(user, target_conversions, period_start=None, period_end=None):
         kpi = CRMLeadService.compute_conversion_kpi(user, period_start, period_end)
         target = int(target_conversions or 0)
         achieved = kpi["total_converted"]
         if target == 0:
             rating = Decimal("100") if achieved == 0 else Decimal("0")
         else:
-            rating = (
-                Decimal(str(achieved)) / Decimal(str(target)) * Decimal("100")
-            ).quantize(Decimal("0.1"))
+            rating = (Decimal(str(achieved)) / Decimal(str(target)) * Decimal("100")).quantize(Decimal("0.1"))
         return {
             "target": target,
             "achieved": achieved,
@@ -343,11 +323,7 @@ class CRMLeadService:
             user_id=user.id,
             activity_type=data.get("activity_type", "call"),
             summary=data.get("summary"),
-            date_deadline=(
-                datetime.fromisoformat(data["date_deadline"])
-                if data.get("date_deadline")
-                else None
-            ),
+            date_deadline=(datetime.fromisoformat(data["date_deadline"]) if data.get("date_deadline") else None),
         )
         db.session.add(activity)
         try:

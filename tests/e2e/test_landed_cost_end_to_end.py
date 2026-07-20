@@ -61,15 +61,11 @@ def main():
                 product = Product.query.filter_by(tenant_id=tid).first()
                 warehouse = Warehouse.query.filter_by(tenant_id=tid).first()
                 if not warehouse:
-                    warehouse = Warehouse(
-                        tenant_id=tid, name="Test Warehouse", code="TW"
-                    )
+                    warehouse = Warehouse(tenant_id=tid, name="Test Warehouse", code="TW")
                     db.session.add(warehouse)
                     db.session.flush()
                 if not product:
-                    product = Product(
-                        tenant_id=tid, name="Test Product", regular_price=Decimal("100")
-                    )
+                    product = Product(tenant_id=tid, name="Test Product", regular_price=Decimal("100"))
                     db.session.add(product)
                     db.session.flush()
                 pwc = ProductWarehouseCost(
@@ -84,21 +80,15 @@ def main():
             old_pwc_avg = pwc.average_cost
             old_pwc_val = pwc.total_value
 
-            print(
-                f"Tenant: {product.tenant.name if product.tenant else tid} (id={tid})"
-            )
+            print(f"Tenant: {product.tenant.name if product.tenant else tid} (id={tid})")
             print(f"Product: {product.name} (id={product.id})")
             print(f"Warehouse: {warehouse.name} (id={warehouse.id})")
-            print(
-                f"Initial PWC: qty={old_pwc_qty} avg_cost={old_pwc_avg} value={old_pwc_val}"
-            )
+            print(f"Initial PWC: qty={old_pwc_qty} avg_cost={old_pwc_avg} value={old_pwc_val}")
 
             # Create supplier
             supplier = Supplier.query.filter_by(tenant_id=tid).first()
             if not supplier:
-                supplier = Supplier(
-                    tenant_id=tid, name="Test Supplier", phone="0500000000"
-                )
+                supplier = Supplier(tenant_id=tid, name="Test Supplier", phone="0500000000")
                 db.session.add(supplier)
                 db.session.flush()
 
@@ -152,9 +142,7 @@ def main():
             total_landed_prop = purchase.total_landed_cost
             if total_landed_prop > 0 and purchase.subtotal > 0:
                 ratio = pl.line_total / purchase.subtotal
-                pl.landed_cost = (total_landed_prop * ratio).quantize(
-                    Decimal("0.001"), rounding=ROUND_HALF_UP
-                )
+                pl.landed_cost = (total_landed_prop * ratio).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
             db.session.flush()
 
             # Trigger WAC update manually (like process_purchase_lines)
@@ -172,40 +160,26 @@ def main():
             db.session.flush()
             db.session.refresh(pwc)
 
-            print(
-                f"\r\nAfter Purchase (qty={purchase_qty} @ FOB {fob_unit_cost}, landed={total_landed}):"
-            )
+            print(f"\r\nAfter Purchase (qty={purchase_qty} @ FOB {fob_unit_cost}, landed={total_landed}):")
             print(f"  landed_unit_cost = {pl.landed_unit_cost}")
-            print(
-                f"  PWC qty={pwc.total_quantity} avg_cost={pwc.average_cost} value={pwc.total_value}"
-            )
+            print(f"  PWC qty={pwc.total_quantity} avg_cost={pwc.average_cost} value={pwc.total_value}")
 
             # Verify landed cost allocation
             expected_landed_per_unit = total_landed / purchase_qty  # 85
-            expected_unit_cost_with_landed = (
-                fob_unit_cost + expected_landed_per_unit
-            )  # 285
+            expected_unit_cost_with_landed = fob_unit_cost + expected_landed_per_unit  # 285
             assert pl.landed_cost == total_landed, (
                 f"Landed cost allocation mismatch: {pl.landed_cost} != {total_landed}"
             )
-            assert pl.landed_unit_cost == expected_unit_cost_with_landed.quantize(
-                Decimal("0.001")
-            ), (
+            assert pl.landed_unit_cost == expected_unit_cost_with_landed.quantize(Decimal("0.001")), (
                 f"Landed unit cost mismatch: {pl.landed_unit_cost} != {expected_unit_cost_with_landed}"
             )
             print("  ✅ Landed cost allocation correct")
 
             # Verify WAC includes landed cost
             expected_new_qty = old_pwc_qty + purchase_qty
-            expected_new_value = old_pwc_val + (
-                purchase_qty * expected_unit_cost_with_landed
-            )
-            expected_new_avg = (expected_new_value / expected_new_qty).quantize(
-                Decimal("0.0001")
-            )
-            assert pwc.total_quantity == expected_new_qty, (
-                f"Qty mismatch: {pwc.total_quantity} != {expected_new_qty}"
-            )
+            expected_new_value = old_pwc_val + (purchase_qty * expected_unit_cost_with_landed)
+            expected_new_avg = (expected_new_value / expected_new_qty).quantize(Decimal("0.0001"))
+            assert pwc.total_quantity == expected_new_qty, f"Qty mismatch: {pwc.total_quantity} != {expected_new_qty}"
             assert abs(pwc.average_cost - expected_new_avg) < Decimal("0.001"), (
                 f"Avg mismatch: {pwc.average_cost} != {expected_new_avg}"
             )
@@ -214,9 +188,7 @@ def main():
             # Create sale and verify COGS from landed-cost-inclusive WAC
             customer = Customer.query.filter_by(tenant_id=tid).first()
             if not customer:
-                customer = Customer(
-                    tenant_id=tid, name="Test Customer", phone="0500000000"
-                )
+                customer = Customer(tenant_id=tid, name="Test Customer", phone="0500000000")
                 db.session.add(customer)
                 db.session.flush()
 
@@ -250,22 +222,16 @@ def main():
             db.session.add(sl)
             db.session.flush()
 
-            cogs = StockService.calculate_sale_cogs_and_deduct(
-                sale, warehouse_id=warehouse.id
-            )
+            cogs = StockService.calculate_sale_cogs_and_deduct(sale, warehouse_id=warehouse.id)
             db.session.flush()
             db.session.refresh(pwc)
 
-            _expected_cogs = (pwc.average_cost * sale_qty).quantize(
-                Decimal("0.001"), rounding=ROUND_HALF_UP
-            )
+            _expected_cogs = (pwc.average_cost * sale_qty).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
             # After WAC update, pwc.average_cost changed; recompute expected
             db.session.refresh(pwc)
             print(f"\r\nAfter Sale (qty={sale_qty}):")
             print(f"  COGS computed: {cogs}")
-            print(
-                f"  PWC qty={pwc.total_quantity} avg_cost={pwc.average_cost} value={pwc.total_value}"
-            )
+            print(f"  PWC qty={pwc.total_quantity} avg_cost={pwc.average_cost} value={pwc.total_value}")
 
             assert cogs > 0, "COGS must be positive"
             print("  ✅ COGS computed from landed-cost-inclusive WAC")
@@ -273,16 +239,10 @@ def main():
             # Verify GL entries include landed costs
             # Note: We didn't run full GL posting in this test, but PurchaseService does.
             # We check the math here.
-            expected_inventory_debit = (
-                purchase.subtotal - purchase.discount_amount
-            ) + total_landed
+            expected_inventory_debit = (purchase.subtotal - purchase.discount_amount) + total_landed
             expected_payable = purchase.total_amount + total_landed
-            assert expected_inventory_debit == Decimal("2850"), (
-                f"Inventory debit mismatch: {expected_inventory_debit}"
-            )
-            assert expected_payable == Decimal("2850"), (
-                f"AP mismatch: {expected_payable}"
-            )
+            assert expected_inventory_debit == Decimal("2850"), f"Inventory debit mismatch: {expected_inventory_debit}"
+            assert expected_payable == Decimal("2850"), f"AP mismatch: {expected_payable}"
             print("  ✅ GL math correct (inventory includes landed costs)")
 
             print("\r\n=== ALL LANDED COST TESTS PASSED ===")
@@ -296,9 +256,7 @@ def main():
                 ref_id = getattr(ref_obj, "id", None)
                 if ref_id:
                     try:
-                        StockMovement.query.filter_by(reference_id=ref_id).delete(
-                            synchronize_session=False
-                        )
+                        StockMovement.query.filter_by(reference_id=ref_id).delete(synchronize_session=False)
                     except Exception:
                         pass
 
@@ -323,16 +281,10 @@ def main():
                 ),
             ]
             for model, filters in records:
-                _id = (
-                    filters.get("id")
-                    or filters.get("sale_id")
-                    or filters.get("purchase_id")
-                )
+                _id = filters.get("id") or filters.get("sale_id") or filters.get("purchase_id")
                 if _id:
                     try:
-                        model.query.filter_by(**filters).delete(
-                            synchronize_session=False
-                        )
+                        model.query.filter_by(**filters).delete(synchronize_session=False)
                     except Exception:
                         pass
 

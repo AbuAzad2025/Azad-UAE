@@ -55,36 +55,20 @@ def _advanced_ledger_patches(**kwargs):
     expenses_pag = _paginated(kwargs.get("expenses", []))
 
     with ExitStack() as stack:
-        stack.enter_context(
-            patch("routes.advanced_ledger.gl_account_query", return_value=accounts_q)
-        )
-        stack.enter_context(
-            patch("routes.advanced_ledger.gl_entry_query", return_value=entries_q)
-        )
-        stack.enter_context(
-            patch("routes.advanced_ledger.active_tenant_id", return_value=1)
-        )
+        stack.enter_context(patch("routes.advanced_ledger.gl_account_query", return_value=accounts_q))
+        stack.enter_context(patch("routes.advanced_ledger.gl_entry_query", return_value=entries_q))
+        stack.enter_context(patch("routes.advanced_ledger.active_tenant_id", return_value=1))
         tax_q = stack.enter_context(patch("routes.advanced_ledger.CustomsTax.query"))
-        cat_q = stack.enter_context(
-            patch("routes.advanced_ledger.ExpenseCategory.query")
-        )
-        exp_q = stack.enter_context(
-            patch("routes.advanced_ledger.AdvancedExpense.query")
-        )
+        cat_q = stack.enter_context(patch("routes.advanced_ledger.ExpenseCategory.query"))
+        exp_q = stack.enter_context(patch("routes.advanced_ledger.AdvancedExpense.query"))
         stack.enter_context(patch("routes.advanced_ledger.Cheque.query", cheque_q))
         session = stack.enter_context(patch("routes.advanced_ledger.db.session"))
-        render = stack.enter_context(
-            patch("routes.advanced_ledger.render_template", return_value="ok")
-        )
-        audit = stack.enter_context(
-            patch("routes.advanced_ledger.LoggingCore.log_audit")
-        )
+        render = stack.enter_context(patch("routes.advanced_ledger.render_template", return_value="ok"))
+        audit = stack.enter_context(patch("routes.advanced_ledger.LoggingCore.log_audit"))
         stack.enter_context(
             patch(
                 "routes.advanced_ledger.AdvancedFinancialAnalytics.get_trend_analysis",
-                return_value=[
-                    {"month": "Jan", "revenue": 100, "expenses": 40, "profit": 60}
-                ],
+                return_value=[{"month": "Jan", "revenue": 100, "expenses": 40, "profit": 60}],
             )
         )
         stack.enter_context(
@@ -147,15 +131,11 @@ def _advanced_ledger_patches(**kwargs):
                 return_value=MagicMock(active_template="modern", enable_qr_code=False),
             )
         )
-        stack.enter_context(
-            patch("utils.tenant_branding.get_print_header_context", return_value={})
-        )
+        stack.enter_context(patch("utils.tenant_branding.get_print_header_context", return_value={}))
         tax_q.filter_by.return_value.order_by.return_value.all.return_value = customs
         cat_q.filter_by.return_value.order_by.return_value.all.return_value = categories
         cat_q.filter_by.return_value.all.return_value = categories
-        exp_q.filter_by.return_value.order_by.return_value.paginate.return_value = (
-            expenses_pag
-        )
+        exp_q.filter_by.return_value.order_by.return_value.paginate.return_value = expenses_pag
         session.query.return_value.scalar.return_value = kwargs.get("cheque_sum", 0)
         yield {"render": render, "audit": audit, "session": session}
 
@@ -214,9 +194,7 @@ class TestAdvancedLedgerPages:
 
     def test_add_expense_category_missing_account(self, advanced_ledger_client):
         with _advanced_ledger_patches():
-            resp = advanced_ledger_client.post(
-                "/ledger/advanced/expense-categories/add", data={"name": "Travel"}
-            )
+            resp = advanced_ledger_client.post("/ledger/advanced/expense-categories/add", data={"name": "Travel"})
         assert resp.status_code == 200
 
     def test_advanced_expenses_list(self, advanced_ledger_client):
@@ -296,9 +274,7 @@ class TestAdvancedLedgerPages:
         with (
             _advanced_ledger_patches(categories=[MagicMock(id=1)]),
             patch("routes.advanced_ledger.AdvancedExpense", return_value=expense),
-            patch(
-                "routes.advanced_ledger.resolve_default_currency", return_value="AED"
-            ),
+            patch("routes.advanced_ledger.resolve_default_currency", return_value="AED"),
         ):
             resp = advanced_ledger_client.post(
                 "/ledger/advanced/advanced-expenses/add",
@@ -328,9 +304,7 @@ class TestAdvancedLedgerPages:
         with _advanced_ledger_patches(categories=[MagicMock(id=1)]):
             with patch("models.Supplier.query") as sup_q:
                 sup_q.filter_by.return_value.with_entities.return_value.all.return_value = []
-                resp = advanced_ledger_client.get(
-                    "/ledger/advanced/advanced-expenses/add"
-                )
+                resp = advanced_ledger_client.get("/ledger/advanced/advanced-expenses/add")
         assert resp.status_code == 200
 
     def test_journal_management(self, advanced_ledger_client):
@@ -339,9 +313,7 @@ class TestAdvancedLedgerPages:
         assert resp.status_code == 200
 
     def test_cheque_integration(self, advanced_ledger_client):
-        with _advanced_ledger_patches(
-            cheques=[MagicMock()], total_cheques=3, cheque_count=1
-        ):
+        with _advanced_ledger_patches(cheques=[MagicMock()], total_cheques=3, cheque_count=1):
             resp = advanced_ledger_client.get("/ledger/advanced/cheque-integration")
         assert resp.status_code == 200
 
@@ -371,9 +343,7 @@ class TestAdvancedLedgerActions:
                 return_value=reversal,
             ),
         ):
-            resp = advanced_ledger_client.post(
-                "/ledger/advanced/journal-management/5/reverse", data={"reason": "fix"}
-            )
+            resp = advanced_ledger_client.post("/ledger/advanced/journal-management/5/reverse", data={"reason": "fix"})
         assert resp.status_code == 302
 
     def test_reverse_journal_entry_error(self, advanced_ledger_client):
@@ -388,9 +358,7 @@ class TestAdvancedLedgerActions:
                 return_value="error",
             ),
         ):
-            resp = advanced_ledger_client.post(
-                "/ledger/advanced/journal-management/5/reverse"
-            )
+            resp = advanced_ledger_client.post("/ledger/advanced/journal-management/5/reverse")
         assert resp.status_code == 302
 
     def test_delete_journal_entry_error(self, advanced_ledger_client):
@@ -405,9 +373,7 @@ class TestAdvancedLedgerActions:
                 return_value="err",
             ),
         ):
-            resp = advanced_ledger_client.post(
-                "/ledger/advanced/journal-management/3/delete"
-            )
+            resp = advanced_ledger_client.post("/ledger/advanced/journal-management/3/delete")
         assert resp.status_code == 302
 
     def test_delete_journal_entry(self, advanced_ledger_client):
@@ -415,9 +381,7 @@ class TestAdvancedLedgerActions:
             _advanced_ledger_patches(),
             patch("routes.advanced_ledger.AdvancedJournalEntryManager.delete_entry"),
         ):
-            resp = advanced_ledger_client.post(
-                "/ledger/advanced/journal-management/3/delete"
-            )
+            resp = advanced_ledger_client.post("/ledger/advanced/journal-management/3/delete")
         assert resp.status_code == 302
 
     def test_approve_journal_entry(self, advanced_ledger_client):
@@ -425,9 +389,7 @@ class TestAdvancedLedgerActions:
             _advanced_ledger_patches(),
             patch("routes.advanced_ledger.AdvancedJournalEntryManager.approve_entry"),
         ):
-            resp = advanced_ledger_client.post(
-                "/ledger/advanced/journal-management/2/approve"
-            )
+            resp = advanced_ledger_client.post("/ledger/advanced/journal-management/2/approve")
         assert resp.status_code == 302
 
     def test_receive_cheque(self, advanced_ledger_client):
@@ -439,9 +401,7 @@ class TestAdvancedLedgerActions:
                 return_value=entry,
             ),
         ):
-            resp = advanced_ledger_client.post(
-                "/ledger/advanced/cheque-integration/1/receive"
-            )
+            resp = advanced_ledger_client.post("/ledger/advanced/cheque-integration/1/receive")
         assert resp.status_code == 302
 
     def test_clear_cheque(self, advanced_ledger_client):
@@ -474,9 +434,7 @@ class TestAdvancedLedgerActions:
                 return_value="err",
             ),
         ):
-            resp = advanced_ledger_client.post(
-                "/ledger/advanced/journal-management/2/approve"
-            )
+            resp = advanced_ledger_client.post("/ledger/advanced/journal-management/2/approve")
         assert resp.status_code == 302
 
     def test_receive_cheque_error(self, advanced_ledger_client):
@@ -491,9 +449,7 @@ class TestAdvancedLedgerActions:
                 return_value="err",
             ),
         ):
-            resp = advanced_ledger_client.post(
-                "/ledger/advanced/cheque-integration/1/receive"
-            )
+            resp = advanced_ledger_client.post("/ledger/advanced/cheque-integration/1/receive")
         assert resp.status_code == 302
 
     def test_clear_cheque_error(self, advanced_ledger_client):
@@ -508,18 +464,14 @@ class TestAdvancedLedgerActions:
                 return_value="err",
             ),
         ):
-            resp = advanced_ledger_client.post(
-                "/ledger/advanced/cheque-integration/1/clear"
-            )
+            resp = advanced_ledger_client.post("/ledger/advanced/cheque-integration/1/clear")
         assert resp.status_code == 302
 
 
 class TestAdvancedLedgerAPI:
     def test_events_stream_api(self, advanced_ledger_client):
         with _advanced_ledger_patches():
-            resp = advanced_ledger_client.get(
-                "/ledger/advanced/api/events/stream?limit=10"
-            )
+            resp = advanced_ledger_client.get("/ledger/advanced/api/events/stream?limit=10")
         assert resp.status_code == 200
         body = resp.get_json()
         assert body["success"] is True
@@ -527,16 +479,12 @@ class TestAdvancedLedgerAPI:
 
     def test_events_stream_by_type(self, advanced_ledger_client):
         with _advanced_ledger_patches():
-            resp = advanced_ledger_client.get(
-                "/ledger/advanced/api/events/stream?type=sale"
-            )
+            resp = advanced_ledger_client.get("/ledger/advanced/api/events/stream?type=sale")
         assert resp.get_json()["success"] is True
 
     def test_cheque_accounting_summary_api(self, advanced_ledger_client):
         with _advanced_ledger_patches():
-            resp = advanced_ledger_client.get(
-                "/ledger/advanced/api/cheque/9/accounting-summary"
-            )
+            resp = advanced_ledger_client.get("/ledger/advanced/api/cheque/9/accounting-summary")
         assert resp.status_code == 200
         assert resp.get_json()["success"] is True
 
@@ -548,9 +496,7 @@ class TestAdvancedLedgerAPI:
                 side_effect=ValueError("missing"),
             ),
         ):
-            resp = advanced_ledger_client.get(
-                "/ledger/advanced/api/cheque/9/accounting-summary"
-            )
+            resp = advanced_ledger_client.get("/ledger/advanced/api/cheque/9/accounting-summary")
         assert resp.status_code == 400
 
     def test_api_financial_ratios(self, advanced_ledger_client):
@@ -562,14 +508,10 @@ class TestAdvancedLedgerAPI:
 
     def test_api_trend_analysis(self, advanced_ledger_client):
         with _advanced_ledger_patches():
-            resp = advanced_ledger_client.get(
-                "/ledger/advanced/api/trend-analysis?months=6"
-            )
+            resp = advanced_ledger_client.get("/ledger/advanced/api/trend-analysis?months=6")
         assert len(resp.get_json()["trends"]) == 1
 
     def test_api_forecasting(self, advanced_ledger_client):
         with _advanced_ledger_patches():
-            resp = advanced_ledger_client.get(
-                "/ledger/advanced/api/forecasting?months=3"
-            )
+            resp = advanced_ledger_client.get("/ledger/advanced/api/forecasting?months=3")
         assert resp.get_json()["success"] is True

@@ -13,11 +13,7 @@ class StoreNotificationService:
         """Return ASCII-safe text to avoid console encoding crashes."""
         if text is None:
             return ""
-        return (
-            str(text)
-            .encode("ascii", errors="replace")
-            .decode("ascii", errors="replace")
-        )
+        return str(text).encode("ascii", errors="replace").decode("ascii", errors="replace")
 
     @staticmethod
     def _order_summary(sale, store: TenantStore, lang: str = "ar") -> str:
@@ -66,9 +62,7 @@ class StoreNotificationService:
         if not recipients:
             return
 
-        if not current_app.config.get("MAIL_USERNAME") or not current_app.config.get(
-            "MAIL_PASSWORD"
-        ):
+        if not current_app.config.get("MAIL_USERNAME") or not current_app.config.get("MAIL_PASSWORD"):
             current_app.logger.info("Store order email skipped — mail not configured.")
             return
 
@@ -80,9 +74,7 @@ class StoreNotificationService:
             try:
                 from flask import url_for
 
-                admin_url = url_for(
-                    "store.admin_order_detail", order_id=sale.id, _external=True
-                )
+                admin_url = url_for("store.admin_order_detail", order_id=sale.id, _external=True)
             except Exception:
                 admin_url = f"/store/admin/orders/{sale.id}"
 

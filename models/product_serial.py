@@ -5,9 +5,7 @@ from extensions import db
 class ProductSerial(db.Model):
     __tablename__ = "product_serials"
     __table_args__ = (
-        db.UniqueConstraint(
-            "tenant_id", "serial_number", name="uq_serial_tenant_serial"
-        ),
+        db.UniqueConstraint("tenant_id", "serial_number", name="uq_serial_tenant_serial"),
         db.Index(
             "ix_serial_tenant_imei1",
             "tenant_id",
@@ -31,12 +29,8 @@ class ProductSerial(db.Model):
         nullable=False,
         index=True,
     )
-    product_id = db.Column(
-        db.Integer, db.ForeignKey("products.id"), nullable=False, index=True
-    )
-    warehouse_id = db.Column(
-        db.Integer, db.ForeignKey("warehouses.id"), nullable=True, index=True
-    )
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False, index=True)
+    warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id"), nullable=True, index=True)
 
     serial_number = db.Column(db.String(100), nullable=False, index=True)
     imei1 = db.Column(db.String(15), nullable=True, index=True)
@@ -63,18 +57,14 @@ class ProductSerial(db.Model):
     warranty_start_date = db.Column(db.DateTime, nullable=True)
     warranty_end_date = db.Column(db.DateTime, nullable=True)
 
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    tenant = db.relationship(
-        "Tenant", backref="product_serials", foreign_keys=[tenant_id]
-    )
+    tenant = db.relationship("Tenant", backref="product_serials", foreign_keys=[tenant_id])
     product = db.relationship("Product", backref="serials")
     purchase_line = db.relationship("PurchaseLine", backref="serials")
     sale_line = db.relationship("SaleLine", backref="serials")

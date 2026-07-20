@@ -30,9 +30,7 @@ class TestMeasureTime:
             return "done"
 
         with (
-            patch(
-                "utils.performance.time.time", side_effect=self._time_sequence(0.0, 1.5)
-            ),
+            patch("utils.performance.time.time", side_effect=self._time_sequence(0.0, 1.5)),
             patch("utils.performance.logger.warning") as warning,
         ):
             assert slow() == "done"
@@ -44,9 +42,7 @@ class TestMeasureTime:
             return 1
 
         with (
-            patch(
-                "utils.performance.time.time", side_effect=self._time_sequence(0.0, 0.6)
-            ),
+            patch("utils.performance.time.time", side_effect=self._time_sequence(0.0, 0.6)),
             patch("utils.performance.logger.info") as info,
         ):
             assert medium() == 1
@@ -58,9 +54,7 @@ class TestMeasureTime:
             return "ok"
 
         with (
-            patch(
-                "utils.performance.time.time", side_effect=self._time_sequence(1.0, 1.1)
-            ),
+            patch("utils.performance.time.time", side_effect=self._time_sequence(1.0, 1.1)),
             patch("utils.performance.logger.warning") as warning,
             patch("utils.performance.logger.info") as info,
         ):

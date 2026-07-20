@@ -12,12 +12,8 @@ class TestHashGeneration:
     def test_same_inputs_same_hash(self):
         from services.bank_import_service import BankImportService
 
-        h1 = BankImportService._generate_hash(
-            1, 5, date(2025, 6, 1), 100.0, "REF1", "desc"
-        )
-        h2 = BankImportService._generate_hash(
-            1, 5, date(2025, 6, 1), 100.0, "REF1", "desc"
-        )
+        h1 = BankImportService._generate_hash(1, 5, date(2025, 6, 1), 100.0, "REF1", "desc")
+        h2 = BankImportService._generate_hash(1, 5, date(2025, 6, 1), 100.0, "REF1", "desc")
         assert h1 == h2
         assert len(h1) == 64
 

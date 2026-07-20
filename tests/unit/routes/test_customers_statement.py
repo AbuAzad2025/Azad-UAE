@@ -14,9 +14,7 @@ def _query_chain(items):
 
 
 class TestCustomersStatementBuilder:
-    def test_statement_sale_lines_without_product(
-        self, customers_client, bypass_customers_auth
-    ):
+    def test_statement_sale_lines_without_product(self, customers_client, bypass_customers_auth):
         line = MagicMock(
             quantity=2,
             unit_price=50,
@@ -62,9 +60,7 @@ class TestCustomersStatementBuilder:
             resp = customers_client.get("/customers/1/statement")
         assert resp.status_code == 200
 
-    def test_statement_payment_with_cheque_and_user(
-        self, customers_client, bypass_customers_auth
-    ):
+    def test_statement_payment_with_cheque_and_user(self, customers_client, bypass_customers_auth):
         cheque = MagicMock(
             cheque_number="CHQ-9",
             bank_name="ENBD",
@@ -102,14 +98,10 @@ class TestCustomersStatementBuilder:
             SaleMod.query.filter_by.return_value = _query_chain([])
             PayMod.query.filter_by.return_value = _query_chain([payment])
             RcvMod.query.filter_by.return_value = _query_chain([])
-            resp = customers_client.get(
-                "/customers/1/statement?transaction_type=payment"
-            )
+            resp = customers_client.get("/customers/1/statement?transaction_type=payment")
         assert resp.status_code == 200
 
-    def test_statement_outgoing_payment_debit(
-        self, customers_client, bypass_customers_auth
-    ):
+    def test_statement_outgoing_payment_debit(self, customers_client, bypass_customers_auth):
         payment = MagicMock(
             id=3,
             payment_number="P-OUT",
@@ -141,9 +133,7 @@ class TestCustomersStatementBuilder:
             resp = customers_client.get("/customers/1/statement")
         assert resp.status_code == 200
 
-    def test_statement_skips_duplicate_receipt_ref(
-        self, customers_client, bypass_customers_auth
-    ):
+    def test_statement_skips_duplicate_receipt_ref(self, customers_client, bypass_customers_auth):
         payment = MagicMock(
             id=4,
             payment_number="P-DUP",
@@ -183,9 +173,7 @@ class TestCustomersStatementBuilder:
             resp = customers_client.get("/customers/1/statement")
         assert resp.status_code == 200
 
-    def test_statement_opening_balance_and_pending_receipt(
-        self, customers_client, bypass_customers_auth
-    ):
+    def test_statement_opening_balance_and_pending_receipt(self, customers_client, bypass_customers_auth):
         sale = MagicMock(
             id=6,
             sale_number="S-OLD",
@@ -224,14 +212,10 @@ class TestCustomersStatementBuilder:
             SaleMod.query.filter_by.return_value = _query_chain([sale])
             PayMod.query.filter_by.return_value = _query_chain([])
             RcvMod.query.filter_by.return_value = _query_chain([receipt])
-            resp = customers_client.get(
-                "/customers/1/statement?date_from=2025-02-01&transaction_type=receipt"
-            )
+            resp = customers_client.get("/customers/1/statement?date_from=2025-02-01&transaction_type=receipt")
         assert resp.status_code == 200
 
-    def test_statement_sale_with_payments_and_product_sku(
-        self, customers_client, bypass_customers_auth
-    ):
+    def test_statement_sale_with_payments_and_product_sku(self, customers_client, bypass_customers_auth):
         product = MagicMock(sku="SKU-X", unit="kg")
         product.get_display_name.return_value = "Product X"
         line = MagicMock(
@@ -308,9 +292,7 @@ class TestCustomersStatementBuilder:
             patch("models.Receipt") as RcvMod,
             patch("routes.customers.branch_scope_id", return_value=1),
         ):
-            SaleMod.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = [
-                sale
-            ]
+            SaleMod.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = [sale]
             PayMod.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = []
             RcvMod.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = []
             resp = customers_client.get(
@@ -318,9 +300,7 @@ class TestCustomersStatementBuilder:
             )
         assert resp.status_code == 200
 
-    def test_statement_sale_payments_track_last_date(
-        self, customers_client, bypass_customers_auth
-    ):
+    def test_statement_sale_payments_track_last_date(self, customers_client, bypass_customers_auth):
         early = MagicMock(
             id=20,
             payment_number="P-EARLY",

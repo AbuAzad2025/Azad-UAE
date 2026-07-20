@@ -39,13 +39,7 @@ def list_tickets():
     tid = get_active_tenant_id(current_user)
     categories = _tenant_categories(tid)
     priorities = _tenant_priorities(tid)
-    users = (
-        User.query.filter(User.tenant_id == tid, User.is_active)
-        .order_by(User.full_name)
-        .all()
-        if tid
-        else []
-    )
+    users = User.query.filter(User.tenant_id == tid, User.is_active).order_by(User.full_name).all() if tid else []
     statuses = ["open", "waiting", "resolved", "closed"]
     return render_template(
         "tickets/list.html",
@@ -72,13 +66,7 @@ def create_ticket():
     categories = _tenant_categories(tid)
     priorities = _tenant_priorities(tid)
     customers = _tenant_customers(tid)
-    users = (
-        User.query.filter(User.tenant_id == tid, User.is_active)
-        .order_by(User.full_name)
-        .all()
-        if tid
-        else []
-    )
+    users = User.query.filter(User.tenant_id == tid, User.is_active).order_by(User.full_name).all() if tid else []
     return render_template(
         "tickets/detail.html",
         categories=categories,
@@ -100,13 +88,7 @@ def ticket_detail(ticket_id):
     tid = get_active_tenant_id(current_user)
     categories = _tenant_categories(tid)
     priorities = _tenant_priorities(tid)
-    users = (
-        User.query.filter(User.tenant_id == tid, User.is_active)
-        .order_by(User.full_name)
-        .all()
-        if tid
-        else []
-    )
+    users = User.query.filter(User.tenant_id == tid, User.is_active).order_by(User.full_name).all() if tid else []
     return render_template(
         "tickets/detail.html",
         ticket=ticket,

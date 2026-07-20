@@ -19,9 +19,7 @@ class TestHashAndTokenGeneration:
         from models.document_verification import DocumentVerification
 
         # A uuid4 component makes every candidate hash distinct.
-        assert DocumentVerification._generate_hash(
-            1, "sale", 10
-        ) != DocumentVerification._generate_hash(1, "sale", 10)
+        assert DocumentVerification._generate_hash(1, "sale", 10) != DocumentVerification._generate_hash(1, "sale", 10)
 
     def test_generate_token_is_uuid4_hex(self):
         from models.document_verification import DocumentVerification
@@ -79,9 +77,7 @@ class TestGetOrCreate:
     def test_created_by_recorded(self, db_session, sample_tenant, sample_user):
         from models.document_verification import DocumentVerification
 
-        rec = DocumentVerification.get_or_create(
-            sample_tenant.id, "sale", 5, created_by=sample_user.id
-        )
+        rec = DocumentVerification.get_or_create(sample_tenant.id, "sale", 5, created_by=sample_user.id)
         db_session.commit()
         assert rec.created_by == sample_user.id
 
@@ -117,9 +113,7 @@ class TestUniquenessConstraints:
                 tenant_id=sample_tenant.id,
                 document_type="sale",
                 document_id=1,
-                document_hash=DocumentVerification._generate_hash(
-                    sample_tenant.id, "sale", 1
-                ),
+                document_hash=DocumentVerification._generate_hash(sample_tenant.id, "sale", 1),
                 public_token=DocumentVerification._generate_token(),
             )
         )

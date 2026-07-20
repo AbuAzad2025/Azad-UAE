@@ -33,9 +33,7 @@ class TestReasoningEngine:
         assert engine.mathematical_reasoning("10 / 0")["result"] == 0
 
     def test_financial_reasoning(self, engine):
-        result = engine.financial_reasoning(
-            "تحليل الربح", {"sales": 10000, "costs": 6000, "expenses": 1000}
-        )
+        result = engine.financial_reasoning("تحليل الربح", {"sales": 10000, "costs": 6000, "expenses": 1000})
         assert "reasoning_steps" in result
 
     def test_technical_brakes(self, engine):
@@ -47,9 +45,7 @@ class TestReasoningEngine:
         assert "thought_chain" in result
 
     def test_explain_decision(self, engine):
-        explanation = engine.explain_decision(
-            "زيادة السعر", {"cost": 100, "demand": "high"}
-        )
+        explanation = engine.explain_decision("زيادة السعر", {"cost": 100, "demand": "high"})
         assert "زيادة السعر" in explanation
 
     def test_singleton(self):

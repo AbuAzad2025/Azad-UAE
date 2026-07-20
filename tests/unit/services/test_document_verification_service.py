@@ -28,14 +28,10 @@ class TestResolveVerificationUrl:
 
 class TestGetOrCreateVerification:
     def test_rejects_unverifiable_type(self, db_session, sample_tenant):
-        rec = DocumentVerificationService.get_or_create_verification(
-            "invoice", 1, sample_tenant.id
-        )
+        rec = DocumentVerificationService.get_or_create_verification("invoice", 1, sample_tenant.id)
         assert rec is None
 
-    def test_creates_record_for_sale(
-        self, db_session, sample_tenant, sample_sale, sample_user
-    ):
+    def test_creates_record_for_sale(self, db_session, sample_tenant, sample_sale, sample_user):
         rec = DocumentVerificationService.get_or_create_verification(
             "sale", sample_sale.id, sample_tenant.id, created_by=sample_user.id
         )
@@ -47,15 +43,9 @@ class TestGetOrCreateVerification:
         assert rec.public_token
         assert rec.document_hash
 
-    def test_second_call_returns_same_record(
-        self, db_session, sample_tenant, sample_sale
-    ):
-        first = DocumentVerificationService.get_or_create_verification(
-            "sale", sample_sale.id, sample_tenant.id
-        )
-        second = DocumentVerificationService.get_or_create_verification(
-            "sale", sample_sale.id, sample_tenant.id
-        )
+    def test_second_call_returns_same_record(self, db_session, sample_tenant, sample_sale):
+        first = DocumentVerificationService.get_or_create_verification("sale", sample_sale.id, sample_tenant.id)
+        second = DocumentVerificationService.get_or_create_verification("sale", sample_sale.id, sample_tenant.id)
         assert first is not None and second is not None
         assert second.id == first.id
         assert second.public_token == first.public_token
@@ -70,12 +60,8 @@ class TestLookupByToken:
     def test_unknown_token_returns_none(self, db_session):
         assert DocumentVerificationService.lookup_by_token("no-such-token") is None
 
-    def test_valid_token_resolves_document(
-        self, db_session, sample_tenant, sample_sale
-    ):
-        rec = DocumentVerificationService.get_or_create_verification(
-            "sale", sample_sale.id, sample_tenant.id
-        )
+    def test_valid_token_resolves_document(self, db_session, sample_tenant, sample_sale):
+        rec = DocumentVerificationService.get_or_create_verification("sale", sample_sale.id, sample_tenant.id)
         result = DocumentVerificationService.lookup_by_token(f"  {rec.public_token}  ")
         assert result is not None
         assert result["tenant_id"] == sample_tenant.id
@@ -100,36 +86,17 @@ class TestLookupByToken:
 
 class TestResolveDocument:
     def test_unknown_type_returns_none(self, db_session, sample_tenant):
-        assert (
-            DocumentVerificationService._resolve_document(
-                "invoice", 1, sample_tenant.id
-            )
-            is None
-        )
+        assert DocumentVerificationService._resolve_document("invoice", 1, sample_tenant.id) is None
 
     def test_missing_rows_return_none_for_all_types(self, db_session, sample_tenant):
         for doc_type in sorted(VERIFIABLE_TYPES):
-            assert (
-                DocumentVerificationService._resolve_document(
-                    doc_type, 999999999, sample_tenant.id
-                )
-                is None
-            )
+            assert DocumentVerificationService._resolve_document(doc_type, 999999999, sample_tenant.id) is None
 
-    def test_resolves_sale_with_tenant_scope(
-        self, db_session, sample_tenant, sample_sale
-    ):
-        doc = DocumentVerificationService._resolve_document(
-            "sale", sample_sale.id, sample_tenant.id
-        )
+    def test_resolves_sale_with_tenant_scope(self, db_session, sample_tenant, sample_sale):
+        doc = DocumentVerificationService._resolve_document("sale", sample_sale.id, sample_tenant.id)
         assert doc is not None and doc.id == sample_sale.id
         # Cross-tenant resolution must not leak the document (IDOR guard).
-        assert (
-            DocumentVerificationService._resolve_document(
-                "sale", sample_sale.id, sample_tenant.id + 9999
-            )
-            is None
-        )
+        assert DocumentVerificationService._resolve_document("sale", sample_sale.id, sample_tenant.id + 9999) is None
 
 
 class TestBuildQrData:

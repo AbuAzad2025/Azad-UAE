@@ -29,9 +29,7 @@ class TestUAEStrategyPlugin:
 
     def test_format_tax_return(self):
         s = UAEStrategy()
-        report = s.format_tax_return(
-            Decimal("100"), Decimal("30"), "2026-01-01", "2026-03-31"
-        )
+        report = s.format_tax_return(Decimal("100"), Decimal("30"), "2026-01-01", "2026-03-31")
         assert report["country"] == "AE"
         assert report["net_payable"] == Decimal("70")
         assert report["format"] == "fta_vat201_v1"

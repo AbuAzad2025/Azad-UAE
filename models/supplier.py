@@ -42,9 +42,7 @@ class Supplier(db.Model):
     commercial_registration = db.Column(db.String(50))
 
     # تصنيف المورد
-    supplier_type = db.Column(
-        db.String(50), default="parts"
-    )  # parts, equipment, services, materials
+    supplier_type = db.Column(db.String(50), default="parts")  # parts, equipment, services, materials
     rating = db.Column(db.Integer, default=3)  # 1-5 stars
 
     # الحد الائتماني والعملة
@@ -95,9 +93,7 @@ class Supplier(db.Model):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
-    created_by = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=True, index=True
-    )
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True, index=True)
 
     # العلاقات
     purchases = db.relationship("Purchase", back_populates="supplier", lazy="dynamic")
@@ -119,15 +115,11 @@ class Supplier(db.Model):
     # دوال مساعدة لتحديث الإحصائيات/الرصيد بشكل تراكمي
     def apply_purchase(self, amount_aed: Decimal):
         """تحديث إجمالي المشتريات عند إنشاء فاتورة شراء."""
-        self.total_purchases_aed = (self.total_purchases_aed or Decimal("0")) + Decimal(
-            str(amount_aed or 0)
-        )
+        self.total_purchases_aed = (self.total_purchases_aed or Decimal("0")) + Decimal(str(amount_aed or 0))
 
     def apply_payment(self, amount_aed: Decimal):
         """تحديث إجمالي المدفوع للمورد عند سند صرف."""
-        self.total_paid_aed = (self.total_paid_aed or Decimal("0")) + Decimal(
-            str(amount_aed or 0)
-        )
+        self.total_paid_aed = (self.total_paid_aed or Decimal("0")) + Decimal(str(amount_aed or 0))
 
     def apply_purchase_base(self, amount: Decimal):
         """تحديث إجمالي المشتريات بالعملة الأساسية."""
@@ -165,9 +157,7 @@ class Supplier(db.Model):
 
         confirmed_purchases = self.purchases.filter_by(status="confirmed").all()
 
-        self.total_purchases_aed = sum(
-            p.amount_aed or Decimal("0") for p in confirmed_purchases
-        )
+        self.total_purchases_aed = sum(p.amount_aed or Decimal("0") for p in confirmed_purchases)
 
         # Calculate total paid from Payment table.
         # An outgoing payment reduces Accounts Payable when it is either a

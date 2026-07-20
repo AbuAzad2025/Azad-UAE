@@ -15,9 +15,7 @@ class TestEnsureBranchLiquidityAccount:
         conn = MagicMock()
         conn.execute.return_value.fetchone.return_value = None
         branch = MagicMock(id=3, tenant_id=1, name="Branch A")
-        ensure_branch_liquidity_account(
-            conn, branch, "1110", "cash", "Cashbox", "صندوق"
-        )
+        ensure_branch_liquidity_account(conn, branch, "1110", "cash", "Cashbox", "صندوق")
         assert conn.execute.call_count == 1
 
     def test_updates_existing_liquidity_account(self):
@@ -26,9 +24,7 @@ class TestEnsureBranchLiquidityAccount:
         conn = MagicMock()
         conn.execute.return_value.fetchone.side_effect = [(10,), (55,)]
         branch = MagicMock(id=3, tenant_id=1, name="Branch A")
-        ensure_branch_liquidity_account(
-            conn, branch, "1110", "cash", "Cashbox", "صندوق"
-        )
+        ensure_branch_liquidity_account(conn, branch, "1110", "cash", "Cashbox", "صندوق")
         assert conn.execute.call_count == 3
 
     def test_inserts_new_liquidity_account(self):
@@ -89,9 +85,7 @@ class TestRegisterBranchEventListeners:
         bas, handlers = _capture_branch_handlers(mocker)
         assert handlers, "expected branch event handlers to be registered"
         err = mocker.patch.object(bas.logger, "error")
-        mocker.patch.object(
-            bas, "ensure_branch_liquidity_account", side_effect=RuntimeError("db fail")
-        )
+        mocker.patch.object(bas, "ensure_branch_liquidity_account", side_effect=RuntimeError("db fail"))
         target = MagicMock(id=6, tenant_id=1, is_active=True, name="HQ")
         with pytest.raises(RuntimeError, match="db fail"):
             handlers[0](None, MagicMock(), target)

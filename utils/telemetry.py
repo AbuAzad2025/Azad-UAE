@@ -100,9 +100,7 @@ def collect_system_info():
         try:
             # Try multiple services to get IP
             try:
-                ip_data = requests.get(
-                    "https://api.ipify.org?format=json", timeout=1
-                ).json()
+                ip_data = requests.get("https://api.ipify.org?format=json", timeout=1).json()
                 info["public_ip"] = (ip_data or {}).get("ip") or "Unknown"
             except Exception:
                 logger.debug("Failed to fetch public IP from ipify", exc_info=True)
@@ -111,9 +109,7 @@ def collect_system_info():
                 ip_data = requests.get("https://ifconfig.me/all.json", timeout=1).json()
                 info["public_ip"] = (ip_data or {}).get("ip_addr") or "Unknown"
         except Exception:
-            logger.debug(
-                "Failed to fetch public IP from ipify or ifconfig", exc_info=True
-            )
+            logger.debug("Failed to fetch public IP from ipify or ifconfig", exc_info=True)
 
         return info
     except Exception as e:

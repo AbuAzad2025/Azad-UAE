@@ -28,9 +28,7 @@ def create_campaign():
             flash(gettext(f"حدث خطأ: {e}"), "danger")
     list_data = EmailMarketingService.list_lists(current_user)
     template_data = EmailMarketingService.list_templates(current_user)
-    return render_template(
-        "marketing/campaign_form.html", lists=list_data, templates=template_data
-    )
+    return render_template("marketing/campaign_form.html", lists=list_data, templates=template_data)
 
 
 @email_marketing_bp.route("/campaigns/<int:campaign_id>")
@@ -82,9 +80,7 @@ def create_list():
 @permission_required("marketing.manage")
 def templates():
     template_data = EmailMarketingService.list_templates(current_user)
-    return render_template(
-        "marketing/campaign_form.html", templates=template_data, tab="templates"
-    )
+    return render_template("marketing/campaign_form.html", templates=template_data, tab="templates")
 
 
 @email_marketing_bp.route("/templates/create", methods=["POST"])

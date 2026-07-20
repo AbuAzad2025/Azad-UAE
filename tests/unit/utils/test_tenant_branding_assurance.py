@@ -76,9 +76,7 @@ class TestResolveBranding:
             tax_number="T",
         )
         mocker.patch("extensions.db.session.get", return_value=tenant)
-        mocker.patch(
-            "models.invoice_settings.InvoiceSettings.get_active", return_value=settings
-        )
+        mocker.patch("models.invoice_settings.InvoiceSettings.get_active", return_value=settings)
         mocker.patch("utils.tenant_assets.branding_for_tenant_slug", return_value={})
         mocker.patch("os.path.isfile", return_value=True)
 
@@ -89,9 +87,7 @@ class TestResolveBranding:
 
     def test_resolve_without_tenant_uses_defaults(self, mocker):
         mocker.patch("models.tenant.Tenant.get_current", return_value=None)
-        mocker.patch(
-            "models.invoice_settings.InvoiceSettings.get_active", return_value=None
-        )
+        mocker.patch("models.invoice_settings.InvoiceSettings.get_active", return_value=None)
         branding = tb.resolve_tenant_branding()
         assert branding["company_name_en"] == "Company"
         assert branding["default_currency"] == "AED"
@@ -123,9 +119,7 @@ class TestResolveBranding:
 
     def test_get_print_header_and_invoice_branding(self, mocker):
         payload = {"logo_url": "x"}
-        mocker.patch(
-            "utils.tenant_branding.resolve_tenant_branding", return_value=payload
-        )
+        mocker.patch("utils.tenant_branding.resolve_tenant_branding", return_value=payload)
         assert tb.get_print_header_context(1) == payload
         assert tb.get_invoice_branding(1) == payload
 
@@ -135,16 +129,12 @@ class TestBrandingPathWarnings:
         assert tb.branding_path_warnings(None) == ["no branding resolved"]
 
     def test_windows_absolute_path_warning(self):
-        warns = tb.branding_path_warnings(
-            {"logo_url": "C:\\logo.png", "tenant_slug": "x"}
-        )
+        warns = tb.branding_path_warnings({"logo_url": "C:\\logo.png", "tenant_slug": "x"})
         assert any("Windows path" in w for w in warns)
 
     def test_missing_file_warning(self, mocker):
         mocker.patch("utils.tenant_branding._static_exists", return_value=False)
-        warns = tb.branding_path_warnings(
-            {"logo_url": "assets/missing.png", "tenant_slug": "x"}
-        )
+        warns = tb.branding_path_warnings({"logo_url": "assets/missing.png", "tenant_slug": "x"})
         assert any("file missing" in w for w in warns)
 
     def test_platform_default_logo_warning(self):

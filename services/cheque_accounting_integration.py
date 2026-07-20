@@ -26,9 +26,7 @@ class ChequeAccountingIntegration:
 
         q = scope_journal_entries(GLJournalEntry.query, tenant_id=cheque.tenant_id)
         if reference_type is not None:
-            q = q.filter(
-                GLJournalEntry.reference_type.in_(ref_variants(reference_type))
-            )
+            q = q.filter(GLJournalEntry.reference_type.in_(ref_variants(reference_type)))
         for key, val in filters.items():
             q = q.filter_by(**{key: val})
         return q
@@ -89,9 +87,7 @@ class ChequeAccountingIntegration:
                 amt_aed = cheque.amount_aed or D("0")
                 target_aed = amt_aed + D(str(exchange_gain_loss))
                 exchange_rate = target_aed / cheque.amount
-            process_cheque_clear(
-                cheque, clearance_date=None, clearance_exchange_rate=exchange_rate
-            )
+            process_cheque_clear(cheque, clearance_date=None, clearance_exchange_rate=exchange_rate)
             try:
                 db.session.flush()
             except Exception:
@@ -167,9 +163,7 @@ class ChequeAccountingIntegration:
         ]
         for ref_type, entry_type in ref_types:
             entries = (
-                ChequeAccountingIntegration._scoped_entries(
-                    cheque, reference_type=ref_type, reference_id=cheque.id
-                )
+                ChequeAccountingIntegration._scoped_entries(cheque, reference_type=ref_type, reference_id=cheque.id)
                 .order_by(GLJournalEntry.id.asc())
                 .all()
             )
@@ -193,9 +187,7 @@ class ChequeAccountingIntegration:
         for entry_info in summary["journal_entries"]:
             entry_info_dict: dict[str, Any] = entry_info
             entry = scope_journal_entries(
-                GLJournalEntry.query.filter_by(
-                    entry_number=entry_info_dict["entry_number"]
-                ),
+                GLJournalEntry.query.filter_by(entry_number=entry_info_dict["entry_number"]),
                 tenant_id=tid,
             ).first()
             if entry:

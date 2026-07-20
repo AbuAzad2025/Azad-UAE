@@ -29,11 +29,7 @@ def treasury():
         branch_id = scoped_branch_id
     elif scoped_branch_id is not None and branch_id != scoped_branch_id:
         return render_template("errors/403.html"), 403
-    elif (
-        scoped_branch_id is None
-        and branch_id is not None
-        and not user_can_access_branch(branch_id, current_user)
-    ):
+    elif scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
         return render_template("errors/403.html"), 403
 
     tenant_id = get_active_tenant_id(current_user)
@@ -65,11 +61,7 @@ def treasury_export():
         branch_id = scoped_branch_id
     elif scoped_branch_id is not None and branch_id != scoped_branch_id:
         return render_template("errors/403.html"), 403
-    elif (
-        scoped_branch_id is None
-        and branch_id is not None
-        and not user_can_access_branch(branch_id, current_user)
-    ):
+    elif scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
         return render_template("errors/403.html"), 403
 
     tenant_id = get_active_tenant_id(current_user)
@@ -94,9 +86,7 @@ def treasury_export():
 
     base_name = f"treasury_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     if fmt == "xlsx":
-        output = ExportService.export_to_xlsx(
-            data, headers, filename=f"{base_name}.xlsx", sheet_name="Treasury"
-        )
+        output = ExportService.export_to_xlsx(data, headers, filename=f"{base_name}.xlsx", sheet_name="Treasury")
         return send_file(
             output,
             mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -142,9 +132,7 @@ def wps_export():
 
     if not strategy.supports_wps:
         return (
-            render_template(
-                "errors/403.html", message=gettext("WPS غير متاح لهذه الدولة")
-            ),
+            render_template("errors/403.html", message=gettext("WPS غير متاح لهذه الدولة")),
             403,
         )
 

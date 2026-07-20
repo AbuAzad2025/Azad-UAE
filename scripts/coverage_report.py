@@ -35,9 +35,7 @@ BACKEND_CATEGORIES = [
 ]
 
 _SCRIPT_RE = re.compile(r'<script[^>]+src=["\']([^"\']+)["\']', re.IGNORECASE)
-_INCLUDE_RE = re.compile(
-    r'{%-?\s*(?:include|extends|from)\s+["\']([^"\']+)["\']', re.IGNORECASE
-)
+_INCLUDE_RE = re.compile(r'{%-?\s*(?:include|extends|from)\s+["\']([^"\']+)["\']', re.IGNORECASE)
 
 
 def _norm(p: str) -> str:

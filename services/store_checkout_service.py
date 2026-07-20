@@ -35,12 +35,8 @@ class StoreCheckoutService:
         if secret:
             return secret
         if StoreCheckoutService._is_production():
-            raise ValueError(
-                "SECRET_KEY must be configured in production to sign shop order tokens."
-            )
-        current_app.logger.warning(
-            "[Dev] Using dev-only shop order token secret; set SECRET_KEY for production."
-        )
+            raise ValueError("SECRET_KEY must be configured in production to sign shop order tokens.")
+        current_app.logger.warning("[Dev] Using dev-only shop order token secret; set SECRET_KEY for production.")
         return StoreCheckoutService._DEV_ONLY_TOKEN_SECRET
 
     @staticmethod
@@ -52,9 +48,7 @@ class StoreCheckoutService:
 
     @staticmethod
     def make_order_token(sale_id: int, tenant_id: int) -> str:
-        return StoreCheckoutService._serializer().dumps(
-            {"sale_id": int(sale_id), "tenant_id": int(tenant_id)}
-        )
+        return StoreCheckoutService._serializer().dumps({"sale_id": int(sale_id), "tenant_id": int(tenant_id)})
 
     @staticmethod
     def load_order_token(token: str) -> dict | None:
@@ -91,9 +85,7 @@ class StoreCheckoutService:
         if len(name) < 2:
             raise ValueError("الاسم مطلوب.")
 
-        customer = Customer.query.filter_by(
-            tenant_id=int(tenant_id), phone=phone_norm
-        ).first()
+        customer = Customer.query.filter_by(tenant_id=int(tenant_id), phone=phone_norm).first()
         if customer:
             if name and customer.name != name:
                 customer.name = name
@@ -119,26 +111,18 @@ class StoreCheckoutService:
     @staticmethod
     def resolve_seller(tenant_id: int) -> User:
         seller = (
-            User.query.filter_by(
-                tenant_id=int(tenant_id), is_active=True, is_owner=True
-            )
+            User.query.filter_by(tenant_id=int(tenant_id), is_active=True, is_owner=True)
             .order_by(User.id.asc())
             .first()
         )
         if not seller:
-            seller = (
-                User.query.filter_by(tenant_id=int(tenant_id), is_active=True)
-                .order_by(User.id.asc())
-                .first()
-            )
+            seller = User.query.filter_by(tenant_id=int(tenant_id), is_active=True).order_by(User.id.asc()).first()
         if not seller:
             raise ValueError("لا يوجد مستخدم نظام لمعالجة الطلب.")
         return seller
 
     @staticmethod
-    def build_lines_from_cart(
-        tenant_id: int, cart: dict, online_warehouse_id: int
-    ) -> list:
+    def build_lines_from_cart(tenant_id: int, cart: dict, online_warehouse_id: int) -> list:
         if not cart:
             raise ValueError("السلة فارغة.")
 
@@ -154,9 +138,7 @@ class StoreCheckoutService:
             if qty <= 0:
                 continue
 
-            product = Product.query.filter_by(
-                id=product_id, tenant_id=int(tenant_id), is_active=True
-            ).first()
+            product = Product.query.filter_by(id=product_id, tenant_id=int(tenant_id), is_active=True).first()
             if not product:
                 raise ValueError("منتج في السلة غير متاح.")
             if product.has_serial_number:
@@ -164,13 +146,9 @@ class StoreCheckoutService:
 
             available = stock_map.get(product_id, Decimal("0"))
             if qty > available:
-                raise ValueError(
-                    f'الكمية المطلوبة من "{product.name}" تتجاوز المتوفر ({available}).'
-                )
+                raise ValueError(f'الكمية المطلوبة من "{product.name}" تتجاوز المتوفر ({available}).')
 
-            ok, msg = StockService.check_availability_in_warehouse(
-                product_id, qty, online_warehouse_id
-            )
+            ok, msg = StockService.check_availability_in_warehouse(product_id, qty, online_warehouse_id)
             if not ok:
                 raise ValueError(f"{product.name}: {msg}")
 
@@ -204,13 +182,9 @@ class StoreCheckoutService:
         if not online_wh or not online_wh.is_online:
             raise ValueError("مستودع المتجر غير مهيأ.")
 
-        pay_method = StorePaymentMethodService.validate_for_checkout(
-            payment_method_code or "cod"
-        )
+        pay_method = StorePaymentMethodService.validate_for_checkout(payment_method_code or "cod")
 
-        lines_data = StoreCheckoutService.build_lines_from_cart(
-            tenant_id, cart, online_wh.id
-        )
+        lines_data = StoreCheckoutService.build_lines_from_cart(tenant_id, cart, online_wh.id)
         if shop_account and shop_account.customer_id:
             customer = db.session.get(Customer, shop_account.customer_id)
             if not customer:
@@ -253,9 +227,7 @@ class StoreCheckoutService:
         discount_amount = Decimal("0")
         coupon_obj = None
         if coupon_code:
-            discount_amount, coupon_obj = StoreCouponService.validate_for_checkout(
-                tenant_id, coupon_code, subtotal
-            )
+            discount_amount, coupon_obj = StoreCouponService.validate_for_checkout(tenant_id, coupon_code, subtotal)
             delivery_block += f"\nكوبون: {coupon_obj.code} (-{discount_amount})"
 
         sale = SaleService.create_sale(
@@ -266,11 +238,7 @@ class StoreCheckoutService:
             currency=currency,
             discount_amount=discount_amount,
             shipping_cost=0,
-            tax_rate=(
-                Decimal(str(tenant.default_tax_rate or 0))
-                if (tenant and tenant.enable_tax)
-                else Decimal("0")
-            ),
+            tax_rate=(Decimal(str(tenant.default_tax_rate or 0)) if (tenant and tenant.enable_tax) else Decimal("0")),
             notes=(notes or "") + delivery_block,
             payment_data=None,
             source="online_store",

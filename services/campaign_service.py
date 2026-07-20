@@ -27,9 +27,7 @@ class CampaignService:
         revenue_d = Decimal(str(revenue or 0))
         if cost_d == 0:
             return Decimal("0")
-        return ((revenue_d - cost_d) / cost_d * Decimal("100")).quantize(
-            Decimal("0.01")
-        )
+        return ((revenue_d - cost_d) / cost_d * Decimal("100")).quantize(Decimal("0.01"))
 
     @staticmethod
     def get_campaign_roi_metrics(campaign, total_revenue=None):
@@ -110,9 +108,7 @@ class CampaignService:
             discount = Decimal("0")
             if campaign.campaign_type == "percentage":
                 discount = (
-                    Decimal(str(sale.subtotal))
-                    * Decimal(str(campaign.discount_value))
-                    / Decimal("100")
+                    Decimal(str(sale.subtotal)) * Decimal(str(campaign.discount_value)) / Decimal("100")
                 ).quantize(Decimal("0.001"))
                 if campaign.max_discount_amount:
                     discount = min(discount, Decimal(str(campaign.max_discount_amount)))

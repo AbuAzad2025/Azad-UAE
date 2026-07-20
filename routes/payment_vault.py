@@ -104,9 +104,7 @@ def _validate_public_api_origin():
     """Reject cross-site POSTs; require Origin/Referer in trusted allowlist."""
     trusted = _payment_vault_trusted_origins()
     if not trusted:
-        logger.warning(
-            "Payment vault public API rejected: trusted origins not configured"
-        )
+        logger.warning("Payment vault public API rejected: trusted origins not configured")
         return jsonify({"success": False, "error": "Origin policy not configured"}), 503
 
     origin = (request.headers.get("Origin") or "").strip().rstrip("/")
@@ -115,9 +113,7 @@ def _validate_public_api_origin():
     if origin:
         if origin not in trusted:
             logger.warning("Payment vault public API rejected: origin=%s", origin)
-            return jsonify(
-                {"success": False, "error": gettext("Origin غير مسموح")}
-            ), 403
+            return jsonify({"success": False, "error": gettext("Origin غير مسموح")}), 403
         return None
 
     if referer:
@@ -243,9 +239,7 @@ def _validate_api_key(*, required_scope: str = "write") -> tuple | None:
 @payment_vault_bp.before_request
 def _protect_owner_vault_pages():
     path = request.path or ""
-    if path.startswith("/payment-vault/api/") or path.startswith(
-        "/payment-vault/webhook/"
-    ):
+    if path.startswith("/payment-vault/api/") or path.startswith("/payment-vault/webhook/"):
         return None
 
     if not current_user.is_authenticated:
@@ -355,24 +349,14 @@ def dashboard():
 
     tid = None
 
-    purchases = Donation.query.filter_by(
-        tenant_id=tid, transaction_type="purchase"
-    ).all()
-    donation_list = Donation.query.filter_by(
-        tenant_id=tid, transaction_type="donation"
-    ).all()
+    purchases = Donation.query.filter_by(tenant_id=tid, transaction_type="purchase").all()
+    donation_list = Donation.query.filter_by(tenant_id=tid, transaction_type="donation").all()
 
     stats = {
         "total_purchases": len(purchases),
         "total_donations": len(donation_list),
-        "total_revenue": sum(
-            float(p.amount_usd or 0)
-            for p in purchases + donation_list
-            if p.status == "completed"
-        ),
-        "pending_count": sum(
-            1 for p in purchases + donation_list if p.status == "pending"
-        ),
+        "total_revenue": sum(float(p.amount_usd or 0) for p in purchases + donation_list if p.status == "completed"),
+        "pending_count": sum(1 for p in purchases + donation_list if p.status == "pending"),
     }
 
     daily_stats = AnalyticsService.get_daily_stats()
@@ -453,94 +437,46 @@ def settings():
             except Exception:
                 return int(default)
 
-        vault.nowpayments_api_key = request.form.get(
-            "nowpayments_api_key", vault.nowpayments_api_key
-        )
-        vault.nowpayments_ipn_secret = request.form.get(
-            "nowpayments_ipn_secret", vault.nowpayments_ipn_secret
-        )
-        vault.bitcoin_address = request.form.get(
-            "bitcoin_address", vault.bitcoin_address
-        )
-        vault.ethereum_address = request.form.get(
-            "ethereum_address", vault.ethereum_address
-        )
+        vault.nowpayments_api_key = request.form.get("nowpayments_api_key", vault.nowpayments_api_key)
+        vault.nowpayments_ipn_secret = request.form.get("nowpayments_ipn_secret", vault.nowpayments_ipn_secret)
+        vault.bitcoin_address = request.form.get("bitcoin_address", vault.bitcoin_address)
+        vault.ethereum_address = request.form.get("ethereum_address", vault.ethereum_address)
         vault.usdt_address = request.form.get("usdt_address", vault.usdt_address)
 
-        vault.paypal_business_email = request.form.get(
-            "paypal_business_email", vault.paypal_business_email
-        )
-        vault.paypal_client_id = request.form.get(
-            "paypal_client_id", vault.paypal_client_id
-        )
-        vault.paypal_client_secret = request.form.get(
-            "paypal_client_secret", vault.paypal_client_secret
-        )
+        vault.paypal_business_email = request.form.get("paypal_business_email", vault.paypal_business_email)
+        vault.paypal_client_id = request.form.get("paypal_client_id", vault.paypal_client_id)
+        vault.paypal_client_secret = request.form.get("paypal_client_secret", vault.paypal_client_secret)
         vault.paypal_mode = request.form.get("paypal_mode", vault.paypal_mode)
 
         vault.bank_name = request.form.get("bank_name", vault.bank_name)
-        vault.bank_account_name = request.form.get(
-            "bank_account_name", vault.bank_account_name
-        )
-        vault.bank_account_number = request.form.get(
-            "bank_account_number", vault.bank_account_number
-        )
+        vault.bank_account_name = request.form.get("bank_account_name", vault.bank_account_name)
+        vault.bank_account_number = request.form.get("bank_account_number", vault.bank_account_number)
         vault.bank_iban = request.form.get("bank_iban", vault.bank_iban)
-        vault.bank_swift_code = request.form.get(
-            "bank_swift_code", vault.bank_swift_code
-        )
+        vault.bank_swift_code = request.form.get("bank_swift_code", vault.bank_swift_code)
         vault.bank_branch = request.form.get("bank_branch", vault.bank_branch)
         vault.bank_country = request.form.get("bank_country", vault.bank_country)
         vault.bank_currency = request.form.get("bank_currency", vault.bank_currency)
 
-        vault.stripe_publishable_key = request.form.get(
-            "stripe_publishable_key", vault.stripe_publishable_key
-        )
-        vault.stripe_secret_key = request.form.get(
-            "stripe_secret_key", vault.stripe_secret_key
-        )
-        vault.stripe_webhook_secret = request.form.get(
-            "stripe_webhook_secret", vault.stripe_webhook_secret
-        )
+        vault.stripe_publishable_key = request.form.get("stripe_publishable_key", vault.stripe_publishable_key)
+        vault.stripe_secret_key = request.form.get("stripe_secret_key", vault.stripe_secret_key)
+        vault.stripe_webhook_secret = request.form.get("stripe_webhook_secret", vault.stripe_webhook_secret)
 
-        vault.min_donation_amount = _as_float(
-            request.form.get("min_donation_amount"), vault.min_donation_amount
-        )
-        vault.max_donation_amount = _as_float(
-            request.form.get("max_donation_amount"), vault.max_donation_amount
-        )
-        vault.daily_limit = _as_float(
-            request.form.get("daily_limit"), vault.daily_limit
-        )
+        vault.min_donation_amount = _as_float(request.form.get("min_donation_amount"), vault.min_donation_amount)
+        vault.max_donation_amount = _as_float(request.form.get("max_donation_amount"), vault.max_donation_amount)
+        vault.daily_limit = _as_float(request.form.get("daily_limit"), vault.daily_limit)
 
         vault.donations_enabled = bool(request.form.get("donations_enabled"))
         vault.donation_page_enabled = bool(request.form.get("donation_page_enabled"))
-        vault.donation_title_ar = (
-            request.form.get("donation_title_ar") or vault.donation_title_ar
-        )
-        vault.donation_title_en = (
-            request.form.get("donation_title_en") or vault.donation_title_en
-        )
-        vault.donation_intro_ar = (
-            request.form.get("donation_intro_ar") or vault.donation_intro_ar
-        )
-        vault.donation_intro_en = (
-            request.form.get("donation_intro_en") or vault.donation_intro_en
-        )
-        vault.donation_debit_account = (
-            request.form.get("donation_debit_account") or "1120"
-        ).strip()
-        vault.donation_credit_account = (
-            request.form.get("donation_credit_account") or "4200"
-        ).strip()
+        vault.donation_title_ar = request.form.get("donation_title_ar") or vault.donation_title_ar
+        vault.donation_title_en = request.form.get("donation_title_en") or vault.donation_title_en
+        vault.donation_intro_ar = request.form.get("donation_intro_ar") or vault.donation_intro_ar
+        vault.donation_intro_en = request.form.get("donation_intro_en") or vault.donation_intro_en
+        vault.donation_debit_account = (request.form.get("donation_debit_account") or "1120").strip()
+        vault.donation_credit_account = (request.form.get("donation_credit_account") or "4200").strip()
 
         vault.require_2fa = bool(request.form.get("require_2fa"))
-        vault.auto_lock_minutes = _as_int(
-            request.form.get("auto_lock_minutes"), vault.auto_lock_minutes
-        )
-        vault.max_failed_attempts = _as_int(
-            request.form.get("max_failed_attempts"), vault.max_failed_attempts
-        )
+        vault.auto_lock_minutes = _as_int(request.form.get("auto_lock_minutes"), vault.auto_lock_minutes)
+        vault.max_failed_attempts = _as_int(request.form.get("max_failed_attempts"), vault.max_failed_attempts)
 
         vault.updated_at = datetime.now(timezone.utc)
 
@@ -590,20 +526,13 @@ def donations():
             )
         )
 
-    pagination = query.order_by(Donation.created_at.desc()).paginate(
-        page=page, per_page=per_page, error_out=False
-    )
+    pagination = query.order_by(Donation.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
     donation_list = pagination.items
 
     total_donations = pagination.total
     completed_count = query.filter(Donation.status == "completed").count()
     pending_count = query.filter(Donation.status == "pending").count()
-    total_amount = float(
-        query.with_entities(
-            db.func.coalesce(db.func.sum(Donation.amount_usd), 0)
-        ).scalar()
-        or 0
-    )
+    total_amount = float(query.with_entities(db.func.coalesce(db.func.sum(Donation.amount_usd), 0)).scalar() or 0)
 
     return render_template(
         "payment_vault/donations.html",
@@ -627,23 +556,13 @@ def packages_management():
 
     packages = Package.query.order_by(Package.sort_order.asc()).all()
 
-    basic_purchases = (
-        PackagePurchase.query.join(Package).filter(Package.slug == "basic").count()
-    )
-    pro_purchases = (
-        PackagePurchase.query.join(Package)
-        .filter(Package.slug == "professional")
-        .count()
-    )
-    ent_purchases = (
-        PackagePurchase.query.join(Package).filter(Package.slug == "enterprise").count()
-    )
+    basic_purchases = PackagePurchase.query.join(Package).filter(Package.slug == "basic").count()
+    pro_purchases = PackagePurchase.query.join(Package).filter(Package.slug == "professional").count()
+    ent_purchases = PackagePurchase.query.join(Package).filter(Package.slug == "enterprise").count()
 
     package_stats = [basic_purchases, pro_purchases, ent_purchases]
 
-    return render_template(
-        "payment_vault/packages.html", packages=packages, package_stats=package_stats
-    )
+    return render_template("payment_vault/packages.html", packages=packages, package_stats=package_stats)
 
 
 @payment_vault_bp.route("/package/create", methods=["POST"])
@@ -695,16 +614,12 @@ def create_package():
             price=_as_float(request.form.get("price"), 0),
             description_ar=(request.form.get("description_ar") or "").strip() or None,
             description_en=(request.form.get("description_en") or "").strip() or None,
-            features=[
-                line.strip() for line in features_text.splitlines() if line.strip()
-            ],
+            features=[line.strip() for line in features_text.splitlines() if line.strip()],
             is_active=request.form.get("is_active") == "on",
             is_featured=request.form.get("is_featured") == "on",
             badge_text=(request.form.get("badge_text") or "").strip() or None,
             sort_order=_as_int(request.form.get("sort_order"), 0),
-            support_duration_months=_as_int(
-                request.form.get("support_duration_months"), 3
-            ),
+            support_duration_months=_as_int(request.form.get("support_duration_months"), 3),
             max_users=_as_int(request.form.get("max_users"), 1),
             max_branches=_as_int(request.form.get("max_branches"), 1),
         )
@@ -764,28 +679,18 @@ def edit_package(package_id):
 
             package.name_ar = request.form.get("name_ar", package.name_ar).strip()
             package.name_en = request.form.get("name_en", package.name_en).strip()
-            package.description_ar = request.form.get(
-                "description_ar", package.description_ar or ""
-            ).strip()
-            package.description_en = request.form.get(
-                "description_en", package.description_en or ""
-            ).strip()
+            package.description_ar = request.form.get("description_ar", package.description_ar or "").strip()
+            package.description_en = request.form.get("description_en", package.description_en or "").strip()
             package.price = _as_float(request.form.get("price"), package.price)
-            package.max_users = _as_int(
-                request.form.get("max_users"), package.max_users or 1
-            )
-            package.max_branches = _as_int(
-                request.form.get("max_branches"), package.max_branches or 1
-            )
+            package.max_users = _as_int(request.form.get("max_users"), package.max_users or 1)
+            package.max_branches = _as_int(request.form.get("max_branches"), package.max_branches or 1)
             package.support_duration_months = _as_int(
                 request.form.get("support_duration_months"),
                 package.support_duration_months,
             )
             package.is_active = request.form.get("is_active") == "on"
             package.is_featured = request.form.get("is_featured") == "on"
-            package.badge_text = request.form.get(
-                "badge_text", package.badge_text or ""
-            ).strip()
+            package.badge_text = request.form.get("badge_text", package.badge_text or "").strip()
 
             features = request.form.get("features", "").strip()
             package.features = features.split("\n") if features else []
@@ -830,9 +735,7 @@ def delete_package(package_id):
     except Exception:
         logger.exception("Payment vault package delete failed")
         return (
-            jsonify(
-                {"success": False, "error": "Could not delete package at this time"}
-            ),
+            jsonify({"success": False, "error": "Could not delete package at this time"}),
             400,
         )
 
@@ -847,11 +750,7 @@ def reports():
         return redirect(url_for("payment_vault.unlock_vault"))
 
     tid = None
-    all_transactions = (
-        Donation.query.filter_by(tenant_id=tid)
-        .order_by(Donation.created_at.desc())
-        .all()
-    )
+    all_transactions = Donation.query.filter_by(tenant_id=tid).order_by(Donation.created_at.desc()).all()
     purchases = [t for t in all_transactions if t.transaction_type == "purchase"]
     donations = [t for t in all_transactions if t.transaction_type == "donation"]
 
@@ -875,15 +774,9 @@ def reports():
         monthly_donations_data.insert(0, 0)
 
     package_stats = [
-        Donation.query.filter_by(
-            tenant_id=tid, transaction_type="purchase", package="basic"
-        ).count(),
-        Donation.query.filter_by(
-            tenant_id=tid, transaction_type="purchase", package="professional"
-        ).count(),
-        Donation.query.filter_by(
-            tenant_id=tid, transaction_type="purchase", package="enterprise"
-        ).count(),
+        Donation.query.filter_by(tenant_id=tid, transaction_type="purchase", package="basic").count(),
+        Donation.query.filter_by(tenant_id=tid, transaction_type="purchase", package="professional").count(),
+        Donation.query.filter_by(tenant_id=tid, transaction_type="purchase", package="enterprise").count(),
     ]
 
     return render_template(
@@ -931,9 +824,7 @@ def cards():
     card_list = tenant_query(CardPayment).order_by(CardPayment.created_at.desc()).all()
 
     total_cards = len(card_list)
-    total_amount = sum(
-        float(c.amount or 0) for c in card_list if c.status == "completed"
-    )
+    total_amount = sum(float(c.amount or 0) for c in card_list if c.status == "completed")
     visa_count = sum(1 for c in card_list if c.card_type == "Visa")
     mastercard_count = sum(1 for c in card_list if c.card_type == "Mastercard")
 
@@ -977,9 +868,7 @@ def process_payment():
         data = request.get_json(silent=True)
 
         if not data:
-            return jsonify(
-                {"success": False, "error": gettext("بيانات غير صحيحة")}
-            ), 400
+            return jsonify({"success": False, "error": gettext("بيانات غير صحيحة")}), 400
 
         payment_method = data.get("payment_method", "crypto")
 
@@ -987,16 +876,13 @@ def process_payment():
             try:
                 amount = float(data.get("amount", 0))
             except (ValueError, TypeError):
-                return jsonify(
-                    {"success": False, "error": gettext("المبلغ غير صحيح")}
-                ), 422
+                return jsonify({"success": False, "error": gettext("المبلغ غير صحيح")}), 422
 
             nowpayments = NOWPaymentsService()
             result = nowpayments.create_payment(
                 amount=amount,
                 crypto_currency=data.get("crypto_currency", "btc"),
-                customer_email=data.get("customer_email")
-                or data.get("donor_email", ""),
+                customer_email=data.get("customer_email") or data.get("donor_email", ""),
                 description=data.get("description", ""),
                 transaction_type=data.get("type", "donation"),
                 package=data.get("package", ""),
@@ -1012,23 +898,17 @@ def process_payment():
             try:
                 amount = float(data.get("amount", 0))
             except (ValueError, TypeError):
-                return jsonify(
-                    {"success": False, "error": gettext("المبلغ غير صحيح")}
-                ), 422
+                return jsonify({"success": False, "error": gettext("المبلغ غير صحيح")}), 422
 
             if amount < 1:
-                return jsonify(
-                    {"success": False, "error": gettext("الحد الأدنى هو $1")}
-                ), 400
+                return jsonify({"success": False, "error": gettext("الحد الأدنى هو $1")}), 400
 
             card_number = data.get("card_number", "").replace(" ", "")
             cvv = data.get("cvv", "")
             expiry = data.get("expiry", "")
 
             if not card_number or len(card_number) < 13:
-                return jsonify(
-                    {"success": False, "error": gettext("رقم البطاقة غير صحيح")}
-                ), 400
+                return jsonify({"success": False, "error": gettext("رقم البطاقة غير صحيح")}), 400
 
             card_payment = CardPayment(
                 customer_name=data.get("customer_name", ""),
@@ -1048,15 +928,9 @@ def process_payment():
                 with atomic_transaction("card_payment_storage"):
                     db.session.add(card_payment)
                     PaymentLog.log_action(
-                        vault_id=(
-                            _get_vault_for_current_tenant().id
-                            if _get_vault_for_current_tenant()
-                            else None
-                        ),
+                        vault_id=(_get_vault_for_current_tenant().id if _get_vault_for_current_tenant() else None),
                         action="card_payment_received",
-                        description=gettext(
-                            f"دفع بالبطاقة: {card_payment.get_card_display()} - ${amount}"
-                        ),
+                        description=gettext(f"دفع بالبطاقة: {card_payment.get_card_display()} - ${amount}"),
                         level="info",
                         ip_address=request.remote_addr,
                         user_agent=request.headers.get("User-Agent"),
@@ -1068,27 +942,19 @@ def process_payment():
                         "message": gettext("تم حفظ معلومات البطاقة بشكل آمن ومشفر"),
                         "transaction_id": card_payment.transaction_id,
                         "whatsapp": "0598953362",
-                        "next_step": gettext(
-                            "سيتم التواصل معك عبر WhatsApp خلال 24 ساعة"
-                        ),
+                        "next_step": gettext("سيتم التواصل معك عبر WhatsApp خلال 24 ساعة"),
                     }
                 )
             else:
-                return jsonify(
-                    {"success": False, "error": gettext("فشل تشفير البيانات")}
-                ), 500
+                return jsonify({"success": False, "error": gettext("فشل تشفير البيانات")}), 500
 
         else:
-            return jsonify(
-                {"success": False, "error": gettext("طريقة دفع غير مدعومة")}
-            ), 400
+            return jsonify({"success": False, "error": gettext("طريقة دفع غير مدعومة")}), 400
 
     except Exception:
         logger.exception("Payment vault process-payment failed")
         return (
-            jsonify(
-                {"success": False, "error": "Could not process payment at this time"}
-            ),
+            jsonify({"success": False, "error": "Could not process payment at this time"}),
             500,
         )
 
@@ -1162,9 +1028,7 @@ def api_create_purchase():
 
         if not request.is_json:
             return (
-                jsonify(
-                    {"success": False, "error": "Content-Type must be application/json"}
-                ),
+                jsonify({"success": False, "error": "Content-Type must be application/json"}),
                 400,
             )
 
@@ -1179,17 +1043,13 @@ def api_create_purchase():
         ]
         for field in required_fields:
             if not data.get(field):
-                return jsonify(
-                    {"success": False, "error": gettext(f"الحقل {field} مطلوب")}
-                ), 400
+                return jsonify({"success": False, "error": gettext(f"الحقل {field} مطلوب")}), 400
 
         import re
 
         email_pattern = r"^[\w\.-]+@[\w\.-]+\.\w+$"
         if not re.match(email_pattern, data["customer_email"]):
-            return jsonify(
-                {"success": False, "error": gettext("بريد إلكتروني غير صحيح")}
-            ), 400
+            return jsonify({"success": False, "error": gettext("بريد إلكتروني غير صحيح")}), 400
 
         from html import escape
 
@@ -1205,9 +1065,7 @@ def api_create_purchase():
 
         package = db.session.get(Package, data["package_id"])
         if not package or not package.is_active:
-            return jsonify(
-                {"success": False, "error": gettext("الباقة غير متاحة")}
-            ), 404
+            return jsonify({"success": False, "error": gettext("الباقة غير متاحة")}), 404
 
         if float(data["amount_paid"]) < package.price:
             return (
@@ -1243,11 +1101,7 @@ def api_create_purchase():
 
         if purchase.payment_method != "bank":
             nowpayments = NOWPaymentsService()
-            crypto_currency = (
-                str(data.get("crypto_currency") or data.get("crypto_type") or "btc")
-                .strip()
-                .lower()
-            )
+            crypto_currency = str(data.get("crypto_currency") or data.get("crypto_type") or "btc").strip().lower()
 
             payment_result = nowpayments.create_payment(
                 amount=purchase.amount_paid,
@@ -1255,9 +1109,7 @@ def api_create_purchase():
                 crypto_currency=crypto_currency,
                 order_id=f"PURCHASE_{purchase.id}",
                 customer_email=customer_email,
-                description=gettext(
-                    f"شراء باقة {package.name_ar} - ${purchase.amount_paid}"
-                ),
+                description=gettext(f"شراء باقة {package.name_ar} - ${purchase.amount_paid}"),
                 transaction_type="purchase",
                 package=package.slug,
                 customer_name=customer_name,
@@ -1265,9 +1117,7 @@ def api_create_purchase():
             )
 
             if payment_result.get("success"):
-                purchase.transaction_id = payment_result.get(
-                    "payment_id", purchase.transaction_id
-                )
+                purchase.transaction_id = payment_result.get("payment_id", purchase.transaction_id)
                 purchase.payment_details = {
                     "nowpayments_id": payment_result.get("payment_id"),
                     "pay_address": payment_result.get("pay_address"),
@@ -1283,9 +1133,7 @@ def api_create_purchase():
                 "note": gettext("يتطلب تواصل مباشر للحصول على تفاصيل الحساب البنكي"),
             }
 
-        donation = Donation.query.filter_by(
-            transaction_hash=payment_result.get("payment_id")
-        ).first()
+        donation = Donation.query.filter_by(transaction_hash=payment_result.get("payment_id")).first()
 
         if not donation:
             donation = Donation(
@@ -1327,9 +1175,7 @@ def api_create_purchase():
                 {
                     "payment_address": payment_result.get("pay_address"),
                     "payment_amount": payment_result.get("pay_amount"),
-                    "crypto_currency": (
-                        crypto_currency.upper() if crypto_currency else None
-                    ),
+                    "crypto_currency": (crypto_currency.upper() if crypto_currency else None),
                     "payment_id": payment_result.get("payment_id"),
                     "payment_url": payment_result.get("invoice_url"),
                 }
@@ -1341,9 +1187,7 @@ def api_create_purchase():
     except Exception:
         logger.exception("Payment vault purchase API failed")
         return (
-            jsonify(
-                {"success": False, "error": "Could not create purchase at this time"}
-            ),
+            jsonify({"success": False, "error": "Could not create purchase at this time"}),
             500,
         )
 
@@ -1368,9 +1212,7 @@ def api_create_donation():
 
         if not request.is_json:
             return (
-                jsonify(
-                    {"success": False, "error": "Content-Type must be application/json"}
-                ),
+                jsonify({"success": False, "error": "Content-Type must be application/json"}),
                 400,
             )
 
@@ -1378,16 +1220,12 @@ def api_create_donation():
 
         if not data.get("amount") or not data.get("payment_method"):
             return (
-                jsonify(
-                    {"success": False, "error": gettext("المبلغ وطريقة الدفع مطلوبة")}
-                ),
+                jsonify({"success": False, "error": gettext("المبلغ وطريقة الدفع مطلوبة")}),
                 400,
             )
 
         if float(data["amount"]) < 15:
-            return jsonify(
-                {"success": False, "error": gettext("الحد الأدنى للتبرع $15")}
-            ), 400
+            return jsonify({"success": False, "error": gettext("الحد الأدنى للتبرع $15")}), 400
 
         from html import escape
 
@@ -1425,11 +1263,7 @@ def api_create_donation():
             db.session.add(donation)
 
         nowpayments = NOWPaymentsService()
-        crypto_currency = (
-            str(data.get("crypto_currency") or data.get("crypto_type") or "btc")
-            .strip()
-            .lower()
-        )
+        crypto_currency = str(data.get("crypto_currency") or data.get("crypto_type") or "btc").strip().lower()
 
         payment_result = nowpayments.create_payment(
             amount=float(data["amount"]),
@@ -1445,9 +1279,7 @@ def api_create_donation():
         )
 
         if payment_result.get("success"):
-            donation.transaction_hash = payment_result.get(
-                "payment_id", donation.transaction_hash
-            )
+            donation.transaction_hash = payment_result.get("payment_id", donation.transaction_hash)
             donation.wallet_address = payment_result.get("pay_address")
             donation.gateway_transaction_id = payment_result.get("payment_id")
             donation.gateway_name = "nowpayments"
@@ -1475,9 +1307,7 @@ def api_create_donation():
                 {
                     "payment_address": payment_result.get("pay_address"),
                     "payment_amount": payment_result.get("pay_amount"),
-                    "crypto_currency": (
-                        crypto_currency.upper() if crypto_currency else None
-                    ),
+                    "crypto_currency": (crypto_currency.upper() if crypto_currency else None),
                     "payment_id": payment_result.get("payment_id"),
                     "payment_url": payment_result.get("invoice_url"),
                 }
@@ -1489,9 +1319,7 @@ def api_create_donation():
     except Exception:
         logger.exception("Payment vault donation API failed")
         return (
-            jsonify(
-                {"success": False, "error": "Could not create donation at this time"}
-            ),
+            jsonify({"success": False, "error": "Could not create donation at this time"}),
             500,
         )
 
@@ -1526,9 +1354,7 @@ def view_purchases():
         "total": len(all_purchases),
         "pending": len([p for p in all_purchases if p.payment_status == "pending"]),
         "completed": len([p for p in all_purchases if p.payment_status == "completed"]),
-        "revenue": sum(
-            [p.amount_paid for p in all_purchases if p.payment_status == "completed"]
-        ),
+        "revenue": sum([p.amount_paid for p in all_purchases if p.payment_status == "completed"]),
     }
 
     return render_template(
@@ -1592,9 +1418,7 @@ def api_package_stats(package_id):
 
     stats = {
         "total_sales": len(purchases),
-        "total_revenue": sum(
-            [p.amount_paid for p in purchases if p.payment_status == "completed"]
-        ),
+        "total_revenue": sum([p.amount_paid for p in purchases if p.payment_status == "completed"]),
         "pending": len([p for p in purchases if p.payment_status == "pending"]),
         "completed": len([p for p in purchases if p.payment_status == "completed"]),
         "failed": len([p for p in purchases if p.payment_status == "failed"]),
@@ -1623,9 +1447,7 @@ def toggle_package_status(package_id):
     except Exception:
         logger.exception("Payment vault package toggle failed")
         return (
-            jsonify(
-                {"success": False, "error": "Could not update package at this time"}
-            ),
+            jsonify({"success": False, "error": "Could not update package at this time"}),
             500,
         )
 
@@ -1704,13 +1526,9 @@ def trigger_auto_approve():
     result = AutoApprovalService.run_auto_approval()
 
     if result.get("total_approved", 0) > 0:
-        NotificationService.notify_auto_approval(
-            result["total_approved"], result["total_amount"]
-        )
+        NotificationService.notify_auto_approval(result["total_approved"], result["total_amount"])
         flash(
-            gettext(
-                f"✅ تم قبول {result['total_approved']} عملية تلقائياً بمبلغ ${result['total_amount']:.2f}"
-            ),
+            gettext(f"✅ تم قبول {result['total_approved']} عملية تلقائياً بمبلغ ${result['total_amount']:.2f}"),
             "success",
         )
     else:
@@ -1728,9 +1546,7 @@ def api_notifications():
     limit = request.args.get("limit", 10, type=int)
     notifications = NotificationService.get_recent_notifications(limit)
 
-    return jsonify(
-        {"success": True, "notifications": notifications, "count": len(notifications)}
-    )
+    return jsonify({"success": True, "notifications": notifications, "count": len(notifications)})
 
 
 @payment_vault_bp.route("/api/live-stats", methods=["GET"])
@@ -1785,9 +1601,7 @@ def export_donations():
 
     tid = None
     donation_list = (
-        Donation.query.filter_by(tenant_id=tid, transaction_type="donation")
-        .order_by(Donation.created_at.desc())
-        .all()
+        Donation.query.filter_by(tenant_id=tid, transaction_type="donation").order_by(Donation.created_at.desc()).all()
     )
     csv_file = ExportService.export_donations_to_csv(donation_list)
 
@@ -1825,9 +1639,7 @@ def export_report_pdf():
 
     tid = None
     purchases = PackagePurchase.query.all()
-    donations = Donation.query.filter_by(
-        tenant_id=tid, transaction_type="donation"
-    ).all()
+    donations = Donation.query.filter_by(tenant_id=tid, transaction_type="donation").all()
 
     stats = {
         gettext("إجمالي المشتريات"): len(purchases),
@@ -1886,9 +1698,7 @@ def nowpayments_webhook():
             return jsonify({"error": "Webhook not configured"}), 503
         if not signature:
             return jsonify({"error": "Missing signature"}), 400
-        if not WebhookService.verify_nowpayments_signature(
-            payload, signature, ipn_secret
-        ):
+        if not WebhookService.verify_nowpayments_signature(payload, signature, ipn_secret):
             logger.warning("NOWPayments webhook signature verification failed")
             return jsonify({"error": "Invalid signature"}), 403
 
@@ -1938,9 +1748,7 @@ def stripe_webhook():
             return jsonify({"error": "Webhook not configured"}), 503
         if not signature:
             return jsonify({"error": "Missing signature"}), 400
-        if not WebhookService.verify_stripe_signature(
-            payload, signature, vault.stripe_webhook_secret
-        ):
+        if not WebhookService.verify_stripe_signature(payload, signature, vault.stripe_webhook_secret):
             logger.warning("Stripe webhook signature verification failed")
             return jsonify({"error": "Invalid signature"}), 403
 
@@ -2078,9 +1886,7 @@ def api_v2_donations():
         )
 
     # Pagination
-    pagination = query.order_by(Donation.created_at.desc()).paginate(
-        page=page, per_page=per_page, error_out=False
-    )
+    pagination = query.order_by(Donation.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
 
     # Convert to dict
     donations_data = []
@@ -2093,9 +1899,7 @@ def api_v2_donations():
                 "amount_usd": float(donation.amount_usd or 0),
                 "payment_method": donation.payment_method,
                 "status": donation.status,
-                "created_at": (
-                    donation.created_at.isoformat() if donation.created_at else None
-                ),
+                "created_at": (donation.created_at.isoformat() if donation.created_at else None),
             }
         )
 

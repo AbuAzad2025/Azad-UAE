@@ -21,9 +21,7 @@ from html.parser import HTMLParser
 
 REPO_ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
 
-RTL_SEQ = re.compile(
-    r"[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]{2,}"
-)
+RTL_SEQ = re.compile(r"[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]{2,}")
 JINJA = re.compile(r"\{[{%#].*?[}%#]\}")
 # Attributes that are NEVER user-facing text -> never wrapped even if Arabic.
 ATTR_DENYLIST = {
@@ -232,16 +230,9 @@ class Wrapper(HTMLParser):
             # (e.g. content="{% block %}...{{ }}...{% endblock %}") — wrapping
             # it in {{ _('...') }} would nest translation calls and corrupt the
             # template (Flask-Babel's gettext then treats %-format chars).
-            if (
-                v
-                and RTL_SEQ.search(v)
-                and not _already_wrapped(v)
-                and not JINJA.search(v)
-            ):
+            if v and RTL_SEQ.search(v) and not _already_wrapped(v) and not JINJA.search(v):
                 # match the exact attribute occurrence in the raw tag text
-                pat = re.compile(
-                    r"(\s" + re.escape(k) + r'\s*=\s*)(["\'])(.*?)(\2)', re.DOTALL
-                )
+                pat = re.compile(r"(\s" + re.escape(k) + r'\s*=\s*)(["\'])(.*?)(\2)', re.DOTALL)
 
                 def _sub(m):
                     return f"{m.group(1)}\"{{{{ _('{_escape(v)}') }}}}\""
@@ -265,9 +256,7 @@ def main():
     args = ap.parse_args()
 
     if args.files:
-        targets = [
-            f if os.path.isabs(f) else os.path.join(REPO_ROOT, f) for f in args.files
-        ]
+        targets = [f if os.path.isabs(f) else os.path.join(REPO_ROOT, f) for f in args.files]
     else:
         targets = []
         for root, dirs, files in os.walk(os.path.join(REPO_ROOT, "templates")):

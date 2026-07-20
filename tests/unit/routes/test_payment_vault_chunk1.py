@@ -90,9 +90,7 @@ def mock_donation(mocker):
     DMod.query.filter_by.return_value.first.return_value = don
     DMod.query.filter_by.return_value.count.return_value = 3
     DMod.query.with_entities.return_value.scalar.return_value = 150.0
-    DMod.query.order_by.return_value.paginate.return_value = _make_pagination(
-        [don], 1, 20, 1
-    )
+    DMod.query.order_by.return_value.paginate.return_value = _make_pagination([don], 1, 20, 1)
     return don
 
 
@@ -154,9 +152,7 @@ def mock_security(mocker):
 
 @pytest.fixture
 def mock_gl_service(mocker):
-    return mocker.patch(
-        "services.donation_gl_service.DonationGLService.post_completed_donation"
-    )
+    return mocker.patch("services.donation_gl_service.DonationGLService.post_completed_donation")
 
 
 @pytest.fixture
@@ -248,9 +244,7 @@ class TestProcessPayment:
         body = resp.get_json()
         assert body["success"] is True
         assert body["transaction_id"] == "CARD_1700000000"
-        mock_card_payment.encrypt_card_data.assert_called_once_with(
-            "4111111111111111", "123", "12/28"
-        )
+        mock_card_payment.encrypt_card_data.assert_called_once_with("4111111111111111", "123", "12/28")
         mock_payment_log.assert_called_once()
 
     def test_card_amount_below_minimum_returns_400(self, vault_owner_client):
@@ -291,9 +285,7 @@ class TestProcessPayment:
         )
         assert resp.status_code == 400
 
-    def test_card_encrypt_failure_returns_500(
-        self, vault_owner_client, mock_card_payment
-    ):
+    def test_card_encrypt_failure_returns_500(self, vault_owner_client, mock_card_payment):
         mock_card_payment.encrypt_card_data.return_value = False
         resp = vault_owner_client.post(
             self.ENDPOINT,
@@ -308,9 +300,7 @@ class TestProcessPayment:
         assert resp.status_code == 500
 
     def test_missing_body_returns_400(self, vault_owner_client):
-        resp = vault_owner_client.post(
-            self.ENDPOINT, data=b"not-json", content_type="application/json"
-        )
+        resp = vault_owner_client.post(self.ENDPOINT, data=b"not-json", content_type="application/json")
         assert resp.status_code == 400
 
     def test_empty_json_returns_400(self, vault_owner_client):
@@ -345,9 +335,7 @@ class TestTogglePackage:
         assert resp.status_code == 200
         assert mock_package.is_active is True
 
-    def test_toggle_rollback_returns_500(
-        self, vault_owner_client, mock_package, mock_db
-    ):
+    def test_toggle_rollback_returns_500(self, vault_owner_client, mock_package, mock_db):
         mock_db.commit.side_effect = Exception("DB fail")
         resp = vault_owner_client.post("/payment-vault/package/1/toggle")
         assert resp.status_code == 500
@@ -368,9 +356,7 @@ class TestPackageStats:
         mock_q.all.return_value = []
         return mock_q
 
-    def test_returns_aggregated_stats(
-        self, vault_owner_client, _mock_package_purchase, mock_package
-    ):
+    def test_returns_aggregated_stats(self, vault_owner_client, _mock_package_purchase, mock_package):
         _mock_package_purchase.all.return_value = [
             MagicMock(amount_paid=100, payment_status="completed"),
             MagicMock(amount_paid=50, payment_status="completed"),
@@ -427,9 +413,7 @@ class TestNotifications:
 
 
 class TestLiveStats:
-    def test_returns_live_stats(
-        self, vault_owner_client, mock_analytics, mock_security, mocker
-    ):
+    def test_returns_live_stats(self, vault_owner_client, mock_analytics, mock_security, mocker):
         mock_don_q = MagicMock()
         mock_don_q.filter_by.return_value.count.return_value = 5
         mocker.patch("routes.payment_vault.Donation.query", mock_don_q)
@@ -455,9 +439,7 @@ class TestV2Purchases:
         q.filter.return_value = q
         q.order_by.return_value = q
         mock_pag = MagicMock(name="pp_pag")
-        mock_pag.items = [
-            MagicMock(to_dict=MagicMock(return_value={"id": 1, "amount": 99.0}))
-        ]
+        mock_pag.items = [MagicMock(to_dict=MagicMock(return_value={"id": 1, "amount": 99.0}))]
         mock_pag.page = 1
         mock_pag.per_page = 20
         mock_pag.total = 1
@@ -482,9 +464,7 @@ class TestV2Purchases:
     def test_filter_by_status(self, vault_owner_client, _mock_pp):
         _mock_pp.paginate.return_value.items = []
         _mock_pp.paginate.return_value.total = 0
-        resp = vault_owner_client.get(
-            "/payment-vault/api/v2/purchases?status=completed"
-        )
+        resp = vault_owner_client.get("/payment-vault/api/v2/purchases?status=completed")
         assert resp.status_code == 200
         body = resp.get_json()
         assert len(body["data"]) == 0
@@ -494,9 +474,7 @@ class TestV2Purchases:
         assert resp.status_code == 200
 
     def test_sort_and_order(self, vault_owner_client, _mock_pp):
-        resp = vault_owner_client.get(
-            "/payment-vault/api/v2/purchases?sort_by=amount_paid&order=asc"
-        )
+        resp = vault_owner_client.get("/payment-vault/api/v2/purchases?sort_by=amount_paid&order=asc")
         assert resp.status_code == 200
 
 
@@ -543,9 +521,7 @@ class TestV2Donations:
 
     def test_filter_by_status(self, vault_owner_client, _mock_don_query):
         _mock_don_query.order_by.return_value.paginate.return_value.items = []
-        resp = vault_owner_client.get(
-            "/payment-vault/api/v2/donations?status=completed"
-        )
+        resp = vault_owner_client.get("/payment-vault/api/v2/donations?status=completed")
         assert resp.status_code == 200
 
     def test_search_filter(self, vault_owner_client, _mock_don_query):
@@ -559,38 +535,26 @@ class TestV2Donations:
 
 
 class TestDonationApproveReject:
-    def test_approve_success(
-        self, vault_owner_client, mock_donation, mock_gl_service, mock_db
-    ):
-        resp = vault_owner_client.post(
-            "/payment-vault/donation/1/approve", follow_redirects=False
-        )
+    def test_approve_success(self, vault_owner_client, mock_donation, mock_gl_service, mock_db):
+        resp = vault_owner_client.post("/payment-vault/donation/1/approve", follow_redirects=False)
         assert resp.status_code == 302
         assert mock_donation.status == "completed"
         mock_gl_service.assert_called_once_with(mock_donation)
 
-    def test_approve_rollback(
-        self, vault_owner_client, mock_donation, mock_gl_service, mock_db
-    ):
+    def test_approve_rollback(self, vault_owner_client, mock_donation, mock_gl_service, mock_db):
         mock_gl_service.side_effect = Exception("GL post failed")
-        resp = vault_owner_client.post(
-            "/payment-vault/donation/1/approve", follow_redirects=False
-        )
+        resp = vault_owner_client.post("/payment-vault/donation/1/approve", follow_redirects=False)
         assert resp.status_code == 302
         mock_db.rollback.assert_not_called()
 
     def test_reject_success(self, vault_owner_client, mock_donation, mock_db):
-        resp = vault_owner_client.post(
-            "/payment-vault/donation/1/reject", follow_redirects=False
-        )
+        resp = vault_owner_client.post("/payment-vault/donation/1/reject", follow_redirects=False)
         assert resp.status_code == 302
         assert mock_donation.status == "failed"
 
     def test_reject_rollback(self, vault_owner_client, mock_donation, mock_db):
         mock_db.commit.side_effect = Exception("DB fail")
-        resp = vault_owner_client.post(
-            "/payment-vault/donation/1/reject", follow_redirects=False
-        )
+        resp = vault_owner_client.post("/payment-vault/donation/1/reject", follow_redirects=False)
         assert resp.status_code == 302
         mock_db.rollback.assert_called_once()
 
@@ -601,24 +565,16 @@ class TestDonationApproveReject:
 
 
 class TestActivatePurchase:
-    def test_activate_success(
-        self, vault_owner_client, mock_purchase, mock_donation, mock_db
-    ):
+    def test_activate_success(self, vault_owner_client, mock_purchase, mock_donation, mock_db):
         assert mock_purchase.activation_status == "pending"
-        resp = vault_owner_client.post(
-            "/payment-vault/purchase/1/activate", follow_redirects=False
-        )
+        resp = vault_owner_client.post("/payment-vault/purchase/1/activate", follow_redirects=False)
         assert resp.status_code == 302
         assert mock_purchase.activation_status == "activated"
         assert mock_purchase.payment_status == "completed"
         assert mock_donation.status == "completed"
 
-    def test_activate_rollback(
-        self, vault_owner_client, mock_purchase, mock_donation, mock_db
-    ):
+    def test_activate_rollback(self, vault_owner_client, mock_purchase, mock_donation, mock_db):
         mock_db.commit.side_effect = Exception("DB fail")
-        resp = vault_owner_client.post(
-            "/payment-vault/purchase/1/activate", follow_redirects=False
-        )
+        resp = vault_owner_client.post("/payment-vault/purchase/1/activate", follow_redirects=False)
         assert resp.status_code == 302
         mock_db.rollback.assert_called_once()

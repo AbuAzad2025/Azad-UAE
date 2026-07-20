@@ -109,9 +109,7 @@ class TestBundleExtraction:
         data_dir = tmp_path / "bundle_data"
         data_dir.mkdir()
         (data_dir / "schema_meta.json").write_text("{}", encoding="utf-8")
-        (data_dir / "products.jsonl").write_text(
-            "\n".join(json.dumps(r) for r in products), encoding="utf-8"
-        )
+        (data_dir / "products.jsonl").write_text("\n".join(json.dumps(r) for r in products), encoding="utf-8")
 
         archive = tmp_path / "scoped.tar.gz"
         with tarfile.open(archive, "w:gz") as tar:
@@ -143,9 +141,7 @@ class TestBundleExtraction:
         self._write_bundle(
             archive,
             {
-                "manifest.json": json.dumps(
-                    {"backup_scope": SCOPE_TENANT, "tenant_id": 3}
-                ),
+                "manifest.json": json.dumps({"backup_scope": SCOPE_TENANT, "tenant_id": 3}),
                 "tenant_export.json": json.dumps(legacy),
             },
         )
@@ -305,9 +301,7 @@ class TestVerifyScopedRestore:
         engine.connect.return_value.__exit__ = MagicMock(return_value=False)
         mocker.patch("sqlalchemy.create_engine", return_value=engine)
         mocker.patch("services.backup_scope_config.table_exists", return_value=True)
-        mocker.patch(
-            "services.backup_scoped_restore._table_has_column", return_value=True
-        )
+        mocker.patch("services.backup_scoped_restore._table_has_column", return_value=True)
 
         from services.backup_scoped_restore import verify_scoped_restore
 

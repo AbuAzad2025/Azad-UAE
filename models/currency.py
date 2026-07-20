@@ -14,18 +14,14 @@ class Currency(db.Model):
     is_base = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True, index=True)
 
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    exchange_rates = db.relationship(
-        "ExchangeRate", back_populates="currency", lazy="dynamic"
-    )
+    exchange_rates = db.relationship("ExchangeRate", back_populates="currency", lazy="dynamic")
 
     def __repr__(self):
         return f"<Currency {self.code}>"
@@ -76,9 +72,7 @@ class ExchangeRate(db.Model):
         nullable=False,
         index=True,
     )
-    created_by = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=True, index=True
-    )
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True, index=True)
 
     currency = db.relationship("Currency", back_populates="exchange_rates")
 

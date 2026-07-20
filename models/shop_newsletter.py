@@ -19,6 +19,4 @@ class ShopNewsletter(db.Model):
         index=True,
         default=lambda: datetime.now(timezone.utc),
     )
-    __table_args__ = (
-        db.UniqueConstraint("tenant_id", "email", name="uq_newsletter_tenant_email"),
-    )
+    __table_args__ = (db.UniqueConstraint("tenant_id", "email", name="uq_newsletter_tenant_email"),)

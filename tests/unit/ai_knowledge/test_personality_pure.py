@@ -50,9 +50,7 @@ class TestBeginnersGuide:
         assert "فاتورة" in BeginnersGuide.get_tutorial("create_invoice")
 
     def test_get_tutorial_unknown(self):
-        assert (
-            BeginnersGuide.get_tutorial("missing") == BEGINNERS_TUTORIALS["first_time"]
-        )
+        assert BeginnersGuide.get_tutorial("missing") == BEGINNERS_TUTORIALS["first_time"]
 
     def test_suggest_next_step(self):
         nxt = BeginnersGuide.suggest_next_step("first_time")
@@ -77,10 +75,7 @@ class TestBeginnersGuide:
         )
 
     def test_beginner_default(self):
-        assert (
-            BeginnersGuide.get_beginner_response("مرحبا")
-            == BEGINNERS_TUTORIALS["first_time"]
-        )
+        assert BeginnersGuide.get_beginner_response("مرحبا") == BEGINNERS_TUTORIALS["first_time"]
 
     def test_singleton(self):
         assert beginners_guide is not None

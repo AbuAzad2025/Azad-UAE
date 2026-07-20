@@ -29,6 +29,4 @@ class ShopSavedPayment(db.Model):
         default=lambda: datetime.now(timezone.utc),
     )
 
-    account = db.relationship(
-        "ShopCustomerAccount", backref=db.backref("saved_payments", lazy="dynamic")
-    )
+    account = db.relationship("ShopCustomerAccount", backref=db.backref("saved_payments", lazy="dynamic"))

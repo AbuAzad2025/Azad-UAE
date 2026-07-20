@@ -96,9 +96,7 @@ class TestPosTableOrder:
         db_session.add(table)
         db_session.flush()
 
-        order = PosTableOrder(
-            tenant_id=sample_tenant.id, table_id=table.id, sale_id=sample_sale.id
-        )
+        order = PosTableOrder(tenant_id=sample_tenant.id, table_id=table.id, sale_id=sample_sale.id)
         db_session.add(order)
         db_session.commit()
 

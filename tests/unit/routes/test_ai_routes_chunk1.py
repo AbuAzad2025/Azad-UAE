@@ -246,17 +246,13 @@ class TestAnalyzeCustomer:
         assert "not found" in resp.get_json()["error"].lower()
 
     def test_timeout_error_returns_503(self, ai_client, mock_ai_service):
-        mock_ai_service.analyze_customer_behavior.side_effect = TimeoutError(
-            "API timeout"
-        )
+        mock_ai_service.analyze_customer_behavior.side_effect = TimeoutError("API timeout")
         resp = ai_client.get("/ai/analyze-customer/1")
         assert resp.status_code == 503
         assert "timed out" in resp.get_json()["error"]
 
     def test_generic_exception_returns_503(self, ai_client, mock_ai_service):
-        mock_ai_service.analyze_customer_behavior.side_effect = RuntimeError(
-            "LLM unavailable"
-        )
+        mock_ai_service.analyze_customer_behavior.side_effect = RuntimeError("LLM unavailable")
         resp = ai_client.get("/ai/analyze-customer/1")
         assert resp.status_code == 503
         assert "error" in resp.get_json()["error"]

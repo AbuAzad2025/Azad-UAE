@@ -33,11 +33,7 @@ def _resolve_user(user=None):
 def is_platform_owner(user=None) -> bool:
     """Platform operator (Azad) — may switch active tenant."""
     user = _resolve_user(user)
-    return bool(
-        user
-        and getattr(user, "is_authenticated", False)
-        and getattr(user, "is_owner", False)
-    )
+    return bool(user and getattr(user, "is_authenticated", False) and getattr(user, "is_owner", False))
 
 
 def is_global_tenant_user(user=None) -> bool:
@@ -65,9 +61,7 @@ def get_active_tenant_id(user=None) -> int | None:
                 if g_tid is not None:
                     return int(g_tid)
         except Exception:
-            logger.debug(
-                "Failed to resolve active tenant from g context", exc_info=True
-            )
+            logger.debug("Failed to resolve active tenant from g context", exc_info=True)
         return None
 
     if not is_platform_owner(user):
@@ -160,9 +154,7 @@ def assign_tenant_id(record, user=None):
     return record
 
 
-def scoped_user_query(
-    user=None, *, active_only: bool = False, exclude_owners: bool = False
-):
+def scoped_user_query(user=None, *, active_only: bool = False, exclude_owners: bool = False):
     """User queries with tenant isolation (User is exempt from ORM auto-scoping)."""
     from models.user import User
 

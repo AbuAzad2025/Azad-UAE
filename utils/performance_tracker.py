@@ -17,10 +17,7 @@ def track_performance(threshold_ms=1000):
             elapsed_time = (time.time() - start_time) * 1000
 
             if elapsed_time > threshold_ms:
-                logger.warning(
-                    f"Slow operation: {f.__name__} took {elapsed_time:.2f}ms "
-                    f"(threshold: {threshold_ms}ms)"
-                )
+                logger.warning(f"Slow operation: {f.__name__} took {elapsed_time:.2f}ms (threshold: {threshold_ms}ms)")
             else:
                 logger.debug(f"{f.__name__} completed in {elapsed_time:.2f}ms")
 
@@ -55,9 +52,7 @@ def log_slow_queries(app):
     from sqlalchemy.engine import Engine
 
     @event.listens_for(Engine, "before_cursor_execute")
-    def before_cursor_execute(
-        conn, cursor, statement, parameters, context, executemany
-    ):
+    def before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
         conn.info.setdefault("query_start_time", []).append(time.time())
 
     @event.listens_for(Engine, "after_cursor_execute")

@@ -38,9 +38,7 @@ class DocumentSnapshot(db.Model):
     )
     created_by = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
 
-    tenant = db.relationship(
-        "Tenant", backref="document_snapshots", foreign_keys=[tenant_id]
-    )
+    tenant = db.relationship("Tenant", backref="document_snapshots", foreign_keys=[tenant_id])
     user = db.relationship("User", foreign_keys=[created_by])
 
     def __repr__(self):

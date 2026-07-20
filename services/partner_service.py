@@ -29,9 +29,7 @@ class PartnerService:
             from models import SaleLine
 
             q = (
-                db.session.query(
-                    func.sum(SaleLine.line_total * func.coalesce(Sale.exchange_rate, 1))
-                )
+                db.session.query(func.sum(SaleLine.line_total * func.coalesce(Sale.exchange_rate, 1)))
                 .select_from(SaleLine)
                 .join(Sale, SaleLine.sale_id == Sale.id)
                 .filter(
@@ -66,9 +64,7 @@ class PartnerService:
         from models import SaleLine, Sale
 
         q = (
-            db.session.query(
-                func.sum(SaleLine.quantity * func.coalesce(SaleLine.cost_price, 0))
-            )
+            db.session.query(func.sum(SaleLine.quantity * func.coalesce(SaleLine.cost_price, 0)))
             .join(Sale, SaleLine.sale_id == Sale.id)
             .filter(
                 SaleLine.tenant_id == tenant_id,
@@ -117,15 +113,9 @@ class PartnerService:
         scope_id: Optional[int] = None,
     ) -> dict:
         """Return full P&L for a scope."""
-        revenue = PartnerService.get_scope_revenue(
-            tenant_id, period_start, period_end, scope_type, scope_id
-        )
-        cogs = PartnerService.get_scope_cogs(
-            tenant_id, period_start, period_end, scope_type, scope_id
-        )
-        expenses = PartnerService.get_scope_expenses(
-            tenant_id, period_start, period_end, scope_type, scope_id
-        )
+        revenue = PartnerService.get_scope_revenue(tenant_id, period_start, period_end, scope_type, scope_id)
+        cogs = PartnerService.get_scope_cogs(tenant_id, period_start, period_end, scope_type, scope_id)
+        expenses = PartnerService.get_scope_expenses(tenant_id, period_start, period_end, scope_type, scope_id)
         gross_profit = revenue - cogs
         net_profit = gross_profit - expenses
         return {
@@ -188,8 +178,7 @@ class PartnerService:
                 )
             except Exception as exc:
                 raise ValueError(
-                    f"فشل حساب أرباح النطاق للشريك {partner.id} "
-                    f"({partner.scope_type}/{partner.scope_id}): {exc}"
+                    f"فشل حساب أرباح النطاق للشريك {partner.id} ({partner.scope_type}/{partner.scope_id}): {exc}"
                 ) from exc
 
             net_profit = Decimal(str(pnl["net_profit"]))
@@ -207,24 +196,15 @@ class PartnerService:
 
             if net_profit > 0:
                 if net_profit >= threshold:
-                    share_amount = (net_profit * share_pct / 100).quantize(
-                        Decimal("0.001")
-                    )
-                expense_share = (total_expenses_dec * expense_pct / 100).quantize(
-                    Decimal("0.001")
-                )
+                    share_amount = (net_profit * share_pct / 100).quantize(Decimal("0.001"))
+                expense_share = (total_expenses_dec * expense_pct / 100).quantize(Decimal("0.001"))
             elif net_profit < 0:
                 if loss_pct <= Decimal("0"):
                     raise ValueError(
-                        f"الشريك {partner.id} ليس لديه نسبة تحمل خسارة "
-                        f"بينما صافي الربح سالب ({net_profit})"
+                        f"الشريك {partner.id} ليس لديه نسبة تحمل خسارة بينما صافي الربح سالب ({net_profit})"
                     )
-                loss_share = (abs(net_profit) * loss_pct / 100).quantize(
-                    Decimal("0.001")
-                )
-                expense_share = (total_expenses_dec * expense_pct / 100).quantize(
-                    Decimal("0.001")
-                )
+                loss_share = (abs(net_profit) * loss_pct / 100).quantize(Decimal("0.001"))
+                expense_share = (total_expenses_dec * expense_pct / 100).quantize(Decimal("0.001"))
 
             net_due = share_amount - expense_share - loss_share + fixed
 
@@ -265,9 +245,7 @@ class PartnerService:
     # ── Distribution lifecycle ──────────────────────────────────
 
     @staticmethod
-    def approve_distribution(
-        dist_id: int, approved_by: int, tenant_id: Optional[int] = None
-    ) -> bool:
+    def approve_distribution(dist_id: int, approved_by: int, tenant_id: Optional[int] = None) -> bool:
         from models import PartnerProfitDistribution, PartnerTransaction, Partner
 
         dist = db.session.get(PartnerProfitDistribution, dist_id)
@@ -298,12 +276,12 @@ class PartnerService:
                 old_bal = Decimal(str(partner.current_balance or 0))
                 new_bal = old_bal + Decimal(str(tx.amount))
                 partner.current_balance = new_bal
-                partner.total_profit_received = Decimal(
-                    str(partner.total_profit_received or 0)
-                ) + (Decimal(str(tx.amount)) if net > 0 else Decimal("0"))
-                partner.total_loss_borne = Decimal(
-                    str(partner.total_loss_borne or 0)
-                ) + (abs(Decimal(str(tx.amount))) if net < 0 else Decimal("0"))
+                partner.total_profit_received = Decimal(str(partner.total_profit_received or 0)) + (
+                    Decimal(str(tx.amount)) if net > 0 else Decimal("0")
+                )
+                partner.total_loss_borne = Decimal(str(partner.total_loss_borne or 0)) + (
+                    abs(Decimal(str(tx.amount))) if net < 0 else Decimal("0")
+                )
                 tx.balance_after = new_bal
 
         try:
@@ -341,9 +319,7 @@ class PartnerService:
             except Exception:
                 partner_account = "2150"
             try:
-                bank_account = GLService.get_default_liquidity_account(
-                    "bank", tenant_id=dist.tenant_id
-                )
+                bank_account = GLService.get_default_liquidity_account("bank", tenant_id=dist.tenant_id)
             except Exception:
                 bank_account = GL_ACCOUNTS.get("bank", "1120")
             lines = [
@@ -422,13 +398,9 @@ class PartnerService:
         db.session.flush()
         partner.current_balance = new_bal
         if transaction_type == "withdrawal":
-            partner.total_withdrawals = Decimal(
-                str(partner.total_withdrawals or 0)
-            ) + abs(amount_base)
+            partner.total_withdrawals = Decimal(str(partner.total_withdrawals or 0)) + abs(amount_base)
         elif transaction_type == "additional_investment":
-            partner.total_additional_investment = (
-                Decimal(str(partner.total_additional_investment or 0)) + amount_base
-            )
+            partner.total_additional_investment = Decimal(str(partner.total_additional_investment or 0)) + amount_base
         if amount_base != 0:
             from services.gl_service import GLService, GL_ACCOUNTS
             from services.gl_posting import post_or_fail
@@ -443,9 +415,7 @@ class PartnerService:
             except Exception:
                 partner_account = "2150"
             try:
-                bank_account = GLService.get_default_liquidity_account(
-                    "bank", tenant_id=partner.tenant_id
-                )
+                bank_account = GLService.get_default_liquidity_account("bank", tenant_id=partner.tenant_id)
             except Exception:
                 bank_account = GL_ACCOUNTS.get("bank", "1120")
             amt = float(abs(amount_base))
@@ -455,15 +425,13 @@ class PartnerService:
                         "account": bank_account,
                         "concept_code": "BANK",
                         "debit": amt,
-                        "description": notes
-                        or f"{transaction_type} - شريك {partner_id}",
+                        "description": notes or f"{transaction_type} - شريك {partner_id}",
                     },
                     {
                         "account": partner_account,
                         "concept_code": "PARTNER_CURRENT_ACCOUNT",
                         "credit": amt,
-                        "description": notes
-                        or f"{transaction_type} - شريك {partner_id}",
+                        "description": notes or f"{transaction_type} - شريك {partner_id}",
                     },
                 ]
             else:
@@ -472,15 +440,13 @@ class PartnerService:
                         "account": partner_account,
                         "concept_code": "PARTNER_CURRENT_ACCOUNT",
                         "debit": amt,
-                        "description": notes
-                        or f"{transaction_type} - شريك {partner_id}",
+                        "description": notes or f"{transaction_type} - شريك {partner_id}",
                     },
                     {
                         "account": bank_account,
                         "concept_code": "BANK",
                         "credit": amt,
-                        "description": notes
-                        or f"{transaction_type} - شريك {partner_id}",
+                        "description": notes or f"{transaction_type} - شريك {partner_id}",
                     },
                 ]
             post_or_fail(
@@ -502,9 +468,7 @@ class PartnerService:
     # ── Reports ─────────────────────────────────────────────────
 
     @staticmethod
-    def get_partner_statement(
-        partner_id: int, start_date: date, end_date: date
-    ) -> dict:
+    def get_partner_statement(partner_id: int, start_date: date, end_date: date) -> dict:
         """Full statement for a partner in a date range."""
         from models import Partner, PartnerTransaction
 
@@ -522,12 +486,8 @@ class PartnerService:
             .all()
         )
 
-        total_credit = sum(
-            float(t.amount_base) for t in txs if float(t.amount_base) > 0
-        )
-        total_debit = sum(
-            abs(float(t.amount_base)) for t in txs if float(t.amount_base) < 0
-        )
+        total_credit = sum(float(t.amount_base) for t in txs if float(t.amount_base) > 0)
+        total_debit = sum(abs(float(t.amount_base)) for t in txs if float(t.amount_base) < 0)
 
         return {
             "partner": partner,
@@ -535,12 +495,6 @@ class PartnerService:
             "total_credit": total_credit,
             "total_debit": total_debit,
             "net_movement": total_credit - total_debit,
-            "opening_balance": (
-                float(txs[0].balance_after) - float(txs[0].amount_base) if txs else 0
-            ),
-            "closing_balance": (
-                float(txs[-1].balance_after)
-                if txs
-                else float(partner.current_balance or 0)
-            ),
+            "opening_balance": (float(txs[0].balance_after) - float(txs[0].amount_base) if txs else 0),
+            "closing_balance": (float(txs[-1].balance_after) if txs else float(partner.current_balance or 0)),
         }

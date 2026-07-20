@@ -95,9 +95,7 @@ def tenant_store(db_session, sample_tenant, online_warehouse):
 
 
 @pytest.fixture
-def online_sale(
-    db_session, sample_tenant, sample_customer, sample_user, online_warehouse
-):
+def online_sale(db_session, sample_tenant, sample_customer, sample_user, online_warehouse):
     from models import Sale
 
     sale = Sale(

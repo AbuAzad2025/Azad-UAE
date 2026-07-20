@@ -15,9 +15,7 @@ class SerialTrackingService:
     def get_serials_in_warehouse(warehouse_id, status="available"):
         from models.product_serial import ProductSerial
 
-        return ProductSerial.query.filter_by(
-            warehouse_id=warehouse_id, status=status
-        ).all()
+        return ProductSerial.query.filter_by(warehouse_id=warehouse_id, status=status).all()
 
     @staticmethod
     def get_serial_by_imei(imei, tenant_id):
@@ -48,6 +46,4 @@ class SerialTrackingService:
     def get_serial_by_serial_number(serial_number, tenant_id):
         from models.product_serial import ProductSerial
 
-        return ProductSerial.query.filter_by(
-            tenant_id=tenant_id, serial_number=serial_number
-        ).first()
+        return ProductSerial.query.filter_by(tenant_id=tenant_id, serial_number=serial_number).first()

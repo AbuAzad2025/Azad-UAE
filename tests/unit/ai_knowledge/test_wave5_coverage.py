@@ -14,9 +14,7 @@ import pytest
 
 @pytest.fixture
 def knowledge_path(tmp_path):
-    with patch(
-        "ai_knowledge.get_knowledge_path", side_effect=lambda name: str(tmp_path / name)
-    ):
+    with patch("ai_knowledge.get_knowledge_path", side_effect=lambda name: str(tmp_path / name)):
         yield tmp_path
 
 
@@ -182,12 +180,8 @@ class TestGlobalKnowledgeWave5:
             result = updater.update_expertise()
             assert "automotive" in result
         assert updater._calculate_progress("unknown") == 0.0
-        assert updater._get_learning_recommendations(
-            "heavy_equipment", updater.connector.get_global_insights()
-        )
-        assert updater._get_learning_recommendations(
-            "tax_regulations", updater.connector.get_global_insights()
-        )
+        assert updater._get_learning_recommendations("heavy_equipment", updater.connector.get_global_insights())
+        assert updater._get_learning_recommendations("tax_regulations", updater.connector.get_global_insights())
 
     def test_module_singletons(self):
         from ai_knowledge.expansion import global_knowledge as gk
@@ -245,9 +239,7 @@ class TestKnowledgeExpansionWave5:
 
         exp = KnowledgeExpander()
         exp.add_document("customs clearance info", "Customs", "customs")
-        exp.add_website = MagicMock(
-            return_value={"success": True, "filename": "website_1.json"}
-        )
+        exp.add_website = MagicMock(return_value={"success": True, "filename": "website_1.json"})
         exp.sources["websites"] = [
             {
                 "url": "https://x.com",
@@ -298,9 +290,7 @@ class TestKnowledgeExpansionWave5:
         exp.add_document("doc content", "Doc1", "general")
         summary = exp.get_knowledge_summary()
         assert summary["success"] is True
-        exp.sources["websites"] = [
-            {"url": "https://a.com", "category": "g", "description": ""}
-        ]
+        exp.sources["websites"] = [{"url": "https://a.com", "category": "g", "description": ""}]
         with patch.object(exp, "add_website", return_value={"success": True}) as aw:
             assert exp.update_knowledge_from_source("website", 0)["success"] is True
             aw.assert_called_once()
@@ -374,9 +364,7 @@ class TestMasterBrainWave5:
 
         mb._master_brain_instance = None
         with (
-            patch.dict(
-                "sys.modules", {"ai_knowledge.knowledge.automotive_ecu_knowledge": None}
-            ),
+            patch.dict("sys.modules", {"ai_knowledge.knowledge.automotive_ecu_knowledge": None}),
             patch("builtins.__import__", side_effect=ImportError("no ecu")),
         ):
             brain = mb.MasterBrain()
@@ -435,9 +423,7 @@ class TestMasterBrainWave5:
             "ضريبة VAT",
             {"steps": []},
             None,
-            brain.knowledge_base.get(
-                "taxes", brain.knowledge_base.get("accounting", {})
-            ),
+            brain.knowledge_base.get("taxes", brain.knowledge_base.get("accounting", {})),
             "question",
         )
         assert synth["text"]
@@ -484,14 +470,10 @@ class TestMasterBrainWave5:
 
         brain = MasterBrain()
         eng = brain.knowledge_base.get("engineering", {})
-        if "sensors" in eng or any(
-            "sensors" in v for v in brain.knowledge_base.values() if isinstance(v, dict)
-        ):
+        if "sensors" in eng or any("sensors" in v for v in brain.knowledge_base.values() if isinstance(v, dict)):
             for domain_data in brain.knowledge_base.values():
                 if isinstance(domain_data, dict) and "sensors" in domain_data:
-                    result = brain._synthesize_answer(
-                        "MAF sensor test", {"steps": []}, None, domain_data, "question"
-                    )
+                    result = brain._synthesize_answer("MAF sensor test", {"steps": []}, None, domain_data, "question")
                     assert result["confidence"] > 0
 
 
@@ -593,9 +575,7 @@ class TestActionDispatcherWave5:
         from ai_knowledge.action_dispatcher import action_dispatcher
 
         with (
-            patch(
-                "ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1
-            ),
+            patch("ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1),
             patch("ai_knowledge.action_dispatcher._has_permission", return_value=True),
             patch("ai_knowledge.action_dispatcher._audit"),
             patch("ai_knowledge.action_dispatcher._log_ai_error"),
@@ -613,23 +593,17 @@ class TestActionDispatcherWave5:
             chain.all.side_effect = RuntimeError("db")
             assert action_dispatcher.dispatch("list_products", {}).success is False
         with (
-            patch(
-                "ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1
-            ),
+            patch("ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1),
             patch("ai_knowledge.action_dispatcher._has_permission", return_value=True),
             patch("ai_knowledge.action_dispatcher._is_owner", return_value=True),
             patch("models.Product") as Product,
         ):
             for attr in ("tenant_id", "is_active", "current_stock", "min_stock_level"):
                 setattr(Product, attr, _Col())
-            Product.query.filter = MagicMock(
-                return_value=MagicMock(all=MagicMock(return_value=[]))
-            )
+            Product.query.filter = MagicMock(return_value=MagicMock(all=MagicMock(return_value=[])))
             assert action_dispatcher.dispatch("check_stock", {}).success is True
         with (
-            patch(
-                "ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1
-            ),
+            patch("ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1),
             patch("ai_knowledge.action_dispatcher._has_permission", return_value=True),
             patch("services.ai_executor.AIExecutor") as Ex,
         ):
@@ -675,9 +649,7 @@ class TestActionDispatcherWave5:
                 is False
             )
         with (
-            patch(
-                "ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1
-            ),
+            patch("ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1),
             patch("ai_knowledge.action_dispatcher._has_permission", return_value=True),
             patch("models.Sale") as Sale,
         ):
@@ -694,9 +666,7 @@ class TestActionDispatcherWave5:
             Sale.query.filter_by.side_effect = RuntimeError()
             assert action_dispatcher.dispatch("list_sales", {}).success is False
         with (
-            patch(
-                "ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1
-            ),
+            patch("ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1),
             patch("ai_knowledge.action_dispatcher._has_permission", return_value=True),
             patch("services.ai_executor.AIExecutor") as Ex,
         ):
@@ -728,9 +698,7 @@ class TestActionDispatcherWave5:
                 is False
             )
         with (
-            patch(
-                "ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1
-            ),
+            patch("ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1),
             patch("ai_knowledge.action_dispatcher._has_permission", return_value=True),
             patch("ai_knowledge.action_dispatcher.db") as db,
             patch("models.Expense"),
@@ -758,17 +726,12 @@ class TestActionDispatcherWave5:
                 is False
             )
         with (
-            patch(
-                "ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1
-            ),
+            patch("ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1),
             patch("ai_knowledge.action_dispatcher._has_permission", return_value=True),
             patch("ai_knowledge.action_dispatcher.db") as db,
             patch("models.Supplier"),
         ):
-            assert (
-                action_dispatcher.dispatch("create_supplier", {"name": "Supp"}).success
-                is True
-            )
+            assert action_dispatcher.dispatch("create_supplier", {"name": "Supp"}).success is True
 
 
 class TestAnalyticsWave5:
@@ -780,9 +743,7 @@ class TestAnalyticsWave5:
             CashFlowAnalytics,
         )
 
-        assert (
-            SalesAnalytics.predict_next_month_sales([100, 200])["confidence"] == "low"
-        )
+        assert SalesAnalytics.predict_next_month_sales([100, 200])["confidence"] == "low"
         hist = [100, 110, 105, 120, 115, 125]
         pred = SalesAnalytics.predict_next_month_sales(hist)
         assert pred["trend"] in ("up", "down", "stable")
@@ -825,9 +786,7 @@ class TestAnalyticsWave5:
             mock_db.session.get.return_value = customer
             for attr in ("customer_id", "paid_amount", "total_amount"):
                 setattr(MockSale, attr, _Col())
-            MockSale.query.filter = MagicMock(
-                return_value=MagicMock(all=MagicMock(return_value=[old_sale]))
-            )
+            MockSale.query.filter = MagicMock(return_value=MagicMock(all=MagicMock(return_value=[old_sale])))
             result = analyzer.analyze_customer_debt(1)
             assert result["success"] is True
             assert result["debt_analysis"]["overdue_count"] >= 1
@@ -838,15 +797,11 @@ class TestAnalyticsWave5:
         sale = MagicMock(total_amount=Decimal("500"), created_at=datetime.now())
         with patch("models.Sale") as MockSale:
             setattr(MockSale, "created_at", _Col())
-            MockSale.query.filter = MagicMock(
-                return_value=MagicMock(all=MagicMock(return_value=[sale] * 10))
-            )
+            MockSale.query.filter = MagicMock(return_value=MagicMock(all=MagicMock(return_value=[sale] * 10)))
             perf = analyzer.analyze_sales_performance(30)
             assert perf["success"] is True
             assert perf["analysis"]["total_sales"] == 10
-            MockSale.query.filter = MagicMock(
-                return_value=MagicMock(all=MagicMock(return_value=[]))
-            )
+            MockSale.query.filter = MagicMock(return_value=MagicMock(all=MagicMock(return_value=[])))
             empty = analyzer.analyze_sales_performance(30)
             assert empty["analysis"]["total_sales"] == 0
 
@@ -887,10 +842,7 @@ class TestSystemKnowledgeWave5:
         assert get_model_info("Sale") is not None
         assert get_model_info("sale") is not None
         assert get_model_info("sal") is not None
-        assert (
-            get_permission_info("manage_sales") is not None
-            or get_permission_info("nonexistent") is None
-        )
+        assert get_permission_info("manage_sales") is not None or get_permission_info("nonexistent") is None
         assert get_role_info("owner") is not None or get_role_info("missing") is None
         results = search_knowledge("مبيعات")
         assert isinstance(results, list)
@@ -957,22 +909,13 @@ class TestNeuralEngineWave5:
             engine.models["accounting_classifier"] = MagicMock()
             engine.scalers["accounting_classifier"] = MagicMock()
             engine.models["accounting_classifier"].predict.return_value = np.array([0])
-            engine.models[
-                "accounting_classifier"
-            ].predict_proba.return_value = np.array([[0.3, 0.7]])
-            engine.scalers["accounting_classifier"].transform.return_value = np.array(
-                [[1.0]]
-            )
+            engine.models["accounting_classifier"].predict_proba.return_value = np.array([[0.3, 0.7]])
+            engine.scalers["accounting_classifier"].transform.return_value = np.array([[1.0]])
             result = engine.validate_accounting_entry(100, 90, 2, "Sale")
             assert "غير متوازن" in result["recommendation"]
             engine.models["accounting_classifier"].predict.return_value = np.array([1])
-            engine.models[
-                "accounting_classifier"
-            ].predict_proba.return_value = np.array([[0.9, 0.1]])
-            assert (
-                engine.validate_accounting_entry(100, 100, 2, "Sale")["is_correct"]
-                is True
-            )
+            engine.models["accounting_classifier"].predict_proba.return_value = np.array([[0.9, 0.1]])
+            assert engine.validate_accounting_entry(100, 100, 2, "Sale")["is_correct"] is True
 
     def test_forecast_trend_branches(self, engine, knowledge_path):
         with (
@@ -981,9 +924,7 @@ class TestNeuralEngineWave5:
         ):
             engine.scalers["sales_forecaster"] = MagicMock()
             engine.models["sales_forecaster"] = MagicMock()
-            engine.scalers["sales_forecaster"].transform.return_value = np.array(
-                [[1.0]]
-            )
+            engine.scalers["sales_forecaster"].transform.return_value = np.array([[1.0]])
             engine.models["sales_forecaster"].predict.return_value = np.array([1000.0])
             rows = []
             base = date.today() - timedelta(days=6)
@@ -1001,16 +942,9 @@ class TestNeuralEngineWave5:
         ctx = MagicMock()
         ctx.__enter__ = MagicMock(return_value=None)
         ctx.__exit__ = MagicMock(return_value=False)
-        with patch.object(
-            engine, "_train_customer_internal", return_value={"success": True}
-        ):
-            assert (
-                engine.train_customer_classifier(from_app_context=ctx)["success"]
-                is True
-            )
-        with patch.object(
-            engine, "_train_financial_internal", side_effect=RuntimeError("fail")
-        ):
+        with patch.object(engine, "_train_customer_internal", return_value={"success": True}):
+            assert engine.train_customer_classifier(from_app_context=ctx)["success"] is True
+        with patch.object(engine, "_train_financial_internal", side_effect=RuntimeError("fail")):
             assert engine.train_financial_planning()["success"] is False
 
 
@@ -1080,12 +1014,8 @@ class TestAzadResponsesWave5:
             }
             si.search_data.return_value = {"success": True, "results": {}}
             da.analyze_customer_debt.return_value = {"success": False}
-            Customer.query.filter.return_value.first.return_value = MagicMock(
-                name="Ali", id=1
-            )
-            Product.query.filter.return_value.first.return_value = MagicMock(
-                name="Filter", current_stock=5
-            )
+            Customer.query.filter.return_value.first.return_value = MagicMock(name="Ali", id=1)
+            Product.query.filter.return_value.first.return_value = MagicMock(name="Filter", current_stock=5)
             mock_db.session.query.return_value.filter.return_value.all.return_value = []
             assert responses._handle_customer_balance_query("رصيد العميل علي")
             assert responses._handle_customer_info_query("بيانات العميل علي")
@@ -1122,9 +1052,7 @@ class TestAzadResponsesWave5:
                 "ai_knowledge.personality.azad_responses.get_tax_advice",
                 return_value="advice",
             ),
-            patch(
-                "ai_knowledge.personality.azad_responses.search_parts", return_value=[]
-            ),
+            patch("ai_knowledge.personality.azad_responses.search_parts", return_value=[]),
             patch(
                 "ai_knowledge.personality.azad_responses.get_part_info",
                 return_value="part",
@@ -1167,9 +1095,7 @@ class TestAzadResponsesWave5:
                 "سوق market",
             ]:
                 assert isinstance(responses.smart_response(msg), str)
-            with patch.object(
-                responses, "_get_status_response", side_effect=RuntimeError("fail")
-            ):
+            with patch.object(responses, "_get_status_response", side_effect=RuntimeError("fail")):
                 assert "نشط" in responses.smart_response("حالة status النظام")
 
 
@@ -1189,9 +1115,7 @@ class TestIntelligentAssistantWave5:
             customer=MagicMock(name="Ali"),
         )
         customer = MagicMock(id=1, name="Ali")
-        product = MagicMock(
-            id=1, name="Bolt", current_stock=Decimal("1"), min_stock_alert=Decimal("5")
-        )
+        product = MagicMock(id=1, name="Bolt", current_stock=Decimal("1"), min_stock_alert=Decimal("5"))
         cols = _patch_model_cols("models.Sale", "models.Customer", "models.Product")
         try:
             with (
@@ -1202,9 +1126,7 @@ class TestIntelligentAssistantWave5:
                 patch("extensions.db"),
                 patch("flask.has_request_context", return_value=True),
                 patch("utils.tenanting.get_active_tenant_id", return_value=1),
-                patch(
-                    "flask_login.current_user", SimpleNamespace(is_authenticated=True)
-                ),
+                patch("flask_login.current_user", SimpleNamespace(is_authenticated=True)),
                 patch.object(
                     assistant.data_analyzer,
                     "analyze_customer_debt",
@@ -1227,14 +1149,10 @@ class TestIntelligentAssistantWave5:
                     if model is Product:
                         for attr in ("is_active", "current_stock", "min_stock_alert"):
                             setattr(model, attr, _Col())
-                data = assistant._collect_real_data(
-                    "customer_balance", {"names": ["Ali"]}, 1
-                )
+                data = assistant._collect_real_data("customer_balance", {"names": ["Ali"]}, 1)
                 assert isinstance(data, dict)
                 Customer.query.first.return_value = None
-                data2 = assistant._collect_real_data(
-                    "customer_balance", {"names": ["Unknown"]}, 1
-                )
+                data2 = assistant._collect_real_data("customer_balance", {"names": ["Unknown"]}, 1)
                 assert isinstance(data2, dict)
                 Product.query.all.return_value = [product] * 6
                 data3 = assistant._collect_real_data("inventory_check", {}, 1)
@@ -1315,9 +1233,7 @@ class TestSecondarySweepWave5:
 
         laws = AdvancedLaws()
         assert laws.get_shipping_info("sea")
-        filtered = SecurityRules.filter_sensitive_data(
-            {"password": "secret", "name": "Ali"}
-        )
+        filtered = SecurityRules.filter_sensitive_data({"password": "secret", "name": "Ali"})
         assert filtered["password"] == "*** محمي ***"
 
     def test_trainer_and_multi_agent(self, knowledge_path):

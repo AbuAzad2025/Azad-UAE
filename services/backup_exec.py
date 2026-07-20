@@ -60,9 +60,7 @@ def run_repo_python_script(
     timeout: int = 600,
 ):
     """Run a .py file under the repo root (no shell)."""
-    return SecureSubprocess.run_repo_python_script(
-        script_rel_path, args, cwd=cwd, env=env, timeout=timeout
-    )
+    return SecureSubprocess.run_repo_python_script(script_rel_path, args, cwd=cwd, env=env, timeout=timeout)
 
 
 def run_python_module(
@@ -74,6 +72,4 @@ def run_python_module(
     timeout: int = 600,
 ):
     """Run `python -m <module>` with the current interpreter (no shell)."""
-    return SecureSubprocess.run_python_module(
-        module, args, cwd=cwd, env=env, timeout=timeout
-    )
+    return SecureSubprocess.run_python_module(module, args, cwd=cwd, env=env, timeout=timeout)

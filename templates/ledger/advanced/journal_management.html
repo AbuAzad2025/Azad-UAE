@@ -35,7 +35,7 @@
               <a href="{{ url_for('admin_ledger.view_journal', id=entry.id) }}" class="btn btn-info" title="{{ t('View') }}"><i class="fas fa-eye"></i></a>
               <form class="needs-validation d-inline" method="post" action="{{ url_for('advanced_ledger.reverse_journal_entry', entry_id=entry.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                <button type="submit" class="btn btn-warning" onclick="return confirm(&quot;{{ t('عكس') }} هذا {{ t('القيد_2') }}&quot;)" title="{{ t('تراجع') }}"><i class="fas fa-undo"></i></button>
+                <button type="submit" class="btn btn-warning" data-action="confirm-submit" data-confirm-message="{{ t('عكس') }} هذا {{ t('القيد_2') }}" title="{{ t('تراجع') }}"><i class="fas fa-undo"></i></button>
               </form>
             </td>
           </tr>
@@ -47,5 +47,15 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action="confirm-submit"]');
+  if (!el) return;
+  if (!confirm(el.dataset.confirmMessage)) e.preventDefault();
+});
+</script>
 {% endblock %}
 

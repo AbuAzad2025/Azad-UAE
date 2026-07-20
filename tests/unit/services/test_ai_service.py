@@ -67,9 +67,7 @@ def _mock_sale_query(mocker, *, filter_all=None, filter_count=0):
     def _query(model):
         q = MagicMock(name=f"query_{getattr(model, '__name__', model)}")
         if model is Sale:
-            q.filter.return_value.all.return_value = (
-                [] if filter_all is None else filter_all
-            )
+            q.filter.return_value.all.return_value = [] if filter_all is None else filter_all
             q.filter.return_value.count.return_value = filter_count
         return q
 
@@ -137,9 +135,7 @@ def _mock_business_insights_queries(
                 q.filter.side_effect = RuntimeError("x")
             else:
                 q.filter.return_value.count.return_value = product_count
-                q.filter.return_value.all.return_value = (
-                    [] if product_all is None else product_all
-                )
+                q.filter.return_value.all.return_value = [] if product_all is None else product_all
         elif model is Customer:
             q.filter.return_value.all.return_value = customers
         elif model is Sale:
@@ -207,18 +203,14 @@ class TestSensitiveRequest:
 
     def test_password_request_denied_for_non_owner(self):
         user = SimpleNamespace(is_owner=False)
-        sensitive, requires_owner, resp = AIService.is_sensitive_request(
-            "كلمة المرور", user
-        )
+        sensitive, requires_owner, resp = AIService.is_sensitive_request("كلمة المرور", user)
         assert sensitive is True
         assert requires_owner is False
         assert resp["type"] == "warning"
 
     def test_password_request_allowed_for_owner(self):
         user = SimpleNamespace(is_owner=True)
-        sensitive, requires_owner, resp = AIService.is_sensitive_request(
-            "password", user
-        )
+        sensitive, requires_owner, resp = AIService.is_sensitive_request("password", user)
         assert sensitive is True
         assert requires_owner is True
         assert resp is None
@@ -249,11 +241,7 @@ class TestUserInfoForOwner:
         from sqlalchemy.dialects import postgresql
 
         clause = AIService._ilike_contains(User.username, "testuser-abc")
-        sql = str(
-            clause.compile(
-                dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}
-            )
-        )
+        sql = str(clause.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
         assert "ESCAPE" not in sql.upper()
 
     def test_ilike_contains_uses_escape_for_metacharacters(self):
@@ -261,11 +249,7 @@ class TestUserInfoForOwner:
         from sqlalchemy.dialects import postgresql
 
         clause = AIService._ilike_contains(User.username, "a%b")
-        sql = str(
-            clause.compile(
-                dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}
-            )
-        )
+        sql = str(clause.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
         assert "ESCAPE" in sql.upper()
 
     def test_user_not_found(self, db_session):
@@ -417,9 +401,7 @@ class TestCustomerAnalysis:
 
 
 class TestExchangeRate:
-    def test_from_recent_sales(
-        self, db_session, sample_tenant, sample_customer, sample_user
-    ):
+    def test_from_recent_sales(self, db_session, sample_tenant, sample_customer, sample_user):
         sale = Sale(
             tenant_id=sample_tenant.id,
             sale_number=f"USD-{uuid.uuid4().hex[:6]}",
@@ -441,9 +423,7 @@ class TestExchangeRate:
         assert result["source"] == "نظام داخلي - متوسط آخر 7 أيام"
 
     def test_default_rate(self):
-        result = AIService.get_exchange_rate_suggestion(
-            "GBP", target_date=datetime.now()
-        )
+        result = AIService.get_exchange_rate_suggestion("GBP", target_date=datetime.now())
         assert result["source"] == "سعر افتراضي"
 
 
@@ -554,10 +534,7 @@ class TestInventoryHealth:
     def test_no_products(self, db_session, sample_tenant):
         db.session.query(Product).filter_by(tenant_id=sample_tenant.id).delete()
         db_session.commit()
-        assert (
-            AIService.analyze_inventory_health(tenant_id=sample_tenant.id)["success"]
-            is False
-        )
+        assert AIService.analyze_inventory_health(tenant_id=sample_tenant.id)["success"] is False
 
     def test_health_ratings(self, sample_product, db_session):
         sample_product.min_stock_alert = Decimal("5")
@@ -586,9 +563,7 @@ class TestChatResponse:
             "ai_knowledge.agents.intelligent_assistant.intelligent_assistant.process",
             return_value={"response": "محلي"},
         )
-        mocker.patch(
-            "ai_knowledge.system_knowledge.search_knowledge", return_value=None
-        )
+        mocker.patch("ai_knowledge.system_knowledge.search_knowledge", return_value=None)
         mocker.patch(
             "ai_knowledge.action_dispatcher.action_dispatcher.parse_chat_action",
             return_value=None,
@@ -602,9 +577,7 @@ class TestChatResponse:
             "ai_knowledge.agents.intelligent_assistant.intelligent_assistant.process",
             return_value={"response": "x"},
         )
-        mocker.patch(
-            "ai_knowledge.system_knowledge.search_knowledge", return_value="ctx"
-        )
+        mocker.patch("ai_knowledge.system_knowledge.search_knowledge", return_value="ctx")
         parsed = ("create_customer", {})
         dispatch_result = SimpleNamespace(success=True, message="تم")
         mocker.patch(
@@ -623,9 +596,7 @@ class TestChatResponse:
             "ai_knowledge.agents.intelligent_assistant.intelligent_assistant.process",
             return_value={"response": "x"},
         )
-        mocker.patch(
-            "ai_knowledge.system_knowledge.search_knowledge", side_effect=RuntimeError()
-        )
+        mocker.patch("ai_knowledge.system_knowledge.search_knowledge", side_effect=RuntimeError())
         mocker.patch(
             "ai_knowledge.action_dispatcher.action_dispatcher.parse_chat_action",
             return_value=None,
@@ -646,9 +617,7 @@ class TestChatResponse:
             "ai_knowledge.agents.intelligent_assistant.intelligent_assistant.process",
             return_value={"response": "local"},
         )
-        mocker.patch(
-            "ai_knowledge.system_knowledge.search_knowledge", return_value=None
-        )
+        mocker.patch("ai_knowledge.system_knowledge.search_knowledge", return_value=None)
         mocker.patch(
             "ai_knowledge.action_dispatcher.action_dispatcher.parse_chat_action",
             return_value=None,
@@ -662,9 +631,7 @@ class TestChatResponse:
         resp.status_code = 200
         resp.json.return_value = {"choices": [{"message": {"content": "إجابة Groq"}}]}
         mocker.patch("requests.post", return_value=resp)
-        mocker.patch(
-            "services.ai_service.AIService._execute_ai_action", return_value=None
-        )
+        mocker.patch("services.ai_service.AIService._execute_ai_action", return_value=None)
         mocker.patch("services.ai_service.AIService._train_local_from_groq")
         out = AIService.chat_response("سؤال")
         assert "إجابة Groq" in out
@@ -675,9 +642,7 @@ class TestChatResponse:
             "ai_knowledge.agents.intelligent_assistant.intelligent_assistant.process",
             return_value={"response": "fallback"},
         )
-        mocker.patch(
-            "ai_knowledge.system_knowledge.search_knowledge", return_value=None
-        )
+        mocker.patch("ai_knowledge.system_knowledge.search_knowledge", return_value=None)
         mocker.patch(
             "ai_knowledge.action_dispatcher.action_dispatcher.parse_chat_action",
             return_value=None,
@@ -738,9 +703,7 @@ class TestExecuteAiAction:
             assert out is not None
 
     def test_action_failure_message(self, mocker):
-        mocker.patch(
-            "flask_login.current_user", SimpleNamespace(is_authenticated=False)
-        )
+        mocker.patch("flask_login.current_user", SimpleNamespace(is_authenticated=False))
         ex = MagicMock()
         ex.create_customer.return_value = {"success": False, "message": "فشل"}
         mocker.patch("services.ai_executor.AIExecutor", return_value=ex)
@@ -751,9 +714,7 @@ class TestExecuteAiAction:
         assert "فشل" in out
 
     def test_invalid_json_returns_error(self, mocker):
-        mocker.patch(
-            "flask_login.current_user", SimpleNamespace(is_authenticated=False)
-        )
+        mocker.patch("flask_login.current_user", SimpleNamespace(is_authenticated=False))
         out = AIService._execute_ai_action('{"action": bad}', 1)
         assert "خطأ" in out
 
@@ -772,9 +733,7 @@ class TestGatherKnowledge:
         assert "بيانات النظام" in out
 
     def test_error_path(self, mocker):
-        mocker.patch(
-            "utils.tenanting.scoped_user_query", side_effect=RuntimeError("db")
-        )
+        mocker.patch("utils.tenanting.scoped_user_query", side_effect=RuntimeError("db"))
         out = AIService._gather_relevant_knowledge("x", {})
         assert "خطأ" in out
 
@@ -860,9 +819,7 @@ class TestMiscHelpers:
         mocker.patch.object(db.session, "get", side_effect=RuntimeError())
         assert AIService.smart_pricing_engine(999999, 1) is None
 
-    def test_predict_churn(
-        self, db_session, sample_customer, sample_tenant, sample_user
-    ):
+    def test_predict_churn(self, db_session, sample_customer, sample_tenant, sample_user):
         old = datetime.now() - timedelta(days=200)
         sale = Sale(
             tenant_id=sample_tenant.id,
@@ -994,16 +951,10 @@ class TestContextualResponse:
         dial = MagicMock(detect_dialect=MagicMock(return_value="msa"))
         pers = MagicMock(generate_response=MagicMock(return_value="رد"))
         learn = MagicMock()
-        mocker.patch(
-            "services.ai_service.AIService.get_context_engine", return_value=ctx_eng
-        )
-        mocker.patch(
-            "services.ai_service.AIService.get_dialect_manager", return_value=dial
-        )
+        mocker.patch("services.ai_service.AIService.get_context_engine", return_value=ctx_eng)
+        mocker.patch("services.ai_service.AIService.get_dialect_manager", return_value=dial)
         mocker.patch("services.ai_service.AIService.get_personality", return_value=pers)
-        mocker.patch(
-            "services.ai_service.AIService.get_learning_system", return_value=learn
-        )
+        mocker.patch("services.ai_service.AIService.get_learning_system", return_value=learn)
         assert AIService.get_contextual_response("مرحبا") == "رد"
 
     def test_fallback_azad_responses(self, mocker):
@@ -1038,14 +989,10 @@ class TestContextualResponse:
 
 class TestIntegrationWrappers:
     def test_analyze_sales_with_predictions(self, mocker):
-        mocker.patch(
-            "services.ai_service.AIService.predict_sales_trend", return_value={"t": 1}
-        )
+        mocker.patch("services.ai_service.AIService.predict_sales_trend", return_value={"t": 1})
         _mock_sale_query(mocker, filter_all=[])
         analyzer = MagicMock(analyze_sales_performance=MagicMock(return_value={}))
-        mocker.patch(
-            "ai_knowledge.analytics.data_analyzer.DataAnalyzer", return_value=analyzer
-        )
+        mocker.patch("ai_knowledge.analytics.data_analyzer.DataAnalyzer", return_value=analyzer)
         mocker.patch(
             "ai_knowledge.analytics.analytics_predictions.SalesAnalytics.predict_next_month_sales",
             return_value={"prediction": 0},
@@ -1096,17 +1043,13 @@ class TestNeuralAndAdvanced:
     @staticmethod
     def _neural(mocker):
         neural = MagicMock()
-        mocker.patch(
-            "services.ai_service.AIService.get_neural_engine", return_value=neural
-        )
+        mocker.patch("services.ai_service.AIService.get_neural_engine", return_value=neural)
         return neural
 
     def test_predict_price_neural(self, mocker, sample_product, sample_customer):
         neural = self._neural(mocker)
         neural.predict_optimal_price.return_value = {"price": 99}
-        result = AIService.predict_price_with_neural(
-            sample_product.id, sample_customer.id
-        )
+        result = AIService.predict_price_with_neural(sample_product.id, sample_customer.id)
         assert result["price"] == 99
 
     def test_predict_price_fallback(self, mocker):
@@ -1163,41 +1106,17 @@ class TestNeuralAndAdvanced:
         conv = MagicMock(process_message=MagicMock(return_value={"response": "hi"}))
         reflect = MagicMock(reflect_on_performance=MagicMock(return_value={"score": 9}))
         vision = MagicMock(read_invoice_image=MagicMock(return_value={"total": 100}))
-        mocker.patch(
-            "services.ai_service.AIService.get_reasoning_engine", return_value=reasoning
-        )
-        mocker.patch(
-            "services.ai_service.AIService.get_agent_coordinator", return_value=coord
-        )
-        mocker.patch(
-            "services.ai_service.AIService.get_code_generator", return_value=codegen
-        )
-        mocker.patch(
-            "services.ai_service.AIService.get_memory_system", return_value=memory
-        )
-        mocker.patch(
-            "services.ai_service.AIService.get_conversation_manager", return_value=conv
-        )
-        mocker.patch(
-            "services.ai_service.AIService.get_reflection_engine", return_value=reflect
-        )
-        mocker.patch(
-            "services.ai_service.AIService.get_vision_processor", return_value=vision
-        )
+        mocker.patch("services.ai_service.AIService.get_reasoning_engine", return_value=reasoning)
+        mocker.patch("services.ai_service.AIService.get_agent_coordinator", return_value=coord)
+        mocker.patch("services.ai_service.AIService.get_code_generator", return_value=codegen)
+        mocker.patch("services.ai_service.AIService.get_memory_system", return_value=memory)
+        mocker.patch("services.ai_service.AIService.get_conversation_manager", return_value=conv)
+        mocker.patch("services.ai_service.AIService.get_reflection_engine", return_value=reflect)
+        mocker.patch("services.ai_service.AIService.get_vision_processor", return_value=vision)
         assert AIService.think_deeply("problem")["thought"] == 1
         assert AIService.delegate_to_expert("task")["task"] == 1
-        assert (
-            "SELECT"
-            in AIService.generate_code(
-                "sql", "report", {"intent": "select", "table": "sales"}
-            )["code"]
-        )
-        assert (
-            AIService.generate_code("python", "fn", {"name": "fn", "params": []})[
-                "type"
-            ]
-            == "python"
-        )
+        assert "SELECT" in AIService.generate_code("sql", "report", {"intent": "select", "table": "sales"})["code"]
+        assert AIService.generate_code("python", "fn", {"name": "fn", "params": []})["type"] == "python"
         assert AIService.generate_code("js", "x", {})["code"].startswith("#")
         assert AIService.remember_conversation(1, "a", "b")["status"] == "remembered"
         assert AIService.recall_conversations(1) == [{"m": 1}]
@@ -1223,18 +1142,14 @@ class TestNeuralAndAdvanced:
         brain.quick_calc.return_value = {"result": 50, "success": True}
         brain.explain.return_value = "شرح"
         brain.validate_accounting_entry.return_value = {"is_balanced": True}
-        mocker.patch(
-            "services.ai_service.AIService.get_master_brain", return_value=brain
-        )
+        mocker.patch("services.ai_service.AIService.get_master_brain", return_value=brain)
         assert AIService.ask_genius("سؤال")["answer"] == "نعم"
         assert AIService.quick_calculate("vat", amount=1000)["success"] is True
         assert AIService.explain_anything("مفهوم") == "شرح"
         assert AIService.validate_entry(100, 100)["is_balanced"] is True
 
     def test_master_brain_errors(self, mocker):
-        mocker.patch(
-            "services.ai_service.AIService.get_master_brain", side_effect=RuntimeError()
-        )
+        mocker.patch("services.ai_service.AIService.get_master_brain", side_effect=RuntimeError())
         assert AIService.ask_genius("x")["confidence"] == 0
         assert AIService.quick_calculate("vat")["success"] is False
         assert "عذراً" in AIService.explain_anything("x")
@@ -1244,9 +1159,7 @@ class TestNeuralAndAdvanced:
         tf = MagicMock()
         tf.understand.return_value = {"attention_map": {}, "tokens": ["a"]}
         tf.generate_response.return_value = "generated"
-        mocker.patch(
-            "services.ai_service.AIService.get_transformers_brain", return_value=tf
-        )
+        mocker.patch("services.ai_service.AIService.get_transformers_brain", return_value=tf)
         assert AIService.understand_with_transformers("نص")
         assert AIService.generate_with_transformers("prompt") == "generated"
         assert AIService.analyze_attention("نص")["visualization"]
@@ -1265,9 +1178,7 @@ class TestNeuralAndAdvanced:
         ecu.diagnose_code.return_value = {"code": "P0420"}
         ecu.get_sensor_info.return_value = {"name": "MAF"}
         ecu.get_ecu_info.return_value = {"type": "engine"}
-        mocker.patch(
-            "services.ai_service.get_automotive_ecu_knowledge", return_value=ecu
-        )
+        mocker.patch("services.ai_service.get_automotive_ecu_knowledge", return_value=ecu)
         assert AIService.diagnose_obd_code("P0420")["code"] == "P0420"
         assert AIService.get_sensor_info("MAF")["name"] == "MAF"
         assert AIService.get_ecu_knowledge("engine_ecu")["type"] == "engine"
@@ -1286,9 +1197,7 @@ class TestNeuralAndAdvanced:
 
     def test_security_compliance(self, mocker):
         sec = MagicMock(check_compliance=MagicMock(return_value=(True, [])))
-        mocker.patch(
-            "services.ai_service.AIService.get_security_rules", return_value=sec
-        )
+        mocker.patch("services.ai_service.AIService.get_security_rules", return_value=sec)
         assert AIService.check_security_compliance("read")["compliant"] is True
 
     def test_get_system_capabilities(self):
@@ -1301,9 +1210,7 @@ class TestNeuralAndAdvanced:
             "ai_knowledge.expansion.knowledge_expansion.KnowledgeExpander",
             return_value=expander,
         )
-        self_imp = MagicMock(
-            analyze_performance=MagicMock(return_value={"improved": True})
-        )
+        self_imp = MagicMock(analyze_performance=MagicMock(return_value={"improved": True}))
         mocker.patch(
             "ai_knowledge.improvement.self_improvement.AzadSelfImprovement",
             return_value=self_imp,
@@ -1345,9 +1252,7 @@ class TestNeuralAndAdvanced:
 
 
 class TestCoverageGaps:
-    def test_perform_analysis_naive_datetime_and_medium_risk(
-        self, mocker, sample_customer
-    ):
+    def test_perform_analysis_naive_datetime_and_medium_risk(self, mocker, sample_customer):
         naive_sale_dt = datetime.now() - timedelta(days=5)
         sale = MagicMock(
             total_amount=Decimal("1000"),
@@ -1364,9 +1269,7 @@ class TestCoverageGaps:
         result = AIService._perform_analysis(sample_customer)
         assert result["risk_level"] == "medium"
 
-    def test_perform_analysis_skip_sale_without_created_at(
-        self, mocker, sample_customer
-    ):
+    def test_perform_analysis_skip_sale_without_created_at(self, mocker, sample_customer):
         sale = MagicMock(
             total_amount=Decimal("100"),
             created_at=None,
@@ -1376,9 +1279,7 @@ class TestCoverageGaps:
         payment = MagicMock(amount=Decimal("10"), created_at=datetime.now(timezone.utc))
         _mock_customer_analysis_queries(mocker, sales=[sale], payments=[payment])
         sample_customer.get_balance_aed = MagicMock(return_value=Decimal("0"))
-        assert (
-            AIService._perform_analysis(sample_customer)["avg_payment_delay_days"] == 0
-        )
+        assert AIService._perform_analysis(sample_customer)["avg_payment_delay_days"] == 0
 
     def test_perform_analysis_payment_without_created_at(self, mocker, sample_customer):
         sale = MagicMock(
@@ -1397,9 +1298,7 @@ class TestCoverageGaps:
             "ai_knowledge.agents.intelligent_assistant.intelligent_assistant.process",
             return_value={"response": "local"},
         )
-        mocker.patch(
-            "ai_knowledge.system_knowledge.search_knowledge", return_value=None
-        )
+        mocker.patch("ai_knowledge.system_knowledge.search_knowledge", return_value=None)
         mocker.patch(
             "ai_knowledge.action_dispatcher.action_dispatcher.parse_chat_action",
             side_effect=RuntimeError(),
@@ -1413,16 +1312,12 @@ class TestCoverageGaps:
             "ai_knowledge.agents.intelligent_assistant.intelligent_assistant.process",
             return_value={"response": "local"},
         )
-        mocker.patch(
-            "ai_knowledge.system_knowledge.search_knowledge", return_value=None
-        )
+        mocker.patch("ai_knowledge.system_knowledge.search_knowledge", return_value=None)
         mocker.patch(
             "ai_knowledge.action_dispatcher.action_dispatcher.parse_chat_action",
             return_value=None,
         )
-        mocker.patch(
-            "ai_knowledge.agents_core.ask_azad_enhanced", side_effect=RuntimeError()
-        )
+        mocker.patch("ai_knowledge.agents_core.ask_azad_enhanced", side_effect=RuntimeError())
         out = AIService.chat_response("x")
         assert "local" in out
 
@@ -1432,23 +1327,17 @@ class TestCoverageGaps:
             "ai_knowledge.agents.intelligent_assistant.intelligent_assistant.process",
             return_value={"response": "local"},
         )
-        mocker.patch(
-            "ai_knowledge.system_knowledge.search_knowledge", return_value=None
-        )
+        mocker.patch("ai_knowledge.system_knowledge.search_knowledge", return_value=None)
         mocker.patch(
             "ai_knowledge.action_dispatcher.action_dispatcher.parse_chat_action",
             return_value=None,
         )
         mocker.patch("ai_knowledge.agents_core.ask_azad_enhanced", return_value=None)
-        mocker.patch(
-            "services.ai_service.AIService._gather_relevant_knowledge", return_value=""
-        )
+        mocker.patch("services.ai_service.AIService._gather_relevant_knowledge", return_value="")
         resp = MagicMock(status_code=200)
         resp.json.return_value = {"choices": [{"message": {"content": "OpenAI"}}]}
         mocker.patch("requests.post", return_value=resp)
-        mocker.patch(
-            "services.ai_service.AIService._execute_ai_action", return_value=None
-        )
+        mocker.patch("services.ai_service.AIService._execute_ai_action", return_value=None)
         mocker.patch("services.ai_service.AIService._train_local_from_groq")
         out = AIService.chat_response("q")
         assert "OpenAI" in out
@@ -1459,23 +1348,17 @@ class TestCoverageGaps:
             "ai_knowledge.agents.intelligent_assistant.intelligent_assistant.process",
             return_value={"response": "local"},
         )
-        mocker.patch(
-            "ai_knowledge.system_knowledge.search_knowledge", return_value=None
-        )
+        mocker.patch("ai_knowledge.system_knowledge.search_knowledge", return_value=None)
         mocker.patch(
             "ai_knowledge.action_dispatcher.action_dispatcher.parse_chat_action",
             return_value=None,
         )
         mocker.patch("ai_knowledge.agents_core.ask_azad_enhanced", return_value=None)
-        mocker.patch(
-            "services.ai_service.AIService._gather_relevant_knowledge", return_value=""
-        )
+        mocker.patch("services.ai_service.AIService._gather_relevant_knowledge", return_value="")
         resp = MagicMock(status_code=200)
         resp.json.return_value = {"choices": [{"message": {"content": "Gemini"}}]}
         mocker.patch("requests.post", return_value=resp)
-        mocker.patch(
-            "services.ai_service.AIService._execute_ai_action", return_value="تنفيذ"
-        )
+        mocker.patch("services.ai_service.AIService._execute_ai_action", return_value="تنفيذ")
         mocker.patch(
             "services.ai_service.AIService._train_local_from_groq",
             side_effect=RuntimeError(),
@@ -1489,25 +1372,19 @@ class TestCoverageGaps:
             "ai_knowledge.agents.intelligent_assistant.intelligent_assistant.process",
             return_value={"response": "local"},
         )
-        mocker.patch(
-            "ai_knowledge.system_knowledge.search_knowledge", return_value=None
-        )
+        mocker.patch("ai_knowledge.system_knowledge.search_knowledge", return_value=None)
         mocker.patch(
             "ai_knowledge.action_dispatcher.action_dispatcher.parse_chat_action",
             return_value=None,
         )
         mocker.patch("ai_knowledge.agents_core.ask_azad_enhanced", return_value=None)
         mocker.patch("requests.post", side_effect=RuntimeError("api"))
-        mocker.patch(
-            "services.logging_core.LoggingCore.log_error", side_effect=RuntimeError()
-        )
+        mocker.patch("services.logging_core.LoggingCore.log_error", side_effect=RuntimeError())
         out = AIService.chat_response("q")
         assert "local" in out
 
     def test_execute_action_sale_lines_fallback_and_empty_action(self, mocker):
-        mocker.patch(
-            "flask_login.current_user", SimpleNamespace(is_authenticated=False)
-        )
+        mocker.patch("flask_login.current_user", SimpleNamespace(is_authenticated=False))
         ex = MagicMock()
         ex.create_sale.return_value = {"success": True, "message": "sale"}
         mocker.patch("services.ai_executor.AIExecutor", return_value=ex)
@@ -1522,16 +1399,10 @@ class TestCoverageGaps:
         assert AIService._execute_ai_action('{"action": "", "data": {}}', 1) is None
 
     def test_execute_action_logs_error(self, mocker):
-        mocker.patch(
-            "flask_login.current_user", SimpleNamespace(is_authenticated=False)
-        )
-        mocker.patch(
-            "services.ai_executor.AIExecutor", side_effect=RuntimeError("boom")
-        )
+        mocker.patch("flask_login.current_user", SimpleNamespace(is_authenticated=False))
+        mocker.patch("services.ai_executor.AIExecutor", side_effect=RuntimeError("boom"))
         mocker.patch("services.logging_core.LoggingCore.log_error")
-        out = AIService._execute_ai_action(
-            '{"action": "create_customer", "data": {"name": "x"}}', 1
-        )
+        out = AIService._execute_ai_action('{"action": "create_customer", "data": {"name": "x"}}', 1)
         assert "خطأ" in out
 
     def test_gather_flask_current_user(self, app, mocker):
@@ -1565,9 +1436,7 @@ class TestCoverageGaps:
             "services.ai_service.AIService.get_context_engine",
             side_effect=RuntimeError("x"),
         )
-        mocker.patch(
-            "services.logging_core.LoggingCore.log_error", side_effect=RuntimeError()
-        )
+        mocker.patch("services.logging_core.LoggingCore.log_error", side_effect=RuntimeError())
         assert "عذراً" in AIService.get_contextual_response("msg")
 
     def test_wrapper_error_paths(self, mocker):
@@ -1588,17 +1457,11 @@ class TestCoverageGaps:
         assert AIService.analyze_profitability() == {}
         mocker.patch("services.ai_service.get_part_info", side_effect=RuntimeError())
         assert AIService.get_parts_information("x") == {}
-        mocker.patch(
-            "services.ai_service.get_market_insights", side_effect=RuntimeError()
-        )
+        mocker.patch("services.ai_service.get_market_insights", side_effect=RuntimeError())
         assert AIService.get_market_insights_report() == {}
-        mocker.patch(
-            "services.ai_service.get_customer_service_tip", side_effect=RuntimeError()
-        )
+        mocker.patch("services.ai_service.get_customer_service_tip", side_effect=RuntimeError())
         assert "عذراً" in AIService.get_customer_service_response("x")
-        mocker.patch(
-            "services.ai_service.lookup_system_guide", side_effect=RuntimeError()
-        )
+        mocker.patch("services.ai_service.lookup_system_guide", side_effect=RuntimeError())
         assert AIService.get_system_guide("x") == {}
         mocker.patch("services.ai_service.search_knowledge", side_effect=RuntimeError())
         assert AIService.get_system_knowledge("x") == {}
@@ -1683,9 +1546,7 @@ class TestCoverageGaps:
         assert AIService.integrate_with_system("customers", "ali")["hits"] == [1]
 
     def test_action_unsuccessful_result(self, mocker):
-        mocker.patch(
-            "flask_login.current_user", SimpleNamespace(is_authenticated=False)
-        )
+        mocker.patch("flask_login.current_user", SimpleNamespace(is_authenticated=False))
         ex = MagicMock()
         ex.create_product.return_value = {"success": False, "message": "no"}
         mocker.patch("services.ai_executor.AIExecutor", return_value=ex)
@@ -1713,26 +1574,16 @@ class TestCoverageGaps:
         AIService._perform_analysis(sample_customer)
 
     def test_execute_unknown_action_returns_none(self, mocker):
-        mocker.patch(
-            "flask_login.current_user", SimpleNamespace(is_authenticated=False)
-        )
+        mocker.patch("flask_login.current_user", SimpleNamespace(is_authenticated=False))
         ex = MagicMock()
         mocker.patch("services.ai_executor.AIExecutor", return_value=ex)
-        assert (
-            AIService._execute_ai_action('{"action": "unknown", "data": {}}', 1) is None
-        )
+        assert AIService._execute_ai_action('{"action": "unknown", "data": {}}', 1) is None
 
     def test_execute_logging_core_failure(self, mocker):
-        mocker.patch(
-            "flask_login.current_user", SimpleNamespace(is_authenticated=False)
-        )
+        mocker.patch("flask_login.current_user", SimpleNamespace(is_authenticated=False))
         mocker.patch("services.ai_executor.AIExecutor", side_effect=RuntimeError("x"))
-        mocker.patch(
-            "services.logging_core.LoggingCore.log_error", side_effect=RuntimeError()
-        )
-        assert "خطأ" in AIService._execute_ai_action(
-            '{"action": "create_customer", "data": {}}', 1
-        )
+        mocker.patch("services.logging_core.LoggingCore.log_error", side_effect=RuntimeError())
+        assert "خطأ" in AIService._execute_ai_action('{"action": "create_customer", "data": {}}', 1)
 
     def test_train_from_groq_failure(self, mocker):
         ls = MagicMock()

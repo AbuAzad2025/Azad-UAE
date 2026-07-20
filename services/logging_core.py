@@ -172,16 +172,12 @@ def _ensure_utf8_stream(stream):
             stream.reconfigure(encoding="utf-8", errors="replace")
             return stream
         except Exception:
-            logger.debug(
-                "Failed to reconfigure stream encoding to utf-8", exc_info=True
-            )
+            logger.debug("Failed to reconfigure stream encoding to utf-8", exc_info=True)
     if hasattr(stream, "buffer"):
         try:
             return io.TextIOWrapper(stream.buffer, encoding="utf-8", errors="replace")
         except Exception:
-            logger.debug(
-                "Failed to wrap stream buffer with utf-8 TextIOWrapper", exc_info=True
-            )
+            logger.debug("Failed to wrap stream buffer with utf-8 TextIOWrapper", exc_info=True)
     return stream
 
 
@@ -217,11 +213,7 @@ def _sanitize_dict(data: dict[str, Any]) -> dict[str, Any]:
             continue
         if isinstance(value, list):
             clean[key] = [
-                (
-                    _sanitize_dict(v)
-                    if isinstance(v, dict)
-                    else (None if type(v).__name__ == "Undefined" else v)
-                )
+                (_sanitize_dict(v) if isinstance(v, dict) else (None if type(v).__name__ == "Undefined" else v))
                 for v in value
             ]
             continue
@@ -252,15 +244,11 @@ def _get_request_context() -> dict[str, Any]:
                 ctx["user_id"] = int(current_user.get_id())
                 ctx["tenant_id"] = getattr(current_user, "tenant_id", None)
         except Exception:
-            logger.debug(
-                "Failed to resolve current user for request context", exc_info=True
-            )
+            logger.debug("Failed to resolve current user for request context", exc_info=True)
     return ctx
 
 
-def _make_fingerprint(
-    category: str, exc_type: str, source: str, endpoint: str, message: str = ""
-) -> str:
+def _make_fingerprint(category: str, exc_type: str, source: str, endpoint: str, message: str = "") -> str:
     message_key = " ".join((message or "").split())[:160]
     raw = f"{category}::{exc_type}::{source}::{endpoint}::{message_key}"
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:32]
@@ -271,9 +259,7 @@ def _make_fingerprint(
 
 class _RequestIdFilter(logging.Filter):
     def filter(self, record):
-        record.request_id = (
-            getattr(g, "request_id", "-") if has_request_context() else "-"
-        )
+        record.request_id = getattr(g, "request_id", "-") if has_request_context() else "-"
         return True
 
 
@@ -307,9 +293,7 @@ class _ColorFormatter(logging.Formatter):
             msg += "\n" + self.formatException(record.exc_info)
         try:
             encoding = getattr(sys.stdout, "encoding", None) or "utf-8"
-            msg = msg.encode(encoding, errors="replace").decode(
-                encoding, errors="replace"
-            )
+            msg = msg.encode(encoding, errors="replace").decode(encoding, errors="replace")
         except Exception:
             msg = msg.encode("ascii", errors="replace").decode("ascii")
         return msg
@@ -323,9 +307,7 @@ class _JsonFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         entry = {
-            "timestamp": datetime.fromtimestamp(
-                record.created, tz=timezone.utc
-            ).isoformat(),
+            "timestamp": datetime.fromtimestamp(record.created, tz=timezone.utc).isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "module": record.module,
@@ -431,9 +413,7 @@ class LoggingCore:
         app.logger.info("=" * 60)
         app.logger.info("[OK] Warnings capture active")
         if cls._alert_callbacks:
-            app.logger.info(
-                "[OK] %d alert callback(s) registered", len(cls._alert_callbacks)
-            )
+            app.logger.info("[OK] %d alert callback(s) registered", len(cls._alert_callbacks))
         app.logger.info("=" * 60)
 
     @classmethod
@@ -502,8 +482,7 @@ class LoggingCore:
                 "name": "security",
                 "file": os.path.join(_LOGS_DIR, "security.log"),
                 "level": logging.WARNING,
-                "fmt": "[%(asctime)s] SECURITY - %(levelname)s\n"
-                "User: %(user)s | IP: %(ip)s\nMessage: %(message)s",
+                "fmt": "[%(asctime)s] SECURITY - %(levelname)s\nUser: %(user)s | IP: %(ip)s\nMessage: %(message)s",
                 "max_bytes": 5 * 1024 * 1024,
                 "backup": 10,
             },
@@ -527,9 +506,7 @@ class LoggingCore:
                 encoding="utf-8",
             )
             handler.setLevel(cfg["level"])
-            handler.setFormatter(
-                logging.Formatter(cfg["fmt"], datefmt="%Y-%m-%d %H:%M:%S")
-            )
+            handler.setFormatter(logging.Formatter(cfg["fmt"], datefmt="%Y-%m-%d %H:%M:%S"))
             handler.addFilter(safe_filter)
             app.logger.addHandler(handler)
             cls._handlers[cfg["name"]] = handler
@@ -585,15 +562,11 @@ class LoggingCore:
         from sqlalchemy.engine import Engine
 
         @event.listens_for(Engine, "before_cursor_execute")
-        def _before_cursor_execute(
-            conn, cursor, statement, parameters, context, executemany
-        ):
+        def _before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
             conn.info.setdefault("query_start_time", []).append(time.time())
 
         @event.listens_for(Engine, "after_cursor_execute")
-        def _after_cursor_execute(
-            conn, cursor, statement, parameters, context, executemany
-        ):
+        def _after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
             total = time.time() - conn.info["query_start_time"].pop()
             if total > _SLOW_QUERY_THRESHOLD_S:
                 logger.warning("Slow query (%.3fs): %s", total, statement[:200])
@@ -644,9 +617,7 @@ class LoggingCore:
                         )
                 logger.warning(msg)
                 if original_showwarning:
-                    original_showwarning(
-                        message, category, filename, lineno, file, line
-                    )
+                    original_showwarning(message, category, filename, lineno, file, line)
 
             _builtin_warnings.showwarning = _log_warning
             app.logger.info("[OK] Python warnings captured via logging")
@@ -737,9 +708,7 @@ class LoggingCore:
             return
         from flask import request
 
-        trace_id = request.headers.get("X-Trace-Id") or request.headers.get(
-            "X-Request-Id"
-        )
+        trace_id = request.headers.get("X-Trace-Id") or request.headers.get("X-Request-Id")
         if trace_id:
             g.request_id = trace_id
             g.trace_id = trace_id
@@ -763,11 +732,7 @@ class LoggingCore:
         exc_type = type(exception).__name__ if exception else None
         trace = None
         if exception:
-            trace = "".join(
-                traceback.format_exception(
-                    type(exception), exception, exception.__traceback__
-                )
-            )
+            trace = "".join(traceback.format_exception(type(exception), exception, exception.__traceback__))
 
         row_id = cls._persist_error(
             message=message,
@@ -787,9 +752,7 @@ class LoggingCore:
                 row_id,
             )
         except Exception:
-            logger.warning(
-                "Failed to write error audit log entry to logger", exc_info=True
-            )
+            logger.warning("Failed to write error audit log entry to logger", exc_info=True)
         return row_id
 
     @classmethod
@@ -870,9 +833,7 @@ class LoggingCore:
                 else:
                     payload = request.form.to_dict() if request.form else {}
             except Exception:
-                logger.debug(
-                    "Failed to parse request payload for error context", exc_info=True
-                )
+                logger.debug("Failed to parse request payload for error context", exc_info=True)
             request_data = _sanitize_dict(payload)
 
         endpoint_path = ""
@@ -882,17 +843,13 @@ class LoggingCore:
             elif has_request_context() and request:
                 endpoint_path = request.path or ""
         except Exception:
-            logger.debug(
-                "Failed to resolve endpoint path for error context", exc_info=True
-            )
+            logger.debug("Failed to resolve endpoint path for error context", exc_info=True)
 
         # Fingerprint
         fp_message = message
         if category == "FRONTEND" and isinstance(request_data, dict):
             fp_message = str(request_data.get("fingerprint_key") or message)
-        fingerprint = _make_fingerprint(
-            category, exc_type or "", source, endpoint_path, fp_message
-        )
+        fingerprint = _make_fingerprint(category, exc_type or "", source, endpoint_path, fp_message)
 
         cls._rate_monitor.record(category)
 
@@ -940,11 +897,7 @@ class LoggingCore:
             "app_version": (app_version or "")[:30],
             "user_id": _user_id,
             "tenant_id": _tenant_id,
-            "request_data": (
-                json.dumps(request_data, ensure_ascii=False, default=str)
-                if request_data
-                else None
-            ),
+            "request_data": (json.dumps(request_data, ensure_ascii=False, default=str) if request_data else None),
             "now": datetime.now(timezone.utc),
         }
 
@@ -961,9 +914,7 @@ class LoggingCore:
 
                     # Check for rate spike after successful insert
                     if cls._rate_monitor.spike(category):
-                        cls._fire_alert_callbacks(
-                            category, level, message, cls._rate_monitor.count(category)
-                        )
+                        cls._fire_alert_callbacks(category, level, message, cls._rate_monitor.count(category))
 
                     return row[0] if row else None
             except Exception as engine_exc:
@@ -974,9 +925,7 @@ class LoggingCore:
                 time.sleep(delay)
                 delay *= 2
 
-        cls._fallback_write(
-            f"[ERROR_AUDIT_FALLBACK] {category} | {message[:200]} | engine_error={last_exc}"
-        )
+        cls._fallback_write(f"[ERROR_AUDIT_FALLBACK] {category} | {message[:200]} | engine_error={last_exc}")
         return None
 
     @classmethod
@@ -985,26 +934,20 @@ class LoggingCore:
         from sqlalchemy import text
 
         try:
-            cutoff = datetime.now(timezone.utc) - timedelta(
-                minutes=_DEDUP_WINDOW_MINUTES
-            )
+            cutoff = datetime.now(timezone.utc) - timedelta(minutes=_DEDUP_WINDOW_MINUTES)
             sql = text("""
                 SELECT id FROM error_audit_logs
                 WHERE fingerprint = :fp AND is_resolved = false AND last_seen_at > :cutoff
                 ORDER BY last_seen_at DESC LIMIT 1
             """)
             with db.engine.connect() as conn:
-                row = conn.execute(
-                    sql, {"fp": fingerprint, "cutoff": cutoff}
-                ).fetchone()
+                row = conn.execute(sql, {"fp": fingerprint, "cutoff": cutoff}).fetchone()
                 return row[0] if row else None
         except Exception:
             return None
 
     @classmethod
-    def _bump_duplicate(
-        cls, log_id: int, new_message: str, new_trace: str | None
-    ) -> int | None:
+    def _bump_duplicate(cls, log_id: int, new_message: str, new_trace: str | None) -> int | None:
         from extensions import db
         from sqlalchemy import text
 
@@ -1024,9 +967,7 @@ class LoggingCore:
                     {
                         "now": datetime.now(timezone.utc),
                         "message": (new_message or "")[:_MAX_MESSAGE_LEN],
-                        "stack_trace": (
-                            (new_trace or "")[:_MAX_TRACE_LEN] if new_trace else None
-                        ),
+                        "stack_trace": ((new_trace or "")[:_MAX_TRACE_LEN] if new_trace else None),
                         "log_id": log_id,
                     },
                 )
@@ -1106,26 +1047,10 @@ class LoggingCore:
         pagination = query.paginate(page=page, per_page=per_page, error_out=False)
 
         categories = [
-            r[0]
-            for r in db.session.query(ErrorAuditLog.category)
-            .distinct()
-            .order_by(ErrorAuditLog.category)
-            .all()
+            r[0] for r in db.session.query(ErrorAuditLog.category).distinct().order_by(ErrorAuditLog.category).all()
         ]
-        levels = [
-            r[0]
-            for r in db.session.query(ErrorAuditLog.level)
-            .distinct()
-            .order_by(ErrorAuditLog.level)
-            .all()
-        ]
-        sources = [
-            r[0]
-            for r in db.session.query(ErrorAuditLog.source)
-            .distinct()
-            .order_by(ErrorAuditLog.source)
-            .all()
-        ]
+        levels = [r[0] for r in db.session.query(ErrorAuditLog.level).distinct().order_by(ErrorAuditLog.level).all()]
+        sources = [r[0] for r in db.session.query(ErrorAuditLog.source).distinct().order_by(ErrorAuditLog.source).all()]
         stats = {
             "total": ErrorAuditLog.query.count(),
             "unresolved": ErrorAuditLog.query.filter_by(is_resolved=False).count(),
@@ -1206,9 +1131,7 @@ class LoggingCore:
         buf.write(f"Count: {len(logs)}\n" + "=" * 80 + "\n\n")
         for log in logs:
             buf.write(f"ID: {log.id} | Level: {log.level} | Category: {log.category}\n")
-            buf.write(
-                f"Source: {log.source} | Time: {log.created_at.isoformat() if log.created_at else '-'}\n"
-            )
+            buf.write(f"Source: {log.source} | Time: {log.created_at.isoformat() if log.created_at else '-'}\n")
             buf.write(f"Message: {log.message}\n")
             if log.stack_trace:
                 buf.write(f"Stack: {log.stack_trace[:500]}\n")
@@ -1272,9 +1195,7 @@ class LoggingCore:
             db.session.add(entry)
             db.session.flush()
         except Exception as e:
-            cls._fallback_write(
-                f"[AUDIT_FALLBACK] action={action} table={table_name} error={e}"
-            )
+            cls._fallback_write(f"[AUDIT_FALLBACK] action={action} table={table_name} error={e}")
 
     # ──────────────────────────────────────────────────────────────
     #  AUDIT QUERIES
@@ -1301,18 +1222,14 @@ class LoggingCore:
         if user_id:
             query = query.filter_by(user_id=user_id)
 
-        pagination = query.order_by(AuditLog.created_at.desc()).paginate(
-            page=page, per_page=per_page, error_out=False
-        )
+        pagination = query.order_by(AuditLog.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
 
         base = AuditLog.query
         if tenant_id:
             base = base.filter_by(tenant_id=tenant_id)
         stats = {
             "total": base.count(),
-            "today": base.filter(
-                db.func.date(AuditLog.created_at) == db.func.current_date()
-            ).count(),
+            "today": base.filter(db.func.date(AuditLog.created_at) == db.func.current_date()).count(),
             "creates": base.filter_by(action="create").count(),
             "updates": base.filter_by(action="update").count(),
             "deletes": base.filter_by(action="delete").count(),
@@ -1532,9 +1449,7 @@ class LoggingCore:
                 "total_customers": Customer.query.count(),
                 "total_products": Product.query.count(),
                 "active_customers": Customer.query.filter_by(is_active=True).count(),
-                "low_stock_products": Product.query.filter(
-                    Product.current_stock <= Product.min_stock_alert
-                ).count(),
+                "low_stock_products": Product.query.filter(Product.current_stock <= Product.min_stock_alert).count(),
             }
         except Exception as e:
             return {"error": str(e)}
@@ -1643,9 +1558,7 @@ class LoggingCore:
         normalized = table_name.strip().lower()
         if not cls._TABLE_NAME_RE.match(normalized):
             return None
-        table_names = {
-            name.lower(): name for name in inspect(db.engine).get_table_names()
-        }
+        table_names = {name.lower(): name for name in inspect(db.engine).get_table_names()}
         return table_names.get(normalized)
 
     @classmethod
@@ -1662,11 +1575,7 @@ class LoggingCore:
         restricted_count = 0
 
         try:
-            result = db.session.execute(
-                text(
-                    "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='public'"
-                )
-            )
+            result = db.session.execute(text("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='public'"))
             for row in result.fetchall():
                 safe_table = cls._resolve_table_name(row[0])
                 if not safe_table:
@@ -1674,14 +1583,10 @@ class LoggingCore:
                 if cls._is_sensitive_table(safe_table):
                     restricted_count += 1
                     continue
-                count: int = (
-                    db.session.execute(count_query(db.engine, safe_table)).scalar() or 0
-                )
+                count: int = db.session.execute(count_query(db.engine, safe_table)).scalar() or 0
                 db_stats[safe_table] = count
         except Exception:
-            logger.debug(
-                "Failed to collect database table stats for system stats", exc_info=True
-            )
+            logger.debug("Failed to collect database table stats for system stats", exc_info=True)
 
         cls.log_audit(
             "view_system_stats",
@@ -1696,9 +1601,7 @@ class LoggingCore:
         return db_stats, restricted_count
 
     @classmethod
-    def get_activity_context(
-        cls, tenant_id: int | None, branch_id: int | None = None
-    ) -> dict:
+    def get_activity_context(cls, tenant_id: int | None, branch_id: int | None = None) -> dict:
         """Return recent activity for the owner dashboard.
 
         Replaces services/monitoring_service.py → get_activity_monitor_context()
@@ -1706,10 +1609,7 @@ class LoggingCore:
         from models import AuditLog, Sale, User
 
         recent_audits = (
-            AuditLog.query.filter_by(tenant_id=tenant_id)
-            .order_by(AuditLog.created_at.desc())
-            .limit(100)
-            .all()
+            AuditLog.query.filter_by(tenant_id=tenant_id).order_by(AuditLog.created_at.desc()).limit(100).all()
         )
 
         active_users = User.query.filter(
@@ -1749,9 +1649,7 @@ class LoggingCore:
 
         Replaces services/monitoring_service.py → get_performance_metrics_data()
         """
-        basedir = os.path.abspath(
-            os.path.join(os.path.dirname(str(__file__)), os.pardir)
-        )
+        basedir = os.path.abspath(os.path.join(os.path.dirname(str(__file__)), os.pardir))
         perf_file = os.path.join(basedir, "logs", "performance.log")
         slow_queries: list[str] = []
 
@@ -1767,17 +1665,13 @@ class LoggingCore:
         }
 
     @classmethod
-    def log_performance_metric(
-        cls, metric_name: str, value: float, tags: dict | None = None
-    ) -> None:
+    def log_performance_metric(cls, metric_name: str, value: float, tags: dict | None = None) -> None:
         """Write a metric to performance.log.
 
         Replaces services/monitoring_service.py → log_performance_metric()
         """
         try:
-            basedir = os.path.abspath(
-                os.path.join(os.path.dirname(str(__file__)), os.pardir)
-            )
+            basedir = os.path.abspath(os.path.join(os.path.dirname(str(__file__)), os.pardir))
             logs_dir = os.path.join(basedir, "logs")
             perf_file = os.path.join(logs_dir, "performance.log")
             os.makedirs(logs_dir, exist_ok=True)
@@ -1827,16 +1721,12 @@ class LoggingCore:
             else:
                 user.login_attempts = (user.login_attempts or 0) + 1
                 if user.login_attempts >= 5:
-                    user.locked_until = datetime.now(timezone.utc) + timedelta(
-                        minutes=15
-                    )
+                    user.locked_until = datetime.now(timezone.utc) + timedelta(minutes=15)
             with atomic_transaction("track_login_attempt"):
                 db.session.flush()
 
     @classmethod
-    def get_security_events(
-        cls, user_id: int | None = None, days: int = 30, tenant_id=None
-    ) -> list:
+    def get_security_events(cls, user_id: int | None = None, days: int = 30, tenant_id=None) -> list:
         """Return recent security-related audit events.
 
         Replaces utils/advanced_audit.py → get_security_events()
@@ -1852,9 +1742,9 @@ class LoggingCore:
             query = query.filter(AuditLog.tenant_id == tid)
         if user_id:
             query = query.filter_by(user_id=user_id)
-        query = query.filter(
-            AuditLog.action.in_(["login", "logout", "delete", "update"])
-        ).order_by(AuditLog.created_at.desc())
+        query = query.filter(AuditLog.action.in_(["login", "logout", "delete", "update"])).order_by(
+            AuditLog.created_at.desc()
+        )
 
         return query.limit(100).all()
 
@@ -1907,14 +1797,10 @@ class LoggingCore:
             results["logs_dir_bytes"] = log_dir_size
             results["logs_dir_mb"] = round(log_dir_size / (1024**2), 2)
         except Exception:
-            logger.debug(
-                "Failed to calculate logs directory size during cleanup", exc_info=True
-            )
+            logger.debug("Failed to calculate logs directory size during cleanup", exc_info=True)
 
         cleanup_sql = {
-            "error_audit_logs": (
-                "DELETE FROM error_audit_logs WHERE is_resolved = true AND last_seen_at < :cutoff"
-            ),
+            "error_audit_logs": ("DELETE FROM error_audit_logs WHERE is_resolved = true AND last_seen_at < :cutoff"),
             "audit_logs": "DELETE FROM audit_logs WHERE created_at < :cutoff",
         }
 
@@ -1960,6 +1846,4 @@ class LoggingCore:
 
         thread = threading.Thread(target=_cleanup_worker, daemon=True)
         thread.start()
-        app.logger.info(
-            "[OK] Log auto-cleanup scheduled every %d hours", interval_hours
-        )
+        app.logger.info("[OK] Log auto-cleanup scheduled every %d hours", interval_hours)

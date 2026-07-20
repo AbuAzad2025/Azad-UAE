@@ -21,9 +21,7 @@ def get_sales():
     per_page = request.args.get("per_page", 20, type=int)
 
     tid = get_active_tenant_id(current_user)
-    query = optimize_query(
-        Sale, relationships=["customer", "seller", "lines"], strategy="joined"
-    )
+    query = optimize_query(Sale, relationships=["customer", "seller", "lines"], strategy="joined")
     query = query.filter(Sale.is_active)
     if tid:
         query = query.filter(Sale.tenant_id == tid)
@@ -50,9 +48,7 @@ def get_sale(sale_id):
     from models import Sale
 
     tid = get_active_tenant_id(current_user)
-    query = optimize_query(
-        Sale, relationships=["customer", "seller", "lines"], strategy="joined"
-    )
+    query = optimize_query(Sale, relationships=["customer", "seller", "lines"], strategy="joined")
     query = query.filter(Sale.id == sale_id)
     if tid:
         query = query.filter(Sale.tenant_id == tid)
@@ -62,9 +58,7 @@ def get_sale(sale_id):
     return jsonify(
         {
             "success": True,
-            "sale": sale.to_dict(
-                include_lines=True, include_cost=current_user.can_see_costs()
-            ),
+            "sale": sale.to_dict(include_lines=True, include_cost=current_user.can_see_costs()),
         }
     )
 

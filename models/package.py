@@ -98,9 +98,7 @@ class PackagePurchase(db.Model):
     __tablename__ = "package_purchases"
 
     id = db.Column(db.Integer, primary_key=True)
-    package_id = db.Column(
-        db.Integer, db.ForeignKey("packages.id"), nullable=False, index=True
-    )
+    package_id = db.Column(db.Integer, db.ForeignKey("packages.id"), nullable=False, index=True)
 
     # بيانات المشتري
     customer_name = db.Column(db.String(200), nullable=False)
@@ -109,12 +107,8 @@ class PackagePurchase(db.Model):
     company_name = db.Column(db.String(200))
 
     # بيانات الدفع
-    payment_method = db.Column(
-        db.String(50), nullable=False
-    )  # crypto, card, paypal, bank
-    payment_status = db.Column(
-        db.String(50), default="pending"
-    )  # pending, completed, failed, refunded
+    payment_method = db.Column(db.String(50), nullable=False)  # crypto, card, paypal, bank
+    payment_status = db.Column(db.String(50), default="pending")  # pending, completed, failed, refunded
     amount_paid = db.Column(db.Float, nullable=False)
     currency = db.Column(db.String(10), default="USD")
 
@@ -123,9 +117,7 @@ class PackagePurchase(db.Model):
     payment_details = db.Column(db.JSON)  # تفاصيل إضافية
 
     # الحالة
-    activation_status = db.Column(
-        db.String(50), default="pending"
-    )  # pending, activated, expired
+    activation_status = db.Column(db.String(50), default="pending")  # pending, activated, expired
     activation_date = db.Column(db.DateTime)
     expiry_date = db.Column(db.DateTime)
 
@@ -133,9 +125,7 @@ class PackagePurchase(db.Model):
     notes = db.Column(db.Text)
 
     # ربط العملية المالية بالمستأجر
-    tenant_id = db.Column(
-        db.Integer, db.ForeignKey("tenants.id"), nullable=True, index=True
-    )
+    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id"), nullable=True, index=True)
 
     created_at = db.Column(db.DateTime, default=_utc_now, index=True)
     updated_at = db.Column(db.DateTime, default=_utc_now, onupdate=_utc_now)
@@ -164,9 +154,7 @@ class PackagePurchase(db.Model):
             "currency": self.currency,
             "transaction_id": self.transaction_id,
             "activation_status": self.activation_status,
-            "activation_date": (
-                self.activation_date.isoformat() if self.activation_date else None
-            ),
+            "activation_date": (self.activation_date.isoformat() if self.activation_date else None),
             "expiry_date": self.expiry_date.isoformat() if self.expiry_date else None,
             "notes": self.notes,
             "created_at": self.created_at.isoformat() if self.created_at else None,

@@ -15,12 +15,8 @@ def _uinv_patches(tid=1, campaigns=None, claims=None, shipments=None):
     claims = claims or []
     shipments = shipments or []
     stack = ExitStack()
-    stack.enter_context(
-        patch("routes.unified_inventory.get_active_tenant_id", return_value=tid)
-    )
-    stack.enter_context(
-        patch("routes.unified_inventory.render_template", return_value="ok")
-    )
+    stack.enter_context(patch("routes.unified_inventory.get_active_tenant_id", return_value=tid))
+    stack.enter_context(patch("routes.unified_inventory.render_template", return_value="ok"))
     stack.enter_context(patch("routes.unified_inventory.LoggingCore.log_audit"))
     camp_q = MagicMock()
     camp_q.filter_by.return_value.order_by.return_value.all.return_value = campaigns
@@ -77,9 +73,7 @@ class TestCampaignsRoutes:
 
     def test_campaigns_create_no_tenant(self, uinv_client):
         with uinv_ctx(tid=None):
-            resp = uinv_client.post(
-                "/uinv/campaigns", data={"name": "X"}, follow_redirects=False
-            )
+            resp = uinv_client.post("/uinv/campaigns", data={"name": "X"}, follow_redirects=False)
         assert resp.status_code == 302
 
     def test_campaigns_create_rollback_on_error(self, uinv_client):
@@ -88,9 +82,7 @@ class TestCampaignsRoutes:
             patch("utils.db_safety.db.session") as mock_safety_session,
         ):
             mock_safety_session.commit.side_effect = RuntimeError("db")
-            resp = uinv_client.post(
-                "/uinv/campaigns", data={"name": "Bad"}, follow_redirects=False
-            )
+            resp = uinv_client.post("/uinv/campaigns", data={"name": "Bad"}, follow_redirects=False)
         assert resp.status_code == 302
 
     def test_unauthenticated_campaigns(self, uinv_client):
@@ -125,9 +117,7 @@ class TestWarrantyRoutes:
 
     def test_warranty_create_no_tenant(self, uinv_client):
         with uinv_ctx(tid=None):
-            resp = uinv_client.post(
-                "/uinv/warranty", data={"sale_id": "1", "product_id": "1"}
-            )
+            resp = uinv_client.post("/uinv/warranty", data={"sale_id": "1", "product_id": "1"})
         assert resp.status_code == 302
 
     def test_warranty_create_error_rolls_back(self, uinv_client):
@@ -136,9 +126,7 @@ class TestWarrantyRoutes:
             patch("utils.db_safety.db.session") as mock_safety_session,
         ):
             mock_safety_session.commit.side_effect = ValueError("bad")
-            resp = uinv_client.post(
-                "/uinv/warranty", data={"sale_id": "x", "product_id": "1"}
-            )
+            resp = uinv_client.post("/uinv/warranty", data={"sale_id": "x", "product_id": "1"})
         assert resp.status_code == 302
 
 

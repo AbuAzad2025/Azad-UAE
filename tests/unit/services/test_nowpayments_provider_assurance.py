@@ -18,9 +18,7 @@ class TestNowPaymentsProvider:
             assert provider.ipn_secret == "secret"
             assert provider.base_url == "https://erp.example.com"
             assert provider.is_configured() is True
-            assert provider.build_webhook_url().endswith(
-                "/payment-vault/webhook/nowpayments"
-            )
+            assert provider.build_webhook_url().endswith("/payment-vault/webhook/nowpayments")
             assert "x-api-key" in provider.headers()
 
     def test_defaults_when_unconfigured(self, app):

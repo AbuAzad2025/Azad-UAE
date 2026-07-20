@@ -40,9 +40,7 @@ def _supplier_patches(**kwargs):
     suppliers = kwargs.get("suppliers", [_mock_supplier()])
     scoped = _scoped_query(suppliers)
     with ExitStack() as stack:
-        stack.enter_context(
-            patch("routes.suppliers.render_template", return_value="ok")
-        )
+        stack.enter_context(patch("routes.suppliers.render_template", return_value="ok"))
         stack.enter_context(patch("routes.suppliers.tenant_query", return_value=scoped))
         stack.enter_context(
             patch(
@@ -50,9 +48,7 @@ def _supplier_patches(**kwargs):
                 return_value=kwargs.get("supplier", _mock_supplier()),
             )
         )
-        stack.enter_context(
-            patch("routes.suppliers.get_active_tenant_id", return_value=1)
-        )
+        stack.enter_context(patch("routes.suppliers.get_active_tenant_id", return_value=1))
         stack.enter_context(
             patch(
                 "routes.suppliers.branch_scope_id",
@@ -80,9 +76,7 @@ def _supplier_patches(**kwargs):
         stack.enter_context(patch("routes.suppliers.LoggingCore.log_audit"))
         stack.enter_context(patch("routes.suppliers.log_mutation"))
         stack.enter_context(patch("routes.suppliers.atomic_transaction"))
-        stack.enter_context(
-            patch("routes.suppliers.resolve_default_currency", return_value="AED")
-        )
+        stack.enter_context(patch("routes.suppliers.resolve_default_currency", return_value="AED"))
         stack.enter_context(patch("extensions.limiter.limit", return_value=lambda f: f))
         stack.enter_context(patch("extensions.db.session"))
         yield {"scoped": scoped, "suppliers": suppliers}
@@ -163,9 +157,7 @@ class TestSuppliersCreate:
 
     def test_create_missing_type(self, suppliers_client):
         with _supplier_patches():
-            resp = suppliers_client.post(
-                "/suppliers/create", data={"name": "New Vendor"}
-            )
+            resp = suppliers_client.post("/suppliers/create", data={"name": "New Vendor"})
         assert resp.status_code == 200
 
     def test_create_invalid_rating(self, suppliers_client):
@@ -185,9 +177,7 @@ class TestSuppliersCreate:
         with (
             _supplier_patches(),
             patch("routes.suppliers.Supplier", return_value=supplier),
-            patch(
-                "utils.field_validators.normalize_phone_optional", return_value="050"
-            ),
+            patch("utils.field_validators.normalize_phone_optional", return_value="050"),
             patch("utils.field_validators.validate_currency_code", return_value="AED"),
             patch("utils.tenant_limits.check_suppliers_limit"),
         ):
@@ -292,9 +282,7 @@ class TestSuppliersEdit:
         supplier = _mock_supplier()
         with (
             _supplier_patches(supplier=supplier),
-            patch(
-                "utils.field_validators.normalize_phone_optional", return_value="050"
-            ),
+            patch("utils.field_validators.normalize_phone_optional", return_value="050"),
             patch("utils.field_validators.validate_currency_code", return_value="AED"),
         ):
             resp = suppliers_client.post(

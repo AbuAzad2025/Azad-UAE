@@ -6,9 +6,7 @@ from unittest.mock import MagicMock, patch
 
 class TestCompatPatches:
     def test_dumps_serializes_value(self):
-        _compat_patches = __import__(
-            "utils.compat_patches"
-        )  # applies the JSON serializer patch
+        _compat_patches = __import__("utils.compat_patches")  # applies the JSON serializer patch
         from cachelib.serializers import BaseSerializer
 
         ser = BaseSerializer()
@@ -32,12 +30,8 @@ class TestCompatPatches:
 
             real_import = builtins.__import__
 
-            def blocked_import(
-                name, globals_dict=None, locals_dict=None, fromlist=(), level=0
-            ):
-                if name == "cachelib.serializers" or (
-                    fromlist and "cachelib.serializers" in str(fromlist)
-                ):
+            def blocked_import(name, globals_dict=None, locals_dict=None, fromlist=(), level=0):
+                if name == "cachelib.serializers" or (fromlist and "cachelib.serializers" in str(fromlist)):
                     raise ImportError("blocked for test")
                 return real_import(name, globals_dict, locals_dict, fromlist, level)
 

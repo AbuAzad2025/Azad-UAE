@@ -54,9 +54,7 @@ class TestSalesRepCommissionModel:
     def test_foreign_keys_to_sale_and_rep(self, db_session):
         from models.sales_rep_commission import SalesRepCommission
 
-        fk_targets = {
-            fk.column.table.name for fk in SalesRepCommission.__table__.foreign_keys
-        }
+        fk_targets = {fk.column.table.name for fk in SalesRepCommission.__table__.foreign_keys}
         assert "sales" in fk_targets
         assert "users" in fk_targets
         assert "tenants" in fk_targets

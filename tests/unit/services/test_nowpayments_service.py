@@ -67,9 +67,7 @@ class TestCreatePayment:
         assert "الحد الأدنى" in result["error"]
 
     def test_creates_donation_and_returns_payment(self, svc, db_session, mocker):
-        mocker.patch(
-            "services.nowpayments_service.requests.post", side_effect=_ok_post()
-        )
+        mocker.patch("services.nowpayments_service.requests.post", side_effect=_ok_post())
         mocker.patch(
             "services.nowpayments_service.get_nowpayments_ipn_url",
             return_value="https://example.com/payment-vault/webhook/nowpayments",
@@ -126,9 +124,7 @@ class TestCreatePayment:
             captured.update(json or {})
             return _ok_post()(url, json=json, headers=headers, timeout=timeout)
 
-        mocker.patch(
-            "services.nowpayments_service.requests.post", side_effect=fake_post
-        )
+        mocker.patch("services.nowpayments_service.requests.post", side_effect=fake_post)
         mocker.patch(
             "services.nowpayments_service.get_nowpayments_ipn_url",
             return_value="https://ipn",
@@ -169,9 +165,7 @@ class TestCreatePayment:
         assert result["success"] is False
 
     def test_db_commit_failure_returns_error(self, svc, mocker):
-        mocker.patch(
-            "services.nowpayments_service.requests.post", side_effect=_ok_post()
-        )
+        mocker.patch("services.nowpayments_service.requests.post", side_effect=_ok_post())
         mocker.patch.object(db.session, "commit", side_effect=RuntimeError("db fail"))
 
         result = svc.create_payment(amount=10)
@@ -265,9 +259,7 @@ class TestVerifyIpn:
         assert svc.verify_ipn({"payment_id": "x"}, "bad-sig") is False
 
     def test_exception_returns_false(self, svc, mocker):
-        mocker.patch(
-            "services.nowpayments_service.json.dumps", side_effect=TypeError("bad")
-        )
+        mocker.patch("services.nowpayments_service.json.dumps", side_effect=TypeError("bad"))
         assert svc.verify_ipn({"a": 1}, "sig") is False
 
 
@@ -385,9 +377,7 @@ class TestProcessPaymentCallback:
 
     def test_commit_failure_returns_false(self, svc, db_session, mocker):
         self._donation(db_session, payment_id="np-db-fail")
-        mocker.patch.object(
-            db.session, "commit", side_effect=RuntimeError("commit fail")
-        )
+        mocker.patch.object(db.session, "commit", side_effect=RuntimeError("commit fail"))
 
         assert (
             svc.process_payment_callback(

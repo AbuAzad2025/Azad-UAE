@@ -19,9 +19,7 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 
 
-def intelligent_response(
-    message: str, user_id: Optional[int] = None, context: Optional[dict] = None
-) -> str:
+def intelligent_response(message: str, user_id: Optional[int] = None, context: Optional[dict] = None) -> str:
     """Get AI response - tries action dispatch first, then local intelligence."""
     try:
         from ai_knowledge.trainer import trainer
@@ -42,13 +40,7 @@ def intelligent_response(
                 from datetime import datetime, timezone
 
                 h = datetime.now(timezone.utc).hour
-                greeting = (
-                    "صباح الخير"
-                    if 5 <= h < 12
-                    else "مساء الخير"
-                    if 12 <= h < 18
-                    else "مساء النور"
-                )
+                greeting = "صباح الخير" if 5 <= h < 12 else "مساء الخير" if 12 <= h < 18 else "مساء النور"
                 return f"{greeting} {'👤 ' + name if name else ''}! 🌟 أنا أزاد، مساعدك الذكي. اسألني عن أي شيء!\n\n{action_dispatcher.format_help()}"
             result = action_dispatcher.dispatch(action_type, args)
             if result.success:
@@ -56,16 +48,12 @@ def intelligent_response(
                 try:
                     from ai_knowledge.trainer import trainer
 
-                    trainer.learn_from_interaction(
-                        message, result.message, user_id, success=True
-                    )
+                    trainer.learn_from_interaction(message, result.message, user_id, success=True)
                 except Exception as e:
                     logger.debug(f"Train from action failed: {e}")
                 return result.message
             if result.needs_permission:
-                return (
-                    f"⚠️ {result.message}\n\nيمكنك سؤالي عن معلومات النظام بدلاً من ذلك."
-                )
+                return f"⚠️ {result.message}\n\nيمكنك سؤالي عن معلومات النظام بدلاً من ذلك."
             return result.message
 
         # Fallback to local intelligence
@@ -107,9 +95,7 @@ def _check_llm_availability() -> bool:
     except Exception as exc:
         logger.debug("dotenv load skipped: %s", exc)
     _llm_available = bool(
-        os.environ.get("GROQ_API_KEY")
-        or os.environ.get("GEMINI_API_KEY")
-        or os.environ.get("OPENAI_API_KEY")
+        os.environ.get("GROQ_API_KEY") or os.environ.get("GEMINI_API_KEY") or os.environ.get("OPENAI_API_KEY")
     )
     return _llm_available
 
@@ -159,11 +145,7 @@ def _get_llm_response(system_prompt: str, user_message: str) -> str | None:
 
             resp = requests.post(
                 f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={gemini_key}",
-                json={
-                    "contents": [
-                        {"parts": [{"text": system_prompt + "\n\n" + user_message}]}
-                    ]
-                },
+                json={"contents": [{"parts": [{"text": system_prompt + "\n\n" + user_message}]}]},
                 timeout=15,
             )
             if resp.status_code == 200:
@@ -184,9 +166,7 @@ def _build_system_prompt(question: str, user_role: str = "user") -> str:
     from ai_knowledge.system_knowledge import search_knowledge, SYSTEM_INFO
 
     results = search_knowledge(question)
-    context_parts = [
-        f"أنت أزاد، المساعد الذكي لنظام {SYSTEM_INFO['name_ar']} (v{SYSTEM_INFO['version']})."
-    ]
+    context_parts = [f"أنت أزاد، المساعد الذكي لنظام {SYSTEM_INFO['name_ar']} (v{SYSTEM_INFO['version']})."]
 
     if results:
         context_parts.append("\nالمعرفة المتعلقة بالسؤال:")
@@ -221,9 +201,7 @@ def _build_system_prompt(question: str, user_role: str = "user") -> str:
     return "\n".join(context_parts)
 
 
-def ask_azad_enhanced(
-    question: str, context: Optional[dict] = None, user_id: Optional[int] = None
-) -> dict:
+def ask_azad_enhanced(question: str, context: Optional[dict] = None, user_id: Optional[int] = None) -> dict:
     """
     Enhanced ask_azad with LLM chain-of-thought and system knowledge.
     Uses Groq/Gemini for complex questions, falls back to local MasterBrain.
@@ -257,27 +235,18 @@ def ask_azad_enhanced(
             for k in knowledge[:3]:
                 if k["type"] == "model":
                     info = k["info"]
-                    fields = "\n".join(
-                        f"  - {f}: {t}"
-                        for f, t in list(info.get("fields", {}).items())[:10]
-                    )
-                    result["answer"] += (
-                        f"**مودل {k['name']}** (جدول {info['table']}):\n{fields}\n\n"
-                    )
+                    fields = "\n".join(f"  - {f}: {t}" for f, t in list(info.get("fields", {}).items())[:10])
+                    result["answer"] += f"**مودل {k['name']}** (جدول {info['table']}):\n{fields}\n\n"
                     result["source"] = "system_knowledge"
                     result["confidence"] = 0.85
                 elif k["type"] == "permission":
                     info = k["info"]
-                    result["answer"] += (
-                        f"**صلاحية {k['code']}**: {info['name_ar']} ({info['name']})\n"
-                    )
+                    result["answer"] += f"**صلاحية {k['code']}**: {info['name_ar']} ({info['name']})\n"
                     result["source"] = "system_knowledge"
                     result["confidence"] = 0.85
                 elif k["type"] == "feature":
                     info = k["info"]
-                    result["answer"] += (
-                        f"**ميزة {k['name']}**: {info['name_ar']}\n  {info['description']}\n"
-                    )
+                    result["answer"] += f"**ميزة {k['name']}**: {info['name_ar']}\n  {info['description']}\n"
                     result["source"] = "system_knowledge"
                     result["confidence"] = 0.9
     except Exception as exc:
@@ -313,9 +282,7 @@ def ask_azad_enhanced(
     try:
         from ai_knowledge.trainer import trainer
 
-        trainer.learn_from_interaction(
-            question, result["answer"], user_id, success=(result["source"] != "error")
-        )
+        trainer.learn_from_interaction(question, result["answer"], user_id, success=(result["source"] != "error"))
     except Exception as e:
         logger.debug(f"Train from question failed: {e}")
 

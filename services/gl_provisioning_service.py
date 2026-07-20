@@ -49,12 +49,7 @@ class GLProvisioningService:
 
     @staticmethod
     def _provision_base_accounts(tenant: Tenant, result: ProvisionResult) -> None:
-        existing_codes = {
-            row[0]
-            for row in db.session.query(GLAccount.code)
-            .filter_by(tenant_id=tenant.id)
-            .all()
-        }
+        existing_codes = {row[0] for row in db.session.query(GLAccount.code).filter_by(tenant_id=tenant.id).all()}
         sorted_accounts = sorted(BASE_ACCOUNTS, key=lambda a: a.level)
         created_ids = {}
         for tmpl in sorted_accounts:
@@ -63,9 +58,7 @@ class GLProvisioningService:
                 continue
             parent_id = None
             if tmpl.parent_code:
-                parent = GLAccount.query.filter_by(
-                    tenant_id=tenant.id, code=tmpl.parent_code
-                ).first()
+                parent = GLAccount.query.filter_by(tenant_id=tenant.id, code=tmpl.parent_code).first()
                 if parent:
                     parent_id = parent.id
             acc = GLAccount(
@@ -92,21 +85,14 @@ class GLProvisioningService:
         industry = (tenant.business_type or "general").strip().lower()
         if industry not in INDUSTRY_EXTENSIONS:
             return
-        existing_codes = {
-            row[0]
-            for row in db.session.query(GLAccount.code)
-            .filter_by(tenant_id=tenant.id)
-            .all()
-        }
+        existing_codes = {row[0] for row in db.session.query(GLAccount.code).filter_by(tenant_id=tenant.id).all()}
         for tmpl in INDUSTRY_EXTENSIONS[industry]:
             if tmpl.code in existing_codes:
                 result.skipped_accounts += 1
                 continue
             parent_id = None
             if tmpl.parent_code:
-                parent = GLAccount.query.filter_by(
-                    tenant_id=tenant.id, code=tmpl.parent_code
-                ).first()
+                parent = GLAccount.query.filter_by(tenant_id=tenant.id, code=tmpl.parent_code).first()
                 if parent:
                     parent_id = parent.id
             acc = GLAccount(
@@ -145,18 +131,11 @@ class GLProvisioningService:
                     result.skipped_mappings += 1
                     continue
                 # Only provision mapping-owned concepts
-                concept_meta: dict[str, Any] = GL_CONCEPT_REGISTRY.get(
-                    mapping.concept_code, {}
-                )
-                if (
-                    concept_meta.get("resolution_mode", RESOLUTION_MODE_MAPPING)
-                    != RESOLUTION_MODE_MAPPING
-                ):
+                concept_meta: dict[str, Any] = GL_CONCEPT_REGISTRY.get(mapping.concept_code, {})
+                if concept_meta.get("resolution_mode", RESOLUTION_MODE_MAPPING) != RESOLUTION_MODE_MAPPING:
                     result.skipped_mappings += 1
                     continue
-                account = GLAccount.query.filter_by(
-                    tenant_id=tenant.id, code=mapping.account_code
-                ).first()
+                account = GLAccount.query.filter_by(tenant_id=tenant.id, code=mapping.account_code).first()
                 if not account:
                     result.errors.append(
                         f"Mapping skipped: account {mapping.account_code} not found for concept {mapping.concept_code}"
@@ -195,12 +174,7 @@ class GLProvisioningService:
         tenant = db.session.get(Tenant, tenant_id)
         if not tenant:
             return []
-        existing = {
-            row[0]
-            for row in db.session.query(GLAccount.code)
-            .filter_by(tenant_id=tenant_id)
-            .all()
-        }
+        existing = {row[0] for row in db.session.query(GLAccount.code).filter_by(tenant_id=tenant_id).all()}
         missing = []
         for tmpl in BASE_ACCOUNTS:
             if tmpl.code not in existing:

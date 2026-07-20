@@ -22,9 +22,7 @@ class TestAdvancedAnalyticsGaps:
     def test_dated_liability_balance_subtracts(self, mocker):
         line = MagicMock(amount_aed=Decimal("75"))
         acct = MagicMock()
-        mocker.patch(
-            "utils.gl_tenant.scope_gl_accounts"
-        ).return_value.all.return_value = [acct]
+        mocker.patch("utils.gl_tenant.scope_gl_accounts").return_value.all.return_value = [acct]
         lines_q = MagicMock()
         lines_q.join.return_value = lines_q
         lines_q.filter.return_value = lines_q
@@ -42,9 +40,7 @@ class TestAdvancedAnalyticsGaps:
 
     def test_expense_breakdown_nonzero_percentage(self, mocker):
         acct = MagicMock(code="5100", full_name="Rent")
-        mocker.patch(
-            "utils.gl_tenant.scope_gl_accounts"
-        ).return_value.all.return_value = [acct]
+        mocker.patch("utils.gl_tenant.scope_gl_accounts").return_value.all.return_value = [acct]
         mocker.patch(
             "services.gl_service.GLService.get_all_account_balances",
             return_value={acct.id: Decimal("250")},
@@ -56,12 +52,8 @@ class TestAdvancedAnalyticsGaps:
 
     def test_revenue_breakdown_zero_total_percentage(self, mocker):
         acct = MagicMock(code="4100", full_name="Zero")
-        mocker.patch(
-            "utils.gl_tenant.scope_gl_accounts"
-        ).return_value.all.return_value = [acct]
-        mocker.patch(
-            "services.gl_service.GLService.get_all_account_balances", return_value={}
-        )
+        mocker.patch("utils.gl_tenant.scope_gl_accounts").return_value.all.return_value = [acct]
+        mocker.patch("services.gl_service.GLService.get_all_account_balances", return_value={})
         from services.advanced_analytics import AdvancedFinancialAnalytics
 
         result = AdvancedFinancialAnalytics.get_revenue_breakdown(tenant_id=1)
@@ -118,9 +110,7 @@ class TestAIExecutorGaps:
         from services.ai_executor import AIExecutorError
 
         with pytest.raises(AIExecutorError, match="المنتج"):
-            ai_executor.create_sale(
-                "Acme", [{"product_name": "Missing", "quantity": 1}]
-            )
+            ai_executor.create_sale("Acme", [{"product_name": "Missing", "quantity": 1}])
 
     def test_create_sale_with_payment_data(self, ai_executor, mocker):
         mock_customer = MagicMock(id=1)
@@ -163,17 +153,13 @@ class TestAIExecutorGaps:
 
             cust_q = MagicMock()
             cust_q.filter_by.return_value.first.return_value = customer
-            mocker.patch.object(
-                Customer, "query", new_callable=mocker.PropertyMock, return_value=cust_q
-            )
+            mocker.patch.object(Customer, "query", new_callable=mocker.PropertyMock, return_value=cust_q)
             sale_q = MagicMock()
             sale_q.filter.return_value.order_by.return_value.all.return_value = [
                 sale1,
                 sale2,
             ]
-            mocker.patch.object(
-                Sale, "query", new_callable=mocker.PropertyMock, return_value=sale_q
-            )
+            mocker.patch.object(Sale, "query", new_callable=mocker.PropertyMock, return_value=sale_q)
             mocker.patch.object(ai_executor, "_generate_number", return_value="PAY-002")
             mocker.patch("services.ai_executor.db.session")
             ai_executor.receive_payment("Acme", 100)
@@ -276,21 +262,13 @@ class TestAIServiceGetModelGaps:
 class TestAnalyticsServiceDonationGaps:
     def test_revenue_by_period_monthly_buckets(self, mocker):
         now = datetime.now(timezone.utc)
-        donation = MagicMock(
-            transaction_type="donation", amount_usd=Decimal("50"), created_at=now
-        )
-        purchase = MagicMock(
-            transaction_type="purchase", amount_usd=Decimal("20"), created_at=now
-        )
-        bad = MagicMock(
-            transaction_type="donation", amount_usd=Decimal("1"), created_at=None
-        )
+        donation = MagicMock(transaction_type="donation", amount_usd=Decimal("50"), created_at=now)
+        purchase = MagicMock(transaction_type="purchase", amount_usd=Decimal("20"), created_at=now)
+        bad = MagicMock(transaction_type="donation", amount_usd=Decimal("1"), created_at=None)
         q = MagicMock()
         q.filter.return_value = q
         q.all.return_value = [donation, purchase, bad]
-        mocker.patch(
-            "services.analytics_service._db_session"
-        ).return_value.query.return_value = q
+        mocker.patch("services.analytics_service._db_session").return_value.query.return_value = q
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=1)
         from services.analytics_service import AnalyticsService
 
@@ -313,9 +291,7 @@ class TestArchiveServiceGaps:
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=1)
         mocker.patch("services.archive_service.current_user", MagicMock())
         original_map = {"sales": None, "purchases": None}
-        mocker.patch(
-            "services.archive_service.ArchiveService.ARCHIVE_MODEL_MAP", original_map
-        )
+        mocker.patch("services.archive_service.ArchiveService.ARCHIVE_MODEL_MAP", original_map)
         mock_init = mocker.patch(
             "services.archive_service.ArchiveService._init_archive_model_map",
             side_effect=lambda: original_map.update({"sales": model}),
@@ -424,9 +400,7 @@ class TestBackupExecGaps:
         if not os.path.isfile(script_abs):
             pytest.skip("script missing")
         completed = subprocess.CompletedProcess([], 0, stdout="ok", stderr="")
-        mock_run = mocker.patch(
-            "utils.secure_subprocess.subprocess.run", return_value=completed
-        )
+        mock_run = mocker.patch("utils.secure_subprocess.subprocess.run", return_value=completed)
         from services.backup_exec import run_repo_python_script
 
         result = run_repo_python_script(script_rel, ["--help"])
@@ -582,9 +556,7 @@ class TestChequeServiceProcessGaps:
         process_cheque_bounce(cheque, "NSF")
 
     def test_bounce_fatal_error_reraises(self, mocker):
-        cheque = MagicMock(
-            id=3, status="deposited", status_ar="مودع", cheque_type="incoming"
-        )
+        cheque = MagicMock(id=3, status="deposited", status_ar="مودع", cheque_type="incoming")
         mocker.patch(
             "services.cheque_service._create_bounce_journal_entry",
             side_effect=RuntimeError("gl"),
@@ -635,9 +607,7 @@ class TestChequeServiceProcessGaps:
             "services.cheque_service.gl_get_customer_credit_account",
             return_value="1200",
         )
-        mocker.patch(
-            "services.cheque_service.gl_get_customer_credit_concept", return_value="AR"
-        )
+        mocker.patch("services.cheque_service.gl_get_customer_credit_concept", return_value="AR")
         mocker.patch(
             "services.cheque_service.GLService.get_account_code_for_concept",
             return_value="2100",
@@ -667,9 +637,7 @@ class TestChequeServiceProcessGaps:
             "services.cheque_service.gl_get_customer_credit_account",
             return_value="1200",
         )
-        mocker.patch(
-            "services.cheque_service.gl_get_customer_credit_concept", return_value="AR"
-        )
+        mocker.patch("services.cheque_service.gl_get_customer_credit_concept", return_value="AR")
         mocker.patch("services.cheque_service._post_gl")
         from services.cheque_service import _create_cancel_journal_entry
 
@@ -720,9 +688,7 @@ class TestChequeServiceProcessGaps:
 
         process_cheque_cancel(cheque, reason="void")
 
-    def test_write_data_bundle_skips_empty_row_list(
-        self, mocker, tmp_path, mock_db_connection
-    ):
+    def test_write_data_bundle_skips_empty_row_list(self, mocker, tmp_path, mock_db_connection):
         from services.backup_scoped_engine import ExportResult, write_data_bundle
         from services.backup_scope_config import SCOPE_TENANT
 

@@ -77,9 +77,7 @@ class TestPaymentServiceHelpers:
                 _query_chain(Decimal("400")),
                 _query_chain(Decimal("50")),
             ]
-            bal = PaymentService.get_customer_balance_scoped(
-                5, branch_id=2, tenant_id=1
-            )
+            bal = PaymentService.get_customer_balance_scoped(5, branch_id=2, tenant_id=1)
         assert bal == Decimal("-650")
 
     def test_get_supplier_balance_scoped(self):
@@ -123,9 +121,7 @@ class TestPaymentServiceHelpers:
         Sale.status = _Col()
         Sale.balance_due = _Col()
         Sale.sale_date = _Col()
-        Sale.query.filter.return_value.order_by.return_value.all.return_value = [
-            MagicMock(id=1)
-        ]
+        Sale.query.filter.return_value.order_by.return_value.all.return_value = [MagicMock(id=1)]
         result = PaymentService.get_unpaid_sales(MagicMock(id=5))
         assert len(result) == 1
 
@@ -142,9 +138,7 @@ class TestPaymentServiceHelpers:
             currency="AED",
         )
         with (
-            patch.object(
-                PaymentService, "get_customer_balance_aed", return_value=Decimal("50")
-            ),
+            patch.object(PaymentService, "get_customer_balance_aed", return_value=Decimal("50")),
             patch.object(PaymentService, "get_unpaid_sales", return_value=[sale]),
         ):
             data = PaymentService.get_customer_balance_and_unpaid_sales(customer)
@@ -188,9 +182,7 @@ class TestPaymentServiceCreatePayment:
                 MagicMock(is_authenticated=True, id=1, tenant_id=1),
             ),
             patch("services.payment_service.generate_number", return_value="PAY-001"),
-            patch.object(
-                PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")
-            ),
+            patch.object(PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")),
             patch.object(PaymentService, "_resolve_branch_id", return_value=1),
             patch("services.payment_service.GLService") as gl,
             patch("services.payment_service.post_or_fail"),
@@ -315,9 +307,7 @@ class TestPaymentServiceCreateReceiptSuccess:
                 MagicMock(is_authenticated=True, id=1, tenant_id=1),
             ),
             patch("services.payment_service.generate_number", return_value="RCV-001"),
-            patch.object(
-                PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")
-            ),
+            patch.object(PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")),
             patch.object(PaymentService, "_resolve_branch_id", return_value=1),
             patch("services.payment_service.GLService") as gl,
             patch("services.payment_service.post_or_fail"),
@@ -364,9 +354,7 @@ class TestPaymentServiceCreateReceiptSuccess:
                 MagicMock(is_authenticated=True, id=1, tenant_id=1),
             ),
             patch("services.payment_service.generate_number", return_value="RCV-002"),
-            patch.object(
-                PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")
-            ),
+            patch.object(PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")),
             patch.object(PaymentService, "_resolve_branch_id", return_value=1),
             patch(
                 "services.payment_service.process_cheque_receive",
@@ -420,18 +408,14 @@ class TestPaymentServiceCreateReceiptSuccess:
                 MagicMock(is_authenticated=True, id=1, tenant_id=1),
             ),
             patch("services.payment_service.generate_number", return_value="PAY-S-1"),
-            patch.object(
-                PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")
-            ),
+            patch.object(PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")),
             patch.object(PaymentService, "_resolve_branch_id", return_value=1),
             patch("services.payment_service.GLService") as gl,
             patch("services.payment_service.post_or_fail"),
             patch("services.payment_service.Receipt", return_value=receipt),
             patch("models.Payment", return_value=MagicMock()),
         ):
-            mock_db.session.get.side_effect = lambda model, pk: (
-                customer if pk == 1 else sale
-            )
+            mock_db.session.get.side_effect = lambda model, pk: customer if pk == 1 else sale
             gl.get_payment_debit_account.return_value = "1100"
             gl.get_payment_debit_concept.return_value = "CASH"
             gl.get_customer_credit_account.return_value = "1200"
@@ -470,9 +454,7 @@ class TestPaymentServiceCreatePaymentExtended:
                 MagicMock(is_authenticated=True, id=1, tenant_id=1),
             ),
             patch("services.payment_service.generate_number", return_value="PAY-001"),
-            patch.object(
-                PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")
-            ),
+            patch.object(PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")),
             patch.object(PaymentService, "_resolve_branch_id", return_value=1),
             patch("services.payment_service.GLService") as gl,
             patch("services.payment_service.post_or_fail"),
@@ -520,14 +502,10 @@ class TestPaymentServiceFailurePaths:
                 MagicMock(is_authenticated=True, id=1, tenant_id=1),
             ),
             patch("services.payment_service.generate_number", return_value="PAY-GL"),
-            patch.object(
-                PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")
-            ),
+            patch.object(PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")),
             patch.object(PaymentService, "_resolve_branch_id", return_value=1),
             patch("services.payment_service.GLService") as gl,
-            patch(
-                "services.payment_service.post_or_fail", side_effect=RuntimeError("gl")
-            ),
+            patch("services.payment_service.post_or_fail", side_effect=RuntimeError("gl")),
             patch("models.Payment", return_value=payment),
             patch("services.payment_service.current_app") as capp,
         ):
@@ -590,9 +568,7 @@ class TestPaymentServiceFailurePaths:
             patch("services.payment_service.Receipt", return_value=receipt),
             patch("models.Payment", return_value=MagicMock()),
         ):
-            mock_db.session.get.side_effect = lambda model, pk: (
-                customer if pk == 1 else source_sale
-            )
+            mock_db.session.get.side_effect = lambda model, pk: customer if pk == 1 else source_sale
             gl.get_payment_debit_account.return_value = "1100"
             gl.get_payment_debit_concept.return_value = "CASH"
             gl.get_customer_credit_account.return_value = "1200"
@@ -633,17 +609,13 @@ class TestPaymentServiceFailurePaths:
                 MagicMock(is_authenticated=True, id=1, tenant_id=1),
             ),
             patch("services.payment_service.generate_number", return_value="RCV-SKIP"),
-            patch.object(
-                PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")
-            ),
+            patch.object(PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")),
             patch.object(PaymentService, "_resolve_branch_id", return_value=1),
             patch("services.payment_service.GLService") as gl,
             patch("services.payment_service.post_or_fail"),
             patch("services.payment_service.Receipt", return_value=receipt),
         ):
-            mock_db.session.get.side_effect = lambda model, pk: (
-                customer if pk == 1 else None
-            )
+            mock_db.session.get.side_effect = lambda model, pk: customer if pk == 1 else None
             gl.get_payment_debit_account.return_value = "1100"
             gl.get_payment_debit_concept.return_value = "CASH"
             gl.get_customer_credit_account.return_value = "1200"
@@ -684,12 +656,8 @@ class TestPaymentServiceReceiptCommitFailure:
                 "services.payment_service.current_user",
                 MagicMock(is_authenticated=True, id=1, tenant_id=1),
             ),
-            patch(
-                "services.payment_service.generate_number", return_value="RCV-COMMIT"
-            ),
-            patch.object(
-                PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")
-            ),
+            patch("services.payment_service.generate_number", return_value="RCV-COMMIT"),
+            patch.object(PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")),
             patch.object(PaymentService, "_resolve_branch_id", return_value=1),
             patch("services.payment_service.GLService") as gl,
             patch("services.payment_service.post_or_fail"),
@@ -729,9 +697,7 @@ class TestPaymentServiceReceiptCommitFailure:
                 "services.payment_service.generate_number",
                 side_effect=RuntimeError("gen fail"),
             ),
-            patch.object(
-                PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")
-            ),
+            patch.object(PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")),
             patch.object(PaymentService, "_resolve_branch_id", return_value=1),
             patch("services.payment_service.current_app") as capp,
         ):
@@ -771,9 +737,7 @@ class TestPaymentServicePaymentCommitFailure:
                 MagicMock(is_authenticated=True, id=1, tenant_id=1),
             ),
             patch("services.payment_service.generate_number", return_value="PAY-C"),
-            patch.object(
-                PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")
-            ),
+            patch.object(PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")),
             patch.object(PaymentService, "_resolve_branch_id", return_value=1),
             patch("services.payment_service.GLService") as gl,
             patch("services.payment_service.post_or_fail"),
@@ -852,9 +816,7 @@ class TestPaymentServiceChequeAndFxLoss:
                 MagicMock(is_authenticated=True, id=1, tenant_id=1),
             ),
             patch("services.payment_service.generate_number", return_value="RCV-CHQ"),
-            patch.object(
-                PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")
-            ),
+            patch.object(PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")),
             patch.object(PaymentService, "_resolve_branch_id", return_value=1),
             patch("services.payment_service.process_cheque_receive", return_value=None),
             patch("models.Cheque"),
@@ -918,9 +880,7 @@ class TestPaymentServiceChequeAndFxLoss:
             patch("services.payment_service.Receipt", return_value=receipt),
             patch("models.Payment", return_value=MagicMock()),
         ):
-            mock_db.session.get.side_effect = lambda model, pk: (
-                customer if pk == 1 else source_sale
-            )
+            mock_db.session.get.side_effect = lambda model, pk: customer if pk == 1 else source_sale
             gl.get_payment_debit_account.return_value = "1100"
             gl.get_payment_debit_concept.return_value = "CASH"
             gl.get_customer_credit_account.return_value = "1200"
@@ -997,9 +957,7 @@ class TestPaymentServiceChequeAndFxLoss:
                 MagicMock(is_authenticated=True, id=1, tenant_id=1),
             ),
             patch("services.payment_service.generate_number", return_value="RCV-GL"),
-            patch.object(
-                PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")
-            ),
+            patch.object(PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")),
             patch.object(PaymentService, "_resolve_branch_id", return_value=1),
             patch("services.payment_service.GLService") as gl,
             patch(
@@ -1058,9 +1016,7 @@ class TestPaymentServiceChequeAndFxLoss:
                 "services.payment_service.current_user",
                 MagicMock(is_authenticated=True, id=1, tenant_id=1),
             ),
-            patch(
-                "services.payment_service.generate_number", return_value="RCV-FXSKIP"
-            ),
+            patch("services.payment_service.generate_number", return_value="RCV-FXSKIP"),
             patch.object(
                 PaymentService,
                 "_resolve_transaction_rate",
@@ -1076,9 +1032,7 @@ class TestPaymentServiceChequeAndFxLoss:
             patch("models.Payment", return_value=MagicMock()),
             patch("services.payment_service.current_app") as capp,
         ):
-            mock_db.session.get.side_effect = lambda model, pk: (
-                customer if pk == 1 else source_sale
-            )
+            mock_db.session.get.side_effect = lambda model, pk: customer if pk == 1 else source_sale
             gl.get_payment_debit_account.return_value = "1100"
             gl.get_payment_debit_concept.return_value = "CASH"
             gl.get_customer_credit_account.return_value = "1200"

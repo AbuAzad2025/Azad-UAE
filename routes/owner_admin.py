@@ -70,10 +70,7 @@ def dashboard():
         admin_emails.setdefault(u.tenant_id, u.email)
 
     packages = (
-        db.session.query(Package)
-        .filter_by(is_active=True)
-        .order_by(Package.sort_order.asc(), Package.id.asc())
-        .all()
+        db.session.query(Package).filter_by(is_active=True).order_by(Package.sort_order.asc(), Package.id.asc()).all()
     )
 
     tenant_rows = []
@@ -153,8 +150,7 @@ def activate_subscription():
         )
         label = _DURATION_LABELS.get(duration_type, duration_type)
         flash(
-            f'Tenant "{tenant.name_ar or tenant.name}" successfully upgraded to '
-            f"{package.name_en} for {label}.",
+            f'Tenant "{tenant.name_ar or tenant.name}" successfully upgraded to {package.name_en} for {label}.',
             "success",
         )
         logger.info(

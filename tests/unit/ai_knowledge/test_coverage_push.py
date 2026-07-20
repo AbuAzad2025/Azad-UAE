@@ -16,9 +16,7 @@ import pytest
 
 @pytest.fixture
 def knowledge_path(tmp_path):
-    with patch(
-        "ai_knowledge.get_knowledge_path", side_effect=lambda name: str(tmp_path / name)
-    ):
+    with patch("ai_knowledge.get_knowledge_path", side_effect=lambda name: str(tmp_path / name)):
         yield tmp_path
 
 
@@ -60,9 +58,7 @@ class TestNeuralEngineCoverage:
             mock_db.session.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.first.return_value = self._customer_row(
                 75000
             )
-            assert (
-                engine.classify_customer_intelligence(2)["classification"] == "premium"
-            )
+            assert engine.classify_customer_intelligence(2)["classification"] == "premium"
             mock_db.session.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.first.return_value = self._customer_row(
                 150000
             )
@@ -137,15 +133,12 @@ class TestNeuralEngineCoverage:
     def test_forecast_sales_success(self, knowledge_path):
         engine = self._engine(knowledge_path)
         forecast_payload = {
-            "forecast": [{"date": "2025-06-01", "amount": 100.0, "confidence": 0.88}]
-            * 3,
+            "forecast": [{"date": "2025-06-01", "amount": 100.0, "confidence": 0.88}] * 3,
             "total_expected": 300.0,
             "trend": "stable",
             "confidence": 0.88,
         }
-        with patch.object(
-            engine, "_forecast_sales_internal", return_value=forecast_payload
-        ):
+        with patch.object(engine, "_forecast_sales_internal", return_value=forecast_payload):
             result = engine.forecast_sales(3)
             assert len(result["forecast"]) == 3
             assert result["total_expected"] == 300.0
@@ -189,9 +182,7 @@ class TestNeuralEngineCoverage:
         ctx = MagicMock()
         ctx.return_value.__enter__ = MagicMock(return_value=None)
         ctx.return_value.__exit__ = MagicMock(return_value=False)
-        with patch.object(
-            engine, "_train_price_internal", return_value={"success": True}
-        ) as inner:
+        with patch.object(engine, "_train_price_internal", return_value={"success": True}) as inner:
             engine.train_price_optimizer(from_app_context=ctx)
             inner.assert_called_once()
 
@@ -201,41 +192,21 @@ class TestNeuralEngineCoverage:
         ctx.return_value.__enter__ = MagicMock(return_value=None)
         ctx.return_value.__exit__ = MagicMock(return_value=False)
         with (
-            patch.object(
-                engine, "train_price_optimizer", return_value={"success": True}
-            ),
-            patch.object(
-                engine, "train_sales_forecaster", return_value={"success": True}
-            ),
+            patch.object(engine, "train_price_optimizer", return_value={"success": True}),
+            patch.object(engine, "train_sales_forecaster", return_value={"success": True}),
             patch.object(
                 engine,
                 "train_customer_classifier",
                 return_value={"success": False, "error": "x"},
             ),
-            patch.object(
-                engine, "train_fraud_detector", return_value={"success": True}
-            ),
-            patch.object(
-                engine, "train_inventory_optimizer", return_value={"success": True}
-            ),
-            patch.object(
-                engine, "train_demand_predictor", return_value={"success": True}
-            ),
-            patch.object(
-                engine, "train_financial_planning", return_value={"success": True}
-            ),
-            patch.object(
-                engine, "train_maintenance_prediction", return_value={"success": True}
-            ),
-            patch.object(
-                engine, "train_accounting_assistant", return_value={"success": True}
-            ),
-            patch.object(
-                engine, "train_profit_optimizer", return_value={"success": True}
-            ),
-            patch.object(
-                engine, "train_churn_predictor", return_value={"success": True}
-            ),
+            patch.object(engine, "train_fraud_detector", return_value={"success": True}),
+            patch.object(engine, "train_inventory_optimizer", return_value={"success": True}),
+            patch.object(engine, "train_demand_predictor", return_value={"success": True}),
+            patch.object(engine, "train_financial_planning", return_value={"success": True}),
+            patch.object(engine, "train_maintenance_prediction", return_value={"success": True}),
+            patch.object(engine, "train_accounting_assistant", return_value={"success": True}),
+            patch.object(engine, "train_profit_optimizer", return_value={"success": True}),
+            patch.object(engine, "train_churn_predictor", return_value={"success": True}),
         ):
             result = engine.train_all_models(ctx)
             assert result["success"] is True
@@ -248,15 +219,9 @@ class TestNeuralEngineCoverage:
                 "accounting_classifier", engine.scalers["price_optimizer"]
             )
             engine.models["accounting_classifier"] = engine.models["fraud_detector"]
-            engine.scalers["accounting_classifier"].transform = MagicMock(
-                return_value=np.array([[1.0] * 6])
-            )
-            engine.models["accounting_classifier"].predict = MagicMock(
-                return_value=np.array([1])
-            )
-            engine.models["accounting_classifier"].predict_proba = MagicMock(
-                return_value=np.array([[0.1, 0.9]])
-            )
+            engine.scalers["accounting_classifier"].transform = MagicMock(return_value=np.array([[1.0] * 6]))
+            engine.models["accounting_classifier"].predict = MagicMock(return_value=np.array([1]))
+            engine.models["accounting_classifier"].predict_proba = MagicMock(return_value=np.array([[0.1, 0.9]]))
             result = engine.validate_accounting_entry(100, 100, 2, "Sale")
             assert result["is_correct"] is True
 
@@ -321,9 +286,7 @@ class TestReasoningEngineCoverage:
         assert fin["metrics"].get("current_ratio") == 2.5
 
     def test_mathematical_percentage_and_history(self, engine):
-        assert (
-            engine.mathematical_reasoning("100 نسبة 15%")["operation"] == "percentage"
-        )
+        assert engine.mathematical_reasoning("100 نسبة 15%")["operation"] == "percentage"
         engine.think(
             "تسعير المنتج 500",
             {"cost_price": 80, "customer_type": "vip", "quantity": 2},
@@ -406,9 +369,7 @@ class TestSystemIntegrationCoverage:
             phone="050",
             get_balance_aed=lambda: Decimal("100"),
         )
-        product = MagicMock(
-            id=2, name="Filter", sku="F1", current_stock=5, unit_price=Decimal("50")
-        )
+        product = MagicMock(id=2, name="Filter", sku="F1", current_stock=5, unit_price=Decimal("50"))
         sale = MagicMock(
             id=3,
             total_amount=Decimal("200"),
@@ -420,23 +381,15 @@ class TestSystemIntegrationCoverage:
             patch("models.Product") as MockP,
             patch("models.Sale") as MockS,
         ):
-            MockC.query.filter.return_value.limit.return_value.all.return_value = [
-                customer
-            ]
-            MockP.query.filter.return_value.limit.return_value.all.return_value = [
-                product
-            ]
-            MockS.query.join.return_value.filter.return_value.limit.return_value.all.return_value = [
-                sale
-            ]
+            MockC.query.filter.return_value.limit.return_value.all.return_value = [customer]
+            MockP.query.filter.return_value.limit.return_value.all.return_value = [product]
+            MockS.query.join.return_value.filter.return_value.limit.return_value.all.return_value = [sale]
             result = integrator.search_data("Ali", dtype)
             assert result["success"] is True
 
     def test_add_customer_success(self, integrator):
         tenant = MagicMock(id=1)
-        customer = MagicMock(
-            id=10, name="New Co", customer_type="regular", phone="", email=""
-        )
+        customer = MagicMock(id=10, name="New Co", customer_type="regular", phone="", email="")
         mock_db = MagicMock()
         with (
             patch("models.Customer", return_value=customer) as MockCustomer,
@@ -445,9 +398,7 @@ class TestSystemIntegrationCoverage:
         ):
             MockTenant.get_current.return_value = tenant
             MockCustomer.return_value = customer
-            result = integrator.add_customer(
-                {"name": "New Co", "customer_type": "regular"}
-            )
+            result = integrator.add_customer({"name": "New Co", "customer_type": "regular"})
             assert result["success"] is True
             mock_db.session.add.assert_called_once()
             mock_db.session.flush.assert_called_once()
@@ -547,9 +498,7 @@ class TestAnalyticsPredictionsCoverage:
     def test_customer_segmentation(self):
         from ai_knowledge.analytics.analytics_predictions import SalesAnalytics
 
-        customers = [
-            {"name": f"C{i}", "total_purchases": i * 1000} for i in range(1, 11)
-        ]
+        customers = [{"name": f"C{i}", "total_purchases": i * 1000} for i in range(1, 11)]
         segments = SalesAnalytics.customer_segmentation(customers)
         assert segments["vip"]
         assert segments["regular"]
@@ -567,33 +516,22 @@ class TestAnalyticsPredictionsCoverage:
         from ai_knowledge.analytics.analytics_predictions import InventoryAnalytics
 
         assert (
-            InventoryAnalytics.inventory_turnover(
-                {"cogs_annual": 80000, "avg_inventory_value": 10000}
-            )["status"]
+            InventoryAnalytics.inventory_turnover({"cogs_annual": 80000, "avg_inventory_value": 10000})["status"]
             == "excellent"
         )
         assert (
-            InventoryAnalytics.inventory_turnover(
-                {"cogs_annual": 50000, "avg_inventory_value": 10000}
-            )["status"]
+            InventoryAnalytics.inventory_turnover({"cogs_annual": 50000, "avg_inventory_value": 10000})["status"]
             == "good"
         )
         assert (
-            InventoryAnalytics.inventory_turnover(
-                {"cogs_annual": 30000, "avg_inventory_value": 10000}
-            )["status"]
+            InventoryAnalytics.inventory_turnover({"cogs_annual": 30000, "avg_inventory_value": 10000})["status"]
             == "average"
         )
         assert (
-            InventoryAnalytics.inventory_turnover(
-                {"cogs_annual": 5000, "avg_inventory_value": 10000}
-            )["status"]
+            InventoryAnalytics.inventory_turnover({"cogs_annual": 5000, "avg_inventory_value": 10000})["status"]
             == "slow"
         )
-        assert (
-            InventoryAnalytics.inventory_turnover({"avg_inventory_value": 0})["status"]
-            == "no_inventory"
-        )
+        assert InventoryAnalytics.inventory_turnover({"avg_inventory_value": 0})["status"] == "no_inventory"
 
     def test_predict_high_confidence_and_abc(self):
         from ai_knowledge.analytics.analytics_predictions import SalesAnalytics
@@ -634,9 +572,7 @@ class TestCodeGeneratorCoverage:
         assert opt["performance_gain_percent"] > 0
 
     def test_sql_insert_and_python_predict(self, gen):
-        sql = gen.generate_sql_query(
-            "insert", "customers", {"columns": ["name"], "values": ["Ali"]}
-        )
+        sql = gen.generate_sql_query("insert", "customers", {"columns": ["name"], "values": ["Ali"]})
         assert "INSERT INTO customers" in sql
         code = gen.generate_python_function("forecast", "توقع المبيعات", ["days"])
         assert "AIService" in code
@@ -805,11 +741,7 @@ class TestMasterBrainCoverage:
     )
     def test_more_domains(self, brain, question, fragment):
         result = brain.ask(question)
-        assert (
-            fragment.lower() in result["answer"].lower()
-            or fragment in result["answer"]
-            or result["confidence"] > 0
-        )
+        assert fragment.lower() in result["answer"].lower() or fragment in result["answer"] or result["confidence"] > 0
 
     def test_neural_pricing_branch(self, brain):
         with patch("services.ai_service.AIService") as MockAI:
@@ -818,9 +750,7 @@ class TestMasterBrainCoverage:
                 "margin_percent": 25,
                 "confidence": 0.9,
             }
-            result = brain.ask(
-                "سعر المنتج", context={"product_id": 1, "customer_id": 2}
-            )
+            result = brain.ask("سعر المنتج", context={"product_id": 1, "customer_id": 2})
             assert result["answer"]
 
 
@@ -855,13 +785,9 @@ class TestAutoRetrainingCoverage:
                 return_value={"success": True},
             ) as trigger,
         ):
-            assert (
-                AutoRetrainingScheduler.check_and_train_if_needed()["success"] is True
-            )
+            assert AutoRetrainingScheduler.check_and_train_if_needed()["success"] is True
             trigger.assert_called_once()
-        with patch.object(
-            AutoRetrainingScheduler, "should_retrain", return_value=False
-        ):
+        with patch.object(AutoRetrainingScheduler, "should_retrain", return_value=False):
             assert "message" in AutoRetrainingScheduler.check_and_train_if_needed()
 
     def test_should_retrain_with_history(self, knowledge_path, tmp_path):
@@ -903,18 +829,8 @@ class TestExternalLearningCoverage:
 
         sys = ExternalLearningSystem()
         with patch.object(sys, "_save_learned_data"):
-            assert (
-                sys.learn_from_source("stackoverflow", "SQL error", "use join")[
-                    "success"
-                ]
-                is True
-            )
-            assert (
-                sys.learn_from_source("github", "flask route", "def view(): pass")[
-                    "success"
-                ]
-                is True
-            )
+            assert sys.learn_from_source("stackoverflow", "SQL error", "use join")["success"] is True
+            assert sys.learn_from_source("github", "flask route", "def view(): pass")["success"] is True
         assert sys.get_automotive_resources()
         assert sys.get_accounting_resources()
         stats = sys.get_statistics()
@@ -996,8 +912,6 @@ class TestKnowledgeExpansionCoverage:
             return_value=mock_response,
         ):
             expander = KnowledgeExpander()
-            result = expander.add_website(
-                "example.com", category="accounting", description="test source"
-            )
+            result = expander.add_website("example.com", category="accounting", description="test source")
             assert result["success"] is True
             assert result["content_length"] > 0

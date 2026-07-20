@@ -39,9 +39,7 @@ class WebhookService:
             payment_status = data.get("payment_status")
             order_id = data.get("order_id", "")
 
-            logger.info(
-                "NOWPayments webhook received: %s - %s", payment_id, payment_status
-            )
+            logger.info("NOWPayments webhook received: %s - %s", payment_id, payment_status)
 
             if order_id.startswith("PURCHASE_"):
                 return WebhookService._process_purchase_webhook(data)
@@ -165,11 +163,7 @@ class WebhookService:
         if not sale:
             return {"success": False, "error": "Store sale not found"}
 
-        if (
-            payment_id
-            and sale.checkout_gateway_ref
-            and sale.checkout_gateway_ref != payment_id
-        ):
+        if payment_id and sale.checkout_gateway_ref and sale.checkout_gateway_ref != payment_id:
             logger.warning("Gateway ref mismatch for sale %s", sale.sale_number)
 
         if payment_status == "finished" and sale.status == "confirmed":
@@ -177,8 +171,7 @@ class WebhookService:
 
             AzadPlatformFeeService.record_store_online_fee(
                 sale,
-                gateway_reference=payment_id
-                or getattr(sale, "checkout_gateway_ref", None),
+                gateway_reference=payment_id or getattr(sale, "checkout_gateway_ref", None),
             )
             with atomic_transaction("webhook_process_store_order"):
                 db.session.flush()
@@ -200,9 +193,7 @@ class WebhookService:
             if sale.status == "pending":
                 with atomic_transaction("webhook_cancel_store_order"):
                     StoreOrderService.cancel_order(sale)
-            logger.warning(
-                "Store order %s payment %s", sale.sale_number, payment_status
-            )
+            logger.warning("Store order %s payment %s", sale.sale_number, payment_status)
 
         return {"success": True, "message": f"Store order updated to {payment_status}"}
 
@@ -259,13 +250,9 @@ class WebhookService:
     @staticmethod
     def _process_stripe_payment_failed(payment_intent):
         customer_email = payment_intent.get("receipt_email")
-        error_message = payment_intent.get("last_payment_error", {}).get(
-            "message", "Unknown error"
-        )
+        error_message = payment_intent.get("last_payment_error", {}).get("message", "Unknown error")
 
-        logger.warning(
-            "Stripe payment failed for %s: %s", customer_email, error_message
-        )
+        logger.warning("Stripe payment failed for %s: %s", customer_email, error_message)
 
         NotificationService.notify_security_alert(
             "فشل دفعة Stripe",

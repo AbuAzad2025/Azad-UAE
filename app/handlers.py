@@ -122,11 +122,7 @@ def register_error_handlers(app):
             flash(str(exc), "danger")
             return render_template("errors/403.html"), 403
         category = "DATABASE" if isinstance(exc, SQLAlchemyError) else "BACKEND"
-        source = (
-            "app.errorhandler.database"
-            if category == "DATABASE"
-            else "app.errorhandler.generic"
-        )
+        source = "app.errorhandler.database" if category == "DATABASE" else "app.errorhandler.generic"
         LoggingCore.log_error(
             message=str(exc) or f"{type(exc).__name__} (no message)",
             category=category,

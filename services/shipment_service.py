@@ -3,9 +3,7 @@ from extensions import db
 
 class ShipmentService:
     @staticmethod
-    def create_shipment(
-        source_type, source_id, carrier_name, tracking_number, **kwargs
-    ):
+    def create_shipment(source_type, source_id, carrier_name, tracking_number, **kwargs):
         from models.shipment import Shipment
 
         shipment = Shipment(
@@ -48,6 +46,4 @@ class ShipmentService:
     def get_shipments_for_purchase(purchase_id):
         from models.shipment import Shipment
 
-        return Shipment.query.filter_by(
-            source_type="purchase", source_id=purchase_id
-        ).all()
+        return Shipment.query.filter_by(source_type="purchase", source_id=purchase_id).all()

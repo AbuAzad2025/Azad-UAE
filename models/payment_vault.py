@@ -71,15 +71,9 @@ class PaymentVault(db.Model):
     razorpay_key_secret = db.Column(db.String(255))  # Razorpay Secret
 
     # Payment Limits - حدود الدفع
-    min_donation_amount = db.Column(
-        db.Numeric(10, 2), default=Decimal("10.00")
-    )  # الحد الأدنى
-    max_donation_amount = db.Column(
-        db.Numeric(10, 2), default=Decimal("10000.00")
-    )  # الحد الأقصى
-    daily_limit = db.Column(
-        db.Numeric(15, 2), default=Decimal("50000.00")
-    )  # الحد اليومي
+    min_donation_amount = db.Column(db.Numeric(10, 2), default=Decimal("10.00"))  # الحد الأدنى
+    max_donation_amount = db.Column(db.Numeric(10, 2), default=Decimal("10000.00"))  # الحد الأقصى
+    daily_limit = db.Column(db.Numeric(15, 2), default=Decimal("50000.00"))  # الحد اليومي
 
     # Azad Donation Page — controlled from secret vault
     donations_enabled = db.Column(db.Boolean, default=False)
@@ -110,15 +104,11 @@ class PaymentVault(db.Model):
         """Return the vault for a concrete project/tenant."""
         if tenant_id is None:
             return None
-        return (
-            cls.query.filter_by(tenant_id=int(tenant_id)).order_by(cls.id.asc()).first()
-        )
+        return cls.query.filter_by(tenant_id=int(tenant_id)).order_by(cls.id.asc()).first()
 
     def set_vault_password(self, password):
         """تعيين كلمة مرور الخزينة"""
-        self.vault_password_hash = generate_password_hash(
-            password, method="pbkdf2:sha256"
-        )
+        self.vault_password_hash = generate_password_hash(password, method="pbkdf2:sha256")
 
     def check_vault_password(self, password):
         """التحقق من كلمة مرور الخزينة"""
@@ -181,9 +171,7 @@ class PaymentTransaction(db.Model):
         index=True,
     )
 
-    transaction_id = db.Column(
-        db.String(100), unique=True, nullable=False
-    )  # معرف المعاملة
+    transaction_id = db.Column(db.String(100), unique=True, nullable=False)  # معرف المعاملة
     amount_usd = db.Column(db.Numeric(15, 2), nullable=False)  # المبلغ بالدولار
     amount_crypto = db.Column(db.Numeric(20, 8))  # المبلغ بالعملة الرقمية
     crypto_currency = db.Column(db.String(10), nullable=False)  # العملة الرقمية
@@ -207,9 +195,7 @@ class PaymentTransaction(db.Model):
     updated_at = db.Column(db.DateTime, default=_utc_now, onupdate=_utc_now)
     completed_at = db.Column(db.DateTime)  # وقت الإكمال
 
-    vault_id = db.Column(
-        db.Integer, db.ForeignKey("payment_vault.id"), nullable=False, index=True
-    )
+    vault_id = db.Column(db.Integer, db.ForeignKey("payment_vault.id"), nullable=False, index=True)
     vault = db.relationship("PaymentVault", backref="transactions")
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
 
@@ -228,9 +214,7 @@ class PaymentTransaction(db.Model):
             "customer_name": self.customer_name,
             "is_verified": self.is_verified,
             "created_at": self.created_at.isoformat(),
-            "completed_at": (
-                self.completed_at.isoformat() if self.completed_at else None
-            ),
+            "completed_at": (self.completed_at.isoformat() if self.completed_at else None),
         }
 
 
@@ -264,9 +248,7 @@ class PaymentLog(db.Model):
 
     created_at = db.Column(db.DateTime, default=_utc_now, index=True)
 
-    vault_id = db.Column(
-        db.Integer, db.ForeignKey("payment_vault.id"), nullable=False, index=True
-    )
+    vault_id = db.Column(db.Integer, db.ForeignKey("payment_vault.id"), nullable=False, index=True)
     vault = db.relationship("PaymentVault", backref="logs")
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
 

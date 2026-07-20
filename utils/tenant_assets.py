@@ -36,11 +36,7 @@ SLUG_TO_FOLDER: dict[str, str] = {
 
 
 def _repo_static_root() -> str:
-    return str(
-        os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static"
-        )
-    )
+    return str(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static"))
 
 
 def static_assets_root() -> str:

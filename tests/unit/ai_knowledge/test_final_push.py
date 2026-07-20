@@ -13,9 +13,7 @@ import pytest
 
 @pytest.fixture
 def knowledge_path(tmp_path):
-    with patch(
-        "ai_knowledge.get_knowledge_path", side_effect=lambda name: str(tmp_path / name)
-    ):
+    with patch("ai_knowledge.get_knowledge_path", side_effect=lambda name: str(tmp_path / name)):
         yield tmp_path
 
 
@@ -30,9 +28,7 @@ def _customer_row(total, days_ago=5, sales_count=8):
 
 def _sale_mock():
     customer = MagicMock(name="Ali", phone="0501234567", address="Dubai")
-    payment = MagicMock(
-        payment_method="cash", amount=Decimal("100"), created_at=datetime(2025, 6, 1)
-    )
+    payment = MagicMock(payment_method="cash", amount=Decimal("100"), created_at=datetime(2025, 6, 1))
     line = MagicMock(
         quantity=2,
         unit_price=Decimal("50"),
@@ -78,21 +74,16 @@ class TestNeuralEngineFinal:
         ) as inner:
             assert engine.train_price_optimizer(from_app_context=ctx)["success"] is True
             inner.assert_called_once()
-        with patch.object(
-            engine, "_train_price_internal", return_value={"success": True}
-        ) as inner2:
+        with patch.object(engine, "_train_price_internal", return_value={"success": True}) as inner2:
             assert engine.train_price_optimizer()["success"] is True
             inner2.assert_called_once()
-        with patch.object(
-            engine, "_train_price_internal", side_effect=RuntimeError("boom")
-        ):
+        with patch.object(engine, "_train_price_internal", side_effect=RuntimeError("boom")):
             assert engine.train_price_optimizer()["success"] is False
 
     def test_predict_next_week_sales_via_forecast(self, knowledge_path):
         engine = self._engine(knowledge_path)
         payload = {
-            "forecast": [{"date": "2025-06-01", "amount": 200.0, "confidence": 0.88}]
-            * 7,
+            "forecast": [{"date": "2025-06-01", "amount": 200.0, "confidence": 0.88}] * 7,
             "total_expected": 1400.0,
             "trend": "increasing",
             "confidence": 0.88,
@@ -104,9 +95,7 @@ class TestNeuralEngineFinal:
         ctx = MagicMock()
         ctx.return_value.__enter__ = MagicMock(return_value=None)
         ctx.return_value.__exit__ = MagicMock(return_value=False)
-        with patch.object(
-            engine, "_forecast_sales_internal", return_value=payload
-        ) as inner:
+        with patch.object(engine, "_forecast_sales_internal", return_value=payload) as inner:
             engine.forecast_sales(7, from_app_context=ctx)
             inner.assert_called_once_with(7)
 
@@ -123,17 +112,12 @@ class TestNeuralEngineFinal:
                 120000
             )
             with patch.object(engine, "_load_model", return_value=False):
-                assert (
-                    engine.classify_customer_intelligence(1)["classification"] == "vip"
-                )
+                assert engine.classify_customer_intelligence(1)["classification"] == "vip"
             mock_db.session.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.first.return_value = _customer_row(
                 60000
             )
             with patch.object(engine, "_load_model", return_value=False):
-                assert (
-                    engine.classify_customer_intelligence(2)["classification"]
-                    == "premium"
-                )
+                assert engine.classify_customer_intelligence(2)["classification"] == "premium"
             mock_db.session.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.first.return_value = _customer_row(
                 1000, days_ago=120
             )
@@ -170,12 +154,8 @@ class TestNeuralEngineFinal:
                 neural = engine.classify_customer_intelligence(4)
                 assert neural["classification"] == "premium"
                 assert neural["model"] == "neural_network"
-        with patch.object(
-            engine, "_classify_customer_internal", side_effect=RuntimeError("fail")
-        ):
-            assert (
-                engine.classify_customer_intelligence(5)["classification"] == "unknown"
-            )
+        with patch.object(engine, "_classify_customer_internal", side_effect=RuntimeError("fail")):
+            assert engine.classify_customer_intelligence(5)["classification"] == "unknown"
 
     def test_save_load_model_tmp_path(self, knowledge_path):
         engine = self._engine(knowledge_path)
@@ -188,9 +168,7 @@ class TestNeuralEngineFinal:
         with patch("joblib.load", side_effect=Exception("corrupt")):
             assert engine._load_model("price_optimizer") is False
         joblib.dump(engine.models["fraud_detector"], f"{bad_path}/fraud_detector.pkl")
-        joblib.dump(
-            engine.scalers["fraud_detector"], f"{bad_path}/fraud_detector_scaler.pkl"
-        )
+        joblib.dump(engine.scalers["fraud_detector"], f"{bad_path}/fraud_detector_scaler.pkl")
         assert engine._load_model("fraud_detector") is True
 
 
@@ -338,16 +316,8 @@ class TestAnalyticsEngineConsolidated:
             get_analytics,
         )
 
-        assert (
-            SalesAnalytics.predict_next_month_sales([100, 110, 120, 130, 140, 150])[
-                "prediction"
-            ]
-            > 0
-        )
-        assert (
-            SalesAnalytics.predict_next_month_sales([1, 2])["method"]
-            == "insufficient_data"
-        )
+        assert SalesAnalytics.predict_next_month_sales([100, 110, 120, 130, 140, 150])["prediction"] > 0
+        assert SalesAnalytics.predict_next_month_sales([1, 2])["method"] == "insufficient_data"
         sale = MagicMock(sale_date=datetime(2025, 6, 2))
         assert SalesAnalytics.analyze_sales_pattern([sale] * 6)["trend"] == "growing"
         assert (
@@ -430,9 +400,7 @@ class TestAgentsCoreFinal:
         agents_core._llm_available = None
         mock_resp = MagicMock()
         mock_resp.status_code = 200
-        mock_resp.json.return_value = {
-            "choices": [{"message": {"content": "إجابة من LLM"}}]
-        }
+        mock_resp.json.return_value = {"choices": [{"message": {"content": "إجابة من LLM"}}]}
         with (
             patch.dict(
                 "os.environ",
@@ -450,9 +418,7 @@ class TestAgentsCoreFinal:
 
         mock_resp = MagicMock()
         mock_resp.status_code = 200
-        mock_resp.json.return_value = {
-            "candidates": [{"content": {"parts": [{"text": "gemini answer"}]}}]
-        }
+        mock_resp.json.return_value = {"candidates": [{"content": {"parts": [{"text": "gemini answer"}]}}]}
         with (
             patch.dict(
                 "os.environ",
@@ -469,9 +435,7 @@ class TestAgentsCoreFinal:
         with (
             patch("ai_knowledge.system_knowledge.search_knowledge", return_value=[]),
             patch("ai_knowledge.system_knowledge.FAQ", {}),
-            patch(
-                "ai_knowledge.agents_core._check_llm_availability", return_value=True
-            ),
+            patch("ai_knowledge.agents_core._check_llm_availability", return_value=True),
             patch(
                 "ai_knowledge.agents_core._get_llm_response",
                 return_value="شرح محاسبي مفصل",
@@ -479,9 +443,7 @@ class TestAgentsCoreFinal:
             patch("ai_knowledge.trainer.trainer") as mock_trainer,
         ):
             mock_trainer.learn_from_interaction = MagicMock()
-            result = ask_azad_enhanced(
-                "كيف أسجل قيد محاسبي؟", context={"role": "accountant"}, user_id=1
-            )
+            result = ask_azad_enhanced("كيف أسجل قيد محاسبي؟", context={"role": "accountant"}, user_id=1)
             assert result["source"] == "llm"
             assert "محاسبي" in result["answer"]
 
@@ -542,13 +504,9 @@ class TestAzadResponsesHandlers:
         return customer_payload, debt_payload, product_payload, summary_payload
 
     def test_handle_methods_direct(self, responses):
-        customer_payload, debt_payload, product_payload, summary_payload = (
-            self._common_mocks()
-        )
+        customer_payload, debt_payload, product_payload, summary_payload = self._common_mocks()
         with (
-            patch(
-                "ai_knowledge.personality.azad_responses.system_integrator"
-            ) as mock_si,
+            patch("ai_knowledge.personality.azad_responses.system_integrator") as mock_si,
             patch("ai_knowledge.personality.azad_responses.data_analyzer") as mock_da,
         ):
             mock_si.get_customer_balance.return_value = customer_payload
@@ -559,9 +517,7 @@ class TestAzadResponsesHandlers:
                     "total_amount": 1000,
                     "paid_amount": 800,
                     "balance_due": 200,
-                    "recent_sales": [
-                        {"id": 1, "date": "2025-06-01", "amount": 500, "status": "جزئي"}
-                    ],
+                    "recent_sales": [{"id": 1, "date": "2025-06-01", "amount": 500, "status": "جزئي"}],
                 },
             }
             mock_si.get_product_stock.return_value = product_payload
@@ -581,39 +537,25 @@ class TestAzadResponsesHandlers:
                 "results": {"customers": [], "products": [], "sales": []},
             }
             mock_da.analyze_customer_debt.return_value = debt_payload
-            assert "أحمد" in responses._handle_customer_balance_query(
-                "رصيد العميل أحمد"
-            )
-            assert "Filter" in responses._handle_product_stock_query(
-                "مخزون منتج Filter"
-            )
+            assert "أحمد" in responses._handle_customer_balance_query("رصيد العميل أحمد")
+            assert "Filter" in responses._handle_product_stock_query("مخزون منتج Filter")
             assert "إجمالي العملاء" in responses._handle_system_summary_query()
             assert responses._handle_search_query("ابحث عن علي")
             assert responses._handle_customer_info_query("بيانات العميل أحمد")
 
     def test_smart_response_handler_routes(self, responses):
-        customer_payload, debt_payload, product_payload, summary_payload = (
-            self._common_mocks()
-        )
+        customer_payload, debt_payload, product_payload, summary_payload = self._common_mocks()
         with (
-            patch(
-                "ai_knowledge.personality.azad_responses.system_integrator"
-            ) as mock_si,
+            patch("ai_knowledge.personality.azad_responses.system_integrator") as mock_si,
             patch("ai_knowledge.personality.azad_responses.data_analyzer") as mock_da,
-            patch(
-                "ai_knowledge.personality.azad_responses.document_generator"
-            ) as mock_doc,
-            patch(
-                "ai_knowledge.personality.azad_responses.knowledge_expander"
-            ) as mock_ke,
+            patch("ai_knowledge.personality.azad_responses.document_generator") as mock_doc,
+            patch("ai_knowledge.personality.azad_responses.knowledge_expander") as mock_ke,
             patch("ai_knowledge.personality.azad_responses.advanced_laws") as mock_laws,
             patch(
                 "ai_knowledge.personality.azad_responses.understand_message",
                 return_value={"intent": "general", "confidence": 0.1},
             ),
-            patch(
-                "ai_knowledge.personality.azad_responses.intelligent_assistant"
-            ) as mock_ia,
+            patch("ai_knowledge.personality.azad_responses.intelligent_assistant") as mock_ia,
             patch("ai_knowledge.personality.azad_responses.learning_system") as mock_ls,
             patch("ai_knowledge.personality.azad_responses.azad_personality") as mock_p,
             patch("services.ai_service.AIService") as MockAI,
@@ -682,16 +624,12 @@ class TestPersonalityCoreFinal:
         responses = AzadResponses()
         assert "أزاد" in responses.smart_response("من أنت")
         with (
-            patch(
-                "ai_knowledge.personality.azad_responses.system_integrator"
-            ) as mock_si,
+            patch("ai_knowledge.personality.azad_responses.system_integrator") as mock_si,
             patch(
                 "ai_knowledge.personality.azad_responses.understand_message",
                 return_value={"intent": "general", "confidence": 0.1},
             ),
-            patch(
-                "ai_knowledge.personality.azad_responses.intelligent_assistant"
-            ) as mock_ia,
+            patch("ai_knowledge.personality.azad_responses.intelligent_assistant") as mock_ia,
             patch("ai_knowledge.personality.azad_responses.learning_system") as mock_ls,
             patch("ai_knowledge.personality.azad_responses.azad_personality") as mock_p,
             patch("services.ai_service.AIService") as MockAI,
@@ -827,9 +765,7 @@ class TestSystemIntegrationPaths:
             get_balance_aed=lambda: Decimal("3200"),
         )
         supplier.purchases.count.return_value = 6
-        supplier.purchases.order_by.return_value.first.return_value = MagicMock(
-            created_at=datetime(2025, 4, 1)
-        )
+        supplier.purchases.order_by.return_value.first.return_value = MagicMock(created_at=datetime(2025, 4, 1))
         product = MagicMock(
             id=9,
             name="Brake Pad",
@@ -880,9 +816,7 @@ class TestSecurityRulesFinal:
         with patch("ai_knowledge.specialized.security_rules.current_user", owner):
             assert SecurityRules.is_owner() is True
             assert SecurityRules.can_access_sensitive_info() is True
-            raw = SecurityRules.filter_sensitive_data(
-                {"password": "secret", "name": "Ali"}
-            )
+            raw = SecurityRules.filter_sensitive_data({"password": "secret", "name": "Ali"})
             assert raw["password"] == "secret"
             ok, msg = SecurityRules.check_user_permissions("delete_all")
             assert ok is True
@@ -908,10 +842,7 @@ class TestSecurityRulesFinal:
             assert ok is False
         assert SecurityRules.get_security_response("password_request")
         assert SecurityRules.get_security_response("unknown_type")
-        assert (
-            SecurityRules.sanitize_input("<script>alert(1)</script>")
-            == "scriptalert1/script"
-        )
+        assert SecurityRules.sanitize_input("<script>alert(1)</script>") == "scriptalert1/script"
         long_text = "a" * 1100
         assert len(SecurityRules.sanitize_input(long_text)) <= 1003
         with patch("ai_knowledge.specialized.security_rules.current_user", owner):

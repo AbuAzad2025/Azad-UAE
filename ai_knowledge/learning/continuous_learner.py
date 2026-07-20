@@ -77,11 +77,7 @@ class ContinuousLearner:
         session.mount("https://", adapter)
 
         # Headers
-        session.headers.update(
-            {
-                "User-Agent": "AzadAI/3.0 (Educational Purpose; +https://azad-systems.com)"
-            }
-        )
+        session.headers.update({"User-Agent": "AzadAI/3.0 (Educational Purpose; +https://azad-systems.com)"})
 
         return session
 
@@ -121,9 +117,7 @@ class ContinuousLearner:
         """
         try:
             topic_encoded = quote(topic.replace(" ", "_"), safe="")
-            url = (
-                f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/{topic_encoded}"
-            )
+            url = f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/{topic_encoded}"
 
             response = self.session.get(url, timeout=10)
 
@@ -135,9 +129,7 @@ class ContinuousLearner:
                     # حفظ
                     self.accumulated_knowledge["wikipedia"][topic] = {
                         "content": extract,
-                        "url": data.get("content_urls", {})
-                        .get("desktop", {})
-                        .get("page", ""),
+                        "url": data.get("content_urls", {}).get("desktop", {}).get("page", ""),
                         "learned_at": datetime.now().isoformat(),
                         "lang": lang,
                     }
@@ -158,9 +150,7 @@ class ContinuousLearner:
 
                     self._save_history()
 
-                    logger.info(
-                        f"📚 Learned from Wikipedia: {topic} ({len(extract)} chars)"
-                    )
+                    logger.info(f"📚 Learned from Wikipedia: {topic} ({len(extract)} chars)")
 
                     return {"success": True, "content": extract, "size": len(extract)}
 
@@ -205,9 +195,7 @@ class ContinuousLearner:
 
                     self.accumulated_knowledge["total_items"] += papers_count
 
-                    logger.info(
-                        f"📄 Learned from ArXiv: {query} ({papers_count} papers)"
-                    )
+                    logger.info(f"📄 Learned from ArXiv: {query} ({papers_count} papers)")
 
                     return {"success": True, "papers": papers_count}
 
@@ -230,11 +218,7 @@ class ContinuousLearner:
                 if isinstance(items, list)
             ),
             "learning_sessions": len(self.learning_history),
-            "last_learning": (
-                self.learning_history[-1]["timestamp"]
-                if self.learning_history
-                else "Never"
-            ),
+            "last_learning": (self.learning_history[-1]["timestamp"] if self.learning_history else "Never"),
         }
 
     def daily_learning_routine(self) -> dict:
@@ -275,9 +259,7 @@ class ContinuousLearner:
             else "0%"
         )
 
-        logger.info(
-            f"🎓 Daily learning completed: {results['items_learned']} items learned"
-        )
+        logger.info(f"🎓 Daily learning completed: {results['items_learned']} items learned")
 
         return results
 
@@ -321,11 +303,7 @@ def evaluate_and_learn(qa_tests: list, ai_service=None):
             continue
         try:
             ans = svc.ask_genius(q, context=context)
-            text = (
-                ""
-                if ans is None
-                else (ans.get("answer") if isinstance(ans, dict) else str(ans))
-            )
+            text = "" if ans is None else (ans.get("answer") if isinstance(ans, dict) else str(ans))
             text_l = (text or "").lower()
             hits = sum(1 for k in expected if k in text_l)
             score = 0.0 if not expected else hits / len(expected)

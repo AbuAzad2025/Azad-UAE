@@ -62,9 +62,7 @@ class ColorFormatter(logging.Formatter):
         except Exception:
             target_encoding = "utf-8"
         try:
-            message = message.encode(target_encoding, errors="replace").decode(
-                target_encoding, errors="replace"
-            )
+            message = message.encode(target_encoding, errors="replace").decode(target_encoding, errors="replace")
         except Exception:
             message = message.encode("ascii", errors="replace").decode("ascii")
         return message
@@ -76,20 +74,12 @@ def setup_logging(app):
     if sys.platform == "win32":
         import io
 
-        if hasattr(sys.stdout, "buffer") and not getattr(
-            sys.stdout, "_azad_utf8_wrapped", False
-        ):
-            wrapped_out = io.TextIOWrapper(
-                sys.stdout.buffer, encoding="utf-8", errors="replace"
-            )
+        if hasattr(sys.stdout, "buffer") and not getattr(sys.stdout, "_azad_utf8_wrapped", False):
+            wrapped_out = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
             setattr(wrapped_out, "_azad_utf8_wrapped", True)
             sys.stdout = wrapped_out
-        if hasattr(sys.stderr, "buffer") and not getattr(
-            sys.stderr, "_azad_utf8_wrapped", False
-        ):
-            wrapped_err = io.TextIOWrapper(
-                sys.stderr.buffer, encoding="utf-8", errors="replace"
-            )
+        if hasattr(sys.stderr, "buffer") and not getattr(sys.stderr, "_azad_utf8_wrapped", False):
+            wrapped_err = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
             setattr(wrapped_err, "_azad_utf8_wrapped", True)
             sys.stderr = wrapped_err
     console_handler = logging.StreamHandler(sys.stdout)

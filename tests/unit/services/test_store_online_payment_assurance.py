@@ -107,9 +107,7 @@ class TestCreatePayment:
             return_value="https://ipn",
         )
         resp = MagicMock(status_code=400, text="bad request")
-        mocker.patch(
-            "services.store_online_payment_service.requests.post", return_value=resp
-        )
+        mocker.patch("services.store_online_payment_service.requests.post", return_value=resp)
 
         from services.store_online_payment_service import StoreOnlinePaymentService
 
@@ -137,17 +135,13 @@ class TestCreatePayment:
         )
         resp = MagicMock(status_code=201)
         resp.json.return_value = {"payment_id": "pid-1", "invoice_url": "https://pay"}
-        mocker.patch(
-            "services.store_online_payment_service.requests.post", return_value=resp
-        )
+        mocker.patch("services.store_online_payment_service.requests.post", return_value=resp)
         mock_session = mocker.patch("services.store_online_payment_service.db.session")
 
         from services.store_online_payment_service import StoreOnlinePaymentService
 
         with app.app_context():
-            result = StoreOnlinePaymentService.create_payment_for_sale(
-                sale, store, customer_email="a@b.com"
-            )
+            result = StoreOnlinePaymentService.create_payment_for_sale(sale, store, customer_email="a@b.com")
 
         assert result["payment_url"] == "https://pay"
         assert sale.checkout_gateway_ref == "pid-1"
@@ -173,9 +167,7 @@ class TestCreatePayment:
         )
         resp = MagicMock(status_code=200)
         resp.json.return_value = {"payment_id": "p2", "payment_url": "https://u"}
-        mocker.patch(
-            "services.store_online_payment_service.requests.post", return_value=resp
-        )
+        mocker.patch("services.store_online_payment_service.requests.post", return_value=resp)
         mock_session = mocker.patch("services.store_online_payment_service.db.session")
         mock_session.flush.side_effect = RuntimeError("db")
 

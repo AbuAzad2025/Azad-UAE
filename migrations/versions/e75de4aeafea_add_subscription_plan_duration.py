@@ -28,12 +28,8 @@ def upgrade():
         sa.Column("opened_at", sa.DateTime(), nullable=False),
         sa.Column("closed_at", sa.DateTime(), nullable=True),
         sa.Column("starting_cash", sa.Numeric(precision=15, scale=3), nullable=False),
-        sa.Column(
-            "system_sales_expected", sa.Numeric(precision=15, scale=3), nullable=True
-        ),
-        sa.Column(
-            "actual_cash_counted", sa.Numeric(precision=15, scale=3), nullable=True
-        ),
+        sa.Column("system_sales_expected", sa.Numeric(precision=15, scale=3), nullable=True),
+        sa.Column("actual_cash_counted", sa.Numeric(precision=15, scale=3), nullable=True),
         sa.Column("discrepancy", sa.Numeric(precision=15, scale=3), nullable=True),
         sa.Column("total_sales", sa.Numeric(precision=15, scale=3), nullable=True),
         sa.Column("total_cash_sales", sa.Numeric(precision=15, scale=3), nullable=True),
@@ -42,56 +38,32 @@ def upgrade():
         sa.Column("notes", sa.Text(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["session_id"], ["pos_sessions.id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["session_id"], ["pos_sessions.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(
             ["user_id"],
             ["users.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "tenant_id", "shift_number", name="uq_pos_shifts_tenant_shift_number"
-        ),
+        sa.UniqueConstraint("tenant_id", "shift_number", name="uq_pos_shifts_tenant_shift_number"),
     )
     with op.batch_alter_table("pos_shifts", schema=None) as batch_op:
-        batch_op.create_index(
-            "idx_pos_shift_session_status", ["session_id", "status"], unique=False
-        )
-        batch_op.create_index(
-            "idx_pos_shift_user_status", ["user_id", "status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_pos_shifts_session_id"), ["session_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_pos_shifts_shift_number"), ["shift_number"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_pos_shifts_status"), ["status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_pos_shifts_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_pos_shifts_user_id"), ["user_id"], unique=False
-        )
+        batch_op.create_index("idx_pos_shift_session_status", ["session_id", "status"], unique=False)
+        batch_op.create_index("idx_pos_shift_user_status", ["user_id", "status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_pos_shifts_session_id"), ["session_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_pos_shifts_shift_number"), ["shift_number"], unique=False)
+        batch_op.create_index(batch_op.f("ix_pos_shifts_status"), ["status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_pos_shifts_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_pos_shifts_user_id"), ["user_id"], unique=False)
 
     with op.batch_alter_table("package_purchases", schema=None) as batch_op:
         batch_op.add_column(sa.Column("tenant_id", sa.Integer(), nullable=True))
-        batch_op.create_index(
-            batch_op.f("ix_package_purchases_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_package_purchases_tenant_id"), ["tenant_id"], unique=False)
         batch_op.create_foreign_key(None, "tenants", ["tenant_id"], ["id"])
 
     with op.batch_alter_table("tenants", schema=None) as batch_op:
-        batch_op.add_column(
-            sa.Column("subscription_plan_duration", sa.String(length=20), nullable=True)
-        )
-        batch_op.add_column(
-            sa.Column("enable_auto_backup", sa.Boolean(), nullable=True)
-        )
+        batch_op.add_column(sa.Column("subscription_plan_duration", sa.String(length=20), nullable=True))
+        batch_op.add_column(sa.Column("enable_auto_backup", sa.Boolean(), nullable=True))
 
     # ### end Alembic commands ###
 

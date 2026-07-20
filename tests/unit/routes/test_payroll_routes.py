@@ -76,32 +76,22 @@ def _payroll_patches(**kwargs):
 
     with ExitStack() as stack:
         stack.enter_context(patch("routes.payroll.render_template", return_value="ok"))
-        stack.enter_context(
-            patch(
-                "routes.payroll.get_active_tenant_id", return_value=kwargs.get("tid", 1)
-            )
-        )
+        stack.enter_context(patch("routes.payroll.get_active_tenant_id", return_value=kwargs.get("tid", 1)))
         stack.enter_context(
             patch(
                 "routes.payroll.branch_scope_id",
                 return_value=kwargs.get("branch_scope"),
             )
         )
-        stack.enter_context(
-            patch("routes.payroll.should_show_all_branch_columns", return_value=False)
-        )
-        stack.enter_context(
-            patch("routes.payroll.db.session.get", side_effect=_session_get)
-        )
+        stack.enter_context(patch("routes.payroll.should_show_all_branch_columns", return_value=False))
+        stack.enter_context(patch("routes.payroll.db.session.get", side_effect=_session_get))
         stack.enter_context(patch("routes.payroll.Employee.query", emp_q))
         stack.enter_context(patch("routes.payroll.Branch.query", branch_q))
         stack.enter_context(patch("routes.payroll.PayrollTransaction.query", txn_q))
         stack.enter_context(patch("routes.payroll.SalaryAdvance.query", adv_q))
         stack.enter_context(patch("routes.payroll.PayrollService.create_employee"))
         stack.enter_context(patch("routes.payroll.PayrollService.create_advance"))
-        stack.enter_context(
-            patch("routes.payroll.PayrollService.process_payroll", return_value=txn)
-        )
+        stack.enter_context(patch("routes.payroll.PayrollService.process_payroll", return_value=txn))
         stack.enter_context(
             patch(
                 "routes.payroll.PayrollService.generate_branch_payroll",
@@ -126,9 +116,7 @@ class TestPayrollAuth:
             resp = payroll_client.get("/payroll/employees")
         assert resp.status_code == 401
 
-    def test_employees_forbidden_without_permission(
-        self, payroll_client, bypass_permission_auth
-    ):
+    def test_employees_forbidden_without_permission(self, payroll_client, bypass_permission_auth):
         bypass_permission_auth.has_permission.return_value = False
         bypass_permission_auth.is_super_admin.return_value = False
         with (
@@ -177,9 +165,7 @@ class TestPayrollAddEmployee:
 
     def test_add_post_branch_mismatch(self, payroll_client):
         with _payroll_patches(branch_scope=2):
-            resp = payroll_client.post(
-                "/payroll/employees/add", data={"branch_id": "9"}
-            )
+            resp = payroll_client.post("/payroll/employees/add", data={"branch_id": "9"})
         assert resp.status_code == 200
 
     def test_add_post_service_error(self, payroll_client):
@@ -190,9 +176,7 @@ class TestPayrollAddEmployee:
                 side_effect=ValueError("bad"),
             ),
         ):
-            resp = payroll_client.post(
-                "/payroll/employees/add", data={"branch_id": "2"}
-            )
+            resp = payroll_client.post("/payroll/employees/add", data={"branch_id": "2"})
         assert resp.status_code == 200
 
 
@@ -216,25 +200,19 @@ class TestPayrollAdvances:
 
     def test_advances_post_missing_employee(self, payroll_client):
         with _payroll_patches(employee=_mock_employee(id=99)):
-            resp = payroll_client.post(
-                "/payroll/advances", data={"employee_id": "1", "amount": "50"}
-            )
+            resp = payroll_client.post("/payroll/advances", data={"employee_id": "1", "amount": "50"})
         assert resp.status_code == 200
 
     def test_advances_post_wrong_tenant(self, payroll_client):
         emp = _mock_employee(tenant_id=99)
         with _payroll_patches(employee=emp):
-            resp = payroll_client.post(
-                "/payroll/advances", data={"employee_id": "1", "amount": "50"}
-            )
+            resp = payroll_client.post("/payroll/advances", data={"employee_id": "1", "amount": "50"})
         assert resp.status_code == 200
 
     def test_advances_post_wrong_branch(self, payroll_client):
         emp = _mock_employee(branch_id=9)
         with _payroll_patches(employee=emp, branch_scope=2):
-            resp = payroll_client.post(
-                "/payroll/advances", data={"employee_id": "1", "amount": "50"}
-            )
+            resp = payroll_client.post("/payroll/advances", data={"employee_id": "1", "amount": "50"})
         assert resp.status_code == 200
 
 
@@ -359,9 +337,7 @@ class TestPayrollSlipAndStatement:
 
     def test_salary_slip_not_found(self, payroll_client):
         txn_q = _chain_query(first=None)
-        txn_q.filter_by.return_value.filter.return_value.first_or_404.side_effect = (
-            NotFound()
-        )
+        txn_q.filter_by.return_value.filter.return_value.first_or_404.side_effect = NotFound()
         with (
             _payroll_patches(),
             patch("routes.payroll.PayrollTransaction.query", txn_q),
@@ -382,9 +358,7 @@ class TestPayrollSlipAndStatement:
 
     def test_statement_not_found(self, payroll_client):
         emp_q = _chain_query(first=None)
-        emp_q.filter_by.return_value.filter.return_value.first_or_404.side_effect = (
-            NotFound()
-        )
+        emp_q.filter_by.return_value.filter.return_value.first_or_404.side_effect = NotFound()
         with _payroll_patches(), patch("routes.payroll.Employee.query", emp_q):
             resp = payroll_client.get("/payroll/statement/404")
         assert resp.status_code == 404

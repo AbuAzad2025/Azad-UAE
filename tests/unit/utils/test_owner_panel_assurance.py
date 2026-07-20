@@ -21,17 +21,12 @@ class TestTenantLogoDisplayUrl:
     def test_http_passthrough(self):
         from utils.owner_panel import _tenant_logo_display_url
 
-        assert (
-            _tenant_logo_display_url(_tenant(), {"logo_url": "https://cdn/logo.png"})
-            == "https://cdn/logo.png"
-        )
+        assert _tenant_logo_display_url(_tenant(), {"logo_url": "https://cdn/logo.png"}) == "https://cdn/logo.png"
 
     def test_static_relative(self):
         from utils.owner_panel import _tenant_logo_display_url
 
-        url = _tenant_logo_display_url(
-            _tenant(), {"logo_url": "assets/tenants/x/logo.png"}
-        )
+        url = _tenant_logo_display_url(_tenant(), {"logo_url": "assets/tenants/x/logo.png"})
         assert url == "/static/assets/tenants/x/logo.png"
 
     def test_tenant_logo_fallback(self):
@@ -110,9 +105,7 @@ class TestBuildPlatformOverview:
         from utils.owner_panel import build_platform_overview
 
         with app.app_context():
-            overview = build_platform_overview(
-                backups=[{"tenant_id": 1, "filename": "b.zip"}]
-            )
+            overview = build_platform_overview(backups=[{"tenant_id": 1, "filename": "b.zip"}])
         assert overview["tenant_count"] == 5
         assert overview["active_tenant_count"] == 4
         assert overview["suspended_tenant_count"] == 1
@@ -162,9 +155,7 @@ class TestBuildPlatformOverview:
         mocker.patch("utils.owner_panel.Branch.query", branch_q)
         nasrallah = _tenant(1, "nasrallah")
         tenant_q = MagicMock()
-        tenant_q.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
-            nasrallah
-        ]
+        tenant_q.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [nasrallah]
         mocker.patch("utils.owner_panel.Tenant.query", tenant_q)
         from utils.owner_panel import build_platform_overview
 
@@ -179,9 +170,7 @@ class TestBuildTenantManagementRows:
         tenant_q = MagicMock()
         tenant_q.order_by.return_value.limit.return_value.all.return_value = [tenant]
         mocker.patch("utils.owner_panel.Tenant.query", tenant_q)
-        mocker.patch(
-            "utils.owner_panel.resolve_tenant_branding", return_value={"logo_url": "x"}
-        )
+        mocker.patch("utils.owner_panel.resolve_tenant_branding", return_value={"logo_url": "x"})
         mocker.patch("utils.owner_panel.branding_path_warnings", return_value=[])
         overview = {
             "user_counts": {1: 2},
@@ -220,9 +209,7 @@ class TestBuildBrandingOverviewRows:
     def test_preview_urls(self, app, mocker):
         tenant = _tenant(3, "shop")
         tenant_q = MagicMock()
-        tenant_q.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [
-            tenant
-        ]
+        tenant_q.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [tenant]
         mocker.patch("utils.owner_panel.Tenant.query", tenant_q)
         mocker.patch("utils.owner_panel.resolve_tenant_branding", return_value={})
         mocker.patch("utils.owner_panel.branding_path_warnings", return_value=["warn"])
@@ -250,9 +237,7 @@ class TestBuildSystemHealthSummary:
         fake_engine = MagicMock()
         fake_engine.connect.return_value = fake_conn
         mocker.patch("sqlalchemy.create_engine", return_value=fake_engine)
-        mocker.patch.dict(
-            "os.environ", {"DATABASE_URL": "postgresql://test/test"}, clear=False
-        )
+        mocker.patch.dict("os.environ", {"DATABASE_URL": "postgresql://test/test"}, clear=False)
         from utils.owner_panel import build_system_health_summary
 
         with app.app_context():
@@ -280,9 +265,7 @@ class TestBuildCompanyDashboardContext:
         tenant = _tenant(1, "acme", logo_url="logo.png")
         mocker.patch("utils.owner_panel.db.session.get", return_value=tenant)
         mocker.patch("utils.owner_panel.resolve_tenant_branding", return_value={})
-        mocker.patch(
-            "utils.owner_panel.branding_path_warnings", return_value=["missing file"]
-        )
+        mocker.patch("utils.owner_panel.branding_path_warnings", return_value=["missing file"])
 
         sales_result = (3, Decimal("1500"))
         sales_q = MagicMock()
@@ -311,7 +294,9 @@ class TestBuildCompanyDashboardContext:
         mocker.patch("models.Product.query", prod_q)
 
         cust_q = MagicMock()
-        cust_q.filter_by.return_value.join.return_value.filter.return_value.distinct.return_value.count.return_value = 20
+        cust_q.filter_by.return_value.join.return_value.filter.return_value.distinct.return_value.count.return_value = (
+            20
+        )
         mocker.patch("models.Customer.query", cust_q)
 
         user_q = MagicMock()
@@ -365,9 +350,7 @@ class TestBuildCompanyDashboardContext:
         branch_q = MagicMock()
         branch_q.filter_by.return_value.count.return_value = 0
         mocker.patch("utils.owner_panel.Branch.query", branch_q)
-        mocker.patch(
-            "services.backup_service.BackupService.list_backups", return_value=[]
-        )
+        mocker.patch("services.backup_service.BackupService.list_backups", return_value=[])
         wh_q = MagicMock()
         wh_q.filter_by.return_value.order_by.return_value.all.return_value = []
         mocker.patch("utils.owner_panel.Warehouse.query", wh_q)
@@ -397,9 +380,7 @@ class TestBuildCompanyDashboardContext:
         cogs_q.select_from.return_value.join.return_value.filter.return_value = cogs_q
         cogs_q.scalar.return_value = Decimal("0")
         session = mocker.patch("utils.owner_panel.db.session")
-        session.query.side_effect = lambda *m: (
-            cogs_q if getattr(m[0], "__name__", "") == "SaleLine" else sales_q
-        )
+        session.query.side_effect = lambda *m: cogs_q if getattr(m[0], "__name__", "") == "SaleLine" else sales_q
         prod_q = MagicMock()
         prod_q.filter_by.return_value.count.return_value = 1
         mocker.patch("models.Product.query", prod_q)
@@ -412,9 +393,7 @@ class TestBuildCompanyDashboardContext:
         branch_q = MagicMock()
         branch_q.filter_by.return_value.count.return_value = 1
         mocker.patch("utils.owner_panel.Branch.query", branch_q)
-        mocker.patch(
-            "services.backup_service.BackupService.list_backups", return_value=[]
-        )
+        mocker.patch("services.backup_service.BackupService.list_backups", return_value=[])
         wh_q = MagicMock()
         wh_q.filter_by.return_value.order_by.return_value.all.return_value = []
         mocker.patch("utils.owner_panel.Warehouse.query", wh_q)

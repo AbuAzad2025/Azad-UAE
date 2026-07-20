@@ -24,9 +24,7 @@ class TestLabelsAndQueries:
         assert found is not None
         assert StoreOrderService.get_tenant_order(sample_tenant.id, 999999999) is None
 
-    def test_list_for_customer(
-        self, db_session, online_sale, sample_tenant, sample_customer
-    ):
+    def test_list_for_customer(self, db_session, online_sale, sample_tenant, sample_customer):
         rows = StoreOrderService.list_for_customer(sample_tenant.id, sample_customer.id)
         assert any(s.id == online_sale.id for s in rows)
 
@@ -165,9 +163,7 @@ class TestCancelOrder:
             StoreOrderService.cancel_order(online_sale)
 
     def test_cancel_pending(self, mocker, online_sale, app):
-        release = mocker.patch(
-            "services.store_coupon_service.StoreCouponService.release_use"
-        )
+        release = mocker.patch("services.store_coupon_service.StoreCouponService.release_use")
         online_sale.coupon_code = "SAVE10"
         with app.app_context():
             result = StoreOrderService.cancel_order(online_sale)
@@ -181,9 +177,7 @@ class TestCancelOrder:
         )
         online_sale.status = "confirmed"
         cancel = mocker.patch("services.store_order_service.SaleService.cancel_sale")
-        release = mocker.patch(
-            "services.store_coupon_service.StoreCouponService.release_use"
-        )
+        release = mocker.patch("services.store_coupon_service.StoreCouponService.release_use")
         online_sale.coupon_code = "CPN"
         with app.app_context():
             StoreOrderService.cancel_order(online_sale)
@@ -194,13 +188,9 @@ class TestCancelOrder:
 class TestReverseLoyalty:
     def test_reverse_loyalty_full_path(self, mocker, online_sale):
         txn = MagicMock(points=25)
-        mocker.patch(
-            "models.shop_loyalty.ShopLoyaltyTransaction.query"
-        ).filter_by.return_value.first.return_value = txn
+        mocker.patch("models.shop_loyalty.ShopLoyaltyTransaction.query").filter_by.return_value.first.return_value = txn
         lp = MagicMock(points=50, points_earned=50)
-        mocker.patch(
-            "models.shop_loyalty.ShopLoyalty.query"
-        ).filter_by.return_value.first.return_value = lp
+        mocker.patch("models.shop_loyalty.ShopLoyalty.query").filter_by.return_value.first.return_value = lp
         acct = MagicMock(id=3)
         mocker.patch(
             "models.shop_customer_account.ShopCustomerAccount.query"
@@ -246,9 +236,7 @@ class TestValidateStock:
             return_value=(True, ""),
         )
         sale = MagicMock(warehouse_id=1)
-        line = MagicMock(
-            product_id=1, quantity=Decimal("1"), product=MagicMock(name="P")
-        )
+        line = MagicMock(product_id=1, quantity=Decimal("1"), product=MagicMock(name="P"))
         sale.lines = [line]
         assert StoreOrderService.validate_stock_for_order(sale) == []
 

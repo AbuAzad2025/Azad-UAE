@@ -14,9 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 def post_sale_commissions(sale):
-    entries = PartnerCommissionEntry.query.filter_by(
-        sale_id=sale.id, tenant_id=sale.tenant_id
-    ).all()
+    entries = PartnerCommissionEntry.query.filter_by(sale_id=sale.id, tenant_id=sale.tenant_id).all()
     if not entries:
         return None
 
@@ -25,16 +23,12 @@ def post_sale_commissions(sale):
         return None
 
     # Dynamic currency: use sale's exchange rate and base currency
-    exchange_rate = (
-        Decimal(str(sale.exchange_rate)) if sale.exchange_rate else Decimal("1")
-    )
+    exchange_rate = Decimal(str(sale.exchange_rate)) if sale.exchange_rate else Decimal("1")
     base_currency = getattr(sale, "currency", "AED")
     try:
         from utils.currency_utils import resolve_tenant_base_currency
 
-        base_currency = (
-            resolve_tenant_base_currency(tenant_id=sale.tenant_id) or base_currency
-        )
+        base_currency = resolve_tenant_base_currency(tenant_id=sale.tenant_id) or base_currency
     except Exception:
         logger.warning(
             "Failed to resolve tenant base currency for commission GL, using default",

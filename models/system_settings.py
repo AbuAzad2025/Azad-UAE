@@ -22,9 +22,7 @@ class SystemSettings(db.Model):
     # System Identity - هوية النظام
     system_name = db.Column(db.String(200), default="Azad ERP System")
     system_version = db.Column(db.String(20), default="2.0.0")
-    system_mode = db.Column(
-        db.String(20), default="production"
-    )  # development, production
+    system_mode = db.Column(db.String(20), default="production")  # development, production
 
     # UI Settings - إعدادات الواجهة
     theme = db.Column(db.String(50), default="modern")  # modern, classic, custom
@@ -104,9 +102,7 @@ class SystemSettings(db.Model):
     enable_compression = db.Column(db.Boolean, default=True)
 
     auto_backup_enabled = db.Column(db.Boolean, default=True)
-    backup_frequency = db.Column(
-        db.String(20), default="daily"
-    )  # daily, weekly, monthly
+    backup_frequency = db.Column(db.String(20), default="daily")  # daily, weekly, monthly
     backup_retention_days = db.Column(db.Integer, default=30)
 
     enable_api = db.Column(db.Boolean, default=False)
@@ -140,13 +136,9 @@ class SystemSettings(db.Model):
 
     # Azad Platform Fees - رسوم منصة أزاد
     azad_platform_fee_rate = db.Column(db.Numeric(5, 2), default=Decimal("1.00"))
-    subscription_monthly_fee_aed = db.Column(
-        db.Numeric(15, 3), default=Decimal("0.000")
-    )
+    subscription_monthly_fee_aed = db.Column(db.Numeric(15, 3), default=Decimal("0.000"))
     subscription_yearly_fee_aed = db.Column(db.Numeric(15, 3), default=Decimal("0.000"))
-    subscription_perpetual_fee_aed = db.Column(
-        db.Numeric(15, 3), default=Decimal("0.000")
-    )
+    subscription_perpetual_fee_aed = db.Column(db.Numeric(15, 3), default=Decimal("0.000"))
 
     auto_update_rates = db.Column(db.Boolean, default=False)
 
@@ -154,9 +146,7 @@ class SystemSettings(db.Model):
 
     # Meta
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -198,9 +188,7 @@ class SystemSettings(db.Model):
             except Exception:
                 import logging
 
-                logging.getLogger(__name__).debug(
-                    "Failed to parse custom_settings JSON", exc_info=True
-                )
+                logging.getLogger(__name__).debug("Failed to parse custom_settings JSON", exc_info=True)
         custom[key] = value
         self.custom_settings = json.dumps(custom, ensure_ascii=False)
 

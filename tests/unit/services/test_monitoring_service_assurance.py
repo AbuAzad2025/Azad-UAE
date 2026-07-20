@@ -97,9 +97,7 @@ class TestActivityMonitor:
         user = MagicMock()
         sale = MagicMock()
         audit_q = MagicMock()
-        audit_q.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [
-            audit
-        ]
+        audit_q.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [audit]
         user_q = MagicMock()
         user_q.filter.return_value.all.return_value = [user]
         sale_q = MagicMock()
@@ -161,9 +159,7 @@ class TestActivityMonitor:
 class TestPerformanceMetricsFile:
     def test_reads_slow_queries(self, mocker):
         mocker.patch("services.monitoring_service.os.path.exists", return_value=True)
-        mocker.patch(
-            "builtins.open", mocker.mock_open(read_data="ok line\nSLOW query took 2s\n")
-        )
+        mocker.patch("builtins.open", mocker.mock_open(read_data="ok line\nSLOW query took 2s\n"))
         data = MonitoringService.get_performance_metrics_data()
         assert data["slow_queries_count"] == 1
 
@@ -187,37 +183,27 @@ class TestHealthMetrics:
 
     def test_get_disk_usage(self, mocker):
         usage = MagicMock(total=1000, used=400, free=600, percent=40)
-        mocker.patch(
-            "services.monitoring_service.psutil.disk_usage", return_value=usage
-        )
+        mocker.patch("services.monitoring_service.psutil.disk_usage", return_value=usage)
         result = MonitoringService.get_disk_usage()
         assert result["healthy"] is True
         assert result["percent"] == 40
 
     def test_get_disk_usage_unavailable(self, mocker):
-        mocker.patch(
-            "services.monitoring_service.psutil.disk_usage", side_effect=OSError()
-        )
+        mocker.patch("services.monitoring_service.psutil.disk_usage", side_effect=OSError())
         assert MonitoringService.get_disk_usage()["error"] == "unavailable"
 
     def test_get_memory_usage(self, mocker):
         mem = MagicMock(total=8 * 1024**2, used=4 * 1024**2, percent=50)
-        mocker.patch(
-            "services.monitoring_service.psutil.virtual_memory", return_value=mem
-        )
+        mocker.patch("services.monitoring_service.psutil.virtual_memory", return_value=mem)
         result = MonitoringService.get_memory_usage()
         assert result["healthy"] is True
 
     def test_get_memory_usage_unavailable(self, mocker):
-        mocker.patch(
-            "services.monitoring_service.psutil.virtual_memory", side_effect=OSError()
-        )
+        mocker.patch("services.monitoring_service.psutil.virtual_memory", side_effect=OSError())
         assert MonitoringService.get_memory_usage()["error"] == "unavailable"
 
     def test_get_cpu_usage_unavailable(self, mocker):
-        mocker.patch(
-            "services.monitoring_service.psutil.cpu_percent", side_effect=OSError()
-        )
+        mocker.patch("services.monitoring_service.psutil.cpu_percent", side_effect=OSError())
         assert MonitoringService.get_cpu_usage()["error"] == "unavailable"
 
     def test_get_cpu_usage(self, mocker):
@@ -227,18 +213,10 @@ class TestHealthMetrics:
         assert result["cores"] == 4
 
     def test_get_system_health(self, mocker):
-        mocker.patch.object(
-            MonitoringService, "check_database", return_value={"healthy": True}
-        )
-        mocker.patch.object(
-            MonitoringService, "get_disk_usage", return_value={"healthy": True}
-        )
-        mocker.patch.object(
-            MonitoringService, "get_memory_usage", return_value={"healthy": True}
-        )
-        mocker.patch.object(
-            MonitoringService, "get_cpu_usage", return_value={"healthy": True}
-        )
+        mocker.patch.object(MonitoringService, "check_database", return_value={"healthy": True})
+        mocker.patch.object(MonitoringService, "get_disk_usage", return_value={"healthy": True})
+        mocker.patch.object(MonitoringService, "get_memory_usage", return_value={"healthy": True})
+        mocker.patch.object(MonitoringService, "get_cpu_usage", return_value={"healthy": True})
         health = MonitoringService.get_system_health()
         assert health["status"] == "healthy"
         assert "timestamp" in health
@@ -282,15 +260,9 @@ class TestApplicationMetrics:
 class TestLogPerformanceMetric:
     def test_writes_metric_line(self, tmp_path, mocker):
         basedir = str(tmp_path)
-        mocker.patch(
-            "services.monitoring_service.os.path.abspath", return_value=basedir
-        )
-        mocker.patch(
-            "services.monitoring_service.os.path.join", side_effect=os.path.join
-        )
-        mocker.patch(
-            "services.monitoring_service.os.path.dirname", return_value=basedir
-        )
+        mocker.patch("services.monitoring_service.os.path.abspath", return_value=basedir)
+        mocker.patch("services.monitoring_service.os.path.join", side_effect=os.path.join)
+        mocker.patch("services.monitoring_service.os.path.dirname", return_value=basedir)
         MonitoringService.log_performance_metric("latency", 1.23, {"route": "sales"})
         log_file = tmp_path / "logs" / "performance.log"
         assert log_file.exists()

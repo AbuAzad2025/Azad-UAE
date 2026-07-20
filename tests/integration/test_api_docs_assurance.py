@@ -46,9 +46,7 @@ class TestApiDocsProtection:
         from werkzeug.exceptions import NotFound
 
         with patch("routes.api_docs._api_docs_public", return_value=False):
-            with patch(
-                "routes.api_docs.current_user", MagicMock(is_authenticated=False)
-            ):
+            with patch("routes.api_docs.current_user", MagicMock(is_authenticated=False)):
                 with app.app_context():
                     try:
                         resp = client.get("/api-docs/openapi.json")
@@ -59,18 +57,14 @@ class TestApiDocsProtection:
 
     def test_protected_allows_authenticated_user(self, app, client):
         with patch("routes.api_docs._api_docs_public", return_value=False):
-            with patch(
-                "routes.api_docs.current_user", MagicMock(is_authenticated=True)
-            ):
+            with patch("routes.api_docs.current_user", MagicMock(is_authenticated=True)):
                 with app.app_context():
                     resp = client.get("/api-docs/openapi.json")
         assert resp.status_code == 200
 
     def test_openapi_strips_servers_when_not_public(self, app, client):
         with patch("routes.api_docs._api_docs_public", return_value=False):
-            with patch(
-                "routes.api_docs.current_user", MagicMock(is_authenticated=True)
-            ):
+            with patch("routes.api_docs.current_user", MagicMock(is_authenticated=True)):
                 with app.app_context():
                     resp = client.get("/api-docs/openapi.json")
         assert "servers" not in resp.get_json()

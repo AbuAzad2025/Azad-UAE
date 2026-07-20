@@ -5,9 +5,7 @@ from collections import Counter
 
 class ErrorLogService:
     @staticmethod
-    def get_parsed_errors(
-        page=1, per_page=50, search="", level_filter="", error_file="logs/errors.log"
-    ):
+    def get_parsed_errors(page=1, per_page=50, search="", level_filter="", error_file="logs/errors.log"):
         parsed_errors = []
 
         if os.path.exists(error_file):
@@ -95,11 +93,7 @@ class ErrorLogService:
         stats = {}
         if parsed_errors:
             stats["by_level"] = dict(Counter(e["level"] for e in parsed_errors))
-            stats["by_module"] = dict(
-                Counter(e["module"] for e in parsed_errors if e["module"]).most_common(
-                    10
-                )
-            )
+            stats["by_module"] = dict(Counter(e["module"] for e in parsed_errors if e["module"]).most_common(10))
             stats["total"] = total
 
         return paginated, total_pages, total, stats

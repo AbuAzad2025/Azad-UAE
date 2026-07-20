@@ -66,18 +66,14 @@ if __name__ == "__main__":
                 except Exception:
                     import logging
 
-                    logging.getLogger(__name__).exception(
-                        "Failed to log DB URI masking warning"
-                    )
+                    logging.getLogger(__name__).exception("Failed to log DB URI masking warning")
                 return uri
 
         app.logger.info("Starting UAE-Sale System")
         app.logger.info("Host: %s", host)
         app.logger.info("Port: %s", port)
         app.logger.info("Debug: %s", debug_mode)
-        app.logger.info(
-            "Database: %s", _mask_db_uri(app.config.get("SQLALCHEMY_DATABASE_URI"))
-        )
+        app.logger.info("Database: %s", _mask_db_uri(app.config.get("SQLALCHEMY_DATABASE_URI")))
         app.logger.info("Starting server on https://%s:%s", host, port)
 
         app.run(host=host, port=port, debug=debug_mode, use_reloader=False)

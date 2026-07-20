@@ -89,9 +89,7 @@ class TestGetOrCreate:
 
         mock_session = MagicMock()
         existing = MagicMock()
-        mock_session.query.return_value.filter_by.return_value.first.return_value = (
-            existing
-        )
+        mock_session.query.return_value.filter_by.return_value.first.return_value = existing
         result, created = get_or_create(mock_session, MagicMock, name="x")
         assert result is existing
         assert created is False
@@ -104,9 +102,7 @@ class TestGetOrCreate:
         model = MagicMock()
         instance = MagicMock()
         model.return_value = instance
-        result, created = get_or_create(
-            mock_session, model, defaults={"active": True}, name="new"
-        )
+        result, created = get_or_create(mock_session, model, defaults={"active": True}, name="new")
         assert result is instance
         assert created is True
         mock_session.add.assert_called_once_with(instance)

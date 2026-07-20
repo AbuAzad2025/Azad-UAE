@@ -40,10 +40,7 @@ def _normalize_doc_type(doc_type):
 def _check_branch_scope(doc):
     """Check if the document's branch_id is within the user's branch scope."""
     scoped_branch_id = branch_scope_id()
-    if (
-        scoped_branch_id is not None
-        and getattr(doc, "branch_id", None) != scoped_branch_id
-    ):
+    if scoped_branch_id is not None and getattr(doc, "branch_id", None) != scoped_branch_id:
         return True
     return False
 
@@ -88,9 +85,7 @@ def print_document(doc_type, **kwargs):
         return render_template("errors/403.html"), 403
 
     eff_tid = tid or getattr(doc, "tenant_id", None)
-    PrintService.create_snapshot(
-        eff_tid, doc_type, record_id, reason="print", document=doc
-    )
+    PrintService.create_snapshot(eff_tid, doc_type, record_id, reason="print", document=doc)
     PrintService.audit_print(eff_tid, doc_type, record_id, action="print")
 
     return PrintService.render_print(
@@ -137,9 +132,7 @@ def print_document_pdf(doc_type, **kwargs):
         tenant_id=eff_tid,
         filename=filename,
     )
-    PrintService.create_snapshot(
-        eff_tid, doc_type, record_id, reason="pdf_download", document=doc
-    )
+    PrintService.create_snapshot(eff_tid, doc_type, record_id, reason="pdf_download", document=doc)
     PrintService.audit_print(eff_tid, doc_type, record_id, action="pdf_download")
 
     return send_file(
@@ -166,9 +159,7 @@ def _handle_packing_slip(sale_id, tid):
     lines = sale.lines if hasattr(sale, "lines") else []
 
     eff_tid = tid or getattr(sale, "tenant_id", None)
-    PrintService.create_snapshot(
-        eff_tid, "packing_slip", sale_id, reason="print", document=sale
-    )
+    PrintService.create_snapshot(eff_tid, "packing_slip", sale_id, reason="print", document=sale)
     PrintService.audit_print(eff_tid, "packing_slip", sale_id, action="print")
 
     return PrintService.render_print(
@@ -201,9 +192,7 @@ def _handle_packing_slip_pdf(sale_id, tid):
         tenant_id=eff_tid,
         filename=filename,
     )
-    PrintService.create_snapshot(
-        eff_tid, "packing_slip", sale_id, reason="pdf_download", document=sale
-    )
+    PrintService.create_snapshot(eff_tid, "packing_slip", sale_id, reason="pdf_download", document=sale)
     PrintService.audit_print(eff_tid, "packing_slip", sale_id, action="pdf_download")
 
     return send_file(
@@ -266,16 +255,10 @@ def bulk_print():
         if doc:
             eff_tid = tid or getattr(doc, "tenant_id", None)
             documents.append({"type": doc_type, "context": {entry["context_key"]: doc}})
-            PrintService.create_snapshot(
-                eff_tid, doc_type, doc_id, reason="bulk_print", document=doc
-            )
-            PrintService.audit_print(
-                eff_tid, f"{doc_type}_bulk", doc_id, action="bulk_print"
-            )
+            PrintService.create_snapshot(eff_tid, doc_type, doc_id, reason="bulk_print", document=doc)
+            PrintService.audit_print(eff_tid, f"{doc_type}_bulk", doc_id, action="bulk_print")
 
-    html = PrintService.bulk_print_documents(
-        documents, {doc_type: entry["template"]}, tid
-    )
+    html = PrintService.bulk_print_documents(documents, {doc_type: entry["template"]}, tid)
     return html, 200, {"Content-Type": "text/html; charset=utf-8"}
 
 
@@ -285,13 +268,9 @@ def bulk_print():
 def print_history():
     tid = get_active_tenant_id(current_user)
     page = request.args.get("page", 1, type=int)
-    query = PrintHistory.query.filter_by(tenant_id=tid).order_by(
-        PrintHistory.created_at.desc()
-    )
+    query = PrintHistory.query.filter_by(tenant_id=tid).order_by(PrintHistory.created_at.desc())
     pagination = query.paginate(page=page, per_page=50, error_out=False)
-    return render_template(
-        "printing/history.html", history=pagination.items, pagination=pagination
-    )
+    return render_template("printing/history.html", history=pagination.items, pagination=pagination)
 
 
 @printing_bp.route("/api/preview", methods=["POST"])
@@ -315,9 +294,7 @@ def print_preview_api():
     if not obj:
         return jsonify({"error": "Document not found"}), 404
 
-    html = PrintService.render_print(
-        entry["template"], {entry["context_key"]: obj}, tenant_id=tid
-    )
+    html = PrintService.render_print(entry["template"], {entry["context_key"]: obj}, tenant_id=tid)
     return jsonify({"html": html})
 
 
@@ -327,12 +304,7 @@ def print_preview_api():
 def api_print_history():
     tid = get_active_tenant_id(current_user)
     limit = request.args.get("limit", 20, type=int)
-    records = (
-        PrintHistory.query.filter_by(tenant_id=tid)
-        .order_by(PrintHistory.created_at.desc())
-        .limit(limit)
-        .all()
-    )
+    records = PrintHistory.query.filter_by(tenant_id=tid).order_by(PrintHistory.created_at.desc()).limit(limit).all()
     return jsonify(
         [
             {
@@ -340,9 +312,7 @@ def api_print_history():
                 "document_type": r.document_type,
                 "document_id": r.document_id,
                 "action": r.action,
-                "created_at": (
-                    r.created_at.strftime("%Y-%m-%d %H:%M:%S") if r.created_at else None
-                ),
+                "created_at": (r.created_at.strftime("%Y-%m-%d %H:%M:%S") if r.created_at else None),
                 "user_name": r.user.full_name if r.user else "—",
             }
             for r in records

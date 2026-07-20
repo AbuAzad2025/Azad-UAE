@@ -39,9 +39,7 @@ class TestHelpers:
             assert _get_active_tenant_id() == 5
 
     def test_has_permission_true(self):
-        user = SimpleNamespace(
-            is_authenticated=True, has_permission=MagicMock(return_value=True)
-        )
+        user = SimpleNamespace(is_authenticated=True, has_permission=MagicMock(return_value=True))
         with patch("ai_knowledge.action_dispatcher.current_user", user):
             assert _has_permission("manage_sales") is True
 
@@ -170,9 +168,7 @@ class TestDispatch:
     def test_create_customer_success(self, mock_ai_user):
         customer = MagicMock(id=10)
         with (
-            patch(
-                "ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1
-            ),
+            patch("ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1),
             patch("ai_knowledge.action_dispatcher._is_owner", return_value=True),
             patch("models.Customer") as Customer,
             patch("ai_knowledge.action_dispatcher.db.session"),
@@ -188,9 +184,7 @@ class TestDispatch:
         mock_q.filter.return_value = mock_q
         mock_q.order_by.return_value.limit.return_value.all.return_value = []
         with (
-            patch(
-                "ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1
-            ),
+            patch("ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1),
             patch("ai_knowledge.action_dispatcher._is_owner", return_value=True),
             patch("models.Customer") as Customer,
         ):

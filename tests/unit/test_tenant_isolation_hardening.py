@@ -70,9 +70,7 @@ class TestTenantIsolationHardening:
         uid = uuid.uuid4().hex[:8]
         role = Role.query.filter_by(slug=f"test-role-{uid}").first()
         if not role:
-            role = Role(
-                name=f"Test Role {uid}", slug=f"test-role-{uid}", is_active=True
-            )
+            role = Role(name=f"Test Role {uid}", slug=f"test-role-{uid}", is_active=True)
             db_session.add(role)
             db_session.flush()
         user = User(
@@ -92,9 +90,7 @@ class TestTenantIsolationHardening:
         db_session.commit()
         return db_session.get(User, user.id)
 
-    def test_normal_user_cannot_set_another_tenant(
-        self, db_session, sample_tenant, sample_branch
-    ):
+    def test_normal_user_cannot_set_another_tenant(self, db_session, sample_tenant, sample_branch):
         """Test normal user cannot set session tenant to another tenant"""
         from utils.tenanting import set_active_tenant
 
@@ -105,14 +101,10 @@ class TestTenantIsolationHardening:
         tenant2 = self._create_second_tenant(db_session)
 
         # Try to set tenant2 as active tenant for user
-        with pytest.raises(
-            ValueError, match="Normal users can only set their own tenant_id"
-        ):
+        with pytest.raises(ValueError, match="Normal users can only set their own tenant_id"):
             set_active_tenant(tenant2.id, user=user)
 
-    def test_platform_owner_can_set_active_tenant(
-        self, db_session, sample_tenant, sample_branch
-    ):
+    def test_platform_owner_can_set_active_tenant(self, db_session, sample_tenant, sample_branch):
         """Test platform owner can set active tenant"""
         from utils.tenanting import set_active_tenant
 
@@ -120,9 +112,7 @@ class TestTenantIsolationHardening:
         owner = self._create_test_user(db_session, sample_tenant.id, is_owner=True)
 
         # Create a second tenant
-        tenant2 = self._ensure_tenant_active(
-            db_session, self._create_second_tenant(db_session)
-        )
+        tenant2 = self._ensure_tenant_active(db_session, self._create_second_tenant(db_session))
 
         # Platform owner should be able to set tenant2
         set_active_tenant(tenant2.id, user=owner)
@@ -132,16 +122,12 @@ class TestTenantIsolationHardening:
 
         assert get_active_tenant_id(user=owner) == tenant2.id
 
-    def test_normal_user_branch_must_belong_to_same_tenant(
-        self, db_session, sample_tenant, sample_branch
-    ):
+    def test_normal_user_branch_must_belong_to_same_tenant(self, db_session, sample_tenant, sample_branch):
         """Test normal user branch must belong to same tenant"""
         from utils.branching import get_accessible_branches
 
         # Create a normal user for sample_tenant
-        user = self._create_test_user(
-            db_session, sample_tenant.id, branch_id=sample_branch.id
-        )
+        user = self._create_test_user(db_session, sample_tenant.id, branch_id=sample_branch.id)
 
         # Create a second tenant and branch
         tenant2 = self._create_second_tenant(db_session)
@@ -161,9 +147,7 @@ class TestTenantIsolationHardening:
         assert branch2.id not in branch_ids
         assert sample_branch.id in branch_ids
 
-    def test_platform_owner_can_switch_to_active_tenant(
-        self, db_session, sample_tenant, sample_branch
-    ):
+    def test_platform_owner_can_switch_to_active_tenant(self, db_session, sample_tenant, sample_branch):
         """Test platform owner can switch to active tenant"""
         from utils.tenanting import set_active_tenant
 
@@ -171,9 +155,7 @@ class TestTenantIsolationHardening:
         owner = self._create_test_user(db_session, sample_tenant.id, is_owner=True)
 
         # Create a second tenant
-        tenant2 = self._ensure_tenant_active(
-            db_session, self._create_second_tenant(db_session)
-        )
+        tenant2 = self._ensure_tenant_active(db_session, self._create_second_tenant(db_session))
 
         # Platform owner should be able to set tenant2
         set_active_tenant(tenant2.id, user=owner)
@@ -183,9 +165,7 @@ class TestTenantIsolationHardening:
 
         assert get_active_tenant_id(user=owner) == tenant2.id
 
-    def test_platform_owner_cannot_switch_to_inactive_tenant(
-        self, db_session, sample_tenant, sample_branch
-    ):
+    def test_platform_owner_cannot_switch_to_inactive_tenant(self, db_session, sample_tenant, sample_branch):
         """Test platform owner cannot switch to inactive tenant"""
         from utils.tenanting import set_active_tenant
 
@@ -199,9 +179,7 @@ class TestTenantIsolationHardening:
         with pytest.raises(ValueError, match="Tenant is not active or is suspended"):
             set_active_tenant(tenant2.id, user=owner)
 
-    def test_platform_owner_cannot_switch_to_nonexistent_tenant(
-        self, db_session, sample_tenant, sample_branch
-    ):
+    def test_platform_owner_cannot_switch_to_nonexistent_tenant(self, db_session, sample_tenant, sample_branch):
         """Test platform owner cannot switch to nonexistent tenant"""
         from utils.tenanting import set_active_tenant
 
@@ -212,17 +190,13 @@ class TestTenantIsolationHardening:
         with pytest.raises(ValueError, match="Tenant not found"):
             set_active_tenant(999999, user=owner)
 
-    def test_normal_user_login_with_valid_branch(
-        self, db_session, sample_tenant, sample_branch
-    ):
+    def test_normal_user_login_with_valid_branch(self, db_session, sample_tenant, sample_branch):
         """Test normal user login with valid branch"""
         from utils.tenanting import set_active_tenant
         from utils.branching import set_active_branch
 
         # Create a normal user with branch_id
-        user = self._create_test_user(
-            db_session, sample_tenant.id, branch_id=sample_branch.id
-        )
+        user = self._create_test_user(db_session, sample_tenant.id, branch_id=sample_branch.id)
 
         # Set active tenant for user
         set_active_tenant(sample_tenant.id, user=user)
@@ -237,9 +211,7 @@ class TestTenantIsolationHardening:
         assert get_active_tenant_id(user=user) == sample_tenant.id
         assert get_active_branch_id(user=user) == sample_branch.id
 
-    def test_platform_owner_behavior_valid(
-        self, db_session, sample_tenant, sample_branch
-    ):
+    def test_platform_owner_behavior_valid(self, db_session, sample_tenant, sample_branch):
         """Test platform owner behavior remains valid"""
         from utils.tenanting import set_active_tenant, get_active_tenant_id
         from utils.branching import set_active_branch, get_active_branch_id
@@ -270,9 +242,7 @@ class TestTenantIsolationHardening:
         set_active_branch(branch2.id, user=owner, allow_all=False)
         assert get_active_branch_id(user=owner) == branch2.id
 
-    def test_bootstrap_owner_login_without_tenant(
-        self, db_session, sample_tenant, sample_branch
-    ):
+    def test_bootstrap_owner_login_without_tenant(self, db_session, sample_tenant, sample_branch):
         """Test bootstrap owner (tenant_id=None) can log in without tenant/branch"""
         # Create bootstrap owner (tenant_id=None)
         owner = self._create_test_user(db_session, sample_tenant.id, is_owner=True)
@@ -292,9 +262,7 @@ class TestTenantIsolationHardening:
         set_active_branch(None, user=owner, allow_all=True)
         assert get_active_branch_id(user=owner) is None
 
-    def test_platform_owner_master_login_flow(
-        self, db_session, sample_tenant, sample_branch
-    ):
+    def test_platform_owner_master_login_flow(self, db_session, sample_tenant, sample_branch):
         """Test platform owner master login flow is not broken"""
         from utils.master_login import try_master_login
 
@@ -310,9 +278,7 @@ class TestTenantIsolationHardening:
 
         # Master login function should be callable (we don't test actual secrets)
         # Just verify the function exists and returns expected structure
-        success, meta = try_master_login(
-            "wrong_password", "127.0.0.1", username=owner.username
-        )
+        success, meta = try_master_login("wrong_password", "127.0.0.1", username=owner.username)
         assert not success
         assert isinstance(meta, dict)
         assert "reason" in meta
@@ -383,9 +349,7 @@ class TestTenantIsolationHardening:
             set_active_tenant("invalid", user=None)
 
         # Test non-existent tenant_id with unauthenticated user
-        with pytest.raises(
-            ValueError, match="Unauthenticated users cannot set tenant_id"
-        ):
+        with pytest.raises(ValueError, match="Unauthenticated users cannot set tenant_id"):
             set_active_tenant(999999, user=None)
 
     def test_inactive_tenant_validation(self, db_session):
@@ -407,9 +371,7 @@ class TestTenantIsolationHardening:
         db_session.flush()
 
         # Try to set inactive tenant with unauthenticated user
-        with pytest.raises(
-            ValueError, match="Unauthenticated users cannot set tenant_id"
-        ):
+        with pytest.raises(ValueError, match="Unauthenticated users cannot set tenant_id"):
             set_active_tenant(tenant.id, user=None)
 
     def test_tenant_session_cleared_on_invalid_input(self, db_session, sample_tenant):
@@ -498,9 +460,7 @@ class TestLoginRouteLevel:
         db_session.flush()
         return user
 
-    def test_normal_user_login_redirects_never_500(
-        self, client, app, db_session, sample_tenant, sample_branch
-    ):
+    def test_normal_user_login_redirects_never_500(self, client, app, db_session, sample_tenant, sample_branch):
         """Valid normal-user POST /auth/login → redirect (302), never 500."""
         from services.gl_service import GLService
 
@@ -537,9 +497,7 @@ class TestLoginRouteLevel:
         with client.session_transaction() as sess:
             assert "_user_id" in sess, "User should be logged in"
 
-    def test_cross_tenant_branch_mismatch_no_session(
-        self, client, app, db_session, sample_tenant, sample_branch
-    ):
+    def test_cross_tenant_branch_mismatch_no_session(self, client, app, db_session, sample_tenant, sample_branch):
         """Cross-tenant branch mismatch â†’ safe login response, no _user_id set."""
         import uuid
         from models.tenant import Tenant
@@ -600,9 +558,7 @@ class TestLoginRouteLevel:
         with client.session_transaction() as sess:
             assert "_user_id" not in sess, "Cross-tenant mismatch must not log user in"
 
-    def test_bootstrap_owner_login_redirects(
-        self, client, app, db_session, sample_tenant, sample_branch
-    ):
+    def test_bootstrap_owner_login_redirects(self, client, app, db_session, sample_tenant, sample_branch):
         """Bootstrap owner (tenant_id=None) login â†’ redirect, no active tenant required."""
         import uuid
         from models.user import User, Role
@@ -652,9 +608,7 @@ class TestLoginRouteLevel:
         with client.session_transaction() as sess:
             assert "_user_id" in sess, "Owner should be logged in"
 
-    def test_suspended_tenant_switch_never_500(
-        self, client, app, db_session, sample_tenant, sample_branch
-    ):
+    def test_suspended_tenant_switch_never_500(self, client, app, db_session, sample_tenant, sample_branch):
         """Switch to suspended tenant via /tenants/switch â†’ never 500, preserves previous tenant."""
         import uuid
         from models.tenant import Tenant
@@ -708,9 +662,7 @@ class TestLoginRouteLevel:
         resp = client.get(f"/tenants/switch/{suspended.id}", follow_redirects=False)
         assert resp.status_code != 500, "Switch must never return 500"
 
-    def test_master_login_attempt_never_500(
-        self, client, app, db_session, sample_tenant, sample_branch
-    ):
+    def test_master_login_attempt_never_500(self, client, app, db_session, sample_tenant, sample_branch):
         """Master-login path (wrong password) â†’ safe response, never 500."""
         owner = self._make_user(
             db_session,

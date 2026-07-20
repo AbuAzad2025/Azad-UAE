@@ -119,9 +119,7 @@ class SecurityService:
         """
         # فحص القائمة السوداء
         if ip_address in SecurityService._blacklist:
-            NotificationService.notify_security_alert(
-                "IP محظور", f"محاولة وصول من IP محظور: {ip_address}"
-            )
+            NotificationService.notify_security_alert("IP محظور", f"محاولة وصول من IP محظور: {ip_address}")
             return {"suspicious": True, "reason": "blacklisted_ip"}
 
         # فحص المحاولات الفاشلة
@@ -138,9 +136,7 @@ class SecurityService:
         # فحص User Agent المشبوه
         suspicious_agents = ["bot", "crawler", "scraper", "scanner"]
         if any(agent in user_agent.lower() for agent in suspicious_agents):
-            NotificationService.notify_security_alert(
-                "User Agent مشبوه", f"كشف user agent مشبوه: {user_agent[:100]}"
-            )
+            NotificationService.notify_security_alert("User Agent مشبوه", f"كشف user agent مشبوه: {user_agent[:100]}")
             return {"suspicious": True, "reason": "suspicious_user_agent"}
 
         return {"suspicious": False}
@@ -156,9 +152,7 @@ class SecurityService:
             }
 
         SecurityService._failed_attempts[ip_address]["count"] += 1
-        SecurityService._failed_attempts[ip_address]["last_attempt"] = datetime.now(
-            timezone.utc
-        )
+        SecurityService._failed_attempts[ip_address]["last_attempt"] = datetime.now(timezone.utc)
 
     @staticmethod
     def reset_failed_attempts(ip_address):
@@ -172,9 +166,7 @@ class SecurityService:
         return {
             "blacklisted_ips": len(SecurityService._blacklist),
             "failed_attempts": len(SecurityService._failed_attempts),
-            "total_failed_count": sum(
-                data["count"] for data in SecurityService._failed_attempts.values()
-            ),
+            "total_failed_count": sum(data["count"] for data in SecurityService._failed_attempts.values()),
             "security_level": SecurityService._calculate_security_level(),
         }
 

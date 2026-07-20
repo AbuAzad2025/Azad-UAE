@@ -55,9 +55,7 @@ def _resolve_transaction_rate(currency, user_rate=None):
 
 def _build_expense_gl_lines(expense, tenant_id):
     category = expense.category
-    expense_account = (
-        category.gl_account_code if category and category.gl_account_code else "6990"
-    )
+    expense_account = category.gl_account_code if category and category.gl_account_code else "6990"
     expense_concept = None if category and category.gl_account_code else "MISC_EXPENSE"
     from models import GLAccount
 
@@ -114,9 +112,7 @@ def index():
     archived_filters = [ArchivedRecord.table_name == "expenses"]
     if _tid is not None:
         archived_filters.append(ArchivedRecord.tenant_id == _tid)
-    archived_expenses = (
-        select(ArchivedRecord.record_id).filter(*archived_filters).scalar_subquery()
-    )
+    archived_expenses = select(ArchivedRecord.record_id).filter(*archived_filters).scalar_subquery()
     query = query.filter(~Expense.id.in_(archived_expenses))
 
     if category_id:
@@ -126,9 +122,7 @@ def index():
     branch_id = branch_scope_id()
     if branch_id is not None:
         query = query.filter(Expense.branch_id == branch_id)
-    pagination = query.order_by(Expense.expense_date.desc()).paginate(
-        page=page, per_page=per_page, error_out=False
-    )
+    pagination = query.order_by(Expense.expense_date.desc()).paginate(page=page, per_page=per_page, error_out=False)
 
     expense_categories = tenant_query(ExpenseCategory).filter_by(is_active=True).all()
 
@@ -148,9 +142,7 @@ def index():
 def create():
     if request.method == "POST":
         try:
-            expense_branch_id = branch_scope_id() or getattr(
-                current_user, "branch_id", None
-            )
+            expense_branch_id = branch_scope_id() or getattr(current_user, "branch_id", None)
             tenant_id = require_active_tenant_id(current_user)
             expense_number = generate_number(
                 "EXP",
@@ -178,13 +170,9 @@ def create():
             cheque_date_obj = None
             if cheque_date_str:
                 try:
-                    cheque_date_obj = datetime.strptime(
-                        cheque_date_str, "%Y-%m-%d"
-                    ).date()
+                    cheque_date_obj = datetime.strptime(cheque_date_str, "%Y-%m-%d").date()
                 except ValueError:
-                    current_app.logger.debug(
-                        "Invalid cheque date format: %s", cheque_date_str
-                    )
+                    current_app.logger.debug("Invalid cheque date format: %s", cheque_date_str)
 
             with atomic_transaction("expense_create"):
                 expense = Expense(
@@ -220,10 +208,8 @@ def create():
                     )
                     cheque = Cheque(
                         tenant_id=getattr(current_user, "tenant_id", None),
-                        cheque_number=expense.cheque_number
-                        or f"CHQ-{expense.expense_number}",
-                        cheque_bank_number=expense.cheque_number
-                        or f"CHQ-{expense.expense_number}",
+                        cheque_number=expense.cheque_number or f"CHQ-{expense.expense_number}",
+                        cheque_bank_number=expense.cheque_number or f"CHQ-{expense.expense_number}",
                         cheque_type="outgoing",
                         bank_name=expense.bank_name or "Unknown",
                         amount=expense.amount,
@@ -243,12 +229,9 @@ def create():
                     db.session.flush()
 
                 GLService.ensure_core_accounts(
-                    tenant_id=getattr(expense, "tenant_id", None)
-                    or get_active_tenant_id(current_user)
+                    tenant_id=getattr(expense, "tenant_id", None) or get_active_tenant_id(current_user)
                 )
-                tid = getattr(expense, "tenant_id", None) or get_active_tenant_id(
-                    current_user
-                )
+                tid = getattr(expense, "tenant_id", None) or get_active_tenant_id(current_user)
                 lines = _build_expense_gl_lines(expense, tid)
                 post_or_fail(
                     lines,
@@ -270,16 +253,12 @@ def create():
 
         except ValueError as e:
             flash(
-                gettext(
-                    f"❌ خطأ في البيانات: {str(e)}\n💡 تحقق من أن جميع الحقول المطلوبة مملوءة."
-                ),
+                gettext(f"❌ خطأ في البيانات: {str(e)}\n💡 تحقق من أن جميع الحقول المطلوبة مملوءة."),
                 "danger",
             )
         except Exception as e:
             flash(
-                gettext(
-                    f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."
-                ),
+                gettext(f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."),
                 "danger",
             )
 
@@ -338,12 +317,7 @@ def edit(**kwargs):
 
     from models import ArchivedRecord
 
-    is_archived = (
-        ArchivedRecord.query.filter_by(
-            table_name="expenses", record_id=expense.id
-        ).first()
-        is not None
-    )
+    is_archived = ArchivedRecord.query.filter_by(table_name="expenses", record_id=expense.id).first() is not None
     if is_archived:
         flash(gettext("⚠️ لا يمكن تعديل مصروف مؤرشف."), "warning")
         return redirect(url_for("expenses.view", id=record_id))
@@ -402,10 +376,7 @@ def edit(**kwargs):
                     expense.is_reversed = True
                     db.session.flush()
 
-                    GLService.ensure_core_accounts(
-                        tenant_id=expense.tenant_id
-                        or get_active_tenant_id(current_user)
-                    )
+                    GLService.ensure_core_accounts(tenant_id=expense.tenant_id or get_active_tenant_id(current_user))
                     tid = expense.tenant_id or get_active_tenant_id(current_user)
                     lines = _build_expense_gl_lines(expense, tid)
                     from services.gl_posting import post_or_fail
@@ -428,15 +399,11 @@ def edit(**kwargs):
             flash(gettext(f"❌ خطأ في البيانات: {str(e)}"), "danger")
         except Exception as e:
             flash(
-                gettext(
-                    f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."
-                ),
+                gettext(f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."),
                 "danger",
             )
 
-    return render_template(
-        "expenses/edit.html", expense=expense, categories=expense_categories
-    )
+    return render_template("expenses/edit.html", expense=expense, categories=expense_categories)
 
 
 @expenses_bp.route("/<int:id>/delete", methods=["POST"])
@@ -454,9 +421,7 @@ def delete(**kwargs):
 
     has_links = False
 
-    cheque = Cheque.query.filter_by(
-        expense_id=expense.id, tenant_id=expense.tenant_id
-    ).first()
+    cheque = Cheque.query.filter_by(expense_id=expense.id, tenant_id=expense.tenant_id).first()
     if cheque and cheque.status in ["cleared", "deposited", "bounced", "cancelled"]:
         has_links = True
 
@@ -477,9 +442,7 @@ def delete(**kwargs):
                     )
                 LoggingCore.log_audit("archive", "expenses", record_id)
             flash(
-                gettext(
-                    f'✅ تم أرشفة المصروف "{expense.expense_number}" (لوجود ارتباطات)'
-                ),
+                gettext(f'✅ تم أرشفة المصروف "{expense.expense_number}" (لوجود ارتباطات)'),
                 "warning",
             )
 
@@ -496,9 +459,7 @@ def delete(**kwargs):
                 if cheque:
                     from services.cheque_service import process_cheque_cancel
 
-                    process_cheque_cancel(
-                        cheque, reason=gettext(f"حذف المصروف {expense.expense_number}")
-                    )
+                    process_cheque_cancel(cheque, reason=gettext(f"حذف المصروف {expense.expense_number}"))
                     db.session.delete(cheque)
                 db.session.delete(expense)
                 LoggingCore.log_audit("delete", "expenses", record_id)
@@ -510,9 +471,7 @@ def delete(**kwargs):
         return redirect(url_for("expenses.index"))
 
     except Exception as e:
-        flash(
-            gettext(f"❌ خطأ في الحذف: {str(e)}\n💡 راجع البيانات المدخلة."), "danger"
-        )
+        flash(gettext(f"❌ خطأ في الحذف: {str(e)}\n💡 راجع البيانات المدخلة."), "danger")
         return redirect(url_for("expenses.view", id=record_id))
 
 
@@ -534,9 +493,7 @@ def cancel(**kwargs):
 
         assert_period_open(expense.expense_date, expense.tenant_id)
 
-        cheque = Cheque.query.filter_by(
-            expense_id=expense.id, tenant_id=expense.tenant_id
-        ).first()
+        cheque = Cheque.query.filter_by(expense_id=expense.id, tenant_id=expense.tenant_id).first()
 
         with atomic_transaction("expense_cancel"):
             if cheque and cheque.status not in ("cancelled",):
@@ -557,9 +514,7 @@ def cancel(**kwargs):
             expense.is_reversed = True
         LoggingCore.log_audit("cancel", "expenses", record_id)
         flash(
-            gettext(
-                f'✅ تم إلغاء المصروف "{expense.expense_number}" وعكس القيد المحاسبي.'
-            ),
+            gettext(f'✅ تم إلغاء المصروف "{expense.expense_number}" وعكس القيد المحاسبي.'),
             "success",
         )
     except Exception as e:
@@ -572,12 +527,7 @@ def cancel(**kwargs):
 @login_required
 @permission_required("manage_expenses")
 def categories():
-    expense_categories = (
-        tenant_query(ExpenseCategory)
-        .filter_by(is_active=True)
-        .order_by(ExpenseCategory.name)
-        .all()
-    )
+    expense_categories = tenant_query(ExpenseCategory).filter_by(is_active=True).order_by(ExpenseCategory.name).all()
     return render_template("expenses/categories.html", categories=expense_categories)
 
 
@@ -594,9 +544,7 @@ def _validate_gl_account_code(gl_account_code, tenant_id):
     if not account:
         raise ValueError(gettext(f'⚠️ حساب الأستاذ "{gl_account_code}" غير موجود.'))
     if account.is_header:
-        raise ValueError(
-            gettext(f'⚠️ حساب "{account.name}" هو حساب رئيسي ولا يمكن الترحيل إليه.')
-        )
+        raise ValueError(gettext(f'⚠️ حساب "{account.name}" هو حساب رئيسي ولا يمكن الترحيل إليه.'))
     if not account.is_active:
         raise ValueError(gettext(f'⚠️ حساب "{account.name}" غير نشط.'))
     code_str = str(gl_account_code)
@@ -604,11 +552,7 @@ def _validate_gl_account_code(gl_account_code, tenant_id):
     restricted_prefixes = ["1", "2", "3", "4"]
     restricted_codes = ["1130", "1150", "1160", "2110", "2120", "2140", "3130", "3350"]
     if code_str in restricted_codes:
-        raise ValueError(
-            gettext(
-                f'⚠️ حساب "{account.name}" هو حساب أصول/خصوم/حقوق ملكية ولا يمكن استخدامه كمصروف.'
-            )
-        )
+        raise ValueError(gettext(f'⚠️ حساب "{account.name}" هو حساب أصول/خصوم/حقوق ملكية ولا يمكن استخدامه كمصروف.'))
     if first_digit in restricted_prefixes and code_str != "6990":
         raise ValueError(
             gettext(
@@ -664,9 +608,7 @@ def create_category():
             return jsonify({"success": False, "error": str(e)}), 400
 
         flash(
-            gettext(
-                f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."
-            ),
+            gettext(f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."),
             "danger",
         )
         return redirect(url_for("expenses.categories"))
@@ -702,17 +644,11 @@ def archived():
     from models import ArchivedRecord
 
     tid = get_active_tenant_id(current_user)
-    archived_expenses_query = db.session.query(ArchivedRecord).filter(
-        ArchivedRecord.table_name == "expenses"
-    )
+    archived_expenses_query = db.session.query(ArchivedRecord).filter(ArchivedRecord.table_name == "expenses")
     if tid is not None:
-        archived_expenses_query = archived_expenses_query.filter(
-            ArchivedRecord.tenant_id == tid
-        )
+        archived_expenses_query = archived_expenses_query.filter(ArchivedRecord.tenant_id == tid)
 
-    archived_items = [
-        _archived_expense_row(archived) for archived in archived_expenses_query.all()
-    ]
+    archived_items = [_archived_expense_row(archived) for archived in archived_expenses_query.all()]
     archived_items.sort(key=lambda x: x["archived_at"], reverse=True)
 
     return render_template("expenses/archived.html", expenses=archived_items)
@@ -733,9 +669,7 @@ def archive(**kwargs):
     try:
         with atomic_transaction("expense_archive"):
             archive_service = ArchiveService()
-            archive_service.archive_record(
-                "expenses", expense, reason=gettext("تم أرشفة المصروف")
-            )
+            archive_service.archive_record("expenses", expense, reason=gettext("تم أرشفة المصروف"))
             LoggingCore.log_audit("archive", "expenses", expense.id)
     except Exception as exc:
         current_app.logger.error("Failed to archive expense %s: %s", expense.id, exc)
@@ -755,9 +689,7 @@ def restore(**kwargs):
 
     record_id = kwargs.pop("id")
     tid = get_active_tenant_id(current_user)
-    archived_query = ArchivedRecord.query.filter_by(
-        table_name="expenses", record_id=record_id
-    )
+    archived_query = ArchivedRecord.query.filter_by(table_name="expenses", record_id=record_id)
     if tid is not None:
         archived_query = archived_query.filter(ArchivedRecord.tenant_id == tid)
     archived_record = archived_query.first_or_404()

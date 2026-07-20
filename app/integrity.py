@@ -31,9 +31,7 @@ def run_system_integrity_check(app):
 
     try:
         ensure_system_integrity(app)
-        app.logger.info(
-            "[OK] System integrity verified (Master Key & Core Data Active)"
-        )
+        app.logger.info("[OK] System integrity verified (Master Key & Core Data Active)")
     except Exception as e:
         app.logger.error(f"[ERROR] System integrity check failed: {e}")
         import traceback

@@ -42,10 +42,7 @@ def overdue_payments():
             "success": True,
             "count": len(overdue),
             "total_amount": sum(float(c.get_balance_aed()) for c in overdue),
-            "customers": [
-                {"id": c.id, "name": c.name, "balance": float(c.get_balance_aed())}
-                for c in overdue[:10]
-            ],
+            "customers": [{"id": c.id, "name": c.name, "balance": float(c.get_balance_aed())} for c in overdue[:10]],
         }
     )
 
@@ -61,9 +58,7 @@ def daily_stats():
     today = datetime.now().date()
 
     tid = get_active_tenant_id(current_user)
-    today_sales = Sale.query.filter(
-        db.func.date(Sale.sale_date) == today, Sale.status == "confirmed"
-    )
+    today_sales = Sale.query.filter(db.func.date(Sale.sale_date) == today, Sale.status == "confirmed")
     if tid:
         today_sales = today_sales.filter(Sale.tenant_id == tid)
     today_sales = _apply_branch_scope(today_sales, Sale)
@@ -131,9 +126,7 @@ def low_stock_products():
     from models import Product
 
     tid = get_active_tenant_id(current_user)
-    products = Product.query.filter(
-        Product.is_active, Product.current_stock <= Product.min_stock_alert
-    )
+    products = Product.query.filter(Product.is_active, Product.current_stock <= Product.min_stock_alert)
     if tid:
         products = products.filter(Product.tenant_id == tid)
     products = _apply_branch_scope(products, Product)
@@ -182,9 +175,6 @@ def revenue_trend():
     return jsonify(
         {
             "success": True,
-            "data": [
-                {"date": str(row.date), "revenue": float(row.total or 0)}
-                for row in daily_revenue
-            ],
+            "data": [{"date": str(row.date), "revenue": float(row.total or 0)} for row in daily_revenue],
         }
     )

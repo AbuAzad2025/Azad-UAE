@@ -92,9 +92,7 @@ def test_select_all_query(engine):
 
 def test_insert_query_parameterized(engine):
     with engine.begin() as conn:
-        conn.execute(
-            insert_query(engine, "widgets", {"id": 10, "name": "z", "tenant_id": 7})
-        )
+        conn.execute(insert_query(engine, "widgets", {"id": 10, "name": "z", "tenant_id": 7}))
     with engine.connect() as conn:
         n = conn.execute(count_query(engine, "widgets")).scalar()
     assert n == 4

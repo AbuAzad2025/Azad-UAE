@@ -6,12 +6,8 @@ from models.bank_reconciliation import BankStatementLine
 
 class BankImportService:
     @staticmethod
-    def _generate_hash(
-        tenant_id, bank_account_id, date, amount, reference, description
-    ):
-        data = (
-            f"{tenant_id}:{bank_account_id}:{date}:{amount}:{reference}:{description}"
-        )
+    def _generate_hash(tenant_id, bank_account_id, date, amount, reference, description):
+        data = f"{tenant_id}:{bank_account_id}:{date}:{amount}:{reference}:{description}"
         return hashlib.sha256(data.encode("utf-8")).hexdigest()
 
     @staticmethod

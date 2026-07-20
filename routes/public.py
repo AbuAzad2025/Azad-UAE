@@ -51,9 +51,7 @@ def landing():
     lang = session.get("language", "ar")
     from models.package import Package
 
-    packages = (
-        Package.query.filter_by(is_active=True).order_by(Package.sort_order).all()
-    )
+    packages = Package.query.filter_by(is_active=True).order_by(Package.sort_order).all()
     return render_template("public/landing.html", packages=packages, is_en=lang == "en")
 
 
@@ -63,9 +61,7 @@ def pricing():
     lang = session.get("language", "ar")
     from models.package import Package
 
-    packages = (
-        Package.query.filter_by(is_active=True).order_by(Package.sort_order).all()
-    )
+    packages = Package.query.filter_by(is_active=True).order_by(Package.sort_order).all()
     ctx = {
         "packages": packages,
         "is_en": lang == "en",
@@ -140,17 +136,9 @@ def donate_azad_submit():
     try:
         amount = Decimal(str(request.form.get("amount", 0)))
         if amount < Decimal(str(vault.min_donation_amount or 10)):
-            raise ValueError(
-                gettext("المبلغ أقل من الحد الأدنى.")
-                if not is_en
-                else "Amount below minimum."
-            )
+            raise ValueError(gettext("المبلغ أقل من الحد الأدنى.") if not is_en else "Amount below minimum.")
         if amount > Decimal(str(vault.max_donation_amount or 10000)):
-            raise ValueError(
-                gettext("المبلغ يتجاوز الحد الأقصى.")
-                if not is_en
-                else "Amount exceeds maximum."
-            )
+            raise ValueError(gettext("المبلغ يتجاوز الحد الأقصى.") if not is_en else "Amount exceeds maximum.")
 
         method = (request.form.get("payment_method") or "bank_transfer").strip()
         donation = Donation(
@@ -181,9 +169,7 @@ def donate_azad_submit():
 
         logging.getLogger(__name__).exception("Donation submit failed")
         flash(
-            gettext("تعذر إرسال التبرع.")
-            if not is_en
-            else "Could not submit donation.",
+            gettext("تعذر إرسال التبرع.") if not is_en else "Could not submit donation.",
             "danger",
         )
         return redirect(url_for("public.donate_azad"))

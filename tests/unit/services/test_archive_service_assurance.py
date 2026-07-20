@@ -40,9 +40,7 @@ class TestArchiveRecord:
 
         record = Row()
 
-        mocker.patch(
-            "services.archive_service.current_user", MagicMock(is_authenticated=False)
-        )
+        mocker.patch("services.archive_service.current_user", MagicMock(is_authenticated=False))
         mocker.patch("services.archive_service.db.session")
         mocker.patch("services.archive_service.current_app").logger = MagicMock()
 
@@ -55,9 +53,7 @@ class TestArchiveRecord:
     def test_commit_failure_rolls_back(self, app, mocker):
         record = MagicMock(id=2, tenant_id=1)
         record.to_dict.return_value = {"id": 2}
-        mocker.patch(
-            "services.archive_service.current_user", MagicMock(is_authenticated=False)
-        )
+        mocker.patch("services.archive_service.current_user", MagicMock(is_authenticated=False))
         mock_session = mocker.patch("services.archive_service.db.session")
         mock_session.flush.side_effect = RuntimeError("db down")
         mocker.patch("services.archive_service.current_app").logger = MagicMock()
@@ -72,9 +68,7 @@ class TestArchiveRecord:
     def test_deferred_commit_flushes_only(self, app, mocker):
         record = MagicMock(id=3, tenant_id=1)
         record.to_dict.return_value = {"id": 3}
-        mocker.patch(
-            "services.archive_service.current_user", MagicMock(is_authenticated=False)
-        )
+        mocker.patch("services.archive_service.current_user", MagicMock(is_authenticated=False))
         mock_session = mocker.patch("services.archive_service.db.session")
         mocker.patch("services.archive_service.current_app").logger = MagicMock()
 
@@ -115,9 +109,7 @@ class TestDeletePaths:
     def test_hard_delete_archives_then_deletes(self, app, mocker):
         record = MagicMock(id=9, tenant_id=1)
         record.to_dict.return_value = {"id": 9}
-        mocker.patch(
-            "services.archive_service.current_user", MagicMock(is_authenticated=False)
-        )
+        mocker.patch("services.archive_service.current_user", MagicMock(is_authenticated=False))
         mocker.patch("services.archive_service.current_app").logger = MagicMock()
         mock_session = mocker.patch("services.archive_service.db.session")
 
@@ -132,9 +124,7 @@ class TestDeletePaths:
     def test_hard_delete_interrupt_rolls_back(self, app, mocker):
         record = MagicMock(id=9, tenant_id=1)
         record.to_dict.return_value = {"id": 9}
-        mocker.patch(
-            "services.archive_service.current_user", MagicMock(is_authenticated=False)
-        )
+        mocker.patch("services.archive_service.current_user", MagicMock(is_authenticated=False))
         mocker.patch("services.archive_service.current_app").logger = MagicMock()
         mock_session = mocker.patch("services.archive_service.db.session")
         mock_session.flush.side_effect = RuntimeError("interrupt")
@@ -251,9 +241,7 @@ class TestRestoreAndQuery:
                 self.__table__ = MagicMock(columns=[col])
 
         record = Row()
-        mocker.patch(
-            "services.archive_service.current_user", MagicMock(is_authenticated=False)
-        )
+        mocker.patch("services.archive_service.current_user", MagicMock(is_authenticated=False))
         mocker.patch("services.archive_service.db.session")
         mocker.patch("services.archive_service.current_app").logger = MagicMock()
         from services.archive_service import ArchiveService
@@ -265,9 +253,7 @@ class TestRestoreAndQuery:
     def test_archive_failure_rolls_back_on_outer_error(self, app, mocker):
         record = MagicMock(id=1, tenant_id=1)
         record.to_dict.side_effect = RuntimeError("serialize fail")
-        mocker.patch(
-            "services.archive_service.current_user", MagicMock(is_authenticated=False)
-        )
+        mocker.patch("services.archive_service.current_user", MagicMock(is_authenticated=False))
         mock_session = mocker.patch("services.archive_service.db.session")
         mocker.patch("services.archive_service.current_app").logger = MagicMock()
         from services.archive_service import ArchiveService
@@ -310,9 +296,7 @@ class TestRestoreAndQuery:
     def test_init_archive_model_map_populates(self, app):
         from services.archive_service import ArchiveService
 
-        ArchiveService.ARCHIVE_MODEL_MAP = {
-            k: None for k in ArchiveService.ARCHIVE_MODEL_MAP
-        }
+        ArchiveService.ARCHIVE_MODEL_MAP = {k: None for k in ArchiveService.ARCHIVE_MODEL_MAP}
         with app.app_context():
             ArchiveService._init_archive_model_map()
         assert ArchiveService.ARCHIVE_MODEL_MAP["sales"] is not None

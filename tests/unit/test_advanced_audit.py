@@ -107,19 +107,28 @@ class TestLogSensitiveAction:
         session = MagicMock()
         user = MagicMock()
         user.is_authenticated = False
+        atomic_cm = MagicMock()
+        atomic_cm.__enter__ = MagicMock(return_value=None)
+        atomic_cm.__exit__ = MagicMock(side_effect=RuntimeError("db down"))
 
         with (
-            patch("models.AuditLog", side_effect=RuntimeError("db down")),
             patch("utils.advanced_audit.db.session", session),
             patch("logging.getLogger") as get_logger,
             patch("utils.advanced_audit.current_user", user),
+            patch("utils.advanced_audit.atomic_transaction", return_value=atomic_cm)
+            as atomic_patch,
         ):
             with flask_app.test_request_context("/"):
                 from utils.advanced_audit import log_sensitive_action
 
                 log_sensitive_action("login")
 
-        session.rollback.assert_called_once()
+        # Rollback is delegated to the atomic_transaction context manager
+        # (GRIMOIRE Rule 1) — it guards the write and re-raises on failure.
+        atomic_patch.assert_called_once()
+        session.add.assert_called_once()
+        atomic_cm.__exit__.assert_called_once()
+        # Best-effort audit: the failure is logged, not propagated to callers.
         get_logger.return_value.exception.assert_called_once()
 
 
@@ -187,11 +196,7 @@ class TestTrackLoginAttempt:
 
         assert user.login_attempts == 5
         assert user.locked_until is not None
-        assert (
-            before + timedelta(minutes=14)
-            < user.locked_until
-            < after + timedelta(minutes=16)
-        )
+        assert before + timedelta(minutes=14) < user.locked_until < after + timedelta(minutes=16)
 
     def test_unknown_user_is_noop(self):
         query = MagicMock()

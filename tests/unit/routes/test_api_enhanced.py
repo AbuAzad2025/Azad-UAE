@@ -61,9 +61,7 @@ def foreign_sale(db_session):
             country="AE",
             subscription_plan="basic",
         )
-        role = Role(
-            name=f"Foreign Role {unique}", slug=f"foreign_{unique}", is_active=True
-        )
+        role = Role(name=f"Foreign Role {unique}", slug=f"foreign_{unique}", is_active=True)
         db_session.add_all([tenant, role])
         db_session.flush()
         customer = Customer(tenant_id=tenant.id, name="Foreign Customer")

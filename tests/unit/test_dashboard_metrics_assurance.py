@@ -20,9 +20,7 @@ class TestDashboardWidgetModel:
     def test_layout_repr(self):
         from models.dashboard import UserDashboardLayout
 
-        layout = UserDashboardLayout(
-            tenant_id=1, user_id=42, layout_json={"widgets": []}
-        )
+        layout = UserDashboardLayout(tenant_id=1, user_id=42, layout_json={"widgets": []})
         assert "user=42" in repr(layout)
 
 
@@ -147,9 +145,7 @@ class TestDashboardServiceLayout:
         mock_session = mocker.patch("services.dashboard_service.db.session")
         mock_session.commit.return_value = None
 
-        layout_json = {
-            "widgets": [{"key": "sales_summary", "x": 0, "y": 0, "w": 6, "h": 2}]
-        }
+        layout_json = {"widgets": [{"key": "sales_summary", "x": 0, "y": 0, "w": 6, "h": 2}]}
         from services.dashboard_service import DashboardService
 
         with app.app_context():
@@ -173,9 +169,7 @@ class TestDashboardServiceLayout:
         )
         mocker.patch("services.dashboard_service.db.session")
 
-        new_json = {
-            "widgets": [{"key": "cash_summary", "x": 6, "y": 0, "w": 6, "h": 2}]
-        }
+        new_json = {"widgets": [{"key": "cash_summary", "x": 6, "y": 0, "w": 6, "h": 2}]}
         from services.dashboard_service import DashboardService
 
         with app.app_context():

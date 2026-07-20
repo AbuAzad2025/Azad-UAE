@@ -63,9 +63,7 @@ class TestColorFormatter:
 
         type(stdout).encoding = property(_encoding)
         formatter = ColorFormatter()
-        record = logging.LogRecord(
-            "svc", logging.WARNING, __file__, 5, "warn", (), None
-        )
+        record = logging.LogRecord("svc", logging.WARNING, __file__, 5, "warn", (), None)
         with patch("utils.logging_setup.sys.stdout", stdout):
             message = formatter.format(record)
         assert "warn" in message

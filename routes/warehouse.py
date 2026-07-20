@@ -79,31 +79,19 @@ def index():
 
     if stock_filter == "low":
         products = [
-            product
-            for product in products
-            if 0 < (product.visible_stock or 0) <= (product.min_stock_alert or 0)
+            product for product in products if 0 < (product.visible_stock or 0) <= (product.min_stock_alert or 0)
         ]
     elif stock_filter == "out":
-        products = [
-            product for product in products if (product.visible_stock or 0) <= 0
-        ]
+        products = [product for product in products if (product.visible_stock or 0) <= 0]
 
     total_count = len(products)
     summary = {
         "total_products": total_count,
-        "good_stock": sum(
-            1
-            for product in products
-            if (product.visible_stock or 0) > (product.min_stock_alert or 0)
-        ),
+        "good_stock": sum(1 for product in products if (product.visible_stock or 0) > (product.min_stock_alert or 0)),
         "low_stock": sum(
-            1
-            for product in products
-            if 0 < (product.visible_stock or 0) <= (product.min_stock_alert or 0)
+            1 for product in products if 0 < (product.visible_stock or 0) <= (product.min_stock_alert or 0)
         ),
-        "out_of_stock": sum(
-            1 for product in products if (product.visible_stock or 0) <= 0
-        ),
+        "out_of_stock": sum(1 for product in products if (product.visible_stock or 0) <= 0),
     }
 
     start = (current_page - 1) * items_per_page
@@ -122,9 +110,7 @@ def index():
             self.prev_num = page - 1
             self.next_num = page + 1
 
-        def iter_pages(
-            self, left_edge=2, left_current=2, right_current=3, right_edge=2
-        ):
+        def iter_pages(self, left_edge=2, left_current=2, right_current=3, right_edge=2):
             last = 0
             for num in range(1, self.pages + 1):
                 if (
@@ -186,9 +172,7 @@ def movements():
         current_warehouse = Warehouse.query.filter_by(
             id=warehouse_id, tenant_id=get_active_tenant_id(current_user)
         ).first()
-        if branch_id is not None and (
-            not current_warehouse or current_warehouse.branch_id != branch_id
-        ):
+        if branch_id is not None and (not current_warehouse or current_warehouse.branch_id != branch_id):
             abort(403)
     else:
         current_warehouse = None
@@ -197,9 +181,7 @@ def movements():
         page=current_page, per_page=items_per_page, error_out=False
     )
 
-    warehouses = (
-        tenant_query(Warehouse).filter_by(is_active=True).order_by(Warehouse.name).all()
-    )
+    warehouses = tenant_query(Warehouse).filter_by(is_active=True).order_by(Warehouse.name).all()
     if branch_id is not None:
         warehouses = [w for w in warehouses if w.branch_id == branch_id]
 
@@ -254,15 +236,11 @@ def view_warehouse(**kwargs):
         # Convert quantity to float for comparison and display, handling None
         qty = float(quantity) if quantity is not None else 0.0
         if qty != 0:
-            product = Product.query.filter_by(
-                id=product_id, tenant_id=warehouse.tenant_id
-            ).first()
+            product = Product.query.filter_by(id=product_id, tenant_id=warehouse.tenant_id).first()
             if product:
                 warehouse_stock.append({"product": product, "quantity": qty})
 
-    return render_template(
-        "warehouse/view_warehouse.html", warehouse=warehouse, stock=warehouse_stock
-    )
+    return render_template("warehouse/view_warehouse.html", warehouse=warehouse, stock=warehouse_stock)
 
 
 @warehouse_bp.route("/<int:id>/edit", methods=["GET", "POST"])
@@ -278,9 +256,7 @@ def edit_warehouse(**kwargs):
     parent_warehouses = parent_warehouses.all()
     users = scoped_user_query(active_only=True, exclude_owners=True).all()
     branches = (
-        get_accessible_branches_query(current_user)
-        .order_by(Branch.is_main.desc(), Branch.code, Branch.name)
-        .all()
+        get_accessible_branches_query(current_user).order_by(Branch.is_main.desc(), Branch.code, Branch.name).all()
     )
 
     if request.method == "POST":
@@ -294,9 +270,7 @@ def edit_warehouse(**kwargs):
                 warehouse.manager_id = request.form.get("manager_id", type=int) or None
                 warehouse.branch_id = request.form.get("branch_id", type=int) or None
                 warehouse.is_main = request.form.get("is_main") == "on"
-                warehouse.allow_negative_inventory = (
-                    request.form.get("allow_negative_inventory") == "on"
-                )
+                warehouse.allow_negative_inventory = request.form.get("allow_negative_inventory") == "on"
 
                 if not warehouse.name:
                     flash(gettext("اسم المستودع مطلوب"), "warning")
@@ -354,9 +328,7 @@ def create_warehouse():
     parent_warehouses = parent_warehouses.all()
     users = scoped_user_query(active_only=True, exclude_owners=True).all()
     branches = (
-        get_accessible_branches_query(current_user)
-        .order_by(Branch.is_main.desc(), Branch.code, Branch.name)
-        .all()
+        get_accessible_branches_query(current_user).order_by(Branch.is_main.desc(), Branch.code, Branch.name).all()
     )
 
     if request.method == "POST":
@@ -369,9 +341,7 @@ def create_warehouse():
             manager_id = request.form.get("manager_id", type=int) or None
             branch_id = request.form.get("branch_id", type=int) or None
             is_main = request.form.get("is_main") == "on"
-            warehouse_type = (
-                request.form.get("warehouse_type") or Warehouse.TYPE_PHYSICAL
-            )
+            warehouse_type = request.form.get("warehouse_type") or Warehouse.TYPE_PHYSICAL
             if warehouse_type not in Warehouse.WAREHOUSE_TYPES:
                 warehouse_type = Warehouse.TYPE_PHYSICAL
 
@@ -407,9 +377,7 @@ def create_warehouse():
                 )
 
             if code:
-                existing = Warehouse.query.filter_by(
-                    code=code, tenant_id=tenant_id
-                ).first()
+                existing = Warehouse.query.filter_by(code=code, tenant_id=tenant_id).first()
                 if existing:
                     flash(gettext("رمز المستودع موجود مسبقاً"), "warning")
                     return render_template(
@@ -421,9 +389,7 @@ def create_warehouse():
                     )
 
             if parent_id:
-                parent_warehouse = Warehouse.query.filter_by(
-                    id=parent_id, tenant_id=tenant_id
-                ).first()
+                parent_warehouse = Warehouse.query.filter_by(id=parent_id, tenant_id=tenant_id).first()
                 if not parent_warehouse:
                     flash(gettext("المستودع الأب غير موجود"), "warning")
                     return render_template(
@@ -482,9 +448,7 @@ def create_warehouse():
                 if warehouse_type == Warehouse.TYPE_ONLINE
                 else (gettext("فرعي") if parent_id else gettext("مستقل"))
             )
-            flash(
-                gettext(f'✓ تم إنشاء المستودع ({type_label}) "{name}" بنجاح'), "success"
-            )
+            flash(gettext(f'✓ تم إنشاء المستودع ({type_label}) "{name}" بنجاح'), "success")
             return redirect(url_for("warehouse.list_warehouses"))
 
         except ValueError as e:
@@ -559,9 +523,7 @@ def delete_warehouse(**kwargs):
     else:
         if has_stock:
             flash(
-                gettext(
-                    f'تم إلغاء تفعيل المستودع "{warehouse.name}" لوجود حركات مخزنية مرتبطة به'
-                ),
+                gettext(f'تم إلغاء تفعيل المستودع "{warehouse.name}" لوجود حركات مخزنية مرتبطة به'),
                 "warning",
             )
         else:
@@ -595,17 +557,13 @@ def add_stock(product_id):
             accessible_query = tenant_query(Warehouse).filter_by(is_active=True)
             scoped_branch_id = branch_scope_id()
             if scoped_branch_id is not None:
-                accessible_query = accessible_query.filter_by(
-                    branch_id=scoped_branch_id
-                )
+                accessible_query = accessible_query.filter_by(branch_id=scoped_branch_id)
 
             warehouse = accessible_query.filter_by(is_main=True).first()
             if not warehouse:
                 warehouse = accessible_query.order_by(Warehouse.name).first()
             if not warehouse:
-                return jsonify(
-                    {"success": False, "message": gettext("لا يوجد مستودع نشط")}
-                ), 400
+                return jsonify({"success": False, "message": gettext("لا يوجد مستودع نشط")}), 400
             warehouse_id = warehouse.id
         else:
             ensure_warehouse_access(warehouse_id, current_user)
@@ -642,9 +600,7 @@ def api_transfer():
     """نقل مخزون بين مستودعين (API)"""
     if not request.is_json:
         return (
-            jsonify(
-                {"success": False, "message": "Content-Type must be application/json"}
-            ),
+            jsonify({"success": False, "message": "Content-Type must be application/json"}),
             415,
         )
     payload = request.get_json(silent=True) or {}
@@ -709,9 +665,7 @@ def api_exchange():
     """إضافة أو سحب مخزون من مستودع (تسوية)"""
     if not request.is_json:
         return (
-            jsonify(
-                {"success": False, "message": "Content-Type must be application/json"}
-            ),
+            jsonify({"success": False, "message": "Content-Type must be application/json"}),
             415,
         )
     payload = request.get_json(silent=True) or {}

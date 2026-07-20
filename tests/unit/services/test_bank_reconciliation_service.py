@@ -101,9 +101,7 @@ class TestAdjustments:
         draft_reconciliation.status = "completed"
         db_session.flush()
         with pytest.raises(ValueError, match="معتمدة"):
-            BankReconciliationService.add_bank_charge(
-                draft_reconciliation.id, Decimal("10"), "fee"
-            )
+            BankReconciliationService.add_bank_charge(draft_reconciliation.id, Decimal("10"), "fee")
 
     def test_add_bank_interest(self, db_session, draft_reconciliation):
         item = BankReconciliationService.add_bank_interest(
@@ -143,9 +141,7 @@ class TestCompleteReconciliation:
 
 
 class TestSummaryAndImport:
-    def test_get_reconciliation_summary(
-        self, mocker, db_session, bank_gl_account, incoming_cheque, sample_tenant
-    ):
+    def test_get_reconciliation_summary(self, mocker, db_session, bank_gl_account, incoming_cheque, sample_tenant):
         incoming_cheque.due_date = date(2026, 3, 10)
         db_session.flush()
         mocker.patch(
@@ -164,9 +160,7 @@ class TestSummaryAndImport:
         assert summary["closing_balance_per_books"] == 3000
         assert summary["outstanding_deposits_count"] >= 1
 
-    def test_import_bank_statement_rows(
-        self, db_session, sample_tenant, bank_gl_account
-    ):
+    def test_import_bank_statement_rows(self, db_session, sample_tenant, bank_gl_account):
         rows = [
             {
                 "date": date(2026, 4, 1),
@@ -269,9 +263,7 @@ class TestAutoMatch:
         assert result is not None
         assert result["journal_line_id"] == gl_line.id
 
-    def test_match_transaction_no_candidate(
-        self, db_session, sample_tenant, bank_gl_account
-    ):
+    def test_match_transaction_no_candidate(self, db_session, sample_tenant, bank_gl_account):
         stmt = BankStatementLine(
             tenant_id=sample_tenant.id,
             bank_account_id=bank_gl_account.id,
@@ -282,18 +274,11 @@ class TestAutoMatch:
         )
         db_session.add(stmt)
         db_session.flush()
-        assert (
-            BankReconciliationService.match_transaction(
-                sample_tenant.id, bank_gl_account.id, stmt.id
-            )
-            is None
-        )
+        assert BankReconciliationService.match_transaction(sample_tenant.id, bank_gl_account.id, stmt.id) is None
 
 
 class TestSuspenseAndApply:
-    def test_route_orphans_to_suspense(
-        self, mocker, db_session, sample_tenant, bank_gl_account
-    ):
+    def test_route_orphans_to_suspense(self, mocker, db_session, sample_tenant, bank_gl_account):
         suspense = GLAccount(
             tenant_id=sample_tenant.id,
             code="2999",
@@ -324,9 +309,7 @@ class TestSuspenseAndApply:
         assert len(results) == 1
         assert stmt.status == "suggested_match"
 
-    def test_apply_matches(
-        self, db_session, draft_reconciliation, sample_tenant, bank_gl_account
-    ):
+    def test_apply_matches(self, db_session, draft_reconciliation, sample_tenant, bank_gl_account):
         stmt = BankStatementLine(
             tenant_id=sample_tenant.id,
             bank_account_id=bank_gl_account.id,
@@ -385,19 +368,10 @@ class TestSuspenseAndApply:
         )
         assert rec.id == draft_reconciliation.id
 
-    def test_import_bank_statement_empty(
-        self, db_session, sample_tenant, bank_gl_account
-    ):
-        assert (
-            BankReconciliationService.import_bank_statement(
-                sample_tenant.id, bank_gl_account.id, []
-            )
-            == 0
-        )
+    def test_import_bank_statement_empty(self, db_session, sample_tenant, bank_gl_account):
+        assert BankReconciliationService.import_bank_statement(sample_tenant.id, bank_gl_account.id, []) == 0
 
-    def test_match_transaction_wrong_tenant(
-        self, db_session, sample_tenant, bank_gl_account
-    ):
+    def test_match_transaction_wrong_tenant(self, db_session, sample_tenant, bank_gl_account):
         stmt = BankStatementLine(
             tenant_id=sample_tenant.id,
             bank_account_id=bank_gl_account.id,
@@ -408,16 +382,9 @@ class TestSuspenseAndApply:
         )
         db_session.add(stmt)
         db_session.flush()
-        assert (
-            BankReconciliationService.match_transaction(
-                99999, bank_gl_account.id, stmt.id
-            )
-            is None
-        )
+        assert BankReconciliationService.match_transaction(99999, bank_gl_account.id, stmt.id) is None
 
-    def test_match_transaction_bad_status(
-        self, db_session, sample_tenant, bank_gl_account
-    ):
+    def test_match_transaction_bad_status(self, db_session, sample_tenant, bank_gl_account):
         stmt = BankStatementLine(
             tenant_id=sample_tenant.id,
             bank_account_id=bank_gl_account.id,
@@ -428,26 +395,15 @@ class TestSuspenseAndApply:
         )
         db_session.add(stmt)
         db_session.flush()
-        assert (
-            BankReconciliationService.match_transaction(
-                sample_tenant.id, bank_gl_account.id, stmt.id
-            )
-            is None
-        )
+        assert BankReconciliationService.match_transaction(sample_tenant.id, bank_gl_account.id, stmt.id) is None
 
-    def test_add_bank_interest_rejects_completed(
-        self, db_session, draft_reconciliation
-    ):
+    def test_add_bank_interest_rejects_completed(self, db_session, draft_reconciliation):
         draft_reconciliation.status = "completed"
         db_session.flush()
         with pytest.raises(ValueError, match="معتمدة"):
-            BankReconciliationService.add_bank_interest(
-                draft_reconciliation.id, Decimal("5"), "int"
-            )
+            BankReconciliationService.add_bank_interest(draft_reconciliation.id, Decimal("5"), "int")
 
-    def test_route_orphans_empty_period(
-        self, db_session, sample_tenant, bank_gl_account
-    ):
+    def test_route_orphans_empty_period(self, db_session, sample_tenant, bank_gl_account):
         assert (
             BankReconciliationService.route_orphans_to_suspense(
                 sample_tenant.id,
@@ -458,9 +414,7 @@ class TestSuspenseAndApply:
             == []
         )
 
-    def test_route_orphans_post_failure(
-        self, mocker, db_session, sample_tenant, bank_gl_account
-    ):
+    def test_route_orphans_post_failure(self, mocker, db_session, sample_tenant, bank_gl_account):
         stmt = BankStatementLine(
             tenant_id=sample_tenant.id,
             bank_account_id=bank_gl_account.id,
@@ -481,9 +435,7 @@ class TestSuspenseAndApply:
         assert results == []
         assert stmt.status == "ignored"
 
-    def test_route_orphans_ignores_tiny_amount(
-        self, mocker, db_session, sample_tenant, bank_gl_account
-    ):
+    def test_route_orphans_ignores_tiny_amount(self, mocker, db_session, sample_tenant, bank_gl_account):
         stmt = BankStatementLine(
             tenant_id=sample_tenant.id,
             bank_account_id=bank_gl_account.id,
@@ -556,9 +508,7 @@ class TestBankReconciliationModel:
 
 
 class TestCommitRollbackPaths:
-    def test_create_reconciliation_commit_failure(
-        self, mocker, db_session, bank_gl_account, sample_user
-    ):
+    def test_create_reconciliation_commit_failure(self, mocker, db_session, bank_gl_account, sample_user):
         mocker.patch(
             "services.gl_service.GLService.get_account_statement",
             return_value={"closing_balance": "4000", "opening_balance": "1000"},
@@ -587,9 +537,7 @@ class TestCommitRollbackPaths:
             side_effect=RuntimeError("lock"),
         )
         with pytest.raises(RuntimeError, match="lock"):
-            BankReconciliationService.add_bank_charge(
-                draft_reconciliation.id, Decimal("5"), "fee"
-            )
+            BankReconciliationService.add_bank_charge(draft_reconciliation.id, Decimal("5"), "fee")
 
     def test_add_bank_interest_commit_failure(self, mocker, draft_reconciliation):
         mocker.patch(
@@ -597,13 +545,9 @@ class TestCommitRollbackPaths:
             side_effect=RuntimeError("lock"),
         )
         with pytest.raises(RuntimeError, match="lock"):
-            BankReconciliationService.add_bank_interest(
-                draft_reconciliation.id, Decimal("3"), "interest"
-            )
+            BankReconciliationService.add_bank_interest(draft_reconciliation.id, Decimal("3"), "interest")
 
-    def test_complete_reconciliation_commit_failure(
-        self, mocker, db_session, draft_reconciliation
-    ):
+    def test_complete_reconciliation_commit_failure(self, mocker, db_session, draft_reconciliation):
         draft_reconciliation.bank_charges = Decimal("0")
         draft_reconciliation.bank_interest = Decimal("0")
         draft_reconciliation.calculate_reconciliation()
@@ -663,9 +607,7 @@ class TestCommitRollbackPaths:
 
 
 class TestAutoMatchAndOrphans:
-    def test_auto_match_skips_already_matched_gl_line(
-        self, db_session, sample_tenant, bank_gl_account
-    ):
+    def test_auto_match_skips_already_matched_gl_line(self, db_session, sample_tenant, bank_gl_account):
         stmt1 = BankStatementLine(
             tenant_id=sample_tenant.id,
             bank_account_id=bank_gl_account.id,
@@ -713,9 +655,7 @@ class TestAutoMatchAndOrphans:
         )
         assert len(matches) == 1
 
-    def test_route_orphans_commit_rollback(
-        self, mocker, db_session, sample_tenant, bank_gl_account
-    ):
+    def test_route_orphans_commit_rollback(self, mocker, db_session, sample_tenant, bank_gl_account):
         suspense = GLAccount(
             tenant_id=sample_tenant.id,
             code="2999",

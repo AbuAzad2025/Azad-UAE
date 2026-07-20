@@ -54,9 +54,7 @@ class DataAnalyzer:
 
             # إحصائيات الديون
             if debt_details:
-                avg_debt_amount = statistics.mean(
-                    [d["remaining_amount"] for d in debt_details]
-                )
+                avg_debt_amount = statistics.mean([d["remaining_amount"] for d in debt_details])
                 max_debt_amount = max([d["remaining_amount"] for d in debt_details])
                 overdue_count = len([d for d in debt_details if d["days_overdue"] > 30])
             else:
@@ -124,11 +122,7 @@ class DataAnalyzer:
             daily_amounts = list(daily_sales.values())
             if len(daily_amounts) > 1:
                 recent_avg = statistics.mean(daily_amounts[-7:])  # آخر أسبوع
-                earlier_avg = (
-                    statistics.mean(daily_amounts[:-7])
-                    if len(daily_amounts) > 7
-                    else recent_avg
-                )
+                earlier_avg = statistics.mean(daily_amounts[:-7]) if len(daily_amounts) > 7 else recent_avg
 
                 if recent_avg > earlier_avg * 1.1:
                     trend = "تصاعدي"
@@ -148,9 +142,7 @@ class DataAnalyzer:
                         customer_sales[customer_name] = 0
                     customer_sales[customer_name] += float(sale.total_amount)
 
-            top_customers = sorted(
-                customer_sales.items(), key=lambda x: x[1], reverse=True
-            )[:5]
+            top_customers = sorted(customer_sales.items(), key=lambda x: x[1], reverse=True)[:5]
 
             return {
                 "success": True,
@@ -160,10 +152,7 @@ class DataAnalyzer:
                     "total_amount": total_amount,
                     "avg_daily_sales": avg_daily_sales,
                     "trend": trend,
-                    "top_customers": [
-                        {"name": name, "amount": amount}
-                        for name, amount in top_customers
-                    ],
+                    "top_customers": [{"name": name, "amount": amount} for name, amount in top_customers],
                     "daily_sales_count": len(daily_sales),
                 },
             }
@@ -184,9 +173,7 @@ class DataAnalyzer:
                     return {"success": False, "error": "المنتج غير موجود"}
 
                 # المبيعات للمنتج
-                sales_lines = SaleLine.query.filter(
-                    SaleLine.product_id == product_id
-                ).all()
+                sales_lines = SaleLine.query.filter(SaleLine.product_id == product_id).all()
 
                 total_quantity_sold = sum(line.quantity for line in sales_lines)
                 total_revenue = sum(float(line.line_total) for line in sales_lines)
@@ -211,11 +198,7 @@ class DataAnalyzer:
                     "performance": {
                         "total_quantity_sold": total_quantity_sold,
                         "total_revenue": total_revenue,
-                        "avg_price": (
-                            total_revenue / total_quantity_sold
-                            if total_quantity_sold > 0
-                            else 0
-                        ),
+                        "avg_price": (total_revenue / total_quantity_sold if total_quantity_sold > 0 else 0),
                         "sales_count": len(sales_lines),
                     },
                     "recent_sales": [
@@ -235,15 +218,11 @@ class DataAnalyzer:
                 product_performance = []
 
                 for product in products:
-                    sales_lines = SaleLine.query.filter(
-                        SaleLine.product_id == product.id
-                    ).all()
+                    sales_lines = SaleLine.query.filter(SaleLine.product_id == product.id).all()
 
                     if sales_lines:
                         total_sold = sum(line.quantity for line in sales_lines)
-                        total_revenue = sum(
-                            float(line.line_total) for line in sales_lines
-                        )
+                        total_revenue = sum(float(line.line_total) for line in sales_lines)
 
                         product_performance.append(
                             {
@@ -282,9 +261,7 @@ class DataAnalyzer:
                 if not customer:
                     return {"success": False, "error": "العميل غير موجود"}
 
-                payments = Payment.query.filter(
-                    Payment.sale.has(customer_id=customer_id)
-                ).all()
+                payments = Payment.query.filter(Payment.sale.has(customer_id=customer_id)).all()
             else:
                 # تحليل جميع المدفوعات
                 payments = Payment.query.all()
@@ -320,11 +297,7 @@ class DataAnalyzer:
                         "method": method,
                         "count": data["count"],
                         "total_amount": float(data["amount"]),
-                        "percentage": (
-                            float(data["amount"] / total_amount * 100)
-                            if total_amount > 0
-                            else 0
-                        ),
+                        "percentage": (float(data["amount"] / total_amount * 100) if total_amount > 0 else 0),
                     }
                 )
 
@@ -352,14 +325,10 @@ class DataAnalyzer:
             from extensions import db
 
             # المبيعات
-            total_sales = db.session.query(
-                db.func.sum(Sale.total_amount)
-            ).scalar() or Decimal("0")
+            total_sales = db.session.query(db.func.sum(Sale.total_amount)).scalar() or Decimal("0")
 
             # المدفوعات
-            total_payments = db.session.query(
-                db.func.sum(Payment.amount)
-            ).scalar() or Decimal("0")
+            total_payments = db.session.query(db.func.sum(Payment.amount)).scalar() or Decimal("0")
 
             # الذمم المدينة
             receivables = total_sales - total_payments
@@ -372,15 +341,9 @@ class DataAnalyzer:
 
             # النسب المالية
             ratios = {
-                "collection_rate": (
-                    float(total_payments / total_sales * 100) if total_sales > 0 else 0
-                ),
-                "avg_sales_per_customer": (
-                    float(total_sales / total_customers) if total_customers > 0 else 0
-                ),
-                "receivables_ratio": (
-                    float(receivables / total_sales * 100) if total_sales > 0 else 0
-                ),
+                "collection_rate": (float(total_payments / total_sales * 100) if total_sales > 0 else 0),
+                "avg_sales_per_customer": (float(total_sales / total_customers) if total_customers > 0 else 0),
+                "receivables_ratio": (float(receivables / total_sales * 100) if total_sales > 0 else 0),
                 "product_diversity": total_products,
             }
 

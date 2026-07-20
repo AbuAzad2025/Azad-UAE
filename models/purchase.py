@@ -6,11 +6,7 @@ from utils.currency_utils import context_aware_default_currency
 
 class Purchase(db.Model):
     __tablename__ = "purchases"
-    __table_args__ = (
-        db.UniqueConstraint(
-            "tenant_id", "purchase_number", name="uq_purchases_tenant_purchase_number"
-        ),
-    )
+    __table_args__ = (db.UniqueConstraint("tenant_id", "purchase_number", name="uq_purchases_tenant_purchase_number"),)
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -22,12 +18,8 @@ class Purchase(db.Model):
     purchase_number = db.Column(db.String(50), nullable=False, index=True)
 
     supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.id"), index=True)
-    warehouse_id = db.Column(
-        db.Integer, db.ForeignKey("warehouses.id"), nullable=True, index=True
-    )
-    branch_id = db.Column(
-        db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True
-    )  # New Branch ID
+    warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id"), nullable=True, index=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True)  # New Branch ID
 
     supplier_name = db.Column(db.String(200), nullable=False)
     supplier_phone = db.Column(db.String(20))
@@ -48,9 +40,7 @@ class Purchase(db.Model):
     total_amount = db.Column(db.Numeric(15, 3), nullable=False)
 
     amount = db.Column(db.Numeric(15, 3), nullable=False)
-    currency = db.Column(
-        db.String(3), default=context_aware_default_currency, nullable=False
-    )
+    currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
     amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
 
@@ -93,9 +83,7 @@ class Purchase(db.Model):
 
     notes = db.Column(db.Text)
 
-    user_id = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=False, index=True
-    )
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     created_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -160,9 +148,7 @@ class Purchase(db.Model):
             func.date(Payment.payment_date) <= as_of_date,
         )
         if self.branch_id is not None:
-            total_supplier_paid = total_supplier_paid.filter(
-                Payment.branch_id == self.branch_id
-            )
+            total_supplier_paid = total_supplier_paid.filter(Payment.branch_id == self.branch_id)
         total_paid = total_supplier_paid.scalar()
 
         if not total_paid:
@@ -177,13 +163,9 @@ class Purchase(db.Model):
             Purchase.tenant_id == self.tenant_id,
         )
         if self.branch_id is not None:
-            other_purchases = other_purchases.filter(
-                Purchase.branch_id == self.branch_id
-            )
+            other_purchases = other_purchases.filter(Purchase.branch_id == self.branch_id)
 
-        other_total = sum(
-            Decimal(str(p.amount_aed or 0)) for p in other_purchases.all()
-        )
+        other_total = sum(Decimal(str(p.amount_aed or 0)) for p in other_purchases.all())
 
         total_paid_decimal = Decimal(str(total_paid))
         my_amount = Decimal(str(self.amount_aed or 0))
@@ -202,47 +184,35 @@ class Purchase(db.Model):
         Supports both VAT-inclusive and VAT-exclusive pricing.
         """
         # Calculate subtotal from all lines - ensure Decimal type
-        self.subtotal = sum(
-            (Decimal(str(line.line_total)) for line in self.lines), Decimal("0")
-        )
+        self.subtotal = sum((Decimal(str(line.line_total)) for line in self.lines), Decimal("0"))
 
         # Ensure all amounts are Decimal
-        discount = (
-            Decimal(str(self.discount_amount)) if self.discount_amount else Decimal("0")
-        )
-        tax_rate_decimal = (
-            Decimal(str(self.tax_rate)) if self.tax_rate else Decimal("0")
-        )
-        exchange_rate_decimal = (
-            Decimal(str(self.exchange_rate)) if self.exchange_rate else Decimal("1")
-        )
+        discount = Decimal(str(self.discount_amount)) if self.discount_amount else Decimal("0")
+        tax_rate_decimal = Decimal(str(self.tax_rate)) if self.tax_rate else Decimal("0")
+        exchange_rate_decimal = Decimal(str(self.exchange_rate)) if self.exchange_rate else Decimal("1")
 
         # Calculate tax based on pricing method (inclusive vs exclusive VAT)
         if self.prices_include_vat:
             # الأسعار تشمل الضريبة: نفصل الضريبة من الإجمالي
             gross = self.subtotal - discount
             if tax_rate_decimal > 0:
-                taxable_amount = (
-                    gross / (Decimal("1") + (tax_rate_decimal / Decimal("100")))
-                ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-                self.tax_amount = (gross - taxable_amount).quantize(
+                taxable_amount = (gross / (Decimal("1") + (tax_rate_decimal / Decimal("100")))).quantize(
                     Decimal("0.01"), rounding=ROUND_HALF_UP
                 )
+                self.tax_amount = (gross - taxable_amount).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
             else:
                 taxable_amount = gross
                 self.tax_amount = Decimal("0")
-            self.total_amount = (gross + self.total_landed_cost).quantize(
-                Decimal("0.001"), rounding=ROUND_HALF_UP
-            )
+            self.total_amount = (gross + self.total_landed_cost).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         else:
             # الأسعار لا تشمل الضريبة: نضيف الضريبة فوق الصافي
             taxable_amount = self.subtotal - discount
-            self.tax_amount = (
-                taxable_amount * (tax_rate_decimal / Decimal("100"))
-            ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-            self.total_amount = (
-                taxable_amount + self.tax_amount + self.total_landed_cost
-            ).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+            self.tax_amount = (taxable_amount * (tax_rate_decimal / Decimal("100"))).quantize(
+                Decimal("0.01"), rounding=ROUND_HALF_UP
+            )
+            self.total_amount = (taxable_amount + self.tax_amount + self.total_landed_cost).quantize(
+                Decimal("0.001"), rounding=ROUND_HALF_UP
+            )
 
         self.taxable_amount = taxable_amount
 
@@ -250,9 +220,7 @@ class Purchase(db.Model):
         self.amount = self.total_amount
 
         # Calculate AED amount with proper rounding (includes landed cost)
-        self.amount_aed = (self.total_amount * exchange_rate_decimal).quantize(
-            Decimal("0.001"), rounding=ROUND_HALF_UP
-        )
+        self.amount_aed = (self.total_amount * exchange_rate_decimal).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
     def to_dict(self, include_lines=False):
         data = {
@@ -288,9 +256,7 @@ class PurchaseLine(db.Model):
         nullable=False,
         index=True,
     )
-    product_id = db.Column(
-        db.Integer, db.ForeignKey("products.id"), nullable=False, index=True
-    )
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False, index=True)
 
     quantity = db.Column(db.Numeric(15, 3), nullable=False)
     unit_cost = db.Column(db.Numeric(15, 3), nullable=False)
@@ -302,9 +268,7 @@ class PurchaseLine(db.Model):
 
     purchase = db.relationship("Purchase", back_populates="lines")
     product = db.relationship("Product", back_populates="purchase_lines")
-    tenant = db.relationship(
-        "Tenant", backref="purchase_lines", foreign_keys=[tenant_id]
-    )
+    tenant = db.relationship("Tenant", backref="purchase_lines", foreign_keys=[tenant_id])
 
     def __repr__(self):
         return f"<PurchaseLine {self.product_id} x {self.quantity}>"
@@ -313,16 +277,10 @@ class PurchaseLine(db.Model):
         """Calculate line total with proper decimal precision and rounding"""
         qty = Decimal(str(self.quantity)) if self.quantity else Decimal("0")
         cost = Decimal(str(self.unit_cost)) if self.unit_cost else Decimal("0")
-        discount = (
-            Decimal(str(self.discount_percent))
-            if self.discount_percent
-            else Decimal("0")
-        )
+        discount = Decimal(str(self.discount_percent)) if self.discount_percent else Decimal("0")
 
         discount_multiplier = (Decimal("100") - discount) / Decimal("100")
-        self.line_total = (qty * cost * discount_multiplier).quantize(
-            Decimal("0.001"), rounding=ROUND_HALF_UP
-        )
+        self.line_total = (qty * cost * discount_multiplier).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
     @property
     def landed_unit_cost(self):
@@ -332,9 +290,7 @@ class PurchaseLine(db.Model):
             return Decimal("0")
         base = Decimal(str(self.unit_cost)) if self.unit_cost else Decimal("0")
         landed = Decimal(str(self.landed_cost)) if self.landed_cost else Decimal("0")
-        return (base + (landed / qty)).quantize(
-            Decimal("0.001"), rounding=ROUND_HALF_UP
-        )
+        return (base + (landed / qty)).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
     @property
     def inventory_unit_cost(self):
@@ -343,31 +299,20 @@ class PurchaseLine(db.Model):
         if qty == 0:
             return Decimal("0")
         base = Decimal(str(self.unit_cost)) if self.unit_cost else Decimal("0")
-        discount = (
-            Decimal(str(self.discount_percent))
-            if self.discount_percent
-            else Decimal("0")
-        )
+        discount = Decimal(str(self.discount_percent)) if self.discount_percent else Decimal("0")
         discount_multiplier = (Decimal("100") - discount) / Decimal("100")
         line_total_with_discount = base * qty * discount_multiplier
 
         purchase = self.purchase
         if purchase and getattr(purchase, "prices_include_vat", False):
-            tax_rate = (
-                Decimal(str(purchase.tax_rate)) if purchase.tax_rate else Decimal("0")
-            )
+            tax_rate = Decimal(str(purchase.tax_rate)) if purchase.tax_rate else Decimal("0")
             if tax_rate > 0:
-                line_total_excl = (
-                    line_total_with_discount
-                    / (Decimal("1") + (tax_rate / Decimal("100")))
-                ).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
-                return (line_total_excl / qty).quantize(
+                line_total_excl = (line_total_with_discount / (Decimal("1") + (tax_rate / Decimal("100")))).quantize(
                     Decimal("0.001"), rounding=ROUND_HALF_UP
                 )
+                return (line_total_excl / qty).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
-        return (line_total_with_discount / qty).quantize(
-            Decimal("0.001"), rounding=ROUND_HALF_UP
-        )
+        return (line_total_with_discount / qty).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
     @property
     def landed_inventory_unit_cost(self):
@@ -377,9 +322,7 @@ class PurchaseLine(db.Model):
             return Decimal("0")
         base = self.inventory_unit_cost
         landed = Decimal(str(self.landed_cost)) if self.landed_cost else Decimal("0")
-        return (base + (landed / qty)).quantize(
-            Decimal("0.001"), rounding=ROUND_HALF_UP
-        )
+        return (base + (landed / qty)).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
     def to_dict(self):
         return {
@@ -390,7 +333,5 @@ class PurchaseLine(db.Model):
             "discount_percent": float(self.discount_percent),
             "line_total": float(self.line_total),
             "landed_cost": float(self.landed_cost) if self.landed_cost else 0,
-            "landed_unit_cost": (
-                float(self.landed_unit_cost) if self.landed_unit_cost else 0
-            ),
+            "landed_unit_cost": (float(self.landed_unit_cost) if self.landed_unit_cost else 0),
         }

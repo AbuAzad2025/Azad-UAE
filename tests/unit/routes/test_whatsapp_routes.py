@@ -30,9 +30,7 @@ def _customer_query(customer=None, not_found=False):
 
 
 @contextmanager
-def _whatsapp_patches(
-    sale=None, customer=None, sale_not_found=False, customer_not_found=False
-):
+def _whatsapp_patches(sale=None, customer=None, sale_not_found=False, customer_not_found=False):
     with (
         patch("utils.tenanting.get_active_tenant_id", return_value=1),
         patch("models.Sale") as sale_cls,
@@ -74,9 +72,7 @@ class TestSendInvoice:
         sale = MagicMock(customer=customer, sale_number="INV-100")
         with _whatsapp_patches(sale=sale) as mocks:
             mocks["wa_svc"].send_invoice.return_value = {"success": True}
-            resp = whatsapp_client.post(
-                "/whatsapp/send-invoice/5", data={"pdf_url": "https://pdf"}
-            )
+            resp = whatsapp_client.post("/whatsapp/send-invoice/5", data={"pdf_url": "https://pdf"})
         assert resp.status_code == 200
         assert resp.get_json()["success"] is True
         mocks["wa_svc"].send_invoice.assert_called_once_with(

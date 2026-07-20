@@ -37,9 +37,7 @@ class TestProductLabelsHtml:
 
     def test_renders_template_with_product_variables(self, app, mocker):
         product = _product()
-        mocker.patch(
-            "services.label_print_service.tenant_get_or_404", return_value=product
-        )
+        mocker.patch("services.label_print_service.tenant_get_or_404", return_value=product)
         mock_render = mocker.patch(
             "services.print_service.PrintService.render_print",
             return_value="<html>labels</html>",
@@ -58,9 +56,7 @@ class TestProductLabelsHtml:
     def test_branch_warehouse_cost_overrides_product_cost(self, app, mocker):
         product = _product(cost_price=Decimal("40"))
         pwc = MagicMock(cost_price=Decimal("35.50"))
-        mocker.patch(
-            "services.label_print_service.tenant_get_or_404", return_value=product
-        )
+        mocker.patch("services.label_print_service.tenant_get_or_404", return_value=product)
 
         pwc_q = MagicMock()
         pwc_q.filter_by.return_value.first.return_value = pwc
@@ -84,9 +80,7 @@ class TestProductLabelsHtml:
     def test_missing_category_and_barcode_fallbacks(self, app, mocker):
         product = _product(barcode=None)
         product.category = None
-        mocker.patch(
-            "services.label_print_service.tenant_get_or_404", return_value=product
-        )
+        mocker.patch("services.label_print_service.tenant_get_or_404", return_value=product)
         mock_render = mocker.patch(
             "services.print_service.PrintService.render_print",
             return_value="ok",

@@ -73,9 +73,7 @@ class TestSystemIntegrator:
     def test_add_customer_no_tenant(self, integrator):
         with patch("models.tenant.Tenant") as MockT:
             MockT.get_current.return_value = None
-            result = integrator.add_customer(
-                {"name": "Test", "customer_type": "regular"}
-            )
+            result = integrator.add_customer({"name": "Test", "customer_type": "regular"})
             assert result["success"] is False
 
     def test_system_summary_returns_dict(self, integrator):

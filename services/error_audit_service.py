@@ -87,19 +87,9 @@ class ErrorAuditService:
     @staticmethod
     def get_dropdowns():
         categories = [
-            r[0]
-            for r in db.session.query(ErrorAuditLog.category)
-            .distinct()
-            .order_by(ErrorAuditLog.category)
-            .all()
+            r[0] for r in db.session.query(ErrorAuditLog.category).distinct().order_by(ErrorAuditLog.category).all()
         ]
-        levels = [
-            r[0]
-            for r in db.session.query(ErrorAuditLog.level)
-            .distinct()
-            .order_by(ErrorAuditLog.level)
-            .all()
-        ]
+        levels = [r[0] for r in db.session.query(ErrorAuditLog.level).distinct().order_by(ErrorAuditLog.level).all()]
         return categories, levels
 
     @staticmethod
@@ -135,13 +125,9 @@ class ErrorAuditService:
             buf.write(f"Level:      {log.level}\n")
             buf.write(f"Category:   {log.category}\n")
             buf.write(f"Source:     {log.source}\n")
-            buf.write(
-                f"Time:       {log.created_at.isoformat() if log.created_at else '-'}\n"
-            )
+            buf.write(f"Time:       {log.created_at.isoformat() if log.created_at else '-'}\n")
             buf.write(f"URL:        {log.url or '-'}\n")
-            buf.write(
-                f"User:       {log.user_id or '-'} | Tenant: {log.tenant_id or '-'}\n"
-            )
+            buf.write(f"User:       {log.user_id or '-'} | Tenant: {log.tenant_id or '-'}\n")
             buf.write(f"Resolved:   {'YES' if log.is_resolved else 'NO'}\n")
             buf.write(f"Message:\n  {log.message}\n")
             if log.stack_trace:
@@ -292,9 +278,7 @@ class ErrorAuditService:
         exc_type = type(exception).__name__ if exception else None
         trace: str | None = stack_trace
         if exception and not trace:
-            trace_list = traceback.format_exception(
-                type(exception), exception, exception.__traceback__
-            )
+            trace_list = traceback.format_exception(type(exception), exception, exception.__traceback__)
             trace = "".join(trace_list)
 
         from flask import request
@@ -308,9 +292,7 @@ class ErrorAuditService:
             _url = _url or request.url[:_MAX_URL_LEN]
             _method = _method or request.method
             _ua = _ua or (request.headers.get("User-Agent", "")[:_MAX_UA_LEN])
-            _ip = _ip or (
-                request.headers.get("X-Forwarded-For", request.remote_addr) or ""
-            )
+            _ip = _ip or (request.headers.get("X-Forwarded-For", request.remote_addr) or "")
 
         # User / tenant
         user_id = None
@@ -335,9 +317,7 @@ class ErrorAuditService:
             environment = current_app.config.get("FLASK_ENV", "production")
             app_version = current_app.config.get("APP_VERSION", "")
         except Exception:
-            logger.warning(
-                "Failed to read app config for error audit context", exc_info=True
-            )
+            logger.warning("Failed to read app config for error audit context", exc_info=True)
 
         # Sanitize
         request_data = None
@@ -351,9 +331,7 @@ class ErrorAuditService:
                 else:
                     payload = request.form.to_dict() if request.form else {}
             except Exception:
-                logger.warning(
-                    "Failed to parse request payload for error audit", exc_info=True
-                )
+                logger.warning("Failed to parse request payload for error audit", exc_info=True)
             request_data = ErrorAuditService._sanitize_dict(payload)
 
         endpoint_path = ""
@@ -363,9 +341,7 @@ class ErrorAuditService:
             elif has_request_context() and request:
                 endpoint_path = request.path or ""
         except Exception:
-            logger.debug(
-                "Failed to resolve endpoint path for error audit", exc_info=True
-            )
+            logger.debug("Failed to resolve endpoint path for error audit", exc_info=True)
 
         # Fingerprint
         fingerprint_message = message
@@ -416,11 +392,7 @@ class ErrorAuditService:
             "app_version": (app_version or "")[:30],
             "user_id": user_id,
             "tenant_id": tenant_id,
-            "request_data": (
-                json.dumps(request_data, ensure_ascii=False, default=str)
-                if request_data
-                else None
-            ),
+            "request_data": (json.dumps(request_data, ensure_ascii=False, default=str) if request_data else None),
             "now": datetime.now(timezone.utc),
         }
 
@@ -434,14 +406,9 @@ class ErrorAuditService:
             try:
                 import sys
 
-                sys.stderr.write(
-                    f"[ERROR_AUDIT_FALLBACK] {category} | {message[:200]} | "
-                    f"engine_error={engine_exc}\n"
-                )
+                sys.stderr.write(f"[ERROR_AUDIT_FALLBACK] {category} | {message[:200]} | engine_error={engine_exc}\n")
             except Exception:
-                logger.warning(
-                    "Failed to write error audit fallback to stderr", exc_info=True
-                )
+                logger.warning("Failed to write error audit fallback to stderr", exc_info=True)
             return None
 
     # ── Deduplication helpers ─────────────────────────────────────
@@ -462,9 +429,7 @@ class ErrorAuditService:
     def _find_duplicate(fingerprint: str) -> int | None:
         """Look for an existing unresolved record with same fingerprint within dedup window."""
         try:
-            cutoff = datetime.now(timezone.utc) - timedelta(
-                minutes=_DEDUP_WINDOW_MINUTES
-            )
+            cutoff = datetime.now(timezone.utc) - timedelta(minutes=_DEDUP_WINDOW_MINUTES)
             sql = text("""
                 SELECT id FROM error_audit_logs
                 WHERE fingerprint = :fp
@@ -498,9 +463,7 @@ class ErrorAuditService:
                     {
                         "now": datetime.now(timezone.utc),
                         "message": (new_message or "")[:_MAX_MESSAGE_LEN],
-                        "stack_trace": (
-                            (new_trace or "")[:_MAX_TRACE_LEN] if new_trace else None
-                        ),
+                        "stack_trace": ((new_trace or "")[:_MAX_TRACE_LEN] if new_trace else None),
                         "log_id": log_id,
                     },
                 )

@@ -25,9 +25,7 @@ class AzadPlatformFeeService:
         settings = SystemSettings.get_current()
         stored = settings.azad_platform_fee_rate
         rate = Decimal(str(stored if stored is not None else 1.00))
-        return (rate / Decimal("100")).quantize(
-            Decimal("0.0001"), rounding=ROUND_HALF_UP
-        ), rate
+        return (rate / Decimal("100")).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP), rate
 
     @staticmethod
     def is_online_store_transaction(sale) -> bool:
@@ -42,25 +40,14 @@ class AzadPlatformFeeService:
         if payment is not None and getattr(payment, "amount_aed", None) is not None:
             amount = Decimal(str(payment.amount_aed or 0))
         else:
-            amount = Decimal(
-                str(
-                    getattr(sale, "amount_aed", None)
-                    or getattr(sale, "total_amount", 0)
-                    or 0
-                )
-            )
+            amount = Decimal(str(getattr(sale, "amount_aed", None) or getattr(sale, "total_amount", 0) or 0))
         return amount.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
     @staticmethod
     def _idempotency_key(sale, payment=None, gateway_reference=None) -> str:
         tenant_id = int(getattr(sale, "tenant_id"))
         sale_id = int(getattr(sale, "id"))
-        ref = (
-            gateway_reference
-            or getattr(sale, "checkout_gateway_ref", None)
-            or getattr(payment, "id", None)
-            or "sale"
-        )
+        ref = gateway_reference or getattr(sale, "checkout_gateway_ref", None) or getattr(payment, "id", None) or "sale"
         return f"store-online:{tenant_id}:{sale_id}:{ref}"
 
     @staticmethod
@@ -90,17 +77,13 @@ class AzadPlatformFeeService:
             return None
 
         rate_decimal, rate_percent = AzadPlatformFeeService._get_rate(tenant_id)
-        fee_amount = (base_amount * rate_decimal).quantize(
-            Decimal("0.001"), rounding=ROUND_HALF_UP
-        )
+        fee_amount = (base_amount * rate_decimal).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         if fee_amount <= Decimal("0"):
             return None
 
         vault = PaymentVault.get_platform_vault()
         if vault is None:
-            raise ValueError(
-                "Platform vault does not exist — cannot accrue platform fee."
-            )
+            raise ValueError("Platform vault does not exist — cannot accrue platform fee.")
         fee = AzadPlatformFee(
             idempotency_key=key,
             tenant_id=int(tenant_id or 0),
@@ -110,15 +93,9 @@ class AzadPlatformFeeService:
             rate_percent=rate_percent,
             base_amount_aed=base_amount,
             fee_amount_aed=fee_amount,
-            payment_channel=(
-                payment_channel
-                or getattr(sale, "checkout_payment_method", None)
-                or "online_pay"
-            )[:50],
+            payment_channel=(payment_channel or getattr(sale, "checkout_payment_method", None) or "online_pay")[:50],
             gateway_name=gateway_name,
-            gateway_reference=(
-                gateway_reference or getattr(sale, "checkout_gateway_ref", None) or ""
-            )[:120],
+            gateway_reference=(gateway_reference or getattr(sale, "checkout_gateway_ref", None) or "")[:120],
             status="accrued",
         )
         db.session.add(fee)
@@ -148,9 +125,7 @@ class AzadPlatformFeeService:
             tenant_id=int(tenant_id or 0),
         )
         fee.gl_posted = True
-        current_app.logger.info(
-            "Azad platform fee accrued: sale=%s fee=%s", sale.sale_number, fee_amount
-        )
+        current_app.logger.info("Azad platform fee accrued: sale=%s fee=%s", sale.sale_number, fee_amount)
         return fee
 
     @staticmethod
@@ -168,9 +143,7 @@ class AzadPlatformFeeService:
         return [
             {
                 "tenant_id": row.tenant_id,
-                "total_fee_aed": Decimal(str(row.total)).quantize(
-                    Decimal("0.001"), rounding=ROUND_HALF_UP
-                ),
+                "total_fee_aed": Decimal(str(row.total)).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP),
             }
             for row in q.all()
         ]
@@ -178,9 +151,7 @@ class AzadPlatformFeeService:
     @staticmethod
     def get_settlement_report(tenant_id=None, date_from=None, date_to=None):
         """Return detailed settlement-ready fees."""
-        q = AzadPlatformFee.query.filter(
-            AzadPlatformFee.status.in_(["accrued", "settled", "paid"])
-        )
+        q = AzadPlatformFee.query.filter(AzadPlatformFee.status.in_(["accrued", "settled", "paid"]))
         if tenant_id:
             q = q.filter(AzadPlatformFee.tenant_id == tenant_id)
         if date_from:
@@ -212,9 +183,7 @@ class AzadPlatformFeeService:
             tenant_ids = [tenant_ids]
         results = []
         for tid in tenant_ids:
-            fees = AzadPlatformFee.query.filter_by(
-                tenant_id=tid, status="accrued", gl_posted=True
-            ).all()
+            fees = AzadPlatformFee.query.filter_by(tenant_id=tid, status="accrued", gl_posted=True).all()
             if not fees:
                 continue
             total = sum(Decimal(str(f.fee_amount_aed or 0)) for f in fees)
@@ -252,9 +221,7 @@ class AzadPlatformFeeService:
                 {
                     "tenant_id": tid,
                     "fee_count": len(fees),
-                    "total_aed": total.quantize(
-                        Decimal("0.001"), rounding=ROUND_HALF_UP
-                    ),
+                    "total_aed": total.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP),
                 }
             )
             current_app.logger.info(

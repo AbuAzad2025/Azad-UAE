@@ -8,9 +8,7 @@ class AzadPlatformFee(db.Model):
 
     __tablename__ = "azad_platform_fees"
     __table_args__ = (
-        db.UniqueConstraint(
-            "idempotency_key", name="uq_azad_platform_fees_idempotency_key"
-        ),
+        db.UniqueConstraint("idempotency_key", name="uq_azad_platform_fees_idempotency_key"),
         db.Index("ix_azad_platform_fees_tenant_sale", "tenant_id", "sale_id"),
     )
 
@@ -23,15 +21,9 @@ class AzadPlatformFee(db.Model):
         nullable=False,
         index=True,
     )
-    sale_id = db.Column(
-        db.Integer, db.ForeignKey("sales.id"), nullable=False, index=True
-    )
-    payment_id = db.Column(
-        db.Integer, db.ForeignKey("payments.id"), nullable=True, index=True
-    )
-    vault_id = db.Column(
-        db.Integer, db.ForeignKey("payment_vault.id"), nullable=True, index=True
-    )
+    sale_id = db.Column(db.Integer, db.ForeignKey("sales.id"), nullable=False, index=True)
+    payment_id = db.Column(db.Integer, db.ForeignKey("payments.id"), nullable=True, index=True)
+    vault_id = db.Column(db.Integer, db.ForeignKey("payment_vault.id"), nullable=True, index=True)
 
     rate_percent = db.Column(db.Numeric(5, 2), nullable=False, default=1)
     base_amount_aed = db.Column(db.Numeric(15, 3), nullable=False)

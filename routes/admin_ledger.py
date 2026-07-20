@@ -63,14 +63,10 @@ def dashboard():
     cash_accounts = _accounts().filter(GLAccount.code.like("11%")).all()
     total_cash = sum(account.get_balance() for account in cash_accounts)
 
-    recent_entries = (
-        _entries().order_by(GLJournalEntry.created_at.desc()).limit(10).all()
-    )
+    recent_entries = _entries().order_by(GLJournalEntry.created_at.desc()).limit(10).all()
 
     high_balance_accounts = []
-    for account in (
-        _accounts().filter_by(is_active=True, is_header=False).limit(500).all()
-    ):
+    for account in _accounts().filter_by(is_active=True, is_header=False).limit(500).all():
         balance = account.get_balance()
         if abs(balance) > 1000:
             high_balance_accounts.append({"account": account, "balance": balance})
@@ -115,9 +111,7 @@ def accounts_management():
 @admin_required
 def add_account():
     """إضافة حساب محاسبي جديد"""
-    parent_accounts = (
-        _accounts().filter_by(is_header=True).order_by(GLAccount.code).all()
-    )
+    parent_accounts = _accounts().filter_by(is_header=True).order_by(GLAccount.code).all()
     default_form = {"is_active": "on"}
 
     if request.method == "POST":
@@ -191,12 +185,8 @@ def add_account():
 
             flash(ErrorMessages.unexpected_error(), "danger")
             form_values = request.form.to_dict()
-            form_values["is_header"] = (
-                "on" if "on" in request.form.getlist("is_header") else "off"
-            )
-            form_values["is_active"] = (
-                "on" if "on" in request.form.getlist("is_active") else "off"
-            )
+            form_values["is_header"] = "on" if "on" in request.form.getlist("is_header") else "off"
+            form_values["is_active"] = "on" if "on" in request.form.getlist("is_active") else "off"
             return render_template(
                 "admin/ledger/add_account.html",
                 parent_accounts=parent_accounts,
@@ -252,9 +242,7 @@ def edit_account(**kwargs):
 
             flash(ErrorMessages.unexpected_error(), "danger")
 
-    parent_accounts = (
-        _accounts().filter_by(is_header=True).order_by(GLAccount.code).all()
-    )
+    parent_accounts = _accounts().filter_by(is_header=True).order_by(GLAccount.code).all()
     return render_template(
         "admin/ledger/edit_account.html",
         account=account,
@@ -271,18 +259,14 @@ def delete_account(**kwargs):
     account = _accounts().filter_by(id=record_id).first_or_404()
 
     try:
-        has_entries = (
-            scoped_model_query(GLJournalLine).filter_by(account_id=record_id).first()
-        )
+        has_entries = scoped_model_query(GLJournalLine).filter_by(account_id=record_id).first()
         if has_entries:
             flash(gettext("❌ لا يمكن حذف الحساب لوجود قيود مرتبطة به"), "danger")
             return redirect(url_for("admin_ledger.accounts_management"))
 
         has_children = _accounts().filter_by(parent_id=record_id).first()
         if has_children:
-            flash(
-                gettext("❌ لا يمكن حذف الحساب لوجود حسابات فرعية مرتبطة به"), "danger"
-            )
+            flash(gettext("❌ لا يمكن حذف الحساب لوجود حسابات فرعية مرتبطة به"), "danger")
             return redirect(url_for("admin_ledger.accounts_management"))
 
         with atomic_transaction("delete_gl_account"):
@@ -314,9 +298,7 @@ def journals_management():
     per_page = 20
 
     entries = (
-        _entries()
-        .order_by(GLJournalEntry.created_at.desc())
-        .paginate(page=page, per_page=per_page, error_out=False)
+        _entries().order_by(GLJournalEntry.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
     )
 
     return render_template("admin/ledger/journals.html", entries=entries)
@@ -372,22 +354,13 @@ def trial_balance():
         date_from = datetime.strptime(date_from, "%Y-%m-%d").date()
         date_to = datetime.strptime(date_to, "%Y-%m-%d").date()
     except (ValueError, TypeError):
-        current_app.logger.warning(
-            "Invalid date format in admin trial balance, falling back to today"
-        )
+        current_app.logger.warning("Invalid date format in admin trial balance, falling back to today")
         date_from = date_to = date.today()
 
     from services.gl_service import GLService
 
-    accounts = (
-        _accounts()
-        .filter_by(is_active=True, is_header=False)
-        .order_by(GLAccount.code)
-        .all()
-    )
-    _all_balances = GLService.get_all_account_balances(
-        start_date=date_from, end_date=date_to
-    )
+    accounts = _accounts().filter_by(is_active=True, is_header=False).order_by(GLAccount.code).all()
+    _all_balances = GLService.get_all_account_balances(start_date=date_from, end_date=date_to)
     trial_balance_data = []
 
     total_debit = total_credit = 0
@@ -425,37 +398,22 @@ def balance_sheet():
     try:
         as_of_date = datetime.strptime(as_of_date, "%Y-%m-%d").date()
     except (ValueError, TypeError):
-        current_app.logger.warning(
-            "Invalid date format in admin balance sheet, falling back to today"
-        )
+        current_app.logger.warning("Invalid date format in admin balance sheet, falling back to today")
         as_of_date = date.today()
 
     from services.gl_service import GLService
 
     _all_balances = GLService.get_all_account_balances(as_of_date=as_of_date)
 
-    assets = (
-        _accounts()
-        .filter_by(type="asset", is_active=True, is_header=False)
-        .order_by(GLAccount.code)
-        .all()
-    )
+    assets = _accounts().filter_by(type="asset", is_active=True, is_header=False).order_by(GLAccount.code).all()
     assets_total = sum(_all_balances.get(a.id, 0) for a in assets)
 
     liabilities = (
-        _accounts()
-        .filter_by(type="liability", is_active=True, is_header=False)
-        .order_by(GLAccount.code)
-        .all()
+        _accounts().filter_by(type="liability", is_active=True, is_header=False).order_by(GLAccount.code).all()
     )
     liabilities_total = sum(abs(_all_balances.get(a.id, 0)) for a in liabilities)
 
-    equity = (
-        _accounts()
-        .filter_by(type="equity", is_active=True, is_header=False)
-        .order_by(GLAccount.code)
-        .all()
-    )
+    equity = _accounts().filter_by(type="equity", is_active=True, is_header=False).order_by(GLAccount.code).all()
     equity_total = sum(abs(_all_balances.get(a.id, 0)) for a in equity)
 
     return render_template(
@@ -475,41 +433,25 @@ def balance_sheet():
 @admin_required
 def income_statement():
     """قائمة الدخل"""
-    date_from = request.args.get(
-        "date_from", (date.today() - timedelta(days=30)).strftime("%Y-%m-%d")
-    )
+    date_from = request.args.get("date_from", (date.today() - timedelta(days=30)).strftime("%Y-%m-%d"))
     date_to = request.args.get("date_to", date.today().strftime("%Y-%m-%d"))
 
     try:
         date_from = datetime.strptime(date_from, "%Y-%m-%d").date()
         date_to = datetime.strptime(date_to, "%Y-%m-%d").date()
     except (ValueError, TypeError):
-        current_app.logger.warning(
-            "Invalid date format in admin income statement, falling back to defaults"
-        )
+        current_app.logger.warning("Invalid date format in admin income statement, falling back to defaults")
         date_from = date.today() - timedelta(days=30)
         date_to = date.today()
 
     from services.gl_service import GLService
 
-    _all_balances = GLService.get_all_account_balances(
-        start_date=date_from, end_date=date_to
-    )
+    _all_balances = GLService.get_all_account_balances(start_date=date_from, end_date=date_to)
 
-    revenues = (
-        _accounts()
-        .filter_by(type="revenue", is_active=True, is_header=False)
-        .order_by(GLAccount.code)
-        .all()
-    )
+    revenues = _accounts().filter_by(type="revenue", is_active=True, is_header=False).order_by(GLAccount.code).all()
     revenues_total = sum(abs(_all_balances.get(a.id, 0)) for a in revenues)
 
-    expenses = (
-        _accounts()
-        .filter_by(type="expense", is_active=True, is_header=False)
-        .order_by(GLAccount.code)
-        .all()
-    )
+    expenses = _accounts().filter_by(type="expense", is_active=True, is_header=False).order_by(GLAccount.code).all()
     expenses_total = sum(_all_balances.get(a.id, 0) for a in expenses)
 
     net_income = revenues_total - expenses_total
@@ -561,9 +503,7 @@ def api_account_statement(account_id):
     date_from = request.args.get("date_from")
     date_to = request.args.get("date_to")
     branch_id = request.args.get("branch_id", type=int)
-    statement = GLService.get_account_statement(
-        account_id, date_from, date_to, branch_id
-    )
+    statement = GLService.get_account_statement(account_id, date_from, date_to, branch_id)
     return jsonify(
         {
             "account": {"code": account.code, "name": account.full_name},

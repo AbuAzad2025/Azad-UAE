@@ -79,14 +79,10 @@ def _is_owner() -> bool:
         return False
 
 
-def _audit(
-    action: str, entity: str, entity_id: int | None = None, details: dict | None = None
-):
+def _audit(action: str, entity: str, entity_id: int | None = None, details: dict | None = None):
     """Log an audit entry."""
     try:
-        LoggingCore.log_audit(
-            action=action, table_name=entity, record_id=entity_id, changes=details or {}
-        )
+        LoggingCore.log_audit(action=action, table_name=entity, record_id=entity_id, changes=details or {})
     except Exception as exc:
         logger.warning("Audit log failed for %s/%s: %s", action, entity, exc)
 
@@ -244,17 +240,11 @@ class ActionDispatcher:
                 from models import Customer
 
                 tid = _get_active_tenant_id()
-                customer = Customer.query.filter_by(
-                    tenant_id=tid, name=name, is_active=True
-                ).first()
+                customer = Customer.query.filter_by(tenant_id=tid, name=name, is_active=True).first()
                 if not customer:
                     return ActionResult(False, f"العميل {name} غير موجود")
                 balance = float(customer.balance or 0)
-                status = (
-                    "طبيعي"
-                    if balance < 1000
-                    else ("تنبيه" if balance < 5000 else "خطير")
-                )
+                status = "طبيعي" if balance < 1000 else ("تنبيه" if balance < 5000 else "خطير")
                 return ActionResult(
                     True,
                     f"رصيد العميل {name}: {balance:,.2f} درهم - {status}",
@@ -423,10 +413,7 @@ class ActionDispatcher:
 
                 tid = _get_active_tenant_id()
                 sales = (
-                    Sale.query.filter_by(tenant_id=tid, status="active")
-                    .order_by(Sale.sale_date.desc())
-                    .limit(10)
-                    .all()
+                    Sale.query.filter_by(tenant_id=tid, status="active").order_by(Sale.sale_date.desc()).limit(10).all()
                 )
                 data = [
                     {
@@ -590,10 +577,7 @@ class ActionDispatcher:
                     .scalar()
                 )
                 lines = (
-                    db.session.query(SaleLine)
-                    .join(Sale)
-                    .filter(Sale.tenant_id == tid, Sale.status == "active")
-                    .all()
+                    db.session.query(SaleLine).join(Sale).filter(Sale.tenant_id == tid, Sale.status == "active").all()
                 )
                 cost = Decimal("0")
                 for line in lines:
@@ -695,9 +679,7 @@ class ActionDispatcher:
         # ===== USERS (owner only) =====
         def _create_user(args: dict) -> ActionResult:
             if not _is_owner():
-                return ActionResult(
-                    False, "هذه العملية تتصلاحيات المالك فقط", needs_permission="admin"
-                )
+                return ActionResult(False, "هذه العملية تتصلاحيات المالك فقط", needs_permission="admin")
             username = args.get("username", "").strip()
             password = args.get("password", "").strip()
             role_slug = args.get("role", "seller")
@@ -734,46 +716,26 @@ class ActionDispatcher:
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
         # Register all actions
-        self._register(
-            "create_customer", _create_customer, "manage_customers", "إنشاء عميل جديد"
-        )
-        self._register(
-            "list_customers", _list_customers, "manage_customers", "عرض العملاء"
-        )
+        self._register("create_customer", _create_customer, "manage_customers", "إنشاء عميل جديد")
+        self._register("list_customers", _list_customers, "manage_customers", "عرض العملاء")
         self._register(
             "customer_balance",
             _get_customer_balance,
             "manage_customers",
             "عرض رصيد عميل",
         )
-        self._register(
-            "create_product", _create_product, "manage_products", "إنشاء منتج جديد"
-        )
-        self._register(
-            "list_products", _list_products, "manage_products", "عرض المنتجات"
-        )
+        self._register("create_product", _create_product, "manage_products", "إنشاء منتج جديد")
+        self._register("list_products", _list_products, "manage_products", "عرض المنتجات")
         self._register("check_stock", _check_stock, "manage_warehouse", "فحص المخزون")
-        self._register(
-            "create_sale", _create_sale, "manage_sales", "إنشاء فاتورة مبيعات"
-        )
+        self._register("create_sale", _create_sale, "manage_sales", "إنشاء فاتورة مبيعات")
         self._register("list_sales", _list_sales, "manage_sales", "عرض الفواتير")
-        self._register(
-            "receive_payment", _receive_payment, "manage_payments", "استلام دفعة"
-        )
+        self._register("receive_payment", _receive_payment, "manage_payments", "استلام دفعة")
         self._register("add_expense", _add_expense, "manage_expenses", "تسجيل مصروف")
-        self._register(
-            "create_supplier", _create_supplier, "manage_suppliers", "إنشاء مورد"
-        )
+        self._register("create_supplier", _create_supplier, "manage_suppliers", "إنشاء مورد")
         self._register("sales_summary", _sales_summary, "view_reports", "ملخص المبيعات")
-        self._register(
-            "profit_summary", _profit_summary, "view_reports", "ملخص الأرباح"
-        )
-        self._register(
-            "create_employee", _create_employee, "manage_employees", "إنشاء موظف"
-        )
-        self._register(
-            "create_purchase", _create_purchase, "manage_purchases", "إنشاء أمر شراء"
-        )
+        self._register("profit_summary", _profit_summary, "view_reports", "ملخص الأرباح")
+        self._register("create_employee", _create_employee, "manage_employees", "إنشاء موظف")
+        self._register("create_purchase", _create_purchase, "manage_purchases", "إنشاء أمر شراء")
         self._register("create_user", _create_user, "manage_users", "إنشاء مستخدم")
 
     def get_registered_actions(self) -> list[str]:
@@ -901,18 +863,14 @@ class ActionDispatcher:
             return "list_sales", {}
 
         # ملخص المبيعات / sales summary
-        if re.search(
-            r"(ملخص|تقرير|summary|report)\s*(المبيعات|المبيعات)", msg, re.IGNORECASE
-        ) or re.search(
+        if re.search(r"(ملخص|تقرير|summary|report)\s*(المبيعات|المبيعات)", msg, re.IGNORECASE) or re.search(
             r"(المبيعات|sales)\s*(ملخص|تقرير|summary|report)", msg, re.IGNORECASE
         ):
             return "sales_summary", {}
 
         # ===== PAYMENT OPERATIONS =====
         # استلام: اسم العميل, المبلغ
-        m = re.match(
-            r"^(استلام|قبض|payment|receive)\s*[::=]\s*(.+)$", msg, re.IGNORECASE
-        )
+        m = re.match(r"^(استلام|قبض|payment|receive)\s*[::=]\s*(.+)$", msg, re.IGNORECASE)
         if m:
             parts = [p.strip() for p in m.group(2).split(",")]
             amt_m = re.search(r"[\d.]+", parts[1]) if len(parts) > 1 else None
@@ -970,9 +928,7 @@ class ActionDispatcher:
 
         # ===== PURCHASE OPERATIONS =====
         # أمر شراء: اسم المورد, اسم المنتج, الكمية
-        m = re.match(
-            r"^(أمر\s*شراء|شراء|purchase|order)\s*[::=]\s*(.+)$", msg, re.IGNORECASE
-        )
+        m = re.match(r"^(أمر\s*شراء|شراء|purchase|order)\s*[::=]\s*(.+)$", msg, re.IGNORECASE)
         if m:
             parts = [p.strip() for p in m.group(2).split(",")]
             qty_m = re.search(r"\d+", parts[2]) if len(parts) > 2 else None
@@ -986,9 +942,7 @@ class ActionDispatcher:
             )
 
         # ===== PROFIT / REPORTS =====
-        if re.search(
-            r"(أرباح|ربح|profit|هامش|margin)", msg, re.IGNORECASE
-        ) and re.search(
+        if re.search(r"(أرباح|ربح|profit|هامش|margin)", msg, re.IGNORECASE) and re.search(
             r"(تقرير|ملخص|summary|report|تحليل|analysis)", msg, re.IGNORECASE
         ):
             return "profit_summary", {}
@@ -998,9 +952,7 @@ class ActionDispatcher:
             return "greeting", {"name": getattr(current_user, "full_name", "") or ""}
 
         # ===== HELP =====
-        if re.search(
-            r"^(مساعدة|help|اوامر|commands|مساعدة|what can you do)", msg, re.IGNORECASE
-        ):
+        if re.search(r"^(مساعدة|help|اوامر|commands|مساعدة|what can you do)", msg, re.IGNORECASE):
             return "help", {}
 
         return None

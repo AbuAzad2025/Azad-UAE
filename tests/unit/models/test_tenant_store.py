@@ -23,15 +23,11 @@ class TestTenantStoreHelpers:
         assert store.logo_url() == "/static/uploads/logos/x.png"
 
     def test_logo_url_uploads_path(self):
-        store = TenantStore(
-            tenant_id=1, store_slug="s", warehouse_id=1, logo_path="uploads/logos/y.png"
-        )
+        store = TenantStore(tenant_id=1, store_slug="s", warehouse_id=1, logo_path="uploads/logos/y.png")
         assert store.logo_url() == "/static/uploads/logos/y.png"
 
     def test_seo_title_ar_fallback(self):
-        store = TenantStore(
-            tenant_id=1, store_slug="s", warehouse_id=1, title="Main Title"
-        )
+        store = TenantStore(tenant_id=1, store_slug="s", warehouse_id=1, title="Main Title")
         assert store.seo_title("ar") == "Main Title"
 
     def test_seo_title_en_prefers_meta(self):

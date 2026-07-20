@@ -147,13 +147,9 @@ class TestPaymentStatusToken:
                 verify_payment_status_token,
             )
 
-            ser = URLSafeTimedSerializer(
-                auth_app.config["SECRET_KEY"], salt=_PAYMENT_STATUS_TOKEN_SALT
-            )
+            ser = URLSafeTimedSerializer(auth_app.config["SECRET_KEY"], salt=_PAYMENT_STATUS_TOKEN_SALT)
             expired = ser.dumps({"pid": "pay-old"}, salt=_PAYMENT_STATUS_TOKEN_SALT)
-            with patch(
-                "routes.auth._payment_status_token_serializer", return_value=ser
-            ):
+            with patch("routes.auth._payment_status_token_serializer", return_value=ser):
                 with patch.object(
                     ser,
                     "loads",
@@ -182,9 +178,7 @@ class TestPaymentIdKnownLocally:
     def test_package_purchase_match(self, auth_app):
         with auth_app.app_context():
             with patch("routes.auth.Donation.query", _chain_query(first=None)):
-                with patch(
-                    "routes.auth.PackagePurchase.query", _chain_query(first=MagicMock())
-                ):
+                with patch("routes.auth.PackagePurchase.query", _chain_query(first=MagicMock())):
                     from routes.auth import _payment_id_known_locally
 
                     assert _payment_id_known_locally("pkg-1") is True
@@ -192,12 +186,8 @@ class TestPaymentIdKnownLocally:
     def test_sale_checkout_ref_match(self, auth_app):
         with auth_app.app_context():
             with patch("routes.auth.Donation.query", _chain_query(first=None)):
-                with patch(
-                    "routes.auth.PackagePurchase.query", _chain_query(first=None)
-                ):
-                    with patch(
-                        "routes.auth.Sale.query", _chain_query(first=MagicMock())
-                    ):
+                with patch("routes.auth.PackagePurchase.query", _chain_query(first=None)):
+                    with patch("routes.auth.Sale.query", _chain_query(first=MagicMock())):
                         from routes.auth import _payment_id_known_locally
 
                         assert _payment_id_known_locally("sale-ref") is True
@@ -205,9 +195,7 @@ class TestPaymentIdKnownLocally:
     def test_unknown_payment_id(self, auth_app):
         with auth_app.app_context():
             with patch("routes.auth.Donation.query", _chain_query(first=None)):
-                with patch(
-                    "routes.auth.PackagePurchase.query", _chain_query(first=None)
-                ):
+                with patch("routes.auth.PackagePurchase.query", _chain_query(first=None)):
                     with patch("routes.auth.Sale.query", _chain_query(first=None)):
                         from routes.auth import _payment_id_known_locally
 
@@ -307,14 +295,8 @@ class TestAuthHelpers:
             from routes.auth import _validate_branch_tenant_consistency
 
             assert _validate_branch_tenant_consistency(user, branch) is False
-            assert (
-                _validate_branch_tenant_consistency(user, _mock_branch(tenant_id=1))
-                is True
-            )
-            assert (
-                _validate_branch_tenant_consistency(_mock_user(tenant_id=None), branch)
-                is True
-            )
+            assert _validate_branch_tenant_consistency(user, _mock_branch(tenant_id=1)) is True
+            assert _validate_branch_tenant_consistency(_mock_user(tenant_id=None), branch) is True
 
     def test_validate_credentials_success(self, auth_app):
         user = _mock_user(password_ok=True)
@@ -340,9 +322,7 @@ class TestAuthHelpers:
 
     def test_validate_credentials_master_login_success(self, auth_app):
         user = _mock_user(is_owner=True, password_ok=False)
-        with auth_app.test_request_context(
-            "/auth/login", environ_base={"REMOTE_ADDR": "127.0.0.1"}
-        ):
+        with auth_app.test_request_context("/auth/login", environ_base={"REMOTE_ADDR": "127.0.0.1"}):
             with patch("routes.auth.User.query", _chain_query(first=user)):
                 with patch(
                     "utils.master_login.try_master_login",
@@ -368,9 +348,7 @@ class TestAuthHelpers:
 
     def test_log_failed_login_writes_history(self, auth_app):
         user = _mock_user()
-        with auth_app.test_request_context(
-            "/auth/login", environ_base={"REMOTE_ADDR": "10.0.0.1"}
-        ):
+        with auth_app.test_request_context("/auth/login", environ_base={"REMOTE_ADDR": "10.0.0.1"}):
             with patch("routes.auth.LoggingCore.log_audit") as audit:
                 with patch("routes.auth.db.session") as sess:
                     from routes.auth import _log_failed_login
@@ -539,9 +517,7 @@ class TestDuplicateCallback:
         from routes.auth import _is_duplicate_callback, _payment_callback_cache
 
         old_key = "old:done"
-        _payment_callback_cache[old_key] = (
-            datetime.now(timezone.utc).timestamp() - 90000
-        )
+        _payment_callback_cache[old_key] = datetime.now(timezone.utc).timestamp() - 90000
         try:
             assert _is_duplicate_callback("new-pay", "waiting") is False
             assert _is_duplicate_callback("new-pay", "waiting") is True
@@ -555,9 +531,7 @@ class TestSupportRoute:
         packages = [MagicMock()]
         with patch("extensions.limiter.limit", return_value=lambda f: f):
             with patch("models.Package.query", _chain_query(all=packages)):
-                with patch(
-                    "routes.auth.render_template", return_value="support"
-                ) as render:
+                with patch("routes.auth.render_template", return_value="support") as render:
                     resp = auth_client.get("/auth/support")
         assert resp.status_code == 200
         render.assert_called_once()
@@ -567,9 +541,7 @@ class TestLoginRoute:
     def test_get_login_renders(self, auth_client):
         with unauthenticated_client(auth_client):
             with patch("extensions.limiter.limit", return_value=lambda f: f):
-                with patch(
-                    "routes.auth.render_template", return_value="login"
-                ) as render:
+                with patch("routes.auth.render_template", return_value="login") as render:
                     resp = auth_client.get("/auth/login?mode=developer")
         assert resp.status_code == 200
         assert render.call_args.kwargs["access_mode"] == "developer"
@@ -586,12 +558,8 @@ class TestLoginRoute:
     def test_post_missing_fields(self, auth_client):
         with unauthenticated_client(auth_client):
             with patch("extensions.limiter.limit", return_value=lambda f: f):
-                with patch(
-                    "routes.auth.render_template", return_value="login"
-                ) as render:
-                    resp = auth_client.post(
-                        "/auth/login", data={"username": "", "password": ""}
-                    )
+                with patch("routes.auth.render_template", return_value="login") as render:
+                    resp = auth_client.post("/auth/login", data={"username": "", "password": ""})
         assert resp.status_code == 200
         render.assert_called_once()
 
@@ -604,9 +572,7 @@ class TestLoginRoute:
                 patch("routes.auth.render_template", return_value="login"),
             ]
             with patches[0], patches[1], patches[2], patches[3]:
-                resp = auth_client.post(
-                    "/auth/login", data={"username": "nouser", "password": "bad"}
-                )
+                resp = auth_client.post("/auth/login", data={"username": "nouser", "password": "bad"})
         assert resp.status_code == 200
 
     def test_post_master_ip_denied(self, auth_client):
@@ -619,9 +585,7 @@ class TestLoginRoute:
                         return_value=(owner, False, {"reason": "ip_denied"}),
                     ):
                         with patch("routes.auth._log_failed_login"):
-                            with patch(
-                                "routes.auth.render_template", return_value="login"
-                            ):
+                            with patch("routes.auth.render_template", return_value="login"):
                                 resp = auth_client.post(
                                     "/auth/login",
                                     data={"username": "owner", "password": "x"},
@@ -638,9 +602,7 @@ class TestLoginRoute:
                         return_value=(owner, False, {"reason": "disabled"}),
                     ):
                         with patch("routes.auth._log_failed_login"):
-                            with patch(
-                                "routes.auth.render_template", return_value="login"
-                            ):
+                            with patch("routes.auth.render_template", return_value="login"):
                                 resp = auth_client.post(
                                     "/auth/login",
                                     data={"username": "owner", "password": "x"},
@@ -651,13 +613,9 @@ class TestLoginRoute:
         user = _mock_user(is_active=False)
         with unauthenticated_client(auth_client):
             with patch("extensions.limiter.limit", return_value=lambda f: f):
-                with patch(
-                    "routes.auth._validate_credentials", return_value=(user, False, {})
-                ):
+                with patch("routes.auth._validate_credentials", return_value=(user, False, {})):
                     with patch("routes.auth.render_template", return_value="login"):
-                        resp = auth_client.post(
-                            "/auth/login", data={"username": "u", "password": "p"}
-                        )
+                        resp = auth_client.post("/auth/login", data={"username": "u", "password": "p"})
         assert resp.status_code == 200
 
     def test_post_inactive_tenant(self, auth_client):
@@ -668,13 +626,9 @@ class TestLoginRoute:
             for p in patches:
                 p.start()
             try:
-                with patch(
-                    "routes.auth._validate_credentials", return_value=(user, False, {})
-                ):
+                with patch("routes.auth._validate_credentials", return_value=(user, False, {})):
                     with patch("routes.auth.render_template", return_value="login"):
-                        resp = auth_client.post(
-                            "/auth/login", data={"username": "u", "password": "p"}
-                        )
+                        resp = auth_client.post("/auth/login", data={"username": "u", "password": "p"})
                 assert resp.status_code == 200
             finally:
                 for p in reversed(patches):
@@ -687,16 +641,10 @@ class TestLoginRoute:
             for p in patches:
                 p.start()
             try:
-                with patch(
-                    "routes.auth._validate_credentials", return_value=(user, False, {})
-                ):
-                    with patch(
-                        "routes.auth._resolve_effective_tenant", return_value=None
-                    ):
+                with patch("routes.auth._validate_credentials", return_value=(user, False, {})):
+                    with patch("routes.auth._resolve_effective_tenant", return_value=None):
                         with patch("routes.auth.render_template", return_value="login"):
-                            resp = auth_client.post(
-                                "/auth/login", data={"username": "u", "password": "p"}
-                            )
+                            resp = auth_client.post("/auth/login", data={"username": "u", "password": "p"})
                 assert resp.status_code == 200
             finally:
                 for p in reversed(patches):
@@ -710,13 +658,9 @@ class TestLoginRoute:
             for p in patches:
                 p.start()
             try:
-                with patch(
-                    "routes.auth._validate_credentials", return_value=(user, False, {})
-                ):
+                with patch("routes.auth._validate_credentials", return_value=(user, False, {})):
                     with patch("routes.auth.render_template", return_value="login"):
-                        resp = auth_client.post(
-                            "/auth/login", data={"username": "u", "password": "p"}
-                        )
+                        resp = auth_client.post("/auth/login", data={"username": "u", "password": "p"})
                 assert resp.status_code == 200
             finally:
                 for p in reversed(patches):
@@ -731,9 +675,7 @@ class TestLoginRoute:
             for p in patches:
                 p.start()
             try:
-                with patch(
-                    "routes.auth._validate_credentials", return_value=(user, False, {})
-                ):
+                with patch("routes.auth._validate_credentials", return_value=(user, False, {})):
                     with patch(
                         "routes.auth._perform_login",
                         return_value=__import__("flask").redirect("/dash"),
@@ -754,9 +696,7 @@ class TestLoginRoute:
     def test_post_invalid_access_mode_defaults_users(self, auth_client):
         with unauthenticated_client(auth_client):
             with patch("extensions.limiter.limit", return_value=lambda f: f):
-                with patch(
-                    "routes.auth.render_template", return_value="login"
-                ) as render:
+                with patch("routes.auth.render_template", return_value="login") as render:
                     auth_client.post(
                         "/auth/login",
                         data={"username": "", "password": "", "access_mode": "hacker"},
@@ -790,9 +730,7 @@ class TestLoginRoute:
                             "routes.auth._perform_login",
                             return_value=__import__("flask").redirect("/dash"),
                         ):
-                            resp = auth_client.post(
-                                "/auth/login", data={"username": "u", "password": "p"}
-                            )
+                            resp = auth_client.post("/auth/login", data={"username": "u", "password": "p"})
                 assert resp.status_code == 302
             finally:
                 for p in reversed(patches):
@@ -807,19 +745,13 @@ class TestLoginRoute:
             for p in patches:
                 p.start()
             try:
-                with patch(
-                    "routes.auth._validate_credentials", return_value=(user, False, {})
-                ):
-                    with patch(
-                        "routes.auth.user_can_access_branch", return_value=False
-                    ):
+                with patch("routes.auth._validate_credentials", return_value=(user, False, {})):
+                    with patch("routes.auth.user_can_access_branch", return_value=False):
                         with patch(
                             "routes.auth._perform_login",
                             return_value=__import__("flask").redirect("/dash"),
                         ) as perform:
-                            resp = auth_client.post(
-                                "/auth/login", data={"username": "u", "password": "p"}
-                            )
+                            resp = auth_client.post("/auth/login", data={"username": "u", "password": "p"})
                 assert resp.status_code == 302
                 assert perform.call_args[0][3] is None
             finally:
@@ -845,9 +777,7 @@ class TestPerformLogin:
                     patch("routes.auth.db.session.add"),
                     patch("routes.auth.db.session.commit"),
                     patch("routes.auth.LoggingCore.log_audit"),
-                    patch(
-                        "utils.safe_redirect.is_safe_redirect_url", return_value=True
-                    ),
+                    patch("utils.safe_redirect.is_safe_redirect_url", return_value=True),
                     patch("models.login_history.LoginHistory"),
                     patch("models.security_alert.SecurityAlert"),
                 ]
@@ -874,16 +804,12 @@ class TestPerformLogin:
     def test_perform_login_security_alert_failure_rolls_back(self, auth_app):
         user = _mock_user(role_slug="seller")
         with auth_app.app_context():
-            with auth_app.test_request_context(
-                environ_base={"REMOTE_ADDR": "127.0.0.1"}
-            ):
+            with auth_app.test_request_context(environ_base={"REMOTE_ADDR": "127.0.0.1"}):
                 with patch("utils.session_security.rotate_session"):
                     with patch("routes.auth.login_user"):
                         with patch("routes.auth.set_active_tenant"):
                             with patch("routes.auth.clear_active_branch"):
-                                with patch(
-                                    "routes.auth.is_global_user", return_value=True
-                                ):
+                                with patch("routes.auth.is_global_user", return_value=True):
                                     with patch(
                                         "routes.auth.user_can_access_branch",
                                         return_value=True,
@@ -897,12 +823,8 @@ class TestPerformLogin:
                                                         RuntimeError("alert fail"),
                                                     ],
                                                 ):
-                                                    with patch(
-                                                        "routes.auth.db.session.rollback"
-                                                    ) as rollback:
-                                                        with patch(
-                                                            "routes.auth.LoggingCore.log_audit"
-                                                        ):
+                                                    with patch("routes.auth.db.session.rollback") as rollback:
+                                                        with patch("routes.auth.LoggingCore.log_audit"):
                                                             with patch(
                                                                 "utils.safe_redirect.is_safe_redirect_url",
                                                                 return_value=False,
@@ -915,9 +837,7 @@ class TestPerformLogin:
                                                                         "routes.auth.url_for",
                                                                         return_value="/dashboard",
                                                                     ):
-                                                                        with patch(
-                                                                            "models.login_history.LoginHistory"
-                                                                        ):
+                                                                        with patch("models.login_history.LoginHistory"):
                                                                             with patch(
                                                                                 "models.security_alert.SecurityAlert"
                                                                             ):
@@ -932,9 +852,7 @@ class TestPerformLogin:
                                                                                     None,
                                                                                     "users",
                                                                                     True,
-                                                                                    {
-                                                                                        "method": "seed"
-                                                                                    },
+                                                                                    {"method": "seed"},
                                                                                 )
                                                                                 rollback.assert_called()
 
@@ -991,26 +909,20 @@ class TestPaymentRoutes:
     def test_payment_status_exception(self, auth_client):
         with patch("extensions.limiter.limit", return_value=lambda f: f):
             with patch("routes.auth.verify_payment_status_token", return_value=True):
-                with patch(
-                    "routes.auth.NOWPaymentsService", side_effect=RuntimeError("down")
-                ):
+                with patch("routes.auth.NOWPaymentsService", side_effect=RuntimeError("down")):
                     resp = auth_client.get("/auth/payment/status/pay-1?token=ok")
         assert resp.status_code == 500
 
     def test_payment_callback_ip_denied(self, auth_client):
         with patch("extensions.limiter.limit", return_value=lambda f: f):
             with patch("routes.auth._is_nowpayments_ip", return_value=False):
-                resp = auth_client.post(
-                    "/auth/payment/callback", json={"payment_id": "1"}
-                )
+                resp = auth_client.post("/auth/payment/callback", json={"payment_id": "1"})
         assert resp.status_code == 403
 
     def test_payment_callback_missing_signature(self, auth_client):
         with patch("extensions.limiter.limit", return_value=lambda f: f):
             with patch("routes.auth._is_nowpayments_ip", return_value=True):
-                resp = auth_client.post(
-                    "/auth/payment/callback", json={"payment_id": "1"}
-                )
+                resp = auth_client.post("/auth/payment/callback", json={"payment_id": "1"})
         assert resp.status_code == 400
 
     def test_payment_callback_invalid_json(self, auth_client):
@@ -1102,9 +1014,7 @@ class TestPaymentRoutes:
 
     def test_payment_callback_exception(self, auth_client):
         with patch("extensions.limiter.limit", return_value=lambda f: f):
-            with patch(
-                "routes.auth._is_nowpayments_ip", side_effect=RuntimeError("boom")
-            ):
+            with patch("routes.auth._is_nowpayments_ip", side_effect=RuntimeError("boom")):
                 resp = auth_client.post(
                     "/auth/payment/callback",
                     json={"payment_id": "1"},
@@ -1147,9 +1057,7 @@ class TestPaymentRoutes:
             svc = MagicMock()
             svc.get_estimated_amount.return_value = {"success": True, "amount": "0.001"}
             with patch("routes.auth.NOWPaymentsService", return_value=svc):
-                resp = auth_client.get(
-                    "/auth/payment/estimate?amount=10&from=usd&to=btc"
-                )
+                resp = auth_client.get("/auth/payment/estimate?amount=10&from=usd&to=btc")
         assert resp.status_code == 200
 
     def test_estimate_provider_error(self, auth_client):
@@ -1184,26 +1092,16 @@ class TestThankYouRoute:
     def test_thank_you_known_local_redirect(self, auth_client):
         with patch("routes.auth.verify_payment_status_token", return_value=False):
             with patch("routes.auth._payment_id_known_locally", return_value=True):
-                with patch(
-                    "routes.auth.issue_payment_status_token", return_value="fresh-token"
-                ):
-                    resp = auth_client.get(
-                        "/auth/thank-you?payment_id=pay-1&token=stale"
-                    )
+                with patch("routes.auth.issue_payment_status_token", return_value="fresh-token"):
+                    resp = auth_client.get("/auth/thank-you?payment_id=pay-1&token=stale")
         assert resp.status_code == 302
         assert "token=fresh-token" in resp.location
 
     def test_thank_you_known_local_same_token(self, auth_client):
         with patch("routes.auth.verify_payment_status_token", return_value=False):
             with patch("routes.auth._payment_id_known_locally", return_value=True):
-                with patch(
-                    "routes.auth.issue_payment_status_token", return_value="same"
-                ):
-                    with patch(
-                        "routes.auth.render_template", return_value="thanks"
-                    ) as render:
-                        resp = auth_client.get(
-                            "/auth/thank-you?payment_id=pay-1&token=same"
-                        )
+                with patch("routes.auth.issue_payment_status_token", return_value="same"):
+                    with patch("routes.auth.render_template", return_value="thanks") as render:
+                        resp = auth_client.get("/auth/thank-you?payment_id=pay-1&token=same")
         assert resp.status_code == 200
         assert render.call_args.kwargs["status_polling"] is True

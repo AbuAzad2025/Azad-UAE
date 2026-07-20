@@ -66,9 +66,7 @@ class TestCleanupOldBackups:
 class TestVerifyBackup:
     def test_accepts_plain_sql_dump(self, tmp_path):
         backup = tmp_path / "dump.sql"
-        backup.write_text(
-            "PostgreSQL database dump\nCREATE TABLE users", encoding="utf-8"
-        )
+        backup.write_text("PostgreSQL database dump\nCREATE TABLE users", encoding="utf-8")
         assert BackupOptimizer.verify_backup(str(backup)) is True
 
     def test_accepts_gzip_sql_dump(self, tmp_path):
@@ -101,9 +99,7 @@ class TestGetBackupInfo:
 
         with (
             patch("utils.backup_optimizer.Path.glob", return_value=[first, second]),
-            patch(
-                "utils.backup_optimizer.os.stat", side_effect=[stat_first, stat_second]
-            ),
+            patch("utils.backup_optimizer.os.stat", side_effect=[stat_first, stat_second]),
         ):
             result = BackupOptimizer.get_backup_info(str(tmp_path))
 
@@ -114,8 +110,6 @@ class TestGetBackupInfo:
         assert result["backups"][1]["compressed"] is True
 
     def test_get_backup_info_failure(self):
-        with patch(
-            "utils.backup_optimizer.Path.glob", side_effect=RuntimeError("fail")
-        ):
+        with patch("utils.backup_optimizer.Path.glob", side_effect=RuntimeError("fail")):
             result = BackupOptimizer.get_backup_info("/backups")
         assert result["success"] is False

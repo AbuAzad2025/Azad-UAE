@@ -87,10 +87,7 @@ class TestPayment:
 
     def test_get_method_display(self):
         assert _payment_stub(payment_method="cash").get_method_display() == "نقدي"
-        assert (
-            _payment_stub(payment_method="unknown_x").get_method_display("en")
-            == "unknown_x"
-        )
+        assert _payment_stub(payment_method="unknown_x").get_method_display("en") == "unknown_x"
 
     def test_confirm_payment_updates_sale(self):
         sale = MagicMock()
@@ -111,10 +108,7 @@ class TestPayment:
     def test_is_pending_and_status_ar(self):
         assert _payment_stub(payment_confirmed=False).is_pending is True
         assert _payment_stub(payment_confirmed=True).status_ar == "مؤكدة"
-        assert (
-            _payment_stub(payment_confirmed=False, rejection_reason="x").status_ar
-            == "مرفوضة"
-        )
+        assert _payment_stub(payment_confirmed=False, rejection_reason="x").status_ar == "مرفوضة"
 
     def test_direction_ar(self):
         assert _payment_stub(direction="incoming").direction_ar == "وارد"
@@ -190,10 +184,7 @@ class TestReceipt:
         assert info["number"] == "S-100"
 
     def test_get_source_info_none(self):
-        assert (
-            _receipt_stub(source_type="manual", source_id=None).get_source_info()
-            is None
-        )
+        assert _receipt_stub(source_type="manual", source_id=None).get_source_info() is None
 
     def test_receipt_status_confirmed(self):
         assert _receipt_stub(payment_confirmed=True).status_ar == "مؤكد"

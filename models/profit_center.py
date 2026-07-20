@@ -12,9 +12,7 @@ class ProfitCenter(db.Model):
     """
 
     __tablename__ = "profit_centers"
-    __table_args__ = (
-        db.UniqueConstraint("tenant_id", "code", name="uq_profit_centers_tenant_code"),
-    )
+    __table_args__ = (db.UniqueConstraint("tenant_id", "code", name="uq_profit_centers_tenant_code"),)
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -54,9 +52,7 @@ class ProfitCenter(db.Model):
 
     parent = db.relationship("ProfitCenter", remote_side=[id], backref="children")
     manager = db.relationship("User", foreign_keys=[manager_id])
-    tenant = db.relationship(
-        "Tenant", backref="profit_centers", foreign_keys=[tenant_id]
-    )
+    tenant = db.relationship("Tenant", backref="profit_centers", foreign_keys=[tenant_id])
 
     def __repr__(self):
         return f"<ProfitCenter {self.code} - {self.name_ar}>"

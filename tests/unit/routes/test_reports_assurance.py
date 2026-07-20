@@ -34,9 +34,7 @@ class TestReportHelpers:
         from routes.reports import get_confirmed_sale_paid_aed
 
         with app.app_context():
-            assert get_confirmed_sale_paid_aed(1, tenant_id=1, branch_id=2) == Decimal(
-                "150.50"
-            )
+            assert get_confirmed_sale_paid_aed(1, tenant_id=1, branch_id=2) == Decimal("150.50")
 
     def test_get_confirmed_supplier_paid_aed(self, app, mocker):
         q = MagicMock()
@@ -48,9 +46,7 @@ class TestReportHelpers:
         from routes.reports import get_confirmed_supplier_paid_aed
 
         with app.app_context():
-            assert get_confirmed_supplier_paid_aed(
-                3, purchase_id=9, tenant_id=1
-            ) == Decimal("80")
+            assert get_confirmed_supplier_paid_aed(3, purchase_id=9, tenant_id=1) == Decimal("80")
 
     def test_scoped_customer_query_all_branches(self, mocker):
         mocker.patch("routes.reports.report_branch_scope_id", return_value=None)
@@ -91,9 +87,7 @@ class TestReportHelpers:
         from routes.reports import get_confirmed_sale_paid_aed
 
         with app.app_context():
-            assert get_confirmed_sale_paid_aed(9, tenant_id=1, branch_id=2) == Decimal(
-                "25"
-            )
+            assert get_confirmed_sale_paid_aed(9, tenant_id=1, branch_id=2) == Decimal("25")
 
     def test_scoped_customer_query_branch_scoped(self, mocker):
         mocker.patch("routes.reports.report_branch_scope_id", return_value=3)

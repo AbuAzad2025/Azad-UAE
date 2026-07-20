@@ -21,12 +21,8 @@ from services.gl_account_resolver import (
 
 class TestFeatureFlag:
     def test_enabled_from_dict_config(self):
-        assert (
-            is_dynamic_gl_mapping_enabled({"ENABLE_DYNAMIC_GL_MAPPING": True}) is True
-        )
-        assert (
-            is_dynamic_gl_mapping_enabled({"ENABLE_DYNAMIC_GL_MAPPING": False}) is False
-        )
+        assert is_dynamic_gl_mapping_enabled({"ENABLE_DYNAMIC_GL_MAPPING": True}) is True
+        assert is_dynamic_gl_mapping_enabled({"ENABLE_DYNAMIC_GL_MAPPING": False}) is False
 
     def test_enabled_from_object_config(self):
         cfg = SimpleNamespace(ENABLE_DYNAMIC_GL_MAPPING=True)
@@ -115,9 +111,7 @@ class TestRaiseMissingOrInactive:
         from models.gl import GLAccount, GLAccountMapping
         from models._constants import GL_CONCEPT_CASH
 
-        account = GLAccount.query.filter_by(
-            tenant_id=sample_tenant.id, code="1111"
-        ).first()
+        account = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="1111").first()
         if account is None:
             account = GLAccount(
                 tenant_id=sample_tenant.id,
@@ -139,35 +133,21 @@ class TestRaiseMissingOrInactive:
         db_session.commit()
         return GL_CONCEPT_CASH
 
-    def test_inactive_branch_override(
-        self, app, db_session, sample_tenant, sample_branch, sample_gl_accounts
-    ):
+    def test_inactive_branch_override(self, app, db_session, sample_tenant, sample_branch, sample_gl_accounts):
         from models._constants import GL_CONCEPT_CASH
 
         with app.app_context():
-            self._inactive_mapping(
-                db_session, sample_tenant, sample_branch, sample_branch.id
-            )
-            with pytest.raises(
-                GLMappingError, match="Branch override mapping exists but is inactive"
-            ):
-                _raise_missing_or_inactive_mapping(
-                    sample_tenant.id, GL_CONCEPT_CASH, sample_branch.id
-                )
+            self._inactive_mapping(db_session, sample_tenant, sample_branch, sample_branch.id)
+            with pytest.raises(GLMappingError, match="Branch override mapping exists but is inactive"):
+                _raise_missing_or_inactive_mapping(sample_tenant.id, GL_CONCEPT_CASH, sample_branch.id)
 
-    def test_inactive_tenant_default(
-        self, app, db_session, sample_tenant, sample_gl_accounts
-    ):
+    def test_inactive_tenant_default(self, app, db_session, sample_tenant, sample_gl_accounts):
         from models._constants import GL_CONCEPT_CASH
 
         with app.app_context():
             self._inactive_mapping(db_session, sample_tenant, None, None)
-            with pytest.raises(
-                GLMappingError, match="Tenant-level mapping exists but is inactive"
-            ):
-                _raise_missing_or_inactive_mapping(
-                    sample_tenant.id, GL_CONCEPT_CASH, None
-                )
+            with pytest.raises(GLMappingError, match="Tenant-level mapping exists but is inactive"):
+                _raise_missing_or_inactive_mapping(sample_tenant.id, GL_CONCEPT_CASH, None)
 
     def test_no_mapping_raises(self, app, sample_tenant):
         with app.app_context():

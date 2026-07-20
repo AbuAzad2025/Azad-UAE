@@ -43,15 +43,11 @@ class TestCostCenterModel:
         assert "مركز" in repr(cc)
 
     def test_full_name(self, sample_tenant):
-        cc = CostCenter(
-            tenant_id=sample_tenant.id, code="CC02", name_ar="قسم", name_en="Dept"
-        )
+        cc = CostCenter(tenant_id=sample_tenant.id, code="CC02", name_ar="قسم", name_en="Dept")
         assert cc.full_name == "CC02 - قسم"
 
     def test_full_name_falls_back_to_en(self, sample_tenant):
-        cc = CostCenter(
-            tenant_id=sample_tenant.id, code="CC03", name_ar="", name_en="English"
-        )
+        cc = CostCenter(tenant_id=sample_tenant.id, code="CC03", name_ar="", name_en="English")
         assert "English" in cc.full_name
 
     @pytest.mark.parametrize(
@@ -73,19 +69,13 @@ class TestCostCenterModel:
         )
         assert cc.center_type_ar == label
 
-    def test_get_performance_without_period(
-        self, mocker, sample_tenant, mock_gl_journal_columns
-    ):
+    def test_get_performance_without_period(self, mocker, sample_tenant, mock_gl_journal_columns):
         cc = CostCenter(tenant_id=sample_tenant.id, code="P1", name_ar="Perf")
         cc.id = 10
         revenue_q = MagicMock()
-        revenue_q.join.return_value.filter.return_value.scalar.return_value = Decimal(
-            "1000"
-        )
+        revenue_q.join.return_value.filter.return_value.scalar.return_value = Decimal("1000")
         expense_q = MagicMock()
-        expense_q.join.return_value.filter.return_value.scalar.return_value = Decimal(
-            "400"
-        )
+        expense_q.join.return_value.filter.return_value.scalar.return_value = Decimal("400")
         session = mocker.patch("models.cost_center.db.session")
         session.query.side_effect = [revenue_q, expense_q]
         perf = cc.get_performance()
@@ -94,23 +84,15 @@ class TestCostCenterModel:
         assert perf["profit"] == 600.0
         assert perf["margin"] == 60.0
 
-    def test_get_performance_with_period(
-        self, mocker, sample_tenant, mock_gl_journal_columns
-    ):
+    def test_get_performance_with_period(self, mocker, sample_tenant, mock_gl_journal_columns):
         cc = CostCenter(tenant_id=sample_tenant.id, code="P2", name_ar="Perf2")
         cc.id = 11
         revenue_q = MagicMock()
-        revenue_q.join.return_value.filter.return_value.filter.return_value.scalar.return_value = Decimal(
-            "0"
-        )
+        revenue_q.join.return_value.filter.return_value.filter.return_value.scalar.return_value = Decimal("0")
         expense_q = MagicMock()
-        expense_q.join.return_value.filter.return_value.filter.return_value.scalar.return_value = Decimal(
-            "50"
-        )
+        expense_q.join.return_value.filter.return_value.filter.return_value.scalar.return_value = Decimal("50")
         session = mocker.patch("models.cost_center.db.session")
         session.query.side_effect = [revenue_q, expense_q]
-        perf = cc.get_performance(
-            period_start=date(2025, 1, 1), period_end=date(2025, 12, 31)
-        )
+        perf = cc.get_performance(period_start=date(2025, 1, 1), period_end=date(2025, 12, 31))
         assert perf["revenues"] == 0.0
         assert perf["margin"] == 0.0

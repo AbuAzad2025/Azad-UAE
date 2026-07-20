@@ -81,7 +81,7 @@
                   {% else %}
                   <input type="hidden" name="platform_disabled" value="1" aria-label="platform disabled">
                   <button type="submit" class="btn btn-outline-danger"
-                          onclick="return confirm('تعطيل هذا المتجر من مستوى المنصة؟ لن يتمكن مالك التينانت من تفعيله.');">
+                          data-action="confirm-submit" data-confirm-message="تعطيل هذا المتجر من مستوى المنصة؟ لن يتمكن مالك التينانت من تفعيله.">
                     <i class="fas fa-lock mr-1"></i>{{ _('قفل (تعطيل)') }}
                   </button>
                   {% endif %}
@@ -97,4 +97,14 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action="confirm-submit"]');
+  if (!el) return;
+  if (!confirm(el.dataset.confirmMessage)) e.preventDefault();
+});
+</script>
 {% endblock %}

@@ -115,9 +115,7 @@ class ExchangeRateService:
             try:
                 return int(cfg)
             except Exception:
-                logger.warning(
-                    "Invalid CURRENCY_API_TIMEOUT config value: %s", cfg, exc_info=True
-                )
+                logger.warning("Invalid CURRENCY_API_TIMEOUT config value: %s", cfg, exc_info=True)
         return 5
 
     @staticmethod
@@ -158,9 +156,7 @@ class ExchangeRateService:
         return None
 
     @staticmethod
-    def _fetch_frankfurter(
-        base: str, symbols: tuple[str, ...]
-    ) -> dict[str, float] | None:
+    def _fetch_frankfurter(base: str, symbols: tuple[str, ...]) -> dict[str, float] | None:
         """Frankfurter fallback (https://api.frankfurter.dev)."""
         if not REQUESTS_AVAILABLE:
             return None
@@ -198,17 +194,13 @@ class ExchangeRateService:
         return None
 
     @staticmethod
-    def _fetch_fallbacks(
-        base: str, symbols: tuple[str, ...]
-    ) -> dict[str, float] | None:
+    def _fetch_fallbacks(base: str, symbols: tuple[str, ...]) -> dict[str, float] | None:
         """Try configured fallbacks from config.py (excluding Frankfurter to avoid dup)."""
         if not REQUESTS_AVAILABLE:
             return None
         fallbacks = current_app.config.get("CURRENCY_API_FALLBACKS", [])
         for tmpl in fallbacks:
-            url = tmpl.replace("{base}", base.upper()).replace(
-                "{base_lower}", base.lower()
-            )
+            url = tmpl.replace("{base}", base.upper()).replace("{base_lower}", base.lower())
             # Skip if URL already covered by primary or frankfurter
             if "open.er-api.com" in url or "frankfurter" in url:
                 continue
@@ -248,9 +240,7 @@ class ExchangeRateService:
                     result[base.upper()] = 1.0
                     return result
             except Exception:
-                logger.debug(
-                    "Fallback exchange rate fetch failed for URL %s", url, exc_info=True
-                )
+                logger.debug("Fallback exchange rate fetch failed for URL %s", url, exc_info=True)
         return None
 
     @staticmethod
@@ -288,9 +278,7 @@ class ExchangeRateService:
                 "rates": cached["rates"].copy(),
                 "source": "stale_cache" if cached.get("stale") else "online",
                 "provider": cached.get("provider", "cache"),
-                "last_updated": cached.get(
-                    "last_updated", datetime.now(timezone.utc).isoformat()
-                ),
+                "last_updated": cached.get("last_updated", datetime.now(timezone.utc).isoformat()),
                 "stale": cached.get("stale", False),
             }
 
@@ -318,11 +306,7 @@ class ExchangeRateService:
                 rates = cached["rates"].copy()
                 provider = cached.get("provider", "unknown")
             else:
-                rates = {
-                    k: v
-                    for k, v in ExchangeRateService.DISPLAY_FALLBACK.items()
-                    if k in symbols or k == base
-                }
+                rates = {k: v for k, v in ExchangeRateService.DISPLAY_FALLBACK.items() if k in symbols or k == base}
                 provider = "fallback_static"
 
         # Ensure base is present
@@ -346,8 +330,7 @@ class ExchangeRateService:
             "rates": rates.copy(),
             "provider": provider,
             "last_updated": last_updated,
-            "stale": provider == "fallback_static"
-            or rates == ExchangeRateService.DISPLAY_FALLBACK,
+            "stale": provider == "fallback_static" or rates == ExchangeRateService.DISPLAY_FALLBACK,
         }
 
         return {
@@ -449,9 +432,7 @@ class ExchangeRateService:
             }
 
         # 4. Admin manual rate (stored by manager in exchange_rate_records)
-        admin_rate = ExchangeRateService._get_admin_rate(
-            from_currency, to_currency, tenant_id, effective_date
-        )
+        admin_rate = ExchangeRateService._get_admin_rate(from_currency, to_currency, tenant_id, effective_date)
         if admin_rate:
             return {
                 "ok": True,
@@ -464,9 +445,7 @@ class ExchangeRateService:
             }
 
         # 5. Online rate — fetch, then auto-save to exchange_rate_records for next time
-        online_rate = ExchangeRateService._fetch_and_store_online_rate(
-            from_currency, to_currency, tenant_id
-        )
+        online_rate = ExchangeRateService._fetch_and_store_online_rate(from_currency, to_currency, tenant_id)
         if online_rate:
             return {
                 "ok": True,
@@ -479,9 +458,7 @@ class ExchangeRateService:
             }
 
         # 6. Last known rate from exchange_rate_records (any date, any source)
-        last_rate = ExchangeRateService._get_last_known_rate(
-            from_currency, to_currency, tenant_id
-        )
+        last_rate = ExchangeRateService._get_last_known_rate(from_currency, to_currency, tenant_id)
         if last_rate:
             return {
                 "ok": True,
@@ -549,9 +526,7 @@ class ExchangeRateService:
         try:
             from services.currency_service import CurrencyService
 
-            rate_decimal = CurrencyService.get_exchange_rate(
-                from_currency, to_currency, user_rate=None
-            )
+            rate_decimal = CurrencyService.get_exchange_rate(from_currency, to_currency, user_rate=None)
             if rate_decimal and rate_decimal > Decimal("0"):
                 rate_float = float(rate_decimal.quantize(Decimal("0.000001")))
                 # Auto-save to exchange_rate_records as 'api_primary' for today
@@ -615,9 +590,7 @@ class ExchangeRateService:
 
         Delegates to the public get_online_rate implementation.
         """
-        return ExchangeRateService.get_online_rate(
-            from_currency, to_currency, tenant_id
-        )
+        return ExchangeRateService.get_online_rate(from_currency, to_currency, tenant_id)
 
     @staticmethod
     def _get_last_known_rate(
@@ -629,9 +602,7 @@ class ExchangeRateService:
 
         Delegates to the public get_latest_rate implementation.
         """
-        return ExchangeRateService.get_latest_rate(
-            from_currency, to_currency, tenant_id
-        )
+        return ExchangeRateService.get_latest_rate(from_currency, to_currency, tenant_id)
 
     @staticmethod
     def _save_rate_record(

@@ -140,9 +140,7 @@ class TestWarehouseAndStock:
         assert result[2] == Decimal("0")
 
     def test_get_product_stock(self, mocker):
-        mocker.patch(
-            "utils.branching.get_branch_stock_map", return_value={7: Decimal("12")}
-        )
+        mocker.patch("utils.branching.get_branch_stock_map", return_value={7: Decimal("12")})
         from utils.branching import get_product_stock
 
         assert get_product_stock(7, warehouse_id=1) == Decimal("12")
@@ -163,9 +161,7 @@ class TestWarehouseAndStock:
             ensure_warehouse_access(1, _user())
 
     def test_get_visible_products_no_branch(self, mocker):
-        mocker.patch(
-            "utils.branching.apply_tenant_scope", side_effect=lambda q, *a, **k: q
-        )
+        mocker.patch("utils.branching.apply_tenant_scope", side_effect=lambda q, *a, **k: q)
         mocker.patch("utils.branching.get_accessible_warehouse_ids", return_value=[1])
         mocker.patch("utils.branching.branch_scope_id_for", return_value=None)
         product_q = MagicMock()
@@ -283,12 +279,8 @@ class TestBranchingExtended:
         assert ensure_warehouse_access(1, _user()) is warehouse
 
     def test_user_can_access_warehouse_true(self, mocker):
-        mocker.patch(
-            "utils.branching.get_accessible_warehouses_query"
-        ).return_value.filter.return_value = MagicMock()
-        mocker.patch(
-            "utils.branching.db.session.query"
-        ).return_value.scalar.return_value = True
+        mocker.patch("utils.branching.get_accessible_warehouses_query").return_value.filter.return_value = MagicMock()
+        mocker.patch("utils.branching.db.session.query").return_value.scalar.return_value = True
         wh_model = MagicMock()
         mocker.patch("models.Warehouse", wh_model)
         from utils.branching import user_can_access_warehouse
@@ -296,9 +288,7 @@ class TestBranchingExtended:
         assert user_can_access_warehouse(1, _user()) is True
 
     def test_get_visible_products_empty_warehouses(self, mocker):
-        mocker.patch(
-            "utils.branching.apply_tenant_scope", side_effect=lambda q, *a, **k: q
-        )
+        mocker.patch("utils.branching.apply_tenant_scope", side_effect=lambda q, *a, **k: q)
         mocker.patch("utils.branching.get_accessible_warehouse_ids", return_value=[])
         mocker.patch("utils.branching.branch_scope_id_for", return_value=5)
         product_q = MagicMock()
@@ -403,9 +393,7 @@ class TestBranchingExtendedCoverage:
         mocker.patch(
             "utils.branching.get_accessible_branches_query"
         ).return_value.filter.return_value.exists.return_value = MagicMock()
-        mocker.patch(
-            "utils.branching.db.session.query"
-        ).return_value.scalar.return_value = True
+        mocker.patch("utils.branching.db.session.query").return_value.scalar.return_value = True
         from utils.branching import user_can_access_branch
 
         assert user_can_access_branch(3, _user()) is True
@@ -455,17 +443,13 @@ class TestBranchingExtendedCoverage:
 
     def test_get_product_stock_resolves_warehouses(self, mocker):
         mocker.patch("utils.branching.get_accessible_warehouse_ids", return_value=[1])
-        mocker.patch(
-            "utils.branching.get_branch_stock_map", return_value={5: Decimal("3")}
-        )
+        mocker.patch("utils.branching.get_branch_stock_map", return_value={5: Decimal("3")})
         from utils.branching import get_product_stock
 
         assert get_product_stock(5, user=_user()) == Decimal("3")
 
     def test_get_visible_products_with_warehouses(self, mocker):
-        mocker.patch(
-            "utils.branching.apply_tenant_scope", side_effect=lambda q, *a, **k: q
-        )
+        mocker.patch("utils.branching.apply_tenant_scope", side_effect=lambda q, *a, **k: q)
         mocker.patch("utils.branching.get_accessible_warehouse_ids", return_value=[1])
         mocker.patch("utils.branching.branch_scope_id_for", return_value=2)
         product_q = MagicMock()
@@ -515,9 +499,7 @@ class TestBranchingExtendedCoverage:
         from utils.branching import should_show_all_branch_columns
 
         with app.test_request_context():
-            assert (
-                should_show_all_branch_columns(_user(is_authenticated=False)) is False
-            )
+            assert should_show_all_branch_columns(_user(is_authenticated=False)) is False
 
     def test_get_active_branch_id_unauthenticated(self, app):
         from utils.branching import get_active_branch_id
@@ -563,9 +545,7 @@ class TestBranchingExtendedCoverage:
 
     def test_get_accessible_warehouse_ids(self, mocker):
         warehouse = MagicMock(id=11)
-        mocker.patch(
-            "utils.branching.get_accessible_warehouses", return_value=[warehouse]
-        )
+        mocker.patch("utils.branching.get_accessible_warehouses", return_value=[warehouse])
         from utils.branching import get_accessible_warehouse_ids
 
         assert get_accessible_warehouse_ids(_user()) == [11]

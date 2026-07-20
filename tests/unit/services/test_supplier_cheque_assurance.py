@@ -259,9 +259,7 @@ class TestChequeBounceGL:
             "services.cheque_service.gl_get_customer_credit_account",
             return_value="1100",
         )
-        mocker.patch(
-            "services.cheque_service.gl_get_customer_credit_concept", return_value="AR"
-        )
+        mocker.patch("services.cheque_service.gl_get_customer_credit_concept", return_value="AR")
         mocker.patch(
             "services.cheque_service.GLService.get_account_code_for_concept",
             return_value="1150",
@@ -325,9 +323,7 @@ class TestChequeBounceGL:
             "services.cheque_service.gl_get_customer_credit_account",
             return_value="1100",
         )
-        mocker.patch(
-            "services.cheque_service.gl_get_customer_credit_concept", return_value="AR"
-        )
+        mocker.patch("services.cheque_service.gl_get_customer_credit_concept", return_value="AR")
         mocker.patch(
             "services.cheque_service.gl_get_default_liquidity_account",
             return_value="1120",
@@ -375,9 +371,7 @@ class TestChequeBounceGL:
             "services.cheque_service.gl_get_customer_credit_account",
             return_value="1100",
         )
-        mocker.patch(
-            "services.cheque_service.gl_get_customer_credit_concept", return_value="AR"
-        )
+        mocker.patch("services.cheque_service.gl_get_customer_credit_concept", return_value="AR")
         mocker.patch(
             "services.cheque_service.GLService.get_account_code_for_concept",
             return_value="1150",
@@ -476,20 +470,14 @@ class TestChequeEventListeners:
 
         importlib.reload(cs)
         warn = mocker.patch.object(cs.logger, "warning")
-        info = mocker.patch.object(
-            cs.logger, "info", side_effect=[None, RuntimeError("log fail")]
-        )
+        info = mocker.patch.object(cs.logger, "info", side_effect=[None, RuntimeError("log fail")])
         err = mocker.patch.object(cs.logger, "error")
         cs.register_cheque_event_listeners()
         from models import Cheque
         from sqlalchemy import event
 
-        before = list(
-            event.registry._key_to_collection.get((Cheque, "before_insert"), [])
-        )
-        after = list(
-            event.registry._key_to_collection.get((Cheque, "after_update"), [])
-        )
+        before = list(event.registry._key_to_collection.get((Cheque, "before_insert"), []))
+        after = list(event.registry._key_to_collection.get((Cheque, "after_update"), []))
         if not before:
             pytest.skip("cheque listeners not registered")
         overdue = MagicMock(

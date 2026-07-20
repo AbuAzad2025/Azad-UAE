@@ -268,7 +268,7 @@
             <div class="text-center">
               <h5>{{ t('Backups') }} {{ t('Reserve') }} {{ t('Manual_2') }}</h5>
               <p class="text-muted">{{ t('Create') }} {{ t('نسخة') }} {{ t('Reserve_2') }} {{ t('فورية') }} من {{ t('قاعدة') }} {{ t('Data') }}</p>
-              <button type="button" class="btn btn-primary btn-lg" onclick="createBackup()">
+              <button type="button" class="btn btn-primary btn-lg" data-action="create-backup">
                 <i class="fas fa-download mr-2"></i>{{ t('Create') }} {{ t('نسخة') }} {{ t('Reserve_2') }}
               </button>
             </div>
@@ -349,6 +349,12 @@
 
 {% block scripts %}
 <script>
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action="create-backup"]');
+  if (!el) return;
+  createBackup();
+});
+
 function createBackup() {
   if (confirm("هل {{ t('تريد') }} {{ t('Create') }} {{ t('نسخة') }} {{ t('Reserve_2') }} {{ t('الآن') }}")) {
     // {{ t('Submit') }} {{ t('طلب') }} {{ t('Create') }} {{ t('نسخة') }} {{ t('Reserve_2') }}

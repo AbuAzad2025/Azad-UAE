@@ -52,15 +52,10 @@ def smart_listener(message, context):
     ):
         return "back"
 
-    if any(
-        word in msg_lower for word in [gettext("مساعدة"), "help", gettext("ساعدني")]
-    ):
+    if any(word in msg_lower for word in [gettext("مساعدة"), "help", gettext("ساعدني")]):
         return "help"
 
-    if any(
-        word in msg_lower
-        for word in [gettext("نعم"), "yes", gettext("تأكيد"), gettext("موافق"), "ok"]
-    ):
+    if any(word in msg_lower for word in [gettext("نعم"), "yes", gettext("تأكيد"), gettext("موافق"), "ok"]):
         return "confirm"
 
     if any(word in msg_lower for word in [gettext("لا"), "no", gettext("إلغاء")]):
@@ -241,9 +236,7 @@ def _sanitize_ai_prompt(message, context):
         return None, (
             jsonify(
                 {
-                    "error": gettext(
-                        "تم اكتشاف نمط غير مسموح به في الرسالة. يرجى إعادة صياغة سؤالك."
-                    ),
+                    "error": gettext("تم اكتشاف نمط غير مسموح به في الرسالة. يرجى إعادة صياغة سؤالك."),
                     "code": "INJECTION_DETECTED",
                 }
             ),
@@ -321,9 +314,7 @@ def _stream_ai_response(message, context, ai_mode):
         {
             "response": response,
             "ai_enabled": bool(
-                state.get("allowed")
-                and state.get("global_enabled")
-                and state.get("tenant_enabled") is not False
+                state.get("allowed") and state.get("global_enabled") and state.get("tenant_enabled") is not False
             ),
             "ai_mode": ai_mode,
             "user_role": "owner" if current_user.is_owner else "user",

@@ -81,9 +81,7 @@ class TestCustomerFormValid:
         assert off.validate() is True
         assert off.is_active.data is False
 
-        on = _customer_form(
-            {"name": "Ahmed", "customer_type": "regular", "is_active": "y"}
-        )
+        on = _customer_form({"name": "Ahmed", "customer_type": "regular", "is_active": "y"})
         assert on.validate() is True
         assert on.is_active.data is True
 

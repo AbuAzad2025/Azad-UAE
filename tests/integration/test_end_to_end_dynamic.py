@@ -157,9 +157,7 @@ def _make_supplier(db_session, tenant_id, name):
 class TestPricesIncludeVatEndToEnd:
     """Verify VAT calculation uses tenant/branch settings correctly."""
 
-    def test_tenant_prices_include_vat_false_calculates_exclusive(
-        self, app, db_session
-    ):
+    def test_tenant_prices_include_vat_false_calculates_exclusive(self, app, db_session):
         from services.sale_service import SaleService
 
         t = _make_tenant(db_session, "Test Tenant", "test-vat-tenant", "AED", False)
@@ -565,9 +563,7 @@ class TestWarehouseEditSecurity:
 
         # Verify branch validation logic (as implemented in route)
         new_branch_id = b2.id
-        assert new_branch_id not in accessible_ids, (
-            "Inaccessible branch should be rejected by route"
-        )
+        assert new_branch_id not in accessible_ids, "Inaccessible branch should be rejected by route"
 
 
 class TestPartnerCommissionDynamicProfitMargin:
@@ -588,9 +584,7 @@ class TestPartnerCommissionDynamicProfitMargin:
         # Create a partner customer
         from models import Customer
 
-        partner = Customer(
-            tenant_id=t.id, name="Partner1", phone="0501111111", customer_type="partner"
-        )
+        partner = Customer(tenant_id=t.id, name="Partner1", phone="0501111111", customer_type="partner")
         db_session.add(partner)
         db_session.flush()
 
@@ -645,9 +639,7 @@ class TestPartnerCommissionDynamicProfitMargin:
         assert entry.warehouse_id == wh.id
         assert entry.tenant_id == t.id
 
-    def test_commission_on_inclusive_vat_excludes_vat_from_profit(
-        self, app, db_session
-    ):
+    def test_commission_on_inclusive_vat_excludes_vat_from_profit(self, app, db_session):
         from services.sale_service import SaleService
 
         t = _make_tenant(db_session, "T", "t-comm-inc", "AED", True)
@@ -659,9 +651,7 @@ class TestPartnerCommissionDynamicProfitMargin:
 
         from models import Customer
 
-        partner = Customer(
-            tenant_id=t.id, name="Partner2", phone="0502222222", customer_type="partner"
-        )
+        partner = Customer(tenant_id=t.id, name="Partner2", phone="0502222222", customer_type="partner")
         db_session.add(partner)
         db_session.flush()
 
@@ -760,9 +750,7 @@ class TestPartnerCommissionDynamicProfitMargin:
 
         from models import Customer
 
-        partner1 = Customer(
-            tenant_id=t1.id, name="P1", phone="0503333333", customer_type="partner"
-        )
+        partner1 = Customer(tenant_id=t1.id, name="P1", phone="0503333333", customer_type="partner")
         db_session.add(partner1)
         db_session.flush()
 
@@ -807,9 +795,7 @@ class TestPartnerCommissionDynamicProfitMargin:
         assert entries[0].tenant_id == t1.id
 
         # Cross-tenant query should return nothing
-        cross = PartnerCommissionEntry.query.filter_by(
-            sale_id=sale.id, tenant_id=t2.id
-        ).all()
+        cross = PartnerCommissionEntry.query.filter_by(sale_id=sale.id, tenant_id=t2.id).all()
         assert len(cross) == 0
 
 
@@ -833,9 +819,7 @@ class TestSecurityAuditFixes:
         # Move to public blueprint — no login required
         resp = client.get(f"/suspended/{t.id}")
         assert resp.status_code == 200
-        assert b"Tenant suspended" in resp.data or "Tenant suspended" in resp.get_data(
-            as_text=True
-        )
+        assert b"Tenant suspended" in resp.data or "Tenant suspended" in resp.get_data(as_text=True)
 
     def test_print_settings_rejects_cashier(self, app, db_session):
         """print_settings must reject non-admin users (e.g., cashier)."""
@@ -949,9 +933,7 @@ class TestSecurityAuditFixes:
                 # User has branch b1, so wh1 is accessible, wh2 is NOT
                 resp_ok = client.get(f"/api/products/{p.id}/info?warehouse_id={wh1.id}")
                 assert resp_ok.status_code == 200
-                resp_forbidden = client.get(
-                    f"/api/products/{p.id}/info?warehouse_id={wh2.id}"
-                )
+                resp_forbidden = client.get(f"/api/products/{p.id}/info?warehouse_id={wh2.id}")
                 assert resp_forbidden.status_code == 403
 
     def test_user_edit_requires_manage_users_permission(self, app, db_session):
@@ -971,12 +953,8 @@ class TestSecurityAuditFixes:
         b = Branch(tenant_id=t.id, name=f"Main_{suffix}", code=f"M{suffix[:4]}")
         db_session.add(b)
         db_session.flush()
-        r_admin = Role.query.filter_by(slug="manager").first() or Role(
-            slug="manager", name="Manager", is_active=True
-        )
-        r_seller = Role.query.filter_by(slug="seller").first() or Role(
-            slug="seller", name="Cashier", is_active=True
-        )
+        r_admin = Role.query.filter_by(slug="manager").first() or Role(slug="manager", name="Manager", is_active=True)
+        r_seller = Role.query.filter_by(slug="seller").first() or Role(slug="seller", name="Cashier", is_active=True)
         if not r_admin.id:
             db_session.add(r_admin)
         if not r_seller.id:
@@ -1061,9 +1039,7 @@ class TestInvoicePrintEngineIsolation:
 
         perm = Permission.query.filter_by(code="manage_sales").first()
         if not perm:
-            perm = Permission(
-                name="Manage Sales", code="manage_sales", category="sales"
-            )
+            perm = Permission(name="Manage Sales", code="manage_sales", category="sales")
             db_session.add(perm)
             db_session.flush()
         u2.role.permissions.append(perm)
@@ -1091,9 +1067,7 @@ class TestInvoicePrintEngineIsolation:
 
         perm = Permission.query.filter_by(code="manage_sales").first()
         if not perm:
-            perm = Permission(
-                name="Manage Sales", code="manage_sales", category="sales"
-            )
+            perm = Permission(name="Manage Sales", code="manage_sales", category="sales")
             db_session.add(perm)
             db_session.flush()
         seller.role.permissions.append(perm)
@@ -1141,9 +1115,7 @@ class TestInvoicePrintEngineIsolation:
                 # Verify it rendered successfully with no hardcoded company name fallback
                 assert "نظام المحاسبة" not in html
 
-    def test_print_invoice_shows_correct_currency_not_hardcoded_aed(
-        self, app, db_session
-    ):
+    def test_print_invoice_shows_correct_currency_not_hardcoded_aed(self, app, db_session):
 
         t = _make_tenant(db_session, "TUSD", "tusd", "USD")
         b = _make_branch(db_session, t.id, "Main", "MAIN")
@@ -1155,9 +1127,7 @@ class TestInvoicePrintEngineIsolation:
 
         perm = Permission.query.filter_by(code="manage_sales").first()
         if not perm:
-            perm = Permission(
-                name="Manage Sales", code="manage_sales", category="sales"
-            )
+            perm = Permission(name="Manage Sales", code="manage_sales", category="sales")
             db_session.add(perm)
             db_session.flush()
         seller.role.permissions.append(perm)
@@ -1235,9 +1205,7 @@ class TestVoucherPaymentIsolation:
         # Add manage_payments permission to seller
         perm = Permission.query.filter_by(code="manage_payments").first()
         if not perm:
-            perm = Permission(
-                name="Manage Payments", code="manage_payments", category="payments"
-            )
+            perm = Permission(name="Manage Payments", code="manage_payments", category="payments")
             db_session.add(perm)
             db_session.flush()
         seller.role.permissions.append(perm)
@@ -1290,9 +1258,7 @@ class TestVoucherPaymentIsolation:
             db_session.flush()
         perm = Permission.query.filter_by(code="manage_payments").first()
         if not perm:
-            perm = Permission(
-                name="Manage Payments", code="manage_payments", category="payments"
-            )
+            perm = Permission(name="Manage Payments", code="manage_payments", category="payments")
             db_session.add(perm)
             db_session.flush()
         if perm not in manager_role.permissions:
@@ -1372,9 +1338,7 @@ class TestPayrollIsolation:
         )
         db_session.flush()
         # Verify transaction exists and is scoped
-        txn = PayrollTransaction.query.filter_by(
-            employee_id=emp.id, month=1, year=2026
-        ).first()
+        txn = PayrollTransaction.query.filter_by(employee_id=emp.id, month=1, year=2026).first()
         assert txn is not None
         assert txn.tenant_id == t.id
         assert txn.branch_id == b.id
@@ -1422,9 +1386,7 @@ class TestPayrollIsolation:
         )
         db_session.flush()
         # Verify accrual GL entry was posted
-        txn = PayrollTransaction.query.filter_by(
-            employee_id=emp.id, month=2, year=2026
-        ).first()
+        txn = PayrollTransaction.query.filter_by(employee_id=emp.id, month=2, year=2026).first()
         assert txn.gl_entry_id is not None
         gl_entry = GLJournalEntry.query.get(txn.gl_entry_id)
         assert gl_entry is not None
@@ -1446,9 +1408,7 @@ class TestPayrollIsolation:
 class TestFxGainLossAutoPosting:
     """Verify FX gain/loss is auto-posted when receipt currency rate differs from sale rate."""
 
-    def test_fx_gain_loss_auto_posted_for_foreign_currency_receipt(
-        self, app, db_session
-    ):
+    def test_fx_gain_loss_auto_posted_for_foreign_currency_receipt(self, app, db_session):
         from models import (
             GLJournalEntry,
             Permission,
@@ -1463,9 +1423,7 @@ class TestFxGainLossAutoPosting:
         seller = _make_user(db_session, t.id, "seller", b.id)
         perm = Permission.query.filter_by(code="manage_payments").first()
         if not perm:
-            perm = Permission(
-                name="Manage Payments", code="manage_payments", category="payments"
-            )
+            perm = Permission(name="Manage Payments", code="manage_payments", category="payments")
             db_session.add(perm)
             db_session.flush()
         seller.role.permissions.append(perm)
@@ -1571,9 +1529,7 @@ class TestPOSSessionAndDrawerIsolation:
         db_session.flush()
 
         # Create session scoped to tenant+branch+user
-        session = create_pos_session(
-            user=u, branch_id=b.id, opening_balance=Decimal("500")
-        )
+        session = create_pos_session(user=u, branch_id=b.id, opening_balance=Decimal("500"))
         db_session.flush()
         assert session.tenant_id == t.id
         assert session.branch_id == b.id
@@ -1656,9 +1612,7 @@ class TestPOSSessionAndDrawerIsolation:
         db_session.add(u)
         db_session.flush()
 
-        session = create_pos_session(
-            user=u, branch_id=b.id, opening_balance=Decimal("200")
-        )
+        session = create_pos_session(user=u, branch_id=b.id, opening_balance=Decimal("200"))
         db_session.flush()
 
         # Close with overage (closing 300, expected 200)
@@ -1794,9 +1748,7 @@ class TestPOSSessionAndDrawerIsolation:
             sale2 = SaleService.create_sale(
                 customer=customer,
                 seller=u,
-                lines_data=[
-                    {"product": p, "quantity": 1, "unit_price": Decimal("100")}
-                ],
+                lines_data=[{"product": p, "quantity": 1, "unit_price": Decimal("100")}],
                 warehouse_id=w2.id,
                 currency="AED",
             )
@@ -1805,11 +1757,7 @@ class TestPOSSessionAndDrawerIsolation:
             db_session.flush()
             assert False, "Expected negative inventory block"
         except ValueError as e:
-            assert (
-                "المخزون غير كافٍ" in str(e)
-                or "insufficient" in str(e).lower()
-                or "mismatch" in str(e).lower()
-            )
+            assert "المخزون غير كافٍ" in str(e) or "insufficient" in str(e).lower() or "mismatch" in str(e).lower()
 
     def test_pos_checkout_negative_inventory_allowed(self, app, db_session):
         from models import (
@@ -1834,9 +1782,7 @@ class TestPOSSessionAndDrawerIsolation:
         )
         db_session.add(t)
         db_session.flush()
-        b = Branch(
-            name="POS-NEG Branch", code="POS-NEG", tenant_id=t.id, is_active=True
-        )
+        b = Branch(name="POS-NEG Branch", code="POS-NEG", tenant_id=t.id, is_active=True)
         db_session.add(b)
         db_session.flush()
         r = Role(

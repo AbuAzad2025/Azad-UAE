@@ -113,18 +113,10 @@ class TestProvisioningScope:
             mappings = GLAccountMapping.query.filter_by(tenant_id=tenant.id).all()
             for mapping in mappings:
                 account = db.session.get(GLAccount, mapping.gl_account_id)
-                assert account is not None, (
-                    f"Mapping {mapping.concept_code} -> missing account"
-                )
-                assert account.is_active, (
-                    f"Mapping {mapping.concept_code} -> inactive {account.code}"
-                )
-                assert not account.is_header, (
-                    f"Mapping {mapping.concept_code} -> header {account.code}"
-                )
-                assert account.tenant_id == tenant.id, (
-                    f"Mapping {mapping.concept_code} -> foreign {account.code}"
-                )
+                assert account is not None, f"Mapping {mapping.concept_code} -> missing account"
+                assert account.is_active, f"Mapping {mapping.concept_code} -> inactive {account.code}"
+                assert not account.is_header, f"Mapping {mapping.concept_code} -> header {account.code}"
+                assert account.tenant_id == tenant.id, f"Mapping {mapping.concept_code} -> foreign {account.code}"
 
 
 # ===================================================================
@@ -150,9 +142,7 @@ class TestLiquidityMode:
         )
         db.session.add(tenant)
         db.session.flush()
-        branch = Branch(
-            tenant_id=tenant.id, name="Main", code=f"{name[:3]}M", is_main=True
-        )
+        branch = Branch(tenant_id=tenant.id, name="Main", code=f"{name[:3]}M", is_main=True)
         db.session.add(branch)
         db.session.flush()
         return tenant, branch
@@ -220,11 +210,7 @@ class TestLiquidityMode:
             )
             db.session.commit()
 
-            cash_line = (
-                GLJournalLine.query.filter_by(entry_id=entry.id)
-                .filter(GLJournalLine.debit > 0)
-                .first()
-            )
+            cash_line = GLJournalLine.query.filter_by(entry_id=entry.id).filter(GLJournalLine.debit > 0).first()
             posted = db.session.get(GLAccount, cash_line.account_id)
             assert posted.id == cash_acc.id, (
                 f"Expected {cash_acc.id} ({cash_acc.code}), got {posted.id} ({posted.code})"
@@ -274,11 +260,7 @@ class TestLiquidityMode:
             )
             db.session.commit()
 
-            bank_line = (
-                GLJournalLine.query.filter_by(entry_id=entry.id)
-                .filter(GLJournalLine.debit > 0)
-                .first()
-            )
+            bank_line = GLJournalLine.query.filter_by(entry_id=entry.id).filter(GLJournalLine.debit > 0).first()
             posted = db.session.get(GLAccount, bank_line.account_id)
             assert posted.id == bank_acc.id, (
                 f"Expected {bank_acc.id} ({bank_acc.code}), got {posted.id} ({posted.code})"
@@ -296,9 +278,7 @@ class TestLiquidityMode:
             GLProvisioningService.provision_tenant(tenant.id)
             db.session.commit()
 
-            with pytest.raises(
-                GLMappingError, match="requires an explicit GL account code"
-            ):
+            with pytest.raises(GLMappingError, match="requires an explicit GL account code"):
                 GLService.create_journal_entry(
                     date=datetime(2026, 6, 1, tzinfo=timezone.utc),
                     description="No account code",
@@ -331,9 +311,7 @@ class TestRecordMode:
         from decimal import Decimal
 
         asset_acc = GLAccount.query.filter_by(tenant_id=tenant.id, code="1111").first()
-        dep_exp_acc = GLAccount.query.filter_by(
-            tenant_id=tenant.id, code="6300"
-        ).first()
+        dep_exp_acc = GLAccount.query.filter_by(tenant_id=tenant.id, code="6300").first()
         dep_acc = GLAccount.query.filter_by(tenant_id=tenant.id, code="1190").first()
 
         asset = FixedAsset(
@@ -379,31 +357,21 @@ class TestRecordMode:
             GLTreeBuilder.build(tenant.id)
             db.session.commit()
 
-            asset, asset_acc, dep_acc, dep_exp_acc = self._setup_asset(
-                app, tenant, branch, "FA-DEPR", 10000
-            )
+            asset, asset_acc, dep_acc, dep_exp_acc = self._setup_asset(app, tenant, branch, "FA-DEPR", 10000)
             db.session.commit()
 
             sched = asset.post_depreciation(period_date="2026-02-01")
             db.session.commit()
             assert sched is not None
 
-            lines = (
-                GLJournalLine.query.filter_by(entry_id=sched.journal_entry_id)
-                .order_by(GLJournalLine.id)
-                .all()
-            )
+            lines = GLJournalLine.query.filter_by(entry_id=sched.journal_entry_id).order_by(GLJournalLine.id).all()
             assert len(lines) == 2
 
             acc0 = db.session.get(GLAccount, lines[0].account_id)
             acc1 = db.session.get(GLAccount, lines[1].account_id)
 
-            assert acc0.id == dep_exp_acc.id, (
-                f"Expected expense {dep_exp_acc.id}, got {acc0.id}"
-            )
-            assert acc1.id == dep_acc.id, (
-                f"Expected depreciation {dep_acc.id}, got {acc1.id}"
-            )
+            assert acc0.id == dep_exp_acc.id, f"Expected expense {dep_exp_acc.id}, got {acc0.id}"
+            assert acc1.id == dep_acc.id, f"Expected depreciation {dep_acc.id}, got {acc1.id}"
 
     def test_disposal_posts_to_exact_asset_account(self, app):
         from extensions import db
@@ -432,24 +400,16 @@ class TestRecordMode:
             GLTreeBuilder.build(tenant.id)
             db.session.commit()
 
-            asset, asset_acc, dep_acc, dep_exp_acc = self._setup_asset(
-                app, tenant, branch, "FA-DIS", 5000
-            )
+            asset, asset_acc, dep_acc, dep_exp_acc = self._setup_asset(app, tenant, branch, "FA-DIS", 5000)
             db.session.commit()
 
-            gain_acc = GLAccount.query.filter_by(
-                tenant_id=tenant.id, code="4600"
-            ).first()
-            loss_acc = GLAccount.query.filter_by(
-                tenant_id=tenant.id, code="6700"
-            ).first()
+            gain_acc = GLAccount.query.filter_by(tenant_id=tenant.id, code="4600").first()
+            loss_acc = GLAccount.query.filter_by(tenant_id=tenant.id, code="6700").first()
             for ccode, cacc in (
                 ("FIXED_ASSET_GAIN", gain_acc),
                 ("FIXED_ASSET_LOSS", loss_acc),
             ):
-                if not GLAccountMapping.query.filter_by(
-                    tenant_id=tenant.id, concept_code=ccode
-                ).first():
+                if not GLAccountMapping.query.filter_by(tenant_id=tenant.id, concept_code=ccode).first():
                     mapping = GLAccountMapping(
                         tenant_id=tenant.id,
                         concept_code=ccode,
@@ -508,9 +468,7 @@ class TestRecordMode:
             GLProvisioningService.provision_tenant(tenant.id)
             db.session.commit()
 
-            with pytest.raises(
-                GLMappingError, match="requires explicit_account_allowed=True"
-            ):
+            with pytest.raises(GLMappingError, match="requires explicit_account_allowed=True"):
                 GLService.create_journal_entry(
                     date=datetime(2026, 6, 1, tzinfo=timezone.utc),
                     description="No explicit flag",
@@ -555,26 +513,16 @@ class TestMappingMode:
             GLProvisioningService.provision_tenant(tenant.id)
             db.session.commit()
 
-            gain_acc = GLAccount.query.filter_by(
-                tenant_id=tenant.id, code="4600"
-            ).first()
-            loss_acc = GLAccount.query.filter_by(
-                tenant_id=tenant.id, code="6700"
-            ).first()
-            assert (
-                gain_acc is not None and gain_acc.is_active and not gain_acc.is_header
-            )
-            assert (
-                loss_acc is not None and loss_acc.is_active and not loss_acc.is_header
-            )
+            gain_acc = GLAccount.query.filter_by(tenant_id=tenant.id, code="4600").first()
+            loss_acc = GLAccount.query.filter_by(tenant_id=tenant.id, code="6700").first()
+            assert gain_acc is not None and gain_acc.is_active and not gain_acc.is_header
+            assert loss_acc is not None and loss_acc.is_active and not loss_acc.is_header
 
             for code, acc in (
                 ("FIXED_ASSET_GAIN", gain_acc),
                 ("FIXED_ASSET_LOSS", loss_acc),
             ):
-                if not GLAccountMapping.query.filter_by(
-                    tenant_id=tenant.id, concept_code=code
-                ).first():
+                if not GLAccountMapping.query.filter_by(tenant_id=tenant.id, concept_code=code).first():
                     mapping = GLAccountMapping(
                         tenant_id=tenant.id,
                         concept_code=code,
@@ -586,9 +534,7 @@ class TestMappingMode:
             db.session.commit()
 
             for code in ("FIXED_ASSET_GAIN", "FIXED_ASSET_LOSS"):
-                mapping = GLAccountMapping.query.filter_by(
-                    tenant_id=tenant.id, concept_code=code
-                ).first()
+                mapping = GLAccountMapping.query.filter_by(tenant_id=tenant.id, concept_code=code).first()
                 assert mapping is not None, f"{code} mapping missing"
                 account = db.session.get(GLAccount, mapping.gl_account_id)
                 assert account is not None, f"{code} -> missing"
@@ -615,12 +561,8 @@ class TestMappingMode:
             GLProvisioningService.provision_tenant(tenant.id)
             db.session.commit()
 
-            gain_acc = GLAccount.query.filter_by(
-                tenant_id=tenant.id, code="4600"
-            ).first()
-            loss_acc = GLAccount.query.filter_by(
-                tenant_id=tenant.id, code="6700"
-            ).first()
+            gain_acc = GLAccount.query.filter_by(tenant_id=tenant.id, code="4600").first()
+            loss_acc = GLAccount.query.filter_by(tenant_id=tenant.id, code="6700").first()
 
             gain_map = GLAccountMapping(
                 tenant_id=tenant.id,
@@ -689,12 +631,8 @@ class TestStaleMappings:
                 "ACCUMULATED_DEPRECIATION",
             )
             for code in stale_concepts:
-                if not GLAccountMapping.query.filter_by(
-                    tenant_id=tenant.id, concept_code=code
-                ).first():
-                    header = GLAccount.query.filter_by(
-                        tenant_id=tenant.id, is_header=True
-                    ).first()
+                if not GLAccountMapping.query.filter_by(tenant_id=tenant.id, concept_code=code).first():
+                    header = GLAccount.query.filter_by(tenant_id=tenant.id, is_header=True).first()
                     if header:
                         stale = GLAccountMapping(
                             tenant_id=tenant.id,
@@ -706,9 +644,7 @@ class TestStaleMappings:
                         db.session.add(stale)
             db.session.commit()
 
-            result = GLMappingValidationService.dry_run(
-                tenant_id=tenant.id, include_ready=True
-            )
+            result = GLMappingValidationService.dry_run(tenant_id=tenant.id, include_ready=True)
             # NOTE: Do not claim result["ready"] is True per corrective commit
             # Stale mappings should not block readiness for mapping-owned concepts
             # but may still show as not ready due to missing required mappings
@@ -720,9 +656,7 @@ class TestStaleMappings:
                     )
             # Additional assertion: stale mappings should be warnings regardless of
             # unrelated required mapping gaps (they are ignored during posting)
-            stale_warnings = [
-                r for r in result["rows"] if r["concept_code"] in stale_concepts
-            ]
+            stale_warnings = [r for r in result["rows"] if r["concept_code"] in stale_concepts]
             assert len(stale_warnings) == len(stale_concepts), (
                 f"Expected {len(stale_concepts)} stale concept warnings, got {len(stale_warnings)}"
             )
@@ -774,15 +708,9 @@ class TestStaleMappings:
                 module_code="test_header_target",
                 required=True,
                 accounts=[],
-                mappings=[
-                    GLConceptMappingTemplate(
-                        "TEST_HEADER_TARGET", "1000", "test_header_target"
-                    )
-                ],
+                mappings=[GLConceptMappingTemplate("TEST_HEADER_TARGET", "1000", "test_header_target")],
             )
-            monkeypatch.setitem(
-                GL_MODULE_DEFINITIONS, "test_header_target", injected_module
-            )
+            monkeypatch.setitem(GL_MODULE_DEFINITIONS, "test_header_target", injected_module)
 
             prov = GLProvisioningService.provision_tenant(tenant.id)
 
@@ -792,14 +720,12 @@ class TestStaleMappings:
             bad_mapping = GLAccountMapping.query.filter_by(
                 tenant_id=tenant.id, concept_code="TEST_HEADER_TARGET"
             ).first()
-            assert bad_mapping is None, (
-                "Mapping to header account should not be created"
-            )
+            assert bad_mapping is None, "Mapping to header account should not be created"
 
             # Provisioning should report an error mentioning header
-            assert any(
-                "is header" in e.lower() or "header" in e.lower() for e in prov.errors
-            ), f"Expected header error in prov.errors: {prov.errors}"
+            assert any("is header" in e.lower() or "header" in e.lower() for e in prov.errors), (
+                f"Expected header error in prov.errors: {prov.errors}"
+            )
 
 
 # ===================================================================
@@ -836,9 +762,7 @@ class TestTenantBranchIsolation:
             db.session.flush()
 
             # Create a branch for tenant2
-            branch2 = Branch(
-                tenant_id=tenant2.id, name="Branch2", code="BR2", is_main=True
-            )
+            branch2 = Branch(tenant_id=tenant2.id, name="Branch2", code="BR2", is_main=True)
             db.session.add(branch2)
             db.session.flush()
 
@@ -901,9 +825,7 @@ class TestTenantBranchIsolation:
             db.session.flush()
 
             # Create a branch for tenant2
-            branch2 = Branch(
-                tenant_id=tenant2.id, name="Branch2", code="BR2", is_main=True
-            )
+            branch2 = Branch(tenant_id=tenant2.id, name="Branch2", code="BR2", is_main=True)
             db.session.add(branch2)
             db.session.flush()
 
@@ -963,12 +885,8 @@ class TestTenantBranchIsolation:
             db.session.flush()
 
             # Create two branches for the same tenant
-            branch1 = Branch(
-                tenant_id=tenant.id, name="Branch1", code="BR1", is_main=True
-            )
-            branch2 = Branch(
-                tenant_id=tenant.id, name="Branch2", code="BR2", is_main=False
-            )
+            branch1 = Branch(tenant_id=tenant.id, name="Branch1", code="BR1", is_main=True)
+            branch2 = Branch(tenant_id=tenant.id, name="Branch2", code="BR2", is_main=False)
             db.session.add_all([branch1, branch2])
             db.session.flush()
 
@@ -1051,13 +969,9 @@ class TestAuthorityModelEdgeCases:
             db.session.commit()
 
             # Resolve AR with canonical case
-            ar_canonical = resolve_gl_account(
-                tenant_id=tenant.id, concept_code="AR", branch_id=branch.id
-            )
+            ar_canonical = resolve_gl_account(tenant_id=tenant.id, concept_code="AR", branch_id=branch.id)
             # Resolve ' ar ' with spaces and lowercase
-            ar_variant = resolve_gl_account(
-                tenant_id=tenant.id, concept_code=" ar ", branch_id=branch.id
-            )
+            ar_variant = resolve_gl_account(tenant_id=tenant.id, concept_code=" ar ", branch_id=branch.id)
 
             assert ar_canonical is not None
             assert ar_variant is not None
@@ -1115,12 +1029,8 @@ class TestAuthorityModelEdgeCases:
             )
             db.session.add(tenant)
             db.session.flush()
-            branch_a = Branch(
-                tenant_id=tenant.id, name="BranchA", code="BRA", is_main=True
-            )
-            branch_b = Branch(
-                tenant_id=tenant.id, name="BranchB", code="BRB", is_main=False
-            )
+            branch_a = Branch(tenant_id=tenant.id, name="BranchA", code="BRA", is_main=True)
+            branch_b = Branch(tenant_id=tenant.id, name="BranchB", code="BRB", is_main=False)
             db.session.add_all([branch_a, branch_b])
             db.session.flush()
 
@@ -1162,9 +1072,7 @@ class TestAuthorityModelEdgeCases:
 
             # Try to create entry with entry branch=branch_b but using branch A's CASH account
             # This should be rejected because entry branch B doesn't match account's branch A
-            with pytest.raises(
-                GLMappingError, match="does not match required branch_id"
-            ):
+            with pytest.raises(GLMappingError, match="does not match required branch_id"):
                 GLService.create_journal_entry(
                     date=datetime(2026, 6, 1, tzinfo=timezone.utc),
                     description="Test cash branch B rejection",
@@ -1208,12 +1116,8 @@ class TestAuthorityModelEdgeCases:
             )
             db.session.add(tenant)
             db.session.flush()
-            branch_a = Branch(
-                tenant_id=tenant.id, name="BranchA", code="BRA", is_main=True
-            )
-            branch_b = Branch(
-                tenant_id=tenant.id, name="BranchB", code="BRB", is_main=False
-            )
+            branch_a = Branch(tenant_id=tenant.id, name="BranchA", code="BRA", is_main=True)
+            branch_b = Branch(tenant_id=tenant.id, name="BranchB", code="BRB", is_main=False)
             db.session.add_all([branch_a, branch_b])
             db.session.flush()
 
@@ -1255,9 +1159,7 @@ class TestAuthorityModelEdgeCases:
 
             # Try to create entry with entry branch=branch_b but using branch A's BANK account
             # This should be rejected because entry branch B doesn't match account's branch A
-            with pytest.raises(
-                GLMappingError, match="does not match required branch_id"
-            ):
+            with pytest.raises(GLMappingError, match="does not match required branch_id"):
                 GLService.create_journal_entry(
                     date=datetime(2026, 6, 1, tzinfo=timezone.utc),
                     description="Test bank branch B rejection",
@@ -1314,9 +1216,7 @@ class TestAuthorityModelEdgeCases:
 
             # LANDED_COST is non-posting; should raise even with dynamic mapping disabled
             # Use GLService._resolve_journal_line_account which has the non-posting check
-            with pytest.raises(
-                GLMappingError, match="Non-posting concept cannot be resolved"
-            ):
+            with pytest.raises(GLMappingError, match="Non-posting concept cannot be resolved"):
                 GLService._resolve_journal_line_account(
                     {"concept_code": "LANDED_COST"},
                     tenant_id=tenant.id,
@@ -1348,24 +1248,14 @@ class TestAuthorityModelEdgeCases:
             GLProvisioningService.provision_tenant(tenant.id)
             db.session.commit()
 
-            result = GLMappingValidationService.dry_run(
-                tenant_id=tenant.id, include_ready=True
-            )
+            result = GLMappingValidationService.dry_run(tenant_id=tenant.id, include_ready=True)
 
-            cash_rows = [
-                r for r in result["rows"] if r["concept_code"] == "CASH_READINESS"
-            ]
-            bank_rows = [
-                r for r in result["rows"] if r["concept_code"] == "BANK_READINESS"
-            ]
+            cash_rows = [r for r in result["rows"] if r["concept_code"] == "CASH_READINESS"]
+            bank_rows = [r for r in result["rows"] if r["concept_code"] == "BANK_READINESS"]
 
-            assert len(cash_rows) == 1, (
-                f"Expected 1 CASH_READINESS row, got {len(cash_rows)}"
-            )
+            assert len(cash_rows) == 1, f"Expected 1 CASH_READINESS row, got {len(cash_rows)}"
             assert cash_rows[0]["severity"] == "critical"
-            assert len(bank_rows) == 1, (
-                f"Expected 1 BANK_READINESS row, got {len(bank_rows)}"
-            )
+            assert len(bank_rows) == 1, f"Expected 1 BANK_READINESS row, got {len(bank_rows)}"
             assert bank_rows[0]["severity"] == "critical"
 
     def test_cash_bank_readiness_after_build(self, app):
@@ -1394,33 +1284,21 @@ class TestAuthorityModelEdgeCases:
             GLTreeBuilder.build(tenant.id)
             db.session.commit()
 
-            result = GLMappingValidationService.dry_run(
-                tenant_id=tenant.id, include_ready=True
-            )
+            result = GLMappingValidationService.dry_run(tenant_id=tenant.id, include_ready=True)
 
-            cash_rows = [
-                r for r in result["rows"] if r["concept_code"] == "CASH_READINESS"
-            ]
-            bank_rows = [
-                r for r in result["rows"] if r["concept_code"] == "BANK_READINESS"
-            ]
+            cash_rows = [r for r in result["rows"] if r["concept_code"] == "CASH_READINESS"]
+            bank_rows = [r for r in result["rows"] if r["concept_code"] == "BANK_READINESS"]
 
             # After build, liquidity accounts exist so readiness rows should be absent
-            assert len(cash_rows) == 0, (
-                f"Expected 0 CASH_READINESS rows after build, got {len(cash_rows)}"
-            )
-            assert len(bank_rows) == 0, (
-                f"Expected 0 BANK_READINESS rows after build, got {len(bank_rows)}"
-            )
+            assert len(cash_rows) == 0, f"Expected 0 CASH_READINESS rows after build, got {len(cash_rows)}"
+            assert len(bank_rows) == 0, f"Expected 0 BANK_READINESS rows after build, got {len(bank_rows)}"
 
 
 class TestGLModelUnitCoverage:
     def test_gl_account_properties_and_repr(self):
         from models.gl import GLAccount
 
-        acct = GLAccount(
-            code="1100", name="Cash", name_ar="نقد", type="asset", sub_type="bank"
-        )
+        acct = GLAccount(code="1100", name="Cash", name_ar="نقد", type="asset", sub_type="bank")
         assert "1100" in repr(acct)
         assert acct.full_name == "1100 - نقد"
         assert acct.type_ar == "أصول"
@@ -1433,9 +1311,7 @@ class TestGLModelUnitCoverage:
 
         acct = GLAccount(id=1, tenant_id=1, type="asset", is_header=False)
         mock_q = MagicMock()
-        mock_q.join.return_value.filter.return_value.scalar.return_value = Decimal(
-            "500"
-        )
+        mock_q.join.return_value.filter.return_value.scalar.return_value = Decimal("500")
         mocker.patch("models.gl.db.session.query", return_value=mock_q)
         assert acct.get_balance() == Decimal("500")
 
@@ -1444,22 +1320,16 @@ class TestGLModelUnitCoverage:
 
         acct = GLAccount(id=2, tenant_id=1, type="liability", is_header=False)
         mock_q = MagicMock()
-        mock_q.join.return_value.filter.return_value.scalar.return_value = Decimal(
-            "300"
-        )
+        mock_q.join.return_value.filter.return_value.scalar.return_value = Decimal("300")
         mocker.patch("models.gl.db.session.query", return_value=mock_q)
         assert acct.get_balance() == Decimal("-300")
 
     def test_gl_account_header_sums_children(self, mocker):
         from models.gl import GLAccount
 
-        child = GLAccount(
-            id=3, tenant_id=1, type="asset", is_header=False, is_active=True
-        )
+        child = GLAccount(id=3, tenant_id=1, type="asset", is_header=False, is_active=True)
         mocker.patch.object(child, "get_balance", return_value=100)
-        parent = GLAccount(
-            id=4, tenant_id=1, type="asset", is_header=True, is_active=True
-        )
+        parent = GLAccount(id=4, tenant_id=1, type="asset", is_header=True, is_active=True)
         parent.children = [child]
         assert parent.get_balance() == 100
 
@@ -1526,9 +1396,7 @@ class TestGLModelUnitCoverage:
     def test_reverse_entry_creates_mirror(self, app, mocker):
         from models.gl import GLJournalEntry, GLJournalLine
 
-        line = GLJournalLine(
-            account_id=1, debit=Decimal("100"), credit=0, amount_aed=Decimal("100")
-        )
+        line = GLJournalLine(account_id=1, debit=Decimal("100"), credit=0, amount_aed=Decimal("100"))
         entry = GLJournalEntry(
             tenant_id=1,
             entry_number="JE-2",
@@ -1559,9 +1427,7 @@ class TestGLModelUnitCoverage:
     def test_gl_account_mapping_repr_and_validate(self):
         from models.gl import GLAccountMapping
 
-        mapping = GLAccountMapping(
-            tenant_id=1, concept_code="AR", gl_account_id=10, branch_id=3
-        )
+        mapping = GLAccountMapping(tenant_id=1, concept_code="AR", gl_account_id=10, branch_id=3)
         assert "AR" in repr(mapping)
         assert "branch=3" in repr(mapping)
         with pytest.raises(ValueError, match="Unknown GL concept"):
@@ -1571,9 +1437,7 @@ class TestGLModelUnitCoverage:
         from models.gl import GLJournalEntry
         from services.gl_posting import UnbalancedJournalEntryError
 
-        entry = GLJournalEntry(
-            entry_number="BAD", total_debit=Decimal("100"), total_credit=Decimal("0")
-        )
+        entry = GLJournalEntry(entry_number="BAD", total_debit=Decimal("100"), total_credit=Decimal("0"))
         with app.app_context():
             with pytest.raises(UnbalancedJournalEntryError):
                 db = __import__("extensions").db

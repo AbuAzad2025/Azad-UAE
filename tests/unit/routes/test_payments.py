@@ -3,9 +3,7 @@ from datetime import datetime, timezone
 
 
 class TestPaymentsReceipts:
-    def test_receipts_list_returns_200(
-        self, auth_client, db_session, sample_tenant, sample_customer
-    ):
+    def test_receipts_list_returns_200(self, auth_client, db_session, sample_tenant, sample_customer):
         import uuid
         from models import Receipt
 

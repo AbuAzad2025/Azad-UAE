@@ -51,9 +51,7 @@ class TestCachedQuery:
 
     def test_cache_set_failure_still_returns(self, app, mocker):
         mocker.patch("utils.cache_decorators.cache.get", return_value=None)
-        mocker.patch(
-            "utils.cache_decorators.cache.set", side_effect=RuntimeError("redis down")
-        )
+        mocker.patch("utils.cache_decorators.cache.set", side_effect=RuntimeError("redis down"))
         from utils.cache_decorators import cached_query
 
         @cached_query()

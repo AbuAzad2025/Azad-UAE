@@ -12,9 +12,6 @@ def extract_serials(line_data: dict) -> list[str]:
 def validate_serials(serials: list[str], product_name: str, quantity: int):
     """التحقق من عدد السيريالات وعدم التكرار. يرفع ValueError في حال وجود خطأ."""
     if len(serials) != quantity:
-        raise ValueError(
-            f'⚠️ المنتج "{product_name}" يتطلب {quantity} رقم تسلسلي، '
-            f"ولكن تم إدخال {len(serials)} فقط."
-        )
+        raise ValueError(f'⚠️ المنتج "{product_name}" يتطلب {quantity} رقم تسلسلي، ولكن تم إدخال {len(serials)} فقط.')
     if len(serials) != len(set(serials)):
         raise ValueError(f'⚠️ يوجد أرقام تسلسلية مكررة للمنتج "{product_name}".')

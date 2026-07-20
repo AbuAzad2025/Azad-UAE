@@ -13,9 +13,7 @@ from tests.unit.routes.conftest import (
 @contextmanager
 def _marketing_patches(**kwargs):
     with ExitStack() as stack:
-        stack.enter_context(
-            patch("routes.email_marketing.render_template", return_value="ok")
-        )
+        stack.enter_context(patch("routes.email_marketing.render_template", return_value="ok"))
         stack.enter_context(
             patch(
                 "routes.email_marketing.EmailMarketingService.list_campaigns",
@@ -40,18 +38,10 @@ def _marketing_patches(**kwargs):
                 return_value=kwargs.get("stats", {"sent": 0}),
             )
         )
-        stack.enter_context(
-            patch("routes.email_marketing.EmailMarketingService.create_campaign")
-        )
-        stack.enter_context(
-            patch("routes.email_marketing.EmailMarketingService.send_campaign")
-        )
-        stack.enter_context(
-            patch("routes.email_marketing.EmailMarketingService.create_list")
-        )
-        stack.enter_context(
-            patch("routes.email_marketing.EmailMarketingService.create_template")
-        )
+        stack.enter_context(patch("routes.email_marketing.EmailMarketingService.create_campaign"))
+        stack.enter_context(patch("routes.email_marketing.EmailMarketingService.send_campaign"))
+        stack.enter_context(patch("routes.email_marketing.EmailMarketingService.create_list"))
+        stack.enter_context(patch("routes.email_marketing.EmailMarketingService.create_template"))
         yield
 
 
@@ -69,9 +59,7 @@ class TestEmailMarketingAuth:
             resp = marketing_client.get("/marketing/")
         assert resp.status_code == 401
 
-    def test_campaigns_forbidden_without_permission(
-        self, marketing_client, bypass_permission_auth
-    ):
+    def test_campaigns_forbidden_without_permission(self, marketing_client, bypass_permission_auth):
         bypass_permission_auth.has_permission.return_value = False
         with (
             _marketing_patches(),

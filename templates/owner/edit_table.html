@@ -61,13 +61,13 @@
             </td>
             {% endfor %}
             <td class="text-center">
-              <button class="btn btn-warning edit-btn" onclick="enableEdit(this)">
+              <button class="btn btn-warning edit-btn" data-action="enable-edit">
                 <i class="fas fa-pencil-alt"></i> {{ _('تعديل') }}
               </button>
-              <button class="btn btn-success save-btn ic-1" onclick="saveRow(this)">
+              <button class="btn btn-success save-btn ic-1" data-action="save-row">
                 <i class="fas fa-save"></i> {{ _('حفظ') }}
               </button>
-              <button class="btn btn-secondary cancel-btn ic-1" onclick="cancelEdit(this)">
+              <button class="btn btn-secondary cancel-btn ic-1" data-action="cancel-edit">
                 <i class="fas fa-times"></i> {{ _('إلغاء') }}
               </button>
             </td>
@@ -98,6 +98,15 @@
 {% block extra_js %}
 <script src="{{ url_for('static', filename='adminlte/plugins/sweetalert2/sweetalert2.all.min.js') }}"></script>
 <script>
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const action = el.dataset.action;
+  if (action === 'enable-edit') enableEdit(el);
+  else if (action === 'save-row') saveRow(el);
+  else if (action === 'cancel-edit') cancelEdit(el);
+});
+
 function enableEdit(btn) {
   const row = btn.closest('tr');
   const inputs = row.querySelectorAll('input');

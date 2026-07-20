@@ -5,15 +5,8 @@ from sqlalchemy.orm import joinedload
 class RoleService:
     @staticmethod
     def get_roles_permissions_context(tenant_id=None):
-        roles = (
-            Role.query.filter_by(is_active=True)
-            .options(joinedload(Role.permissions))
-            .order_by(Role.name)
-            .all()
-        )
-        permissions = Permission.query.order_by(
-            Permission.category, Permission.name
-        ).all()
+        roles = Role.query.filter_by(is_active=True).options(joinedload(Role.permissions)).order_by(Role.name).all()
+        permissions = Permission.query.order_by(Permission.category, Permission.name).all()
 
         perm_categories = {}
         for p in permissions:

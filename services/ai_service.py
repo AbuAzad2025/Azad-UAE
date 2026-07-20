@@ -284,11 +284,7 @@ class AIService:
 
         load_dotenv(override=True)
 
-        return (
-            os.environ.get("GROQ_API_KEY")
-            or os.environ.get("GEMINI_API_KEY")
-            or os.environ.get("OPENAI_API_KEY")
-        )
+        return os.environ.get("GROQ_API_KEY") or os.environ.get("GEMINI_API_KEY") or os.environ.get("OPENAI_API_KEY")
 
     @staticmethod
     def is_enabled():
@@ -345,18 +341,12 @@ class AIService:
 
         # إذا كانت الرسالة عن كلمات المرور أو المستخدمين أو الصلاحيات
         is_sensitive = (
-            is_about_password
-            or (is_about_users and len(message_normalized.split()) <= 5)
-            or is_about_security
+            is_about_password or (is_about_users and len(message_normalized.split()) <= 5) or is_about_security
         )
 
         if is_sensitive:
             # إذا كان المستخدم هو المالك، السماح بالوصول
-            if (
-                current_user
-                and hasattr(current_user, "is_owner")
-                and current_user.is_owner
-            ):
+            if current_user and hasattr(current_user, "is_owner") and current_user.is_owner:
                 return True, True, None
 
             # إذا لم يكن المالك، رفض الوصول
@@ -430,9 +420,7 @@ class AIService:
                 }
 
             summary = AIService._user_summary(user)
-            summary["created_at"] = (
-                user.created_at.strftime("%Y-%m-%d") if user.created_at else None
-            )
+            summary["created_at"] = user.created_at.strftime("%Y-%m-%d") if user.created_at else None
             return {"success": True, "user": summary}
 
         users = session.query(User).all()
@@ -587,9 +575,7 @@ class AIService:
                     continue
 
                 relevant_payments = [
-                    payment_dt
-                    for payment_dt, _ in normalized_payment_times
-                    if payment_dt >= sale_created_at
+                    payment_dt for payment_dt, _ in normalized_payment_times if payment_dt >= sale_created_at
                 ]
 
                 if relevant_payments:
@@ -681,9 +667,7 @@ class AIService:
         tid = get_active_tenant_id()
 
         last_30_days = datetime.now(timezone.utc) - timedelta(days=30)
-        sales = db.session.query(Sale).filter(
-            Sale.sale_date >= last_30_days, Sale.status == "confirmed"
-        )
+        sales = db.session.query(Sale).filter(Sale.sale_date >= last_30_days, Sale.status == "confirmed")
         if tid is not None:
             sales = sales.filter(Sale.tenant_id == tid)
         sales = sales.all()
@@ -720,15 +704,11 @@ class AIService:
         x_mean = sum(x) / n
         y_mean = sum(y) / n
 
-        slope = sum((x[i] - x_mean) * (y[i] - y_mean) for i in range(n)) / sum(
-            (x[i] - x_mean) ** 2 for i in range(n)
-        )
+        slope = sum((x[i] - x_mean) * (y[i] - y_mean) for i in range(n)) / sum((x[i] - x_mean) ** 2 for i in range(n))
         intercept = y_mean - slope * x_mean
 
         # Predict next days
-        predictions = [
-            max(0, slope * (n + i) + intercept) for i in range(1, days_ahead + 1)
-        ]
+        predictions = [max(0, slope * (n + i) + intercept) for i in range(1, days_ahead + 1)]
 
         # Calculate R² for confidence
         y_pred = [slope * i + intercept for i in x]
@@ -757,9 +737,7 @@ class AIService:
         tid = get_active_tenant_id()
 
         last_30_days = datetime.now(timezone.utc) - timedelta(days=30)
-        sales = db.session.query(Sale).filter(
-            Sale.sale_date >= last_30_days, Sale.status == "confirmed"
-        )
+        sales = db.session.query(Sale).filter(Sale.sale_date >= last_30_days, Sale.status == "confirmed")
         if tid is not None:
             sales = sales.filter(Sale.tenant_id == tid)
         sales = sales.all()
@@ -783,9 +761,7 @@ class AIService:
                     }
 
                 cost = Decimal(str(line.cost_price)) * Decimal(str(line.quantity))
-                revenue = Decimal(str(line.line_total)) * Decimal(
-                    str(sale.exchange_rate)
-                )
+                revenue = Decimal(str(line.line_total)) * Decimal(str(sale.exchange_rate))
 
                 products_data[pid]["revenue"] += revenue
                 products_data[pid]["cost"] += cost
@@ -793,9 +769,7 @@ class AIService:
                 total_cost += cost
 
         total_profit = total_revenue - total_cost
-        margin = (
-            (total_profit / total_revenue * 100) if total_revenue > 0 else Decimal("0")
-        )
+        margin = (total_profit / total_revenue * 100) if total_revenue > 0 else Decimal("0")
 
         products_list = []
         for data in products_data.values():
@@ -833,9 +807,7 @@ class AIService:
         tid = get_active_tenant_id()
 
         last_90_days = datetime.now(timezone.utc) - timedelta(days=90)
-        sales = db.session.query(Sale).filter(
-            Sale.sale_date >= last_90_days, Sale.status == "confirmed"
-        )
+        sales = db.session.query(Sale).filter(Sale.sale_date >= last_90_days, Sale.status == "confirmed")
         if tid is not None:
             sales = sales.filter(Sale.tenant_id == tid)
         sales = sales.all()
@@ -905,13 +877,7 @@ class AIService:
             "rating": (
                 "ممتاز"
                 if health_score >= 80
-                else (
-                    "جيد"
-                    if health_score >= 60
-                    else "مقبول"
-                    if health_score >= 40
-                    else "ضعيف"
-                )
+                else ("جيد" if health_score >= 60 else "مقبول" if health_score >= 40 else "ضعيف")
             ),
         }
 
@@ -928,28 +894,17 @@ class AIService:
         local_response = local_result.get("response", "")
 
         force_local = ctx.get("force_local", False)
-        knowledge_context = (
-            ""
-            if force_local
-            else AIService._gather_relevant_knowledge(message, local_result)
-        )
+        knowledge_context = "" if force_local else AIService._gather_relevant_knowledge(message, local_result)
 
         system_context = ""
         try:
             from ai_knowledge.system_knowledge import search_knowledge
 
-            role_slug = (
-                current_user.role.slug
-                if current_user and getattr(current_user, "role", None)
-                else None
-            )
+            role_slug = current_user.role.slug if current_user and getattr(current_user, "role", None) else None
             sys_ctx = search_knowledge(message)
             if sys_ctx:
                 ctx_text = "\n".join(
-                    str(
-                        item.get("name") or item.get("code") or item.get("type") or item
-                    )
-                    for item in sys_ctx[:20]
+                    str(item.get("name") or item.get("code") or item.get("type") or item) for item in sys_ctx[:20]
                 )
                 system_context = "\n📘 **معلومات النظام:**\n" + ctx_text[:2000]
         except Exception:
@@ -964,9 +919,7 @@ class AIService:
                 action_type, args = parsed
                 result = action_dispatcher.dispatch(action_type, args)
                 if result.success:
-                    return (
-                        f"{result.message}\n\n<sub>🤖 المصدر: محرك التنفيذ الذكي</sub>"
-                    )
+                    return f"{result.message}\n\n<sub>🤖 المصدر: محرك التنفيذ الذكي</sub>"
         except Exception:
             logger.debug("Action dispatcher failed for chat message", exc_info=True)
 
@@ -975,11 +928,7 @@ class AIService:
             from ai_knowledge.agents_core import ask_azad_enhanced
 
             fast_path = ask_azad_enhanced(message, user_id=user_id)
-            if (
-                fast_path
-                and fast_path.get("answer")
-                and fast_path.get("source") != "local"
-            ):
+            if fast_path and fast_path.get("answer") and fast_path.get("source") != "local":
                 return f"{fast_path['answer']}\n\n<sub>🤖 المصدر: GROQ API + معرفة النظام</sub>"
         except Exception:
             logger.debug("Knowledge agents failed for chat message", exc_info=True)
@@ -1006,11 +955,7 @@ class AIService:
                     model = "gpt-4"
 
                 # بناء البرومبت مع معرفة النظام الشاملة
-                role_slug = (
-                    current_user.role.slug
-                    if current_user and getattr(current_user, "role", None)
-                    else "user"
-                )
+                role_slug = current_user.role.slug if current_user and getattr(current_user, "role", None) else "user"
                 expert_prompt = f"""أنت أزاد - مساعد ذكي خبير لنظام إدارة كراجات وورش المعدات الثقيلة.
 
 دور المستخدم: {role_slug}
@@ -1082,9 +1027,7 @@ class AIService:
 
                     # Groq يدرب المحلي
                     try:
-                        AIService._train_local_from_groq(
-                            message, str(local_response), str(groq_response), user_id
-                        )
+                        AIService._train_local_from_groq(message, str(local_response), str(groq_response), user_id)
                     except Exception as e:
                         logger.debug("Training skipped: %s", e)
 
@@ -1160,14 +1103,12 @@ class AIService:
                 else:
                     product_lines = [
                         {
-                            "name": data.get("product_name")
-                            or data.get("اسم_المنتج", ""),
+                            "name": data.get("product_name") or data.get("اسم_المنتج", ""),
                             "quantity": int(data.get("quantity", 1)),
                         }
                     ]
                 result = ex.create_sale(
-                    customer_name=data.get("customer_name")
-                    or data.get("اسم_العميل", ""),
+                    customer_name=data.get("customer_name") or data.get("اسم_العميل", ""),
                     product_lines=product_lines,
                     payment_method=data.get("payment_method", "cash"),
                     paid_amount=float(data.get("paid_amount", data.get("المبلغ", 0))),
@@ -1175,8 +1116,7 @@ class AIService:
                 )
             elif action_type == "receive_payment":
                 result = ex.receive_payment(
-                    customer_name=data.get("customer_name")
-                    or data.get("اسم_العميل", ""),
+                    customer_name=data.get("customer_name") or data.get("اسم_العميل", ""),
                     amount=float(data.get("amount") or data.get("المبلغ", 0)),
                     method=data.get("method") or data.get("طريقة_الدفع", "cash"),
                 )
@@ -1276,21 +1216,9 @@ class AIService:
             # 📊 إحصائيات الشركة النشطة (User معفى من ORM — scoped يدوياً)
             tid = ctx_user.tenant_id
             users_count = scoped_user_query(ctx_user, exclude_owners=True).count()
-            customers_count = (
-                db.session.query(Customer)
-                .filter_by(is_active=True, tenant_id=tid)
-                .count()
-            )
-            suppliers_count = (
-                db.session.query(Supplier)
-                .filter_by(is_active=True, tenant_id=tid)
-                .count()
-            )
-            products_count = (
-                db.session.query(Product)
-                .filter_by(is_active=True, tenant_id=tid)
-                .count()
-            )
+            customers_count = db.session.query(Customer).filter_by(is_active=True, tenant_id=tid).count()
+            suppliers_count = db.session.query(Supplier).filter_by(is_active=True, tenant_id=tid).count()
+            products_count = db.session.query(Product).filter_by(is_active=True, tenant_id=tid).count()
 
             sales_30d = (
                 db.session.query(Sale)
@@ -1429,9 +1357,7 @@ class AIService:
                 hbc_q = hbc_q.filter(Customer.tenant_id == tid)
             high_balance_customers = hbc_q.all()
 
-            overdue_count = sum(
-                1 for c in high_balance_customers if c.get_balance_aed() > 1000
-            )
+            overdue_count = sum(1 for c in high_balance_customers if c.get_balance_aed() > 1000)
 
             if overdue_count > 0:
                 insights.append(
@@ -1446,9 +1372,7 @@ class AIService:
 
             # رؤية 3: أداء المبيعات
             today = datetime.now().date()
-            today_sales_q = db.session.query(Sale).filter(
-                db.func.date(Sale.sale_date) == today
-            )
+            today_sales_q = db.session.query(Sale).filter(db.func.date(Sale.sale_date) == today)
             if tid is not None:
                 today_sales_q = today_sales_q.filter(Sale.tenant_id == tid)
             today_sales = today_sales_q.count()
@@ -1504,11 +1428,7 @@ class AIService:
                         "product_name": product.name,
                         "current_stock": float(product.current_stock),
                         "recommended_order": float(order_quantity),
-                        "estimated_cost": (
-                            float(order_quantity * product.cost_price)
-                            if product.cost_price
-                            else 0
-                        ),
+                        "estimated_cost": (float(order_quantity * product.cost_price) if product.cost_price else 0),
                     }
                 )
 
@@ -1581,9 +1501,7 @@ class AIService:
                 "discount_percentage": discount * 100,
                 "discount_amount": round(base_price * quantity * discount, 2),
                 "total_before_discount": round(base_price * quantity, 2),
-                "total_after_discount": round(
-                    base_price * quantity * (1 - discount), 2
-                ),
+                "total_after_discount": round(base_price * quantity * (1 - discount), 2),
                 "unit_price_after_discount": round(base_price * (1 - discount), 2),
                 "currency": "AED",
             }
@@ -1604,9 +1522,7 @@ class AIService:
             at_risk = []
             active_customers_q = db.session.query(Customer).filter_by(is_active=True)
             if tid is not None:
-                active_customers_q = active_customers_q.filter(
-                    Customer.tenant_id == tid
-                )
+                active_customers_q = active_customers_q.filter(Customer.tenant_id == tid)
             active_customers = active_customers_q.all()
             for customer in active_customers:
                 last_sale_q = db.session.query(Sale).filter_by(customer_id=customer.id)
@@ -1619,14 +1535,8 @@ class AIService:
                             "customer_id": customer.id,
                             "customer_name": customer.name,
                             "last_purchase": last_sale.sale_date.strftime("%Y-%m-%d"),
-                            "days_since_last_purchase": (
-                                datetime.now() - last_sale.sale_date
-                            ).days,
-                            "risk_level": (
-                                "high"
-                                if (datetime.now() - last_sale.sale_date).days > 180
-                                else "medium"
-                            ),
+                            "days_since_last_purchase": (datetime.now() - last_sale.sale_date).days,
+                            "risk_level": ("high" if (datetime.now() - last_sale.sale_date).days > 180 else "medium"),
                         }
                     )
             return {
@@ -1634,9 +1544,7 @@ class AIService:
                 "at_risk_customers": at_risk,
                 "total_at_risk": len(at_risk),
                 "total_customers": len(active_customers),
-                "churn_rate_percentage": round(
-                    len(at_risk) / max(len(active_customers), 1) * 100, 1
-                ),
+                "churn_rate_percentage": round(len(at_risk) / max(len(active_customers), 1) * 100, 1),
             }
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -1729,9 +1637,7 @@ class AIService:
             historical = [float(s.amount_aed or 0) for s in sales]
             predictions = SalesAnalytics.predict_next_month_sales(historical)
             SalesAnalytics.analyze_sales_pattern(sales)
-            deep_insights = DataAnalyzer().analyze_sales_performance(
-                period_days=days_ahead
-            )
+            deep_insights = DataAnalyzer().analyze_sales_performance(period_days=days_ahead)
             return {
                 "historical": historical,
                 "predictions": predictions,
@@ -1973,9 +1879,7 @@ class AIService:
             from flask import current_app
 
             neural = AIService.get_neural_engine()
-            forecast = neural.forecast_sales(
-                days_ahead, from_app_context=current_app.app_context
-            )
+            forecast = neural.forecast_sales(days_ahead, from_app_context=current_app.app_context)
 
             return forecast
 
@@ -2020,9 +1924,7 @@ class AIService:
             from flask import current_app
 
             neural = AIService.get_neural_engine()
-            optimization = neural.optimize_stock_level(
-                product_id, from_app_context=current_app.app_context
-            )
+            optimization = neural.optimize_stock_level(product_id, from_app_context=current_app.app_context)
 
             return optimization
 
@@ -2037,9 +1939,7 @@ class AIService:
             from flask import current_app
 
             neural = AIService.get_neural_engine()
-            prediction = neural.predict_maintenance_needs(
-                product_id, from_app_context=current_app.app_context
-            )
+            prediction = neural.predict_maintenance_needs(product_id, from_app_context=current_app.app_context)
 
             return prediction
 
@@ -2054,9 +1954,7 @@ class AIService:
             from flask import current_app
 
             neural = AIService.get_neural_engine()
-            prediction = neural.predict_cash_flow(
-                months_ahead, from_app_context=current_app.app_context
-            )
+            prediction = neural.predict_cash_flow(months_ahead, from_app_context=current_app.app_context)
 
             return prediction
 
@@ -2336,9 +2234,7 @@ class AIService:
     # ========================================================================
 
     @staticmethod
-    def ask_genius(
-        question: str, context: dict | None = None, user_id: int | None = None
-    ):
+    def ask_genius(question: str, context: dict | None = None, user_id: int | None = None):
         """
         اسأل العبقري - الواجهة الموحدة للعقل الخارق
 

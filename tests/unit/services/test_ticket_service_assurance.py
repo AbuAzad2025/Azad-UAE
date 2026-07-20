@@ -33,9 +33,7 @@ class TestTicketNumbering:
         mock_q.filter.return_value = mock_q
         mock_q.order_by.return_value = mock_q
         mock_q.first.return_value = last
-        mocker.patch.object(
-            Ticket, "query", new_callable=mocker.PropertyMock, return_value=mock_q
-        )
+        mocker.patch.object(Ticket, "query", new_callable=mocker.PropertyMock, return_value=mock_q)
 
         from services.ticket_service import TicketService
 
@@ -168,16 +166,12 @@ class TestCommentsAndSearch:
         mock_q.filter.return_value = mock_q
         mock_q.order_by.return_value = mock_q
         mock_q.all.return_value = []
-        mocker.patch.object(
-            Ticket, "query", new_callable=mocker.PropertyMock, return_value=mock_q
-        )
+        mocker.patch.object(Ticket, "query", new_callable=mocker.PropertyMock, return_value=mock_q)
 
         from services.ticket_service import TicketService
 
         with app.app_context():
-            TicketService.search_tickets(
-                {"status": "open", "search": "printer"}, MagicMock()
-            )
+            TicketService.search_tickets({"status": "open", "search": "printer"}, MagicMock())
         assert mock_q.filter.called
 
 
@@ -190,9 +184,7 @@ class TestTicketEdgeCases:
         mock_q.filter.return_value = mock_q
         mock_q.order_by.return_value = mock_q
         mock_q.first.return_value = last
-        mocker.patch.object(
-            Ticket, "query", new_callable=mocker.PropertyMock, return_value=mock_q
-        )
+        mocker.patch.object(Ticket, "query", new_callable=mocker.PropertyMock, return_value=mock_q)
         from services.ticket_service import TicketService
 
         with app.app_context():
@@ -263,15 +255,11 @@ class TestTicketEdgeCases:
         mock_q.filter.return_value = mock_q
         mock_q.order_by.return_value = mock_q
         mock_q.all.return_value = []
-        mocker.patch.object(
-            Ticket, "query", new_callable=mocker.PropertyMock, return_value=mock_q
-        )
+        mocker.patch.object(Ticket, "query", new_callable=mocker.PropertyMock, return_value=mock_q)
         from services.ticket_service import TicketService
 
         with app.app_context():
-            TicketService.search_tickets(
-                {"category_id": "3", "assigned_user_id": "9"}, MagicMock()
-            )
+            TicketService.search_tickets({"category_id": "3", "assigned_user_id": "9"}, MagicMock())
         assert mock_q.filter.called
 
     @pytest.mark.parametrize(

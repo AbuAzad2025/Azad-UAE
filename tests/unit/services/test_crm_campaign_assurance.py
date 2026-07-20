@@ -207,9 +207,7 @@ class TestCampaignROI:
 
         from services.campaign_service import CampaignService
 
-        metrics = CampaignService.get_campaign_roi_metrics(
-            mock_campaign, total_revenue=Decimal("1000")
-        )
+        metrics = CampaignService.get_campaign_roi_metrics(mock_campaign, total_revenue=Decimal("1000"))
         assert metrics["campaign_id"] == 1
         assert metrics["total_cost"] == 500.0
         assert metrics["roi"] == 100.0
@@ -224,26 +222,20 @@ class TestCampaignROI:
 
         from services.campaign_service import CampaignService
 
-        metrics = CampaignService.get_campaign_roi_metrics(
-            mock_campaign, total_revenue=Decimal("0")
-        )
+        metrics = CampaignService.get_campaign_roi_metrics(mock_campaign, total_revenue=Decimal("0"))
         assert metrics["total_cost"] == 0.0
         assert metrics["roi"] == 0.0
 
     def test_safe_commission_normal(self):
         from services.campaign_service import CampaignService
 
-        commission = CampaignService.calculate_safe_commission(
-            Decimal("1000"), Decimal("10")
-        )
+        commission = CampaignService.calculate_safe_commission(Decimal("1000"), Decimal("10"))
         assert commission == Decimal("100.00")
 
     def test_safe_commission_zero_revenue(self):
         from services.campaign_service import CampaignService
 
-        commission = CampaignService.calculate_safe_commission(
-            Decimal("0"), Decimal("10")
-        )
+        commission = CampaignService.calculate_safe_commission(Decimal("0"), Decimal("10"))
         assert commission == Decimal("0.00")
 
     def test_safe_commission_rate_clamped(self):
@@ -257,9 +249,7 @@ class TestCampaignROI:
         from services.campaign_service import CampaignService
 
         assert CampaignService.calculate_safe_commission(None, None) == Decimal("0.00")
-        assert CampaignService.calculate_safe_commission(
-            Decimal("500"), None
-        ) == Decimal("0.00")
+        assert CampaignService.calculate_safe_commission(Decimal("500"), None) == Decimal("0.00")
 
 
 class TestBranchIsolation:
@@ -277,9 +267,7 @@ class TestBranchIsolation:
 
         from services.crm_lead_service import CRMLeadService
 
-        with pytest.raises(
-            ValueError, match="لا يمكنك التعامل مع عميل متوقع من فرع آخر"
-        ):
+        with pytest.raises(ValueError, match="لا يمكنك التعامل مع عميل متوقع من فرع آخر"):
             CRMLeadService.get_lead(1, MagicMock())
 
     def test_get_lead_same_branch_allowed(self, mocker, mock_db):
@@ -309,9 +297,7 @@ class TestBranchIsolation:
 
         from services.crm_lead_service import CRMLeadService
 
-        with pytest.raises(
-            ValueError, match="لا يمكنك التعامل مع عميل متوقع من فرع آخر"
-        ):
+        with pytest.raises(ValueError, match="لا يمكنك التعامل مع عميل متوقع من فرع آخر"):
             CRMLeadService.move_stage(1, 5, MagicMock())
 
     def test_global_user_bypasses_branch_check(self, mocker, mock_db):

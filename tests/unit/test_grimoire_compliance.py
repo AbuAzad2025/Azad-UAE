@@ -121,9 +121,9 @@ def test_full_compliance_summary():
     result = run_all_checks(PROJECT_ROOT)
     errors = [v for v in result.violations if v.severity == "error"]
     warnings = [v for v in result.violations if v.severity == "warning"]
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("Grimoire Compliance Summary")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"Files scanned: {result.files_scanned}")
     print(f"Errors:   {len(errors)}")
     print(f"Warnings: {len(warnings)}")
@@ -131,4 +131,4 @@ def test_full_compliance_summary():
         print("\nViolations:")
         for v in sorted(result.violations, key=lambda x: (x.file, x.line)):
             print(f"  {v.format()}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")

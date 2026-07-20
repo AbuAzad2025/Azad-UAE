@@ -103,9 +103,7 @@ class TestSaleGlIntegration:
 
         total_debit = sum(Decimal(str(line.debit or 0)) for line in gl_entry.lines)
         total_credit = sum(Decimal(str(line.credit or 0)) for line in gl_entry.lines)
-        assert total_debit == total_credit, (
-            f"SALE GL entry unbalanced: debit={total_debit}, credit={total_credit}"
-        )
+        assert total_debit == total_credit, f"SALE GL entry unbalanced: debit={total_debit}, credit={total_credit}"
 
         # Sale of 2x100 = 200 → DR AR 200, CR Sales Revenue 200
         assert total_debit == Decimal("200")
@@ -121,9 +119,7 @@ class TestSaleGlIntegration:
 
         cogs_debit = sum(Decimal(str(line.debit or 0)) for line in cogs_entry.lines)
         cogs_credit = sum(Decimal(str(line.credit or 0)) for line in cogs_entry.lines)
-        assert cogs_debit == cogs_credit, (
-            f"COGS GL entry unbalanced: debit={cogs_debit}, credit={cogs_credit}"
-        )
+        assert cogs_debit == cogs_credit, f"COGS GL entry unbalanced: debit={cogs_debit}, credit={cogs_credit}"
 
         # COGS = 2 units × 50 cost = 100 → DR COGS 100, CR Inventory 100
         assert cogs_debit == Decimal("100")
@@ -138,6 +134,4 @@ class TestSaleGlIntegration:
         ).all()
         assert len(movements) >= 1
         total_qty = sum(m.quantity for m in movements)
-        assert total_qty == Decimal("-2"), (
-            f"Stock movement expected -2, got {total_qty}"
-        )
+        assert total_qty == Decimal("-2"), f"Stock movement expected -2, got {total_qty}"

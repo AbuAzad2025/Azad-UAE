@@ -53,56 +53,30 @@ def _projects_patches(**kwargs):
                 return_value=kwargs.get("projects", [project]),
             )
         )
-        stack.enter_context(
-            patch("routes.projects.ProjectService.get_project", return_value=project)
-        )
-        stack.enter_context(
-            patch("routes.projects.ProjectService.create_project", return_value=project)
-        )
-        stack.enter_context(
-            patch("routes.projects.ProjectService.update_project", return_value=project)
-        )
-        stack.enter_context(
-            patch(
-                "routes.projects.ProjectService.create_task", return_value=_mock_task()
-            )
-        )
-        stack.enter_context(
-            patch("routes.projects.ProjectService.move_task", return_value=_mock_task())
-        )
+        stack.enter_context(patch("routes.projects.ProjectService.get_project", return_value=project))
+        stack.enter_context(patch("routes.projects.ProjectService.create_project", return_value=project))
+        stack.enter_context(patch("routes.projects.ProjectService.update_project", return_value=project))
+        stack.enter_context(patch("routes.projects.ProjectService.create_task", return_value=_mock_task()))
+        stack.enter_context(patch("routes.projects.ProjectService.move_task", return_value=_mock_task()))
         stack.enter_context(
             patch(
                 "routes.projects.ProjectService.log_timesheet",
                 return_value=MagicMock(id=5, hours=Decimal("2")),
             )
         )
-        stack.enter_context(
-            patch("routes.projects.ProjectService.get_gantt_data", return_value=gantt)
-        )
-        stack.enter_context(
-            patch("routes.projects.ProjectService.add_member", return_value=MagicMock())
-        )
+        stack.enter_context(patch("routes.projects.ProjectService.get_gantt_data", return_value=gantt))
+        stack.enter_context(patch("routes.projects.ProjectService.add_member", return_value=MagicMock()))
         stack.enter_context(
             patch(
                 "routes.projects.get_active_tenant_id",
                 return_value=kwargs.get("tid", 1),
             )
         )
-        stack.enter_context(
-            patch("routes.projects.Customer.query", _chain_query(all=customers))
-        )
-        stack.enter_context(
-            patch("routes.projects.TaskStage.query", _chain_query(all=stages))
-        )
-        stack.enter_context(
-            patch("routes.projects.Task.query", _chain_query(all=tasks))
-        )
-        stack.enter_context(
-            patch("routes.projects.ProjectMember.query", _chain_query(all=members))
-        )
-        stack.enter_context(
-            patch("routes.projects.User.query", _chain_query(all=users))
-        )
+        stack.enter_context(patch("routes.projects.Customer.query", _chain_query(all=customers)))
+        stack.enter_context(patch("routes.projects.TaskStage.query", _chain_query(all=stages)))
+        stack.enter_context(patch("routes.projects.Task.query", _chain_query(all=tasks)))
+        stack.enter_context(patch("routes.projects.ProjectMember.query", _chain_query(all=members)))
+        stack.enter_context(patch("routes.projects.User.query", _chain_query(all=users)))
         stack.enter_context(patch("extensions.limiter.limit", return_value=lambda f: f))
         yield project
 
@@ -121,9 +95,7 @@ class TestProjectsAuth:
             resp = projects_client.get("/projects/")
         assert resp.status_code == 401
 
-    def test_list_forbidden_without_permission(
-        self, projects_client, bypass_permission_auth
-    ):
+    def test_list_forbidden_without_permission(self, projects_client, bypass_permission_auth):
         bypass_permission_auth.has_permission.return_value = False
         bypass_permission_auth.is_super_admin.return_value = False
         with (
@@ -149,9 +121,7 @@ class TestProjectCreate:
 
     def test_create_post_success(self, projects_client):
         with _projects_patches():
-            resp = projects_client.post(
-                "/projects/create", data={"name": "New Proj"}, follow_redirects=False
-            )
+            resp = projects_client.post("/projects/create", data={"name": "New Proj"}, follow_redirects=False)
         assert resp.status_code == 302
 
     def test_create_post_error(self, projects_client):
@@ -201,9 +171,7 @@ class TestProjectDetail:
 
     def test_edit_post_success(self, projects_client):
         with _projects_patches():
-            resp = projects_client.post(
-                "/projects/1/edit", data={"name": "Updated"}, follow_redirects=False
-            )
+            resp = projects_client.post("/projects/1/edit", data={"name": "Updated"}, follow_redirects=False)
         assert resp.status_code == 302
 
     def test_edit_post_error(self, projects_client):
@@ -221,9 +189,7 @@ class TestProjectDetail:
 class TestProjectTasks:
     def test_add_task(self, projects_client):
         with _projects_patches():
-            resp = projects_client.post(
-                "/projects/1/tasks", data={"name": "Task"}, follow_redirects=False
-            )
+            resp = projects_client.post("/projects/1/tasks", data={"name": "Task"}, follow_redirects=False)
         assert resp.status_code == 302
 
     def test_add_task_error(self, projects_client):
@@ -239,9 +205,7 @@ class TestProjectTasks:
 
     def test_api_move_task_success(self, projects_client):
         with _projects_patches():
-            resp = projects_client.post(
-                "/projects/api/move-task", json={"task_id": 1, "stage_id": 2}
-            )
+            resp = projects_client.post("/projects/api/move-task", json={"task_id": 1, "stage_id": 2})
         assert resp.status_code == 200
         assert resp.get_json()["success"] is True
 
@@ -253,9 +217,7 @@ class TestProjectTasks:
                 side_effect=ValueError("bad stage"),
             ),
         ):
-            resp = projects_client.post(
-                "/projects/api/move-task", json={"task_id": 1, "stage_id": 9}
-            )
+            resp = projects_client.post("/projects/api/move-task", json={"task_id": 1, "stage_id": 9})
         assert resp.status_code == 400
 
     def test_api_move_task_missing_key(self, projects_client):
@@ -267,9 +229,7 @@ class TestProjectTasks:
 class TestTimesheetApi:
     def test_log_timesheet_success(self, projects_client):
         with _projects_patches():
-            resp = projects_client.post(
-                "/projects/api/log-timesheet", json={"task_id": 1, "hours": "3"}
-            )
+            resp = projects_client.post("/projects/api/log-timesheet", json={"task_id": 1, "hours": "3"})
         assert resp.status_code == 200
         data = resp.get_json()
         assert data["success"] is True
@@ -283,9 +243,7 @@ class TestTimesheetApi:
                 side_effect=ValueError("zero"),
             ),
         ):
-            resp = projects_client.post(
-                "/projects/api/log-timesheet", json={"task_id": 1, "hours": "0"}
-            )
+            resp = projects_client.post("/projects/api/log-timesheet", json={"task_id": 1, "hours": "0"})
         assert resp.status_code == 400
 
 

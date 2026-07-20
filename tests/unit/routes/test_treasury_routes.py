@@ -137,9 +137,7 @@ class TestTreasuryExport:
                 "services.export_service.ExportService.export_to_xlsx",
                 return_value=_export_io(),
             ) as xlsx,
-            patch(
-                "routes.treasury.send_file", return_value=_send_file_response()
-            ) as send_file,
+            patch("routes.treasury.send_file", return_value=_send_file_response()) as send_file,
         ):
             resp = treasury_client.get("/reports/treasury/export")
         assert resp.status_code == 200
@@ -184,9 +182,7 @@ class TestTreasuryVatReturn:
     def test_vat_return_returns_200(self, treasury_client):
         report = {"total_vat": 100}
         with (
-            patch(
-                "services.tax_service.TaxService.get_vat_return", return_value=report
-            ) as tax,
+            patch("services.tax_service.TaxService.get_vat_return", return_value=report) as tax,
             patch("routes.treasury.render_template", return_value="vat") as render,
         ):
             resp = treasury_client.get(
@@ -229,9 +225,7 @@ class TestTreasuryWpsExport:
         with (
             patch("utils.localization.get_strategy", return_value=strategy),
             patch("routes.treasury.db.session") as mock_session,
-            patch(
-                "routes.treasury.render_template", return_value="forbidden"
-            ) as render,
+            patch("routes.treasury.render_template", return_value="forbidden") as render,
         ):
             mock_session.get.return_value = tenant
             resp = treasury_client.get("/reports/wps-export")

@@ -210,9 +210,7 @@ def _validate_select_only_sql(sql_query: str) -> tuple[bool, str | None]:
     if blocked:
         return (
             False,
-            gettext(
-                "❌ الوصول محظور لجداول بيانات المستأجرين (tenant business tables)."
-            ),
+            gettext("❌ الوصول محظور لجداول بيانات المستأجرين (tenant business tables)."),
         )
     return True, None
 
@@ -264,20 +262,12 @@ def _get_developer_from_settings():
     cfg = current_app.config
     settings = SystemSettings.get_current()
     return {
-        "developer_name_ar": settings.get_custom_setting("developer_name_ar")
-        or cfg.get("DEVELOPER_NAME_AR", ""),
-        "developer_name": settings.get_custom_setting("developer_name")
-        or cfg.get("DEVELOPER_NAME", ""),
-        "developer_credit": settings.get_custom_setting("developer_credit")
-        or cfg.get("DEVELOPER_CREDIT", ""),
-        "developer_phone": settings.get_custom_setting("developer_phone")
-        or cfg.get("DEVELOPER_PHONE", ""),
-        "developer_email": settings.get_custom_setting("developer_email")
-        or cfg.get("DEVELOPER_EMAIL", ""),
-        "developer_website": settings.get_custom_setting("developer_website")
-        or cfg.get("DEVELOPER_WEBSITE", ""),
-        "developer_whatsapp": settings.get_custom_setting("developer_whatsapp")
-        or cfg.get("DEVELOPER_WHATSAPP", ""),
-        "developer_logo": settings.get_custom_setting("developer_logo")
-        or cfg.get("DEVELOPER_LOGO", ""),
+        "developer_name_ar": settings.get_custom_setting("developer_name_ar") or cfg.get("DEVELOPER_NAME_AR", ""),
+        "developer_name": settings.get_custom_setting("developer_name") or cfg.get("DEVELOPER_NAME", ""),
+        "developer_credit": settings.get_custom_setting("developer_credit") or cfg.get("DEVELOPER_CREDIT", ""),
+        "developer_phone": settings.get_custom_setting("developer_phone") or cfg.get("DEVELOPER_PHONE", ""),
+        "developer_email": settings.get_custom_setting("developer_email") or cfg.get("DEVELOPER_EMAIL", ""),
+        "developer_website": settings.get_custom_setting("developer_website") or cfg.get("DEVELOPER_WEBSITE", ""),
+        "developer_whatsapp": settings.get_custom_setting("developer_whatsapp") or cfg.get("DEVELOPER_WHATSAPP", ""),
+        "developer_logo": settings.get_custom_setting("developer_logo") or cfg.get("DEVELOPER_LOGO", ""),
     }

@@ -76,9 +76,7 @@ class TestEnsureDefaults:
         StorePaymentMethodService.ensure_defaults()
 
         recreated_cod = StorePaymentMethod.query.filter_by(code="cod").first()
-        recreated_bank = StorePaymentMethod.query.filter_by(
-            code="bank_transfer"
-        ).first()
+        recreated_bank = StorePaymentMethod.query.filter_by(code="bank_transfer").first()
         assert recreated_cod is not None
         assert recreated_cod.is_builtin is True
         assert recreated_bank is not None
@@ -116,9 +114,7 @@ class TestListForCheckout:
             "services.store_online_payment_service.StoreOnlinePaymentService.is_configured",
             return_value=False,
         )
-        codes = {
-            m.code for m in StorePaymentMethodService.list_for_checkout(tenant_id=1)
-        }
+        codes = {m.code for m in StorePaymentMethodService.list_for_checkout(tenant_id=1)}
         assert "online_pay" not in codes
 
     def test_includes_online_pay_when_configured(self, db_session, mocker):
@@ -132,15 +128,11 @@ class TestListForCheckout:
             "services.store_online_payment_service.StoreOnlinePaymentService.is_configured",
             return_value=True,
         )
-        codes = {
-            m.code for m in StorePaymentMethodService.list_for_checkout(tenant_id=1)
-        }
+        codes = {m.code for m in StorePaymentMethodService.list_for_checkout(tenant_id=1)}
         assert "online_pay" in codes
 
     def test_import_error_filters_online_pay(self, db_session, mocker):
-        mocker.patch.dict(
-            "sys.modules", {"services.store_online_payment_service": None}
-        )
+        mocker.patch.dict("sys.modules", {"services.store_online_payment_service": None})
         online = StorePaymentMethod.query.filter_by(code="online_pay").first()
         if online:
             online.is_enabled = True
@@ -188,9 +180,7 @@ class TestToggleEnabled:
 
     def test_commit_failure_raises(self, db_session, mocker):
         row = _custom(db_session)
-        mocker.patch.object(
-            db.session, "commit", side_effect=RuntimeError("commit fail")
-        )
+        mocker.patch.object(db.session, "commit", side_effect=RuntimeError("commit fail"))
         with pytest.raises(RuntimeError, match="commit fail"):
             StorePaymentMethodService.toggle_enabled(row.id, False)
 
@@ -203,9 +193,7 @@ class TestCreateMethod:
 
     def test_short_names_raises(self):
         with pytest.raises(ValueError, match="الاسم"):
-            StorePaymentMethodService.create_method(
-                {"code": "valid_code", "name_ar": "", "name_en": ""}
-            )
+            StorePaymentMethodService.create_method({"code": "valid_code", "name_ar": "", "name_en": ""})
 
     def test_creates_with_config_and_name_fallback(self, db_session):
         method = StorePaymentMethodService.create_method(
@@ -224,9 +212,7 @@ class TestCreateMethod:
         assert method.is_builtin is False
 
     def test_commit_failure_raises(self, mocker):
-        mocker.patch.object(
-            db.session, "commit", side_effect=RuntimeError("create fail")
-        )
+        mocker.patch.object(db.session, "commit", side_effect=RuntimeError("create fail"))
         with pytest.raises(RuntimeError, match="create fail"):
             StorePaymentMethodService.create_method(
                 {
@@ -270,9 +256,7 @@ class TestUpdateMethod:
         if not cod:
             StorePaymentMethodService.ensure_defaults()
             cod = StorePaymentMethod.query.filter_by(code="cod").first()
-        updated = StorePaymentMethodService.update_method(
-            cod.id, {"code": "other_code", "name_ar": "COD"}
-        )
+        updated = StorePaymentMethodService.update_method(cod.id, {"code": "other_code", "name_ar": "COD"})
         assert updated.code == "cod"
 
     def test_code_clash_raises(self, db_session):
@@ -296,9 +280,7 @@ class TestUpdateMethod:
 
     def test_commit_failure_raises(self, db_session, mocker):
         row = _custom(db_session)
-        mocker.patch.object(
-            db.session, "commit", side_effect=RuntimeError("update fail")
-        )
+        mocker.patch.object(db.session, "commit", side_effect=RuntimeError("update fail"))
         with pytest.raises(RuntimeError, match="update fail"):
             StorePaymentMethodService.update_method(row.id, {"name_ar": "x"})
 
@@ -324,9 +306,7 @@ class TestDeleteMethod:
 
     def test_commit_failure_raises(self, db_session, mocker):
         row = _custom(db_session)
-        mocker.patch.object(
-            db.session, "commit", side_effect=RuntimeError("delete fail")
-        )
+        mocker.patch.object(db.session, "commit", side_effect=RuntimeError("delete fail"))
         with pytest.raises(RuntimeError, match="delete fail"):
             StorePaymentMethodService.delete_method(row.id)
 
@@ -351,14 +331,10 @@ class TestFormatCheckoutInstructions:
 
     def test_instructions_and_providers(self, db_session):
         row = _custom(db_session, config={"instructions": "Pay via link"})
-        assert "Pay via link" in StorePaymentMethodService.format_checkout_instructions(
-            row
-        )
+        assert "Pay via link" in StorePaymentMethodService.format_checkout_instructions(row)
 
         row2 = _custom(db_session, config={"providers": "Google Pay"})
-        assert "Google Pay" in StorePaymentMethodService.format_checkout_instructions(
-            row2
-        )
+        assert "Google Pay" in StorePaymentMethodService.format_checkout_instructions(row2)
 
     def test_description_only(self, db_session):
         row = _custom(db_session, name_ar="AR", name_en="EN")

@@ -93,9 +93,7 @@ class TestNetSalaryNegativeGuard:
     def test_positive_net_no_clamp(self):
         from services.hr_service import PayrollEngine
 
-        r = PayrollEngine.process_with_negative_guard(
-            Decimal("5000"), Decimal("500"), Decimal("300")
-        )
+        r = PayrollEngine.process_with_negative_guard(Decimal("5000"), Decimal("500"), Decimal("300"))
         assert r["net_salary"] == Decimal("5200.00")
         assert r["clamped"] is False
         assert r["debt"] == Decimal("0")
@@ -103,9 +101,7 @@ class TestNetSalaryNegativeGuard:
     def test_negative_net_clamps_to_zero(self):
         from services.hr_service import PayrollEngine
 
-        r = PayrollEngine.process_with_negative_guard(
-            Decimal("2000"), Decimal("0"), Decimal("3000")
-        )
+        r = PayrollEngine.process_with_negative_guard(Decimal("2000"), Decimal("0"), Decimal("3000"))
         assert r["net_salary"] == Decimal("0")
         assert r["clamped"] is True
         assert r["debt"] == Decimal("1000.00")
@@ -142,9 +138,7 @@ class TestNetSalaryNegativeGuard:
     def test_net_zero_no_clamp(self):
         from services.hr_service import PayrollEngine
 
-        r = PayrollEngine.process_with_negative_guard(
-            Decimal("1000"), Decimal("0"), Decimal("1000")
-        )
+        r = PayrollEngine.process_with_negative_guard(Decimal("1000"), Decimal("0"), Decimal("1000"))
         assert r["net_salary"] == Decimal("0.00")
         assert r["clamped"] is False
         assert r["debt"] == Decimal("0")
@@ -245,9 +239,7 @@ class TestLockedModificationAttempt:
         tx = MagicMock()
         tx.status = "draft"
         tx.allowances = Decimal("500")
-        batch = PayrollBatch(
-            [tx], status="approved", tenant_id=1, branch_id=1, month=6, year=2026
-        )
+        batch = PayrollBatch([tx], status="approved", tenant_id=1, branch_id=1, month=6, year=2026)
 
         with app.app_context():
             with pytest.raises(ImmutableRecordError, match="لا يمكن تعديل دفعة"):
@@ -262,9 +254,7 @@ class TestLockedModificationAttempt:
 
         tx = MagicMock()
         tx.status = "draft"
-        batch = PayrollBatch(
-            [tx], status="paid", tenant_id=1, branch_id=1, month=6, year=2026
-        )
+        batch = PayrollBatch([tx], status="paid", tenant_id=1, branch_id=1, month=6, year=2026)
         mocker.patch("services.hr_service.db.session.delete")
 
         with app.app_context():
@@ -276,9 +266,7 @@ class TestLockedModificationAttempt:
 
         tx = MagicMock()
         tx.status = "draft"
-        batch = PayrollBatch(
-            [tx], status="draft", tenant_id=1, branch_id=1, month=6, year=2026
-        )
+        batch = PayrollBatch([tx], status="draft", tenant_id=1, branch_id=1, month=6, year=2026)
 
         with app.app_context():
             PayrollService.update_allowances(tx, Decimal("1200"), batch=batch)
@@ -377,9 +365,7 @@ class TestPayrollBatchGLApproval:
     def test_approve_batch_posts_balanced_gl(self, app, mocker):
         from services.hr_service import PayrollService, PayrollBatch
 
-        mock_post = mocker.patch(
-            "services.gl_posting.post_or_fail", return_value=MagicMock(id=99)
-        )
+        mock_post = mocker.patch("services.gl_posting.post_or_fail", return_value=MagicMock(id=99))
         mocker.patch("services.gl_service.GLService.ensure_core_accounts")
         mocker.patch(
             "services.gl_service.GLService.get_account_code_for_concept",
@@ -388,9 +374,7 @@ class TestPayrollBatchGLApproval:
 
         tx1 = self._make_tx(5000, 500, 300, 5200)
         tx2 = self._make_tx(4000, 500, 4500, 0)
-        batch = PayrollBatch(
-            [tx1, tx2], status="draft", tenant_id=1, branch_id=1, month=6, year=2026
-        )
+        batch = PayrollBatch([tx1, tx2], status="draft", tenant_id=1, branch_id=1, month=6, year=2026)
 
         with app.app_context():
             gl_entry = PayrollService.approve_batch(batch, user_id=1)
@@ -416,9 +400,7 @@ class TestPayrollBatchGLApproval:
             ImmutableRecordError,
         )
 
-        batch = PayrollBatch(
-            [], status="paid", tenant_id=1, branch_id=1, month=6, year=2026
-        )
+        batch = PayrollBatch([], status="paid", tenant_id=1, branch_id=1, month=6, year=2026)
 
         with app.app_context():
             with pytest.raises(ImmutableRecordError, match="لا يمكن تعديل دفعة"):

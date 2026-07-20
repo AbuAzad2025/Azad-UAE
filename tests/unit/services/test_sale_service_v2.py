@@ -114,16 +114,12 @@ class TestSaleServiceCreate:
                 with self._setup_mocks()[1]:
                     with self._setup_mocks()[2]:
                         with self._setup_mocks()[3] as mock_ex:
-                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {
-                                "rate": 1.0
-                            }
+                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
                             with patch("services.sale_service.db.session") as mock_db:
                                 mock_db.add = MagicMock()
                                 mock_db.flush = MagicMock()
                                 mock_db.commit = MagicMock()
-                                with patch(
-                                    "services.sale_service.SaleLine"
-                                ) as mock_line:
+                                with patch("services.sale_service.SaleLine") as mock_line:
                                     line_instance = MagicMock()
                                     line_instance.line_total = Decimal("200")
                                     line_instance.quantity = 2
@@ -141,9 +137,7 @@ class TestSaleServiceCreate:
                                             "fulfill_sale",
                                             return_value=None,
                                         ):
-                                            result = SaleService.create_sale(
-                                                customer, seller, lines, currency="AED"
-                                            )
+                                            result = SaleService.create_sale(customer, seller, lines, currency="AED")
                                             assert result is not None
 
     def test_create_sale_with_serial_numbers(self, app):
@@ -180,25 +174,15 @@ class TestSaleServiceCreate:
             with patch("models.Warehouse.query") as mock_wh_query:
                 wh = self._mock_warehouse()
                 mock_wh_query.filter_by.return_value.filter_by.return_value.first.return_value = wh
-                with patch(
-                    "services.sale_service.ensure_warehouse_access", return_value=wh
-                ):
-                    with patch(
-                        "services.sale_service.generate_number", return_value="S-001"
-                    ):
-                        with patch(
-                            "services.sale_service.ExchangeRateService"
-                        ) as mock_ex:
-                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {
-                                "rate": 1.0
-                            }
+                with patch("services.sale_service.ensure_warehouse_access", return_value=wh):
+                    with patch("services.sale_service.generate_number", return_value="S-001"):
+                        with patch("services.sale_service.ExchangeRateService") as mock_ex:
+                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
                             with patch("services.sale_service.db.session") as mock_db:
                                 mock_db.add = MagicMock()
                                 mock_db.flush = MagicMock()
                                 mock_db.commit = MagicMock()
-                                with patch(
-                                    "services.sale_service.SaleLine"
-                                ) as mock_line:
+                                with patch("services.sale_service.SaleLine") as mock_line:
                                     line_instance = MagicMock()
                                     line_instance.line_total = Decimal("100")
                                     line_instance.quantity = 1

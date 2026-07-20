@@ -50,9 +50,7 @@ class TestIssueCheque:
         with pytest.raises(ValueError, match="معلق"):
             ChequeAccountingIntegration.issue_cheque(outgoing_cheque.id)
 
-    def test_success_returns_entry(
-        self, mocker, outgoing_cheque, db_session, sample_tenant
-    ):
+    def test_success_returns_entry(self, mocker, outgoing_cheque, db_session, sample_tenant):
         mocker.patch("services.cheque_accounting_integration.process_cheque_issue")
         entry = GLJournalEntry(
             tenant_id=sample_tenant.id,
@@ -81,9 +79,7 @@ class TestClearCheque:
         with pytest.raises(ValueError, match="صرفه"):
             ChequeAccountingIntegration.clear_cheque(incoming_cheque.id)
 
-    def test_success_with_entry(
-        self, mocker, incoming_cheque, db_session, sample_tenant
-    ):
+    def test_success_with_entry(self, mocker, incoming_cheque, db_session, sample_tenant):
         mocker.patch("services.cheque_accounting_integration.process_cheque_clear")
         entry = GLJournalEntry(
             tenant_id=sample_tenant.id,
@@ -124,9 +120,7 @@ class TestClearCheque:
             "services.cheque_accounting_integration.get_system_default_currency",
             return_value="AED",
         )
-        clear_mock = mocker.patch(
-            "services.cheque_accounting_integration.process_cheque_clear"
-        )
+        clear_mock = mocker.patch("services.cheque_accounting_integration.process_cheque_clear")
         ChequeAccountingIntegration.clear_cheque(
             incoming_cheque.id,
             exchange_gain_loss=Decimal("3"),
@@ -159,9 +153,7 @@ class TestBounceCheque:
         )
         db_session.add(entry)
         db_session.flush()
-        result = ChequeAccountingIntegration.bounce_cheque(
-            incoming_cheque.id, bounce_reason="NSF"
-        )
+        result = ChequeAccountingIntegration.bounce_cheque(incoming_cheque.id, bounce_reason="NSF")
         assert result.entry_number == "JE-BNC-1"
 
     def test_failure_rolls_back(self, mocker, incoming_cheque):
@@ -216,9 +208,7 @@ class TestAccountingSummary:
         db_session.add(line)
         db_session.flush()
 
-        summary = ChequeAccountingIntegration.get_cheque_accounting_summary(
-            incoming_cheque.id
-        )
+        summary = ChequeAccountingIntegration.get_cheque_accounting_summary(incoming_cheque.id)
         assert summary["cheque_info"]["id"] == incoming_cheque.id
         assert len(summary["journal_entries"]) >= 1
         assert summary["journal_entries"][0]["type"] == "receive"

@@ -223,9 +223,7 @@ class KnowledgeExpander:
                                         "title": data.get("title", ""),
                                         "url": data.get("url", ""),
                                         "category": data.get("category", ""),
-                                        "snippet": self._extract_snippet(
-                                            data.get("content", ""), query_lower
-                                        ),
+                                        "snippet": self._extract_snippet(data.get("content", ""), query_lower),
                                     }
                                 )
 
@@ -250,9 +248,7 @@ class KnowledgeExpander:
                                         "type": "document",
                                         "title": data.get("title", ""),
                                         "category": data.get("category", ""),
-                                        "snippet": self._extract_snippet(
-                                            data.get("content", ""), query_lower
-                                        ),
+                                        "snippet": self._extract_snippet(data.get("content", ""), query_lower),
                                     }
                                 )
 
@@ -291,9 +287,7 @@ class KnowledgeExpander:
     def get_knowledge_summary(self):
         """ملخص المعرفة الموسعة"""
         try:
-            total_sources = len(self.sources.get("websites") or []) + len(
-                self.sources.get("documents") or []
-            )
+            total_sources = len(self.sources.get("websites") or []) + len(self.sources.get("documents") or [])
 
             # فئات المعرفة
             categories = {}

@@ -97,9 +97,7 @@ class TestWarehouseAddStock:
             quantity=Decimal("10"),
         )
         db_session.add(stock)
-        _add_initial_stock(
-            db_session, product.id, warehouse.id, tenant.id, Decimal("10")
-        )
+        _add_initial_stock(db_session, product.id, warehouse.id, tenant.id, Decimal("10"))
         db_session.commit()
 
         GLService.ensure_core_accounts(tenant_id=tenant.id)
@@ -131,12 +129,8 @@ class TestWarehouseAddStock:
         assert data is not None, f"Expected JSON, got {resp.data}"
         assert data["success"] is True
 
-        stock_after = ProductWarehouseStock.query.filter_by(
-            product_id=product.id, warehouse_id=warehouse.id
-        ).first()
-        assert stock_after.quantity == Decimal("15"), (
-            f"Expected 15, got {stock_after.quantity}"
-        )
+        stock_after = ProductWarehouseStock.query.filter_by(product_id=product.id, warehouse_id=warehouse.id).first()
+        assert stock_after.quantity == Decimal("15"), f"Expected 15, got {stock_after.quantity}"
 
         movement = (
             StockMovement.query.filter_by(
@@ -157,12 +151,8 @@ class TestWarehouseAddStock:
         assert len(gl_entries) >= 1
         total_debit = sum((e.total_debit or 0) for e in gl_entries)
         total_credit = sum((e.total_credit or 0) for e in gl_entries)
-        assert total_debit == total_credit, (
-            f"GL unbalanced: debit={total_debit} credit={total_credit}"
-        )
-        assert total_debit == Decimal("250"), (
-            f"Expected 250 (5 * 50), got {total_debit}"
-        )
+        assert total_debit == total_credit, f"GL unbalanced: debit={total_debit} credit={total_credit}"
+        assert total_debit == Decimal("250"), f"Expected 250 (5 * 50), got {total_debit}"
 
     def test_add_stock_calculates_gl_from_cost_price(self, app, db_session, client):
         from models import (
@@ -239,9 +229,7 @@ class TestWarehouseAddStock:
             quantity=Decimal("0"),
         )
         db_session.add(stock)
-        _add_initial_stock(
-            db_session, product.id, warehouse.id, tenant.id, Decimal("0")
-        )
+        _add_initial_stock(db_session, product.id, warehouse.id, tenant.id, Decimal("0"))
         db_session.commit()
 
         GLService.ensure_core_accounts(tenant_id=tenant.id)
@@ -272,9 +260,7 @@ class TestWarehouseAddStock:
         assert data["success"] is True
         assert float(data["new_stock"]) == 10.0
 
-        stock_after = ProductWarehouseStock.query.filter_by(
-            product_id=product.id, warehouse_id=warehouse.id
-        ).first()
+        stock_after = ProductWarehouseStock.query.filter_by(product_id=product.id, warehouse_id=warehouse.id).first()
         assert stock_after.quantity == Decimal("10")
 
         movement = (
@@ -308,9 +294,7 @@ class TestWarehouseAddStock:
         total_debit = sum((line.debit or 0) for line in lines)
         total_credit = sum((line.credit or 0) for line in lines)
         assert total_debit == total_credit
-        assert total_debit == Decimal("200"), (
-            f"Expected 200 (10 * 20), got {total_debit}"
-        )
+        assert total_debit == Decimal("200"), f"Expected 200 (10 * 20), got {total_debit}"
 
 
 class TestWarehouseCreate:
@@ -329,9 +313,7 @@ class TestWarehouseCreate:
         db_session.add(tenant)
         db_session.flush()
 
-        branch = Branch(
-            tenant_id=tenant.id, name=f"Main {tid}", code=f"BR{tid[:4]}", is_main=True
-        )
+        branch = Branch(tenant_id=tenant.id, name=f"Main {tid}", code=f"BR{tid[:4]}", is_main=True)
         db_session.add(branch)
         db_session.flush()
 
@@ -377,9 +359,7 @@ class TestWarehouseCreate:
             )
             assert resp.status_code in (302, 303)
 
-            created = Warehouse.query.filter_by(
-                tenant_id=tenant.id, name=f"Storage {tid}"
-            ).first()
+            created = Warehouse.query.filter_by(tenant_id=tenant.id, name=f"Storage {tid}").first()
             assert created is not None
             assert created.branch_id == branch.id
             assert created.is_active is True

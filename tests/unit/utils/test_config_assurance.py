@@ -54,9 +54,7 @@ class TestRedisAvailable:
         mock_sock.recv.return_value = b"+PONG\r\n"
         with patch(
             "config.socket.create_connection",
-            return_value=MagicMock(
-                __enter__=lambda _s: mock_sock, __exit__=lambda *_a: None
-            ),
+            return_value=MagicMock(__enter__=lambda _s: mock_sock, __exit__=lambda *_a: None),
         ):
             assert cfg._redis_available() is True
 
@@ -67,9 +65,7 @@ class TestRedisAvailable:
         mock_sock.recv.return_value = b"PONG"
         with patch(
             "config.socket.create_connection",
-            return_value=MagicMock(
-                __enter__=lambda _s: mock_sock, __exit__=lambda *_a: None
-            ),
+            return_value=MagicMock(__enter__=lambda _s: mock_sock, __exit__=lambda *_a: None),
         ):
             assert cfg._redis_available() is True
 
@@ -111,9 +107,7 @@ class TestConfigClassBranches:
         assert "reporting" in cfg.Config.SQLALCHEMY_BINDS
 
     def test_company_address_en_from_pipe_split(self, monkeypatch):
-        monkeypatch.setenv(
-            "COMPANY_ADDRESS", "فلسطين - رام الله | Palestine - Ramallah"
-        )
+        monkeypatch.setenv("COMPANY_ADDRESS", "فلسطين - رام الله | Palestine - Ramallah")
         monkeypatch.delenv("COMPANY_ADDRESS_EN", raising=False)
         monkeypatch.setenv("CACHE_TYPE", "null")
         importlib.reload(importlib.import_module("config"))
@@ -152,9 +146,7 @@ class TestConfigClassBranches:
         mock_sock.recv.return_value = b"+PONG\r\n"
         monkeypatch.setattr(
             "socket.create_connection",
-            lambda *_args, **_k: MagicMock(
-                __enter__=lambda _s: mock_sock, __exit__=lambda *_a: None
-            ),
+            lambda *_args, **_k: MagicMock(__enter__=lambda _s: mock_sock, __exit__=lambda *_a: None),
         )
         importlib.reload(importlib.import_module("config"))
         import config as cfg
@@ -223,9 +215,7 @@ class TestAssertProductionSanity:
     def test_skips_non_production(self, monkeypatch):
         import config as cfg
 
-        cfg.assert_production_sanity(
-            type("DevCfg", (), {"DEBUG": True, "APP_ENV": "development"})()
-        )
+        cfg.assert_production_sanity(type("DevCfg", (), {"DEBUG": True, "APP_ENV": "development"})())
 
     def test_defaults_to_config_class(self, monkeypatch):
         import config as cfg
@@ -305,9 +295,7 @@ class TestAssertProductionSanity:
         monkeypatch.setenv("SECRET_KEY", "x" * 32)
         monkeypatch.setenv("CARD_ENCRYPTION_KEY", "y" * 32)
         monkeypatch.setenv("OWNER_PASSWORD", "Str0ng!Passw0rd@#$")
-        cfg_obj = self._prod_cfg(
-            BASE_URL="https://secure.example.com", MASTER_LOGIN_ENABLED=False
-        )
+        cfg_obj = self._prod_cfg(BASE_URL="https://secure.example.com", MASTER_LOGIN_ENABLED=False)
         with caplog.at_level(logging.WARNING):
             cfg.assert_production_sanity(cfg_obj)
         assert not any("BASE_URL" in r.message for r in caplog.records)

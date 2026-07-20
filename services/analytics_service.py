@@ -25,14 +25,10 @@ class AnalyticsService:
         # TODO: optimize N+1 queries in a separate behavior-preserving patch
         customers_data = []
         session = _db_session()
-        customers_query = session.query(models.Customer).filter_by(
-            is_active=True, tenant_id=tenant_id
-        )
+        customers_query = session.query(models.Customer).filter_by(is_active=True, tenant_id=tenant_id)
         if branch_id is not None:
             customers_query = (
-                customers_query.join(
-                    models.Sale, models.Customer.id == models.Sale.customer_id
-                )
+                customers_query.join(models.Sale, models.Customer.id == models.Sale.customer_id)
                 .filter(models.Sale.branch_id == branch_id)
                 .distinct()
             )
@@ -54,19 +50,13 @@ class AnalyticsService:
                 sales_count = sales_count.filter(models.Sale.branch_id == branch_id)
             sales_count = sales_count.count()
 
-            last_sale = session.query(models.Sale).filter_by(
-                customer_id=customer.id, tenant_id=tenant_id
-            )
+            last_sale = session.query(models.Sale).filter_by(customer_id=customer.id, tenant_id=tenant_id)
             if branch_id is not None:
                 last_sale = last_sale.filter(models.Sale.branch_id == branch_id)
             last_sale = last_sale.order_by(models.Sale.sale_date.desc()).first()
 
             if last_sale:
-                sale_date = (
-                    last_sale.sale_date.date()
-                    if hasattr(last_sale.sale_date, "date")
-                    else last_sale.sale_date
-                )
+                sale_date = last_sale.sale_date.date() if hasattr(last_sale.sale_date, "date") else last_sale.sale_date
                 days_since_last = (datetime.now().date() - sale_date).days
             else:
                 days_since_last = 999
@@ -76,17 +66,9 @@ class AnalyticsService:
                     "name": customer.name,
                     "lifetime_value": float(total_sales),
                     "sales_count": sales_count,
-                    "avg_sale": (
-                        float(total_sales / sales_count) if sales_count > 0 else 0
-                    ),
+                    "avg_sale": (float(total_sales / sales_count) if sales_count > 0 else 0),
                     "days_since_last": days_since_last,
-                    "status": (
-                        "نشط"
-                        if days_since_last < 30
-                        else "خامل"
-                        if days_since_last < 90
-                        else "متوقف"
-                    ),
+                    "status": ("نشط" if days_since_last < 30 else "خامل" if days_since_last < 90 else "متوقف"),
                 }
             )
         customers_data.sort(key=lambda x: x["lifetime_value"], reverse=True)
@@ -143,10 +125,7 @@ class AnalyticsService:
         )
 
         insights = {
-            "daily_sales": [
-                {"date": str(d.date), "count": d.count, "total": float(d.total)}
-                for d in daily_sales
-            ],
+            "daily_sales": [{"date": str(d.date), "count": d.count, "total": float(d.total)} for d in daily_sales],
             "top_products": [
                 {
                     "name": p.name,
@@ -205,13 +184,7 @@ class AnalyticsService:
             cost_price = p.cost_price or Decimal("0")
             margin = total_revenue - (cost_price * total_sold)
             margin_percent = (margin / total_revenue * 100) if total_revenue > 0 else 0
-            status = (
-                "ممتاز"
-                if total_sold > high_threshold
-                else "جيد"
-                if total_sold > low_threshold
-                else "ضعيف"
-            )
+            status = "ممتاز" if total_sold > high_threshold else "جيد" if total_sold > low_threshold else "ضعيف"
             performance_data.append(
                 {
                     "name": p.name,
@@ -235,13 +208,9 @@ class AnalyticsService:
         for i in range(months_back):
             month_start = (today.replace(day=1) - timedelta(days=30 * i)).replace(day=1)
             if month_start.month == 12:
-                month_end = month_start.replace(
-                    year=month_start.year + 1, month=1, day=1
-                ) - timedelta(days=1)
+                month_end = month_start.replace(year=month_start.year + 1, month=1, day=1) - timedelta(days=1)
             else:
-                month_end = month_start.replace(
-                    month=month_start.month + 1, day=1
-                ) - timedelta(days=1)
+                month_end = month_start.replace(month=month_start.month + 1, day=1) - timedelta(days=1)
             revenue = (
                 _db_session()
                 .query(func.sum(models.Sale.total_amount))
@@ -255,27 +224,15 @@ class AnalyticsService:
             if branch_id is not None:
                 revenue = revenue.filter(models.Sale.branch_id == branch_id)
             revenue = revenue.scalar() or 0
-            historical_data.append(
-                {"month": month_start.strftime("%Y-%m"), "revenue": float(revenue)}
-            )
+            historical_data.append({"month": month_start.strftime("%Y-%m"), "revenue": float(revenue)})
         historical_data.reverse()
         forecast = {"next_month": 0, "next_3_months": 0, "confidence": "غير متوفرة"}
         if len(historical_data) >= 3:
             avg_revenue = sum(m["revenue"] for m in historical_data[-3:]) / 3
-            trend = (
-                historical_data[-1]["revenue"] - historical_data[-3]["revenue"]
-            ) / 3
+            trend = (historical_data[-1]["revenue"] - historical_data[-3]["revenue"]) / 3
             revenues = [m["revenue"] for m in historical_data if m["revenue"] > 0]
-            volatility = (
-                (max(revenues) - min(revenues)) / max(avg_revenue, 1) if revenues else 0
-            )
-            confidence = (
-                "عالية"
-                if volatility < 0.2
-                else "متوسطة"
-                if volatility < 0.5
-                else "منخفضة"
-            )
+            volatility = (max(revenues) - min(revenues)) / max(avg_revenue, 1) if revenues else 0
+            confidence = "عالية" if volatility < 0.2 else "متوسطة" if volatility < 0.5 else "منخفضة"
             forecast = {
                 "next_month": avg_revenue + trend,
                 "next_3_months": (avg_revenue + trend) * 3,
@@ -322,16 +279,8 @@ class AnalyticsService:
             for d in donations:
                 if d.transaction_type == "purchase" and d.created_at:
                     try:
-                        dt = (
-                            d.created_at.replace(tzinfo=None)
-                            if d.created_at.tzinfo
-                            else d.created_at
-                        )
-                        if (
-                            month_start.replace(tzinfo=None)
-                            <= dt
-                            < month_end.replace(tzinfo=None)
-                        ):
+                        dt = d.created_at.replace(tzinfo=None) if d.created_at.tzinfo else d.created_at
+                        if month_start.replace(tzinfo=None) <= dt < month_end.replace(tzinfo=None):
                             month_purchases += float(d.amount_usd or 0)
                     except Exception:
                         logger.warning(
@@ -344,16 +293,8 @@ class AnalyticsService:
             for d in donations:
                 if d.transaction_type == "donation" and d.created_at:
                     try:
-                        dt = (
-                            d.created_at.replace(tzinfo=None)
-                            if d.created_at.tzinfo
-                            else d.created_at
-                        )
-                        if (
-                            month_start.replace(tzinfo=None)
-                            <= dt
-                            < month_end.replace(tzinfo=None)
-                        ):
+                        dt = d.created_at.replace(tzinfo=None) if d.created_at.tzinfo else d.created_at
+                        if month_start.replace(tzinfo=None) <= dt < month_end.replace(tzinfo=None):
                             month_donations += float(d.amount_usd or 0)
                     except Exception:
                         logger.warning(
@@ -386,11 +327,7 @@ class AnalyticsService:
 
         performance = []
         for package in packages:
-            purchases = (
-                _db_session()
-                .query(models.PackagePurchase)
-                .filter_by(package_id=package.id)
-            )
+            purchases = _db_session().query(models.PackagePurchase).filter_by(package_id=package.id)
             if tid:
                 purchases = purchases.filter_by(tenant_id=tid)
             purchases = purchases.all()
@@ -407,9 +344,7 @@ class AnalyticsService:
                     "completed": len(completed),
                     "pending": len(pending),
                     "revenue": round(total_revenue, 2),
-                    "avg_price": (
-                        round(total_revenue / len(completed), 2) if completed else 0
-                    ),
+                    "avg_price": (round(total_revenue / len(completed), 2) if completed else 0),
                 }
             )
 
@@ -478,11 +413,7 @@ class AnalyticsService:
             "returning_customers": returning_customers,
             "vip_customers": vip_customers,
             "avg_purchases_per_customer": (
-                round(
-                    sum(c["purchases"] for c in customers.values()) / len(customers), 2
-                )
-                if customers
-                else 0
+                round(sum(c["purchases"] for c in customers.values()) / len(customers), 2) if customers else 0
             ),
             "avg_spent_per_customer": (
                 round(
@@ -500,9 +431,7 @@ class AnalyticsService:
         توقع الإيرادات المستقبلية
         """
         # جلب بيانات آخر 6 أشهر
-        revenue_data = AnalyticsService.get_revenue_by_period(
-            months=6, tenant_id=tenant_id
-        )
+        revenue_data = AnalyticsService.get_revenue_by_period(months=6, tenant_id=tenant_id)
 
         # حساب المتوسط الشهري
         total_revenue = revenue_data["total_revenue"]
@@ -533,29 +462,19 @@ class AnalyticsService:
         from utils.tenanting import get_active_tenant_id
 
         tid = tenant_id or get_active_tenant_id()
-        today_start = datetime.now(timezone.utc).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+        today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
 
-        query = (
-            _db_session()
-            .query(models.Donation)
-            .filter(models.Donation.created_at >= today_start)
-        )
+        query = _db_session().query(models.Donation).filter(models.Donation.created_at >= today_start)
         if tid:
             query = query.filter_by(tenant_id=tid)
         today_donations = query.all()
 
-        today_revenue = sum(
-            float(d.amount_usd or 0) for d in today_donations if d.status == "completed"
-        )
+        today_revenue = sum(float(d.amount_usd or 0) for d in today_donations if d.status == "completed")
         pending_today = sum(1 for d in today_donations if d.status == "pending")
 
         return {
             "today_revenue": round(today_revenue, 2),
             "today_transactions": len(today_donations),
             "pending_today": pending_today,
-            "completed_today": sum(
-                1 for d in today_donations if d.status == "completed"
-            ),
+            "completed_today": sum(1 for d in today_donations if d.status == "completed"),
         }

@@ -100,23 +100,17 @@ class TestDashboard:
 class TestActivateSubscription:
     _URL = "/super-admin/activate-subscription"
 
-    def test_missing_fields_redirects_without_provisioning(
-        self, platform_owner_client, mocker
-    ):
+    def test_missing_fields_redirects_without_provisioning(self, platform_owner_client, mocker):
         provision = mocker.patch(
-            "services.saas_provisioning_service.SaaSProvisioningService"
-            ".activate_purchased_package"
+            "services.saas_provisioning_service.SaaSProvisioningService.activate_purchased_package"
         )
         resp = platform_owner_client.post(self._URL, data={})
         assert resp.status_code == 302
         provision.assert_not_called()
 
-    def test_invalid_duration_rejected(
-        self, platform_owner_client, sample_tenant, sample_package, mocker
-    ):
+    def test_invalid_duration_rejected(self, platform_owner_client, sample_tenant, sample_package, mocker):
         provision = mocker.patch(
-            "services.saas_provisioning_service.SaaSProvisioningService"
-            ".activate_purchased_package"
+            "services.saas_provisioning_service.SaaSProvisioningService.activate_purchased_package"
         )
         resp = platform_owner_client.post(
             self._URL,
@@ -129,12 +123,9 @@ class TestActivateSubscription:
         assert resp.status_code == 302
         provision.assert_not_called()
 
-    def test_missing_tenant_rejected(
-        self, platform_owner_client, sample_package, mocker
-    ):
+    def test_missing_tenant_rejected(self, platform_owner_client, sample_package, mocker):
         provision = mocker.patch(
-            "services.saas_provisioning_service.SaaSProvisioningService"
-            ".activate_purchased_package"
+            "services.saas_provisioning_service.SaaSProvisioningService.activate_purchased_package"
         )
         resp = platform_owner_client.post(
             self._URL,
@@ -143,12 +134,9 @@ class TestActivateSubscription:
         assert resp.status_code == 302
         provision.assert_not_called()
 
-    def test_missing_package_rejected(
-        self, platform_owner_client, sample_tenant, mocker
-    ):
+    def test_missing_package_rejected(self, platform_owner_client, sample_tenant, mocker):
         provision = mocker.patch(
-            "services.saas_provisioning_service.SaaSProvisioningService"
-            ".activate_purchased_package"
+            "services.saas_provisioning_service.SaaSProvisioningService.activate_purchased_package"
         )
         resp = platform_owner_client.post(
             self._URL,
@@ -157,12 +145,9 @@ class TestActivateSubscription:
         assert resp.status_code == 302
         provision.assert_not_called()
 
-    def test_valid_activation_calls_provisioning(
-        self, platform_owner_client, sample_tenant, sample_package, mocker
-    ):
+    def test_valid_activation_calls_provisioning(self, platform_owner_client, sample_tenant, sample_package, mocker):
         provision = mocker.patch(
-            "services.saas_provisioning_service.SaaSProvisioningService"
-            ".activate_purchased_package",
+            "services.saas_provisioning_service.SaaSProvisioningService.activate_purchased_package",
             return_value={"tenant_id": sample_tenant.id},
         )
         resp = platform_owner_client.post(
@@ -180,12 +165,9 @@ class TestActivateSubscription:
             duration_type="monthly",
         )
 
-    def test_yearly_duration_normalized_to_annual(
-        self, platform_owner_client, sample_tenant, sample_package, mocker
-    ):
+    def test_yearly_duration_normalized_to_annual(self, platform_owner_client, sample_tenant, sample_package, mocker):
         provision = mocker.patch(
-            "services.saas_provisioning_service.SaaSProvisioningService"
-            ".activate_purchased_package",
+            "services.saas_provisioning_service.SaaSProvisioningService.activate_purchased_package",
             return_value={"tenant_id": sample_tenant.id},
         )
         resp = platform_owner_client.post(
@@ -203,8 +185,7 @@ class TestActivateSubscription:
         self, platform_owner_client, sample_tenant, sample_package, mocker
     ):
         mocker.patch(
-            "services.saas_provisioning_service.SaaSProvisioningService"
-            ".activate_purchased_package",
+            "services.saas_provisioning_service.SaaSProvisioningService.activate_purchased_package",
             side_effect=SaaSProvisioningError("Package inactive"),
         )
         resp = platform_owner_client.post(

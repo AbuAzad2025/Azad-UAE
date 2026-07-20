@@ -47,9 +47,7 @@ class TestFetchProviders:
             "result": "success",
             "rates": {"USD": 1.0, "AED": 3.67, "EUR": 0.92},
         }
-        mocker.patch(
-            "services.exchange_rate_service.requests.get", return_value=mock_res
-        )
+        mocker.patch("services.exchange_rate_service.requests.get", return_value=mock_res)
         rates = _ERS()._fetch_primary("USD", ("AED", "EUR"))
         assert rates is not None
         assert rates["AED"] == 3.67
@@ -64,9 +62,7 @@ class TestFetchProviders:
     def test_fetch_frankfurter_success(self, mocker):
         mock_res = MagicMock(status_code=200)
         mock_res.json.return_value = {"rates": {"AED": 3.67}}
-        mocker.patch(
-            "services.exchange_rate_service.requests.get", return_value=mock_res
-        )
+        mocker.patch("services.exchange_rate_service.requests.get", return_value=mock_res)
         rates = _ERS()._fetch_frankfurter("USD", ("AED",))
         assert rates is not None
 
@@ -74,9 +70,7 @@ class TestFetchProviders:
         app.config["CURRENCY_API_FALLBACKS"] = ["https://example.com/{base}"]
         mock_res = MagicMock(status_code=200)
         mock_res.json.return_value = {"rates": {"AED": 3.67}}
-        mocker.patch(
-            "services.exchange_rate_service.requests.get", return_value=mock_res
-        )
+        mocker.patch("services.exchange_rate_service.requests.get", return_value=mock_res)
         rates = _ERS()._fetch_fallbacks("USD", ("AED",))
         assert rates is not None
 
@@ -110,9 +104,7 @@ class TestDisplayRates:
             "result": "success",
             "rates": {"USD": 1.0, "AED": 3.67, "EUR": 0.92, "ILS": 3.65},
         }
-        mocker.patch(
-            "services.exchange_rate_service.requests.get", return_value=mock_res
-        )
+        mocker.patch("services.exchange_rate_service.requests.get", return_value=mock_res)
         result = _ERS().get_online_rates_for_display("USD")
         assert result["ok"] is True
         assert result["provider"] == "primary"
@@ -206,9 +198,7 @@ class TestResolveTransactionRate:
         )
         db_session.add(record)
         db_session.flush()
-        mocker_patch = patch.object(
-            _ERS(), "_fetch_and_store_online_rate", return_value=None
-        )
+        mocker_patch = patch.object(_ERS(), "_fetch_and_store_online_rate", return_value=None)
         with mocker_patch:
             result = _ERS().resolve_exchange_rate_for_transaction(
                 "EUR",
@@ -286,16 +276,12 @@ class TestSaveAndLegacy:
 
     def test_fetch_primary_bad_status(self, mocker):
         mock_res = MagicMock(status_code=500)
-        mocker.patch(
-            "services.exchange_rate_service.requests.get", return_value=mock_res
-        )
+        mocker.patch("services.exchange_rate_service.requests.get", return_value=mock_res)
         assert _ERS()._fetch_primary("USD", ("AED",)) is None
 
     def test_frankfurter_bad_status(self, mocker):
         mock_res = MagicMock(status_code=500)
-        mocker.patch(
-            "services.exchange_rate_service.requests.get", return_value=mock_res
-        )
+        mocker.patch("services.exchange_rate_service.requests.get", return_value=mock_res)
         assert _ERS()._fetch_frankfurter("USD", ("AED",)) is None
 
     def test_requests_unavailable(self, mocker):
@@ -311,9 +297,7 @@ class TestSaveAndLegacy:
     def test_primary_non_success_result(self, mocker):
         mock_res = MagicMock(status_code=200)
         mock_res.json.return_value = {"result": "error", "rates": {}}
-        mocker.patch(
-            "services.exchange_rate_service.requests.get", return_value=mock_res
-        )
+        mocker.patch("services.exchange_rate_service.requests.get", return_value=mock_res)
         assert _ERS()._fetch_primary("USD", ("AED",)) is None
 
     def test_primary_invalid_rate_value_skipped(self, mocker):
@@ -322,9 +306,7 @@ class TestSaveAndLegacy:
             "result": "success",
             "rates": {"USD": 1.0, "AED": "bad"},
         }
-        mocker.patch(
-            "services.exchange_rate_service.requests.get", return_value=mock_res
-        )
+        mocker.patch("services.exchange_rate_service.requests.get", return_value=mock_res)
         assert _ERS()._fetch_primary("USD", ("AED",)) is None
 
     def test_frankfurter_provider_path(self, mocker):
@@ -349,23 +331,17 @@ class TestSaveAndLegacy:
         assert result["provider"] == "fallback"
 
     def test_fallback_with_api_key(self, app, mocker):
-        app.config["CURRENCY_API_FALLBACKS"] = [
-            "https://example.com/{base}?key={api_key}"
-        ]
+        app.config["CURRENCY_API_FALLBACKS"] = ["https://example.com/{base}?key={api_key}"]
         app.config["CURRENCY_API_KEY"] = "secret"
         mock_res = MagicMock(status_code=200)
         mock_res.json.return_value = {"rates": {"AED": 3.67}}
-        get = mocker.patch(
-            "services.exchange_rate_service.requests.get", return_value=mock_res
-        )
+        get = mocker.patch("services.exchange_rate_service.requests.get", return_value=mock_res)
         rates = _ERS()._fetch_fallbacks("USD", ("AED",))
         assert rates is not None
         assert "secret" in get.call_args.args[0]
 
     def test_fallback_skips_missing_api_key(self, app, mocker):
-        app.config["CURRENCY_API_FALLBACKS"] = [
-            "https://example.com/{base}?key={api_key}"
-        ]
+        app.config["CURRENCY_API_FALLBACKS"] = ["https://example.com/{base}?key={api_key}"]
         app.config["CURRENCY_API_KEY"] = ""
         get = mocker.patch("services.exchange_rate_service.requests.get")
         assert _ERS()._fetch_fallbacks("USD", ("AED",)) is None
@@ -373,9 +349,7 @@ class TestSaveAndLegacy:
 
     def test_get_admin_rate_exception(self, mocker):
         chain = mocker.MagicMock()
-        chain.filter_by.return_value.order_by.return_value.first.side_effect = (
-            RuntimeError("db")
-        )
+        chain.filter_by.return_value.order_by.return_value.first.side_effect = RuntimeError("db")
         mocker.patch("models.ExchangeRateRecord.query", chain)
         assert _ERS()._get_admin_rate("USD", "AED", tenant_id=1) is None
 
@@ -388,9 +362,7 @@ class TestSaveAndLegacy:
 
     def test_get_last_known_rate_exception(self, mocker):
         chain = mocker.MagicMock()
-        chain.filter_by.return_value.order_by.return_value.first.side_effect = (
-            RuntimeError("db")
-        )
+        chain.filter_by.return_value.order_by.return_value.first.side_effect = RuntimeError("db")
         mocker.patch("models.ExchangeRateRecord.query", chain)
         assert _ERS()._get_last_known_rate("USD", "AED") is None
 
@@ -431,9 +403,7 @@ class TestSaveAndLegacy:
     def test_frankfurter_invalid_float_skipped(self, mocker):
         mock_res = MagicMock(status_code=200)
         mock_res.json.return_value = {"rates": {"AED": "not-a-float", "EUR": 0.9}}
-        mocker.patch(
-            "services.exchange_rate_service.requests.get", return_value=mock_res
-        )
+        mocker.patch("services.exchange_rate_service.requests.get", return_value=mock_res)
         rates = _ERS()._fetch_frankfurter("USD", ("AED", "EUR"))
         assert rates is not None
         assert "EUR" in rates
@@ -457,9 +427,7 @@ class TestSaveAndLegacy:
         app.config["CURRENCY_API_FALLBACKS"] = ["https://example.com/{base}"]
         mock_res = MagicMock(status_code=200)
         mock_res.json.return_value = {"USD": {"AED": 3.67}}
-        mocker.patch(
-            "services.exchange_rate_service.requests.get", return_value=mock_res
-        )
+        mocker.patch("services.exchange_rate_service.requests.get", return_value=mock_res)
         rates = _ERS()._fetch_fallbacks("USD", ("AED",))
         assert rates is not None
 
@@ -467,9 +435,7 @@ class TestSaveAndLegacy:
         app.config["CURRENCY_API_FALLBACKS"] = ["https://example.com/{base}"]
         mock_res = MagicMock(status_code=200)
         mock_res.json.return_value = {"usd": {"aed": 3.67}}
-        mocker.patch(
-            "services.exchange_rate_service.requests.get", return_value=mock_res
-        )
+        mocker.patch("services.exchange_rate_service.requests.get", return_value=mock_res)
         rates = _ERS()._fetch_fallbacks("USD", ("AED",))
         assert rates is not None
 
@@ -477,9 +443,7 @@ class TestSaveAndLegacy:
         app.config["CURRENCY_API_FALLBACKS"] = ["https://example.com/{base}"]
         mock_res = MagicMock(status_code=200)
         mock_res.json.return_value = {"rates": {"AED": "bad"}}
-        mocker.patch(
-            "services.exchange_rate_service.requests.get", return_value=mock_res
-        )
+        mocker.patch("services.exchange_rate_service.requests.get", return_value=mock_res)
         assert _ERS()._fetch_fallbacks("USD", ("AED",)) is None
 
     def test_user_rate_invalid_falls_through(self, mocker):

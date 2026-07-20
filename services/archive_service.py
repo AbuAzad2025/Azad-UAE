@@ -17,9 +17,7 @@ class ArchiveService:
 
         tenant_id = getattr(record, "tenant_id", None)
         if tenant_id is None:
-            raise ValueError(
-                f"Cannot archive {table_name} #{record.id}: record has no tenant_id"
-            )
+            raise ValueError(f"Cannot archive {table_name} #{record.id}: record has no tenant_id")
 
         archived = ArchivedRecord(
             tenant_id=tenant_id,
@@ -69,14 +67,10 @@ class ArchiveService:
             if ArchiveService.ARCHIVE_MODEL_MAP.get(archived_record.table_name) is None:
                 ArchiveService._init_archive_model_map()
 
-            model_class = ArchiveService.ARCHIVE_MODEL_MAP.get(
-                archived_record.table_name
-            )
+            model_class = ArchiveService.ARCHIVE_MODEL_MAP.get(archived_record.table_name)
 
             if not model_class:
-                raise ValueError(
-                    f"Model not found for table: {archived_record.table_name}"
-                )
+                raise ValueError(f"Model not found for table: {archived_record.table_name}")
 
             # Tenant scope check
             from flask_login import current_user
@@ -93,9 +87,7 @@ class ArchiveService:
             if existing:
                 existing.is_active = True
                 db.session.flush()
-                current_app.logger.info(
-                    f"Restored: {archived_record.table_name} #{archived_record.record_id}"
-                )
+                current_app.logger.info(f"Restored: {archived_record.table_name} #{archived_record.record_id}")
                 return existing
 
             raise ValueError("Cannot restore: Record not found in database")

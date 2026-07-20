@@ -202,9 +202,7 @@ class TestSetActiveTenant:
             assert session[ACTIVE_TENANT_SESSION_KEY] == 8
 
     def test_inactive_tenant_rejected(self, app, mocker):
-        mocker.patch(
-            "utils.tenanting.db.session.get", return_value=MagicMock(is_active=False)
-        )
+        mocker.patch("utils.tenanting.db.session.get", return_value=MagicMock(is_active=False))
         from utils.tenanting import set_active_tenant
 
         with app.test_request_context():
@@ -238,9 +236,7 @@ class TestTenantStatus:
         assert status["suspended"] is True
 
     def test_suspended_tenant(self, mocker):
-        tenant = MagicMock(
-            is_active=True, is_suspended=True, suspension_reason="billing"
-        )
+        tenant = MagicMock(is_active=True, is_suspended=True, suspension_reason="billing")
         mocker.patch("utils.tenanting.db.session.get", return_value=tenant)
         from utils.tenanting import get_tenant_status
 
@@ -373,9 +369,7 @@ class TestTenantingExtended:
         from utils.tenanting import assert_tenant_record
 
         with app.test_request_context():
-            assert (
-                assert_tenant_record(MagicMock(tenant_id=None), or_404=False) is False
-            )
+            assert assert_tenant_record(MagicMock(tenant_id=None), or_404=False) is False
 
     def test_assert_no_active_tenant_or_404_false(self, app, mocker):
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=None)

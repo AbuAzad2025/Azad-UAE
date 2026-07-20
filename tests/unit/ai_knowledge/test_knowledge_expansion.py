@@ -28,9 +28,7 @@ from ai_knowledge.knowledge_base import (
 
 class TestGlobalKnowledge:
     def test_fetch_automotive_news(self):
-        assert (
-            GlobalKnowledgeConnector().fetch_global_automotive_news()["success"] is True
-        )
+        assert GlobalKnowledgeConnector().fetch_global_automotive_news()["success"] is True
 
     def test_global_insights(self):
         assert isinstance(GlobalKnowledgeConnector().get_global_insights(), dict)

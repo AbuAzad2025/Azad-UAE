@@ -80,9 +80,7 @@ class GLTreeBuilder:
             if tenant and tenant.business_type:
                 industry_tree = _get_industry_tree(tenant.business_type)
         except Exception:
-            logger.warning(
-                "Failed to load industry tree for tenant %s", tenant_id, exc_info=True
-            )
+            logger.warning("Failed to load industry tree for tenant %s", tenant_id, exc_info=True)
         full_tree = core_tree + industry_tree
         for (
             code,
@@ -122,15 +120,9 @@ class GLTreeBuilder:
         )
         if cleanup_extra:
             for code, acc in existing_accounts.items():
-                if (
-                    code not in CORE_ACCOUNT_CODES
-                    and acc.is_active
-                    and not getattr(acc, "liquidity_kind", None)
-                ):
+                if code not in CORE_ACCOUNT_CODES and acc.is_active and not getattr(acc, "liquidity_kind", None):
                     acc.is_active = False
-                    audit_report["deactivated"].append(
-                        {"code": code, "name_ar": acc.name_ar or acc.name}
-                    )
+                    audit_report["deactivated"].append({"code": code, "name_ar": acc.name_ar or acc.name})
 
         # حفظ التغييرات
         has_changes = (
@@ -262,9 +254,7 @@ class GLTreeBuilder:
         return f"{prefix}-B{int(branch_id)}"
 
     @staticmethod
-    def _ensure_branch_liquidity_accounts(
-        tenant_id, existing_accounts, processed, audit_report
-    ):
+    def _ensure_branch_liquidity_accounts(tenant_id, existing_accounts, processed, audit_report):
         from models import Branch
 
         branches = (
@@ -407,20 +397,14 @@ class GLTreeBuilder:
             code = template.code
             name_ar = template.name_ar
             if code not in account_codes:
-                validation["missing_core_accounts"].append(
-                    {"code": code, "name_ar": name_ar}
-                )
+                validation["missing_core_accounts"].append({"code": code, "name_ar": name_ar})
                 validation["valid"] = False
             else:
                 if not account_codes[code].is_active:
-                    validation["issues"].append(
-                        {"code": code, "issue": "الحساب الأساسي غير نشط!"}
-                    )
+                    validation["issues"].append({"code": code, "issue": "الحساب الأساسي غير نشط!"})
                     validation["valid"] = False
 
-        validation["core_accounts_found"] = len(CORE_ACCOUNT_CODES) - len(
-            validation["missing_core_accounts"]
-        )
+        validation["core_accounts_found"] = len(CORE_ACCOUNT_CODES) - len(validation["missing_core_accounts"])
 
         # التحقق من الحسابات الزائدة
         for code, acc in account_codes.items():
@@ -438,9 +422,7 @@ class GLTreeBuilder:
             if acc.parent_id:
                 parent = db.session.get(GLAccount, acc.parent_id)
                 if not parent or parent.tenant_id != tenant_id:
-                    validation["issues"].append(
-                        {"code": acc.code, "issue": f"الأب #{acc.parent_id} غير صالح"}
-                    )
+                    validation["issues"].append({"code": acc.code, "issue": f"الأب #{acc.parent_id} غير صالح"})
                     validation["valid"] = False
 
             # التحقق من مستوى الحساب

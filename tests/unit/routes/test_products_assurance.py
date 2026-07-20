@@ -130,9 +130,7 @@ class TestParseProductPartners:
 
 
 class TestAnnotateStockAndBranch:
-    def test_annotate_visible_stock_with_warehouses(
-        self, app_factory, bypass_product_auth
-    ):
+    def test_annotate_visible_stock_with_warehouses(self, app_factory, bypass_product_auth):
         from routes.products import _annotate_visible_stock, products_bp
 
         app = app_factory(products_bp)
@@ -140,9 +138,7 @@ class TestAnnotateStockAndBranch:
         with (
             app.app_context(),
             patch("routes.products.get_accessible_warehouse_ids", return_value=[1, 2]),
-            patch(
-                "routes.products.get_branch_stock_map", return_value={1: 11.0, 2: 22.0}
-            ),
+            patch("routes.products.get_branch_stock_map", return_value={1: 11.0, 2: 22.0}),
         ):
             result = _annotate_visible_stock(items)
         assert result[0].visible_stock == 11.0
@@ -156,9 +152,7 @@ class TestAnnotateStockAndBranch:
         assert result[0].visible_warehouse_names == []
         assert result[0].visible_branch_names == []
 
-    def test_annotate_branch_info_populates_names(
-        self, app_factory, bypass_product_auth
-    ):
+    def test_annotate_branch_info_populates_names(self, app_factory, bypass_product_auth):
         from routes.products import _annotate_branch_and_warehouse_info, products_bp
 
         app = app_factory(products_bp)
@@ -190,9 +184,7 @@ class TestWantsJson:
         from routes.products import _wants_json, products_bp
 
         app = app_factory(products_bp)
-        with app.test_request_context(
-            "/", headers={"X-Requested-With": "XMLHttpRequest"}
-        ):
+        with app.test_request_context("/", headers={"X-Requested-With": "XMLHttpRequest"}):
             assert _wants_json() is True
 
     def test_plain_form_false(self, app_factory, bypass_product_auth):
@@ -218,9 +210,7 @@ class TestGetAlternativeWarehouses:
             ),
             patch(
                 "routes.products.StockService.get_product_stock",
-                side_effect=lambda pid, warehouse_id=None, user=None: (
-                    5.0 if warehouse_id == 2 else 0
-                ),
+                side_effect=lambda pid, warehouse_id=None, user=None: 5.0 if warehouse_id == 2 else 0,
             ),
         ):
             result = _get_alternative_warehouses(1, exclude_warehouse_id=1)
@@ -294,9 +284,7 @@ class TestImportProducts:
 
     def test_import_existing_category_reuse(self, product_client_upload):
         existing_cat = _category(9, name="Tools")
-        df = _import_dataframe(
-            {"name": ["CatProd"], "price": [20.0], "category": ["Tools"]}
-        )
+        df = _import_dataframe({"name": ["CatProd"], "price": [20.0], "category": ["Tools"]})
         with (
             _products_patches() as ctx,
             patch("models.Warehouse.query", _warehouse_query_mock()),
@@ -314,14 +302,10 @@ class TestImportProducts:
             )
         assert resp.status_code == 302
 
-    def test_import_update_existing_same_stock_skips_adjust(
-        self, product_client_upload
-    ):
+    def test_import_update_existing_same_stock_skips_adjust(self, product_client_upload):
         existing = _product(name="SameStock")
         existing.current_stock = 10.0
-        df = _import_dataframe(
-            {"name": ["SameStock"], "price": [12.0], "stock": [10.0]}
-        )
+        df = _import_dataframe({"name": ["SameStock"], "price": [12.0], "stock": [10.0]})
         with (
             _products_patches() as ctx,
             patch("models.Warehouse.query", _warehouse_query_mock()),
@@ -342,9 +326,7 @@ class TestImportProducts:
         assert resp.status_code == 302
         adjust.assert_not_called()
 
-    def test_import_outer_exception_and_cleanup(
-        self, product_client_upload, upload_dir, mocker
-    ):
+    def test_import_outer_exception_and_cleanup(self, product_client_upload, upload_dir, mocker):
         import os
 
         mocker.patch(
@@ -535,9 +517,7 @@ class TestCreateAssurance:
 
 
 class TestEditAssurance:
-    def test_edit_cost_json_blocked_with_stock(
-        self, product_client, bypass_product_auth
-    ):
+    def test_edit_cost_json_blocked_with_stock(self, product_client, bypass_product_auth):
         bypass_product_auth.can_see_costs = MagicMock(return_value=True)
         form = _mock_product_form(validate=True)
         product = _product()
@@ -562,9 +542,7 @@ class TestEditAssurance:
         assert resp.status_code == 400
         assert resp.get_json()["success"] is False
 
-    def test_edit_cost_allowed_when_stock_zero(
-        self, product_client, bypass_product_auth
-    ):
+    def test_edit_cost_allowed_when_stock_zero(self, product_client, bypass_product_auth):
         bypass_product_auth.can_see_costs = MagicMock(return_value=True)
         form = _mock_product_form(validate=True)
         product = _product()
@@ -862,9 +840,7 @@ class TestAdjustStockAssurance:
 
     def test_adjust_server_error_500(self, product_client, mocker):
         mocker.patch("routes.products.tenant_get_or_404", return_value=_product())
-        mocker.patch(
-            "routes.products.StockService.get_product_stock", return_value=10.0
-        )
+        mocker.patch("routes.products.StockService.get_product_stock", return_value=10.0)
         mocker.patch(
             "routes.products.StockService.adjust_stock",
             side_effect=RuntimeError("db"),
@@ -991,9 +967,7 @@ class TestPrintLabelsAssurance:
 
 
 class TestImportProductsDirect:
-    def test_import_success_skips_blank_rows_and_new_category(
-        self, products_import_app
-    ):
+    def test_import_success_skips_blank_rows_and_new_category(self, products_import_app):
         df = _import_dataframe(
             {
                 "name": ["", float("nan"), "Valid", "Dup"],
@@ -1015,9 +989,7 @@ class TestImportProductsDirect:
                 file_mock = MagicMock()
                 file_mock.filename = "products.xlsx"
                 file_mock.save = MagicMock()
-                with products_import_app.test_request_context(
-                    "/products/import", method="POST"
-                ):
+                with products_import_app.test_request_context("/products/import", method="POST"):
                     with (
                         patch("models.Warehouse.query", _warehouse_query_mock()),
                         patch("os.remove"),
@@ -1046,9 +1018,7 @@ class TestImportProductsDirect:
         file_mock = MagicMock()
         file_mock.filename = "notes.txt"
         with _products_patches():
-            with products_import_app.test_request_context(
-                "/products/import", method="POST"
-            ):
+            with products_import_app.test_request_context("/products/import", method="POST"):
                 with patch("routes.products.request") as req:
                     req.method = "POST"
                     req.files = {"file": file_mock}
@@ -1170,9 +1140,7 @@ class TestProductsCoverageFinal:
         )
         new_cat = _category(12, name="BrandNewCat")
         pc_cls = MagicMock()
-        pc_cls.query.filter_by.return_value.filter.return_value.first.return_value = (
-            None
-        )
+        pc_cls.query.filter_by.return_value.filter.return_value.first.return_value = None
         pc_cls.return_value = new_cat
         with (
             patch("routes.products.ProductCategory", pc_cls),
@@ -1324,27 +1292,19 @@ class TestProductsRemainingCoverage:
             patch("models.SaleLine", sl),
             patch("models.PurchaseLine", pl),
         ):
-            resp = product_client.post(
-                f"/products/{product.id}/delete", follow_redirects=False
-            )
+            resp = product_client.post(f"/products/{product.id}/delete", follow_redirects=False)
         assert resp.status_code == 302
 
     def test_print_label_branch_scope_exception(self, product_client, mocker):
-        mocker.patch(
-            "services.label_print_service.get_single_label_html", return_value="html"
-        )
-        mocker.patch(
-            "utils.decorators.report_branch_scope_id", side_effect=RuntimeError("scope")
-        )
+        mocker.patch("services.label_print_service.get_single_label_html", return_value="html")
+        mocker.patch("utils.decorators.report_branch_scope_id", side_effect=RuntimeError("scope"))
         with _products_patches():
             resp = product_client.get("/products/1/print-label")
         assert resp.status_code == 200
 
     def test_import_os_remove_failure_still_succeeds(self, products_import_app):
         df = _import_dataframe({"name": ["Row"], "price": [5.0]})
-        resp = _run_import_post(
-            products_import_app, df, os_remove_side_effect=OSError("locked")
-        )
+        resp = _run_import_post(products_import_app, df, os_remove_side_effect=OSError("locked"))
         _assert_import_index_redirect(resp)
 
     def test_edit_success_with_extras_and_tiers(self, product_client):
@@ -1416,23 +1376,17 @@ class TestProductsRemainingCoverage:
         assert resp.status_code == 200
 
     def test_import_creates_new_category_on_the_fly(self, products_import_app):
-        df = _import_dataframe(
-            {"name": ["CatItem"], "price": [11.0], "category": ["FlyCat"]}
-        )
+        df = _import_dataframe({"name": ["CatItem"], "price": [11.0], "category": ["FlyCat"]})
         new_cat = _category(20, name="FlyCat")
         pc_cls = MagicMock()
-        pc_cls.query.filter_by.return_value.filter.return_value.first.return_value = (
-            None
-        )
+        pc_cls.query.filter_by.return_value.filter.return_value.first.return_value = None
         pc_cls.return_value = new_cat
         with patch("models.ProductCategory", pc_cls):
             resp = _run_import_post(products_import_app, df)
         _assert_import_index_redirect(resp)
         pc_cls.assert_called_once()
 
-    def test_edit_rejects_partners_without_tenant(
-        self, product_client, bypass_product_auth
-    ):
+    def test_edit_rejects_partners_without_tenant(self, product_client, bypass_product_auth):
         bypass_product_auth.can_see_costs.return_value = False
         form = _mock_product_form(validate=True)
         product = _product()

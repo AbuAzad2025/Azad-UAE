@@ -58,43 +58,27 @@ class TestBranchCheck:
 
 
 class TestClockInOut:
-    def test_clock_in_creates_attendance(
-        self, db_session, hr_user, sample_tenant, mocker
-    ):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
+    def test_clock_in_creates_attendance(self, db_session, hr_user, sample_tenant, mocker):
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
         att = HRService.clock_in(hr_user)
         assert att.user_id == hr_user.id
         assert att.check_out is None
         assert att.state == "draft"
 
-    def test_clock_in_duplicate_raises(
-        self, db_session, hr_user, sample_tenant, mocker
-    ):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
+    def test_clock_in_duplicate_raises(self, db_session, hr_user, sample_tenant, mocker):
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
         HRService.clock_in(hr_user)
         with pytest.raises(ValueError, match="مفتوح"):
             HRService.clock_in(hr_user)
 
-    def test_clock_in_with_branch(
-        self, db_session, hr_user, sample_tenant, sample_branch, mocker
-    ):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
+    def test_clock_in_with_branch(self, db_session, hr_user, sample_tenant, sample_branch, mocker):
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
         mocker.patch("services.hr_service.is_global_owner_user", return_value=True)
         att = HRService.clock_in(hr_user, branch_id=sample_branch.id)
         assert att.branch_id == sample_branch.id
 
-    def test_clock_out_completes_session(
-        self, db_session, hr_user, sample_tenant, mocker
-    ):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
+    def test_clock_out_completes_session(self, db_session, hr_user, sample_tenant, mocker):
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
         HRService.clock_in(hr_user)
         att = HRService.clock_out(hr_user)
         assert att.check_out is not None
@@ -106,9 +90,7 @@ class TestClockInOut:
             HRService.clock_out(hr_user)
 
     def test_clock_out_naive_check_in(self, db_session, hr_user, sample_tenant, mocker):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
         att = Attendance(
             tenant_id=sample_tenant.id,
             user_id=hr_user.id,
@@ -123,9 +105,7 @@ class TestClockInOut:
 
 class TestAttendanceQueries:
     def test_get_attendance_filters(self, db_session, hr_user, sample_tenant, mocker):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
         att = Attendance(
             tenant_id=sample_tenant.id,
             user_id=hr_user.id,
@@ -134,21 +114,13 @@ class TestAttendanceQueries:
         )
         db_session.add(att)
         db_session.commit()
-        records = HRService.get_attendance(
-            hr_user, date_from="2026-06-01", date_to="2026-06-30"
-        )
+        records = HRService.get_attendance(hr_user, date_from="2026-06-01", date_to="2026-06-30")
         assert len(records) >= 1
 
-    def test_report_attendance_branch_scope(
-        self, db_session, hr_user, sample_tenant, sample_branch, mocker
-    ):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
+    def test_report_attendance_branch_scope(self, db_session, hr_user, sample_tenant, sample_branch, mocker):
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
         mocker.patch("services.hr_service.is_global_owner_user", return_value=False)
-        mocker.patch(
-            "services.hr_service.branch_scope_id_for", return_value=sample_branch.id
-        )
+        mocker.patch("services.hr_service.branch_scope_id_for", return_value=sample_branch.id)
         att = Attendance(
             tenant_id=sample_tenant.id,
             branch_id=sample_branch.id,
@@ -162,12 +134,8 @@ class TestAttendanceQueries:
 
 
 class TestLeaveWorkflow:
-    def test_request_leave_success(
-        self, db_session, hr_user, sample_tenant, leave_type, mocker
-    ):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
+    def test_request_leave_success(self, db_session, hr_user, sample_tenant, leave_type, mocker):
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
         leave = HRService.request_leave(
             {
                 "leave_type_id": leave_type.id,
@@ -183,9 +151,7 @@ class TestLeaveWorkflow:
     def test_request_leave_missing_type(self, hr_user, mocker):
         mocker.patch("services.hr_service.get_active_tenant_id", return_value=1)
         with pytest.raises(ValueError, match="نوع الإجازة"):
-            HRService.request_leave(
-                {"date_from": "2026-07-01", "date_to": "2026-07-05"}, hr_user
-            )
+            HRService.request_leave({"date_from": "2026-07-01", "date_to": "2026-07-05"}, hr_user)
 
     def test_request_leave_invalid_dates(self, hr_user, leave_type, mocker):
         mocker.patch("services.hr_service.get_active_tenant_id", return_value=1)
@@ -199,9 +165,7 @@ class TestLeaveWorkflow:
                 hr_user,
             )
 
-    def test_request_leave_wrong_tenant_type(
-        self, db_session, hr_user, sample_tenant, mocker
-    ):
+    def test_request_leave_wrong_tenant_type(self, db_session, hr_user, sample_tenant, mocker):
         from models import Tenant
 
         other_tenant = Tenant(
@@ -217,9 +181,7 @@ class TestLeaveWorkflow:
         other_lt = LeaveType(tenant_id=other_tenant.id, name="Other")
         db_session.add(other_lt)
         db_session.flush()
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
         with pytest.raises(ValueError, match="غير صالح"):
             HRService.request_leave(
                 {
@@ -230,12 +192,8 @@ class TestLeaveWorkflow:
                 hr_user,
             )
 
-    def test_approve_leave(
-        self, db_session, hr_user, sample_tenant, leave_type, mocker
-    ):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
+    def test_approve_leave(self, db_session, hr_user, sample_tenant, leave_type, mocker):
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
         leave = HRService.request_leave(
             {
                 "leave_type_id": leave_type.id,
@@ -249,12 +207,8 @@ class TestLeaveWorkflow:
         assert approved.state == "approved"
         assert approved.manager_id == manager.id
 
-    def test_approve_non_draft_raises(
-        self, db_session, hr_user, sample_tenant, leave_type, mocker
-    ):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
+    def test_approve_non_draft_raises(self, db_session, hr_user, sample_tenant, leave_type, mocker):
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
         leave = HRService.request_leave(
             {
                 "leave_type_id": leave_type.id,
@@ -268,9 +222,7 @@ class TestLeaveWorkflow:
             HRService.approve_leave(leave.id, _user(user_id=2))
 
     def test_refuse_leave(self, db_session, hr_user, sample_tenant, leave_type, mocker):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
         leave = HRService.request_leave(
             {
                 "leave_type_id": leave_type.id,
@@ -284,9 +236,7 @@ class TestLeaveWorkflow:
         assert refused.rejected_reason == "busy"
 
     def test_list_leaves(self, db_session, hr_user, sample_tenant, leave_type, mocker):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
         HRService.request_leave(
             {
                 "leave_type_id": leave_type.id,
@@ -301,12 +251,8 @@ class TestLeaveWorkflow:
 
 class TestDepartmentsAndContracts:
     def test_create_department(self, db_session, hr_user, sample_tenant, mocker):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
-        dept = HRService.create_department(
-            {"name": "Engineering", "name_ar": "هندسة"}, hr_user
-        )
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
+        dept = HRService.create_department({"name": "Engineering", "name_ar": "هندسة"}, hr_user)
         assert dept.name == "Engineering"
 
     def test_create_department_no_tenant(self, hr_user, mocker):
@@ -315,9 +261,7 @@ class TestDepartmentsAndContracts:
             HRService.create_department({"name": "X"}, hr_user)
 
     def test_list_departments(self, db_session, hr_user, sample_tenant, mocker):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
         HRService.create_department({"name": "Sales"}, hr_user)
         depts = HRService.list_departments(hr_user)
         assert len(depts) >= 1
@@ -326,12 +270,8 @@ class TestDepartmentsAndContracts:
         mocker.patch("services.hr_service.get_active_tenant_id", return_value=None)
         assert HRService.list_departments(hr_user) == []
 
-    def test_create_contract(
-        self, db_session, hr_user, sample_tenant, sample_branch, mocker
-    ):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
+    def test_create_contract(self, db_session, hr_user, sample_tenant, sample_branch, mocker):
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
         mocker.patch("services.hr_service.is_global_owner_user", return_value=True)
         contract = HRService.create_contract(
             {
@@ -347,16 +287,12 @@ class TestDepartmentsAndContracts:
 
 class TestPayrollApproveBatch:
     def test_approve_empty_batch_raises(self, app):
-        batch = PayrollBatch(
-            [], status="draft", tenant_id=1, branch_id=1, month=6, year=2026
-        )
+        batch = PayrollBatch([], status="draft", tenant_id=1, branch_id=1, month=6, year=2026)
         with app.app_context():
             with pytest.raises(ValueError, match="لا توجد معاملات"):
                 PayrollService.approve_batch(batch, user_id=1)
 
-    def test_approve_batch_posts_gl(
-        self, app, sample_tenant, sample_branch, sample_gl_accounts, mocker
-    ):
+    def test_approve_batch_posts_gl(self, app, sample_tenant, sample_branch, sample_gl_accounts, mocker):
         tx = MagicMock()
         tx.id = 10
         tx.status = "draft"
@@ -381,9 +317,7 @@ class TestPayrollApproveBatch:
         assert tx.status == "approved"
         assert tx.gl_entry_id == 55
 
-    def test_approve_batch_with_deductions_line(
-        self, app, sample_tenant, sample_branch, sample_gl_accounts, mocker
-    ):
+    def test_approve_batch_with_deductions_line(self, app, sample_tenant, sample_branch, sample_gl_accounts, mocker):
         tx = MagicMock()
         tx.id = 11
         tx.status = "draft"
@@ -399,9 +333,7 @@ class TestPayrollApproveBatch:
             month=7,
             year=2026,
         )
-        post = mocker.patch(
-            "services.gl_posting.post_or_fail", return_value=MagicMock(id=56)
-        )
+        post = mocker.patch("services.gl_posting.post_or_fail", return_value=MagicMock(id=56))
         with app.app_context():
             PayrollService.approve_batch(batch, user_id=1)
         lines = post.call_args[0][0]
@@ -476,12 +408,8 @@ class TestHrEdgeCases:
         with pytest.raises(ValueError, match="غير موجود"):
             HRService.refuse_leave(99999, _user(user_id=2))
 
-    def test_refuse_non_draft_raises(
-        self, db_session, hr_user, sample_tenant, leave_type, mocker
-    ):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
+    def test_refuse_non_draft_raises(self, db_session, hr_user, sample_tenant, leave_type, mocker):
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
         leave = HRService.request_leave(
             {
                 "leave_type_id": leave_type.id,
@@ -494,12 +422,8 @@ class TestHrEdgeCases:
         with pytest.raises(ValueError, match="المسودة"):
             HRService.refuse_leave(leave.id, _user(user_id=2))
 
-    def test_report_attendance_date_filters(
-        self, db_session, hr_user, sample_tenant, mocker
-    ):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
+    def test_report_attendance_date_filters(self, db_session, hr_user, sample_tenant, mocker):
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
         mocker.patch("services.hr_service.is_global_owner_user", return_value=True)
         records = HRService.report_attendance(
             {
@@ -510,12 +434,8 @@ class TestHrEdgeCases:
         )
         assert isinstance(records, list)
 
-    def test_list_leaves_user_filter(
-        self, db_session, hr_user, sample_tenant, leave_type, mocker
-    ):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
+    def test_list_leaves_user_filter(self, db_session, hr_user, sample_tenant, leave_type, mocker):
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
         HRService.request_leave(
             {
                 "leave_type_id": leave_type.id,
@@ -533,9 +453,7 @@ class TestHrEdgeCases:
             HRService.create_contract({"user_id": hr_user.id}, hr_user)
 
     def test_create_contract_defaults(self, db_session, hr_user, sample_tenant, mocker):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
         mocker.patch("services.hr_service.is_global_owner_user", return_value=True)
         contract = HRService.create_contract(
             {
@@ -565,44 +483,28 @@ class TestHrEdgeCases:
     def test_process_negative_guard_no_employee_id(self):
         from services.hr_service import PayrollEngine
 
-        r = PayrollEngine.process_with_negative_guard(
-            Decimal("100"), Decimal("0"), Decimal("500")
-        )
+        r = PayrollEngine.process_with_negative_guard(Decimal("100"), Decimal("0"), Decimal("500"))
         assert r["clamped"] is True
         assert r["debt"] == Decimal("400.00")
 
 
 class TestHrServiceCommitRollbackPaths:
     def test_clock_in_commit_failure(self, db_session, hr_user, sample_tenant, mocker):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
-        mocker.patch.object(
-            db.session, "flush", side_effect=RuntimeError("commit failed")
-        )
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
+        mocker.patch.object(db.session, "flush", side_effect=RuntimeError("commit failed"))
         with pytest.raises(RuntimeError, match="commit failed"):
             HRService.clock_in(hr_user)
 
     def test_clock_out_commit_failure(self, db_session, hr_user, sample_tenant, mocker):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
         HRService.clock_in(hr_user)
-        mocker.patch.object(
-            db.session, "flush", side_effect=RuntimeError("commit failed")
-        )
+        mocker.patch.object(db.session, "flush", side_effect=RuntimeError("commit failed"))
         with pytest.raises(RuntimeError, match="commit failed"):
             HRService.clock_out(hr_user)
 
-    def test_request_leave_commit_failure(
-        self, db_session, hr_user, sample_tenant, leave_type, mocker
-    ):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
-        mocker.patch.object(
-            db.session, "flush", side_effect=RuntimeError("commit failed")
-        )
+    def test_request_leave_commit_failure(self, db_session, hr_user, sample_tenant, leave_type, mocker):
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
+        mocker.patch.object(db.session, "flush", side_effect=RuntimeError("commit failed"))
         with pytest.raises(RuntimeError, match="commit failed"):
             HRService.request_leave(
                 {
@@ -613,12 +515,8 @@ class TestHrServiceCommitRollbackPaths:
                 hr_user,
             )
 
-    def test_approve_leave_commit_failure(
-        self, db_session, hr_user, sample_tenant, leave_type, mocker
-    ):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
+    def test_approve_leave_commit_failure(self, db_session, hr_user, sample_tenant, leave_type, mocker):
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
         leave = HRService.request_leave(
             {
                 "leave_type_id": leave_type.id,
@@ -627,18 +525,12 @@ class TestHrServiceCommitRollbackPaths:
             },
             hr_user,
         )
-        mocker.patch.object(
-            db.session, "flush", side_effect=RuntimeError("commit failed")
-        )
+        mocker.patch.object(db.session, "flush", side_effect=RuntimeError("commit failed"))
         with pytest.raises(RuntimeError, match="commit failed"):
             HRService.approve_leave(leave.id, _user(user_id=2))
 
-    def test_refuse_leave_commit_failure(
-        self, db_session, hr_user, sample_tenant, leave_type, mocker
-    ):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
+    def test_refuse_leave_commit_failure(self, db_session, hr_user, sample_tenant, leave_type, mocker):
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
         leave = HRService.request_leave(
             {
                 "leave_type_id": leave_type.id,
@@ -647,34 +539,20 @@ class TestHrServiceCommitRollbackPaths:
             },
             hr_user,
         )
-        mocker.patch.object(
-            db.session, "flush", side_effect=RuntimeError("commit failed")
-        )
+        mocker.patch.object(db.session, "flush", side_effect=RuntimeError("commit failed"))
         with pytest.raises(RuntimeError, match="commit failed"):
             HRService.refuse_leave(leave.id, _user(user_id=2), reason="no")
 
-    def test_create_department_commit_failure(
-        self, db_session, hr_user, sample_tenant, mocker
-    ):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
-        mocker.patch.object(
-            db.session, "flush", side_effect=RuntimeError("commit failed")
-        )
+    def test_create_department_commit_failure(self, db_session, hr_user, sample_tenant, mocker):
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
+        mocker.patch.object(db.session, "flush", side_effect=RuntimeError("commit failed"))
         with pytest.raises(RuntimeError, match="commit failed"):
             HRService.create_department({"name": "Fail Dept"}, hr_user)
 
-    def test_create_contract_commit_failure(
-        self, db_session, hr_user, sample_tenant, mocker
-    ):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
+    def test_create_contract_commit_failure(self, db_session, hr_user, sample_tenant, mocker):
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
         mocker.patch("services.hr_service.is_global_owner_user", return_value=True)
-        mocker.patch.object(
-            db.session, "flush", side_effect=RuntimeError("commit failed")
-        )
+        mocker.patch.object(db.session, "flush", side_effect=RuntimeError("commit failed"))
         with pytest.raises(RuntimeError, match="commit failed"):
             HRService.create_contract({"user_id": hr_user.id}, hr_user)
 

@@ -17,18 +17,10 @@ class TestValidateDecimalPrecision:
         assert gl_auto_service.validate_decimal_precision("10.123") is True
 
     def test_too_many_decimal_places(self):
-        assert (
-            gl_auto_service.validate_decimal_precision("1.1234", decimal_places=3)
-            is False
-        )
+        assert gl_auto_service.validate_decimal_precision("1.1234", decimal_places=3) is False
 
     def test_too_many_digits(self):
-        assert (
-            gl_auto_service.validate_decimal_precision(
-                "1234567890123456", max_digits=15
-            )
-            is False
-        )
+        assert gl_auto_service.validate_decimal_precision("1234567890123456", max_digits=15) is False
 
     def test_invalid_value_returns_false(self):
         assert gl_auto_service.validate_decimal_precision("not-a-number") is False
@@ -81,21 +73,15 @@ class TestEnsureBalanceConsistency:
 
 class TestValidateJournalEntryBalance:
     def test_balanced_entry_passes(self):
-        target = MagicMock(
-            entry_number="JE-1", total_debit=Decimal("100"), total_credit=Decimal("100")
-        )
+        target = MagicMock(entry_number="JE-1", total_debit=Decimal("100"), total_credit=Decimal("100"))
         gl_auto_service.validate_journal_entry_balance(None, None, target)
 
     def test_zero_debit_and_credit_passes(self):
-        target = MagicMock(
-            entry_number="JE-0", total_debit=Decimal("0"), total_credit=Decimal("0")
-        )
+        target = MagicMock(entry_number="JE-0", total_debit=Decimal("0"), total_credit=Decimal("0"))
         gl_auto_service.validate_journal_entry_balance(None, None, target)
 
     def test_unbalanced_entry_raises(self):
-        target = MagicMock(
-            entry_number="JE-2", total_debit=Decimal("100"), total_credit=Decimal("50")
-        )
+        target = MagicMock(entry_number="JE-2", total_debit=Decimal("100"), total_credit=Decimal("50"))
         with pytest.raises(ValueError, match="غير متوازن"):
             gl_auto_service.validate_journal_entry_balance(None, None, target)
 
@@ -105,9 +91,7 @@ class TestValidateJournalEntryBalance:
 
     def test_unexpected_error_is_reraised(self):
         target = MagicMock()
-        type(target).total_debit = property(
-            lambda _self: (_ for _ in ()).throw(RuntimeError("boom"))
-        )
+        type(target).total_debit = property(lambda _self: (_ for _ in ()).throw(RuntimeError("boom")))
 
         with pytest.raises(RuntimeError, match="boom"):
             gl_auto_service.validate_journal_entry_balance(None, None, target)
@@ -117,9 +101,7 @@ class TestRegisterEventListeners:
     def test_register_gl_event_listeners_is_noop(self):
         with patch("sqlalchemy.event.listens_for") as mock_listens:
             gl_auto_service.register_gl_event_listeners()
-            assert (
-                mock_listens.call_count == 0
-            )  # model/gl.py handles balance validation
+            assert mock_listens.call_count == 0  # model/gl.py handles balance validation
 
     def test_register_validation_event_listeners_attaches_handlers(self):
         with patch("sqlalchemy.event.listens_for") as mock_listens:
@@ -127,9 +109,7 @@ class TestRegisterEventListeners:
             assert mock_listens.call_count >= 5
 
     def test_sale_negative_amount_logs_error(self, caplog):
-        with patch(
-            "sqlalchemy.event.listens_for", side_effect=lambda *a, **k: lambda fn: fn
-        ):
+        with patch("sqlalchemy.event.listens_for", side_effect=lambda *a, **k: lambda fn: fn):
             gl_auto_service.register_validation_event_listeners()
 
         handlers = []
@@ -203,9 +183,7 @@ class TestRegisterEventListeners:
             gl_auto_service.register_validation_event_listeners()
         sale_handler = handlers[0]
         target = MagicMock()
-        type(target).amount_aed = property(
-            lambda _self: (_ for _ in ()).throw(RuntimeError("boom"))
-        )
+        type(target).amount_aed = property(lambda _self: (_ for _ in ()).throw(RuntimeError("boom")))
         with caplog.at_level("ERROR"):
             sale_handler(None, None, target)
 
@@ -218,9 +196,7 @@ class TestRegisterEventListeners:
             gl_auto_service.register_validation_event_listeners()
         receipt_handler = handlers[4]
         target = MagicMock()
-        type(target).amount_aed = property(
-            lambda _self: (_ for _ in ()).throw(RuntimeError("boom"))
-        )
+        type(target).amount_aed = property(lambda _self: (_ for _ in ()).throw(RuntimeError("boom")))
         with caplog.at_level("ERROR"):
             receipt_handler(None, None, target)
 
@@ -233,9 +209,7 @@ class TestRegisterEventListeners:
             gl_auto_service.register_validation_event_listeners()
         product_handler = handlers[-1]
         target = MagicMock()
-        type(target).current_stock = property(
-            lambda _self: (_ for _ in ()).throw(RuntimeError("boom"))
-        )
+        type(target).current_stock = property(lambda _self: (_ for _ in ()).throw(RuntimeError("boom")))
         with caplog.at_level("ERROR"):
             product_handler(None, None, target)
 
@@ -248,9 +222,7 @@ class TestRegisterEventListeners:
             gl_auto_service.register_validation_event_listeners()
         purchase_handler = handlers[1]
         target = MagicMock()
-        type(target).amount_aed = property(
-            lambda _self: (_ for _ in ()).throw(RuntimeError("boom"))
-        )
+        type(target).amount_aed = property(lambda _self: (_ for _ in ()).throw(RuntimeError("boom")))
         with caplog.at_level("ERROR"):
             purchase_handler(None, None, target)
 
@@ -263,14 +235,10 @@ class TestRegisterEventListeners:
             gl_auto_service.register_validation_event_listeners()
         payment_handler = handlers[5]
         target = MagicMock()
-        type(target).amount_aed = property(
-            lambda _self: (_ for _ in ()).throw(RuntimeError("boom"))
-        )
+        type(target).amount_aed = property(lambda _self: (_ for _ in ()).throw(RuntimeError("boom")))
         with caplog.at_level("ERROR"):
             payment_handler(None, None, target)
 
     def test_gl_validate_balance_passes_balanced(self):
-        target = MagicMock(
-            entry_number="JE-9", total_debit=Decimal("10"), total_credit=Decimal("10")
-        )
+        target = MagicMock(entry_number="JE-9", total_debit=Decimal("10"), total_credit=Decimal("10"))
         gl_auto_service.validate_journal_entry_balance(None, None, target)

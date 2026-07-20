@@ -52,9 +52,7 @@ class TestSupplierBalances:
         assert "Parts Co" in repr(_supplier_stub())
 
     def test_balance_aliases(self):
-        s = _supplier_stub(
-            total_purchases_aed=Decimal("1000"), total_paid_aed=Decimal("250")
-        )
+        s = _supplier_stub(total_purchases_aed=Decimal("1000"), total_paid_aed=Decimal("250"))
         assert s.get_balance_aed() == Decimal("750")
         assert s.get_balance_base() == Decimal("750")
 
@@ -66,9 +64,7 @@ class TestSupplierBalances:
         assert s.total_paid_aed == Decimal("50")
 
     def test_apply_purchase_and_payment(self):
-        s = _supplier_stub(
-            total_purchases_aed=Decimal("100"), total_paid_aed=Decimal("20")
-        )
+        s = _supplier_stub(total_purchases_aed=Decimal("100"), total_paid_aed=Decimal("20"))
         s.apply_purchase(Decimal("50"))
         s.apply_payment(Decimal("10"))
         s.apply_purchase_base(Decimal("5"))
@@ -91,9 +87,7 @@ class TestSupplierDisplay:
         assert _supplier_stub(rating=0).get_rating_stars() == "☆☆☆☆☆"
 
     def test_supplier_base_getters(self):
-        s = _supplier_stub(
-            total_purchases_aed=Decimal("10"), total_paid_aed=Decimal("3")
-        )
+        s = _supplier_stub(total_purchases_aed=Decimal("10"), total_paid_aed=Decimal("3"))
         assert s.total_purchases_base == Decimal("10")
         assert s.total_paid_base == Decimal("3")
 

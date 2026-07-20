@@ -336,8 +336,7 @@ def _inject_tenant_write_guard(session, flush_context, instances):
         elif tid is not None and int(obj_tid or 0) != int(tid or 0):
             _log_cross_tenant_warning(obj.__class__.__name__, obj_tid, tid)
             raise TenantIsolationError(
-                f"Cross-tenant INSERT on {obj.__class__.__name__}: "
-                f"obj.tenant_id={obj_tid} != active_tenant={tid}"
+                f"Cross-tenant INSERT on {obj.__class__.__name__}: obj.tenant_id={obj_tid} != active_tenant={tid}"
             )
 
     # ── UPDATE guard ──────────────────────────────────────────────────
@@ -353,8 +352,7 @@ def _inject_tenant_write_guard(session, flush_context, instances):
         if tid is not None and int(obj_tid or 0) != int(tid or 0):
             _log_cross_tenant_warning(obj.__class__.__name__, obj_tid, tid)
             raise TenantIsolationError(
-                f"Cross-tenant UPDATE on {obj.__class__.__name__}: "
-                f"obj.tenant_id={obj_tid} != active_tenant={tid}"
+                f"Cross-tenant UPDATE on {obj.__class__.__name__}: obj.tenant_id={obj_tid} != active_tenant={tid}"
             )
 
     # ── DELETE guard ──────────────────────────────────────────────────
@@ -370,8 +368,7 @@ def _inject_tenant_write_guard(session, flush_context, instances):
         if tid is not None and int(obj_tid or 0) != int(tid or 0):
             _log_cross_tenant_warning(obj.__class__.__name__, obj_tid, tid)
             raise TenantIsolationError(
-                f"Cross-tenant DELETE on {obj.__class__.__name__}: "
-                f"obj.tenant_id={obj_tid} != active_tenant={tid}"
+                f"Cross-tenant DELETE on {obj.__class__.__name__}: obj.tenant_id={obj_tid} != active_tenant={tid}"
             )
 
 

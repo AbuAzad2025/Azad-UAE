@@ -31,19 +31,14 @@ from ai_knowledge.learning.quick_learner import QuickLearner, quick_learner
 
 class TestSalesAnalytics:
     def test_predict_insufficient(self):
-        assert (
-            SalesAnalytics.predict_next_month_sales([100])["method"]
-            == "insufficient_data"
-        )
+        assert SalesAnalytics.predict_next_month_sales([100])["method"] == "insufficient_data"
 
     def test_predict_trend_up(self):
         result = SalesAnalytics.predict_next_month_sales([100, 110, 120, 130, 140, 150])
         assert result["prediction"] > 0
 
     def test_inventory_eoq(self):
-        result = InventoryAnalytics.calculate_eoq(
-            {"annual_sales": 1200, "cost_price": 10, "ordering_cost": 50}
-        )
+        result = InventoryAnalytics.calculate_eoq({"annual_sales": 1200, "cost_price": 10, "ordering_cost": 50})
         assert result["eoq"] > 0
 
     def test_profit_break_even(self):
@@ -51,9 +46,7 @@ class TestSalesAnalytics:
         assert result["break_even_units"] == 250
 
     def test_cash_flow_forecast(self):
-        result = CashFlowAnalytics.forecast_cash_flow(
-            [{"amount": 1000}], [{"amount": 800}]
-        )
+        result = CashFlowAnalytics.forecast_cash_flow([{"amount": 1000}], [{"amount": 800}])
         assert result["net_cash_flow"] == 200
 
     def test_get_analytics(self):
@@ -76,9 +69,7 @@ class TestDataAnalyzer:
 
 class TestCodeGenerator:
     def test_sql_select(self):
-        sql = CodeGenerator().generate_sql_query(
-            "select", "sales", {"where": {"id": 1}}
-        )
+        sql = CodeGenerator().generate_sql_query("select", "sales", {"where": {"id": 1}})
         assert "SELECT" in sql
 
     def test_python_function(self):

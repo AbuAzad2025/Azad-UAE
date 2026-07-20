@@ -19,9 +19,7 @@ class ReceiptForm(FlaskForm):
         default="AED",
         validators=[DataRequired()],
     )  # TODO: use Config.DEFAULT_CURRENCY
-    exchange_rate = DecimalField(
-        "سعر الصرف (اختياري)", validators=[Optional(), NumberRange(min=0)]
-    )
+    exchange_rate = DecimalField("سعر الصرف (اختياري)", validators=[Optional(), NumberRange(min=0)])
     payment_method = SelectField(
         "طريقة الدفع",
         choices=[

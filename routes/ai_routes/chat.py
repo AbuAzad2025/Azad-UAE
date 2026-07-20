@@ -180,15 +180,11 @@ def chat():
     message = safe_message
 
     # Check if client prefers SSE streaming (to prevent Gunicorn timeouts)
-    prefer_stream = request.headers.get("Accept") == "text/event-stream" or data.get(
-        "stream", False
-    )
+    prefer_stream = request.headers.get("Accept") == "text/event-stream" or data.get("stream", False)
 
     if prefer_stream:
         return Response(
-            stream_with_context(
-                cast(Iterator[str], _stream_ai_response(message, context, ai_mode))
-            ),
+            stream_with_context(cast(Iterator[str], _stream_ai_response(message, context, ai_mode))),
             mimetype="text/event-stream",
             headers={
                 "Cache-Control": "no-cache",
@@ -199,9 +195,7 @@ def chat():
 
     action_result = None
     ai_state = getattr(g, "ai_access_state", None) or get_ai_access_state(current_user)
-    can_execute_mutations = ai_state.get("is_platform_user") or ai_level_allows(
-        ai_state.get("ai_level"), "execute"
-    )
+    can_execute_mutations = ai_state.get("is_platform_user") or ai_level_allows(ai_state.get("ai_level"), "execute")
 
     # Try new action dispatcher first (clean, permission-validated, error-logged)
     if can_execute_mutations and _user_can_ai_execute_actions(current_user):
@@ -226,9 +220,7 @@ def chat():
         action_result = _process_user_action(message, current_user)
 
     if action_result:
-        return jsonify(
-            {"response": action_result, "ai_enabled": True, "action_executed": True}
-        )
+        return jsonify({"response": action_result, "ai_enabled": True, "action_executed": True})
 
     import time
 
@@ -271,9 +263,7 @@ def chat():
         {
             "response": response,
             "ai_enabled": bool(
-                state.get("allowed")
-                and state.get("global_enabled")
-                and state.get("tenant_enabled") is not False
+                state.get("allowed") and state.get("global_enabled") and state.get("tenant_enabled") is not False
             ),
             "ai_mode": ai_mode,
             "user_role": "owner" if current_user.is_owner else "user",

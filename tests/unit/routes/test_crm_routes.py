@@ -24,29 +24,17 @@ def _crm_patches(**kwargs):
     leads = kwargs.get("leads", [])
     with ExitStack() as stack:
         stack.enter_context(patch("routes.crm.render_template", return_value="ok"))
-        stack.enter_context(
-            patch("routes.crm.get_active_tenant_id", return_value=kwargs.get("tid", 1))
-        )
-        stack.enter_context(
-            patch("routes.crm.CRMLeadService.search_leads", return_value=leads)
-        )
-        stack.enter_context(
-            patch(
-                "routes.crm.CRMStage.query", _chain_query(all=kwargs.get("stages", []))
-            )
-        )
-        stack.enter_context(
-            patch("routes.crm.CRMTeam.query", _chain_query(all=kwargs.get("teams", [])))
-        )
+        stack.enter_context(patch("routes.crm.get_active_tenant_id", return_value=kwargs.get("tid", 1)))
+        stack.enter_context(patch("routes.crm.CRMLeadService.search_leads", return_value=leads))
+        stack.enter_context(patch("routes.crm.CRMStage.query", _chain_query(all=kwargs.get("stages", []))))
+        stack.enter_context(patch("routes.crm.CRMTeam.query", _chain_query(all=kwargs.get("teams", []))))
         stack.enter_context(
             patch(
                 "routes.crm.Customer.query",
                 _chain_query(all=kwargs.get("customers", [])),
             )
         )
-        stack.enter_context(
-            patch("routes.crm.User.query", _chain_query(all=kwargs.get("users", [])))
-        )
+        stack.enter_context(patch("routes.crm.User.query", _chain_query(all=kwargs.get("users", []))))
         stack.enter_context(patch("extensions.limiter.limit", return_value=lambda f: f))
         yield
 
@@ -65,9 +53,7 @@ class TestCrmAuth:
             resp = crm_client.get("/crm/pipeline")
         assert resp.status_code == 401
 
-    def test_pipeline_forbidden_without_permission(
-        self, crm_client, bypass_permission_auth
-    ):
+    def test_pipeline_forbidden_without_permission(self, crm_client, bypass_permission_auth):
         bypass_permission_auth.has_permission.return_value = False
         bypass_permission_auth.is_super_admin.return_value = False
         with (
@@ -113,18 +99,14 @@ class TestCrmCreateLead:
             _crm_patches(),
             patch("routes.crm.CRMLeadService.create_lead", return_value=_mock_lead()),
         ):
-            resp = crm_client.post(
-                "/crm/leads/create", data={"name": "New Lead"}, follow_redirects=False
-            )
+            resp = crm_client.post("/crm/leads/create", data={"name": "New Lead"}, follow_redirects=False)
         assert resp.status_code == 302
         assert "/crm/leads" in resp.location
 
     def test_create_post_error(self, crm_client):
         with (
             _crm_patches(),
-            patch(
-                "routes.crm.CRMLeadService.create_lead", side_effect=ValueError("bad")
-            ),
+            patch("routes.crm.CRMLeadService.create_lead", side_effect=ValueError("bad")),
         ):
             resp = crm_client.post("/crm/leads/create", data={"name": ""})
         assert resp.status_code == 200
@@ -142,9 +124,7 @@ class TestCrmLeadDetail:
     def test_detail_not_found_redirects(self, crm_client):
         with (
             _crm_patches(),
-            patch(
-                "routes.crm.CRMLeadService.get_lead", side_effect=ValueError("missing")
-            ),
+            patch("routes.crm.CRMLeadService.get_lead", side_effect=ValueError("missing")),
         ):
             resp = crm_client.get("/crm/leads/99", follow_redirects=False)
         assert resp.status_code == 302
@@ -166,9 +146,7 @@ class TestCrmEditLead:
             patch("routes.crm.CRMLeadService.get_lead", return_value=_mock_lead()),
             patch("routes.crm.CRMLeadService.update_lead", return_value=_mock_lead()),
         ):
-            resp = crm_client.post(
-                "/crm/leads/3/edit", data={"name": "Updated"}, follow_redirects=False
-            )
+            resp = crm_client.post("/crm/leads/3/edit", data={"name": "Updated"}, follow_redirects=False)
         assert resp.status_code == 302
 
     def test_edit_post_error(self, crm_client):
@@ -198,9 +176,7 @@ class TestCrmApi:
             _crm_patches(),
             patch("routes.crm.CRMLeadService.move_stage", return_value=_mock_lead()),
         ):
-            resp = crm_client.post(
-                "/crm/api/move-stage", json={"lead_id": 1, "stage_id": 2}
-            )
+            resp = crm_client.post("/crm/api/move-stage", json={"lead_id": 1, "stage_id": 2})
         assert resp.status_code == 200
         assert resp.get_json()["success"] is True
 
@@ -212,9 +188,7 @@ class TestCrmApi:
                 side_effect=ValueError("invalid"),
             ),
         ):
-            resp = crm_client.post(
-                "/crm/api/move-stage", json={"lead_id": 1, "stage_id": 9}
-            )
+            resp = crm_client.post("/crm/api/move-stage", json={"lead_id": 1, "stage_id": 9})
         assert resp.status_code == 400
         assert resp.get_json()["success"] is False
 
@@ -240,9 +214,7 @@ class TestCrmApi:
             _crm_patches(),
             patch("routes.crm.CRMLeadService.add_activity", return_value=MagicMock()),
         ):
-            resp = crm_client.post(
-                "/crm/api/activities", json={"lead_id": 1, "summary": "call"}
-            )
+            resp = crm_client.post("/crm/api/activities", json={"lead_id": 1, "summary": "call"})
         assert resp.status_code == 200
         assert resp.get_json()["success"] is True
 

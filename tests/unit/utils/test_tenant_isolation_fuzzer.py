@@ -71,9 +71,7 @@ def _tenants(app):
         db.session.flush()
 
         for t in (tenant_a, tenant_b):
-            b = Branch(
-                tenant_id=t.id, name=f"Main {t.id}", code=f"M{t.id}", is_active=True
-            )
+            b = Branch(tenant_id=t.id, name=f"Main {t.id}", code=f"M{t.id}", is_active=True)
             db.session.add(b)
             w = Warehouse(tenant_id=t.id, name=f"WH {t.id}", is_active=True)
             db.session.add(w)
@@ -149,9 +147,7 @@ class TestTenantQueryBoundary:
             rows = tenant_query(Customer).all()
             ids = {r.id for r in rows}
             assert _tenants["customer_a"].id in ids
-            assert _tenants["customer_b"].id in ids, (
-                "tenant_query with no active tenant must not silently isolate"
-            )
+            assert _tenants["customer_b"].id in ids, "tenant_query with no active tenant must not silently isolate"
 
     def test_cross_tenant_write_blocked(self, app, _tenants):
         from models import Customer as M
@@ -194,9 +190,7 @@ class TestRouteLevelIsolation:
                 "Authorization": "Bearer test-token",
             },
         )
-        assert resp.status_code in (403, 404, 401), (
-            f"Expected 403/404/401, got {resp.status_code}"
-        )
+        assert resp.status_code in (403, 404, 401), f"Expected 403/404/401, got {resp.status_code}"
 
     def test_cannot_list_other_tenant_customers(self, client, _tenants):
         resp = client.get(
@@ -208,16 +202,9 @@ class TestRouteLevelIsolation:
         )
         if resp.status_code == 200:
             data = resp.get_json(silent=True) or {}
-            items = (
-                data
-                if isinstance(data, list)
-                else data.get("data", data.get("results", []))
-            )
+            items = data if isinstance(data, list) else data.get("data", data.get("results", []))
             for item in items:
-                if (
-                    isinstance(item, dict)
-                    and item.get("id") == _tenants["customer_b"].id
-                ):
+                if isinstance(item, dict) and item.get("id") == _tenants["customer_b"].id:
                     pytest.fail("customer_b leaked into tenant_a listing")
 
     def test_no_tenant_header_rejected(self, client):

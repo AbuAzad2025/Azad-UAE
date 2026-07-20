@@ -49,9 +49,7 @@ class TestListAndGet:
         active = _coupon(db_session, sample_tenant.id)
         inactive = _coupon(db_session, sample_tenant.id, is_active=False)
         all_rows = StoreCouponService.list_for_tenant(sample_tenant.id)
-        active_rows = StoreCouponService.list_for_tenant(
-            sample_tenant.id, active_only=True
-        )
+        active_rows = StoreCouponService.list_for_tenant(sample_tenant.id, active_only=True)
         assert active.id in {r.id for r in all_rows}
         assert inactive.id in {r.id for r in all_rows}
         assert active.id in {r.id for r in active_rows}
@@ -66,16 +64,12 @@ class TestListAndGet:
 class TestValidateForCheckout:
     def test_invalid_code(self, sample_tenant):
         with pytest.raises(ValueError, match="غير صالح"):
-            StoreCouponService.validate_for_checkout(
-                sample_tenant.id, "NOPE", Decimal("100")
-            )
+            StoreCouponService.validate_for_checkout(sample_tenant.id, "NOPE", Decimal("100"))
 
     def test_inactive_coupon(self, db_session, sample_tenant):
         row = _coupon(db_session, sample_tenant.id, is_active=False)
         with pytest.raises(ValueError, match="منتهٍ"):
-            StoreCouponService.validate_for_checkout(
-                sample_tenant.id, row.code, Decimal("100")
-            )
+            StoreCouponService.validate_for_checkout(sample_tenant.id, row.code, Decimal("100"))
 
     def test_expired_coupon(self, db_session, sample_tenant):
         row = _coupon(
@@ -84,9 +78,7 @@ class TestValidateForCheckout:
             valid_until=datetime.now(timezone.utc) - timedelta(days=1),
         )
         with pytest.raises(ValueError, match="منتهٍ"):
-            StoreCouponService.validate_for_checkout(
-                sample_tenant.id, row.code, Decimal("100")
-            )
+            StoreCouponService.validate_for_checkout(sample_tenant.id, row.code, Decimal("100"))
 
     def test_min_order_not_met(self, db_session, sample_tenant):
         row = _coupon(
@@ -96,53 +88,39 @@ class TestValidateForCheckout:
             min_order_amount=Decimal("50"),
         )
         with pytest.raises(ValueError, match="الحد الأدنى"):
-            StoreCouponService.validate_for_checkout(
-                sample_tenant.id, row.code, Decimal("10")
-            )
+            StoreCouponService.validate_for_checkout(sample_tenant.id, row.code, Decimal("10"))
 
     def test_percent_discount(self, db_session, sample_tenant):
         row = _coupon(db_session, sample_tenant.id, discount_percent=Decimal("10"))
-        discount, coupon = StoreCouponService.validate_for_checkout(
-            sample_tenant.id, row.code, Decimal("100")
-        )
+        discount, coupon = StoreCouponService.validate_for_checkout(sample_tenant.id, row.code, Decimal("100"))
         assert discount == Decimal("10.000")
         assert coupon.id == row.id
 
     def test_amount_discount(self, db_session, sample_tenant):
         row = _coupon(db_session, sample_tenant.id, discount_amount=Decimal("15"))
-        discount, _ = StoreCouponService.validate_for_checkout(
-            sample_tenant.id, row.code, Decimal("100")
-        )
+        discount, _ = StoreCouponService.validate_for_checkout(sample_tenant.id, row.code, Decimal("100"))
         assert discount == Decimal("15")
 
     def test_discount_capped_at_subtotal(self, db_session, sample_tenant):
         row = _coupon(db_session, sample_tenant.id, discount_amount=Decimal("50"))
-        discount, _ = StoreCouponService.validate_for_checkout(
-            sample_tenant.id, row.code, Decimal("20")
-        )
+        discount, _ = StoreCouponService.validate_for_checkout(sample_tenant.id, row.code, Decimal("20"))
         assert discount == Decimal("20")
 
     def test_zero_discount_raises(self, db_session, sample_tenant):
         row = _coupon(db_session, sample_tenant.id, discount_percent=Decimal("0"))
         with pytest.raises(ValueError, match="لا يوجد خصم"):
-            StoreCouponService.validate_for_checkout(
-                sample_tenant.id, row.code, Decimal("100")
-            )
+            StoreCouponService.validate_for_checkout(sample_tenant.id, row.code, Decimal("100"))
 
 
 class TestCreateCoupon:
     def test_short_code(self, sample_tenant):
         with pytest.raises(ValueError, match="قصير"):
-            StoreCouponService.create_coupon(
-                sample_tenant.id, {"code": "AB", "discount_amount": 5}
-            )
+            StoreCouponService.create_coupon(sample_tenant.id, {"code": "AB", "discount_amount": 5})
 
     def test_duplicate_code(self, db_session, sample_tenant):
         row = _coupon(db_session, sample_tenant.id, code="DUP123")
         with pytest.raises(ValueError, match="مستخدم"):
-            StoreCouponService.create_coupon(
-                sample_tenant.id, {"code": row.code, "discount_amount": 5}
-            )
+            StoreCouponService.create_coupon(sample_tenant.id, {"code": row.code, "discount_amount": 5})
 
     def test_both_or_neither_discount(self, sample_tenant):
         with pytest.raises(ValueError, match="لا كلاهما"):
@@ -222,16 +200,12 @@ class TestUpdateCoupon:
     def test_update_percent_and_clear_amount_path(self, db_session, sample_tenant):
         row = _coupon(db_session, sample_tenant.id, discount_amount=Decimal("5"))
         with pytest.raises(ValueError, match="نسبة خصم"):
-            StoreCouponService.update_coupon(
-                row.id, sample_tenant.id, {"discount_percent": 10}
-            )
+            StoreCouponService.update_coupon(row.id, sample_tenant.id, {"discount_percent": 10})
 
     def test_update_amount_when_percent_exists(self, db_session, sample_tenant):
         row = _coupon(db_session, sample_tenant.id, discount_percent=Decimal("5"))
         with pytest.raises(ValueError, match="مبلغ خصم"):
-            StoreCouponService.update_coupon(
-                row.id, sample_tenant.id, {"discount_amount": 5}
-            )
+            StoreCouponService.update_coupon(row.id, sample_tenant.id, {"discount_amount": 5})
 
     def test_updates_fields(self, db_session, sample_tenant):
         row = _coupon(db_session, sample_tenant.id, discount_amount=Decimal("5"))
@@ -266,16 +240,12 @@ class TestUpdateCoupon:
 
     def test_update_percent_success(self, db_session, sample_tenant):
         row = _coupon(db_session, sample_tenant.id, discount_percent=Decimal("5"))
-        updated = StoreCouponService.update_coupon(
-            row.id, sample_tenant.id, {"discount_percent": 12}
-        )
+        updated = StoreCouponService.update_coupon(row.id, sample_tenant.id, {"discount_percent": 12})
         assert updated.discount_percent == Decimal("12")
 
     def test_clear_amount_discount(self, db_session, sample_tenant):
         row = _coupon(db_session, sample_tenant.id, discount_amount=Decimal("5"))
-        updated = StoreCouponService.update_coupon(
-            row.id, sample_tenant.id, {"discount_amount": None}
-        )
+        updated = StoreCouponService.update_coupon(row.id, sample_tenant.id, {"discount_amount": None})
         assert updated.discount_amount is None
 
     def test_creates_amount_coupon(self, sample_tenant):
@@ -291,31 +261,23 @@ class TestUpdateCoupon:
     def test_invalid_percent_on_update(self, db_session, sample_tenant):
         row = _coupon(db_session, sample_tenant.id, discount_percent=Decimal("5"))
         with pytest.raises(ValueError, match="نسبة الخصم"):
-            StoreCouponService.update_coupon(
-                row.id, sample_tenant.id, {"discount_percent": 0}
-            )
+            StoreCouponService.update_coupon(row.id, sample_tenant.id, {"discount_percent": 0})
 
     def test_update_amount_success(self, db_session, sample_tenant):
         row = _coupon(db_session, sample_tenant.id, discount_amount=Decimal("5"))
-        updated = StoreCouponService.update_coupon(
-            row.id, sample_tenant.id, {"discount_amount": 9}
-        )
+        updated = StoreCouponService.update_coupon(row.id, sample_tenant.id, {"discount_amount": 9})
         assert updated.discount_amount == Decimal("9")
 
     def test_invalid_amount_on_update(self, db_session, sample_tenant):
         row = _coupon(db_session, sample_tenant.id, discount_amount=Decimal("5"))
         with pytest.raises(ValueError, match="مبلغ الخصم"):
-            StoreCouponService.update_coupon(
-                row.id, sample_tenant.id, {"discount_amount": 0}
-            )
+            StoreCouponService.update_coupon(row.id, sample_tenant.id, {"discount_amount": 0})
 
     def test_commit_failure(self, db_session, sample_tenant, mocker):
         row = _coupon(db_session, sample_tenant.id, discount_amount=Decimal("5"))
         mocker.patch.object(db.session, "flush", side_effect=RuntimeError("upd"))
         with pytest.raises(RuntimeError, match="upd"):
-            StoreCouponService.update_coupon(
-                row.id, sample_tenant.id, {"description": "x"}
-            )
+            StoreCouponService.update_coupon(row.id, sample_tenant.id, {"description": "x"})
 
 
 class TestMarkAndRelease:
@@ -343,17 +305,13 @@ class TestMarkAndRelease:
             StoreCouponService.mark_used(row)
 
     def test_release_use(self, db_session, sample_tenant):
-        row = _coupon(
-            db_session, sample_tenant.id, discount_amount=Decimal("5"), used_count=2
-        )
+        row = _coupon(db_session, sample_tenant.id, discount_amount=Decimal("5"), used_count=2)
         StoreCouponService.release_use(row.code, sample_tenant.id)
         db_session.refresh(row)
         assert row.used_count == 1
 
     def test_release_use_noop(self, db_session, sample_tenant):
-        row = _coupon(
-            db_session, sample_tenant.id, discount_amount=Decimal("5"), used_count=0
-        )
+        row = _coupon(db_session, sample_tenant.id, discount_amount=Decimal("5"), used_count=0)
         StoreCouponService.release_use(row.code, sample_tenant.id)
         db_session.refresh(row)
         assert row.used_count == 0

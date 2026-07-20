@@ -15,13 +15,9 @@ class TicketCategory(db.Model):
     name = db.Column(db.String(100), nullable=False)
     name_ar = db.Column(db.String(100))
     color = db.Column(db.String(7), default="#3b82f6")
-    auto_assign_user_id = db.Column(
-        db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-    )
+    auto_assign_user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     auto_assign_user = db.relationship("User", foreign_keys=[auto_assign_user_id])
@@ -46,9 +42,7 @@ class TicketPriority(db.Model):
     color = db.Column(db.String(7), default="#6b7280")
     sla_hours = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
 
@@ -103,9 +97,7 @@ class Ticket(db.Model):
     resolved_at = db.Column(db.DateTime, nullable=True)
     closed_at = db.Column(db.DateTime, nullable=True)
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -118,9 +110,7 @@ class Ticket(db.Model):
     category = db.relationship("TicketCategory", foreign_keys=[category_id])
     priority = db.relationship("TicketPriority", foreign_keys=[priority_id])
     assigned_user = db.relationship("User", foreign_keys=[assigned_user_id])
-    comments = db.relationship(
-        "TicketComment", back_populates="ticket", cascade="all, delete-orphan"
-    )
+    comments = db.relationship("TicketComment", back_populates="ticket", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Ticket #{self.number} {self.subject}>"
@@ -156,19 +146,13 @@ class TicketComment(db.Model):
         nullable=False,
         index=True,
     )
-    user_id = db.Column(
-        db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-    )
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     body = db.Column(db.Text, nullable=False)
     is_internal = db.Column(db.Boolean, default=False)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
-    ticket = db.relationship(
-        "Ticket", back_populates="comments", foreign_keys=[ticket_id]
-    )
+    ticket = db.relationship("Ticket", back_populates="comments", foreign_keys=[ticket_id])
     user = db.relationship("User", foreign_keys=[user_id])
 
     def __repr__(self):

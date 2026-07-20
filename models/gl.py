@@ -8,9 +8,7 @@ from utils.gl_services import gl_next_entry_number
 
 class GLAccount(db.Model):
     __tablename__ = "gl_accounts"
-    __table_args__ = (
-        db.UniqueConstraint("tenant_id", "code", name="uq_gl_accounts_tenant_code"),
-    )
+    __table_args__ = (db.UniqueConstraint("tenant_id", "code", name="uq_gl_accounts_tenant_code"),)
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -23,18 +21,12 @@ class GLAccount(db.Model):
     name = db.Column(db.String(200), nullable=False)  # English name
     name_ar = db.Column(db.String(200))  # Arabic name
     parent_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id"), index=True)
-    branch_id = db.Column(
-        db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True
-    )
-    type = db.Column(
-        db.String(20), nullable=False, index=True
-    )  # asset, liability, equity, revenue, expense
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True)
+    type = db.Column(db.String(20), nullable=False, index=True)  # asset, liability, equity, revenue, expense
     sub_type = db.Column(
         db.String(50), nullable=True, index=True
     )  # receivable, payable, cash, bank, inventory, fixed_asset, etc.
-    is_reconcile = db.Column(
-        db.Boolean, default=False, nullable=False
-    )  # هل الحساب قابل للتسوية
+    is_reconcile = db.Column(db.Boolean, default=False, nullable=False)  # هل الحساب قابل للتسوية
     currency = db.Column(
         db.String(3), default=context_aware_default_currency, nullable=False
     )  # TODO: use Config.DEFAULT_CURRENCY
@@ -111,9 +103,7 @@ class GLAccount(db.Model):
         }
         return sub_types.get(self.sub_type, self.sub_type or "")
 
-    def get_balance(
-        self, start_date=None, end_date=None, as_of_date=None, _depth=0, _visited=None
-    ):
+    def get_balance(self, start_date=None, end_date=None, as_of_date=None, _depth=0, _visited=None):
         from sqlalchemy import func
         from models import GLJournalLine
         from decimal import Decimal
@@ -146,11 +136,7 @@ class GLAccount(db.Model):
         end = end_date or as_of_date
 
         q = (
-            db.session.query(
-                func.coalesce(
-                    func.sum(GLJournalLine.debit - GLJournalLine.credit), Decimal("0")
-                )
-            )
+            db.session.query(func.coalesce(func.sum(GLJournalLine.debit - GLJournalLine.credit), Decimal("0")))
             .join(GLJournalLine.entry)
             .filter(
                 GLJournalLine.account_id == self.id,
@@ -182,21 +168,13 @@ class GLAccount(db.Model):
         result = []
         for child in self.children:
             result.append(child)
-            result.extend(
-                child.get_children_recursive(
-                    max_depth=max_depth, _depth=_depth + 1, _visited=_visited
-                )
-            )
+            result.extend(child.get_children_recursive(max_depth=max_depth, _depth=_depth + 1, _visited=_visited))
         return result
 
 
 class GLJournalEntry(db.Model):
     __tablename__ = "gl_journal_entries"
-    __table_args__ = (
-        db.UniqueConstraint(
-            "tenant_id", "entry_number", name="uq_gl_journal_entries_tenant_number"
-        ),
-    )
+    __table_args__ = (db.UniqueConstraint("tenant_id", "entry_number", name="uq_gl_journal_entries_tenant_number"),)
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -217,12 +195,8 @@ class GLJournalEntry(db.Model):
         db.String(50)
     )  # sale, purchase, payment, expense, manual, adjustment, closing, reversing
     reference_id = db.Column(db.Integer)
-    branch_id = db.Column(
-        db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True
-    )  # New Branch ID
-    entry_type = db.Column(
-        db.String(30), default="manual"
-    )  # manual, auto, adjustment, closing, reversing
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True)  # New Branch ID
+    entry_type = db.Column(db.String(30), default="manual")  # manual, auto, adjustment, closing, reversing
     currency = db.Column(
         db.String(3), default=context_aware_default_currency, nullable=False
     )  # TODO: use Config.DEFAULT_CURRENCY
@@ -246,9 +220,7 @@ class GLJournalEntry(db.Model):
     validation_errors = db.Column(db.Text)  # JSON list of validation failures
     validated_at = db.Column(db.DateTime)
     validated_by = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
-    reversed_entry_id = db.Column(
-        db.Integer, db.ForeignKey("gl_journal_entries.id"), index=True
-    )  # القيد المعكوس
+    reversed_entry_id = db.Column(db.Integer, db.ForeignKey("gl_journal_entries.id"), index=True)  # القيد المعكوس
     notes = db.Column(db.Text)  # ملاحظات إضافية
     created_by = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
     created_at = db.Column(
@@ -264,16 +236,10 @@ class GLJournalEntry(db.Model):
     )
 
     lines = db.relationship("GLJournalLine", back_populates="entry", lazy="dynamic")
-    reversed_entry = db.relationship(
-        "GLJournalEntry", remote_side=[id], foreign_keys=[reversed_entry_id]
-    )
+    reversed_entry = db.relationship("GLJournalEntry", remote_side=[id], foreign_keys=[reversed_entry_id])
     user = db.relationship("User", foreign_keys=[created_by])
-    branch = db.relationship(
-        "Branch", backref="journal_entries", foreign_keys=[branch_id]
-    )
-    tenant = db.relationship(
-        "Tenant", backref="journal_entries", foreign_keys=[tenant_id]
-    )
+    branch = db.relationship("Branch", backref="journal_entries", foreign_keys=[branch_id])
+    tenant = db.relationship("Tenant", backref="journal_entries", foreign_keys=[tenant_id])
 
     def __repr__(self):
         return f"<GLEntry {self.entry_number}>"
@@ -352,11 +318,7 @@ class GLPeriod(db.Model):
     """Accounting period lock — prevents posting into closed months."""
 
     __tablename__ = "gl_periods"
-    __table_args__ = (
-        db.UniqueConstraint(
-            "tenant_id", "year", "month", name="uq_gl_periods_tenant_ym"
-        ),
-    )
+    __table_args__ = (db.UniqueConstraint("tenant_id", "year", "month", name="uq_gl_periods_tenant_ym"),)
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -397,9 +359,7 @@ class GLJournalLine(db.Model):
         nullable=False,
         index=True,
     )
-    account_id = db.Column(
-        db.Integer, db.ForeignKey("gl_accounts.id"), nullable=False, index=True
-    )
+    account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id"), nullable=False, index=True)
     description = db.Column(db.String(255))
     debit = db.Column(db.Numeric(18, 3), default=0)
     credit = db.Column(db.Numeric(18, 3), default=0)
@@ -416,21 +376,11 @@ class GLJournalLine(db.Model):
         self.amount_aed = value
 
     # الأبعاد المالية (Financial Dimensions)
-    branch_id = db.Column(
-        db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True
-    )
-    warehouse_id = db.Column(
-        db.Integer, db.ForeignKey("warehouses.id"), nullable=True, index=True
-    )
-    cost_center_id = db.Column(
-        db.Integer, db.ForeignKey("cost_centers.id"), nullable=True, index=True
-    )
-    profit_center_id = db.Column(
-        db.Integer, db.ForeignKey("profit_centers.id"), nullable=True, index=True
-    )
-    partner_id = db.Column(
-        db.Integer, db.ForeignKey("partners.id"), nullable=True, index=True
-    )
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True)
+    warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id"), nullable=True, index=True)
+    cost_center_id = db.Column(db.Integer, db.ForeignKey("cost_centers.id"), nullable=True, index=True)
+    profit_center_id = db.Column(db.Integer, db.ForeignKey("profit_centers.id"), nullable=True, index=True)
+    partner_id = db.Column(db.Integer, db.ForeignKey("partners.id"), nullable=True, index=True)
 
     entry = db.relationship("GLJournalEntry", back_populates="lines")
     account = db.relationship("GLAccount")
@@ -439,9 +389,7 @@ class GLJournalLine(db.Model):
     warehouse = db.relationship("Warehouse", foreign_keys=[warehouse_id])
     profit_center = db.relationship("ProfitCenter", foreign_keys=[profit_center_id])
     partner = db.relationship("Partner", foreign_keys=[partner_id])
-    tenant = db.relationship(
-        "Tenant", backref="journal_lines", foreign_keys=[tenant_id]
-    )
+    tenant = db.relationship("Tenant", backref="journal_lines", foreign_keys=[tenant_id])
 
     def __repr__(self):
         return f"<GLLine acc={self.account_id} d={self.debit} c={self.credit}>"
@@ -533,15 +481,9 @@ class GLAccountMapping(db.Model):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    tenant = db.relationship(
-        "Tenant", backref="gl_account_mappings", foreign_keys=[tenant_id]
-    )
-    gl_account = db.relationship(
-        "GLAccount", backref="concept_mappings", foreign_keys=[gl_account_id]
-    )
-    branch = db.relationship(
-        "Branch", backref="gl_account_mappings", foreign_keys=[branch_id]
-    )
+    tenant = db.relationship("Tenant", backref="gl_account_mappings", foreign_keys=[tenant_id])
+    gl_account = db.relationship("GLAccount", backref="concept_mappings", foreign_keys=[gl_account_id])
+    branch = db.relationship("Branch", backref="gl_account_mappings", foreign_keys=[branch_id])
 
     def __repr__(self):
         branch_tag = f" branch={self.branch_id}" if self.branch_id else ""
@@ -551,19 +493,14 @@ class GLAccountMapping(db.Model):
     def validate_concept_code(cls, concept_code):
         """Raise ValueError if the concept_code is not in the approved registry."""
         if concept_code not in VALID_GL_CONCEPT_CODES:
-            raise ValueError(
-                f"Unknown GL concept code '{concept_code}'. "
-                f"Valid codes: {sorted(VALID_GL_CONCEPT_CODES)}"
-            )
+            raise ValueError(f"Unknown GL concept code '{concept_code}'. Valid codes: {sorted(VALID_GL_CONCEPT_CODES)}")
 
 
 @event.listens_for(GLJournalEntry, "before_insert")
 @event.listens_for(GLJournalEntry, "before_update")
 def _validate_journal_entry(mapper, connection, target):
     # 1. Balance check
-    diff = abs(
-        (target.total_debit or Decimal("0")) - (target.total_credit or Decimal("0"))
-    )
+    diff = abs((target.total_debit or Decimal("0")) - (target.total_credit or Decimal("0")))
     if diff > Decimal("0.001"):
         from services.gl_posting import UnbalancedJournalEntryError
 

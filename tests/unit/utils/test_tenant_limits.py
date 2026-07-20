@@ -185,9 +185,7 @@ class TestTenantLimits:
         ):
             chain = mock_db.session.query.return_value.filter.return_value
             chain.count.return_value = 0
-            check_monthly_limit(
-                "sales", model=model, date_field="sale_date", extra_filter=lambda q: q
-            )
+            check_monthly_limit("sales", model=model, date_field="sale_date", extra_filter=lambda q: q)
             chain.count.assert_called_once()
 
     def test_month_start_helper(self):

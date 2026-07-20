@@ -116,9 +116,7 @@ def seed_industry_fields():
     with atomic_transaction("seed_industry_fields"):
         order = 0
         for field_code, name_ar, name_en, field_type in CORE_FIELDS:
-            existing = IndustryFieldDefinition.query.filter_by(
-                industry_code="core", field_code=field_code
-            ).first()
+            existing = IndustryFieldDefinition.query.filter_by(industry_code="core", field_code=field_code).first()
             if not existing:
                 db.session.add(
                     IndustryFieldDefinition(

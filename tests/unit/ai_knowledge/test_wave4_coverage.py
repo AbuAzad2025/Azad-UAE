@@ -13,9 +13,7 @@ import pytest
 
 @pytest.fixture
 def knowledge_path(tmp_path):
-    with patch(
-        "ai_knowledge.get_knowledge_path", side_effect=lambda name: str(tmp_path / name)
-    ):
+    with patch("ai_knowledge.get_knowledge_path", side_effect=lambda name: str(tmp_path / name)):
         yield tmp_path
 
 
@@ -126,9 +124,7 @@ class TestAzadResponsesWave4:
     def _safe_mocks():
         return patch.multiple(
             "ai_knowledge.personality.azad_responses",
-            understand_message=MagicMock(
-                return_value={"intent": None, "confidence": 0}
-            ),
+            understand_message=MagicMock(return_value={"intent": None, "confidence": 0}),
             azad_personality=MagicMock(
                 is_inappropriate_message=MagicMock(return_value="normal"),
                 get_greeting=MagicMock(return_value="مرحبا"),
@@ -145,9 +141,7 @@ class TestAzadResponsesWave4:
                 "ai_knowledge.personality.azad_responses.understand_message",
                 return_value={"intent": "sales_analysis", "confidence": 0.9},
             ),
-            patch(
-                "ai_knowledge.personality.azad_responses.intelligent_assistant"
-            ) as ia,
+            patch("ai_knowledge.personality.azad_responses.intelligent_assistant") as ia,
             patch(
                 "services.ai_service.AIService.is_sensitive_request",
                 return_value=(False, False, {}),
@@ -209,9 +203,7 @@ class TestAzadResponsesWave4:
             patch("ai_knowledge.personality.azad_responses.learning_system"),
         ):
             ap.is_inappropriate_message.return_value = "normal"
-            result = responses.smart_response(
-                "مستخدم admin", context={"current_user": owner, "is_owner": True}
-            )
+            result = responses.smart_response("مستخدم admin", context={"current_user": owner, "is_owner": True})
             assert "u1" in result
 
     @pytest.mark.parametrize(
@@ -271,12 +263,8 @@ class TestAzadResponsesWave4:
             ),
         ):
             ap.is_inappropriate_message.return_value = "normal"
-            assert "أهلين" in responses.smart_response(
-                "مرحبا", context={"dialect": "palestinian"}
-            )
-            assert "أهلين" in responses.smart_response(
-                "هلا", context={"dialect": "gulf"}
-            )
+            assert "أهلين" in responses.smart_response("مرحبا", context={"dialect": "palestinian"})
+            assert "أهلين" in responses.smart_response("هلا", context={"dialect": "gulf"})
 
     def test_tax_customs_parts_branches(self, responses):
         with (
@@ -309,9 +297,9 @@ class TestAzadResponsesWave4:
             assert "customs" in responses.smart_response(
                 "جمارك الإمارات uae"
             ).lower() or "customs" in responses.smart_response("جمارك الإمارات uae")
-            assert "tax" in responses.smart_response(
+            assert "tax" in responses.smart_response("ضريبة الإمارات uae").lower() or "tax" in responses.smart_response(
                 "ضريبة الإمارات uae"
-            ).lower() or "tax" in responses.smart_response("ضريبة الإمارات uae")
+            )
             assert "tax" in responses.smart_response(
                 "ضريبة السعودية saudi"
             ).lower() or "tax" in responses.smart_response("ضريبة السعودية saudi")
@@ -356,9 +344,7 @@ class TestAzadResponsesWave4:
                 side_effect=RuntimeError("fail"),
             ),
         ):
-            assert "لا توجد بيانات" in responses.smart_response(
-                "حلل analyze المبيعات sales"
-            )
+            assert "لا توجد بيانات" in responses.smart_response("حلل analyze المبيعات sales")
 
     def test_improvement_and_status_exceptions(self, responses):
         with (
@@ -370,9 +356,7 @@ class TestAzadResponsesWave4:
             patch("ai_knowledge.personality.azad_responses.self_improvement") as si,
         ):
             si.auto_improve.side_effect = RuntimeError("fail")
-            assert "تعلم مستمر" in responses.smart_response(
-                "تحسين improve تلقائي automatic"
-            )
+            assert "تعلم مستمر" in responses.smart_response("تحسين improve تلقائي automatic")
             si.auto_improve.side_effect = None
             si.get_improvement_status.side_effect = RuntimeError("fail")
             assert "نشط" in responses.smart_response("حالة status النظام")
@@ -400,9 +384,7 @@ class TestAzadResponsesWave4:
                 ),
             ):
                 mock_db.session.query.return_value.filter.return_value.group_by.return_value.all.return_value = monthly
-                assert "5,000" in responses.smart_response(
-                    "توقع predict forecast الشهر"
-                )
+                assert "5,000" in responses.smart_response("توقع predict forecast الشهر")
         finally:
             _stop_patches(cols)
         with (
@@ -470,9 +452,7 @@ class TestAzadResponsesWave4:
                 "ai_knowledge.personality.azad_responses.get_help_for_task",
                 return_value="لم أجد",
             ):
-                assert "system guide" in responses.smart_response(
-                    "دليل guide شرح explain"
-                )
+                assert "system guide" in responses.smart_response("دليل guide شرح explain")
             assert "market" in responses.smart_response("سوق market منافسة")
 
     def test_smart_response_suggestions_else(self, responses):
@@ -495,9 +475,7 @@ class TestAzadResponsesWave4:
                 return_value="guide",
             ),
         ):
-            result = responses.smart_response(
-                "xyzunknownquery رصيد balance فاتورة invoice query"
-            )
+            result = responses.smart_response("xyzunknownquery رصيد balance فاتورة invoice query")
             assert isinstance(result, str) and len(result) > 20
 
     def test_customer_balance_full_paths(self, responses):
@@ -528,9 +506,7 @@ class TestAzadResponsesWave4:
                     "overdue_count": 1,
                 },
             }
-            assert "أحمد" in responses._handle_customer_balance_query(
-                "رصيد العميل أحمد"
-            )
+            assert "أحمد" in responses._handle_customer_balance_query("رصيد العميل أحمد")
             assert "أحمد" in responses._handle_balance_query("رصيد العميل أحمد")
             assert "❌" in responses._handle_customer_balance_query("رصيد عميل")
             si.get_customer_balance.return_value = {
@@ -562,9 +538,7 @@ class TestAzadResponsesWave4:
                     "total_amount": 3000,
                     "paid_amount": 2800,
                     "balance_due": 200,
-                    "recent_sales": [
-                        {"id": 1, "date": "2025-06-01", "amount": 500, "status": "paid"}
-                    ],
+                    "recent_sales": [{"id": 1, "date": "2025-06-01", "amount": 500, "status": "paid"}],
                 },
             }
             assert "سامي" in responses._handle_customer_info_query("بيانات عميل سامي")
@@ -620,18 +594,14 @@ class TestAzadResponsesWave4:
             patch("ai_knowledge.personality.azad_responses.system_integrator") as si,
             patch("ai_knowledge.personality.azad_responses.knowledge_expander") as ke,
             patch("ai_knowledge.personality.azad_responses.knowledge_manager") as km,
-            patch(
-                "ai_knowledge.personality.azad_responses.recommend_sources_for_query"
-            ) as rec,
+            patch("ai_knowledge.personality.azad_responses.recommend_sources_for_query") as rec,
         ):
             si.search_data.return_value = {
                 "success": True,
                 "results": {
                     "customers": [{"name": "A", "type": "r", "balance": 100}],
                     "products": [{"name": "P", "sku": "S", "stock": 5, "price": 10}],
-                    "sales": [
-                        {"id": 1, "customer": "A", "amount": 100, "date": "2025-01-01"}
-                    ],
+                    "sales": [{"id": 1, "customer": "A", "amount": 100, "date": "2025-01-01"}],
                 },
             }
             assert "A" in responses._handle_search_query("ابحث عن Ali")
@@ -640,9 +610,7 @@ class TestAzadResponsesWave4:
             ke.search_knowledge.return_value = {
                 "success": True,
                 "total_found": 1,
-                "results": [
-                    {"title": "T", "type": "doc", "category": "tax", "snippet": "snip"}
-                ],
+                "results": [{"title": "T", "type": "doc", "category": "tax", "snippet": "snip"}],
             }
             assert "T" in responses._handle_knowledge_search("ابحث في المعرفة tax")
             ke.search_knowledge.return_value = {
@@ -655,30 +623,20 @@ class TestAzadResponsesWave4:
             km.get_all_sources_summary.return_value = {
                 "total_categories": 2,
                 "total_sources": 5,
-                "categories": {
-                    "tax": {"count": 2, "sources": [{"name": "SRC", "url": "http://x"}]}
-                },
+                "categories": {"tax": {"count": 2, "sources": [{"name": "SRC", "url": "http://x"}]}},
             }
             assert "SRC" in responses._show_knowledge_sources("كل all المصادر")
-            km.get_sources_by_topic.return_value = [
-                {"name": "VAT", "url": "http://vat", "type": "web"}
-            ]
+            km.get_sources_by_topic.return_value = [{"name": "VAT", "url": "http://vat", "type": "web"}]
             assert "VAT" in responses._show_knowledge_sources("مصادر ضريبة")
-            rec.return_value = [
-                {"name": "Guide", "url": "http://g", "category": "tax", "type": "web"}
-            ]
+            rec.return_value = [{"name": "Guide", "url": "http://g", "category": "tax", "type": "web"}]
             assert "Guide" in responses._recommend_sources("أين أجد معلومات tax")
 
     def test_document_excel_report_handlers(self, responses):
         with patch("ai_knowledge.personality.azad_responses.document_generator") as dg:
             dg.generate_receipt.return_value = ("receipt", "ok")
             dg.generate_invoice.return_value = ("invoice", "ok")
-            assert "receipt" in responses._handle_document_generation(
-                "ولد سند receipt 42"
-            )
-            assert "invoice" in responses._handle_document_generation(
-                "ولد فاتورة invoice 99"
-            )
+            assert "receipt" in responses._handle_document_generation("ولد سند receipt 42")
+            assert "invoice" in responses._handle_document_generation("ولد فاتورة invoice 99")
             dg.generate_receipt.return_value = (None, "fail")
             assert "fail" in responses._handle_document_generation("ولد سند 1")
             assert "❌" in responses._handle_document_generation("ولد سند receipt")
@@ -687,39 +645,21 @@ class TestAzadResponsesWave4:
         assert "Excel" in responses._handle_excel_export("صدر export عملاء customers")
         assert "Excel" in responses._handle_excel_export("صدر export منتجات products")
         assert "؟" in responses._handle_excel_export("صدر excel")
-        assert "تقرير" in responses._handle_report_generation(
-            "ولد generate تقرير مبيعات sales"
-        )
-        assert "كشف" in responses._handle_report_generation(
-            "ولد generate كشف statement"
-        )
+        assert "تقرير" in responses._handle_report_generation("ولد generate تقرير مبيعات sales")
+        assert "كشف" in responses._handle_report_generation("ولد generate كشف statement")
         assert "؟" in responses._handle_report_generation("ولد report")
 
     def test_tax_shipping_quality_handlers(self, responses):
-        assert "فلسطين" in responses._handle_tax_laws_query(
-            "قانون ضريبة فلسطين palestine"
-        )
-        assert "إسرائيل" in responses._handle_tax_laws_query(
-            "قانون ضريبة israel اسرائيل"
-        )
+        assert "فلسطين" in responses._handle_tax_laws_query("قانون ضريبة فلسطين palestine")
+        assert "إسرائيل" in responses._handle_tax_laws_query("قانون ضريبة israel اسرائيل")
         assert "الخليج" in responses._handle_tax_laws_query("قانون ضريبة gulf خليج uae")
         assert "؟" in responses._handle_tax_laws_query("قانون ضريبة")
-        assert "إجراءات" in responses._handle_shipping_laws_query(
-            "شحن shipping إجراءات procedures"
-        )
-        assert "الشحن البحري" in responses._handle_shipping_laws_query(
-            "شحن shipping نوع type"
-        )
+        assert "إجراءات" in responses._handle_shipping_laws_query("شحن shipping إجراءات procedures")
+        assert "الشحن البحري" in responses._handle_shipping_laws_query("شحن shipping نوع type")
         assert "؟" in responses._handle_shipping_laws_query("شحن")
-        assert "معايير" in responses._handle_quality_standards_query(
-            "معايير standards جودة"
-        )
-        assert "الأغذية" in responses._handle_quality_standards_query(
-            "جودة quality طعام food"
-        )
-        assert "الإلكترونيات" in responses._handle_quality_standards_query(
-            "جودة electronics إلكترونيات"
-        )
+        assert "معايير" in responses._handle_quality_standards_query("معايير standards جودة")
+        assert "الأغذية" in responses._handle_quality_standards_query("جودة quality طعام food")
+        assert "الإلكترونيات" in responses._handle_quality_standards_query("جودة electronics إلكترونيات")
         assert "؟" in responses._handle_quality_standards_query("جودة")
 
     def test_quick_links_and_inventory_status(self, responses):
@@ -736,24 +676,14 @@ class TestAzadResponsesWave4:
         assert "/sales/create" in responses._quick_invoice_link()
         assert "/payments/receipts/create" in responses._quick_receipt_link()
         assert "/reports/sales" in responses._quick_report_links("تقرير مبيعات sales")
-        assert "/reports/purchases" in responses._quick_report_links(
-            "تقرير purchases مشتريات"
-        )
-        assert "/reports/inventory" in responses._quick_report_links(
-            "تقرير inventory مخزون"
-        )
-        assert "/reports/receivables" in responses._quick_report_links(
-            "تقرير receivables ذمم"
-        )
-        assert "/ledger/balance-sheet" in responses._quick_report_links(
-            "تقرير report عام"
-        )
+        assert "/reports/purchases" in responses._quick_report_links("تقرير purchases مشتريات")
+        assert "/reports/inventory" in responses._quick_report_links("تقرير inventory مخزون")
+        assert "/reports/receivables" in responses._quick_report_links("تقرير receivables ذمم")
+        assert "/ledger/balance-sheet" in responses._quick_report_links("تقرير report عام")
         assert "/sales/create" in responses._show_system_quick_links()
 
     def test_smart_sales_analysis_trends(self, responses):
-        sale7 = MagicMock(
-            amount_aed=700, status="confirmed", sale_date=datetime.now(timezone.utc)
-        )
+        sale7 = MagicMock(amount_aed=700, status="confirmed", sale_date=datetime.now(timezone.utc))
         sale30 = MagicMock(
             amount_aed=100,
             status="confirmed",
@@ -931,9 +861,7 @@ class TestNeuralEngineWave4:
 
     def test_predict_maintenance_no_product_and_else(self, engine):
         with patch.object(engine, "_load_model", return_value=False):
-            assert (
-                engine._predict_maintenance_internal(99)["error"] == "Model not trained"
-            )
+            assert engine._predict_maintenance_internal(99)["error"] == "Model not trained"
         with patch.object(
             engine,
             "_predict_maintenance_internal",
@@ -974,9 +902,7 @@ class TestNeuralEngineWave4:
             assert high["recommendation"]
 
     def test_cash_flow_trends(self, engine):
-        cols = _patch_model_cols(
-            "models.Sale", "models.Purchase", "models.Expense", "models.Receipt"
-        )
+        cols = _patch_model_cols("models.Sale", "models.Purchase", "models.Expense", "models.Receipt")
         try:
             with (
                 patch.object(engine, "_load_model", return_value=True),
@@ -1079,9 +1005,7 @@ class TestNeuralEngineWave4:
     def test_predict_maintenance_exception(self, engine):
         ctx = MagicMock()
         ctx.side_effect = RuntimeError("ctx fail")
-        with patch.object(
-            engine, "_predict_maintenance_internal", side_effect=RuntimeError("fail")
-        ):
+        with patch.object(engine, "_predict_maintenance_internal", side_effect=RuntimeError("fail")):
             assert engine.predict_maintenance_needs(1)["confidence"] == 0
 
 
@@ -1090,26 +1014,18 @@ class TestAgentsCoreWave4:
         from ai_knowledge.agents_core import intelligent_response
 
         with (
-            patch(
-                "ai_knowledge.trainer.trainer", side_effect=RuntimeError("seed fail")
-            ),
+            patch("ai_knowledge.trainer.trainer", side_effect=RuntimeError("seed fail")),
             patch(
                 "ai_knowledge.action_dispatcher.action_dispatcher.parse_chat_action",
                 return_value=("create_customer", {"name": "Ali"}),
             ),
             patch("ai_knowledge.action_dispatcher.action_dispatcher.dispatch") as disp,
         ):
-            disp.return_value = MagicMock(
-                success=True, message="تم", needs_permission=""
-            )
+            disp.return_value = MagicMock(success=True, message="تم", needs_permission="")
             assert "تم" in intelligent_response("عميل Ali")
-            disp.return_value = MagicMock(
-                success=False, message="مرفوض", needs_permission="manage_sales"
-            )
+            disp.return_value = MagicMock(success=False, message="مرفوض", needs_permission="manage_sales")
             assert "مرفوض" in intelligent_response("عميل Ali")
-            disp.return_value = MagicMock(
-                success=False, message="فشل", needs_permission=""
-            )
+            disp.return_value = MagicMock(success=False, message="فشل", needs_permission="")
             assert "فشل" in intelligent_response("عميل Ali")
         with patch("datetime.datetime") as mock_dt:
             mock_dt.now.return_value = datetime(2025, 6, 1, 8, 0, 0)
@@ -1198,12 +1114,8 @@ class TestAgentsCoreWave4:
         ]
         with (
             patch("ai_knowledge.system_knowledge.FAQ", faq),
-            patch(
-                "ai_knowledge.system_knowledge.search_knowledge", return_value=knowledge
-            ),
-            patch(
-                "ai_knowledge.agents_core._check_llm_availability", return_value=False
-            ),
+            patch("ai_knowledge.system_knowledge.search_knowledge", return_value=knowledge),
+            patch("ai_knowledge.agents_core._check_llm_availability", return_value=False),
             patch("ai_knowledge.agents.master_brain.get_master_brain") as gmb,
             patch("ai_knowledge.trainer.trainer") as tr,
         ):
@@ -1221,9 +1133,7 @@ class TestAgentsCoreWave4:
         with (
             patch("ai_knowledge.system_knowledge.FAQ", {}),
             patch("ai_knowledge.system_knowledge.search_knowledge", return_value=[]),
-            patch(
-                "ai_knowledge.agents_core._check_llm_availability", return_value=True
-            ),
+            patch("ai_knowledge.agents_core._check_llm_availability", return_value=True),
             patch(
                 "ai_knowledge.agents_core._get_llm_response",
                 side_effect=RuntimeError("llm fail"),
@@ -1240,16 +1150,12 @@ class TestAgentsCoreWave4:
                 "ai_knowledge.system_knowledge.search_knowledge",
                 side_effect=RuntimeError("kb fail"),
             ),
-            patch(
-                "ai_knowledge.agents_core._check_llm_availability", return_value=False
-            ),
+            patch("ai_knowledge.agents_core._check_llm_availability", return_value=False),
             patch(
                 "ai_knowledge.agents.master_brain.get_master_brain",
                 side_effect=RuntimeError("brain fail"),
             ),
-            patch(
-                "ai_knowledge.trainer.trainer", side_effect=RuntimeError("train fail")
-            ),
+            patch("ai_knowledge.trainer.trainer", side_effect=RuntimeError("train fail")),
         ):
             result = ac.ask_azad_enhanced("سؤال")
             assert result["answer"]
@@ -1274,9 +1180,7 @@ class TestAgentsCoreWave4:
                 "info": {"name_ar": "نسخ", "description": "backup desc"},
             },
         ]
-        with patch(
-            "ai_knowledge.system_knowledge.search_knowledge", return_value=knowledge
-        ):
+        with patch("ai_knowledge.system_knowledge.search_knowledge", return_value=knowledge):
             prompt = _build_system_prompt("تقارير", "manager")
             assert "Customer" in prompt
             assert "view_reports" in prompt
@@ -1286,9 +1190,7 @@ class TestActionDispatcherWave4:
     @pytest.fixture
     def permitted(self):
         return (
-            patch(
-                "ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1
-            ),
+            patch("ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1),
             patch("ai_knowledge.action_dispatcher._is_owner", return_value=True),
             patch("ai_knowledge.action_dispatcher._audit"),
             patch("ai_knowledge.action_dispatcher._log_ai_error"),
@@ -1318,10 +1220,7 @@ class TestActionDispatcherWave4:
             patch("models.Customer") as Customer,
         ):
             session.flush.side_effect = RuntimeError("db")
-            assert (
-                action_dispatcher.dispatch("create_customer", {"name": "Ali"}).success
-                is False
-            )
+            assert action_dispatcher.dispatch("create_customer", {"name": "Ali"}).success is False
         with (
             permitted[0],
             permitted[1],
@@ -1329,52 +1228,22 @@ class TestActionDispatcherWave4:
             permitted[3],
             patch("models.Customer") as Customer,
         ):
-            Customer.query.filter_by.return_value.order_by.return_value.limit.return_value.all.side_effect = RuntimeError()
+            Customer.query.filter_by.return_value.order_by.return_value.limit.return_value.all.side_effect = (
+                RuntimeError()
+            )
             assert action_dispatcher.dispatch("list_customers", {}).success is False
-            assert (
-                action_dispatcher.dispatch("customer_balance", {"name": ""}).success
-                is False
-            )
+            assert action_dispatcher.dispatch("customer_balance", {"name": ""}).success is False
             Customer.query.filter_by.return_value.first.side_effect = RuntimeError()
-            assert (
-                action_dispatcher.dispatch("customer_balance", {"name": "Ali"}).success
-                is False
-            )
+            assert action_dispatcher.dispatch("customer_balance", {"name": "Ali"}).success is False
         with permitted[0], permitted[1], permitted[2], permitted[3]:
+            assert action_dispatcher.dispatch("create_product", {"name": ""}).success is False
+            assert action_dispatcher.dispatch("create_sale", {"customer_name": "", "product_name": ""}).success is False
+            assert action_dispatcher.dispatch("receive_payment", {"customer_name": "", "amount": 0}).success is False
+            assert action_dispatcher.dispatch("add_expense", {"description": "", "amount": 0}).success is False
+            assert action_dispatcher.dispatch("create_supplier", {"name": ""}).success is False
+            assert action_dispatcher.dispatch("create_employee", {"name": ""}).success is False
             assert (
-                action_dispatcher.dispatch("create_product", {"name": ""}).success
-                is False
-            )
-            assert (
-                action_dispatcher.dispatch(
-                    "create_sale", {"customer_name": "", "product_name": ""}
-                ).success
-                is False
-            )
-            assert (
-                action_dispatcher.dispatch(
-                    "receive_payment", {"customer_name": "", "amount": 0}
-                ).success
-                is False
-            )
-            assert (
-                action_dispatcher.dispatch(
-                    "add_expense", {"description": "", "amount": 0}
-                ).success
-                is False
-            )
-            assert (
-                action_dispatcher.dispatch("create_supplier", {"name": ""}).success
-                is False
-            )
-            assert (
-                action_dispatcher.dispatch("create_employee", {"name": ""}).success
-                is False
-            )
-            assert (
-                action_dispatcher.dispatch(
-                    "create_purchase", {"supplier_name": "", "product_name": ""}
-                ).success
+                action_dispatcher.dispatch("create_purchase", {"supplier_name": "", "product_name": ""}).success
                 is False
             )
 
@@ -1413,12 +1282,7 @@ class TestActionDispatcherWave4:
                 is False
             )
             Ex.return_value.create_employee.side_effect = RuntimeError("emp fail")
-            assert (
-                action_dispatcher.dispatch(
-                    "create_employee", {"name": "Sam", "salary": 3000}
-                ).success
-                is False
-            )
+            assert action_dispatcher.dispatch("create_employee", {"name": "Sam", "salary": 3000}).success is False
             Ex.return_value.create_purchase.side_effect = RuntimeError("pur fail")
             assert (
                 action_dispatcher.dispatch(
@@ -1451,24 +1315,18 @@ class TestActionDispatcherWave4:
             session.query.return_value = q
             assert action_dispatcher.dispatch("sales_summary", {}).success is False
             line = MagicMock(product_id=1, quantity=Decimal("2"))
-            SaleLine.query.join.return_value.filter.return_value.all.return_value = [
-                line
-            ]
+            SaleLine.query.join.return_value.filter.return_value.all.return_value = [line]
             Sale.query.filter_by.return_value.count.return_value = 5
             Product.query.get.return_value = MagicMock(cost_price=Decimal("10"))
             result = action_dispatcher.dispatch("profit_summary", {})
             assert result.success is True or "ربح" in result.message
         with (
-            patch(
-                "ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1
-            ),
+            patch("ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1),
             patch("ai_knowledge.action_dispatcher._is_owner", return_value=False),
             permitted[2],
             permitted[3],
         ):
-            assert action_dispatcher.dispatch(
-                "create_user", {"username": "u", "password": "p"}
-            ).needs_permission
+            assert action_dispatcher.dispatch("create_user", {"username": "u", "password": "p"}).needs_permission
 
 
 class TestSecondaryWave4:
@@ -1545,9 +1403,9 @@ class TestSecondaryWave4:
 
         hits = search_parts("محرك engine")
         assert hits or isinstance(hits, list)
-        assert "compatible" in get_compatible_parts(
+        assert "compatible" in get_compatible_parts("filter", "Toyota").lower() or "filter" in get_compatible_parts(
             "filter", "Toyota"
-        ).lower() or "filter" in get_compatible_parts("filter", "Toyota")
+        )
         ecu = get_automotive_ecu_knowledge()
         assert ecu.get_ecu_info("engine_ecu")
         assert ecu.diagnose_code("P0420")["found"] is True
@@ -1617,10 +1475,7 @@ class TestSecondaryWave4:
         ):
             mock_q.all.return_value = [sale] * 10
             mock_q.count.return_value = 10
-            assert (
-                assistant.process("حلل المبيعات", user_id=1, context={})["success"]
-                is True
-            )
+            assert assistant.process("حلل المبيعات", user_id=1, context={})["success"] is True
         debt_payload = {
             "success": True,
             "customer": {"name": "Debtor"},
@@ -1646,19 +1501,14 @@ class TestSecondaryWave4:
             ),
             patch.object(assistant, "_learn_from_interaction"),
         ):
-            assert (
-                assistant.process("رصيد العميل", user_id=1, context={})["success"]
-                is True
-            )
+            assert assistant.process("رصيد العميل", user_id=1, context={})["success"] is True
 
     def test_master_brain_and_expansion(self, knowledge_path):
         from ai_knowledge.agents.master_brain import get_master_brain
         from ai_knowledge.expansion.global_knowledge import GlobalKnowledgeConnector
 
         brain = get_master_brain()
-        with patch.object(
-            brain, "_use_neural_if_needed", return_value={"answer": "neural"}
-        ):
+        with patch.object(brain, "_use_neural_if_needed", return_value={"answer": "neural"}):
             assert brain.ask("توقع")["answer"]
         gkc = GlobalKnowledgeConnector()
         assert gkc.fetch_global_automotive_news()["success"] is True
@@ -1760,9 +1610,7 @@ class TestWave4Extended:
             ke.search_knowledge.return_value = {
                 "success": True,
                 "total_found": 1,
-                "results": [
-                    {"title": "T", "type": "d", "category": "c", "snippet": "s"}
-                ],
+                "results": [{"title": "T", "type": "d", "category": "c", "snippet": "s"}],
             }
             routes = [
                 "رصيد balance عميل customer أحمد",
@@ -1804,9 +1652,7 @@ class TestWave4Extended:
                         "services.ai_service.AIService.is_sensitive_request",
                         return_value=(False, False, {}),
                     ),
-                    patch(
-                        "ai_knowledge.personality.azad_responses.azad_personality"
-                    ) as ap,
+                    patch("ai_knowledge.personality.azad_responses.azad_personality") as ap,
                     patch("ai_knowledge.personality.azad_responses.learning_system"),
                     patch("extensions.db") as mock_db,
                     patch(
@@ -1839,9 +1685,7 @@ class TestWave4Extended:
             sale_date=datetime.now(),
             customer=MagicMock(name="Ali"),
         )
-        product = MagicMock(
-            id=1, name="Bolt", current_stock=Decimal("1"), min_stock_alert=Decimal("5")
-        )
+        product = MagicMock(id=1, name="Bolt", current_stock=Decimal("1"), min_stock_alert=Decimal("5"))
         mock_q = MagicMock()
         mock_q.filter_by.return_value = mock_q
         mock_q.filter.return_value = mock_q
@@ -1874,23 +1718,13 @@ class TestWave4Extended:
                     }
                     mock_q.all.return_value = []
                     mock_q.count.return_value = 0
-                    assert (
-                        assistant.process("حلل المبيعات", user_id=1, context={})[
-                            "success"
-                        ]
-                        is True
-                    )
+                    assert assistant.process("حلل المبيعات", user_id=1, context={})["success"] is True
                     understand.return_value = {
                         "intent": "sales_analysis",
                         "confidence": 0.9,
                     }
                     mock_q.all.return_value = [sale] * 3
-                    assert (
-                        assistant.process("حلل المبيعات", user_id=1, context={})[
-                            "success"
-                        ]
-                        is True
-                    )
+                    assert assistant.process("حلل المبيعات", user_id=1, context={})["success"] is True
                     understand.return_value = {
                         "intent": "sales_analysis",
                         "confidence": 0.9,
@@ -1902,26 +1736,15 @@ class TestWave4Extended:
                         return_value={"success": True, "predicted_amount": 9000},
                         create=True,
                     ):
-                        assert (
-                            assistant.process("حلل المبيعات", user_id=1, context={})[
-                                "success"
-                            ]
-                            is True
-                        )
+                        assert assistant.process("حلل المبيعات", user_id=1, context={})["success"] is True
                     understand.return_value = {
                         "intent": "inventory_check",
                         "confidence": 0.9,
                     }
                     mock_q.filter.return_value.all.return_value = []
-                    assert (
-                        assistant.process("مخزون", user_id=1, context={})["success"]
-                        is True
-                    )
+                    assert assistant.process("مخزون", user_id=1, context={})["success"] is True
                     mock_q.filter.return_value.all.return_value = [product] * 6
-                    assert (
-                        assistant.process("مخzون", user_id=1, context={})["success"]
-                        is True
-                    )
+                    assert assistant.process("مخzون", user_id=1, context={})["success"] is True
                     understand.return_value = {
                         "intent": "customer_balance",
                         "confidence": 0.9,
@@ -1939,12 +1762,7 @@ class TestWave4Extended:
                                 "debt_analysis": {"total_debt": 0, "overdue_count": 0},
                             },
                         ):
-                            assert (
-                                assistant.process("رصيد Ali", user_id=1, context={})[
-                                    "success"
-                                ]
-                                is True
-                            )
+                            assert assistant.process("رصيد Ali", user_id=1, context={})["success"] is True
                         with patch.object(
                             assistant.data_analyzer,
                             "analyze_customer_debt",
@@ -1956,12 +1774,7 @@ class TestWave4Extended:
                                 },
                             },
                         ):
-                            assert (
-                                assistant.process("رصيد Ali", user_id=1, context={})[
-                                    "success"
-                                ]
-                                is True
-                            )
+                            assert assistant.process("رصيد Ali", user_id=1, context={})["success"] is True
         finally:
             _stop_patches(cols)
 
@@ -1986,28 +1799,18 @@ class TestWave4Extended:
                 },
             },
         }
-        resp = assistant._generate_dynamic_response(
-            "inventory_check", analysis, {}, data
-        )
+        resp = assistant._generate_dynamic_response("inventory_check", analysis, {}, data)
         assert "صحي" in resp
-        data2 = {
-            "low_stock_products": [{"name": "X", "current_stock": 1, "min_alert": 5}]
-        }
-        assert assistant._generate_dynamic_response(
-            "inventory_check", analysis, {}, data2
-        )
-        with patch.object(
-            assistant.memory_system, "remember_conversation", side_effect=RuntimeError()
-        ):
+        data2 = {"low_stock_products": [{"name": "X", "current_stock": 1, "min_alert": 5}]}
+        assert assistant._generate_dynamic_response("inventory_check", analysis, {}, data2)
+        with patch.object(assistant.memory_system, "remember_conversation", side_effect=RuntimeError()):
             assistant._learn_from_interaction("q", "a", None)
         with (
             patch(
                 "ai_knowledge.learning.quick_learner.quick_learner.get_answer",
                 return_value=None,
             ),
-            patch.object(
-                assistant, "_understand_message", side_effect=RuntimeError("fail")
-            ),
+            patch.object(assistant, "_understand_message", side_effect=RuntimeError("fail")),
         ):
             assert assistant.process("test", user_id=1)["success"] is False
 
@@ -2017,9 +1820,7 @@ class TestWave4Extended:
         with (
             patch("ai_knowledge.system_knowledge.FAQ", {}),
             patch("ai_knowledge.system_knowledge.search_knowledge", return_value=[]),
-            patch(
-                "ai_knowledge.agents_core._check_llm_availability", return_value=False
-            ),
+            patch("ai_knowledge.agents_core._check_llm_availability", return_value=False),
             patch(
                 "ai_knowledge.agents.master_brain.get_master_brain",
                 side_effect=RuntimeError("brain"),
@@ -2037,9 +1838,7 @@ class TestWave4Extended:
                 ),
                 patch(
                     "ai_knowledge.action_dispatcher.action_dispatcher.dispatch",
-                    return_value=MagicMock(
-                        success=True, message="ok", needs_permission=""
-                    ),
+                    return_value=MagicMock(success=True, message="ok", needs_permission=""),
                 ),
             ):
                 from ai_knowledge.agents_core import intelligent_response
@@ -2143,15 +1942,10 @@ class TestWave4Extended:
                 patch("extensions.db") as mock_db,
             ):
                 mock_db.session.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
-                assert (
-                    engine._forecast_sales_internal(3)["error"]
-                    == "Not enough recent data"
-                )
+                assert engine._forecast_sales_internal(3)["error"] == "Not enough recent data"
         finally:
             _stop_patches(cols)
-        with patch.object(
-            engine, "_train_price_internal", side_effect=RuntimeError("fail")
-        ):
+        with patch.object(engine, "_train_price_internal", side_effect=RuntimeError("fail")):
             assert engine.train_price_optimizer()["success"] is False
 
     def test_action_dispatcher_remaining(self, mock_ai_user):
@@ -2169,9 +1963,7 @@ class TestWave4Extended:
             ):
                 assert _get_active_tenant_id() == 5
         with (
-            patch(
-                "ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1
-            ),
+            patch("ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1),
             patch("ai_knowledge.action_dispatcher._is_owner", return_value=True),
             patch("ai_knowledge.action_dispatcher._audit"),
             patch("ai_knowledge.action_dispatcher._log_ai_error"),
@@ -2210,13 +2002,11 @@ class TestWave4Extended:
         )
         from ai_knowledge.analytics.data_analyzer import DataAnalyzer
 
-        assert SalesAnalytics.analyze_sales_pattern(
-            [MagicMock(sale_date=datetime.now())] * 6
-        )["trend"]
+        assert SalesAnalytics.analyze_sales_pattern([MagicMock(sale_date=datetime.now())] * 6)["trend"]
         assert (
-            InventoryAnalytics.calculate_reorder_point(
-                {"avg_daily_sales": 0, "lead_time_days": 7, "current_stock": 0}
-            )["status"]
+            InventoryAnalytics.calculate_reorder_point({"avg_daily_sales": 0, "lead_time_days": 7, "current_stock": 0})[
+                "status"
+            ]
             == "order_now"
         )
         assert ProfitAnalytics.break_even_analysis(1000, 10, 25)["break_even_units"] > 0

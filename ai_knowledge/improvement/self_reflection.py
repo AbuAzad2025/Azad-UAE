@@ -60,9 +60,7 @@ class SelfReflectionEngine:
         if self.performance_log:
             recent_performance = self.performance_log[-100:]  # آخر 100 عملية
 
-            accuracy_scores = [
-                p.get("accuracy", 0) for p in recent_performance if "accuracy" in p
-            ]
+            accuracy_scores = [p.get("accuracy", 0) for p in recent_performance if "accuracy" in p]
 
             if accuracy_scores:
                 avg_accuracy = sum(accuracy_scores) / len(accuracy_scores)
@@ -91,30 +89,22 @@ class SelfReflectionEngine:
                 most_common = max(error_types, key=lambda k: error_types[k])
                 count = error_types[most_common]
 
-                assessment["weaknesses"].append(
-                    f"خطأ متكرر: {most_common} ({count} مرة)"
-                )
+                assessment["weaknesses"].append(f"خطأ متكرر: {most_common} ({count} مرة)")
                 assessment["improvements_needed"].append(f"إصلاح: {most_common}")
 
         # التحسينات السابقة
         if self.improvements_log:
             recent_improvements = self.improvements_log[-10:]
-            assessment["recent_improvements"] = [
-                imp.get("improvement", "") for imp in recent_improvements
-            ]
+            assessment["recent_improvements"] = [imp.get("improvement", "") for imp in recent_improvements]
 
         # حفظ التقييم
         self.self_assessment = assessment
 
-        logger.info(
-            f"🔮 Self-reflection complete: Overall score {assessment['overall_score']:.0%}"
-        )
+        logger.info(f"🔮 Self-reflection complete: Overall score {assessment['overall_score']:.0%}")
 
         return assessment
 
-    def log_performance(
-        self, task: str, accuracy: float, details: dict | None = None
-    ) -> None:
+    def log_performance(self, task: str, accuracy: float, details: dict | None = None) -> None:
         """تسجيل الأداء"""
         entry = {
             "timestamp": datetime.now().isoformat(),
@@ -129,9 +119,7 @@ class SelfReflectionEngine:
         if len(self.performance_log) > 1000:
             self.performance_log = self.performance_log[-1000:]
 
-    def log_error(
-        self, error_type: str, error_message: str, context: dict | None = None
-    ) -> None:
+    def log_error(self, error_type: str, error_message: str, context: dict | None = None) -> None:
         """تسجيل خطأ للتعلم منه"""
         entry = {
             "timestamp": datetime.now().isoformat(),

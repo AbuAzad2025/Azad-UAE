@@ -117,9 +117,7 @@ class TestCardPaymentCrypto:
 
     def test_encrypt_returns_false_on_exception(self, app, card_key, mocker):
         with app.app_context():
-            mocker.patch.object(
-                CardPayment, "_encrypt", side_effect=RuntimeError("fail")
-            )
+            mocker.patch.object(CardPayment, "_encrypt", side_effect=RuntimeError("fail"))
             cp = CardPayment()
             assert cp.encrypt_card_data("4111111111111111", "123", "12/28") is False
 

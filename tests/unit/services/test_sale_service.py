@@ -58,27 +58,17 @@ class TestSaleServiceValidations:
         with patch("services.sale_service.StockService"):
             with patch("models.Warehouse"):
                 with patch("services.sale_service.ensure_warehouse_access"):
-                    with patch(
-                        "services.sale_service.generate_number", return_value="S-001"
-                    ):
-                        with patch(
-                            "services.sale_service.ExchangeRateService"
-                        ) as mock_ex:
-                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {
-                                "rate": 1.0
-                            }
+                    with patch("services.sale_service.generate_number", return_value="S-001"):
+                        with patch("services.sale_service.ExchangeRateService") as mock_ex:
+                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
                             with patch("services.sale_service.db.session.add"):
                                 with patch("services.sale_service.db.session.flush"):
-                                    with patch(
-                                        "services.sale_service.db.session.commit"
-                                    ):
+                                    with patch("services.sale_service.db.session.commit"):
                                         with pytest.raises(
                                             ValueError,
                                             match="الكمية يجب أن تكون أكبر من صفر",
                                         ):
-                                            SaleService.create_sale(
-                                                customer, seller, lines
-                                            )
+                                            SaleService.create_sale(customer, seller, lines)
 
     def test_create_sale_rejects_zero_unit_price(self, app):
         from services.sale_service import SaleService
@@ -96,27 +86,17 @@ class TestSaleServiceValidations:
             mock_stock.check_availability_in_warehouse.return_value = (True, "")
             with patch("models.Warehouse"):
                 with patch("services.sale_service.ensure_warehouse_access"):
-                    with patch(
-                        "services.sale_service.generate_number", return_value="S-001"
-                    ):
-                        with patch(
-                            "services.sale_service.ExchangeRateService"
-                        ) as mock_ex:
-                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {
-                                "rate": 1.0
-                            }
+                    with patch("services.sale_service.generate_number", return_value="S-001"):
+                        with patch("services.sale_service.ExchangeRateService") as mock_ex:
+                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
                             with patch("services.sale_service.db.session.add"):
                                 with patch("services.sale_service.db.session.flush"):
-                                    with patch(
-                                        "services.sale_service.db.session.commit"
-                                    ):
+                                    with patch("services.sale_service.db.session.commit"):
                                         with pytest.raises(
                                             ValueError,
                                             match="السعر يجب أن يكون أكبر من صفر",
                                         ):
-                                            SaleService.create_sale(
-                                                customer, seller, lines
-                                            )
+                                            SaleService.create_sale(customer, seller, lines)
 
     def test_create_sale_rejects_negative_discount(self, app):
         from services.sale_service import SaleService
@@ -171,27 +151,17 @@ class TestSaleServiceValidations:
             mock_stock.check_availability_in_warehouse.return_value = (True, "")
             with patch("models.Warehouse"):
                 with patch("services.sale_service.ensure_warehouse_access"):
-                    with patch(
-                        "services.sale_service.generate_number", return_value="S-001"
-                    ):
-                        with patch(
-                            "services.sale_service.ExchangeRateService"
-                        ) as mock_ex:
-                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {
-                                "rate": 1.0
-                            }
+                    with patch("services.sale_service.generate_number", return_value="S-001"):
+                        with patch("services.sale_service.ExchangeRateService") as mock_ex:
+                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
                             with patch("services.sale_service.db.session.add"):
                                 with patch("services.sale_service.db.session.flush"):
-                                    with patch(
-                                        "services.sale_service.db.session.commit"
-                                    ):
+                                    with patch("services.sale_service.db.session.commit"):
                                         with pytest.raises(
                                             ValueError,
                                             match="نسبة الخصم يجب أن تكون بين 0 و 100",
                                         ):
-                                            SaleService.create_sale(
-                                                customer, seller, lines
-                                            )
+                                            SaleService.create_sale(customer, seller, lines)
 
 
 class TestSaleServiceCreate:
@@ -226,45 +196,27 @@ class TestSaleServiceCreate:
                 wh.branch_id = 1
                 mock_wh.query.filter_by.return_value = mock_wh.query
                 mock_wh.query.first.return_value = wh
-                with patch(
-                    "services.sale_service.ensure_warehouse_access", return_value=wh
-                ):
+                with patch("services.sale_service.ensure_warehouse_access", return_value=wh):
                     with patch(
                         "services.sale_service.generate_number",
                         return_value="S-2024-001",
                     ):
-                        with patch(
-                            "services.sale_service.ExchangeRateService"
-                        ) as mock_ex:
-                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {
-                                "rate": 1.0
-                            }
+                        with patch("services.sale_service.ExchangeRateService") as mock_ex:
+                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
                             with patch("services.sale_service.db.session.add"):
                                 with patch("services.sale_service.db.session.flush"):
-                                    with patch(
-                                        "services.sale_service.db.session.commit"
-                                    ):
-                                        with patch(
-                                            "services.sale_service.SaleService.fulfill_sale"
-                                        ):
-                                            with patch(
-                                                "services.sale_service.SaleLine"
-                                            ) as mock_line:
+                                    with patch("services.sale_service.db.session.commit"):
+                                        with patch("services.sale_service.SaleService.fulfill_sale"):
+                                            with patch("services.sale_service.SaleLine") as mock_line:
                                                 line_instance = MagicMock()
-                                                line_instance.line_total = Decimal(
-                                                    "200"
-                                                )
+                                                line_instance.line_total = Decimal("200")
                                                 line_instance.quantity = 2
                                                 line_instance.cost_price = Decimal("50")
                                                 line_instance.id = 1
                                                 line_instance.product_id = 1
-                                                line_instance.calculate_line_total = (
-                                                    MagicMock()
-                                                )
+                                                line_instance.calculate_line_total = MagicMock()
                                                 mock_line.return_value = line_instance
-                                                result = SaleService.create_sale(
-                                                    customer, seller, lines
-                                                )
+                                                result = SaleService.create_sale(customer, seller, lines)
                                                 assert result is not None
 
     def test_create_sale_with_discount(self, app):
@@ -304,38 +256,22 @@ class TestSaleServiceCreate:
                 wh.branch_id = 1
                 mock_wh.query.filter_by.return_value = mock_wh.query
                 mock_wh.query.first.return_value = wh
-                with patch(
-                    "services.sale_service.ensure_warehouse_access", return_value=wh
-                ):
-                    with patch(
-                        "services.sale_service.generate_number", return_value="S-001"
-                    ):
-                        with patch(
-                            "services.sale_service.ExchangeRateService"
-                        ) as mock_ex:
-                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {
-                                "rate": 1.0
-                            }
+                with patch("services.sale_service.ensure_warehouse_access", return_value=wh):
+                    with patch("services.sale_service.generate_number", return_value="S-001"):
+                        with patch("services.sale_service.ExchangeRateService") as mock_ex:
+                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
                             with patch("services.sale_service.db.session.add"):
                                 with patch("services.sale_service.db.session.flush"):
-                                    with patch(
-                                        "services.sale_service.db.session.commit"
-                                    ):
-                                        with patch(
-                                            "services.sale_service.SaleService.fulfill_sale"
-                                        ):
-                                            with patch(
-                                                "services.sale_service.SaleLine"
-                                            ) as mock_line:
+                                    with patch("services.sale_service.db.session.commit"):
+                                        with patch("services.sale_service.SaleService.fulfill_sale"):
+                                            with patch("services.sale_service.SaleLine") as mock_line:
                                                 line_instance = MagicMock()
                                                 line_instance.line_total = Decimal("90")
                                                 line_instance.quantity = 1
                                                 line_instance.cost_price = Decimal("50")
                                                 line_instance.id = 1
                                                 line_instance.product_id = 1
-                                                line_instance.calculate_line_total = (
-                                                    MagicMock()
-                                                )
+                                                line_instance.calculate_line_total = MagicMock()
                                                 mock_line.return_value = line_instance
                                                 result = SaleService.create_sale(
                                                     customer,
@@ -381,44 +317,24 @@ class TestSaleServiceCreate:
                 wh.branch_id = 1
                 mock_wh.query.filter_by.return_value = mock_wh.query
                 mock_wh.query.first.return_value = wh
-                with patch(
-                    "services.sale_service.ensure_warehouse_access", return_value=wh
-                ):
-                    with patch(
-                        "services.sale_service.generate_number", return_value="S-001"
-                    ):
-                        with patch(
-                            "services.sale_service.ExchangeRateService"
-                        ) as mock_ex:
-                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {
-                                "rate": 1.0
-                            }
+                with patch("services.sale_service.ensure_warehouse_access", return_value=wh):
+                    with patch("services.sale_service.generate_number", return_value="S-001"):
+                        with patch("services.sale_service.ExchangeRateService") as mock_ex:
+                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
                             with patch("services.sale_service.db.session.add"):
                                 with patch("services.sale_service.db.session.flush"):
-                                    with patch(
-                                        "services.sale_service.db.session.commit"
-                                    ):
-                                        with patch(
-                                            "services.sale_service.SaleService.fulfill_sale"
-                                        ):
-                                            with patch(
-                                                "services.sale_service.SaleLine"
-                                            ) as mock_line:
+                                    with patch("services.sale_service.db.session.commit"):
+                                        with patch("services.sale_service.SaleService.fulfill_sale"):
+                                            with patch("services.sale_service.SaleLine") as mock_line:
                                                 line_instance = MagicMock()
-                                                line_instance.line_total = Decimal(
-                                                    "100"
-                                                )
+                                                line_instance.line_total = Decimal("100")
                                                 line_instance.quantity = 1
                                                 line_instance.cost_price = Decimal("50")
                                                 line_instance.id = 1
                                                 line_instance.product_id = 1
-                                                line_instance.calculate_line_total = (
-                                                    MagicMock()
-                                                )
+                                                line_instance.calculate_line_total = MagicMock()
                                                 mock_line.return_value = line_instance
-                                                with patch(
-                                                    "services.sale_service.Payment"
-                                                ):
+                                                with patch("services.sale_service.Payment"):
                                                     result = SaleService.create_sale(
                                                         customer,
                                                         seller,
@@ -447,9 +363,7 @@ class TestSaleServiceCreate:
         product.warranty_days = 0
         product.get_price_for_customer.return_value = Decimal("100")
         product.partner_shares = []
-        lines = [
-            {"product": product, "quantity": 1, "unit_price": 100, "serials": ["SN001"]}
-        ]
+        lines = [{"product": product, "quantity": 1, "unit_price": 100, "serials": ["SN001"]}]
         with patch("services.sale_service.StockService") as mock_stock:
             mock_stock.check_availability_in_warehouse.return_value = (True, "")
             mock_stock._resolve_cogs_unit_cost.return_value = (Decimal("50"), "test")
@@ -459,64 +373,32 @@ class TestSaleServiceCreate:
                 wh.branch_id = 1
                 mock_wh.query.filter_by.return_value = mock_wh.query
                 mock_wh.query.first.return_value = wh
-                with patch(
-                    "services.sale_service.ensure_warehouse_access", return_value=wh
-                ):
-                    with patch(
-                        "services.sale_service.generate_number", return_value="S-001"
-                    ):
-                        with patch(
-                            "services.sale_service.ExchangeRateService"
-                        ) as mock_ex:
-                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {
-                                "rate": 1.0
-                            }
+                with patch("services.sale_service.ensure_warehouse_access", return_value=wh):
+                    with patch("services.sale_service.generate_number", return_value="S-001"):
+                        with patch("services.sale_service.ExchangeRateService") as mock_ex:
+                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
                             with patch("services.sale_service.db.session.add"):
                                 with patch("services.sale_service.db.session.flush"):
-                                    with patch(
-                                        "services.sale_service.db.session.commit"
-                                    ):
-                                        with patch(
-                                            "services.sale_service.SaleService.fulfill_sale"
-                                        ):
-                                            with patch(
-                                                "services.sale_service.SaleLine"
-                                            ) as mock_line:
+                                    with patch("services.sale_service.db.session.commit"):
+                                        with patch("services.sale_service.SaleService.fulfill_sale"):
+                                            with patch("services.sale_service.SaleLine") as mock_line:
                                                 line_instance = MagicMock()
-                                                line_instance.line_total = Decimal(
-                                                    "100"
-                                                )
+                                                line_instance.line_total = Decimal("100")
                                                 line_instance.quantity = 1
                                                 line_instance.cost_price = Decimal("50")
                                                 line_instance.id = 1
                                                 line_instance.product_id = 1
-                                                line_instance.calculate_line_total = (
-                                                    MagicMock()
-                                                )
+                                                line_instance.calculate_line_total = MagicMock()
                                                 mock_line.return_value = line_instance
-                                                with patch(
-                                                    "models.ProductSerial"
-                                                ) as mock_sn:
+                                                with patch("models.ProductSerial") as mock_sn:
                                                     sn_obj = MagicMock()
                                                     sn_obj.status = "available"
                                                     sn_obj.warehouse_id = 1
                                                     mock_sn.query.filter_by.return_value.first.return_value = sn_obj
-                                                    with patch(
-                                                        "services.sale_service.current_app"
-                                                    ) as mock_app:
-                                                        mock_app.__name__ = (
-                                                            "current_app"
-                                                        )
-                                                        mock_app.logger = (
-                                                            make_sync_logger_mock(
-                                                                "logger"
-                                                            )
-                                                        )
-                                                        result = (
-                                                            SaleService.create_sale(
-                                                                customer, seller, lines
-                                                            )
-                                                        )
+                                                    with patch("services.sale_service.current_app") as mock_app:
+                                                        mock_app.__name__ = "current_app"
+                                                        mock_app.logger = make_sync_logger_mock("logger")
+                                                        result = SaleService.create_sale(customer, seller, lines)
                                                         assert result is not None
 
     def test_create_sale_serial_number_mismatch_count(self, app):
@@ -529,31 +411,19 @@ class TestSaleServiceCreate:
         product = MagicMock()
         product.name = "Test"
         product.has_serial_number = True
-        lines = [
-            {"product": product, "quantity": 2, "unit_price": 100, "serials": ["SN001"]}
-        ]
+        lines = [{"product": product, "quantity": 2, "unit_price": 100, "serials": ["SN001"]}]
         with patch("services.sale_service.StockService") as mock_stock:
             mock_stock.check_availability_in_warehouse.return_value = (True, "")
             with patch("models.Warehouse"):
                 with patch("services.sale_service.ensure_warehouse_access"):
-                    with patch(
-                        "services.sale_service.generate_number", return_value="S-001"
-                    ):
-                        with patch(
-                            "services.sale_service.ExchangeRateService"
-                        ) as mock_ex:
-                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {
-                                "rate": 1.0
-                            }
+                    with patch("services.sale_service.generate_number", return_value="S-001"):
+                        with patch("services.sale_service.ExchangeRateService") as mock_ex:
+                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
                             with patch("services.sale_service.db.session.add"):
                                 with patch("services.sale_service.db.session.flush"):
-                                    with patch(
-                                        "services.sale_service.db.session.commit"
-                                    ):
+                                    with patch("services.sale_service.db.session.commit"):
                                         with pytest.raises(ValueError, match="يتطلب"):
-                                            SaleService.create_sale(
-                                                customer, seller, lines
-                                            )
+                                            SaleService.create_sale(customer, seller, lines)
 
     def test_create_sale_stock_unavailable(self, app):
         from services.sale_service import SaleService
@@ -572,26 +442,14 @@ class TestSaleServiceCreate:
             )
             with patch("models.Warehouse"):
                 with patch("services.sale_service.ensure_warehouse_access"):
-                    with patch(
-                        "services.sale_service.generate_number", return_value="S-001"
-                    ):
-                        with patch(
-                            "services.sale_service.ExchangeRateService"
-                        ) as mock_ex:
-                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {
-                                "rate": 1.0
-                            }
+                    with patch("services.sale_service.generate_number", return_value="S-001"):
+                        with patch("services.sale_service.ExchangeRateService") as mock_ex:
+                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
                             with patch("services.sale_service.db.session.add"):
                                 with patch("services.sale_service.db.session.flush"):
-                                    with patch(
-                                        "services.sale_service.db.session.commit"
-                                    ):
-                                        with pytest.raises(
-                                            ValueError, match="Stock not available"
-                                        ):
-                                            SaleService.create_sale(
-                                                customer, seller, lines
-                                            )
+                                    with patch("services.sale_service.db.session.commit"):
+                                        with pytest.raises(ValueError, match="Stock not available"):
+                                            SaleService.create_sale(customer, seller, lines)
 
     def test_create_sale_with_currency_conversion(self, app):
         from services.sale_service import SaleService
@@ -623,40 +481,22 @@ class TestSaleServiceCreate:
                 wh.branch_id = 1
                 mock_wh.query.filter_by.return_value = mock_wh.query
                 mock_wh.query.first.return_value = wh
-                with patch(
-                    "services.sale_service.ensure_warehouse_access", return_value=wh
-                ):
-                    with patch(
-                        "services.sale_service.generate_number", return_value="S-001"
-                    ):
-                        with patch(
-                            "services.sale_service.ExchangeRateService"
-                        ) as mock_ex:
-                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {
-                                "rate": 3.67
-                            }
+                with patch("services.sale_service.ensure_warehouse_access", return_value=wh):
+                    with patch("services.sale_service.generate_number", return_value="S-001"):
+                        with patch("services.sale_service.ExchangeRateService") as mock_ex:
+                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 3.67}
                             with patch("services.sale_service.db.session.add"):
                                 with patch("services.sale_service.db.session.flush"):
-                                    with patch(
-                                        "services.sale_service.db.session.commit"
-                                    ):
-                                        with patch(
-                                            "services.sale_service.SaleService.fulfill_sale"
-                                        ):
-                                            with patch(
-                                                "services.sale_service.SaleLine"
-                                            ) as mock_line:
+                                    with patch("services.sale_service.db.session.commit"):
+                                        with patch("services.sale_service.SaleService.fulfill_sale"):
+                                            with patch("services.sale_service.SaleLine") as mock_line:
                                                 line_instance = MagicMock()
-                                                line_instance.line_total = Decimal(
-                                                    "100"
-                                                )
+                                                line_instance.line_total = Decimal("100")
                                                 line_instance.quantity = 1
                                                 line_instance.cost_price = Decimal("50")
                                                 line_instance.id = 1
                                                 line_instance.product_id = 1
-                                                line_instance.calculate_line_total = (
-                                                    MagicMock()
-                                                )
+                                                line_instance.calculate_line_total = MagicMock()
                                                 mock_line.return_value = line_instance
                                                 result = SaleService.create_sale(
                                                     customer,

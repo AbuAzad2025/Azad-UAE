@@ -50,9 +50,7 @@ class TestSetupListeners:
 
             return decorator
 
-        mocker.patch(
-            "services.real_time_listeners.event.listens_for", side_effect=capture
-        )
+        mocker.patch("services.real_time_listeners.event.listens_for", side_effect=capture)
         original = rtl.RealTimeAccountingListeners._listeners_registered
         try:
             rtl.RealTimeAccountingListeners._listeners_registered = False
@@ -67,13 +65,9 @@ class TestSetupListeners:
                 "Cheque:after_update",
             ):
                 assert key in callbacks
-            mocker.patch.object(
-                rtl.RealTimeAccountingListeners, "_on_journal_entry_created"
-            )
+            mocker.patch.object(rtl.RealTimeAccountingListeners, "_on_journal_entry_created")
             callbacks["GLJournalEntry:after_insert"](None, None, entry)
-            rtl.RealTimeAccountingListeners._on_journal_entry_created.assert_called_once_with(
-                entry
-            )
+            rtl.RealTimeAccountingListeners._on_journal_entry_created.assert_called_once_with(entry)
         finally:
             rtl.RealTimeAccountingListeners._listeners_registered = original
 
@@ -83,9 +77,7 @@ class TestHandlerExceptionPaths:
         from services.real_time_listeners import RealTimeAccountingListeners
 
         bad = _entry()
-        type(bad).is_posted = property(
-            lambda self: (_ for _ in ()).throw(RuntimeError("x"))
-        )
+        type(bad).is_posted = property(lambda self: (_ for _ in ()).throw(RuntimeError("x")))
         RealTimeAccountingListeners._on_journal_entry_updated(bad)
         assert "خطأ" in capsys.readouterr().out
 
@@ -111,28 +103,16 @@ class TestHandlerExceptionPaths:
 
             return decorator
 
-        mocker.patch(
-            "services.real_time_listeners.event.listens_for", side_effect=capture
-        )
+        mocker.patch("services.real_time_listeners.event.listens_for", side_effect=capture)
         original = rtl.RealTimeAccountingListeners._listeners_registered
         try:
             rtl.RealTimeAccountingListeners._listeners_registered = False
             rtl.RealTimeAccountingListeners.setup_listeners()
-            updated = mocker.patch.object(
-                rtl.RealTimeAccountingListeners, "_on_journal_entry_updated"
-            )
-            line = mocker.patch.object(
-                rtl.RealTimeAccountingListeners, "_on_journal_line_created"
-            )
-            account = mocker.patch.object(
-                rtl.RealTimeAccountingListeners, "_on_account_updated"
-            )
-            expense = mocker.patch.object(
-                rtl.RealTimeAccountingListeners, "_on_expense_created"
-            )
-            cheque = mocker.patch.object(
-                rtl.RealTimeAccountingListeners, "_on_cheque_updated"
-            )
+            updated = mocker.patch.object(rtl.RealTimeAccountingListeners, "_on_journal_entry_updated")
+            line = mocker.patch.object(rtl.RealTimeAccountingListeners, "_on_journal_line_created")
+            account = mocker.patch.object(rtl.RealTimeAccountingListeners, "_on_account_updated")
+            expense = mocker.patch.object(rtl.RealTimeAccountingListeners, "_on_expense_created")
+            cheque = mocker.patch.object(rtl.RealTimeAccountingListeners, "_on_cheque_updated")
 
             callbacks["GLJournalEntry:after_update"](None, None, _entry())
             callbacks["GLJournalLine:after_insert"](None, None, MagicMock())
@@ -224,9 +204,7 @@ class TestJournalEntryHandlers:
     def test_on_journal_entry_created_handles_error(self, mocker, capsys):
         from services.real_time_listeners import RealTimeAccountingListeners
 
-        mocker.patch.object(
-            RealTimeAccountingListeners, "_log_event", side_effect=RuntimeError("bad")
-        )
+        mocker.patch.object(RealTimeAccountingListeners, "_log_event", side_effect=RuntimeError("bad"))
         RealTimeAccountingListeners._on_journal_entry_created(_entry())
         assert "خطأ" in capsys.readouterr().out
 
@@ -270,9 +248,7 @@ class TestJournalLineHandler:
         line.debit = 0
         line.credit = 0
         line.description = ""
-        mock_update = mocker.patch.object(
-            RealTimeAccountingListeners, "_update_account_balance"
-        )
+        mock_update = mocker.patch.object(RealTimeAccountingListeners, "_update_account_balance")
         RealTimeAccountingListeners._on_journal_line_created(line)
         mock_update.assert_called_once_with(99)
 
@@ -329,9 +305,7 @@ class TestHelpers:
     def test_log_event_json_error(self, capsys):
         from services.real_time_listeners import RealTimeAccountingListeners
 
-        with patch(
-            "services.real_time_listeners.json.dumps", side_effect=TypeError("bad")
-        ):
+        with patch("services.real_time_listeners.json.dumps", side_effect=TypeError("bad")):
             RealTimeAccountingListeners._log_event("test", {"x": object()})
         assert "خطأ" in capsys.readouterr().out
 
@@ -344,9 +318,7 @@ class TestHelpers:
     def test_update_statistics(self, mocker, capsys):
         from services.real_time_listeners import RealTimeAccountingListeners
 
-        mocker.patch(
-            "services.real_time_listeners.GLJournalEntry.query.count", return_value=10
-        )
+        mocker.patch("services.real_time_listeners.GLJournalEntry.query.count", return_value=10)
         mock_q = MagicMock()
         mock_q.filter_by.return_value.count.return_value = 3
         mocker.patch("services.real_time_listeners.GLJournalEntry.query", mock_q)
@@ -356,12 +328,8 @@ class TestHelpers:
     def test_update_account_balance(self, mocker, capsys):
         from services.real_time_listeners import RealTimeAccountingListeners
 
-        account = MagicMock(
-            code="1100", get_balance=MagicMock(return_value=Decimal("500"))
-        )
-        mocker.patch(
-            "services.real_time_listeners.db.session.get", return_value=account
-        )
+        account = MagicMock(code="1100", get_balance=MagicMock(return_value=Decimal("500")))
+        mocker.patch("services.real_time_listeners.db.session.get", return_value=account)
         RealTimeAccountingListeners._update_account_balance(1)
         assert "account_balance_updated" in capsys.readouterr().out
 

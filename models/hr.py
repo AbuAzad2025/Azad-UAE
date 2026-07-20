@@ -14,17 +14,11 @@ class Department(db.Model):
     )
     name = db.Column(db.String(100), nullable=False)
     name_ar = db.Column(db.String(100))
-    manager_id = db.Column(
-        db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-    )
-    parent_id = db.Column(
-        db.Integer, db.ForeignKey("departments.id", ondelete="SET NULL"), nullable=True
-    )
+    manager_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    parent_id = db.Column(db.Integer, db.ForeignKey("departments.id", ondelete="SET NULL"), nullable=True)
     color = db.Column(db.String(7), default="#3b82f6")
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     manager = db.relationship("User", foreign_keys=[manager_id])
@@ -46,14 +40,10 @@ class JobPosition(db.Model):
     )
     name = db.Column(db.String(100), nullable=False)
     name_ar = db.Column(db.String(100))
-    department_id = db.Column(
-        db.Integer, db.ForeignKey("departments.id", ondelete="SET NULL"), nullable=True
-    )
+    department_id = db.Column(db.Integer, db.ForeignKey("departments.id", ondelete="SET NULL"), nullable=True)
     no_of_employees = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     department = db.relationship("Department", foreign_keys=[department_id])
@@ -84,9 +74,7 @@ class HRContract(db.Model):
         nullable=False,
         index=True,
     )
-    department_id = db.Column(
-        db.Integer, db.ForeignKey("departments.id", ondelete="SET NULL"), nullable=True
-    )
+    department_id = db.Column(db.Integer, db.ForeignKey("departments.id", ondelete="SET NULL"), nullable=True)
     job_id = db.Column(
         db.Integer,
         db.ForeignKey("job_positions.id", ondelete="SET NULL"),
@@ -97,9 +85,7 @@ class HRContract(db.Model):
     wage = db.Column(db.Numeric(15, 3), default=0)
     state = db.Column(db.String(20), default="draft")
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -143,9 +129,7 @@ class Attendance(db.Model):
     work_hours = db.Column(db.Numeric(8, 2), nullable=True)
     state = db.Column(db.String(20), default="draft")
     notes = db.Column(db.String(500))
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     branch = db.relationship("Branch", foreign_keys=[branch_id])
@@ -173,9 +157,7 @@ class LeaveType(db.Model):
     allocation_type = db.Column(db.String(20), default="fixed")
     days_per_year = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
 
@@ -205,22 +187,16 @@ class LeaveRequest(db.Model):
         nullable=False,
         index=True,
     )
-    leave_type_id = db.Column(
-        db.Integer, db.ForeignKey("leave_types.id", ondelete="SET NULL"), nullable=True
-    )
+    leave_type_id = db.Column(db.Integer, db.ForeignKey("leave_types.id", ondelete="SET NULL"), nullable=True)
     date_from = db.Column(db.Date, nullable=False)
     date_to = db.Column(db.Date, nullable=False)
     duration = db.Column(db.Numeric(5, 1), nullable=False)
     reason = db.Column(db.Text)
     state = db.Column(db.String(20), default="draft", index=True)
-    manager_id = db.Column(
-        db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-    )
+    manager_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     rejected_reason = db.Column(db.String(500))
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),

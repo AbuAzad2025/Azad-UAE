@@ -134,9 +134,7 @@ class TestIntelligentAssistant:
                 return_value={"intent": "greeting", "confidence": 0.9},
             ):
                 with patch.object(assistant, "_collect_real_data", return_value={}):
-                    with patch.object(
-                        assistant, "_analyze_and_reason", return_value={}
-                    ):
+                    with patch.object(assistant, "_analyze_and_reason", return_value={}):
                         result = assistant.process("مرحبا", user_id=1, context={})
                         assert "response" in result
 
@@ -183,9 +181,7 @@ class TestMultiAgentSystem:
 
     def test_maintenance_agent(self):
         agent = MaintenanceAgent()
-        with patch(
-            "ai_knowledge.core.reasoning_engine.get_reasoning_engine"
-        ) as mock_re:
+        with patch("ai_knowledge.core.reasoning_engine.get_reasoning_engine") as mock_re:
             mock_re.return_value.technical_reasoning.return_value = {
                 "causes": ["x"],
                 "solutions": ["y"],
@@ -205,9 +201,7 @@ class TestMultiAgentSystem:
 
     def test_collaborative_solve(self):
         coord = MultiAgentCoordinator()
-        result = coord.collaborative_solve(
-            "محاسبة ومخزون", {"debit": 100, "credit": 100}
-        )
+        result = coord.collaborative_solve("محاسبة ومخزون", {"debit": 100, "credit": 100})
         assert isinstance(result, dict)
 
     def test_singleton(self):

@@ -102,9 +102,7 @@ def post_or_fail(
         )
 
         if validated_entry.status == "error":
-            raise GlPostingError(
-                f'Validation failed for entry "{description}": {validated_entry.validation_errors}'
-            )
+            raise GlPostingError(f'Validation failed for entry "{description}": {validated_entry.validation_errors}')
 
         # Post the validated entry
         posted_entry = AdvancedJournalEntryManager.post_entry(
@@ -135,12 +133,8 @@ _DEFAULT_TOLERANCE = Decimal("0.001")
 
 def assert_balanced_lines(lines, *, currency=None, tolerance=None):
     if tolerance is None:
-        tolerance = _CURRENCY_TOLERANCE.get(
-            (currency or "").upper(), _DEFAULT_TOLERANCE
-        )
+        tolerance = _CURRENCY_TOLERANCE.get((currency or "").upper(), _DEFAULT_TOLERANCE)
     total_debit = sum(Decimal(str(line.get("debit", 0) or 0)) for line in lines)
     total_credit = sum(Decimal(str(line.get("credit", 0) or 0)) for line in lines)
     if abs(total_debit - total_credit) > tolerance:
-        raise UnbalancedJournalEntryError(
-            f"القيد غير متوازن: مدين={total_debit} دائن={total_credit}"
-        )
+        raise UnbalancedJournalEntryError(f"القيد غير متوازن: مدين={total_debit} دائن={total_credit}")

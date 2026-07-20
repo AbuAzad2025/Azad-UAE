@@ -12,9 +12,7 @@ class TestPurchaseModel:
     def test_repr(self, sample_purchase):
         assert "PUR-TEST-001" in repr(sample_purchase)
 
-    def test_warehouse_property_with_id(
-        self, sample_purchase, sample_warehouse, db_session
-    ):
+    def test_warehouse_property_with_id(self, sample_purchase, sample_warehouse, db_session):
         sample_purchase.warehouse_id = sample_warehouse.id
         db_session.flush()
         wh = sample_purchase.warehouse
@@ -84,9 +82,7 @@ class TestPurchaseGetPaidAmount:
         paid = sample_purchase.get_paid_amount(as_of_date=date(2030, 1, 1))
         assert paid == Decimal("105")
 
-    def test_fifo_zero_when_other_total_covers_payments(
-        self, db_session, sample_purchase, mocker
-    ):
+    def test_fifo_zero_when_other_total_covers_payments(self, db_session, sample_purchase, mocker):
         query = mocker.patch("models.purchase.db.session.query")
         direct_q = MagicMock()
         direct_q.filter.return_value.scalar.return_value = None
@@ -97,9 +93,7 @@ class TestPurchaseGetPaidAmount:
         purchase_q.filter.return_value.all.return_value = [other_purchase]
         query.side_effect = [direct_q, fifo_q]
         mocker.patch("models.Purchase.query", purchase_q)
-        assert sample_purchase.get_paid_amount(as_of_date=date(2030, 1, 1)) == Decimal(
-            "0"
-        )
+        assert sample_purchase.get_paid_amount(as_of_date=date(2030, 1, 1)) == Decimal("0")
 
     def test_no_payments_returns_zero(self, db_session, sample_purchase, mocker):
         query = mocker.patch("models.purchase.db.session.query")
@@ -113,9 +107,7 @@ class TestPurchaseGetPaidAmount:
     def test_base_amount_getter(self, sample_purchase):
         assert sample_purchase.base_amount == sample_purchase.amount_aed
 
-    def test_fifo_with_branch_filters(
-        self, db_session, sample_purchase, sample_branch, mocker
-    ):
+    def test_fifo_with_branch_filters(self, db_session, sample_purchase, sample_branch, mocker):
         sample_purchase.branch_id = sample_branch.id
         query = mocker.patch("models.purchase.db.session.query")
         direct_q = MagicMock()
@@ -145,9 +137,7 @@ class TestPurchaseGetPaidAmount:
 
 class TestPurchaseCalculateTotals:
     @staticmethod
-    def _purchase_with_line(
-        sample_purchase, sample_product, _db_session, **line_kwargs
-    ):
+    def _purchase_with_line(sample_purchase, sample_product, _db_session, **line_kwargs):
         line = PurchaseLine(
             tenant_id=sample_purchase.tenant_id,
             purchase_id=sample_purchase.id,
@@ -160,9 +150,7 @@ class TestPurchaseCalculateTotals:
         sample_purchase.lines = [line]
         return sample_purchase
 
-    def test_calculate_totals_vat_exclusive(
-        self, sample_purchase, sample_product, db_session
-    ):
+    def test_calculate_totals_vat_exclusive(self, sample_purchase, sample_product, db_session):
         p = self._purchase_with_line(sample_purchase, sample_product, db_session)
         p.tax_rate = Decimal("5")
         p.discount_amount = Decimal("10")
@@ -173,9 +161,7 @@ class TestPurchaseCalculateTotals:
         assert p.total_amount == Decimal("99.500")
         assert p.amount_aed == Decimal("99.500")
 
-    def test_calculate_totals_vat_inclusive(
-        self, sample_purchase, sample_product, db_session
-    ):
+    def test_calculate_totals_vat_inclusive(self, sample_purchase, sample_product, db_session):
         p = self._purchase_with_line(sample_purchase, sample_product, db_session)
         p.prices_include_vat = True
         p.tax_rate = Decimal("5")
@@ -184,9 +170,7 @@ class TestPurchaseCalculateTotals:
         assert p.tax_amount > Decimal("0")
         assert p.total_amount == Decimal("100.000")
 
-    def test_calculate_totals_zero_tax_rate_inclusive(
-        self, sample_purchase, sample_product, db_session
-    ):
+    def test_calculate_totals_zero_tax_rate_inclusive(self, sample_purchase, sample_product, db_session):
         p = self._purchase_with_line(sample_purchase, sample_product, db_session)
         p.prices_include_vat = True
         p.tax_rate = Decimal("0")
@@ -307,9 +291,7 @@ class TestPurchaseLine:
         line.purchase = purchase
         assert line.landed_inventory_unit_cost == Decimal("12.000")
 
-    def test_branch_filter_applied(
-        self, db_session, sample_purchase, sample_branch, mocker
-    ):
+    def test_branch_filter_applied(self, db_session, sample_purchase, sample_branch, mocker):
         sample_purchase.branch_id = sample_branch.id
         query = mocker.patch("models.purchase.db.session.query")
         chain = MagicMock()

@@ -17,7 +17,7 @@
             <form method="GET" class="row g-3">
                 <div class="col-md-4">
                     <label for="branch_id" class="form-label">{{ t('Branch') }}</label>
-                    <select name="branch_id" id="branch_id" class="form-select" onchange="this.form.submit()">
+                    <select name="branch_id" id="branch_id" class="form-select" data-action="submit-form">
                         <option value="">{{ t('جميع') }} {{ t('Branches') }}</option>
                         {% for branch in branches %}
                         <option value="{{ branch.id }}" {% if branch.id == selected_branch %}selected{% endif %}>
@@ -100,4 +100,14 @@
         </div>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('change', (e) => {
+    const el = e.target.closest('[data-action="submit-form"]');
+    if (!el) return;
+    el.form.submit();
+});
+</script>
 {% endblock %}

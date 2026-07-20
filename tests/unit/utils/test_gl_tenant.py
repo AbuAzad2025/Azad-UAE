@@ -135,8 +135,6 @@ class TestQueryHelpers:
         model.query = MagicMock()
         with (
             patch("models.GLJournalEntry", model),
-            patch(
-                "utils.gl_tenant.scope_journal_entries", return_value="scoped"
-            ) as _scope,
+            patch("utils.gl_tenant.scope_journal_entries", return_value="scoped") as _scope,
         ):
             assert gt.gl_entry_query(tenant_id=4) == "scoped"

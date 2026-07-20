@@ -15,9 +15,7 @@ class TestHealthCheckService:
         assert HealthCheckService.check_database()["status"] == "healthy"
 
     def test_check_database_unhealthy_on_error(self, mocker):
-        mocker.patch(
-            "services.health_service.db.session"
-        ).execute.side_effect = RuntimeError("down")
+        mocker.patch("services.health_service.db.session").execute.side_effect = RuntimeError("down")
         from services.health_service import HealthCheckService
 
         assert HealthCheckService.check_database()["status"] == "unhealthy"
@@ -37,12 +35,8 @@ class TestHealthCheckService:
 
     def test_check_system_resources_warning_threshold(self, mocker):
         mocker.patch("services.health_service.psutil.cpu_percent", return_value=95)
-        mocker.patch(
-            "services.health_service.psutil.virtual_memory"
-        ).return_value.percent = 50
-        mocker.patch(
-            "services.health_service.psutil.disk_usage"
-        ).return_value.percent = 50
+        mocker.patch("services.health_service.psutil.virtual_memory").return_value.percent = 50
+        mocker.patch("services.health_service.psutil.disk_usage").return_value.percent = 50
         from services.health_service import HealthCheckService
 
         result = HealthCheckService.check_system_resources()
@@ -68,9 +62,7 @@ class TestHealthCheckService:
         )
         from services.health_service import HealthCheckService
 
-        assert (
-            HealthCheckService.run_full_health_check()["overall_status"] == "unhealthy"
-        )
+        assert HealthCheckService.run_full_health_check()["overall_status"] == "unhealthy"
 
     def test_get_system_metrics_counts(self, mocker):
         mocker.patch("models.Donation.query").count.return_value = 1
@@ -98,9 +90,7 @@ class TestMonitoringService:
         assert MonitoringService._is_sensitive_stats_table("products") is False
 
     def test_resolve_known_table_rejects_invalid(self, mocker):
-        mocker.patch("sqlalchemy.inspect").return_value.get_table_names.return_value = [
-            "sales"
-        ]
+        mocker.patch("sqlalchemy.inspect").return_value.get_table_names.return_value = ["sales"]
         from services.monitoring_service import MonitoringService
 
         assert MonitoringService._resolve_known_table("sales") == "sales"
@@ -111,9 +101,7 @@ class TestMonitoringService:
         row_sales.__getitem__ = lambda _self, i: "sales"
         row_users = MagicMock()
         row_users.__getitem__ = lambda _self, i: "users"
-        mocker.patch(
-            "services.monitoring_service.db.session"
-        ).execute.return_value.fetchall.return_value = [
+        mocker.patch("services.monitoring_service.db.session").execute.return_value.fetchall.return_value = [
             row_sales,
             row_users,
         ]
@@ -136,12 +124,8 @@ class TestMonitoringService:
         mock_q.limit.return_value = mock_q
         mock_q.all.return_value = []
         mocker.patch("services.monitoring_service.AuditLog.query", mock_q)
-        mocker.patch(
-            "services.monitoring_service.User.query"
-        ).filter.return_value.all.return_value = []
-        mocker.patch(
-            "services.monitoring_service.Sale.query"
-        ).filter.return_value = mock_q
+        mocker.patch("services.monitoring_service.User.query").filter.return_value.all.return_value = []
+        mocker.patch("services.monitoring_service.Sale.query").filter.return_value = mock_q
 
         from services.monitoring_service import MonitoringService
 

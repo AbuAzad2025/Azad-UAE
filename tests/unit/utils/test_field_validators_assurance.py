@@ -41,9 +41,7 @@ class TestCurrencyAndPhone:
         assert normalize_phone_optional("+971 50 123-4567") == "+971 50 123-4567"
 
     def test_normalize_user_email_required_ok(self):
-        assert (
-            normalize_user_email_required("  User@Example.COM  ") == "user@example.com"
-        )
+        assert normalize_user_email_required("  User@Example.COM  ") == "user@example.com"
 
     def test_normalize_user_email_required_missing(self):
         with pytest.raises(FieldValidationError, match="Email is required"):
@@ -132,9 +130,7 @@ class TestStockAndGl:
         assert validate_reference_type_write("sale") == "Sale"
 
     def test_validate_reference_type_write_non_legacy(self, mocker):
-        mocker.patch(
-            "utils.field_validators.normalize_ref_type", return_value="CustomRef"
-        )
+        mocker.patch("utils.field_validators.normalize_ref_type", return_value="CustomRef")
         mocker.patch("utils.field_validators.LEGACY_REF_MAP", {"sale": "Sale"})
         assert validate_reference_type_write("CustomRef") == "CustomRef"
 
@@ -150,6 +146,4 @@ class TestStockAndGl:
             validate_gl_line_sides(100, 50)
 
     def test_validate_gl_line_sides_custom_tolerance(self):
-        validate_gl_line_sides(
-            Decimal("0.005"), Decimal("0.005"), tolerance=Decimal("0.01")
-        )
+        validate_gl_line_sides(Decimal("0.005"), Decimal("0.005"), tolerance=Decimal("0.01"))

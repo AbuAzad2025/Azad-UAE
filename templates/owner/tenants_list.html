@@ -84,7 +84,7 @@
                     <i class="bi bi-pause-circle"></i> {{ _('تعليق') }}
                   </button>
                   {% else %}
-                  <form class="needs-validation d-inline" method="POST" action="{{ url_for('owner.tenant_activate', tenant_id=tenant.id) }}" onsubmit="return confirm('تأكيد تفعيل التينانت؟');">
+                  <form class="needs-validation d-inline" method="POST" action="{{ url_for('owner.tenant_activate', tenant_id=tenant.id) }}" data-action="confirm-submit" data-confirm-message="تأكيد تفعيل التينانت؟">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                     <button type="submit" class="btn btn-outline-success">
                       <i class="bi bi-play-circle"></i> {{ _('تفعيل') }}
@@ -161,4 +161,15 @@
   </div>
 </div>
 {% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script>
+document.addEventListener('submit', (e) => {
+  const el = e.target.closest('[data-action="confirm-submit"]');
+  if (!el) return;
+  if (!confirm(el.dataset.confirmMessage)) e.preventDefault();
+});
+</script>
 {% endblock %}

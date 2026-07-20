@@ -140,9 +140,7 @@ class TestHappyPaths:
             "routes.owner.maintenance.rebuild_gl_tree_api",
             return_value={"tenants": [{"created": 3, "updated": 1}]},
         )
-        resp = auth_client.post(
-            _GL, data={"confirm": "REBUILD_GL_TREE", "cleanup_extra": "on"}
-        )
+        resp = auth_client.post(_GL, data={"confirm": "REBUILD_GL_TREE", "cleanup_extra": "on"})
         assert resp.status_code == 200
         data = resp.get_json()
         assert data["success"] is True
@@ -154,9 +152,7 @@ class TestHappyPaths:
             "routes.owner.maintenance.fix_default_tenant_metadata_api",
             return_value={"patched": ["tenants.x"], "action_needed": True},
         )
-        resp = auth_client.post(
-            _TENANT, data={"confirm": "FIX_DEFAULT_TENANT", "dry_run": "on"}
-        )
+        resp = auth_client.post(_TENANT, data={"confirm": "FIX_DEFAULT_TENANT", "dry_run": "on"})
         assert resp.status_code == 200
         assert resp.get_json()["success"] is True
         service.assert_called_once_with(dry_run=True)

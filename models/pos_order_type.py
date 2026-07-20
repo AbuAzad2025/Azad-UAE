@@ -11,9 +11,7 @@ class PosOrderType(db.Model):
     __tablename__ = "pos_order_types"
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(
-        db.Integer, db.ForeignKey("tenants.id"), nullable=False, index=True
-    )
+    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id"), nullable=False, index=True)
     code = db.Column(db.String(40), nullable=False)
     name_ar = db.Column(db.String(120), nullable=False)
     name_en = db.Column(db.String(120), nullable=True)
@@ -24,9 +22,7 @@ class PosOrderType(db.Model):
     created_at = db.Column(db.DateTime, default=db.func.now())
     updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
 
-    __table_args__ = (
-        db.UniqueConstraint("tenant_id", "code", name="uq_pos_order_type_tenant_code"),
-    )
+    __table_args__ = (db.UniqueConstraint("tenant_id", "code", name="uq_pos_order_type_tenant_code"),)
 
     @property
     def display_name(self):
@@ -48,15 +44,9 @@ class PosOrderType(db.Model):
 
     @classmethod
     def default_for_tenant(cls, tenant_id):
-        ot = cls.query.filter_by(
-            tenant_id=tenant_id, is_default=True, is_active=True
-        ).first()
+        ot = cls.query.filter_by(tenant_id=tenant_id, is_default=True, is_active=True).first()
         if not ot:
-            ot = (
-                cls.query.filter_by(tenant_id=tenant_id, is_active=True)
-                .order_by(cls.sort_order, cls.id)
-                .first()
-            )
+            ot = cls.query.filter_by(tenant_id=tenant_id, is_active=True).order_by(cls.sort_order, cls.id).first()
         return ot
 
     def to_dict(self):

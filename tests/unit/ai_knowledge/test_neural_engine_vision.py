@@ -44,16 +44,12 @@ class TestAzadNeuralEngine:
 
     def test_detect_fraud_fallback(self, engine):
         with patch.object(engine, "_load_model", return_value=False):
-            result = engine.detect_fraud(
-                {"amount_aed": 200000, "discount_amount": 120000, "subtotal": 200000}
-            )
+            result = engine.detect_fraud({"amount_aed": 200000, "discount_amount": 120000, "subtotal": 200000})
             assert result["is_fraud"] is True
 
     def test_detect_fraud_normal(self, engine):
         with patch.object(engine, "_load_model", return_value=False):
-            result = engine.detect_fraud(
-                {"amount_aed": 500, "discount_amount": 0, "subtotal": 500}
-            )
+            result = engine.detect_fraud({"amount_aed": 500, "discount_amount": 0, "subtotal": 500})
             assert result["is_fraud"] is False
 
     def test_understand_intent_sales(self, engine):
@@ -80,9 +76,7 @@ class TestVisionProcessor:
         return VisionProcessor()
 
     def test_ocr_unavailable(self):
-        with patch.object(
-            VisionProcessor, "_check_ocr_availability", return_value=False
-        ):
+        with patch.object(VisionProcessor, "_check_ocr_availability", return_value=False):
             vp = VisionProcessor()
             result = vp.read_invoice_image("fake.png")
             assert result.get("confidence") == 0

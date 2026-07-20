@@ -34,10 +34,7 @@ class TestKnowledgeAPI:
         assert get_part_info("filter") is not None
 
     def test_kb_search(self):
-        assert (
-            isinstance(kb_search("sales"), (str, list, dict))
-            or kb_search("sales") is None
-        )
+        assert isinstance(kb_search("sales"), (str, list, dict)) or kb_search("sales") is None
 
     def test_market_insights(self):
         assert len(get_market_insights()) > 20

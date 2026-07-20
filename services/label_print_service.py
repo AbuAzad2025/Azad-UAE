@@ -8,9 +8,7 @@ def _build_label_context(product, branch_id=None):
 
     cost = None
     if branch_id:
-        pwc = ProductWarehouseCost.query.filter_by(
-            product_id=product.id, warehouse_id=branch_id
-        ).first()
+        pwc = ProductWarehouseCost.query.filter_by(product_id=product.id, warehouse_id=branch_id).first()
         if pwc:
             cost = pwc.cost_price
     if cost is None:

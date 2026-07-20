@@ -35,9 +35,7 @@ MARKET_INSIGHTS = {
 
 def get_market_insights():
     """فهم السوق"""
-    pricing = "\n".join(
-        f"• {k}: {v}" for k, v in MARKET_INSIGHTS["pricing_strategy"].items()
-    )
+    pricing = "\n".join(f"• {k}: {v}" for k, v in MARKET_INSIGHTS["pricing_strategy"].items())
     return f"""📈 **فهم السوق الإماراتي:**
 
 🏗️ **القطاعات:**

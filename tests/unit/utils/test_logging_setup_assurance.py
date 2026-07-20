@@ -87,9 +87,7 @@ class TestSetupLogging:
         fmt = ColorFormatter()
         mocker.patch.object(fmt, "formatTime", return_value="ts")
         bad_stdout = MagicMock()
-        type(bad_stdout).encoding = property(
-            lambda _self: (_ for _ in ()).throw(RuntimeError("no enc"))
-        )
+        type(bad_stdout).encoding = property(lambda _self: (_ for _ in ()).throw(RuntimeError("no enc")))
         mocker.patch("utils.logging_setup.sys.stdout", bad_stdout)
         assert "ok" in fmt.format(record)
 
@@ -126,9 +124,7 @@ class TestSetupLogging:
         saved = sys.modules.pop(mod_name, None)
         real_import = builtins.__import__
 
-        def blocked_import(
-            name, globals_dict=None, locals_dict=None, fromlist=(), level=0
-        ):
+        def blocked_import(name, globals_dict=None, locals_dict=None, fromlist=(), level=0):
             if name == "colorama":
                 raise ImportError("blocked for test")
             return real_import(name, globals_dict, locals_dict, fromlist, level)

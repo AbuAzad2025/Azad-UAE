@@ -99,9 +99,7 @@ class StorePaymentMethodService:
         q = StorePaymentMethod.query
         if enabled_only:
             q = q.filter_by(is_enabled=True)
-        return q.order_by(
-            StorePaymentMethod.sort_order.asc(), StorePaymentMethod.id.asc()
-        ).all()
+        return q.order_by(StorePaymentMethod.sort_order.asc(), StorePaymentMethod.id.asc()).all()
 
     @staticmethod
     def list_for_checkout(tenant_id=None):

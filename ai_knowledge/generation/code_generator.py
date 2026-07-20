@@ -83,9 +83,7 @@ def {function_name}():
         }
 
     @staticmethod
-    def generate_sql_query(
-        intent: str, table: str, filters: Optional[dict] = None
-    ) -> str:
+    def generate_sql_query(intent: str, table: str, filters: Optional[dict] = None) -> str:
         """
         توليد SQL query تلقائياً
 
@@ -137,11 +135,7 @@ def {function_name}():
                     for k, v in filters["set"].items():
                         set_kwargs[_ident(k)] = v
                 col_names = list(set_kwargs.keys())
-                tbl = (
-                    sa_table(table_name, *[column(c) for c in col_names])
-                    if col_names
-                    else sa_table(table_name)
-                )
+                tbl = sa_table(table_name, *[column(c) for c in col_names]) if col_names else sa_table(table_name)
                 stmt = update(tbl)
                 if set_kwargs:
                     stmt = stmt.values(**set_kwargs)
@@ -158,9 +152,7 @@ def {function_name}():
             return f"-- Error: {e}"
 
     @staticmethod
-    def generate_python_function(
-        function_name: str, purpose: str, params: Optional[List[str]] = None
-    ) -> str:
+    def generate_python_function(function_name: str, purpose: str, params: Optional[List[str]] = None) -> str:
         """
         توليد دالة Python
 
@@ -219,9 +211,7 @@ def {function_name}():
             return f"# Error: {e}"
 
     @staticmethod
-    def generate_report_query(
-        report_type: str, date_range: Optional[dict] = None
-    ) -> str:
+    def generate_report_query(report_type: str, date_range: Optional[dict] = None) -> str:
         """
         توليد query لتقرير محدد
 

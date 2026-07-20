@@ -25,9 +25,7 @@ class TestCheckDatabase:
 
 class TestCheckNowpayments:
     def test_no_vault_warning(self, mocker):
-        mocker.patch(
-            "services.health_service.PaymentVault.get_platform_vault", return_value=None
-        )
+        mocker.patch("services.health_service.PaymentVault.get_platform_vault", return_value=None)
         result = HealthCheckService.check_nowpayments()
         assert result["status"] == "warning"
 
@@ -134,9 +132,7 @@ class TestCheckSystemResources:
         assert result["status"] == "warning"
 
     def test_psutil_exception(self, mocker):
-        mocker.patch(
-            "services.health_service.psutil.cpu_percent", side_effect=OSError("psutil")
-        )
+        mocker.patch("services.health_service.psutil.cpu_percent", side_effect=OSError("psutil"))
         result = HealthCheckService.check_system_resources()
         assert result["status"] == "unknown"
 
@@ -155,24 +151,16 @@ class TestGetSystemMetrics:
         assert "timestamp" in result
 
     def test_metrics_error(self, mocker):
-        mocker.patch(
-            "services.health_service.psutil.Process", side_effect=RuntimeError("proc")
-        )
+        mocker.patch("services.health_service.psutil.Process", side_effect=RuntimeError("proc"))
         result = HealthCheckService.get_system_metrics()
         assert "error" in result
 
 
 class TestRunFullHealthCheck:
     def test_overall_healthy(self, mocker):
-        mocker.patch.object(
-            HealthCheckService, "check_database", return_value={"status": "healthy"}
-        )
-        mocker.patch.object(
-            HealthCheckService, "check_nowpayments", return_value={"status": "healthy"}
-        )
-        mocker.patch.object(
-            HealthCheckService, "check_encryption", return_value={"status": "healthy"}
-        )
+        mocker.patch.object(HealthCheckService, "check_database", return_value={"status": "healthy"})
+        mocker.patch.object(HealthCheckService, "check_nowpayments", return_value={"status": "healthy"})
+        mocker.patch.object(HealthCheckService, "check_encryption", return_value={"status": "healthy"})
         mocker.patch.object(
             HealthCheckService,
             "check_system_resources",
@@ -182,15 +170,9 @@ class TestRunFullHealthCheck:
         assert result["overall_status"] == "healthy"
 
     def test_overall_warning(self, mocker):
-        mocker.patch.object(
-            HealthCheckService, "check_database", return_value={"status": "healthy"}
-        )
-        mocker.patch.object(
-            HealthCheckService, "check_nowpayments", return_value={"status": "warning"}
-        )
-        mocker.patch.object(
-            HealthCheckService, "check_encryption", return_value={"status": "healthy"}
-        )
+        mocker.patch.object(HealthCheckService, "check_database", return_value={"status": "healthy"})
+        mocker.patch.object(HealthCheckService, "check_nowpayments", return_value={"status": "warning"})
+        mocker.patch.object(HealthCheckService, "check_encryption", return_value={"status": "healthy"})
         mocker.patch.object(
             HealthCheckService,
             "check_system_resources",
@@ -200,15 +182,9 @@ class TestRunFullHealthCheck:
         assert result["overall_status"] == "warning"
 
     def test_overall_unhealthy(self, mocker):
-        mocker.patch.object(
-            HealthCheckService, "check_database", return_value={"status": "unhealthy"}
-        )
-        mocker.patch.object(
-            HealthCheckService, "check_nowpayments", return_value={"status": "warning"}
-        )
-        mocker.patch.object(
-            HealthCheckService, "check_encryption", return_value={"status": "healthy"}
-        )
+        mocker.patch.object(HealthCheckService, "check_database", return_value={"status": "unhealthy"})
+        mocker.patch.object(HealthCheckService, "check_nowpayments", return_value={"status": "warning"})
+        mocker.patch.object(HealthCheckService, "check_encryption", return_value={"status": "healthy"})
         mocker.patch.object(
             HealthCheckService,
             "check_system_resources",
@@ -227,9 +203,7 @@ class TestGetHealthData:
         )
         size_result = MagicMock()
         size_result.scalar.return_value = 1048576
-        mocker.patch(
-            "services.health_service.db.session.execute", return_value=size_result
-        )
+        mocker.patch("services.health_service.db.session.execute", return_value=size_result)
         mocker.patch(
             "services.health_service.psutil.virtual_memory",
             return_value=MagicMock(total=8e9, used=4e9),
@@ -240,9 +214,7 @@ class TestGetHealthData:
         )
         user_query = MagicMock()
         user_query.filter.return_value.scalar.return_value = 3
-        mocker.patch(
-            "services.health_service.db.session.query", return_value=user_query
-        )
+        mocker.patch("services.health_service.db.session.query", return_value=user_query)
 
         with app.app_context():
             data = HealthCheckService.get_health_data()
@@ -271,9 +243,7 @@ class TestGetHealthData:
         )
         user_query = MagicMock()
         user_query.filter.return_value.scalar.side_effect = RuntimeError("users")
-        mocker.patch(
-            "services.health_service.db.session.query", return_value=user_query
-        )
+        mocker.patch("services.health_service.db.session.query", return_value=user_query)
 
         with app.app_context():
             data = HealthCheckService.get_health_data()

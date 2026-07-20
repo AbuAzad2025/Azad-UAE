@@ -75,9 +75,7 @@ def backup_svc(mocker):
         "get_schedule_state",
         "save_schedule_settings",
     ):
-        setattr(
-            svc, name, mocker.patch(f"services.backup_service.BackupService.{name}")
-        )
+        setattr(svc, name, mocker.patch(f"services.backup_service.BackupService.{name}"))
     return svc
 
 
@@ -90,9 +88,7 @@ class TestOwnerGuardContract:
     def test_tenant_admin_gets_404(self, auth_client):
         assert auth_client.get("/owner/backups/list").status_code == 404
 
-    def test_platform_owner_gets_through(
-        self, platform_owner_client, backup_svc, mocker
-    ):
+    def test_platform_owner_gets_through(self, platform_owner_client, backup_svc, mocker):
         mocker.patch("routes.owner.backups.render_template", return_value="ok")
         backup_svc.get_list_backups_context.return_value = {
             "backups": [],
@@ -144,31 +140,23 @@ class TestBackupNow:
 class TestCreateScopedBackup:
     def test_system_scope_created(self, platform_owner_client, backup_svc):
         backup_svc.create_backup.return_value = {"filename": "sys.sql.gz"}
-        resp = platform_owner_client.post(
-            "/owner/backups/create", data={"scope": "system"}
-        )
+        resp = platform_owner_client.post("/owner/backups/create", data={"scope": "system"})
         assert resp.status_code == 302
         assert backup_svc.create_backup.call_args.kwargs["scope"] == "system"
 
     def test_unsupported_scope_rejected(self, platform_owner_client, backup_svc):
-        resp = platform_owner_client.post(
-            "/owner/backups/create", data={"scope": "galaxy"}
-        )
+        resp = platform_owner_client.post("/owner/backups/create", data={"scope": "galaxy"})
         assert resp.status_code == 302
         backup_svc.create_backup.assert_not_called()
 
     def test_tenant_scope_requires_tenant_id(self, platform_owner_client, backup_svc):
-        resp = platform_owner_client.post(
-            "/owner/backups/create", data={"scope": "tenant"}
-        )
+        resp = platform_owner_client.post("/owner/backups/create", data={"scope": "tenant"})
         assert resp.status_code == 302
         backup_svc.create_backup.assert_not_called()
 
     def test_tenant_scope_with_tenant_created(self, platform_owner_client, backup_svc):
         backup_svc.create_backup.return_value = {"filename": "t.sql.gz"}
-        resp = platform_owner_client.post(
-            "/owner/backups/create", data={"scope": "tenant", "tenant_id": "7"}
-        )
+        resp = platform_owner_client.post("/owner/backups/create", data={"scope": "tenant", "tenant_id": "7"})
         assert resp.status_code == 302
         kwargs = backup_svc.create_backup.call_args.kwargs
         assert kwargs["scope"] == "tenant"
@@ -220,9 +208,7 @@ class TestBackupInfoAndVerify:
 
 
 class TestDownloadAndDelete:
-    def test_download_serves_real_file(
-        self, platform_owner_client, backup_svc, tmp_path, mocker
-    ):
+    def test_download_serves_real_file(self, platform_owner_client, backup_svc, tmp_path, mocker):
         backup_file = tmp_path / "b.sql.gz"
         backup_file.write_bytes(b"backup-bytes")
         backup_svc.sanitize_filename.return_value = "b.sql.gz"
@@ -232,24 +218,18 @@ class TestDownloadAndDelete:
         assert resp.status_code == 200
         assert resp.data == b"backup-bytes"
 
-    def test_download_missing_file_redirects(
-        self, platform_owner_client, backup_svc, tmp_path, mocker
-    ):
+    def test_download_missing_file_redirects(self, platform_owner_client, backup_svc, tmp_path, mocker):
         backup_svc.sanitize_filename.return_value = "gone.sql.gz"
         backup_svc.user_may_access_backup.return_value = True
         mocker.patch("services.backup_service.BackupService.BACKUP_DIR", str(tmp_path))
         resp = platform_owner_client.get("/owner/backups/download/gone.sql.gz")
         assert resp.status_code == 302
 
-    def test_delete_not_listed_redirects_without_delete(
-        self, platform_owner_client, backup_svc
-    ):
+    def test_delete_not_listed_redirects_without_delete(self, platform_owner_client, backup_svc):
         backup_svc.sanitize_filename.return_value = "b.sql.gz"
         backup_svc.user_may_access_backup.return_value = True
         backup_svc.list_backups_for_user.return_value = []
-        resp = platform_owner_client.post(
-            "/owner/backups/delete", data={"filename": "b.sql.gz"}
-        )
+        resp = platform_owner_client.post("/owner/backups/delete", data={"filename": "b.sql.gz"})
         assert resp.status_code == 302
         backup_svc.delete_backup.assert_not_called()
 
@@ -258,17 +238,13 @@ class TestDownloadAndDelete:
         backup_svc.user_may_access_backup.return_value = True
         backup_svc.list_backups_for_user.return_value = [{"filename": "b.sql.gz"}]
         backup_svc.delete_backup.return_value = True
-        resp = platform_owner_client.post(
-            "/owner/backups/delete", data={"filename": "b.sql.gz"}
-        )
+        resp = platform_owner_client.post("/owner/backups/delete", data={"filename": "b.sql.gz"})
         assert resp.status_code == 302
         backup_svc.delete_backup.assert_called_once_with("b.sql.gz")
 
 
 class TestRestoreFlows:
-    def test_prepare_restore_post_returns_payload(
-        self, platform_owner_client, backup_svc
-    ):
+    def test_prepare_restore_post_returns_payload(self, platform_owner_client, backup_svc):
         backup_svc.sanitize_filename.return_value = "b.sql.gz"
         backup_svc.user_may_access_backup.return_value = True
         backup_svc.prepare_restore.return_value = {"ok": True, "commands": ["psql"]}
@@ -276,21 +252,15 @@ class TestRestoreFlows:
         assert resp.status_code == 200
         assert resp.get_json() == {"ok": True, "commands": ["psql"]}
 
-    def test_restore_target_without_url_redirects(
-        self, platform_owner_client, backup_svc, monkeypatch
-    ):
+    def test_restore_target_without_url_redirects(self, platform_owner_client, backup_svc, monkeypatch):
         monkeypatch.delenv("TARGET_TEST_DATABASE_URL", raising=False)
         backup_svc.sanitize_filename.return_value = "b.sql.gz"
         backup_svc.get_backup_info.return_value = {"manifest": {}}
-        resp = platform_owner_client.post(
-            "/owner/backups/restore-target/b.sql.gz", data={}
-        )
+        resp = platform_owner_client.post("/owner/backups/restore-target/b.sql.gz", data={})
         assert resp.status_code == 302
         backup_svc.restore_backup_to_target_db.assert_not_called()
 
-    def test_restore_target_with_url_calls_service(
-        self, platform_owner_client, backup_svc
-    ):
+    def test_restore_target_with_url_calls_service(self, platform_owner_client, backup_svc):
         backup_svc.sanitize_filename.return_value = "b.sql.gz"
         backup_svc.get_backup_info.return_value = {"manifest": {}}
         backup_svc.restore_backup_to_target_db.return_value = {
@@ -310,9 +280,7 @@ class TestRestoreFlows:
 
 class TestScheduledBackups:
     def test_get_renders_with_context(self, platform_owner_client, backup_svc, mocker):
-        render = mocker.patch(
-            "routes.owner.backups.render_template", return_value="rendered"
-        )
+        render = mocker.patch("routes.owner.backups.render_template", return_value="rendered")
         backup_svc.get_schedule_settings.return_value = {"enabled": True}
         backup_svc.get_schedule_state.return_value = {"last_run": None}
         backup_svc.list_backups.return_value = []

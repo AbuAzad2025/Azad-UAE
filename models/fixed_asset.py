@@ -19,11 +19,7 @@ class FixedAsset(db.Model):
     """
 
     __tablename__ = "fixed_assets"
-    __table_args__ = (
-        db.UniqueConstraint(
-            "tenant_id", "asset_number", name="uq_fixed_assets_tenant_asset_number"
-        ),
-    )
+    __table_args__ = (db.UniqueConstraint("tenant_id", "asset_number", name="uq_fixed_assets_tenant_asset_number"),)
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -38,32 +34,20 @@ class FixedAsset(db.Model):
     description = db.Column(db.Text)
 
     # التصنيف
-    category = db.Column(
-        db.String(50), index=True
-    )  # land, building, vehicle, equipment, furniture
+    category = db.Column(db.String(50), index=True)  # land, building, vehicle, equipment, furniture
 
     # الحسابات المحاسبية
-    asset_account_id = db.Column(
-        db.Integer, db.ForeignKey("gl_accounts.id"), nullable=False, index=True
-    )  # حساب الأصل
-    depreciation_account_id = db.Column(
-        db.Integer, db.ForeignKey("gl_accounts.id"), index=True
-    )  # مجمع الاستهلاك
-    expense_account_id = db.Column(
-        db.Integer, db.ForeignKey("gl_accounts.id"), index=True
-    )  # مصروف الاستهلاك
+    asset_account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id"), nullable=False, index=True)  # حساب الأصل
+    depreciation_account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id"), index=True)  # مجمع الاستهلاك
+    expense_account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id"), index=True)  # مصروف الاستهلاك
 
     # التكلفة
     purchase_date = db.Column(db.Date, nullable=False, index=True)
     purchase_price = db.Column(db.Numeric(18, 3), nullable=False)
-    salvage_value = db.Column(
-        db.Numeric(18, 3), default=0
-    )  # القيمة الإنقاذية (في نهاية العمر)
+    salvage_value = db.Column(db.Numeric(18, 3), default=0)  # القيمة الإنقاذية (في نهاية العمر)
 
     # الاستهلاك
-    depreciation_method = db.Column(
-        db.String(30), default="straight_line"
-    )  # straight_line, declining_balance
+    depreciation_method = db.Column(db.String(30), default="straight_line")  # straight_line, declining_balance
     useful_life_years = db.Column(db.Integer, nullable=False)  # العمر الإنتاجي بالسنوات
     useful_life_months = db.Column(db.Integer)  # أو بالأشهر
 
@@ -75,9 +59,7 @@ class FixedAsset(db.Model):
     # الموقع
     location = db.Column(db.String(200))
     cost_center_id = db.Column(db.Integer, db.ForeignKey("cost_centers.id"), index=True)
-    branch_id = db.Column(
-        db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True
-    )  # New Branch ID
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True)  # New Branch ID
 
     # الحالة
     status = db.Column(db.String(20), default="active", index=True)
@@ -107,9 +89,7 @@ class FixedAsset(db.Model):
 
     tenant = db.relationship("Tenant", backref="fixed_assets", foreign_keys=[tenant_id])
     asset_account = db.relationship("GLAccount", foreign_keys=[asset_account_id])
-    depreciation_account = db.relationship(
-        "GLAccount", foreign_keys=[depreciation_account_id]
-    )
+    depreciation_account = db.relationship("GLAccount", foreign_keys=[depreciation_account_id])
     expense_account = db.relationship("GLAccount", foreign_keys=[expense_account_id])
     cost_center = db.relationship("CostCenter")
     branch = db.relationship("Branch", backref="assets", foreign_keys=[branch_id])
@@ -163,9 +143,7 @@ class FixedAsset(db.Model):
         if self.depreciation_method == "straight_line":
             # القسط الثابت
             months = self.useful_life_years * 12
-            monthly = (self.depreciable_amount / months).quantize(
-                Decimal("0.01"), ROUND_HALF_UP
-            )
+            monthly = (self.depreciable_amount / months).quantize(Decimal("0.01"), ROUND_HALF_UP)
             return monthly
 
         elif self.depreciation_method == "declining_balance":
@@ -178,9 +156,7 @@ class FixedAsset(db.Model):
                 return Decimal("0")
 
             annual_depreciation = current_book_value * rate
-            monthly = (annual_depreciation / 12).quantize(
-                Decimal("0.01"), ROUND_HALF_UP
-            )
+            monthly = (annual_depreciation / 12).quantize(Decimal("0.01"), ROUND_HALF_UP)
 
             # التأكد من عدم تجاوز القيمة الإنقاذية
             if current_book_value - monthly < self.salvage_value:
@@ -201,9 +177,7 @@ class FixedAsset(db.Model):
             period_date = date.today()
 
         # التحقق من عدم الاستهلاك المكرر
-        existing = DepreciationSchedule.query.filter_by(
-            asset_id=self.id, period_date=period_date
-        ).first()
+        existing = DepreciationSchedule.query.filter_by(asset_id=self.id, period_date=period_date).first()
 
         if existing:
             raise ValueError("تم ترحيل الاستهلاك لهذا الشهر مسبقاً")
@@ -381,9 +355,7 @@ class DepreciationSchedule(db.Model):
         nullable=False,
         index=True,
     )
-    asset_id = db.Column(
-        db.Integer, db.ForeignKey("fixed_assets.id"), nullable=False, index=True
-    )
+    asset_id = db.Column(db.Integer, db.ForeignKey("fixed_assets.id"), nullable=False, index=True)
 
     period_date = db.Column(db.Date, nullable=False, index=True)  # نهاية الشهر/الفترة
     depreciation_amount = db.Column(db.Numeric(18, 3), nullable=False)
@@ -391,9 +363,7 @@ class DepreciationSchedule(db.Model):
     book_value = db.Column(db.Numeric(18, 3), nullable=False)
 
     # الربط بالقيد المحاسبي
-    journal_entry_id = db.Column(
-        db.Integer, db.ForeignKey("gl_journal_entries.id"), index=True
-    )
+    journal_entry_id = db.Column(db.Integer, db.ForeignKey("gl_journal_entries.id"), index=True)
 
     notes = db.Column(db.Text)
 

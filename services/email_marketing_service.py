@@ -159,11 +159,7 @@ class EmailMarketingService:
             name=data["name"],
             list_id=int(data["list_id"]) if data.get("list_id") else None,
             template_id=int(data["template_id"]) if data.get("template_id") else None,
-            scheduled_date=(
-                datetime.fromisoformat(data["scheduled_date"])
-                if data.get("scheduled_date")
-                else None
-            ),
+            scheduled_date=(datetime.fromisoformat(data["scheduled_date"]) if data.get("scheduled_date") else None),
             status="draft",
         )
         db.session.add(campaign)
@@ -208,8 +204,7 @@ class EmailMarketingService:
                     subject=template.subject,
                     recipients=[sub.email],
                     html=template.body_html,
-                    sender=template.from_email
-                    or current_app.config.get("MAIL_DEFAULT_SENDER"),
+                    sender=template.from_email or current_app.config.get("MAIL_DEFAULT_SENDER"),
                 )
                 mail.send(msg)
                 log = CampaignLog(

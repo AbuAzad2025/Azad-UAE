@@ -155,9 +155,7 @@ class TestInvoiceSettingsModel:
                 "logo_url": "",
             },
         )
-        mocker.patch.object(
-            InvoiceSettings, "get_active", return_value=InvoiceSettings()
-        )
+        mocker.patch.object(InvoiceSettings, "get_active", return_value=InvoiceSettings())
         with app.app_context():
             t, _, ctx = InvoiceSettings.company_print_context(tenant_id=7)
         assert t is tenant

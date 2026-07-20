@@ -60,9 +60,7 @@ def update_integration(service):
     try:
         integration = IntegrationSettings.get_service_config(service)
 
-        integration.enabled = (
-            request.form.get("enabled") == "true" or request.form.get("enabled") == "1"
-        )
+        integration.enabled = request.form.get("enabled") == "true" or request.form.get("enabled") == "1"
 
         config_data = {}
 
@@ -80,8 +78,7 @@ def update_integration(service):
                 "smtp_port": request.form.get("smtp_port", "587"),
                 "smtp_user": request.form.get("smtp_user", ""),
                 "smtp_password": request.form.get("smtp_password", ""),
-                "smtp_use_tls": request.form.get("smtp_use_tls") == "true"
-                or request.form.get("smtp_use_tls") == "1",
+                "smtp_use_tls": request.form.get("smtp_use_tls") == "true" or request.form.get("smtp_use_tls") == "1",
                 "from_email": request.form.get("from_email", ""),
                 "from_name": request.form.get("from_name", ""),
             }
@@ -163,9 +160,7 @@ def company_info():
 
                 business_type = request.form.get("business_type", "general").strip()
                 tenant.business_type = (
-                    business_type
-                    if IndustryService.validate_industry_code(business_type)
-                    else "general"
+                    business_type if IndustryService.validate_industry_code(business_type) else "general"
                 )
                 tenant.industry = tenant.business_type
 
@@ -182,18 +177,12 @@ def company_info():
 
                 # Legal Info
                 tenant.tax_number = request.form.get("tax_number", "").strip()
-                tenant.commercial_register = request.form.get(
-                    "commercial_register", ""
-                ).strip()
+                tenant.commercial_register = request.form.get("commercial_register", "").strip()
                 tenant.license_number = request.form.get("license_number", "").strip()
 
                 # Branding
-                tenant.brand_color_primary = request.form.get(
-                    "brand_color_primary", "#007A3D"
-                )
-                tenant.brand_color_secondary = request.form.get(
-                    "brand_color_secondary", "#D4AF37"
-                )
+                tenant.brand_color_primary = request.form.get("brand_color_primary", "#007A3D")
+                tenant.brand_color_secondary = request.form.get("brand_color_secondary", "#D4AF37")
 
                 tenant.updated_by = current_user.id
 
@@ -201,9 +190,7 @@ def company_info():
                     inv = InvoiceSettings.get_active()
                     if inv:
                         inv.company_name_ar = tenant.name_ar or inv.company_name_ar
-                        inv.company_name_en = (
-                            tenant.name_en or tenant.name or inv.company_name_en
-                        )
+                        inv.company_name_en = tenant.name_en or tenant.name or inv.company_name_en
                         inv.address_ar = tenant.address_ar or inv.address_ar
                         inv.address_en = tenant.address_en or inv.address_en
                         inv.phone_1 = tenant.phone_1 or inv.phone_1
@@ -237,18 +224,10 @@ def developer_settings():
                     "developer_name_ar",
                     request.form.get("developer_name_ar", "").strip(),
                 )
-                settings.set_custom_setting(
-                    "developer_name", request.form.get("developer_name", "").strip()
-                )
-                settings.set_custom_setting(
-                    "developer_credit", request.form.get("developer_credit", "").strip()
-                )
-                settings.set_custom_setting(
-                    "developer_phone", request.form.get("developer_phone", "").strip()
-                )
-                settings.set_custom_setting(
-                    "developer_email", request.form.get("developer_email", "").strip()
-                )
+                settings.set_custom_setting("developer_name", request.form.get("developer_name", "").strip())
+                settings.set_custom_setting("developer_credit", request.form.get("developer_credit", "").strip())
+                settings.set_custom_setting("developer_phone", request.form.get("developer_phone", "").strip())
+                settings.set_custom_setting("developer_email", request.form.get("developer_email", "").strip())
                 settings.set_custom_setting(
                     "developer_website",
                     request.form.get("developer_website", "").strip(),
@@ -257,18 +236,14 @@ def developer_settings():
                     "developer_whatsapp",
                     request.form.get("developer_whatsapp", "").strip(),
                 )
-                settings.set_custom_setting(
-                    "developer_logo", request.form.get("developer_logo", "").strip()
-                )
+                settings.set_custom_setting("developer_logo", request.form.get("developer_logo", "").strip())
                 settings.updated_by = current_user.id
             _invalidate_owner_changes()
             flash(gettext("تم حفظ إعدادات الشركة المطورة بنجاح"), "success")
             return redirect(url_for("owner.developer_settings"))
         except Exception as e:
             flash(gettext(f"خطأ في الحفظ: {str(e)}"), "error")
-    return render_template(
-        "owner/developer_settings.html", dev=dev, config=current_app.config
-    )
+    return render_template("owner/developer_settings.html", dev=dev, config=current_app.config)
 
 
 @owner_bp.route("/system-config", methods=["GET", "POST"])
@@ -287,58 +262,40 @@ def system_config():
                 settings.enable_expenses = request.form.get("enable_expenses") == "on"
                 settings.enable_gl = request.form.get("enable_gl") == "on"
                 settings.enable_reports = request.form.get("enable_reports") == "on"
-                settings.enable_ai_assistant = (
-                    request.form.get("enable_ai_assistant") == "on"
-                )
+                settings.enable_ai_assistant = request.form.get("enable_ai_assistant") == "on"
                 settings.enable_pos = request.form.get("enable_pos") == "on"
 
-                settings.enable_barcode_scanner = (
-                    request.form.get("enable_barcode_scanner") == "on"
-                )
-                settings.enable_multi_warehouse = (
-                    request.form.get("enable_multi_warehouse") == "on"
-                )
-                settings.enable_multi_currency = (
-                    request.form.get("enable_multi_currency") == "on"
-                )
+                settings.enable_barcode_scanner = request.form.get("enable_barcode_scanner") == "on"
+                settings.enable_multi_warehouse = request.form.get("enable_multi_warehouse") == "on"
+                settings.enable_multi_currency = request.form.get("enable_multi_currency") == "on"
                 settings.enable_discounts = request.form.get("enable_discounts") == "on"
                 settings.enable_returns = request.form.get("enable_returns") == "on"
                 settings.enable_ecommerce = request.form.get("enable_ecommerce") == "on"
 
                 # Azad Platform Fees
                 try:
-                    fee_rate = Decimal(
-                        str(request.form.get("azad_platform_fee_rate") or "0")
-                    )
+                    fee_rate = Decimal(str(request.form.get("azad_platform_fee_rate") or "0"))
                     settings.azad_platform_fee_rate = fee_rate.quantize(Decimal("0.01"))
                 except Exception:
-                    logger.exception(
-                        "Failed to parse azad_platform_fee_rate from form data"
-                    )
+                    logger.exception("Failed to parse azad_platform_fee_rate from form data")
                 try:
                     settings.subscription_monthly_fee_aed = Decimal(
                         request.form.get("subscription_monthly_fee_aed", "0") or "0"
                     ).quantize(Decimal("0.001"))
                 except Exception:
-                    logger.exception(
-                        "Failed to parse subscription_monthly_fee_aed from form data"
-                    )
+                    logger.exception("Failed to parse subscription_monthly_fee_aed from form data")
                 try:
                     settings.subscription_yearly_fee_aed = Decimal(
                         request.form.get("subscription_yearly_fee_aed", "0") or "0"
                     ).quantize(Decimal("0.001"))
                 except Exception:
-                    logger.exception(
-                        "Failed to parse subscription_yearly_fee_aed from form data"
-                    )
+                    logger.exception("Failed to parse subscription_yearly_fee_aed from form data")
                 try:
                     settings.subscription_perpetual_fee_aed = Decimal(
                         request.form.get("subscription_perpetual_fee_aed", "0") or "0"
                     ).quantize(Decimal("0.001"))
                 except Exception:
-                    logger.exception(
-                        "Failed to parse subscription_perpetual_fee_aed from form data"
-                    )
+                    logger.exception("Failed to parse subscription_perpetual_fee_aed from form data")
 
                 try:
                     default_currency = request.form.get("default_currency", "ILS")
@@ -494,12 +451,8 @@ def invoice_settings():
         try:
             with atomic_transaction("invoice_settings"):
                 # Company Info
-                settings.company_name_ar = request.form.get(
-                    "company_name_ar", ""
-                ).strip()
-                settings.company_name_en = request.form.get(
-                    "company_name_en", ""
-                ).strip()
+                settings.company_name_ar = request.form.get("company_name_ar", "").strip()
+                settings.company_name_en = request.form.get("company_name_en", "").strip()
 
                 # Contact Info
                 settings.address_ar = request.form.get("address_ar", "").strip()
@@ -510,26 +463,18 @@ def invoice_settings():
                 settings.website = request.form.get("website", "").strip()
 
                 settings.tax_number = request.form.get("tax_number", "").strip()
-                settings.commercial_register = request.form.get(
-                    "commercial_register", ""
-                ).strip()
+                settings.commercial_register = request.form.get("commercial_register", "").strip()
                 settings.license_number = request.form.get("license_number", "").strip()
 
                 # Bank Info
                 settings.bank_name = request.form.get("bank_name", "").strip()
-                settings.bank_account_number = request.form.get(
-                    "bank_account_number", ""
-                ).strip()
+                settings.bank_account_number = request.form.get("bank_account_number", "").strip()
                 settings.iban = request.form.get("iban", "").strip()
                 settings.swift_code = request.form.get("swift_code", "").strip()
 
                 # Design
-                settings.header_color = request.form.get(
-                    "header_color", "#667eea"
-                ).strip()
-                settings.accent_color = request.form.get(
-                    "accent_color", "#764ba2"
-                ).strip()
+                settings.header_color = request.form.get("header_color", "#667eea").strip()
+                settings.accent_color = request.form.get("accent_color", "#764ba2").strip()
                 settings.text_color = request.form.get("text_color", "#333333").strip()
 
                 # Layout
@@ -543,32 +488,16 @@ def invoice_settings():
                 settings.show_terms = request.form.get("show_terms") == "on"
 
                 # Terms
-                settings.terms_conditions_ar = request.form.get(
-                    "terms_conditions_ar", ""
-                ).strip()
-                settings.terms_conditions_en = request.form.get(
-                    "terms_conditions_en", ""
-                ).strip()
-                settings.payment_terms_ar = request.form.get(
-                    "payment_terms_ar", ""
-                ).strip()
-                settings.payment_terms_en = request.form.get(
-                    "payment_terms_en", ""
-                ).strip()
+                settings.terms_conditions_ar = request.form.get("terms_conditions_ar", "").strip()
+                settings.terms_conditions_en = request.form.get("terms_conditions_en", "").strip()
+                settings.payment_terms_ar = request.form.get("payment_terms_ar", "").strip()
+                settings.payment_terms_en = request.form.get("payment_terms_en", "").strip()
 
                 # Notes
-                settings.default_invoice_note_ar = request.form.get(
-                    "default_invoice_note_ar", ""
-                ).strip()
-                settings.default_invoice_note_en = request.form.get(
-                    "default_invoice_note_en", ""
-                ).strip()
-                settings.default_receipt_note_ar = request.form.get(
-                    "default_receipt_note_ar", ""
-                ).strip()
-                settings.default_receipt_note_en = request.form.get(
-                    "default_receipt_note_en", ""
-                ).strip()
+                settings.default_invoice_note_ar = request.form.get("default_invoice_note_ar", "").strip()
+                settings.default_invoice_note_en = request.form.get("default_invoice_note_en", "").strip()
+                settings.default_receipt_note_ar = request.form.get("default_receipt_note_ar", "").strip()
+                settings.default_receipt_note_en = request.form.get("default_receipt_note_en", "").strip()
 
                 # QR & Watermark
                 settings.enable_qr_code = request.form.get("enable_qr_code") == "on"
@@ -582,17 +511,13 @@ def invoice_settings():
 
                 # Additional
                 settings.show_barcode = request.form.get("show_barcode") == "on"
-                settings.show_page_numbers = (
-                    request.form.get("show_page_numbers") == "on"
-                )
+                settings.show_page_numbers = request.form.get("show_page_numbers") == "on"
                 settings.show_due_date = request.form.get("show_due_date") == "on"
 
                 # Social Media
                 settings.facebook_url = request.form.get("facebook_url", "").strip()
                 settings.instagram_url = request.form.get("instagram_url", "").strip()
-                settings.whatsapp_number = request.form.get(
-                    "whatsapp_number", ""
-                ).strip()
+                settings.whatsapp_number = request.form.get("whatsapp_number", "").strip()
 
                 # Template
                 settings.active_template = request.form.get("active_template", "modern")
@@ -734,9 +659,7 @@ def preview_invoice(template):
 
     sample_sale = SampleSale()
     sample_user_name = sample_sale.seller.get_display_name("ar")
-    sample_amount_in_words = number_to_arabic_words(
-        float(sample_sale.total_amount), sample_sale.currency
-    )
+    sample_amount_in_words = number_to_arabic_words(float(sample_sale.total_amount), sample_sale.currency)
     sample_qr_data_url = ""
     if settings and settings.enable_qr_code:
         sample_qr_data_url = generate_qr_data_url(
@@ -746,11 +669,7 @@ def preview_invoice(template):
                 "a": float(sample_sale.total_amount),
                 "c": sample_sale.currency,
                 "d": sample_sale.sale_date.strftime("%Y-%m-%d"),
-                "co": (
-                    settings.company_name_ar
-                    if settings and settings.company_name_ar
-                    else gettext("نظام المحاسبة")
-                ),
+                "co": (settings.company_name_ar if settings and settings.company_name_ar else gettext("نظام المحاسبة")),
                 "u": sample_user_name,
                 "b": SampleBranch.name,
             }
@@ -820,9 +739,7 @@ def preview_receipt(template):
 
     class SampleAllocation:
         def __init__(self, sale_num, amount):
-            self.sale = type(
-                "obj", (object,), {"sale_number": sale_num, "sale_date": datetime.now()}
-            )()
+            self.sale = type("obj", (object,), {"sale_number": sale_num, "sale_date": datetime.now()})()
             self.amount_allocated = Decimal(str(amount))
 
     class SampleReceipt:
@@ -855,9 +772,7 @@ def preview_receipt(template):
 
     sample_receipt = SampleReceipt()
     sample_user_name = sample_receipt.user.get_display_name("ar")
-    sample_amount_in_words = number_to_arabic_words(
-        float(sample_receipt.amount), sample_receipt.currency
-    )
+    sample_amount_in_words = number_to_arabic_words(float(sample_receipt.amount), sample_receipt.currency)
     sample_qr_data_url = ""
     if settings and settings.enable_qr_code:
         sample_qr_data_url = generate_qr_data_url(
@@ -867,11 +782,7 @@ def preview_receipt(template):
                 "a": float(sample_receipt.amount),
                 "c": sample_receipt.currency,
                 "d": sample_receipt.receipt_date.strftime("%Y-%m-%d"),
-                "co": (
-                    settings.company_name_ar
-                    if settings and settings.company_name_ar
-                    else gettext("نظام المحاسبة")
-                ),
+                "co": (settings.company_name_ar if settings and settings.company_name_ar else gettext("نظام المحاسبة")),
                 "u": sample_user_name,
                 "b": SampleBranch.name,
             }
@@ -907,19 +818,13 @@ def tax_settings():
         try:
             with atomic_transaction("tax_settings"):
                 tenant.enable_tax = request.form.get("enable_tax") == "on"
-                tenant.vat_country = (
-                    (request.form.get("vat_country") or "PS").strip().upper()[:2]
-                )
+                tenant.vat_country = (request.form.get("vat_country") or "PS").strip().upper()[:2]
                 rate = request.form.get("default_tax_rate", type=float)
                 if rate is None and tenant.enable_tax:
                     rate = float(suggested_rate_for_country(tenant.vat_country))
                 tenant.default_tax_rate = Decimal(str(rate or 0))
-                tenant.vat_number = (
-                    request.form.get("vat_number") or ""
-                ).strip() or None
-                tenant.tax_number = (
-                    request.form.get("tax_number") or ""
-                ).strip() or tenant.tax_number
+                tenant.vat_number = (request.form.get("vat_number") or "").strip() or None
+                tenant.tax_number = (request.form.get("tax_number") or "").strip() or tenant.tax_number
         except Exception as e:
             flash(gettext(f"خطأ في حفظ إعدادات الضرائب: {str(e)}"), "danger")
             return redirect(url_for("owner.tax_settings"))
@@ -953,9 +858,7 @@ def currency_settings():
                     tenant.default_currency = default_currency
                 except Exception as exc:
                     logger.debug("tenant currency settings sync: %s", exc)
-                settings.auto_update_rates = (
-                    request.form.get("auto_update_rates") == "on"
-                )
+                settings.auto_update_rates = request.form.get("auto_update_rates") == "on"
         except Exception as e:
             flash(gettext(f"خطأ في حفظ إعدادات العملات: {str(e)}"), "danger")
             return redirect(url_for("owner.currency_settings"))
@@ -972,9 +875,7 @@ def currency_settings():
         default_currency = get_system_default_currency()
     rates = CurrencyService.get_all_rates(default_currency)
 
-    return render_template(
-        "owner/currency_settings.html", settings=settings, rates=rates
-    )
+    return render_template("owner/currency_settings.html", settings=settings, rates=rates)
 
 
 @owner_bp.route("/exchange-rates", methods=["GET", "POST"])
@@ -1007,18 +908,14 @@ def exchange_rates():
                 if result.get("ok"):
                     flash(gettext("✅ تم حفظ سعر الصرف بنجاح!"), "success")
                 else:
-                    flash(
-                        gettext(f"❌ خطأ: {result.get('error', 'unknown')}"), "danger"
-                    )
+                    flash(gettext(f"❌ خطأ: {result.get('error', 'unknown')}"), "danger")
             else:
                 flash(gettext("⚠️ أدخل سعر صرف صالح أكبر من صفر."), "warning")
 
         elif action == "delete":
             record_id = request.form.get("record_id", type=int)
             if record_id:
-                rec = ExchangeRateRecord.query.filter_by(
-                    id=record_id, tenant_id=tenant_id
-                ).first()
+                rec = ExchangeRateRecord.query.filter_by(id=record_id, tenant_id=tenant_id).first()
                 if rec:
                     with atomic_transaction("exchange_rate_delete"):
                         db.session.delete(rec)
@@ -1056,9 +953,7 @@ def payment_gateways():
     if not vault:
         with atomic_transaction("payment_gateway_create_vault"):
             vault = PaymentVault(tenant_id=None)
-            vault.set_vault_password(
-                current_app.config.get("SECRET_KEY", "default-vault-password")
-            )
+            vault.set_vault_password(current_app.config.get("SECRET_KEY", "default-vault-password"))
             db.session.add(vault)
         _invalidate_owner_changes()
 
@@ -1137,9 +1032,7 @@ def whatsapp_settings():
 
                 settings.whatsapp_api_url = request.form.get("whatsapp_api_url")
                 settings.whatsapp_api_key = request.form.get("whatsapp_api_key")
-                settings.whatsapp_phone_number = request.form.get(
-                    "whatsapp_phone_number"
-                )
+                settings.whatsapp_phone_number = request.form.get("whatsapp_phone_number")
                 settings.whatsapp_enabled = request.form.get("whatsapp_enabled") == "on"
         except Exception as e:
             flash(gettext(f"خطأ في حفظ إعدادات واتساب: {str(e)}"), "danger")
@@ -1217,9 +1110,7 @@ def api_update_tenant_settings():
                     tenant.logo_url = str(value).strip()
                 tenant.updated_at = datetime.now(timezone.utc)
         _invalidate_owner_changes()
-        _audit_owner_db_action(
-            "api_update_tenant_settings", {"field": field, "tenant_id": tenant.id}
-        )
+        _audit_owner_db_action("api_update_tenant_settings", {"field": field, "tenant_id": tenant.id})
         return jsonify({"success": True, "message": gettext(f"تم تحديث {field} بنجاح")})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
@@ -1240,9 +1131,7 @@ def api_toggle_warehouse_negative():
         if not warehouse_id:
             return jsonify({"success": False, "error": "warehouse_id required"}), 400
         tenant_id = get_active_tenant_id()
-        warehouse = Warehouse.query.filter_by(
-            id=warehouse_id, tenant_id=tenant_id
-        ).first()
+        warehouse = Warehouse.query.filter_by(id=warehouse_id, tenant_id=tenant_id).first()
         if not warehouse:
             return jsonify({"success": False, "error": "Warehouse not found"}), 404
         with atomic_transaction("api_toggle_warehouse_negative"):
@@ -1284,19 +1173,13 @@ def api_supervisor_override():
         supervisor = db.session.get(User, supervisor_id)
         if not supervisor or not supervisor.is_active:
             return (
-                jsonify(
-                    {"success": False, "error": gettext("المشرف غير موجود أو غير نشط")}
-                ),
+                jsonify({"success": False, "error": gettext("المشرف غير موجود أو غير نشط")}),
                 404,
             )
         if not supervisor.is_manager() and not supervisor.is_admin():
-            return jsonify(
-                {"success": False, "error": gettext("المستخدم ليس مشرفاً")}
-            ), 403
+            return jsonify({"success": False, "error": gettext("المستخدم ليس مشرفاً")}), 403
         if not supervisor.check_password(password):
-            return jsonify(
-                {"success": False, "error": gettext("كلمة المرور غير صحيحة")}
-            ), 403
+            return jsonify({"success": False, "error": gettext("كلمة المرور غير صحيحة")}), 403
         LoggingCore.log_audit(
             "supervisor_override",
             "system",

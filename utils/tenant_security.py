@@ -88,12 +88,8 @@ def validate_tenant_ownership(model_class):
                     abort(404, description="Resource not found")
             else:
                 # For tenant-scoped resources, strict ownership check
-                if tenant_id is not None and int(resource_tenant_id or 0) != int(
-                    tenant_id or 0
-                ):
-                    abort(
-                        404, description=f"{model_class.__name__} not found"
-                    )  # Return 404 to avoid leaking existence
+                if tenant_id is not None and int(resource_tenant_id or 0) != int(tenant_id or 0):
+                    abort(404, description=f"{model_class.__name__} not found")  # Return 404 to avoid leaking existence
 
             # Resource belongs to current tenant, proceed with the route
             return f(*args, **kwargs)

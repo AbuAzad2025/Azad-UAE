@@ -43,29 +43,21 @@ def sample_package(db_session):
 class TestActivatePurchasedPackageValidation:
     def test_missing_tenant_raises(self, db_session, sample_package):
         with pytest.raises(SaaSProvisioningError, match="Tenant .* not found"):
-            SaaSProvisioningService.activate_purchased_package(
-                tenant_id=999999999, package_id=sample_package.id
-            )
+            SaaSProvisioningService.activate_purchased_package(tenant_id=999999999, package_id=sample_package.id)
 
     def test_missing_package_raises(self, db_session, sample_tenant):
         with pytest.raises(SaaSProvisioningError, match="not found or inactive"):
-            SaaSProvisioningService.activate_purchased_package(
-                tenant_id=sample_tenant.id, package_id=999999999
-            )
+            SaaSProvisioningService.activate_purchased_package(tenant_id=sample_tenant.id, package_id=999999999)
 
     def test_inactive_package_raises(self, db_session, sample_tenant, sample_package):
         sample_package.is_active = False
         db_session.commit()
         with pytest.raises(SaaSProvisioningError, match="not found or inactive"):
-            SaaSProvisioningService.activate_purchased_package(
-                tenant_id=sample_tenant.id, package_id=sample_package.id
-            )
+            SaaSProvisioningService.activate_purchased_package(tenant_id=sample_tenant.id, package_id=sample_package.id)
 
 
 class TestActivatePurchasedPackageDurations:
-    def test_monthly_sets_30_day_window(
-        self, db_session, sample_tenant, sample_package
-    ):
+    def test_monthly_sets_30_day_window(self, db_session, sample_tenant, sample_package):
         result = SaaSProvisioningService.activate_purchased_package(
             tenant_id=sample_tenant.id, package_id=sample_package.id
         )
@@ -76,9 +68,7 @@ class TestActivatePurchasedPackageDurations:
         delta = tenant.subscription_end - tenant.subscription_start
         assert delta == timedelta(days=30)
 
-    def test_annual_sets_365_day_window(
-        self, db_session, sample_tenant, sample_package
-    ):
+    def test_annual_sets_365_day_window(self, db_session, sample_tenant, sample_package):
         SaaSProvisioningService.activate_purchased_package(
             tenant_id=sample_tenant.id,
             package_id=sample_package.id,
@@ -87,13 +77,9 @@ class TestActivatePurchasedPackageDurations:
         tenant = db_session.get(type(sample_tenant), sample_tenant.id)
         assert tenant.subscription_plan_duration == "annual"
         assert tenant.is_trial is False
-        assert tenant.subscription_end - tenant.subscription_start == timedelta(
-            days=365
-        )
+        assert tenant.subscription_end - tenant.subscription_start == timedelta(days=365)
 
-    def test_trial_sets_7_day_window_and_flag(
-        self, db_session, sample_tenant, sample_package
-    ):
+    def test_trial_sets_7_day_window_and_flag(self, db_session, sample_tenant, sample_package):
         result = SaaSProvisioningService.activate_purchased_package(
             tenant_id=sample_tenant.id,
             package_id=sample_package.id,
@@ -117,12 +103,8 @@ class TestActivatePurchasedPackageDurations:
 
 
 class TestActivatePurchasedPackageFeatures:
-    def test_package_limits_and_flags_applied(
-        self, db_session, sample_tenant, sample_package
-    ):
-        SaaSProvisioningService.activate_purchased_package(
-            tenant_id=sample_tenant.id, package_id=sample_package.id
-        )
+    def test_package_limits_and_flags_applied(self, db_session, sample_tenant, sample_package):
+        SaaSProvisioningService.activate_purchased_package(tenant_id=sample_tenant.id, package_id=sample_package.id)
         tenant = db_session.get(type(sample_tenant), sample_tenant.id)
         assert tenant.max_users == 7
         assert tenant.max_branches == 4
@@ -132,17 +114,13 @@ class TestActivatePurchasedPackageFeatures:
         assert tenant.allow_custom_integrations is True
         assert tenant.enable_reports is True
 
-    def test_none_limits_leave_tenant_defaults(
-        self, db_session, sample_tenant, sample_package
-    ):
+    def test_none_limits_leave_tenant_defaults(self, db_session, sample_tenant, sample_package):
         sample_package.max_users = None
         sample_package.max_branches = None
         db_session.commit()
         original_users = sample_tenant.max_users
         original_branches = sample_tenant.max_branches
-        SaaSProvisioningService.activate_purchased_package(
-            tenant_id=sample_tenant.id, package_id=sample_package.id
-        )
+        SaaSProvisioningService.activate_purchased_package(tenant_id=sample_tenant.id, package_id=sample_package.id)
         tenant = db_session.get(type(sample_tenant), sample_tenant.id)
         assert tenant.max_users == original_users
         assert tenant.max_branches == original_branches

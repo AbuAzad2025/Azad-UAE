@@ -151,12 +151,8 @@ class TestGetTableSizes:
 class TestOptimizeAll:
     def test_runs_all_optimization_steps(self):
         with (
-            patch.object(
-                DatabaseOptimizer, "vacuum_postgres", return_value={"success": True}
-            ),
-            patch.object(
-                DatabaseOptimizer, "analyze_tables", return_value={"success": True}
-            ),
+            patch.object(DatabaseOptimizer, "vacuum_postgres", return_value={"success": True}),
+            patch.object(DatabaseOptimizer, "analyze_tables", return_value={"success": True}),
             patch.object(
                 DatabaseOptimizer,
                 "get_table_sizes",

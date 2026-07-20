@@ -34,15 +34,11 @@ def _hr_patches(**kwargs):
 
     with ExitStack() as stack:
         stack.enter_context(patch("routes.hr.render_template", return_value="ok"))
-        stack.enter_context(
-            patch("routes.hr.get_active_tenant_id", return_value=kwargs.get("tid", 1))
-        )
+        stack.enter_context(patch("routes.hr.get_active_tenant_id", return_value=kwargs.get("tid", 1)))
         stack.enter_context(
             patch(
                 "routes.hr.tenant_query",
-                side_effect=lambda model: _chain_query(
-                    all=kwargs.get("leave_types", [])
-                ),
+                side_effect=lambda model: _chain_query(all=kwargs.get("leave_types", [])),
             )
         )
         stack.enter_context(
@@ -51,20 +47,14 @@ def _hr_patches(**kwargs):
                 return_value=kwargs.get("records", []),
             )
         )
-        stack.enter_context(
-            patch(
-                "routes.hr.HRService.list_leaves", return_value=kwargs.get("leaves", [])
-            )
-        )
+        stack.enter_context(patch("routes.hr.HRService.list_leaves", return_value=kwargs.get("leaves", [])))
         stack.enter_context(
             patch(
                 "routes.hr.HRService.list_departments",
                 return_value=kwargs.get("departments", []),
             )
         )
-        stack.enter_context(
-            patch("routes.hr.HRService.clock_in", return_value=_mock_attendance())
-        )
+        stack.enter_context(patch("routes.hr.HRService.clock_in", return_value=_mock_attendance()))
         stack.enter_context(
             patch(
                 "routes.hr.HRService.clock_out",
@@ -72,18 +62,12 @@ def _hr_patches(**kwargs):
             )
         )
         stack.enter_context(patch("routes.hr.HRService.request_leave"))
-        stack.enter_context(
-            patch("routes.hr.HRService.approve_leave", return_value=_mock_leave())
-        )
-        stack.enter_context(
-            patch("routes.hr.HRService.refuse_leave", return_value=_mock_leave())
-        )
+        stack.enter_context(patch("routes.hr.HRService.approve_leave", return_value=_mock_leave()))
+        stack.enter_context(patch("routes.hr.HRService.refuse_leave", return_value=_mock_leave()))
         stack.enter_context(patch("routes.hr.HRService.create_department"))
         stack.enter_context(patch("routes.hr.HRService.create_contract"))
         stack.enter_context(patch("routes.hr.User.query", user_q))
-        stack.enter_context(
-            patch("routes.hr.tenant_get_or_404", return_value=_mock_leave())
-        )
+        stack.enter_context(patch("routes.hr.tenant_get_or_404", return_value=_mock_leave()))
         stack.enter_context(patch("extensions.limiter.limit", return_value=lambda f: f))
         yield
 
@@ -102,9 +86,7 @@ class TestHrAuth:
             resp = hr_client.get("/hr/attendance")
         assert resp.status_code == 401
 
-    def test_attendance_forbidden_without_permission(
-        self, hr_client, bypass_permission_auth
-    ):
+    def test_attendance_forbidden_without_permission(self, hr_client, bypass_permission_auth):
         bypass_permission_auth.has_permission.return_value = False
         bypass_permission_auth.is_super_admin.return_value = False
         with (
@@ -123,9 +105,7 @@ class TestHrAttendance:
 
     def test_attendance_with_filters(self, hr_client):
         with _hr_patches():
-            resp = hr_client.get(
-                "/hr/attendance?user_id=3&date_from=2026-01-01&date_to=2026-06-30"
-            )
+            resp = hr_client.get("/hr/attendance?user_id=3&date_from=2026-01-01&date_to=2026-06-30")
         assert resp.status_code == 200
 
     def test_clock_in_success(self, hr_client):
@@ -153,9 +133,7 @@ class TestHrAttendance:
     def test_clock_out_error(self, hr_client):
         with (
             _hr_patches(),
-            patch(
-                "routes.hr.HRService.clock_out", side_effect=ValueError("no session")
-            ),
+            patch("routes.hr.HRService.clock_out", side_effect=ValueError("no session")),
         ):
             resp = hr_client.post("/hr/attendance/clock-out")
         assert resp.status_code == 302
@@ -193,9 +171,7 @@ class TestHrLeaves:
     def test_request_leave_post_error(self, hr_client):
         with (
             _hr_patches(),
-            patch(
-                "routes.hr.HRService.request_leave", side_effect=ValueError("overlap")
-            ),
+            patch("routes.hr.HRService.request_leave", side_effect=ValueError("overlap")),
         ):
             resp = hr_client.post("/hr/leaves/request", data={})
         assert resp.status_code == 200
@@ -216,18 +192,14 @@ class TestHrLeaves:
     def test_approve_leave_value_error(self, hr_client):
         with (
             _hr_patches(),
-            patch(
-                "routes.hr.HRService.approve_leave", side_effect=ValueError("not draft")
-            ),
+            patch("routes.hr.HRService.approve_leave", side_effect=ValueError("not draft")),
         ):
             resp = hr_client.post("/hr/leaves/5/approve")
         assert resp.status_code == 302
 
     def test_refuse_leave_success(self, hr_client):
         with _hr_patches():
-            resp = hr_client.post(
-                "/hr/leaves/5/refuse", data={"rejected_reason": "busy"}
-            )
+            resp = hr_client.post("/hr/leaves/5/refuse", data={"rejected_reason": "busy"})
         assert resp.status_code == 302
 
     def test_refuse_leave_cross_tenant(self, hr_client):
@@ -261,9 +233,7 @@ class TestHrDepartments:
     def test_create_department_error(self, hr_client):
         with (
             _hr_patches(),
-            patch(
-                "routes.hr.HRService.create_department", side_effect=ValueError("dup")
-            ),
+            patch("routes.hr.HRService.create_department", side_effect=ValueError("dup")),
         ):
             resp = hr_client.post("/hr/departments/create", data={})
         assert resp.status_code == 302
@@ -282,9 +252,7 @@ class TestHrDepartments:
     def test_create_contract_error(self, hr_client):
         with (
             _hr_patches(),
-            patch(
-                "routes.hr.HRService.create_contract", side_effect=KeyError("user_id")
-            ),
+            patch("routes.hr.HRService.create_contract", side_effect=KeyError("user_id")),
         ):
             resp = hr_client.post("/hr/contracts/create", data={})
         assert resp.status_code == 302

@@ -9,9 +9,7 @@ def _import_bp(app, module_path, var_name):
         import sys
         import traceback
 
-        sys.stderr.write(
-            f"[SYSTEM_INIT_ERROR] Failed to import blueprint {module_path}.{var_name}: {exc}\n"
-        )
+        sys.stderr.write(f"[SYSTEM_INIT_ERROR] Failed to import blueprint {module_path}.{var_name}: {exc}\n")
         traceback.print_exc()
         try:
             from services.logging_core import LoggingCore
@@ -91,17 +89,13 @@ def _make_ai_fallback(ai_import_error):
             from flask import session
 
             if not session.get("ai_unavailable_notified"):
-                flash(
-                    "المساعد الذكي غير متاح حالياً بسبب إعدادات غير مكتملة.", "warning"
-                )
+                flash("المساعد الذكي غير متاح حالياً بسبب إعدادات غير مكتملة.", "warning")
                 session["ai_unavailable_notified"] = True
         except Exception as e:
             import sys
             import traceback
 
-            sys.stderr.write(
-                f"[AI_FALLBACK_WARNING] Failed to set session notification: {e}\n"
-            )
+            sys.stderr.write(f"[AI_FALLBACK_WARNING] Failed to set session notification: {e}\n")
             traceback.print_exc()
             try:
                 from services.logging_core import LoggingCore
@@ -183,9 +177,7 @@ def register_blueprints(app):
     hr_bp = _import_bp(app, "routes.hr", "hr_bp")
     email_marketing_bp = _import_bp(app, "routes.email_marketing", "email_marketing_bp")
     printing_bp = _import_bp(app, "routes.printing", "printing_bp")
-    billing_webhook_bp = _import_bp(
-        app, "routes.billing_webhooks", "billing_webhook_bp"
-    )
+    billing_webhook_bp = _import_bp(app, "routes.billing_webhooks", "billing_webhook_bp")
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)

@@ -47,9 +47,7 @@ def _expense(**kwargs):
         customs_rate=kwargs.get("customs_rate", Decimal("0.02")),
         is_reversed=kwargs.get("is_reversed", False),
     )
-    exp.category = kwargs.get(
-        "category", SimpleNamespace(gl_account=SimpleNamespace(code="6100"))
-    )
+    exp.category = kwargs.get("category", SimpleNamespace(gl_account=SimpleNamespace(code="6100")))
     return exp
 
 

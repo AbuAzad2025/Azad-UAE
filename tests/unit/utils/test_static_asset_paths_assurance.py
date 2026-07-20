@@ -38,9 +38,7 @@ class TestTenantAssetPaths:
         assert ".." not in path
 
     def test_tenant_demo_products_dir_normalizes_slug(self):
-        assert (
-            tenant_demo_products_dir("  ACME  ") == "assets/tenants/acme/demo-products"
-        )
+        assert tenant_demo_products_dir("  ACME  ") == "assets/tenants/acme/demo-products"
         assert tenant_demo_products_dir("") == "assets/tenants//demo-products"
 
     def test_constants_are_relative_static_paths(self):

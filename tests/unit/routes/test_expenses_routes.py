@@ -52,31 +52,19 @@ def _expense_patches(expense=None, tenant_get_raises=False, branch_scope=None):
         stack.enter_context(
             patch(
                 "routes.expenses.tenant_query",
-                side_effect=lambda m: (
-                    cat_q
-                    if getattr(m, "__name__", "") == "ExpenseCategory"
-                    else expense_q
-                ),
+                side_effect=lambda m: cat_q if getattr(m, "__name__", "") == "ExpenseCategory" else expense_q,
             )
         )
-        stack.enter_context(
-            patch("routes.expenses.get_active_tenant_id", return_value=1)
-        )
-        stack.enter_context(
-            patch("routes.expenses.require_active_tenant_id", return_value=1)
-        )
+        stack.enter_context(patch("routes.expenses.get_active_tenant_id", return_value=1))
+        stack.enter_context(patch("routes.expenses.require_active_tenant_id", return_value=1))
         stack.enter_context(
             patch(
                 "routes.expenses.tenant_get_or_404",
                 return_value=expense if not tenant_get_raises else None,
             )
         )
-        stack.enter_context(
-            patch("routes.expenses.branch_scope_id", return_value=branch_scope)
-        )
-        stack.enter_context(
-            patch("routes.expenses.should_show_all_branch_columns", return_value=False)
-        )
+        stack.enter_context(patch("routes.expenses.branch_scope_id", return_value=branch_scope))
+        stack.enter_context(patch("routes.expenses.should_show_all_branch_columns", return_value=False))
         stack.enter_context(patch("extensions.db.session"))
         stack.enter_context(patch("services.logging_core.LoggingCore.log_audit"))
         stack.enter_context(
@@ -91,17 +79,9 @@ def _expense_patches(expense=None, tenant_get_raises=False, branch_scope=None):
                 return_value=Decimal("1"),
             )
         )
-        stack.enter_context(
-            patch("routes.expenses.resolve_default_currency", return_value="AED")
-        )
-        stack.enter_context(
-            patch("routes.expenses.generate_number", return_value="EXP-NEW")
-        )
-        stack.enter_context(
-            patch(
-                "routes.expenses._resolve_transaction_rate", return_value=Decimal("1")
-            )
-        )
+        stack.enter_context(patch("routes.expenses.resolve_default_currency", return_value="AED"))
+        stack.enter_context(patch("routes.expenses.generate_number", return_value="EXP-NEW"))
+        stack.enter_context(patch("routes.expenses._resolve_transaction_rate", return_value=Decimal("1")))
         stack.enter_context(patch("routes.expenses.post_or_fail"))
         stack.enter_context(patch("routes.expenses.GLService.ensure_core_accounts"))
         stack.enter_context(
@@ -119,12 +99,8 @@ def _expense_patches(expense=None, tenant_get_raises=False, branch_scope=None):
         stack.enter_context(patch("services.cheque_service.process_cheque_issue"))
         stack.enter_context(patch("extensions.limiter.limit", return_value=lambda f: f))
         if tenant_get_raises:
-            stack.enter_context(
-                patch("routes.expenses.tenant_get_or_404", side_effect=NotFound())
-            )
-        render = stack.enter_context(
-            patch("routes.expenses.render_template", return_value="ok")
-        )
+            stack.enter_context(patch("routes.expenses.tenant_get_or_404", side_effect=NotFound()))
+        render = stack.enter_context(patch("routes.expenses.render_template", return_value="ok"))
         yield {"render": render, "expense": expense}
 
 
@@ -186,9 +162,7 @@ class TestExpensesIndex:
 
 class TestResolveTransactionRate:
     def test_resolve_transaction_rate(self, mocker):
-        mocker.patch(
-            "utils.currency_utils.get_system_default_currency", return_value="AED"
-        )
+        mocker.patch("utils.currency_utils.get_system_default_currency", return_value="AED")
         mocker.patch(
             "services.exchange_rate_service.ExchangeRateService.resolve_exchange_rate_for_transaction",
             return_value={"rate": "3.67"},
@@ -421,9 +395,7 @@ class TestExpensesEdit:
             patch("models.ArchivedRecord") as ar,
         ):
             ar.query.filter_by.return_value.first.return_value = archived
-            resp = expenses_client.post(
-                "/expenses/1/edit", data={"amount": "100"}, follow_redirects=False
-            )
+            resp = expenses_client.post("/expenses/1/edit", data={"amount": "100"}, follow_redirects=False)
         assert resp.status_code == 302
 
     def test_edit_financial_change_reposts(self, expenses_client):

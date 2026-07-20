@@ -15,9 +15,7 @@ class CashBox(db.Model):
     """
 
     __tablename__ = "cash_boxes"
-    __table_args__ = (
-        db.UniqueConstraint("tenant_id", "code", name="uq_cash_boxes_tenant_code"),
-    )
+    __table_args__ = (db.UniqueConstraint("tenant_id", "code", name="uq_cash_boxes_tenant_code"),)
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -26,9 +24,7 @@ class CashBox(db.Model):
         nullable=False,
         index=True,
     )
-    branch_id = db.Column(
-        db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True
-    )
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True)
 
     code = db.Column(db.String(20), nullable=False, index=True)
     name_ar = db.Column(db.String(200), nullable=False)
@@ -51,18 +47,14 @@ class CashBox(db.Model):
     swift_code = db.Column(db.String(20), nullable=True)
 
     # Payment gateway fields
-    gateway_provider = db.Column(
-        db.String(50), nullable=True
-    )  # stripe, nowpayments, etc.
+    gateway_provider = db.Column(db.String(50), nullable=True)  # stripe, nowpayments, etc.
     gateway_merchant_id = db.Column(db.String(100), nullable=True)
 
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
     is_default = db.Column(db.Boolean, default=False, nullable=False)
 
     # GL linkage
-    gl_account_id = db.Column(
-        db.Integer, db.ForeignKey("gl_accounts.id"), nullable=True, index=True
-    )
+    gl_account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id"), nullable=True, index=True)
 
     # Audit
     created_at = db.Column(

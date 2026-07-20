@@ -28,9 +28,7 @@ class AiMemory(db.Model):
         default=lambda: datetime.now(timezone.utc),
         index=True,
     )
-    updated_at = db.Column(
-        db.DateTime, nullable=True, onupdate=lambda: datetime.now(timezone.utc)
-    )
+    updated_at = db.Column(db.DateTime, nullable=True, onupdate=lambda: datetime.now(timezone.utc))
     tenant = db.relationship("Tenant", backref="ai_memories", foreign_keys=[tenant_id])
 
     def to_dict(self):
@@ -43,9 +41,7 @@ class AiMemory(db.Model):
             "confidence": float(self.confidence) if self.confidence else 0.80,
             "source": self.source,
             "access_count": self.access_count,
-            "last_accessed": (
-                self.last_accessed.isoformat() if self.last_accessed else None
-            ),
+            "last_accessed": (self.last_accessed.isoformat() if self.last_accessed else None),
             "is_active": self.is_active,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
@@ -73,18 +69,14 @@ class AiInteraction(db.Model):
     intent = db.Column(db.String(100), nullable=True)
     was_successful = db.Column(db.Boolean, nullable=True)
     response_time_ms = db.Column(db.Integer, nullable=True)
-    is_training_sample = db.Column(
-        db.Boolean, nullable=False, default=False, index=True
-    )
+    is_training_sample = db.Column(db.Boolean, nullable=False, default=False, index=True)
     created_at = db.Column(
         db.DateTime,
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         index=True,
     )
-    tenant = db.relationship(
-        "Tenant", backref="ai_interactions", foreign_keys=[tenant_id]
-    )
+    tenant = db.relationship("Tenant", backref="ai_interactions", foreign_keys=[tenant_id])
     user = db.relationship("User", foreign_keys=[user_id])
 
     def to_dict(self):

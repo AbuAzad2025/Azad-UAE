@@ -89,9 +89,7 @@ class RealTimeAccountingListeners:
                     "entry_number": entry.entry_number,
                     "is_posted": entry.is_posted,
                     "is_reversed": entry.is_reversed,
-                    "updated_at": (
-                        entry.updated_at.isoformat() if entry.updated_at else None
-                    ),
+                    "updated_at": (entry.updated_at.isoformat() if entry.updated_at else None),
                 },
             )
 
@@ -156,9 +154,7 @@ class RealTimeAccountingListeners:
                     "account_code": account.code,
                     "account_name": account.full_name,
                     "balance": float(account.get_balance()),
-                    "updated_at": (
-                        account.updated_at.isoformat() if account.updated_at else None
-                    ),
+                    "updated_at": (account.updated_at.isoformat() if account.updated_at else None),
                 },
             )
 
@@ -200,10 +196,7 @@ class RealTimeAccountingListeners:
             )
 
             # فحص حدود الموافقة
-            if (
-                expense.requires_approval
-                and expense.amount_aed > expense.category.approval_limit
-            ):
+            if expense.requires_approval and expense.amount_aed > expense.category.approval_limit:
                 RealTimeAccountingListeners._send_notification(
                     "موافقة مطلوبة",
                     f"مصروف رقم {expense.expense_number} يحتاج موافقة (يتجاوز الحد المسموح)",
@@ -226,9 +219,7 @@ class RealTimeAccountingListeners:
                     "status": cheque.status,
                     "amount": float(cheque.amount_aed),
                     "type": cheque.cheque_type,
-                    "updated_at": (
-                        cheque.updated_at.isoformat() if cheque.updated_at else None
-                    ),
+                    "updated_at": (cheque.updated_at.isoformat() if cheque.updated_at else None),
                 },
             )
 
@@ -244,13 +235,7 @@ class RealTimeAccountingListeners:
                 RealTimeAccountingListeners._send_notification(
                     status_messages[cheque.status],
                     f"شيك رقم {cheque.cheque_bank_number} - {cheque.status_ar}",
-                    (
-                        "success"
-                        if cheque.status == "cleared"
-                        else "warning"
-                        if cheque.status == "bounced"
-                        else "info"
-                    ),
+                    ("success" if cheque.status == "cleared" else "warning" if cheque.status == "bounced" else "info"),
                 )
 
         except Exception as e:
@@ -262,9 +247,7 @@ class RealTimeAccountingListeners:
         try:
             # يمكن حفظ الأحداث في قاعدة بيانات أو ملف
             # طباعة للاختبار (يمكن استبدالها بحفظ في قاعدة البيانات)
-            print(
-                f"🔔 حدث محاسبي: {event_type} - {json.dumps(data, ensure_ascii=False)}"
-            )
+            print(f"🔔 حدث محاسبي: {event_type} - {json.dumps(data, ensure_ascii=False)}")
 
         except Exception as e:
             print(f"خطأ في تسجيل الحدث: {e}")

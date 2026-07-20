@@ -103,9 +103,7 @@ class TestSalesCreate:
             quantity=Decimal("100"),
         )
         db_session.add(stock)
-        _add_initial_stock(
-            db_session, product.id, warehouse.id, tenant.id, Decimal("100")
-        )
+        _add_initial_stock(db_session, product.id, warehouse.id, tenant.id, Decimal("100"))
         db_session.commit()
 
         GLService.ensure_core_accounts(tenant_id=tenant.id)
@@ -153,20 +151,12 @@ class TestSalesCreate:
         assert len(gl_entries) >= 2
         total_debit = sum((e.total_debit or 0) for e in gl_entries)
         total_credit = sum((e.total_credit or 0) for e in gl_entries)
-        assert total_debit == total_credit, (
-            f"GL unbalanced: debit={total_debit} credit={total_credit}"
-        )
+        assert total_debit == total_credit, f"GL unbalanced: debit={total_debit} credit={total_credit}"
 
-        stock_after = ProductWarehouseStock.query.filter_by(
-            product_id=product.id, warehouse_id=warehouse.id
-        ).first()
-        assert stock_after.quantity == Decimal("95"), (
-            f"Expected 95, got {stock_after.quantity}"
-        )
+        stock_after = ProductWarehouseStock.query.filter_by(product_id=product.id, warehouse_id=warehouse.id).first()
+        assert stock_after.quantity == Decimal("95"), f"Expected 95, got {stock_after.quantity}"
 
-    def test_create_invoice_with_tax_calculates_vat_correctly(
-        self, app, db_session, client
-    ):
+    def test_create_invoice_with_tax_calculates_vat_correctly(self, app, db_session, client):
         from models import (
             Tenant,
             Branch,
@@ -223,9 +213,7 @@ class TestSalesCreate:
         db_session.add(user)
         db_session.flush()
 
-        customer = Customer(
-            tenant_id=tenant.id, name=f"TaxCust {tid}", phone=f"051{tid}"
-        )
+        customer = Customer(tenant_id=tenant.id, name=f"TaxCust {tid}", phone=f"051{tid}")
         db_session.add(customer)
         db_session.flush()
 
@@ -248,9 +236,7 @@ class TestSalesCreate:
             quantity=Decimal("50"),
         )
         db_session.add(stock)
-        _add_initial_stock(
-            db_session, product.id, warehouse.id, tenant.id, Decimal("50")
-        )
+        _add_initial_stock(db_session, product.id, warehouse.id, tenant.id, Decimal("50"))
         db_session.commit()
 
         GLService.ensure_core_accounts(tenant_id=tenant.id)

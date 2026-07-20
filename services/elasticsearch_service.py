@@ -15,9 +15,7 @@ class ElasticsearchService:
         try:
             from elasticsearch import Elasticsearch
 
-            es = Elasticsearch(
-                [os.environ.get("ELASTICSEARCH_URL", "http://localhost:9200")]
-            )
+            es = Elasticsearch([os.environ.get("ELASTICSEARCH_URL", "http://localhost:9200")])
 
             result = es.index(index="sales", id=sale_data["id"], document=sale_data)
 
@@ -27,9 +25,7 @@ class ElasticsearchService:
             return {"success": False, "error": str(e)}
 
     @staticmethod
-    def search_sales(
-        query: str, filters: Optional[Dict] = None, limit: int = 50
-    ) -> Dict:
+    def search_sales(query: str, filters: Optional[Dict] = None, limit: int = 50) -> Dict:
         if not ElasticsearchService.is_enabled():
             return ElasticsearchService._fallback_search(query, filters, limit)
 
@@ -70,9 +66,7 @@ class ElasticsearchService:
             return ElasticsearchService._fallback_search(query, filters, limit)
 
     @staticmethod
-    def _fallback_search(
-        query: str, filters: Optional[Dict] = None, limit: int = 50
-    ) -> Dict:
+    def _fallback_search(query: str, filters: Optional[Dict] = None, limit: int = 50) -> Dict:
         from models import Sale
         from sqlalchemy import or_
 
@@ -80,9 +74,7 @@ class ElasticsearchService:
 
         if query:
             search_query = search_query.filter(
-                or_(
-                    Sale.sale_number.ilike(f"%{query}%"), Sale.notes.ilike(f"%{query}%")
-                )
+                or_(Sale.sale_number.ilike(f"%{query}%"), Sale.notes.ilike(f"%{query}%"))
             )
 
         if filters:

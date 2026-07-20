@@ -74,9 +74,7 @@ def _recommended_fix(status: str, issue: str) -> str:
     if "inactive" in issue.lower():
         return "Map the concept to an active GL account or reactivate the intended account after finance approval."
     if "header" in issue.lower():
-        return (
-            "Map the concept to a postable detail account, not a header/group account."
-        )
+        return "Map the concept to a postable detail account, not a header/group account."
     if "duplicate" in issue.lower():
         return "Keep one approved mapping for this tenant/concept scope and remove the duplicate after finance review."
     return "Review and correct the GL mapping manually."
@@ -85,9 +83,7 @@ def _recommended_fix(status: str, issue: str) -> str:
 def _is_mapping_owned(concept_code: str) -> bool:
     """Return True if the concept should be resolved via GLAccountMapping."""
     meta = GL_CONCEPT_REGISTRY.get(concept_code, {})
-    return (
-        meta.get("resolution_mode", RESOLUTION_MODE_MAPPING) == RESOLUTION_MODE_MAPPING
-    )
+    return meta.get("resolution_mode", RESOLUTION_MODE_MAPPING) == RESOLUTION_MODE_MAPPING
 
 
 def _row(
@@ -450,14 +446,8 @@ class GLMappingValidationService:
         )
 
         rows: list[GLMappingValidationRow] = []
-        rows.extend(
-            GLMappingValidationService._validate_required_defaults(
-                tenant, mappings, include_ready
-            )
-        )
-        rows.extend(
-            GLMappingValidationService._validate_existing_mappings(tenant, mappings)
-        )
+        rows.extend(GLMappingValidationService._validate_required_defaults(tenant, mappings, include_ready))
+        rows.extend(GLMappingValidationService._validate_existing_mappings(tenant, mappings))
         # Add liquidity readiness validation
         rows.extend(GLMappingValidationService._validate_liquidity_readiness(tenant))
         return rows
@@ -468,9 +458,7 @@ class GLMappingValidationService:
     ) -> list[GLMappingValidationRow]:
         """Read-only validate cash and bank readiness for every active branch."""
         rows: list[GLMappingValidationRow] = []
-        tenant_name = (
-            tenant.name or tenant.name_en or tenant.name_ar or f"Tenant {tenant.id}"
-        )
+        tenant_name = tenant.name or tenant.name_en or tenant.name_ar or f"Tenant {tenant.id}"
 
         checks = (
             ("cash", "CASH_READINESS"),
@@ -545,9 +533,7 @@ class GLMappingValidationService:
             }
 
         if tenant_id is None:
-            rows = GLMappingValidationService.validate_all_tenants(
-                include_ready=include_ready
-            )
+            rows = GLMappingValidationService.validate_all_tenants(include_ready=include_ready)
         else:
             rows = [
                 row.to_dict()
@@ -557,16 +543,8 @@ class GLMappingValidationService:
                 )
             ]
 
-        critical_count = sum(
-            1
-            for row in rows
-            if row["severity"] == "critical" and row["status"] != "ready"
-        )
-        warning_count = sum(
-            1
-            for row in rows
-            if row["severity"] == "warning" and row["status"] != "ready"
-        )
+        critical_count = sum(1 for row in rows if row["severity"] == "critical" and row["status"] != "ready")
+        warning_count = sum(1 for row in rows if row["severity"] == "warning" and row["status"] != "ready")
         return {
             "ready": critical_count == 0,
             "critical_count": critical_count,
@@ -661,9 +639,7 @@ class GLMappingValidationService:
 
             # Find candidate GL accounts in this tenant with the legacy code
             candidates = (
-                GLAccount.query.filter_by(tenant_id=tenant.id, code=legacy_code)
-                .order_by(GLAccount.id.asc())
-                .all()
+                GLAccount.query.filter_by(tenant_id=tenant.id, code=legacy_code).order_by(GLAccount.id.asc()).all()
             )
 
             if not candidates:
@@ -713,11 +689,7 @@ class GLMappingValidationService:
             else:
                 # Report the first invalid candidate with its issues
                 first_invalid = candidates[0]
-                first_issue = (
-                    candidate_issues[0]
-                    if candidate_issues
-                    else "Candidate account is invalid."
-                )
+                first_issue = candidate_issues[0] if candidate_issues else "Candidate account is invalid."
                 rows.append(
                     GLMappingSeedPreviewRow(
                         tenant_id=tenant.id,
@@ -786,12 +758,8 @@ class GLMappingValidationService:
             rows.extend(GLMappingValidationService._discover_for_tenant(tenant))
 
         candidate_found = sum(1 for r in rows if r["status"] == "candidate_found")
-        owner_selection = sum(
-            1 for r in rows if r["status"] == "owner_selection_required"
-        )
-        manual_creation = sum(
-            1 for r in rows if r["status"] == "manual_creation_required"
-        )
+        owner_selection = sum(1 for r in rows if r["status"] == "owner_selection_required")
+        manual_creation = sum(1 for r in rows if r["status"] == "manual_creation_required")
 
         # Required summary breakdowns
         total_concepts_checked = len(DISCOVERY_RULES) * len(tenants)
@@ -818,23 +786,11 @@ class GLMappingValidationService:
                 tenant_status[tid]["has_manual_creation"] = True
                 tenant_status[tid]["has_all_candidates"] = False
 
-        tenants_with_complete_candidates = [
-            tid for tid, s in tenant_status.items() if s["has_all_candidates"]
-        ]
-        tenants_requiring_owner_selection = [
-            tid for tid, s in tenant_status.items() if s["has_owner_selection"]
-        ]
-        tenants_requiring_new_gl_account = [
-            tid for tid, s in tenant_status.items() if s["has_manual_creation"]
-        ]
+        tenants_with_complete_candidates = [tid for tid, s in tenant_status.items() if s["has_all_candidates"]]
+        tenants_requiring_owner_selection = [tid for tid, s in tenant_status.items() if s["has_owner_selection"]]
+        tenants_requiring_new_gl_account = [tid for tid, s in tenant_status.items() if s["has_manual_creation"]]
 
-        concepts_unresolvable = sorted(
-            {
-                r["concept_code"]
-                for r in rows
-                if r["status"] == "manual_creation_required"
-            }
-        )
+        concepts_unresolvable = sorted({r["concept_code"] for r in rows if r["status"] == "manual_creation_required"})
 
         return {
             "discovery_type": "candidate_discovery",
@@ -860,9 +816,7 @@ class GLMappingValidationService:
 
         # First, know which concepts were ALREADY safely proposed in Phase 1G
         preview_rows = GLMappingValidationService._preview_seed_for_tenant(tenant)
-        proposed_concepts = {
-            r["concept_code"] for r in preview_rows if r["status"] == "proposed"
-        }
+        proposed_concepts = {r["concept_code"] for r in preview_rows if r["status"] == "proposed"}
 
         for concept_code in sorted(DISCOVERY_RULES):
             if concept_code in proposed_concepts:
@@ -870,9 +824,7 @@ class GLMappingValidationService:
                 continue
 
             rule = DISCOVERY_RULES[concept_code]
-            candidates = GLMappingValidationService._find_candidates(
-                tenant, concept_code, rule
-            )
+            candidates = GLMappingValidationService._find_candidates(tenant, concept_code, rule)
 
             if not candidates:
                 rows.append(
@@ -959,9 +911,7 @@ class GLMappingValidationService:
                     continue
                 account_name_lower = (account.name or "").lower()
                 if account_name_lower == pattern.lower():
-                    candidates.append(
-                        (account, f"Exact name match: '{account.name}'", "high")
-                    )
+                    candidates.append((account, f"Exact name match: '{account.name}'", "high"))
                     seen_ids.add(account.id)
 
         # --- Strategy 2: partial name match (medium confidence) ---
@@ -986,9 +936,7 @@ class GLMappingValidationService:
 
         # --- Strategy 3: parent code hint → search children (medium/high confidence) ---
         if parent_code_hint:
-            parent = GLAccount.query.filter_by(
-                tenant_id=tenant.id, code=parent_code_hint
-            ).first()
+            parent = GLAccount.query.filter_by(tenant_id=tenant.id, code=parent_code_hint).first()
             if parent:
                 for child in parent.children:
                     if child.id in seen_ids:
@@ -1051,14 +999,9 @@ class GLMappingValidationService:
                 )
                 continue
 
-            issues = GLMappingValidationService._mapping_issues(
-                tenant, default_mappings[0]
-            )
+            issues = GLMappingValidationService._mapping_issues(tenant, default_mappings[0])
             if issues:
-                rows.extend(
-                    _row(tenant, concept_code, "invalid", issue, severity="critical")
-                    for issue in issues
-                )
+                rows.extend(_row(tenant, concept_code, "invalid", issue, severity="critical") for issue in issues)
             elif include_ready:
                 rows.append(
                     _row(
@@ -1115,9 +1058,7 @@ class GLMappingValidationService:
             if mapping.branch_id is None:
                 seen_defaults_filtered[mapping.concept_code] += 1
             else:
-                seen_branch_overrides_filtered[
-                    (mapping.concept_code, mapping.branch_id)
-                ] += 1
+                seen_branch_overrides_filtered[(mapping.concept_code, mapping.branch_id)] += 1
 
         # Check for duplicates in tenant-level mappings (excluding ignored non-mapping-owned)
         for concept_code, count in seen_defaults_filtered.items():
@@ -1150,10 +1091,7 @@ class GLMappingValidationService:
             if not _is_mapping_owned(mapping.concept_code):
                 continue
             # Skip required concepts without branch_id (they're handled in _validate_required_defaults)
-            if (
-                mapping.concept_code in REQUIRED_GL_CONCEPTS
-                and mapping.branch_id is None
-            ):
+            if mapping.concept_code in REQUIRED_GL_CONCEPTS and mapping.branch_id is None:
                 continue
             for issue in GLMappingValidationService._mapping_issues(tenant, mapping):
                 rows.append(_row(tenant, mapping.concept_code, "invalid", issue))
@@ -1177,9 +1115,7 @@ class GLMappingValidationService:
                 issues.append("Mapped GL account is a header/group account.")
 
         if mapping.branch_id is not None:
-            branch = (
-                mapping.branch or Branch.query.filter_by(id=mapping.branch_id).first()
-            )
+            branch = mapping.branch or Branch.query.filter_by(id=mapping.branch_id).first()
             if branch is None:
                 issues.append("Branch override references a missing branch.")
             elif branch.tenant_id != tenant.id:

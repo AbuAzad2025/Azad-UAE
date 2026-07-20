@@ -22,13 +22,9 @@ class PricingService:
             return tier.price
 
         if customer_type == "partner" and getattr(product, "partner_price", None):
-            return product.regular_price * (
-                1 - (Decimal(str(product.partner_price)) / 100)
-            )
+            return product.regular_price * (1 - (Decimal(str(product.partner_price)) / 100))
         elif customer_type == "merchant" and getattr(product, "merchant_price", None):
-            return product.regular_price * (
-                1 - (Decimal(str(product.merchant_price)) / 100)
-            )
+            return product.regular_price * (1 - (Decimal(str(product.merchant_price)) / 100))
 
         return product.regular_price
 
@@ -58,9 +54,7 @@ class PricingService:
 
         commission_rate = Decimal("0")
         if sales_rep:
-            commission_rate = Decimal(
-                str(getattr(sales_rep, "commission_rate", 0) or 0)
-            )
+            commission_rate = Decimal(str(getattr(sales_rep, "commission_rate", 0) or 0))
 
         return {
             "unit_price": unit_price,

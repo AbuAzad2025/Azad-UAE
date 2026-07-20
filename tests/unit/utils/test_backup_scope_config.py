@@ -202,25 +202,16 @@ def _merge_setup(
     existing_customer_ids=None,
     fetch_result=None,
 ):
-    mocker.patch(
-        "services.backup_scope_config.table_exists", return_value=customers_table
-    )
+    mocker.patch("services.backup_scope_config.table_exists", return_value=customers_table)
     conn = mock_db_connection(rows=fetch_result or [], keys=["id", "name", "tenant_id"])
 
     tables_out = {"products": [], "product_partners": []}
     if merchant_customer_id is not None:
-        tables_out["products"] = [
-            {"id": 1, "merchant_customer_id": merchant_customer_id, "tenant_id": 1}
-        ]
+        tables_out["products"] = [{"id": 1, "merchant_customer_id": merchant_customer_id, "tenant_id": 1}]
     if partner_customer_id is not None:
-        tables_out["product_partners"] = [
-            {"id": 1, "partner_customer_id": partner_customer_id, "tenant_id": 1}
-        ]
+        tables_out["product_partners"] = [{"id": 1, "partner_customer_id": partner_customer_id, "tenant_id": 1}]
     if existing_customer_ids:
-        tables_out["customers"] = [
-            {"id": cid, "name": f"c{cid}", "tenant_id": 1}
-            for cid in existing_customer_ids
-        ]
+        tables_out["customers"] = [{"id": cid, "name": f"c{cid}", "tenant_id": 1} for cid in existing_customer_ids]
 
     row_counts = {}
     included = []
@@ -232,9 +223,7 @@ def test_merge_skip_no_customers_table(mocker, mock_db_connection):
     conn, tables_out, row_counts, included, unresolved = _merge_setup(
         mocker, mock_db_connection, customers_table=False, merchant_customer_id=5
     )
-    _merge_product_customer_dependencies(
-        conn, tables_out, row_counts, included, 1, unresolved
-    )
+    _merge_product_customer_dependencies(conn, tables_out, row_counts, included, 1, unresolved)
     assert unresolved == []
 
 
@@ -242,9 +231,7 @@ def test_merge_no_missing_customers(mocker, mock_db_connection):
     conn, tables_out, row_counts, included, unresolved = _merge_setup(
         mocker, mock_db_connection, merchant_customer_id=5, existing_customer_ids=[5]
     )
-    _merge_product_customer_dependencies(
-        conn, tables_out, row_counts, included, 1, unresolved
-    )
+    _merge_product_customer_dependencies(conn, tables_out, row_counts, included, 1, unresolved)
     assert unresolved == []
 
 
@@ -256,9 +243,7 @@ def test_merge_fetches_missing_and_appends(mocker, mock_db_connection):
         existing_customer_ids=[],
         fetch_result=[(5, "merchant_co", 1)],
     )
-    _merge_product_customer_dependencies(
-        conn, tables_out, row_counts, included, 1, unresolved
-    )
+    _merge_product_customer_dependencies(conn, tables_out, row_counts, included, 1, unresolved)
     assert len(tables_out.get("customers") or []) == 1
     assert tables_out["customers"][0]["id"] == 5
 
@@ -271,9 +256,7 @@ def test_merge_reports_unresolved_ref(mocker, mock_db_connection):
         existing_customer_ids=[],
         fetch_result=[],
     )
-    _merge_product_customer_dependencies(
-        conn, tables_out, row_counts, included, 1, unresolved
-    )
+    _merge_product_customer_dependencies(conn, tables_out, row_counts, included, 1, unresolved)
     assert any("missing_merchant" in u for u in unresolved)
 
 
@@ -309,9 +292,7 @@ def patch_export_helpers(mocker):
         (SCOPE_STORE, 1, {"store_id": 3}),
     ],
 )
-def test_export_scoped_database_happy_path(
-    patch_export_helpers, scope, tenant_id, kwargs
-):
+def test_export_scoped_database_happy_path(patch_export_helpers, scope, tenant_id, kwargs):
     conn = None
     tables, _counts, _included, _skipped, _unresolved = export_scoped_database(
         conn, scope, tenant_id=tenant_id, **kwargs
@@ -382,9 +363,7 @@ def test_write_read_directory_roundtrip(tmp_path):
 
 
 def test_read_data_directory_missing_meta_falls_back_to_jsonl_files(tmp_path):
-    (tmp_path / "customers.jsonl").write_text(
-        '{"id":1,"name":"A"}\n{"id":2,"name":"B"}\n', encoding="utf-8"
-    )
+    (tmp_path / "customers.jsonl").write_text('{"id":1,"name":"A"}\n{"id":2,"name":"B"}\n', encoding="utf-8")
     tables, _meta = read_data_directory(str(tmp_path))
     assert len(tables.get("customers") or []) == 2
 
@@ -409,9 +388,7 @@ def test_merge_no_refs_needed(mocker, mock_db_connection):
     conn, tables_out, row_counts, included, unresolved = _merge_setup(
         mocker, mock_db_connection, existing_customer_ids=[]
     )
-    _merge_product_customer_dependencies(
-        conn, tables_out, row_counts, included, 1, unresolved
-    )
+    _merge_product_customer_dependencies(conn, tables_out, row_counts, included, 1, unresolved)
     assert unresolved == []
 
 
@@ -423,9 +400,7 @@ def test_merge_partner_customer_ref(mocker, mock_db_connection):
         existing_customer_ids=[],
         fetch_result=[(8, "partner", 1)],
     )
-    _merge_product_customer_dependencies(
-        conn, tables_out, row_counts, included, 1, unresolved
-    )
+    _merge_product_customer_dependencies(conn, tables_out, row_counts, included, 1, unresolved)
     assert tables_out["customers"][0]["id"] == 8
 
 
@@ -458,9 +433,7 @@ def test_export_branch_and_store_validation(mocker, mock_db_connection):
     mocker.patch("services.backup_scope_config._fetch_child_rows", return_value=[])
     mocker.patch("services.backup_scope_config._merge_product_customer_dependencies")
     conn = mock_db_connection()
-    _, _, _, _, un1 = export_scoped_database(
-        conn, SCOPE_BRANCH, tenant_id=1, branch_id=2
-    )
+    _, _, _, _, un1 = export_scoped_database(conn, SCOPE_BRANCH, tenant_id=1, branch_id=2)
     _, _, _, _, un2 = export_scoped_database(conn, SCOPE_STORE, tenant_id=1, store_id=3)
     assert any("branches" in u for u in un1)
     assert any("tenant_stores" in u for u in un2)
@@ -486,9 +459,7 @@ def test_export_includes_roles_for_users(mocker, mock_db_connection):
 
 def test_export_fetch_error_and_rollback(mocker, mock_db_connection):
     mocker.patch("services.backup_scope_config.table_exists", return_value=True)
-    mocker.patch(
-        "services.backup_scope_config._fetch_rows", side_effect=RuntimeError("boom")
-    )
+    mocker.patch("services.backup_scope_config._fetch_rows", side_effect=RuntimeError("boom"))
     mocker.patch("services.backup_scope_config._fetch_child_rows", return_value=[])
     mocker.patch("services.backup_scope_config._merge_product_customer_dependencies")
     conn = mock_db_connection()
@@ -516,23 +487,17 @@ def test_collect_tenant_upload_paths_wrapper(mocker, mock_db_connection, tmp_pat
         "services.backup_scope_config.collect_scoped_upload_paths",
         return_value=(["/a.png"], ["unresolved"]),
     )
-    paths, _unresolved = collect_tenant_upload_paths(
-        mock_db_connection(), 1, str(tmp_path)
-    )
+    paths, _unresolved = collect_tenant_upload_paths(mock_db_connection(), 1, str(tmp_path))
     assert paths == ["/a.png"]
 
 
 def test_build_archive_skips_missing_file(tmp_path):
     dest = tmp_path / "out.tar.gz"
-    info = build_tenant_uploads_archive(
-        [str(tmp_path / "missing.txt")], str(dest), str(tmp_path)
-    )
+    info = build_tenant_uploads_archive([str(tmp_path / "missing.txt")], str(dest), str(tmp_path))
     assert info["files_packed"] == 0
 
 
-def test_collect_scoped_upload_paths_resolves_and_unresolved(
-    mocker, mock_db_connection, tmp_path
-):
+def test_collect_scoped_upload_paths_resolves_and_unresolved(mocker, mock_db_connection, tmp_path):
     mocker.patch("services.backup_scope_config.table_exists", return_value=True)
     uploads = tmp_path / "static" / "uploads"
     uploads.mkdir(parents=True)
@@ -544,9 +509,7 @@ def test_collect_scoped_upload_paths_resolves_and_unresolved(
         sql = str(stmt)
         result = MagicMock()
         if "column_name" in sql:
-            result.__iter__ = lambda _self: iter(
-                [("image_url",), ("logo_path",), ("watermark_image_path",)]
-            )
+            result.__iter__ = lambda _self: iter([("image_url",), ("logo_path",), ("watermark_image_path",)])
         else:
             result.__iter__ = lambda _self: iter(
                 [
@@ -682,9 +645,7 @@ def test_export_skips_excluded_roles_table(mocker, mock_db_connection):
 
 def test_export_fetch_rollback_failure_logged(mocker, mock_db_connection):
     mocker.patch("services.backup_scope_config.table_exists", return_value=True)
-    mocker.patch(
-        "services.backup_scope_config._fetch_rows", side_effect=RuntimeError("boom")
-    )
+    mocker.patch("services.backup_scope_config._fetch_rows", side_effect=RuntimeError("boom"))
     mocker.patch("services.backup_scope_config._fetch_child_rows", return_value=[])
     mocker.patch("services.backup_scope_config._merge_product_customer_dependencies")
     conn = mock_db_connection()
@@ -745,9 +706,7 @@ def test_path_from_urlish_bare_filename(tmp_path):
 
 def test_collect_upload_products_table_missing(mocker, mock_db_connection, tmp_path):
     mocker.patch("services.backup_scope_config.table_exists", return_value=False)
-    paths, _unresolved = collect_scoped_upload_paths(
-        _conn := mock_db_connection(), SCOPE_TENANT, 1, str(tmp_path)
-    )
+    paths, _unresolved = collect_scoped_upload_paths(_conn := mock_db_connection(), SCOPE_TENANT, 1, str(tmp_path))
     assert paths == []
 
 
@@ -791,9 +750,7 @@ def test_export_child_excluded_policy_continue(mocker, mock_db_connection):
         "services.backup_scope_config._fetch_rows",
         return_value=[{"id": 1, "tenant_id": 1}],
     )
-    child_mock = mocker.patch(
-        "services.backup_scope_config._fetch_child_rows", return_value=[]
-    )
+    child_mock = mocker.patch("services.backup_scope_config._fetch_child_rows", return_value=[])
     mocker.patch("services.backup_scope_config._merge_product_customer_dependencies")
     conn = mock_db_connection()
     export_scoped_database(conn, SCOPE_BRANCH, tenant_id=1, branch_id=2)
@@ -851,8 +808,6 @@ def test_export_via_real_fetch_rows(mocker, mock_db_connection):
 
     conn.execute.side_effect = execute_router
     mocker.patch("services.backup_scope_config._merge_product_customer_dependencies")
-    tables, _, _included, _skipped, _ = export_scoped_database(
-        conn, SCOPE_TENANT, tenant_id=1
-    )
+    tables, _, _included, _skipped, _ = export_scoped_database(conn, SCOPE_TENANT, tenant_id=1)
     assert "tenants" in tables
     assert tables["tenants"][0]["name"] == "T"

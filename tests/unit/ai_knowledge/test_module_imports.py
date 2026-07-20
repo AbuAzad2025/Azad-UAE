@@ -15,9 +15,7 @@ _SKIP = {
 
 _MODULES = sorted(
     name
-    for _finder, name, _ispkg in pkgutil.walk_packages(
-        ai_knowledge.__path__, ai_knowledge.__name__ + "."
-    )
+    for _finder, name, _ispkg in pkgutil.walk_packages(ai_knowledge.__path__, ai_knowledge.__name__ + ".")
     if name not in _SKIP and not name.endswith(".tests")
 )
 

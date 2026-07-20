@@ -73,9 +73,7 @@ class TestPasswordValidator:
         assert "✅" in msg
 
     def test_validate_with_helpful_message_failure(self):
-        with patch.object(
-            PasswordValidator, "generate_suggestion", return_value="Str0ng!Pass99"
-        ):
+        with patch.object(PasswordValidator, "generate_suggestion", return_value="Str0ng!Pass99"):
             ok, msg = validate_password_with_helpful_message("weak")
         assert ok is False
         assert "⚠️" in msg

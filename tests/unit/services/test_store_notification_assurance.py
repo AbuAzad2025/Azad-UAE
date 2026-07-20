@@ -79,22 +79,14 @@ class TestEmailDispatch:
             from services.store_notification_service import StoreNotificationService
 
             StoreNotificationService.notify_new_order(sale, store)
-        skip_calls = [
-            c
-            for c in logger.info.call_args_list
-            if c.args and "mail not configured" in str(c.args[0])
-        ]
+        skip_calls = [c for c in logger.info.call_args_list if c.args and "mail not configured" in str(c.args[0])]
         assert skip_calls
 
     def test_skips_when_notify_email_disabled(self, app, mocker):
         sale, store = _sale_and_store()
         store.notify_email_on_order = False
-        mock_mail = mocker.patch(
-            "services.store_notification_service.mail", create=True
-        )
-        mocker.patch(
-            "services.store_notification_service.current_app"
-        ).logger = MagicMock()
+        mock_mail = mocker.patch("services.store_notification_service.mail", create=True)
+        mocker.patch("services.store_notification_service.current_app").logger = MagicMock()
 
         from services.store_notification_service import StoreNotificationService
 
@@ -105,9 +97,7 @@ class TestEmailDispatch:
     def test_skips_when_no_valid_recipient(self, app, mocker):
         sale, store = _sale_and_store()
         store.email = "not-an-email"
-        mocker.patch(
-            "services.store_notification_service.current_app"
-        ).logger = MagicMock()
+        mocker.patch("services.store_notification_service.current_app").logger = MagicMock()
 
         from services.store_notification_service import StoreNotificationService
 

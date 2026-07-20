@@ -20,11 +20,7 @@ def _ensure_column(table_name: str, column_name: str, ddl: str) -> bool:
 
 def _ensure_index(index_name: str, table_name: str, column_name: str) -> None:
     with db.engine.begin() as connection:
-        connection.execute(
-            text(
-                f"CREATE INDEX IF NOT EXISTS {index_name} ON {table_name} ({column_name})"
-            )
-        )
+        connection.execute(text(f"CREATE INDEX IF NOT EXISTS {index_name} ON {table_name} ({column_name})"))
 
 
 def _first_non_null(*values):
@@ -57,20 +53,12 @@ def ensure_branch_isolation_schema_and_data():
                 schema_changes += 1
             _ensure_index(f"ix_{table_name}_branch_id", table_name, "branch_id")
 
-        main_branch = (
-            Branch.query.filter_by(is_active=True, is_main=True)
-            .order_by(Branch.id.asc())
-            .first()
-        )
+        main_branch = Branch.query.filter_by(is_active=True, is_main=True).order_by(Branch.id.asc()).first()
         if not main_branch:
-            first_tenant = (
-                Tenant.query.filter_by(is_active=True).order_by(Tenant.id.asc()).first()
-            )
+            first_tenant = Tenant.query.filter_by(is_active=True).order_by(Tenant.id.asc()).first()
             tenant_id = first_tenant.id if first_tenant else None
             if tenant_id is None:
-                current_app.logger.info(
-                    "BranchRepair: No active tenant found — skipping Main Branch creation."
-                )
+                current_app.logger.info("BranchRepair: No active tenant found — skipping Main Branch creation.")
                 return {
                     "schema_changes": schema_changes,
                     "main_branch_id": None,
@@ -100,10 +88,7 @@ def ensure_branch_isolation_schema_and_data():
         user_backfills = 0
         for user in User.query.all():
             role_slug = getattr(getattr(user, "role", None), "slug", None)
-            requires_branch = (
-                not getattr(user, "is_owner", False)
-                and role_slug not in GLOBAL_ROLE_SLUGS
-            )
+            requires_branch = not getattr(user, "is_owner", False) and role_slug not in GLOBAL_ROLE_SLUGS
             if requires_branch and user.branch_id is None:
                 user.branch_id = main_branch.id
                 user_backfills += 1
@@ -146,9 +131,7 @@ def ensure_branch_isolation_schema_and_data():
         receipt_backfills = 0
         for receipt in Receipt.query.filter(Receipt.branch_id.is_(None)).all():
             source_sale = (
-                db.session.get(Sale, receipt.source_id)
-                if receipt.source_type == "sale" and receipt.source_id
-                else None
+                db.session.get(Sale, receipt.source_id) if receipt.source_type == "sale" and receipt.source_id else None
             )
             receipt.branch_id = _first_non_null(
                 getattr(source_sale, "branch_id", None),
@@ -168,9 +151,7 @@ def ensure_branch_isolation_schema_and_data():
             cheque_backfills += 1
 
         gl_backfills = 0
-        for entry in GLJournalEntry.query.filter(
-            GLJournalEntry.branch_id.is_(None)
-        ).all():
+        for entry in GLJournalEntry.query.filter(GLJournalEntry.branch_id.is_(None)).all():
             linked_branch_id = None
             if entry.reference_type == "Payment":
                 linked = db.session.get(Payment, entry.reference_id)

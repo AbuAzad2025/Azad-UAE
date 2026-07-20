@@ -259,9 +259,7 @@ class AzadNeuralEngine:
             ]
 
             # التصنيف (يحتاج صيانة قريباً أم لا)
-            needs_maintenance = (
-                1 if (usage_frequency > 50 and days_since_sale < 30) else 0
-            )
+            needs_maintenance = 1 if (usage_frequency > 50 and days_since_sale < 30) else 0
 
             x.append(features)
             y.append(needs_maintenance)
@@ -286,9 +284,7 @@ class AzadNeuralEngine:
             "trained_at": datetime.now().isoformat(),
         }
 
-        logger.info(
-            f"🔧 Maintenance model trained: {accuracy:.2%} accuracy on {len(products)} samples"
-        )
+        logger.info(f"🔧 Maintenance model trained: {accuracy:.2%} accuracy on {len(products)} samples")
 
         return {
             "success": True,
@@ -352,9 +348,7 @@ class AzadNeuralEngine:
 
         # تحضير الميزات
         days_since_sale = (
-            (
-                datetime.now(timezone.utc).date() - product_data.last_sale_date.date()
-            ).days
+            (datetime.now(timezone.utc).date() - product_data.last_sale_date.date()).days
             if product_data.last_sale_date
             else 365
         )
@@ -371,9 +365,7 @@ class AzadNeuralEngine:
         # التوقع
         features_scaled = self.scalers["maintenance_predictor"].transform([features])
         prediction = self.models["maintenance_predictor"].predict(features_scaled)
-        probability = self.models["maintenance_predictor"].predict_proba(
-            features_scaled
-        )
+        probability = self.models["maintenance_predictor"].predict_proba(features_scaled)
 
         needs_maintenance = bool(prediction[0])
         confidence = float(max(probability[0]))
@@ -495,11 +487,7 @@ class AzadNeuralEngine:
                 return {
                     "is_correct": is_balanced,
                     "confidence": 1.0 if is_balanced else 0.0,
-                    "recommendation": (
-                        "القيد متوازن"
-                        if is_balanced
-                        else "القيد غير متوازن - راجع المدين والدائن"
-                    ),
+                    "recommendation": ("القيد متوازن" if is_balanced else "القيد غير متوازن - راجع المدين والدائن"),
                 }
 
             # تحضير الميزات
@@ -513,13 +501,9 @@ class AzadNeuralEngine:
             ]
 
             # التوقع
-            features_scaled = self.scalers["accounting_classifier"].transform(
-                [features]
-            )
+            features_scaled = self.scalers["accounting_classifier"].transform([features])
             prediction = self.models["accounting_classifier"].predict(features_scaled)
-            probability = self.models["accounting_classifier"].predict_proba(
-                features_scaled
-            )
+            probability = self.models["accounting_classifier"].predict_proba(features_scaled)
 
             is_correct = bool(prediction[0])
             confidence = float(max(probability[0]))
@@ -586,9 +570,7 @@ class AzadNeuralEngine:
         monthly_data = []
 
         for month_offset in range(12):  # آخر 12 شهر
-            start_date = datetime.now(timezone.utc) - timedelta(
-                days=30 * (month_offset + 1)
-            )
+            start_date = datetime.now(timezone.utc) - timedelta(days=30 * (month_offset + 1))
             end_date = datetime.now(timezone.utc) - timedelta(days=30 * month_offset)
 
             # المبيعات
@@ -782,9 +764,7 @@ class AzadNeuralEngine:
             ]
 
             features_scaled = self.scalers["financial_planner"].transform([features])
-            predicted_cash_flow = self.models["financial_planner"].predict(
-                features_scaled
-            )
+            predicted_cash_flow = self.models["financial_planner"].predict(features_scaled)
 
             predictions.append(
                 {
@@ -890,9 +870,7 @@ class AzadNeuralEngine:
 
         for sale in sales_data:
             # الميزات
-            customer_type_encoded = {"regular": 0, "merchant": 1, "partner": 2}.get(
-                sale.customer_type, 0
-            )
+            customer_type_encoded = {"regular": 0, "merchant": 1, "partner": 2}.get(sale.customer_type, 0)
 
             month = sale.sale_date.month if sale.sale_date else 1
             day_of_week = sale.sale_date.weekday() if sale.sale_date else 0
@@ -926,9 +904,7 @@ class AzadNeuralEngine:
         # Cross-validation للتأكد
         from sklearn.model_selection import cross_val_score
 
-        cv_scores = cross_val_score(
-            self.models["price_optimizer"], x_scaled, y, cv=5, scoring="r2"
-        )
+        cv_scores = cross_val_score(self.models["price_optimizer"], x_scaled, y, cv=5, scoring="r2")
         avg_r2 = np.mean(cv_scores)
 
         self._save_model("price_optimizer")
@@ -982,9 +958,7 @@ class AzadNeuralEngine:
                 }
 
             # تحضير الميزات
-            customer_type_encoded = {"regular": 0, "merchant": 1, "partner": 2}.get(
-                customer_type, 0
-            )
+            customer_type_encoded = {"regular": 0, "merchant": 1, "partner": 2}.get(customer_type, 0)
 
             now = datetime.now()
 
@@ -1205,9 +1179,7 @@ class AzadNeuralEngine:
 
             # التوقع
             features_scaled = self.scalers["sales_forecaster"].transform([features])
-            predicted_amount = self.models["sales_forecaster"].predict(features_scaled)[
-                0
-            ]
+            predicted_amount = self.models["sales_forecaster"].predict(features_scaled)[0]
 
             forecast.append(
                 {
@@ -1313,9 +1285,7 @@ class AzadNeuralEngine:
                 float(customer.sales_count or 0),
                 float(customer.avg_order_value or 0),
                 float(days_since_purchase),
-                float(
-                    customer.sales_count / max(1, days_since_purchase / 30)
-                ),  # purchase frequency
+                float(customer.sales_count / max(1, days_since_purchase / 30)),  # purchase frequency
             ]
 
             # التصنيف
@@ -1389,9 +1359,7 @@ class AzadNeuralEngine:
 
         # تحضير الميزات
         days_since_purchase = (
-            (
-                datetime.now(timezone.utc).date() - customer_data.last_purchase.date()
-            ).days
+            (datetime.now(timezone.utc).date() - customer_data.last_purchase.date()).days
             if customer_data.last_purchase
             else 365
         )
@@ -1407,16 +1375,10 @@ class AzadNeuralEngine:
         # محاولة التحميل والتوقع
         if self._load_model("customer_classifier"):
             features_scaled = self.scalers["customer_classifier"].transform([features])
-            prediction_encoded = self.models["customer_classifier"].predict(
-                features_scaled
-            )
-            probability = self.models["customer_classifier"].predict_proba(
-                features_scaled
-            )
+            prediction_encoded = self.models["customer_classifier"].predict(features_scaled)
+            probability = self.models["customer_classifier"].predict_proba(features_scaled)
 
-            classification = self.encoders["customer_classifier"].inverse_transform(
-                prediction_encoded
-            )[0]
+            classification = self.encoders["customer_classifier"].inverse_transform(prediction_encoded)[0]
             confidence = float(max(probability[0]))
         else:
             # Fallback للقاعدة البسيطة
@@ -1435,9 +1397,7 @@ class AzadNeuralEngine:
             "sales_count": customer_data.sales_count or 0,
             "avg_order": float(customer_data.avg_order_value or 0),
             "days_since_purchase": days_since_purchase,
-            "purchase_frequency": float(
-                customer_data.sales_count / max(1, days_since_purchase / 30)
-            ),
+            "purchase_frequency": float(customer_data.sales_count / max(1, days_since_purchase / 30)),
         }
 
         # التوصيات
@@ -1458,11 +1418,7 @@ class AzadNeuralEngine:
             "confidence": confidence,
             "characteristics": characteristics,
             "recommendations": recommendations,
-            "model": (
-                "neural_network"
-                if self._is_model_loaded("customer_classifier")
-                else "rule_based"
-            ),
+            "model": ("neural_network" if self._is_model_loaded("customer_classifier") else "rule_based"),
         }
 
     # ====================================================================
@@ -1519,14 +1475,8 @@ class AzadNeuralEngine:
 
         for sale in sales:
             # الميزات
-            discount_percent = (
-                (sale.discount_amount / sale.subtotal * 100) if sale.subtotal > 0 else 0
-            )
-            cash_percent = (
-                (sale.paid_amount_aed / sale.amount_aed * 100)
-                if sale.amount_aed > 0
-                else 0
-            )
+            discount_percent = (sale.discount_amount / sale.subtotal * 100) if sale.subtotal > 0 else 0
+            cash_percent = (sale.paid_amount_aed / sale.amount_aed * 100) if sale.amount_aed > 0 else 0
             hour = sale.sale_date.hour if sale.sale_date else 12
 
             features = [
@@ -1600,9 +1550,7 @@ class AzadNeuralEngine:
             if self._load_model("fraud_detector"):
                 features_scaled = self.scalers["fraud_detector"].transform([features])
                 prediction = self.models["fraud_detector"].predict(features_scaled)
-                probability = self.models["fraud_detector"].predict_proba(
-                    features_scaled
-                )
+                probability = self.models["fraud_detector"].predict_proba(features_scaled)
 
                 is_fraud = bool(prediction[0])
                 risk_score = float(probability[0][1])  # احتمال الاحتيال
@@ -1625,19 +1573,9 @@ class AzadNeuralEngine:
             return {
                 "is_fraud": is_fraud,
                 "risk_score": risk_score,
-                "risk_level": (
-                    "high"
-                    if risk_score > 0.7
-                    else "medium"
-                    if risk_score > 0.4
-                    else "low"
-                ),
+                "risk_level": ("high" if risk_score > 0.7 else "medium" if risk_score > 0.4 else "low"),
                 "reasons": reasons,
-                "recommendation": (
-                    "🛡️ راجع هذه المعاملة يدوياً"
-                    if is_fraud
-                    else "✅ المعاملة تبدو طبيعية"
-                ),
+                "recommendation": ("🛡️ راجع هذه المعاملة يدوياً" if is_fraud else "✅ المعاملة تبدو طبيعية"),
             }
 
         except Exception as e:
@@ -1712,9 +1650,7 @@ class AzadNeuralEngine:
             ]
 
             # الهدف: نقطة إعادة الطلب المثلى
-            optimal_reorder = max(
-                product.min_stock_alert or 10, sales_rate * 14
-            )  # مخزون 14 يوم
+            optimal_reorder = max(product.min_stock_alert or 10, sales_rate * 14)  # مخزون 14 يوم
 
             x.append(features)
             y.append(float(optimal_reorder))
@@ -1795,9 +1731,7 @@ class AzadNeuralEngine:
         # التوقع
         if self._load_model("inventory_optimizer"):
             features_scaled = self.scalers["inventory_optimizer"].transform([features])
-            optimal_reorder = self.models["inventory_optimizer"].predict(
-                features_scaled
-            )[0]
+            optimal_reorder = self.models["inventory_optimizer"].predict(features_scaled)[0]
         else:
             # Fallback
             optimal_reorder = max(product_data.min_stock_alert or 10, sales_rate * 14)
@@ -1831,11 +1765,7 @@ class AzadNeuralEngine:
             "days_of_stock": float(product_data.current_stock / max(0.1, sales_rate)),
             "recommendation": recommendation,
             "urgency": urgency,
-            "model": (
-                "neural_network"
-                if self._is_model_loaded("inventory_optimizer")
-                else "calculated"
-            ),
+            "model": ("neural_network" if self._is_model_loaded("inventory_optimizer") else "calculated"),
         }
 
     # ====================================================================
@@ -1989,9 +1919,7 @@ class AzadNeuralEngine:
 
         if len(recent_demand) < 7:
             # بيانات غير كافية
-            avg_demand = sum(d.total_quantity for d in recent_demand) / max(
-                1, len(recent_demand)
-            )
+            avg_demand = sum(d.total_quantity for d in recent_demand) / max(1, len(recent_demand))
             return {
                 "forecast": [
                     {
@@ -2022,9 +1950,7 @@ class AzadNeuralEngine:
             ]
 
             features_scaled = self.scalers["demand_predictor"].transform([features])
-            predicted_quantity = max(
-                0, self.models["demand_predictor"].predict(features_scaled)[0]
-            )
+            predicted_quantity = max(0, self.models["demand_predictor"].predict(features_scaled)[0])
 
             forecast.append(
                 {
@@ -2104,11 +2030,7 @@ class AzadNeuralEngine:
 
         for sale in sales:
             # الميزات
-            margin_percent = (
-                ((sale.unit_price - sale.cost_price) / sale.cost_price * 100)
-                if sale.cost_price > 0
-                else 0
-            )
+            margin_percent = ((sale.unit_price - sale.cost_price) / sale.cost_price * 100) if sale.cost_price > 0 else 0
 
             features = [
                 float(sale.cost_price),
@@ -2320,9 +2242,7 @@ class AzadNeuralEngine:
                 if result.get("success"):
                     logger.info(f"✅ {model_name}: Trained successfully")
                 else:
-                    logger.warning(
-                        f"⚠️ {model_name}: {result.get('error', 'Unknown error')}"
-                    )
+                    logger.warning(f"⚠️ {model_name}: {result.get('error', 'Unknown error')}")
 
             except Exception as e:
                 logger.error(f"❌ {model_name}: Training failed - {e}")
@@ -2332,9 +2252,7 @@ class AzadNeuralEngine:
         successful = sum(1 for r in results.values() if r.get("success"))
         total = len(results)
 
-        logger.info(
-            f"🎊 Neural training complete: {successful}/{total} models trained successfully"
-        )
+        logger.info(f"🎊 Neural training complete: {successful}/{total} models trained successfully")
 
         return {
             "success": successful > 0,
@@ -2359,8 +2277,7 @@ class AzadNeuralEngine:
 
                 status["models"][model_name] = {
                     "trained": True,
-                    "accuracy": training_info.get("accuracy")
-                    or training_info.get("r2_score"),
+                    "accuracy": training_info.get("accuracy") or training_info.get("r2_score"),
                     "samples": training_info.get("samples"),
                     "trained_at": training_info.get("trained_at"),
                 }
@@ -2368,9 +2285,7 @@ class AzadNeuralEngine:
                 status["models"][model_name] = {"trained": False}
 
         status["training_percentage"] = (
-            (status["trained_models"] / status["total_models"] * 100)
-            if status["total_models"] > 0
-            else 0
+            (status["trained_models"] / status["total_models"] * 100) if status["total_models"] > 0 else 0
         )
 
         return status

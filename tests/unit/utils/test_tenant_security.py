@@ -60,9 +60,7 @@ class TestRequireTenantContext:
 
 
 class TestValidateTenantOwnership:
-    def test_passes_when_resource_matches_tenant(
-        self, request_ctx, sample_tenant, sample_product
-    ):
+    def test_passes_when_resource_matches_tenant(self, request_ctx, sample_tenant, sample_product):
         from models import Product
         from utils.tenant_security import validate_tenant_ownership
 
@@ -75,9 +73,7 @@ class TestValidateTenantOwnership:
         with patch("utils.tenant_security.current_user", _user(is_owner=False)):
             assert view(product_id=sample_product.id) == f"ok:{sample_product.id}"
 
-    def test_aborts_404_for_cross_tenant_resource(
-        self, request_ctx, db_session, sample_product
-    ):
+    def test_aborts_404_for_cross_tenant_resource(self, request_ctx, db_session, sample_product):
         from models import Product, Tenant
         from utils.tenant_security import validate_tenant_ownership
 
@@ -129,9 +125,7 @@ class TestValidateTenantOwnership:
         with pytest.raises(BadRequest):
             view()
 
-    def test_aborts_404_without_tenant_context_for_company_user(
-        self, request_ctx, sample_product
-    ):
+    def test_aborts_404_without_tenant_context_for_company_user(self, request_ctx, sample_product):
         from models import Product
         from utils.tenant_security import validate_tenant_ownership
 
@@ -161,9 +155,7 @@ class TestValidateTenantOwnership:
         with patch("utils.tenant_security.current_user", _user(is_owner=True)):
             assert view(id=sample_tenant.id) == "ok"
 
-    def test_falls_back_to_first_parameter(
-        self, request_ctx, sample_tenant, sample_product
-    ):
+    def test_falls_back_to_first_parameter(self, request_ctx, sample_tenant, sample_product):
         from models import Product
         from utils.tenant_security import validate_tenant_ownership
 

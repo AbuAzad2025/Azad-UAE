@@ -55,9 +55,7 @@ class TestEnsureSystemIntegrity:
             patch("utils.system_init.db.create_all"),
             patch("utils.system_init._ensure_permissions"),
             patch("utils.system_init._ensure_owner_role", return_value=owner_role),
-            patch(
-                "utils.system_init._ensure_owner_user", return_value=(owner_user, False)
-            ),
+            patch("utils.system_init._ensure_owner_user", return_value=(owner_user, False)),
             patch("utils.system_init._record_server_activation"),
             patch("utils.system_init._ensure_super_admin_role"),
             patch("utils.system_init._ensure_developer_role"),
@@ -93,9 +91,7 @@ class TestEnsureSystemIntegrity:
             patch.dict("os.environ", {"DISABLE_TELEMETRY": "true"}, clear=False),
         ):
             system_init_module._ensure_system_integrity_inner(flask_app)
-        flask_app.logger.info.assert_any_call(
-            "SystemInit: Telemetry disabled via environment variable."
-        )
+        flask_app.logger.info.assert_any_call("SystemInit: Telemetry disabled via environment variable.")
 
     def test_inner_starts_telemetry_when_enabled(self, flask_app):
         with (
@@ -140,9 +136,7 @@ class TestEnsureSystemIntegrity:
             patch("app.runtime.branch_repair.ensure_branch_isolation_schema_and_data"),
             patch("utils.system_init._ensure_tenant_gl_trees"),
             patch("app.runtime.accounting_repair.repair_accounting_data"),
-            patch(
-                "utils.telemetry.start_telemetry", side_effect=RuntimeError("telemetry")
-            ),
+            patch("utils.telemetry.start_telemetry", side_effect=RuntimeError("telemetry")),
             patch(
                 "services.logging_core.LoggingCore.log_error",
                 side_effect=RuntimeError("log fail"),
@@ -179,9 +173,7 @@ class TestEnsureSystemIntegrity:
                 "app.runtime.accounting_repair.repair_accounting_data",
                 side_effect=RuntimeError("acct"),
             ),
-            patch(
-                "utils.telemetry.start_telemetry", side_effect=RuntimeError("telemetry")
-            ),
+            patch("utils.telemetry.start_telemetry", side_effect=RuntimeError("telemetry")),
             patch("services.logging_core.LoggingCore.log_error"),
             patch.dict("os.environ", {}, clear=False),
         ):
@@ -338,9 +330,7 @@ class TestCoreDataBootstrap:
             patch.object(SystemSettings, "get_current", return_value=settings),
             patch.object(Currency, "query", currency_query),
             patch("utils.system_init.db.session") as session,
-            patch(
-                "services.store_payment_method_service.StorePaymentMethodService.ensure_defaults"
-            ) as store_defaults,
+            patch("services.store_payment_method_service.StorePaymentMethodService.ensure_defaults") as store_defaults,
             patch("utils.seed_industry_fields.seed_industry_fields") as seed_fields,
         ):
             system_init_module._ensure_core_data()
@@ -383,9 +373,7 @@ class TestCoreDataBootstrap:
             patch.object(SystemSettings, "get_current", return_value=settings),
             patch.object(Currency, "query", currency_query),
             patch("utils.system_init.db.session") as session,
-            patch(
-                "services.store_payment_method_service.StorePaymentMethodService.ensure_defaults"
-            ),
+            patch("services.store_payment_method_service.StorePaymentMethodService.ensure_defaults"),
             patch("utils.seed_industry_fields.seed_industry_fields"),
         ):
             system_init_module._ensure_core_data()
@@ -433,9 +421,7 @@ class TestOwnerUserBootstrap:
 
     def test_updates_owner_email_when_available(self, flask_app):
         role = MagicMock()
-        owner = MagicMock(
-            username="owner", is_owner=True, role=role, email="old@system.local", id=1
-        )
+        owner = MagicMock(username="owner", is_owner=True, role=role, email="old@system.local", id=1)
         user_query = MagicMock()
         user_query.filter_by.return_value.first.return_value = owner
         user_query.filter.return_value.first.return_value = None
@@ -450,9 +436,7 @@ class TestOwnerUserBootstrap:
 
     def test_skips_conflicting_owner_email(self, flask_app):
         role = MagicMock()
-        owner = MagicMock(
-            username="owner", is_owner=True, role=role, email="old@system.local", id=1
-        )
+        owner = MagicMock(username="owner", is_owner=True, role=role, email="old@system.local", id=1)
         conflict = MagicMock(username="other", id=2)
         user_query = MagicMock()
         user_query.filter_by.return_value.first.return_value = owner
@@ -493,9 +477,7 @@ class TestTenantGlTrees:
 
         tenant = MagicMock(id=3, is_active=True)
         tenant_query = MagicMock()
-        tenant_query.filter_by.return_value.order_by.return_value.all.return_value = [
-            tenant
-        ]
+        tenant_query.filter_by.return_value.order_by.return_value.all.return_value = [tenant]
         with (
             flask_app.app_context(),
             patch.object(Tenant, "query", tenant_query),
@@ -595,9 +577,7 @@ class TestRecordServerActivation:
         ):
             system_init_module._record_server_activation(owner, True)
         send_mail.assert_not_called()
-        flask_app.logger.info.assert_called_with(
-            "SystemInit: Mail sending skipped (DISABLE_TELEMETRY)."
-        )
+        flask_app.logger.info.assert_called_with("SystemInit: Mail sending skipped (DISABLE_TELEMETRY).")
 
     def test_returns_before_mail_when_smtp_not_configured(self, flask_app, monkeypatch):
         settings = MagicMock()

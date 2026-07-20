@@ -19,17 +19,13 @@ class PartnerProfitDistribution(db.Model):
         nullable=False,
         index=True,
     )
-    partner_id = db.Column(
-        db.Integer, db.ForeignKey("partners.id"), nullable=False, index=True
-    )
+    partner_id = db.Column(db.Integer, db.ForeignKey("partners.id"), nullable=False, index=True)
 
     period_start = db.Column(db.Date, nullable=False)
     period_end = db.Column(db.Date, nullable=False)
 
     # Revenue scope
-    scope_type = db.Column(
-        db.String(20), default="company"
-    )  # company / branch / warehouse
+    scope_type = db.Column(db.String(20), default="company")  # company / branch / warehouse
     scope_id = db.Column(db.Integer, nullable=True)
 
     # Financials (in base currency — unified)
@@ -56,24 +52,16 @@ class PartnerProfitDistribution(db.Model):
     net_due = db.Column(db.Numeric(15, 3), default=0)
     # formula: share_amount - expense_share_amount - loss_share_amount + fixed_amount
 
-    status = db.Column(
-        db.String(20), default="draft", index=True
-    )  # draft / approved / paid / cancelled
+    status = db.Column(db.String(20), default="draft", index=True)  # draft / approved / paid / cancelled
 
     # Audit
-    created_by = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=True, index=True
-    )
-    approved_by = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=True, index=True
-    )
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True, index=True)
+    approved_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True, index=True)
     approved_at = db.Column(db.DateTime, nullable=True)
 
     notes = db.Column(db.Text)
 
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),

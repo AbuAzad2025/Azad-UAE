@@ -60,9 +60,7 @@ class ErrorAuditLog(db.Model):
 
     # ── User / tenant context ──────────────────────────────────
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
-    tenant_id = db.Column(
-        db.Integer, db.ForeignKey("tenants.id", ondelete="CASCADE"), index=True
-    )
+    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id", ondelete="CASCADE"), index=True)
 
     # Sanitized request data (no passwords, tokens, secrets)
     request_data = db.Column(db.JSON)
@@ -88,12 +86,8 @@ class ErrorAuditLog(db.Model):
             "id": self.id,
             "fingerprint": self.fingerprint,
             "occurrence_count": self.occurrence_count,
-            "first_seen_at": (
-                self.first_seen_at.isoformat() if self.first_seen_at else None
-            ),
-            "last_seen_at": (
-                self.last_seen_at.isoformat() if self.last_seen_at else None
-            ),
+            "first_seen_at": (self.first_seen_at.isoformat() if self.first_seen_at else None),
+            "last_seen_at": (self.last_seen_at.isoformat() if self.last_seen_at else None),
             "level": self.level,
             "category": self.category,
             "source": self.source,

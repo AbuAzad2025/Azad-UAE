@@ -12,9 +12,7 @@ import pytest
 class TestValidatePgExecutable:
     """validate_pg_executable — allowlist enforcement."""
 
-    @pytest.mark.parametrize(
-        "exe", ["pg_dump", "pg_dump.exe", "psql", "pg_restore.exe"]
-    )
+    @pytest.mark.parametrize("exe", ["pg_dump", "pg_dump.exe", "psql", "pg_restore.exe"])
     def test_allowlisted_tools_pass(self, exe):
         from services.backup_exec import validate_pg_executable
 
@@ -39,15 +37,11 @@ class TestRunPgTool:
 
     def test_successful_pg_dump_invocation(self, mocker):
         completed = subprocess.CompletedProcess(["pg_dump"], 0, stdout="ok", stderr="")
-        mock_run = mocker.patch(
-            "utils.secure_subprocess.subprocess.run", return_value=completed
-        )
+        mock_run = mocker.patch("utils.secure_subprocess.subprocess.run", return_value=completed)
 
         from services.backup_exec import run_pg_tool
 
-        result = run_pg_tool(
-            ["pg_dump", "-Fc", "mydb"], env={"PGPASSWORD": "x"}, timeout=60
-        )
+        result = run_pg_tool(["pg_dump", "-Fc", "mydb"], env={"PGPASSWORD": "x"}, timeout=60)
         assert result.returncode == 0
         mock_run.assert_called_once()
         assert mock_run.call_args.kwargs["shell"] is False
@@ -93,9 +87,7 @@ class TestRunRepoPythonScript:
     """run_repo_python_script — path escape guard."""
 
     def test_runs_existing_script_under_repo(self, mocker, tmp_path):
-        root = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "..", "..")
-        )
+        root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
         script_rel = "scripts/verify_backup.py"
         script_abs = os.path.join(root, script_rel.replace("/", os.sep))
         if not os.path.isfile(script_abs):
@@ -135,9 +127,7 @@ class TestRunPythonModule:
 
     def test_module_invocation_success(self, mocker):
         completed = subprocess.CompletedProcess([], 0, stdout="done", stderr="")
-        mock_run = mocker.patch(
-            "utils.secure_subprocess.subprocess.run", return_value=completed
-        )
+        mock_run = mocker.patch("utils.secure_subprocess.subprocess.run", return_value=completed)
 
         from services.backup_exec import run_python_module
 
@@ -148,9 +138,7 @@ class TestRunPythonModule:
         assert cmd[2] == "pytest"
 
     def test_repo_script_passes_env_and_cwd(self, mocker, tmp_path):
-        root = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "..", "..")
-        )
+        root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
         script_rel = "scripts/verify_backup.py"
         script_abs = os.path.join(root, script_rel.replace("/", os.sep))
         if not os.path.isfile(script_abs):
@@ -160,14 +148,10 @@ class TestRunPythonModule:
                 fh.write('print("ok")\n')
             script_rel = os.path.relpath(script_abs, root).replace("\\", "/")
         completed = subprocess.CompletedProcess([], 0, stdout="ok", stderr="")
-        mock_run = mocker.patch(
-            "utils.secure_subprocess.subprocess.run", return_value=completed
-        )
+        mock_run = mocker.patch("utils.secure_subprocess.subprocess.run", return_value=completed)
         from services.backup_exec import run_repo_python_script
 
-        result = run_repo_python_script(
-            script_rel, ["--dry-run"], env={"FOO": "bar"}, cwd=str(tmp_path)
-        )
+        result = run_repo_python_script(script_rel, ["--dry-run"], env={"FOO": "bar"}, cwd=str(tmp_path))
         assert result.returncode == 0
         assert mock_run.call_args.kwargs["env"] == {"FOO": "bar"}
         assert mock_run.call_args.kwargs["cwd"] == str(tmp_path)

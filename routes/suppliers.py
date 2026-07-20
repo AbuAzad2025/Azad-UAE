@@ -53,17 +53,13 @@ def _scoped_supplier_query():
 def _supplier_in_scope(supplier_id):
     if branch_scope_id() is None:
         return True
-    return db.session.query(
-        _scoped_supplier_query().filter(Supplier.id == supplier_id).exists()
-    ).scalar()
+    return db.session.query(_scoped_supplier_query().filter(Supplier.id == supplier_id).exists()).scalar()
 
 
 def _supplier_scoped_totals(supplier_id):
     tid = get_active_tenant_id(current_user)
     scoped_branch_id = branch_scope_id()
-    purchases_query = Purchase.query.filter_by(
-        supplier_id=supplier_id, status="confirmed", tenant_id=tid
-    )
+    purchases_query = Purchase.query.filter_by(supplier_id=supplier_id, status="confirmed", tenant_id=tid)
     payments_query = Payment.query.filter_by(supplier_id=supplier_id, tenant_id=tid)
     if scoped_branch_id is not None:
         purchases_query = purchases_query.filter(Purchase.branch_id == scoped_branch_id)
@@ -71,10 +67,7 @@ def _supplier_scoped_totals(supplier_id):
 
     purchases = purchases_query.all()
     total_purchases = sum((p.amount_aed or 0) for p in purchases)
-    total_paid = sum(
-        (p.amount_aed or 0)
-        for p in payments_query.filter(Payment.direction == "outgoing").all()
-    )
+    total_paid = sum((p.amount_aed or 0) for p in payments_query.filter(Payment.direction == "outgoing").all())
     return purchases, total_purchases, total_paid
 
 
@@ -111,19 +104,11 @@ def _attach_supplier_branch_labels(suppliers):
             branch_map[sid].add(bid)
             branch_ids.add(bid)
 
-    branches = (
-        Branch.query.filter(Branch.id.in_(branch_ids)).all() if branch_ids else []
-    )
-    branch_labels = {
-        b.id: (f"{b.name} ({b.code})" if getattr(b, "code", None) else b.name)
-        for b in branches
-    }
+    branches = Branch.query.filter(Branch.id.in_(branch_ids)).all() if branch_ids else []
+    branch_labels = {b.id: (f"{b.name} ({b.code})" if getattr(b, "code", None) else b.name) for b in branches}
 
     for supplier in suppliers:
-        labels = [
-            branch_labels.get(bid, str(bid))
-            for bid in sorted(branch_map.get(supplier.id, set()))
-        ]
+        labels = [branch_labels.get(bid, str(bid)) for bid in sorted(branch_map.get(supplier.id, set()))]
         supplier.branch_labels = labels
 
 
@@ -153,9 +138,7 @@ def index():
     if supplier_type:
         query = query.filter_by(supplier_type=supplier_type)
 
-    pagination = query.order_by(Supplier.name).paginate(
-        page=page, per_page=per_page, error_out=False
-    )
+    pagination = query.order_by(Supplier.name).paginate(page=page, per_page=per_page, error_out=False)
 
     scoped_stats_query = _scoped_supplier_query().filter_by(is_active=True)
     stats = {
@@ -228,9 +211,7 @@ def create():
                 name_en=request.form.get("name_en"),
                 company_name=request.form.get("company_name"),
                 phone=normalize_phone_optional(request.form.get("phone")),
-                phone2=normalize_phone_optional(
-                    request.form.get("phone2"), field_label="phone2"
-                ),
+                phone2=normalize_phone_optional(request.form.get("phone2"), field_label="phone2"),
                 email=request.form.get("email"),
                 website=request.form.get("website"),
                 address=request.form.get("address"),
@@ -241,12 +222,8 @@ def create():
                 supplier_type=supplier_type_value,
                 rating=rating if rating is not None else None,
                 credit_limit=request.form.get("credit_limit", type=float, default=0),
-                payment_terms_days=request.form.get(
-                    "payment_terms_days", type=int, default=30
-                ),
-                preferred_currency=validate_currency_code(
-                    request.form.get("preferred_currency", default_currency)
-                ),
+                payment_terms_days=request.form.get("payment_terms_days", type=int, default=30),
+                preferred_currency=validate_currency_code(request.form.get("preferred_currency", default_currency)),
                 total_purchases_aed=initial_balance,
                 total_paid_aed=0,
                 notes=request.form.get("notes"),
@@ -270,18 +247,14 @@ def create():
                                 "concept_code": "OPENING_BALANCE_EQUITY",
                                 "debit": initial_balance,
                                 "credit": 0,
-                                "description": gettext(
-                                    f"رصيد افتتاحي للمورد {supplier.name}"
-                                ),
+                                "description": gettext(f"رصيد افتتاحي للمورد {supplier.name}"),
                             },
                             {
                                 "account": "2110",
                                 "concept_code": "ACCOUNTS_PAYABLE",
                                 "debit": 0,
                                 "credit": initial_balance,
-                                "description": gettext(
-                                    f"رصيد افتتاحي للمورد {supplier.name}"
-                                ),
+                                "description": gettext(f"رصيد افتتاحي للمورد {supplier.name}"),
                             },
                         ],
                         description=gettext(f"رصيد افتتاحي للمورد {supplier.name}"),
@@ -315,12 +288,8 @@ def view(**kwargs):
 
     recent_purchases_query = supplier.purchases.filter_by(status="confirmed")
     if branch_scope_id() is not None:
-        recent_purchases_query = recent_purchases_query.filter(
-            Purchase.branch_id == branch_scope_id()
-        )
-    recent_purchases = (
-        recent_purchases_query.order_by(desc(Purchase.purchase_date)).limit(10).all()
-    )
+        recent_purchases_query = recent_purchases_query.filter(Purchase.branch_id == branch_scope_id())
+    recent_purchases = recent_purchases_query.order_by(desc(Purchase.purchase_date)).limit(10).all()
     _, total_amount, total_paid = _supplier_scoped_totals(record_id)
 
     stats = {
@@ -362,18 +331,14 @@ def edit(**kwargs):
             )
 
             supplier.phone = normalize_phone_optional(request.form.get("phone"))
-            supplier.phone2 = normalize_phone_optional(
-                request.form.get("phone2"), field_label="phone2"
-            )
+            supplier.phone2 = normalize_phone_optional(request.form.get("phone2"), field_label="phone2")
             supplier.email = request.form.get("email")
             supplier.website = request.form.get("website")
             supplier.address = request.form.get("address")
             supplier.city = request.form.get("city")
             supplier.country = request.form.get("country")
             supplier.tax_number = request.form.get("tax_number")
-            supplier.commercial_registration = request.form.get(
-                "commercial_registration"
-            )
+            supplier.commercial_registration = request.form.get("commercial_registration")
             supplier_type_value = (request.form.get("supplier_type") or "").strip()
             supplier.supplier_type = supplier_type_value or None
 
@@ -384,13 +349,9 @@ def edit(**kwargs):
             except Exception:
                 default_currency = get_system_default_currency()
             supplier.credit_limit = request.form.get("credit_limit", type=float)
-            supplier.payment_terms_days = request.form.get(
-                "payment_terms_days", type=int
-            )
+            supplier.payment_terms_days = request.form.get("payment_terms_days", type=int)
             supplier.preferred_currency = validate_currency_code(
-                request.form.get("preferred_currency")
-                or supplier.preferred_currency
-                or default_currency
+                request.form.get("preferred_currency") or supplier.preferred_currency or default_currency
             )
             supplier.notes = request.form.get("notes")
             supplier.tags = request.form.get("tags")
@@ -427,12 +388,8 @@ def delete(**kwargs):
         purchases_query = Purchase.query.filter_by(supplier_id=record_id, tenant_id=tid)
         payments_query = Payment.query.filter_by(supplier_id=record_id, tenant_id=tid)
         if branch_scope_id() is not None:
-            purchases_query = purchases_query.filter(
-                Purchase.branch_id == branch_scope_id()
-            )
-            payments_query = payments_query.filter(
-                Payment.branch_id == branch_scope_id()
-            )
+            purchases_query = purchases_query.filter(Purchase.branch_id == branch_scope_id())
+            payments_query = payments_query.filter(Payment.branch_id == branch_scope_id())
         purchases_count = purchases_query.count()
         payments_count = payments_query.count()
 
@@ -467,9 +424,7 @@ def delete(**kwargs):
                 "warning",
             )
         except Exception as inner_e:
-            current_app.logger.error(
-                f"Error falling back to soft delete for supplier {record_id}: {inner_e}"
-            )
+            current_app.logger.error(f"Error falling back to soft delete for supplier {record_id}: {inner_e}")
             flash(ErrorMessages.delete_failed("supplier"), "danger")
 
     return redirect(url_for("suppliers.index"))
@@ -531,9 +486,7 @@ def statement(**kwargs):
         # still-pending cheque (issuing an outgoing cheque reduces AP
         # immediately). Bounced/cancelled cheques carry a rejection_reason and
         # have had their AP restored, so they have no effect.
-        affects_balance = bool(pm.payment_confirmed) or (
-            pm.payment_method == "cheque" and not pm.rejection_reason
-        )
+        affects_balance = bool(pm.payment_confirmed) or (pm.payment_method == "cheque" and not pm.rejection_reason)
         # Outgoing payments reduce the balance owed (credit); incoming refunds
         # from the supplier offset AP and increase the balance owed (debit).
         is_refund = pm.direction == "incoming"
@@ -631,13 +584,7 @@ def api_search():
                 .all()
             )
         else:
-            suppliers = (
-                _scoped_supplier_query()
-                .filter_by(is_active=True)
-                .order_by(Supplier.name)
-                .limit(per_page)
-                .all()
-            )
+            suppliers = _scoped_supplier_query().filter_by(is_active=True).order_by(Supplier.name).limit(per_page).all()
 
         results = []
         for s in suppliers:

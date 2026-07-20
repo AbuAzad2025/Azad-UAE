@@ -38,11 +38,7 @@ def _static_exists(rel: str) -> bool:
     rel = normalize_static_rel(rel)
     if not rel or rel.startswith("http"):
         return bool(rel)
-    root = str(
-        os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static"
-        )
-    )
+    root = str(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static"))
     return os.path.isfile(os.path.join(root, rel.replace("/", os.sep)))
 
 
@@ -63,17 +59,11 @@ def resolve_tenant_branding(tenant_id: int | None = None) -> dict[str, Any]:
     from models.tenant import Tenant
     from utils.tenant_assets import branding_for_tenant_slug
 
-    tenant = (
-        db.session.get(Tenant, int(tenant_id)) if tenant_id else Tenant.get_current()
-    )
+    tenant = db.session.get(Tenant, int(tenant_id)) if tenant_id else Tenant.get_current()
     from utils.tenanting import without_tenant_scope
 
     with without_tenant_scope():
-        settings = (
-            InvoiceSettings.get_active(tenant.id)
-            if tenant
-            else InvoiceSettings.get_active()
-        )
+        settings = InvoiceSettings.get_active(tenant.id) if tenant else InvoiceSettings.get_active()
 
     disk: dict[str, str] = {}
     slug = (tenant.slug or "").strip().lower() if tenant else ""
@@ -97,27 +87,15 @@ def resolve_tenant_branding(tenant_id: int | None = None) -> dict[str, Any]:
         f"assets/tenants/{slug}/headers/invoice-letterhead.png" if slug else None,
     )
 
-    company_name_ar = (
-        (settings.company_name_ar if settings else None)
-        or (tenant.name_ar if tenant else None)
-        or ""
-    )
+    company_name_ar = (settings.company_name_ar if settings else None) or (tenant.name_ar if tenant else None) or ""
     company_name_en = (
         (settings.company_name_en if settings else None)
         or (tenant.name_en if tenant else None)
         or (tenant.name if tenant else None)
         or "Company"
     )
-    address_ar = (
-        (settings.address_ar if settings else None)
-        or (tenant.address_ar if tenant else None)
-        or ""
-    )
-    address_en = (
-        (settings.address_en if settings else None)
-        or (tenant.address_en if tenant else None)
-        or ""
-    )
+    address_ar = (settings.address_ar if settings else None) or (tenant.address_ar if tenant else None) or ""
+    address_en = (settings.address_en if settings else None) or (tenant.address_en if tenant else None) or ""
 
     return {
         "tenant_id": tenant.id if tenant else None,
@@ -140,16 +118,8 @@ def resolve_tenant_branding(tenant_id: int | None = None) -> dict[str, Any]:
             or (tenant.mobile if tenant else None)
             or ""
         ),
-        "email": (
-            (settings.email if settings else None)
-            or (tenant.email if tenant else None)
-            or ""
-        ),
-        "tax_number": (
-            (settings.tax_number if settings else None)
-            or (tenant.tax_number if tenant else None)
-            or ""
-        ),
+        "email": ((settings.email if settings else None) or (tenant.email if tenant else None) or ""),
+        "tax_number": ((settings.tax_number if settings else None) or (tenant.tax_number if tenant else None) or ""),
         "vat_country": (tenant.vat_country if tenant else None) or "AE",
         "default_currency": (tenant.default_currency if tenant else None) or "AED",
         "timezone": (tenant.timezone if tenant else None) or "Asia/Dubai",
@@ -199,12 +169,7 @@ def branding_path_warnings(branding: dict[str, Any] | None) -> list[str]:
                 warns.append(f"{key}: file missing ({rel})")
     slug = (branding.get("tenant_slug") or "").strip()
     logo = normalize_static_rel(branding.get("logo_url") or "")
-    if (
-        slug
-        and logo
-        and f"assets/tenants/{slug}" not in logo
-        and "uploads/" not in logo
-    ):
+    if slug and logo and f"assets/tenants/{slug}" not in logo and "uploads/" not in logo:
         if "azad" in logo.lower() and slug not in ("azad",):
             warns.append("logo may be platform default, not tenant asset")
     return warns

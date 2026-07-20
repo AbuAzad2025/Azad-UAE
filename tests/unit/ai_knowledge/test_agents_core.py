@@ -71,9 +71,7 @@ class TestAgentsCore:
         brain = MagicMock()
         brain.ask.return_value = {"answer": "من العقل", "confidence": 0.8}
         with (
-            patch(
-                "ai_knowledge.agents_core._check_llm_availability", return_value=False
-            ),
+            patch("ai_knowledge.agents_core._check_llm_availability", return_value=False),
             patch("ai_knowledge.agents_core.get_master_brain", return_value=brain),
             patch("ai_knowledge.trainer.trainer.learn_from_interaction"),
         ):
@@ -82,9 +80,7 @@ class TestAgentsCore:
 
     def test_ask_azad_enhanced_faq(self):
         with (
-            patch(
-                "ai_knowledge.agents_core._check_llm_availability", return_value=False
-            ),
+            patch("ai_knowledge.agents_core._check_llm_availability", return_value=False),
             patch(
                 "ai_knowledge.system_knowledge.search_knowledge",
                 return_value=[{"type": "faq", "answer": "إجابة"}],

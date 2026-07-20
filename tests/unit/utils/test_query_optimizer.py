@@ -41,9 +41,7 @@ class TestPaginateOptimized:
     def test_paginate_forwards_args(self):
         query = MagicMock()
         qo.paginate_optimized(query, page=2, per_page=10)
-        query.paginate.assert_called_once_with(
-            page=2, per_page=10, error_out=False, max_per_page=100
-        )
+        query.paginate.assert_called_once_with(page=2, per_page=10, error_out=False, max_per_page=100)
 
 
 class TestBatchFetch:

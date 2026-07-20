@@ -50,12 +50,8 @@ def _purchase_patches(
         patch("routes.purchases.LoggingCore.log_audit") as log_audit,
         patch("routes.purchases.should_show_all_branch_columns", return_value=True),
         patch("routes.purchases.PurchaseService") as purchase_service,
-        patch(
-            "routes.purchases.CurrencyService.get_all_rates", return_value={"AED": 1.0}
-        ),
-        patch(
-            "routes.purchases.get_accessible_warehouses", return_value=warehouses or []
-        ),
+        patch("routes.purchases.CurrencyService.get_all_rates", return_value={"AED": 1.0}),
+        patch("routes.purchases.get_accessible_warehouses", return_value=warehouses or []),
         patch("routes.purchases.ensure_warehouse_access"),
         patch("routes.purchases.resolve_default_currency", return_value="AED"),
         patch("routes.purchases.get_system_default_currency", return_value="AED"),
@@ -273,9 +269,7 @@ class TestPurchasesCancel:
     def test_cancel_value_error(self, purchases_client):
         purchase = _mock_purchase()
         with _purchase_patches(purchase=purchase) as ctx:
-            ctx["purchase_service"].cancel_purchase.side_effect = ValueError(
-                "cannot cancel"
-            )
+            ctx["purchase_service"].cancel_purchase.side_effect = ValueError("cannot cancel")
             resp = purchases_client.post("/purchases/1/cancel")
         assert resp.status_code == 302
 
@@ -334,9 +328,7 @@ class TestPurchasesApiCalculateTotals:
             _purchase_patches(),
             patch("utils.tax_settings.normalize_tax_rate", side_effect=lambda x: x),
         ):
-            resp = purchases_client.post(
-                "/purchases/api/calculate-totals", json=payload
-            )
+            resp = purchases_client.post("/purchases/api/calculate-totals", json=payload)
         assert resp.status_code == 200
         data = resp.get_json()
         assert data["success"] is True
@@ -353,9 +345,7 @@ class TestPurchasesApiCalculateTotals:
             _purchase_patches(),
             patch("utils.tax_settings.normalize_tax_rate", side_effect=lambda x: x),
         ):
-            resp = purchases_client.post(
-                "/purchases/api/calculate-totals", json=payload
-            )
+            resp = purchases_client.post("/purchases/api/calculate-totals", json=payload)
         assert resp.status_code == 200
         data = resp.get_json()
         assert data["success"] is True
@@ -381,9 +371,7 @@ class TestPurchasesExtended:
 
     def test_create_post_generic_exception(self, purchases_client):
         with _purchase_patches() as ctx, _atomic_transaction_mock():
-            ctx["purchase_service"].create_purchase.side_effect = RuntimeError(
-                "db down"
-            )
+            ctx["purchase_service"].create_purchase.side_effect = RuntimeError("db down")
             resp = purchases_client.post(
                 "/purchases/create",
                 data={"warehouse_id": "1", "line_count": "0"},
@@ -500,9 +488,7 @@ class TestPurchasesExtended:
             patch("routes.purchases.PurchaseReturnLine"),
         ):
             ret_model.query.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
-            ctx["purchase_service"].create_purchase_return.side_effect = RuntimeError(
-                "fail"
-            )
+            ctx["purchase_service"].create_purchase_return.side_effect = RuntimeError("fail")
             resp = purchases_client.post(
                 "/purchases/1/return",
                 data={"lines": "1", "reason": "damaged"},
@@ -518,9 +504,7 @@ class TestPurchasesExtended:
             _purchase_patches(),
             patch("utils.tax_settings.normalize_tax_rate", side_effect=lambda x: x),
         ):
-            resp = purchases_client.post(
-                "/purchases/api/calculate-totals", json=payload
-            )
+            resp = purchases_client.post("/purchases/api/calculate-totals", json=payload)
         assert resp.status_code == 200
         assert resp.get_json()["line_count"] == 0
 
@@ -534,9 +518,7 @@ class TestPurchasesExtended:
             _purchase_patches(),
             patch("utils.tax_settings.normalize_tax_rate", side_effect=lambda x: x),
         ):
-            resp = purchases_client.post(
-                "/purchases/api/calculate-totals", json=payload
-            )
+            resp = purchases_client.post("/purchases/api/calculate-totals", json=payload)
         assert resp.status_code == 200
         data = resp.get_json()
         assert data["tax_amount"] == 0.0
@@ -570,9 +552,7 @@ class TestPurchasesExtended:
             patch("routes.purchases.PurchaseReturnLine"),
         ):
             ret_model.query.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
-            ctx["purchase_service"].create_purchase_return.side_effect = ValueError(
-                "invalid qty"
-            )
+            ctx["purchase_service"].create_purchase_return.side_effect = ValueError("invalid qty")
             resp = purchases_client.post(
                 "/purchases/1/return",
                 data={"lines": "1", "reason": "damaged"},
@@ -588,8 +568,6 @@ class TestPurchasesExtended:
             _purchase_patches(),
             patch("utils.tax_settings.normalize_tax_rate", side_effect=lambda x: x),
         ):
-            resp = purchases_client.post(
-                "/purchases/api/calculate-totals", json=payload
-            )
+            resp = purchases_client.post("/purchases/api/calculate-totals", json=payload)
         assert resp.status_code == 200
         assert resp.get_json()["line_count"] == 0

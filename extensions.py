@@ -19,9 +19,7 @@ try:
 except ImportError:
     Compress = None  # type: ignore[misc,assignment]
     COMPRESS_AVAILABLE = False
-    logging.warning(
-        "Flask-Compress not available - install with: pip install Flask-Compress Brotli"
-    )
+    logging.warning("Flask-Compress not available - install with: pip install Flask-Compress Brotli")
 
 
 def get_locale():
@@ -56,9 +54,7 @@ def _rate_limit_key():
     except Exception:
         import logging
 
-        logging.getLogger(__name__).debug(
-            "Rate-limit key resolution: current_user not available, falling back to IP"
-        )
+        logging.getLogger(__name__).debug("Rate-limit key resolution: current_user not available, falling back to IP")
     return get_remote_address()
 
 
@@ -87,15 +83,11 @@ def init_extensions(app):
         compress.init_app(app)
         logging.info("[OK] Compression enabled")
     else:
-        logging.warning(
-            "Compression disabled - install Flask-Compress for better performance"
-        )
+        logging.warning("Compression disabled - install Flask-Compress for better performance")
     default_limit = app.config.get("RATELIMIT_DEFAULT")
     if default_limit:
         if isinstance(default_limit, str):
-            limiter.default_limits = [
-                part.strip() for part in default_limit.split(";") if part.strip()
-            ]
+            limiter.default_limits = [part.strip() for part in default_limit.split(";") if part.strip()]
         else:
             limiter.default_limits = [default_limit]
     if app.config.get("MAIL_USERNAME"):

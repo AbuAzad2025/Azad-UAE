@@ -39,11 +39,7 @@ def pipeline():
     stages = _tenant_stages(tid)
     leads = CRMLeadService.search_leads({}, current_user)
     teams = CRMTeam.query.filter_by(tenant_id=tid).all() if tid else []
-    users = (
-        User.query.filter(User.tenant_id == tid, User.is_active)
-        .order_by(User.full_name)
-        .all()
-    )
+    users = User.query.filter(User.tenant_id == tid, User.is_active).order_by(User.full_name).all()
     return render_template(
         "crm/pipeline.html",
         stages=stages,
@@ -82,13 +78,7 @@ def create_lead():
     tid = get_active_tenant_id(current_user)
     stages = _tenant_stages(tid)
     customers = _tenant_customers(tid)
-    users = (
-        User.query.filter(User.tenant_id == tid, User.is_active)
-        .order_by(User.full_name)
-        .all()
-        if tid
-        else []
-    )
+    users = User.query.filter(User.tenant_id == tid, User.is_active).order_by(User.full_name).all() if tid else []
     teams = _tenant_teams(tid)
     return render_template(
         "crm/lead_form.html",
@@ -110,12 +100,8 @@ def lead_detail(lead_id):
         return redirect(url_for("crm.leads_list"))
     tid = get_active_tenant_id(current_user)
     stages = _tenant_stages(tid)
-    users = (
-        User.query.filter(User.tenant_id == tid, User.is_active).all() if tid else []
-    )
-    return render_template(
-        "crm/lead_form.html", lead=lead, stages=stages, users=users, view=True
-    )
+    users = User.query.filter(User.tenant_id == tid, User.is_active).all() if tid else []
+    return render_template("crm/lead_form.html", lead=lead, stages=stages, users=users, view=True)
 
 
 @crm_bp.route("/leads/<int:lead_id>/edit", methods=["GET", "POST"])
@@ -138,9 +124,7 @@ def edit_lead(lead_id):
     tid = get_active_tenant_id(current_user)
     stages = _tenant_stages(tid)
     customers = _tenant_customers(tid)
-    users = (
-        User.query.filter(User.tenant_id == tid, User.is_active).all() if tid else []
-    )
+    users = User.query.filter(User.tenant_id == tid, User.is_active).all() if tid else []
     teams = _tenant_teams(tid)
     return render_template(
         "crm/lead_form.html",

@@ -15,11 +15,7 @@ class Cheque(db.Model):
     """
 
     __tablename__ = "cheques"
-    __table_args__ = (
-        db.UniqueConstraint(
-            "tenant_id", "cheque_number", name="uq_cheques_tenant_cheque_number"
-        ),
-    )
+    __table_args__ = (db.UniqueConstraint("tenant_id", "cheque_number", name="uq_cheques_tenant_cheque_number"),)
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -34,9 +30,7 @@ class Cheque(db.Model):
     cheque_bank_number = db.Column(db.String(50), nullable=False)  # رقم الشيك من البنك
 
     # النوع: incoming (وارد) أو outgoing (صادر)
-    cheque_type = db.Column(
-        db.String(20), nullable=False, index=True
-    )  # incoming, outgoing
+    cheque_type = db.Column(db.String(20), nullable=False, index=True)  # incoming, outgoing
 
     # البنك والمعلومات المصرفية
     bank_name = db.Column(db.String(200), nullable=False)
@@ -45,20 +39,12 @@ class Cheque(db.Model):
 
     # المبلغ والعملة
     amount = db.Column(db.Numeric(15, 2), nullable=False)
-    currency = db.Column(
-        db.String(10), default=context_aware_default_currency
-    )  # TODO: use Config.DEFAULT_CURRENCY
-    exchange_rate = db.Column(
-        db.Numeric(15, 6), default=Decimal("1.0")
-    )  # سعر الصرف عند الإنشاء
+    currency = db.Column(db.String(10), default=context_aware_default_currency)  # TODO: use Config.DEFAULT_CURRENCY
+    exchange_rate = db.Column(db.Numeric(15, 6), default=Decimal("1.0"))  # سعر الصرف عند الإنشاء
     clearance_exchange_rate = db.Column(db.Numeric(15, 6))  # سعر الصرف عند الصرف الفعلي
     amount_aed = db.Column(db.Numeric(15, 2))  # المبلغ بالعملة الأساسية عند الإنشاء
-    actual_amount_aed = db.Column(
-        db.Numeric(15, 2)
-    )  # المبلغ الفعلي بالعملة الأساسية عند الصرف
-    currency_gain_loss = db.Column(
-        db.Numeric(15, 2), default=Decimal("0")
-    )  # ربح/خسارة فرق العملة
+    actual_amount_aed = db.Column(db.Numeric(15, 2))  # المبلغ الفعلي بالعملة الأساسية عند الصرف
+    currency_gain_loss = db.Column(db.Numeric(15, 2), default=Decimal("0"))  # ربح/خسارة فرق العملة
 
     # Aliases for unified currency handling
     @property
@@ -121,9 +107,7 @@ class Cheque(db.Model):
     archive_reason = db.Column(db.String(500))
 
     # Meta
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -131,12 +115,8 @@ class Cheque(db.Model):
     )
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
 
-    customer = db.relationship(
-        "Customer", backref="cheques", foreign_keys=[customer_id]
-    )
-    supplier = db.relationship(
-        "Supplier", backref="cheques", foreign_keys=[supplier_id]
-    )
+    customer = db.relationship("Customer", backref="cheques", foreign_keys=[customer_id])
+    supplier = db.relationship("Supplier", backref="cheques", foreign_keys=[supplier_id])
     sale = db.relationship("Sale", backref="cheques", foreign_keys=[sale_id])
     receipt = db.relationship("Receipt", backref="cheques", foreign_keys=[receipt_id])
     expense = db.relationship("Expense", backref="cheques", foreign_keys=[expense_id])
@@ -225,23 +205,13 @@ class Cheque(db.Model):
             "amount": float(self.amount),
             "currency": self.currency,
             "exchange_rate": float(self.exchange_rate) if self.exchange_rate else 1.0,
-            "clearance_exchange_rate": (
-                float(self.clearance_exchange_rate)
-                if self.clearance_exchange_rate
-                else None
-            ),
+            "clearance_exchange_rate": (float(self.clearance_exchange_rate) if self.clearance_exchange_rate else None),
             "amount_aed": float(self.amount_aed) if self.amount_aed else 0,
-            "actual_amount_aed": (
-                float(self.actual_amount_aed) if self.actual_amount_aed else None
-            ),
-            "currency_gain_loss": (
-                float(self.currency_gain_loss) if self.currency_gain_loss else 0
-            ),
+            "actual_amount_aed": (float(self.actual_amount_aed) if self.actual_amount_aed else None),
+            "currency_gain_loss": (float(self.currency_gain_loss) if self.currency_gain_loss else 0),
             "issue_date": self.issue_date.isoformat() if self.issue_date else None,
             "due_date": self.due_date.isoformat() if self.due_date else None,
-            "clearance_date": (
-                self.clearance_date.isoformat() if self.clearance_date else None
-            ),
+            "clearance_date": (self.clearance_date.isoformat() if self.clearance_date else None),
             "status": self.status,
             "status_ar": self.status_ar,
             "days_until_due": self.days_until_due,
@@ -331,42 +301,28 @@ class Cheque(db.Model):
 
         total_incoming = base_query.filter_by(cheque_type="incoming").count()
         total_outgoing = base_query.filter_by(cheque_type="outgoing").count()
-        pending_incoming = base_query.filter_by(
-            cheque_type="incoming", status="pending"
-        ).count()
-        pending_outgoing = base_query.filter_by(
-            cheque_type="outgoing", status="pending"
-        ).count()
+        pending_incoming = base_query.filter_by(cheque_type="incoming", status="pending").count()
+        pending_outgoing = base_query.filter_by(cheque_type="outgoing", status="pending").count()
 
-        incoming_amount_query = db.session.query(
-            db.func.sum(Cheque.amount_aed)
-        ).filter_by(cheque_type="incoming", status="pending", is_active=True)
+        incoming_amount_query = db.session.query(db.func.sum(Cheque.amount_aed)).filter_by(
+            cheque_type="incoming", status="pending", is_active=True
+        )
         if tenant_id is not None:
-            incoming_amount_query = incoming_amount_query.filter(
-                Cheque.tenant_id == tenant_id
-            )
+            incoming_amount_query = incoming_amount_query.filter(Cheque.tenant_id == tenant_id)
         if branch_id is not None:
-            incoming_amount_query = incoming_amount_query.filter(
-                Cheque.branch_id == branch_id
-            )
+            incoming_amount_query = incoming_amount_query.filter(Cheque.branch_id == branch_id)
         incoming_amount = incoming_amount_query.scalar() or Decimal("0")
 
-        outgoing_amount_query = db.session.query(
-            db.func.sum(Cheque.amount_aed)
-        ).filter_by(cheque_type="outgoing", status="pending", is_active=True)
+        outgoing_amount_query = db.session.query(db.func.sum(Cheque.amount_aed)).filter_by(
+            cheque_type="outgoing", status="pending", is_active=True
+        )
         if tenant_id is not None:
-            outgoing_amount_query = outgoing_amount_query.filter(
-                Cheque.tenant_id == tenant_id
-            )
+            outgoing_amount_query = outgoing_amount_query.filter(Cheque.tenant_id == tenant_id)
         if branch_id is not None:
-            outgoing_amount_query = outgoing_amount_query.filter(
-                Cheque.branch_id == branch_id
-            )
+            outgoing_amount_query = outgoing_amount_query.filter(Cheque.branch_id == branch_id)
         outgoing_amount = outgoing_amount_query.scalar() or Decimal("0")
 
-        overdue_query = Cheque.query.filter_by(
-            status="pending", is_active=True, is_overdue=True
-        )
+        overdue_query = Cheque.query.filter_by(status="pending", is_active=True, is_overdue=True)
         if tenant_id is not None:
             overdue_query = overdue_query.filter(Cheque.tenant_id == tenant_id)
         if branch_id is not None:

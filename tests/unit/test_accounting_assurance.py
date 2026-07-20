@@ -68,9 +68,7 @@ class TestGLDoubleEntryBalance:
         with pytest.raises(UnbalancedJournalEntryError, match="غير متوازن"):
             post_or_fail(unbalanced, description="Test", tenant_id=1)
 
-    def test_post_or_fail_passes_balanced_with_app_context(
-        self, app, mocker, sample_tenant
-    ):
+    def test_post_or_fail_passes_balanced_with_app_context(self, app, mocker, sample_tenant):
         from services.gl_posting import post_or_fail
 
         mock_entry = MagicMock(id=42)
@@ -90,9 +88,7 @@ class TestGLDoubleEntryBalance:
             {"debit": Decimal("250"), "credit": Decimal("0")},
             {"debit": Decimal("0"), "credit": Decimal("250")},
         ]
-        result = post_or_fail(
-            balanced, description="Test balanced", tenant_id=sample_tenant.id
-        )
+        result = post_or_fail(balanced, description="Test balanced", tenant_id=sample_tenant.id)
         assert result.id == 42
 
 
@@ -218,11 +214,7 @@ class TestPartnerProfitAndLossDistribution:
             app,
             mocker,
             model_patch,
-            partners=[
-                self._make_partner(
-                    scope_type="branch", scope_id=5, share_percentage=Decimal("30")
-                )
-            ],
+            partners=[self._make_partner(scope_type="branch", scope_id=5, share_percentage=Decimal("30"))],
             pnl={
                 "revenue": 15000.0,
                 "cogs": 5000.0,
@@ -237,11 +229,7 @@ class TestPartnerProfitAndLossDistribution:
             app,
             mocker,
             model_patch,
-            partners=[
-                self._make_partner(
-                    scope_type="warehouse", scope_id=10, share_percentage=Decimal("20")
-                )
-            ],
+            partners=[self._make_partner(scope_type="warehouse", scope_id=10, share_percentage=Decimal("20"))],
             pnl={
                 "revenue": 10000.0,
                 "cogs": 4000.0,
@@ -262,15 +250,11 @@ class TestBankAutoMatchingAndSuspenseRouting:
 
     @staticmethod
     def _setup_match_mocks(mocker, stmt, gl_lines):
-        mocker.patch(
-            "services.bank_reconciliation_service.db.session.get", return_value=stmt
-        )
+        mocker.patch("services.bank_reconciliation_service.db.session.get", return_value=stmt)
         mock_q = MagicMock()
         mock_q.return_value = mock_q
         mock_q.join.return_value.filter.return_value.all.return_value = gl_lines
-        mocker.patch(
-            "services.bank_reconciliation_service.db.session.query", return_value=mock_q
-        )
+        mocker.patch("services.bank_reconciliation_service.db.session.query", return_value=mock_q)
 
     def test_auto_match_exact_hit(self, app, mocker):
         stmt = MagicMock()
@@ -324,9 +308,7 @@ class TestBankAutoMatchingAndSuspenseRouting:
         bsl = mocker.patch("services.bank_reconciliation_service.BankStatementLine")
         bsl.query.filter.return_value.all.return_value = stmts
         gla = mocker.patch("services.bank_reconciliation_service.GLAccount")
-        gla.query.filter_by.return_value.filter.return_value.first.return_value = (
-            MagicMock(code="2999")
-        )
+        gla.query.filter_by.return_value.filter.return_value.first.return_value = MagicMock(code="2999")
         mock_entry = MagicMock(id=99)
         mocker.patch("services.gl_posting.post_or_fail", return_value=mock_entry)
         return bsl
@@ -392,15 +374,11 @@ class TestBankAutoMatchingAndSuspenseRouting:
         gl_b = MagicMock(id=11, debit=Decimal("1500"), credit=Decimal("0"))
         gl_b.entry = MagicMock(entry_date=date(2026, 2, 16))
 
-        mocker.patch(
-            "services.bank_reconciliation_service.db.session.get", return_value=stmt
-        )
+        mocker.patch("services.bank_reconciliation_service.db.session.get", return_value=stmt)
         mock_q = MagicMock()
         mock_q.return_value = mock_q
         mock_q.join.return_value.filter.return_value.all.return_value = [gl_a, gl_b]
-        mocker.patch(
-            "services.bank_reconciliation_service.db.session.query", return_value=mock_q
-        )
+        mocker.patch("services.bank_reconciliation_service.db.session.query", return_value=mock_q)
 
         from services.bank_reconciliation_service import BankReconciliationService
 

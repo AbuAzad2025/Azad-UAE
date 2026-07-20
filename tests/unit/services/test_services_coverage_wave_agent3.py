@@ -259,14 +259,10 @@ class TestExchangeRateServiceResolve:
 
         with (
             patch.object(ExchangeRateService, "_get_admin_rate", return_value=None),
-            patch.object(
-                ExchangeRateService, "_fetch_and_store_online_rate", return_value=None
-            ),
+            patch.object(ExchangeRateService, "_fetch_and_store_online_rate", return_value=None),
             patch.object(ExchangeRateService, "_get_last_known_rate", return_value=4.0),
         ):
-            result = ExchangeRateService.resolve_exchange_rate_for_transaction(
-                "EUR", "AED"
-            )
+            result = ExchangeRateService.resolve_exchange_rate_for_transaction("EUR", "AED")
         assert result["source"] == "last_record"
 
     def test_needs_input_when_no_rate_found(self):
@@ -274,24 +270,16 @@ class TestExchangeRateServiceResolve:
 
         with (
             patch.object(ExchangeRateService, "_get_admin_rate", return_value=None),
-            patch.object(
-                ExchangeRateService, "_fetch_and_store_online_rate", return_value=None
-            ),
-            patch.object(
-                ExchangeRateService, "_get_last_known_rate", return_value=None
-            ),
+            patch.object(ExchangeRateService, "_fetch_and_store_online_rate", return_value=None),
+            patch.object(ExchangeRateService, "_get_last_known_rate", return_value=None),
         ):
-            result = ExchangeRateService.resolve_exchange_rate_for_transaction(
-                "XYZ", "AED"
-            )
+            result = ExchangeRateService.resolve_exchange_rate_for_transaction("XYZ", "AED")
         assert result["rate_mode"] == "needs_input"
 
     def test_save_manual_rate_db_error(self):
         from services.exchange_rate_service import ExchangeRateService
 
-        with patch.object(
-            ExchangeRateService, "_save_rate_record", side_effect=RuntimeError("db")
-        ):
+        with patch.object(ExchangeRateService, "_save_rate_record", side_effect=RuntimeError("db")):
             result = ExchangeRateService.save_manual_rate("USD", "AED", 3.67)
         assert result["ok"] is False
 
@@ -324,9 +312,7 @@ class TestErrorAuditService:
     def test_request_id_without_context(self):
         from services.error_audit_service import ErrorAuditService
 
-        with patch(
-            "services.error_audit_service.has_request_context", return_value=False
-        ):
+        with patch("services.error_audit_service.has_request_context", return_value=False):
             rid = ErrorAuditService.get_or_create_request_id()
         assert isinstance(rid, str) and len(rid) >= 32
 
@@ -360,9 +346,7 @@ class TestErrorLogService:
             "\n\n[2024-01-01 00:00:00] ERROR in mod:5\nMessage: boom\n",
             encoding="utf-8",
         )
-        paginated, total_pages, total, stats = ErrorLogService.get_parsed_errors(
-            error_file=str(log)
-        )
+        paginated, total_pages, total, stats = ErrorLogService.get_parsed_errors(error_file=str(log))
         assert total == 1
         assert paginated[0]["message"] == "boom"
 
@@ -450,9 +434,7 @@ class TestBackupServicePgToolDiscovery:
 
         mocker.patch(
             "services.backup_exec.run_git",
-            return_value=subprocess.CompletedProcess(
-                [], 0, stdout="abcdef1234567890\n"
-            ),
+            return_value=subprocess.CompletedProcess([], 0, stdout="abcdef1234567890\n"),
         )
         assert BackupService._git_short_sha() == "abcdef123456"
 
@@ -487,9 +469,7 @@ class TestFiscalPositionService:
         ).filter_by.return_value.first.return_value = rule
         from services.fiscal_position_service import FiscalPositionService
 
-        tax_amount, rate = FiscalPositionService.compute_tax_for_line(
-            line, customer_id=7
-        )
+        tax_amount, rate = FiscalPositionService.compute_tax_for_line(line, customer_id=7)
         assert rate == Decimal("5")
 
     def test_compute_tax_no_position_uses_source_tax(self, mocker):
@@ -555,9 +535,7 @@ class TestGlAutoValidationBranches:
         from services import gl_auto_service
 
         target = MagicMock()
-        type(target).amount_aed = property(
-            lambda self: (_ for _ in ()).throw(RuntimeError("boom"))
-        )
+        type(target).amount_aed = property(lambda self: (_ for _ in ()).throw(RuntimeError("boom")))
         with patch.object(gl_auto_service.logger, "error") as mock_error:
             self._handler_for("Purchase")(None, None, target)
         mock_error.assert_called_once()
@@ -600,9 +578,7 @@ def _gl_account(
     return acct
 
 
-def _mapping_mock(
-    concept_code, *, mid=1, branch_id=None, gl_account=None, branch=None, is_active=True
-):
+def _mapping_mock(concept_code, *, mid=1, branch_id=None, gl_account=None, branch=None, is_active=True):
     return MagicMock(
         id=mid,
         concept_code=concept_code,
@@ -622,9 +598,9 @@ class TestAccountIssues:
 
 class TestDiscoverCandidatesAggregation:
     def test_all_tenants_with_candidate_and_owner_rows(self, mocker, sample_tenant):
-        mocker.patch(
-            "services.gl_mapping_validation.Tenant.query"
-        ).order_by.return_value.all.return_value = [sample_tenant]
+        mocker.patch("services.gl_mapping_validation.Tenant.query").order_by.return_value.all.return_value = [
+            sample_tenant
+        ]
         mocker.patch.object(
             GLMappingValidationService,
             "_discover_for_tenant",
@@ -647,15 +623,9 @@ class TestDiscoverCandidatesAggregation:
 
 
 class TestDiscoverForTenantSingleCandidate:
-    def test_single_candidate_marks_candidate_found(
-        self, db_session, sample_tenant, mocker
-    ):
-        acct = _gl_account(
-            db_session, sample_tenant, f"S-{uuid.uuid4().hex[:4]}", "cash"
-        )
-        mocker.patch.object(
-            GLMappingValidationService, "_preview_seed_for_tenant", return_value=[]
-        )
+    def test_single_candidate_marks_candidate_found(self, db_session, sample_tenant, mocker):
+        acct = _gl_account(db_session, sample_tenant, f"S-{uuid.uuid4().hex[:4]}", "cash")
+        mocker.patch.object(GLMappingValidationService, "_preview_seed_for_tenant", return_value=[])
         mocker.patch.object(
             GLMappingValidationService,
             "_find_candidates",
@@ -666,9 +636,7 @@ class TestDiscoverForTenantSingleCandidate:
 
 
 class TestFindCandidatesFilterBranches:
-    def test_exact_match_skips_seen_nonpostable_and_type(
-        self, db_session, sample_tenant
-    ):
+    def test_exact_match_skips_seen_nonpostable_and_type(self, db_session, sample_tenant):
         # duplicate exact pattern → triggers seen_ids continue
         _gl_account(
             db_session,
@@ -702,9 +670,7 @@ class TestFindCandidatesFilterBranches:
         found = GLMappingValidationService._find_candidates(sample_tenant, "CASH", rule)
         assert len(found) == 1
 
-    def test_partial_match_skips_seen_nonpostable_and_type(
-        self, db_session, sample_tenant
-    ):
+    def test_partial_match_skips_seen_nonpostable_and_type(self, db_session, sample_tenant):
         _gl_account(
             db_session,
             sample_tenant,
@@ -787,15 +753,9 @@ class TestValidateExistingMappings:
         d1 = _mapping_mock(GL_CONCEPT_SALES_RETURNS, mid=1, gl_account=acct)
         d2 = _mapping_mock(GL_CONCEPT_SALES_RETURNS, mid=2, gl_account=acct)
         # two branch overrides for the same concept+branch → branch duplicate
-        b1 = _mapping_mock(
-            GL_CONCEPT_SALES_RETURNS, mid=3, branch_id=5, gl_account=acct
-        )
-        b2 = _mapping_mock(
-            GL_CONCEPT_SALES_RETURNS, mid=4, branch_id=5, gl_account=acct
-        )
-        rows = GLMappingValidationService._validate_existing_mappings(
-            sample_tenant, [d1, d2, b1, b2]
-        )
+        b1 = _mapping_mock(GL_CONCEPT_SALES_RETURNS, mid=3, branch_id=5, gl_account=acct)
+        b2 = _mapping_mock(GL_CONCEPT_SALES_RETURNS, mid=4, branch_id=5, gl_account=acct)
+        rows = GLMappingValidationService._validate_existing_mappings(sample_tenant, [d1, d2, b1, b2])
         issues = [r.issue for r in rows]
         assert any("Duplicate tenant-level" in i for i in issues)
         assert any("Duplicate branch override" in i for i in issues)
@@ -811,9 +771,7 @@ class TestValidateExistingMappings:
         )
         with patch("services.gl_mapping_validation.Branch.query") as branch_q:
             branch_q.filter_by.return_value.first.return_value = None
-            rows = GLMappingValidationService._validate_existing_mappings(
-                sample_tenant, [mapping]
-            )
+            rows = GLMappingValidationService._validate_existing_mappings(sample_tenant, [mapping])
         assert any("missing branch" in r.issue.lower() for r in rows)
 
 

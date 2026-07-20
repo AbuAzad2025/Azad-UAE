@@ -48,9 +48,7 @@ class PasswordValidator:
         if cls.REQUIRE_SPECIAL:
             special_pattern = f"[{re.escape(cls.SPECIAL_CHARS)}]"
             if not re.search(special_pattern, password):
-                errors.append(
-                    f"يجب أن تحتوي على رمز خاص واحد على الأقل ({cls.SPECIAL_CHARS[:10]}...)"
-                )
+                errors.append(f"يجب أن تحتوي على رمز خاص واحد على الأقل ({cls.SPECIAL_CHARS[:10]}...)")
 
         common_passwords = [
             "password",

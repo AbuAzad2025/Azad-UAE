@@ -17,9 +17,7 @@ class TestConsolidatedNeuralNetwork:
 
             engine = AzadNeuralEngine()
             with patch.object(engine, "_load_model", return_value=False):
-                assert engine.validate_accounting_entry(100, 100, 2, "Sale")[
-                    "is_correct"
-                ]
+                assert engine.validate_accounting_entry(100, 100, 2, "Sale")["is_correct"]
 
 
 class TestConsolidatedCoreEngine:

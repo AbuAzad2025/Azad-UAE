@@ -13,9 +13,7 @@ class APIKey(db.Model):
     service = db.Column(db.String(50), nullable=False)
     scope = db.Column(db.String(20), default="write", index=True)  # 'read' | 'write'
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     last_used = db.Column(db.DateTime)
     usage_count = db.Column(db.Integer, default=0)
     created_by = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)

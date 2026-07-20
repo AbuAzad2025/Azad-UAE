@@ -6,9 +6,7 @@ import uuid
 
 
 class TestTrialBalance:
-    def test_trial_balance_returns_equal_debits_and_credits(
-        self, app, db_session, client
-    ):
+    def test_trial_balance_returns_equal_debits_and_credits(self, app, db_session, client):
         tid = str(uuid.uuid4())[:8]
         from models import Tenant, Branch, User, Role
         from services.gl_service import GLService
@@ -77,6 +75,4 @@ class TestTrialBalance:
             if word in html:
                 found_credits = True
                 break
-        assert found_debits and found_credits, (
-            f"Expected debit/credit columns in page. HTML: {html[1000:2000]}"
-        )
+        assert found_debits and found_credits, f"Expected debit/credit columns in page. HTML: {html[1000:2000]}"

@@ -47,10 +47,7 @@ class TestGLTreeBuilderBuild:
             report = GLTreeBuilder.build(sample_tenant.id, commit=True)
             assert report["tenant_id"] == sample_tenant.id
             assert report["created"] or report["updated"] or report["converted"]
-            codes = {
-                a.code
-                for a in GLAccount.query.filter_by(tenant_id=sample_tenant.id).all()
-            }
+            codes = {a.code for a in GLAccount.query.filter_by(tenant_id=sample_tenant.id).all()}
             assert CORE_ACCOUNT_CODES.issubset(codes)
 
     def test_build_with_industry_extension(self, app, db_session, sample_tenant):
@@ -58,26 +55,17 @@ class TestGLTreeBuilderBuild:
         db_session.commit()
         with app.app_context():
             report = GLTreeBuilder.build(sample_tenant.id, commit=True)
-            codes = {
-                a.code
-                for a in GLAccount.query.filter_by(tenant_id=sample_tenant.id).all()
-            }
+            codes = {a.code for a in GLAccount.query.filter_by(tenant_id=sample_tenant.id).all()}
             assert "4105" in codes
             assert not report["errors"]
 
-    def test_build_industry_lookup_failure_ignored(
-        self, app, db_session, sample_tenant, mocker
-    ):
-        mocker.patch(
-            "services.gl_tree_builder.db.session.get", side_effect=RuntimeError("db")
-        )
+    def test_build_industry_lookup_failure_ignored(self, app, db_session, sample_tenant, mocker):
+        mocker.patch("services.gl_tree_builder.db.session.get", side_effect=RuntimeError("db"))
         with app.app_context():
             report = GLTreeBuilder.build(sample_tenant.id, commit=False)
             assert report["tenant_id"] == sample_tenant.id
 
-    def test_build_process_account_error_captured(
-        self, app, db_session, sample_tenant, mocker
-    ):
+    def test_build_process_account_error_captured(self, app, db_session, sample_tenant, mocker):
         mocker.patch(
             "services.gl_tree_builder.GLTreeBuilder._process_account",
             side_effect=[{"action": "created", "code": "1110"}, RuntimeError("boom")],
@@ -98,25 +86,17 @@ class TestGLTreeBuilderBuild:
             )
             db.session.add(extra)
             db.session.commit()
-            report = GLTreeBuilder.build(
-                sample_tenant.id, cleanup_extra=True, commit=True
-            )
+            report = GLTreeBuilder.build(sample_tenant.id, cleanup_extra=True, commit=True)
             db.session.refresh(extra)
             assert extra.is_active is False
             assert any(d["code"] == "99999" for d in report["deactivated"])
 
-    def test_build_commit_rollback_on_failure(
-        self, app, db_session, sample_tenant, mocker
-    ):
+    def test_build_commit_rollback_on_failure(self, app, db_session, sample_tenant, mocker):
         with app.app_context():
             GLTreeBuilder.build(sample_tenant.id, commit=True)
-            acc = GLAccount.query.filter_by(
-                tenant_id=sample_tenant.id, code="1110"
-            ).first()
+            acc = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="1110").first()
             acc.name = "Stale Name"
-            mocker.patch.object(
-                db.session, "commit", side_effect=RuntimeError("commit fail")
-            )
+            mocker.patch.object(db.session, "commit", side_effect=RuntimeError("commit fail"))
             with pytest.raises(RuntimeError, match="commit fail"):
                 GLTreeBuilder.build(sample_tenant.id, commit=True)
 
@@ -131,15 +111,10 @@ class TestProcessAccount:
     def test_process_existing_updates_fields(self, app, db_session, sample_tenant):
         with app.app_context():
             GLTreeBuilder.build(sample_tenant.id, commit=True)
-            acc = GLAccount.query.filter_by(
-                tenant_id=sample_tenant.id, code="1110"
-            ).first()
+            acc = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="1110").first()
             acc.name = "Wrong"
             acc.is_active = False
-            existing = {
-                a.code: a
-                for a in GLAccount.query.filter_by(tenant_id=sample_tenant.id).all()
-            }
+            existing = {a.code: a for a in GLAccount.query.filter_by(tenant_id=sample_tenant.id).all()}
             processed = {}
             tmpl = next(t for t in BASE_ACCOUNTS if t.code == "1110")
             result = GLTreeBuilder._process_account(
@@ -162,10 +137,7 @@ class TestProcessAccount:
             GLTreeBuilder.build(sample_tenant.id, commit=True)
             parent_tmpl = next(t for t in BASE_ACCOUNTS if t.code == "1100")
             child_tmpl = next(t for t in BASE_ACCOUNTS if t.code == "1110")
-            existing = {
-                a.code: a
-                for a in GLAccount.query.filter_by(tenant_id=sample_tenant.id).all()
-            }
+            existing = {a.code: a for a in GLAccount.query.filter_by(tenant_id=sample_tenant.id).all()}
             processed = {parent_tmpl.code: existing[parent_tmpl.code]}
             acc = existing[child_tmpl.code]
             acc.name = "Wrong"
@@ -232,13 +204,9 @@ class TestProcessAccount:
                 processed,
             )
             assert result["action"] == "created"
-            assert (
-                processed[child_tmpl.code].parent_id == processed[parent_tmpl.code].id
-            )
+            assert processed[child_tmpl.code].parent_id == processed[parent_tmpl.code].id
 
-    def test_process_account_exception_in_loop(
-        self, app, db_session, sample_tenant, mocker
-    ):
+    def test_process_account_exception_in_loop(self, app, db_session, sample_tenant, mocker):
         mocker.patch(
             "services.gl_tree_builder.GLTreeBuilder._process_account",
             side_effect=RuntimeError("process fail"),
@@ -247,16 +215,11 @@ class TestProcessAccount:
             report = GLTreeBuilder.build(sample_tenant.id, commit=False)
             assert report["errors"]
 
-    def test_ensure_liquidity_updates_every_field(
-        self, app, db_session, sample_tenant, sample_branch
-    ):
+    def test_ensure_liquidity_updates_every_field(self, app, db_session, sample_tenant, sample_branch):
         with app.app_context():
             GLTreeBuilder.build(sample_tenant.id, commit=True)
             code = GLTreeBuilder._branch_account_code("1120", sample_branch.id)
-            existing = {
-                a.code: a
-                for a in GLAccount.query.filter_by(tenant_id=sample_tenant.id).all()
-            }
+            existing = {a.code: a for a in GLAccount.query.filter_by(tenant_id=sample_tenant.id).all()}
             processed = dict(existing)
             acc = existing.get(code)
             if acc is None:
@@ -305,9 +268,7 @@ class TestProcessAccount:
             assert acc.is_default_liquidity is True
             assert report["updated"]
 
-    def test_build_records_converted_accounts(
-        self, app, db_session, sample_tenant, mocker
-    ):
+    def test_build_records_converted_accounts(self, app, db_session, sample_tenant, mocker):
         original = GLTreeBuilder._process_account
 
         def _wrap(*args, **kwargs):
@@ -322,23 +283,14 @@ class TestProcessAccount:
             report = GLTreeBuilder.build(sample_tenant.id, commit=False)
             assert any(item.get("code") == "1110" for item in report["converted"])
 
-    def test_process_create_parent_from_existing_accounts_map(
-        self, app, db_session, sample_tenant
-    ):
+    def test_process_create_parent_from_existing_accounts_map(self, app, db_session, sample_tenant):
         with app.app_context():
             GLTreeBuilder.build(sample_tenant.id, commit=True)
             parent_tmpl = next(t for t in BASE_ACCOUNTS if t.code == "1100")
             child_tmpl = next(t for t in BASE_ACCOUNTS if t.code == "1110")
-            existing = {
-                a.code: a
-                for a in GLAccount.query.filter_by(tenant_id=sample_tenant.id).all()
-            }
+            existing = {a.code: a for a in GLAccount.query.filter_by(tenant_id=sample_tenant.id).all()}
             del existing[child_tmpl.code]
-            db.session.delete(
-                GLAccount.query.filter_by(
-                    tenant_id=sample_tenant.id, code=child_tmpl.code
-                ).first()
-            )
+            db.session.delete(GLAccount.query.filter_by(tenant_id=sample_tenant.id, code=child_tmpl.code).first())
             db.session.commit()
             processed = {}
             result = GLTreeBuilder._process_account(
@@ -359,14 +311,9 @@ class TestProcessAccount:
     def test_process_existing_header_conversion(self, app, db_session, sample_tenant):
         with app.app_context():
             GLTreeBuilder.build(sample_tenant.id, commit=True)
-            acc = GLAccount.query.filter_by(
-                tenant_id=sample_tenant.id, code="1110"
-            ).first()
+            acc = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="1110").first()
             acc.is_header = not acc.is_header
-            existing = {
-                a.code: a
-                for a in GLAccount.query.filter_by(tenant_id=sample_tenant.id).all()
-            }
+            existing = {a.code: a for a in GLAccount.query.filter_by(tenant_id=sample_tenant.id).all()}
             processed = {}
             tmpl = next(t for t in BASE_ACCOUNTS if t.code == "1110")
             result = GLTreeBuilder._process_account(
@@ -414,9 +361,7 @@ class TestProcessAccount:
 
 
 class TestBranchLiquidityAccounts:
-    def test_ensure_branch_liquidity_creates_accounts(
-        self, app, db_session, sample_tenant, sample_branch
-    ):
+    def test_ensure_branch_liquidity_creates_accounts(self, app, db_session, sample_tenant, sample_branch):
         with app.app_context():
             report = {
                 "created": [],
@@ -425,16 +370,10 @@ class TestBranchLiquidityAccounts:
                 "deactivated": [],
                 "errors": [],
             }
-            existing = {
-                a.code: a
-                for a in GLAccount.query.filter_by(tenant_id=sample_tenant.id).all()
-            }
+            existing = {a.code: a for a in GLAccount.query.filter_by(tenant_id=sample_tenant.id).all()}
             processed = dict(existing)
             GLTreeBuilder.build(sample_tenant.id, commit=True)
-            existing = {
-                a.code: a
-                for a in GLAccount.query.filter_by(tenant_id=sample_tenant.id).all()
-            }
+            existing = {a.code: a for a in GLAccount.query.filter_by(tenant_id=sample_tenant.id).all()}
             processed = dict(existing)
             GLTreeBuilder._ensure_branch_liquidity_accounts(
                 tenant_id=sample_tenant.id,
@@ -447,16 +386,11 @@ class TestBranchLiquidityAccounts:
             assert cash_code in existing or cash_code in processed
             assert bank_code in existing or bank_code in processed
 
-    def test_ensure_liquidity_updates_existing(
-        self, app, db_session, sample_tenant, sample_branch
-    ):
+    def test_ensure_liquidity_updates_existing(self, app, db_session, sample_tenant, sample_branch):
         with app.app_context():
             GLTreeBuilder.build(sample_tenant.id, commit=True)
             code = GLTreeBuilder._branch_account_code("1110", sample_branch.id)
-            existing = {
-                a.code: a
-                for a in GLAccount.query.filter_by(tenant_id=sample_tenant.id).all()
-            }
+            existing = {a.code: a for a in GLAccount.query.filter_by(tenant_id=sample_tenant.id).all()}
             processed = dict(existing)
             acc = existing.get(code)
             if acc:
@@ -507,17 +441,13 @@ class TestValidateTree:
             assert result["valid"] is False
             assert result["missing_core_accounts"]
 
-    def test_validate_tree_inactive_core_and_bad_parent(
-        self, app, db_session, sample_tenant
-    ):
+    def test_validate_tree_inactive_core_and_bad_parent(self, app, db_session, sample_tenant):
         import uuid
         from models import Tenant
 
         with app.app_context():
             GLTreeBuilder.build(sample_tenant.id, commit=True)
-            core = GLAccount.query.filter_by(
-                tenant_id=sample_tenant.id, code="1110"
-            ).first()
+            core = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="1110").first()
             core.is_active = False
             other = Tenant(
                 name=f"ValOther-{uuid.uuid4().hex[:6]}",

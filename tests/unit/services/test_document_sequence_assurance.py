@@ -15,9 +15,7 @@ class TestGetOrCreate:
         existing = MagicMock(id=1, code="sale", tenant_id=1)
         mock_q = MagicMock()
         mock_q.filter_by.return_value.first.return_value = existing
-        mocker.patch(
-            "services.document_sequence_service.DocumentSequence.query", mock_q
-        )
+        mocker.patch("services.document_sequence_service.DocumentSequence.query", mock_q)
 
         from services.document_sequence_service import DocumentSequenceService
 
@@ -28,9 +26,7 @@ class TestGetOrCreate:
     def test_creates_sale_defaults(self, app, mocker):
         mock_q = MagicMock()
         mock_q.filter_by.return_value.first.return_value = None
-        mocker.patch(
-            "services.document_sequence_service.DocumentSequence.query", mock_q
-        )
+        mocker.patch("services.document_sequence_service.DocumentSequence.query", mock_q)
         mock_session = mocker.patch("services.document_sequence_service.db.session")
 
         from services.document_sequence_service import DocumentSequenceService
@@ -45,9 +41,7 @@ class TestGetOrCreate:
     def test_unknown_code_uses_doc_fallback(self, app, mocker):
         mock_q = MagicMock()
         mock_q.filter_by.return_value.first.return_value = None
-        mocker.patch(
-            "services.document_sequence_service.DocumentSequence.query", mock_q
-        )
+        mocker.patch("services.document_sequence_service.DocumentSequence.query", mock_q)
         mocker.patch("services.document_sequence_service.db.session")
 
         from services.document_sequence_service import DocumentSequenceService
@@ -87,9 +81,7 @@ class TestNextNumber:
         from services.document_sequence_service import DocumentSequenceService
 
         with app.app_context():
-            number = DocumentSequenceService.next_number(
-                1, "payment", branch_code="DXB"
-            )
+            number = DocumentSequenceService.next_number(1, "payment", branch_code="DXB")
 
         assert number == "PAY-2026-0007"
         locked.get_next_number.assert_called_once()
@@ -135,9 +127,7 @@ class TestPreview:
         from services.document_sequence_service import DocumentSequenceService
 
         with app.app_context():
-            preview = DocumentSequenceService.preview(
-                1, "invoice", branch_code="AUH", date=fixed_date
-            )
+            preview = DocumentSequenceService.preview(1, "invoice", branch_code="AUH", date=fixed_date)
 
         assert preview == "INV-2026-0042"
         assert seq.counter == 42

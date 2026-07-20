@@ -26,9 +26,7 @@ class TestAIServiceGetModel:
         mocker.patch("services.ai_service.db.session.get", return_value=leaked)
         assert AIService._get_model(Product, 1) is None
 
-    def test_rejects_product_whose_class_module_is_mock(
-        self, mocker, db_session, sample_tenant
-    ):
+    def test_rejects_product_whose_class_module_is_mock(self, mocker, db_session, sample_tenant):
         product = Product(
             tenant_id=sample_tenant.id,
             name="Leak",
@@ -251,9 +249,7 @@ class TestBackupGitSha:
 
         mocker.patch(
             "services.backup_exec.run_git",
-            return_value=subprocess.CompletedProcess(
-                [], 0, stdout="abcdef1234567890\n"
-            ),
+            return_value=subprocess.CompletedProcess([], 0, stdout="abcdef1234567890\n"),
         )
         assert BackupService._git_short_sha() == "abcdef123456"
 
@@ -291,9 +287,7 @@ class TestExtensionsCompressImport:
         try:
             real_import = __import__
 
-            def blocked(
-                name, globals_dict=None, locals_dict=None, fromlist=(), level=0
-            ):
+            def blocked(name, globals_dict=None, locals_dict=None, fromlist=(), level=0):
                 if name == "flask_compress":
                     raise ImportError("blocked for test")
                 return real_import(name, globals_dict, locals_dict, fromlist, level)

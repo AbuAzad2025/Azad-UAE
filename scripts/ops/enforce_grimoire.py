@@ -32,69 +32,80 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # ── Exempt files / directories ────────────────────────────────────────────
 
-EXEMPT_DIRS: frozenset[str] = frozenset({
-    "__pycache__",
-    ".venv",
-    "venv",
-    "node_modules",
-    "migrations",
-    ".git",
-    ".pytest_cache",
-    ".mypy_cache",
-    ".ruff_cache",
-    "htmlcov",
-    "instance",
-    "logs",
-    "load_tests",
-    "tools",
-})
+EXEMPT_DIRS: frozenset[str] = frozenset(
+    {
+        "__pycache__",
+        ".venv",
+        "venv",
+        "node_modules",
+        "migrations",
+        ".git",
+        ".pytest_cache",
+        ".mypy_cache",
+        ".ruff_cache",
+        "htmlcov",
+        "instance",
+        "logs",
+        "load_tests",
+        "tools",
+    }
+)
 
-EXEMPT_FILES: frozenset[str] = frozenset({
-    "utils/db_safety.py",        # owns commit/rollback by design
-    "utils/tenanting.py",        # owns tenant scope helpers
-    "tests/conftest.py",         # test infra may commit/rollback
-    "cli_commands.py",           # CLI commands manage transactions
-    "config.py",                 # no DB access
-    "app.py",                    # entrypoint — BackupService.initialize
-    "wsgi.py",                   # WSGI entrypoint
-    "extensions.py",             # extension init — no business logic
-})
+EXEMPT_FILES: frozenset[str] = frozenset(
+    {
+        "utils/db_safety.py",  # owns commit/rollback by design
+        "utils/tenanting.py",  # owns tenant scope helpers
+        "tests/conftest.py",  # test infra may commit/rollback
+        "cli_commands.py",  # CLI commands manage transactions
+        "config.py",  # no DB access
+        "app.py",  # entrypoint — BackupService.initialize
+        "wsgi.py",  # WSGI entrypoint
+        "extensions.py",  # extension init — no business logic
+    }
+)
 
 # gl_accounting_setup.py has an intentional dry-run rollback
-DRY_RUN_ROLLBACK_FILES: frozenset[str] = frozenset({
-    "services/gl_accounting_setup.py",
-    "services/backup_scoped_engine.py",
-    "services/backup_scoped_restore.py",
-    "services/backup_service.py",
-})
+DRY_RUN_ROLLBACK_FILES: frozenset[str] = frozenset(
+    {
+        "services/gl_accounting_setup.py",
+        "services/backup_scoped_engine.py",
+        "services/backup_scoped_restore.py",
+        "services/backup_service.py",
+    }
+)
 
 # Directories where business logic / DB queries are forbidden
 ROUTE_DIRS: frozenset[str] = frozenset({"routes"})
 SERVICE_DIRS: frozenset[str] = frozenset({"services"})
 
 # HTTP concepts forbidden in services/ (current_app for logging is OK)
-FORBIDDEN_SERVICE_IMPORTS: frozenset[str] = frozenset({
-    "routes",
-    "flask.request",
-    "flask.jsonify",
-    "flask.flash",
-    "flask.redirect",
-    "flask.render_template",
-    "flask.url_for",
-    "flask.abort",
-    "flask.session",
-})
+FORBIDDEN_SERVICE_IMPORTS: frozenset[str] = frozenset(
+    {
+        "routes",
+        "flask.request",
+        "flask.jsonify",
+        "flask.flash",
+        "flask.redirect",
+        "flask.render_template",
+        "flask.url_for",
+        "flask.abort",
+        "flask.session",
+    }
+)
 
 # HTTP concepts forbidden in models/
-FORBIDDEN_MODEL_IMPORTS: frozenset[str] = frozenset({
-    "flask.request",
-    "flask.jsonify",
-    "flask.flash",
-    "flask.redirect",
-    "flask.render_template",
-    "flask.abort",
-    "routes",
-})
+FORBIDDEN_MODEL_IMPORTS: frozenset[str] = frozenset(
+    {
+        "flask.request",
+        "flask.jsonify",
+        "flask.flash",
+        "flask.redirect",
+        "flask.render_template",
+        "flask.abort",
+        "routes",
+    }
+)
+
 
 def _matches_forbidden(target: str, forbidden: str) -> bool:
     """True when *target* is exactly *forbidden* or a sub-module of it.
@@ -114,8 +125,9 @@ def _matches_forbidden(target: str, forbidden: str) -> bool:
 @dataclass(frozen=True)
 class Violation:
     """Single rule violation with precise location."""
+
     rule: str
-    severity: str          # "error" | "warning"
+    severity: str  # "error" | "warning"
     file: str
     line: int
     col: int
@@ -327,10 +339,7 @@ def check_tenant_isolation(root: Path) -> Iterator[Violation]:
                 if isinstance(func.value, ast.Attribute) and func.value.attr == "query":
                     if isinstance(func.value.value, ast.Name):
                         # Check if any kwarg contains tenant_id
-                        has_tenant = any(
-                            kw.arg == "tenant_id"
-                            for kw in node.keywords
-                        )
+                        has_tenant = any(kw.arg == "tenant_id" for kw in node.keywords)
                         # Check if filter expression contains tenant_id
                         if not has_tenant:
                             for arg in node.args:
@@ -624,19 +633,41 @@ def check_noqa(root: Path) -> Iterator[Violation]:
 
 # ── Check 9: Root directory cleanliness ────────────────────────────────────
 
-ALLOWED_ROOT_FILES: frozenset[str] = frozenset({
-    "app.py", "wsgi.py", "config.py", "extensions.py", "cli_commands.py",
-    "README.md", "LICENSE", "AGENTS.md", "mypy.ini", "pytest.ini",
-    "biome.json", "package.json", "package-lock.json",
-    "requirements.txt", "requirements-dev.txt", "requirements-optional.txt",
-    ".gitignore", ".dockerignore", ".editorconfig", ".env",
-    ".flake8", ".coveragerc", ".python-version", ".browserslistrc",
-    ".bandit.yml", ".stylelintrc.json", ".yamllint.yml",
-    "ruff.toml",
-    "vitest.config.js",
-    "templates_rendered.json",
-    "nul",
-})
+ALLOWED_ROOT_FILES: frozenset[str] = frozenset(
+    {
+        "app.py",
+        "wsgi.py",
+        "config.py",
+        "extensions.py",
+        "cli_commands.py",
+        "README.md",
+        "LICENSE",
+        "AGENTS.md",
+        "mypy.ini",
+        "pytest.ini",
+        "biome.json",
+        "package.json",
+        "package-lock.json",
+        "requirements.txt",
+        "requirements-dev.txt",
+        "requirements-optional.txt",
+        ".gitignore",
+        ".dockerignore",
+        ".editorconfig",
+        ".env",
+        ".flake8",
+        ".coveragerc",
+        ".python-version",
+        ".browserslistrc",
+        ".bandit.yml",
+        ".stylelintrc.json",
+        ".yamllint.yml",
+        "ruff.toml",
+        "vitest.config.js",
+        "templates_rendered.json",
+        "nul",
+    }
+)
 
 
 def check_root_cleanliness(root: Path) -> Iterator[Violation]:
@@ -704,12 +735,17 @@ def main() -> int:
     warnings = [v for v in result.violations if v.severity == "warning"]
 
     if output_json:
-        print(json.dumps({
-            "files_scanned": result.files_scanned,
-            "errors": len(errors),
-            "warnings": len(warnings),
-            "violations": [v.to_dict() for v in result.violations],
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "files_scanned": result.files_scanned,
+                    "errors": len(errors),
+                    "warnings": len(warnings),
+                    "violations": [v.to_dict() for v in result.violations],
+                },
+                indent=2,
+            )
+        )
     else:
         print(f"Scanned {result.files_scanned} Python files")
         print(f"Errors: {len(errors)}  Warnings: {len(warnings)}")

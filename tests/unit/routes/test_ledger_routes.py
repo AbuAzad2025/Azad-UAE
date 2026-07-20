@@ -69,11 +69,7 @@ def _scope_accounts_by_type(accounts_by_type):
         query_text = str(query).lower()
         if "revenue" in query_text or "code.like('4%')" in query_text.replace(" ", ""):
             m.all.return_value = accounts_by_type.get("revenue", [])
-        elif (
-            "expense" in query_text
-            or "code.like('5%')" in query_text
-            or "code.like('6%')" in query_text
-        ):
+        elif "expense" in query_text or "code.like('5%')" in query_text or "code.like('6%')" in query_text:
             m.all.return_value = accounts_by_type.get("expense", [])
         elif "asset" in query_text:
             m.all.return_value = accounts_by_type.get("asset", [])
@@ -122,14 +118,8 @@ def _ledger_patches(**kwargs):
     branches = kwargs.get("branches", [MagicMock(id=1, name="Main")])
     with ExitStack() as stack:
         stack.enter_context(patch("routes.ledger.render_template", return_value="ok"))
-        stack.enter_context(
-            patch("routes.ledger.get_accessible_branches", return_value=branches)
-        )
-        stack.enter_context(
-            patch(
-                "routes.ledger.branch_scope_id", return_value=kwargs.get("branch_scope")
-            )
-        )
+        stack.enter_context(patch("routes.ledger.get_accessible_branches", return_value=branches))
+        stack.enter_context(patch("routes.ledger.branch_scope_id", return_value=kwargs.get("branch_scope")))
         stack.enter_context(
             patch(
                 "routes.ledger.user_can_access_branch",
@@ -173,29 +163,13 @@ def _ledger_patches(**kwargs):
             )
         )
         stack.enter_context(patch("utils.gl_tenant.active_tenant_id", return_value=1))
-        stack.enter_context(
-            patch("utils.tenanting.require_active_tenant_id", return_value=1)
-        )
-        stack.enter_context(
-            patch("utils.tenanting.get_active_tenant_id", return_value=1)
-        )
-        stack.enter_context(
-            patch(
-                "routes.ledger.GLService.get_account_statement", return_value=statement
-            )
-        )
-        stack.enter_context(
-            patch("routes.ledger.GLService.get_trial_balance", return_value=trial)
-        )
-        stack.enter_context(
-            patch("routes.ledger.GLService.get_vat_report", return_value=vat)
-        )
-        stack.enter_context(
-            patch("routes.ledger.GLService.get_accounts_tree", return_value=[])
-        )
-        stack.enter_context(
-            patch("routes.ledger.GLService.get_all_account_balances", return_value={})
-        )
+        stack.enter_context(patch("utils.tenanting.require_active_tenant_id", return_value=1))
+        stack.enter_context(patch("utils.tenanting.get_active_tenant_id", return_value=1))
+        stack.enter_context(patch("routes.ledger.GLService.get_account_statement", return_value=statement))
+        stack.enter_context(patch("routes.ledger.GLService.get_trial_balance", return_value=trial))
+        stack.enter_context(patch("routes.ledger.GLService.get_vat_report", return_value=vat))
+        stack.enter_context(patch("routes.ledger.GLService.get_accounts_tree", return_value=[]))
+        stack.enter_context(patch("routes.ledger.GLService.get_all_account_balances", return_value={}))
         stack.enter_context(
             patch(
                 "routes.ledger.GLService.create_manual_entry",
@@ -216,11 +190,7 @@ def _ledger_patches(**kwargs):
                 return_value={},
             )
         )
-        stack.enter_context(
-            patch(
-                "routes.ledger.AgingAnalysisService.get_payables_aging", return_value={}
-            )
-        )
+        stack.enter_context(patch("routes.ledger.AgingAnalysisService.get_payables_aging", return_value={}))
         stack.enter_context(
             patch(
                 "routes.ledger.AgingAnalysisService.verify_receivables_with_gl",
@@ -239,9 +209,7 @@ def _ledger_patches(**kwargs):
                 return_value={"posted": 2, "skipped": 1, "errors": []},
             )
         )
-        render = stack.enter_context(
-            patch("routes.ledger.render_template", return_value="ok")
-        )
+        render = stack.enter_context(patch("routes.ledger.render_template", return_value="ok"))
         yield {"render": render, "entry": entry}
 
 
@@ -277,9 +245,7 @@ class TestLedgerPages:
 
     def test_account_ledger(self, ledger_client):
         with _ledger_patches():
-            resp = ledger_client.get(
-                "/ledger/account/1?date_from=2026-01-01&branch_id=2"
-            )
+            resp = ledger_client.get("/ledger/account/1?date_from=2026-01-01&branch_id=2")
         assert resp.status_code == 200
 
     def test_trial_balance(self, ledger_client):
@@ -321,9 +287,7 @@ class TestLedgerPages:
     def test_gl_periods_get(self, ledger_client):
         period = MagicMock(year=2026, month=1)
         with _ledger_patches(), patch("models.gl.GLPeriod") as gp:
-            gp.query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [
-                period
-            ]
+            gp.query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [period]
             resp = ledger_client.get("/ledger/periods")
         assert resp.status_code == 200
 
@@ -374,9 +338,7 @@ class TestLedgerPages:
             ),
             patch("utils.tenanting.get_active_tenant_id", return_value=1),
         ):
-            resp = ledger_client.get(
-                "/ledger/income-statement?date_from=2026-01-01&date_to=2026-06-01&branch_id=1"
-            )
+            resp = ledger_client.get("/ledger/income-statement?date_from=2026-01-01&date_to=2026-06-01&branch_id=1")
         assert resp.status_code == 200
 
     def test_income_statement_no_tenant_filter(self, ledger_client):
@@ -590,9 +552,7 @@ class TestLedgerManualEntry:
         entry = _entry_mock(entry_id=57)
         with (
             _ledger_patches(branch_scope=None, can_access_branch=True),
-            patch(
-                "routes.ledger.GLService.create_manual_entry", return_value=entry
-            ) as create,
+            patch("routes.ledger.GLService.create_manual_entry", return_value=entry) as create,
         ):
             resp = ledger_client.post(
                 "/ledger/manual-entry",
@@ -615,9 +575,7 @@ class TestLedgerManualEntry:
         entry = _entry_mock(entry_id=58)
         with (
             _ledger_patches(branch_scope=4),
-            patch(
-                "routes.ledger.GLService.create_manual_entry", return_value=entry
-            ) as create,
+            patch("routes.ledger.GLService.create_manual_entry", return_value=entry) as create,
         ):
             resp = ledger_client.post(
                 "/ledger/manual-entry",
@@ -640,9 +598,7 @@ class TestLedgerManualEntry:
         entry = _entry_mock(entry_id=59)
         with (
             _ledger_patches(branch_scope=None, can_access_branch=False),
-            patch(
-                "routes.ledger.GLService.create_manual_entry", return_value=entry
-            ) as create,
+            patch("routes.ledger.GLService.create_manual_entry", return_value=entry) as create,
         ):
             resp = ledger_client.post(
                 "/ledger/manual-entry",
@@ -969,9 +925,7 @@ class TestLedgerAdmin:
 
     def test_admin_balance_sheet(self, ledger_admin_client):
         assets = [_mock_account(code="1000", type="asset", balance=Decimal("1000"))]
-        liabilities = [
-            _mock_account(code="2000", type="liability", balance=Decimal("-400"))
-        ]
+        liabilities = [_mock_account(code="2000", type="liability", balance=Decimal("-400"))]
         equity = [_mock_account(code="3000", type="equity", balance=Decimal("-600"))]
 
         def filter_by(**kwargs):
@@ -1001,9 +955,7 @@ class TestLedgerAdmin:
             _ledger_patches(),
             patch("utils.gl_tenant.gl_account_query", return_value=q),
         ):
-            resp = ledger_admin_client.get(
-                "/ledger/admin-balance-sheet?as_of_date=invalid"
-            )
+            resp = ledger_admin_client.get("/ledger/admin-balance-sheet?as_of_date=invalid")
         assert resp.status_code == 200
 
     def test_admin_income_statement(self, ledger_admin_client):
@@ -1034,9 +986,7 @@ class TestLedgerAdmin:
             _ledger_patches(),
             patch("utils.gl_tenant.gl_account_query", return_value=q),
         ):
-            resp = ledger_admin_client.get(
-                "/ledger/admin-income-statement?date_from=bad&date_to=also-bad"
-            )
+            resp = ledger_admin_client.get("/ledger/admin-income-statement?date_from=bad&date_to=also-bad")
         assert resp.status_code == 200
 
     def test_admin_settings(self, ledger_admin_client):

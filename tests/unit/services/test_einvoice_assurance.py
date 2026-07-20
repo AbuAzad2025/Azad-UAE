@@ -42,9 +42,7 @@ class TestEInvoiceGeneration:
             "xml_payload": "<KSA/>",
             "format": "zatca",
         }
-        mock_get = mocker.patch(
-            "utils.localization.get_strategy", return_value=strategy
-        )
+        mock_get = mocker.patch("utils.localization.get_strategy", return_value=strategy)
 
         sale = MagicMock(id=1, tenant_id=5)
         from services.einvoice_service import EInvoiceService
@@ -86,9 +84,7 @@ class TestEInvoiceGeneration:
             "xml_payload": "",
             "format": "fta_ubl_xml",
         }
-        mock_get = mocker.patch(
-            "utils.localization.get_strategy", return_value=strategy
-        )
+        mock_get = mocker.patch("utils.localization.get_strategy", return_value=strategy)
 
         sale = MagicMock(id=2, tenant_id=None)
         from services.einvoice_service import EInvoiceService

@@ -72,25 +72,19 @@ class TestTieredPricing:
         assert price == Decimal("75")
 
     def test_regular_customer_uses_regular_price(self, mocker):
-        product = MagicMock(
-            id=4, regular_price=Decimal("50"), partner_price=10, merchant_price=10
-        )
+        product = MagicMock(id=4, regular_price=Decimal("50"), partner_price=10, merchant_price=10)
         _mock_tier_query(mocker, None)
 
         from services.pricing_service import PricingService
 
-        assert PricingService.get_price(
-            product, customer_type="regular", qty=1
-        ) == Decimal("50")
+        assert PricingService.get_price(product, customer_type="regular", qty=1) == Decimal("50")
 
 
 class TestSaleLinePricing:
     """get_price_for_sale_line — discount + commission bundle."""
 
     def test_returns_tier_code_and_commission(self, mocker):
-        product = MagicMock(
-            id=5, regular_price=Decimal("100"), partner_price=Decimal("5")
-        )
+        product = MagicMock(id=5, regular_price=Decimal("100"), partner_price=Decimal("5"))
         tier = _tier("bulk", 5, "90")
         _mock_tier_query(mocker, tier)
 
@@ -99,9 +93,7 @@ class TestSaleLinePricing:
 
         from services.pricing_service import PricingService
 
-        result = PricingService.get_price_for_sale_line(
-            product, qty=10, customer=customer, sales_rep=rep
-        )
+        result = PricingService.get_price_for_sale_line(product, qty=10, customer=customer, sales_rep=rep)
         assert result["unit_price"] == Decimal("90")
         assert result["tier_code"] == "bulk"
         assert result["discount_applied"] == Decimal("5")
@@ -125,9 +117,7 @@ class TestFormatPrice:
     def test_delegates_to_currency_formatter(self, mocker):
         import utils.currency_utils as cu
 
-        mocker.patch.object(
-            cu, "format_currency_value", return_value="AED 1,234.50", create=True
-        )
+        mocker.patch.object(cu, "format_currency_value", return_value="AED 1,234.50", create=True)
 
         from services.pricing_service import PricingService
 

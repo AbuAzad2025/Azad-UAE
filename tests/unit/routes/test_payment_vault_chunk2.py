@@ -261,14 +261,10 @@ class TestWebhookSignatureValidation:
             "routes.payment_vault._get_vault_for_current_tenant",
             return_value=MagicMock(nowpayments_ipn_secret="sec"),
         )
-        mocker.patch(
-            "utils.nowpayments_ipn.resolve_nowpayments_ipn_secret", return_value="sec"
-        )
+        mocker.patch("utils.nowpayments_ipn.resolve_nowpayments_ipn_secret", return_value="sec")
         mocker.patch("routes.payment_vault.PaymentLog.log_action")
         mocker.patch("routes.payment_vault._is_duplicate_webhook", return_value=False)
-        mocker.patch(
-            "routes.payment_vault._reject_stale_webhook_timestamp", return_value=None
-        )
+        mocker.patch("routes.payment_vault._reject_stale_webhook_timestamp", return_value=None)
 
     def test_valid_signature_returns_200(self, vault_owner_client, mocker):
         mocker.patch(
@@ -310,9 +306,7 @@ class TestWebhookSignatureValidation:
         assert resp.status_code == 403
 
     def test_missing_ipn_secret_returns_503(self, vault_owner_client, mocker):
-        mocker.patch(
-            "utils.nowpayments_ipn.resolve_nowpayments_ipn_secret", return_value=None
-        )
+        mocker.patch("utils.nowpayments_ipn.resolve_nowpayments_ipn_secret", return_value=None)
         resp = vault_owner_client.post(
             "/payment-vault/webhook/nowpayments",
             data=self.PAYLOAD,
@@ -341,9 +335,7 @@ class TestPurchaseEndpointIdempotency:
 
     @pytest.fixture(autouse=True)
     def _patch_deps(self, mocker, mock_db):
-        mocker.patch(
-            "routes.payment_vault._validate_public_api_origin", return_value=None
-        )
+        mocker.patch("routes.payment_vault._validate_public_api_origin", return_value=None)
         mocker.patch("routes.payment_vault._validate_api_key", return_value=None)
         mocker.patch("routes.payment_vault._check_idempotency_key", return_value=None)
         _mock_pkg_cls = mocker.patch("routes.payment_vault.Package")
@@ -389,9 +381,7 @@ class TestPurchaseEndpointIdempotency:
         assert resp.get_json()["cached"] is True
         spy.assert_not_called()
 
-    def test_missing_idempotency_key_processes_normally(
-        self, vault_owner_client, mocker
-    ):
+    def test_missing_idempotency_key_processes_normally(self, vault_owner_client, mocker):
         mocker.patch("routes.payment_vault.NOWPaymentsService")
 
         resp = vault_owner_client.post(
@@ -421,9 +411,7 @@ class TestDonationEndpointSecurity:
 
     @pytest.fixture(autouse=True)
     def _patch_deps(self, mocker, mock_db):
-        mocker.patch(
-            "routes.payment_vault._validate_public_api_origin", return_value=None
-        )
+        mocker.patch("routes.payment_vault._validate_public_api_origin", return_value=None)
         mocker.patch("routes.payment_vault._validate_api_key", return_value=None)
         mocker.patch("routes.payment_vault._check_idempotency_key", return_value=None)
         mocker.patch("routes.payment_vault.LoggingCore.log_audit")

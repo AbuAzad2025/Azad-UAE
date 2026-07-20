@@ -30,11 +30,7 @@ class ShopCustomerAuthService:
         if not raw:
             return None
         account = db.session.get(ShopCustomerAccount, int(raw or 0))
-        if (
-            not account
-            or not account.is_active
-            or int(account.tenant_id or 0) != int(tenant_id)
-        ):
+        if not account or not account.is_active or int(account.tenant_id or 0) != int(tenant_id):
             return None
         return account
 
@@ -80,15 +76,11 @@ class ShopCustomerAuthService:
         if not password or len(password) < 6:
             raise ValueError("كلمة المرور 6 أحرف على الأقل.")
 
-        existing = ShopCustomerAccount.query.filter_by(
-            tenant_id=tenant_id, email=email
-        ).first()
+        existing = ShopCustomerAccount.query.filter_by(tenant_id=tenant_id, email=email).first()
         if existing:
             raise ValueError("هذا البريد مسجّل مسبقاً — سجّل الدخول.")
 
-        customer = Customer.query.filter_by(
-            tenant_id=tenant_id, phone=phone_norm
-        ).first()
+        customer = Customer.query.filter_by(tenant_id=tenant_id, phone=phone_norm).first()
         if not customer:
             customer = Customer(
                 tenant_id=tenant_id,
@@ -129,9 +121,7 @@ class ShopCustomerAuthService:
     @staticmethod
     def authenticate(tenant_id: int, email: str, password: str) -> ShopCustomerAccount:
         email = ShopCustomerAuthService.normalize_email(email)
-        account = ShopCustomerAccount.query.filter_by(
-            tenant_id=int(tenant_id), email=email, is_active=True
-        ).first()
+        account = ShopCustomerAccount.query.filter_by(tenant_id=int(tenant_id), email=email, is_active=True).first()
         if not account or not account.check_password(password):
             raise ValueError("بيانات الدخول غير صحيحة.")
         from datetime import datetime, timezone
@@ -146,23 +136,17 @@ class ShopCustomerAuthService:
         return account
 
     @staticmethod
-    def request_password_reset(
-        tenant_id: int, email: str
-    ) -> ShopCustomerAccount | None:
+    def request_password_reset(tenant_id: int, email: str) -> ShopCustomerAccount | None:
         import secrets
         from datetime import timedelta
 
         email = ShopCustomerAuthService.normalize_email(email)
-        account = ShopCustomerAccount.query.filter_by(
-            tenant_id=int(tenant_id), email=email, is_active=True
-        ).first()
+        account = ShopCustomerAccount.query.filter_by(tenant_id=int(tenant_id), email=email, is_active=True).first()
         if not account:
             return None
 
         account.password_reset_token = secrets.token_urlsafe(32)
-        account.password_reset_expires_at = datetime.now(timezone.utc) + timedelta(
-            hours=2
-        )
+        account.password_reset_expires_at = datetime.now(timezone.utc) + timedelta(hours=2)
         try:
             db.session.flush()
         except Exception:
@@ -172,9 +156,7 @@ class ShopCustomerAuthService:
         return account
 
     @staticmethod
-    def reset_password(
-        tenant_id: int, token: str, new_password: str
-    ) -> ShopCustomerAccount:
+    def reset_password(tenant_id: int, token: str, new_password: str) -> ShopCustomerAccount:
         token = (token or "").strip()
         if not token:
             raise ValueError("رمز الاستعادة غير صالح.")
@@ -189,9 +171,7 @@ class ShopCustomerAuthService:
         if not account:
             raise ValueError("رمز الاستعادة غير صالح أو منتهٍ.")
         expires = account.password_reset_expires_at
-        if not expires or expires.replace(tzinfo=timezone.utc) < datetime.now(
-            timezone.utc
-        ):
+        if not expires or expires.replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
             raise ValueError("انتهت صلاحية رابط الاستعادة — اطلب رابطاً جديداً.")
 
         account.set_password(new_password)
@@ -209,9 +189,7 @@ class ShopCustomerAuthService:
     def send_password_reset_email(account: ShopCustomerAccount, store, reset_url: str):
         from flask import current_app
 
-        if not current_app.config.get("MAIL_USERNAME") or not current_app.config.get(
-            "MAIL_PASSWORD"
-        ):
+        if not current_app.config.get("MAIL_USERNAME") or not current_app.config.get("MAIL_PASSWORD"):
             return False
         try:
             from flask_mail import Message

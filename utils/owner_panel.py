@@ -61,8 +61,7 @@ def _system_backup_status(backups: list) -> dict:
     system = [
         b
         for b in backups
-        if (b.get("backup_scope") == "system")
-        or str(b.get("filename", "")).startswith("azad_backup_system_")
+        if (b.get("backup_scope") == "system") or str(b.get("filename", "")).startswith("azad_backup_system_")
     ]
     if not system:
         return {"status": "missing", "label": "Missing Backup", "latest": None}
@@ -76,9 +75,7 @@ def build_platform_overview(backups: list | None = None) -> dict:
 
     backups = backups if backups is not None else BackupService.list_backups()
     tenant_count = db.session.query(func.count(Tenant.id)).scalar() or 0
-    active_tenant_count = (
-        db.session.query(func.count(Tenant.id)).filter(Tenant.is_active).scalar() or 0
-    )
+    active_tenant_count = db.session.query(func.count(Tenant.id)).filter(Tenant.is_active).scalar() or 0
     suspended_tenant_count = tenant_count - active_tenant_count
 
     user_counts = dict(
@@ -98,12 +95,7 @@ def build_platform_overview(backups: list | None = None) -> dict:
     sys_backup = _system_backup_status(backups)
     warnings: list[str] = []
 
-    recent_active = (
-        Tenant.query.filter(Tenant.is_active)
-        .order_by(Tenant.id.desc())
-        .limit(200)
-        .all()
-    )
+    recent_active = Tenant.query.filter(Tenant.is_active).order_by(Tenant.id.desc()).limit(200).all()
     for t in recent_active:
         uc = int(user_counts.get(t.id) or 0)
         if uc == 0 and (t.slug or "").lower() != "nasrallah":
@@ -111,15 +103,11 @@ def build_platform_overview(backups: list | None = None) -> dict:
         if t.id not in backup_by_tenant:
             warnings.append(f"Tenant {t.slug or t.id}: no tenant backup")
 
-    nasrallah = next(
-        (t for t in recent_active if (t.slug or "").lower() == "nasrallah"), None
-    )
+    nasrallah = next((t for t in recent_active if (t.slug or "").lower() == "nasrallah"), None)
     if nasrallah:
         n_users = int(user_counts.get(nasrallah.id) or 0)
         if n_users == 0:
-            warnings.append(
-                "Nasrallah: active tenant with zero users (expected until manager created)"
-            )
+            warnings.append("Nasrallah: active tenant with zero users (expected until manager created)")
 
     return {
         "tenant_count": tenant_count,
@@ -274,14 +262,10 @@ def build_system_health_summary() -> dict:
     try:
         from sqlalchemy import create_engine, text
 
-        url = os.environ.get("DATABASE_URL") or os.environ.get(
-            "SQLALCHEMY_DATABASE_URI"
-        )
+        url = os.environ.get("DATABASE_URL") or os.environ.get("SQLALCHEMY_DATABASE_URI")
         if url:
             with create_engine(url).connect() as conn:
-                rev = conn.execute(
-                    text("SELECT version_num FROM alembic_version LIMIT 1")
-                ).scalar()
+                rev = conn.execute(text("SELECT version_num FROM alembic_version LIMIT 1")).scalar()
                 summary["migration"] = str(rev) if rev else "head"
     except Exception:
         summary["migration"] = "check alembic"
@@ -289,9 +273,7 @@ def build_system_health_summary() -> dict:
     return summary
 
 
-def build_company_dashboard_context(
-    tenant_id: int, branch_id: int | None = None
-) -> dict:
+def build_company_dashboard_context(tenant_id: int, branch_id: int | None = None) -> dict:
     """KPIs and readiness for tenant company admin (single tenant only)."""
     from models import Customer, Product, Sale, SaleLine
 
@@ -348,17 +330,12 @@ def build_company_dashboard_context(
 
     all_backups = BackupService.list_backups()
     tenant_backups = [
-        b
-        for b in all_backups
-        if b.get("backup_scope") == "tenant"
-        and int(b.get("tenant_id") or -1) == int(tenant_id)
+        b for b in all_backups if b.get("backup_scope") == "tenant" and int(b.get("tenant_id") or -1) == int(tenant_id)
     ]
 
     # COGS (cost of goods sold) for the month
     cogs_q = (
-        db.session.query(
-            func.coalesce(func.sum(SaleLine.cost_price * SaleLine.quantity), 0)
-        )
+        db.session.query(func.coalesce(func.sum(SaleLine.cost_price * SaleLine.quantity), 0))
         .select_from(SaleLine)
         .join(Sale, SaleLine.sale_id == Sale.id)
         .filter(
@@ -374,9 +351,7 @@ def build_company_dashboard_context(
     try:
         from models.partner_commission import PartnerCommissionEntry
 
-        comm_q = db.session.query(
-            func.coalesce(func.sum(PartnerCommissionEntry.commission_amount_aed), 0)
-        ).filter(
+        comm_q = db.session.query(func.coalesce(func.sum(PartnerCommissionEntry.commission_amount_aed), 0)).filter(
             PartnerCommissionEntry.tenant_id == tenant_id,
             func.date(PartnerCommissionEntry.created_at) >= month_start,
         )
@@ -386,9 +361,7 @@ def build_company_dashboard_context(
     except Exception:
         month_commissions = 0.0
 
-    warehouses = (
-        Warehouse.query.filter_by(tenant_id=tenant_id).order_by(Warehouse.name).all()
-    )
+    warehouses = Warehouse.query.filter_by(tenant_id=tenant_id).order_by(Warehouse.name).all()
 
     return {
         "tenant": tenant,
@@ -413,9 +386,7 @@ def build_company_dashboard_context(
 
 
 def tenants_without_users_allowlist() -> set[str]:
-    raw = (
-        os.environ.get("OWNER_PANEL_ALLOW_TENANTS_WITHOUT_USERS") or "nasrallah"
-    ).strip()
+    raw = (os.environ.get("OWNER_PANEL_ALLOW_TENANTS_WITHOUT_USERS") or "nasrallah").strip()
     return {s.strip().lower() for s in raw.split(",") if s.strip()}
 
 

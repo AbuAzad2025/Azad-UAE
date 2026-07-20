@@ -80,9 +80,7 @@ class TestPostOrFail:
             "services.gl_posting.db.session.get",
             side_effect=AttributeError("no tenant"),
         )
-        mocker.patch(
-            "services.gl_posting.get_system_default_currency", return_value="AED"
-        )
+        mocker.patch("services.gl_posting.get_system_default_currency", return_value="AED")
         mocker.patch("services.gl_posting.assert_period_open")
         mock_entry = MagicMock(id=2)
         create = mocker.patch(

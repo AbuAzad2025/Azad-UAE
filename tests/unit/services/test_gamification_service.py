@@ -109,9 +109,7 @@ class TestUserStats:
         mocker.patch.object(db.session, "get", return_value=None)
         assert GamificationService.get_user_stats(999999)["success"] is False
 
-    def test_stats_with_sales(
-        self, db_session, sample_user, sample_tenant, sample_customer
-    ):
+    def test_stats_with_sales(self, db_session, sample_user, sample_tenant, sample_customer):
         from models import Sale
 
         sample_user.points = 40

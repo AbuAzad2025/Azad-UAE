@@ -13,9 +13,7 @@ import pytest
 
 @pytest.fixture
 def knowledge_path(tmp_path):
-    with patch(
-        "ai_knowledge.get_knowledge_path", side_effect=lambda name: str(tmp_path / name)
-    ):
+    with patch("ai_knowledge.get_knowledge_path", side_effect=lambda name: str(tmp_path / name)):
         yield tmp_path
 
 
@@ -159,13 +157,9 @@ class TestNeuralWave7:
             chain.first.return_value = product_data
             engine.scalers["maintenance_predictor"] = MagicMock()
             engine.models["maintenance_predictor"] = MagicMock()
-            engine.scalers["maintenance_predictor"].transform.return_value = np.array(
-                [[1.0] * 6]
-            )
+            engine.scalers["maintenance_predictor"].transform.return_value = np.array([[1.0] * 6])
             engine.models["maintenance_predictor"].predict.return_value = np.array([0])
-            engine.models[
-                "maintenance_predictor"
-            ].predict_proba.return_value = np.array([[0.8, 0.2]])
+            engine.models["maintenance_predictor"].predict_proba.return_value = np.array([[0.8, 0.2]])
             result = engine._predict_maintenance_internal(1)
             assert result["estimated_days"] == 30
 
@@ -173,29 +167,18 @@ class TestNeuralWave7:
         with patch.object(engine, "_load_model", return_value=True):
             engine.scalers["accounting_classifier"] = MagicMock()
             engine.models["accounting_classifier"] = MagicMock()
-            engine.scalers["accounting_classifier"].transform.return_value = np.array(
-                [[1.0] * 6]
-            )
+            engine.scalers["accounting_classifier"].transform.return_value = np.array([[1.0] * 6])
             engine.models["accounting_classifier"].predict.return_value = np.array([0])
-            engine.models[
-                "accounting_classifier"
-            ].predict_proba.return_value = np.array([[0.3, 0.7]])
+            engine.models["accounting_classifier"].predict_proba.return_value = np.array([[0.3, 0.7]])
             result = engine.validate_accounting_entry(100, 100, 2, "Sale")
-            assert (
-                "مراجعة" in result["recommendation"]
-                or "غير متوازن" in result["recommendation"]
-            )
+            assert "مراجعة" in result["recommendation"] or "غير متوازن" in result["recommendation"]
 
     def test_cash_flow_and_forecast_exceptions(self, engine):
         ctx = MagicMock()
         ctx.side_effect = RuntimeError("ctx")
-        with patch.object(
-            engine, "_predict_cash_flow_internal", side_effect=RuntimeError("fail")
-        ):
+        with patch.object(engine, "_predict_cash_flow_internal", side_effect=RuntimeError("fail")):
             assert engine.predict_cash_flow(3)["trend"] == "unknown"
-        with patch.object(
-            engine, "_forecast_sales_internal", side_effect=RuntimeError("fail")
-        ):
+        with patch.object(engine, "_forecast_sales_internal", side_effect=RuntimeError("fail")):
             assert engine.forecast_sales(7)["forecast"] == []
 
     def test_forecast_decreasing_trend(self, engine):
@@ -243,9 +226,7 @@ class TestNeuralWave7:
             ("train_inventory_optimizer", "_train_inventory_internal"),
             ("optimize_stock_level", "_optimize_stock_internal"),
         ):
-            with patch.object(
-                engine, internal, return_value={"success": True}
-            ) as inner:
+            with patch.object(engine, internal, return_value={"success": True}) as inner:
                 if method == "optimize_stock_level":
                     getattr(engine, method)(1, from_app_context=ctx)
                     inner.assert_called_once_with(1)
@@ -254,9 +235,7 @@ class TestNeuralWave7:
                     inner.assert_called_once()
 
     def test_remaining_predict_train_paths(self, engine):
-        cols = _patch_model_cols(
-            "models.Sale", "models.Purchase", "models.Expense", "models.Receipt"
-        )
+        cols = _patch_model_cols("models.Sale", "models.Purchase", "models.Expense", "models.Receipt")
         try:
             with (
                 patch("extensions.db") as mock_db,
@@ -368,15 +347,9 @@ class TestAzadWave7:
             ap.get_greeting.return_value = "مرحبا عام"
             ap.get_help_intro.return_value = "مساعدة"
             bg.get_beginner_response.return_value = None
-            assert "أهلين" in responses.smart_response(
-                "مرحبا", context={"dialect": "palestinian"}
-            )
-            assert "أهلين" in responses.smart_response(
-                "هلا", context={"dialect": "gulf"}
-            )
-            assert "مرحبا عام" in responses.smart_response(
-                "مرحبا", context={"dialect": "standard"}
-            )
+            assert "أهلين" in responses.smart_response("مرحبا", context={"dialect": "palestinian"})
+            assert "أهلين" in responses.smart_response("هلا", context={"dialect": "gulf"})
+            assert "مرحبا عام" in responses.smart_response("مرحبا", context={"dialect": "standard"})
             assert "VAT" in responses.smart_response("كيف أستخدم الضريبة")
 
     def test_status_fallback_and_improvement_branches(self, responses):
@@ -391,9 +364,7 @@ class TestAzadWave7:
             ),
             patch("ai_knowledge.personality.azad_responses.azad_personality") as ap,
             patch("ai_knowledge.personality.azad_responses.learning_system"),
-            patch.object(
-                responses, "_get_status_response", side_effect=RuntimeError("fail")
-            ),
+            patch.object(responses, "_get_status_response", side_effect=RuntimeError("fail")),
         ):
             ap.is_inappropriate_message.return_value = "normal"
             assert "نشط" in responses.smart_response("حالة النظام status")
@@ -413,13 +384,9 @@ class TestAzadWave7:
             assert "أهداف" in responses._get_improvement_response("عرض هدف goal")
             si.auto_improve.return_value = {
                 "improvements_made": 1,
-                "details": [
-                    {"area": "q", "old_score": 7, "new_score": 8, "improvement": 1}
-                ],
+                "details": [{"area": "q", "old_score": 7, "new_score": 8, "improvement": 1}],
             }
-            assert "تحسين" in responses._get_improvement_response(
-                "تحسين تلقائي automatic"
-            )
+            assert "تحسين" in responses._get_improvement_response("تحسين تلقائي automatic")
             si.get_improvement_status.return_value = {
                 "overall_score": 8,
                 "total_improvements": 2,
@@ -502,9 +469,7 @@ class TestDocumentCodeWave7:
             Sale.query.all.return_value = [sale]
             Sale.query.filter.return_value.all.return_value = [sale]
             Sale.query.get.return_value = sale
-            Customer.query.get.return_value = MagicMock(
-                name="Ali", phone="050", email="a@t.com"
-            )
+            Customer.query.get.return_value = MagicMock(name="Ali", phone="050", email="a@t.com")
             Product.query.all.return_value = [
                 SimpleNamespace(
                     id=1,
@@ -518,9 +483,7 @@ class TestDocumentCodeWave7:
             ]
             start = datetime.now().date() - timedelta(days=30)
             end = datetime.now().date()
-            data, fname = DocumentGenerator.export_to_excel(
-                "sales", start_date=start, end_date=end
-            )
+            data, fname = DocumentGenerator.export_to_excel("sales", start_date=start, end_date=end)
             assert fname.endswith(".csv")
             data2, fname2 = DocumentGenerator.export_to_excel("customers")
             assert fname2.endswith(".csv")
@@ -544,9 +507,7 @@ class TestDocumentCodeWave7:
         bad_dr = MagicMock()
         bad_dr.__getitem__ = MagicMock(side_effect=RuntimeError("range"))
         assert "-- Error:" in gen.generate_report_query("sales", bad_dr)
-        fixed = gen.fix_code(
-            "def f():\n\nreturn 1", "IndentationError: unexpected indent"
-        )
+        fixed = gen.fix_code("def f():\n\nreturn 1", "IndentationError: unexpected indent")
         assert fixed["fixed_code"]
         assert gen.generate_report_query("unknown_type_xyz").startswith("--")
 
@@ -566,9 +527,7 @@ class TestLearnerWave7:
             rg.return_value = MagicMock(status_code=404)
             assert cl.learn_from_wikipedia("topic")["success"] is False
         with patch.object(cl.session, "get") as rg:
-            rg.return_value = MagicMock(
-                status_code=200, json=lambda: {"feed": {"entry": []}}
-            )
+            rg.return_value = MagicMock(status_code=200, json=lambda: {"feed": {"entry": []}})
             assert isinstance(cl.learn_arxiv_papers("ml"), dict)
 
     def test_self_improvement_remaining(self, knowledge_path):
@@ -599,9 +558,7 @@ class TestLearnerWave7:
         from ai_knowledge.learning.external_learning import ExternalLearningSystem
 
         with (
-            patch.object(
-                AutoRetrainingScheduler, "get_last_training_info", return_value=None
-            ),
+            patch.object(AutoRetrainingScheduler, "get_last_training_info", return_value=None),
             patch("models.Sale") as Sale,
         ):
             Sale.query.filter_by.return_value.count.return_value = 0
@@ -682,9 +639,7 @@ class TestSpecializedWave7:
         assert laws.get_quality_standards("textiles")
         user = MagicMock(is_authenticated=True, is_owner=False)
         with patch("ai_knowledge.specialized.security_rules.current_user", user):
-            filtered = SecurityRules.filter_sensitive_data(
-                {"password": "secret", "name": "Ali"}
-            )
+            filtered = SecurityRules.filter_sensitive_data({"password": "secret", "name": "Ali"})
             assert filtered["password"] == "*** محمي ***"
         with patch(
             "ai_knowledge.specialized.security_rules.current_user",
@@ -696,19 +651,10 @@ class TestSpecializedWave7:
         import ai_knowledge.system_knowledge as sk_root
         import ai_knowledge.knowledge.system_knowledge as sk_nested
 
-        assert (
-            sk_root.get_model_info("Customer")
-            or sk_root.get_model_info("missing") is None
-        )
-        assert (
-            sk_root.get_permission_info("manage_inventory")
-            or sk_root.get_permission_info("x") is None
-        )
+        assert sk_root.get_model_info("Customer") or sk_root.get_model_info("missing") is None
+        assert sk_root.get_permission_info("manage_inventory") or sk_root.get_permission_info("x") is None
         assert isinstance(sk_nested.search_knowledge("sale"), list)
-        assert (
-            sk_nested.get_module_help("sales")
-            or sk_nested.get_module_help("xyz") is None
-        )
+        assert sk_nested.get_module_help("sales") or sk_nested.get_module_help("xyz") is None
 
 
 class TestMiscWave7:
@@ -851,12 +797,8 @@ class TestWave8FinalPush:
                 "success": True,
                 "results": {"customers": [], "products": [], "sales": []},
             }
-            Customer.query.filter.return_value.first.return_value = MagicMock(
-                name="Ali", id=1
-            )
-            Product.query.filter.return_value.first.return_value = MagicMock(
-                name="Filter", current_stock=5
-            )
+            Customer.query.filter.return_value.first.return_value = MagicMock(name="Ali", id=1)
+            Product.query.filter.return_value.first.return_value = MagicMock(name="Filter", current_stock=5)
             mock_db.session.query.return_value.filter.return_value.all.return_value = []
             dg.generate_invoice.return_value = ("inv", "ok")
             ke.search_knowledge.return_value = {
@@ -872,43 +814,25 @@ class TestWave8FinalPush:
                 ],
             }
             assert responses._handle_customer_balance_query("رصيد for Ali")
-            assert responses._handle_customer_balance_query(
-                "رصيد balance عميل customer سامي"
-            )
+            assert responses._handle_customer_balance_query("رصيد balance عميل customer سامي")
             assert responses._handle_customer_info_query("بيانات عميل أحمد")
-            assert responses._handle_product_stock_query(
-                "مخزون stock منتج product فلتر"
-            )
+            assert responses._handle_product_stock_query("مخزون stock منتج product فلتر")
             assert responses._handle_system_summary_query()
             assert responses._handle_add_customer_query("أضف add عميل customer جديد")
             assert responses._handle_search_query("ابحث search عن علي")
-            assert responses._handle_add_knowledge_source(
-                "أضف add موقع website مصدر source"
-            )
+            assert responses._handle_add_knowledge_source("أضف add موقع website مصدر source")
             assert responses._show_system_quick_links()
             assert responses._show_knowledge_sources("مصادر sources")
             assert responses._recommend_sources("أين where أجد find معلومات tax")
-            assert responses._handle_knowledge_search(
-                "ابحث search في المعرفة knowledge tax"
-            )
+            assert responses._handle_knowledge_search("ابحث search في المعرفة knowledge tax")
             assert responses._quick_invoice_link()
             assert responses._quick_receipt_link()
-            assert responses._handle_document_generation(
-                "ولد generate فاتورة invoice 55"
-            )
-            assert responses._handle_excel_export(
-                "صدر export excel بيانات data مبيعات sales"
-            )
+            assert responses._handle_document_generation("ولد generate فاتورة invoice 55")
+            assert responses._handle_excel_export("صدر export excel بيانات data مبيعات sales")
             assert responses._handle_report_generation("تقرير report مبيعات sales")
-            assert responses._handle_tax_laws_query(
-                "قانون law ضريبة tax فلسطين palestine"
-            )
-            assert responses._handle_shipping_laws_query(
-                "شحن shipping قانون law إجراءات procedures"
-            )
-            assert responses._handle_quality_standards_query(
-                "جودة quality معايير standards"
-            )
+            assert responses._handle_tax_laws_query("قانون law ضريبة tax فلسطين palestine")
+            assert responses._handle_shipping_laws_query("شحن shipping قانون law إجراءات procedures")
+            assert responses._handle_quality_standards_query("جودة quality معايير standards")
             assert responses._handle_suppliers_query("مورد supplier جديد")
             assert responses._handle_smart_filters_query("فلتر filter بحث search")
             assert responses._handle_payment_methods_query("طريقة payment دفع كاش cash")
@@ -922,18 +846,10 @@ class TestWave8FinalPush:
                 return_value="market",
             ),
         ):
-            assert "guide" in self._safe_smart(
-                responses, "استخدام usage دليل guide شرح"
-            )
-            assert "market" in self._safe_smart(
-                responses, "سوق market منافسة competition"
-            )
-        with patch.object(
-            responses, "_get_status_response", side_effect=RuntimeError("x")
-        ):
-            assert "نشط" in self._safe_smart(
-                responses, "أداء performance تقدم progress شبكات neural"
-            )
+            assert "guide" in self._safe_smart(responses, "استخدام usage دليل guide شرح")
+            assert "market" in self._safe_smart(responses, "سوق market منافسة competition")
+        with patch.object(responses, "_get_status_response", side_effect=RuntimeError("x")):
+            assert "نشط" in self._safe_smart(responses, "أداء performance تقدم progress شبكات neural")
 
     def test_semantic_arabic_intents_and_agents(self):
         from ai_knowledge.neural.semantic_matcher import SemanticMatcher
@@ -963,12 +879,7 @@ class TestWave8FinalPush:
         ):
             assert sales.execute("سعر price", {"product_id": 1})["confidence"] == 0
         acct = AccountingAgent()
-        assert (
-            acct.execute("قيد journal", {"debit": 100, "credit": 100})["result"][
-                "is_balanced"
-            ]
-            is True
-        )
+        assert acct.execute("قيد journal", {"debit": 100, "credit": 100})["result"]["is_balanced"] is True
         inv = InventoryAgent()
         assert isinstance(inv.execute("مخزون stock", {}), dict)
 
@@ -983,9 +894,7 @@ class TestWave8FinalPush:
             SecurityRules.log_security_event("access", "test event")
             SecurityRules.rate_limit_check(1, "query")
             assert SecurityRules.sanitize_input("x" * 2000).endswith("...")
-            filtered = SecurityRules.filter_sensitive_data(
-                {"email": 123, "phone": 456, "name": "Ali"}
-            )
+            filtered = SecurityRules.filter_sensitive_data({"email": 123, "phone": 456, "name": "Ali"})
             assert filtered["name"] == "Ali"
             assert SecurityRules.filter_sensitive_data("plain") == "plain"
         vp = VisionProcessor()
@@ -1013,13 +922,8 @@ class TestWave8FinalPush:
         ctx = MagicMock()
         ctx.__enter__ = MagicMock(return_value=None)
         ctx.__exit__ = MagicMock(return_value=False)
-        with patch.object(
-            engine, "_optimize_stock_internal", side_effect=RuntimeError("fail")
-        ):
-            assert (
-                engine.optimize_stock_level(1, from_app_context=ctx)["optimal_stock"]
-                == 0
-            )
+        with patch.object(engine, "_optimize_stock_internal", side_effect=RuntimeError("fail")):
+            assert engine.optimize_stock_level(1, from_app_context=ctx)["optimal_stock"] == 0
 
 
 class TestWave9PushTo99:
@@ -1037,9 +941,7 @@ class TestWave9PushTo99:
             CashFlowAnalytics,
         )
 
-        volatile = SalesAnalytics.predict_next_month_sales(
-            [100, 10, 200, 5, 300, 8, 400, 12]
-        )
+        volatile = SalesAnalytics.predict_next_month_sales([100, 10, 200, 5, 300, 8, 400, 12])
         assert volatile["confidence"] == "low"
         assert SalesAnalytics.abc_analysis([]) == {"A": [], "B": [], "C": []}
         products = [
@@ -1187,9 +1089,7 @@ class TestWave9PushTo99:
                 "success": False,
                 "error": "غير موجود",
             }
-            assert "غير موجود" in responses._handle_customer_info_query(
-                "بيانات عميل ghost"
-            )
+            assert "غير موجود" in responses._handle_customer_info_query("بيانات عميل ghost")
             si.get_customer_balance.return_value = {
                 "success": True,
                 "customer": {

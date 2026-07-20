@@ -77,9 +77,7 @@ class TestSessionHelpers:
         account = _account(db_session, sample_tenant.id, is_active=False)
         with app.test_request_context() as ctx:
             ctx.session[f"shop_account_{sample_tenant.id}"] = account.id
-            assert (
-                ShopCustomerAuthService.get_logged_in_account(sample_tenant.id) is None
-            )
+            assert ShopCustomerAuthService.get_logged_in_account(sample_tenant.id) is None
 
     def test_get_logged_in_account_valid(self, app, db_session, sample_tenant):
         account = _account(db_session, sample_tenant.id)
@@ -92,20 +90,14 @@ class TestSessionHelpers:
 
 class TestNormalization:
     def test_normalize_email_valid(self):
-        assert (
-            ShopCustomerAuthService.normalize_email("  User@Example.COM ")
-            == "user@example.com"
-        )
+        assert ShopCustomerAuthService.normalize_email("  User@Example.COM ") == "user@example.com"
 
     def test_normalize_email_invalid(self):
         with pytest.raises(ValueError, match="البريد"):
             ShopCustomerAuthService.normalize_email("not-an-email")
 
     def test_normalize_phone_valid(self):
-        assert (
-            ShopCustomerAuthService.normalize_phone("+971 50 123 4567")
-            == "971501234567"
-        )
+        assert ShopCustomerAuthService.normalize_phone("+971 50 123 4567") == "971501234567"
 
     def test_normalize_phone_too_short(self):
         with pytest.raises(ValueError, match="الهاتف"):
@@ -156,87 +148,55 @@ class TestRegisterAuthenticate:
             )
 
     def test_authenticate_success_updates_last_login(self, db_session, sample_tenant):
-        account = _account(
-            db_session, sample_tenant.id, email="auth@shop.test", password="mypass12"
-        )
-        result = ShopCustomerAuthService.authenticate(
-            sample_tenant.id, "auth@shop.test", "mypass12"
-        )
+        account = _account(db_session, sample_tenant.id, email="auth@shop.test", password="mypass12")
+        result = ShopCustomerAuthService.authenticate(sample_tenant.id, "auth@shop.test", "mypass12")
         assert result.id == account.id
         assert result.last_login_at is not None
 
     def test_authenticate_wrong_password(self, db_session, sample_tenant):
-        _account(
-            db_session, sample_tenant.id, email="bad@shop.test", password="correct1"
-        )
+        _account(db_session, sample_tenant.id, email="bad@shop.test", password="correct1")
         with pytest.raises(ValueError, match="بيانات الدخول"):
-            ShopCustomerAuthService.authenticate(
-                sample_tenant.id, "bad@shop.test", "wrongpass"
-            )
+            ShopCustomerAuthService.authenticate(sample_tenant.id, "bad@shop.test", "wrongpass")
 
 
 class TestPasswordReset:
     def test_request_password_reset_unknown_email(self, sample_tenant):
-        assert (
-            ShopCustomerAuthService.request_password_reset(
-                sample_tenant.id, "nobody@shop.test"
-            )
-            is None
-        )
+        assert ShopCustomerAuthService.request_password_reset(sample_tenant.id, "nobody@shop.test") is None
 
     def test_request_password_reset_sets_token(self, db_session, sample_tenant):
         _account(db_session, sample_tenant.id, email="reset@shop.test")
-        updated = ShopCustomerAuthService.request_password_reset(
-            sample_tenant.id, "reset@shop.test"
-        )
+        updated = ShopCustomerAuthService.request_password_reset(sample_tenant.id, "reset@shop.test")
         assert updated.password_reset_token
         assert updated.password_reset_expires_at is not None
 
     def test_reset_password_success(self, db_session, sample_tenant):
         account = _account(db_session, sample_tenant.id, email="tok@shop.test")
         account.password_reset_token = "valid-token"
-        account.password_reset_expires_at = datetime.now(timezone.utc) + timedelta(
-            hours=1
-        )
+        account.password_reset_expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
         db.session.commit()
-        result = ShopCustomerAuthService.reset_password(
-            sample_tenant.id, "valid-token", "newpass99"
-        )
+        result = ShopCustomerAuthService.reset_password(sample_tenant.id, "valid-token", "newpass99")
         assert result.password_reset_token is None
         assert result.check_password("newpass99")
 
     def test_reset_password_expired_token(self, db_session, sample_tenant):
         account = _account(db_session, sample_tenant.id, email="exp@shop.test")
         account.password_reset_token = "expired-token"
-        account.password_reset_expires_at = datetime.now(timezone.utc) - timedelta(
-            hours=1
-        )
+        account.password_reset_expires_at = datetime.now(timezone.utc) - timedelta(hours=1)
         db.session.commit()
         with pytest.raises(ValueError, match="انتهت"):
-            ShopCustomerAuthService.reset_password(
-                sample_tenant.id, "expired-token", "newpass99"
-            )
+            ShopCustomerAuthService.reset_password(sample_tenant.id, "expired-token", "newpass99")
 
     def test_reset_password_empty_token(self, sample_tenant):
         with pytest.raises(ValueError, match="رمز"):
             ShopCustomerAuthService.reset_password(sample_tenant.id, "", "newpass99")
 
-    def test_send_password_reset_email_no_mail_config(
-        self, app, db_session, sample_tenant
-    ):
+    def test_send_password_reset_email_no_mail_config(self, app, db_session, sample_tenant):
         account = _account(db_session, sample_tenant.id)
         store = MagicMock(title="Test Store")
         with app.app_context():
-            assert (
-                ShopCustomerAuthService.send_password_reset_email(
-                    account, store, "http://reset"
-                )
-                is False
-            )
+            assert ShopCustomerAuthService.send_password_reset_email(account, store, "http://reset") is False
 
-    def test_send_password_reset_email_success(
-        self, app, db_session, sample_tenant, mocker
-    ):
+    def test_send_password_reset_email_success(self, app, db_session, sample_tenant, mocker):
         account = _account(db_session, sample_tenant.id)
         store = MagicMock(title="Test Store")
         app.config["MAIL_USERNAME"] = "user"
@@ -245,17 +205,10 @@ class TestPasswordReset:
         mocker.patch("extensions.mail", mock_mail)
         mocker.patch("flask_mail.Message")
         with app.app_context():
-            assert (
-                ShopCustomerAuthService.send_password_reset_email(
-                    account, store, "http://reset"
-                )
-                is True
-            )
+            assert ShopCustomerAuthService.send_password_reset_email(account, store, "http://reset") is True
         mock_mail.send.assert_called_once()
 
-    def test_send_password_reset_email_failure_logged(
-        self, app, db_session, sample_tenant, mocker
-    ):
+    def test_send_password_reset_email_failure_logged(self, app, db_session, sample_tenant, mocker):
         account = _account(db_session, sample_tenant.id)
         store = MagicMock(title="Test Store")
         app.config["MAIL_USERNAME"] = "user"
@@ -267,12 +220,7 @@ class TestPasswordReset:
         with app.app_context():
             logger = MagicMock()
             mocker.patch("flask.current_app.logger", logger)
-            assert (
-                ShopCustomerAuthService.send_password_reset_email(
-                    account, store, "http://reset"
-                )
-                is False
-            )
+            assert ShopCustomerAuthService.send_password_reset_email(account, store, "http://reset") is False
         logger.warning.assert_called()
 
 
@@ -290,9 +238,7 @@ class TestWhatsappOrderUrl:
             "services.shop_customer_auth_service.resolve_default_currency",
             return_value="AED",
         )
-        store = MagicMock(
-            whatsapp="+971501234567", phone=None, title="متجري", tenant=None
-        )
+        store = MagicMock(whatsapp="+971501234567", phone=None, title="متجري", tenant=None)
         product = MagicMock()
         product.get_display_name.return_value = "منتج"
         product.sku = "P1"
@@ -306,9 +252,7 @@ class TestWhatsappOrderUrl:
             "services.shop_customer_auth_service.resolve_default_currency",
             return_value="AED",
         )
-        store = MagicMock(
-            whatsapp="971509876543", phone=None, title="My Shop", tenant=None
-        )
+        store = MagicMock(whatsapp="971509876543", phone=None, title="My Shop", tenant=None)
         product = MagicMock()
         product.get_display_name.return_value = "Widget"
         product.sku = None

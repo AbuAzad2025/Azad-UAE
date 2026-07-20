@@ -38,9 +38,7 @@ class TestOnlineStoreDetection:
     def test_detection_matrix(self, source, method, ref, expected):
         from services.azad_platform_fee_service import AzadPlatformFeeService
 
-        sale = _online_sale(
-            source=source, checkout_payment_method=method, checkout_gateway_ref=ref
-        )
+        sale = _online_sale(source=source, checkout_payment_method=method, checkout_gateway_ref=ref)
         assert AzadPlatformFeeService.is_online_store_transaction(sale) is expected
 
 
@@ -52,9 +50,7 @@ class TestFeeCalculations:
 
         sale = _online_sale(amount_aed=Decimal("500"))
         payment = MagicMock(amount_aed=Decimal("750"))
-        assert AzadPlatformFeeService._base_amount_aed(sale, payment) == Decimal(
-            "750.000"
-        )
+        assert AzadPlatformFeeService._base_amount_aed(sale, payment) == Decimal("750.000")
 
     def test_get_rate_from_system_settings(self, mocker):
         settings = MagicMock(azad_platform_fee_rate=Decimal("2.50"))
@@ -135,18 +131,14 @@ class TestRecordStoreOnlineFee:
         )
         settings = MagicMock(azad_platform_fee_rate=Decimal("1"))
         mocker.patch("models.SystemSettings.get_current", return_value=settings)
-        mocker.patch(
-            "services.azad_platform_fee_service.GLService.ensure_core_accounts"
-        )
+        mocker.patch("services.azad_platform_fee_service.GLService.ensure_core_accounts")
         mock_post = mocker.patch("services.azad_platform_fee_service.post_or_fail")
         mocker.patch("services.azad_platform_fee_service.db.session")
 
         from services.azad_platform_fee_service import AzadPlatformFeeService
 
         with app.app_context():
-            fee = AzadPlatformFeeService.record_store_online_fee(
-                _online_sale(amount_aed=Decimal("1000"))
-            )
+            fee = AzadPlatformFeeService.record_store_online_fee(_online_sale(amount_aed=Decimal("1000")))
 
         assert fee is not None
         assert fee.fee_amount_aed == Decimal("10.000")
@@ -183,9 +175,7 @@ class TestPlatformFeeReporting:
 
         dt_from = datetime(2026, 1, 1, tzinfo=timezone.utc)
         dt_to = datetime(2026, 6, 1, tzinfo=timezone.utc)
-        report = AzadPlatformFeeService.get_settlement_report(
-            tenant_id=1, date_from=dt_from, date_to=dt_to
-        )
+        report = AzadPlatformFeeService.get_settlement_report(tenant_id=1, date_from=dt_from, date_to=dt_to)
         assert report["count"] == 1
         assert report["total_fee_aed"] == Decimal("10.000")
 
@@ -218,20 +208,14 @@ class TestPlatformFeeReporting:
         from services.azad_platform_fee_service import AzadPlatformFeeService
 
         with app.app_context():
-            assert (
-                AzadPlatformFeeService.record_store_online_fee(_online_sale()) is None
-            )
+            assert AzadPlatformFeeService.record_store_online_fee(_online_sale()) is None
 
     def test_settle_fees_posts_gl(self, app, mocker):
-        fee = MagicMock(
-            id=1, fee_amount_aed=Decimal("10"), status="accrued", gl_posted=True
-        )
+        fee = MagicMock(id=1, fee_amount_aed=Decimal("10"), status="accrued", gl_posted=True)
         mock_q = MagicMock()
         mock_q.filter_by.return_value.all.return_value = [fee]
         mocker.patch("services.azad_platform_fee_service.AzadPlatformFee.query", mock_q)
-        mocker.patch(
-            "services.azad_platform_fee_service._resolve_main_branch", return_value=1
-        )
+        mocker.patch("services.azad_platform_fee_service._resolve_main_branch", return_value=1)
         mock_post = mocker.patch("services.azad_platform_fee_service.post_or_fail")
         mocker.patch("services.azad_platform_fee_service.db.session")
         from services.azad_platform_fee_service import AzadPlatformFeeService

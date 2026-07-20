@@ -62,9 +62,7 @@ def create_user():
 
     current_level = role_level_for_user(current_user)
     roles = Role.query.filter_by(is_active=True).all()
-    roles = [
-        r for r in roles if role_level_for(getattr(r, "slug", None)) <= current_level
-    ]
+    roles = [r for r in roles if role_level_for(getattr(r, "slug", None)) <= current_level]
     roles = [r for r in roles if getattr(r, "slug", None) not in ("owner", "developer")]
     tid = get_active_tenant_id(current_user)
     branches = Branch.query.filter_by(is_active=True)
@@ -80,9 +78,7 @@ def create_user():
         def _form_values():
             values = request.form.to_dict()
             values["is_owner"] = "on" if request.form.get("is_owner") == "on" else "off"
-            values["is_active"] = (
-                "on" if request.form.get("is_active") == "on" else "off"
-            )
+            values["is_active"] = "on" if request.form.get("is_active") == "on" else "off"
             return values
 
         try:
@@ -93,11 +89,7 @@ def create_user():
                 normalize_user_email_required,
             )
 
-            username = str(
-                InputSanitizer.sanitize_text(
-                    request.form.get("username", ""), max_length=20
-                )
-            ).strip()
+            username = str(InputSanitizer.sanitize_text(request.form.get("username", ""), max_length=20)).strip()
             try:
                 email = normalize_user_email_required(request.form.get("email"))
             except FieldValidationError as exc:
@@ -111,9 +103,7 @@ def create_user():
                     form_data=_form_values(),
                 )
             password = request.form.get("password", "").strip()
-            full_name = InputSanitizer.sanitize_text(
-                request.form.get("full_name", ""), max_length=100
-            )
+            full_name = InputSanitizer.sanitize_text(request.form.get("full_name", ""), max_length=100)
             role_id = request.form.get("role_id", type=int)
             requested_is_owner = request.form.get("is_owner") == "on"
             is_owner = requested_is_owner if current_user.is_owner else False
@@ -159,9 +149,7 @@ def create_user():
                 )
 
             target_tenant_id = request.form.get("tenant_id", type=int) or tid
-            existing = User.query.filter_by(
-                username=username, tenant_id=target_tenant_id
-            ).first()
+            existing = User.query.filter_by(username=username, tenant_id=target_tenant_id).first()
             if existing:
                 from utils.error_messages import ErrorMessages
 
@@ -206,9 +194,7 @@ def create_user():
                 if role and user_may_have_null_tenant(is_owner=is_owner, role=role):
                     user_tenant_id = None
                 else:
-                    user_tenant_id = form_tenant_id or get_active_tenant_id(
-                        current_user
-                    )
+                    user_tenant_id = form_tenant_id or get_active_tenant_id(current_user)
             else:
                 user_tenant_id = get_active_tenant_id(current_user)
 
@@ -266,9 +252,7 @@ def edit_user(user_id):
     user = User.query.get_or_404(user_id)
     current_level = role_level_for_user(current_user)
     roles = Role.query.filter_by(is_active=True).all()
-    roles = [
-        r for r in roles if role_level_for(getattr(r, "slug", None)) <= current_level
-    ]
+    roles = [r for r in roles if role_level_for(getattr(r, "slug", None)) <= current_level]
     tid = get_active_tenant_id(current_user)
     branches = Branch.query.filter_by(is_active=True)
     if tid:
@@ -286,14 +270,10 @@ def edit_user(user_id):
 
             if role_requires_branch(role, is_owner=is_owner) and not branch_id:
                 flash(gettext("⚠️ يجب ربط هذا المستخدم بفرع محدد."), "warning")
-                return render_template(
-                    "owner/edit_user.html", user=user, roles=roles, branches=branches
-                )
+                return render_template("owner/edit_user.html", user=user, roles=roles, branches=branches)
             if role_level_for(getattr(role, "slug", None)) > current_level:
                 flash(gettext("⚠️ لا يمكنك تعيين دور أعلى من دورك."), "danger")
-                return render_template(
-                    "owner/edit_user.html", user=user, roles=roles, branches=branches
-                )
+                return render_template("owner/edit_user.html", user=user, roles=roles, branches=branches)
 
             from utils.sanitizer import InputSanitizer
             from utils.field_validators import (
@@ -301,18 +281,12 @@ def edit_user(user_id):
                 normalize_user_email_required,
             )
 
-            user.username = str(
-                InputSanitizer.sanitize_text(
-                    request.form.get("username", ""), max_length=20
-                )
-            ).strip()
+            user.username = str(InputSanitizer.sanitize_text(request.form.get("username", ""), max_length=20)).strip()
             try:
                 user.email = normalize_user_email_required(request.form.get("email"))
             except FieldValidationError as exc:
                 flash(str(exc), "error")
-                return render_template(
-                    "owner/edit_user.html", user=user, roles=roles, branches=branches
-                )
+                return render_template("owner/edit_user.html", user=user, roles=roles, branches=branches)
             user.full_name = request.form.get("full_name", "").strip()
             user.role_id = role_id
             user.branch_id = branch_id
@@ -324,9 +298,7 @@ def edit_user(user_id):
 
             new_password = request.form.get("new_password", "").strip()
             if new_password:
-                user.password_hash = generate_password_hash(
-                    new_password, method="pbkdf2:sha256"
-                )
+                user.password_hash = generate_password_hash(new_password, method="pbkdf2:sha256")
 
             user.updated_by = current_user.id
 
@@ -339,9 +311,7 @@ def edit_user(user_id):
         except Exception as e:
             flash(gettext(f"خطأ في تحديث المستخدم: {str(e)}"), "error")
 
-    return render_template(
-        "owner/edit_user.html", user=user, roles=roles, branches=branches
-    )
+    return render_template("owner/edit_user.html", user=user, roles=roles, branches=branches)
 
 
 @owner_bp.route("/users/<int:user_id>/profile")
@@ -354,15 +324,9 @@ def user_profile(user_id):
     from models import Sale, Payment
 
     # Sale/Payment stats scoped by tenant for security
-    sale_q = (
-        Sale.query.filter_by(seller_id=user_id, tenant_id=tid)
-        if tid
-        else Sale.query.filter_by(seller_id=user_id)
-    )
+    sale_q = Sale.query.filter_by(seller_id=user_id, tenant_id=tid) if tid else Sale.query.filter_by(seller_id=user_id)
     payment_q = (
-        Payment.query.filter_by(user_id=user_id, tenant_id=tid)
-        if tid
-        else Payment.query.filter_by(user_id=user_id)
+        Payment.query.filter_by(user_id=user_id, tenant_id=tid) if tid else Payment.query.filter_by(user_id=user_id)
     )
 
     stats = {
@@ -377,22 +341,14 @@ def user_profile(user_id):
             .scalar()
             or 0
             if tid
-            else db.session.query(func.sum(Sale.amount_aed))
-            .filter_by(status="confirmed", seller_id=user_id)
-            .scalar()
+            else db.session.query(func.sum(Sale.amount_aed)).filter_by(status="confirmed", seller_id=user_id).scalar()
             or 0
         ),
         "payments_count": payment_q.count(),
         "payments_total": (
-            db.session.query(func.sum(Payment.amount_aed))
-            .filter_by(user_id=user_id, tenant_id=tid)
-            .scalar()
-            or 0
+            db.session.query(func.sum(Payment.amount_aed)).filter_by(user_id=user_id, tenant_id=tid).scalar() or 0
             if tid
-            else db.session.query(func.sum(Payment.amount_aed))
-            .filter_by(user_id=user_id)
-            .scalar()
-            or 0
+            else db.session.query(func.sum(Payment.amount_aed)).filter_by(user_id=user_id).scalar() or 0
         ),
         "audits_count": (
             AuditLog.query.filter_by(user_id=user_id, tenant_id=tid).count()

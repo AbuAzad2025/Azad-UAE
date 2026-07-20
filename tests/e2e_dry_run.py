@@ -103,9 +103,7 @@ def _seed_tenant(db):
 
     settings = SystemSettings.query.first()
     if not settings:
-        settings = SystemSettings(
-            enable_pos=True, enable_tax=True, default_tax_rate=Decimal("5.00")
-        )
+        settings = SystemSettings(enable_pos=True, enable_tax=True, default_tax_rate=Decimal("5.00"))
         db.session.add(settings)
     else:
         settings.enable_pos = True
@@ -232,9 +230,7 @@ def _verify_gl(_db, ctx, sale):
         assert diff <= Decimal("0.001"), (
             f"Unbalanced entry {entry.entry_number}: debit={total_debit} credit={total_credit} diff={diff}"
         )
-        assert entry.status == "posted", (
-            f"Entry {entry.entry_number} status is {entry.status}, expected posted"
-        )
+        assert entry.status == "posted", f"Entry {entry.entry_number} status is {entry.status}, expected posted"
 
     return entries
 
@@ -251,9 +247,7 @@ def _reconcile_and_close_shift(db, _ctx, shift, sale):
     actual = expected
     shift.reconcile(actual, notes="E2E reconciliation")
     assert shift.status == PosShift.SHIFT_RECONCILED
-    assert shift.discrepancy == Decimal("0"), (
-        f"Expected zero discrepancy, got {shift.discrepancy}"
-    )
+    assert shift.discrepancy == Decimal("0"), f"Expected zero discrepancy, got {shift.discrepancy}"
 
     shift.close()
     assert shift.status == PosShift.SHIFT_CLOSED
@@ -330,15 +324,11 @@ def run_e2e_dry_run():
             )
 
             entries = _verify_gl(db, ctx, sale)
-            logger.info(
-                "Step 4: GL verified — %d balanced posted entries", len(entries)
-            )
+            logger.info("Step 4: GL verified — %d balanced posted entries", len(entries))
 
             _reconcile_and_close_shift(db, ctx, shift, sale)
             db.session.commit()
-            logger.info(
-                "Step 5: Shift reconciled & closed — discrepancy=%s", shift.discrepancy
-            )
+            logger.info("Step 5: Shift reconciled & closed — discrepancy=%s", shift.discrepancy)
 
             result = _run_subscription_scheduler(db, ctx)
             logger.info("Step 6: Subscription scheduler — %s", result)
@@ -352,16 +342,10 @@ def run_e2e_dry_run():
             print("\r\n" + "=" * 60)
             print("E2E DRY-RUN: ALL CHECKS PASSED")
             print("=" * 60)
-            print(
-                f"  Sale:      {sale.sale_number} (total={sale.total_amount} AED, VAT={sale.tax_amount})"
-            )
+            print(f"  Sale:      {sale.sale_number} (total={sale.total_amount} AED, VAT={sale.tax_amount})")
             print(f"  GL entries: {len(entries)} (all balanced, all posted)")
-            print(
-                f"  Shift:      {shift.shift_number} (discrepancy={shift.discrepancy})"
-            )
-            print(
-                f"  Scheduler:  reminded={result['reminded']}, suspended={result['suspended']}"
-            )
+            print(f"  Shift:      {shift.shift_number} (discrepancy={shift.discrepancy})")
+            print(f"  Scheduler:  reminded={result['reminded']}, suspended={result['suspended']}")
             print("=" * 60)
             return 0
 

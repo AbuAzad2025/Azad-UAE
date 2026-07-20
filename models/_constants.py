@@ -560,10 +560,6 @@ GL_CONCEPT_REGISTRY: dict[str, dict[str, Any]] = {
 }
 
 VALID_GL_CONCEPT_CODES = frozenset(GL_CONCEPT_CODES)
-REQUIRED_GL_CONCEPTS = frozenset(
-    code for code, meta in GL_CONCEPT_REGISTRY.items() if meta["required"]
-)
+REQUIRED_GL_CONCEPTS = frozenset(code for code, meta in GL_CONCEPT_REGISTRY.items() if meta["required"])
 
-_GL_CONCEPT_CODE_CHECK = "concept_code IN ({})".format(
-    ", ".join(f"'{code}'" for code in GL_CONCEPT_CODES)
-)
+_GL_CONCEPT_CODE_CHECK = "concept_code IN ({})".format(", ".join(f"'{code}'" for code in GL_CONCEPT_CODES))

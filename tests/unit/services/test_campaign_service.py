@@ -51,24 +51,16 @@ def fixed_campaign(db_session, sample_tenant):
 
 class TestCampaignROI:
     def test_calculate_roi_positive(self):
-        assert CampaignService.calculate_roi(Decimal("100"), Decimal("150")) == Decimal(
-            "50.00"
-        )
+        assert CampaignService.calculate_roi(Decimal("100"), Decimal("150")) == Decimal("50.00")
 
     def test_calculate_roi_zero_cost(self):
-        assert CampaignService.calculate_roi(Decimal("0"), Decimal("150")) == Decimal(
-            "0"
-        )
+        assert CampaignService.calculate_roi(Decimal("0"), Decimal("150")) == Decimal("0")
 
     def test_calculate_roi_negative(self):
-        assert CampaignService.calculate_roi(Decimal("200"), Decimal("50")) == Decimal(
-            "-75.00"
-        )
+        assert CampaignService.calculate_roi(Decimal("200"), Decimal("50")) == Decimal("-75.00")
 
     def test_get_campaign_roi_metrics(self, active_campaign):
-        metrics = CampaignService.get_campaign_roi_metrics(
-            active_campaign, total_revenue=Decimal("1000")
-        )
+        metrics = CampaignService.get_campaign_roi_metrics(active_campaign, total_revenue=Decimal("1000"))
         assert metrics["campaign_id"] == active_campaign.id
         assert metrics["total_cost"] == 0.0
         assert metrics["roi"] == 0.0
@@ -85,9 +77,7 @@ class TestCampaignROI:
         )
         db_session.add(campaign)
         db_session.flush()
-        metrics = CampaignService.get_campaign_roi_metrics(
-            campaign, total_revenue=Decimal("500")
-        )
+        metrics = CampaignService.get_campaign_roi_metrics(campaign, total_revenue=Decimal("500"))
         assert metrics["total_cost"] == 100.0
         assert metrics["roi"] == 400.0
 
@@ -98,54 +88,36 @@ class TestCampaignCommission:
         assert CampaignService.safe_commission_rate(Decimal("150")) == Decimal("100")
 
     def test_calculate_safe_commission(self):
-        assert CampaignService.calculate_safe_commission(
-            Decimal("1000"), Decimal("10")
-        ) == Decimal("100.00")
+        assert CampaignService.calculate_safe_commission(Decimal("1000"), Decimal("10")) == Decimal("100.00")
         assert CampaignService.calculate_safe_commission(None, None) == Decimal("0.00")
 
 
 class TestGetActiveCampaigns:
-    def test_filters_by_tenant_and_dates(
-        self, db_session, sample_tenant, active_campaign
-    ):
+    def test_filters_by_tenant_and_dates(self, db_session, sample_tenant, active_campaign):
         results = CampaignService.get_active_campaigns(sample_tenant.id)
         assert any(c.id == active_campaign.id for c in results)
 
     def test_product_filter_overlap(self, db_session, sample_tenant, active_campaign):
         active_campaign.applicable_products = [101, 102]
         db_session.flush()
-        matched = CampaignService.get_active_campaigns(
-            sample_tenant.id, product_ids=[102]
-        )
+        matched = CampaignService.get_active_campaigns(sample_tenant.id, product_ids=[102])
         assert len(matched) == 1
-        unmatched = CampaignService.get_active_campaigns(
-            sample_tenant.id, product_ids=[999]
-        )
+        unmatched = CampaignService.get_active_campaigns(sample_tenant.id, product_ids=[999])
         assert unmatched == []
 
-    def test_category_filter_null_means_all(
-        self, db_session, sample_tenant, active_campaign
-    ):
+    def test_category_filter_null_means_all(self, db_session, sample_tenant, active_campaign):
         active_campaign.applicable_categories = None
         db_session.flush()
-        results = CampaignService.get_active_campaigns(
-            sample_tenant.id, category_ids=[1]
-        )
+        results = CampaignService.get_active_campaigns(sample_tenant.id, category_ids=[1])
         assert len(results) == 1
 
-    def test_corrupt_scalar_json_treated_as_unrestricted(
-        self, db_session, sample_tenant, active_campaign
-    ):
+    def test_corrupt_scalar_json_treated_as_unrestricted(self, db_session, sample_tenant, active_campaign):
         active_campaign.applicable_products = "invalid"
         db_session.flush()
-        results = CampaignService.get_active_campaigns(
-            sample_tenant.id, product_ids=[102]
-        )
+        results = CampaignService.get_active_campaigns(sample_tenant.id, product_ids=[102])
         assert len(results) == 1
 
-    def test_product_and_category_filter(
-        self, db_session, sample_tenant, active_campaign
-    ):
+    def test_product_and_category_filter(self, db_session, sample_tenant, active_campaign):
         active_campaign.applicable_products = [101, 102]
         active_campaign.applicable_categories = [5, 6]
         db_session.flush()
@@ -164,9 +136,7 @@ class TestGetActiveCampaigns:
 
 
 class TestApplyCampaigns:
-    def test_percentage_discount_capped(
-        self, db_session, sample_tenant, active_campaign, sample_customer, sample_user
-    ):
+    def test_percentage_discount_capped(self, db_session, sample_tenant, active_campaign, sample_customer, sample_user):
         from models import Sale
 
         sale = Sale(
@@ -186,9 +156,7 @@ class TestApplyCampaigns:
         assert active_campaign.usage_count == 1
         assert db.session.query(SaleCampaign).filter_by(sale_id=sale.id).count() == 1
 
-    def test_skips_usage_limit_reached(
-        self, db_session, sample_tenant, fixed_campaign, sample_customer, sample_user
-    ):
+    def test_skips_usage_limit_reached(self, db_session, sample_tenant, fixed_campaign, sample_customer, sample_user):
         from models import Sale
 
         fixed_campaign.usage_limit = 1
@@ -209,9 +177,7 @@ class TestApplyCampaigns:
         total = CampaignService.apply_campaigns(sale, [fixed_campaign])
         assert total == Decimal("0")
 
-    def test_fixed_discount_without_cap(
-        self, db_session, sample_tenant, fixed_campaign, sample_customer, sample_user
-    ):
+    def test_fixed_discount_without_cap(self, db_session, sample_tenant, fixed_campaign, sample_customer, sample_user):
         from models import Sale
 
         sale = Sale(
@@ -229,9 +195,7 @@ class TestApplyCampaigns:
         total = CampaignService.apply_campaigns(sale, [fixed_campaign])
         assert total == Decimal("25.000")
 
-    def test_bundle_campaign_type(
-        self, db_session, sample_tenant, sample_customer, sample_user
-    ):
+    def test_bundle_campaign_type(self, db_session, sample_tenant, sample_customer, sample_user):
         from models import Sale
 
         now = datetime.now(timezone.utc)

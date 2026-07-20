@@ -103,20 +103,13 @@ def search_pos_products(
         if exact:
             products = exact
         else:
-            products = (
-                _product_search_filters(base, q)
-                .order_by(Product.name)
-                .limit(per_page)
-                .all()
-            )
+            products = _product_search_filters(base, q).order_by(Product.name).limit(per_page).all()
     else:
         products = base.order_by(Product.name).limit(per_page).all()
 
     wh_ids = _warehouse_ids_for_stock(warehouse_id, user)
     stock_map = (
-        get_branch_stock_map(product_ids=[p.id for p in products], warehouse_ids=wh_ids)
-        if wh_ids and products
-        else {}
+        get_branch_stock_map(product_ids=[p.id for p in products], warehouse_ids=wh_ids) if wh_ids and products else {}
     )
     return products, stock_map, wh_ids
 
@@ -146,17 +139,11 @@ def lookup_pos_product_exact(
         return None, {}
 
     wh_ids = _warehouse_ids_for_stock(warehouse_id, user)
-    stock_map = (
-        get_branch_stock_map(product_ids=[product.id], warehouse_ids=wh_ids)
-        if wh_ids
-        else {}
-    )
+    stock_map = get_branch_stock_map(product_ids=[product.id], warehouse_ids=wh_ids) if wh_ids else {}
     return product, stock_map
 
 
-def serialize_pos_product(
-    product: Product, stock_map: dict, *, warehouse_id: int | None = None
-):
+def serialize_pos_product(product: Product, stock_map: dict, *, warehouse_id: int | None = None):
     stock = float(stock_map.get(product.id, product.current_stock or 0))
     inactive = not product.is_active
     no_stock = stock <= 0
@@ -270,9 +257,7 @@ def create_pos_session(
     return session
 
 
-def close_pos_session(
-    session: PosSession, closing_cash: Decimal, notes: str | None = None
-):
+def close_pos_session(session: PosSession, closing_cash: Decimal, notes: str | None = None):
     from models import Sale
 
     tenant_id = session.tenant_id
@@ -309,9 +294,7 @@ def close_pos_session(
         GLService.ensure_core_accounts(tenant_id=tenant_id)
         diff_aed = Decimal(str(session.difference))
         cash_parent_code = GL_ACCOUNTS.get("cash", "1110")
-        cash_acct_code = GLTreeBuilder._branch_account_code(
-            cash_parent_code, session.branch_id
-        )
+        cash_acct_code = GLTreeBuilder._branch_account_code(cash_parent_code, session.branch_id)
         # Verify branch-specific cash account exists and is postable
         cash_account = gl_helpers.get_account(cash_acct_code, tenant_id=tenant_id)
         if cash_account is None or getattr(cash_account, "is_header", False):

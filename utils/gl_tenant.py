@@ -41,11 +41,7 @@ def reverse_document_gl(reference_type, reference_id, description, tenant_id=Non
     """Reverse GL entries for a document — raises on failure."""
     from services.gl_service import GLService
 
-    types = (
-        reference_type
-        if isinstance(reference_type, (list, tuple))
-        else [reference_type]
-    )
+    types = reference_type if isinstance(reference_type, (list, tuple)) else [reference_type]
     for ref in types:
         GLService.reverse_entry(
             reference_type=ref,

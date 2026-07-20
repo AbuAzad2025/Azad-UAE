@@ -188,9 +188,7 @@ class TestAdjustStockInsufficientCrossWarehouse:
             return_value=self.mock_warehouse,
         )
 
-    def test_insufficient_stock_returns_cross_warehouse_map(
-        self, product_client, mocker
-    ):
+    def test_insufficient_stock_returns_cross_warehouse_map(self, product_client, mocker):
         alternatives = [
             {
                 "warehouse_id": 2,
@@ -218,9 +216,7 @@ class TestAdjustStockInsufficientCrossWarehouse:
         assert len(body["alternative_locations"]) == 1
         assert body["alternative_locations"][0]["warehouse_id"] == 2
 
-    def test_insufficient_returns_empty_alternatives_on_error(
-        self, product_client, mocker
-    ):
+    def test_insufficient_returns_empty_alternatives_on_error(self, product_client, mocker):
         mocker.patch(
             "routes.products._get_alternative_warehouses",
             side_effect=RuntimeError("DB down"),
@@ -382,9 +378,7 @@ class TestAjaxHeaderJsonResponses:
         self.sl_mock = mocker.patch("models.SaleLine")
         self.pl_mock = mocker.patch("models.PurchaseLine")
 
-    def test_delete_with_ajax_header_returns_json_on_stock_error(
-        self, product_client, mocker
-    ):
+    def test_delete_with_ajax_header_returns_json_on_stock_error(self, product_client, mocker):
         """X-Requested-With: XMLHttpRequest → JSON 400 when stock > 0."""
         mocker.patch(
             "routes.products.StockService.get_product_stock",
@@ -400,9 +394,7 @@ class TestAjaxHeaderJsonResponses:
         assert body["success"] is False
         assert "مخزون" in body["error"]
 
-    def test_delete_with_ajax_header_returns_json_on_soft_delete(
-        self, product_client, mocker
-    ):
+    def test_delete_with_ajax_header_returns_json_on_soft_delete(self, product_client, mocker):
         """X-Requested-With → JSON 200 soft-delete when stock=0 + sales exist."""
         mocker.patch(
             "routes.products.StockService.get_product_stock",
@@ -454,9 +446,7 @@ class TestOnlineWarehouseIsolation:
         mocker.patch("routes.products.current_user", user)
 
         with app.app_context():
-            result = _get_alternative_warehouses(
-                product_id=1, exclude_warehouse_id=None
-            )
+            result = _get_alternative_warehouses(product_id=1, exclude_warehouse_id=None)
 
         online_entry = next((e for e in result if e["warehouse_id"] == 201), None)
         physical_entry = next((e for e in result if e["warehouse_id"] == 101), None)
@@ -506,9 +496,7 @@ class TestPartnerCommissionRouting:
                 return (line_profit * p_pct) / Decimal("100")
             return (line_profit * wh_pct) / Decimal("100")
 
-        commission_amount = calculate_applied_commission(
-            product_percentage, warehouse_percentage
-        )
+        commission_amount = calculate_applied_commission(product_percentage, warehouse_percentage)
         expected_amount = (line_profit * expected_applied) / Decimal("100")
 
         assert commission_amount == expected_amount

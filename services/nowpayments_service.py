@@ -50,8 +50,7 @@ class NOWPaymentsService:
                 "price_amount": float(amount),
                 "price_currency": currency.lower(),
                 "pay_currency": crypto_currency.lower(),
-                "order_description": description
-                or f"تبرع لمشروع Azad Systems - ${amount}",
+                "order_description": description or f"تبرع لمشروع Azad Systems - ${amount}",
                 "ipn_callback_url": get_nowpayments_ipn_url(),
             }
             if order_id:
@@ -86,14 +85,8 @@ class NOWPaymentsService:
                     gateway_status="pending",
                     transaction_type=transaction_type,
                     package=package,
-                    customer_name=(
-                        customer_name if transaction_type == "purchase" else donor_name
-                    ),
-                    customer_email=(
-                        customer_email
-                        if transaction_type == "purchase"
-                        else donor_email
-                    ),
+                    customer_name=(customer_name if transaction_type == "purchase" else donor_name),
+                    customer_email=(customer_email if transaction_type == "purchase" else donor_email),
                     customer_phone=customer_phone,
                     donor_name=donor_name,
                     donor_email=donor_email,

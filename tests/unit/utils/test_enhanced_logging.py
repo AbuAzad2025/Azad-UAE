@@ -34,9 +34,7 @@ class TestEnsureUtf8Stream:
         stream = MagicMock()
         stream.reconfigure.side_effect = OSError("nope")
         stream.buffer = io.BytesIO(b"")
-        with patch(
-            "utils.enhanced_logging.io.TextIOWrapper", side_effect=OSError("wrap fail")
-        ):
+        with patch("utils.enhanced_logging.io.TextIOWrapper", side_effect=OSError("wrap fail")):
             assert _ensure_utf8_stream(stream) is stream
 
     def test_returns_original_when_no_buffer(self):
@@ -80,17 +78,14 @@ class TestSetupEnhancedLogging:
             (
                 item[0] if isinstance(item, tuple) else item
                 for item in app.teardown_appcontext_funcs
-                if getattr(item[0] if isinstance(item, tuple) else item, "__name__", "")
-                == "_close_log_handlers"
+                if getattr(item[0] if isinstance(item, tuple) else item, "__name__", "") == "_close_log_handlers"
             ),
             None,
         )
         assert teardown is not None
         teardown(None)
 
-    def test_removes_existing_stream_handlers_and_closes_on_error(
-        self, tmp_path, monkeypatch
-    ):
+    def test_removes_existing_stream_handlers_and_closes_on_error(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         app = Flask(__name__)
         app.logger = logging.getLogger("enhanced-test-2")
@@ -123,8 +118,7 @@ class TestSetupEnhancedLogging:
             (
                 item[0] if isinstance(item, tuple) else item
                 for item in app.teardown_appcontext_funcs
-                if getattr(item[0] if isinstance(item, tuple) else item, "__name__", "")
-                == "_close_log_handlers"
+                if getattr(item[0] if isinstance(item, tuple) else item, "__name__", "") == "_close_log_handlers"
             ),
             None,
         )

@@ -128,10 +128,7 @@ class HealthCheckService:
                     "cpu_percent": process.cpu_percent(interval=0.1),
                     "threads": process.num_threads(),
                     "uptime_seconds": int(
-                        (
-                            datetime.now()
-                            - datetime.fromtimestamp(process.create_time())
-                        ).total_seconds()
+                        (datetime.now() - datetime.fromtimestamp(process.create_time())).total_seconds()
                     ),
                 },
                 "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -174,9 +171,7 @@ class HealthCheckService:
         resources = HealthCheckService.check_system_resources()
 
         try:
-            size_result = db.session.execute(
-                db.text("SELECT pg_database_size(current_database())")
-            )
+            size_result = db.session.execute(db.text("SELECT pg_database_size(current_database())"))
             db_size_bytes = size_result.scalar() or 0
             db_size_mb = db_size_bytes / (1024 * 1024)
         except Exception:
@@ -221,13 +216,7 @@ class HealthCheckService:
             },
             "database": {
                 "size_mb": round(db_size_mb, 2),
-                "status": (
-                    "جيد"
-                    if db_size_mb < 500
-                    else "تحذير"
-                    if db_size_mb < 1000
-                    else "خطر"
-                ),
+                "status": ("جيد" if db_size_mb < 500 else "تحذير" if db_size_mb < 1000 else "خطر"),
             },
             "system": {
                 "os": platform.system(),
@@ -242,8 +231,7 @@ class HealthCheckService:
             active_users = (
                 db.session.query(func.count(User.id))
                 .filter(
-                    User.last_seen
-                    >= datetime.now(timezone.utc) - timedelta(minutes=30),
+                    User.last_seen >= datetime.now(timezone.utc) - timedelta(minutes=30),
                     User.is_active,
                 )
                 .scalar()

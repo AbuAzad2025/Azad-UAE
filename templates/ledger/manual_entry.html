@@ -24,7 +24,7 @@
   <div class="card-header bg-success text-white">
     <h5 class="mb-0">
       <i class="fas fa-magic mr-2"></i>{{ t('Quick Templates') }}
-      <button type="button" class="btn btn-light float-left ic-2" onclick="toggleCard('quickTemplates')" title="طي/{{ t('توسيع') }}">
+      <button type="button" class="btn btn-light float-left ic-2" data-action="toggle-card" data-card="quickTemplates" title="طي/{{ t('توسيع') }}">
         <i class="fas fa-minus"></i>
       </button>
     </h5>
@@ -32,22 +32,22 @@
   <div class="card-body" id="quickTemplatesBody">
     <div class="row">
       <div class="col-md-3 mb-2">
-        <button type="button" class="btn btn-success btn-block" onclick="loadTemplate('cash_sale')">
+        <button type="button" class="btn btn-success btn-block" data-action="load-template" data-template="cash_sale">
           <i class="fas fa-cash-register mr-1"></i>{{ t('مبيعة') }} {{ t('Cash_4') }}
         </button>
       </div>
       <div class="col-md-3 mb-2">
-        <button type="button" class="btn btn-primary btn-block" onclick="loadTemplate('credit_sale')">
+        <button type="button" class="btn btn-primary btn-block" data-action="load-template" data-template="credit_sale">
           <i class="fas fa-credit-card mr-1"></i>{{ t('مبيعة') }} {{ t('Credit_2') }}
         </button>
       </div>
       <div class="col-md-3 mb-2">
-        <button type="button" class="btn btn-warning btn-block" onclick="loadTemplate('expense')">
+        <button type="button" class="btn btn-warning btn-block" data-action="load-template" data-template="expense">
           <i class="fas fa-receipt mr-1"></i>{{ t('Expense_3') }}
         </button>
       </div>
       <div class="col-md-3 mb-2">
-        <button type="button" class="btn btn-info btn-block" onclick="loadTemplate('adjustment')">
+        <button type="button" class="btn btn-info btn-block" data-action="load-template" data-template="adjustment">
           <i class="fas fa-balance-scale mr-1"></i>{{ t('Reconciliation') }}
         </button>
       </div>
@@ -162,10 +162,10 @@
           <button type="submit" class="btn btn-success btn-lg" id="submitBtn" disabled>
             <i class="fas fa-save mr-2"></i>{{ t('Save Entry') }}
           </button>
-          <button type="button" class="btn btn-primary" onclick="addLine()">
+          <button type="button" class="btn btn-primary" data-action="add-line">
             <i class="fas fa-plus mr-2"></i>{{ t('Add') }} {{ t('سطر') }}
           </button>
-          <button type="button" class="btn btn-secondary" onclick="resetForm()">
+          <button type="button" class="btn btn-secondary" data-action="reset-form">
             <i class="fas fa-redo mr-2"></i>{{ t('إعادة') }} {{ t('تعيين') }}
           </button>
           <div class="float-left">
@@ -181,6 +181,16 @@
 </div>
 
 <script>
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const action = el.dataset.action;
+  if (action === 'toggle-card') toggleCard(el.dataset.card);
+  else if (action === 'load-template') loadTemplate(el.dataset.template);
+  else if (action === 'add-line') addLine();
+  else if (action === 'reset-form') resetForm();
+});
+
 // {{ t('List') }} {{ t('Accounts') }} (من Backend)
 const accounts = {{ accounts_json | tojson }}.map(function (a) {
   return Object.assign({}, a, {

@@ -55,21 +55,16 @@ class ErrorMessages:
 
     @staticmethod
     def customer_phone_invalid():
-        return (
-            "رقم الهاتف غير صحيح.\nأدخل رقم هاتف صالح مثل: 0501234567 أو +971501234567"
-        )
+        return "رقم الهاتف غير صحيح.\nأدخل رقم هاتف صالح مثل: 0501234567 أو +971501234567"
 
     @staticmethod
     def customer_email_invalid():
-        return (
-            "البريد الإلكتروني غير صحيح.\nتأكد من وجود @ ونطاق مثل: ahmed@example.com"
-        )
+        return "البريد الإلكتروني غير صحيح.\nتأكد من وجود @ ونطاق مثل: ahmed@example.com"
 
     @staticmethod
     def customer_has_transactions(name):
         return (
-            f'لا يمكن حذف العميل "{name}" لأن لديه معاملات مسجلة.\n'
-            "سيتم إلغاء تفعيله بدلاً من حذفه للحفاظ على السجلات."
+            f'لا يمكن حذف العميل "{name}" لأن لديه معاملات مسجلة.\nسيتم إلغاء تفعيله بدلاً من حذفه للحفاظ على السجلات.'
         )
 
     @staticmethod
@@ -82,9 +77,7 @@ class ErrorMessages:
 
     @staticmethod
     def product_negative_stock():
-        return (
-            "لا يمكن أن يكون المخزون سالباً.\nتأكد من إدخال كمية صحيحة أو اضبط على صفر."
-        )
+        return "لا يمكن أن يكون المخزون سالباً.\nتأكد من إدخال كمية صحيحة أو اضبط على صفر."
 
     @staticmethod
     def product_low_stock(name, current, min_required):
@@ -100,9 +93,7 @@ class ErrorMessages:
 
     @staticmethod
     def sale_no_lines():
-        return (
-            'يجب إضافة منتج واحد على الأقل للفاتورة.\nاضغط زر "إضافة صف" واختر منتجاً.'
-        )
+        return 'يجب إضافة منتج واحد على الأقل للفاتورة.\nاضغط زر "إضافة صف" واختر منتجاً.'
 
     @staticmethod
     def sale_no_customer():
@@ -130,10 +121,7 @@ class ErrorMessages:
 
     @staticmethod
     def payment_exceeds_due(amount, due):
-        return (
-            f"المبلغ المدفوع ({amount:.2f}) أكبر من المستحق ({due:.2f}).\n"
-            f"المبلغ المستحق هو {due:.2f} فقط."
-        )
+        return f"المبلغ المدفوع ({amount:.2f}) أكبر من المستحق ({due:.2f}).\nالمبلغ المستحق هو {due:.2f} فقط."
 
     @staticmethod
     def payment_method_required():
@@ -174,11 +162,7 @@ class ErrorMessages:
 
     @staticmethod
     def file_too_large(max_size_mb=5):
-        return (
-            "حجم الملف كبير جداً.\n"
-            f"الحد الأقصى: {max_size_mb}MB\n"
-            "قم بضغط الملف أو اختر ملفاً أصغر."
-        )
+        return f"حجم الملف كبير جداً.\nالحد الأقصى: {max_size_mb}MB\nقم بضغط الملف أو اختر ملفاً أصغر."
 
     @staticmethod
     def file_upload_failed(err):
@@ -260,10 +244,7 @@ class ErrorMessages:
 
     @staticmethod
     def duplicate_entry(field, value):
-        return (
-            f'القيمة "{value}" موجودة مسبقاً في حقل "{field}".\n'
-            "كل قيمة يجب أن تكون فريدة. جرب قيمة مختلفة."
-        )
+        return f'القيمة "{value}" موجودة مسبقاً في حقل "{field}".\nكل قيمة يجب أن تكون فريدة. جرب قيمة مختلفة.'
 
     @staticmethod
     def invalid_email():
@@ -275,9 +256,7 @@ class ErrorMessages:
 
     @staticmethod
     def invalid_number(field):
-        return (
-            f'القيمة في "{field}" يجب أن تكون رقماً.\nأدخل رقماً صحيحاً مثل: 100 أو 99.50'
-        )
+        return f'القيمة في "{field}" يجب أن تكون رقماً.\nأدخل رقماً صحيحاً مثل: 100 أو 99.50'
 
     @staticmethod
     def invalid_date():
@@ -301,11 +280,7 @@ class ErrorMessages:
 
     @staticmethod
     def backup_failed(reason):
-        return (
-            "فشل إنشاء النسخة الاحتياطية.\n"
-            f"السبب: {reason}\n"
-            "تأكد من مساحة القرص وصلاحيات الكتابة."
-        )
+        return f"فشل إنشاء النسخة الاحتياطية.\nالسبب: {reason}\nتأكد من مساحة القرص وصلاحيات الكتابة."
 
     @staticmethod
     def rate_limit_exceeded():

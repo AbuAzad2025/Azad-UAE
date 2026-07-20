@@ -30,9 +30,7 @@ class MonitoringService:
 
     @staticmethod
     def _is_sensitive_stats_table(table_name: str) -> bool:
-        return (
-            table_name or ""
-        ).strip().lower() in MonitoringService._STATS_BLOCKED_TABLES
+        return (table_name or "").strip().lower() in MonitoringService._STATS_BLOCKED_TABLES
 
     @staticmethod
     def _resolve_known_table(table_name: str) -> str | None:
@@ -43,9 +41,7 @@ class MonitoringService:
         normalized = table_name.strip().lower()
         if not MonitoringService._TABLE_NAME_RE.match(normalized):
             return None
-        table_names = {
-            name.lower(): name for name in inspect(db.engine).get_table_names()
-        }
+        table_names = {name.lower(): name for name in inspect(db.engine).get_table_names()}
         return table_names.get(normalized)
 
     @staticmethod
@@ -61,18 +57,12 @@ class MonitoringService:
         db.session.flush()
 
     @staticmethod
-    def get_system_stats_context(
-        resolve_table_fn, is_sensitive_table_fn
-    ) -> Tuple[Dict[str, int], int]:
+    def get_system_stats_context(resolve_table_fn, is_sensitive_table_fn) -> Tuple[Dict[str, int], int]:
         db_stats = {}
         restricted_count = 0
 
         try:
-            result = db.session.execute(
-                text(
-                    "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='public'"
-                )
-            )
+            result = db.session.execute(text("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='public'"))
             for row in result.fetchall():
                 safe_table = resolve_table_fn(row[0])
                 if not safe_table:
@@ -91,12 +81,7 @@ class MonitoringService:
 
     @staticmethod
     def get_activity_monitor_context(tid, scoped_branch_id) -> Dict[str, Any]:
-        recent_audits = (
-            AuditLog.query.filter_by(tenant_id=tid)
-            .order_by(AuditLog.created_at.desc())
-            .limit(100)
-            .all()
-        )
+        recent_audits = AuditLog.query.filter_by(tenant_id=tid).order_by(AuditLog.created_at.desc()).limit(100).all()
 
         active_users = User.query.filter(
             User.last_seen >= datetime.now(timezone.utc) - timedelta(minutes=30),
@@ -127,9 +112,7 @@ class MonitoringService:
 
     @staticmethod
     def get_performance_metrics_data() -> Dict[str, Any]:
-        basedir = os.path.abspath(
-            os.path.join(os.path.dirname(str(__file__)), os.pardir)
-        )
+        basedir = os.path.abspath(os.path.join(os.path.dirname(str(__file__)), os.pardir))
         performance_file = os.path.join(basedir, "logs", "performance.log")
         slow_queries = []
 
@@ -212,21 +195,15 @@ class MonitoringService:
                 "total_customers": Customer.query.count(),
                 "total_products": Product.query.count(),
                 "active_customers": Customer.query.filter_by(is_active=True).count(),
-                "low_stock_products": Product.query.filter(
-                    Product.current_stock <= Product.min_stock_alert
-                ).count(),
+                "low_stock_products": Product.query.filter(Product.current_stock <= Product.min_stock_alert).count(),
             }
         except Exception as e:
             return {"error": str(e)}
 
     @staticmethod
-    def log_performance_metric(
-        metric_name: str, value: float, tags: Optional[Dict] = None
-    ):
+    def log_performance_metric(metric_name: str, value: float, tags: Optional[Dict] = None):
         try:
-            basedir = os.path.abspath(
-                os.path.join(os.path.dirname(str(__file__)), os.pardir)
-            )
+            basedir = os.path.abspath(os.path.join(os.path.dirname(str(__file__)), os.pardir))
             logs_dir = os.path.join(basedir, "logs")
             metrics_file = os.path.join(logs_dir, "performance.log")
 

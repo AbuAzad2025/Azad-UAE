@@ -54,18 +54,14 @@ def run_inventory_reconciliation(tenant_id: int | None = None):
 
         results = []
         for tid in tenant_ids:
-            report = InventoryReconciliationService.build_warehouse_summary(
-                tenant_id=tid
-            )
+            report = InventoryReconciliationService.build_warehouse_summary(tenant_id=tid)
             summary = report["summary"]
             qty_ok = summary.get("all_matched_qty", summary.get("all_matched", False))
             value_ok = summary.get("all_matched_value", True)
             all_ok = qty_ok and value_ok
 
             qty_mismatches = [r for r in report["rows"] if not r["matched_qty"]]
-            value_mismatches = [
-                r for r in report.get("warehouse_summary", []) if not r["matched_value"]
-            ]
+            value_mismatches = [r for r in report.get("warehouse_summary", []) if not r["matched_value"]]
 
             if all_ok:
                 logger.info(
@@ -137,8 +133,7 @@ def generate_monthly_report(month: int, year: int):
 
     logger = logging.getLogger(__name__)
     logger.warning(
-        "generate_monthly_report(%d, %d) — disabled. "
-        "No tenant-scoped ReportService is available yet.",
+        "generate_monthly_report(%d, %d) — disabled. No tenant-scoped ReportService is available yet.",
         month,
         year,
     )
@@ -226,9 +221,7 @@ def send_payment_reminders():
             for customer in tenant_customers:
                 balance = customer.get_balance_aed()
                 if balance > Decimal("1000") and customer.phone:
-                    result = WhatsAppService.send_payment_reminder(
-                        customer.phone, customer.name, float(balance)
-                    )
+                    result = WhatsAppService.send_payment_reminder(customer.phone, customer.name, float(balance))
                     if result.get("success"):
                         sent += 1
 

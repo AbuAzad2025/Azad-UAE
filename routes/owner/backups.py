@@ -66,17 +66,13 @@ def backup_now():
                 }
             )
         return (
-            jsonify(
-                {"success": False, "message": gettext("فشل إنشاء النسخة الاحتياطية")}
-            ),
+            jsonify({"success": False, "message": gettext("فشل إنشاء النسخة الاحتياطية")}),
             400,
         )
     else:
         if backup:
             flash(
-                gettext(
-                    f"✅ تم إنشاء نسخة احتياطية: {backup['filename']} ({backup['size_mb']} MB)"
-                ),
+                gettext(f"✅ تم إنشاء نسخة احتياطية: {backup['filename']} ({backup['size_mb']} MB)"),
                 "success",
             )
         else:
@@ -100,9 +96,7 @@ def create_scoped_backup():
 
     if scope == "system":
         if not is_global_owner_user(current_user):
-            _audit_owner_db_action(
-                "create_backup_denied", {"scope": scope, "reason": "not_global_owner"}
-            )
+            _audit_owner_db_action("create_backup_denied", {"scope": scope, "reason": "not_global_owner"})
             abort(403)
     elif scope in ("tenant", "branch", "store"):
         if is_global_owner_user(current_user):
@@ -216,9 +210,7 @@ def verify_backup(filename):
 
     result = BackupService.verify_backup(safe)
     if result.get("valid"):
-        _audit_owner_db_action(
-            "verify_backup", {"filename": safe, "format": result.get("format")}
-        )
+        _audit_owner_db_action("verify_backup", {"filename": safe, "format": result.get("format")})
         return jsonify({"success": True, "verified": True, "result": result})
     return jsonify({"success": True, "verified": False, "result": result}), 200
 
@@ -366,13 +358,9 @@ def download_backup(filename):
         return redirect(url_for("owner.list_backups"))
 
     try:
-        mimetype = (
-            "application/gzip" if safe.endswith(".gz") else "application/octet-stream"
-        )
+        mimetype = "application/gzip" if safe.endswith(".gz") else "application/octet-stream"
         _audit_owner_db_action("download_backup", {"filename": safe})
-        return send_file(
-            backup_path, as_attachment=True, download_name=safe, mimetype=mimetype
-        )
+        return send_file(backup_path, as_attachment=True, download_name=safe, mimetype=mimetype)
     except Exception as e:
         flash(gettext(f"❌ فشل التحميل: {str(e)}"), "danger")
         return redirect(url_for("owner.list_backups"))

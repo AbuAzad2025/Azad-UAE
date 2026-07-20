@@ -102,9 +102,7 @@ class TestMergeCheckoutLines:
 
     def test_rejects_invalid_discount(self):
         with pytest.raises(ValueError, match="0 و 100"):
-            merge_checkout_lines(
-                [{"product_id": 1, "quantity": "1", "discount_percent": 150}]
-            )
+            merge_checkout_lines([{"product_id": 1, "quantity": "1", "discount_percent": 150}])
 
 
 class TestSerializePosProduct:
@@ -178,9 +176,7 @@ class TestProductSearch:
             return_value=base,
         )
         mocker.patch("utils.pos_helpers._warehouse_ids_for_stock", return_value=[1])
-        mocker.patch(
-            "utils.pos_helpers.get_branch_stock_map", return_value={1: Decimal("3")}
-        )
+        mocker.patch("utils.pos_helpers.get_branch_stock_map", return_value={1: Decimal("3")})
         found, stock = lookup_pos_product_exact("BC1")
         assert found.id == product.id
         assert stock[1] == Decimal("3")
@@ -193,12 +189,8 @@ class TestProductSearch:
             return_value=base,
         )
         mocker.patch("utils.pos_helpers._warehouse_ids_for_stock", return_value=[1])
-        mocker.patch(
-            "utils.pos_helpers.get_branch_stock_map", return_value={1: Decimal("2")}
-        )
-        products, stock, wh = search_pos_products(
-            "wid", user=MagicMock(), warehouse_id=1, category_id=2
-        )
+        mocker.patch("utils.pos_helpers.get_branch_stock_map", return_value={1: Decimal("2")})
+        products, stock, wh = search_pos_products("wid", user=MagicMock(), warehouse_id=1, category_id=2)
         assert products == [product]
         assert wh == [1]
 
@@ -210,9 +202,7 @@ class TestProductSearch:
             return_value=base,
         )
         mocker.patch("utils.pos_helpers._warehouse_ids_for_stock", return_value=[1])
-        mocker.patch(
-            "utils.pos_helpers.get_branch_stock_map", return_value={1: Decimal("5")}
-        )
+        mocker.patch("utils.pos_helpers.get_branch_stock_map", return_value={1: Decimal("5")})
         products, stock, wh = search_pos_products("BC1", user=MagicMock())
         assert products == [product]
 
@@ -238,17 +228,13 @@ class TestProductSearch:
         assert found is None
 
     def test_warehouse_ids_for_stock_single(self, mocker):
-        mocker.patch(
-            "utils.pos_helpers.get_accessible_warehouse_ids", return_value=[1, 2]
-        )
+        mocker.patch("utils.pos_helpers.get_accessible_warehouse_ids", return_value=[1, 2])
         from utils.pos_helpers import _warehouse_ids_for_stock
 
         assert _warehouse_ids_for_stock(5, user=MagicMock()) == [5]
 
     def test_warehouse_ids_for_stock_accessible(self, mocker):
-        mocker.patch(
-            "utils.pos_helpers.get_accessible_warehouse_ids", return_value=[1, 2]
-        )
+        mocker.patch("utils.pos_helpers.get_accessible_warehouse_ids", return_value=[1, 2])
         from utils.pos_helpers import _warehouse_ids_for_stock
 
         assert _warehouse_ids_for_stock(None, user=MagicMock()) == [1, 2]
@@ -346,9 +332,7 @@ class TestClosePosSession:
             "services.gl_tree_builder.GLTreeBuilder._branch_account_code",
             return_value="1110",
         )
-        mocker.patch(
-            "services.gl_helpers.get_account", return_value=MagicMock(is_header=False)
-        )
+        mocker.patch("services.gl_helpers.get_account", return_value=MagicMock(is_header=False))
         mocker.patch(
             "services.gl_service.GLService.get_account_code_for_concept",
             side_effect=["1110", "6995"],
@@ -398,9 +382,7 @@ class TestClosePosSession:
             "services.gl_tree_builder.GLTreeBuilder._branch_account_code",
             return_value="1110",
         )
-        mocker.patch(
-            "services.gl_helpers.get_account", return_value=MagicMock(is_header=True)
-        )
+        mocker.patch("services.gl_helpers.get_account", return_value=MagicMock(is_header=True))
         mocker.patch(
             "services.gl_service.GLService.get_account_code_for_concept",
             side_effect=["1110-B", "6995"],

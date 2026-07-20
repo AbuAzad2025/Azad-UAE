@@ -73,9 +73,7 @@ class CardPayment(db.Model):
     gateway_response = db.Column(db.Text)  # JSON response
 
     # الحالة
-    status = db.Column(
-        db.String(20), default="pending", index=True
-    )  # pending, completed, failed, refunded
+    status = db.Column(db.String(20), default="pending", index=True)  # pending, completed, failed, refunded
 
     # معلومات الأمان
     ip_address = db.Column(db.String(50))
@@ -145,9 +143,7 @@ class CardPayment(db.Model):
             )
             self.encrypted_data = self._encrypt(payload)
 
-            self.card_last_4 = (
-                card_number[-4:] if len(card_number) >= 4 else card_number
-            )
+            self.card_last_4 = card_number[-4:] if len(card_number) >= 4 else card_number
 
             if card_number.startswith("4"):
                 self.card_type = "Visa"
@@ -206,11 +202,7 @@ class CardPayment(db.Model):
     @staticmethod
     def get_total_card_payments():
         """إجمالي الدفع بالبطاقات"""
-        result = (
-            db.session.query(db.func.sum(CardPayment.amount))
-            .filter_by(status="completed")
-            .scalar()
-        )
+        result = db.session.query(db.func.sum(CardPayment.amount)).filter_by(status="completed").scalar()
         return float(result) if result else 0
 
     @staticmethod

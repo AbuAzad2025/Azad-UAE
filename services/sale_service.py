@@ -28,9 +28,7 @@ class SaleService:
         if profit_margin <= Decimal("0"):
             return Decimal("0")
         try:
-            return (profit_margin * exchange_rate).quantize(
-                Decimal("0.001"), rounding=ROUND_HALF_UP
-            )
+            return (profit_margin * exchange_rate).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         except Exception:
             return profit_margin
 
@@ -60,17 +58,13 @@ class SaleService:
         """
         # Input validations
         if not customer or not customer.is_active:
-            raise ValueError(
-                "⚠️ العميل غير صالح أو غير نشط.\n💡 اختر عميل نشط من القائمة أو قم بتفعيله."
-            )
+            raise ValueError("⚠️ العميل غير صالح أو غير نشط.\n💡 اختر عميل نشط من القائمة أو قم بتفعيله.")
 
         if not seller or not seller.is_active:
             raise ValueError("البائع غير صالح أو غير نشط")
 
         if not lines_data or len(lines_data) == 0:
-            raise ValueError(
-                '⚠️ يجب إضافة منتج واحد على الأقل للفاتورة.\n💡 اضغط زر "➕ إضافة صف" واختر منتجاً.'
-            )
+            raise ValueError('⚠️ يجب إضافة منتج واحد على الأقل للفاتورة.\n💡 اضغط زر "➕ إضافة صف" واختر منتجاً.')
 
         if not currency:
             try:
@@ -83,12 +77,8 @@ class SaleService:
         currency = validate_currency_code(currency)
 
         # Validate discount and tax (rate finalized after tenant/warehouse resolved)
-        discount_decimal = (
-            Decimal(str(discount_amount)) if discount_amount else Decimal("0")
-        )
-        shipping_decimal = (
-            Decimal(str(shipping_cost)) if shipping_cost else Decimal("0")
-        )
+        discount_decimal = Decimal(str(discount_amount)) if discount_amount else Decimal("0")
+        shipping_decimal = Decimal(str(shipping_cost)) if shipping_cost else Decimal("0")
         raw_tax_rate = Decimal(str(tax_rate)) if tax_rate else Decimal("0")
 
         if discount_decimal < Decimal("0"):
@@ -101,9 +91,7 @@ class SaleService:
         from models import Warehouse
 
         tenant_id = (
-            get_active_tenant_id(seller)
-            or getattr(seller, "tenant_id", None)
-            or getattr(customer, "tenant_id", None)
+            get_active_tenant_id(seller) or getattr(seller, "tenant_id", None) or getattr(customer, "tenant_id", None)
         )
         if not warehouse_id:
             warehouse = None
@@ -113,33 +101,24 @@ class SaleService:
                 warehouse_query = warehouse_query.filter_by(tenant_id=tenant_id)
             if seller_branch_id:
                 warehouse_query = warehouse_query.filter_by(branch_id=seller_branch_id)
-            warehouse = (
-                warehouse_query.filter_by(is_main=True).first()
-                or warehouse_query.first()
-            )
+            warehouse = warehouse_query.filter_by(is_main=True).first() or warehouse_query.first()
             if warehouse:
                 warehouse_id = warehouse.id
         else:
             warehouse = ensure_warehouse_access(warehouse_id, user=seller)
 
         if not warehouse_id or not warehouse:
-            raise ValueError(
-                "⚠️ لا يوجد مستودع متاح لهذا الفرع.\n💡 أنشئ مستودعاً للفرع أو اختر مستودعاً صحيحاً."
-            )
+            raise ValueError("⚠️ لا يوجد مستودع متاح لهذا الفرع.\n💡 أنشئ مستودعاً للفرع أو اختر مستودعاً صحيحاً.")
 
         sale_branch_id = warehouse.branch_id or seller.branch_id
         tax_rate_decimal = normalize_tax_rate(raw_tax_rate, tenant_id)
 
         from utils.tax_settings import get_prices_include_vat
 
-        prices_include_vat = get_prices_include_vat(
-            tenant_id=tenant_id, branch_id=sale_branch_id
-        )
+        prices_include_vat = get_prices_include_vat(tenant_id=tenant_id, branch_id=sale_branch_id)
 
         try:
-            sale_number = generate_number(
-                "S", Sale, "sale_number", branch_id=sale_branch_id, tenant_id=tenant_id
-            )
+            sale_number = generate_number("S", Sale, "sale_number", branch_id=sale_branch_id, tenant_id=tenant_id)
             paid_amount_aed = Decimal("0")
 
             from utils.currency_utils import resolve_tenant_base_currency
@@ -200,9 +179,7 @@ class SaleService:
                     )
 
                 # Check stock availability
-                available, msg = StockService.check_availability_in_warehouse(
-                    product.id, quantity, warehouse_id
-                )
+                available, msg = StockService.check_availability_in_warehouse(product.id, quantity, warehouse_id)
                 if not available:
                     raise ValueError(f"{product.name}: {msg}")
 
@@ -222,9 +199,7 @@ class SaleService:
 
                 # Validate line discount
                 if discount_percent < Decimal("0") or discount_percent > Decimal("100"):
-                    raise ValueError(
-                        f"{product.name}: نسبة الخصم يجب أن تكون بين 0 و 100"
-                    )
+                    raise ValueError(f"{product.name}: نسبة الخصم يجب أن تكون بين 0 و 100")
 
                 # --- Serial Number Handling ---
                 if product.has_serial_number:
@@ -245,18 +220,10 @@ class SaleService:
                                 raise ValueError(
                                     f'⚠️ السيريال "{sn}" للمنتج "{product.name}" غير متاح للبيع (حالة: {existing_sn.status}).'
                                 )
-                            if (
-                                warehouse_id
-                                and existing_sn.warehouse_id
-                                and existing_sn.warehouse_id != warehouse_id
-                            ):
-                                raise ValueError(
-                                    f'⚠️ السيريال "{sn}" موجود في مستودع مختلف. يرجى تحويل المخزون أولاً.'
-                                )
+                            if warehouse_id and existing_sn.warehouse_id and existing_sn.warehouse_id != warehouse_id:
+                                raise ValueError(f'⚠️ السيريال "{sn}" موجود في مستودع مختلف. يرجى تحويل المخزون أولاً.')
                         else:
-                            allow_onsale = current_app.config.get(
-                                "ALLOW_SERIAL_CREATION_ON_SALE", False
-                            )
+                            allow_onsale = current_app.config.get("ALLOW_SERIAL_CREATION_ON_SALE", False)
                             if not allow_onsale:
                                 raise ValueError(
                                     f'⚠️ السيريال "{sn}" للمنتج "{product.name}" غير موجود في النظام.\n💡 يجب إدخال الأرقام التسلسلية أثناء استلام المشتريات.'
@@ -282,11 +249,7 @@ class SaleService:
                     quantity=quantity,
                     unit_price=unit_price,
                     discount_percent=discount_percent,
-                    cost_price=(
-                        Decimal(str(product.cost_price))
-                        if product.cost_price
-                        else Decimal("0")
-                    ),
+                    cost_price=(Decimal(str(product.cost_price)) if product.cost_price else Decimal("0")),
                     line_total=Decimal("0"),  # Initialize with 0
                     notes=line_data.get("notes"),  # Pass notes if any
                 )
@@ -304,8 +267,7 @@ class SaleService:
                 line_total_dec = Decimal(str(line.line_total))
                 if sale.prices_include_vat and sale.tax_rate > 0:
                     revenue_excl_vat = (
-                        line_total_dec
-                        / (Decimal("1") + Decimal(str(sale.tax_rate)) / Decimal("100"))
+                        line_total_dec / (Decimal("1") + Decimal(str(sale.tax_rate)) / Decimal("100"))
                     ).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
                 else:
                     revenue_excl_vat = line_total_dec
@@ -319,23 +281,13 @@ class SaleService:
                         line_cost_price=line.cost_price,
                     )
                 except Exception:
-                    unit_cost = (
-                        Decimal(str(line.cost_price))
-                        if line.cost_price
-                        else Decimal("0")
-                    )
+                    unit_cost = Decimal(str(line.cost_price)) if line.cost_price else Decimal("0")
 
                 qty_dec = Decimal(str(line.quantity)) if line.quantity else Decimal("0")
-                cost_basis = (unit_cost * qty_dec).quantize(
-                    Decimal("0.001"), rounding=ROUND_HALF_UP
-                )
-                profit_margin = (revenue_excl_vat - cost_basis).quantize(
-                    Decimal("0.001"), rounding=ROUND_HALF_UP
-                )
+                cost_basis = (unit_cost * qty_dec).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+                profit_margin = (revenue_excl_vat - cost_basis).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
-                base_amount = SaleService._commission_base_aed(
-                    profit_margin, exchange_rate
-                )
+                base_amount = SaleService._commission_base_aed(profit_margin, exchange_rate)
 
                 for ps in getattr(product, "partner_shares", []) or []:
                     partner_customer_id = getattr(ps, "partner_customer_id", None)
@@ -399,10 +351,7 @@ class SaleService:
                             serial_obj.warehouse_id = warehouse_id
                             if product.warranty_days > 0:
                                 serial_obj.warranty_start_date = datetime.now()
-                                serial_obj.warranty_end_date = (
-                                    datetime.now()
-                                    + timedelta(days=product.warranty_days)
-                                )
+                                serial_obj.warranty_end_date = datetime.now() + timedelta(days=product.warranty_days)
                             db.session.add(serial_obj)
                 # ---------------------------------
 
@@ -412,16 +361,12 @@ class SaleService:
             # Handle payment if provided
             if payment_data:
                 paid_amount = Decimal(str(payment_data.get("amount", 0)))
-                payment_currency = payment_data.get(
-                    "currency", get_system_default_currency()
-                )
+                payment_currency = payment_data.get("currency", get_system_default_currency())
                 payment_exchange_rate = payment_data.get("exchange_rate", 1.0)
 
                 # Convert payment to AED
                 payment_exchange_decimal = (
-                    Decimal(str(payment_exchange_rate))
-                    if payment_exchange_rate
-                    else Decimal("1")
+                    Decimal(str(payment_exchange_rate)) if payment_exchange_rate else Decimal("1")
                 )
                 paid_amount_aed = (paid_amount * payment_exchange_decimal).quantize(
                     Decimal("0.001"), rounding=ROUND_HALF_UP
@@ -437,9 +382,7 @@ class SaleService:
                 # Handle overpayment (credit to customer)
                 if paid_amount_aed > sale.amount_aed:
                     overpayment = paid_amount_aed - sale.amount_aed
-                    payment_note = (
-                        f"\n[دفع زائد] مبلغ {overpayment} AED سُجّل كرصيد للزبون"
-                    )
+                    payment_note = f"\n[دفع زائد] مبلغ {overpayment} AED سُجّل كرصيد للزبون"
                     sale.notes = (sale.notes or "") + payment_note
 
                 # Add payment currency info to notes if not default
@@ -456,32 +399,24 @@ class SaleService:
             if sale_status:
                 sale.status = validate_sale_status(sale_status)
             if checkout_payment_method:
-                sale.checkout_payment_method = (
-                    str(checkout_payment_method).strip().lower()[:50]
-                )
+                sale.checkout_payment_method = str(checkout_payment_method).strip().lower()[:50]
 
             if defer_fulfillment:
                 try:
                     db.session.flush()
                 except Exception:
-                    current_app.logger.exception(
-                        "Deferred sale flush failed for %s", sale.sale_number
-                    )
+                    current_app.logger.exception("Deferred sale flush failed for %s", sale.sale_number)
                     raise
 
                 current_app.logger.info(f"Sale created (deferred): {sale.sale_number}")
                 return sale
 
-            SaleService.fulfill_sale(
-                sale, payment_data=payment_data, paid_amount_aed=paid_amount_aed
-            )
+            SaleService.fulfill_sale(sale, payment_data=payment_data, paid_amount_aed=paid_amount_aed)
 
             try:
                 db.session.flush()
             except Exception:
-                current_app.logger.exception(
-                    "Sale flush failed for %s", sale.sale_number
-                )
+                current_app.logger.exception("Sale flush failed for %s", sale.sale_number)
                 raise
 
             current_app.logger.info(f"Sale created: {sale.sale_number}")
@@ -489,9 +424,7 @@ class SaleService:
             return sale
 
         except Exception:
-            current_app.logger.exception(
-                "Sale creation failed for customer %s", getattr(customer, "id", None)
-            )
+            current_app.logger.exception("Sale creation failed for customer %s", getattr(customer, "id", None))
             raise
 
     @staticmethod
@@ -512,33 +445,19 @@ class SaleService:
             raise ValueError("تم تنفيذ المخزون لهذه الفاتورة مسبقاً")
 
         for line in sale.lines:
-            available, msg = StockService.check_availability_in_warehouse(
-                line.product_id, line.quantity, warehouse_id
-            )
+            available, msg = StockService.check_availability_in_warehouse(line.product_id, line.quantity, warehouse_id)
             if not available:
-                product_name = (
-                    line.product.name if line.product else str(line.product_id)
-                )
+                product_name = line.product.name if line.product else str(line.product_id)
                 raise ValueError(f"{product_name}: {msg}")
 
         StockService.process_sale_lines(sale, warehouse_id)
 
-        paid_aed = (
-            Decimal(str(paid_amount_aed))
-            if paid_amount_aed is not None
-            else Decimal("0")
-        )
+        paid_aed = Decimal(str(paid_amount_aed)) if paid_amount_aed is not None else Decimal("0")
         if payment_data and payment_data.get("amount", 0) > 0:
             paid_amount = Decimal(str(payment_data.get("amount", 0)))
             payment_exchange_rate = payment_data.get("exchange_rate", 1.0)
-            payment_exchange_decimal = (
-                Decimal(str(payment_exchange_rate))
-                if payment_exchange_rate
-                else Decimal("1")
-            )
-            paid_aed = (paid_amount * payment_exchange_decimal).quantize(
-                Decimal("0.001"), rounding=ROUND_HALF_UP
-            )
+            payment_exchange_decimal = Decimal(str(payment_exchange_rate)) if payment_exchange_rate else Decimal("1")
+            paid_aed = (paid_amount * payment_exchange_decimal).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
             if paid_aed < Decimal("0"):
                 raise ValueError("مبلغ الدفع لا يمكن أن يكون سالب")
 
@@ -547,14 +466,10 @@ class SaleService:
             overpayment_aed = Decimal("0")
             if paid_aed > sale.amount_aed:
                 overpayment_aed = paid_aed - sale.amount_aed
-                payment_note = (
-                    f"\n[دفع زائد] مبلغ {overpayment_aed} AED سُجّل كرصيد للزبون"
-                )
+                payment_note = f"\n[دفع زائد] مبلغ {overpayment_aed} AED سُجّل كرصيد للزبون"
                 sale.notes = (sale.notes or "") + payment_note
 
-            payment_currency = payment_data.get(
-                "currency", get_system_default_currency()
-            )
+            payment_currency = payment_data.get("currency", get_system_default_currency())
             if payment_currency.upper() != get_system_default_currency().upper():
                 payment_note = (
                     f"\n[دفعة] {paid_amount} {payment_currency} = {paid_aed} {get_system_default_currency()} "
@@ -564,9 +479,9 @@ class SaleService:
 
             if overpayment_aed > Decimal("0"):
                 # Cap sale payment at invoice amount; remainder becomes prepayment
-                overpayment_amount = (
-                    overpayment_aed / payment_exchange_decimal
-                ).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+                overpayment_amount = (overpayment_aed / payment_exchange_decimal).quantize(
+                    Decimal("0.001"), rounding=ROUND_HALF_UP
+                )
                 sale_payment_amount = paid_amount - overpayment_amount
                 SaleService.create_payment_for_sale(
                     sale=sale,
@@ -616,9 +531,7 @@ class SaleService:
                     sale=sale,
                     amount=payment_data["amount"],
                     payment_method=payment_data["payment_method"],
-                    currency=payment_data.get(
-                        "currency", get_system_default_currency()
-                    ),
+                    currency=payment_data.get("currency", get_system_default_currency()),
                     exchange_rate=payment_data.get("exchange_rate", 1.0),
                     reference_number=payment_data.get("reference_number"),
                     cheque_number=payment_data.get("cheque_number"),
@@ -637,24 +550,18 @@ class SaleService:
             sale, warehouse_id=getattr(sale, "warehouse_id", None)
         )
 
-        ar_account = GLService.get_customer_credit_account(
-            customer, branch_id=sale.branch_id, tenant_id=tenant_id
-        )
+        ar_account = GLService.get_customer_credit_account(customer, branch_id=sale.branch_id, tenant_id=tenant_id)
 
         # When prices_include_vat=True, revenue/shipping/discount must be VAT-exclusive for GL balance
         if sale.prices_include_vat:
             tax_rate = Decimal(str(sale.tax_rate)) if sale.tax_rate else Decimal("0")
             if tax_rate > 0:
                 divisor = Decimal("1") + (tax_rate / Decimal("100"))
-                discount_debit = (sale.discount_amount / divisor).quantize(
+                discount_debit = (sale.discount_amount / divisor).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                shipping_credit = (sale.shipping_cost / divisor).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                revenue_credit = (sale.taxable_amount - shipping_credit + discount_debit).quantize(
                     Decimal("0.01"), rounding=ROUND_HALF_UP
                 )
-                shipping_credit = (sale.shipping_cost / divisor).quantize(
-                    Decimal("0.01"), rounding=ROUND_HALF_UP
-                )
-                revenue_credit = (
-                    sale.taxable_amount - shipping_credit + discount_debit
-                ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
             else:
                 revenue_credit = sale.subtotal
                 shipping_credit = sale.shipping_cost
@@ -774,12 +681,9 @@ class SaleService:
                 branch_id=sale.branch_id,
                 tenant_id=tenant_id,
             )
-        elif cogs_total_aed == Decimal("0") and any(
-            line.quantity > 0 for line in sale.lines
-        ):
+        elif cogs_total_aed == Decimal("0") and any(line.quantity > 0 for line in sale.lines):
             current_app.logger.warning(
-                "COGS = 0 for sale %s — stock decreased but no cost recorded. "
-                "Inventory GL may be overstated.",
+                "COGS = 0 for sale %s — stock decreased but no cost recorded. Inventory GL may be overstated.",
                 sale.sale_number,
             )
 
@@ -835,17 +739,11 @@ class SaleService:
         # Validate cheque details if payment method is cheque
         if payment_method == "cheque":
             if not cheque_number:
-                raise ValueError(
-                    "⚠️ رقم الشيك مطلوب عند الدفع بشيك.\n💡 أدخل رقم الشيك وتاريخ الاستحقاق واسم البنك."
-                )
+                raise ValueError("⚠️ رقم الشيك مطلوب عند الدفع بشيك.\n💡 أدخل رقم الشيك وتاريخ الاستحقاق واسم البنك.")
             if not cheque_date:
-                raise ValueError(
-                    "⚠️ تاريخ الاستحقاق مطلوب للشيك.\n💡 حدد تاريخ صرف الشيك من البنك."
-                )
+                raise ValueError("⚠️ تاريخ الاستحقاق مطلوب للشيك.\n💡 حدد تاريخ صرف الشيك من البنك.")
             if not bank_name:
-                raise ValueError(
-                    "⚠️ اسم البنك مطلوب للشيك.\n💡 أدخل اسم البنك المسحوب عليه الشيك."
-                )
+                raise ValueError("⚠️ اسم البنك مطلوب للشيك.\n💡 أدخل اسم البنك المسحوب عليه الشيك.")
 
             # Convert cheque_date to date object if it's a string
             if isinstance(cheque_date, str):
@@ -864,9 +762,7 @@ class SaleService:
 
         # Calculate AED amount with proper rounding using PROVIDED exchange rate
         exchange_rate_decimal = Decimal(str(exchange_rate))
-        amount_aed = (amount_decimal * exchange_rate_decimal).quantize(
-            Decimal("0.001"), rounding=ROUND_HALF_UP
-        )
+        amount_aed = (amount_decimal * exchange_rate_decimal).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
         payment = Payment(
             tenant_id=getattr(sale, "tenant_id", None),
@@ -880,9 +776,7 @@ class SaleService:
             amount_aed=amount_aed,
             payment_method=payment_method,
             payment_confirmed=(payment_method != "cheque"),
-            confirmation_date=(
-                None if payment_method == "cheque" else datetime.now(timezone.utc)
-            ),
+            confirmation_date=(None if payment_method == "cheque" else datetime.now(timezone.utc)),
             reference_number=reference_number,
             cheque_number=cheque_number,
             cheque_date=cheque_date,
@@ -957,9 +851,7 @@ class SaleService:
                     },
                     {
                         "account": credit_account,
-                        "concept_code": GLService.get_customer_credit_concept(
-                            sale.customer
-                        ),
+                        "concept_code": GLService.get_customer_credit_concept(sale.customer),
                         "credit": amount_decimal,
                         "description": f"Payment Received {payment.payment_number}",
                     },
@@ -985,12 +877,8 @@ class SaleService:
         if currency and str(currency).upper() == str(sale.currency).upper():
             sale_rate = Decimal(str(sale.exchange_rate or 1))
             if sale_rate != exchange_rate_decimal and amount_decimal > 0:
-                expected_aed = (amount_decimal * sale_rate).quantize(
-                    Decimal("0.001"), rounding=ROUND_HALF_UP
-                )
-                fx_diff = (amount_aed - expected_aed).quantize(
-                    Decimal("0.001"), rounding=ROUND_HALF_UP
-                )
+                expected_aed = (amount_decimal * sale_rate).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+                fx_diff = (amount_aed - expected_aed).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
                 if abs(fx_diff) > Decimal("0.01"):
                     try:
                         fx_lines = []
@@ -1075,9 +963,7 @@ class SaleService:
             payment_confirmed=True,
         ).count()
         if confirmed_payments > 0:
-            raise ValueError(
-                "لا يمكن إلغاء فاتورة لها دفعات مؤكدة. قم بإلغاء الدفعات أولاً."
-            )
+            raise ValueError("لا يمكن إلغاء فاتورة لها دفعات مؤكدة. قم بإلغاء الدفعات أولاً.")
 
         # Reject any pending payments/cheques linked to this sale
         pending_payments = Payment.query.filter_by(
@@ -1091,9 +977,7 @@ class SaleService:
 
                 cheque = db.session.get(Cheque, pmt.cheque_id)
                 if cheque and cheque.status not in ["cancelled", "bounced"]:
-                    process_cheque_cancel(
-                        cheque, reason=f"إلغاء فاتورة {sale.sale_number}"
-                    )
+                    process_cheque_cancel(cheque, reason=f"إلغاء فاتورة {sale.sale_number}")
             pmt.reject_payment(f"إلغاء فاتورة {sale.sale_number}")
 
         customer = sale.customer
@@ -1104,9 +988,7 @@ class SaleService:
 
             amount_aed = _D(str(sale.amount_aed or 0))
             customer.adjust_balance(+amount_aed)
-            customer.total_purchases = max(
-                (customer.total_purchases or _D("0")) - amount_aed, _D("0")
-            )
+            customer.total_purchases = max((customer.total_purchases or _D("0")) - amount_aed, _D("0"))
             customer.update_classification()
 
         sale.status = "cancelled"
@@ -1129,9 +1011,7 @@ class SaleService:
                     tenant_id=getattr(sale, "tenant_id", None),
                 )
             except Exception as _e:
-                current_app.logger.exception(
-                    "GL reversal failed for cancelled sale %s", sale.sale_number
-                )
+                current_app.logger.exception("GL reversal failed for cancelled sale %s", sale.sale_number)
                 raise ValueError(f"فشل عكس القيد المحاسبي: {_e}") from _e
 
         # إعادة حساب حالة الدفع بعد الإلغاء
@@ -1140,9 +1020,7 @@ class SaleService:
         try:
             db.session.flush()
         except Exception:
-            current_app.logger.exception(
-                "Cancel sale flush failed for %s", sale.sale_number
-            )
+            current_app.logger.exception("Cancel sale flush failed for %s", sale.sale_number)
             raise
 
         current_app.logger.info(f"Sale cancelled: {sale.sale_number}")
@@ -1158,7 +1036,5 @@ class SaleService:
         try:
             db.session.flush()
         except Exception:
-            current_app.logger.exception(
-                "Payment status update flush failed for %s", sale.sale_number
-            )
+            current_app.logger.exception("Payment status update flush failed for %s", sale.sale_number)
             raise

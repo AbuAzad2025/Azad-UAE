@@ -55,9 +55,7 @@ class TestShopStoreResolution:
         assert resp.status_code == 404
 
     def test_stores_globally_disabled_returns_503(self, shop_client, mock_store):
-        with patch(
-            "routes.shop.StoreService.stores_globally_enabled", return_value=False
-        ):
+        with patch("routes.shop.StoreService.stores_globally_enabled", return_value=False):
             resp = shop_client.get(f"{BASE}/")
         assert resp.status_code == 503
 
@@ -68,9 +66,7 @@ class TestShopStoreResolution:
 
     def test_tenant_disabled_store_returns_503(self, shop_client, mock_store):
         mock_store.is_enabled = False
-        with patch(
-            "routes.shop.StoreService.get_store_by_slug", return_value=mock_store
-        ):
+        with patch("routes.shop.StoreService.get_store_by_slug", return_value=mock_store):
             resp = shop_client.get(f"{BASE}/")
         assert resp.status_code == 503
 
@@ -208,9 +204,7 @@ class TestShopAccountAuth:
                 "routes.shop.ShopCustomerAuthService.get_logged_in_account",
                 return_value=None,
             ),
-            patch(
-                "routes.shop.ShopCustomerAuthService.authenticate", return_value=account
-            ),
+            patch("routes.shop.ShopCustomerAuthService.authenticate", return_value=account),
             patch("routes.shop.ShopCustomerAuthService.login"),
             patch("routes.shop.safe_redirect_target", return_value=f"{BASE}/"),
         ):
@@ -330,9 +324,7 @@ class TestShopAccountOrders:
                 "routes.shop.ShopCustomerAuthService.get_logged_in_account",
                 return_value=account,
             ),
-            patch(
-                "routes.shop.StoreOrderService.list_for_customer", return_value=[sale]
-            ),
+            patch("routes.shop.StoreOrderService.list_for_customer", return_value=[sale]),
             patch("routes.shop.StorePaymentMethodService.list_all", return_value=[pm]),
         ):
             resp = shop_client.get(f"{BASE}/account/orders")
@@ -378,9 +370,7 @@ class TestShopAccountOrders:
             ),
             patch("routes.shop.StoreOrderService.get_tenant_order", return_value=sale),
             patch("routes.shop.StorePaymentMethodService.get_by_code", return_value=pm),
-            patch(
-                "routes.shop.StoreOrderService.status_label", return_value="Confirmed"
-            ),
+            patch("routes.shop.StoreOrderService.status_label", return_value="Confirmed"),
         ):
             resp = shop_client.get(f"{BASE}/account/orders/100")
         assert resp.status_code == 200
@@ -446,9 +436,7 @@ class TestShopProduct:
                 return_value={10: Decimal("5")},
             ),
             patch("routes.shop.StoreService.get_related_products", return_value=[]),
-            patch(
-                "routes.shop.StoreService.get_recently_viewed_products", return_value=[]
-            ),
+            patch("routes.shop.StoreService.get_recently_viewed_products", return_value=[]),
             patch("routes.shop.StoreService.get_product_variants", return_value=[]),
             patch(
                 "routes.shop.ShopCustomerAuthService.whatsapp_order_url",
@@ -520,9 +508,7 @@ class TestShopProduct:
             ),
             patch("routes.shop.db.session"),
         ):
-            resp = shop_client.post(
-                f"{BASE}/p/10/review/add", data={"rating": "5", "comment": "Nice"}
-            )
+            resp = shop_client.post(f"{BASE}/p/10/review/add", data={"rating": "5", "comment": "Nice"})
         assert resp.status_code in (302, 303)
 
 
@@ -539,9 +525,7 @@ class TestShopStockAlertAndNewsletter:
             patch("models.shop_stock_alert.ShopStockAlert.query", alert_q),
             patch("routes.shop.db.session"),
         ):
-            resp = shop_client.post(
-                f"{BASE}/stock-alert/10", data={"email": "a@test.com"}
-            )
+            resp = shop_client.post(f"{BASE}/stock-alert/10", data={"email": "a@test.com"})
         assert resp.status_code in (302, 303)
 
     def test_newsletter_invalid_email(self, shop_client):
@@ -556,9 +540,7 @@ class TestShopStockAlertAndNewsletter:
             patch("models.shop_newsletter.ShopNewsletter.query", nl_q),
             patch("routes.shop.db.session"),
         ):
-            resp = shop_client.post(
-                f"{BASE}/newsletter/subscribe", data={"email": "sub@test.com"}
-            )
+            resp = shop_client.post(f"{BASE}/newsletter/subscribe", data={"email": "sub@test.com"})
         assert resp.status_code in (302, 303)
 
 
@@ -585,9 +567,7 @@ class TestShopCart:
             patch("routes.shop.StoreService.save_cart"),
             patch("routes.shop._track_cart_activity"),
         ):
-            resp = shop_client.post(
-                f"{BASE}/cart/add", data={"product_id": "10", "quantity": "1"}
-            )
+            resp = shop_client.post(f"{BASE}/cart/add", data={"product_id": "10", "quantity": "1"})
         assert resp.status_code in (302, 303)
 
     def test_cart_add_ajax_success(self, shop_client):
@@ -619,15 +599,11 @@ class TestShopCart:
             patch("routes.shop.Product.query", pq),
             patch("routes.shop.safe_redirect_target", return_value=f"{BASE}/"),
         ):
-            resp = shop_client.post(
-                f"{BASE}/cart/add", data={"product_id": "99", "quantity": "1"}
-            )
+            resp = shop_client.post(f"{BASE}/cart/add", data={"product_id": "99", "quantity": "1"})
         assert resp.status_code in (302, 303)
 
     def test_cart_add_closed_store_503(self, shop_client, mock_store):
-        with patch(
-            "routes.shop.StoreService.stores_globally_enabled", return_value=False
-        ):
+        with patch("routes.shop.StoreService.stores_globally_enabled", return_value=False):
             resp = shop_client.post(f"{BASE}/cart/add", data={"product_id": "10"})
         assert resp.status_code == 503
 
@@ -685,9 +661,7 @@ class TestShopCart:
         assert resp.status_code == 200
 
     def test_cart_count_json(self, shop_client):
-        with patch(
-            "routes.shop.StoreService.get_cart", return_value={"10": 2, "11": 1}
-        ):
+        with patch("routes.shop.StoreService.get_cart", return_value={"10": 2, "11": 1}):
             resp = shop_client.get(f"{BASE}/cart/count")
         assert resp.status_code == 200
         assert resp.get_json()["count"] == 3
@@ -732,9 +706,7 @@ class TestShopCheckout:
                 "routes.shop.StorePaymentMethodService.list_for_checkout",
                 return_value=[],
             ),
-            patch(
-                "routes.shop.StoreCheckoutService.create_web_order", return_value=sale
-            ),
+            patch("routes.shop.StoreCheckoutService.create_web_order", return_value=sale),
             patch(
                 "routes.shop.StoreCheckoutService.make_order_token",
                 return_value="tok-abc",
@@ -793,9 +765,7 @@ class TestShopCheckout:
         with (
             patch("routes.shop.StoreService.get_cart", return_value={"10": 1}),
             patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()),
-            patch(
-                "routes.shop.StoreCheckoutService.create_web_order", return_value=sale
-            ),
+            patch("routes.shop.StoreCheckoutService.create_web_order", return_value=sale),
             patch(
                 "services.store_online_payment_service.StoreOnlinePaymentService.create_payment_for_sale",
                 return_value={
@@ -822,9 +792,7 @@ class TestShopCheckout:
         with (
             patch("routes.shop.StoreService.get_cart", return_value={"10": 1}),
             patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()),
-            patch(
-                "routes.shop.StoreCheckoutService.create_web_order", return_value=sale
-            ),
+            patch("routes.shop.StoreCheckoutService.create_web_order", return_value=sale),
             patch(
                 "services.store_online_payment_service.StoreOnlinePaymentService.create_payment_for_sale",
                 side_effect=ValueError("gateway down"),
@@ -852,17 +820,13 @@ class TestShopCheckout:
 class TestShopStaticPages:
     def test_return_policy_renders(self, shop_client, mock_store):
         mock_store.return_policy.return_value = "30-day returns"
-        with patch(
-            "routes.shop.StoreService.get_store_by_slug", return_value=mock_store
-        ):
+        with patch("routes.shop.StoreService.get_store_by_slug", return_value=mock_store):
             resp = shop_client.get(f"{BASE}/return-policy")
         assert resp.status_code == 200
 
     def test_return_policy_missing_404(self, shop_client, mock_store):
         mock_store.return_policy.return_value = ""
-        with patch(
-            "routes.shop.StoreService.get_store_by_slug", return_value=mock_store
-        ):
+        with patch("routes.shop.StoreService.get_store_by_slug", return_value=mock_store):
             resp = shop_client.get(f"{BASE}/return-policy")
         assert resp.status_code == 404
 
@@ -901,9 +865,7 @@ class TestShopStaticPages:
         assert b"urlset" in resp.data
 
     def test_sitemap_not_public_404(self, shop_client):
-        with patch(
-            "routes.shop.StoreService.is_store_publicly_available", return_value=False
-        ):
+        with patch("routes.shop.StoreService.is_store_publicly_available", return_value=False):
             resp = shop_client.get(f"{BASE}/sitemap.xml")
         assert resp.status_code == 404
 
@@ -932,9 +894,7 @@ class TestShopPasswordReset:
             ),
             patch("routes.shop.ShopCustomerAuthService.send_password_reset_email"),
         ):
-            resp = shop_client.post(
-                f"{BASE}/account/forgot-password", data={"email": "shop@test.com"}
-            )
+            resp = shop_client.post(f"{BASE}/account/forgot-password", data={"email": "shop@test.com"})
         assert resp.status_code in (302, 303)
 
     def test_reset_password_get(self, shop_client):
@@ -980,9 +940,7 @@ class TestShopSavedPayments:
             "routes.shop.ShopCustomerAuthService.get_logged_in_account",
             return_value=None,
         ):
-            resp = shop_client.post(
-                f"{BASE}/account/payments/save", data={"method_code": "cod"}
-            )
+            resp = shop_client.post(f"{BASE}/account/payments/save", data={"method_code": "cod"})
         assert resp.status_code == 401
 
     def test_save_payment_success(self, shop_client):
@@ -1083,9 +1041,7 @@ class TestShopReorderInvoiceTrack:
             ),
             patch("routes.shop.Sale.query", sq),
             patch("routes.shop.StorePaymentMethodService.get_by_code", return_value=pm),
-            patch(
-                "routes.shop.StoreOrderService.status_label", return_value="Confirmed"
-            ),
+            patch("routes.shop.StoreOrderService.status_label", return_value="Confirmed"),
         ):
             resp = shop_client.get(f"{BASE}/order/50/invoice")
         assert resp.status_code == 200
@@ -1149,9 +1105,7 @@ class TestShopOrderConfirmation:
         assert resp.status_code == 404
 
     def test_order_confirmation_invalid_token_404(self, shop_client):
-        with patch(
-            "routes.shop.StoreCheckoutService.load_order_token", return_value=None
-        ):
+        with patch("routes.shop.StoreCheckoutService.load_order_token", return_value=None):
             resp = shop_client.get(f"{BASE}/order/bad-token")
         assert resp.status_code == 404
 
@@ -1191,9 +1145,7 @@ class TestShopRoutesExtended:
         assert resp.status_code in (302, 303)
 
     def test_account_register_closed_store(self, shop_client, mock_store):
-        with patch(
-            "routes.shop.StoreService.stores_globally_enabled", return_value=False
-        ):
+        with patch("routes.shop.StoreService.stores_globally_enabled", return_value=False):
             resp = shop_client.get(f"{BASE}/account/register")
         assert resp.status_code == 503
 
@@ -1279,15 +1231,11 @@ class TestShopRoutesExtended:
             patch("models.shop_abandoned_cart.ShopAbandonedCart.query", ac_q),
             patch("routes.shop.db.session"),
         ):
-            resp = shop_client.post(
-                f"{BASE}/cart/add", data={"product_id": "10", "quantity": "1"}
-            )
+            resp = shop_client.post(f"{BASE}/cart/add", data={"product_id": "10", "quantity": "1"})
         assert resp.status_code in (302, 303)
 
     def test_cart_update_closed_store_503(self, shop_client, mock_store):
-        with patch(
-            "routes.shop.StoreService.stores_globally_enabled", return_value=False
-        ):
+        with patch("routes.shop.StoreService.stores_globally_enabled", return_value=False):
             resp = shop_client.post(f"{BASE}/cart/update", data={"qty_10": "2"})
         assert resp.status_code == 503
 
@@ -1358,20 +1306,14 @@ class TestShopRoutesExtended:
         with (
             patch("routes.shop.StoreService.get_cart", return_value={"10": 1}),
             patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()),
-            patch(
-                "routes.shop.StoreCheckoutService.create_web_order", return_value=sale
-            ),
+            patch("routes.shop.StoreCheckoutService.create_web_order", return_value=sale),
             patch(
                 "services.store_online_payment_service.StoreOnlinePaymentService.create_payment_for_sale",
                 side_effect=ValueError("gateway"),
             ),
-            patch(
-                "routes.shop.StoreCheckoutService.make_order_token", return_value="tok"
-            ),
+            patch("routes.shop.StoreCheckoutService.make_order_token", return_value="tok"),
             patch("routes.shop.StoreService.save_cart"),
-            patch(
-                "routes.shop.db.session.commit", side_effect=RuntimeError("commit fail")
-            ),
+            patch("routes.shop.db.session.commit", side_effect=RuntimeError("commit fail")),
             patch("routes.shop.db.session.rollback"),
         ):
             resp = shop_client.post(
@@ -1386,9 +1328,7 @@ class TestShopRoutesExtended:
         assert resp.status_code == 200
 
     def test_product_detail_closed_store(self, shop_client, mock_store):
-        with patch(
-            "routes.shop.StoreService.stores_globally_enabled", return_value=False
-        ):
+        with patch("routes.shop.StoreService.stores_globally_enabled", return_value=False):
             resp = shop_client.get(f"{BASE}/p/10")
         assert resp.status_code == 503
 
@@ -1476,16 +1416,12 @@ class TestShopInternalHelpers:
 
 class TestShopRoutesMoreCoverage:
     def test_wishlist_view_closed_store(self, shop_client, mock_store):
-        with patch(
-            "routes.shop.StoreService.stores_globally_enabled", return_value=False
-        ):
+        with patch("routes.shop.StoreService.stores_globally_enabled", return_value=False):
             resp = shop_client.get(f"{BASE}/wishlist")
         assert resp.status_code == 503
 
     def test_account_login_closed_store(self, shop_client, mock_store):
-        with patch(
-            "routes.shop.StoreService.stores_globally_enabled", return_value=False
-        ):
+        with patch("routes.shop.StoreService.stores_globally_enabled", return_value=False):
             resp = shop_client.get(f"{BASE}/account/login")
         assert resp.status_code == 503
 
@@ -1506,16 +1442,12 @@ class TestShopRoutesMoreCoverage:
         assert resp.status_code == 200
 
     def test_account_orders_closed_store(self, shop_client, mock_store):
-        with patch(
-            "routes.shop.StoreService.stores_globally_enabled", return_value=False
-        ):
+        with patch("routes.shop.StoreService.stores_globally_enabled", return_value=False):
             resp = shop_client.get(f"{BASE}/account/orders")
         assert resp.status_code == 503
 
     def test_account_order_detail_closed_store(self, shop_client, mock_store):
-        with patch(
-            "routes.shop.StoreService.stores_globally_enabled", return_value=False
-        ):
+        with patch("routes.shop.StoreService.stores_globally_enabled", return_value=False):
             resp = shop_client.get(f"{BASE}/account/orders/10")
         assert resp.status_code == 503
 
@@ -1555,9 +1487,7 @@ class TestShopRoutesMoreCoverage:
         assert resp.status_code in (302, 303)
 
     def test_checkout_closed_store(self, shop_client, mock_store):
-        with patch(
-            "routes.shop.StoreService.stores_globally_enabled", return_value=False
-        ):
+        with patch("routes.shop.StoreService.stores_globally_enabled", return_value=False):
             resp = shop_client.get(f"{BASE}/checkout")
         assert resp.status_code == 503
 

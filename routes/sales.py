@@ -87,9 +87,7 @@ def index():
     from sqlalchemy.orm import joinedload
 
     query = query.options(joinedload(Sale.customer))
-    pagination = query.order_by(Sale.sale_date.desc()).paginate(
-        page=page, per_page=per_page, error_out=False
-    )
+    pagination = query.order_by(Sale.sale_date.desc()).paginate(page=page, per_page=per_page, error_out=False)
 
     return render_template(
         "sales/index.html",
@@ -158,9 +156,7 @@ def create():
                 import sys
                 import traceback
 
-                sys.stderr.write(
-                    f"[SALES_WARNING] Failed to get tenant default currency (create sale): {e}\n"
-                )
+                sys.stderr.write(f"[SALES_WARNING] Failed to get tenant default currency (create sale): {e}\n")
                 traceback.print_exc()
                 try:
                     LoggingCore.log_error(
@@ -171,9 +167,7 @@ def create():
                         exception=e,
                     )
                 except Exception:
-                    current_app.logger.exception(
-                        "Failed to log currency resolution error for sale creation"
-                    )
+                    current_app.logger.exception("Failed to log currency resolution error for sale creation")
                 default_currency = get_system_default_currency()
             currency_value = request.form.get("currency")
             currency = currency_value if currency_value else default_currency
@@ -181,9 +175,7 @@ def create():
 
             exchange_rate_manual = request.form.get("exchange_rate_manual") == "true"
             exchange_rate_server = request.form.get("exchange_rate_server", type=float)
-            exchange_rate_diff = request.form.get(
-                "exchange_rate_difference", type=float
-            )
+            exchange_rate_diff = request.form.get("exchange_rate_difference", type=float)
 
             discount_amount = request.form.get("discount_amount", type=float, default=0)
             shipping_cost = request.form.get("shipping_cost", type=float, default=0)
@@ -195,9 +187,7 @@ def create():
                 notes = (notes or "") + gettext(f"\n[كوبون] {coupon_code}")
             if exchange_rate_manual and exchange_rate_server and user_exchange_rate:
                 if user_exchange_rate < exchange_rate_server:
-                    diff_pct = (
-                        exchange_rate_diff if exchange_rate_diff is not None else 0
-                    )
+                    diff_pct = exchange_rate_diff if exchange_rate_diff is not None else 0
                     audit_note = gettext(
                         f"\n[تنبيه] سعر صرف يدوي: {user_exchange_rate:.6f} (سعر السيرفر: {exchange_rate_server:.6f}, فرق: {diff_pct:.2f}%)"
                     )
@@ -262,9 +252,7 @@ def create():
     if tid:
         warehouses = StoreService.get_physical_warehouses(tid, user=current_user)
     else:
-        warehouses = [
-            wh for wh in get_accessible_warehouses(current_user) if not wh.is_online
-        ]
+        warehouses = [wh for wh in get_accessible_warehouses(current_user) if not wh.is_online]
     preselected_customer = None
     preselected_customer_id = request.args.get("customer_id", type=int)
     if preselected_customer_id:
@@ -330,11 +318,7 @@ def print_invoice(**kwargs):
     from models import Tenant
 
     tenant = db.session.get(Tenant, tid) if tid else None
-    default_currency = (
-        tenant.default_currency
-        if tenant and tenant.default_currency
-        else Config.DEFAULT_CURRENCY
-    )
+    default_currency = tenant.default_currency if tenant and tenant.default_currency else Config.DEFAULT_CURRENCY
     print_branding = get_print_header_context(tid)
     print_branch = db.session.get(Branch, sale.branch_id) if sale.branch_id else None
     print_user_name = (
@@ -346,20 +330,14 @@ def print_invoice(**kwargs):
             else (sale.seller.username if sale.seller else "")
         )
     )
-    amount_in_words = number_to_arabic_words(
-        float(sale.total_amount or 0), sale.currency or default_currency
-    )
+    amount_in_words = number_to_arabic_words(float(sale.total_amount or 0), sale.currency or default_currency)
     qr_data_url = ""
     if settings and settings.enable_qr_code:
         from services.document_verification_service import DocumentVerificationService
 
-        ver = DocumentVerificationService.get_or_create_verification(
-            "sale", sale.id, tid
-        )
+        ver = DocumentVerificationService.get_or_create_verification("sale", sale.id, tid)
         if ver:
-            ver_url = url_for(
-                "public.verify_document", token=ver.public_token, _external=True
-            )
+            ver_url = url_for("public.verify_document", token=ver.public_token, _external=True)
             qr_data_url = generate_qr_data_url(ver_url)
         else:
             qr_data_url = generate_qr_data_url(
@@ -371,9 +349,7 @@ def print_invoice(**kwargs):
                     "d": sale.sale_date.strftime("%Y-%m-%d") if sale.sale_date else "",
                     "co": (
                         settings.company_name_ar
-                        if settings
-                        and settings.company_name_ar
-                        and settings.company_name_ar != "None"
+                        if settings and settings.company_name_ar and settings.company_name_ar != "None"
                         else (tenant.name_ar if tenant and tenant.name_ar else "")
                     ),
                     "u": print_user_name,
@@ -381,9 +357,7 @@ def print_invoice(**kwargs):
                 }
             )
 
-    template = (
-        settings.active_template if settings and settings.active_template else "modern"
-    )
+    template = settings.active_template if settings and settings.active_template else "modern"
     template_path = f"invoices/{template}.html"
 
     try:
@@ -400,9 +374,7 @@ def print_invoice(**kwargs):
             print_tenant_id=tid,
         )
     except Exception:
-        current_app.logger.warning(
-            "Invoice template %s not found, falling back to modern", template
-        )
+        current_app.logger.warning("Invoice template %s not found, falling back to modern", template)
         return render_template(
             "invoices/modern.html",
             sale=sale,
@@ -432,18 +404,14 @@ def edit(**kwargs):
 
     if sale.payment_status == "paid":
         flash(
-            gettext(
-                "⚠️ لا يمكن تعديل فاتورة مدفوعة بالكامل.\n💡 الفواتير المدفوعة لا يمكن تعديلها محاسبياً."
-            ),
+            gettext("⚠️ لا يمكن تعديل فاتورة مدفوعة بالكامل.\n💡 الفواتير المدفوعة لا يمكن تعديلها محاسبياً."),
             "danger",
         )
         return redirect(url_for("sales.view", id=record_id))
 
     if sale.status == "cancelled":
         flash(
-            gettext(
-                "⚠️ لا يمكن تعديل فاتورة ملغاة.\n💡 قم بإنشاء فاتورة جديدة بدلاً من ذلك."
-            ),
+            gettext("⚠️ لا يمكن تعديل فاتورة ملغاة.\n💡 قم بإنشاء فاتورة جديدة بدلاً من ذلك."),
             "danger",
         )
         return redirect(url_for("sales.view", id=record_id))
@@ -471,9 +439,7 @@ def edit(**kwargs):
             return redirect(url_for("sales.view", id=record_id))
 
         except Exception as e:
-            flash(
-                gettext(f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة."), "danger"
-            )
+            flash(gettext(f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة."), "danger")
 
     return render_template("sales/edit.html", sale=sale)
 
@@ -505,9 +471,7 @@ def cancel(**kwargs):
 
     except Exception as e:
         flash(
-            gettext(
-                f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."
-            ),
+            gettext(f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."),
             "danger",
         )
 
@@ -532,16 +496,12 @@ def api_get_price():
         return jsonify({"error": "Not found"}), 404
 
     price = product.get_price_for_customer(customer.customer_type)
-    current_stock = StockService.get_product_stock(
-        product.id, warehouse_id=warehouse_id, user=current_user
-    )
+    current_stock = StockService.get_product_stock(product.id, warehouse_id=warehouse_id, user=current_user)
 
     return jsonify(
         {
             "price": float(price),
-            "cost_price": (
-                float(product.cost_price) if current_user.can_see_costs() else None
-            ),
+            "cost_price": (float(product.cost_price) if current_user.can_see_costs() else None),
             "current_stock": float(current_stock),
             "unit": product.unit or gettext("بلا"),
         }
@@ -560,21 +520,13 @@ def archived():
 
     tenant_id = get_active_tenant_id(current_user)
 
-    archived_sales_query = db.session.query(ArchivedRecord).filter(
-        ArchivedRecord.table_name == "sales"
-    )
+    archived_sales_query = db.session.query(ArchivedRecord).filter(ArchivedRecord.table_name == "sales")
     if tenant_id is not None:
-        archived_sales_query = archived_sales_query.filter(
-            ArchivedRecord.tenant_id == tenant_id
-        )
+        archived_sales_query = archived_sales_query.filter(ArchivedRecord.tenant_id == tenant_id)
 
     archived_items = []
 
-    for archived in (
-        archived_sales_query.order_by(ArchivedRecord.archived_at.desc())
-        .limit(500)
-        .all()
-    ):
+    for archived in archived_sales_query.order_by(ArchivedRecord.archived_at.desc()).limit(500).all():
         data = archived.data
         sale = tenant_get(Sale, archived.record_id) if archived.record_id else None
         if sale is None:
@@ -626,24 +578,18 @@ def delete(**kwargs):
 
     if sale.status == "confirmed" or SaleService.has_inventory_posted(sale):
         flash(
-            gettext(
-                "⚠️ لا يمكن حذف فاتورة مؤكدة/منفذة مخزنياً. استخدم إلغاء الفاتورة بدلاً من الحذف."
-            ),
+            gettext("⚠️ لا يمكن حذف فاتورة مؤكدة/منفذة مخزنياً. استخدم إلغاء الفاتورة بدلاً من الحذف."),
             "danger",
         )
         return redirect(url_for("sales.view", id=record_id))
 
     has_links = False
 
-    linked_payments = Payment.query.filter_by(
-        sale_id=sale.id, tenant_id=sale.tenant_id
-    ).count()
+    linked_payments = Payment.query.filter_by(sale_id=sale.id, tenant_id=sale.tenant_id).count()
     if linked_payments > 0:
         has_links = True
 
-    linked_cheques = Cheque.query.filter_by(
-        sale_id=sale.id, tenant_id=sale.tenant_id
-    ).count()
+    linked_cheques = Cheque.query.filter_by(sale_id=sale.id, tenant_id=sale.tenant_id).count()
     if linked_cheques > 0:
         has_links = True
 
@@ -665,9 +611,7 @@ def delete(**kwargs):
             )
             archive_service = ArchiveService()
             archive_reason = (
-                gettext("تم أرشفة الفاتورة لوجود ارتباطات مالية")
-                if has_links
-                else gettext("تم أرشفة الفاتورة")
+                gettext("تم أرشفة الفاتورة لوجود ارتباطات مالية") if has_links else gettext("تم أرشفة الفاتورة")
             )
             archive_service.archive_record("sales", sale, reason=archive_reason)
             LoggingCore.log_audit("archive", "sales", record_id)
@@ -700,9 +644,7 @@ def archive(**kwargs):
             if sale.status == "confirmed" or SaleService.has_inventory_posted(sale):
                 SaleService.cancel_sale(sale)
             archive_service = ArchiveService()
-            archive_service.archive_record(
-                "sales", sale, reason=gettext("تم أرشفة فاتورة المبيعات")
-            )
+            archive_service.archive_record("sales", sale, reason=gettext("تم أرشفة فاتورة المبيعات"))
             LoggingCore.log_audit("archive", "sales", sale.id)
     except Exception as e:
         flash(gettext(f"❌ خطأ في الأرشفة: {str(e)}"), "danger")
@@ -719,9 +661,7 @@ def restore(**kwargs):
     from models import ArchivedRecord
 
     tid = get_active_tenant_id(current_user)
-    archived_query = ArchivedRecord.query.filter_by(
-        table_name="sales", record_id=record_id
-    )
+    archived_query = ArchivedRecord.query.filter_by(table_name="sales", record_id=record_id)
     if tid is not None:
         archived_query = archived_query.filter(ArchivedRecord.tenant_id == tid)
     archived_record = archived_query.first_or_404()
@@ -775,9 +715,9 @@ def api_calculate_sale_totals():
         after_discount = subtotal - discount_amount + shipping_cost
         if prices_include_vat:
             if tax_rate > 0:
-                taxable_amount = (
-                    after_discount / (Decimal("1") + (tax_rate / Decimal("100")))
-                ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                taxable_amount = (after_discount / (Decimal("1") + (tax_rate / Decimal("100")))).quantize(
+                    Decimal("0.01"), rounding=ROUND_HALF_UP
+                )
                 tax_amount = after_discount - taxable_amount
             else:
                 taxable_amount = after_discount
@@ -791,9 +731,7 @@ def api_calculate_sale_totals():
             tax_amount = (after_discount * (tax_rate / Decimal("100"))).quantize(
                 Decimal("0.01"), rounding=ROUND_HALF_UP
             )
-            total = (after_discount + tax_amount).quantize(
-                Decimal("0.01"), rounding=ROUND_HALF_UP
-            )
+            total = (after_discount + tax_amount).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
         subtotal = subtotal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         positive_lines = 0
@@ -811,13 +749,9 @@ def api_calculate_sale_totals():
                     "discount": float(discount_amount),
                     "shipping": float(shipping_cost),
                     "tax_rate": float(tax_rate),
-                    "tax_amount": float(
-                        tax_amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-                    ),
+                    "tax_amount": float(tax_amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)),
                     "total": float(
-                        total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-                        if isinstance(total, Decimal)
-                        else total
+                        total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) if isinstance(total, Decimal) else total
                     ),
                     "prices_include_vat": prices_include_vat,
                     "line_count": positive_lines,
@@ -828,6 +762,4 @@ def api_calculate_sale_totals():
 
     except Exception:
         current_app.logger.exception("calculate_sale_totals failed")
-        return jsonify(
-            {"success": False, "error": gettext("تعذر حساب الإجماليات حالياً")}
-        ), 500
+        return jsonify({"success": False, "error": gettext("تعذر حساب الإجماليات حالياً")}), 500

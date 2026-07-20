@@ -17,14 +17,10 @@ def _socketio_cors_origins(app: Flask):
 
     if is_prod:
         origins = [
-            origin.strip().rstrip("/")
-            for origin in (app.config.get("CORS_ORIGINS") or [])
-            if origin and origin.strip()
+            origin.strip().rstrip("/") for origin in (app.config.get("CORS_ORIGINS") or []) if origin and origin.strip()
         ]
         if not origins:
-            logger.warning(
-                "[WebSocket] CORS_ORIGINS empty in production; cross-origin Socket.IO disabled"
-            )
+            logger.warning("[WebSocket] CORS_ORIGINS empty in production; cross-origin Socket.IO disabled")
         return origins
 
     port = int(app.config.get("PORT", 5000))

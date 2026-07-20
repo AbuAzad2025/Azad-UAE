@@ -18,8 +18,7 @@ class WarrantyService:
             claim_type=claim_type,
             description=description,
             warranty_start_date=sale.sale_date,
-            warranty_end_date=sale.sale_date
-            + timedelta(days=product.warranty_days or 0),
+            warranty_end_date=sale.sale_date + timedelta(days=product.warranty_days or 0),
         )
         db.session.add(claim)
         return claim

@@ -18,9 +18,7 @@ class PrintHistory(db.Model):
         index=True,
     )
 
-    user_id = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=True, index=True
-    )
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True, index=True)
 
     document_type = db.Column(db.String(50), nullable=False, index=True)
 
@@ -32,9 +30,7 @@ class PrintHistory(db.Model):
 
     ip_address = db.Column(db.String(45), nullable=True)
 
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
     user = db.relationship("User", backref="print_history", foreign_keys=[user_id])
 

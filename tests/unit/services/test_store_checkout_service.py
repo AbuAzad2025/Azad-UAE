@@ -47,9 +47,7 @@ class TestOrderTokens:
 
 class TestNormalizePhone:
     def test_strips_and_validates(self):
-        assert (
-            StoreCheckoutService.normalize_phone("+971 50 123 4567") == "971501234567"
-        )
+        assert StoreCheckoutService.normalize_phone("+971 50 123 4567") == "971501234567"
 
     def test_empty_raises(self):
         with pytest.raises(ValueError, match="مطلوب"):
@@ -80,9 +78,7 @@ class TestCustomerAndSeller:
 
     def test_short_name_raises(self, sample_tenant):
         with pytest.raises(ValueError, match="الاسم"):
-            StoreCheckoutService.get_or_create_customer(
-                sample_tenant.id, "X", "05012345678"
-            )
+            StoreCheckoutService.get_or_create_customer(sample_tenant.id, "X", "05012345678")
 
     def test_resolve_seller_owner_first(self, db_session, sample_tenant, sample_user):
         sample_user.is_owner = True
@@ -102,9 +98,7 @@ class TestCustomerAndSeller:
 class TestBuildLinesFromCart:
     def test_empty_cart_raises(self, sample_tenant, online_warehouse):
         with pytest.raises(ValueError, match="فارغة"):
-            StoreCheckoutService.build_lines_from_cart(
-                sample_tenant.id, {}, online_warehouse.id
-            )
+            StoreCheckoutService.build_lines_from_cart(sample_tenant.id, {}, online_warehouse.id)
 
     def test_builds_line_with_stock(
         self,
@@ -266,9 +260,7 @@ class TestCreateWebOrder:
         mocker.patch(
             "services.store_notification_service.StoreNotificationService.notify_new_order",
         )
-        mark = mocker.patch(
-            "services.store_coupon_service.StoreCouponService.mark_used"
-        )
+        mark = mocker.patch("services.store_coupon_service.StoreCouponService.mark_used")
         sample_user.is_owner = True
         StoreCheckoutService.create_web_order(
             tenant_store,
@@ -325,9 +317,7 @@ class TestCreateWebOrder:
             token = StoreCheckoutService._serializer().dumps(["not", "a", "dict"])
             assert StoreCheckoutService.load_order_token(token) is None
 
-    def test_build_lines_skips_invalid_qty(
-        self, mocker, sample_tenant, online_warehouse, sample_product_with_stock
-    ):
+    def test_build_lines_skips_invalid_qty(self, mocker, sample_tenant, online_warehouse, sample_product_with_stock):
         mocker.patch(
             "services.store_checkout_service.StoreService.online_stock_map",
             return_value={sample_product_with_stock.id: Decimal("10")},
@@ -340,9 +330,7 @@ class TestCreateWebOrder:
                 online_warehouse.id,
             )
 
-    def test_get_or_create_customer_updates_existing_email(
-        self, db_session, sample_tenant
-    ):
+    def test_get_or_create_customer_updates_existing_email(self, db_session, sample_tenant):
         customer = StoreCheckoutService.get_or_create_customer(
             sample_tenant.id,
             "First",
@@ -395,9 +383,7 @@ class TestCreateWebOrder:
             "services.store_checkout_service.SaleService.create_sale",
             return_value=MagicMock(id=1),
         )
-        mocker.patch(
-            "services.store_notification_service.StoreNotificationService.notify_new_order"
-        )
+        mocker.patch("services.store_notification_service.StoreNotificationService.notify_new_order")
         sample_user.is_owner = True
         account = MagicMock(customer_id=999)
         StoreCheckoutService.create_web_order(
@@ -434,9 +420,7 @@ class TestCreateWebOrder:
             "services.store_checkout_service.SaleService.create_sale",
             return_value=sale_mock,
         )
-        mocker.patch(
-            "services.store_notification_service.StoreNotificationService.notify_new_order"
-        )
+        mocker.patch("services.store_notification_service.StoreNotificationService.notify_new_order")
         sample_user.is_owner = True
         StoreCheckoutService.create_web_order(
             tenant_store,
@@ -482,13 +466,9 @@ class TestCreateWebOrder:
             "services.store_checkout_service.SaleService.create_sale",
             return_value=MagicMock(id=1),
         )
-        mocker.patch(
-            "services.store_notification_service.StoreNotificationService.notify_new_order"
-        )
+        mocker.patch("services.store_notification_service.StoreNotificationService.notify_new_order")
         mocker.patch("services.store_coupon_service.StoreCouponService.mark_used")
-        mocker.patch(
-            "extensions.db.session.flush", side_effect=RuntimeError("flush fail")
-        )
+        mocker.patch("extensions.db.session.flush", side_effect=RuntimeError("flush fail"))
         rollback = mocker.patch("extensions.db.session.rollback")
         sample_user.is_owner = True
         with pytest.raises(RuntimeError):
@@ -503,9 +483,7 @@ class TestCreateWebOrder:
                 )
         rollback.assert_called()
 
-    def test_get_or_create_customer_sets_address_when_empty(
-        self, db_session, sample_tenant
-    ):
+    def test_get_or_create_customer_sets_address_when_empty(self, db_session, sample_tenant):
         StoreCheckoutService.get_or_create_customer(
             sample_tenant.id,
             "Addr User",
@@ -562,9 +540,7 @@ class TestCreateWebOrder:
             "services.store_checkout_service.SaleService.create_sale",
             return_value=MagicMock(id=1),
         )
-        mocker.patch(
-            "services.store_notification_service.StoreNotificationService.notify_new_order"
-        )
+        mocker.patch("services.store_notification_service.StoreNotificationService.notify_new_order")
 
         def get_side_effect(model, pk):
             from models import Warehouse as WH, Customer as C

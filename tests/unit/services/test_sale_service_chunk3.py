@@ -92,9 +92,7 @@ class TestCreateSaleSerialBranches:
 
         customer, seller, product = _actors(has_serial_number=True)
         existing = MagicMock(status="sold", warehouse_id=1)
-        with _create_ctx(
-            customer, seller, product, {"serials": ["SN1"]}, expect_error=True
-        ) as (svc, _, _, _):
+        with _create_ctx(customer, seller, product, {"serials": ["SN1"]}, expect_error=True) as (svc, _, _, _):
             with patch("models.ProductSerial") as sn_mod:
                 sn_mod.query.filter_by.return_value.first.return_value = existing
                 with pytest.raises(ValueError, match="غير متاح للبيع"):
@@ -116,9 +114,7 @@ class TestCreateSaleSerialBranches:
 
         customer, seller, product = _actors(has_serial_number=True)
         existing = MagicMock(status="available", warehouse_id=99)
-        with _create_ctx(
-            customer, seller, product, {"serials": ["SN1"]}, expect_error=True
-        ) as (svc, _, _, _):
+        with _create_ctx(customer, seller, product, {"serials": ["SN1"]}, expect_error=True) as (svc, _, _, _):
             with patch("models.ProductSerial") as sn_mod:
                 sn_mod.query.filter_by.return_value.first.return_value = existing
                 with pytest.raises(ValueError, match="مستودع مختلف"):
@@ -138,9 +134,7 @@ class TestCreateSaleSerialBranches:
 
     def test_serial_missing_disallowed(self, app):
         customer, seller, product = _actors(has_serial_number=True)
-        with _create_ctx(
-            customer, seller, product, {"serials": ["SN-NEW"]}, expect_error=True
-        ) as (svc, _, _, _):
+        with _create_ctx(customer, seller, product, {"serials": ["SN-NEW"]}, expect_error=True) as (svc, _, _, _):
             with patch("models.ProductSerial") as sn_mod:
                 sn_mod.query.filter_by.return_value.first.return_value = None
                 with pytest.raises(ValueError, match="غير موجود في النظام"):
@@ -197,9 +191,7 @@ class TestCreateSaleCommissionAndOptions:
     def test_partner_commission_vat_inclusive(self, app):
         customer, seller, product = _actors(
             has_serial_number=False,
-            partner_shares=[
-                MagicMock(partner_customer_id=10, percentage=Decimal("10"))
-            ],
+            partner_shares=[MagicMock(partner_customer_id=10, percentage=Decimal("10"))],
         )
         partner = MagicMock(customer_type="partner")
         with _create_ctx(customer, seller, product) as (svc, stock, db_sess, _):
@@ -383,9 +375,7 @@ class TestCreateSaleCommissionAndOptions:
         wh = MagicMock(id=5, branch_id=2)
         with (
             patch("services.sale_service.StockService") as stock,
-            patch(
-                "services.sale_service.ensure_warehouse_access", return_value=wh
-            ) as ensure,
+            patch("services.sale_service.ensure_warehouse_access", return_value=wh) as ensure,
             patch("services.sale_service.generate_number", return_value="S-WH"),
             patch("services.sale_service.ExchangeRateService") as ex,
             patch("services.sale_service.db.session"),
@@ -426,9 +416,7 @@ class TestFulfillSaleGlBranches:
         }
         defaults.update(patches)
         with (
-            patch.object(
-                SaleService, "has_inventory_posted", return_value=defaults["has_inv"]
-            ),
+            patch.object(SaleService, "has_inventory_posted", return_value=defaults["has_inv"]),
             patch("services.sale_service.StockService") as stock,
             patch("services.sale_service.GLService") as gl,
             patch("services.sale_service.post_or_fail") as post,
@@ -558,9 +546,7 @@ class TestCreatePaymentFxAndGl:
             gl.get_customer_credit_concept.return_value = "AR"
             capp.logger = _logger()
             with pytest.raises(RuntimeError, match="gl fail"):
-                SaleService.create_payment_for_sale(
-                    sale, 100, "cash", currency="AED", exchange_rate=1.0
-                )
+                SaleService.create_payment_for_sale(sale, 100, "cash", currency="AED", exchange_rate=1.0)
 
     def test_fx_loss_branch(self, app):
         from services.sale_service import SaleService
@@ -590,9 +576,7 @@ class TestCreatePaymentFxAndGl:
             gl.get_customer_credit_concept.return_value = "AR"
             gl.get_account_code_for_concept.return_value = "4900"
             db_sess.flush = MagicMock()
-            SaleService.create_payment_for_sale(
-                sale, 100, "cash", currency="USD", exchange_rate=3.5
-            )
+            SaleService.create_payment_for_sale(sale, 100, "cash", currency="USD", exchange_rate=3.5)
         assert post.call_count >= 2
 
     def test_fx_skip_on_second_post_error(self, app):
@@ -628,9 +612,7 @@ class TestCreatePaymentFxAndGl:
             gl.get_account_code_for_concept.return_value = "4900"
             db_sess.flush = MagicMock()
             capp.logger = _logger()
-            result = SaleService.create_payment_for_sale(
-                sale, 100, "cash", currency="USD", exchange_rate=3.5
-            )
+            result = SaleService.create_payment_for_sale(sale, 100, "cash", currency="USD", exchange_rate=3.5)
         assert result is payment
         assert post.call_count >= 2
 

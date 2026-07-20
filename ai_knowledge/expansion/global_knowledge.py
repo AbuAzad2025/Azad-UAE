@@ -151,9 +151,7 @@ class GlobalKnowledgeConnector:
         """جلب أسعار العملات العالمية"""
         try:
             # استخدام API حقيقي لأسعار العملات
-            response = requests.get(
-                "https://api.exchangerate-api.com/v4/latest/AED", timeout=10
-            )
+            response = requests.get("https://api.exchangerate-api.com/v4/latest/AED", timeout=10)
 
             if response.status_code == 200:
                 data = response.json()
@@ -162,9 +160,7 @@ class GlobalKnowledgeConnector:
                     "data": {
                         "base_currency": "AED",
                         "rates": data.get("rates", {}),
-                        "last_updated": data.get(
-                            "date", datetime.now().strftime("%Y-%m-%d")
-                        ),
+                        "last_updated": data.get("date", datetime.now().strftime("%Y-%m-%d")),
                     },
                     "timestamp": datetime.now().isoformat(),
                     "source": "ExchangeRate-API",
@@ -318,33 +314,23 @@ class GlobalExpertiseUpdater:
                 next_topic = learning_path[0] if learning_path else "أساسيات المجال"
             elif current_level == "متوسط":
                 next_level = "متقدم"
-                next_topic = (
-                    learning_path[1] if len(learning_path) > 1 else "مواضيع متقدمة"
-                )
+                next_topic = learning_path[1] if len(learning_path) > 1 else "مواضيع متقدمة"
             elif current_level == "متقدم":
                 next_level = "خبير محلي"
-                next_topic = (
-                    learning_path[2] if len(learning_path) > 2 else "خبرة متخصصة"
-                )
+                next_topic = learning_path[2] if len(learning_path) > 2 else "خبرة متخصصة"
             elif current_level == "خبير محلي":
                 next_level = "خبير إقليمي"
-                next_topic = (
-                    learning_path[3] if len(learning_path) > 3 else "خبرة إقليمية"
-                )
+                next_topic = learning_path[3] if len(learning_path) > 3 else "خبرة إقليمية"
             else:
                 next_level = "خبير عالمي"
-                next_topic = (
-                    learning_path[4] if len(learning_path) > 4 else "خبرة عالمية"
-                )
+                next_topic = learning_path[4] if len(learning_path) > 4 else "خبرة عالمية"
 
             updates[area] = {
                 "current_level": current_level,
                 "next_level": next_level,
                 "next_topic": next_topic,
                 "progress": self._calculate_progress(current_level),
-                "recommendations": self._get_learning_recommendations(
-                    area, global_insights
-                ),
+                "recommendations": self._get_learning_recommendations(area, global_insights),
             }
 
         return updates

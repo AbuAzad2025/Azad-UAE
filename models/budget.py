@@ -13,11 +13,7 @@ class Budget(db.Model):
     """
 
     __tablename__ = "budgets"
-    __table_args__ = (
-        db.UniqueConstraint(
-            "tenant_id", "budget_number", name="uq_budgets_tenant_budget_number"
-        ),
-    )
+    __table_args__ = (db.UniqueConstraint("tenant_id", "budget_number", name="uq_budgets_tenant_budget_number"),)
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -32,9 +28,7 @@ class Budget(db.Model):
 
     # الفترة
     fiscal_year = db.Column(db.Integer, nullable=False, index=True)  # 2025, 2026
-    period_type = db.Column(
-        db.String(20), default="annual"
-    )  # annual, quarterly, monthly
+    period_type = db.Column(db.String(20), default="annual")  # annual, quarterly, monthly
     period_start = db.Column(db.Date, nullable=False)
     period_end = db.Column(db.Date, nullable=False)
 
@@ -45,18 +39,14 @@ class Budget(db.Model):
     variance_percentage = db.Column(db.Numeric(5, 2), default=0)
 
     # الحالة
-    status = db.Column(
-        db.String(20), default="draft", index=True
-    )  # draft, active, closed
+    status = db.Column(db.String(20), default="draft", index=True)  # draft, active, closed
 
     notes = db.Column(db.Text)
 
     # Meta
     created_by = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
     approved_by = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
-    branch_id = db.Column(
-        db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True
-    )  # New Branch ID
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True)  # New Branch ID
     created_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -71,9 +61,7 @@ class Budget(db.Model):
     approved_at = db.Column(db.DateTime)
 
     tenant = db.relationship("Tenant", backref="budgets", foreign_keys=[tenant_id])
-    lines = db.relationship(
-        "BudgetLine", back_populates="budget", cascade="all, delete-orphan"
-    )
+    lines = db.relationship("BudgetLine", back_populates="budget", cascade="all, delete-orphan")
     creator = db.relationship("User", foreign_keys=[created_by])
     approver = db.relationship("User", foreign_keys=[approved_by])
     branch = db.relationship("Branch", backref="budgets", foreign_keys=[branch_id])
@@ -104,9 +92,7 @@ class Budget(db.Model):
         for line in self.lines:
             entry_filters = [
                 GLJournalEntry.tenant_id == self.tenant_id,
-                func.date(GLJournalEntry.entry_date).between(
-                    self.period_start, self.period_end
-                ),
+                func.date(GLJournalEntry.entry_date).between(self.period_start, self.period_end),
             ]
             if self.branch_id is not None:
                 entry_filters.append(GLJournalEntry.branch_id == self.branch_id)
@@ -180,12 +166,8 @@ class BudgetLine(db.Model):
         nullable=False,
         index=True,
     )
-    budget_id = db.Column(
-        db.Integer, db.ForeignKey("budgets.id"), nullable=False, index=True
-    )
-    account_id = db.Column(
-        db.Integer, db.ForeignKey("gl_accounts.id"), nullable=False, index=True
-    )
+    budget_id = db.Column(db.Integer, db.ForeignKey("budgets.id"), nullable=False, index=True)
+    account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id"), nullable=False, index=True)
 
     # المبالغ المخططة
     budgeted_amount = db.Column(db.Numeric(18, 3), nullable=False)

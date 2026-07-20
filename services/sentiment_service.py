@@ -85,19 +85,11 @@ class SentimentAnalyzer:
 
         text_lower = text.lower()
 
-        positive_count = sum(
-            1 for word in SentimentAnalyzer.POSITIVE_WORDS_AR if word in text_lower
-        )
-        positive_count += sum(
-            1 for word in SentimentAnalyzer.POSITIVE_WORDS_EN if word in text_lower
-        )
+        positive_count = sum(1 for word in SentimentAnalyzer.POSITIVE_WORDS_AR if word in text_lower)
+        positive_count += sum(1 for word in SentimentAnalyzer.POSITIVE_WORDS_EN if word in text_lower)
 
-        negative_count = sum(
-            1 for word in SentimentAnalyzer.NEGATIVE_WORDS_AR if word in text_lower
-        )
-        negative_count += sum(
-            1 for word in SentimentAnalyzer.NEGATIVE_WORDS_EN if word in text_lower
-        )
+        negative_count = sum(1 for word in SentimentAnalyzer.NEGATIVE_WORDS_AR if word in text_lower)
+        negative_count += sum(1 for word in SentimentAnalyzer.NEGATIVE_WORDS_EN if word in text_lower)
 
         total_sentiment_words = positive_count + negative_count
         total_words = len(text_lower.split())

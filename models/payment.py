@@ -6,11 +6,7 @@ from utils.constants import normalize_payment_method_code
 
 class Payment(db.Model):
     __tablename__ = "payments"
-    __table_args__ = (
-        db.UniqueConstraint(
-            "tenant_id", "payment_number", name="uq_payments_tenant_payment_number"
-        ),
-    )
+    __table_args__ = (db.UniqueConstraint("tenant_id", "payment_number", name="uq_payments_tenant_payment_number"),)
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -24,9 +20,7 @@ class Payment(db.Model):
     payment_type = db.Column(db.String(20), nullable=False, index=True)
 
     # اتجاه المدفوعات
-    direction = db.Column(
-        db.String(10), default="outgoing", index=True
-    )  # incoming, outgoing
+    direction = db.Column(db.String(10), default="outgoing", index=True)  # incoming, outgoing
 
     sale_id = db.Column(db.Integer, db.ForeignKey("sales.id"), index=True)
     customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), index=True)
@@ -68,9 +62,7 @@ class Payment(db.Model):
     # حالة الدفعة - للشيكات فقط
     # confirmed: مؤكدة (الشيك صُرف)
     # pending: معلقة (الشيك لم يُصرف بعد)
-    payment_confirmed = db.Column(
-        db.Boolean, default=True, index=True
-    )  # True للنقد/بطاقة، False للشيكات المعلقة
+    payment_confirmed = db.Column(db.Boolean, default=True, index=True)  # True للنقد/بطاقة، False للشيكات المعلقة
     confirmation_date = db.Column(db.DateTime)  # تاريخ التأكيد
     rejection_reason = db.Column(db.String(500))  # سبب الرفض
 
@@ -82,9 +74,7 @@ class Payment(db.Model):
     )
     notes = db.Column(db.Text)
 
-    user_id = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=True, index=True
-    )
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True, index=True)
     created_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -98,9 +88,7 @@ class Payment(db.Model):
     supplier = db.relationship("Supplier", foreign_keys=[supplier_id])
     branch = db.relationship("Branch", foreign_keys=[branch_id])
     user = db.relationship("User", foreign_keys=[user_id])
-    cheque = db.relationship(
-        "Cheque", backref="payment_record", foreign_keys=[cheque_id]
-    )
+    cheque = db.relationship("Cheque", backref="payment_record", foreign_keys=[cheque_id])
     tenant = db.relationship("Tenant", backref="payments", foreign_keys=[tenant_id])
 
     def __repr__(self):
@@ -174,11 +162,7 @@ class Payment(db.Model):
 
 class Receipt(db.Model):
     __tablename__ = "receipts"
-    __table_args__ = (
-        db.UniqueConstraint(
-            "tenant_id", "receipt_number", name="uq_receipts_tenant_receipt_number"
-        ),
-    )
+    __table_args__ = (db.UniqueConstraint("tenant_id", "receipt_number", name="uq_receipts_tenant_receipt_number"),)
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -190,19 +174,13 @@ class Receipt(db.Model):
     receipt_number = db.Column(db.String(50), nullable=False, index=True)
 
     # تصنيف مصدر السند
-    source_type = db.Column(
-        db.String(20), default="sale", index=True
-    )  # sale, manual, refund, etc.
+    source_type = db.Column(db.String(20), default="sale", index=True)  # sale, manual, refund, etc.
     source_id = db.Column(db.Integer, index=True)  # ID of the source (sale_id, etc.)
 
     # اتجاه المدفوعات
-    direction = db.Column(
-        db.String(10), default="incoming", index=True
-    )  # incoming, outgoing
+    direction = db.Column(db.String(10), default="incoming", index=True)  # incoming, outgoing
 
-    customer_id = db.Column(
-        db.Integer, db.ForeignKey("customers.id"), nullable=False, index=True
-    )
+    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=False, index=True)
 
     amount = db.Column(db.Numeric(15, 3), nullable=False)
     currency = db.Column(
@@ -246,9 +224,7 @@ class Receipt(db.Model):
     )
     notes = db.Column(db.Text)
 
-    user_id = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=True, index=True
-    )
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True, index=True)
     created_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -259,9 +235,7 @@ class Receipt(db.Model):
     customer = db.relationship("Customer", back_populates="receipts")
     branch = db.relationship("Branch", foreign_keys=[branch_id])
     user = db.relationship("User", foreign_keys=[user_id])
-    cheque = db.relationship(
-        "Cheque", backref="receipt_record", foreign_keys=[cheque_id]
-    )
+    cheque = db.relationship("Cheque", backref="receipt_record", foreign_keys=[cheque_id])
     tenant = db.relationship("Tenant", backref="receipts", foreign_keys=[tenant_id])
 
     def __repr__(self):

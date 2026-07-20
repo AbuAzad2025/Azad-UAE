@@ -63,20 +63,14 @@ class BackupService:
         if is_owner:
             backups = cls.list_backups()
             tenants = Tenant.query.filter_by(is_active=True).order_by(Tenant.name).all()
-            branches = (
-                Branch.query.filter_by(is_active=True).order_by(Branch.name).all()
-            )
+            branches = Branch.query.filter_by(is_active=True).order_by(Branch.name).all()
             stores = TenantStore.query.order_by(TenantStore.store_slug).all()
         else:
             backups = cls.list_backups_for_user(user)
             tenants = []
             active_tid = get_active_tenant_id(user)
             if active_tid:
-                branches = (
-                    Branch.query.filter_by(tenant_id=active_tid, is_active=True)
-                    .order_by(Branch.name)
-                    .all()
-                )
+                branches = Branch.query.filter_by(tenant_id=active_tid, is_active=True).order_by(Branch.name).all()
                 stores = TenantStore.query.filter_by(tenant_id=active_tid).all()
             else:
                 branches = []
@@ -122,9 +116,7 @@ class BackupService:
             import sys
             import traceback
 
-            sys.stderr.write(
-                f"[BACKUP_WARNING] Failed to load JSON file {file_path}: {e}\n"
-            )
+            sys.stderr.write(f"[BACKUP_WARNING] Failed to load JSON file {file_path}: {e}\n")
             traceback.print_exc()
             try:
                 from services.logging_core import LoggingCore
@@ -155,9 +147,7 @@ class BackupService:
             import sys
             import traceback
 
-            sys.stderr.write(
-                f"[BACKUP_WARNING] Failed to write JSON file {file_path}: {e}\n"
-            )
+            sys.stderr.write(f"[BACKUP_WARNING] Failed to write JSON file {file_path}: {e}\n")
             traceback.print_exc()
             try:
                 from services.logging_core import LoggingCore
@@ -305,10 +295,7 @@ class BackupService:
                 from extensions import db
 
                 engine_url = db.engine.url
-            if (
-                "postgresql" not in engine_url.drivername
-                and "postgres" not in engine_url.drivername
-            ):
+            if "postgresql" not in engine_url.drivername and "postgres" not in engine_url.drivername:
                 return None
             host = engine_url.host or "127.0.0.1"
             if str(host).lower() in ("localhost", "::1"):
@@ -354,11 +341,7 @@ class BackupService:
     def _which(cls, exe_name: str) -> Optional[str]:
         exe = str(exe_name)
         path_env = os.environ.get("PATH") or ""
-        exts = (
-            (("",) + tuple(os.environ.get("PATHEXT", "").split(os.pathsep)))
-            if cls._is_windows()
-            else ("",)
-        )
+        exts = (("",) + tuple(os.environ.get("PATHEXT", "").split(os.pathsep))) if cls._is_windows() else ("",)
         for directory in path_env.split(os.pathsep):
             if not directory:
                 continue
@@ -379,21 +362,11 @@ class BackupService:
         if not cls._is_windows():
             return None
         candidates: List[str] = []
-        for pf in filter(
-            None, [os.environ.get("ProgramFiles"), os.environ.get("ProgramFiles(x86)")]
-        ):
-            candidates.extend(
-                glob.glob(os.path.join(pf, "PostgreSQL", "*", "bin", exe_name))
-            )
-            candidates.extend(
-                glob.glob(os.path.join(pf, "PostgreSQL", "*", "bin", exe_name + ".exe"))
-            )
-        candidates.extend(
-            glob.glob(os.path.join("C:\\", "PostgreSQL", "*", "bin", exe_name))
-        )
-        candidates.extend(
-            glob.glob(os.path.join("C:\\", "PostgreSQL", "*", "bin", exe_name + ".exe"))
-        )
+        for pf in filter(None, [os.environ.get("ProgramFiles"), os.environ.get("ProgramFiles(x86)")]):
+            candidates.extend(glob.glob(os.path.join(pf, "PostgreSQL", "*", "bin", exe_name)))
+            candidates.extend(glob.glob(os.path.join(pf, "PostgreSQL", "*", "bin", exe_name + ".exe")))
+        candidates.extend(glob.glob(os.path.join("C:\\", "PostgreSQL", "*", "bin", exe_name)))
+        candidates.extend(glob.glob(os.path.join("C:\\", "PostgreSQL", "*", "bin", exe_name + ".exe")))
         for c in candidates:
             if os.path.isfile(c):
                 return c
@@ -445,15 +418,11 @@ class BackupService:
         try:
             from sqlalchemy import create_engine, text
 
-            url = os.environ.get("DATABASE_URL") or os.environ.get(
-                "SQLALCHEMY_DATABASE_URI"
-            )
+            url = os.environ.get("DATABASE_URL") or os.environ.get("SQLALCHEMY_DATABASE_URI")
             if not url:
                 return None, None
             with create_engine(url).connect() as conn:
-                cur = conn.execute(
-                    text("SELECT version_num FROM alembic_version LIMIT 1")
-                ).scalar()
+                cur = conn.execute(text("SELECT version_num FROM alembic_version LIMIT 1")).scalar()
             return str(cur) if cur else None, str(cur) if cur else None
         except Exception:
             return None, None
@@ -466,11 +435,7 @@ class BackupService:
 
             folder = str(current_app.config.get("UPLOAD_FOLDER") or "")
             if folder:
-                abs_folder = (
-                    folder
-                    if os.path.isabs(folder)
-                    else os.path.join(cls._BASEDIR, folder)
-                )
+                abs_folder = folder if os.path.isabs(folder) else os.path.join(cls._BASEDIR, folder)
                 if abs_folder not in roots and os.path.isdir(abs_folder):
                     roots.append(abs_folder)
         except Exception as exc:
@@ -484,11 +449,7 @@ class BackupService:
             for root_dir in cls._upload_roots():
                 base_name = os.path.relpath(root_dir, cls._BASEDIR).replace("\\", "/")
                 for dirpath, dirnames, filenames in os.walk(root_dir):
-                    dirnames[:] = [
-                        d
-                        for d in dirnames
-                        if d != "__pycache__" and not d.startswith(".")
-                    ]
+                    dirnames[:] = [d for d in dirnames if d != "__pycache__" and not d.startswith(".")]
                     for fn in filenames:
                         if fn.endswith((".pyc", ".log")):
                             continue
@@ -538,9 +499,7 @@ class BackupService:
         try:
             from sqlalchemy import create_engine, text
 
-            url = os.environ.get("DATABASE_URL") or os.environ.get(
-                "SQLALCHEMY_DATABASE_URI"
-            )
+            url = os.environ.get("DATABASE_URL") or os.environ.get("SQLALCHEMY_DATABASE_URI")
             if not url:
                 summary["checks"].append("database_url: missing")
                 return summary
@@ -556,12 +515,7 @@ class BackupService:
                     or 0
                 )
                 dual = int(
-                    conn.execute(
-                        text(
-                            "SELECT COUNT(*) FROM gl_journal_lines "
-                            "WHERE debit > 0 AND credit > 0"
-                        )
-                    ).scalar()
+                    conn.execute(text("SELECT COUNT(*) FROM gl_journal_lines WHERE debit > 0 AND credit > 0")).scalar()
                     or 0
                 )
                 unbal = int(
@@ -576,17 +530,13 @@ class BackupService:
             summary["tables_count"] = tables
             summary["gl_dual_side"] = dual
             summary["unbalanced_journal_entries"] = unbal
-            summary["checks"].append(
-                "basic_integrity: OK" if dual == 0 and unbal == 0 else "WARN"
-            )
+            summary["checks"].append("basic_integrity: OK" if dual == 0 and unbal == 0 else "WARN")
         except Exception as e:
             summary["checks"].append(f"basic_integrity: error ({type(e).__name__})")
         return summary
 
     @classmethod
-    def _run_pg_dump_custom(
-        cls, params: Dict[str, str], dest_file: str
-    ) -> Tuple[bool, str]:
+    def _run_pg_dump_custom(cls, params: Dict[str, str], dest_file: str) -> Tuple[bool, str]:
         pg_dump = cls._resolve_pg_tool("pg_dump", "PG_DUMP_PATH")
         if not pg_dump:
             return (
@@ -630,11 +580,7 @@ class BackupService:
         if not filename or ".." in filename or "/" in filename or "\\" in filename:
             return None
         base = os.path.basename(filename)
-        if (
-            BACKUP_BASENAME_RE.match(base)
-            or BACKUP_BASENAME_LEGACY_RE.match(base)
-            or LEGACY_NAME_RE.match(base)
-        ):
+        if BACKUP_BASENAME_RE.match(base) or BACKUP_BASENAME_LEGACY_RE.match(base) or LEGACY_NAME_RE.match(base):
             return base
         return None
 
@@ -702,9 +648,7 @@ class BackupService:
         uploads_unresolved: Optional[List[str]] = None,
         extra_includes: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
-        includes = list(
-            extra_includes or ["manifest", "env.example.redacted", "README_RESTORE.txt"]
-        )
+        includes = list(extra_includes or ["manifest", "env.example.redacted", "README_RESTORE.txt"])
         return {
             "app_name": "Azad-UAE",
             "backup_version": BACKUP_VERSION,
@@ -782,16 +726,12 @@ class BackupService:
     def _fetch_tenant_row(cls, tenant_id: int) -> Optional[Dict[str, Any]]:
         from sqlalchemy import create_engine, text
 
-        url = os.environ.get("DATABASE_URL") or os.environ.get(
-            "SQLALCHEMY_DATABASE_URI"
-        )
+        url = os.environ.get("DATABASE_URL") or os.environ.get("SQLALCHEMY_DATABASE_URI")
         if not url:
             return None
         with create_engine(url).connect() as conn:
             row = conn.execute(
-                text(
-                    "SELECT id, slug, name, enable_auto_backup FROM tenants WHERE id = :tid"
-                ),
+                text("SELECT id, slug, name, enable_auto_backup FROM tenants WHERE id = :tid"),
                 {"tid": tenant_id},
             ).fetchone()
             if not row:
@@ -813,12 +753,8 @@ class BackupService:
             elif member == "data" and os.path.isdir(path):
                 for root, _, files in os.walk(path):
                     for fn in sorted(files):
-                        rel = os.path.relpath(os.path.join(root, fn), work_dir).replace(
-                            "\\", "/"
-                        )
-                        lines.append(
-                            f"{cls._sha256_file(os.path.join(work_dir, rel))}  {rel}"
-                        )
+                        rel = os.path.relpath(os.path.join(root, fn), work_dir).replace("\\", "/")
+                        lines.append(f"{cls._sha256_file(os.path.join(work_dir, rel))}  {rel}")
         checksums_path = os.path.join(work_dir, "checksums.sha256")
         with open(checksums_path, "w", encoding="utf-8") as f:
             f.write("\n".join(lines) + ("\n" if lines else ""))
@@ -858,9 +794,7 @@ class BackupService:
             return None
 
         if not tenant.get("enable_auto_backup", True):
-            logger.info(
-                "Skipping backup for tenant %s (enable_auto_backup=False)", tenant_id
-            )
+            logger.info("Skipping backup for tenant %s (enable_auto_backup=False)", tenant_id)
             return None
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -879,22 +813,18 @@ class BackupService:
         try:
             from sqlalchemy import create_engine
 
-            url = os.environ.get("DATABASE_URL") or os.environ.get(
-                "SQLALCHEMY_DATABASE_URI"
-            )
+            url = os.environ.get("DATABASE_URL") or os.environ.get("SQLALCHEMY_DATABASE_URI")
             params = cls._parse_db_url(url)
             if not params or not url:
                 return None
 
             with create_engine(url).connect() as conn:
-                tables_payload, row_counts, included, skipped, unresolved = (
-                    export_scoped_database(
-                        conn,
-                        scope,
-                        tenant_id=tenant_id,
-                        branch_id=branch_id,
-                        store_id=store_id,
-                    )
+                tables_payload, row_counts, included, skipped, unresolved = export_scoped_database(
+                    conn,
+                    scope,
+                    tenant_id=tenant_id,
+                    branch_id=branch_id,
+                    store_id=store_id,
                 )
                 upload_paths, upload_unresolved = collect_scoped_upload_paths(
                     conn,
@@ -917,9 +847,7 @@ class BackupService:
             )
 
             uploads_path = os.path.join(work_dir, "uploads.tar.gz")
-            uploads_meta = build_tenant_uploads_archive(
-                upload_paths, uploads_path, cls._BASEDIR
-            )
+            uploads_meta = build_tenant_uploads_archive(upload_paths, uploads_path, cls._BASEDIR)
 
             alembic_current, alembic_heads = cls._alembic_info()
             pre_checks = cls._pre_backup_checks_summary()
@@ -942,12 +870,8 @@ class BackupService:
                 elif member == "data" and os.path.isdir(p):
                     for root, _, files in os.walk(p):
                         for fn in files:
-                            rel = os.path.relpath(
-                                os.path.join(root, fn), work_dir
-                            ).replace("\\", "/")
-                            file_hashes[rel] = cls._sha256_file(
-                                os.path.join(work_dir, rel)
-                            )
+                            rel = os.path.relpath(os.path.join(root, fn), work_dir).replace("\\", "/")
+                            file_hashes[rel] = cls._sha256_file(os.path.join(work_dir, rel))
 
             restore_scope_map = {
                 SCOPE_TENANT: "tenant_same_or_new_with_remap",
@@ -977,21 +901,15 @@ class BackupService:
                 tenant_name=tenant.get("name"),
                 branch_id=branch_id,
                 store_id=store_id,
-                data_filter_summary=scope_filter_summary(
-                    scope, tenant_id, branch_id=branch_id, store_id=store_id
-                ),
+                data_filter_summary=scope_filter_summary(scope, tenant_id, branch_id=branch_id, store_id=store_id),
                 uploads_unresolved=unresolved,
                 extra_includes=archive_members + ["checksums.sha256"],
             )
             manifest["unresolved_references"] = unresolved[:100]
 
-            with open(
-                os.path.join(work_dir, "manifest.json"), "w", encoding="utf-8"
-            ) as f:
+            with open(os.path.join(work_dir, "manifest.json"), "w", encoding="utf-8") as f:
                 json.dump(manifest, f, indent=2, ensure_ascii=False)
-            with open(
-                os.path.join(work_dir, "env.example.redacted"), "w", encoding="utf-8"
-            ) as f:
+            with open(os.path.join(work_dir, "env.example.redacted"), "w", encoding="utf-8") as f:
                 json.dump(cls._build_env_redacted(), f, indent=2)
             cls._write_readme_restore(os.path.join(work_dir, "README_RESTORE.txt"))
 
@@ -1002,9 +920,7 @@ class BackupService:
                         for root, _, files in os.walk(full):
                             for fn in files:
                                 abs_p = os.path.join(root, fn)
-                                arc = os.path.relpath(abs_p, work_dir).replace(
-                                    "\\", "/"
-                                )
+                                arc = os.path.relpath(abs_p, work_dir).replace("\\", "/")
                                 tar.add(abs_p, arcname=arc)
                     elif os.path.isfile(full):
                         tar.add(full, arcname=member)
@@ -1066,14 +982,10 @@ class BackupService:
                 continue
             if scope == "tenant" and active_tid and meta.get("tenant_id") == active_tid:
                 filtered.append(meta)
-            elif (
-                scope == "branch" and active_tid and meta.get("tenant_id") == active_tid
-            ):
+            elif scope == "branch" and active_tid and meta.get("tenant_id") == active_tid:
                 if user_branch_id and meta.get("branch_id") == user_branch_id:
                     filtered.append(meta)
-            elif (
-                scope == "store" and active_tid and meta.get("tenant_id") == active_tid
-            ):
+            elif scope == "store" and active_tid and meta.get("tenant_id") == active_tid:
                 filtered.append(meta)
         return filtered
 
@@ -1231,17 +1143,12 @@ class BackupService:
             try:
                 from sqlalchemy import create_engine, text
 
-                url = os.environ.get("DATABASE_URL") or os.environ.get(
-                    "SQLALCHEMY_DATABASE_URI"
-                )
+                url = os.environ.get("DATABASE_URL") or os.environ.get("SQLALCHEMY_DATABASE_URI")
                 if url:
                     with create_engine(url).connect() as conn:
                         approx_rows = int(
                             conn.execute(
-                                text(
-                                    "SELECT COALESCE(SUM(n_live_tup),0)::bigint "
-                                    "FROM pg_stat_user_tables"
-                                )
+                                text("SELECT COALESCE(SUM(n_live_tup),0)::bigint FROM pg_stat_user_tables")
                             ).scalar()
                             or 0
                         )
@@ -1368,9 +1275,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
         modern = [b for b in cls.list_backups() if b.get("format") == "azad_tar_v1"]
         if len(modern) <= keep:
             return
-        for b in sorted(modern, key=lambda x: x.get("timestamp", ""))[
-            : len(modern) - keep
-        ]:
+        for b in sorted(modern, key=lambda x: x.get("timestamp", ""))[: len(modern) - keep]:
             cls.delete_backup(b["filename"])
 
     @classmethod
@@ -1390,15 +1295,11 @@ This archive does NOT include secrets, .env, or AI runtime memory.
         try:
             from sqlalchemy import create_engine, text
 
-            url = os.environ.get("DATABASE_URL") or os.environ.get(
-                "SQLALCHEMY_DATABASE_URI"
-            )
+            url = os.environ.get("DATABASE_URL") or os.environ.get("SQLALCHEMY_DATABASE_URI")
             if url:
                 with create_engine(url).connect() as conn:
                     rows = conn.execute(
-                        text(
-                            "SELECT id FROM tenants WHERE is_active = TRUE AND enable_auto_backup = TRUE"
-                        )
+                        text("SELECT id FROM tenants WHERE is_active = TRUE AND enable_auto_backup = TRUE")
                     ).fetchall()
                 for (tid,) in rows:
                     cls.create_backup(
@@ -1503,9 +1404,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
         return False
 
     @classmethod
-    def _verify_modern_archive(
-        cls, path: str, result: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _verify_modern_archive(cls, path: str, result: Dict[str, Any]) -> Dict[str, Any]:
         work = tempfile.mkdtemp(prefix="azad_verify_")
         try:
             with tarfile.open(path, "r:gz") as tar:
@@ -1578,9 +1477,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
                         result["errors"].append("pg_restore --list failed")
                         return result
                 else:
-                    result["warnings"].append(
-                        "pg_restore not available; skipped dump list check"
-                    )
+                    result["warnings"].append("pg_restore not available; skipped dump list check")
 
             result["valid"] = True
             result["format"] = "azad_tar_v1"
@@ -1592,9 +1489,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
             shutil.rmtree(work, ignore_errors=True)
 
     @classmethod
-    def _verify_tenant_export(
-        cls, export_path: str, manifest: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _verify_tenant_export(cls, export_path: str, manifest: Dict[str, Any]) -> Dict[str, Any]:
         out: Dict[str, Any] = {"ok": True, "errors": []}
         try:
             with open(export_path, "r", encoding="utf-8") as f:
@@ -1604,18 +1499,14 @@ This archive does NOT include secrets, .env, or AI runtime memory.
 
         scope = manifest.get("backup_scope") or "tenant"
         tid = manifest.get("tenant_id")
-        if doc.get("tenant_id") is not None and int(doc.get("tenant_id") or 0) != int(
-            tid or 0
-        ):
+        if doc.get("tenant_id") is not None and int(doc.get("tenant_id") or 0) != int(tid or 0):
             out["ok"] = False
             out["errors"].append("export tenant_id mismatch manifest")
 
         tenants_rows = (doc.get("tables") or {}).get("tenants") or []
         if len(tenants_rows) != 1:
             out["ok"] = False
-            out["errors"].append(
-                f"tenants row count expected 1 got {len(tenants_rows)}"
-            )
+            out["errors"].append(f"tenants row count expected 1 got {len(tenants_rows)}")
         elif (
             tenants_rows
             and tenants_rows[0].get("id") is not None
@@ -1667,9 +1558,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
             actual = len((doc.get("tables") or {}).get(table) or [])
             if actual != expected:
                 out["ok"] = False
-                out["errors"].append(
-                    f"row count mismatch {table}: {actual} vs {expected}"
-                )
+                out["errors"].append(f"row count mismatch {table}: {actual} vs {expected}")
         return out
 
     @classmethod
@@ -1704,11 +1593,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
         scope = manifest.get("backup_scope") or "system"
         if scope in ("tenant", "branch", "store"):
             src_tid = manifest.get("tenant_id")
-            if (
-                target_tenant_id
-                and int(target_tenant_id) != int(src_tid or -1)
-                and not remap
-            ):
+            if target_tenant_id and int(target_tenant_id) != int(src_tid or -1) and not remap:
                 return {
                     "ok": False,
                     "error": f"{scope} restore to a different tenant_id requires remap=True",
@@ -1723,17 +1608,14 @@ This archive does NOT include secrets, .env, or AI runtime memory.
                     "Set TARGET_TEST_DATABASE_URL to a NEW empty PostgreSQL database",
                     "flask db upgrade  # schema on target",
                     f"POST restore with confirmation={confirm!r}",
-                    "python tools/qa/backup_restore_check.py --scope "
-                    f"{scope} --restore-to-temp-local",
+                    f"python tools/qa/backup_restore_check.py --scope {scope} --restore-to-temp-local",
                 ],
                 "tenant_id": src_tid,
                 "target_tenant_id": target_tenant_id,
                 "remap": remap,
                 "confirmation_required": confirm,
             }
-        target = (
-            target_database_url or ""
-        ).strip() or "postgresql://USER:***@HOST:PORT/NEW_DB_NAME"
+        target = (target_database_url or "").strip() or "postgresql://USER:***@HOST:PORT/NEW_DB_NAME"
         masked_target = "***"
         try:
             p = urlparse(target.replace("postgresql+psycopg2://", "postgresql://", 1))
@@ -1744,9 +1626,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
                 )
         except Exception as exc:
             logging.getLogger(__name__).debug("mask restore target url: %s", exc)
-        pg_restore = (
-            cls._resolve_pg_tool("pg_restore", "PG_RESTORE_PATH") or "pg_restore"
-        )
+        pg_restore = cls._resolve_pg_tool("pg_restore", "PG_RESTORE_PATH") or "pg_restore"
         lines = [
             "# Extract archive first",
             f"tar -xzf {filename} -C /tmp/azad_restore",
@@ -1802,15 +1682,10 @@ This archive does NOT include secrets, .env, or AI runtime memory.
             outcome["details"] = verify
             return outcome
 
-        current_url = (
-            os.environ.get("DATABASE_URL")
-            or os.environ.get("SQLALCHEMY_DATABASE_URI")
-            or ""
-        )
+        current_url = os.environ.get("DATABASE_URL") or os.environ.get("SQLALCHEMY_DATABASE_URI") or ""
         if cls._urls_same_database(current_url, target_database_url):
             outcome["errors"].append(
-                "Target database is the same as current DATABASE_URL. "
-                "Use a different TARGET database."
+                "Target database is the same as current DATABASE_URL. Use a different TARGET database."
             )
             return outcome
 
@@ -1935,9 +1810,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
 
                 iso = verify_scoped_isolation(manifest, work)
                 outcome["archive_verify"] = iso
-                tgt_tid = int(
-                    outcome.get("target_tenant_id") or manifest.get("tenant_id") or 0
-                )
+                tgt_tid = int(outcome.get("target_tenant_id") or manifest.get("tenant_id") or 0)
                 db_v = verify_scoped_restore(
                     target_database_url,
                     manifest,
@@ -1947,8 +1820,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
                 outcome["scoped_verify"] = db_v
                 if not iso.get("ok"):
                     outcome.setdefault("warnings", []).append(
-                        "archive isolation check: "
-                        + "; ".join(iso.get("errors") or [])[:200]
+                        "archive isolation check: " + "; ".join(iso.get("errors") or [])[:200]
                     )
                 if not db_v.get("ok"):
                     outcome["ok"] = False

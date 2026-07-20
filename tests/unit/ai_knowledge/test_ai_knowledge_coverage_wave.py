@@ -12,9 +12,7 @@ import pytest
 
 @pytest.fixture
 def knowledge_path(tmp_path):
-    with patch(
-        "ai_knowledge.get_knowledge_path", side_effect=lambda name: str(tmp_path / name)
-    ):
+    with patch("ai_knowledge.get_knowledge_path", side_effect=lambda name: str(tmp_path / name)):
         yield tmp_path
 
 
@@ -64,9 +62,7 @@ class TestMasterBrainCovWave:
         brain = MasterBrain()
         result = brain.quick_calc("gross_margin", sales=0, cogs=100)
         assert result["success"] is True
-        result2 = brain.quick_calc(
-            "break_even", fixed_costs="bad", price=10, variable_cost=5
-        )
+        result2 = brain.quick_calc("break_even", fixed_costs="bad", price=10, variable_cost=5)
         assert result2["success"] is False
 
     def test_formulas_in_ask(self):
@@ -74,9 +70,7 @@ class TestMasterBrainCovWave:
         from ai_knowledge.agents.master_brain import MasterBrain
 
         brain = MasterBrain()
-        brain.knowledge_base["accounting"] = {
-            "formulas": {"ربح_إجمالي": "الإيرادات - التكاليف"}
-        }
+        brain.knowledge_base["accounting"] = {"formulas": {"ربح_إجمالي": "الإيرادات - التكاليف"}}
         result = brain.ask("ربح إجمالي")
         assert result.get("answer") or result.get("confidence", 0) >= 0
 
@@ -85,9 +79,7 @@ class TestMasterBrainCovWave:
         from ai_knowledge.agents.master_brain import MasterBrain
 
         brain = MasterBrain()
-        brain.knowledge_base["domain_test"] = {
-            "cat": {"item_key": "This is about depreciation info"}
-        }
+        brain.knowledge_base["domain_test"] = {"cat": {"item_key": "This is about depreciation info"}}
         result = brain.explain("depreciation")
         assert "📚" in result
 
@@ -130,11 +122,7 @@ class TestMultiAgentSystemCovWave:
             "sys.modules",
             {
                 "services.ai_service": MagicMock(
-                    AIService=MagicMock(
-                        optimize_inventory_neural=MagicMock(
-                            side_effect=Exception("boom")
-                        )
-                    )
+                    AIService=MagicMock(optimize_inventory_neural=MagicMock(side_effect=Exception("boom")))
                 )
             },
         ):
@@ -521,9 +509,7 @@ class TestDocumentGeneratorCovWave:
 class TestSelfImprovementCovWave:
     @staticmethod
     def _make_engine(tmp_path):
-        with patch(
-            "ai_knowledge.get_knowledge_path", side_effect=lambda n: str(tmp_path / n)
-        ):
+        with patch("ai_knowledge.get_knowledge_path", side_effect=lambda n: str(tmp_path / n)):
             from ai_knowledge.improvement.self_improvement import AzadSelfImprovement
 
             return AzadSelfImprovement()
@@ -537,9 +523,7 @@ class TestSelfImprovementCovWave:
             "current_version": "1.0",
             "next_version": "1.1",
         }
-        (tmp_path / "self_improvement.json").write_text(
-            json.dumps(data), encoding="utf-8"
-        )
+        (tmp_path / "self_improvement.json").write_text(json.dumps(data), encoding="utf-8")
         engine = self._make_engine(tmp_path)
         assert engine.improvement_data["total_improvements"] == 5
 
@@ -551,18 +535,14 @@ class TestSelfImprovementCovWave:
             "monthly_metrics": {},
             "overall_performance": 9.0,
         }
-        (tmp_path / "performance_metrics.json").write_text(
-            json.dumps(data), encoding="utf-8"
-        )
+        (tmp_path / "performance_metrics.json").write_text(json.dumps(data), encoding="utf-8")
         engine = self._make_engine(tmp_path)
         assert engine.performance_metrics.get("overall_performance") == 9.0
 
     def test_load_improvement_goals_exists(self, tmp_path):
         """Line 100: load existing goals file."""
         data = {"short_term_goals": ["goal1"], "long_term_goals": ["goal2"]}
-        (tmp_path / "improvement_goals.json").write_text(
-            json.dumps(data), encoding="utf-8"
-        )
+        (tmp_path / "improvement_goals.json").write_text(json.dumps(data), encoding="utf-8")
         engine = self._make_engine(tmp_path)
         assert "goal1" in engine.improvement_goals.get("short_term_goals", [])
 
@@ -581,15 +561,11 @@ class TestSelfImprovementCovWave:
     def test_analyze_trend_slow_stable(self, tmp_path):
         """Lines 408-411: slow/stable/zero trends."""
         engine = self._make_engine(tmp_path)
-        engine.improvement_data["improvement_history"] = [
-            {"improvement": 0.015} for _ in range(10)
-        ]
+        engine.improvement_data["improvement_history"] = [{"improvement": 0.015} for _ in range(10)]
         result = engine._calculate_improvement_trend()
         assert result in ["تحسن بطيء", "تحسن مستقر", "ثابت"]
 
-        engine.improvement_data["improvement_history"] = [
-            {"improvement": 0.0} for _ in range(10)
-        ]
+        engine.improvement_data["improvement_history"] = [{"improvement": 0.0} for _ in range(10)]
         assert engine._calculate_improvement_trend() == "ثابت"
 
     def test_evolve_high_score(self, tmp_path):
@@ -801,9 +777,7 @@ class TestExternalLearningCovWave:
         )
 
         el = ExternalLearning()
-        with patch.object(
-            el, "_extract_knowledge", side_effect=Exception("extract fail")
-        ):
+        with patch.object(el, "_extract_knowledge", side_effect=Exception("extract fail")):
             result = el.learn_from_source("wikipedia", "test", "content")
         assert result["success"] is False
 
@@ -872,9 +846,7 @@ class TestNeuralEngineCovWave:
     def test_predict_demand_exception(self):
         """Lines 1776-1778: predict_product_demand exception."""
         engine = self._make_engine()
-        with patch.object(
-            engine, "_predict_demand_internal", side_effect=Exception("boom")
-        ):
+        with patch.object(engine, "_predict_demand_internal", side_effect=Exception("boom")):
             result = engine.predict_product_demand(1)
         assert result == {"forecast": [], "total_expected": 0}
 
@@ -962,9 +934,7 @@ class TestTransformersBrainCovWave:
         from ai_knowledge.neural.transformers_brain import TransformersBrain
 
         brain = TransformersBrain()
-        entities = brain._extract_entities(
-            "ضريبة مخزون قيد 100", ["ضريبة", "مخزون", "قيد"]
-        )
+        entities = brain._extract_entities("ضريبة مخزون قيد 100", ["ضريبة", "مخزون", "قيد"])
         assert "ضريبة" in entities["tax_terms"]
         assert "مخزون" in entities["management_terms"]
 
@@ -1131,9 +1101,7 @@ class TestSecurityRulesCovWave:
         """Line 44: email/phone partial mask + non-string email fallback."""
         from ai_knowledge.specialized.security_rules import SecurityRules
 
-        result = SecurityRules.filter_sensitive_data(
-            {"email": "test@example.com", "name": "Ali"}
-        )
+        result = SecurityRules.filter_sensitive_data({"email": "test@example.com", "name": "Ali"})
         assert "@***.***" in result["email"]
         result2 = SecurityRules.filter_sensitive_data({"email": 12345})
         assert result2["email"] == 12345
@@ -1180,6 +1148,4 @@ class TestTrainerCovWave:
             mock_ql.return_value = MagicMock()
             with patch("ai_knowledge.core.learning_system.learning_system") as mock_ls:
                 mock_ls.learn_from_interaction.side_effect = Exception("save fail")
-                trainer.train_from_feedback(
-                    "question", "answer", user_id=1, tenant_id=1
-                )
+                trainer.train_from_feedback("question", "answer", user_id=1, tenant_id=1)

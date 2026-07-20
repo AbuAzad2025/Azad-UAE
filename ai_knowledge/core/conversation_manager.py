@@ -37,9 +37,7 @@ class ConversationManager:
             "simple": "بسيط ومباشر",
         }
 
-    def start_conversation(
-        self, user_id: int, user_info: Optional[dict] = None
-    ) -> dict:
+    def start_conversation(self, user_id: int, user_info: Optional[dict] = None) -> dict:
         """بدء محادثة جديدة"""
         self.active_conversations[user_id] = {
             "user_id": user_id,
@@ -144,17 +142,11 @@ class ConversationManager:
         # تحديد النية
         if any(kw in message_lower for kw in ["سعر", "price", "كم", "how much"]):
             intent = "pricing_query"
-        elif any(
-            kw in message_lower for kw in ["توقع", "predict", "متوقع", "forecast"]
-        ):
+        elif any(kw in message_lower for kw in ["توقع", "predict", "متوقع", "forecast"]):
             intent = "prediction_query"
-        elif any(
-            kw in message_lower for kw in ["محاسبة", "قيد", "accounting", "journal"]
-        ):
+        elif any(kw in message_lower for kw in ["محاسبة", "قيد", "accounting", "journal"]):
             intent = "accounting_query"
-        elif any(
-            kw in message_lower for kw in ["صيانة", "maintenance", "إصلاح", "repair"]
-        ):
+        elif any(kw in message_lower for kw in ["صيانة", "maintenance", "إصلاح", "repair"]):
             intent = "maintenance_query"
         elif any(kw in message_lower for kw in ["مخزون", "inventory", "stock"]):
             intent = "inventory_query"
@@ -200,13 +192,9 @@ class ConversationManager:
 
         # الاحتفاظ بآخر 10 نيات فقط
         if len(conversation["context"]["intent_history"]) > 10:
-            conversation["context"]["intent_history"] = conversation["context"][
-                "intent_history"
-            ][-10:]
+            conversation["context"]["intent_history"] = conversation["context"]["intent_history"][-10:]
 
-    def _generate_response(
-        self, user_id: int, _message: str, intent: str, _entities: dict
-    ) -> dict:
+    def _generate_response(self, user_id: int, _message: str, intent: str, _entities: dict) -> dict:
         """توليد الرد المناسب"""
         conversation = self.active_conversations[user_id]
         style = conversation.get("style", "professional")

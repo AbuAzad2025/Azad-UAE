@@ -25,9 +25,7 @@ def send_invoice(sale_id):
 
     pdf_url = request.form.get("pdf_url")
 
-    result = WhatsAppService.send_invoice(
-        phone=sale.customer.phone, invoice_number=sale.sale_number, pdf_url=pdf_url
-    )
+    result = WhatsAppService.send_invoice(phone=sale.customer.phone, invoice_number=sale.sale_number, pdf_url=pdf_url)
 
     if result["success"]:
         flash(gettext("تم إرسال الفاتورة عبر واتساب بنجاح"), "success")
@@ -69,9 +67,7 @@ def send_reminder(customer_id):
     else:
         from flask import current_app
 
-        current_app.logger.error(
-            f"WhatsApp send reminder failed: {result.get('error')}"
-        )
+        current_app.logger.error(f"WhatsApp send reminder failed: {result.get('error')}")
         from utils.error_messages import ErrorMessages
 
         flash(ErrorMessages.whatsapp_failed(), "danger")

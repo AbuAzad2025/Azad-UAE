@@ -57,9 +57,7 @@ class TestStockCommands:
             },
         ):
             runner = cli_app.test_cli_runner()
-            result = runner.invoke(
-                args=["reconcile-stock", "--tenant-id", "3", "--commit"]
-            )
+            result = runner.invoke(args=["reconcile-stock", "--tenant-id", "3", "--commit"])
         assert result.exit_code == 0
         assert "Dry run" not in result.output
 
@@ -84,9 +82,7 @@ class TestBackupCommands:
             return_value={"success": False},
         ):
             runner = cli_app.test_cli_runner()
-            result = runner.invoke(
-                args=["backup", "--scope", "tenant", "--tenant-id", "1"]
-            )
+            result = runner.invoke(args=["backup", "--scope", "tenant", "--tenant-id", "1"])
         assert result.exit_code != 0
 
 

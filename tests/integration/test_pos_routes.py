@@ -238,11 +238,7 @@ class TestPOSSession:
 
         from models import GLJournalEntry
 
-        gl = (
-            GLJournalEntry.query.filter_by(tenant_id=tenant.id)
-            .order_by(GLJournalEntry.id.desc())
-            .first()
-        )
+        gl = GLJournalEntry.query.filter_by(tenant_id=tenant.id).order_by(GLJournalEntry.id.desc()).first()
         if gl:
             total_dr = sum(Decimal(str(line.debit or 0)) for line in gl.lines)
             total_cr = sum(Decimal(str(line.credit or 0)) for line in gl.lines)
@@ -664,9 +660,7 @@ class TestPOSSession:
                 },
                 content_type="application/json",
             )
-        assert resp.status_code == 403, (
-            f"Expected 403, got {resp.status_code}: {resp.get_json()}"
-        )
+        assert resp.status_code == 403, f"Expected 403, got {resp.status_code}: {resp.get_json()}"
 
     def test_pos_sale_on_customer_credit(self, app, db_session, client):
         """POS sale on credit defers payment — sale has balance_due > 0."""
@@ -881,16 +875,12 @@ class TestPOSSession:
 
         from utils.pos_helpers import create_pos_session
 
-        s1 = create_pos_session(
-            user=user1, branch_id=branch.id, opening_balance=Decimal("300")
-        )
+        s1 = create_pos_session(user=user1, branch_id=branch.id, opening_balance=Decimal("300"))
         db_session.flush()
         assert s1.status == "open"
         assert float(s1.opening_balance_cash) == 300.0
 
-        s2 = create_pos_session(
-            user=user2, branch_id=branch.id, opening_balance=Decimal("500")
-        )
+        s2 = create_pos_session(user=user2, branch_id=branch.id, opening_balance=Decimal("500"))
         db_session.flush()
         assert s2.status == "open"
         assert float(s2.opening_balance_cash) == 500.0

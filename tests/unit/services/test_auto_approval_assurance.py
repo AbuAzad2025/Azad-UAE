@@ -47,14 +47,8 @@ class TestApprovePendingDonations:
             (24, 25, 1),
         ],
     )
-    def test_threshold_limits_auto_approval(
-        self, app, mocker, hours_threshold, hours_ago, expected_count
-    ):
-        donations = (
-            [self._donation(hours_ago=hours_ago)]
-            if hours_ago >= hours_threshold
-            else []
-        )
+    def test_threshold_limits_auto_approval(self, app, mocker, hours_threshold, hours_ago, expected_count):
+        donations = [self._donation(hours_ago=hours_ago)] if hours_ago >= hours_threshold else []
         mock_q = MagicMock()
         mock_q.filter.return_value.all.return_value = donations
         mocker.patch("services.auto_approval_service.Donation.query", mock_q)
@@ -64,9 +58,7 @@ class TestApprovePendingDonations:
         from services.auto_approval_service import AutoApprovalService
 
         with app.app_context():
-            result = AutoApprovalService.approve_pending_donations(
-                hours_threshold=hours_threshold
-            )
+            result = AutoApprovalService.approve_pending_donations(hours_threshold=hours_threshold)
 
         assert result["approved_count"] == expected_count
 

@@ -9,9 +9,7 @@ import pytest
 
 @pytest.fixture
 def api_docs_client(app_factory, mocker):
-    mocker.patch(
-        "flask_login.utils._get_user", return_value=MagicMock(is_authenticated=False)
-    )
+    mocker.patch("flask_login.utils._get_user", return_value=MagicMock(is_authenticated=False))
     from routes.api_docs import api_docs_bp
 
     app = app_factory(api_docs_bp)
@@ -54,17 +52,13 @@ class TestApiDocsPublic:
 class TestApiDocsProtection:
     def test_protected_anonymous_404(self, api_docs_client):
         with patch("routes.api_docs._api_docs_public", return_value=False):
-            with patch(
-                "routes.api_docs.current_user", MagicMock(is_authenticated=False)
-            ):
+            with patch("routes.api_docs.current_user", MagicMock(is_authenticated=False)):
                 resp = api_docs_client.get("/api-docs/openapi.json")
         assert resp.status_code == 404
 
     def test_protected_authenticated_ok(self, api_docs_client):
         with patch("routes.api_docs._api_docs_public", return_value=False):
-            with patch(
-                "routes.api_docs.current_user", MagicMock(is_authenticated=True)
-            ):
+            with patch("routes.api_docs.current_user", MagicMock(is_authenticated=True)):
                 resp = api_docs_client.get("/api-docs/openapi.json")
         assert resp.status_code == 200
         assert "servers" not in resp.get_json()

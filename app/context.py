@@ -27,9 +27,7 @@ def register_context_processors(app):
 
     @app.context_processor
     def inject_has_endpoint():
-        return dict(
-            has_endpoint=lambda endpoint: endpoint in current_app.view_functions
-        )
+        return dict(has_endpoint=lambda endpoint: endpoint in current_app.view_functions)
 
     @app.context_processor
     def utility_processor() -> dict[str, Any]:
@@ -79,18 +77,14 @@ def register_context_processors(app):
                     tenant_name = (inv.company_name_en or "").strip() or tenant_name
                     tenant_phone = (inv.phone_1 or "").strip() or tenant_phone
                     tenant_email = (inv.email or "").strip() or tenant_email
-                    tenant_address = (
-                        inv.address_ar or inv.address_en or ""
-                    ).strip() or tenant_address
+                    tenant_address = (inv.address_ar or inv.address_en or "").strip() or tenant_address
                     tenant_logo_url = (inv.logo_url or "").strip() or tenant_logo_url
             if tenant:
                 from utils.tenant_branding import resolve_tenant_branding
 
                 branding = resolve_tenant_branding(tenant.id)
                 tenant_logo_url = branding.get("logo_url") or tenant_logo_url
-                tenant_logo_dark_url = (
-                    branding.get("logo_dark_url") or tenant_logo_dark_url
-                )
+                tenant_logo_dark_url = branding.get("logo_dark_url") or tenant_logo_dark_url
                 tenant_favicon_url = branding.get("favicon_url") or tenant_favicon_url
                 if not tenant_name_ar:
                     tenant_name_ar = branding.get("company_name_ar") or tenant_name_ar
@@ -120,55 +114,39 @@ def register_context_processors(app):
             from models.system_settings import SystemSettings
 
             sys_settings = SystemSettings.get_current()
-            developer_name_ar = (
-                sys_settings.get_custom_setting("developer_name_ar") or ""
-            ).strip() or app.config.get("DEVELOPER_NAME_AR", "")
-            developer_name = (
-                sys_settings.get_custom_setting("developer_name") or ""
-            ).strip() or app.config.get("DEVELOPER_NAME", "")
-            developer_credit = (
-                sys_settings.get_custom_setting("developer_credit") or ""
-            ).strip() or app.config.get("DEVELOPER_CREDIT", "")
-            developer_phone = (
-                sys_settings.get_custom_setting("developer_phone") or ""
-            ).strip() or app.config.get("DEVELOPER_PHONE", "")
-            developer_email = (
-                sys_settings.get_custom_setting("developer_email") or ""
-            ).strip() or app.config.get("DEVELOPER_EMAIL", "")
-            developer_website = (
-                sys_settings.get_custom_setting("developer_website") or ""
-            ).strip() or app.config.get("DEVELOPER_WEBSITE", "")
+            developer_name_ar = (sys_settings.get_custom_setting("developer_name_ar") or "").strip() or app.config.get(
+                "DEVELOPER_NAME_AR", ""
+            )
+            developer_name = (sys_settings.get_custom_setting("developer_name") or "").strip() or app.config.get(
+                "DEVELOPER_NAME", ""
+            )
+            developer_credit = (sys_settings.get_custom_setting("developer_credit") or "").strip() or app.config.get(
+                "DEVELOPER_CREDIT", ""
+            )
+            developer_phone = (sys_settings.get_custom_setting("developer_phone") or "").strip() or app.config.get(
+                "DEVELOPER_PHONE", ""
+            )
+            developer_email = (sys_settings.get_custom_setting("developer_email") or "").strip() or app.config.get(
+                "DEVELOPER_EMAIL", ""
+            )
+            developer_website = (sys_settings.get_custom_setting("developer_website") or "").strip() or app.config.get(
+                "DEVELOPER_WEBSITE", ""
+            )
             developer_whatsapp = (
                 sys_settings.get_custom_setting("developer_whatsapp") or ""
             ).strip() or app.config.get("DEVELOPER_WHATSAPP", "")
-            developer_logo_raw = (
-                sys_settings.get_custom_setting("developer_logo") or ""
-            ).strip()
-            if developer_logo_raw and (
-                ":\\" in developer_logo_raw or ":/" in developer_logo_raw
-            ):
+            developer_logo_raw = (sys_settings.get_custom_setting("developer_logo") or "").strip()
+            if developer_logo_raw and (":\\" in developer_logo_raw or ":/" in developer_logo_raw):
                 developer_logo_raw = ""
             if developer_logo_raw.startswith("/static/"):
                 developer_logo_raw = developer_logo_raw[len("/static/") :]
             if developer_logo_raw.startswith("static/"):
                 developer_logo_raw = developer_logo_raw[len("static/") :]
-            developer_logo = developer_logo_raw or app.config.get(
-                "DEVELOPER_LOGO", "assets/brand/azad/logos/logo.png"
-            )
-            system_default_currency = (
-                sys_settings.default_currency or ""
-            ).strip() or get_system_default_currency()
-            system_currency_symbol = (
-                sys_settings.currency_symbol or ""
-            ).strip() or system_default_currency
-            system_currency_position = (
-                sys_settings.currency_position or ""
-            ).strip() or "after"
-            system_decimal_places = (
-                sys_settings.decimal_places
-                if isinstance(sys_settings.decimal_places, int)
-                else 2
-            )
+            developer_logo = developer_logo_raw or app.config.get("DEVELOPER_LOGO", "assets/brand/azad/logos/logo.png")
+            system_default_currency = (sys_settings.default_currency or "").strip() or get_system_default_currency()
+            system_currency_symbol = (sys_settings.currency_symbol or "").strip() or system_default_currency
+            system_currency_position = (sys_settings.currency_position or "").strip() or "after"
+            system_decimal_places = sys_settings.decimal_places if isinstance(sys_settings.decimal_places, int) else 2
             system_enable_tax = bool(getattr(sys_settings, "enable_tax", True))
             system_default_tax_rate = getattr(sys_settings, "default_tax_rate", None)
             system_enable_pos = bool(getattr(sys_settings, "enable_pos", False))
@@ -198,9 +176,7 @@ def register_context_processors(app):
             developer_email = app.config.get("DEVELOPER_EMAIL", "")
             developer_website = app.config.get("DEVELOPER_WEBSITE", "")
             developer_whatsapp = app.config.get("DEVELOPER_WHATSAPP", "")
-            developer_logo = app.config.get(
-                "DEVELOPER_LOGO", "assets/brand/azad/logos/logo.png"
-            )
+            developer_logo = app.config.get("DEVELOPER_LOGO", "assets/brand/azad/logos/logo.png")
             system_default_currency = get_system_default_currency()
             system_currency_symbol = get_system_default_currency()
             system_currency_position = "after"
@@ -216,9 +192,7 @@ def register_context_processors(app):
                 digits = digits[2:]
             return digits
 
-        developer_whatsapp_link = _normalize_whatsapp_link(
-            developer_whatsapp or developer_phone
-        )
+        developer_whatsapp_link = _normalize_whatsapp_link(developer_whatsapp or developer_phone)
 
         from utils.constants import (
             PERMISSIONS,
@@ -232,18 +206,10 @@ def register_context_processors(app):
         from utils.branching import get_active_branch, get_active_branch_mode
 
         current_user_permissions = []
-        if current_user.is_authenticated and getattr(
-            current_user, "has_permission", None
-        ):
-            current_user_permissions = [
-                c for c in PERMISSION_CODES if current_user.has_permission(c)
-            ]
-        active_branch = (
-            get_active_branch(current_user) if current_user.is_authenticated else None
-        )
-        active_branch_mode = (
-            get_active_branch_mode() if current_user.is_authenticated else "single"
-        )
+        if current_user.is_authenticated and getattr(current_user, "has_permission", None):
+            current_user_permissions = [c for c in PERMISSION_CODES if current_user.has_permission(c)]
+        active_branch = get_active_branch(current_user) if current_user.is_authenticated else None
+        active_branch_mode = get_active_branch_mode() if current_user.is_authenticated else "single"
 
         available_tenants = []
         active_tenant_id = None
@@ -255,10 +221,7 @@ def register_context_processors(app):
                 from models.tenant import Tenant as TenantModel
 
                 available_tenants = (
-                    TenantModel.query.filter_by(is_active=True)
-                    .order_by(TenantModel.id.desc())
-                    .limit(200)
-                    .all()
+                    TenantModel.query.filter_by(is_active=True).order_by(TenantModel.id.desc()).limit(200).all()
                 )
         except Exception as e:
             try:
@@ -290,9 +253,7 @@ def register_context_processors(app):
         }
         from utils.ai_access import get_ai_access_state
 
-        ai_access_state = get_ai_access_state(
-            current_user if current_user.is_authenticated else None
-        )
+        ai_access_state = get_ai_access_state(current_user if current_user.is_authenticated else None)
 
         # ── Tenant usage vs limits (for upgrade banners / usage meters) ──
         tenant_usage = {}
@@ -315,9 +276,7 @@ def register_context_processors(app):
                     "users": (
                         "users",
                         "User",
-                        lambda: User.query.filter(
-                            User.tenant_id == _t.id, User.is_active
-                        ).count(),
+                        lambda: User.query.filter(User.tenant_id == _t.id, User.is_active).count(),
                     ),
                     "branches": (
                         "branches",
@@ -327,30 +286,22 @@ def register_context_processors(app):
                     "warehouses": (
                         "warehouses",
                         "Warehouse",
-                        lambda: Warehouse.query.filter(
-                            Warehouse.tenant_id == _t.id
-                        ).count(),
+                        lambda: Warehouse.query.filter(Warehouse.tenant_id == _t.id).count(),
                     ),
                     "products": (
                         "products",
                         "Product",
-                        lambda: Product.query.filter(
-                            Product.tenant_id == _t.id, Product.is_active
-                        ).count(),
+                        lambda: Product.query.filter(Product.tenant_id == _t.id, Product.is_active).count(),
                     ),
                     "customers": (
                         "customers",
                         "Customer",
-                        lambda: Customer.query.filter(
-                            Customer.tenant_id == _t.id, Customer.is_active
-                        ).count(),
+                        lambda: Customer.query.filter(Customer.tenant_id == _t.id, Customer.is_active).count(),
                     ),
                     "suppliers": (
                         "suppliers",
                         "Supplier",
-                        lambda: Supplier.query.filter(
-                            Supplier.tenant_id == _t.id, Supplier.is_active
-                        ).count(),
+                        lambda: Supplier.query.filter(Supplier.tenant_id == _t.id, Supplier.is_active).count(),
                     ),
                 }
                 for key, (_res_name, _model_name, _counter) in _res_map.items():
@@ -359,9 +310,7 @@ def register_context_processors(app):
                     tenant_usage[key] = {
                         "current": cur_val,
                         "max": max_val,
-                        "percent": round(
-                            (cur_val / max_val * 100) if max_val and max_val > 0 else 0
-                        ),
+                        "percent": round((cur_val / max_val * 100) if max_val and max_val > 0 else 0),
                     }
                 tenant_subscription = {
                     "plan": _t.subscription_plan or "basic",
@@ -369,9 +318,7 @@ def register_context_processors(app):
                     "is_active": _t.is_active,
                     "is_suspended": getattr(_t, "is_suspended", False),
                     "expiry_date": (
-                        _t.subscription_end_at.isoformat()
-                        if getattr(_t, "subscription_end_at", None)
-                        else None
+                        _t.subscription_end_at.isoformat() if getattr(_t, "subscription_end_at", None) else None
                     ),
                 }
                 wa_upgrade_link = developer_whatsapp_link or _normalize_whatsapp_link(
@@ -409,15 +356,9 @@ def register_context_processors(app):
                 "ACCOUNTANT": "accountant",
                 "SELLER": "seller",
                 "CASHIER": "cashier",
-                "global_scope": list(
-                    __import__(
-                        "models.enums", fromlist=["RoleEnum"]
-                    ).RoleEnum.global_scope_values()
-                ),
+                "global_scope": list(__import__("models.enums", fromlist=["RoleEnum"]).RoleEnum.global_scope_values()),
                 "company_admin": list(
-                    __import__(
-                        "models.enums", fromlist=["RoleEnum"]
-                    ).RoleEnum.company_admin_values()
+                    __import__("models.enums", fromlist=["RoleEnum"]).RoleEnum.company_admin_values()
                 ),
             },
             "tenant_name_ar": tenant_name_ar,
@@ -432,41 +373,24 @@ def register_context_processors(app):
             or system_default_currency
             or get_system_default_currency(),
             "tenant_currency_symbol": get_currency_symbol(
-                tenant_default_currency
-                or system_default_currency
-                or get_system_default_currency()
+                tenant_default_currency or system_default_currency or get_system_default_currency()
             ),
             "tenant_currency_name_ar": get_currency_name_ar(
-                tenant_default_currency
-                or system_default_currency
-                or get_system_default_currency()
+                tenant_default_currency or system_default_currency or get_system_default_currency()
             ),
-            "tenant_enable_tax": (
-                tenant_enable_tax
-                if tenant_enable_tax is not None
-                else system_enable_tax
-            ),
+            "tenant_enable_tax": (tenant_enable_tax if tenant_enable_tax is not None else system_enable_tax),
             "tenant_default_tax_rate": (
-                tenant_default_tax_rate
-                if tenant_default_tax_rate is not None
-                else system_default_tax_rate
+                tenant_default_tax_rate if tenant_default_tax_rate is not None else system_default_tax_rate
             ),
             "company_name": tenant_name or "ERP System",
             "company_name_ar": tenant_name_ar or "نظام المحاسبة",
             "company_phone": tenant_phone,
             "company_email": tenant_email,
             "company_address": tenant_address,
-            "company_default_currency": tenant_default_currency
-            or system_default_currency,
-            "company_enable_tax": (
-                tenant_enable_tax
-                if tenant_enable_tax is not None
-                else system_enable_tax
-            ),
+            "company_default_currency": tenant_default_currency or system_default_currency,
+            "company_enable_tax": (tenant_enable_tax if tenant_enable_tax is not None else system_enable_tax),
             "company_default_tax_rate": (
-                tenant_default_tax_rate
-                if tenant_default_tax_rate is not None
-                else system_default_tax_rate
+                tenant_default_tax_rate if tenant_default_tax_rate is not None else system_default_tax_rate
             ),
             "system_default_currency": system_default_currency,
             "system_currency_symbol": system_currency_symbol,

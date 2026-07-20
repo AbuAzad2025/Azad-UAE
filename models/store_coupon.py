@@ -7,9 +7,7 @@ from extensions import db
 
 class StoreCoupon(db.Model):
     __tablename__ = "store_coupons"
-    __table_args__ = (
-        db.UniqueConstraint("tenant_id", "code", name="uq_store_coupon_tenant_code"),
-    )
+    __table_args__ = (db.UniqueConstraint("tenant_id", "code", name="uq_store_coupon_tenant_code"),)
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -35,9 +33,7 @@ class StoreCoupon(db.Model):
         index=True,
     )
 
-    tenant = db.relationship(
-        "Tenant", backref=db.backref("store_coupons", lazy="dynamic")
-    )
+    tenant = db.relationship("Tenant", backref=db.backref("store_coupons", lazy="dynamic"))
 
     @staticmethod
     def normalize_code(code: str) -> str:
@@ -51,8 +47,6 @@ class StoreCoupon(db.Model):
             return False
         if self.valid_until and self.valid_until.replace(tzinfo=timezone.utc) < now:
             return False
-        if self.max_uses is not None and int(self.used_count or 0) >= int(
-            self.max_uses
-        ):
+        if self.max_uses is not None and int(self.used_count or 0) >= int(self.max_uses):
             return False
         return True

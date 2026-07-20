@@ -62,9 +62,7 @@ class TestIndexSale:
         result = ElasticsearchService.index_sale({"id": 42, "sale_number": "S-1"})
         assert result["success"] is True
         assert result["id"] == "42"
-        mock_es.index.assert_called_once_with(
-            index="sales", id=42, document={"id": 42, "sale_number": "S-1"}
-        )
+        mock_es.index.assert_called_once_with(index="sales", id=42, document={"id": 42, "sale_number": "S-1"})
 
     def test_index_timeout_returns_error(self, mocker):
         mocker.patch(
@@ -128,9 +126,7 @@ class TestSearchSales:
 
         from services.elasticsearch_service import ElasticsearchService
 
-        result = ElasticsearchService.search_sales(
-            "S-9", filters={"tenant_id": 1}, limit=10
-        )
+        result = ElasticsearchService.search_sales("S-9", filters={"tenant_id": 1}, limit=10)
         assert result["success"] is True
         assert result["total"] == 1
         body = mock_es.search.call_args.kwargs["body"]
@@ -178,9 +174,7 @@ class TestFallbackSearch:
 
         from services.elasticsearch_service import ElasticsearchService
 
-        result = ElasticsearchService._fallback_search(
-            "S-5", filters={"tenant_id": 1}, limit=25
-        )
+        result = ElasticsearchService._fallback_search("S-5", filters={"tenant_id": 1}, limit=25)
         assert result["fallback"] is True
         assert result["results"][0]["sale_number"] == "S-5"
         assert mock_q.filter.call_count >= 2

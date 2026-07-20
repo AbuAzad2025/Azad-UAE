@@ -108,9 +108,7 @@ def _other_tenant(db_session):
 
 class TestCreateList:
     def test_no_tenant_raises(self, sample_user, mocker):
-        mocker.patch(
-            "services.email_marketing_service.get_active_tenant_id", return_value=None
-        )
+        mocker.patch("services.email_marketing_service.get_active_tenant_id", return_value=None)
         with pytest.raises(ValueError, match="شركة نشطة"):
             EmailMarketingService.create_list({"name": "X"}, sample_user)
 
@@ -119,9 +117,7 @@ class TestCreateList:
             EmailMarketingService.create_list({}, tenant_user)
 
     def test_creates_list(self, tenant_user, db_session):
-        lst = EmailMarketingService.create_list(
-            {"name": "News", "description": "D"}, tenant_user
-        )
+        lst = EmailMarketingService.create_list({"name": "News", "description": "D"}, tenant_user)
         assert lst.id is not None
         assert lst.name == "News"
 
@@ -133,9 +129,7 @@ class TestCreateList:
 
 class TestListLists:
     def test_no_tenant_returns_empty(self, sample_user, mocker):
-        mocker.patch(
-            "services.email_marketing_service.get_active_tenant_id", return_value=None
-        )
+        mocker.patch("services.email_marketing_service.get_active_tenant_id", return_value=None)
         assert EmailMarketingService.list_lists(sample_user) == []
 
     def test_returns_active_only(self, tenant_user, db_session, sample_tenant):
@@ -157,21 +151,15 @@ class TestSubscribe:
     def test_wrong_tenant_raises(self, tenant_user, db_session, mocker):
         other = _other_tenant(db_session)
         lst = _email_list(db_session, other.id)
-        mocker.patch(
-            "services.email_marketing_service.is_global_owner_user", return_value=False
-        )
+        mocker.patch("services.email_marketing_service.is_global_owner_user", return_value=False)
         with pytest.raises(ValueError, match="لا تنتمي"):
             EmailMarketingService.subscribe(lst.id, "x@y.com", user=tenant_user)
 
     def test_global_owner_other_tenant(self, tenant_user, db_session, mocker):
         other = _other_tenant(db_session)
         lst = _email_list(db_session, other.id)
-        mocker.patch(
-            "services.email_marketing_service.is_global_owner_user", return_value=True
-        )
-        sub = EmailMarketingService.subscribe(
-            lst.id, "owner@example.com", user=tenant_user
-        )
+        mocker.patch("services.email_marketing_service.is_global_owner_user", return_value=True)
+        sub = EmailMarketingService.subscribe(lst.id, "owner@example.com", user=tenant_user)
         assert sub.email == "owner@example.com"
 
     def test_without_user(self, db_session, sample_tenant):
@@ -179,9 +167,7 @@ class TestSubscribe:
         sub = EmailMarketingService.subscribe(lst.id, "public@example.com")
         assert sub.status == "subscribed"
 
-    def test_new_subscriber_with_customer(
-        self, tenant_user, db_session, sample_tenant, sample_customer
-    ):
+    def test_new_subscriber_with_customer(self, tenant_user, db_session, sample_tenant, sample_customer):
         lst = _email_list(db_session, sample_tenant.id)
         sub = EmailMarketingService.subscribe(
             lst.id,
@@ -203,29 +189,19 @@ class TestSubscribe:
         assert sub.status == "subscribed"
         assert sub.unsubscribed_at is None
 
-    def test_existing_subscribed_returns_as_is(
-        self, tenant_user, db_session, sample_tenant
-    ):
+    def test_existing_subscribed_returns_as_is(self, tenant_user, db_session, sample_tenant):
         lst = _email_list(db_session, sample_tenant.id)
         existing = _subscriber(db_session, lst, email="same@example.com")
-        sub = EmailMarketingService.subscribe(
-            lst.id, "same@example.com", user=tenant_user
-        )
+        sub = EmailMarketingService.subscribe(lst.id, "same@example.com", user=tenant_user)
         assert sub.id == existing.id
 
-    def test_commit_failure_on_new(
-        self, tenant_user, db_session, sample_tenant, mocker
-    ):
+    def test_commit_failure_on_new(self, tenant_user, db_session, sample_tenant, mocker):
         lst = _email_list(db_session, sample_tenant.id)
         mocker.patch.object(db.session, "flush", side_effect=RuntimeError("sub fail"))
         with pytest.raises(RuntimeError, match="sub fail"):
-            EmailMarketingService.subscribe(
-                lst.id, "fail@example.com", user=tenant_user
-            )
+            EmailMarketingService.subscribe(lst.id, "fail@example.com", user=tenant_user)
 
-    def test_commit_failure_on_resubscribe(
-        self, tenant_user, db_session, sample_tenant, mocker
-    ):
+    def test_commit_failure_on_resubscribe(self, tenant_user, db_session, sample_tenant, mocker):
         lst = _email_list(db_session, sample_tenant.id)
         _subscriber(db_session, lst, email="old@example.com", status="unsubscribed")
         mocker.patch.object(db.session, "flush", side_effect=RuntimeError("resub fail"))
@@ -256,9 +232,7 @@ class TestUnsubscribe:
     def test_by_tenant_id(self, db_session, sample_tenant):
         lst = _email_list(db_session, sample_tenant.id)
         sub = _subscriber(db_session, lst, email="tenant@example.com")
-        count = EmailMarketingService.unsubscribe(
-            "tenant@example.com", tenant_id=sample_tenant.id
-        )
+        count = EmailMarketingService.unsubscribe("tenant@example.com", tenant_id=sample_tenant.id)
         assert count == 1
         db_session.refresh(sub)
         assert sub.status == "unsubscribed"
@@ -273,9 +247,7 @@ class TestUnsubscribe:
 
 class TestCreateTemplate:
     def test_no_tenant_raises(self, sample_user, mocker):
-        mocker.patch(
-            "services.email_marketing_service.get_active_tenant_id", return_value=None
-        )
+        mocker.patch("services.email_marketing_service.get_active_tenant_id", return_value=None)
         with pytest.raises(ValueError, match="شركة نشطة"):
             EmailMarketingService.create_template({"name": "T"}, sample_user)
 
@@ -310,9 +282,7 @@ class TestCreateTemplate:
 
 class TestListTemplates:
     def test_no_tenant_returns_empty(self, sample_user, mocker):
-        mocker.patch(
-            "services.email_marketing_service.get_active_tenant_id", return_value=None
-        )
+        mocker.patch("services.email_marketing_service.get_active_tenant_id", return_value=None)
         assert EmailMarketingService.list_templates(sample_user) == []
 
     def test_returns_active_templates(self, tenant_user, db_session, sample_tenant):
@@ -327,9 +297,7 @@ class TestListTemplates:
 
 class TestCreateCampaign:
     def test_no_tenant_raises(self, sample_user, mocker):
-        mocker.patch(
-            "services.email_marketing_service.get_active_tenant_id", return_value=None
-        )
+        mocker.patch("services.email_marketing_service.get_active_tenant_id", return_value=None)
         with pytest.raises(ValueError, match="شركة نشطة"):
             EmailMarketingService.create_campaign({"name": "C"}, sample_user)
 
@@ -376,9 +344,7 @@ class TestSendCampaign:
         lst = _email_list(db_session, other.id)
         tpl = _template(db_session, other.id)
         camp = _campaign(db_session, other.id, lst, tpl)
-        mocker.patch(
-            "services.email_marketing_service.is_global_owner_user", return_value=False
-        )
+        mocker.patch("services.email_marketing_service.is_global_owner_user", return_value=False)
         with pytest.raises(ValueError, match="لا تنتمي"):
             EmailMarketingService.send_campaign(camp.id, tenant_user)
 
@@ -405,9 +371,7 @@ class TestSendCampaign:
 
     def test_no_template(self, tenant_user, db_session, sample_tenant):
         lst = _email_list(db_session, sample_tenant.id)
-        camp = EmailCampaign(
-            tenant_id=sample_tenant.id, name="No tpl", list_id=lst.id, status="draft"
-        )
+        camp = EmailCampaign(tenant_id=sample_tenant.id, name="No tpl", list_id=lst.id, status="draft")
         db_session.add(camp)
         db_session.flush()
         with pytest.raises(ValueError, match="قالب"):
@@ -426,9 +390,7 @@ class TestSendCampaign:
         with pytest.raises(ValueError, match="البريد"):
             EmailMarketingService.send_campaign(camp.id, tenant_user)
 
-    def test_sends_and_logs_bounces(
-        self, tenant_user, db_session, sample_tenant, app, mocker
-    ):
+    def test_sends_and_logs_bounces(self, tenant_user, db_session, sample_tenant, app, mocker):
         lst = _email_list(db_session, sample_tenant.id)
         tpl = _template(db_session, sample_tenant.id)
         camp = _campaign(db_session, sample_tenant.id, lst, tpl)
@@ -448,9 +410,7 @@ class TestSendCampaign:
         assert len(logs) == 2
         assert {ok.id, bad.id} == {log.subscriber_id for log in logs}
 
-    def test_uses_template_from_email(
-        self, tenant_user, db_session, sample_tenant, app, mocker
-    ):
+    def test_uses_template_from_email(self, tenant_user, db_session, sample_tenant, app, mocker):
         camp = TestSendCampaign._ready_campaign(db_session, sample_tenant)
         mail = MagicMock()
         app.extensions["mail"] = mail
@@ -463,9 +423,7 @@ class TestSendCampaign:
         EmailMarketingService.send_campaign(camp.id, tenant_user)
         assert captured["sender"] == "noreply@example.com"
 
-    def test_commit_failure_raises(
-        self, tenant_user, db_session, sample_tenant, app, mocker
-    ):
+    def test_commit_failure_raises(self, tenant_user, db_session, sample_tenant, app, mocker):
         camp = TestSendCampaign._ready_campaign(db_session, sample_tenant)
         app.extensions["mail"] = MagicMock()
         mocker.patch.object(db.session, "flush", side_effect=RuntimeError("send fail"))
@@ -483,9 +441,7 @@ class TestGetCampaignStats:
         lst = _email_list(db_session, other.id)
         tpl = _template(db_session, other.id)
         camp = _campaign(db_session, other.id, lst, tpl, status="sent")
-        mocker.patch(
-            "services.email_marketing_service.is_global_owner_user", return_value=False
-        )
+        mocker.patch("services.email_marketing_service.is_global_owner_user", return_value=False)
         with pytest.raises(ValueError, match="لا تنتمي"):
             EmailMarketingService.get_campaign_stats(camp.id, tenant_user)
 
@@ -513,9 +469,7 @@ class TestGetCampaignStats:
 
 class TestListCampaigns:
     def test_no_tenant_returns_empty(self, sample_user, mocker):
-        mocker.patch(
-            "services.email_marketing_service.get_active_tenant_id", return_value=None
-        )
+        mocker.patch("services.email_marketing_service.get_active_tenant_id", return_value=None)
         assert EmailMarketingService.list_campaigns(sample_user) == []
 
     def test_returns_active_campaigns(self, tenant_user, db_session, sample_tenant):

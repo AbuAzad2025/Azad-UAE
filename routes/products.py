@@ -150,11 +150,7 @@ def _validate_product_create_payload(form, *, warehouse_id, initial_stock, cost_
     has_positive_stock = initial_stock > 0
     missing_cost = cost_price <= 0
     if has_positive_stock and missing_cost:
-        errors.append(
-            gettext(
-                "عند إدخال مخزون افتتاحي، يجب تحديد سعر التكلفة (أكبر من صفر) لإتمام التسجيل المحاسبي."
-            )
-        )
+        errors.append(gettext("عند إدخال مخزون افتتاحي، يجب تحديد سعر التكلفة (أكبر من صفر) لإتمام التسجيل المحاسبي."))
     return errors
 
 
@@ -252,9 +248,7 @@ def _parse_product_partners(form):
         if partner_id in seen_partner_ids:
             return None, gettext("⚠️ لا يمكن تكرار نفس الشريك أكثر من مرة لنفس المنتج.")
 
-        partner_customer = (
-            _scoped_customers_query("partner").filter(Customer.id == partner_id).first()
-        )
+        partner_customer = _scoped_customers_query("partner").filter(Customer.id == partner_id).first()
         if not partner_customer:
             return None, gettext("⚠️ الشريك المحدد غير موجود أو غير مُعرّف كـ شريك.")
 
@@ -320,15 +314,11 @@ def _annotate_branch_and_warehouse_info(products, warehouse_ids):
 
     by_product = {}
     for product_id, wh_name, wh_name_ar, branch_name, branch_code in rows:
-        bucket = by_product.setdefault(
-            product_id, {"warehouses": set(), "branches": set()}
-        )
+        bucket = by_product.setdefault(product_id, {"warehouses": set(), "branches": set()})
         if wh_name_ar or wh_name:
             bucket["warehouses"].add((wh_name_ar or wh_name).strip())
         if branch_name:
-            branch_label = (
-                f"{branch_name} ({branch_code})" if branch_code else branch_name
-            )
+            branch_label = f"{branch_name} ({branch_code})" if branch_code else branch_name
             bucket["branches"].add(branch_label.strip())
 
     for product in products:
@@ -465,9 +455,7 @@ def import_products():
                 from models import Warehouse, ProductCategory
 
                 tid = get_active_tenant_id(current_user)
-                warehouse = Warehouse.query.filter_by(
-                    is_active=True, is_main=True, tenant_id=tid
-                ).first()
+                warehouse = Warehouse.query.filter_by(is_active=True, is_main=True, tenant_id=tid).first()
                 if not warehouse:
                     warehouse = Warehouse.query.filter_by(tenant_id=tid).first()
 
@@ -478,21 +466,9 @@ def import_products():
                             if not name or pd.isna(name):
                                 continue
 
-                            price = (
-                                float(row["price"])
-                                if not pd.isna(row["price"])
-                                else 0.0
-                            )
-                            cost = (
-                                float(row.get("cost", 0))
-                                if not pd.isna(row.get("cost"))
-                                else 0.0
-                            )
-                            stock = (
-                                float(row.get("stock", 0))
-                                if not pd.isna(row.get("stock"))
-                                else 0.0
-                            )
+                            price = float(row["price"]) if not pd.isna(row["price"]) else 0.0
+                            cost = float(row.get("cost", 0)) if not pd.isna(row.get("cost")) else 0.0
+                            stock = float(row.get("stock", 0)) if not pd.isna(row.get("stock")) else 0.0
 
                             warranty_days = 0
                             warranty_raw = row.get("warranty", 0)
@@ -511,9 +487,7 @@ def import_products():
                                 barcode = sku
 
                             tid = get_active_tenant_id(current_user)
-                            dup_q = Product.query.filter(
-                                (Product.sku == sku) | (Product.barcode == barcode)
-                            )
+                            dup_q = Product.query.filter((Product.sku == sku) | (Product.barcode == barcode))
                             if tid is not None:
                                 dup_q = dup_q.filter(Product.tenant_id == tid)
                             existing = dup_q.first()
@@ -536,20 +510,12 @@ def import_products():
                                     success_count += 1
                                 else:
                                     error_count += 1
-                                    errors.append(
-                                        gettext(
-                                            f"المنتج {name} موجود مسبقاً (SKU: {sku})"
-                                        )
-                                    )
+                                    errors.append(gettext(f"المنتج {name} موجود مسبقاً (SKU: {sku})"))
                                 continue
 
                             category_name = str(row.get("category", "")).strip()
                             category_id = None
-                            if (
-                                category_name
-                                and not pd.isna(category_name)
-                                and category_name.lower() != "nan"
-                            ):
+                            if category_name and not pd.isna(category_name) and category_name.lower() != "nan":
                                 cat = (
                                     ProductCategory.query.filter_by(tenant_id=tid)
                                     .filter(ProductCategory.name.ilike(category_name))
@@ -590,20 +556,14 @@ def import_products():
 
                         except Exception as e:
                             error_count += 1
-                            errors.append(
-                                gettext(
-                                    f"خطأ في السطر {cast(int, index) + 2}: {str(e)}"
-                                )
-                            )
+                            errors.append(gettext(f"خطأ في السطر {cast(int, index) + 2}: {str(e)}"))
 
                 if success_count > 0:
                     flash(gettext(f"تم استيراد {success_count} منتج بنجاح."), "success")
 
                 if error_count > 0:
                     flash(
-                        gettext(
-                            f"لم يتم استيراد {error_count} منتج. يرجى مراجعة البيانات والمحاولة مرة أخرى."
-                        ),
+                        gettext(f"لم يتم استيراد {error_count} منتج. يرجى مراجعة البيانات والمحاولة مرة أخرى."),
                         "warning",
                     )
                     # Could log errors to file/session to show user
@@ -612,9 +572,7 @@ def import_products():
 
             except Exception as e:
                 flash(
-                    gettext(
-                        "حدث خطأ أثناء معالجة الملف: يرجى التأكد من صحة البيانات وإعادة المحاولة."
-                    ),
+                    gettext("حدث خطأ أثناء معالجة الملف: يرجى التأكد من صحة البيانات وإعادة المحاولة."),
                     "danger",
                 )
                 current_app.logger.error(f"Import Failed: {e}")
@@ -623,9 +581,7 @@ def import_products():
                     try:
                         os.remove(filepath)
                     except Exception:
-                        current_app.logger.exception(
-                            "Failed to remove uploaded temp file"
-                        )
+                        current_app.logger.exception("Failed to remove uploaded temp file")
 
     return render_template("products/import.html")
 
@@ -647,9 +603,7 @@ def import_grid():
     from models import Warehouse
 
     tid = get_active_tenant_id(current_user)
-    warehouse = Warehouse.query.filter_by(
-        is_active=True, is_main=True, tenant_id=tid
-    ).first()
+    warehouse = Warehouse.query.filter_by(is_active=True, is_main=True, tenant_id=tid).first()
     if not warehouse:
         warehouse = Warehouse.query.filter_by(tenant_id=tid).first()
 
@@ -738,11 +692,7 @@ def index():
         products = query.order_by(Product.name).all()
         _annotate_visible_stock(products)
         if stock_filter == "low":
-            products = [
-                p
-                for p in products
-                if 0 < (p.visible_stock or 0) <= (p.min_stock_alert or 0)
-            ]
+            products = [p for p in products if 0 < (p.visible_stock or 0) <= (p.min_stock_alert or 0)]
         elif stock_filter == "out":
             products = [p for p in products if (p.visible_stock or 0) <= 0]
         total = len(products)
@@ -768,15 +718,11 @@ def index():
             query = query.filter(Product.current_stock <= Product.min_stock_alert)
         elif stock_filter == "out":
             query = query.filter(Product.current_stock <= 0)
-        pagination = query.order_by(Product.name).paginate(
-            page=page, per_page=per_page, error_out=False
-        )
+        pagination = query.order_by(Product.name).paginate(page=page, per_page=per_page, error_out=False)
         items = pagination.items
         _annotate_visible_stock(items)
 
-    category_list = ProductCategory.query.filter_by(
-        is_active=True, tenant_id=get_active_tenant_id(current_user)
-    ).all()
+    category_list = ProductCategory.query.filter_by(is_active=True, tenant_id=get_active_tenant_id(current_user)).all()
     show_branch_columns = should_show_all_branch_columns(current_user)
     warehouse_ids = get_accessible_warehouse_ids(current_user)
     if show_branch_columns:
@@ -800,12 +746,8 @@ def create():
 
     form = ProductForm()
 
-    category_list = ProductCategory.query.filter_by(
-        is_active=True, tenant_id=get_active_tenant_id(current_user)
-    ).all()
-    form.category_id.choices = [(0, gettext("بلا"))] + [
-        (c.id, c.name) for c in category_list
-    ]
+    category_list = ProductCategory.query.filter_by(is_active=True, tenant_id=get_active_tenant_id(current_user)).all()
+    form.category_id.choices = [(0, gettext("بلا"))] + [(c.id, c.name) for c in category_list]
     preselected_warehouse_id = request.args.get("warehouse_id", type=int)
     default_industry = _tenant_business_type_default()
     merchants = _scoped_customers_query("merchant").order_by(Customer.name).all()
@@ -846,9 +788,7 @@ def create():
                     warehouse = ensure_warehouse_access(warehouse_id, user=current_user)
                 except ValueError:
                     flash(
-                        gettext(
-                            "المستودع المحدد غير صالح أو غير متاح لك. يرجى اختيار مستودع من القائمة."
-                        ),
+                        gettext("المستودع المحدد غير صالح أو غير متاح لك. يرجى اختيار مستودع من القائمة."),
                         "warning",
                     )
                     warehouses = get_accessible_warehouses(current_user)
@@ -863,14 +803,10 @@ def create():
                         default_industry=default_industry,
                     )
 
-                merchant_customer_id = request.form.get(
-                    "merchant_customer_id", type=int
-                )
+                merchant_customer_id = request.form.get("merchant_customer_id", type=int)
                 if merchant_customer_id:
                     merchant_customer = (
-                        _scoped_customers_query("merchant")
-                        .filter(Customer.id == merchant_customer_id)
-                        .first()
+                        _scoped_customers_query("merchant").filter(Customer.id == merchant_customer_id).first()
                     )
                     if not merchant_customer:
                         flash(
@@ -937,9 +873,7 @@ def create():
                     category_id=(form.category_id.data or None),
                     regular_price=safe_float(request.form.get("regular_price")),
                     merchant_price=safe_float(request.form.get("merchant_price")),
-                    merchant_share=safe_float(
-                        request.form.get("merchant_share"), default=100.0
-                    ),
+                    merchant_share=safe_float(request.form.get("merchant_share"), default=100.0),
                     partner_price=safe_float(request.form.get("partner_price")),
                     cost_price=safe_float(request.form.get("cost_price")),
                     current_stock=0,
@@ -951,8 +885,7 @@ def create():
                     merchant_customer_id=merchant_customer_id or None,
                     has_serial_number=has_serial_number,
                     warranty_days=warranty_days,
-                    industry=request.form.get("industry", default_industry)
-                    or default_industry,
+                    industry=request.form.get("industry", default_industry) or default_industry,
                 )
                 extra_fields = {}
                 for key in request.form:
@@ -968,9 +901,7 @@ def create():
                     if "image" in request.files:
                         file = request.files["image"]
                         if file.filename and product.tenant_id:
-                            image_path = save_uploaded_file(
-                                file, tenant_upload_dir(product.tenant_id, "products")
-                            )
+                            image_path = save_uploaded_file(file, tenant_upload_dir(product.tenant_id, "products"))
                             if image_path:
                                 product.image_url = image_path
 
@@ -989,9 +920,7 @@ def create():
                                 resolve_tenant_base_currency,
                             )
 
-                            tier_currency = resolve_tenant_base_currency(
-                                tenant_id=product.tenant_id
-                            )
+                            tier_currency = resolve_tenant_base_currency(tenant_id=product.tenant_id)
                             tier = ProductPriceTier(
                                 tenant_id=product.tenant_id,
                                 product_id=product.id,
@@ -1045,9 +974,7 @@ def create():
                 for error in errors:
                     flash(gettext(f"⚠️ خطأ في حقل {field}: {error}"), "danger")
 
-    category_list = ProductCategory.query.filter_by(
-        is_active=True, tenant_id=get_active_tenant_id(current_user)
-    ).all()
+    category_list = ProductCategory.query.filter_by(is_active=True, tenant_id=get_active_tenant_id(current_user)).all()
     warehouses = get_accessible_warehouses(current_user)
     partners_json = [{"id": p.id, "name": p.name} for p in partners]
 
@@ -1076,9 +1003,7 @@ def view(**kwargs):
     movements_query = product.stock_movements
     scoped_warehouse_ids = get_accessible_warehouse_ids(current_user)
     if branch_scope_id() is not None:
-        movements_query = movements_query.filter(
-            StockMovement.warehouse_id.in_(scoped_warehouse_ids)
-        )
+        movements_query = movements_query.filter(StockMovement.warehouse_id.in_(scoped_warehouse_ids))
 
     movements = movements_query.order_by(db.desc("created_at")).limit(20).all()
 
@@ -1101,12 +1026,8 @@ def edit(**kwargs):
 
     form = ProductForm(obj=product)
 
-    category_list = ProductCategory.query.filter_by(
-        is_active=True, tenant_id=get_active_tenant_id(current_user)
-    ).all()
-    form.category_id.choices = [(0, gettext("بلا"))] + [
-        (c.id, c.name) for c in category_list
-    ]
+    category_list = ProductCategory.query.filter_by(is_active=True, tenant_id=get_active_tenant_id(current_user)).all()
+    form.category_id.choices = [(0, gettext("بلا"))] + [(c.id, c.name) for c in category_list]
     warehouses = get_accessible_warehouses(current_user)
     merchants = _scoped_customers_query("merchant").order_by(Customer.name).all()
     partners = _scoped_customers_query("partner").order_by(Customer.name).all()
@@ -1123,9 +1044,7 @@ def edit(**kwargs):
             if warehouse_id:
                 ensure_warehouse_access(warehouse_id, user=current_user)
             old_stock_value = (
-                StockService.get_product_stock(
-                    product.id, warehouse_id=warehouse_id, user=current_user
-                )
+                StockService.get_product_stock(product.id, warehouse_id=warehouse_id, user=current_user)
                 if (scoped_branch_id is not None or warehouse_id)
                 else (product.current_stock or 0)
             )
@@ -1149,9 +1068,7 @@ def edit(**kwargs):
             merchant_customer_id = request.form.get("merchant_customer_id", type=int)
             if merchant_customer_id:
                 merchant_customer = (
-                    _scoped_customers_query("merchant")
-                    .filter(Customer.id == merchant_customer_id)
-                    .first()
+                    _scoped_customers_query("merchant").filter(Customer.id == merchant_customer_id).first()
                 )
                 if not merchant_customer:
                     flash(
@@ -1189,21 +1106,11 @@ def edit(**kwargs):
             product.part_number = request.form.get("part_number")
             product.barcode = request.form.get("barcode")
             product.category_id = form.category_id.data or None
-            product.regular_price = safe_float(
-                request.form.get("regular_price"), default=0
-            )
-            product.merchant_price = safe_float(
-                request.form.get("merchant_price"), default=None
-            )
-            product.merchant_share = safe_float(
-                request.form.get("merchant_share"), default=100.0
-            )
-            product.partner_price = safe_float(
-                request.form.get("partner_price"), default=None
-            )
-            product.min_stock_alert = safe_float(
-                request.form.get("min_stock_alert"), default=0
-            )
+            product.regular_price = safe_float(request.form.get("regular_price"), default=0)
+            product.merchant_price = safe_float(request.form.get("merchant_price"), default=None)
+            product.merchant_share = safe_float(request.form.get("merchant_share"), default=100.0)
+            product.partner_price = safe_float(request.form.get("partner_price"), default=None)
+            product.min_stock_alert = safe_float(request.form.get("min_stock_alert"), default=0)
             unit_value = request.form.get("unit")
             if "unit" in request.form:
                 product.unit = unit_value or None
@@ -1211,9 +1118,7 @@ def edit(**kwargs):
             product.description = request.form.get("description")
             product.notes = request.form.get("notes")
             product.merchant_customer_id = merchant_customer_id or None
-            product.industry = (
-                request.form.get("industry", product.industry or "general") or "general"
-            )
+            product.industry = request.form.get("industry", product.industry or "general") or "general"
             extra_fields = dict(product.extra_fields or {})
             for key in request.form:
                 if key.startswith("extra_"):
@@ -1241,9 +1146,7 @@ def edit(**kwargs):
                                 400,
                             )
                         flash(
-                            gettext(
-                                "⚠️ لا يمكن تعديل سعر التكلفة لوجود مخزون. قم بتسوية المخزون أولاً."
-                            ),
+                            gettext("⚠️ لا يمكن تعديل سعر التكلفة لوجود مخزون. قم بتسوية المخزون أولاً."),
                             "warning",
                         )
                         return render_template(
@@ -1322,11 +1225,7 @@ def edit(**kwargs):
                         existing.is_active = False
                 if new_stock is not None and abs(new_stock - old_stock) > 1e-6:
                     if scoped_branch_id is not None and not warehouse_id:
-                        raise ValueError(
-                            gettext(
-                                "يجب اختيار مستودع التعديل عند تغيير مخزون هذا الفرع."
-                            )
-                        )
+                        raise ValueError(gettext("يجب اختيار مستودع التعديل عند تغيير مخزون هذا الفرع."))
                     StockService.adjust_stock(
                         product_id=product.id,
                         quantity=new_stock - old_stock,
@@ -1339,9 +1238,7 @@ def edit(**kwargs):
                 if "image" in request.files:
                     file = request.files["image"]
                     if file.filename and product.tenant_id:
-                        image_path = save_uploaded_file(
-                            file, tenant_upload_dir(product.tenant_id, "products")
-                        )
+                        image_path = save_uploaded_file(file, tenant_upload_dir(product.tenant_id, "products"))
                         if image_path:
                             product.image_url = image_path
 
@@ -1353,12 +1250,8 @@ def edit(**kwargs):
         except Exception as e:
             flash(gettext(f"❌ فشل تحديث المنتج: {str(e)}"), "danger")
 
-    category_list = ProductCategory.query.filter_by(
-        is_active=True, tenant_id=get_active_tenant_id(current_user)
-    ).all()
-    product.visible_stock = StockService.get_product_stock(
-        product.id, user=current_user
-    )
+    category_list = ProductCategory.query.filter_by(is_active=True, tenant_id=get_active_tenant_id(current_user)).all()
+    product.visible_stock = StockService.get_product_stock(product.id, user=current_user)
     partners_json = [{"id": p.id, "name": p.name} for p in partners]
     partner_shares_json = [
         {"partner_customer_id": s.partner_customer_id, "percentage": s.percentage}
@@ -1386,9 +1279,7 @@ def delete(**kwargs):
     product = tenant_get_or_404(Product, record_id)
     if not _ensure_product_scope(product):
         if _wants_json():
-            return jsonify(
-                {"success": False, "error": gettext("المنتج خارج النطاق")}
-            ), 403
+            return jsonify({"success": False, "error": gettext("المنتج خارج النطاق")}), 403
         return render_template("errors/403.html"), 403
 
     try:
@@ -1401,9 +1292,7 @@ def delete(**kwargs):
                     jsonify(
                         {
                             "success": False,
-                            "error": gettext(
-                                "لا يمكن حذف منتج لديه مخزون. قم بتسوية المخزون أولاً."
-                            ),
+                            "error": gettext("لا يمكن حذف منتج لديه مخزون. قم بتسوية المخزون أولاً."),
                         }
                     ),
                     400,
@@ -1438,9 +1327,7 @@ def delete(**kwargs):
                 return jsonify(
                     {
                         "success": True,
-                        "message": gettext(
-                            f'تم إلغاء تفعيل المنتج "{product.name}" (لديه عمليات مسجلة).'
-                        ),
+                        "message": gettext(f'تم إلغاء تفعيل المنتج "{product.name}" (لديه عمليات مسجلة).'),
                     }
                 )
             flash(
@@ -1487,9 +1374,7 @@ def api_search():
     per_page = 20
 
     warehouse_id = request.args.get("warehouse_id", type=int)
-    warehouse_ids = (
-        [warehouse_id] if warehouse_id else get_accessible_warehouse_ids(current_user)
-    )
+    warehouse_ids = [warehouse_id] if warehouse_id else get_accessible_warehouse_ids(current_user)
     products_query = StockService.get_visible_products_query(current_user)
     if query and len(query) >= 1:
         products_query = products_query.filter(
@@ -1519,8 +1404,7 @@ def api_search():
             "price": float(p.regular_price or 0),
             "stock": float(stock_map.get(p.id, p.current_stock or 0) or 0),
             "unit": p.unit,
-            "is_low_stock": float(stock_map.get(p.id, p.current_stock or 0) or 0)
-            <= float(p.min_stock_alert or 0),
+            "is_low_stock": float(stock_map.get(p.id, p.current_stock or 0) or 0) <= float(p.min_stock_alert or 0),
         }
         for p in products
     ]
@@ -1533,9 +1417,7 @@ def api_search():
 @permission_required("manage_products")
 def categories():
     category_list = (
-        ProductCategory.query.filter_by(
-            is_active=True, tenant_id=get_active_tenant_id(current_user)
-        )
+        ProductCategory.query.filter_by(is_active=True, tenant_id=get_active_tenant_id(current_user))
         .order_by(ProductCategory.name)
         .all()
     )
@@ -1549,9 +1431,7 @@ def create_category():
     try:
         data = request.get_json(silent=True) if request.is_json else dict(request.form)
         if request.is_json and data is None:
-            return jsonify(
-                {"success": False, "error": gettext("بيانات غير صحيحة")}
-            ), 400
+            return jsonify({"success": False, "error": gettext("بيانات غير صحيحة")}), 400
 
         name, name_ar, description, err = _category_payload(data)
         if err:
@@ -1618,9 +1498,7 @@ def update_category(**kwargs):
         category = _tenant_category_or_404(record_id)
         data = request.get_json(silent=True) if request.is_json else dict(request.form)
         if request.is_json and data is None:
-            return jsonify(
-                {"success": False, "error": gettext("بيانات غير صحيحة")}
-            ), 400
+            return jsonify({"success": False, "error": gettext("بيانات غير صحيحة")}), 400
 
         name, name_ar, description, err = _category_payload(data)
         if err:
@@ -1712,18 +1590,12 @@ def _get_alternative_warehouses(product_id, exclude_warehouse_id):
     Uses StockService.get_product_stock per warehouse since
     get_branch_stock_map aggregates across all warehouse IDs."""
     accessible = get_accessible_warehouses(current_user)
-    alt_warehouses = [
-        w
-        for w in accessible
-        if not exclude_warehouse_id or w.id != exclude_warehouse_id
-    ]
+    alt_warehouses = [w for w in accessible if not exclude_warehouse_id or w.id != exclude_warehouse_id]
     if not alt_warehouses:
         return []
     results = []
     for w in alt_warehouses:
-        wh_stock = StockService.get_product_stock(
-            product_id, warehouse_id=w.id, user=current_user
-        )
+        wh_stock = StockService.get_product_stock(product_id, warehouse_id=w.id, user=current_user)
         if wh_stock and wh_stock > 0:
             results.append(
                 {
@@ -1742,9 +1614,7 @@ def _wants_json():
     Checks both ``request.is_json`` (Content-Type: application/json) and
     the ``X-Requested-With: XMLHttpRequest`` header used by many front-end
     frameworks."""
-    return (
-        request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest"
-    )
+    return request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
 
 @products_bp.route("/<int:id>/adjust-stock", methods=["POST"])
@@ -1755,9 +1625,7 @@ def adjust_stock(**kwargs):
     product = tenant_get_or_404(Product, record_id)
     if not _ensure_product_scope(product):
         return (
-            jsonify(
-                {"success": False, "message": gettext("المنتج خارج نطاق الفرع الحالي")}
-            ),
+            jsonify({"success": False, "message": gettext("المنتج خارج نطاق الفرع الحالي")}),
             403,
         )
 
@@ -1766,9 +1634,7 @@ def adjust_stock(**kwargs):
         try:
             quantity = require_float(str(request.form.get("quantity", 0)))
         except ValueError:
-            return jsonify(
-                {"success": False, "message": gettext("الكمية غير صحيحة")}
-            ), 422
+            return jsonify({"success": False, "message": gettext("الكمية غير صحيحة")}), 422
         reason = request.form.get("reason", "adjustment")
         notes = request.form.get("notes", "")
         warehouse_id = request.form.get("warehouse_id", type=int)
@@ -1785,9 +1651,7 @@ def adjust_stock(**kwargs):
                     jsonify(
                         {
                             "success": False,
-                            "message": gettext(
-                                "يجب اختيار مستودع داخل الفرع الحالي لتعديل المخزون"
-                            ),
+                            "message": gettext("يجب اختيار مستودع داخل الفرع الحالي لتعديل المخزون"),
                         }
                     ),
                     400,
@@ -1820,18 +1684,14 @@ def adjust_stock(**kwargs):
             new_stock = old_stock - quantity
             if new_stock < 0:
                 try:
-                    alternatives = _get_alternative_warehouses(
-                        product.id, warehouse.id if warehouse else None
-                    )
+                    alternatives = _get_alternative_warehouses(product.id, warehouse.id if warehouse else None)
                 except Exception:
                     alternatives = []
                 return (
                     jsonify(
                         {
                             "success": False,
-                            "message": gettext(
-                                "لا يمكن أن يكون المخزون سالباً — المخزون المتاح غير كافٍ"
-                            ),
+                            "message": gettext("لا يمكن أن يكون المخزون سالباً — المخزون المتاح غير كافٍ"),
                             "insufficient": True,
                             "current_warehouse_id": warehouse.id if warehouse else None,
                             "requested_quantity": quantity,
@@ -1844,9 +1704,7 @@ def adjust_stock(**kwargs):
         elif adjustment_type == "set":
             new_stock = quantity
         else:
-            return jsonify(
-                {"success": False, "message": gettext("نوع التعديل غير صحيح")}
-            ), 400
+            return jsonify({"success": False, "message": gettext("نوع التعديل غير صحيح")}), 400
 
         with atomic_transaction("product_adjust_stock"):
             delta = quantity if adjustment_type != "set" else (new_stock - old_stock)
@@ -1874,9 +1732,7 @@ def adjust_stock(**kwargs):
 
     except Exception:
         current_app.logger.exception("Product stock update failed")
-        return jsonify(
-            {"success": False, "message": gettext("تعذر تحديث المخزون حالياً")}
-        ), 500
+        return jsonify({"success": False, "message": gettext("تعذر تحديث المخزون حالياً")}), 500
 
 
 @products_bp.route("/<int:id>/print-label")
@@ -1894,9 +1750,7 @@ def print_label(**kwargs):
 
         branch_id = report_branch_scope_id()
     except Exception:
-        current_app.logger.exception(
-            "Failed to resolve branch scope for single label print"
-        )
+        current_app.logger.exception("Failed to resolve branch scope for single label print")
     return get_single_label_html(product, branch_id=branch_id, tenant_id=tenant_id)
 
 
@@ -1906,11 +1760,7 @@ def print_label(**kwargs):
 def print_labels():
     from services.label_print_service import get_product_labels_html
 
-    ids = (
-        request.json.get("product_ids", [])
-        if request.is_json
-        else request.form.getlist("product_ids")
-    )
+    ids = request.json.get("product_ids", []) if request.is_json else request.form.getlist("product_ids")
     ids = [int(i) for i in ids if str(i).isdigit()]
     if not ids:
         flash(gettext("اختر منتجات للطباعة."), "warning")
@@ -1922,7 +1772,5 @@ def print_labels():
 
         branch_id = report_branch_scope_id()
     except Exception:
-        current_app.logger.exception(
-            "Failed to resolve branch scope for batch label print"
-        )
+        current_app.logger.exception("Failed to resolve branch scope for batch label print")
     return get_product_labels_html(ids, tenant_id, branch_id=branch_id)

@@ -54,9 +54,7 @@ class PayrollService:
             branch_id=int(branch_id),
             tenant_id=tenant_id,
             joined_date=(
-                datetime.strptime(data.get("joined_date"), "%Y-%m-%d")
-                if data.get("joined_date")
-                else datetime.now()
+                datetime.strptime(data.get("joined_date"), "%Y-%m-%d") if data.get("joined_date") else datetime.now()
             ),
         )
 
@@ -199,19 +197,12 @@ class PayrollService:
         for adv in pending_advances:
             remaining = Decimal(str(adv.remaining_amount or 0))
             if remaining <= Decimal("0"):
-                remaining = Decimal(str(adv.total_amount or 0)) - Decimal(
-                    str(adv.deducted_amount or 0)
-                )
+                remaining = Decimal(str(adv.total_amount or 0)) - Decimal(str(adv.deducted_amount or 0))
                 if remaining < Decimal("0"):
                     remaining = Decimal("0")
             advance_deduction_total += remaining
 
-        net_salary = (
-            basic_amount
-            + Decimal(allowances)
-            - Decimal(deductions)
-            - advance_deduction_total
-        )
+        net_salary = basic_amount + Decimal(allowances) - Decimal(deductions) - advance_deduction_total
 
         # التحقق من عدم وجود راتب مكرر لنفس الموظف/الشهر/السنة
         existing = PayrollTransaction.query.filter_by(
@@ -221,20 +212,14 @@ class PayrollService:
             year=year,
         ).first()
         if existing:
-            raise ValueError(
-                f'تمت معالجة راتب الموظف "{employee.name}" لشهر {month}/{year} مسبقاً.'
-            )
+            raise ValueError(f'تمت معالجة راتب الموظف "{employee.name}" لشهر {month}/{year} مسبقاً.')
 
         # التحقق من أن صافي الراتب غير سالب — خصم جزئي للسلفة
-        actual_deduction = (
-            advance_deduction_total  # المبلغ الذي سيتم خصمه فعلياً من السلف
-        )
+        actual_deduction = advance_deduction_total  # المبلغ الذي سيتم خصمه فعلياً من السلف
         if net_salary < Decimal("0"):
             max_deductible = basic_amount + Decimal(allowances) - Decimal(deductions)
             if max_deductible <= Decimal("0"):
-                raise ValueError(
-                    f'صافي راتب الموظف "{employee.name}" سالب ({net_salary}). لا يمكن صرف الراتب.'
-                )
+                raise ValueError(f'صافي راتب الموظف "{employee.name}" سالب ({net_salary}). لا يمكن صرف الراتب.')
             actual_deduction = max_deductible
             net_salary = Decimal("0")
 
@@ -265,16 +250,12 @@ class PayrollService:
                 break
             remaining = Decimal(str(adv.remaining_amount or 0))
             if remaining <= Decimal("0"):
-                remaining = Decimal(str(adv.total_amount or 0)) - Decimal(
-                    str(adv.deducted_amount or 0)
-                )
+                remaining = Decimal(str(adv.total_amount or 0)) - Decimal(str(adv.deducted_amount or 0))
                 if remaining <= Decimal("0"):
                     continue
             to_deduct = min(remaining, remaining_to_apply)
             adv.deducted_amount = Decimal(str(adv.deducted_amount or 0)) + to_deduct
-            adv.remaining_amount = Decimal(str(adv.total_amount or 0)) - Decimal(
-                str(adv.deducted_amount or 0)
-            )
+            adv.remaining_amount = Decimal(str(adv.total_amount or 0)) - Decimal(str(adv.deducted_amount or 0))
             remaining_to_apply -= to_deduct
             if adv.remaining_amount <= Decimal("0"):
                 adv.is_deducted = True
@@ -504,9 +485,7 @@ class PayrollService:
     @staticmethod
     def generate_branch_payroll(branch_id, month, year, user_id):
         tenant_id = PayrollService._branch_tenant_id(branch_id)
-        employees = Employee.query.filter_by(
-            branch_id=branch_id, tenant_id=tenant_id, is_active=True
-        ).all()
+        employees = Employee.query.filter_by(branch_id=branch_id, tenant_id=tenant_id, is_active=True).all()
 
         generated_count = 0
 

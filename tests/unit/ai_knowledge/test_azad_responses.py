@@ -18,9 +18,7 @@ class TestAzadResponses:
         assert "أزاد" in responses.smart_response("من أنت")
 
     def test_inappropriate_blocked(self, responses):
-        with patch(
-            "ai_knowledge.personality.azad_responses.azad_personality"
-        ) as mock_p:
+        with patch("ai_knowledge.personality.azad_responses.azad_personality") as mock_p:
             mock_p.is_inappropriate_message.return_value = "insult"
             mock_p.get_contextual_response.return_value = "رد محترم"
             assert responses.smart_response("stupid") == "رد محترم"

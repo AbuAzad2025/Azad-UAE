@@ -12,9 +12,7 @@ class TestGetTenantContext:
             "models.invoice_settings.InvoiceSettings.company_print_context",
             return_value=(tenant, settings, company),
         )
-        mocker.patch(
-            "utils.tenant_branding.get_print_header_context", return_value={"logo": "x"}
-        )
+        mocker.patch("utils.tenant_branding.get_print_header_context", return_value={"logo": "x"})
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=5)
 
         from services.print_service import PrintService
@@ -43,9 +41,7 @@ class TestUserContext:
 
     def test_exception_returns_dash(self, mocker):
         bad_user = MagicMock()
-        type(bad_user).full_name = property(
-            lambda self: (_ for _ in ()).throw(RuntimeError("no user"))
-        )
+        type(bad_user).full_name = property(lambda self: (_ for _ in ()).throw(RuntimeError("no user")))
         mocker.patch("services.print_service.current_user", bad_user)
         from services.print_service import PrintService
 
@@ -64,9 +60,7 @@ class TestRenderPrint:
             "services.print_service.PrintService._user_context",
             return_value={"print_user_id": 2},
         )
-        mock_render = mocker.patch(
-            "services.print_service.render_template", return_value="<html/>"
-        )
+        mock_render = mocker.patch("services.print_service.render_template", return_value="<html/>")
         from services.print_service import PrintService
 
         with app.app_context():
@@ -98,9 +92,7 @@ class TestRenderPdf:
 
         real_import = builtins.__import__
 
-        def fake_import(
-            name, globals_dict=None, locals_dict=None, fromlist=(), level=0
-        ):
+        def fake_import(name, globals_dict=None, locals_dict=None, fromlist=(), level=0):
             if name == "weasyprint":
                 raise ImportError("no weasyprint")
             return real_import(name, globals_dict, locals_dict, fromlist, level)
@@ -113,9 +105,7 @@ class TestRenderPdf:
         assert b"WeasyPrint" in result
 
     def test_generation_error_returns_html_bytes(self, app, mocker):
-        mocker.patch(
-            "services.print_service.PrintService.render_print", return_value="<html/>"
-        )
+        mocker.patch("services.print_service.PrintService.render_print", return_value="<html/>")
         fake_wp = MagicMock()
         fake_wp.HTML.return_value.write_pdf.side_effect = RuntimeError("render fail")
         mocker.patch.dict("sys.modules", {"weasyprint": fake_wp})
@@ -142,9 +132,7 @@ class TestAuditPrint:
         mock_session.flush.assert_called_once()
 
     def test_audit_failure_non_blocking(self, app, mocker):
-        mocker.patch(
-            "models.print_history.PrintHistory", side_effect=RuntimeError("db")
-        )
+        mocker.patch("models.print_history.PrintHistory", side_effect=RuntimeError("db"))
         from services.print_service import PrintService
 
         with app.app_context():
@@ -160,9 +148,7 @@ class TestBulkPrint:
         assert "لا توجد مستندات" in html
 
     def test_skips_unknown_doc_types(self, app, mocker):
-        mocker.patch(
-            "services.print_service.PrintService.render_print", return_value="<page/>"
-        )
+        mocker.patch("services.print_service.PrintService.render_print", return_value="<page/>")
         docs = [{"type": "unknown", "context": {}}]
         from services.print_service import PrintService
 
@@ -182,8 +168,6 @@ class TestBulkPrint:
         from services.print_service import PrintService
 
         with app.app_context():
-            html = PrintService.bulk_print_documents(
-                docs, {"invoice": "inv.html"}, tenant_id=1
-            )
+            html = PrintService.bulk_print_documents(docs, {"invoice": "inv.html"}, tenant_id=1)
         assert "page-break" in html
         assert "<p1/>" in html and "<p2/>" in html

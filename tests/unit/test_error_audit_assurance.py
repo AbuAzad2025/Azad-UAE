@@ -65,12 +65,8 @@ class TestFingerprintAndDedup:
     def test_fingerprint_stable_for_same_inputs(self):
         from services.error_audit_service import ErrorAuditService
 
-        fp1 = ErrorAuditService._make_fingerprint(
-            "BACKEND", "ValueError", "svc", "/api/x", "boom"
-        )
-        fp2 = ErrorAuditService._make_fingerprint(
-            "BACKEND", "ValueError", "svc", "/api/x", "boom"
-        )
+        fp1 = ErrorAuditService._make_fingerprint("BACKEND", "ValueError", "svc", "/api/x", "boom")
+        fp2 = ErrorAuditService._make_fingerprint("BACKEND", "ValueError", "svc", "/api/x", "boom")
         assert fp1 == fp2
         assert len(fp1) == 32
 
@@ -179,9 +175,7 @@ class TestLogApi:
 
         from services.error_audit_service import ErrorAuditService
 
-        ErrorAuditService.log(
-            "disk full", level="CRITICAL", category="INFRA", source="backup"
-        )
+        ErrorAuditService.log("disk full", level="CRITICAL", category="INFRA", source="backup")
         assert persist.call_args.kwargs["level"] == "CRITICAL"
 
     def test_dedup_short_circuits_insert(self, mocker):
@@ -197,9 +191,7 @@ class TestLogApi:
 
         from services.error_audit_service import ErrorAuditService
 
-        row_id = ErrorAuditService._persist(
-            "dup error", category="BACKEND", level="ERROR", source="x"
-        )
+        row_id = ErrorAuditService._persist("dup error", category="BACKEND", level="ERROR", source="x")
         assert row_id == 55
         insert.assert_not_called()
 
@@ -323,9 +315,7 @@ class TestPersistPaths:
             "services.error_audit_service.ErrorAuditService._persist",
             return_value=8,
         )
-        mocker.patch(
-            "services.error_audit_service.logger.error", side_effect=RuntimeError("log")
-        )
+        mocker.patch("services.error_audit_service.logger.error", side_effect=RuntimeError("log"))
         from services.error_audit_service import ErrorAuditService
 
         assert ErrorAuditService.log("msg") == 8
@@ -372,9 +362,7 @@ class TestPersistPaths:
         mocker.patch("services.error_audit_service.db.engine.connect", return_value=ctx)
         from services.error_audit_service import ErrorAuditService
 
-        with app.test_request_context(
-            "/api/test", method="POST", json={"password": "secret"}
-        ):
+        with app.test_request_context("/api/test", method="POST", json={"password": "secret"}):
             row_id = ErrorAuditService._persist(
                 "backend fail",
                 category="BACKEND",
@@ -395,12 +383,7 @@ class TestPersistPaths:
         )
         from services.error_audit_service import ErrorAuditService
 
-        assert (
-            ErrorAuditService._persist(
-                "x", category="BACKEND", level="ERROR", source="s"
-            )
-            is None
-        )
+        assert ErrorAuditService._persist("x", category="BACKEND", level="ERROR", source="s") is None
 
     def test_persist_frontend_fingerprint_key(self, mocker):
         mocker.patch(
@@ -442,12 +425,7 @@ class TestPersistPaths:
         mocker.patch("services.error_audit_service.db.engine.connect", return_value=ctx)
         from services.error_audit_service import ErrorAuditService
 
-        assert (
-            ErrorAuditService._persist(
-                "x", category="BACKEND", level="ERROR", source="s"
-            )
-            == 11
-        )
+        assert ErrorAuditService._persist("x", category="BACKEND", level="ERROR", source="s") == 11
 
     def test_get_or_create_request_id_reuses_g(self, app):
         from flask import g
@@ -521,9 +499,7 @@ class TestRequestId:
         from services.error_audit_service import ErrorAuditService
 
         with app.test_request_context("/form", method="POST", data={"username": "a"}):
-            row_id = ErrorAuditService._persist(
-                "form err", category="BACKEND", level="ERROR", source="web"
-            )
+            row_id = ErrorAuditService._persist("form err", category="BACKEND", level="ERROR", source="web")
         assert row_id == 5
 
     def test_persist_user_lookup_failure(self, app, mocker):
@@ -544,12 +520,7 @@ class TestRequestId:
         from services.error_audit_service import ErrorAuditService
 
         with app.test_request_context("/x"):
-            assert (
-                ErrorAuditService._persist(
-                    "x", category="BACKEND", level="ERROR", source="s"
-                )
-                == 6
-            )
+            assert ErrorAuditService._persist("x", category="BACKEND", level="ERROR", source="s") == 6
 
     def test_persist_app_config_failure(self, app, mocker):
         mocker.patch(
@@ -569,12 +540,7 @@ class TestRequestId:
         from services.error_audit_service import ErrorAuditService
 
         with app.test_request_context("/x"):
-            assert (
-                ErrorAuditService._persist(
-                    "x", category="BACKEND", level="ERROR", source="s"
-                )
-                == 7
-            )
+            assert ErrorAuditService._persist("x", category="BACKEND", level="ERROR", source="s") == 7
 
     def test_persist_form_parse_failure(self, app, mocker):
         mocker.patch(
@@ -586,13 +552,9 @@ class TestRequestId:
         bad_request.method = "POST"
         bad_request.headers = {}
         bad_request.is_json = False
-        bad_request.form = MagicMock(
-            to_dict=MagicMock(side_effect=RuntimeError("form"))
-        )
-        mocker.patch("services.error_audit_service.request", bad_request)
-        mocker.patch(
-            "services.error_audit_service.has_request_context", return_value=True
-        )
+        bad_request.form = MagicMock(to_dict=MagicMock(side_effect=RuntimeError("form")))
+        mocker.patch("flask.request", bad_request)
+        mocker.patch("services.error_audit_service.has_request_context", return_value=True)
         conn = MagicMock()
         conn.execute.return_value.fetchone.return_value = (8,)
         ctx = MagicMock()
@@ -601,21 +563,14 @@ class TestRequestId:
         mocker.patch("services.error_audit_service.db.engine.connect", return_value=ctx)
         from services.error_audit_service import ErrorAuditService
 
-        assert (
-            ErrorAuditService._persist(
-                "x", category="BACKEND", level="ERROR", source="s"
-            )
-            == 8
-        )
+        assert ErrorAuditService._persist("x", category="BACKEND", level="ERROR", source="s") == 8
 
     def test_persist_endpoint_parse_failure(self, app, mocker):
         mocker.patch(
             "services.error_audit_service.ErrorAuditService._find_duplicate",
             return_value=None,
         )
-        mocker.patch(
-            "services.error_audit_service.urlparse", side_effect=RuntimeError("parse")
-        )
+        mocker.patch("services.error_audit_service.urlparse", side_effect=RuntimeError("parse"))
         conn = MagicMock()
         conn.execute.return_value.fetchone.return_value = (9,)
         ctx = MagicMock()
@@ -645,12 +600,7 @@ class TestRequestId:
         mocker.patch("sys.stderr.write", side_effect=RuntimeError("stderr"))
         from services.error_audit_service import ErrorAuditService
 
-        assert (
-            ErrorAuditService._persist(
-                "x", category="BACKEND", level="ERROR", source="s"
-            )
-            is None
-        )
+        assert ErrorAuditService._persist("x", category="BACKEND", level="ERROR", source="s") is None
 
     def test_get_or_create_request_id_sets_g(self, app):
         from flask import g
@@ -686,9 +636,4 @@ class TestRequestId:
         from services.error_audit_service import ErrorAuditService
 
         with app.test_request_context("/secure"):
-            assert (
-                ErrorAuditService._persist(
-                    "auth", category="BACKEND", level="ERROR", source="s"
-                )
-                == 12
-            )
+            assert ErrorAuditService._persist("auth", category="BACKEND", level="ERROR", source="s") == 12

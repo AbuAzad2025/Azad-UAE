@@ -30,9 +30,5 @@ class ShopAbandonedCart(db.Model):
         default=lambda: datetime.now(timezone.utc),
     )
 
-    tenant = db.relationship(
-        "Tenant", backref=db.backref("abandoned_carts", lazy="dynamic")
-    )
-    account = db.relationship(
-        "ShopCustomerAccount", backref=db.backref("abandoned_carts", lazy="dynamic")
-    )
+    tenant = db.relationship("Tenant", backref=db.backref("abandoned_carts", lazy="dynamic"))
+    account = db.relationship("ShopCustomerAccount", backref=db.backref("abandoned_carts", lazy="dynamic"))

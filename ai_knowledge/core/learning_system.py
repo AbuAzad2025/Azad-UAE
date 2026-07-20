@@ -63,9 +63,7 @@ class AzadLearningSystem:
             return AzadLearningSystem._default_knowledge()
         exp = data.get("expertise_areas", {})
         if not isinstance(exp, defaultdict):
-            data["expertise_areas"] = defaultdict(
-                int, exp if isinstance(exp, dict) else {}
-            )
+            data["expertise_areas"] = defaultdict(int, exp if isinstance(exp, dict) else {})
         if not isinstance(data.get("failed_responses"), list):
             data["failed_responses"] = []
         if not isinstance(data.get("successful_responses"), dict):
@@ -76,9 +74,7 @@ class AzadLearningSystem:
             if not isinstance(data.get(key), dict):
                 data[key] = {}
         if "learning_stats" not in data or not isinstance(data["learning_stats"], dict):
-            data["learning_stats"] = AzadLearningSystem._default_knowledge()[
-                "learning_stats"
-            ]
+            data["learning_stats"] = AzadLearningSystem._default_knowledge()["learning_stats"]
         return data
 
     @staticmethod
@@ -161,9 +157,7 @@ class AzadLearningSystem:
                 logger.debug("Could not load feedback file: %s", exc)
         return []
 
-    def learn_from_interaction(
-        self, question, response, user_feedback=None, context=None, tenant_id=None
-    ):
+    def learn_from_interaction(self, question, response, user_feedback=None, context=None, tenant_id=None):
         """التعلم من كل تفاعل"""
         ctx = dict(context or {})
         if tenant_id is not None:
@@ -174,8 +168,7 @@ class AzadLearningSystem:
             "response": response,
             "user_feedback": user_feedback,
             "context": ctx,
-            "success": user_feedback is None
-            or user_feedback > 3,  # افتراض نجاح إذا لم يكن هناك تقييم
+            "success": user_feedback is None or user_feedback > 3,  # افتراض نجاح إذا لم يكن هناك تقييم
         }
 
         # إضافة للتفاعلات
@@ -320,11 +313,9 @@ class AzadLearningSystem:
 
     def _save_tenant_data(self, tenant_id: int) -> None:
         try:
-            tenant_interactions = [
-                i
-                for i in self.interactions
-                if i.get("context", {}).get("tenant_id") == tenant_id
-            ][-1000:]
+            tenant_interactions = [i for i in self.interactions if i.get("context", {}).get("tenant_id") == tenant_id][
+                -1000:
+            ]
             interactions_file = self._tenant_path("interactions_log.json", tenant_id)
             with open(interactions_file, "w", encoding="utf-8") as f:
                 json.dump(tenant_interactions, f, ensure_ascii=False, indent=2)
@@ -337,9 +328,7 @@ class AzadLearningSystem:
                 to_save["expertise_areas"] = {}
             prefs = to_save.get("customer_preferences", {})
             if isinstance(prefs, dict):
-                to_save["customer_preferences"] = {
-                    k: v for k, v in prefs.items() if str(k) == str(tenant_id)
-                }
+                to_save["customer_preferences"] = {k: v for k, v in prefs.items() if str(k) == str(tenant_id)}
             with open(knowledge_file, "w", encoding="utf-8") as f:
                 json.dump(to_save, f, ensure_ascii=False, indent=2)
         except Exception as exc:
@@ -378,16 +367,12 @@ class AzadLearningSystem:
     def _update_stats(self) -> None:
         """تحديث الإحصائيات"""
         total_interactions = len(self.interactions)
-        successful_answers = sum(
-            1 for i in self.interactions if i.get("success", False)
-        )
+        successful_answers = sum(1 for i in self.interactions if i.get("success", False))
 
         self.learned_knowledge["learning_stats"] = {
             "total_interactions": total_interactions,
             "successful_answers": successful_answers,
-            "learning_rate": (
-                successful_answers / total_interactions if total_interactions > 0 else 0
-            ),
+            "learning_rate": (successful_answers / total_interactions if total_interactions > 0 else 0),
             "last_updated": datetime.now().isoformat(),
         }
 
@@ -395,22 +380,14 @@ class AzadLearningSystem:
         """الحصول على رؤى التعلم"""
         interactions = self.interactions
         if tenant_id is not None:
-            interactions = [
-                i
-                for i in self.interactions
-                if i.get("context", {}).get("tenant_id") == tenant_id
-            ]
+            interactions = [i for i in self.interactions if i.get("context", {}).get("tenant_id") == tenant_id]
         total_interactions = len(interactions)
         successful_answers = sum(1 for i in interactions if i.get("success", False))
         stats = {
             "total_interactions": total_interactions,
             "successful_answers": successful_answers,
-            "learning_rate": (
-                successful_answers / total_interactions if total_interactions else 0
-            ),
-            "last_updated": self.learned_knowledge.get("learning_stats", {}).get(
-                "last_updated"
-            ),
+            "learning_rate": (successful_answers / total_interactions if total_interactions else 0),
+            "last_updated": self.learned_knowledge.get("learning_stats", {}).get("last_updated"),
         }
         expertise = self.learned_knowledge["expertise_areas"]
 
@@ -451,9 +428,7 @@ class AzadLearningSystem:
         expertise = self.learned_knowledge["expertise_areas"]
         if expertise:
             min_expertise = min(expertise.values())
-            weak_areas = [
-                area for area, count in expertise.items() if count == min_expertise
-            ]
+            weak_areas = [area for area, count in expertise.items() if count == min_expertise]
 
             if weak_areas:
                 recommendations.append(f"ركز على تحسين: {', '.join(weak_areas)}")
@@ -550,10 +525,7 @@ class AzadLearningSystem:
                 self.learned_knowledge["response_strategies"][question_type] = {
                     "common_elements": common_elements,
                     "success_rate": len(responses)
-                    / (
-                        len(responses)
-                        + len(self.learned_knowledge.get("failed_responses", []))
-                    ),
+                    / (len(responses) + len(self.learned_knowledge.get("failed_responses", []))),
                     "last_updated": datetime.now().isoformat(),
                 }
 
@@ -615,15 +587,11 @@ class AzadLearningSystem:
 
         # تطبيق استراتيجيات الرد المكتسبة
         if "response_strategies" in self.learned_knowledge:
-            strategies = self.learned_knowledge["response_strategies"].get(
-                question_type, {}
-            )
+            strategies = self.learned_knowledge["response_strategies"].get(question_type, {})
 
             if strategies:
                 # تحسين الرد بناءً على الاستراتيجيات
-                enhanced_response = self._apply_response_strategies(
-                    base_response, strategies
-                )
+                enhanced_response = self._apply_response_strategies(base_response, strategies)
                 return enhanced_response
 
         return base_response
@@ -641,9 +609,7 @@ class AzadLearningSystem:
 
         # تحسين طول الرد
         if common_elements.get("response_length"):
-            avg_length = sum(common_elements["response_length"]) / len(
-                common_elements["response_length"]
-            )
+            avg_length = sum(common_elements["response_length"]) / len(common_elements["response_length"])
             if len(response) < avg_length * 0.5:
                 # الرد قصير جداً - يمكن إضافة المزيد من التفاصيل
                 pass
@@ -670,9 +636,7 @@ class AzadLearningSystem:
             if len(self.groq_training_log) > 100:
                 self.groq_training_log = self.groq_training_log[-100:]
 
-            self.learn_from_interaction(
-                question, groq_answer, user_feedback="groq_improved"
-            )
+            self.learn_from_interaction(question, groq_answer, user_feedback="groq_improved")
 
         except Exception as e:
             print(f"Groq training error: {e}")

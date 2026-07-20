@@ -63,9 +63,7 @@ class TestSecurityService:
     def test_blacklisted_ip_is_suspicious(self):
         SecurityService._blacklist.add("1.2.3.4")
         with patch.object(NotificationService, "notify_security_alert") as alert:
-            result = SecurityService.detect_suspicious_activity(
-                "1.2.3.4", "Mozilla", "login"
-            )
+            result = SecurityService.detect_suspicious_activity("1.2.3.4", "Mozilla", "login")
         assert result["suspicious"] is True
         assert result["reason"] == "blacklisted_ip"
         alert.assert_called_once()
@@ -84,15 +82,11 @@ class TestSecurityService:
 
     def test_suspicious_user_agent(self):
         with patch.object(NotificationService, "notify_security_alert"):
-            result = SecurityService.detect_suspicious_activity(
-                "8.8.8.8", "Googlebot crawler", "scan"
-            )
+            result = SecurityService.detect_suspicious_activity("8.8.8.8", "Googlebot crawler", "scan")
         assert result["reason"] == "suspicious_user_agent"
 
     def test_clean_activity(self):
-        result = SecurityService.detect_suspicious_activity(
-            "8.8.8.8", "Mozilla/5.0", "login"
-        )
+        result = SecurityService.detect_suspicious_activity("8.8.8.8", "Mozilla/5.0", "login")
         assert result == {"suspicious": False}
 
     def test_log_and_reset_failed_attempts(self):

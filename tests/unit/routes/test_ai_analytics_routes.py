@@ -194,19 +194,13 @@ class TestSmartPrice:
 
     def test_non_json_body_400_not_500(self, view_products_client):
         """Regression: unguarded get_json(silent=True) used to 500 on non-JSON."""
-        resp = view_products_client.post(
-            "/ai/smart-price", data="not json", content_type="text/plain"
-        )
+        resp = view_products_client.post("/ai/smart-price", data="not json", content_type="text/plain")
         assert resp.status_code == 400
         assert resp.get_json()["error"] == "Product and Customer required"
 
     def test_not_found_404(self, view_products_client, mocker):
-        mocker.patch(
-            "services.ai_service.AIService.smart_pricing_engine", return_value=None
-        )
-        resp = view_products_client.post(
-            "/ai/smart-price", json={"product_id": 1, "customer_id": 2}
-        )
+        mocker.patch("services.ai_service.AIService.smart_pricing_engine", return_value=None)
+        resp = view_products_client.post("/ai/smart-price", json={"product_id": 1, "customer_id": 2})
         assert resp.status_code == 404
 
     def test_success_payload_and_call_args(self, view_products_client, mocker):

@@ -57,9 +57,7 @@ class TestPlan:
             GLAccountingSetupService,
             "_build_plan",
             return_value=[
-                SetupPlanAction(
-                    "map_concept", 1, "AR", gl_account_id=5, gl_account_code="1130"
-                ),
+                SetupPlanAction("map_concept", 1, "AR", gl_account_id=5, gl_account_code="1130"),
             ],
         )
         plan = GLAccountingSetupService.plan(1)
@@ -113,9 +111,7 @@ class TestExecute:
         mock_session = mocker.patch("services.gl_accounting_setup.db.session")
         mock_mapping_q = MagicMock()
         mock_mapping_q.filter_by.return_value.first.return_value = None
-        mocker.patch(
-            "services.gl_accounting_setup.GLAccountMapping.query", mock_mapping_q
-        )
+        mocker.patch("services.gl_accounting_setup.GLAccountMapping.query", mock_mapping_q)
         result = GLAccountingSetupService.execute(1, dry_run=True)
         mock_session.rollback.assert_called_once()
         assert len(result.created_accounts) == 1
@@ -150,16 +146,12 @@ class TestExecute:
             GLAccountingSetupService,
             "_build_plan",
             return_value=[
-                SetupPlanAction(
-                    "map_concept", 1, "AR", gl_account_id=5, gl_account_code="1130"
-                ),
+                SetupPlanAction("map_concept", 1, "AR", gl_account_id=5, gl_account_code="1130"),
             ],
         )
         mock_mapping_q = MagicMock()
         mock_mapping_q.filter_by.return_value.first.return_value = MagicMock()
-        mocker.patch(
-            "services.gl_accounting_setup.GLAccountMapping.query", mock_mapping_q
-        )
+        mocker.patch("services.gl_accounting_setup.GLAccountMapping.query", mock_mapping_q)
         mocker.patch("services.gl_accounting_setup.db.session")
         result = GLAccountingSetupService.execute(1, dry_run=False)
         assert result.created_mappings == []
@@ -173,9 +165,7 @@ class TestExecute:
             GLAccountingSetupService,
             "_build_plan",
             return_value=[
-                SetupPlanAction(
-                    "map_concept", 1, "AR", gl_account_id=5, gl_account_code="1130"
-                ),
+                SetupPlanAction("map_concept", 1, "AR", gl_account_id=5, gl_account_code="1130"),
             ],
         )
         mock_mapping_q = MagicMock()
@@ -191,9 +181,7 @@ class TestExecute:
         mock_q = MagicMock()
         mock_q.order_by.return_value.all.return_value = [_tenant()]
         mocker.patch("services.gl_accounting_setup.Tenant.query", mock_q)
-        mocker.patch.object(
-            GLAccountingSetupService, "execute", return_value=MagicMock()
-        )
+        mocker.patch.object(GLAccountingSetupService, "execute", return_value=MagicMock())
         assert len(GLAccountingSetupService.execute_all()) == 1
 
 
@@ -258,17 +246,13 @@ class TestBuildPlan:
                 return cogs
             return None
 
-        mocker.patch.object(
-            GLAccountingSetupService, "_find_best_candidate", side_effect=fake_find
-        )
+        mocker.patch.object(GLAccountingSetupService, "_find_best_candidate", side_effect=fake_find)
         actions = GLAccountingSetupService._build_plan(_tenant())
         alias_actions = [a for a in actions if a.concept_code == "COGS_REVERSAL"]
         assert alias_actions and alias_actions[0].action_type == "map_concept"
 
     def test_skip_when_no_template(self, mocker):
-        mocker.patch.object(
-            GLAccountingSetupService, "_find_best_candidate", return_value=None
-        )
+        mocker.patch.object(GLAccountingSetupService, "_find_best_candidate", return_value=None)
         actions = GLAccountingSetupService._build_plan(_tenant())
         skips = [a for a in actions if a.action_type == "skip"]
         assert skips
@@ -280,9 +264,7 @@ class TestCreateAccount:
         mock_q = MagicMock()
         mock_q.filter_by.return_value.first.return_value = parent
         mocker.patch("services.gl_accounting_setup.GLAccount.query", mock_q)
-        mocker.patch.object(
-            GLAccountingSetupService, "_next_child_code", return_value="1110-B2"
-        )
+        mocker.patch.object(GLAccountingSetupService, "_next_child_code", return_value="1110-B2")
         acc = GLAccountingSetupService._create_account(_tenant(), "CASH")
         assert acc.code == "1110-B2"
         assert acc.liquidity_kind == "cash"
@@ -291,9 +273,7 @@ class TestCreateAccount:
         mock_q = MagicMock()
         mock_q.filter_by.return_value.first.return_value = None
         mocker.patch("services.gl_accounting_setup.GLAccount.query", mock_q)
-        mocker.patch.object(
-            GLAccountingSetupService, "_next_available_code", return_value="4110"
-        )
+        mocker.patch.object(GLAccountingSetupService, "_next_available_code", return_value="4110")
         acc = GLAccountingSetupService._create_account(_tenant(), "SALES_RETURNS")
         assert acc.code == "4110"
 
@@ -343,9 +323,7 @@ class TestCodeAllocation:
 
 class TestSetupPlanAction:
     def test_to_dict(self):
-        action = SetupPlanAction(
-            "map_concept", 1, "AR", gl_account_id=5, gl_account_code="1130"
-        )
+        action = SetupPlanAction("map_concept", 1, "AR", gl_account_id=5, gl_account_code="1130")
         assert action.to_dict()["concept_code"] == "AR"
 
 
@@ -412,9 +390,7 @@ class TestExecuteCommit:
             ],
         )
         acct = _account(7, "1110-B1")
-        mocker.patch.object(
-            GLAccountingSetupService, "_create_account", return_value=acct
-        )
+        mocker.patch.object(GLAccountingSetupService, "_create_account", return_value=acct)
         mock_session = mocker.patch("services.gl_accounting_setup.db.session")
         mock_mapping_q = MagicMock()
         mock_mapping_q.filter_by.return_value.first.return_value = None
@@ -433,9 +409,7 @@ class TestExecuteCommit:
             GLAccountingSetupService,
             "_build_plan",
             return_value=[
-                SetupPlanAction(
-                    "map_concept", 1, "AR", gl_account_id=None, reason="missing"
-                ),
+                SetupPlanAction("map_concept", 1, "AR", gl_account_id=None, reason="missing"),
             ],
         )
         mocker.patch("services.gl_accounting_setup.db.session")
@@ -479,7 +453,4 @@ class TestFindBestCandidateEdge:
         mock_q.filter_by.return_value.first.return_value = parent
         mocker.patch("services.gl_accounting_setup.GLAccount.query", mock_q)
         rule = ConceptSetupRule(parent_code_hint="1110", expected_types=("asset",))
-        assert (
-            GLAccountingSetupService._find_best_candidate(_tenant(), rule).code
-            == "1110-B1"
-        )
+        assert GLAccountingSetupService._find_best_candidate(_tenant(), rule).code == "1110-B1"

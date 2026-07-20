@@ -76,9 +76,7 @@ def _invoke(app, exc):
 
 class TestWantsJsonErrorResponse:
     def test_json_content_type(self, app_with_handlers):
-        with app_with_handlers.test_request_context(
-            "/api/data", content_type="application/json"
-        ):
+        with app_with_handlers.test_request_context("/api/data", content_type="application/json"):
             assert _wants_json_error_response() is True
 
     def test_api_path(self, app_with_handlers):
@@ -86,9 +84,7 @@ class TestWantsJsonErrorResponse:
             assert _wants_json_error_response() is True
 
     def test_xhr_header(self, app_with_handlers):
-        with app_with_handlers.test_request_context(
-            "/page", headers={"X-Requested-With": "XMLHttpRequest"}
-        ):
+        with app_with_handlers.test_request_context("/page", headers={"X-Requested-With": "XMLHttpRequest"}):
             assert _wants_json_error_response() is True
 
     def test_accept_mimetypes_json(self, app_with_handlers):
@@ -238,9 +234,7 @@ class TestHttpErrorHandlers:
 
     def test_handle_http_exception_json(self, app_with_handlers):
         with patch("app.handlers.LoggingCore.log_error"):
-            with app_with_handlers.test_request_context(
-                "/api/data", headers={"Accept": "application/json"}
-            ):
+            with app_with_handlers.test_request_context("/api/data", headers={"Accept": "application/json"}):
                 resp = _invoke(app_with_handlers, BadRequest("bad input"))
         assert resp.status_code == 400
         assert resp.get_json()["success"] is False
@@ -264,9 +258,7 @@ class TestHttpErrorHandlers:
     def test_handle_http_exception_html_returns_exc(self, app_with_handlers):
         with patch("app.handlers.LoggingCore.log_error"):
             with app_with_handlers.test_request_context("/page"):
-                result = _handler(app_with_handlers, BadRequest("bad input"))(
-                    BadRequest("bad input")
-                )
+                result = _handler(app_with_handlers, BadRequest("bad input"))(BadRequest("bad input"))
         assert result.code == 400
 
     def test_handle_404_via_client(self, app_with_handlers):

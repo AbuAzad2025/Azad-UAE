@@ -43,9 +43,7 @@ class TestTrackPerformance:
             return "ok"
 
         with flask_app.test_request_context():
-            with patch(
-                "utils.performance_tracker.time.time", side_effect=[0.0, 0.01, 0.01]
-            ):
+            with patch("utils.performance_tracker.time.time", side_effect=[0.0, 0.01, 0.01]):
                 assert timed_op() == "ok"
             assert g.performance_metrics["timed_op"] == pytest.approx(10.0, rel=1e-3)
 
@@ -56,9 +54,7 @@ class TestTrackPerformance:
 
         with flask_app.test_request_context():
             g.performance_metrics = {"first": 1.0}
-            with patch(
-                "utils.performance_tracker.time.time", side_effect=[0.0, 0.02, 0.02]
-            ):
+            with patch("utils.performance_tracker.time.time", side_effect=[0.0, 0.02, 0.02]):
                 assert second() == 2
             assert g.performance_metrics["first"] == 1.0
             assert "second" in g.performance_metrics

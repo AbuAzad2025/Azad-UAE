@@ -195,9 +195,7 @@ class TestDatabaseMessages:
     def test_whatsapp_failed(self):
         assert "WhatsApp" in ErrorMessages.whatsapp_failed()
 
-    @pytest.mark.parametrize(
-        "entity", ["customer", "product", "sale", "user", "unknown"]
-    )
+    @pytest.mark.parametrize("entity", ["customer", "product", "sale", "user", "unknown"])
     def test_record_not_found(self, entity):
         assert ErrorMessages.record_not_found(entity)
 
@@ -265,9 +263,7 @@ class TestSuccessMessages:
     def test_success_create(self, entity):
         assert ErrorMessages.success_create(entity)
 
-    @pytest.mark.parametrize(
-        "entity", ["customer", "product", "sale", "user", "unknown"]
-    )
+    @pytest.mark.parametrize("entity", ["customer", "product", "sale", "user", "unknown"])
     def test_success_update(self, entity):
         assert ErrorMessages.success_update(entity)
 

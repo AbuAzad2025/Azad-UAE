@@ -21,14 +21,10 @@ class StoreCouponService:
         normalized = StoreCoupon.normalize_code(code)
         if not normalized:
             return None
-        return StoreCoupon.query.filter_by(
-            tenant_id=int(tenant_id), code=normalized
-        ).first()
+        return StoreCoupon.query.filter_by(tenant_id=int(tenant_id), code=normalized).first()
 
     @staticmethod
-    def validate_for_checkout(
-        tenant_id: int, code: str, subtotal: Decimal
-    ) -> tuple[Decimal, StoreCoupon]:
+    def validate_for_checkout(tenant_id: int, code: str, subtotal: Decimal) -> tuple[Decimal, StoreCoupon]:
         coupon = StoreCouponService.get_by_code(tenant_id, code)
         if not coupon:
             raise ValueError("كود الخصم غير صالح.")
@@ -42,9 +38,9 @@ class StoreCouponService:
 
         discount = Decimal("0")
         if coupon.discount_percent and Decimal(str(coupon.discount_percent)) > 0:
-            discount = (
-                subtotal * (Decimal(str(coupon.discount_percent)) / Decimal("100"))
-            ).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+            discount = (subtotal * (Decimal(str(coupon.discount_percent)) / Decimal("100"))).quantize(
+                Decimal("0.001"), rounding=ROUND_HALF_UP
+            )
         elif coupon.discount_amount and Decimal(str(coupon.discount_amount)) > 0:
             discount = Decimal(str(coupon.discount_amount))
 
@@ -85,11 +81,7 @@ class StoreCouponService:
             description=(data.get("description") or "").strip() or None,
             discount_percent=Decimal(str(pct)) if pct else None,
             discount_amount=Decimal(str(amt)) if amt else None,
-            min_order_amount=(
-                Decimal(str(data["min_order_amount"]))
-                if data.get("min_order_amount")
-                else None
-            ),
+            min_order_amount=(Decimal(str(data["min_order_amount"])) if data.get("min_order_amount") else None),
             max_uses=int(data["max_uses"]) if data.get("max_uses") else None,
             is_active=bool(data.get("is_active", True)),
         )
@@ -100,9 +92,7 @@ class StoreCouponService:
 
     @staticmethod
     def update_coupon(coupon_id: int, tenant_id: int, data: dict) -> StoreCoupon:
-        coupon = StoreCoupon.query.filter_by(
-            id=int(coupon_id), tenant_id=int(tenant_id)
-        ).first()
+        coupon = StoreCoupon.query.filter_by(id=int(coupon_id), tenant_id=int(tenant_id)).first()
         if not coupon:
             raise ValueError("الكوبون غير موجود.")
         if data.get("description") is not None:
@@ -119,9 +109,7 @@ class StoreCouponService:
                 if pct_decimal <= Decimal("0") or pct_decimal > Decimal("100"):
                     raise ValueError("نسبة الخصم يجب أن تكون بين 0.01 و 100.")
                 if coupon.discount_amount is not None:
-                    raise ValueError(
-                        "لا يمكن تعيين نسبة خصم عندما يكون هناك مبلغ خصم موجود."
-                    )
+                    raise ValueError("لا يمكن تعيين نسبة خصم عندما يكون هناك مبلغ خصم موجود.")
                 coupon.discount_percent = pct_decimal
             else:
                 coupon.discount_percent = None
@@ -132,18 +120,12 @@ class StoreCouponService:
                 if amt_decimal <= Decimal("0"):
                     raise ValueError("مبلغ الخصم يجب أن يكون أكبر من صفر.")
                 if coupon.discount_percent is not None:
-                    raise ValueError(
-                        "لا يمكن تعيين مبلغ خصم عندما تكون هناك نسبة خصم موجودة."
-                    )
+                    raise ValueError("لا يمكن تعيين مبلغ خصم عندما تكون هناك نسبة خصم موجودة.")
                 coupon.discount_amount = amt_decimal
             else:
                 coupon.discount_amount = None
         if "min_order_amount" in data:
-            coupon.min_order_amount = (
-                Decimal(str(data["min_order_amount"]))
-                if data.get("min_order_amount")
-                else None
-            )
+            coupon.min_order_amount = Decimal(str(data["min_order_amount"])) if data.get("min_order_amount") else None
         if "max_uses" in data:
             coupon.max_uses = int(data["max_uses"]) if data.get("max_uses") else None
         if "is_active" in data:

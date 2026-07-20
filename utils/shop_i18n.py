@@ -250,9 +250,7 @@ STRINGS = {
 
 
 def shop_lang(default="ar"):
-    lang = (
-        session.get("shop_lang") or session.get("language") or default or "ar"
-    ).lower()
+    lang = (session.get("shop_lang") or session.get("language") or default or "ar").lower()
     return "en" if lang.startswith("en") else "ar"
 
 

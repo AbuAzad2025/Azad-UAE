@@ -42,9 +42,7 @@ class TestSanitizeHtml:
             patch.object(sanitizer_module, "_BLEACH_AVAILABLE", True),
             patch.object(sanitizer_module, "bleach", bleach_mock),
         ):
-            result = InputSanitizer.sanitize_html(
-                "<b>safe</b><script>x</script>", allow_tags=True
-            )
+            result = InputSanitizer.sanitize_html("<b>safe</b><script>x</script>", allow_tags=True)
 
         bleach_mock.clean.assert_called_once_with(
             "<b>safe</b><script>x</script>",
@@ -66,9 +64,7 @@ class TestSanitizeHtml:
 
         real_import = builtins.__import__
 
-        def blocked_import(
-            name, globals_dict=None, locals_dict=None, fromlist=(), level=0
-        ):
+        def blocked_import(name, globals_dict=None, locals_dict=None, fromlist=(), level=0):
             if name == "bleach":
                 raise ImportError("blocked for test")
             return real_import(name, globals_dict, locals_dict, fromlist, level)
@@ -89,9 +85,7 @@ class TestSanitizeHtml:
 
             real_import = builtins.__import__
 
-            def blocked_import(
-                name, globals_dict=None, locals_dict=None, fromlist=(), level=0
-            ):
+            def blocked_import(name, globals_dict=None, locals_dict=None, fromlist=(), level=0):
                 if name == "bleach":
                     raise ImportError("blocked for test")
                 return real_import(name, globals_dict, locals_dict, fromlist, level)
@@ -127,10 +121,7 @@ class TestSanitizeEmail:
         assert InputSanitizer.sanitize_email(None) is None
 
     def test_valid_email_normalized(self):
-        assert (
-            InputSanitizer.sanitize_email("  User@Mail.Example  ")
-            == "user@mail.example"
-        )
+        assert InputSanitizer.sanitize_email("  User@Mail.Example  ") == "user@mail.example"
 
     def test_invalid_email_returns_none(self):
         assert InputSanitizer.sanitize_email("not-email") is None
@@ -141,10 +132,7 @@ class TestSanitizePhone:
         assert InputSanitizer.sanitize_phone(None) is None
 
     def test_keeps_allowed_characters(self):
-        assert (
-            InputSanitizer.sanitize_phone("  +971 (50) 123-4567!  ")
-            == "+971 (50) 123-4567"
-        )
+        assert InputSanitizer.sanitize_phone("  +971 (50) 123-4567!  ") == "+971 (50) 123-4567"
 
 
 class TestSanitizeNumber:
@@ -179,19 +167,11 @@ class TestSanitizeSqlInput:
 class TestSanitizeFormData:
     def test_applies_per_field_rules(self):
         with (
-            patch.object(
-                InputSanitizer, "sanitize_email", return_value="a@b.co"
-            ) as email_fn,
-            patch.object(
-                InputSanitizer, "sanitize_phone", return_value="+971501234567"
-            ),
+            patch.object(InputSanitizer, "sanitize_email", return_value="a@b.co") as email_fn,
+            patch.object(InputSanitizer, "sanitize_phone", return_value="+971501234567"),
             patch.object(InputSanitizer, "sanitize_number", return_value=10),
-            patch.object(
-                InputSanitizer, "sanitize_html", return_value=Markup("<b>x</b>")
-            ) as html_fn,
-            patch.object(
-                InputSanitizer, "sanitize_text", return_value="plain"
-            ) as text_fn,
+            patch.object(InputSanitizer, "sanitize_html", return_value=Markup("<b>x</b>")) as html_fn,
+            patch.object(InputSanitizer, "sanitize_text", return_value="plain") as text_fn,
         ):
             form_data = {
                 "email": "a@b.co",

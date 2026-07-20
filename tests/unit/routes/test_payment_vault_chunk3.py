@@ -22,12 +22,8 @@ def mock_unlocked_vault(mocker):
     vault.nowpayments_api_key = ""
     vault.nowpayments_ipn_secret = "sec"
     vault.stripe_webhook_secret = "whsec"
-    mocker.patch(
-        "routes.payment_vault._get_vault_for_current_tenant", return_value=vault
-    )
-    mocker.patch(
-        "routes.payment_vault.PaymentVault.get_platform_vault", return_value=vault
-    )
+    mocker.patch("routes.payment_vault._get_vault_for_current_tenant", return_value=vault)
+    mocker.patch("routes.payment_vault.PaymentVault.get_platform_vault", return_value=vault)
     return vault
 
 
@@ -39,9 +35,7 @@ def mock_locked_vault(mocker):
     vault.is_vault_accessible.return_value = False
     vault.unlock_vault.return_value = False
     vault.is_locked_out.return_value = False
-    mocker.patch(
-        "routes.payment_vault._get_vault_for_current_tenant", return_value=vault
-    )
+    mocker.patch("routes.payment_vault._get_vault_for_current_tenant", return_value=vault)
     return vault
 
 
@@ -162,10 +156,7 @@ class TestVaultSecurityHelpers:
     def test_origin_from_referer_valid(self):
         from routes.payment_vault import _origin_from_referer
 
-        assert (
-            _origin_from_referer("https://localhost:5000/path")
-            == "https://localhost:5000"
-        )
+        assert _origin_from_referer("https://localhost:5000/path") == "https://localhost:5000"
 
     def test_origin_from_referer_invalid(self):
         from routes.payment_vault import _origin_from_referer
@@ -204,9 +195,7 @@ class TestVaultSecurityHelpers:
             return_value=frozenset({"http://localhost:5000"}),
         )
         app = app_factory(payment_vault_bp)
-        with app.test_request_context(
-            "/", headers={"Referer": "http://localhost:5000/pay"}
-        ):
+        with app.test_request_context("/", headers={"Referer": "http://localhost:5000/pay"}):
             assert _validate_public_api_origin() is None
 
     def test_validate_public_api_origin_missing_headers(self, app_factory, mocker):
@@ -278,15 +267,11 @@ class TestUnlockVaultRoutes:
             "routes.payment_vault._get_vault_for_current_tenant",
             return_value=MagicMock(),
         )
-        resp = vault_owner_client.post(
-            "/payment-vault/unlock", data={"vault_password": ""}
-        )
+        resp = vault_owner_client.post("/payment-vault/unlock", data={"vault_password": ""})
         assert resp.status_code == 200
 
     def test_unlock_post_create_new_vault(self, vault_owner_client, mocker, mock_db):
-        mocker.patch(
-            "routes.payment_vault._get_vault_for_current_tenant", return_value=None
-        )
+        mocker.patch("routes.payment_vault._get_vault_for_current_tenant", return_value=None)
         mocker.patch("routes.payment_vault.PaymentVault")
         mocker.patch("routes.payment_vault.PaymentLog.log_action")
         resp = vault_owner_client.post(
@@ -309,26 +294,18 @@ class TestUnlockVaultRoutes:
         vault = MagicMock()
         vault.is_locked_out.return_value = False
         vault.unlock_vault.return_value = False
-        mocker.patch(
-            "routes.payment_vault._get_vault_for_current_tenant", return_value=vault
-        )
+        mocker.patch("routes.payment_vault._get_vault_for_current_tenant", return_value=vault)
         mocker.patch("routes.payment_vault.PaymentLog.log_action")
-        resp = vault_owner_client.post(
-            "/payment-vault/unlock", data={"vault_password": "bad"}
-        )
+        resp = vault_owner_client.post("/payment-vault/unlock", data={"vault_password": "bad"})
         assert resp.status_code == 200
 
     def test_unlock_post_locked_out(self, vault_owner_client, mocker):
         vault = MagicMock()
         vault.is_locked_out.return_value = True
         vault.unlock_vault.return_value = False
-        mocker.patch(
-            "routes.payment_vault._get_vault_for_current_tenant", return_value=vault
-        )
+        mocker.patch("routes.payment_vault._get_vault_for_current_tenant", return_value=vault)
         mocker.patch("routes.payment_vault.PaymentLog.log_action")
-        resp = vault_owner_client.post(
-            "/payment-vault/unlock", data={"vault_password": "bad"}
-        )
+        resp = vault_owner_client.post("/payment-vault/unlock", data={"vault_password": "bad"})
         assert resp.status_code == 200
 
 
@@ -338,14 +315,10 @@ class TestVaultPageRoutes:
         assert resp.status_code == 200
 
     def test_dashboard_locked_redirect(self, vault_owner_client, mock_locked_vault):
-        resp = vault_owner_client.get(
-            "/payment-vault/dashboard", follow_redirects=False
-        )
+        resp = vault_owner_client.get("/payment-vault/dashboard", follow_redirects=False)
         assert resp.status_code == 302
 
-    def test_dashboard_unlocked(
-        self, vault_owner_client, mock_unlocked_vault, mocker, mock_analytics
-    ):
+    def test_dashboard_unlocked(self, vault_owner_client, mock_unlocked_vault, mocker, mock_analytics):
         don = MagicMock(amount_usd=100, status="completed")
         q = MagicMock()
         q.filter_by.return_value.all.return_value = [don]
@@ -363,9 +336,7 @@ class TestVaultPageRoutes:
         resp = vault_owner_client.get("/payment-vault/settings", follow_redirects=False)
         assert resp.status_code == 302
 
-    def test_settings_post_update(
-        self, vault_owner_client, mock_unlocked_vault, mock_db, mocker
-    ):
+    def test_settings_post_update(self, vault_owner_client, mock_unlocked_vault, mock_db, mocker):
         mocker.patch("routes.payment_vault.LoggingCore.log_audit")
         resp = vault_owner_client.post(
             "/payment-vault/settings",
@@ -391,25 +362,19 @@ class TestVaultPageRoutes:
         q.filter.return_value.count.return_value = 0
         q.with_entities.return_value.scalar.return_value = 0
         mocker.patch("routes.payment_vault.Donation.query", q)
-        resp = vault_owner_client.get(
-            "/payment-vault/donations?status=pending&search=ali"
-        )
+        resp = vault_owner_client.get("/payment-vault/donations?status=pending&search=ali")
         assert resp.status_code == 200
 
     def test_packages_management(self, vault_owner_client, mock_unlocked_vault, mocker):
         pkg = MagicMock(slug="basic")
-        mocker.patch(
-            "routes.payment_vault.Package.query"
-        ).order_by.return_value.all.return_value = [pkg]
+        mocker.patch("routes.payment_vault.Package.query").order_by.return_value.all.return_value = [pkg]
         pp_q = MagicMock()
         pp_q.join.return_value.filter.return_value.count.return_value = 2
         mocker.patch("routes.payment_vault.PackagePurchase.query", pp_q)
         resp = vault_owner_client.get("/payment-vault/packages-management")
         assert resp.status_code == 200
 
-    def test_create_package_missing_names(
-        self, vault_owner_client, mock_unlocked_vault
-    ):
+    def test_create_package_missing_names(self, vault_owner_client, mock_unlocked_vault):
         resp = vault_owner_client.post(
             "/payment-vault/package/create",
             data={"name_ar": ""},
@@ -417,12 +382,8 @@ class TestVaultPageRoutes:
         )
         assert resp.status_code == 302
 
-    def test_create_package_duplicate_slug(
-        self, vault_owner_client, mock_unlocked_vault, mocker
-    ):
-        mocker.patch(
-            "routes.payment_vault.Package.query"
-        ).filter_by.return_value.first.return_value = MagicMock()
+    def test_create_package_duplicate_slug(self, vault_owner_client, mock_unlocked_vault, mocker):
+        mocker.patch("routes.payment_vault.Package.query").filter_by.return_value.first.return_value = MagicMock()
         resp = vault_owner_client.post(
             "/payment-vault/package/create",
             data={
@@ -434,12 +395,8 @@ class TestVaultPageRoutes:
         )
         assert resp.status_code == 302
 
-    def test_create_package_success(
-        self, vault_owner_client, mock_unlocked_vault, mocker, mock_db
-    ):
-        mocker.patch(
-            "routes.payment_vault.Package.query"
-        ).filter_by.return_value.first.return_value = None
+    def test_create_package_success(self, vault_owner_client, mock_unlocked_vault, mocker, mock_db):
+        mocker.patch("routes.payment_vault.Package.query").filter_by.return_value.first.return_value = None
         mocker.patch("routes.payment_vault.LoggingCore.log_audit")
         resp = vault_owner_client.post(
             "/payment-vault/package/create",
@@ -454,15 +411,11 @@ class TestVaultPageRoutes:
         assert resp.status_code == 302
 
     def test_edit_package_get(self, vault_owner_client, mock_unlocked_vault, mocker):
-        mocker.patch(
-            "routes.payment_vault.Package.query"
-        ).get_or_404.return_value = MagicMock()
+        mocker.patch("routes.payment_vault.Package.query").get_or_404.return_value = MagicMock()
         resp = vault_owner_client.get("/payment-vault/package/1/edit")
         assert resp.status_code == 200
 
-    def test_edit_package_post(
-        self, vault_owner_client, mock_unlocked_vault, mocker, mock_db
-    ):
+    def test_edit_package_post(self, vault_owner_client, mock_unlocked_vault, mocker, mock_db):
         pkg = MagicMock(price=10, max_users=1, max_branches=1)
         mocker.patch("routes.payment_vault.Package.query").get_or_404.return_value = pkg
         mocker.patch("routes.payment_vault.LoggingCore.log_audit")
@@ -477,15 +430,11 @@ class TestVaultPageRoutes:
         )
         assert resp.status_code in (200, 302)
 
-    def test_delete_package(
-        self, vault_owner_client, mock_unlocked_vault, mocker, mock_db
-    ):
+    def test_delete_package(self, vault_owner_client, mock_unlocked_vault, mocker, mock_db):
         pkg = MagicMock()
         mocker.patch("routes.payment_vault.Package.query").get_or_404.return_value = pkg
         mocker.patch("routes.payment_vault.LoggingCore.log_audit")
-        resp = vault_owner_client.post(
-            "/payment-vault/package/1/delete", follow_redirects=False
-        )
+        resp = vault_owner_client.post("/payment-vault/package/1/delete", follow_redirects=False)
         assert resp.status_code in (200, 302)
 
     def test_reports_page(self, vault_owner_client, mock_unlocked_vault, mocker):
@@ -504,23 +453,17 @@ class TestVaultPageRoutes:
         resp = vault_owner_client.get("/payment-vault/reports")
         assert resp.status_code == 200
 
-    def test_lock_vault_post(
-        self, vault_owner_client, mock_unlocked_vault, mocker, mock_db
-    ):
+    def test_lock_vault_post(self, vault_owner_client, mock_unlocked_vault, mocker, mock_db):
         mocker.patch("routes.payment_vault.PaymentLog.log_action")
         resp = vault_owner_client.post("/payment-vault/lock", follow_redirects=False)
         assert resp.status_code in (200, 302)
 
     def test_cards_page(self, vault_owner_client, mock_unlocked_vault, mocker):
-        mocker.patch(
-            "routes.payment_vault.CardPayment.query"
-        ).order_by.return_value.all.return_value = []
+        mocker.patch("routes.payment_vault.CardPayment.query").order_by.return_value.all.return_value = []
         resp = vault_owner_client.get("/payment-vault/cards")
         assert resp.status_code == 200
 
-    def test_card_decrypt(
-        self, vault_owner_client, mock_unlocked_vault, mock_db, mocker
-    ):
+    def test_card_decrypt(self, vault_owner_client, mock_unlocked_vault, mock_db, mocker):
         card = MagicMock()
         card.get_card_display.return_value = "****1111"
         card.to_dict.return_value = {"last_four": "1111"}
@@ -545,29 +488,19 @@ class TestVaultPageRoutes:
 
     def test_purchase_detail(self, vault_owner_client, mock_unlocked_vault, mocker):
         pur = MagicMock(to_dict=lambda: {"id": 1})
-        mocker.patch(
-            "routes.payment_vault.PackagePurchase.query"
-        ).get_or_404.return_value = pur
+        mocker.patch("routes.payment_vault.PackagePurchase.query").get_or_404.return_value = pur
         resp = vault_owner_client.get("/payment-vault/purchase/1")
         assert resp.status_code == 200
 
     def test_donation_detail(self, vault_owner_client, mock_unlocked_vault, mocker):
         don = MagicMock()
-        mocker.patch(
-            "routes.payment_vault.Donation.query"
-        ).filter_by.return_value.first_or_404.return_value = don
+        mocker.patch("routes.payment_vault.Donation.query").filter_by.return_value.first_or_404.return_value = don
         resp = vault_owner_client.get("/payment-vault/donation/1")
         assert resp.status_code == 200
 
-    def test_auto_approve(
-        self, vault_owner_client, mock_unlocked_vault, mocker, mock_db
-    ):
-        mocker.patch(
-            "routes.payment_vault.Donation.query"
-        ).filter_by.return_value.all.return_value = []
-        resp = vault_owner_client.post(
-            "/payment-vault/auto-approve", follow_redirects=False
-        )
+    def test_auto_approve(self, vault_owner_client, mock_unlocked_vault, mocker, mock_db):
+        mocker.patch("routes.payment_vault.Donation.query").filter_by.return_value.all.return_value = []
+        resp = vault_owner_client.post("/payment-vault/auto-approve", follow_redirects=False)
         assert resp.status_code == 302
 
     def test_health_check(self, vault_owner_client, mocker):
@@ -599,9 +532,7 @@ class TestVaultPageRoutes:
             "services.analytics_service.AnalyticsService.get_daily_stats",
             return_value={"today_revenue": 0},
         )
-        mocker.patch(
-            "routes.payment_vault.Donation.query"
-        ).filter_by.return_value.count.return_value = 0
+        mocker.patch("routes.payment_vault.Donation.query").filter_by.return_value.count.return_value = 0
         resp = vault_owner_client.get("/payment-vault/api/v2/stats")
         assert resp.status_code == 200
 
@@ -612,15 +543,11 @@ class TestStripeWebhook:
     @pytest.fixture(autouse=True)
     def _common(self, mocker, mock_unlocked_vault):
         mocker.patch("routes.payment_vault._is_duplicate_webhook", return_value=False)
-        mocker.patch(
-            "routes.payment_vault._reject_stale_webhook_timestamp", return_value=None
-        )
+        mocker.patch("routes.payment_vault._reject_stale_webhook_timestamp", return_value=None)
         mocker.patch("routes.payment_vault.PaymentLog.log_action")
 
     def test_stripe_missing_secret(self, vault_owner_client, mocker):
-        mocker.patch(
-            "routes.payment_vault._get_vault_for_current_tenant"
-        ).return_value.stripe_webhook_secret = ""
+        mocker.patch("routes.payment_vault._get_vault_for_current_tenant").return_value.stripe_webhook_secret = ""
         resp = vault_owner_client.post(
             "/payment-vault/webhook/stripe",
             data=self.PAYLOAD,
@@ -670,9 +597,7 @@ class TestStripeWebhook:
 
 class TestVaultExports:
     def test_export_purchases(self, vault_owner_client, mock_unlocked_vault, mocker):
-        mocker.patch(
-            "routes.payment_vault.PackagePurchase.query"
-        ).order_by.return_value.all.return_value = []
+        mocker.patch("routes.payment_vault.PackagePurchase.query").order_by.return_value.all.return_value = []
         mocker.patch(
             "services.export_service.ExportService.export_purchases_to_csv",
             return_value=MagicMock(),
@@ -694,9 +619,7 @@ class TestVaultExports:
         assert resp.status_code == 200
 
     def test_export_cards(self, vault_owner_client, mock_unlocked_vault, mocker):
-        mocker.patch(
-            "routes.payment_vault.CardPayment.query"
-        ).order_by.return_value.all.return_value = []
+        mocker.patch("routes.payment_vault.CardPayment.query").order_by.return_value.all.return_value = []
         mocker.patch(
             "services.export_service.ExportService.export_cards_to_csv",
             return_value=MagicMock(),

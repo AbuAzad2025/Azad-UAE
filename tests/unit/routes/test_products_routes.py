@@ -28,9 +28,7 @@ def _assert_import_index_redirect(resp):
     assert urlparse(resp.location).path.rstrip("/") == "/products"
 
 
-def _product(
-    pid=1, name="Widget", sku="SKU-1", barcode="BC-1", min_alert=5, current_stock=10
-):
+def _product(pid=1, name="Widget", sku="SKU-1", barcode="BC-1", min_alert=5, current_stock=10):
     product = MagicMock()
     product.id = pid
     product.name = name
@@ -141,9 +139,7 @@ def _products_patches(
     product=None,
     categories=None,
 ):
-    products = (
-        products if products is not None else [_product(1), _product(2, name="Other")]
-    )
+    products = products if products is not None else [_product(1), _product(2, name="Other")]
     product = product or products[0]
     categories = categories if categories is not None else [_category()]
     visible_query = visible_query or _chain_query(all=products, count=len(products))
@@ -151,9 +147,7 @@ def _products_patches(
     category_query = MagicMock()
     category_query.filter_by.return_value.all.return_value = categories
     category_query.filter.return_value.first.return_value = None
-    category_query.filter_by.return_value.order_by.return_value.all.return_value = (
-        categories
-    )
+    category_query.filter_by.return_value.order_by.return_value.all.return_value = categories
 
     warehouse_query = MagicMock()
     warehouse_query.filter_by.return_value.first.return_value = _warehouse()
@@ -168,71 +162,31 @@ def _products_patches(
                 return_value=visible_query,
             )
         )
-        stack.enter_context(
-            patch("routes.products.StockService.get_product_stock", return_value=10.0)
-        )
+        stack.enter_context(patch("routes.products.StockService.get_product_stock", return_value=10.0))
         stack.enter_context(patch("routes.products.StockService.adjust_stock"))
         stack.enter_context(patch("routes.products.StockService.add_opening_stock"))
-        stack.enter_context(
-            patch("routes.products.tenant_query", return_value=customer_query)
-        )
-        stack.enter_context(
-            patch("routes.products.tenant_get_or_404", return_value=product)
-        )
+        stack.enter_context(patch("routes.products.tenant_query", return_value=customer_query))
+        stack.enter_context(patch("routes.products.tenant_get_or_404", return_value=product))
         stack.enter_context(patch("routes.products.render_template", return_value="ok"))
         session = stack.enter_context(patch("routes.products.db.session"))
-        stack.enter_context(
-            patch("routes.products.db.session.query", return_value=session_query)
-        )
-        stack.enter_context(
-            patch.object(
-                products_mod, "ProductCategory", MagicMock(query=category_query)
-            )
-        )
-        stack.enter_context(
-            patch("routes.products.branch_scope_id", return_value=branch_scope)
-        )
-        stack.enter_context(
-            patch(
-                "routes.products.get_accessible_warehouses", return_value=[_warehouse()]
-            )
-        )
-        stack.enter_context(
-            patch("routes.products.get_accessible_warehouse_ids", return_value=[1])
-        )
-        stack.enter_context(
-            patch("routes.products.ensure_warehouse_access", return_value=_warehouse())
-        )
+        stack.enter_context(patch("routes.products.db.session.query", return_value=session_query))
+        stack.enter_context(patch.object(products_mod, "ProductCategory", MagicMock(query=category_query)))
+        stack.enter_context(patch("routes.products.branch_scope_id", return_value=branch_scope))
+        stack.enter_context(patch("routes.products.get_accessible_warehouses", return_value=[_warehouse()]))
+        stack.enter_context(patch("routes.products.get_accessible_warehouse_ids", return_value=[1]))
+        stack.enter_context(patch("routes.products.ensure_warehouse_access", return_value=_warehouse()))
         stack.enter_context(patch("routes.products.assign_tenant_id"))
         stack.enter_context(patch("routes.products.LoggingCore.log_audit"))
-        stack.enter_context(
-            patch(
-                "routes.products.get_branch_stock_map", return_value={1: 10.0, 2: 3.0}
-            )
-        )
-        stack.enter_context(
-            patch("routes.products.should_show_all_branch_columns", return_value=False)
-        )
-        stack.enter_context(
-            patch("routes.products.get_active_tenant_id", return_value=1)
-        )
-        stack.enter_context(
-            patch("utils.tenanting.get_active_tenant_id", return_value=1)
-        )
-        stack.enter_context(
-            patch("routes.products.generate_sku", return_value="AUTO-SKU")
-        )
-        stack.enter_context(
-            patch("routes.products.generate_barcode", return_value="AUTO-BC")
-        )
-        stack.enter_context(
-            patch("routes.products.save_uploaded_file", return_value="products/img.png")
-        )
+        stack.enter_context(patch("routes.products.get_branch_stock_map", return_value={1: 10.0, 2: 3.0}))
+        stack.enter_context(patch("routes.products.should_show_all_branch_columns", return_value=False))
+        stack.enter_context(patch("routes.products.get_active_tenant_id", return_value=1))
+        stack.enter_context(patch("utils.tenanting.get_active_tenant_id", return_value=1))
+        stack.enter_context(patch("routes.products.generate_sku", return_value="AUTO-SKU"))
+        stack.enter_context(patch("routes.products.generate_barcode", return_value="AUTO-BC"))
+        stack.enter_context(patch("routes.products.save_uploaded_file", return_value="products/img.png"))
         product_cls, product_query_mock = _product_class_mock()
         stack.enter_context(patch.object(products_mod, "Product", product_cls))
-        stack.enter_context(
-            patch("routes.products.db.or_", return_value=MagicMock(name="sql_or"))
-        )
+        stack.enter_context(patch("routes.products.db.or_", return_value=MagicMock(name="sql_or")))
         stack.enter_context(patch("utils.tenant_limits.check_products_limit"))
         yield {
             "visible_query": visible_query,
@@ -286,14 +240,10 @@ def _run_import_post(
 
     with app.test_request_context("/products/import", method="POST"):
         with ExitStack() as stack:
-            stack.enter_context(
-                patch("routes.products._read_import_dataframe", return_value=df)
-            )
+            stack.enter_context(patch("routes.products._read_import_dataframe", return_value=df))
             stack.enter_context(patch("models.Warehouse.query", wh_query))
             if os_remove_side_effect is not None:
-                stack.enter_context(
-                    patch("os.remove", side_effect=os_remove_side_effect)
-                )
+                stack.enter_context(patch("os.remove", side_effect=os_remove_side_effect))
             else:
                 stack.enter_context(patch("os.remove"))
             stack.enter_context(patch("os.path.exists", return_value=True))
@@ -623,9 +573,7 @@ class TestProductsIndex:
         query = _chain_query(all=items)
         with (
             _products_patches(products=items, visible_query=query, branch_scope=1),
-            patch(
-                "routes.products.get_branch_stock_map", return_value={1: 0.0, 2: 5.0}
-            ),
+            patch("routes.products.get_branch_stock_map", return_value={1: 0.0, 2: 5.0}),
             patch("routes.products.render_template", return_value="index") as render,
         ):
             resp = products_client.get("/products/?stock=out")
@@ -686,9 +634,7 @@ class TestProductsCreate:
         with (
             _products_patches(),
             patch("forms.product.ProductForm", return_value=form),
-            patch(
-                "routes.products.ensure_warehouse_access", side_effect=ValueError("bad")
-            ),
+            patch("routes.products.ensure_warehouse_access", side_effect=ValueError("bad")),
             patch("routes.products.render_template", return_value="create"),
         ):
             resp = products_client.post(
@@ -907,9 +853,7 @@ class TestCategories:
     def test_categories_list(self, products_client):
         cats = [_category(1), _category(2, name="B")]
         category_query = MagicMock()
-        category_query.filter_by.return_value.order_by.return_value.all.return_value = (
-            cats
-        )
+        category_query.filter_by.return_value.order_by.return_value.all.return_value = cats
         with (
             _products_patches(categories=cats),
             patch("routes.products.ProductCategory.query", category_query),
@@ -1131,9 +1075,7 @@ class TestPrintLabels:
         assert resp.status_code == 302
         _assert_import_index_redirect(resp)
 
-    def test_print_labels_forbidden_without_view_products(
-        self, products_client, mock_user
-    ):
+    def test_print_labels_forbidden_without_view_products(self, products_client, mock_user):
         mock_user.has_permission.side_effect = lambda perm: perm != "view_products"
         with (
             patch("utils.auth_helpers.is_global_owner_user", return_value=False),
@@ -1152,9 +1094,7 @@ class TestProductsExtendedCoverage:
         query = _chain_query(all=items)
         with (
             _products_patches(products=items, visible_query=query, branch_scope=1),
-            patch(
-                "routes.products.get_branch_stock_map", return_value={1: 3.0, 2: 20.0}
-            ),
+            patch("routes.products.get_branch_stock_map", return_value={1: 3.0, 2: 20.0}),
             patch("routes.products.render_template", return_value="index") as render,
         ):
             resp = products_client.get("/products/?stock=low")
@@ -1173,9 +1113,7 @@ class TestProductsExtendedCoverage:
         )
         new_cat = _category(5, name="Tools")
         pc_class = MagicMock()
-        pc_class.query.filter_by.return_value.filter.return_value.first.return_value = (
-            None
-        )
+        pc_class.query.filter_by.return_value.filter.return_value.first.return_value = None
         pc_class.return_value = new_cat
         new_product = MagicMock()
         new_product.id = 88
@@ -1609,18 +1547,12 @@ class TestProductsExtendedCoverage:
 
         app = app_factory(products_bp)
         client = app.test_client()
-        with patch(
-            "services.label_print_service.get_product_labels_html", return_value="batch"
-        ) as labels:
-            resp = client.post(
-                "/products/print-labels", data={"product_ids": ["1", "2"]}
-            )
+        with patch("services.label_print_service.get_product_labels_html", return_value="batch") as labels:
+            resp = client.post("/products/print-labels", data={"product_ids": ["1", "2"]})
         assert resp.status_code == 200
         labels.assert_called_once()
 
-    def test_scoped_customers_query_with_branch(
-        self, app_factory, bypass_permission_auth
-    ):
+    def test_scoped_customers_query_with_branch(self, app_factory, bypass_permission_auth):
         from routes.products import _scoped_customers_query, products_bp
 
         app = app_factory(products_bp)

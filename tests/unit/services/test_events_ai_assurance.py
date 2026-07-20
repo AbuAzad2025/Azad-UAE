@@ -10,9 +10,7 @@ from unittest.mock import MagicMock
 
 def _mock_learning(mocker):
     ls = MagicMock()
-    mocker.patch(
-        "ai_knowledge.core.learning_system.AzadLearningSystem", return_value=ls
-    )
+    mocker.patch("ai_knowledge.core.learning_system.AzadLearningSystem", return_value=ls)
     return ls
 
 
@@ -390,9 +388,7 @@ class TestPredictionHandlers:
         mov = SimpleNamespace(quantity=Decimal("-30"))
         conn = MagicMock()
         conn.execute.return_value.fetchall.return_value = [mov] * 5
-        target = SimpleNamespace(
-            id=1, name="Part", current_stock=Decimal("3"), min_stock_alert=Decimal("10")
-        )
+        target = SimpleNamespace(id=1, name="Part", current_stock=Decimal("3"), min_stock_alert=Decimal("10"))
         from services.events_ai_service import _predict_stockout
 
         _predict_stockout(None, conn, target)
@@ -892,9 +888,7 @@ class TestHandlerExceptions:
 
     def test_neural_inventory_outer_failure(self, mocker):
         target = MagicMock()
-        type(target).current_stock = property(
-            lambda self: (_ for _ in ()).throw(RuntimeError("bad"))
-        )
+        type(target).current_stock = property(lambda self: (_ for _ in ()).throw(RuntimeError("bad")))
         from services.events_ai_service import _neural_inventory_learning
 
         _neural_inventory_learning(None, None, target)

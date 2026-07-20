@@ -15,9 +15,7 @@ class EmailList(db.Model):
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -25,12 +23,8 @@ class EmailList(db.Model):
     )
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
-    subscribers = db.relationship(
-        "EmailSubscriber", back_populates="list", cascade="all, delete-orphan"
-    )
-    campaigns = db.relationship(
-        "EmailCampaign", back_populates="list", cascade="all, delete-orphan"
-    )
+    subscribers = db.relationship("EmailSubscriber", back_populates="list", cascade="all, delete-orphan")
+    campaigns = db.relationship("EmailCampaign", back_populates="list", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<EmailList {self.name}>"
@@ -54,24 +48,16 @@ class EmailSubscriber(db.Model):
     )
     email = db.Column(db.String(200), nullable=False)
     name = db.Column(db.String(200))
-    customer_id = db.Column(
-        db.Integer, db.ForeignKey("customers.id", ondelete="SET NULL"), nullable=True
-    )
+    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id", ondelete="SET NULL"), nullable=True)
     status = db.Column(db.String(20), default="subscribed", index=True)
     unsubscribed_at = db.Column(db.DateTime, nullable=True)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
-    list = db.relationship(
-        "EmailList", back_populates="subscribers", foreign_keys=[list_id]
-    )
+    list = db.relationship("EmailList", back_populates="subscribers", foreign_keys=[list_id])
     customer = db.relationship("Customer", foreign_keys=[customer_id])
 
-    __table_args__ = (
-        db.UniqueConstraint("list_id", "email", name="uq_email_subscriber"),
-    )
+    __table_args__ = (db.UniqueConstraint("list_id", "email", name="uq_email_subscriber"),)
 
     def __repr__(self):
         return f"<EmailSubscriber {self.email}>"
@@ -92,9 +78,7 @@ class EmailTemplate(db.Model):
     body_html = db.Column(db.Text, nullable=False)
     from_email = db.Column(db.String(200))
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -137,9 +121,7 @@ class EmailCampaign(db.Model):
     click_count = db.Column(db.Integer, default=0)
     bounce_count = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -147,13 +129,9 @@ class EmailCampaign(db.Model):
     )
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
-    list = db.relationship(
-        "EmailList", back_populates="campaigns", foreign_keys=[list_id]
-    )
+    list = db.relationship("EmailList", back_populates="campaigns", foreign_keys=[list_id])
     template = db.relationship("EmailTemplate", foreign_keys=[template_id])
-    logs = db.relationship(
-        "CampaignLog", back_populates="campaign", cascade="all, delete-orphan"
-    )
+    logs = db.relationship("CampaignLog", back_populates="campaign", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<EmailCampaign {self.name}>"
@@ -188,9 +166,7 @@ class CampaignLog(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
-    campaign = db.relationship(
-        "EmailCampaign", back_populates="logs", foreign_keys=[campaign_id]
-    )
+    campaign = db.relationship("EmailCampaign", back_populates="logs", foreign_keys=[campaign_id])
     subscriber = db.relationship("EmailSubscriber", foreign_keys=[subscriber_id])
 
     def __repr__(self):

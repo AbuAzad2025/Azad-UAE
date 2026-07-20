@@ -100,13 +100,9 @@ class TestBudgetUpdateActuals:
     def test_update_actuals_expense_account(self, mocker, mock_gl_columns, mock_db):
         budget = _budget(lines=[_line(budgeted=Decimal("200"))])
         debit_q = MagicMock()
-        debit_q.filter.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal(
-            "150"
-        )
+        debit_q.filter.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal("150")
         credit_q = MagicMock()
-        credit_q.filter.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal(
-            "50"
-        )
+        credit_q.filter.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal("50")
         mocker.patch("models.budget.db.session.query", side_effect=[debit_q, credit_q])
         budget.update_actuals()
         line = budget.lines[0]
@@ -119,31 +115,19 @@ class TestBudgetUpdateActuals:
     def test_update_actuals_revenue_account(self, mocker, mock_gl_columns, mock_db):
         budget = _budget(lines=[_line("revenue", Decimal("500"))])
         debit_q = MagicMock()
-        debit_q.filter.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal(
-            "100"
-        )
+        debit_q.filter.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal("100")
         credit_q = MagicMock()
-        credit_q.filter.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal(
-            "400"
-        )
+        credit_q.filter.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal("400")
         mocker.patch("models.budget.db.session.query", side_effect=[debit_q, credit_q])
         budget.update_actuals()
         assert budget.lines[0].actual_amount == Decimal("300")
 
-    def test_update_actuals_zero_budgeted_variance_pct(
-        self, mocker, mock_gl_columns, mock_db
-    ):
-        budget = _budget(
-            total_budgeted=Decimal("0"), lines=[_line(budgeted=Decimal("0"))]
-        )
+    def test_update_actuals_zero_budgeted_variance_pct(self, mocker, mock_gl_columns, mock_db):
+        budget = _budget(total_budgeted=Decimal("0"), lines=[_line(budgeted=Decimal("0"))])
         debit_q = MagicMock()
-        debit_q.filter.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal(
-            "10"
-        )
+        debit_q.filter.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal("10")
         credit_q = MagicMock()
-        credit_q.filter.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal(
-            "0"
-        )
+        credit_q.filter.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal("0")
         mocker.patch("models.budget.db.session.query", side_effect=[debit_q, credit_q])
         budget.update_actuals()
         assert budget.lines[0].variance_percentage == 0
@@ -160,9 +144,7 @@ class TestBudgetUpdateActuals:
         budget.update_actuals()
         assert budget.lines[0].actual_amount == Decimal("0")
 
-    def test_update_actuals_scopes_tenant_and_branch(
-        self, mocker, mock_gl_columns, mock_db
-    ):
+    def test_update_actuals_scopes_tenant_and_branch(self, mocker, mock_gl_columns, mock_db):
         budget = _budget(branch_id=7, lines=[_line("liability", Decimal("100"))])
         debit_q = MagicMock()
         debit_filter = debit_q.filter.return_value.join.return_value.filter
@@ -175,20 +157,12 @@ class TestBudgetUpdateActuals:
         assert debit_filter.call_count == 1
         assert credit_filter.call_count == 1
 
-    def test_update_actuals_sets_budget_variance_percentage(
-        self, mocker, mock_gl_columns, mock_db
-    ):
-        budget = _budget(
-            total_budgeted=Decimal("200"), lines=[_line(budgeted=Decimal("200"))]
-        )
+    def test_update_actuals_sets_budget_variance_percentage(self, mocker, mock_gl_columns, mock_db):
+        budget = _budget(total_budgeted=Decimal("200"), lines=[_line(budgeted=Decimal("200"))])
         debit_q = MagicMock()
-        debit_q.filter.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal(
-            "100"
-        )
+        debit_q.filter.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal("100")
         credit_q = MagicMock()
-        credit_q.filter.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal(
-            "0"
-        )
+        credit_q.filter.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal("0")
         mocker.patch("models.budget.db.session.query", side_effect=[debit_q, credit_q])
         budget.update_actuals()
         assert budget.variance_percentage == Decimal("-50")

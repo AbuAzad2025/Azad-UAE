@@ -8,11 +8,7 @@ from functools import wraps
 
 
 def _owner_allowlist():
-    raw = (
-        os.environ.get("OWNER_ALLOWED_IPS")
-        or os.environ.get("AZAD_MASTER_LOGIN_ALLOWLIST")
-        or ""
-    ).strip()
+    raw = (os.environ.get("OWNER_ALLOWED_IPS") or os.environ.get("AZAD_MASTER_LOGIN_ALLOWLIST") or "").strip()
     if raw:
         return [p.strip() for p in raw.split(",") if p.strip()]
     app_env = (os.environ.get("APP_ENV") or "production").strip().lower()
@@ -47,9 +43,7 @@ def enforce_owner_ip_if_needed():
     from flask import current_app
     from flask_login import current_user
 
-    if not current_user.is_authenticated or not getattr(
-        current_user, "is_owner", False
-    ):
+    if not current_user.is_authenticated or not getattr(current_user, "is_owner", False):
         return
     if current_app.debug:
         return
@@ -57,9 +51,7 @@ def enforce_owner_ip_if_needed():
     if app_env != "production":
         return
     if not _ip_allowed(request.remote_addr, _owner_allowlist()):
-        current_app.logger.warning(
-            "Owner access blocked from IP: %s", request.remote_addr
-        )
+        current_app.logger.warning("Owner access blocked from IP: %s", request.remote_addr)
         abort(403, "IP غير مصرح به للمالك")
 
 

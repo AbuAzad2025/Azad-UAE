@@ -21,17 +21,13 @@ class Project(db.Model):
     name = db.Column(db.String(200), nullable=False)
     name_ar = db.Column(db.String(200))
     description = db.Column(db.Text)
-    customer_id = db.Column(
-        db.Integer, db.ForeignKey("customers.id", ondelete="SET NULL"), nullable=True
-    )
+    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id", ondelete="SET NULL"), nullable=True)
     status = db.Column(db.String(20), default="planning", index=True)
     date_start = db.Column(db.DateTime, nullable=True)
     date_end = db.Column(db.DateTime, nullable=True)
     color = db.Column(db.String(7), default="#10b981")
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -41,15 +37,9 @@ class Project(db.Model):
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     branch = db.relationship("Branch", foreign_keys=[branch_id])
     customer = db.relationship("Customer", foreign_keys=[customer_id])
-    stages = db.relationship(
-        "TaskStage", back_populates="project", cascade="all, delete-orphan"
-    )
-    tasks = db.relationship(
-        "Task", back_populates="project", cascade="all, delete-orphan"
-    )
-    members = db.relationship(
-        "ProjectMember", back_populates="project", cascade="all, delete-orphan"
-    )
+    stages = db.relationship("TaskStage", back_populates="project", cascade="all, delete-orphan")
+    tasks = db.relationship("Task", back_populates="project", cascade="all, delete-orphan")
+    members = db.relationship("ProjectMember", back_populates="project", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Project {self.name}>"
@@ -88,9 +78,7 @@ class TaskStage(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
-    project = db.relationship(
-        "Project", back_populates="stages", foreign_keys=[project_id]
-    )
+    project = db.relationship("Project", back_populates="stages", foreign_keys=[project_id])
 
     def __repr__(self):
         return f"<TaskStage {self.name}>"
@@ -124,9 +112,7 @@ class Task(db.Model):
         nullable=True,
         index=True,
     )
-    parent_id = db.Column(
-        db.Integer, db.ForeignKey("tasks.id", ondelete="SET NULL"), nullable=True
-    )
+    parent_id = db.Column(db.Integer, db.ForeignKey("tasks.id", ondelete="SET NULL"), nullable=True)
     name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     assigned_user_id = db.Column(
@@ -141,9 +127,7 @@ class Task(db.Model):
     effective_hours = db.Column(db.Numeric(8, 2), default=0)
     sort_order = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -152,15 +136,11 @@ class Task(db.Model):
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     branch = db.relationship("Branch", foreign_keys=[branch_id])
-    project = db.relationship(
-        "Project", back_populates="tasks", foreign_keys=[project_id]
-    )
+    project = db.relationship("Project", back_populates="tasks", foreign_keys=[project_id])
     stage = db.relationship("TaskStage", foreign_keys=[stage_id])
     parent = db.relationship("Task", remote_side=[id], backref="subtasks")
     assigned_user = db.relationship("User", foreign_keys=[assigned_user_id])
-    timesheets = db.relationship(
-        "Timesheet", back_populates="task", cascade="all, delete-orphan"
-    )
+    timesheets = db.relationship("Timesheet", back_populates="task", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Task {self.name}>"
@@ -197,9 +177,7 @@ class Timesheet(db.Model):
     date = db.Column(db.Date, nullable=False, index=True)
     hours = db.Column(db.Numeric(8, 2), nullable=False)
     description = db.Column(db.String(500))
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     branch = db.relationship("Branch", foreign_keys=[branch_id])
@@ -236,14 +214,10 @@ class ProjectMember(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
-    project = db.relationship(
-        "Project", back_populates="members", foreign_keys=[project_id]
-    )
+    project = db.relationship("Project", back_populates="members", foreign_keys=[project_id])
     user = db.relationship("User", foreign_keys=[user_id])
 
-    __table_args__ = (
-        db.UniqueConstraint("project_id", "user_id", name="uq_project_member"),
-    )
+    __table_args__ = (db.UniqueConstraint("project_id", "user_id", name="uq_project_member"),)
 
     def __repr__(self):
         return f"<ProjectMember P{self.project_id} U{self.user_id}>"

@@ -46,9 +46,7 @@ def resolve_tenant_id(branch_id=None, user_id=None):
             import sys
             import traceback
 
-            sys.stderr.write(
-                f"[GL_HELPERS_WARNING] get_active_tenant_id() failed: {e}\n"
-            )
+            sys.stderr.write(f"[GL_HELPERS_WARNING] get_active_tenant_id() failed: {e}\n")
             traceback.print_exc()
             try:
                 from services.logging_core import LoggingCore
@@ -91,9 +89,7 @@ def resolve_tenant_id(branch_id=None, user_id=None):
             raise RuntimeError(f"resolve_tenant_id database lookup failed: {e}")
 
     if tenant_id is None:
-        raise ValueError(
-            "resolve_tenant_id: could not determine tenant_id under any fallback."
-        )
+        raise ValueError("resolve_tenant_id: could not determine tenant_id under any fallback.")
 
     return int(tenant_id)
 
@@ -123,9 +119,7 @@ def next_entry_number(tenant_id, entry_date=None):
             import sys
             import traceback
 
-            sys.stderr.write(
-                f"[GL_HELPERS_WARNING] Failed to parse entry_number '{latest.entry_number}': {err}\n"
-            )
+            sys.stderr.write(f"[GL_HELPERS_WARNING] Failed to parse entry_number '{latest.entry_number}': {err}\n")
             traceback.print_exc()
             try:
                 from services.logging_core import LoggingCore

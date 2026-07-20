@@ -31,16 +31,8 @@ class ProjectService:
             description=data.get("description"),
             customer_id=int(data["customer_id"]) if data.get("customer_id") else None,
             status=data.get("status", "planning"),
-            date_start=(
-                datetime.fromisoformat(data["date_start"])
-                if data.get("date_start")
-                else None
-            ),
-            date_end=(
-                datetime.fromisoformat(data["date_end"])
-                if data.get("date_end")
-                else None
-            ),
+            date_start=(datetime.fromisoformat(data["date_start"]) if data.get("date_start") else None),
+            date_end=(datetime.fromisoformat(data["date_end"]) if data.get("date_end") else None),
             color=data.get("color", "#10b981"),
         )
         db.session.add(project)
@@ -87,19 +79,11 @@ class ProjectService:
             if field in data:
                 setattr(project, field, data[field])
         if "date_start" in data:
-            project.date_start = (
-                datetime.fromisoformat(data["date_start"])
-                if data["date_start"]
-                else None
-            )
+            project.date_start = datetime.fromisoformat(data["date_start"]) if data["date_start"] else None
         if "date_end" in data:
-            project.date_end = (
-                datetime.fromisoformat(data["date_end"]) if data["date_end"] else None
-            )
+            project.date_end = datetime.fromisoformat(data["date_end"]) if data["date_end"] else None
         if "customer_id" in data:
-            project.customer_id = (
-                int(data["customer_id"]) if data["customer_id"] else None
-            )
+            project.customer_id = int(data["customer_id"]) if data["customer_id"] else None
         project.updated_at = datetime.now(timezone.utc)
         try:
             db.session.flush()
@@ -137,15 +121,9 @@ class ProjectService:
             parent_id=int(data["parent_id"]) if data.get("parent_id") else None,
             name=data["name"],
             description=data.get("description"),
-            assigned_user_id=(
-                int(data["assigned_user_id"]) if data.get("assigned_user_id") else None
-            ),
+            assigned_user_id=(int(data["assigned_user_id"]) if data.get("assigned_user_id") else None),
             priority=data.get("priority", "medium"),
-            date_deadline=(
-                datetime.fromisoformat(data["date_deadline"])
-                if data.get("date_deadline")
-                else None
-            ),
+            date_deadline=(datetime.fromisoformat(data["date_deadline"]) if data.get("date_deadline") else None),
             planned_hours=Decimal(str(data.get("planned_hours", 0))),
         )
         db.session.add(task)
@@ -227,9 +205,7 @@ class ProjectService:
                     "name": t.name,
                     "stage_id": t.stage_id,
                     "assigned_user_id": t.assigned_user_id,
-                    "date_deadline": (
-                        t.date_deadline.isoformat() if t.date_deadline else None
-                    ),
+                    "date_deadline": (t.date_deadline.isoformat() if t.date_deadline else None),
                     "planned_hours": float(t.planned_hours or 0),
                     "effective_hours": float(t.effective_hours or 0),
                     "priority": t.priority,
@@ -241,9 +217,7 @@ class ProjectService:
     @staticmethod
     def add_member(project_id, user_id, role, user):
         project = ProjectService.get_project(project_id, user)
-        existing = ProjectMember.query.filter_by(
-            project_id=project.id, user_id=int(user_id)
-        ).first()
+        existing = ProjectMember.query.filter_by(project_id=project.id, user_id=int(user_id)).first()
         if existing:
             raise ValueError("المستخدم مضاف بالفعل للمشروع.")
         member = ProjectMember(

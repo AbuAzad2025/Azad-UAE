@@ -47,9 +47,7 @@ class RedisCache:
         try:
             if hasattr(cache.cache, "_client"):
                 redis_client = cache.cache._client
-                keys = redis_client.keys(
-                    f"{current_app.config['CACHE_KEY_PREFIX']}:{pattern}"
-                )
+                keys = redis_client.keys(f"{current_app.config['CACHE_KEY_PREFIX']}:{pattern}")
                 if keys:
                     redis_client.delete(*keys)
                 return True

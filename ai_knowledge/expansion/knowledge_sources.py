@@ -295,9 +295,7 @@ class KnowledgeSourceManager:
         """ملخص جميع المصادر"""
         summary = {
             "total_categories": len(KNOWLEDGE_SOURCES),
-            "total_sources": sum(
-                len(sources) for sources in KNOWLEDGE_SOURCES.values()
-            ),
+            "total_sources": sum(len(sources) for sources in KNOWLEDGE_SOURCES.values()),
             "categories": {},
         }
 

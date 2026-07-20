@@ -55,17 +55,13 @@ def validate_percentage(value, field_name: str = "percentage") -> float:
 # ==================== String Validators ====================
 
 
-def validate_required_string(
-    value: Optional[str], field_name: str, max_length: int = 255
-) -> str:
+def validate_required_string(value: Optional[str], field_name: str, max_length: int = 255) -> str:
     """Validate a required string field."""
     if not value or not str(value).strip():
         raise ValidationError(f"{field_name} is required")
     text = str(value).strip()
     if len(text) > max_length:
-        raise ValidationError(
-            f"{field_name} exceeds maximum length of {max_length} characters"
-        )
+        raise ValidationError(f"{field_name} exceeds maximum length of {max_length} characters")
     # Prevent control characters
     if any(ord(c) < 32 and c not in "\t\n\r" for c in text):
         raise ValidationError(f"{field_name} contains invalid characters")
@@ -149,9 +145,7 @@ def validate_optional_id(value, field_name: str = "id") -> Optional[int]:
 # ==================== Collection Validators ====================
 
 
-def validate_pagination(
-    page: int, per_page: int, max_per_page: int = 100
-) -> Tuple[int, int]:
+def validate_pagination(page: int, per_page: int, max_per_page: int = 100) -> Tuple[int, int]:
     """Validate and normalize pagination parameters."""
     if page < 1:
         page = 1

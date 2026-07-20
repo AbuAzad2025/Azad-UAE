@@ -99,9 +99,7 @@ class TestGetAllRates:
 
     def test_static_fallback_cross_rate(self, mocker):
         mocker.patch("services.currency_service.FOREX_AVAILABLE", False)
-        mocker.patch.object(
-            CurrencyService, "_fetch_open_er_api_rates", return_value={}
-        )
+        mocker.patch.object(CurrencyService, "_fetch_open_er_api_rates", return_value={})
         rates = CurrencyService.get_all_rates("USD")
         assert rates["USD"] == Decimal("1.00")
         assert "AED" in rates
@@ -115,16 +113,12 @@ class TestGetAllRates:
 
 class TestExchangeRateDetails:
     def test_user_rate_priority(self):
-        details = CurrencyService.get_exchange_rate_details(
-            "USD", "AED", user_rate="3.67"
-        )
+        details = CurrencyService.get_exchange_rate_details("USD", "AED", user_rate="3.67")
         assert details["source"] == "user_input"
         assert details["rate"] == Decimal("3.670000")
 
     def test_invalid_user_rate_ignored(self):
-        details = CurrencyService.get_exchange_rate_details(
-            "USD", "AED", user_rate="bad"
-        )
+        details = CurrencyService.get_exchange_rate_details("USD", "AED", user_rate="bad")
         assert details["source"] in (
             "parity",
             "open_er_api",
@@ -166,9 +160,7 @@ class TestExchangeRateDetails:
         cs.FOREX_AVAILABLE = True
         cs.CurrencyRates = MagicMock(return_value=instance)
         try:
-            mocker_patch = patch.object(
-                CurrencyService, "_fetch_open_er_api_rates", return_value={}
-            )
+            mocker_patch = patch.object(CurrencyService, "_fetch_open_er_api_rates", return_value={})
             with mocker_patch:
                 details = CurrencyService.get_exchange_rate_details("USD", "AED")
             assert details["source"] == "forex_python"
@@ -188,16 +180,12 @@ class TestExchangeRateDetails:
 
     def test_fetch_open_er_api_request_error(self, mocker):
         mocker.patch("services.currency_service.REQUESTS_AVAILABLE", True)
-        mocker.patch(
-            "services.currency_service.requests.get", side_effect=RuntimeError("net")
-        )
+        mocker.patch("services.currency_service.requests.get", side_effect=RuntimeError("net"))
         assert CurrencyService._fetch_open_er_api_rates("AED") == {}
 
     def test_fallback_static(self, mocker):
         mocker.patch("services.currency_service.FOREX_AVAILABLE", False)
-        mocker.patch.object(
-            CurrencyService, "_fetch_open_er_api_rates", return_value={}
-        )
+        mocker.patch.object(CurrencyService, "_fetch_open_er_api_rates", return_value={})
         details = CurrencyService.get_exchange_rate_details("USD", "AED")
         assert details["source"] == "fallback_static"
         assert details["rate"] > Decimal("0")

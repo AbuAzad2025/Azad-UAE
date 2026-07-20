@@ -48,9 +48,7 @@ class GLIndustryExtension:
 
 BASE_ACCOUNTS = [
     GLAccountTemplate("1000", "Assets", "الأصول", "asset", 0, True),
-    GLAccountTemplate(
-        "1100", "Current Assets", "أصول متداولة", "asset", 1, True, "1000"
-    ),
+    GLAccountTemplate("1100", "Current Assets", "أصول متداولة", "asset", 1, True, "1000"),
     GLAccountTemplate(
         "1110",
         "Cash and Cash Equivalents",
@@ -60,24 +58,12 @@ BASE_ACCOUNTS = [
         True,
         "1100",
     ),
-    GLAccountTemplate(
-        "1111", "Cash Box (Main)", "الصندوق الرئيسي", "asset", 3, False, "1110"
-    ),
-    GLAccountTemplate(
-        "1112", "Cash Box (Branch)", "صندوق الفرع", "asset", 3, False, "1110"
-    ),
-    GLAccountTemplate(
-        "1120", "Bank Accounts", "الحسابات البنكية", "asset", 2, True, "1100"
-    ),
-    GLAccountTemplate(
-        "1130", "Accounts Receivable", "العملاء (ذمم مدينة)", "asset", 2, False, "1100"
-    ),
-    GLAccountTemplate(
-        "1131", "AR - Trade Customers", "عملاء التجارة", "asset", 3, False, "1130"
-    ),
-    GLAccountTemplate(
-        "1132", "AR - Partners", "عملاء الشراكة", "asset", 3, False, "1130"
-    ),
+    GLAccountTemplate("1111", "Cash Box (Main)", "الصندوق الرئيسي", "asset", 3, False, "1110"),
+    GLAccountTemplate("1112", "Cash Box (Branch)", "صندوق الفرع", "asset", 3, False, "1110"),
+    GLAccountTemplate("1120", "Bank Accounts", "الحسابات البنكية", "asset", 2, True, "1100"),
+    GLAccountTemplate("1130", "Accounts Receivable", "العملاء (ذمم مدينة)", "asset", 2, False, "1100"),
+    GLAccountTemplate("1131", "AR - Trade Customers", "عملاء التجارة", "asset", 3, False, "1130"),
+    GLAccountTemplate("1132", "AR - Partners", "عملاء الشراكة", "asset", 3, False, "1130"),
     GLAccountTemplate("1133", "AR - Staff", "ذمم الموظفين", "asset", 3, False, "1130"),
     GLAccountTemplate("1140", "Inventory", "المخزون", "asset", 2, False, "1100"),
     GLAccountTemplate(
@@ -98,9 +84,7 @@ BASE_ACCOUNTS = [
         False,
         "1140",
     ),
-    GLAccountTemplate(
-        "1143", "Inventory - Spare Parts", "مخزون قطع غيار", "asset", 3, False, "1140"
-    ),
+    GLAccountTemplate("1143", "Inventory - Spare Parts", "مخزون قطع غيار", "asset", 3, False, "1140"),
     GLAccountTemplate(
         "1150",
         "Cheques Under Collection",
@@ -110,25 +94,13 @@ BASE_ACCOUNTS = [
         False,
         "1100",
     ),
-    GLAccountTemplate(
-        "1160", "Prepayments", "مدفوعات مقدمة", "asset", 2, False, "1100"
-    ),
-    GLAccountTemplate(
-        "1170", "Employee Advances", "سلف الموظفين", "asset", 2, False, "1100"
-    ),
-    GLAccountTemplate(
-        "1180", "Fixed Assets", "الأصول الثابتة", "asset", 2, True, "1100"
-    ),
-    GLAccountTemplate(
-        "1190", "Accumulated Depreciation", "مجمع الإهلاك", "asset", 2, False, "1100"
-    ),
-    GLAccountTemplate(
-        "1200", "Non-Current Assets", "أصول غير متداولة", "asset", 1, True, "1000"
-    ),
+    GLAccountTemplate("1160", "Prepayments", "مدفوعات مقدمة", "asset", 2, False, "1100"),
+    GLAccountTemplate("1170", "Employee Advances", "سلف الموظفين", "asset", 2, False, "1100"),
+    GLAccountTemplate("1180", "Fixed Assets", "الأصول الثابتة", "asset", 2, True, "1100"),
+    GLAccountTemplate("1190", "Accumulated Depreciation", "مجمع الإهلاك", "asset", 2, False, "1100"),
+    GLAccountTemplate("1200", "Non-Current Assets", "أصول غير متداولة", "asset", 1, True, "1000"),
     GLAccountTemplate("2000", "Liabilities", "الخصوم", "liability", 0, True),
-    GLAccountTemplate(
-        "2100", "Current Liabilities", "خصوم متداولة", "liability", 1, True, "2000"
-    ),
+    GLAccountTemplate("2100", "Current Liabilities", "خصوم متداولة", "liability", 1, True, "2000"),
     GLAccountTemplate(
         "2110",
         "Accounts Payable",
@@ -138,21 +110,11 @@ BASE_ACCOUNTS = [
         False,
         "2100",
     ),
-    GLAccountTemplate(
-        "2111", "AP - Suppliers", "موردين", "liability", 3, False, "2110"
-    ),
-    GLAccountTemplate(
-        "2112", "AP - Trade Payables", "ذمم دائنة تجارية", "liability", 3, False, "2110"
-    ),
-    GLAccountTemplate(
-        "2120", "VAT Payable", "ضريبة القيمة المضافة", "liability", 2, False, "2100"
-    ),
-    GLAccountTemplate(
-        "2121", "VAT Output", "ضريبة مخرجات", "liability", 3, False, "2120"
-    ),
-    GLAccountTemplate(
-        "2122", "VAT Input", "ضريبة مدخلات", "liability", 3, False, "2120"
-    ),
+    GLAccountTemplate("2111", "AP - Suppliers", "موردين", "liability", 3, False, "2110"),
+    GLAccountTemplate("2112", "AP - Trade Payables", "ذمم دائنة تجارية", "liability", 3, False, "2110"),
+    GLAccountTemplate("2120", "VAT Payable", "ضريبة القيمة المضافة", "liability", 2, False, "2100"),
+    GLAccountTemplate("2121", "VAT Output", "ضريبة مخرجات", "liability", 3, False, "2120"),
+    GLAccountTemplate("2122", "VAT Input", "ضريبة مدخلات", "liability", 3, False, "2120"),
     GLAccountTemplate(
         "2130",
         "Deferred Cheques Payable",
@@ -171,9 +133,7 @@ BASE_ACCOUNTS = [
         False,
         "2100",
     ),
-    GLAccountTemplate(
-        "2141", "Payroll Payable", "رواتب مستحقة", "liability", 2, False, "2100"
-    ),
+    GLAccountTemplate("2141", "Payroll Payable", "رواتب مستحقة", "liability", 2, False, "2100"),
     GLAccountTemplate(
         "2150",
         "Partner Current Accounts",
@@ -219,9 +179,7 @@ BASE_ACCOUNTS = [
         False,
         "2100",
     ),
-    GLAccountTemplate(
-        "2170", "Customer Deposits", "عربون العملاء", "liability", 2, False, "2100"
-    ),
+    GLAccountTemplate("2170", "Customer Deposits", "عربون العملاء", "liability", 2, False, "2100"),
     GLAccountTemplate(
         "2180",
         "Azad Platform Payable",
@@ -260,25 +218,13 @@ BASE_ACCOUNTS = [
     ),
     GLAccountTemplate("3000", "Equity", "حقوق الملكية", "equity", 0, True),
     GLAccountTemplate("3100", "Capital", "رأس المال", "equity", 1, False, "3000"),
-    GLAccountTemplate(
-        "3130", "Opening Balance Equity", "رصيد افتتاحي", "equity", 1, False, "3000"
-    ),
-    GLAccountTemplate(
-        "3200", "Retained Earnings", "أرباح مرحلة", "equity", 1, False, "3000"
-    ),
-    GLAccountTemplate(
-        "3300", "Owner Drawings", "مسحوبات المالك", "equity", 1, False, "3000"
-    ),
+    GLAccountTemplate("3130", "Opening Balance Equity", "رصيد افتتاحي", "equity", 1, False, "3000"),
+    GLAccountTemplate("3200", "Retained Earnings", "أرباح مرحلة", "equity", 1, False, "3000"),
+    GLAccountTemplate("3300", "Owner Drawings", "مسحوبات المالك", "equity", 1, False, "3000"),
     GLAccountTemplate("4000", "Revenue", "الإيرادات", "revenue", 0, True),
-    GLAccountTemplate(
-        "4100", "Sales Revenue", "إيرادات المبيعات", "revenue", 1, False, "4000"
-    ),
-    GLAccountTemplate(
-        "4101", "Sales - Retail", "مبيعات التجزئة", "revenue", 2, False, "4100"
-    ),
-    GLAccountTemplate(
-        "4102", "Sales - Wholesale", "مبيعات الجملة", "revenue", 2, False, "4100"
-    ),
+    GLAccountTemplate("4100", "Sales Revenue", "إيرادات المبيعات", "revenue", 1, False, "4000"),
+    GLAccountTemplate("4101", "Sales - Retail", "مبيعات التجزئة", "revenue", 2, False, "4100"),
+    GLAccountTemplate("4102", "Sales - Wholesale", "مبيعات الجملة", "revenue", 2, False, "4100"),
     GLAccountTemplate(
         "4103",
         "Sales - Online Store",
@@ -288,21 +234,11 @@ BASE_ACCOUNTS = [
         False,
         "4100",
     ),
-    GLAccountTemplate(
-        "4104", "Sales - Services", "إيرادات الخدمات", "revenue", 2, False, "4100"
-    ),
-    GLAccountTemplate(
-        "4200", "Shipping Revenue", "إيرادات الشحن", "revenue", 1, False, "4000"
-    ),
-    GLAccountTemplate(
-        "4300", "Other Revenue", "إيرادات أخرى", "revenue", 1, False, "4000"
-    ),
-    GLAccountTemplate(
-        "4400", "FX Gains", "أرباح صرف العملات", "revenue", 1, False, "4000"
-    ),
-    GLAccountTemplate(
-        "4500", "Donation Revenue", "إيرادات التبرعات", "revenue", 1, False, "4000"
-    ),
+    GLAccountTemplate("4104", "Sales - Services", "إيرادات الخدمات", "revenue", 2, False, "4100"),
+    GLAccountTemplate("4200", "Shipping Revenue", "إيرادات الشحن", "revenue", 1, False, "4000"),
+    GLAccountTemplate("4300", "Other Revenue", "إيرادات أخرى", "revenue", 1, False, "4000"),
+    GLAccountTemplate("4400", "FX Gains", "أرباح صرف العملات", "revenue", 1, False, "4000"),
+    GLAccountTemplate("4500", "Donation Revenue", "إيرادات التبرعات", "revenue", 1, False, "4000"),
     GLAccountTemplate(
         "4600",
         "Fixed Asset Disposal Gain",
@@ -331,24 +267,12 @@ BASE_ACCOUNTS = [
         False,
         "5000",
     ),
-    GLAccountTemplate(
-        "5101", "COGS - Retail", "تكلفة بضاعة تجزئة", "expense", 2, False, "5100"
-    ),
-    GLAccountTemplate(
-        "5102", "COGS - Wholesale", "تكلفة بضاعة جملة", "expense", 2, False, "5100"
-    ),
-    GLAccountTemplate(
-        "5103", "COGS - Online", "تكلفة بضاعة أونلاين", "expense", 2, False, "5100"
-    ),
-    GLAccountTemplate(
-        "5200", "Inventory Adjustments", "تسويات المخزون", "expense", 1, True, "5000"
-    ),
-    GLAccountTemplate(
-        "5201", "Inventory Gain", "ربح مخزوني", "expense", 2, False, "5200"
-    ),
-    GLAccountTemplate(
-        "5202", "Inventory Loss", "خسارة مخزونية", "expense", 2, False, "5200"
-    ),
+    GLAccountTemplate("5101", "COGS - Retail", "تكلفة بضاعة تجزئة", "expense", 2, False, "5100"),
+    GLAccountTemplate("5102", "COGS - Wholesale", "تكلفة بضاعة جملة", "expense", 2, False, "5100"),
+    GLAccountTemplate("5103", "COGS - Online", "تكلفة بضاعة أونلاين", "expense", 2, False, "5100"),
+    GLAccountTemplate("5200", "Inventory Adjustments", "تسويات المخزون", "expense", 1, True, "5000"),
+    GLAccountTemplate("5201", "Inventory Gain", "ربح مخزوني", "expense", 2, False, "5200"),
+    GLAccountTemplate("5202", "Inventory Loss", "خسارة مخزونية", "expense", 2, False, "5200"),
     GLAccountTemplate(
         "5150",
         "Inventory Adjustment",
@@ -358,19 +282,11 @@ BASE_ACCOUNTS = [
         False,
         "5000",
     ),
-    GLAccountTemplate(
-        "5300", "Landed Costs", "تكاليف الشحن والجمارك", "expense", 1, True, "5000"
-    ),
+    GLAccountTemplate("5300", "Landed Costs", "تكاليف الشحن والجمارك", "expense", 1, True, "5000"),
     GLAccountTemplate("5301", "Freight In", "شحن وارد", "expense", 2, False, "5300"),
-    GLAccountTemplate(
-        "5302", "Customs Duty", "رسوم جمركية", "expense", 2, False, "5300"
-    ),
-    GLAccountTemplate(
-        "5303", "Insurance In", "تأمين وارد", "expense", 2, False, "5300"
-    ),
-    GLAccountTemplate(
-        "6000", "Operating Expenses", "مصروفات تشغيلية", "expense", 0, True
-    ),
+    GLAccountTemplate("5302", "Customs Duty", "رسوم جمركية", "expense", 2, False, "5300"),
+    GLAccountTemplate("5303", "Insurance In", "تأمين وارد", "expense", 2, False, "5300"),
+    GLAccountTemplate("6000", "Operating Expenses", "مصروفات تشغيلية", "expense", 0, True),
     GLAccountTemplate(
         "6100",
         "Sales & Marketing Expenses",
@@ -380,15 +296,9 @@ BASE_ACCOUNTS = [
         True,
         "6000",
     ),
-    GLAccountTemplate(
-        "6110", "Advertising & Marketing", "إعلان وتسويق", "expense", 2, False, "6100"
-    ),
-    GLAccountTemplate(
-        "6120", "Sales Commissions", "عمولات المبيعات", "expense", 2, False, "6100"
-    ),
-    GLAccountTemplate(
-        "6150", "Partner Commissions", "عمولات الشركاء", "expense", 2, False, "6100"
-    ),
+    GLAccountTemplate("6110", "Advertising & Marketing", "إعلان وتسويق", "expense", 2, False, "6100"),
+    GLAccountTemplate("6120", "Sales Commissions", "عمولات المبيعات", "expense", 2, False, "6100"),
+    GLAccountTemplate("6150", "Partner Commissions", "عمولات الشركاء", "expense", 2, False, "6100"),
     GLAccountTemplate(
         "6130",
         "Store Discounts & Coupons",
@@ -398,9 +308,7 @@ BASE_ACCOUNTS = [
         False,
         "6100",
     ),
-    GLAccountTemplate(
-        "6131", "Campaign Discounts", "خصومات الحملات", "expense", 2, False, "6100"
-    ),
+    GLAccountTemplate("6131", "Campaign Discounts", "خصومات الحملات", "expense", 2, False, "6100"),
     GLAccountTemplate(
         "6140",
         "Shipping & Delivery Cost",
@@ -410,36 +318,18 @@ BASE_ACCOUNTS = [
         False,
         "6100",
     ),
-    GLAccountTemplate(
-        "6200", "Administrative Expenses", "مصروفات إدارية", "expense", 1, True, "6000"
-    ),
+    GLAccountTemplate("6200", "Administrative Expenses", "مصروفات إدارية", "expense", 1, True, "6000"),
     GLAccountTemplate("6210", "Rent", "الإيجار", "expense", 2, False, "6200"),
-    GLAccountTemplate(
-        "6220", "Salaries & Wages", "الرواتب والأجور", "expense", 2, False, "6200"
-    ),
-    GLAccountTemplate(
-        "6230", "Utilities", "الكهرباء والمياه", "expense", 2, False, "6200"
-    ),
-    GLAccountTemplate(
-        "6240", "Maintenance & Repairs", "صيانة وإصلاحات", "expense", 2, False, "6200"
-    ),
-    GLAccountTemplate(
-        "6250", "Office Supplies", "قرطاسية ومستلزمات", "expense", 2, False, "6200"
-    ),
-    GLAccountTemplate(
-        "6260", "Bank Fees & Charges", "رسوم بنكية", "expense", 2, False, "6200"
-    ),
+    GLAccountTemplate("6220", "Salaries & Wages", "الرواتب والأجور", "expense", 2, False, "6200"),
+    GLAccountTemplate("6230", "Utilities", "الكهرباء والمياه", "expense", 2, False, "6200"),
+    GLAccountTemplate("6240", "Maintenance & Repairs", "صيانة وإصلاحات", "expense", 2, False, "6200"),
+    GLAccountTemplate("6250", "Office Supplies", "قرطاسية ومستلزمات", "expense", 2, False, "6200"),
+    GLAccountTemplate("6260", "Bank Fees & Charges", "رسوم بنكية", "expense", 2, False, "6200"),
     GLAccountTemplate("6270", "Insurance", "تأمين", "expense", 2, False, "6200"),
-    GLAccountTemplate(
-        "6280", "Legal & Professional Fees", "رسوم قانونية", "expense", 2, False, "6200"
-    ),
+    GLAccountTemplate("6280", "Legal & Professional Fees", "رسوم قانونية", "expense", 2, False, "6200"),
     GLAccountTemplate("6290", "Communication", "اتصالات", "expense", 2, False, "6200"),
-    GLAccountTemplate(
-        "6300", "Depreciation Expense", "مصروف الإهلاك", "expense", 1, False, "6000"
-    ),
-    GLAccountTemplate(
-        "6400", "Warranty Claims", "مطالبات الضمان", "expense", 1, False, "6000"
-    ),
+    GLAccountTemplate("6300", "Depreciation Expense", "مصروف الإهلاك", "expense", 1, False, "6000"),
+    GLAccountTemplate("6400", "Warranty Claims", "مطالبات الضمان", "expense", 1, False, "6000"),
     GLAccountTemplate(
         "6410",
         "Platform Subscription Expense",
@@ -449,12 +339,8 @@ BASE_ACCOUNTS = [
         False,
         "6000",
     ),
-    GLAccountTemplate(
-        "6500", "Miscellaneous Expenses", "مصروفات متنوعة", "expense", 1, False, "6000"
-    ),
-    GLAccountTemplate(
-        "6600", "FX Losses", "خسائر صرف العملات", "expense", 1, False, "6000"
-    ),
+    GLAccountTemplate("6500", "Miscellaneous Expenses", "مصروفات متنوعة", "expense", 1, False, "6000"),
+    GLAccountTemplate("6600", "FX Losses", "خسائر صرف العملات", "expense", 1, False, "6000"),
     GLAccountTemplate(
         "6190",
         "End of Service Provision Expenses",
@@ -939,12 +825,8 @@ INDUSTRY_EXTENSIONS = {
             "4100",
             "jewelry",
         ),
-        GLAccountTemplate(
-            "5111", "COGS - Gold", "تكلفة ذهب", "expense", 2, False, "5100", "jewelry"
-        ),
-        GLAccountTemplate(
-            "6244", "Security Cost", "تكلفة أمن", "expense", 2, False, "6200", "jewelry"
-        ),
+        GLAccountTemplate("5111", "COGS - Gold", "تكلفة ذهب", "expense", 2, False, "5100", "jewelry"),
+        GLAccountTemplate("6244", "Security Cost", "تكلفة أمن", "expense", 2, False, "6200", "jewelry"),
     ],
     "trading": [
         GLAccountTemplate(
@@ -1014,12 +896,8 @@ GL_MODULE_DEFINITIONS = {
         accounts=[],
         mappings=[
             # CASH and BANK are liquidity-owned — no mapping template
-            GLConceptMappingTemplate(
-                "CHEQUES_UNDER_COLLECTION", "1150", "core_payments"
-            ),
-            GLConceptMappingTemplate(
-                "DEFERRED_CHEQUES_PAYABLE", "2130", "core_payments"
-            ),
+            GLConceptMappingTemplate("CHEQUES_UNDER_COLLECTION", "1150", "core_payments"),
+            GLConceptMappingTemplate("DEFERRED_CHEQUES_PAYABLE", "2130", "core_payments"),
             GLConceptMappingTemplate("BANK_FEES", "6260", "core_payments"),
             GLConceptMappingTemplate("CARD_PROCESSING_FEES", "6260", "core_payments"),
         ],
@@ -1032,15 +910,9 @@ GL_MODULE_DEFINITIONS = {
             GLConceptMappingTemplate("INVENTORY_ASSET", "1140", "core_inventory"),
             GLConceptMappingTemplate("COGS", "5100", "core_inventory"),
             GLConceptMappingTemplate("COGS_REVERSAL", "5100", "core_inventory"),
-            GLConceptMappingTemplate(
-                "INVENTORY_ADJUSTMENT_GAIN", "5150", "core_inventory"
-            ),
-            GLConceptMappingTemplate(
-                "INVENTORY_ADJUSTMENT_LOSS", "5150", "core_inventory"
-            ),
-            GLConceptMappingTemplate(
-                "OPENING_BALANCE_EQUITY", "3130", "core_inventory"
-            ),
+            GLConceptMappingTemplate("INVENTORY_ADJUSTMENT_GAIN", "5150", "core_inventory"),
+            GLConceptMappingTemplate("INVENTORY_ADJUSTMENT_LOSS", "5150", "core_inventory"),
+            GLConceptMappingTemplate("OPENING_BALANCE_EQUITY", "3130", "core_inventory"),
         ],
     ),
     "shop_online": GLModuleDefinition(
@@ -1152,9 +1024,7 @@ GL_MODULE_DEFINITIONS = {
         "enable_bank_reconciliation",
         accounts=[],
         mappings=[
-            GLConceptMappingTemplate(
-                "BANK_INTEREST_INCOME", "4300", "bank_reconciliation"
-            ),
+            GLConceptMappingTemplate("BANK_INTEREST_INCOME", "4300", "bank_reconciliation"),
         ],
     ),
     "azad_platform": GLModuleDefinition(
@@ -1192,16 +1062,10 @@ GL_MODULE_DEFINITIONS = {
         ],
         mappings=[
             GLConceptMappingTemplate("AZAD_PLATFORM_PAYABLE", "2180", "azad_platform"),
-            GLConceptMappingTemplate(
-                "AZAD_PLATFORM_FEE_ACCRUED", "2181", "azad_platform"
-            ),
+            GLConceptMappingTemplate("AZAD_PLATFORM_FEE_ACCRUED", "2181", "azad_platform"),
             GLConceptMappingTemplate("AZAD_PLATFORM_FEE_PAID", "2182", "azad_platform"),
-            GLConceptMappingTemplate(
-                "AZAD_SUBSCRIPTION_EXPENSE", "6410", "azad_platform"
-            ),
-            GLConceptMappingTemplate(
-                "AZAD_SUBSCRIPTION_REVENUE", "4700", "azad_platform"
-            ),
+            GLConceptMappingTemplate("AZAD_SUBSCRIPTION_EXPENSE", "6410", "azad_platform"),
+            GLConceptMappingTemplate("AZAD_SUBSCRIPTION_REVENUE", "4700", "azad_platform"),
         ],
     ),
 }

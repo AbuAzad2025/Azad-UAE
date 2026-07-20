@@ -24,22 +24,14 @@ from services.cheque_service import (
 @pytest.fixture(autouse=True)
 def _patch_gl_dependencies(mocker):
     mocker.patch("services.cheque_service.gl_ensure_core_accounts")
-    mocker.patch(
-        "services.cheque_service.gl_post_or_fail", return_value=MagicMock(id=101)
-    )
+    mocker.patch("services.cheque_service.gl_post_or_fail", return_value=MagicMock(id=101))
     mocker.patch(
         "services.cheque_service.GLService.get_account_code_for_concept",
         return_value="1100",
     )
-    mocker.patch(
-        "services.cheque_service.gl_get_customer_credit_account", return_value="1200"
-    )
-    mocker.patch(
-        "services.cheque_service.gl_get_customer_credit_concept", return_value="AR"
-    )
-    mocker.patch(
-        "services.cheque_service.gl_get_default_liquidity_account", return_value="1101"
-    )
+    mocker.patch("services.cheque_service.gl_get_customer_credit_account", return_value="1200")
+    mocker.patch("services.cheque_service.gl_get_customer_credit_concept", return_value="AR")
+    mocker.patch("services.cheque_service.gl_get_default_liquidity_account", return_value="1101")
     mocker.patch("utils.currency_utils.get_system_default_currency", return_value="AED")
 
 
@@ -148,25 +140,19 @@ class TestReceiveAndIssue:
     def test_receive_outgoing_returns_none(self, outgoing_cheque):
         assert process_cheque_receive(outgoing_cheque) is None
 
-    def test_issue_outgoing_supplier(
-        self, mocker, db_session, sample_tenant, sample_supplier, outgoing_cheque
-    ):
+    def test_issue_outgoing_supplier(self, mocker, db_session, sample_tenant, sample_supplier, outgoing_cheque):
         outgoing_cheque.supplier_id = sample_supplier.id
         db_session.flush()
         entry = process_cheque_issue(outgoing_cheque)
         assert entry is not None
         assert outgoing_cheque.gl_journal_entry_id == 101
 
-    def test_issue_outgoing_customer(
-        self, mocker, db_session, sample_customer, outgoing_cheque
-    ):
+    def test_issue_outgoing_customer(self, mocker, db_session, sample_customer, outgoing_cheque):
         outgoing_cheque.customer_id = sample_customer.id
         db_session.flush()
         assert process_cheque_issue(outgoing_cheque) is not None
 
-    def test_issue_outgoing_expense_skips_gl(
-        self, db_session, sample_expense, outgoing_cheque
-    ):
+    def test_issue_outgoing_expense_skips_gl(self, db_session, sample_expense, outgoing_cheque):
         outgoing_cheque.expense_id = sample_expense.id
         db_session.flush()
         assert process_cheque_issue(outgoing_cheque) is None
@@ -237,9 +223,7 @@ class TestClearCheque:
         process_cheque_clear(outgoing_cheque, clearance_exchange_rate=Decimal("3.80"))
         assert outgoing_cheque.status == "cleared"
 
-    def test_clear_confirms_payment(
-        self, mocker, db_session, sample_tenant, outgoing_cheque, sample_user
-    ):
+    def test_clear_confirms_payment(self, mocker, db_session, sample_tenant, outgoing_cheque, sample_user):
         outgoing_cheque.status = "deposited"
         payment = Payment(
             tenant_id=sample_tenant.id,
@@ -296,9 +280,7 @@ class TestBounceCheque:
         assert incoming_cheque.status == "bounced"
         assert incoming_cheque.bounce_reason == "NSF"
 
-    def test_bounce_outgoing_supplier(
-        self, mocker, db_session, sample_supplier, outgoing_cheque
-    ):
+    def test_bounce_outgoing_supplier(self, mocker, db_session, sample_supplier, outgoing_cheque):
         outgoing_cheque.status = "pending"
         outgoing_cheque.supplier_id = sample_supplier.id
         db_session.flush()
@@ -323,9 +305,7 @@ class TestBounceCheque:
         mocker.patch("services.gl_posting.post_or_fail", side_effect=RuntimeError("gl"))
         process_cheque_bounce(incoming_cheque, reason="NSF", bounce_fee=Decimal("10"))
 
-    def test_bounce_adjusts_customer(
-        self, mocker, db_session, sample_customer, incoming_cheque
-    ):
+    def test_bounce_adjusts_customer(self, mocker, db_session, sample_customer, incoming_cheque):
         incoming_cheque.status = "deposited"
         incoming_cheque.customer_id = sample_customer.id
         db_session.flush()
@@ -333,9 +313,7 @@ class TestBounceCheque:
         process_cheque_bounce(incoming_cheque, reason="NSF")
         adjust.assert_called_once()
 
-    def test_bounce_rejects_payment(
-        self, db_session, sample_tenant, outgoing_cheque, sample_user
-    ):
+    def test_bounce_rejects_payment(self, db_session, sample_tenant, outgoing_cheque, sample_user):
         outgoing_cheque.status = "pending"
         payment = Payment(
             tenant_id=sample_tenant.id,
@@ -353,9 +331,7 @@ class TestBounceCheque:
         process_cheque_bounce(outgoing_cheque, reason="Bounced")
         assert payment.payment_confirmed is False
 
-    def test_bounce_rejects_receipt(
-        self, db_session, sample_tenant, incoming_cheque, sample_customer, sample_user
-    ):
+    def test_bounce_rejects_receipt(self, db_session, sample_tenant, incoming_cheque, sample_customer, sample_user):
         incoming_cheque.status = "deposited"
         receipt = Receipt(
             tenant_id=sample_tenant.id,
@@ -390,9 +366,7 @@ class TestCancelCheque:
         process_cheque_cancel(incoming_cheque)
         assert incoming_cheque.status == "cancelled"
 
-    def test_cancel_outgoing_supplier_restores_ap(
-        self, mocker, db_session, sample_supplier, outgoing_cheque
-    ):
+    def test_cancel_outgoing_supplier_restores_ap(self, mocker, db_session, sample_supplier, outgoing_cheque):
         outgoing_cheque.supplier_id = sample_supplier.id
         db_session.flush()
         apply = mocker.patch.object(sample_supplier, "apply_payment")
@@ -409,9 +383,7 @@ class TestCancelCheque:
         process_cheque_cancel(incoming_cheque, create_gl=False)
         post.assert_not_called()
 
-    def test_cancel_rejects_linked_payment(
-        self, db_session, sample_tenant, outgoing_cheque, sample_user
-    ):
+    def test_cancel_rejects_linked_payment(self, db_session, sample_tenant, outgoing_cheque, sample_user):
         payment = Payment(
             tenant_id=sample_tenant.id,
             payment_number=f"PAY-{uuid.uuid4().hex[:6]}",
@@ -475,9 +447,7 @@ class TestChequeEdgePaths:
         process_cheque_clear(outgoing_cheque, clearance_exchange_rate=Decimal("3.50"))
         assert outgoing_cheque.status == "cleared"
 
-    def test_bounce_outgoing_customer_credit(
-        self, db_session, sample_customer, outgoing_cheque
-    ):
+    def test_bounce_outgoing_customer_credit(self, db_session, sample_customer, outgoing_cheque):
         outgoing_cheque.status = "pending"
         outgoing_cheque.customer_id = sample_customer.id
         outgoing_cheque.supplier_id = None
@@ -485,22 +455,16 @@ class TestChequeEdgePaths:
         process_cheque_bounce(outgoing_cheque, reason="Returned")
         assert outgoing_cheque.status == "bounced"
 
-    def test_bounce_customer_adjust_failure_logged(
-        self, mocker, db_session, sample_customer, incoming_cheque
-    ):
+    def test_bounce_customer_adjust_failure_logged(self, mocker, db_session, sample_customer, incoming_cheque):
         incoming_cheque.status = "deposited"
         incoming_cheque.customer_id = sample_customer.id
         db_session.flush()
-        mocker.patch.object(
-            sample_customer, "adjust_balance", side_effect=RuntimeError("cust")
-        )
+        mocker.patch.object(sample_customer, "adjust_balance", side_effect=RuntimeError("cust"))
         err = mocker.patch("services.cheque_service.logger.error")
         process_cheque_bounce(incoming_cheque, reason="NSF")
         err.assert_called()
 
-    def test_cancel_outgoing_customer_credit(
-        self, db_session, sample_customer, outgoing_cheque
-    ):
+    def test_cancel_outgoing_customer_credit(self, db_session, sample_customer, outgoing_cheque):
         outgoing_cheque.customer_id = sample_customer.id
         outgoing_cheque.supplier_id = None
         db_session.flush()
@@ -514,9 +478,7 @@ class TestChequeEdgePaths:
         process_cheque_cancel(outgoing_cheque, create_gl=True)
         assert outgoing_cheque.status == "cancelled"
 
-    def test_clear_with_tenant_scoped_payment(
-        self, mocker, db_session, sample_tenant, outgoing_cheque, sample_user
-    ):
+    def test_clear_with_tenant_scoped_payment(self, mocker, db_session, sample_tenant, outgoing_cheque, sample_user):
         outgoing_cheque.status = "deposited"
         payment = Payment(
             tenant_id=sample_tenant.id,
@@ -579,9 +541,7 @@ class TestChequeEdgePaths:
         process_cheque_clear(incoming_cheque)
         assert receipt.payment_confirmed is True
 
-    def test_bounce_outgoing_supplier_restores_ap(
-        self, mocker, db_session, sample_supplier, outgoing_cheque
-    ):
+    def test_bounce_outgoing_supplier_restores_ap(self, mocker, db_session, sample_supplier, outgoing_cheque):
         outgoing_cheque.status = "pending"
         outgoing_cheque.supplier_id = sample_supplier.id
         outgoing_cheque.expense_id = None
@@ -590,9 +550,7 @@ class TestChequeEdgePaths:
         process_cheque_bounce(outgoing_cheque, reason="Returned")
         apply.assert_called_once()
 
-    def test_cancel_expense_with_category_gl_code(
-        self, db_session, sample_expense, outgoing_cheque
-    ):
+    def test_cancel_expense_with_category_gl_code(self, db_session, sample_expense, outgoing_cheque):
         sample_expense.category.gl_account_code = "6200"
         outgoing_cheque.expense_id = sample_expense.id
         db_session.flush()
@@ -618,9 +576,7 @@ class TestChequeEdgePaths:
         process_cheque_cancel(incoming_cheque)
         assert receipt.payment_confirmed is False
 
-    def test_overdue_listener_datetime_due_date(
-        self, mocker, db_session, sample_tenant
-    ):
+    def test_overdue_listener_datetime_due_date(self, mocker, db_session, sample_tenant):
         register_cheque_event_listeners()
         warn = mocker.patch("services.cheque_service.logger.warning")
         ch = Cheque(

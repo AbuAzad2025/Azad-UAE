@@ -58,9 +58,7 @@ def _add_sale(
     return sale
 
 
-def _add_sale_line(
-    db_session, *, tenant_id, sale_id, product_id, qty, unit_price, cost_price
-):
+def _add_sale_line(db_session, *, tenant_id, sale_id, product_id, qty, unit_price, cost_price):
     from models import SaleLine
 
     qty_d = Decimal(str(qty))
@@ -530,9 +528,7 @@ class TestDonationAnalyticsIntegration:
             )
             db_session.commit()
 
-            stats = AnalyticsService.get_payment_method_stats(
-                tenant_id=sample_tenant.id
-            )
+            stats = AnalyticsService.get_payment_method_stats(tenant_id=sample_tenant.id)
 
         assert "card" in stats["methods"]
         assert "bank" in stats["methods"]

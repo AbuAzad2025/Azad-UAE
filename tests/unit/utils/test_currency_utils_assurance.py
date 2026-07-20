@@ -32,18 +32,14 @@ class TestContextAwareDefault:
 
     def test_context_aware_no_request(self, mocker):
         mocker.patch("flask.has_request_context", return_value=False)
-        mocker.patch(
-            "utils.currency_utils.get_system_default_currency", return_value="AED"
-        )
+        mocker.patch("utils.currency_utils.get_system_default_currency", return_value="AED")
         from utils.currency_utils import context_aware_default_currency
 
         assert context_aware_default_currency() == "AED"
 
     def test_context_aware_exception_fallback(self, mocker):
         mocker.patch("flask.has_request_context", side_effect=RuntimeError("ctx"))
-        mocker.patch(
-            "utils.currency_utils.get_system_default_currency", return_value="ILS"
-        )
+        mocker.patch("utils.currency_utils.get_system_default_currency", return_value="ILS")
         from utils.currency_utils import context_aware_default_currency
 
         assert context_aware_default_currency() == "ILS"
@@ -58,9 +54,7 @@ class TestResolveDefaultCurrency:
 
     def test_from_system_settings(self, mocker):
         settings = MagicMock(default_currency="gbp")
-        mocker.patch(
-            "models.system_settings.SystemSettings.get_current", return_value=settings
-        )
+        mocker.patch("models.system_settings.SystemSettings.get_current", return_value=settings)
         from utils.currency_utils import resolve_default_currency
 
         assert resolve_default_currency(None) == "GBP"
@@ -70,9 +64,7 @@ class TestResolveDefaultCurrency:
             "models.system_settings.SystemSettings.get_current",
             side_effect=RuntimeError("x"),
         )
-        mocker.patch(
-            "utils.currency_utils.get_system_default_currency", return_value="ILS"
-        )
+        mocker.patch("utils.currency_utils.get_system_default_currency", return_value="ILS")
         from utils.currency_utils import resolve_default_currency
 
         assert resolve_default_currency(None) == "ILS"
@@ -95,9 +87,7 @@ class TestTenantBaseCurrency:
 
     def test_get_tenant_base_currency_fallback(self, mocker):
         mocker.patch("utils.currency_utils.db.session.get", return_value=None)
-        mocker.patch(
-            "utils.currency_utils.get_system_default_currency", return_value="ILS"
-        )
+        mocker.patch("utils.currency_utils.get_system_default_currency", return_value="ILS")
         from utils.currency_utils import get_tenant_base_currency
 
         assert get_tenant_base_currency(99) == "ILS"
@@ -109,20 +99,14 @@ class TestTenantBaseCurrency:
         assert resolve_tenant_base_currency(tenant=tenant) == "QAR"
 
     def test_resolve_tenant_base_currency_by_id(self, mocker):
-        mocker.patch(
-            "utils.currency_utils.get_tenant_base_currency", return_value="OMR"
-        )
+        mocker.patch("utils.currency_utils.get_tenant_base_currency", return_value="OMR")
         from utils.currency_utils import resolve_tenant_base_currency
 
         assert resolve_tenant_base_currency(tenant_id=3) == "OMR"
 
     def test_get_tenant_base_currency_db_error(self, mocker):
-        mocker.patch(
-            "utils.currency_utils.db.session.get", side_effect=RuntimeError("db")
-        )
-        mocker.patch(
-            "utils.currency_utils.get_system_default_currency", return_value="ILS"
-        )
+        mocker.patch("utils.currency_utils.db.session.get", side_effect=RuntimeError("db"))
+        mocker.patch("utils.currency_utils.get_system_default_currency", return_value="ILS")
         from utils.currency_utils import get_tenant_base_currency
 
         assert get_tenant_base_currency(1) == "ILS"
@@ -134,9 +118,7 @@ class TestTenantBaseCurrency:
         assert resolve_tenant_base_currency(tenant=tenant) == "KWD"
 
     def test_resolve_tenant_base_currency_system_fallback(self, mocker):
-        mocker.patch(
-            "utils.currency_utils.get_system_default_currency", return_value="ILS"
-        )
+        mocker.patch("utils.currency_utils.get_system_default_currency", return_value="ILS")
         from utils.currency_utils import resolve_tenant_base_currency
 
         assert resolve_tenant_base_currency() == "ILS"

@@ -67,11 +67,7 @@ class _MWACHelper:
     ) -> tuple[Decimal, Decimal, Decimal]:
         new_qty = old_qty + change_qty
         new_value = old_value + (change_qty * unit_cost)
-        new_avg: Decimal = (
-            (new_value / new_qty).quantize(Decimal("0.0001"))
-            if new_qty != 0
-            else Decimal("0")
-        )
+        new_avg: Decimal = (new_value / new_qty).quantize(Decimal("0.0001")) if new_qty != 0 else Decimal("0")
         return new_qty, new_value, new_avg
 
 
@@ -84,9 +80,7 @@ def _resolve_gl_concept_account(concept_code, fallback_account_code, tenant_id=N
 
     if is_dynamic_gl_mapping_enabled() and tenant_id:
         try:
-            resolved = resolve_gl_account(
-                tenant_id=tenant_id, concept_code=concept_code
-            )
+            resolved = resolve_gl_account(tenant_id=tenant_id, concept_code=concept_code)
             if resolved:
                 return resolved.account_code
         except Exception:
@@ -152,28 +146,16 @@ class StockService:
         product = db.session.get(Product, movement.product_id)
         if not product or not product.cost_price:
             return
-        cost_value = abs(Decimal(str(movement.quantity))) * Decimal(
-            str(product.cost_price)
-        )
+        cost_value = abs(Decimal(str(movement.quantity))) * Decimal(str(product.cost_price))
         if cost_value <= 0:
             return
         warehouse = (
-            db.session.get(Warehouse, movement.warehouse_id)
-            if getattr(movement, "warehouse_id", None)
-            else None
+            db.session.get(Warehouse, movement.warehouse_id) if getattr(movement, "warehouse_id", None) else None
         )
-        tenant_id = getattr(movement, "tenant_id", None) or getattr(
-            product, "tenant_id", None
-        )
-        loss_account = _resolve_gl_concept_account(
-            "INVENTORY_ADJUSTMENT_LOSS", "5150", tenant_id
-        )
-        asset_account = _resolve_gl_concept_account(
-            "INVENTORY_ASSET", "1140", tenant_id
-        )
-        gain_account = _resolve_gl_concept_account(
-            "INVENTORY_ADJUSTMENT_GAIN", "5150", tenant_id
-        )
+        tenant_id = getattr(movement, "tenant_id", None) or getattr(product, "tenant_id", None)
+        loss_account = _resolve_gl_concept_account("INVENTORY_ADJUSTMENT_LOSS", "5150", tenant_id)
+        asset_account = _resolve_gl_concept_account("INVENTORY_ASSET", "1140", tenant_id)
+        gain_account = _resolve_gl_concept_account("INVENTORY_ADJUSTMENT_GAIN", "5150", tenant_id)
 
         if Decimal(str(movement.quantity)) < 0:
             lines = [
@@ -246,9 +228,7 @@ class StockService:
             raise
 
     @staticmethod
-    def add_opening_stock(
-        product_id, quantity, notes=None, warehouse_id=None, cost_price=None
-    ):
+    def add_opening_stock(product_id, quantity, notes=None, warehouse_id=None, cost_price=None):
         movement = StockService.create_movement(
             product_id=product_id,
             quantity=Decimal(str(quantity)),
@@ -267,12 +247,8 @@ class StockService:
             cost_value = Decimal(str(quantity)) * Decimal(str(product.cost_price))
             if cost_value > 0:
                 tenant_id = getattr(product, "tenant_id", None)
-                asset_account = _resolve_gl_concept_account(
-                    "INVENTORY_ASSET", "1140", tenant_id
-                )
-                equity_account = _resolve_gl_concept_account(
-                    "OPENING_BALANCE_EQUITY", "3130", tenant_id
-                )
+                asset_account = _resolve_gl_concept_account("INVENTORY_ASSET", "1140", tenant_id)
+                equity_account = _resolve_gl_concept_account("OPENING_BALANCE_EQUITY", "3130", tenant_id)
                 GLService.ensure_core_accounts(tenant_id=tenant_id)
                 post_or_fail(
                     lines=[
@@ -317,49 +293,31 @@ class StockService:
             product = db.session.get(Product, product_id)
 
             if not product:
-                raise ValueError(
-                    f"⚠️ المنتج غير موجود (ID: {product_id}).\n💡 تأكد من اختيار منتج صحيح من القائمة."
-                )
+                raise ValueError(f"⚠️ المنتج غير موجود (ID: {product_id}).\n💡 تأكد من اختيار منتج صحيح من القائمة.")
 
             try:
-                user_id = (
-                    current_user.id
-                    if current_user and current_user.is_authenticated
-                    else None
-                )
+                user_id = current_user.id if current_user and current_user.is_authenticated else None
             except Exception:
-                current_app.logger.debug(
-                    "Could not resolve current_user.id for stock movement"
-                )
+                current_app.logger.debug("Could not resolve current_user.id for stock movement")
                 user_id = None
 
             tenant_id = getattr(product, "tenant_id", None)
 
             # تحديد المستودع
             if warehouse_id:
-                warehouse = Warehouse.query.filter_by(
-                    id=warehouse_id, is_active=True
-                ).first()
+                warehouse = Warehouse.query.filter_by(id=warehouse_id, is_active=True).first()
                 if not warehouse:
-                    raise ValueError(
-                        f"⚠️ المستودع المحدد غير موجود أو غير نشط (ID: {warehouse_id})."
-                    )
+                    raise ValueError(f"⚠️ المستودع المحدد غير موجود أو غير نشط (ID: {warehouse_id}).")
                 if (
                     tenant_id is not None
                     and getattr(warehouse, "tenant_id", None) is not None
                     and warehouse.tenant_id != tenant_id
                 ):
-                    raise ValueError(
-                        f"⚠️ المستودع (ID: {warehouse_id}) لا ينتمي لنفس شركة المنتج."
-                    )
+                    raise ValueError(f"⚠️ المستودع (ID: {warehouse_id}) لا ينتمي لنفس شركة المنتج.")
             else:
-                warehouse = Warehouse.query.filter_by(
-                    tenant_id=tenant_id, is_active=True, is_main=True
-                ).first()
+                warehouse = Warehouse.query.filter_by(tenant_id=tenant_id, is_active=True, is_main=True).first()
                 if not warehouse:
-                    warehouse = Warehouse.query.filter_by(
-                        tenant_id=tenant_id, is_active=True
-                    ).first()
+                    warehouse = Warehouse.query.filter_by(tenant_id=tenant_id, is_active=True).first()
 
                 if not warehouse:
                     warehouse = Warehouse(
@@ -432,9 +390,7 @@ class StockService:
                 )
 
             try:
-                current_app.logger.info(
-                    f"Stock movement: {movement_type} {quantity} of product #{product_id}"
-                )
+                current_app.logger.info(f"Stock movement: {movement_type} {quantity} of product #{product_id}")
             except Exception:
                 logger.warning(
                     "Failed to log stock movement info for product #%s",
@@ -449,9 +405,7 @@ class StockService:
             raise
 
     @staticmethod
-    def transfer_stock(
-        product_id, from_warehouse_id, to_warehouse_id, quantity, notes=None, user=None
-    ):
+    def transfer_stock(product_id, from_warehouse_id, to_warehouse_id, quantity, notes=None, user=None):
         """Transfer quantity between warehouses (net zero on product.current_stock)."""
         qty = abs(Decimal(str(quantity)))
         if qty <= 0:
@@ -462,12 +416,8 @@ class StockService:
             raise ValueError("المنتج غير موجود.")
         tenant_id = getattr(product, "tenant_id", None)
 
-        from_wh = Warehouse.query.filter_by(
-            id=int(from_warehouse_id), is_active=True
-        ).first()
-        to_wh = Warehouse.query.filter_by(
-            id=int(to_warehouse_id), is_active=True
-        ).first()
+        from_wh = Warehouse.query.filter_by(id=int(from_warehouse_id), is_active=True).first()
+        to_wh = Warehouse.query.filter_by(id=int(to_warehouse_id), is_active=True).first()
         if not from_wh or not to_wh:
             raise ValueError("المستودع المصدر أو الوجهة غير موجود أو غير نشط.")
         if from_wh.id == to_wh.id:
@@ -480,13 +430,9 @@ class StockService:
                 getattr(to_wh, "tenant_id", None),
             ]
             if tenant_id not in wh_tenant_ids:
-                raise ValueError(
-                    "المنتج لا ينتمي إلى نفس المستودع (تعارض في التينانت)."
-                )
+                raise ValueError("المنتج لا ينتمي إلى نفس المستودع (تعارض في التينانت).")
             if from_wh.tenant_id != tenant_id or to_wh.tenant_id != tenant_id:
-                raise ValueError(
-                    "المستودع المصدر والوجهة يجب أن ينتميان لنفس شركة المنتج."
-                )
+                raise ValueError("المستودع المصدر والوجهة يجب أن ينتميان لنفس شركة المنتج.")
 
         # التحقق من صلاحية المستخدم - إذا تم تمرير مستخدم
         if user is not None:
@@ -496,21 +442,14 @@ class StockService:
                 from utils.branching import get_accessible_warehouse_ids
 
                 accessible = get_accessible_warehouse_ids(user)
-                if accessible and (
-                    from_wh.id not in accessible or to_wh.id not in accessible
-                ):
+                if accessible and (from_wh.id not in accessible or to_wh.id not in accessible):
                     raise ValueError("ليس لديك صلاحية الوصول لأحد المستودعين.")
 
         available = StockService.get_product_stock(product_id, warehouse_id=from_wh.id)
         if available < qty:
-            raise ValueError(
-                f"الكمية غير متوفرة في المستودع المصدر (المتوفر: {available})."
-            )
+            raise ValueError(f"الكمية غير متوفرة في المستودع المصدر (المتوفر: {available}).")
 
-        label = (
-            notes
-            or f"تحويل من {from_wh.name_ar or from_wh.name} إلى {to_wh.name_ar or to_wh.name}"
-        )
+        label = notes or f"تحويل من {from_wh.name_ar or from_wh.name} إلى {to_wh.name_ar or to_wh.name}"
         out_movement = StockService.create_movement(
             product_id=product_id,
             quantity=-qty,
@@ -567,9 +506,7 @@ class StockService:
             )
 
     @staticmethod
-    def _resolve_cogs_unit_cost(
-        product_id, warehouse_id, tenant_id, line_cost_price=None
-    ):
+    def _resolve_cogs_unit_cost(product_id, warehouse_id, tenant_id, line_cost_price=None):
         """Resolve unit cost for COGS using Odoo-style fallback chain:
         1. ProductWarehouseCost.average_cost (if stock > 0)
         2. SaleLine.cost_price
@@ -581,12 +518,7 @@ class StockService:
             product_id=product_id,
             warehouse_id=warehouse_id,
         ).first()
-        if (
-            pwc
-            and pwc.total_quantity > 0
-            and pwc.average_cost
-            and pwc.average_cost > Decimal("0")
-        ):
+        if pwc and pwc.total_quantity > 0 and pwc.average_cost and pwc.average_cost > Decimal("0"):
             return pwc.average_cost, "mwac"
         if line_cost_price:
             cost = Decimal(str(line_cost_price))
@@ -602,11 +534,7 @@ class StockService:
             .order_by(ProductCostHistory.created_at.desc())
             .first()
         )
-        if (
-            last_purchase
-            and last_purchase.movement_unit_cost
-            and last_purchase.movement_unit_cost > Decimal("0")
-        ):
+        if last_purchase and last_purchase.movement_unit_cost and last_purchase.movement_unit_cost > Decimal("0"):
             return Decimal(str(last_purchase.movement_unit_cost)), "last_purchase"
         raise ValueError(
             f"لا يمكن تحديد تكلفة البضاعة المباعة (COGS) للمنتج {product_id}: "
@@ -639,11 +567,7 @@ class StockService:
 
         # Determine if negative inventory is allowed for this warehouse
         warehouse = db.session.get(Warehouse, warehouse_id) if warehouse_id else None
-        allow_negative = (
-            getattr(warehouse, "allow_negative_inventory", False)
-            if warehouse
-            else False
-        )
+        allow_negative = getattr(warehouse, "allow_negative_inventory", False) if warehouse else False
 
         for line in sale.lines:
             qty = Decimal(str(line.quantity))
@@ -655,30 +579,14 @@ class StockService:
                     product_id=line.product_id,
                     warehouse_id=warehouse_id,
                 )
-                pwc = _safe_for_update(
-                    query, label=f"PWC p={line.product_id} w={warehouse_id}"
-                )
+                pwc = _safe_for_update(query, label=f"PWC p={line.product_id} w={warehouse_id}")
 
             if pwc and pwc.total_quantity > 0:
                 # Normal positive-stock case
-                avg_cost = (
-                    Decimal(str(pwc.average_cost))
-                    if pwc.average_cost is not None
-                    else Decimal("0")
-                )
-                cogs = (avg_cost * qty).quantize(
-                    Decimal("0.001"), rounding=ROUND_HALF_UP
-                )
-                old_qty = (
-                    Decimal(str(pwc.total_quantity))
-                    if pwc.total_quantity is not None
-                    else Decimal("0")
-                )
-                old_value = (
-                    Decimal(str(pwc.total_value))
-                    if pwc.total_value is not None
-                    else Decimal("0")
-                )
+                avg_cost = Decimal(str(pwc.average_cost)) if pwc.average_cost is not None else Decimal("0")
+                cogs = (avg_cost * qty).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+                old_qty = Decimal(str(pwc.total_quantity)) if pwc.total_quantity is not None else Decimal("0")
+                old_value = Decimal(str(pwc.total_value)) if pwc.total_value is not None else Decimal("0")
                 old_avg = avg_cost
                 new_qty, new_value, new_avg = StockService._mwac_calc(
                     old_qty, old_value, -qty, avg_cost.quantize(Decimal("0.0001"))
@@ -711,9 +619,7 @@ class StockService:
                     tenant_id,
                     line_cost_price=line.cost_price,
                 )
-                cogs = (avg_cost * qty).quantize(
-                    Decimal("0.001"), rounding=ROUND_HALF_UP
-                )
+                cogs = (avg_cost * qty).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
                 current_app.logger.warning(
                     "Negative inventory sale (%s) for product %s sale %s: unit_cost=%s, qty=%s",
                     source,
@@ -724,21 +630,9 @@ class StockService:
                 )
 
                 if pwc:
-                    old_qty = (
-                        Decimal(str(pwc.total_quantity))
-                        if pwc.total_quantity is not None
-                        else Decimal("0")
-                    )
-                    old_value = (
-                        Decimal(str(pwc.total_value))
-                        if pwc.total_value is not None
-                        else Decimal("0")
-                    )
-                    old_avg = (
-                        Decimal(str(pwc.average_cost))
-                        if pwc.average_cost is not None
-                        else Decimal("0")
-                    )
+                    old_qty = Decimal(str(pwc.total_quantity)) if pwc.total_quantity is not None else Decimal("0")
+                    old_value = Decimal(str(pwc.total_value)) if pwc.total_value is not None else Decimal("0")
+                    old_avg = Decimal(str(pwc.average_cost)) if pwc.average_cost is not None else Decimal("0")
                     new_qty, new_value, new_avg = StockService._mwac_calc(
                         old_qty, old_value, -qty, avg_cost.quantize(Decimal("0.0001"))
                     )
@@ -772,11 +666,7 @@ class StockService:
                     movement_type="sale",
                     reference_type=GLRef.SALE,
                     reference_id=sale.id,
-                    old_average_cost=(
-                        old_avg.quantize(Decimal("0.0001"))
-                        if old_avg is not None
-                        else None
-                    ),
+                    old_average_cost=(old_avg.quantize(Decimal("0.0001")) if old_avg is not None else None),
                     new_average_cost=pwc.average_cost,
                     quantity_change=-qty,
                     old_total_quantity=old_qty,
@@ -793,9 +683,7 @@ class StockService:
                     tenant_id,
                     line_cost_price=line.cost_price,
                 )
-                cogs = (avg_cost * qty).quantize(
-                    Decimal("0.001"), rounding=ROUND_HALF_UP
-                )
+                cogs = (avg_cost * qty).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
                 current_app.logger.warning(
                     "COGS resolved via fallback (%s) for product %s sale %s: unit_cost=%s",
                     source,
@@ -832,9 +720,7 @@ class StockService:
                 continue
             processed_product_ids.add(product.id)
 
-            capitalize_landed = current_app.config.get(
-                "ENABLE_LANDED_COST_CAPITALIZATION", True
-            )
+            capitalize_landed = current_app.config.get("ENABLE_LANDED_COST_CAPITALIZATION", True)
             if capitalize_landed:
                 unit_cost_for_valuation = line.landed_inventory_unit_cost
             else:
@@ -870,9 +756,7 @@ class StockService:
                 total_val += Decimal(str(pwc.total_value or 0))
                 total_qty += Decimal(str(pwc.total_quantity or 0))
             if total_qty > 0:
-                product.cost_price = (total_val / total_qty).quantize(
-                    Decimal("0.001"), rounding=ROUND_HALF_UP
-                )
+                product.cost_price = (total_val / total_qty).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
             else:
                 product.cost_price = Decimal("0")
 
@@ -918,15 +802,11 @@ class StockService:
         product_name = product.name if product else f"Product #{product_id}"
 
         GLService.ensure_core_accounts(tenant_id=tenant_id)
-        asset_account = _resolve_gl_concept_account(
-            "INVENTORY_ASSET", "1140", tenant_id
-        )
+        asset_account = _resolve_gl_concept_account("INVENTORY_ASSET", "1140", tenant_id)
 
         if variance > 0:
             # New cost > old average: inventory value needs to be reduced (loss)
-            loss_account = _resolve_gl_concept_account(
-                "INVENTORY_ADJUSTMENT_LOSS", "5150", tenant_id
-            )
+            loss_account = _resolve_gl_concept_account("INVENTORY_ADJUSTMENT_LOSS", "5150", tenant_id)
             lines = [
                 {
                     "account": loss_account,
@@ -946,9 +826,7 @@ class StockService:
             description = f"Retrospective Cost Adjustment (Loss) — {product_name}"
         else:
             # New cost < old average: inventory value needs to be increased (gain)
-            gain_account = _resolve_gl_concept_account(
-                "INVENTORY_ADJUSTMENT_GAIN", "5150", tenant_id
-            )
+            gain_account = _resolve_gl_concept_account("INVENTORY_ADJUSTMENT_GAIN", "5150", tenant_id)
             lines = [
                 {
                     "account": asset_account,
@@ -1010,21 +888,13 @@ class StockService:
             product_id=product_id,
             warehouse_id=warehouse_id,
         )
-        pwc = _safe_for_update(
-            query, label=f"PWC(receipt) p={product_id} w={warehouse_id}"
-        )
+        pwc = _safe_for_update(query, label=f"PWC(receipt) p={product_id} w={warehouse_id}")
 
         if pwc:
             old_qty = pwc.total_quantity
             old_value = pwc.total_value
-            old_avg = (
-                Decimal(str(pwc.average_cost))
-                if pwc.average_cost is not None
-                else Decimal("0")
-            )
-            new_qty, new_value, new_avg = StockService._mwac_calc(
-                old_qty, old_value, received_qty, unit_cost_aed
-            )
+            old_avg = Decimal(str(pwc.average_cost)) if pwc.average_cost is not None else Decimal("0")
+            new_qty, new_value, new_avg = StockService._mwac_calc(old_qty, old_value, received_qty, unit_cost_aed)
 
             pwc.total_quantity = new_qty
             pwc.total_value = new_value
@@ -1073,9 +943,7 @@ class StockService:
             movement_type="purchase",
             reference_type=reference_type,
             reference_id=reference_id,
-            old_average_cost=(
-                old_avg.quantize(Decimal("0.0001")) if old_avg is not None else None
-            ),
+            old_average_cost=(old_avg.quantize(Decimal("0.0001")) if old_avg is not None else None),
             new_average_cost=pwc.average_cost,
             quantity_change=received_qty,
             old_total_quantity=old_qty,
@@ -1135,30 +1003,18 @@ class StockService:
                     qty = Decimal(str(line.quantity))
                     if cost_history:
                         # استخدام قيم COGS الأصلية من سجل التكلفة
-                        original_cogs = abs(
-                            Decimal(str(cost_history.movement_unit_cost)) * qty
-                        )
+                        original_cogs = abs(Decimal(str(cost_history.movement_unit_cost)) * qty)
                     else:
-                        original_cogs = (
-                            pwc.average_cost * qty if pwc.average_cost else Decimal("0")
-                        )
+                        original_cogs = pwc.average_cost * qty if pwc.average_cost else Decimal("0")
 
                     old_qty = pwc.total_quantity
                     old_value = pwc.total_value
-                    old_avg = (
-                        Decimal(str(pwc.average_cost))
-                        if pwc.average_cost is not None
-                        else Decimal("0")
-                    )
+                    old_avg = Decimal(str(pwc.average_cost)) if pwc.average_cost is not None else Decimal("0")
                     new_qty, new_value, new_avg = StockService._mwac_calc(
                         old_qty,
                         old_value,
                         qty,
-                        (
-                            (original_cogs / qty).quantize(Decimal("0.0001"))
-                            if qty > 0
-                            else Decimal("0")
-                        ),
+                        ((original_cogs / qty).quantize(Decimal("0.0001")) if qty > 0 else Decimal("0")),
                     )
 
                     pwc.total_quantity = new_qty
@@ -1174,9 +1030,7 @@ class StockService:
                         movement_type="sale_reversal",
                         reference_type=GLRef.SALE_REVERSED,
                         reference_id=sale.id,
-                        old_average_cost=(
-                            old_avg.quantize(Decimal("0.0001")) if old_avg else None
-                        ),
+                        old_average_cost=(old_avg.quantize(Decimal("0.0001")) if old_avg else None),
                         new_average_cost=pwc.average_cost,
                         quantity_change=qty,
                         old_total_quantity=old_qty,
@@ -1184,9 +1038,7 @@ class StockService:
                         old_total_value=old_value,
                         new_total_value=new_value,
                         movement_unit_cost=(
-                            (original_cogs / qty).quantize(Decimal("0.0001"))
-                            if qty > 0
-                            else Decimal("0")
+                            (original_cogs / qty).quantize(Decimal("0.0001")) if qty > 0 else Decimal("0")
                         ),
                     )
                     db.session.add(pch)
@@ -1238,24 +1090,14 @@ class StockService:
                     qty = Decimal(str(line.quantity))
 
                     if cost_history:
-                        original_unit_cost = abs(
-                            Decimal(str(cost_history.movement_unit_cost))
-                        )
+                        original_unit_cost = abs(Decimal(str(cost_history.movement_unit_cost)))
                     else:
-                        original_unit_cost = (
-                            pwc.average_cost if pwc.average_cost else Decimal("0")
-                        )
+                        original_unit_cost = pwc.average_cost if pwc.average_cost else Decimal("0")
 
                     old_qty = pwc.total_quantity
                     old_value = pwc.total_value
-                    old_avg = (
-                        Decimal(str(pwc.average_cost))
-                        if pwc.average_cost is not None
-                        else Decimal("0")
-                    )
-                    new_qty, new_value, new_avg = StockService._mwac_calc(
-                        old_qty, old_value, -qty, original_unit_cost
-                    )
+                    old_avg = Decimal(str(pwc.average_cost)) if pwc.average_cost is not None else Decimal("0")
+                    new_qty, new_value, new_avg = StockService._mwac_calc(old_qty, old_value, -qty, original_unit_cost)
 
                     # Preserve the MWAC cost even when the reversal drives stock
                     # to zero/negative so subsequent purchases can apply the
@@ -1277,18 +1119,14 @@ class StockService:
                         movement_type="purchase_reversal",
                         reference_type=GLRef.PURCHASE,
                         reference_id=purchase.id,
-                        old_average_cost=(
-                            old_avg.quantize(Decimal("0.0001")) if old_avg else None
-                        ),
+                        old_average_cost=(old_avg.quantize(Decimal("0.0001")) if old_avg else None),
                         new_average_cost=pwc.average_cost,
                         quantity_change=-qty,
                         old_total_quantity=old_qty,
                         new_total_quantity=pwc.total_quantity,
                         old_total_value=old_value,
                         new_total_value=pwc.total_value,
-                        movement_unit_cost=original_unit_cost.quantize(
-                            Decimal("0.0001")
-                        ),
+                        movement_unit_cost=original_unit_cost.quantize(Decimal("0.0001")),
                     )
                     db.session.add(pch)
 
@@ -1324,9 +1162,7 @@ class StockService:
         if warehouse.allow_negative_inventory:
             return True, "متوفر (البيع بالسالب مفعل)"
 
-        available_qty = StockService.get_product_stock(
-            product_id, warehouse_id=warehouse_id
-        )
+        available_qty = StockService.get_product_stock(product_id, warehouse_id=warehouse_id)
         if available_qty < Decimal(str(quantity)):
             return (
                 False,
@@ -1342,9 +1178,7 @@ class StockService:
         elif warehouse_ids is None:
             warehouse_ids = get_accessible_warehouse_ids(user)
 
-        stock_map = get_branch_stock_map(
-            product_ids=[product_id], warehouse_ids=warehouse_ids
-        )
+        stock_map = get_branch_stock_map(product_ids=[product_id], warehouse_ids=warehouse_ids)
         return stock_map.get(product_id, Decimal("0"))
 
     @staticmethod
@@ -1370,15 +1204,13 @@ class StockService:
             products = [
                 product
                 for product in products
-                if stock_map.get(product.id, Decimal("0"))
-                <= (product.min_stock_alert or Decimal("0"))
+                if stock_map.get(product.id, Decimal("0")) <= (product.min_stock_alert or Decimal("0"))
             ]
         else:
             products = [
                 product
                 for product in products
-                if (product.current_stock or Decimal("0"))
-                <= (product.min_stock_alert or Decimal("0"))
+                if (product.current_stock or Decimal("0")) <= (product.min_stock_alert or Decimal("0"))
             ]
 
         if limit:
@@ -1400,17 +1232,9 @@ class StockService:
                 product_ids=[product.id for product in products],
                 warehouse_ids=branch_warehouse_ids,
             )
-            return [
-                product
-                for product in products
-                if stock_map.get(product.id, Decimal("0")) <= 0
-            ]
+            return [product for product in products if stock_map.get(product.id, Decimal("0")) <= 0]
 
-        return [
-            product
-            for product in products
-            if (product.current_stock or Decimal("0")) <= 0
-        ]
+        return [product for product in products if (product.current_stock or Decimal("0")) <= 0]
 
     @staticmethod
     def reconcile_stock(tenant_id=None, commit=False):
@@ -1434,12 +1258,8 @@ class StockService:
             func.sum(StockMovement.quantity).label("total_qty"),
         )
         if tenant_id:
-            movement_totals = movement_totals.filter(
-                StockMovement.tenant_id == tenant_id
-            )
-        movement_totals = movement_totals.group_by(
-            StockMovement.product_id, StockMovement.warehouse_id
-        ).all()
+            movement_totals = movement_totals.filter(StockMovement.tenant_id == tenant_id)
+        movement_totals = movement_totals.group_by(StockMovement.product_id, StockMovement.warehouse_id).all()
 
         now = datetime.now(timezone.utc)
         created = 0
@@ -1490,9 +1310,7 @@ class StockService:
         all_pws = all_pws.group_by(ProductWarehouseStock.product_id).all()
 
         prod_ids = [r.product_id for r in all_pws]
-        products = (
-            Product.query.filter(Product.id.in_(prod_ids)).all() if prod_ids else []
-        )
+        products = Product.query.filter(Product.id.in_(prod_ids)).all() if prod_ids else []
         prod_map = {p.id: p for p in products}
         for row in all_pws:
             prod = prod_map.get(row.product_id)

@@ -29,9 +29,7 @@ class WhatsAppService:
         )
 
     @staticmethod
-    def send_invoice(
-        phone: str, invoice_number: str, pdf_url: str | None = None
-    ) -> Dict:
+    def send_invoice(phone: str, invoice_number: str, pdf_url: str | None = None) -> Dict:
         if not WhatsAppService.is_enabled():
             return {"success": False, "error": "WhatsApp not configured"}
 
@@ -75,9 +73,7 @@ class WhatsAppService:
             return {"success": False, "error": str(e)}
 
     @staticmethod
-    def send_payment_reminder(
-        phone: str, customer_name: str, amount_due: float
-    ) -> Dict:
+    def send_payment_reminder(phone: str, customer_name: str, amount_due: float) -> Dict:
         if not WhatsAppService.is_enabled():
             return {"success": False, "error": "WhatsApp not configured"}
 

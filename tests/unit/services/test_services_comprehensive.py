@@ -32,9 +32,7 @@ class TestPrintService:
             assert ctx["print_user_name"] == "—"
             assert ctx["print_user_id"] is None
 
-    @patch(
-        "services.print_service.render_template", return_value="<html>printed</html>"
-    )
+    @patch("services.print_service.render_template", return_value="<html>printed</html>")
     def test_render_print_basic(self, mock_render):
         from services.print_service import PrintService
 
@@ -58,9 +56,7 @@ class TestPrintService:
                 assert result == "<html>printed</html>"
                 mock_render.assert_called_once()
 
-    @patch(
-        "services.print_service.render_template", return_value="<html>with-extra</html>"
-    )
+    @patch("services.print_service.render_template", return_value="<html>with-extra</html>")
     def test_render_print_with_extra_context(self, mock_render):
         from services.print_service import PrintService
 
@@ -80,9 +76,7 @@ class TestPrintService:
                 "_user_context",
                 return_value={"print_user_name": "test", "print_user_id": 1},
             ):
-                result = PrintService.render_print(
-                    "print/test.html", extra_context={"doc_id": 42}
-                )
+                result = PrintService.render_print("print/test.html", extra_context={"doc_id": 42})
                 assert result == "<html>with-extra</html>"
                 args, kwargs = mock_render.call_args
                 assert "doc_id" in kwargs
@@ -94,13 +88,9 @@ class TestPrintService:
             record_instance = MagicMock()
             with (
                 patch("extensions.db") as mock_db,
-                patch(
-                    "models.print_history.PrintHistory", return_value=record_instance
-                ),
+                patch("models.print_history.PrintHistory", return_value=record_instance),
             ):
-                PrintService.audit_print(
-                    tenant_id=1, document_type="sale", document_id=100, user_id=5
-                )
+                PrintService.audit_print(tenant_id=1, document_type="sale", document_id=100, user_id=5)
                 assert mock_db.session.add.called
                 assert mock_db.session.flush.called
 
@@ -241,9 +231,7 @@ class TestTenantService:
         ):
             t = MagicMock(id=1, name="Test Co")
             mock_query.order_by.return_value.all.return_value = [t]
-            mock_dbq.return_value.filter.return_value.group_by.return_value.all.return_value = [
-                (1, 5)
-            ]
+            mock_dbq.return_value.filter.return_value.group_by.return_value.all.return_value = [(1, 5)]
             ctx = TenantService.get_tenants_list_context()
             assert len(ctx["tenants"]) == 1
             assert ctx["user_counts"][1] == 5
@@ -285,9 +273,7 @@ class TestRoleService:
             patch("services.role_service.joinedload"),
         ):
             r = MagicMock(id=1, name="Admin")
-            mock_role.query.filter_by.return_value.options.return_value.order_by.return_value.all.return_value = [
-                r
-            ]
+            mock_role.query.filter_by.return_value.options.return_value.order_by.return_value.all.return_value = [r]
             p = MagicMock(category="sales", name="manage_sales")
             mock_perm.query.order_by.return_value.all.return_value = [p]
             mock_user.query.filter_by.return_value.filter_by.return_value.count.return_value = 3
@@ -308,9 +294,7 @@ class TestStockService:
     def test_mwac_calc_initial(self):
         from services.stock_service import StockService
 
-        new_qty, new_val, new_avg = StockService._mwac_calc(
-            Decimal("0"), Decimal("0"), Decimal("10"), Decimal("50")
-        )
+        new_qty, new_val, new_avg = StockService._mwac_calc(Decimal("0"), Decimal("0"), Decimal("10"), Decimal("50"))
         assert new_qty == Decimal("10")
         assert new_val == Decimal("500")
         assert new_avg == Decimal("50.0000")
@@ -318,9 +302,7 @@ class TestStockService:
     def test_mwac_calc_addition(self):
         from services.stock_service import StockService
 
-        new_qty, new_val, new_avg = StockService._mwac_calc(
-            Decimal("10"), Decimal("500"), Decimal("5"), Decimal("60")
-        )
+        new_qty, new_val, new_avg = StockService._mwac_calc(Decimal("10"), Decimal("500"), Decimal("5"), Decimal("60"))
         assert new_qty == Decimal("15")
         assert new_val == Decimal("800")
         assert new_avg == Decimal("53.3333")
@@ -338,9 +320,7 @@ class TestStockService:
     def test_mwac_calc_zero_result(self):
         from services.stock_service import StockService
 
-        new_qty, new_val, new_avg = StockService._mwac_calc(
-            Decimal("5"), Decimal("250"), Decimal("-5"), Decimal("50")
-        )
+        new_qty, new_val, new_avg = StockService._mwac_calc(Decimal("5"), Decimal("250"), Decimal("-5"), Decimal("50"))
         assert new_qty == Decimal("0")
         assert new_val == Decimal("0")
         assert new_avg == Decimal("0")
@@ -391,9 +371,7 @@ class TestStockService:
                 pwc_q.filter_by.return_value.first.return_value = None
                 pch_q.filter_by.return_value.order_by.return_value.first.return_value = None
                 with pytest.raises(ValueError, match="لا يمكن تحديد تكلفة"):
-                    StockService._resolve_cogs_unit_cost(
-                        999, 999, 1, line_cost_price=None
-                    )
+                    StockService._resolve_cogs_unit_cost(999, 999, 1, line_cost_price=None)
 
     def test_resolve_cogs_from_cost_price(self, app):
         from services.stock_service import StockService
@@ -401,9 +379,7 @@ class TestStockService:
         with app.app_context():
             with patch("services.stock_service.ProductWarehouseCost.query") as pwc_q:
                 pwc_q.filter_by.return_value.first.return_value = None
-                cost, source = StockService._resolve_cogs_unit_cost(
-                    999, 999, 1, line_cost_price=Decimal("150")
-                )
+                cost, source = StockService._resolve_cogs_unit_cost(999, 999, 1, line_cost_price=Decimal("150"))
                 assert cost == Decimal("150")
                 assert source == "cost_price"
 
@@ -412,13 +388,9 @@ class TestStockService:
 
         with app.app_context():
             with patch("services.stock_service.ProductWarehouseCost.query") as pwc_q:
-                pwc = MagicMock(
-                    total_quantity=Decimal("10"), average_cost=Decimal("45.5000")
-                )
+                pwc = MagicMock(total_quantity=Decimal("10"), average_cost=Decimal("45.5000"))
                 pwc_q.filter_by.return_value.first.return_value = pwc
-                cost, source = StockService._resolve_cogs_unit_cost(
-                    999, 999, 1, line_cost_price=None
-                )
+                cost, source = StockService._resolve_cogs_unit_cost(999, 999, 1, line_cost_price=None)
                 assert cost == Decimal("45.5000")
                 assert source == "mwac"
 

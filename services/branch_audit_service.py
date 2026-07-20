@@ -8,13 +8,9 @@ def _branch_liquidity_account_code(parent_code, branch_id):
     return f"{parent_code}-B{int(branch_id)}"
 
 
-def ensure_branch_liquidity_account(
-    connection, branch, parent_code, liquidity_kind, name_prefix, name_prefix_ar
-):
+def ensure_branch_liquidity_account(connection, branch, parent_code, liquidity_kind, name_prefix, name_prefix_ar):
     parent = connection.execute(
-        text(
-            "SELECT id FROM gl_accounts WHERE tenant_id = :tenant_id AND code = :code LIMIT 1"
-        ),
+        text("SELECT id FROM gl_accounts WHERE tenant_id = :tenant_id AND code = :code LIMIT 1"),
         {"tenant_id": branch.tenant_id, "code": parent_code},
     ).fetchone()
     if not parent:
@@ -27,9 +23,7 @@ def ensure_branch_liquidity_account(
         return
     code = _branch_liquidity_account_code(parent_code, branch.id)
     existing = connection.execute(
-        text(
-            "SELECT id FROM gl_accounts WHERE tenant_id = :tenant_id AND code = :code LIMIT 1"
-        ),
+        text("SELECT id FROM gl_accounts WHERE tenant_id = :tenant_id AND code = :code LIMIT 1"),
         {"tenant_id": branch.tenant_id, "code": code},
     ).fetchone()
     params = {
@@ -84,11 +78,7 @@ def register_branch_event_listeners():
                 "Cashbox",
                 "\u0635\u0646\u062f\u0648\u0642",
             )
-            ensure_branch_liquidity_account(
-                connection, target, "1120", "bank", "Bank", "\u0628\u0646\u0643"
-            )
+            ensure_branch_liquidity_account(connection, target, "1120", "bank", "Bank", "\u0628\u0646\u0643")
         except Exception as e:
-            logger.error(
-                "Failed to ensure financial accounts for branch %s: %s", target.id, e
-            )
+            logger.error("Failed to ensure financial accounts for branch %s: %s", target.id, e)
             raise

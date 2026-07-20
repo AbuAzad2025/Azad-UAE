@@ -94,9 +94,7 @@ def edit(**kwargs):
         branch.phone = normalize_phone_optional(request.form.get("phone"))
         branch.is_main = request.form.get("is_main") == "on"
         raw_piv = request.form.get("prices_include_vat")
-        branch.prices_include_vat = (
-            True if raw_piv == "on" else (False if raw_piv == "off" else None)
-        )
+        branch.prices_include_vat = True if raw_piv == "on" else (False if raw_piv == "off" else None)
 
         with atomic_transaction("branch_update"):
             db.session.flush()
@@ -119,9 +117,7 @@ def delete(**kwargs):
     # This is a basic check. In a real system, you might want to soft-delete or strict check.
     if branch.users or branch.warehouses or branch.sales:
         flash(
-            gettext(
-                "لا يمكن حذف الفرع لوجود بيانات مرتبطة به (مستخدمين، مستودعات، أو مبيعات)"
-            ),
+            gettext("لا يمكن حذف الفرع لوجود بيانات مرتبطة به (مستخدمين، مستودعات، أو مبيعات)"),
             "danger",
         )
         return redirect(url_for("branches.index"))

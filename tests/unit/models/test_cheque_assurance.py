@@ -188,9 +188,7 @@ class TestChequeQueries:
         q.filter_by.assert_any_call(supplier_id=4)
 
     def test_update_all_statuses(self, mocker):
-        pending = _cheque_stub(
-            status="pending", due_date=date.today() + timedelta(days=1)
-        )
+        pending = _cheque_stub(status="pending", due_date=date.today() + timedelta(days=1))
         q = MagicMock()
         q.filter_by.return_value = q
         q.filter.return_value = q
@@ -213,9 +211,7 @@ class TestChequeQueries:
         amount_q.scalar.side_effect = [Decimal("1500"), Decimal("800")]
         session = MagicMock()
         session.query.return_value = amount_q
-        mocker.patch.object(
-            cheque_mod, "db", SimpleNamespace(session=session, func=cheque_mod.db.func)
-        )
+        mocker.patch.object(cheque_mod, "db", SimpleNamespace(session=session, func=cheque_mod.db.func))
 
         stats = _GET_STATS(tenant_id=1, branch_id=3)
         assert stats["total_incoming"] == 2

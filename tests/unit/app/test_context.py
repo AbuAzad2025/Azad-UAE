@@ -107,9 +107,7 @@ class TestContextProcessor:
         )
         with (
             patch("models.Tenant.get_current", return_value=None),
-            patch(
-                "models.invoice_settings.InvoiceSettings.get_active", return_value=inv
-            ),
+            patch("models.invoice_settings.InvoiceSettings.get_active", return_value=inv),
             patch("models.system_settings.SystemSettings.get_current") as sys_set,
             patch("flask_login.current_user", MagicMock(is_authenticated=False)),
         ):
@@ -143,9 +141,7 @@ class TestContextProcessor:
     def test_developer_logo_path_sanitization(self, ctx_app):
         with (
             patch("models.Tenant.get_current", return_value=None),
-            patch(
-                "models.invoice_settings.InvoiceSettings.get_active", return_value=None
-            ),
+            patch("models.invoice_settings.InvoiceSettings.get_active", return_value=None),
             patch("flask_login.current_user", MagicMock(is_authenticated=False)),
         ):
             sys = MagicMock()
@@ -160,9 +156,7 @@ class TestContextProcessor:
             sys.enable_tax = True
             sys.default_tax_rate = None
             sys.enable_pos = False
-            with patch(
-                "models.system_settings.SystemSettings.get_current", return_value=sys
-            ):
+            with patch("models.system_settings.SystemSettings.get_current", return_value=sys):
                 ctx = self._ctx(ctx_app)
         assert ":\\" not in ctx["developer_logo"]
 
@@ -171,9 +165,7 @@ class TestContextProcessor:
         user.has_permission.return_value = True
         t = MagicMock(id=1)
         with (
-            patch(
-                "models.Tenant.get_current", return_value=MagicMock(id=1, name_ar="T")
-            ),
+            patch("models.Tenant.get_current", return_value=MagicMock(id=1, name_ar="T")),
             patch("models.system_settings.SystemSettings.get_current") as sys_set,
             patch("utils.tenanting.is_global_tenant_user", return_value=True),
             patch("utils.tenanting.get_active_tenant_id", return_value=1),
@@ -192,9 +184,7 @@ class TestContextProcessor:
             sys.default_tax_rate = None
             sys.enable_pos = False
             sys_set.return_value = sys
-            TenantModel.query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [
-                t
-            ]
+            TenantModel.query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [t]
             with ctx_app.test_request_context():
                 ctx = self._ctx(ctx_app)
         assert "available_tenants" in ctx
@@ -220,9 +210,7 @@ class TestContextProcessor:
         tenant.name = ""
         with (
             patch("models.Tenant.get_current", return_value=tenant),
-            patch(
-                "models.invoice_settings.InvoiceSettings.get_active", return_value=None
-            ),
+            patch("models.invoice_settings.InvoiceSettings.get_active", return_value=None),
             patch(
                 "utils.tenant_branding.resolve_tenant_branding",
                 return_value={
@@ -250,15 +238,11 @@ class TestContextProcessor:
     def test_developer_logo_static_prefix_stripped(self, ctx_app):
         with (
             patch("models.Tenant.get_current", return_value=None),
-            patch(
-                "models.invoice_settings.InvoiceSettings.get_active", return_value=None
-            ),
+            patch("models.invoice_settings.InvoiceSettings.get_active", return_value=None),
             patch("flask_login.current_user", MagicMock(is_authenticated=False)),
         ):
             sys = MagicMock()
-            sys.get_custom_setting.side_effect = lambda k: (
-                "/static/assets/logo.png" if k == "developer_logo" else ""
-            )
+            sys.get_custom_setting.side_effect = lambda k: "/static/assets/logo.png" if k == "developer_logo" else ""
             sys.default_currency = "AED"
             sys.currency_symbol = "AED"
             sys.currency_position = "after"
@@ -266,9 +250,7 @@ class TestContextProcessor:
             sys.enable_tax = True
             sys.default_tax_rate = None
             sys.enable_pos = False
-            with patch(
-                "models.system_settings.SystemSettings.get_current", return_value=sys
-            ):
+            with patch("models.system_settings.SystemSettings.get_current", return_value=sys):
                 ctx = self._ctx(ctx_app)
         assert ctx["developer_logo"].startswith("assets/")
 
@@ -276,17 +258,13 @@ class TestContextProcessor:
         user = MagicMock(is_authenticated=True)
         user.has_permission = lambda c: c == "manage_sales"
         with (
-            patch(
-                "models.Tenant.get_current", return_value=MagicMock(id=1, name_ar="T")
-            ),
+            patch("models.Tenant.get_current", return_value=MagicMock(id=1, name_ar="T")),
             patch("models.system_settings.SystemSettings.get_current") as sys_set,
             patch("app.context.current_user", user),
             patch("utils.branching.get_active_branch", return_value=None),
             patch("utils.branching.get_active_branch_mode", return_value="single"),
             patch("utils.tenanting.is_global_tenant_user", return_value=False),
-            patch(
-                "utils.constants.PERMISSION_CODES", ["manage_sales", "manage_customers"]
-            ),
+            patch("utils.constants.PERMISSION_CODES", ["manage_sales", "manage_customers"]),
         ):
             sys = MagicMock()
             sys.get_custom_setting.return_value = ""
@@ -304,9 +282,7 @@ class TestContextProcessor:
     def test_available_tenants_exception_logged(self, ctx_app):
         user = MagicMock(is_authenticated=True)
         with (
-            patch(
-                "models.Tenant.get_current", return_value=MagicMock(id=1, name_ar="T")
-            ),
+            patch("models.Tenant.get_current", return_value=MagicMock(id=1, name_ar="T")),
             patch("models.system_settings.SystemSettings.get_current") as sys_set,
             patch("utils.tenanting.is_global_tenant_user", return_value=True),
             patch(
@@ -333,15 +309,11 @@ class TestContextProcessor:
     def test_developer_logo_static_prefix_without_leading_slash(self, ctx_app):
         with (
             patch("models.Tenant.get_current", return_value=None),
-            patch(
-                "models.invoice_settings.InvoiceSettings.get_active", return_value=None
-            ),
+            patch("models.invoice_settings.InvoiceSettings.get_active", return_value=None),
             patch("flask_login.current_user", MagicMock(is_authenticated=False)),
         ):
             sys = MagicMock()
-            sys.get_custom_setting.side_effect = lambda k: (
-                "static/assets/logo.png" if k == "developer_logo" else ""
-            )
+            sys.get_custom_setting.side_effect = lambda k: "static/assets/logo.png" if k == "developer_logo" else ""
             sys.default_currency = "AED"
             sys.currency_symbol = "AED"
             sys.currency_position = "after"
@@ -349,18 +321,14 @@ class TestContextProcessor:
             sys.enable_tax = True
             sys.default_tax_rate = None
             sys.enable_pos = False
-            with patch(
-                "models.system_settings.SystemSettings.get_current", return_value=sys
-            ):
+            with patch("models.system_settings.SystemSettings.get_current", return_value=sys):
                 ctx = self._ctx(ctx_app)
         assert ctx["developer_logo"].startswith("assets/")
 
     def test_available_tenants_nested_log_failure(self, ctx_app):
         user = MagicMock(is_authenticated=True)
         with (
-            patch(
-                "models.Tenant.get_current", return_value=MagicMock(id=1, name_ar="T")
-            ),
+            patch("models.Tenant.get_current", return_value=MagicMock(id=1, name_ar="T")),
             patch("models.system_settings.SystemSettings.get_current") as sys_set,
             patch("utils.tenanting.is_global_tenant_user", return_value=True),
             patch(

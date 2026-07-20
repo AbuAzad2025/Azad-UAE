@@ -91,9 +91,7 @@ def log_mutation(
     log_func(json.dumps(log_entry, ensure_ascii=False, default=str))
 
 
-def log_security_event(
-    event_type: str, description: str, severity: str = "info", extra: dict | None = None
-):
+def log_security_event(event_type: str, description: str, severity: str = "info", extra: dict | None = None):
     """Log security-related events (login attempts, permission denials, etc.)."""
     log_entry = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -106,9 +104,7 @@ def log_security_event(
         "extra": extra or {},
     }
 
-    log_func = getattr(
-        logger, severity if severity != "alert" else "warning", logger.info
-    )
+    log_func = getattr(logger, severity if severity != "alert" else "warning", logger.info)
     log_func(json.dumps(log_entry, ensure_ascii=False, default=str))
 
 

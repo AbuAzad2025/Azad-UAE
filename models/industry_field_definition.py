@@ -16,11 +16,7 @@ class IndustryFieldDefinition(db.Model):
     is_required = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True, index=True)
 
-    __table_args__ = (
-        db.UniqueConstraint(
-            "industry_code", "field_code", name="uq_industry_field_code"
-        ),
-    )
+    __table_args__ = (db.UniqueConstraint("industry_code", "field_code", name="uq_industry_field_code"),)
 
     def __repr__(self):
         return f"<IndustryField {self.industry_code}.{self.field_code}>"

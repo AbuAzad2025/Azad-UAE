@@ -22,9 +22,7 @@ class TestLayoutRetrieval:
     def test_saved_layout_bypasses_default(self, mocker, app):
         from models.dashboard import UserDashboardLayout
 
-        custom = {
-            "widgets": [{"key": "inventory_alert", "x": 0, "y": 2, "w": 12, "h": 2}]
-        }
+        custom = {"widgets": [{"key": "inventory_alert", "x": 0, "y": 2, "w": 12, "h": 2}]}
         row = MagicMock(layout_json=custom)
         mock_q = MagicMock()
         mock_q.filter_by.return_value.first.return_value = row
@@ -103,9 +101,7 @@ class TestMultiTenantIsolation:
         from services.dashboard_service import DashboardService
 
         with app.app_context():
-            saved = DashboardService.save_user_layout(
-                tenant_id=42, user_id=3, layout_json=layout_json
-            )
+            saved = DashboardService.save_user_layout(tenant_id=42, user_id=3, layout_json=layout_json)
 
         added = mock_session.add.call_args[0][0]
         assert added.tenant_id == 42
@@ -153,9 +149,7 @@ class TestLayoutPersistence:
         )
         mock_session = mocker.patch("services.dashboard_service.db.session")
 
-        payload = {
-            "widgets": [{"key": "cash_summary", "x": 0, "y": 0, "w": 12, "h": 1}]
-        }
+        payload = {"widgets": [{"key": "cash_summary", "x": 0, "y": 0, "w": 12, "h": 1}]}
         from services.dashboard_service import DashboardService
 
         with app.app_context():

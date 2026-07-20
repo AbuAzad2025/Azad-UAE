@@ -15,9 +15,7 @@ STATE_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "scripts", "auth
 def _load_state(role_slug):
     path = os.path.join(STATE_DIR, f"{role_slug}_state.json")
     if not os.path.exists(path):
-        pytest.skip(
-            f"Auth state file not found: {path}. Run: python scripts/auth/setup_test_users.py"
-        )
+        pytest.skip(f"Auth state file not found: {path}. Run: python scripts/auth/setup_test_users.py")
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 

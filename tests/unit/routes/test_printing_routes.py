@@ -38,9 +38,7 @@ def printing_client(app_factory, bypass_permission_auth):
             "routes.printing.PrintService.render_print",
             return_value="<html>print</html>",
         ) as render_print,
-        patch(
-            "routes.printing.PrintService.render_pdf", return_value=b"fake-pdf"
-        ) as render_pdf,
+        patch("routes.printing.PrintService.render_pdf", return_value=b"fake-pdf") as render_pdf,
         patch("routes.printing.PrintService.audit_print") as audit_print,
         patch("routes.printing.PrintService.create_snapshot") as create_snapshot,
         patch(
@@ -260,12 +258,8 @@ class TestPrintHistory:
     def test_print_history_returns_200(self, printing_client):
         record = MagicMock()
         record.id = 1
-        printing_client._printing_mocks["history_model"].query = _chain_query(
-            all=[record]
-        )
-        with patch(
-            "routes.printing.render_template", return_value="history-page"
-        ) as render:
+        printing_client._printing_mocks["history_model"].query = _chain_query(all=[record])
+        with patch("routes.printing.render_template", return_value="history-page") as render:
             resp = printing_client.get("/printing/history")
         assert resp.status_code == 200
         render.assert_called_once()
@@ -384,9 +378,7 @@ class TestPrintApiHistory:
 
 class TestPrintSettings:
     def test_settings_get_returns_200(self, printing_client):
-        with patch(
-            "routes.printing.render_template", return_value="settings-page"
-        ) as render:
+        with patch("routes.printing.render_template", return_value="settings-page") as render:
             resp = printing_client.get("/printing/settings")
         assert resp.status_code == 200
         render.assert_called_once()
@@ -496,9 +488,7 @@ class TestPrintingCoverageGaps:
 
             real_import = builtins.__import__
 
-            def _import_shim(
-                name, globals_dict=None, locals_dict=None, fromlist=(), level=0
-            ):
+            def _import_shim(name, globals_dict=None, locals_dict=None, fromlist=(), level=0):
                 if name == "models" and fromlist and "Shipment" in fromlist:
                     raise ImportError("Shipment unavailable")
                 return real_import(name, globals_dict, locals_dict, fromlist, level)

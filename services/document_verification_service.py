@@ -23,9 +23,7 @@ class DocumentVerificationService:
         return base + "/verify/{}"
 
     @staticmethod
-    def get_or_create_verification(
-        document_type, document_id, tenant_id, created_by=None
-    ):
+    def get_or_create_verification(document_type, document_id, tenant_id, created_by=None):
         from models.document_verification import DocumentVerification
 
         if document_type not in VERIFIABLE_TYPES:
@@ -42,9 +40,7 @@ class DocumentVerificationService:
             db.session.flush()
             return rec
         except Exception:
-            logger.exception(
-                "Failed to create verification for %s #%d", document_type, document_id
-            )
+            logger.exception("Failed to create verification for %s #%d", document_type, document_id)
             return None
 
     @staticmethod
@@ -54,15 +50,11 @@ class DocumentVerificationService:
         if not public_token or not public_token.strip():
             return None
 
-        rec = DocumentVerification.query.filter_by(
-            public_token=public_token.strip()
-        ).first()
+        rec = DocumentVerification.query.filter_by(public_token=public_token.strip()).first()
         if not rec:
             return None
 
-        doc = DocumentVerificationService._resolve_document(
-            rec.document_type, rec.document_id, rec.tenant_id
-        )
+        doc = DocumentVerificationService._resolve_document(rec.document_type, rec.document_id, rec.tenant_id)
         if doc is None:
             return None
 
@@ -88,32 +80,22 @@ class DocumentVerificationService:
             if document_type == "payment":
                 from models import Payment
 
-                return Payment.query.filter_by(
-                    id=document_id, tenant_id=tenant_id
-                ).first()
+                return Payment.query.filter_by(id=document_id, tenant_id=tenant_id).first()
             if document_type == "receipt":
                 from models import Receipt
 
-                return Receipt.query.filter_by(
-                    id=document_id, tenant_id=tenant_id
-                ).first()
+                return Receipt.query.filter_by(id=document_id, tenant_id=tenant_id).first()
             if document_type == "purchase":
                 from models import Purchase
 
-                return Purchase.query.filter_by(
-                    id=document_id, tenant_id=tenant_id
-                ).first()
+                return Purchase.query.filter_by(id=document_id, tenant_id=tenant_id).first()
             if document_type == "expense":
                 from models import Expense
 
-                return Expense.query.filter_by(
-                    id=document_id, tenant_id=tenant_id
-                ).first()
+                return Expense.query.filter_by(id=document_id, tenant_id=tenant_id).first()
             return None
         except Exception:
-            logger.exception(
-                "Error resolving document %s #%d", document_type, document_id
-            )
+            logger.exception("Error resolving document %s #%d", document_type, document_id)
             return None
 
     @staticmethod
@@ -128,21 +110,13 @@ class DocumentVerificationService:
     ):
         pass
 
-        getattr(document, "sale_number", None) or getattr(
-            document, "payment_number", None
-        ) or getattr(document, "receipt_number", None) or getattr(
-            document, "purchase_number", None
-        ) or getattr(document, "expense_number", None) or str(
+        getattr(document, "sale_number", None) or getattr(document, "payment_number", None) or getattr(
+            document, "receipt_number", None
+        ) or getattr(document, "purchase_number", None) or getattr(document, "expense_number", None) or str(
             getattr(document, "id", "")
         )
-        float(
-            getattr(document, "total_amount", None)
-            or getattr(document, "amount", None)
-            or 0
-        )
-        getattr(document, "currency", None) or (
-            tenant.default_currency if tenant else "AED"
-        )
+        float(getattr(document, "total_amount", None) or getattr(document, "amount", None) or 0)
+        getattr(document, "currency", None) or (tenant.default_currency if tenant else "AED")
         qr_data = verification_url
 
         return qr_data

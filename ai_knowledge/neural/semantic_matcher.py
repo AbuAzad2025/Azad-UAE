@@ -746,9 +746,7 @@ class SemanticMatcher:
             }
         """
         # 1. محاولة Semantic Matching أولاً
-        intent, confidence, all_scores = self.find_best_intent(
-            user_message, threshold=0.3
-        )
+        intent, confidence, all_scores = self.find_best_intent(user_message, threshold=0.3)
 
         if intent and confidence > 0.5:
             return {

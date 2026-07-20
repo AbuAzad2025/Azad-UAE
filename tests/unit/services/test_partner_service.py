@@ -50,73 +50,47 @@ class TestScopeAggregation:
             "services.partner_service.db.session.query",
             return_value=_query_chain(Decimal("1000")),
         )
-        result = PartnerService.get_scope_revenue(
-            1, date(2026, 1, 1), date(2026, 1, 31)
-        )
+        result = PartnerService.get_scope_revenue(1, date(2026, 1, 1), date(2026, 1, 31))
         assert result == Decimal("1000")
 
     def test_get_scope_revenue_branch_filter(self, mocker):
         q = _query_chain(Decimal("500"))
         mocker.patch("services.partner_service.db.session.query", return_value=q)
-        result = PartnerService.get_scope_revenue(
-            1, date(2026, 1, 1), date(2026, 1, 31), "branch", 2
-        )
+        result = PartnerService.get_scope_revenue(1, date(2026, 1, 1), date(2026, 1, 31), "branch", 2)
         q.filter.assert_called()
         assert result == Decimal("500")
 
     def test_get_scope_revenue_warehouse(self, mocker):
         q = _query_chain(Decimal("300"))
         mocker.patch("services.partner_service.db.session.query", return_value=q)
-        result = PartnerService.get_scope_revenue(
-            1, date(2026, 1, 1), date(2026, 1, 31), "warehouse", 9
-        )
+        result = PartnerService.get_scope_revenue(1, date(2026, 1, 1), date(2026, 1, 31), "warehouse", 9)
         assert result == Decimal("300")
 
     def test_get_scope_revenue_none_scalar(self, mocker):
-        mocker.patch(
-            "services.partner_service.db.session.query", return_value=_query_chain(None)
-        )
-        assert PartnerService.get_scope_revenue(
-            1, date(2026, 1, 1), date(2026, 1, 31)
-        ) == Decimal("0")
+        mocker.patch("services.partner_service.db.session.query", return_value=_query_chain(None))
+        assert PartnerService.get_scope_revenue(1, date(2026, 1, 1), date(2026, 1, 31)) == Decimal("0")
 
     def test_get_scope_cogs_branch_and_warehouse(self, mocker):
         q = _query_chain(Decimal("200"))
         mocker.patch("services.partner_service.db.session.query", return_value=q)
-        assert PartnerService.get_scope_cogs(
-            1, date(2026, 1, 1), date(2026, 1, 31), "branch", 1
-        ) == Decimal("200")
-        assert PartnerService.get_scope_cogs(
-            1, date(2026, 1, 1), date(2026, 1, 31), "warehouse", 1
-        ) == Decimal("200")
+        assert PartnerService.get_scope_cogs(1, date(2026, 1, 1), date(2026, 1, 31), "branch", 1) == Decimal("200")
+        assert PartnerService.get_scope_cogs(1, date(2026, 1, 1), date(2026, 1, 31), "warehouse", 1) == Decimal("200")
 
     def test_get_scope_expenses_warehouse_zero(self):
-        assert PartnerService.get_scope_expenses(
-            1, date(2026, 1, 1), date(2026, 1, 31), "warehouse", 1
-        ) == Decimal("0")
+        assert PartnerService.get_scope_expenses(1, date(2026, 1, 1), date(2026, 1, 31), "warehouse", 1) == Decimal("0")
 
     def test_get_scope_expenses_branch(self, mocker):
         mocker.patch(
             "services.partner_service.db.session.query",
             return_value=_query_chain(Decimal("150")),
         )
-        assert PartnerService.get_scope_expenses(
-            1, date(2026, 1, 1), date(2026, 1, 31), "branch", 3
-        ) == Decimal("150")
+        assert PartnerService.get_scope_expenses(1, date(2026, 1, 1), date(2026, 1, 31), "branch", 3) == Decimal("150")
 
     def test_calculate_scope_profit(self, mocker):
-        mocker.patch.object(
-            PartnerService, "get_scope_revenue", return_value=Decimal("1000")
-        )
-        mocker.patch.object(
-            PartnerService, "get_scope_cogs", return_value=Decimal("400")
-        )
-        mocker.patch.object(
-            PartnerService, "get_scope_expenses", return_value=Decimal("100")
-        )
-        pnl = PartnerService.calculate_scope_profit(
-            1, date(2026, 1, 1), date(2026, 1, 31)
-        )
+        mocker.patch.object(PartnerService, "get_scope_revenue", return_value=Decimal("1000"))
+        mocker.patch.object(PartnerService, "get_scope_cogs", return_value=Decimal("400"))
+        mocker.patch.object(PartnerService, "get_scope_expenses", return_value=Decimal("100"))
+        pnl = PartnerService.calculate_scope_profit(1, date(2026, 1, 1), date(2026, 1, 31))
         assert pnl["net_profit"] == 500.0
 
 
@@ -124,10 +98,7 @@ class TestCreateDistributions:
     def test_empty_partners_returns_empty(self, mocker):
         P = mocker.patch("models.Partner")
         P.query.filter_by.return_value.all.return_value = []
-        assert (
-            PartnerService.create_distributions(1, date(2026, 1, 1), date(2026, 1, 31))
-            == []
-        )
+        assert PartnerService.create_distributions(1, date(2026, 1, 1), date(2026, 1, 31)) == []
 
     def test_skips_existing_period(self, mocker):
         partner = _partner()
@@ -146,15 +117,10 @@ class TestCreateDistributions:
                 "net_profit": 0,
             },
         )
-        assert (
-            PartnerService.create_distributions(1, date(2026, 1, 1), date(2026, 1, 31))
-            == []
-        )
+        assert PartnerService.create_distributions(1, date(2026, 1, 1), date(2026, 1, 31)) == []
 
     def test_profit_distribution_commits(self, mocker):
-        partner = _partner(
-            share_percentage=Decimal("40"), min_profit_threshold=Decimal("0")
-        )
+        partner = _partner(share_percentage=Decimal("40"), min_profit_threshold=Decimal("0"))
         P = mocker.patch("models.Partner")
         P.query.filter_by.return_value.all.return_value = [partner]
         D = mocker.patch("models.PartnerProfitDistribution")
@@ -173,9 +139,7 @@ class TestCreateDistributions:
             },
         )
         mock_db = mocker.patch("services.partner_service.db")
-        ids = PartnerService.create_distributions(
-            1, date(2026, 1, 1), date(2026, 1, 31), created_by=1
-        )
+        ids = PartnerService.create_distributions(1, date(2026, 1, 1), date(2026, 1, 31), created_by=1)
         assert ids == [99]
         mock_db.session.flush.assert_called()
 
@@ -205,12 +169,8 @@ class TestCreateDistributions:
     def test_scope_calculation_failure_wrapped(self, mocker):
         P = mocker.patch("models.Partner")
         P.query.filter_by.return_value.all.return_value = [_partner()]
-        mocker.patch(
-            "models.PartnerProfitDistribution"
-        ).query.filter_by.return_value.first.return_value = None
-        mocker.patch.object(
-            PartnerService, "calculate_scope_profit", side_effect=RuntimeError("boom")
-        )
+        mocker.patch("models.PartnerProfitDistribution").query.filter_by.return_value.first.return_value = None
+        mocker.patch.object(PartnerService, "calculate_scope_profit", side_effect=RuntimeError("boom"))
         with pytest.raises(ValueError, match="فشل حساب أرباح"):
             PartnerService.create_distributions(1, date(2026, 1, 1), date(2026, 1, 31))
 
@@ -331,18 +291,13 @@ class TestAddTransaction:
     def test_tenant_mismatch(self, mocker):
         mock_db = mocker.patch("services.partner_service.db")
         mock_db.session.get.return_value = _partner(tenant_id=2)
-        assert (
-            PartnerService.add_transaction(1, "withdrawal", Decimal("10"), tenant_id=1)
-            is None
-        )
+        assert PartnerService.add_transaction(1, "withdrawal", Decimal("10"), tenant_id=1) is None
 
     def test_withdrawal_updates_totals_and_posts_gl(self, mocker):
         partner = _partner(current_balance=Decimal("0"))
         mock_db = mocker.patch("services.partner_service.db")
         mock_db.session.get.return_value = partner
-        mocker.patch(
-            "utils.currency_utils.get_system_default_currency", return_value="AED"
-        )
+        mocker.patch("utils.currency_utils.get_system_default_currency", return_value="AED")
         tx_cls = mocker.patch("models.PartnerTransaction")
         tx = MagicMock(id=55)
         tx_cls.return_value = tx
@@ -356,9 +311,7 @@ class TestAddTransaction:
             return_value="1120",
         )
         post = mocker.patch("services.gl_posting.post_or_fail")
-        tx_id = PartnerService.add_transaction(
-            1, "withdrawal", Decimal("-100"), notes="cash out"
-        )
+        tx_id = PartnerService.add_transaction(1, "withdrawal", Decimal("-100"), notes="cash out")
         assert tx_id == 55
         mock_db.session.flush.assert_called()
         post.assert_called_once()
@@ -367,9 +320,7 @@ class TestAddTransaction:
         partner = _partner(current_balance=Decimal("0"))
         mock_db = mocker.patch("services.partner_service.db")
         mock_db.session.get.return_value = partner
-        mocker.patch(
-            "utils.currency_utils.get_system_default_currency", return_value="AED"
-        )
+        mocker.patch("utils.currency_utils.get_system_default_currency", return_value="AED")
         tx_cls = mocker.patch("models.PartnerTransaction")
         tx = MagicMock(id=77)
         tx_cls.return_value = tx
@@ -390,9 +341,7 @@ class TestAddTransaction:
         partner = _partner(current_balance=Decimal("0"))
         mock_db = mocker.patch("services.partner_service.db")
         mock_db.session.get.return_value = partner
-        mocker.patch(
-            "utils.currency_utils.get_system_default_currency", return_value="AED"
-        )
+        mocker.patch("utils.currency_utils.get_system_default_currency", return_value="AED")
         mocker.patch("models.PartnerTransaction", return_value=MagicMock(id=1))
         post = mocker.patch("services.gl_posting.post_or_fail")
         PartnerService.add_transaction(1, "adjustment", Decimal("0"))
@@ -402,9 +351,7 @@ class TestAddTransaction:
         partner = _partner(current_balance=Decimal("0"))
         mock_db = mocker.patch("services.partner_service.db")
         mock_db.session.get.return_value = partner
-        mocker.patch(
-            "utils.currency_utils.get_system_default_currency", return_value="AED"
-        )
+        mocker.patch("utils.currency_utils.get_system_default_currency", return_value="AED")
         mocker.patch("models.PartnerTransaction", return_value=MagicMock(id=1))
         mocker.patch("services.gl_posting.post_or_fail")
         mock_db.session.flush.side_effect = RuntimeError("fail")
@@ -436,10 +383,7 @@ class TestPartnerStatement:
     def test_missing_partner(self, mocker):
         mock_db = mocker.patch("services.partner_service.db")
         mock_db.session.get.return_value = None
-        assert (
-            PartnerService.get_partner_statement(1, date(2026, 1, 1), date(2026, 1, 31))
-            == {}
-        )
+        assert PartnerService.get_partner_statement(1, date(2026, 1, 1), date(2026, 1, 31)) == {}
 
     def test_statement_with_transactions(self, mocker):
         partner = _partner(current_balance=Decimal("200"))
@@ -449,9 +393,7 @@ class TestPartnerStatement:
         mock_db.session.get.return_value = partner
         pt = _fake_partner_transaction_module([tx1, tx2])
         with patch.object(models, "PartnerTransaction", pt):
-            stmt = PartnerService.get_partner_statement(
-                1, date(2026, 1, 1), date(2026, 1, 31)
-            )
+            stmt = PartnerService.get_partner_statement(1, date(2026, 1, 1), date(2026, 1, 31))
         assert stmt["total_credit"] == 100.0
         assert stmt["total_debit"] == 30.0
         assert stmt["closing_balance"] == 70.0
@@ -462,8 +404,6 @@ class TestPartnerStatement:
         mock_db.session.get.return_value = partner
         pt = _fake_partner_transaction_module([])
         with patch.object(models, "PartnerTransaction", pt):
-            stmt = PartnerService.get_partner_statement(
-                1, date(2026, 1, 1), date(2026, 1, 31)
-            )
+            stmt = PartnerService.get_partner_statement(1, date(2026, 1, 1), date(2026, 1, 31))
         assert stmt["opening_balance"] == 0
         assert stmt["closing_balance"] == 50.0

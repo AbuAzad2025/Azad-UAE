@@ -52,9 +52,7 @@ class TestReceiptFormValid:
         assert form.currency.data == "AED"
         assert form.payment_method.data == "cash"
 
-    @pytest.mark.parametrize(
-        "method", ["cash", "card", "bank_transfer", "cheque", "e_wallet"]
-    )
+    @pytest.mark.parametrize("method", ["cash", "card", "bank_transfer", "cheque", "e_wallet"])
     def test_every_payment_method_choice_accepted(self, method):
         form = _receipt_form({**VALID_PAYLOAD, "payment_method": method})
         assert form.validate() is True

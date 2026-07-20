@@ -17,14 +17,8 @@ def _main_patches(**kwargs):
     with ExitStack() as stack:
         stack.enter_context(patch("routes.main.render_template", return_value="ok"))
         stack.enter_context(patch("routes.main.get_active_tenant_id", return_value=1))
-        stack.enter_context(
-            patch(
-                "routes.main.branch_scope_id", return_value=kwargs.get("branch_scope")
-            )
-        )
-        stack.enter_context(
-            patch("utils.tenanting.tenant_query", return_value=_chain_query(count=5))
-        )
+        stack.enter_context(patch("routes.main.branch_scope_id", return_value=kwargs.get("branch_scope")))
+        stack.enter_context(patch("utils.tenanting.tenant_query", return_value=_chain_query(count=5)))
         stack.enter_context(
             patch(
                 "routes.main.get_visible_products_query",
@@ -63,9 +57,7 @@ def _scalar_query_result(value):
     q.first.return_value = value
     q.scalar.return_value = value
     q.all.return_value = value if isinstance(value, list) else []
-    q.order_by.return_value.limit.return_value.all.return_value = (
-        value if isinstance(value, list) else []
-    )
+    q.order_by.return_value.limit.return_value.all.return_value = value if isinstance(value, list) else []
     return q
 
 
@@ -87,9 +79,7 @@ def _dashboard_query_side_effect(can_profit=False):
         q.select_from.return_value = q
         if can_profit and calls["n"] == 3:
             q.scalar.return_value = Decimal("75")
-        elif calls["n"] in (1, 2) or (
-            can_profit and calls["n"] > 4 and calls["n"] % 2 == 1
-        ):
+        elif calls["n"] in (1, 2) or (can_profit and calls["n"] > 4 and calls["n"] % 2 == 1):
             q.first.return_value = (2, Decimal("500"))
         else:
             q.scalar.return_value = Decimal("250")
@@ -100,9 +90,7 @@ def _dashboard_query_side_effect(can_profit=False):
 
 
 class TestMainDashboard:
-    def test_dashboard_renders_without_branch(
-        self, main_client, bypass_permission_auth
-    ):
+    def test_dashboard_renders_without_branch(self, main_client, bypass_permission_auth):
         bypass_permission_auth.can_see_costs.return_value = False
         product_q = MagicMock()
         product_q.filter_by.return_value.count.return_value = 8
@@ -182,9 +170,7 @@ class TestMainDashboard:
             resp = main_client.get("/dashboard")
         assert resp.status_code == 200
 
-    def test_dashboard_liquidity_exception_swallowed(
-        self, main_client, bypass_permission_auth
-    ):
+    def test_dashboard_liquidity_exception_swallowed(self, main_client, bypass_permission_auth):
         bypass_permission_auth.can_see_costs.return_value = True
         with (
             _main_patches(),
@@ -234,9 +220,7 @@ class TestMainDashboard:
             _main_patches(branch_scope=2),
             patch("routes.main.db.session.query", side_effect=_query_side_effect),
             patch("utils.tenanting.tenant_query", return_value=customer_count_q),
-            patch(
-                "routes.main.get_visible_products_query", return_value=product_count_q
-            ),
+            patch("routes.main.get_visible_products_query", return_value=product_count_q),
             patch("routes.main.Sale.query", sale_q),
             patch("routes.main.GLAccount.query") as gaq,
             patch("routes.main.get_gl_account_by_code", return_value=inv_account),
@@ -280,9 +264,7 @@ class TestMainProfile:
 
     def test_profile_update_fields(self, main_client, bypass_permission_auth):
         with (
-            patch(
-                "utils.sanitizer.InputSanitizer.sanitize_text", return_value="New Name"
-            ),
+            patch("utils.sanitizer.InputSanitizer.sanitize_text", return_value="New Name"),
             patch("routes.main.db.session") as sess,
         ):
             resp = main_client.post(
@@ -341,9 +323,7 @@ class TestMainProfile:
         assert bypass_permission_auth.phone == "+971500000001"
         sess.commit.assert_called()
 
-    def test_profile_password_missing_current(
-        self, main_client, bypass_permission_auth
-    ):
+    def test_profile_password_missing_current(self, main_client, bypass_permission_auth):
         resp = main_client.post(
             "/my-profile/update",
             data={
@@ -448,9 +428,7 @@ class TestMainProfile:
             patch("routes.main.db.session") as sess,
         ):
             sess.rollback = MagicMock()
-            resp = main_client.post(
-                "/my-profile/update", data={"full_name": "X"}, follow_redirects=False
-            )
+            resp = main_client.post("/my-profile/update", data={"full_name": "X"}, follow_redirects=False)
         assert resp.status_code == 302
 
 

@@ -75,21 +75,15 @@ def login_history():
     # LoginHistory has no tenant_id, so we join with User to scope where possible
     query = LoginHistory.query
     if tid:
-        query = query.join(User, LoginHistory.user_id == User.id).filter(
-            User.tenant_id == tid
-        )
+        query = query.join(User, LoginHistory.user_id == User.id).filter(User.tenant_id == tid)
 
     if user_filter:
         query = query.filter(LoginHistory.user_id == user_filter)
 
     if success_filter is not None:
-        query = query.filter(
-            LoginHistory.__table__.c.success == (success_filter == "true")
-        )
+        query = query.filter(LoginHistory.__table__.c.success == (success_filter == "true"))
 
-    pagination = query.order_by(LoginHistory.login_time.desc()).paginate(
-        page=page, per_page=50, error_out=False
-    )
+    pagination = query.order_by(LoginHistory.login_time.desc()).paginate(page=page, per_page=50, error_out=False)
 
     # Users list for filter dropdown, scoped by tenant
     users = User.query.filter_by(is_active=True)
@@ -100,15 +94,12 @@ def login_history():
     # Stats: base queries scoped by tenant via User join
     base_stats = LoginHistory.query
     if tid:
-        base_stats = base_stats.join(User, LoginHistory.user_id == User.id).filter(
-            User.tenant_id == tid
-        )
+        base_stats = base_stats.join(User, LoginHistory.user_id == User.id).filter(User.tenant_id == tid)
     stats = {
         "total_logins": base_stats.filter(LoginHistory.success).count(),
         "failed_logins": base_stats.filter(LoginHistory.success.is_(False)).count(),
         "today_logins": base_stats.filter(
-            LoginHistory.login_time
-            >= datetime.now(timezone.utc).replace(hour=0, minute=0)
+            LoginHistory.login_time >= datetime.now(timezone.utc).replace(hour=0, minute=0)
         ).count(),
     }
 
@@ -151,12 +142,8 @@ def security_alerts():
 
     stats = {
         "unresolved": SecurityAlert.query.filter_by(is_resolved=False).count(),
-        "critical": SecurityAlert.query.filter_by(
-            severity="critical", is_resolved=False
-        ).count(),
-        "high": SecurityAlert.query.filter_by(
-            severity="high", is_resolved=False
-        ).count(),
+        "critical": SecurityAlert.query.filter_by(severity="critical", is_resolved=False).count(),
+        "high": SecurityAlert.query.filter_by(severity="high", is_resolved=False).count(),
     }
 
     return render_template(
@@ -285,9 +272,7 @@ def financial_dashboard_advanced():
 
     tid = get_active_tenant_id(current_user)
     scoped_branch_id = _owner_branch_scope()
-    context = FinancialService.get_financial_dashboard_advanced_context(
-        tenant_id=tid, branch_id=scoped_branch_id
-    )
+    context = FinancialService.get_financial_dashboard_advanced_context(tenant_id=tid, branch_id=scoped_branch_id)
     return render_template(
         "owner/financial_dashboard_advanced.html",
         months_data=context["months_data"],
@@ -302,9 +287,7 @@ def sales_insights():
 
     scoped_branch_id = _owner_branch_scope()
     tid = get_active_tenant_id(current_user)
-    insights = AnalyticsService.get_sales_insights(
-        tenant_id=tid, branch_id=scoped_branch_id
-    )
+    insights = AnalyticsService.get_sales_insights(tenant_id=tid, branch_id=scoped_branch_id)
     return render_template("owner/sales_insights.html", insights=insights)
 
 
@@ -315,9 +298,7 @@ def customer_insights():
 
     scoped_branch_id = _owner_branch_scope()
     tid = get_active_tenant_id(current_user)
-    customers = AnalyticsService.get_customer_insights(
-        tenant_id=tid, branch_id=scoped_branch_id
-    )
+    customers = AnalyticsService.get_customer_insights(tenant_id=tid, branch_id=scoped_branch_id)
     return render_template("owner/customer_insights.html", customers=customers)
 
 
@@ -328,9 +309,7 @@ def product_performance():
 
     scoped_branch_id = _owner_branch_scope()
     tid = get_active_tenant_id(current_user)
-    products = AnalyticsService.get_product_performance(
-        tenant_id=tid, branch_id=scoped_branch_id
-    )
+    products = AnalyticsService.get_product_performance(tenant_id=tid, branch_id=scoped_branch_id)
     return render_template("owner/product_performance.html", products=products)
 
 
@@ -341,12 +320,8 @@ def forecasting():
 
     scoped_branch_id = _owner_branch_scope()
     tid = get_active_tenant_id(current_user)
-    historical, forecast = AnalyticsService.get_forecasting_data(
-        tenant_id=tid, branch_id=scoped_branch_id
-    )
-    return render_template(
-        "owner/forecasting.html", historical=historical, forecast=forecast
-    )
+    historical, forecast = AnalyticsService.get_forecasting_data(tenant_id=tid, branch_id=scoped_branch_id)
+    return render_template("owner/forecasting.html", historical=historical, forecast=forecast)
 
 
 # ───────────────────────────────────────────────────────────────

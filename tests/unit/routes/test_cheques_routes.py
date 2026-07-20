@@ -47,33 +47,19 @@ def _cheque_patches(**kwargs):
         stack.enter_context(patch("routes.cheques.render_template", return_value="ok"))
         stack.enter_context(patch("routes.cheques.Cheque.query", cq))
         stack.enter_context(patch("routes.cheques.Cheque.update_all_statuses"))
-        stack.enter_context(
-            patch("routes.cheques.Cheque.get_statistics", return_value={"total": 1})
-        )
-        stack.enter_context(
-            patch("routes.cheques.Cheque.get_due_soon_cheques", return_value=[])
-        )
-        stack.enter_context(
-            patch("routes.cheques.Cheque.get_overdue_cheques", return_value=[])
-        )
-        stack.enter_context(
-            patch("routes.cheques.get_active_tenant_id", return_value=1)
-        )
+        stack.enter_context(patch("routes.cheques.Cheque.get_statistics", return_value={"total": 1}))
+        stack.enter_context(patch("routes.cheques.Cheque.get_due_soon_cheques", return_value=[]))
+        stack.enter_context(patch("routes.cheques.Cheque.get_overdue_cheques", return_value=[]))
+        stack.enter_context(patch("routes.cheques.get_active_tenant_id", return_value=1))
         stack.enter_context(
             patch(
                 "routes.cheques.branch_scope_id",
                 return_value=kwargs.get("branch_scope"),
             )
         )
-        stack.enter_context(
-            patch("routes.cheques.should_show_all_branch_columns", return_value=False)
-        )
-        stack.enter_context(
-            patch("utils.tenanting.tenant_get_or_404", return_value=cheque)
-        )
-        stack.enter_context(
-            patch("routes.cheques._get_cheque_or_404", return_value=cheque)
-        )
+        stack.enter_context(patch("routes.cheques.should_show_all_branch_columns", return_value=False))
+        stack.enter_context(patch("utils.tenanting.tenant_get_or_404", return_value=cheque))
+        stack.enter_context(patch("routes.cheques._get_cheque_or_404", return_value=cheque))
         stack.enter_context(
             patch(
                 "routes.cheques._ensure_cheque_scope",
@@ -92,21 +78,11 @@ def _cheque_patches(**kwargs):
                 return_value=_chain_query(all=[]),
             )
         )
-        stack.enter_context(
-            patch("routes.cheques.resolve_default_currency", return_value="AED")
-        )
-        stack.enter_context(
-            patch("routes.cheques.get_system_default_currency", return_value="AED")
-        )
-        stack.enter_context(
-            patch("routes.cheques.CurrencyService.get_all_rates", return_value={})
-        )
-        stack.enter_context(
-            patch("routes.cheques._resolve_transaction_rate", return_value=Decimal("1"))
-        )
-        stack.enter_context(
-            patch("routes.cheques.generate_number", return_value="CHQ-NEW")
-        )
+        stack.enter_context(patch("routes.cheques.resolve_default_currency", return_value="AED"))
+        stack.enter_context(patch("routes.cheques.get_system_default_currency", return_value="AED"))
+        stack.enter_context(patch("routes.cheques.CurrencyService.get_all_rates", return_value={}))
+        stack.enter_context(patch("routes.cheques._resolve_transaction_rate", return_value=Decimal("1")))
+        stack.enter_context(patch("routes.cheques.generate_number", return_value="CHQ-NEW"))
         stack.enter_context(patch("routes.cheques.calculate_amount_aed"))
         stack.enter_context(patch("routes.cheques.process_cheque_receive"))
         stack.enter_context(patch("routes.cheques.process_cheque_issue"))
@@ -259,9 +235,7 @@ class TestChequesAuth:
 class TestChequesListPages:
     def test_index(self, cheques_client):
         with _cheque_patches():
-            resp = cheques_client.get(
-                "/cheques/?type=incoming&status=pending&search=bank"
-            )
+            resp = cheques_client.get("/cheques/?type=incoming&status=pending&search=bank")
         assert resp.status_code == 200
 
     def test_incoming(self, cheques_client):
@@ -452,9 +426,7 @@ class TestChequesCreate:
     def test_deposit_generic_error(self, cheques_client):
         with (
             _cheque_patches(),
-            patch(
-                "routes.cheques.process_cheque_deposit", side_effect=RuntimeError("db")
-            ),
+            patch("routes.cheques.process_cheque_deposit", side_effect=RuntimeError("db")),
         ):
             resp = cheques_client.post("/cheques/1/deposit", follow_redirects=False)
         assert resp.status_code == 302
@@ -462,9 +434,7 @@ class TestChequesCreate:
     def test_bounce_generic_error(self, cheques_client):
         with (
             _cheque_patches(),
-            patch(
-                "routes.cheques.process_cheque_bounce", side_effect=RuntimeError("db")
-            ),
+            patch("routes.cheques.process_cheque_bounce", side_effect=RuntimeError("db")),
         ):
             resp = cheques_client.post("/cheques/1/bounce", follow_redirects=False)
         assert resp.status_code == 302
@@ -472,13 +442,9 @@ class TestChequesCreate:
     def test_cancel_generic_error(self, cheques_admin_client):
         with (
             _cheque_patches(),
-            patch(
-                "routes.cheques.process_cheque_cancel", side_effect=RuntimeError("db")
-            ),
+            patch("routes.cheques.process_cheque_cancel", side_effect=RuntimeError("db")),
         ):
-            resp = cheques_admin_client.post(
-                "/cheques/1/cancel", follow_redirects=False
-            )
+            resp = cheques_admin_client.post("/cheques/1/cancel", follow_redirects=False)
         assert resp.status_code == 302
 
     def test_clear_currency_fallback(self, cheques_client):
@@ -644,9 +610,7 @@ class TestChequesActions:
     def test_clear_with_loss(self, cheques_client):
         cheque = _mock_cheque(currency_gain_loss=Decimal("-5"))
         with _cheque_patches(cheque=cheque):
-            resp = cheques_client.post(
-                "/cheques/1/clear", data={}, follow_redirects=False
-            )
+            resp = cheques_client.post("/cheques/1/clear", data={}, follow_redirects=False)
         assert resp.status_code == 302
 
     def test_clear_value_error(self, cheques_client):
@@ -663,9 +627,7 @@ class TestChequesActions:
     def test_clear_generic_error(self, cheques_client):
         with (
             _cheque_patches(),
-            patch(
-                "routes.cheques.process_cheque_clear", side_effect=RuntimeError("db")
-            ),
+            patch("routes.cheques.process_cheque_clear", side_effect=RuntimeError("db")),
         ):
             resp = cheques_client.post("/cheques/1/clear", follow_redirects=False)
         assert resp.status_code == 302
@@ -706,9 +668,7 @@ class TestChequesActions:
     def test_cancel_cleared_blocked(self, cheques_admin_client):
         cheque = _mock_cheque(status="cleared")
         with _cheque_patches(cheque=cheque):
-            resp = cheques_admin_client.post(
-                "/cheques/1/cancel", follow_redirects=False
-            )
+            resp = cheques_admin_client.post("/cheques/1/cancel", follow_redirects=False)
         assert resp.status_code == 302
 
     def test_cancel_success(self, cheques_admin_client):
@@ -722,17 +682,13 @@ class TestChequesActions:
 
     def test_cancel_forbidden_scope(self, cheques_admin_client):
         with _cheque_patches(in_scope=False):
-            resp = cheques_admin_client.post(
-                "/cheques/1/cancel", follow_redirects=False
-            )
+            resp = cheques_admin_client.post("/cheques/1/cancel", follow_redirects=False)
         assert resp.status_code == 403
 
     def test_delete_archive(self, cheques_admin_client):
         cheque = _mock_cheque(status="deposited", receipt_id=5)
         with _cheque_patches(cheque=cheque):
-            resp = cheques_admin_client.post(
-                "/cheques/1/delete", follow_redirects=False
-            )
+            resp = cheques_admin_client.post("/cheques/1/delete", follow_redirects=False)
         assert resp.status_code == 302
         cheque.archive.assert_called_once()
 
@@ -740,16 +696,12 @@ class TestChequesActions:
         cheque = _mock_cheque(status="pending")
         gl_q = MagicMock()
         with _cheque_patches(cheque=cheque), patch("models.GLJournalEntry.query", gl_q):
-            resp = cheques_admin_client.post(
-                "/cheques/1/delete", follow_redirects=False
-            )
+            resp = cheques_admin_client.post("/cheques/1/delete", follow_redirects=False)
         assert resp.status_code == 302
 
     def test_delete_forbidden_scope(self, cheques_admin_client):
         with _cheque_patches(in_scope=False):
-            resp = cheques_admin_client.post(
-                "/cheques/1/delete", follow_redirects=False
-            )
+            resp = cheques_admin_client.post("/cheques/1/delete", follow_redirects=False)
         assert resp.status_code == 403
 
     def test_delete_error(self, cheques_admin_client):
@@ -757,32 +709,24 @@ class TestChequesActions:
         session = MagicMock()
         session.commit.side_effect = RuntimeError("fk")
         with _cheque_patches(cheque=cheque), patch("extensions.db.session", session):
-            resp = cheques_admin_client.post(
-                "/cheques/1/delete", follow_redirects=False
-            )
+            resp = cheques_admin_client.post("/cheques/1/delete", follow_redirects=False)
         assert resp.status_code == 302
 
     def test_restore_success(self, cheques_admin_client):
         with _cheque_patches():
-            resp = cheques_admin_client.post(
-                "/cheques/1/restore", follow_redirects=False
-            )
+            resp = cheques_admin_client.post("/cheques/1/restore", follow_redirects=False)
         assert resp.status_code == 302
 
     def test_restore_forbidden_scope(self, cheques_admin_client):
         with _cheque_patches(in_scope=False):
-            resp = cheques_admin_client.post(
-                "/cheques/1/restore", follow_redirects=False
-            )
+            resp = cheques_admin_client.post("/cheques/1/restore", follow_redirects=False)
         assert resp.status_code == 403
 
     def test_restore_error(self, cheques_admin_client):
         cheque = _mock_cheque()
         cheque.restore.side_effect = RuntimeError("fail")
         with _cheque_patches(cheque=cheque):
-            resp = cheques_admin_client.post(
-                "/cheques/1/restore", follow_redirects=False
-            )
+            resp = cheques_admin_client.post("/cheques/1/restore", follow_redirects=False)
         assert resp.status_code == 302
 
 

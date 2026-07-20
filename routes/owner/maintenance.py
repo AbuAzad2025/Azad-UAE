@@ -156,9 +156,7 @@ def maintenance_fix_default_tenant():
         return jsonify(
             {
                 "success": True,
-                "message": gettext(
-                    f"✅ تم تصحيح {patched} عمود في بيانات المستأجر الافتراضي"
-                ),
+                "message": gettext(f"✅ تم تصحيح {patched} عمود في بيانات المستأجر الافتراضي"),
                 "result": result,
             }
         )
@@ -206,9 +204,7 @@ def maintenance_regenerate_default_backup():
             return jsonify(
                 {
                     "success": True,
-                    "message": gettext(
-                        "🔍 تجربة جافة: ستتم إعادة إنشاء النسخة الاحتياطية"
-                    ),
+                    "message": gettext("🔍 تجربة جافة: ستتم إعادة إنشاء النسخة الاحتياطية"),
                     "result": result,
                 }
             )
@@ -241,9 +237,7 @@ def maintenance_run_default_tenant_maintenance():
             jsonify(
                 {
                     "success": False,
-                    "error": gettext(
-                        "يجب كتابة RUN_DEFAULT_TENANT_MAINTENANCE للتأكيد"
-                    ),
+                    "error": gettext("يجب كتابة RUN_DEFAULT_TENANT_MAINTENANCE للتأكيد"),
                 }
             ),
             400,
@@ -266,9 +260,7 @@ def maintenance_run_default_tenant_maintenance():
             return jsonify(
                 {
                     "success": True,
-                    "message": gettext(
-                        f"🔍 تجربة جافة: سيتم تصحيح {patched} عمود وتجديد النسخة"
-                    ),
+                    "message": gettext(f"🔍 تجربة جافة: سيتم تصحيح {patched} عمود وتجديد النسخة"),
                     "result": result,
                 }
             )
@@ -276,16 +268,12 @@ def maintenance_run_default_tenant_maintenance():
         return jsonify(
             {
                 "success": True,
-                "message": gettext(
-                    f"✅ صيانة كاملة: {patched} عمود مصحح، نسخة احتياطية: {backup}"
-                ),
+                "message": gettext(f"✅ صيانة كاملة: {patched} عمود مصحح، نسخة احتياطية: {backup}"),
                 "result": result,
             }
         )
     except Exception as e:
-        current_app.logger.error(
-            "maintenance_run_default_tenant_maintenance failed: %s", e
-        )
+        current_app.logger.error("maintenance_run_default_tenant_maintenance failed: %s", e)
         LoggingCore.log_error(
             message=f"run_default_tenant_maintenance failed: {e}",
             category="MAINTENANCE",
@@ -329,9 +317,7 @@ def maintenance_cleanup_test_dbs():
             return jsonify(
                 {
                     "success": True,
-                    "message": gettext(
-                        f"🔍 تجربة جافة: سيتم حذف {dropped} قاعدة بيانات"
-                    ),
+                    "message": gettext(f"🔍 تجربة جافة: سيتم حذف {dropped} قاعدة بيانات"),
                     "result": result,
                 }
             )

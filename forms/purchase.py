@@ -14,12 +14,8 @@ class PurchaseForm(FlaskForm):
         default="AED",
         validators=[DataRequired()],
     )  # TODO: use Config.DEFAULT_CURRENCY
-    exchange_rate = DecimalField(
-        "سعر الصرف (اختياري)", validators=[Optional(), NumberRange(min=0)]
-    )
-    discount_amount = DecimalField(
-        "الخصم", default=Decimal(), validators=[Optional(), NumberRange(min=0)]
-    )
+    exchange_rate = DecimalField("سعر الصرف (اختياري)", validators=[Optional(), NumberRange(min=0)])
+    discount_amount = DecimalField("الخصم", default=Decimal(), validators=[Optional(), NumberRange(min=0)])
     tax_rate = DecimalField(
         "الضريبة %",
         default=Decimal(),

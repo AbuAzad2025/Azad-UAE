@@ -42,8 +42,7 @@ class BackupOptimizer:
     def cleanup_old_backups(backup_dir: str, keep_count: int = 10):
         try:
             backup_files = sorted(
-                list(Path(backup_dir).glob("*.sql*"))
-                + list(Path(backup_dir).glob("*.dump*")),
+                list(Path(backup_dir).glob("*.sql*")) + list(Path(backup_dir).glob("*.dump*")),
                 key=os.path.getmtime,
                 reverse=True,
             )

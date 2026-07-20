@@ -77,9 +77,7 @@ class TreasuryService:
                 GLAccount.tenant_id == tenant_id,
                 GLAccount.is_active,
                 GLAccount.is_header.is_(False),
-                GLAccount.liquidity_kind.in_(
-                    list(TreasuryService.LIQUIDITY_KINDS.keys())
-                ),
+                GLAccount.liquidity_kind.in_(list(TreasuryService.LIQUIDITY_KINDS.keys())),
             )
             if branch_id is not None:
                 gl_q = gl_q.filter(GLAccount.branch_id == branch_id)
@@ -92,15 +90,11 @@ class TreasuryService:
                     {
                         "id": acc.id,
                         "code": acc.code,
-                        "name": getattr(acc, "name_ar", None)
-                        or getattr(acc, "name", None)
-                        or acc.code,
+                        "name": getattr(acc, "name_ar", None) or getattr(acc, "name", None) or acc.code,
                         "name_en": getattr(acc, "name_en", None),
                         "kind": kind,
                         "kind_label": TreasuryService.LIQUIDITY_KINDS.get(kind, kind),
-                        "currency": getattr(
-                            acc, "currency", get_system_default_currency()
-                        )
+                        "currency": getattr(acc, "currency", get_system_default_currency())
                         or get_system_default_currency(),
                         "balance": float(balance),
                         "balance_aed": float(balance),
@@ -215,9 +209,7 @@ class TreasuryService:
 
         # BankReconciliation has no direct tenant_id; filter via GLAccount
         recs = (
-            BankReconciliation.query.join(
-                GLAccount, BankReconciliation.bank_account_id == GLAccount.id
-            )
+            BankReconciliation.query.join(GLAccount, BankReconciliation.bank_account_id == GLAccount.id)
             .filter(GLAccount.tenant_id == tenant_id)
             .order_by(BankReconciliation.created_at.desc())
             .limit(limit)
@@ -229,8 +221,7 @@ class TreasuryService:
                 "id": r.id,
                 "reconciliation_number": r.reconciliation_number,
                 "bank_account_code": r.bank_account.code if r.bank_account else None,
-                "bank_account_name": getattr(r.bank_account, "name_ar", None)
-                or getattr(r.bank_account, "name", None),
+                "bank_account_name": getattr(r.bank_account, "name_ar", None) or getattr(r.bank_account, "name", None),
                 "period_start": r.period_start.isoformat() if r.period_start else None,
                 "period_end": r.period_end.isoformat() if r.period_end else None,
                 "closing_balance_per_books": float(r.closing_balance_per_books or 0),
@@ -250,9 +241,7 @@ class TreasuryService:
         """
         liquidity = TreasuryService.get_liquidity_position(tenant_id, branch_id)
         cheques = TreasuryService.get_cheque_maturity(tenant_id, branch_id)
-        reconciliations = TreasuryService.get_bank_reconciliation_status(
-            tenant_id, branch_id
-        )
+        reconciliations = TreasuryService.get_bank_reconciliation_status(tenant_id, branch_id)
 
         return {
             "liquidity": liquidity,

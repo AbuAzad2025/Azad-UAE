@@ -61,10 +61,7 @@ class AzadResponses:
 
         # ========== أسئلة بسيطة - رد فوري ==========
         # من أنت؟ - معلومات عن المساعد
-        if any(
-            kw in msg_lower
-            for kw in ["من أنت", "من انت", "who are you", "مين انت", "مين أنت"]
-        ):
+        if any(kw in msg_lower for kw in ["من أنت", "من انت", "who are you", "مين انت", "مين أنت"]):
             return """🤖 **أنا أزاد - مساعدك الذكي!**
 
 **من أنا:**
@@ -160,13 +157,9 @@ class AzadResponses:
             try:
                 # استخدام المساعد الذكي الحقيقي
                 user_id = current_user.id if current_user else None
-                intelligent_result = intelligent_assistant.process(
-                    message, user_id, context
-                )
+                intelligent_result = intelligent_assistant.process(message, user_id, context)
 
-                if intelligent_result["success"] and intelligent_result.get(
-                    "data_used"
-                ):
+                if intelligent_result["success"] and intelligent_result.get("data_used"):
                     # رد مبني على بيانات حقيقية + تحليل + استنتاج
                     return intelligent_result["response"]
             except Exception as e:
@@ -176,16 +169,12 @@ class AzadResponses:
         # ========== للنوايا الأخرى (روابط، مساعدة، إلخ) ==========
         # استخدام Pattern Matching المحسّن
         if detected_intent and confidence > 0.6:
-            intent_response = AzadResponses._handle_detected_intent(
-                detected_intent, message, context
-            )
+            intent_response = AzadResponses._handle_detected_intent(detected_intent, message, context)
             if intent_response:
                 return intent_response
 
         # فحص الأمان للمعلومات السرية أولاً
-        is_sensitive, requires_owner, security_response = (
-            AIService.is_sensitive_request(message, current_user)
-        )
+        is_sensitive, requires_owner, security_response = AIService.is_sensitive_request(message, current_user)
 
         if is_sensitive:
             if not requires_owner:
@@ -245,10 +234,7 @@ class AzadResponses:
         # وضع المبتدئين - له أولوية إذا مفعّل
         if beginners_mode:
             beginner_response = beginners_guide.get_beginner_response(message, dialect)
-            if (
-                beginner_response
-                and beginner_response != BEGINNERS_TUTORIALS["first_time"]
-            ):
+            if beginner_response and beginner_response != BEGINNERS_TUTORIALS["first_time"]:
                 return apply_dialect(beginner_response, dialect)
 
         # ترحيب مع دعم اللهجات
@@ -276,10 +262,7 @@ class AzadResponses:
             return f"{greeting}\n\n{get_welcome_message()}"
 
         # شكر
-        elif any(
-            kw in msg_lower
-            for kw in ["شكر", "thank", "مشكور", "thanks", "ممتاز", "رائع"]
-        ):
+        elif any(kw in msg_lower for kw in ["شكر", "thank", "مشكور", "thanks", "ممتاز", "رائع"]):
             return azad_personality.get_thanks_response()
 
         # نكتة
@@ -367,30 +350,22 @@ class AzadResponses:
             return get_part_info(message)
 
         # خدمة عملاء
-        elif any(
-            kw in msg_lower for kw in ["عميل", "customer", "زبون", "خدمة"]
-        ) and not any(kw in msg_lower for kw in ["مورد", "supplier"]):
+        elif any(kw in msg_lower for kw in ["عميل", "customer", "زبون", "خدمة"]) and not any(
+            kw in msg_lower for kw in ["مورد", "supplier"]
+        ):
             if "نصيحة" in msg_lower or "تعامل" in msg_lower:
                 return get_customer_service_tip()
             else:
                 from ai_knowledge.specialized.customer_service import CUSTOMER_SERVICE
 
-                return "👥 **التعامل مع العملاء:**\n\n" + "\n".join(
-                    CUSTOMER_SERVICE["principles"][:5]
-                )
+                return "👥 **التعامل مع العملاء:**\n\n" + "\n".join(CUSTOMER_SERVICE["principles"][:5])
 
         # 🏪 إدارة الموردين - نظام جديد ⭐
-        elif any(
-            kw in msg_lower
-            for kw in ["مورد", "supplier", "موردين", "suppliers", "شراء من", "توريد"]
-        ):
+        elif any(kw in msg_lower for kw in ["مورد", "supplier", "موردين", "suppliers", "شراء من", "توريد"]):
             return AzadResponses._handle_suppliers_query(message)
 
         # 🔍 الفلاتر الذكية - نظام جديد ⭐
-        elif any(
-            kw in msg_lower
-            for kw in ["فلتر", "filter", "بحث", "search", "اختيار", "select"]
-        ):
+        elif any(kw in msg_lower for kw in ["فلتر", "filter", "بحث", "search", "اختيار", "select"]):
             return AzadResponses._handle_smart_filters_query(message)
 
         # 💳 طرق الدفع الديناميكية - نظام جديد ⭐
@@ -427,10 +402,7 @@ class AzadResponses:
 بعدها سأستطيع تحليل المبيعات وإعطائك رؤى ذكية! 🚀"""
 
         # التحسين الذاتي
-        elif any(
-            kw in msg_lower
-            for kw in ["تحسين", "improve", "تطوير", "develop", "تعلم", "learn"]
-        ):
+        elif any(kw in msg_lower for kw in ["تحسين", "improve", "تطوير", "develop", "تعلم", "learn"]):
             try:
                 return AzadResponses._get_improvement_response(message)
             except Exception as e:
@@ -525,9 +497,7 @@ class AzadResponses:
                 return f"عذراً، حدث خطأ في التنبؤ: {str(e)}"
 
         # مخزون
-        elif any(
-            kw in msg_lower for kw in ["مخزون", "stock", "صحة", "health", "inventory"]
-        ):
+        elif any(kw in msg_lower for kw in ["مخزون", "stock", "صحة", "health", "inventory"]):
             health = AIService.analyze_inventory_health()
             if health.get("success"):
                 s = health.get("summary", {})
@@ -578,15 +548,14 @@ class AzadResponses:
             return get_market_insights()
 
         # ملخص النظام
-        elif any(
-            kw in msg_lower for kw in ["ملخص", "summary", "إحصائيات", "statistics"]
-        ) and any(kw in msg_lower for kw in ["نظام", "system", "كلي"]):
+        elif any(kw in msg_lower for kw in ["ملخص", "summary", "إحصائيات", "statistics"]) and any(
+            kw in msg_lower for kw in ["نظام", "system", "كلي"]
+        ):
             return AzadResponses._handle_system_summary_query()
 
         # إضافة مصدر معرفة
         elif any(kw in msg_lower for kw in ["أضف", "add"]) and any(
-            kw in msg_lower
-            for kw in ["موقع", "website", "كتاب", "book", "مصدر", "source"]
+            kw in msg_lower for kw in ["موقع", "website", "كتاب", "book", "مصدر", "source"]
         ):
             return AzadResponses._handle_add_knowledge_source(message)
 
@@ -616,15 +585,15 @@ class AzadResponses:
             return AzadResponses._quick_receipt_link()
 
         # توليد المستندات
-        elif any(
-            kw in msg_lower for kw in ["سند", "receipt", "فاتورة", "invoice"]
-        ) and any(kw in msg_lower for kw in ["ولد", "generate", "أنشئ", "create"]):
+        elif any(kw in msg_lower for kw in ["سند", "receipt", "فاتورة", "invoice"]) and any(
+            kw in msg_lower for kw in ["ولد", "generate", "أنشئ", "create"]
+        ):
             return AzadResponses._handle_document_generation(message)
 
         # التقارير العامة
-        elif any(
-            kw in msg_lower for kw in ["تقرير", "report", "كشف", "statement"]
-        ) and any(kw in msg_lower for kw in ["ولد", "generate", "أنشئ", "create"]):
+        elif any(kw in msg_lower for kw in ["تقرير", "report", "كشف", "statement"]) and any(
+            kw in msg_lower for kw in ["ولد", "generate", "أنشئ", "create"]
+        ):
             return AzadResponses._handle_report_generation(message)
 
         # قوانين الشحن
@@ -634,10 +603,7 @@ class AzadResponses:
             return AzadResponses._handle_shipping_laws_query(message)
 
         # جودة البضائع
-        elif any(
-            kw in msg_lower
-            for kw in ["جودة", "quality", "معايير", "standards", "شهادة", "certificate"]
-        ):
+        elif any(kw in msg_lower for kw in ["جودة", "quality", "معايير", "standards", "شهادة", "certificate"]):
             return AzadResponses._handle_quality_standards_query(message)
 
         # رد عام ذكي
@@ -646,9 +612,7 @@ class AzadResponses:
 
             # محاولة فهم السؤال
             suggestions = []
-            if any(
-                kw in msg_lower for kw in ["كيف", "how", "ماذا", "what", "متى", "when"]
-            ):
+            if any(kw in msg_lower for kw in ["كيف", "how", "ماذا", "what", "متى", "when"]):
                 suggestions.append("🔍 جرّب: 'كيف أضيف فاتورة؟' أو 'مصادر'")
             if any(kw in msg_lower for kw in ["رصيد", "balance", "ديون", "debt"]):
                 suggestions.append("💰 جرّب: 'رصيد زبون [الاسم]'")
@@ -894,9 +858,7 @@ class AzadResponses:
         product_name = None
 
         for i, word in enumerate(words):
-            if word.lower() in ["منتج", "product", "قطعة", "part"] and i + 1 < len(
-                words
-            ):
+            if word.lower() in ["منتج", "product", "قطعة", "part"] and i + 1 < len(words):
                 product_name = words[i + 1]
                 break
             elif word.lower() in ["اسمه", "اسم", "name"] and i + 1 < len(words):
@@ -1102,9 +1064,7 @@ class AzadResponses:
             res_type = res["type"]
             category = res["category"]
             snippet = res["snippet"]
-            results_list.append(
-                f"**{i + 1}. {title}** ({res_type})\\n   الفئة: {category}\\n   {snippet}\\n"
-            )
+            results_list.append(f"**{i + 1}. {title}** ({res_type})\\n   الفئة: {category}\\n   {snippet}\\n")
 
         results_text = chr(10).join(results_list)
 
@@ -1281,12 +1241,7 @@ class AzadResponses:
 
 **أزاد خبير في القوانين الإسرائيلية!**"""
 
-        elif (
-            "خليج" in msg_lower
-            or "gulf" in msg_lower
-            or "امارات" in msg_lower
-            or "uae" in msg_lower
-        ):
+        elif "خليج" in msg_lower or "gulf" in msg_lower or "امارات" in msg_lower or "uae" in msg_lower:
             return f"""🇦🇪 **القوانين الضريبية الخليجية**
 
 **الإمارات:**
@@ -1330,9 +1285,7 @@ class AzadResponses:
             for category, info in summary.get("categories", {}).items():
                 response += f"**{category.upper()}** ({info.get('count', 0)} مصادر):\n"
                 for source in info.get("sources", [])[:3]:
-                    response += (
-                        f"  • [{source.get('name', '')}]({source.get('url', '')})\n"
-                    )
+                    response += f"  • [{source.get('name', '')}]({source.get('url', '')})\n"
                 response += "\n"
 
             response += "**للحصول على مصادر محددة، اسأل عن موضوع معين!**"
@@ -1517,12 +1470,8 @@ class AzadResponses:
         last_7_days = datetime.now(timezone.utc) - timedelta(days=7)
         last_30_days = datetime.now(timezone.utc) - timedelta(days=30)
 
-        sales_7d = Sale.query.filter(
-            Sale.sale_date >= last_7_days, Sale.status == "confirmed"
-        ).all()
-        sales_30d = Sale.query.filter(
-            Sale.sale_date >= last_30_days, Sale.status == "confirmed"
-        ).all()
+        sales_7d = Sale.query.filter(Sale.sale_date >= last_7_days, Sale.status == "confirmed").all()
+        sales_30d = Sale.query.filter(Sale.sale_date >= last_30_days, Sale.status == "confirmed").all()
 
         total_7d = sum((Decimal(str(s.amount_aed)) for s in sales_7d), Decimal("0"))
         total_30d = sum((Decimal(str(s.amount_aed)) for s in sales_30d), Decimal("0"))
@@ -1579,13 +1528,9 @@ class AzadResponses:
             "add_customer": lambda: AzadResponses._handle_add_customer_query(message),
             # الضرائب والجمارك
             "tax_info": lambda: f"💵 **الضرائب في الإمارات:**\n\n{get_tax_info('uae')}",
-            "customs_info": lambda: (
-                f"🛃 **الجمارك في الإمارات:**\n\n{get_customs_info('uae')}"
-            ),
+            "customs_info": lambda: f"🛃 **الجمارك في الإمارات:**\n\n{get_customs_info('uae')}",
             # قطع الغيار والسيارات
-            "parts_info": lambda: (
-                f"**معلومات قطع الغيار:**\n\n{get_part_info(message)}"
-            ),
+            "parts_info": lambda: f"**معلومات قطع الغيار:**\n\n{get_part_info(message)}",
             "automotive_ecu": lambda: (
                 "🚗 **كمبيوتر السيارة (ECU):**\n\nوحدة التحكم الإلكتروني (ECU) هي دماغ السيارة الحديثة. تتحكم في المحرك، ناقل الحركة، الفرامل، والأنظمة الكهربائية.\n\n**الوظائف:**\n• إدارة المحرك والوقود\n• التشخيص الذاتي\n• تحسين الأداء\n• خفض الانبعاثات"
             ),
@@ -1594,14 +1539,10 @@ class AzadResponses:
             ),
             # السوق وخدمة العملاء
             "market_insights": lambda: f"📊 **رؤى السوق:**\n\n{get_market_insights()}",
-            "customer_service": lambda: (
-                f"👥 **خدمة العملاء المتميزة:**\n\n{get_customer_service_tip()}"
-            ),
+            "customer_service": lambda: f"👥 **خدمة العملاء المتميزة:**\n\n{get_customer_service_tip()}",
             # الشحن والجودة
             "shipping_laws": lambda: AzadResponses._handle_shipping_laws_query(message),
-            "quality_standards": lambda: AzadResponses._handle_quality_standards_query(
-                message
-            ),
+            "quality_standards": lambda: AzadResponses._handle_quality_standards_query(message),
             # الموردين والمعرفة
             "suppliers_info": lambda: AzadResponses._handle_suppliers_query(message),
             "knowledge_sources": lambda: AzadResponses._show_knowledge_sources(message),
@@ -1611,9 +1552,7 @@ class AzadResponses:
             "gulf_tax_laws": lambda: AzadResponses._get_gulf_tax_laws(),
             "shipping_regulations": lambda: AzadResponses._get_shipping_regulations(),
             # المعالجة المتقدمة
-            "memory_query": lambda: (
-                "🧠 **نظام الذاكرة:** قيد التطوير - سيتم تفعيله قريباً لتذكر محادثاتك السابقة!"
-            ),
+            "memory_query": lambda: "🧠 **نظام الذاكرة:** قيد التطوير - سيتم تفعيله قريباً لتذكر محادثاتك السابقة!",
             "multi_step_query": lambda: (
                 "🔄 **الاستفسارات متعددة الخطوات:** قيد التطوير - سأتمكن قريباً من تنفيذ عدة أوامر متتالية!"
             ),
@@ -1627,16 +1566,12 @@ class AzadResponses:
             "ac_parts": lambda: AzadResponses._get_ac_guide(),
             # التشخيص والأعطال
             "diagnostic_codes": lambda: AzadResponses._get_dtc_info(message),
-            "sensors_issues": lambda: AzadResponses._get_sensor_troubleshooting(
-                message
-            ),
+            "sensors_issues": lambda: AzadResponses._get_sensor_troubleshooting(message),
             # الأعمال المتقدمة
             "pricing_strategy": lambda: AzadResponses._get_pricing_strategy_guide(),
             "sales_techniques": lambda: AzadResponses._get_sales_techniques_guide(),
             # المساعدة العامة
-            "general_help": lambda: (
-                azad_personality.get_help_intro() + "\n\n" + get_system_guide()
-            ),
+            "general_help": lambda: azad_personality.get_help_intro() + "\n\n" + get_system_guide(),
         }
 
         # تنفيذ المعالج المناسب
@@ -1817,22 +1752,13 @@ class AzadResponses:
             total_suppliers = Supplier.query.filter_by(is_active=True).count()
 
             # موردين موثوقين
-            verified_suppliers = Supplier.query.filter_by(
-                is_active=True, is_verified=True
-            ).count()
+            verified_suppliers = Supplier.query.filter_by(is_active=True, is_verified=True).count()
 
             # أفضل مورد (حسب التقييم)
-            top_supplier = (
-                Supplier.query.filter_by(is_active=True)
-                .order_by(Supplier.rating.desc())
-                .first()
-            )
+            top_supplier = Supplier.query.filter_by(is_active=True).order_by(Supplier.rating.desc()).first()
 
             # إجمالي المشتريات
-            total_purchases = (
-                db.session.query(db.func.sum(Supplier.total_purchases_aed)).scalar()
-                or 0
-            )
+            total_purchases = db.session.query(db.func.sum(Supplier.total_purchases_aed)).scalar() or 0
 
             response = f"""🏪 **نظام إدارة الموردين** ⭐ (نظام جديد!)
 

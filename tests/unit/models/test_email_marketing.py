@@ -56,9 +56,7 @@ class TestEmailSubscriber:
         assert subscriber.customer_id is None
         assert repr(subscriber) == "<EmailSubscriber fan@example.com>"
 
-    def test_email_unique_per_list(
-        self, db_session, sample_tenant, email_list, subscriber
-    ):
+    def test_email_unique_per_list(self, db_session, sample_tenant, email_list, subscriber):
         from models.email_marketing import EmailSubscriber
 
         db_session.add(
@@ -72,9 +70,7 @@ class TestEmailSubscriber:
             db_session.flush()
         db_session.rollback()
 
-    def test_same_email_allowed_in_other_list(
-        self, db_session, sample_tenant, email_list, subscriber
-    ):
+    def test_same_email_allowed_in_other_list(self, db_session, sample_tenant, email_list, subscriber):
         from models.email_marketing import EmailList, EmailSubscriber
 
         other = EmailList(tenant_id=sample_tenant.id, name="Promos")
@@ -93,9 +89,7 @@ class TestEmailSubscriber:
         assert subscriber.list is not None
         assert subscriber.list.id == email_list.id
 
-    def test_deleting_list_cascades_to_subscribers(
-        self, db_session, email_list, subscriber
-    ):
+    def test_deleting_list_cascades_to_subscribers(self, db_session, email_list, subscriber):
         from models.email_marketing import EmailSubscriber
 
         db_session.delete(email_list)
@@ -141,9 +135,7 @@ class TestEmailCampaign:
     def test_create_with_defaults(self, db_session, sample_tenant, email_list):
         from models.email_marketing import EmailCampaign
 
-        camp = EmailCampaign(
-            tenant_id=sample_tenant.id, name="June Promo", list_id=email_list.id
-        )
+        camp = EmailCampaign(tenant_id=sample_tenant.id, name="June Promo", list_id=email_list.id)
         db_session.add(camp)
         db_session.commit()
 
@@ -169,14 +161,10 @@ class TestEmailCampaign:
 
 
 class TestCampaignLog:
-    def test_create_and_relationships(
-        self, db_session, sample_tenant, email_list, subscriber
-    ):
+    def test_create_and_relationships(self, db_session, sample_tenant, email_list, subscriber):
         from models.email_marketing import CampaignLog, EmailCampaign
 
-        camp = EmailCampaign(
-            tenant_id=sample_tenant.id, name="Log Camp", list_id=email_list.id
-        )
+        camp = EmailCampaign(tenant_id=sample_tenant.id, name="Log Camp", list_id=email_list.id)
         db_session.add(camp)
         db_session.flush()
 

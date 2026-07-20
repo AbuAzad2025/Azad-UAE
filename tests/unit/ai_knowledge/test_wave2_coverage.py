@@ -11,9 +11,7 @@ import pytest
 
 @pytest.fixture
 def knowledge_path(tmp_path):
-    with patch(
-        "ai_knowledge.get_knowledge_path", side_effect=lambda name: str(tmp_path / name)
-    ):
+    with patch("ai_knowledge.get_knowledge_path", side_effect=lambda name: str(tmp_path / name)):
         yield tmp_path
 
 
@@ -80,12 +78,7 @@ class TestConsolidatedImports:
     def test_analytics_engine_reexports(self):
         from ai_knowledge.analytics_engine import SalesAnalytics, data_analyzer
 
-        assert (
-            SalesAnalytics.predict_next_month_sales([10, 20, 30, 40, 50, 60])[
-                "prediction"
-            ]
-            > 0
-        )
+        assert SalesAnalytics.predict_next_month_sales([10, 20, 30, 40, 50, 60])["prediction"] > 0
         assert data_analyzer is not None
 
     def test_learning_and_expansion_reexports(self):
@@ -181,14 +174,9 @@ class TestNeuralEngineTrainWave2:
 
         engine = AzadNeuralEngine()
         with patch.object(engine, "_load_model", return_value=False):
+            assert engine.predict_optimal_price(80, 3, "partner")["predicted_price"] > 80
             assert (
-                engine.predict_optimal_price(80, 3, "partner")["predicted_price"] > 80
-            )
-            assert (
-                engine.detect_fraud(
-                    {"amount_aed": 5000, "discount_amount": 0, "subtotal": 5000}
-                )["is_fraud"]
-                is False
+                engine.detect_fraud({"amount_aed": 5000, "discount_amount": 0, "subtotal": 5000})["is_fraud"] is False
             )
         assert get_neural_engine() is get_neural_engine()
 
@@ -267,9 +255,7 @@ class TestAzadResponsesWave2:
                 "ai_knowledge.personality.azad_responses.understand_message",
                 return_value={"intent": "sales_analysis", "confidence": 0.9},
             ),
-            patch(
-                "ai_knowledge.personality.azad_responses.intelligent_assistant"
-            ) as ia,
+            patch("ai_knowledge.personality.azad_responses.intelligent_assistant") as ia,
             patch(
                 "services.ai_service.AIService.is_sensitive_request",
                 return_value=(False, False, {}),
@@ -480,9 +466,7 @@ class TestContinuousLearnerWave2:
 
         learner = ContinuousLearner()
         with (
-            patch.object(
-                learner, "learn_from_wikipedia", return_value={"success": True}
-            ),
+            patch.object(learner, "learn_from_wikipedia", return_value={"success": True}),
             patch.object(
                 learner,
                 "learn_arxiv_papers",

@@ -64,9 +64,7 @@ class TestStripeWebhook:
 
     def test_bad_signature_returns_403(self, client, stripe_secret, mocker):
         stripe_mod = _fake_stripe(mocker)
-        stripe_mod.Webhook.construct_event.side_effect = (
-            stripe_mod.error.SignatureVerificationError("bad sig")
-        )
+        stripe_mod.Webhook.construct_event.side_effect = stripe_mod.error.SignatureVerificationError("bad sig")
         resp = client.post(
             "/billing-webhook/stripe",
             data=b"{}",
@@ -86,8 +84,7 @@ class TestStripeWebhook:
     def test_valid_event_provisions_tenant(self, client, stripe_secret, mocker):
         _fake_stripe(mocker, event=_checkout_event())
         provision = mocker.patch(
-            "services.saas_provisioning_service.SaaSProvisioningService"
-            ".activate_purchased_package",
+            "services.saas_provisioning_service.SaaSProvisioningService.activate_purchased_package",
             return_value={"tenant_id": 3},
         )
         resp = client.post("/billing-webhook/stripe", data=b"payload")
@@ -95,15 +92,12 @@ class TestStripeWebhook:
         data = resp.get_json()
         assert data["success"] is True
         assert data["provisioning"] == {"tenant_id": 3}
-        provision.assert_called_once_with(
-            tenant_id=3, package_id=4, duration_type="annual"
-        )
+        provision.assert_called_once_with(tenant_id=3, package_id=4, duration_type="annual")
 
     def test_provisioning_error_returns_422(self, client, stripe_secret, mocker):
         _fake_stripe(mocker, event=_checkout_event())
         mocker.patch(
-            "services.saas_provisioning_service.SaaSProvisioningService"
-            ".activate_purchased_package",
+            "services.saas_provisioning_service.SaaSProvisioningService.activate_purchased_package",
             side_effect=SaaSProvisioningError("Tenant 3 not found"),
         )
         resp = client.post("/billing-webhook/stripe", data=b"payload")
@@ -120,8 +114,7 @@ class TestStripeWebhook:
         _fake_stripe(mocker, event=_checkout_event())
         mocker.patch("routes.billing_webhooks._is_duplicate", return_value=True)
         provision = mocker.patch(
-            "services.saas_provisioning_service.SaaSProvisioningService"
-            ".activate_purchased_package"
+            "services.saas_provisioning_service.SaaSProvisioningService.activate_purchased_package"
         )
         resp = client.post("/billing-webhook/stripe", data=b"payload")
         assert resp.status_code == 200
@@ -130,9 +123,7 @@ class TestStripeWebhook:
 
     def test_stale_event_rejected(self, client, stripe_secret, mocker):
         event = _checkout_event()
-        event["data"]["object"]["created"] = (
-            int(datetime.now(timezone.utc).timestamp()) - 600
-        )
+        event["data"]["object"]["created"] = int(datetime.now(timezone.utc).timestamp()) - 600
         _fake_stripe(mocker, event=event)
         resp = client.post("/billing-webhook/stripe", data=b"payload")
         assert resp.status_code == 400
@@ -180,8 +171,7 @@ class TestGenericWebhook:
 
     def test_valid_payment_provisions(self, client, mocker):
         provision = mocker.patch(
-            "services.saas_provisioning_service.SaaSProvisioningService"
-            ".activate_purchased_package",
+            "services.saas_provisioning_service.SaaSProvisioningService.activate_purchased_package",
             return_value={"tenant_id": 3},
         )
         resp = client.post(
@@ -196,14 +186,11 @@ class TestGenericWebhook:
         )
         assert resp.status_code == 200
         assert resp.get_json()["success"] is True
-        provision.assert_called_once_with(
-            tenant_id=3, package_id=4, duration_type="monthly"
-        )
+        provision.assert_called_once_with(tenant_id=3, package_id=4, duration_type="monthly")
 
     def test_provisioning_error_returns_422(self, client, mocker):
         mocker.patch(
-            "services.saas_provisioning_service.SaaSProvisioningService"
-            ".activate_purchased_package",
+            "services.saas_provisioning_service.SaaSProvisioningService.activate_purchased_package",
             side_effect=SaaSProvisioningError("Package 4 not found or inactive"),
         )
         resp = client.post(
@@ -297,9 +284,7 @@ class TestHelpers:
         store = {}
         fake_cache = MagicMock(name="cache")
         fake_cache.get.side_effect = store.get
-        fake_cache.set.side_effect = lambda key, value, timeout=None: store.update(
-            {key: value}
-        )
+        fake_cache.set.side_effect = lambda key, value, timeout=None: store.update({key: value})
         mocker.patch("extensions.cache", fake_cache)
 
         assert _is_duplicate("stripe", "evt_1") is False

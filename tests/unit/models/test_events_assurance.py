@@ -12,9 +12,7 @@ def _capture_handlers(mocker):
 
     def listens_for(model, _event):
         def decorator(fn):
-            handlers.setdefault(
-                model.__name__ if hasattr(model, "__name__") else str(model), []
-            ).append(fn)
+            handlers.setdefault(model.__name__ if hasattr(model, "__name__") else str(model), []).append(fn)
             return fn
 
         return decorator
@@ -130,17 +128,13 @@ class TestSaleListeners:
 
     def test_sale_delete_logs_and_handles_error(self, mocker):
         handlers = _capture_handlers(mocker)
-        _info = mocker.patch(
-            "models.events.logger.info", side_effect=RuntimeError("log fail")
-        )
+        _info = mocker.patch("models.events.logger.info", side_effect=RuntimeError("log fail"))
         warn = mocker.patch("models.events.logger.warning")
         from models.events import register_sale_listeners
 
         register_sale_listeners()
         target = SimpleNamespace(sale_number="S-DEL")
-        delete_handlers = [
-            fn for fn in handlers.get("Sale", []) if fn.__name__ == "_h2"
-        ]
+        delete_handlers = [fn for fn in handlers.get("Sale", []) if fn.__name__ == "_h2"]
         for fn in delete_handlers:
             fn(None, MagicMock(), target)
         warn.assert_called()
@@ -154,9 +148,7 @@ class TestReceiptListeners:
         from models.events import register_receipt_listeners
 
         register_receipt_listeners()
-        target = SimpleNamespace(
-            receipt_number="R-ERR", amount_aed=Decimal("1"), customer_id=1
-        )
+        target = SimpleNamespace(receipt_number="R-ERR", amount_aed=Decimal("1"), customer_id=1)
         handlers["Receipt"][0](None, MagicMock(), target)
         warn.assert_called()
 
@@ -178,9 +170,7 @@ class TestPurchaseListeners:
         from models.events import register_purchase_listeners
 
         register_purchase_listeners()
-        target = SimpleNamespace(
-            purchase_number="P-ERR", supplier_id=1, status="confirmed"
-        )
+        target = SimpleNamespace(purchase_number="P-ERR", supplier_id=1, status="confirmed")
         for fn in handlers.get("Purchase", []):
             if fn.__name__ == "_h":
                 fn(None, MagicMock(), target)
@@ -191,9 +181,7 @@ class TestPurchaseListeners:
         from models.events import register_purchase_listeners
 
         register_purchase_listeners()
-        target = SimpleNamespace(
-            purchase_number="P-CAN", supplier_id=1, status="cancelled"
-        )
+        target = SimpleNamespace(purchase_number="P-CAN", supplier_id=1, status="cancelled")
         for fn in handlers.get("Purchase", []):
             if fn.__name__ == "_h":
                 fn(None, MagicMock(), target)
@@ -203,25 +191,19 @@ class TestPurchaseListeners:
 class TestPaymentListeners:
     def test_payment_supplier_and_failure(self, mocker):
         handlers = _capture_handlers(mocker)
-        _info = mocker.patch(
-            "models.events.logger.info", side_effect=RuntimeError("fail")
-        )
+        _info = mocker.patch("models.events.logger.info", side_effect=RuntimeError("fail"))
         warn = mocker.patch("models.events.logger.warning")
         from models.events import register_payment_listeners
 
         register_payment_listeners()
-        target = SimpleNamespace(
-            supplier_id=5, payment_number="PAY-1", amount_aed=Decimal("20")
-        )
+        target = SimpleNamespace(supplier_id=5, payment_number="PAY-1", amount_aed=Decimal("20"))
         handlers["Payment"][0](None, MagicMock(), target)
         warn.assert_called()
 
 
 class TestBranchAndChequeListeners:
     def test_branch_delegates(self, mocker):
-        reg = mocker.patch(
-            "services.branch_audit_service.register_branch_event_listeners"
-        )
+        reg = mocker.patch("services.branch_audit_service.register_branch_event_listeners")
         from models.events import register_branch_listeners
 
         register_branch_listeners()
@@ -296,9 +278,7 @@ class TestProductReturnAndExpenseListeners:
         from models.events import register_product_return_listeners
 
         register_product_return_listeners()
-        handlers["ProductReturn"][0](
-            None, MagicMock(), SimpleNamespace(return_number="R", status="approved")
-        )
+        handlers["ProductReturn"][0](None, MagicMock(), SimpleNamespace(return_number="R", status="approved"))
         err.assert_called()
 
     def test_expense_active_and_failure(self, mocker):
@@ -308,12 +288,8 @@ class TestProductReturnAndExpenseListeners:
         from models.events import register_expense_listeners
 
         register_expense_listeners()
-        active = SimpleNamespace(
-            amount_aed=Decimal("50"), category_id=1, is_active=True
-        )
-        inactive = SimpleNamespace(
-            amount_aed=Decimal("50"), category_id=1, is_active=False
-        )
+        active = SimpleNamespace(amount_aed=Decimal("50"), category_id=1, is_active=True)
+        inactive = SimpleNamespace(amount_aed=Decimal("50"), category_id=1, is_active=False)
         fn = handlers["Expense"][0]
         fn(None, MagicMock(), inactive)
         fn(None, MagicMock(), active)
@@ -329,9 +305,7 @@ class TestGlAndValidationListeners:
         reg.assert_called_once()
 
     def test_validation_delegates(self, mocker):
-        reg = mocker.patch(
-            "services.gl_auto_service.register_validation_event_listeners"
-        )
+        reg = mocker.patch("services.gl_auto_service.register_validation_event_listeners")
         from models.events import register_validation_listeners
 
         register_validation_listeners()
@@ -345,15 +319,9 @@ class TestAuditListeners:
         from models.events import register_audit_listeners
 
         register_audit_listeners()
-        handlers["Sale"][0](
-            None, MagicMock(), SimpleNamespace(sale_number="S", amount_aed=1)
-        )
-        handlers["Purchase"][0](
-            None, MagicMock(), SimpleNamespace(purchase_number="P", amount_aed=2)
-        )
-        handlers["Receipt"][0](
-            None, MagicMock(), SimpleNamespace(receipt_number="R", amount_aed=3)
-        )
+        handlers["Sale"][0](None, MagicMock(), SimpleNamespace(sale_number="S", amount_aed=1))
+        handlers["Purchase"][0](None, MagicMock(), SimpleNamespace(purchase_number="P", amount_aed=2))
+        handlers["Receipt"][0](None, MagicMock(), SimpleNamespace(receipt_number="R", amount_aed=3))
         handlers["Payment"][0](None, MagicMock(), SimpleNamespace(amount_aed=4))
         assert warn.call_count == 4
 

@@ -59,9 +59,7 @@ class TestCreateEmployee:
             PayrollService.create_employee({"name": "X"})
 
     def test_create_employee_commit_failure(self, db_session, sample_branch):
-        with patch(
-            "services.payroll_service.db.session.flush", side_effect=RuntimeError("db")
-        ):
+        with patch("services.payroll_service.db.session.flush", side_effect=RuntimeError("db")):
             with pytest.raises(RuntimeError):
                 PayrollService.create_employee(
                     {
@@ -89,9 +87,7 @@ class TestCreateAdvance:
         assert adv.gl_entry_id == 77
         assert adv.tenant_id == sample_tenant.id
 
-    def test_create_advance_branch_scope_denied(
-        self, db_session, sample_branch, sample_tenant
-    ):
+    def test_create_advance_branch_scope_denied(self, db_session, sample_branch, sample_tenant):
         emp = _employee(db_session, sample_branch, sample_tenant)
         actor = MagicMock()
         with (
@@ -102,13 +98,9 @@ class TestCreateAdvance:
             ),
         ):
             with pytest.raises(ValueError, match="فرع"):
-                PayrollService.create_advance(
-                    emp.id, "100", "x", user_id=1, actor_user=actor
-                )
+                PayrollService.create_advance(emp.id, "100", "x", user_id=1, actor_user=actor)
 
-    def test_create_advance_tenant_mismatch(
-        self, db_session, sample_branch, sample_tenant
-    ):
+    def test_create_advance_tenant_mismatch(self, db_session, sample_branch, sample_tenant):
         emp = _employee(db_session, sample_branch, sample_tenant)
         actor = MagicMock()
         with (
@@ -120,13 +112,9 @@ class TestCreateAdvance:
             ),
         ):
             with pytest.raises(ValueError, match="شركتك"):
-                PayrollService.create_advance(
-                    emp.id, "100", "x", user_id=1, actor_user=actor
-                )
+                PayrollService.create_advance(emp.id, "100", "x", user_id=1, actor_user=actor)
 
-    def test_create_advance_commit_failure(
-        self, db_session, sample_branch, sample_tenant
-    ):
+    def test_create_advance_commit_failure(self, db_session, sample_branch, sample_tenant):
         emp = _employee(db_session, sample_branch, sample_tenant)
         gl_entry = MagicMock(id=1)
         with (
@@ -223,9 +211,7 @@ class TestProcessPayroll:
         txn = self._run_payroll(emp, deductions=200)
         assert txn.deductions == Decimal("200")
 
-    def test_process_negative_net_partial_advance(
-        self, db_session, sample_branch, sample_tenant
-    ):
+    def test_process_negative_net_partial_advance(self, db_session, sample_branch, sample_tenant):
         emp = _employee(db_session, sample_branch, sample_tenant, basic_salary="1000")
         adv = SalaryAdvance(
             employee_id=emp.id,
@@ -243,9 +229,7 @@ class TestProcessPayroll:
         assert txn.net_salary == Decimal("0")
         assert txn.advances_deducted == Decimal("1000")
 
-    def test_process_negative_net_raises(
-        self, db_session, sample_branch, sample_tenant
-    ):
+    def test_process_negative_net_raises(self, db_session, sample_branch, sample_tenant):
         emp = _employee(db_session, sample_branch, sample_tenant, basic_salary="100")
         adv = SalaryAdvance(
             employee_id=emp.id,
@@ -262,9 +246,7 @@ class TestProcessPayroll:
         with pytest.raises(ValueError, match="سالب"):
             self._run_payroll(emp, deductions=200)
 
-    def test_process_advance_total_fallback_in_summary(
-        self, db_session, sample_branch, sample_tenant
-    ):
+    def test_process_advance_total_fallback_in_summary(self, db_session, sample_branch, sample_tenant):
         emp = _employee(db_session, sample_branch, sample_tenant, basic_salary="3000")
         adv = SalaryAdvance(
             employee_id=emp.id,
@@ -282,9 +264,7 @@ class TestProcessPayroll:
         txn = self._run_payroll(emp)
         assert txn.advances_deducted == Decimal("300")
 
-    def test_process_clamps_over_deducted_advance_total(
-        self, db_session, sample_branch, sample_tenant
-    ):
+    def test_process_clamps_over_deducted_advance_total(self, db_session, sample_branch, sample_tenant):
         emp = _employee(db_session, sample_branch, sample_tenant, basic_salary="2000")
         adv = SalaryAdvance(
             employee_id=emp.id,
@@ -302,9 +282,7 @@ class TestProcessPayroll:
         txn = self._run_payroll(emp)
         assert txn.advances_deducted == Decimal("0")
 
-    def test_process_multiple_advances_stops_when_applied(
-        self, db_session, sample_branch, sample_tenant
-    ):
+    def test_process_multiple_advances_stops_when_applied(self, db_session, sample_branch, sample_tenant):
         emp = _employee(db_session, sample_branch, sample_tenant, basic_salary="1000")
         adv1 = SalaryAdvance(
             employee_id=emp.id,
@@ -342,9 +320,7 @@ class TestProcessPayroll:
         assert txn.advances_deducted == Decimal("1000")
         assert adv3.is_deducted is False
 
-    def test_process_skips_exhausted_advance_in_distribution(
-        self, db_session, sample_branch, sample_tenant
-    ):
+    def test_process_skips_exhausted_advance_in_distribution(self, db_session, sample_branch, sample_tenant):
         emp = _employee(db_session, sample_branch, sample_tenant, basic_salary="1000")
         exhausted = SalaryAdvance(
             employee_id=emp.id,
@@ -371,9 +347,7 @@ class TestProcessPayroll:
         txn = self._run_payroll(emp)
         assert txn.advances_deducted == Decimal("200")
 
-    def test_process_actor_branch_denied(
-        self, db_session, sample_branch, sample_tenant
-    ):
+    def test_process_actor_branch_denied(self, db_session, sample_branch, sample_tenant):
         emp = _employee(db_session, sample_branch, sample_tenant)
         actor = MagicMock()
         with (
@@ -383,9 +357,7 @@ class TestProcessPayroll:
             with pytest.raises(ValueError, match="فرع"):
                 self._run_payroll(emp, actor_user=actor)
 
-    def test_process_actor_tenant_mismatch(
-        self, db_session, sample_branch, sample_tenant
-    ):
+    def test_process_actor_tenant_mismatch(self, db_session, sample_branch, sample_tenant):
         emp = _employee(db_session, sample_branch, sample_tenant)
         actor = MagicMock()
         with (
@@ -399,9 +371,7 @@ class TestProcessPayroll:
             with pytest.raises(ValueError, match="شركتك"):
                 self._run_payroll(emp, actor_user=actor)
 
-    def test_process_advance_fallback_remaining(
-        self, db_session, sample_branch, sample_tenant
-    ):
+    def test_process_advance_fallback_remaining(self, db_session, sample_branch, sample_tenant):
         emp = _employee(db_session, sample_branch, sample_tenant, basic_salary="2000")
         adv = SalaryAdvance(
             employee_id=emp.id,
@@ -418,9 +388,7 @@ class TestProcessPayroll:
         txn = self._run_payroll(emp)
         assert txn.advances_deducted == Decimal("200")
 
-    def test_process_advance_fully_deducted_flag(
-        self, db_session, sample_branch, sample_tenant
-    ):
+    def test_process_advance_fully_deducted_flag(self, db_session, sample_branch, sample_tenant):
         emp = _employee(db_session, sample_branch, sample_tenant, basic_salary="500")
         adv = SalaryAdvance(
             employee_id=emp.id,
@@ -461,9 +429,7 @@ class TestProcessPayroll:
             with pytest.raises(RuntimeError):
                 PayrollService.process_payroll(emp.id, 9, 2026, 0, 0, 0, user_id=1)
 
-    def test_process_accrual_warning_logged(
-        self, db_session, sample_branch, sample_tenant, app
-    ):
+    def test_process_accrual_warning_logged(self, db_session, sample_branch, sample_tenant, app):
         emp = _employee(db_session, sample_branch, sample_tenant)
         gl_entry = MagicMock(id=5)
         with (
@@ -505,15 +471,11 @@ class TestAccrualCalculations:
     def test_leave_accrual_positive(self):
         assert PayrollService._calculate_leave_monthly_accrual(2400, 30) > Decimal("0")
 
-    def test_post_payroll_accruals_none_when_zero(
-        self, db_session, sample_branch, sample_tenant
-    ):
+    def test_post_payroll_accruals_none_when_zero(self, db_session, sample_branch, sample_tenant):
         emp = _employee(db_session, sample_branch, sample_tenant, basic_salary="0")
         assert PayrollService.post_payroll_accruals(emp, 1, 2026, 1) is None
 
-    def test_post_payroll_accruals_posts_lines(
-        self, db_session, sample_branch, sample_tenant
-    ):
+    def test_post_payroll_accruals_posts_lines(self, db_session, sample_branch, sample_tenant):
         emp = _employee(db_session, sample_branch, sample_tenant, basic_salary="6000")
         emp.contract_type = "limited"
         emp.annual_leave_days = 30
@@ -524,17 +486,13 @@ class TestAccrualCalculations:
                 "services.payroll_service.GLService.get_account_code_for_concept",
                 return_value="6190",
             ),
-            patch(
-                "services.payroll_service.post_or_fail", return_value=gl_entry
-            ) as post,
+            patch("services.payroll_service.post_or_fail", return_value=gl_entry) as post,
         ):
             result = PayrollService.post_payroll_accruals(emp, 6, 2026, 1)
         assert result is gl_entry
         assert post.called
 
-    def test_post_payroll_accruals_leave_only(
-        self, db_session, sample_branch, sample_tenant
-    ):
+    def test_post_payroll_accruals_leave_only(self, db_session, sample_branch, sample_tenant):
         emp = _employee(db_session, sample_branch, sample_tenant, basic_salary="6000")
         gl_entry = MagicMock()
         with (
@@ -554,12 +512,8 @@ class TestAccrualCalculations:
 
 
 class TestGenerateBranchPayroll:
-    def test_generate_skips_daily_and_existing(
-        self, db_session, sample_branch, sample_tenant
-    ):
-        sal = _employee(
-            db_session, sample_branch, sample_tenant, employment_type="salary"
-        )
+    def test_generate_skips_daily_and_existing(self, db_session, sample_branch, sample_tenant):
+        sal = _employee(db_session, sample_branch, sample_tenant, employment_type="salary")
         _employee(
             db_session,
             sample_branch,
@@ -584,20 +538,14 @@ class TestGenerateBranchPayroll:
         db_session.add(existing)
         db_session.flush()
         with patch("services.payroll_service.PayrollService.process_payroll") as proc:
-            generated, skipped = PayrollService.generate_branch_payroll(
-                sample_branch.id, 7, 2026, user_id=1
-            )
+            generated, skipped = PayrollService.generate_branch_payroll(sample_branch.id, 7, 2026, user_id=1)
         assert generated == 0
         assert skipped >= 2
         proc.assert_not_called()
 
-    def test_generate_processes_salary_employees(
-        self, db_session, sample_branch, sample_tenant
-    ):
+    def test_generate_processes_salary_employees(self, db_session, sample_branch, sample_tenant):
         _employee(db_session, sample_branch, sample_tenant, name="Pay Me")
         with patch("services.payroll_service.PayrollService.process_payroll") as proc:
-            generated, skipped = PayrollService.generate_branch_payroll(
-                sample_branch.id, 8, 2026, user_id=1
-            )
+            generated, skipped = PayrollService.generate_branch_payroll(sample_branch.id, 8, 2026, user_id=1)
         assert generated == 1
         proc.assert_called_once()

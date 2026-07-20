@@ -132,11 +132,7 @@ class GLService:
         account=None,
     ):
         legacy_code = account if account is not None else GL_ACCOUNTS[account_key]
-        concept = (
-            concept_code
-            if concept_code is not None
-            else GL_ACCOUNT_CONCEPTS.get(account_key)
-        )
+        concept = concept_code if concept_code is not None else GL_ACCOUNT_CONCEPTS.get(account_key)
         line = {
             "account": legacy_code,
             "debit": debit,
@@ -178,9 +174,7 @@ class GLService:
         return "AR"
 
     @staticmethod
-    def _resolve_journal_line_account(
-        line, tenant_id, branch_id=None, ensure_core=True, missing_ok=False
-    ):
+    def _resolve_journal_line_account(line, tenant_id, branch_id=None, ensure_core=True, missing_ok=False):
         account_code = line.get("account_code") or line.get("account")
         raw_concept = line.get("concept_code")
         concept_code = str(raw_concept or "").strip().upper()
@@ -248,10 +242,7 @@ class GLService:
                 # For record mode: account.branch_id is None or equals branch_id
                 # For liquidity mode: account.branch_id must equal branch_id exactly
                 if resolution_mode == RESOLUTION_MODE_RECORD:
-                    if (
-                        getattr(acct, "branch_id", None) is not None
-                        and getattr(acct, "branch_id", None) != branch_id
-                    ):
+                    if getattr(acct, "branch_id", None) is not None and getattr(acct, "branch_id", None) != branch_id:
                         raise GLMappingError(
                             tenant_id=tenant_id,
                             concept_code=concept_code or "EXPLICIT_ACCOUNT",
@@ -342,10 +333,7 @@ class GLService:
                     tenant_id=tenant_id,
                     concept_code=concept_code or "UNMAPPED_ACCOUNT_CODE",
                     branch_id=branch_id,
-                    issue=(
-                        f"No approved GL concept was provided for legacy hardcoded "
-                        f"account code {account_code}."
-                    ),
+                    issue=(f"No approved GL concept was provided for legacy hardcoded account code {account_code}."),
                 )
 
         # ---- Dynamic mapping disabled: try resolve (will return None) ----
@@ -360,9 +348,7 @@ class GLService:
 
         # ---- Legacy fallback (no concept, or dynamic mapping disabled) ----
         if not account_code:
-            raise ValueError(
-                "GL account code is required when dynamic mapping is disabled."
-            )
+            raise ValueError("GL account code is required when dynamic mapping is disabled.")
 
         account = gl_helpers.get_account(account_code, tenant_id)
         if account is None and ensure_core:
@@ -394,9 +380,7 @@ class GLService:
     ):
         """Standardized GL Entry Creation"""
 
-        tenant_id = tenant_id or gl_helpers.resolve_tenant_id(
-            branch_id=branch_id, user_id=user_id
-        )
+        tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id, user_id=user_id)
         gl_helpers.assert_period_open(date, tenant_id)
         entry_number = gl_helpers.next_entry_number(tenant_id, date)
 
@@ -421,10 +405,7 @@ class GLService:
                     tenant_id=tenant_id,
                     concept_code="JOURNAL_ENTRY_BRANCH",
                     branch_id=branch_id,
-                    issue=(
-                        f"Branch {branch_id} belongs to tenant "
-                        f"{branch.tenant_id}, not tenant {tenant_id}."
-                    ),
+                    issue=(f"Branch {branch_id} belongs to tenant {branch.tenant_id}, not tenant {tenant_id}."),
                 )
 
         # Resolve currency from tenant if not provided
@@ -482,23 +463,15 @@ class GLService:
         total_credit = Decimal("0")
 
         for line in lines:
-            account = GLService._resolve_journal_line_account(
-                line, tenant_id, branch_id=branch_id
-            )
+            account = GLService._resolve_journal_line_account(line, tenant_id, branch_id=branch_id)
             if getattr(account, "is_header", False):
-                raise ValueError(
-                    f"لا يمكن القيد على الحساب الرئيسي: {getattr(account, 'full_name', account.code)}"
-                )
+                raise ValueError(f"لا يمكن القيد على الحساب الرئيسي: {getattr(account, 'full_name', account.code)}")
             debit = Decimal(str(line.get("debit", 0)))
             credit = Decimal(str(line.get("credit", 0)))
             validate_gl_line_sides(debit, credit)
 
-            original_debit = Decimal(
-                str(line.get("original_debit", line.get("debit", 0)))
-            )
-            original_credit = Decimal(
-                str(line.get("original_credit", line.get("credit", 0)))
-            )
+            original_debit = Decimal(str(line.get("original_debit", line.get("debit", 0))))
+            original_credit = Decimal(str(line.get("original_credit", line.get("credit", 0))))
             gl_line = GLJournalLine(
                 tenant_id=tenant_id,
                 entry_id=entry.id,
@@ -525,9 +498,7 @@ class GLService:
         if abs(total_debit - total_credit) > Decimal("0.001"):
             from services.gl_posting import UnbalancedJournalEntryError
 
-            raise UnbalancedJournalEntryError(
-                f"القيد غير متوازن: مدين={total_debit} دائن={total_credit}"
-            )
+            raise UnbalancedJournalEntryError(f"القيد غير متوازن: مدين={total_debit} دائن={total_credit}")
 
         return entry
 
@@ -556,9 +527,7 @@ class GLService:
         ):
             from flask import current_app
 
-            current_app.logger.info(
-                f"GLTreeBuilder: Tenant {tenant_id} report: {audit_report}"
-            )
+            current_app.logger.info(f"GLTreeBuilder: Tenant {tenant_id} report: {audit_report}")
 
         if is_dynamic_gl_mapping_enabled():
             mapping_report = GLService.ensure_gl_mappings(tenant_id=tenant_id)
@@ -644,9 +613,7 @@ class GLService:
                 {
                     "account_code": line.get("account_code") or line.get("account"),
                     "concept_code": line.get("concept_code"),
-                    "explicit_account_allowed": line.get(
-                        "explicit_account_allowed", False
-                    ),
+                    "explicit_account_allowed": line.get("explicit_account_allowed", False),
                     "debit": debit,
                     "credit": credit,
                     "original_debit": orig_debit,
@@ -723,9 +690,7 @@ class GLService:
             if not account:
                 return Decimal("0")
             q = (
-                db.session.query(
-                    func.coalesce(func.sum(getattr(GLJournalLine, side)), 0)
-                )
+                db.session.query(func.coalesce(func.sum(getattr(GLJournalLine, side)), 0))
                 .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
                 .filter(
                     GLJournalLine.account_id == account.id,
@@ -750,9 +715,7 @@ class GLService:
         return result
 
     @staticmethod
-    def reverse_entry(
-        reference_type=None, reference_id=None, description=None, tenant_id=None
-    ):
+    def reverse_entry(reference_type=None, reference_id=None, description=None, tenant_id=None):
         """عكس جميع القيود المرتبطة بمرجع (مثل فاتورة بيع/شراء/سند)."""
         from utils.gl_reference_types import ref_variants
 
@@ -796,19 +759,13 @@ class GLService:
             )
             if account:
                 return account.code
-            raise ValueError(
-                f"No default {kind} account configured for branch_id={branch_id}"
-            )
+            raise ValueError(f"No default {kind} account configured for branch_id={branch_id}")
 
-        accounts = query.order_by(
-            GLAccount.is_default_liquidity.desc(), GLAccount.id.asc()
-        ).all()
+        accounts = query.order_by(GLAccount.is_default_liquidity.desc(), GLAccount.id.asc()).all()
         if len(accounts) == 1:
             return accounts[0].code
         if not accounts:
-            raise ValueError(
-                f"No default {kind} account configured for tenant_id={tenant_id}"
-            )
+            raise ValueError(f"No default {kind} account configured for tenant_id={tenant_id}")
         raise ValueError(
             f"Multiple {kind} accounts exist for tenant_id={tenant_id}; branch_id is required to avoid ambiguous posting"
         )
@@ -817,13 +774,9 @@ class GLService:
     def get_payment_debit_account(method, branch_id=None, tenant_id=None):
         m = (method or "").strip()
         if m == "cash":
-            return GLService.get_default_liquidity_account(
-                "cash", branch_id=branch_id, tenant_id=tenant_id
-            )
+            return GLService.get_default_liquidity_account("cash", branch_id=branch_id, tenant_id=tenant_id)
         if m in ("bank_transfer", "card"):
-            return GLService.get_default_liquidity_account(
-                "bank", branch_id=branch_id, tenant_id=tenant_id
-            )
+            return GLService.get_default_liquidity_account("bank", branch_id=branch_id, tenant_id=tenant_id)
         if m == "cheque":
             if tenant_id and is_dynamic_gl_mapping_enabled():
                 account = resolve_gl_account(
@@ -840,9 +793,7 @@ class GLService:
                     issue="No GL account mapping found for cheque debit account.",
                 )
             return GL_ACCOUNTS.get("cheques_under_collection", "1150")
-        return GLService.get_default_liquidity_account(
-            "cash", branch_id=branch_id, tenant_id=tenant_id
-        )
+        return GLService.get_default_liquidity_account("cash", branch_id=branch_id, tenant_id=tenant_id)
 
     @staticmethod
     def get_customer_credit_account(customer, branch_id=None, tenant_id=None):
@@ -892,17 +843,11 @@ class GLService:
                 user = db.session.get(User, created_by)
                 if user:
                     branch_id = user.branch_id
-            elif (
-                hasattr(current_user, "is_authenticated")
-                and current_user.is_authenticated
-            ):
+            elif hasattr(current_user, "is_authenticated") and current_user.is_authenticated:
                 branch_id = current_user.branch_id
 
         user_id = created_by or (
-            current_user.id
-            if hasattr(current_user, "is_authenticated")
-            and current_user.is_authenticated
-            else None
+            current_user.id if hasattr(current_user, "is_authenticated") and current_user.is_authenticated else None
         )
         tenant_id = gl_helpers.resolve_tenant_id(branch_id=branch_id, user_id=user_id)
 
@@ -915,13 +860,9 @@ class GLService:
             if not account:
                 raise ValueError(f"الحساب {account_code} غير موجود")
             if account.is_header:
-                raise ValueError(
-                    f"الحساب {account.full_name} هو حساب رئيسي ولا يمكن إضافة قيود عليه"
-                )
+                raise ValueError(f"الحساب {account.full_name} هو حساب رئيسي ولا يمكن إضافة قيود عليه")
             if not getattr(account, "is_active", True):
-                raise ValueError(
-                    f"الحساب {account.full_name} غير نشط ولا يمكن إضافة قيود عليه"
-                )
+                raise ValueError(f"الحساب {account.full_name} غير نشط ولا يمكن إضافة قيود عليه")
 
         entry = GLService.post_entry(
             lines,
@@ -964,9 +905,7 @@ class GLService:
         return float(total)
 
     @staticmethod
-    def get_account_statement(
-        account_id, date_from=None, date_to=None, branch_id=None, tenant_id=None
-    ):
+    def get_account_statement(account_id, date_from=None, date_to=None, branch_id=None, tenant_id=None):
         """كشف حساب تفصيلي. عند تمرير branch_id يُعزل العرض لقيود الفرع فقط."""
         from sqlalchemy import func
 
@@ -995,21 +934,15 @@ class GLService:
         lines = query.order_by(GLJournalEntry.entry_date).all()
 
         # حساب الرصيد الافتتاحي
-        opening_query = GLJournalLine.query.filter_by(account_id=account_id).join(
-            GLJournalEntry
-        )
+        opening_query = GLJournalLine.query.filter_by(account_id=account_id).join(GLJournalEntry)
 
         if tenant_id is not None:
-            opening_query = opening_query.filter(
-                GLJournalEntry.tenant_id == int(tenant_id)
-            )
+            opening_query = opening_query.filter(GLJournalEntry.tenant_id == int(tenant_id))
         if branch_id:
             opening_query = opening_query.filter(GLJournalEntry.branch_id == branch_id)
 
         if date_from:
-            opening_query = opening_query.filter(
-                func.date(GLJournalEntry.entry_date) < date_from
-            )
+            opening_query = opening_query.filter(func.date(GLJournalEntry.entry_date) < date_from)
 
         # Calculate opening balance manually since we need to filter by date and branch
         opening_lines = opening_query.all()
@@ -1042,9 +975,7 @@ class GLService:
                     "entry_type": line.entry.entry_type,  # Fixed from entry_type_ar if not property
                     "description": line.description or line.entry.description,
                     "reference": (
-                        f"{line.entry.reference_type} #{line.entry.reference_id}"
-                        if line.entry.reference_type
-                        else ""
+                        f"{line.entry.reference_type} #{line.entry.reference_id}" if line.entry.reference_type else ""
                     ),
                     "debit": float(debit_val),
                     "credit": float(credit_val),
@@ -1063,9 +994,7 @@ class GLService:
         }
 
     @staticmethod
-    def get_general_ledger(
-        date_from=None, date_to=None, branch_id=None, tenant_id=None
-    ):
+    def get_general_ledger(date_from=None, date_to=None, branch_id=None, tenant_id=None):
         """كشف حساب عام — running balance لكل حساب مع رصيد افتتاحي."""
         from sqlalchemy import func
 
@@ -1092,27 +1021,15 @@ class GLService:
 
             if branch_id:
                 lines_query = lines_query.filter(GLJournalEntry.branch_id == branch_id)
-                opening_query = opening_query.filter(
-                    GLJournalEntry.branch_id == branch_id
-                )
+                opening_query = opening_query.filter(GLJournalEntry.branch_id == branch_id)
             if tenant_id is not None:
-                lines_query = lines_query.filter(
-                    GLJournalEntry.tenant_id == int(tenant_id)
-                )
-                opening_query = opening_query.filter(
-                    GLJournalEntry.tenant_id == int(tenant_id)
-                )
+                lines_query = lines_query.filter(GLJournalEntry.tenant_id == int(tenant_id))
+                opening_query = opening_query.filter(GLJournalEntry.tenant_id == int(tenant_id))
             if date_from:
-                lines_query = lines_query.filter(
-                    func.date(GLJournalEntry.entry_date) >= date_from
-                )
-                opening_query = opening_query.filter(
-                    func.date(GLJournalEntry.entry_date) < date_from
-                )
+                lines_query = lines_query.filter(func.date(GLJournalEntry.entry_date) >= date_from)
+                opening_query = opening_query.filter(func.date(GLJournalEntry.entry_date) < date_from)
             if date_to:
-                lines_query = lines_query.filter(
-                    func.date(GLJournalEntry.entry_date) <= date_to
-                )
+                lines_query = lines_query.filter(func.date(GLJournalEntry.entry_date) <= date_to)
 
             opening_lines = opening_query.all()
             opening_debit = sum(line.debit for line in opening_lines)
@@ -1122,9 +1039,7 @@ class GLService:
             else:
                 opening_balance = opening_credit - opening_debit
 
-            lines = lines_query.order_by(
-                GLJournalEntry.entry_date, GLJournalEntry.id
-            ).all()
+            lines = lines_query.order_by(GLJournalEntry.entry_date, GLJournalEntry.id).all()
             running = opening_balance
             transactions = []
             for line in lines:
@@ -1159,9 +1074,7 @@ class GLService:
                     "account_type": account.type_ar,
                     "opening_balance": float(opening_balance),
                     "transactions": transactions,
-                    "closing_balance": (
-                        float(running) if transactions else float(opening_balance)
-                    ),
+                    "closing_balance": (float(running) if transactions else float(opening_balance)),
                     "total_debit": sum(t["debit"] for t in transactions),
                     "total_credit": sum(t["credit"] for t in transactions),
                 }
@@ -1170,9 +1083,7 @@ class GLService:
         return result
 
     @staticmethod
-    def get_partner_ledger(
-        partner_id, date_from=None, date_to=None, branch_id=None, tenant_id=None
-    ):
+    def get_partner_ledger(partner_id, date_from=None, date_to=None, branch_id=None, tenant_id=None):
         """كشف حساب شريك (عميل/مورد) من GL حسب partner_id."""
         from sqlalchemy import func
 
@@ -1198,15 +1109,11 @@ class GLService:
             GLJournalEntry.status == "posted",
         )
         if tenant_id is not None:
-            opening_query = opening_query.filter(
-                GLJournalEntry.tenant_id == int(tenant_id)
-            )
+            opening_query = opening_query.filter(GLJournalEntry.tenant_id == int(tenant_id))
         if branch_id:
             opening_query = opening_query.filter(GLJournalEntry.branch_id == branch_id)
         if date_from:
-            opening_query = opening_query.filter(
-                func.date(GLJournalEntry.entry_date) < date_from
-            )
+            opening_query = opening_query.filter(func.date(GLJournalEntry.entry_date) < date_from)
 
         opening_lines = opening_query.all()
         opening_debit = sum(line.debit for line in opening_lines)
@@ -1225,9 +1132,7 @@ class GLService:
                     "account_name": line.account.full_name,
                     "description": line.description or line.entry.description,
                     "reference": (
-                        f"{line.entry.reference_type}#{line.entry.reference_id}"
-                        if line.entry.reference_type
-                        else ""
+                        f"{line.entry.reference_type}#{line.entry.reference_id}" if line.entry.reference_type else ""
                     ),
                     "debit": float(line.debit),
                     "credit": float(line.credit),
@@ -1266,9 +1171,7 @@ class GLService:
                 "is_header": account.is_header,
                 "level": account.level,
                 "balance": float(account.get_balance()),
-                "children": [
-                    build_tree(child) for child in account.children if child.is_active
-                ],
+                "children": [build_tree(child) for child in account.children if child.is_active],
             }
 
         return [build_tree(acc) for acc in root_accounts]
@@ -1296,13 +1199,9 @@ class GLService:
         if branch_id:
             agg_query = agg_query.filter(GLJournalEntry.branch_id == branch_id)
         if date_from:
-            agg_query = agg_query.filter(
-                func.date(GLJournalEntry.entry_date) >= date_from
-            )
+            agg_query = agg_query.filter(func.date(GLJournalEntry.entry_date) >= date_from)
         if date_to:
-            agg_query = agg_query.filter(
-                func.date(GLJournalEntry.entry_date) <= date_to
-            )
+            agg_query = agg_query.filter(func.date(GLJournalEntry.entry_date) <= date_to)
         agg_query = agg_query.group_by(GLJournalLine.account_id)
 
         account_totals = {}
@@ -1336,9 +1235,7 @@ class GLService:
                 )
                 continue
 
-            debit_sum, credit_sum = account_totals.get(
-                account.id, (Decimal("0"), Decimal("0"))
-            )
+            debit_sum, credit_sum = account_totals.get(account.id, (Decimal("0"), Decimal("0")))
 
             if debit_sum == 0 and credit_sum == 0:
                 continue
@@ -1367,9 +1264,7 @@ class GLService:
         }
 
     @staticmethod
-    def get_all_account_balances(
-        start_date=None, end_date=None, as_of_date=None, branch_id=None, tenant_id=None
-    ):
+    def get_all_account_balances(start_date=None, end_date=None, as_of_date=None, branch_id=None, tenant_id=None):
         """Batch-compute balances for ALL accounts in a single aggregate query.
 
         Returns dict {account_id: Decimal balance}.
@@ -1460,9 +1355,7 @@ class GLService:
         return balance_map
 
     @staticmethod
-    def get_account_code_for_concept(
-        concept_code, branch_id=None, tenant_id=None, fallback_key=None
-    ):
+    def get_account_code_for_concept(concept_code, branch_id=None, tenant_id=None, fallback_key=None):
         """Resolve GL account code for a concept.
         Tries dynamic mapping first, then falls back to GL_ACCOUNTS dict.
         Raises GLMappingError if no mapping and no fallback available.
@@ -1493,13 +1386,9 @@ class GLService:
         """حساب الدائن عند الصرف (خروج نقدية)."""
         m = (payment_method or "").strip().lower()
         if m == "cash":
-            return GLService.get_default_liquidity_account(
-                "cash", branch_id=branch_id, tenant_id=tenant_id
-            )
+            return GLService.get_default_liquidity_account("cash", branch_id=branch_id, tenant_id=tenant_id)
         if m in ("bank_transfer", "card", "bank"):
-            return GLService.get_default_liquidity_account(
-                "bank", branch_id=branch_id, tenant_id=tenant_id
-            )
+            return GLService.get_default_liquidity_account("bank", branch_id=branch_id, tenant_id=tenant_id)
         if m == "cheque":
             return GLService.get_account_code_for_concept(
                 "DEFERRED_CHEQUES_PAYABLE",
@@ -1507,9 +1396,7 @@ class GLService:
                 tenant_id=tenant_id,
                 fallback_key="deferred_cheques",
             )
-        return GLService.get_default_liquidity_account(
-            "cash", branch_id=branch_id, tenant_id=tenant_id
-        )
+        return GLService.get_default_liquidity_account("cash", branch_id=branch_id, tenant_id=tenant_id)
 
     @staticmethod
     def _reconciliation_concept_balance(concept_code, tenant_id=None, branch_id=None):
@@ -1537,8 +1424,7 @@ class GLService:
             return Decimal("0")
         q = (
             db.session.query(
-                func.coalesce(func.sum(GLJournalLine.debit), 0)
-                - func.coalesce(func.sum(GLJournalLine.credit), 0)
+                func.coalesce(func.sum(GLJournalLine.debit), 0) - func.coalesce(func.sum(GLJournalLine.credit), 0)
             )
             .join(GLJournalEntry)
             .filter(
@@ -1559,16 +1445,8 @@ class GLService:
 
         tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id)
 
-        gl_ar = abs(
-            GLService._reconciliation_concept_balance(
-                "AR", tenant_id=tenant_id, branch_id=branch_id
-            )
-        )
-        gl_ap = abs(
-            GLService._reconciliation_concept_balance(
-                "AP", tenant_id=tenant_id, branch_id=branch_id
-            )
-        )
+        gl_ar = abs(GLService._reconciliation_concept_balance("AR", tenant_id=tenant_id, branch_id=branch_id))
+        gl_ap = abs(GLService._reconciliation_concept_balance("AP", tenant_id=tenant_id, branch_id=branch_id))
 
         from models import Customer, Supplier
 
@@ -1577,17 +1455,13 @@ class GLService:
             if not tenant_id
             else Customer.query.filter_by(tenant_id=int(tenant_id), is_active=True)
         )
-        total_customer_balance = sum(
-            Decimal(str(c.balance or 0)) for c in customers.all()
-        )
+        total_customer_balance = sum(Decimal(str(c.balance or 0)) for c in customers.all())
         suppliers = (
             Supplier.query.filter_by(is_active=True)
             if not tenant_id
             else Supplier.query.filter_by(tenant_id=int(tenant_id), is_active=True)
         )
-        total_supplier_balance = sum(
-            Decimal(str(s.get_balance_base())) for s in suppliers.all()
-        )
+        total_supplier_balance = sum(Decimal(str(s.get_balance_base())) for s in suppliers.all())
 
         return {
             "tenant_id": tenant_id,

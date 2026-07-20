@@ -15,18 +15,14 @@ class PayrollSettings(db.Model):
     )
 
     # Jurisdiction/Policy
-    payroll_jurisdiction = db.Column(
-        db.String(50), default="default"
-    )  # Palestine, UAE, GCC, Custom
+    payroll_jurisdiction = db.Column(db.String(50), default="default")  # Palestine, UAE, GCC, Custom
     country_code = db.Column(db.String(3), default="PS")  # PS, AE, etc.
 
     # Leave Policy Parameters
     annual_leave_days = db.Column(db.Integer, default=30)
 
     # End of Service/Gratuity Policy
-    eos_calculation_method = db.Column(
-        db.String(50), default="standard"
-    )  # standard, custom
+    eos_calculation_method = db.Column(db.String(50), default="standard")  # standard, custom
 
     rounding_policy = db.Column(db.String(20), default="round_half_up")
 

@@ -100,24 +100,12 @@ def create():
                 email=request.form.get("email", "").strip() or None,
                 address=request.form.get("address", "").strip() or None,
                 id_number=request.form.get("id_number", "").strip() or None,
-                investment_amount=Decimal(
-                    request.form.get("investment_amount", "0") or "0"
-                ),
-                share_percentage=Decimal(
-                    request.form.get("share_percentage", "0") or "0"
-                ),
-                fixed_monthly_amount=Decimal(
-                    request.form.get("fixed_monthly_amount", "0") or "0"
-                ),
-                expense_share_percentage=Decimal(
-                    request.form.get("expense_share_percentage", "0") or "0"
-                ),
-                loss_share_percentage=Decimal(
-                    request.form.get("loss_share_percentage", "0") or "0"
-                ),
-                min_profit_threshold=Decimal(
-                    request.form.get("min_profit_threshold", "0") or "0"
-                ),
+                investment_amount=Decimal(request.form.get("investment_amount", "0") or "0"),
+                share_percentage=Decimal(request.form.get("share_percentage", "0") or "0"),
+                fixed_monthly_amount=Decimal(request.form.get("fixed_monthly_amount", "0") or "0"),
+                expense_share_percentage=Decimal(request.form.get("expense_share_percentage", "0") or "0"),
+                loss_share_percentage=Decimal(request.form.get("loss_share_percentage", "0") or "0"),
+                min_profit_threshold=Decimal(request.form.get("min_profit_threshold", "0") or "0"),
                 notes=request.form.get("notes", "").strip() or None,
                 is_active=True,
             )
@@ -128,9 +116,7 @@ def create():
         except Exception as e:
             flash(gettext(f"❌ خطأ: {e}"), "danger")
 
-    return render_template(
-        "partners/create.html", branches=branches, warehouses=warehouses
-    )
+    return render_template("partners/create.html", branches=branches, warehouses=warehouses)
 
 
 # ── Detail & Edit ─────────────────────────────────────────────
@@ -148,19 +134,13 @@ def view(**kwargs):
     latest_dists = PartnerProfitDistribution.query.filter_by(partner_id=record_id)
     if tid is not None:
         latest_dists = latest_dists.filter(PartnerProfitDistribution.tenant_id == tid)
-    latest_dists = (
-        latest_dists.order_by(PartnerProfitDistribution.period_end.desc())
-        .limit(12)
-        .all()
-    )
+    latest_dists = latest_dists.order_by(PartnerProfitDistribution.period_end.desc()).limit(12).all()
 
     # Latest transactions
     latest_txs = PartnerTransaction.query.filter_by(partner_id=record_id)
     if tid is not None:
         latest_txs = latest_txs.filter(PartnerTransaction.tenant_id == tid)
-    latest_txs = (
-        latest_txs.order_by(PartnerTransaction.transaction_date.desc()).limit(20).all()
-    )
+    latest_txs = latest_txs.order_by(PartnerTransaction.transaction_date.desc()).limit(20).all()
 
     return render_template(
         "partners/view.html",
@@ -190,37 +170,21 @@ def edit(**kwargs):
                 scope_id = None
 
             partner.name = request.form.get("name", partner.name).strip()
-            partner.name_en = (
-                request.form.get("name_en", partner.name_en).strip() or None
-            )
+            partner.name_en = request.form.get("name_en", partner.name_en).strip() or None
             partner.code = request.form.get("code", partner.code).strip() or None
             partner.scope_type = scope_type
             partner.scope_id = scope_id
-            partner.partner_type = request.form.get(
-                "partner_type", partner.partner_type
-            )
+            partner.partner_type = request.form.get("partner_type", partner.partner_type)
             partner.phone = request.form.get("phone", "").strip() or None
             partner.email = request.form.get("email", "").strip() or None
             partner.address = request.form.get("address", "").strip() or None
             partner.id_number = request.form.get("id_number", "").strip() or None
-            partner.investment_amount = Decimal(
-                request.form.get("investment_amount", "0") or "0"
-            )
-            partner.share_percentage = Decimal(
-                request.form.get("share_percentage", "0") or "0"
-            )
-            partner.fixed_monthly_amount = Decimal(
-                request.form.get("fixed_monthly_amount", "0") or "0"
-            )
-            partner.expense_share_percentage = Decimal(
-                request.form.get("expense_share_percentage", "0") or "0"
-            )
-            partner.loss_share_percentage = Decimal(
-                request.form.get("loss_share_percentage", "0") or "0"
-            )
-            partner.min_profit_threshold = Decimal(
-                request.form.get("min_profit_threshold", "0") or "0"
-            )
+            partner.investment_amount = Decimal(request.form.get("investment_amount", "0") or "0")
+            partner.share_percentage = Decimal(request.form.get("share_percentage", "0") or "0")
+            partner.fixed_monthly_amount = Decimal(request.form.get("fixed_monthly_amount", "0") or "0")
+            partner.expense_share_percentage = Decimal(request.form.get("expense_share_percentage", "0") or "0")
+            partner.loss_share_percentage = Decimal(request.form.get("loss_share_percentage", "0") or "0")
+            partner.min_profit_threshold = Decimal(request.form.get("min_profit_threshold", "0") or "0")
             partner.is_active = request.form.get("is_active") == "on"
             partner.notes = request.form.get("notes", "").strip() or None
             partner.updated_at = datetime.now(timezone.utc)
@@ -232,9 +196,7 @@ def edit(**kwargs):
         except Exception as e:
             flash(gettext(f"❌ خطأ: {e}"), "danger")
 
-    return render_template(
-        "partners/edit.html", partner=partner, branches=branches, warehouses=warehouses
-    )
+    return render_template("partners/edit.html", partner=partner, branches=branches, warehouses=warehouses)
 
 
 # ── Statement ─────────────────────────────────────────────────
@@ -317,9 +279,7 @@ def distribute():
 def approve_distribution(dist_id):
     try:
         with atomic_transaction("partner_approve_distribution"):
-            ok = PartnerService.approve_distribution(
-                dist_id, current_user.id, tenant_id=_tenant_id()
-            )
+            ok = PartnerService.approve_distribution(dist_id, current_user.id, tenant_id=_tenant_id())
         if ok:
             flash(gettext("✅ تم اعتماد التوزيع."), "success")
         else:
@@ -394,7 +354,5 @@ def api_preview_pnl():
     scope = request.args.get("scope_type", "company")
     scope_id = request.args.get("scope_id", type=int)
 
-    pnl = PartnerService.calculate_scope_profit(
-        int(tid or 0), start, end, scope, scope_id
-    )
+    pnl = PartnerService.calculate_scope_profit(int(tid or 0), start, end, scope, scope_id)
     return jsonify(pnl)

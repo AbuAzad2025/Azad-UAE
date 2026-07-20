@@ -14,9 +14,7 @@ class DocumentSequence(db.Model):
     """
 
     __tablename__ = "document_sequences"
-    __table_args__ = (
-        db.UniqueConstraint("tenant_id", "code", name="uq_doc_seq_tenant_code"),
-    )
+    __table_args__ = (db.UniqueConstraint("tenant_id", "code", name="uq_doc_seq_tenant_code"),)
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -31,32 +29,24 @@ class DocumentSequence(db.Model):
     name_ar = db.Column(db.String(100))
 
     # Pattern template, e.g. "INV/{year}/{branch}/{counter:04d}"
-    pattern = db.Column(
-        db.String(200), nullable=False, default="{prefix}-{year}-{counter:04d}"
-    )
+    pattern = db.Column(db.String(200), nullable=False, default="{prefix}-{year}-{counter:04d}")
     prefix = db.Column(db.String(20), nullable=False, default="DOC")
 
     counter = db.Column(db.Integer, nullable=False, default=1)
-    counter_reset = db.Column(
-        db.String(20), nullable=False, default="year"
-    )  # never, yearly, monthly, daily
+    counter_reset = db.Column(db.String(20), nullable=False, default="year")  # never, yearly, monthly, daily
 
     branch_scoped = db.Column(db.Boolean, nullable=False, default=False)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
 
     # Meta
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    tenant = db.relationship(
-        "Tenant", backref="document_sequences", foreign_keys=[tenant_id]
-    )
+    tenant = db.relationship("Tenant", backref="document_sequences", foreign_keys=[tenant_id])
 
     def __repr__(self):
         return f"<DocumentSequence {self.code} {self.pattern}>"

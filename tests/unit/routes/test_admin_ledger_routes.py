@@ -22,9 +22,7 @@ def _mock_account(code="1101", balance=Decimal("2000"), **kwargs):
 
 
 def _accounts_query(**cfg):
-    cash_accounts = cfg.get(
-        "cash_accounts", [_mock_account(code="1101", balance=Decimal("3000"))]
-    )
+    cash_accounts = cfg.get("cash_accounts", [_mock_account(code="1101", balance=Decimal("3000"))])
     balance_accounts = cfg.get(
         "balance_accounts",
         [
@@ -48,9 +46,7 @@ def _accounts_query(**cfg):
             inner.order_by.return_value.all.return_value = balance_accounts
             inner.limit.return_value.all.return_value = balance_accounts
         elif kwargs == {"is_header": True}:
-            inner.order_by.return_value.all.return_value = cfg.get(
-                "parent_accounts", []
-            )
+            inner.order_by.return_value.all.return_value = cfg.get("parent_accounts", [])
         elif kwargs.get("code") and duplicate:
             inner.first.return_value = duplicate
         elif kwargs.get("id") is not None:
@@ -151,9 +147,7 @@ def _ledger_patches(
             "routes.admin_ledger.GLService.get_account_statement",
             return_value=statement or [],
         ),
-        patch(
-            "routes.admin_ledger.GLService.get_all_account_balances", return_value={}
-        ),
+        patch("routes.admin_ledger.GLService.get_all_account_balances", return_value={}),
         patch("routes.admin_ledger._vaults", return_value=vaults_query),
     ):
         yield {
@@ -388,15 +382,9 @@ class TestAdminLedgerReports:
         assert kwargs["date_to"] == date.today()
 
     def test_balance_sheet(self, ledger_client):
-        assets = [
-            _mock_account(code="1000", type="asset", id=10, balance=Decimal("1000"))
-        ]
-        liabilities = [
-            _mock_account(code="2000", type="liability", id=20, balance=Decimal("-500"))
-        ]
-        equity = [
-            _mock_account(code="3000", type="equity", id=30, balance=Decimal("-500"))
-        ]
+        assets = [_mock_account(code="1000", type="asset", id=10, balance=Decimal("1000"))]
+        liabilities = [_mock_account(code="2000", type="liability", id=20, balance=Decimal("-500"))]
+        equity = [_mock_account(code="3000", type="equity", id=30, balance=Decimal("-500"))]
 
         def filter_by(**filter_kw):
             inner = MagicMock()
@@ -428,12 +416,8 @@ class TestAdminLedgerReports:
         assert kwargs["assets_total"] == Decimal("1000")
 
     def test_income_statement(self, ledger_client):
-        rev_acct = _mock_account(
-            code="4100", type="revenue", id=10, balance=Decimal("-800")
-        )
-        exp_acct = _mock_account(
-            code="5100", type="expense", id=20, balance=Decimal("300")
-        )
+        rev_acct = _mock_account(code="4100", type="revenue", id=10, balance=Decimal("-800"))
+        exp_acct = _mock_account(code="5100", type="expense", id=20, balance=Decimal("300"))
         revenues = [rev_acct]
         expenses = [exp_acct]
 
@@ -494,9 +478,7 @@ class TestAdminLedgerApi:
 class TestAdminLedgerCoverageGaps:
     def test_vaults_helper_calls_scoped_query(self):
         vault_q = MagicMock()
-        with patch(
-            "routes.admin_ledger.scoped_model_query", return_value=vault_q
-        ) as smq:
+        with patch("routes.admin_ledger.scoped_model_query", return_value=vault_q) as smq:
             from routes.admin_ledger import _vaults
 
             assert _vaults() is vault_q
@@ -510,9 +492,7 @@ class TestAdminLedgerCoverageGaps:
                 "routes.admin_ledger.resolve_default_currency",
                 side_effect=RuntimeError("no tenant"),
             ),
-            patch(
-                "routes.admin_ledger.get_system_default_currency", return_value="USD"
-            ),
+            patch("routes.admin_ledger.get_system_default_currency", return_value="USD"),
             patch("routes.admin_ledger.GLAccount") as gl_cls,
         ):
             gl_cls.return_value.id = 50
@@ -584,9 +564,7 @@ class TestAdminLedgerCoverageGaps:
                 "routes.admin_ledger.resolve_default_currency",
                 side_effect=RuntimeError("fail"),
             ),
-            patch(
-                "routes.admin_ledger.get_system_default_currency", return_value="AED"
-            ),
+            patch("routes.admin_ledger.get_system_default_currency", return_value="AED"),
         ):
             resp = ledger_client.post(
                 "/admin/ledger/accounts/12/edit",
@@ -689,7 +667,5 @@ class TestAdminLedgerCoverageGaps:
             )
         assert resp.status_code == 200
         kwargs = mocks["render"].call_args[1]
-        assert kwargs["date_from"] == date.today() - __import__("datetime").timedelta(
-            days=30
-        )
+        assert kwargs["date_from"] == date.today() - __import__("datetime").timedelta(days=30)
         assert kwargs["date_to"] == date.today()

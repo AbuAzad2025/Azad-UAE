@@ -63,9 +63,7 @@ class TestApiUpdateTenantSettings:
         assert resp.status_code == 400
         assert resp.json["error"] == "JSON required"
 
-    def test_unknown_field_returns_400(
-        self, company_admin_client, mocker, mock_settings_db
-    ):
+    def test_unknown_field_returns_400(self, company_admin_client, mocker, mock_settings_db):
         mocker.patch("routes.owner.settings.Tenant")
         mock_settings_db.session.get.return_value = MagicMock(id=1)
         resp = company_admin_client.post(

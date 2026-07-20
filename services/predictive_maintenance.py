@@ -54,18 +54,14 @@ class PredictiveMaintenanceService:
         alerts = []
 
         for product in products:
-            prediction = PredictiveMaintenanceService.predict_next_maintenance(
-                product.id
-            )
+            prediction = PredictiveMaintenanceService.predict_next_maintenance(product.id)
             if prediction and prediction["days_until"] <= threshold_days:
                 alerts.append(
                     {
                         "product_id": product.id,
                         "product_name": product.name,
                         "days_until_maintenance": prediction["days_until"],
-                        "urgency": (
-                            "high" if prediction["days_until"] <= 7 else "medium"
-                        ),
+                        "urgency": ("high" if prediction["days_until"] <= 7 else "medium"),
                         "confidence": prediction["confidence"],
                     }
                 )
@@ -102,9 +98,7 @@ class PredictiveMaintenanceService:
             "days_active": days_active,
             "avg_monthly_sales": round(float(avg_sales_per_month), 2),
             "total_transactions": len(sales),
-            "lifecycle_stage": PredictiveMaintenanceService._determine_lifecycle_stage(
-                days_active, len(sales)
-            ),
+            "lifecycle_stage": PredictiveMaintenanceService._determine_lifecycle_stage(days_active, len(sales)),
         }
 
     @staticmethod

@@ -169,10 +169,7 @@ def table_exists(conn: Connection, table: str) -> bool:
 
     return bool(
         conn.execute(
-            text(
-                "SELECT 1 FROM information_schema.tables "
-                "WHERE table_schema='public' AND table_name=:t"
-            ),
+            text("SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=:t"),
             {"t": table},
         ).scalar()
     )
@@ -193,10 +190,7 @@ def column_metadata(conn: Connection, table: str) -> List[Dict[str, Any]]:
         ),
         {"t": table},
     ).fetchall()
-    return [
-        {"name": r[0], "data_type": r[1], "is_nullable": r[2], "default": r[3]}
-        for r in rows
-    ]
+    return [{"name": r[0], "data_type": r[1], "is_nullable": r[2], "default": r[3]} for r in rows]
 
 
 def _default_for_type(data_type: Optional[str]) -> Any:
@@ -204,10 +198,7 @@ def _default_for_type(data_type: Optional[str]) -> Any:
     dt = (data_type or "").lower()
     if "boolean" in dt:
         return False
-    if any(
-        k in dt
-        for k in ("int", "numeric", "decimal", "money", "real", "double", "float")
-    ):
+    if any(k in dt for k in ("int", "numeric", "decimal", "money", "real", "double", "float")):
         return 0
     if "json" in dt:
         return {}
@@ -222,9 +213,7 @@ def _default_for_type(data_type: Optional[str]) -> Any:
     return ""
 
 
-def normalize_row_to_target(
-    conn: Connection, table: str, row: Dict[str, Any]
-) -> Dict[str, Any]:
+def normalize_row_to_target(conn: Connection, table: str, row: Dict[str, Any]) -> Dict[str, Any]:
     """Make a backup row safe to INSERT into the *current* target schema.
 
     Handles schema drift in both directions:
@@ -242,9 +231,7 @@ def normalize_row_to_target(
     for c in cols:
         if c["name"] in out:
             continue
-        if c["is_nullable"] == "NO" and (
-            c["default"] is None or str(c["default"]).upper() == "NULL"
-        ):
+        if c["is_nullable"] == "NO" and (c["default"] is None or str(c["default"]).upper() == "NULL"):
             out[c["name"]] = _default_for_type(c["data_type"])
     return out
 
@@ -258,16 +245,12 @@ def _serialize_row(item: Dict[str, Any]) -> Dict[str, Any]:
     return item
 
 
-def _fetch_rows(
-    conn, table: str, where_sql: str, params: Dict[str, Any]
-) -> List[Dict[str, Any]]:
+def _fetch_rows(conn, table: str, where_sql: str, params: Dict[str, Any]) -> List[Dict[str, Any]]:
     from sqlalchemy import text
 
     tbl = _table(conn, table)
     if where_sql:
-        result = conn.execute(
-            select(text("*")).select_from(tbl).where(text(where_sql)), params
-        )
+        result = conn.execute(select(text("*")).select_from(tbl).where(text(where_sql)), params)
     else:
         result = conn.execute(select(text("*")).select_from(tbl))
     rows = []
@@ -290,9 +273,7 @@ def _fetch_child_rows(
         return []
     assert_known_column(conn, child_table, child_fk)
     tbl = _table(conn, child_table, [child_fk])
-    result = conn.execute(
-        select(text("*")).select_from(tbl).where(tbl.c[child_fk].in_(parent_ids))
-    )
+    result = conn.execute(select(text("*")).select_from(tbl).where(tbl.c[child_fk].in_(parent_ids)))
     return [_serialize_row(dict(zip(result.keys(), row))) for row in result.fetchall()]
 
 
@@ -318,25 +299,16 @@ def _merge_product_customer_dependencies(
             needed.add(int(pid or 0))
     if not needed:
         return
-    existing = {
-        int(row["id"])
-        for row in (tables_out.get("customers") or [])
-        if row.get("id") is not None
-    }
+    existing = {int(row["id"]) for row in (tables_out.get("customers") or []) if row.get("id") is not None}
     missing = sorted(needed - existing)
     if not missing:
         return
     try:
         tbl = _table(conn, "customers", ["id", "tenant_id"])
         result = conn.execute(
-            select(text("*"))
-            .select_from(tbl)
-            .where(tbl.c.tenant_id == tenant_id)
-            .where(tbl.c.id.in_(missing))
+            select(text("*")).select_from(tbl).where(tbl.c.tenant_id == tenant_id).where(tbl.c.id.in_(missing))
         )
-        extra = [
-            _serialize_row(dict(zip(result.keys(), row))) for row in result.fetchall()
-        ]
+        extra = [_serialize_row(dict(zip(result.keys(), row))) for row in result.fetchall()]
         found_ids = {int(r["id"]) for r in extra if r.get("id") is not None}
         if extra:
             tables_out.setdefault("customers", []).extend(extra)
@@ -361,9 +333,7 @@ def export_scoped_database(
     tenant_id: int,
     branch_id: Optional[int] = None,
     store_id: Optional[int] = None,
-) -> Tuple[
-    Dict[str, List[Dict[str, Any]]], Dict[str, int], List[str], List[str], List[str]
-]:
+) -> Tuple[Dict[str, List[Dict[str, Any]]], Dict[str, int], List[str], List[str], List[str]]:
     """
     Export scoped rows.
     Returns tables, row_counts, included, skipped, unresolved_references.
@@ -436,13 +406,9 @@ def export_scoped_database(
             skipped.append(f"{child_table}:missing")
             continue
         parent_rows = tables_out.get(parent_table) or []
-        parent_ids = [
-            r.get(parent_pk) for r in parent_rows if r.get(parent_pk) is not None
-        ]
+        parent_ids = [r.get(parent_pk) for r in parent_rows if r.get(parent_pk) is not None]
         try:
-            rows = _fetch_child_rows(
-                conn, child_table, parent_table, parent_pk, child_fk, parent_ids
-            )
+            rows = _fetch_child_rows(conn, child_table, parent_table, parent_pk, child_fk, parent_ids)
             tables_out[child_table] = rows
             row_counts[child_table] = len(rows)
             if rows:
@@ -467,30 +433,17 @@ def export_scoped_database(
             unresolved.append(f"tenant_stores:expected_1_got_{len(st)}")
 
     if scope in (SCOPE_TENANT, SCOPE_BRANCH, SCOPE_STORE):
-        _merge_product_customer_dependencies(
-            conn, tables_out, row_counts, included, tenant_id, unresolved
-        )
+        _merge_product_customer_dependencies(conn, tables_out, row_counts, included, tenant_id, unresolved)
 
-    if scope in (SCOPE_TENANT, SCOPE_BRANCH, SCOPE_STORE) and table_exists(
-        conn, "roles"
-    ):
-        role_ids = {
-            u.get("role_id")
-            for u in (tables_out.get("users") or [])
-            if u.get("role_id") is not None
-        }
+    if scope in (SCOPE_TENANT, SCOPE_BRANCH, SCOPE_STORE) and table_exists(conn, "roles"):
+        role_ids = {u.get("role_id") for u in (tables_out.get("users") or []) if u.get("role_id") is not None}
         if role_ids:
             try:
                 roles_tbl = _table(conn, "roles", ["id"])
                 result = conn.execute(
-                    select(text("*"))
-                    .select_from(roles_tbl)
-                    .where(roles_tbl.c["id"].in_(list(role_ids)))
+                    select(text("*")).select_from(roles_tbl).where(roles_tbl.c["id"].in_(list(role_ids)))
                 )
-                rows = [
-                    _serialize_row(dict(zip(result.keys(), row)))
-                    for row in result.fetchall()
-                ]
+                rows = [_serialize_row(dict(zip(result.keys(), row))) for row in result.fetchall()]
                 if rows:
                     tables_out["roles"] = rows
                     row_counts["roles"] = len(rows)
@@ -511,9 +464,7 @@ def export_tenant_database(
     tenant_id: int,
 ) -> Tuple[Dict[str, List[Dict[str, Any]]], Dict[str, int], List[str], List[str]]:
     """Backward-compatible tenant export (no unresolved list)."""
-    tables, counts, included, skipped, _ = export_scoped_database(
-        conn, SCOPE_TENANT, tenant_id=tenant_id
-    )
+    tables, counts, included, skipped, _ = export_scoped_database(conn, SCOPE_TENANT, tenant_id=tenant_id)
     return tables, counts, included, skipped
 
 
@@ -623,17 +574,14 @@ def collect_scoped_upload_paths(
     resolved: Set[str] = set()
     unresolved: List[str] = []
 
-    def add_column(
-        table: str, column: str, where: str, bind_config: Dict[str, Any]
-    ) -> None:
+    def add_column(table: str, column: str, where: str, bind_config: Dict[str, Any]) -> None:
         if not table_exists(conn, table):
             return
         cols = {
             r[0]
             for r in conn.execute(
                 sa_text(
-                    "SELECT column_name FROM information_schema.columns "
-                    "WHERE table_schema='public' AND table_name=:t"
+                    "SELECT column_name FROM information_schema.columns WHERE table_schema='public' AND table_name=:t"
                 ),
                 {"t": table},
             )
@@ -672,9 +620,7 @@ def collect_scoped_upload_paths(
         add_column("products", "image_url", "tenant_id = :tid", bind)
         if table_exists(conn, "invoice_settings"):
             add_column("invoice_settings", "logo_path", "tenant_id = :tid", bind)
-            add_column(
-                "invoice_settings", "watermark_image_path", "tenant_id = :tid", bind
-            )
+            add_column("invoice_settings", "watermark_image_path", "tenant_id = :tid", bind)
         if table_exists(conn, "tenant_stores"):
             w = "tenant_id = :tid"
             if store_id:
@@ -692,9 +638,7 @@ def collect_tenant_upload_paths(
     return collect_scoped_upload_paths(conn, SCOPE_TENANT, tenant_id, base_dir)
 
 
-def build_tenant_uploads_archive(
-    file_paths: List[str], dest_path: str, base_dir: str
-) -> Dict[str, Any]:
+def build_tenant_uploads_archive(file_paths: List[str], dest_path: str, base_dir: str) -> Dict[str, Any]:
     import tarfile
 
     packed = 0

@@ -10,9 +10,7 @@ from services.donation_gl_service import DonationGLService
 
 
 class TestVaultAccounts:
-    def test_defaults_when_no_vault(
-        self, db_session, sample_tenant, sample_gl_accounts, mocker
-    ):
+    def test_defaults_when_no_vault(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch(
             "services.donation_gl_service.GLService.get_default_liquidity_account",
             return_value="1111",
@@ -21,9 +19,7 @@ class TestVaultAccounts:
         assert credit == "4200"
         assert debit == "1111"
 
-    def test_cash_debit_resolves_cash_liquidity(
-        self, db_session, sample_tenant, sample_gl_accounts, mocker
-    ):
+    def test_cash_debit_resolves_cash_liquidity(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         vault = MagicMock()
         vault.donation_debit_account = "1110"
         vault.donation_credit_account = "4200"
@@ -36,9 +32,7 @@ class TestVaultAccounts:
         assert debit == "1110"
         assert credit == "4200"
 
-    def test_bank_debit_resolves_bank_liquidity(
-        self, db_session, sample_tenant, sample_gl_accounts, mocker
-    ):
+    def test_bank_debit_resolves_bank_liquidity(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         vault = MagicMock()
         vault.donation_debit_account = "1120"
         vault.donation_credit_account = "4200"
@@ -50,9 +44,7 @@ class TestVaultAccounts:
         mock_liq.assert_called_with("bank", tenant_id=sample_tenant.id)
         assert debit == "1120"
 
-    def test_custom_accounts_from_vault(
-        self, db_session, sample_tenant, sample_gl_accounts
-    ):
+    def test_custom_accounts_from_vault(self, db_session, sample_tenant, sample_gl_accounts):
         from models import GLAccount
 
         GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="4100").first()
@@ -105,9 +97,7 @@ class TestPostCompletedDonation:
         with app.app_context():
             assert DonationGLService.post_completed_donation(donation) is False
 
-    def test_successful_posting(
-        self, db_session, sample_tenant, sample_gl_accounts, mocker
-    ):
+    def test_successful_posting(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         donation = Donation(
             tenant_id=sample_tenant.id,
             amount_usd=Decimal("100"),
@@ -141,9 +131,7 @@ class TestPostCompletedDonation:
         assert lines[0]["debit"] == Decimal("367.000")
         assert lines[1]["credit"] == Decimal("367.000")
 
-    def test_exchange_rate_fallback(
-        self, db_session, sample_tenant, sample_gl_accounts, mocker
-    ):
+    def test_exchange_rate_fallback(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         donation = Donation(
             tenant_id=sample_tenant.id,
             amount_usd=Decimal("10"),
@@ -167,14 +155,10 @@ class TestPostCompletedDonation:
             "services.donation_gl_service.ExchangeRateService.resolve_exchange_rate_for_transaction",
             side_effect=RuntimeError("api down"),
         )
-        mocker.patch(
-            "services.donation_gl_service.post_or_fail", return_value=MagicMock(id=1)
-        )
+        mocker.patch("services.donation_gl_service.post_or_fail", return_value=MagicMock(id=1))
         assert DonationGLService.post_completed_donation(donation) is True
 
-    def test_posting_failure_reraises(
-        self, db_session, sample_tenant, sample_gl_accounts, mocker
-    ):
+    def test_posting_failure_reraises(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         donation = Donation(
             tenant_id=sample_tenant.id,
             amount_usd=Decimal("25"),

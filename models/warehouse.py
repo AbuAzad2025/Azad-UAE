@@ -24,22 +24,16 @@ class Warehouse(db.Model):
     name_ar = db.Column(db.String(100))
     code = db.Column(db.String(50))
     location = db.Column(db.String(255))
-    warehouse_type = db.Column(
-        db.String(20), default=TYPE_PHYSICAL, nullable=False, index=True
-    )
+    warehouse_type = db.Column(db.String(20), default=TYPE_PHYSICAL, nullable=False, index=True)
 
     parent_id = db.Column(db.Integer, db.ForeignKey("warehouses.id"), index=True)
-    branch_id = db.Column(
-        db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True
-    )  # Linked Branch
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True)  # Linked Branch
 
     manager_id = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
     is_active = db.Column(db.Boolean, default=True, index=True)
     is_main = db.Column(db.Boolean, default=False)
     allow_negative_inventory = db.Column(db.Boolean, default=False, index=True)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
     extra_fields = db.Column(db.JSON, default=dict)
 
@@ -47,12 +41,8 @@ class Warehouse(db.Model):
     manager = db.relationship("User", foreign_keys=[manager_id])
     branch = db.relationship("Branch", backref="warehouses", foreign_keys=[branch_id])
     tenant = db.relationship("Tenant", backref="warehouses", foreign_keys=[tenant_id])
-    stock_movements = db.relationship(
-        "StockMovement", back_populates="warehouse", lazy="dynamic"
-    )
-    warehouse_stocks = db.relationship(
-        "ProductWarehouseStock", back_populates="warehouse", lazy="dynamic"
-    )
+    stock_movements = db.relationship("StockMovement", back_populates="warehouse", lazy="dynamic")
+    warehouse_stocks = db.relationship("ProductWarehouseStock", back_populates="warehouse", lazy="dynamic")
 
     def __repr__(self):
         return f"<Warehouse {self.name}>"
@@ -68,9 +58,7 @@ class Warehouse(db.Model):
 class ProductWarehouseStock(db.Model):
     __tablename__ = "product_warehouse_stock"
     __table_args__ = (
-        db.UniqueConstraint(
-            "tenant_id", "product_id", "warehouse_id", name="uq_product_warehouse_stock"
-        ),
+        db.UniqueConstraint("tenant_id", "product_id", "warehouse_id", name="uq_product_warehouse_stock"),
     )
 
     id = db.Column(db.Integer, primary_key=True)
@@ -107,9 +95,7 @@ class ProductWarehouseStock(db.Model):
 
     product = db.relationship("Product", back_populates="warehouse_stocks")
     warehouse = db.relationship("Warehouse", back_populates="warehouse_stocks")
-    tenant = db.relationship(
-        "Tenant", backref="product_warehouse_stocks", foreign_keys=[tenant_id]
-    )
+    tenant = db.relationship("Tenant", backref="product_warehouse_stocks", foreign_keys=[tenant_id])
 
     def __repr__(self):
         return f"<ProductWarehouseStock P#{self.product_id} W#{self.warehouse_id} qty={self.quantity}>"
@@ -132,9 +118,7 @@ class StockMovement(db.Model):
         nullable=False,
         index=True,
     )
-    warehouse_id = db.Column(
-        db.Integer, db.ForeignKey("warehouses.id"), nullable=False, index=True
-    )
+    warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id"), nullable=False, index=True)
 
     movement_type = db.Column(db.String(20), nullable=False, index=True)
 
@@ -156,9 +140,7 @@ class StockMovement(db.Model):
     product = db.relationship("Product", back_populates="stock_movements")
     warehouse = db.relationship("Warehouse", back_populates="stock_movements")
     user = db.relationship("User", foreign_keys=[user_id])
-    tenant = db.relationship(
-        "Tenant", backref="stock_movements", foreign_keys=[tenant_id]
-    )
+    tenant = db.relationship("Tenant", backref="stock_movements", foreign_keys=[tenant_id])
 
     def __repr__(self):
         return f"<StockMovement {self.movement_type} {self.quantity}>"
@@ -180,10 +162,6 @@ class StockMovement(db.Model):
             "product": self.product.name if self.product else None,
             "movement_type": self.movement_type,
             "quantity": float(self.quantity),
-            "reference": (
-                f"{self.reference_type} #{self.reference_id}"
-                if self.reference_type
-                else None
-            ),
+            "reference": (f"{self.reference_type} #{self.reference_id}" if self.reference_type else None),
             "created_at": self.created_at.isoformat(),
         }

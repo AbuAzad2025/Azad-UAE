@@ -4,9 +4,7 @@ from extensions import db
 
 class ArchivedRecord(db.Model):
     __tablename__ = "archived_records"
-    __table_args__ = (
-        db.Index("ix_archived_records_tenant_table", "tenant_id", "table_name"),
-    )
+    __table_args__ = (db.Index("ix_archived_records_tenant_table", "tenant_id", "table_name"),)
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -33,9 +31,7 @@ class ArchivedRecord(db.Model):
 
     can_restore = db.Column(db.Boolean, default=True)
 
-    tenant = db.relationship(
-        "Tenant", backref="archived_records", foreign_keys=[tenant_id]
-    )
+    tenant = db.relationship("Tenant", backref="archived_records", foreign_keys=[tenant_id])
     user = db.relationship("User", foreign_keys=[archived_by])
 
     def __repr__(self):

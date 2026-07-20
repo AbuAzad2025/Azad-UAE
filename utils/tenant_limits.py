@@ -36,20 +36,14 @@ class TenantLimitError(Exception):
                     from models.system_settings import SystemSettings
 
                     _settings = SystemSettings.get_current()
-                    link = (
-                        _settings.get_custom_setting("developer_whatsapp")
-                        if _settings
-                        else ""
-                    )
+                    link = _settings.get_custom_setting("developer_whatsapp") if _settings else ""
                 if link:
                     link = link.strip().replace(" ", "").lstrip("+")
                     if not link.startswith("https"):
                         link = f"https://wa.me/{link}"
                     TenantLimitError.wa_upgrade_link = link
             except Exception:
-                logger.debug(
-                    "Failed to resolve developer WhatsApp upgrade link", exc_info=True
-                )
+                logger.debug("Failed to resolve developer WhatsApp upgrade link", exc_info=True)
             msg += (
                 f"\n\nيمكنك التواصل مع المطور للترقية إلى باقة أعلى عبر "
                 f'<a href="{TenantLimitError.wa_upgrade_link}" target="_blank" class="alert-link">واتساب</a>.'
@@ -70,9 +64,7 @@ def _active_tenant():
 
 
 def _month_start():
-    return datetime.now(timezone.utc).replace(
-        day=1, hour=0, minute=0, second=0, microsecond=0
-    )
+    return datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
 
 def check_limit(

@@ -18,9 +18,7 @@ class TestContextHelpers:
         assert _get_request_context() == {}
 
     def test_request_context_with_flask(self, app):
-        with app.test_request_context(
-            "/api/test", method="POST", headers={"User-Agent": "pytest-agent"}
-        ):
+        with app.test_request_context("/api/test", method="POST", headers={"User-Agent": "pytest-agent"}):
             ctx = _get_request_context()
             assert ctx["method"] == "POST"
             assert "/api/test" in ctx["url"]
@@ -58,9 +56,7 @@ class TestContextHelpers:
 class TestLogMutation:
     def test_log_mutation_info(self, app, mocker):
         mock_logger = mocker.patch("utils.structured_logging.logger")
-        user = MagicMock(
-            is_authenticated=True, id=1, username="u", tenant_id=2, is_owner=False
-        )
+        user = MagicMock(is_authenticated=True, id=1, username="u", tenant_id=2, is_owner=False)
         mocker.patch("utils.structured_logging.current_user", user)
         with app.test_request_context("/sales/1", method="PUT"):
             log_mutation("update", "Sale", entity_id=1, details={"field": "total"})
@@ -78,9 +74,7 @@ class TestLogMutation:
     def test_log_mutation_unknown_level_falls_back_to_info(self, mocker):
         import logging
 
-        mock_logger = mocker.patch(
-            "utils.structured_logging.logger", spec=logging.Logger
-        )
+        mock_logger = mocker.patch("utils.structured_logging.logger", spec=logging.Logger)
         mock_logger.info = MagicMock()
         log_mutation("create", "User", level="not_a_level")
         mock_logger.info.assert_called_once()
@@ -96,9 +90,7 @@ class TestLogSecurityEvent:
 
     def test_log_security_event_alert_uses_warning(self, mocker):
         mock_logger = mocker.patch("utils.structured_logging.logger")
-        log_security_event(
-            "brute_force", "many attempts", severity="alert", extra={"ip": "1.2.3.4"}
-        )
+        log_security_event("brute_force", "many attempts", severity="alert", extra={"ip": "1.2.3.4"})
         mock_logger.warning.assert_called_once()
 
     def test_log_security_event_error_level(self, mocker):
@@ -111,9 +103,7 @@ class TestLogDataAccess:
     def test_log_data_access_read(self, app, mocker):
         mock_logger = mocker.patch("utils.structured_logging.logger")
         with app.test_request_context("/reports/customers"):
-            log_data_access(
-                "Customer", entity_id=5, access_type="read", details={"export": True}
-            )
+            log_data_access("Customer", entity_id=5, access_type="read", details={"export": True})
         mock_logger.info.assert_called_once()
         payload = json.loads(mock_logger.info.call_args[0][0])
         assert payload["event_type"] == "data_access"

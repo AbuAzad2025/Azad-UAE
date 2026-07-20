@@ -28,9 +28,7 @@ class ShopLoyalty(db.Model):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    account = db.relationship(
-        "ShopCustomerAccount", backref=db.backref("loyalty", uselist=False)
-    )
+    account = db.relationship("ShopCustomerAccount", backref=db.backref("loyalty", uselist=False))
 
 
 class ShopLoyaltyTransaction(db.Model):
@@ -49,9 +47,7 @@ class ShopLoyaltyTransaction(db.Model):
         nullable=False,
         index=True,
     )
-    sale_id = db.Column(
-        db.Integer, db.ForeignKey("sales.id"), nullable=True, index=True
-    )
+    sale_id = db.Column(db.Integer, db.ForeignKey("sales.id"), nullable=True, index=True)
     points = db.Column(db.Integer, nullable=False)
     reason = db.Column(db.String(100), nullable=False)
     created_at = db.Column(

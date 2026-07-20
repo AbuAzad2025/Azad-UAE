@@ -95,25 +95,17 @@ class TestEffectiveIndustry:
     def test_product_industry_wins(self):
         product = MagicMock(industry="electronics")
         tenant = MagicMock(business_type="pharmacy")
-        assert (
-            IndustryService.get_product_effective_industry(product, tenant)
-            == "electronics"
-        )
+        assert IndustryService.get_product_effective_industry(product, tenant) == "electronics"
 
     def test_tenant_fallback_when_product_blank(self):
         product = MagicMock(industry=None)
         tenant = MagicMock(business_type="restaurant")
-        assert (
-            IndustryService.get_product_effective_industry(product, tenant)
-            == "restaurant"
-        )
+        assert IndustryService.get_product_effective_industry(product, tenant) == "restaurant"
 
     def test_general_fallback_when_tenant_type_missing(self):
         product = MagicMock(industry=None)
         tenant = MagicMock(spec=[])
-        assert (
-            IndustryService.get_product_effective_industry(product, tenant) == "general"
-        )
+        assert IndustryService.get_product_effective_industry(product, tenant) == "general"
 
 
 class TestSaveExtraFields:

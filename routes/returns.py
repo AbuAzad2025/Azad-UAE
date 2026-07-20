@@ -19,9 +19,7 @@ def _scoped_returns_query():
 
     tenant_id = get_active_tenant_id(current_user)
     if tenant_id is not None:
-        query = query.filter(
-            Sale.tenant_id == tenant_id, ProductReturn.tenant_id == tenant_id
-        )
+        query = query.filter(Sale.tenant_id == tenant_id, ProductReturn.tenant_id == tenant_id)
     elif not is_platform_owner(current_user):
         query = query.filter(Sale.tenant_id < 0)
     else:
@@ -71,9 +69,7 @@ def api_create_return():
         sale_id = data.get("sale_id")
         lines = data.get("lines", [])
         notes = data.get("notes")
-        manual_refund_amount = data.get(
-            "manual_refund_amount", data.get("refund_amount")
-        )
+        manual_refund_amount = data.get("manual_refund_amount", data.get("refund_amount"))
 
         if not sale_id or not lines:
             return (
@@ -118,9 +114,7 @@ def api_create_return():
         )
 
     except ValueError:
-        return jsonify(
-            {"success": False, "message": gettext("بيانات المرتجع غير صالحة")}
-        ), 400
+        return jsonify({"success": False, "message": gettext("بيانات المرتجع غير صالحة")}), 400
     except Exception as e:
         current_app.logger.error(f"Error creating return: {e}")
         return jsonify({"success": False, "message": "Internal server error"}), 500
@@ -131,9 +125,7 @@ def api_create_return():
 @permission_required("manage_sales")
 def view(**kwargs):
     record_id = kwargs.pop("id")
-    product_return = (
-        _scoped_returns_query().filter(ProductReturn.id == record_id).first()
-    )
+    product_return = _scoped_returns_query().filter(ProductReturn.id == record_id).first()
     if not product_return:
         abort(404)
 

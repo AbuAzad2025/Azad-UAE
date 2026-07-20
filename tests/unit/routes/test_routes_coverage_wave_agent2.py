@@ -64,9 +64,7 @@ class TestAdvancedLedgerWave:
                 "routes.advanced_ledger.resolve_default_currency",
                 side_effect=RuntimeError("no tenant"),
             ),
-            patch(
-                "routes.advanced_ledger.get_system_default_currency", return_value="AED"
-            ) as gsd,
+            patch("routes.advanced_ledger.get_system_default_currency", return_value="AED") as gsd,
         ):
             resp = advanced_ledger_client.post(
                 "/ledger/advanced/advanced-expenses/add",
@@ -87,9 +85,7 @@ class TestAdvancedLedgerWave:
         """Exception inside add_advanced_expense -> handler + re-render (246-250)."""
         with (
             _advanced_ledger_patches(categories=[MagicMock(id=1)]) as mocks,
-            patch(
-                "routes.advanced_ledger.resolve_default_currency", return_value="AED"
-            ),
+            patch("routes.advanced_ledger.resolve_default_currency", return_value="AED"),
             patch(
                 "routes.advanced_ledger.AdvancedExpense",
                 side_effect=RuntimeError("boom"),
@@ -206,9 +202,7 @@ class TestChatOwnerExecuteElif:
                 "routes.ai_routes.chat._process_user_action",
                 return_value="wizard-reply",
             ) as proc,
-            patch(
-                "routes.ai_routes.chat.AIService.chat_response", return_value="fallback"
-            ),
+            patch("routes.ai_routes.chat.AIService.chat_response", return_value="fallback"),
         ):
             resp = client.post("/ai/chat", json={"message": "افعل شيئا"})
         assert resp.status_code == 200
@@ -719,9 +713,7 @@ class TestLedgerWizardWave:
         entry = _obj(id=1, description="d", debit_amount=Decimal("10"))
         entry.entry_date = _obj(strftime=lambda f: "2026-01-01")
         with patch("models.gl.GLJournalEntry") as GL:
-            GL.query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [
-                entry
-            ]
+            GL.query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [entry]
             result = _run("1", mock_user, ctx)
         assert "دفتر الأستاذ" in result
 
@@ -737,9 +729,7 @@ class TestLedgerWizardWave:
         entry = _obj(id=2, description="d2", debit_amount=Decimal("20"))
         entry.entry_date = _obj(strftime=lambda f: "2026-02-01")
         with patch("models.gl.GLJournalEntry") as GL:
-            GL.query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [
-                entry
-            ]
+            GL.query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [entry]
             result = _run("2", mock_user, ctx)
         assert "القيود المحاسبية" in result
 
@@ -953,9 +943,7 @@ class TestColonCommandsWave:
 
     def test_show_balance_colon_with_payments(self, mock_user):
         ctx = {}
-        customer = _obj(
-            id=1, name="ShowC", balance=Decimal("250"), phone="1", address="A"
-        )
+        customer = _obj(id=1, name="ShowC", balance=Decimal("250"), phone="1", address="A")
         cust_chain = MagicMock()
         cust_chain.first.return_value = customer
         payment = _obj(amount_aed=Decimal("100"), payment_method="cash")
@@ -1010,9 +998,7 @@ class TestConfigUploadWave:
         fake_ai = env_dir / "ai.py"
         fake_ai.write_text("#", encoding="utf-8")
         with patch("routes.ai_routes.assistant.__file__", str(fake_ai)):
-            resp = ai_client.post(
-                "/ai/config", data={"api_key": "k", "provider": "groq"}
-            )
+            resp = ai_client.post("/ai/config", data={"api_key": "k", "provider": "groq"})
         assert resp.get_json()["success"] is True
         assert (tmp_path / ".env").exists()
 
@@ -1025,9 +1011,7 @@ class TestConfigUploadWave:
             patch("routes.ai_routes.assistant.__file__", str(fake_ai)),
             patch("builtins.open", side_effect=OSError("io error")),
         ):
-            resp = ai_client.post(
-                "/ai/config", data={"api_key": "k", "provider": "groq"}
-            )
+            resp = ai_client.post("/ai/config", data={"api_key": "k", "provider": "groq"})
         assert resp.get_json()["success"] is False
 
     def test_upload_warehouse_fallback(self, ai_client):
@@ -1039,9 +1023,7 @@ class TestConfigUploadWave:
                 "routes.ai_routes.assistant._process_excel_intelligently",
                 return_value={"success": True},
             ) as proc:
-                resp = ai_client.post(
-                    "/ai/upload-excel", data=data, content_type="multipart/form-data"
-                )
+                resp = ai_client.post("/ai/upload-excel", data=data, content_type="multipart/form-data")
         assert resp.status_code == 200
         proc.assert_called_once()
 
@@ -1068,13 +1050,9 @@ class TestConfigUploadWave:
 
 class TestExcelHelpersWave:
     @staticmethod
-    def _excel_env(
-        df, mapping, warehouse, existing=None, new_product=None, wh_import=None
-    ):
+    def _excel_env(df, mapping, warehouse, existing=None, new_product=None, wh_import=None):
         stack = ExitStack()
-        stack.enter_context(
-            patch("routes.ai_routes.assistant.pd.read_excel", return_value=df)
-        )
+        stack.enter_context(patch("routes.ai_routes.assistant.pd.read_excel", return_value=df))
         stack.enter_context(
             patch(
                 "routes.ai_routes.assistant._intelligent_column_detector",
@@ -1087,9 +1065,7 @@ class TestExcelHelpersWave:
         stack.enter_context(patch("routes.ai_routes.assistant.assign_tenant_id"))
         ss = stack.enter_context(patch("routes.ai_routes.assistant.StockService"))
         stack.enter_context(patch("routes.ai_routes.assistant._train_ai_from_excel"))
-        wh.query.filter_by.return_value.first.return_value = (
-            warehouse if wh_import is None else None
-        )
+        wh.query.filter_by.return_value.first.return_value = warehouse if wh_import is None else None
         if wh_import is not None:
             wh.query.filter_by.return_value.first.side_effect = [warehouse, wh_import]
         product.query.filter_by.return_value.first.return_value = existing
@@ -1107,9 +1083,7 @@ class TestExcelHelpersWave:
             "price": "price",
             "quantity": "qty",
         }
-        stack, ss = TestExcelHelpersWave._excel_env(
-            df, mapping, _obj(name="W"), existing=None, new_product=_obj(id=3)
-        )
+        stack, ss = TestExcelHelpersWave._excel_env(df, mapping, _obj(name="W"), existing=None, new_product=_obj(id=3))
         with stack:
             result = _process_excel_intelligently(MagicMock(), 1, mock_user)
         assert result["success"] is True
@@ -1136,18 +1110,14 @@ class TestExcelHelpersWave:
     def test_quantity_nan(self, mock_user):
         from routes.ai_routes import _process_excel_intelligently
 
-        df = pd.DataFrame(
-            {"name": ["A"], "part": ["P"], "price": [10], "qty": [np.nan]}
-        )
+        df = pd.DataFrame({"name": ["A"], "part": ["P"], "price": [10], "qty": [np.nan]})
         mapping = {
             "name": "name",
             "part_number": "part",
             "price": "price",
             "quantity": "qty",
         }
-        stack, ss = TestExcelHelpersWave._excel_env(
-            df, mapping, _obj(name="W"), existing=None, new_product=_obj(id=3)
-        )
+        stack, ss = TestExcelHelpersWave._excel_env(df, mapping, _obj(name="W"), existing=None, new_product=_obj(id=3))
         with stack:
             result = _process_excel_intelligently(MagicMock(), 1, mock_user)
         assert result["success"] is True

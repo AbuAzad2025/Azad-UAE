@@ -68,9 +68,7 @@ def _suspend_tenant(tenant):
         with atomic_transaction("subscription_auto_suspend"):
             tenant.is_active = False
             tenant.is_suspended = True
-            tenant.suspension_reason = (
-                f"Subscription expired on {tenant.subscription_end.isoformat()}"
-            )
+            tenant.suspension_reason = f"Subscription expired on {tenant.subscription_end.isoformat()}"
     except Exception as exc:
         logger.error("Failed to suspend tenant %s: %s", tenant.id, exc)
 
@@ -85,24 +83,15 @@ def _send_expiry_reminder(tenant):
         wa_number = _resolve_whatsapp_number()
 
         if not wa_number:
-            logger.warning(
-                "WhatsApp not configured — skipping reminder for tenant %s", tenant.id
-            )
+            logger.warning("WhatsApp not configured — skipping reminder for tenant %s", tenant.id)
             return
 
-        message = (
-            f"مرحباً، تنبيه: اشتراككم في نظام أزاد ينتهي خلال {days_left} يوم. "
-            f"يرجى التجديد لتجنب تعليق الخدمة."
-        )
+        message = f"مرحباً، تنبيه: اشتراككم في نظام أزاد ينتهي خلال {days_left} يوم. يرجى التجديد لتجنب تعليق الخدمة."
         result = WhatsAppService.send_custom_message(wa_number, message)
         if result.get("success"):
-            logger.info(
-                "Expiry reminder sent for tenant %s (%s)", tenant.id, admin_email
-            )
+            logger.info("Expiry reminder sent for tenant %s (%s)", tenant.id, admin_email)
         else:
-            logger.warning(
-                "Reminder failed for tenant %s: %s", tenant.id, result.get("error")
-            )
+            logger.warning("Reminder failed for tenant %s: %s", tenant.id, result.get("error"))
     except Exception as exc:
         logger.error("Failed to send reminder for tenant %s: %s", tenant.id, exc)
 

@@ -35,10 +35,7 @@ class TestDefaultForType:
         assert MaintenanceService._default_for_type("jsonb") == "{}"
 
     def test_temporal_defaults_now_expression(self):
-        assert (
-            MaintenanceService._default_for_type("timestamp without time zone")
-            == "now()"
-        )
+        assert MaintenanceService._default_for_type("timestamp without time zone") == "now()"
         assert MaintenanceService._default_for_type("date") == "now()"
 
     def test_uuid_defaults_parseable_uuid(self):
@@ -114,10 +111,7 @@ class TestCleanupTestDatabases:
 
         statements = [str(call.args[0]) for call in conn.execute.call_args_list]
         for db_name in MaintenanceService.STALE_TEST_DATABASES:
-            assert any(
-                f"DROP DATABASE IF EXISTS {db_name} WITH (FORCE)" in stmt
-                for stmt in statements
-            )
+            assert any(f"DROP DATABASE IF EXISTS {db_name} WITH (FORCE)" in stmt for stmt in statements)
         assert result["dropped"] == MaintenanceService.STALE_TEST_DATABASES
         assert result["remaining"] == ["azad_uae"]
 
@@ -158,10 +152,7 @@ class TestRebuildGlTree:
         # assert the contract per processed tenant rather than an exact count.
         build_tenant_ids = [call.args[0] for call in build.call_args_list]
         assert sample_tenant.id in build_tenant_ids
-        assert all(
-            call.kwargs == {"cleanup_extra": False, "commit": True}
-            for call in build.call_args_list
-        )
+        assert all(call.kwargs == {"cleanup_extra": False, "commit": True} for call in build.call_args_list)
         validate_tenant_ids = [call.args[0] for call in validate.call_args_list]
         assert validate_tenant_ids == build_tenant_ids
         entry = next(t for t in result["tenants"] if t["tenant_id"] == sample_tenant.id)
@@ -184,16 +175,12 @@ class TestRegenerateDefaultBackup:
     def test_dry_run_skips_backup(self, mocker, db_session):
         mocker.patch("services.backup_service.BackupService.initialize")
         create = mocker.patch("services.backup_service.BackupService.create_backup")
-        assert MaintenanceService.regenerate_default_backup(dry_run=True) == (
-            "(skipped: --check mode)"
-        )
+        assert MaintenanceService.regenerate_default_backup(dry_run=True) == ("(skipped: --check mode)")
         create.assert_not_called()
 
     def test_no_default_tenant_reports_missing(self, mocker, db_session):
         mocker.patch("services.backup_service.BackupService.initialize")
-        assert MaintenanceService.regenerate_default_backup(dry_run=False) == (
-            "No default tenant found"
-        )
+        assert MaintenanceService.regenerate_default_backup(dry_run=False) == ("No default tenant found")
 
     def test_default_tenant_backup_returns_filename(self, mocker, db_session):
         import uuid as uuid_mod
@@ -224,43 +211,31 @@ class TestRegenerateDefaultBackup:
 
 class TestApiWrappers:
     def test_fix_cost_centers_index_api_delegates(self, mocker):
-        method = mocker.patch.object(
-            MaintenanceService, "fix_cost_centers_index", return_value={"ok": 1}
-        )
+        method = mocker.patch.object(MaintenanceService, "fix_cost_centers_index", return_value={"ok": 1})
         assert fix_cost_centers_index_api() == {"ok": 1}
         method.assert_called_once_with()
 
     def test_rebuild_gl_tree_api_delegates(self, mocker):
-        method = mocker.patch.object(
-            MaintenanceService, "rebuild_gl_tree", return_value={"ok": 2}
-        )
+        method = mocker.patch.object(MaintenanceService, "rebuild_gl_tree", return_value={"ok": 2})
         assert rebuild_gl_tree_api(cleanup_extra=True) == {"ok": 2}
         method.assert_called_once_with(cleanup_extra=True)
 
     def test_fix_default_tenant_metadata_api_delegates(self, mocker):
-        method = mocker.patch.object(
-            MaintenanceService, "fix_default_tenant_metadata", return_value=["a"]
-        )
+        method = mocker.patch.object(MaintenanceService, "fix_default_tenant_metadata", return_value=["a"])
         assert fix_default_tenant_metadata_api(dry_run=True) == ["a"]
         method.assert_called_once_with(dry_run=True)
 
     def test_regenerate_default_backup_api_delegates(self, mocker):
-        method = mocker.patch.object(
-            MaintenanceService, "regenerate_default_backup", return_value="b.sql.gz"
-        )
+        method = mocker.patch.object(MaintenanceService, "regenerate_default_backup", return_value="b.sql.gz")
         assert regenerate_default_backup_api(dry_run=True) == "b.sql.gz"
         method.assert_called_once_with(dry_run=True)
 
     def test_run_default_tenant_maintenance_api_delegates(self, mocker):
-        method = mocker.patch.object(
-            MaintenanceService, "run_default_tenant_maintenance", return_value={"ok": 3}
-        )
+        method = mocker.patch.object(MaintenanceService, "run_default_tenant_maintenance", return_value={"ok": 3})
         assert run_default_tenant_maintenance_api(dry_run=True) == {"ok": 3}
         method.assert_called_once_with(dry_run=True)
 
     def test_cleanup_test_databases_api_delegates(self, mocker):
-        method = mocker.patch.object(
-            MaintenanceService, "cleanup_test_databases", return_value={"ok": 4}
-        )
+        method = mocker.patch.object(MaintenanceService, "cleanup_test_databases", return_value={"ok": 4})
         assert cleanup_test_databases_api(dry_run=True) == {"ok": 4}
         method.assert_called_once_with(dry_run=True)

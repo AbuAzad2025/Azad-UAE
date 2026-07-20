@@ -67,9 +67,7 @@ class ExportService:
                         max_len = len(v)
                 except Exception:
                     continue
-            ws.column_dimensions[get_column_letter(col_idx)].width = min(
-                max(max_len + 2, 10), 60
-            )
+            ws.column_dimensions[get_column_letter(col_idx)].width = min(max(max_len + 2, 10), 60)
 
         output = BytesIO()
         wb.save(output)
@@ -101,11 +99,7 @@ class ExportService:
                     f"${purchase.amount_paid}",
                     purchase.payment_method,
                     purchase.payment_status,
-                    (
-                        purchase.created_at.strftime("%Y-%m-%d %H:%M")
-                        if purchase.created_at
-                        else "N/A"
-                    ),
+                    (purchase.created_at.strftime("%Y-%m-%d %H:%M") if purchase.created_at else "N/A"),
                 ]
             )
 
@@ -134,11 +128,7 @@ class ExportService:
                     f"${donation.amount_usd}",
                     donation.payment_method,
                     donation.status,
-                    (
-                        donation.created_at.strftime("%Y-%m-%d %H:%M")
-                        if donation.created_at
-                        else "N/A"
-                    ),
+                    (donation.created_at.strftime("%Y-%m-%d %H:%M") if donation.created_at else "N/A"),
                 ]
             )
 
@@ -165,19 +155,11 @@ class ExportService:
                     card.id,
                     card.customer_name,
                     card.customer_email,
-                    (
-                        card.get_card_display()
-                        if hasattr(card, "get_card_display")
-                        else "N/A"
-                    ),
+                    (card.get_card_display() if hasattr(card, "get_card_display") else "N/A"),
                     card.card_type or "Unknown",
                     f"${card.amount}" if card.amount else "N/A",
                     card.status,
-                    (
-                        card.created_at.strftime("%Y-%m-%d %H:%M")
-                        if card.created_at
-                        else "N/A"
-                    ),
+                    (card.created_at.strftime("%Y-%m-%d %H:%M") if card.created_at else "N/A"),
                 ]
             )
 

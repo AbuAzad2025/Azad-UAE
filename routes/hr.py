@@ -23,13 +23,7 @@ def attendance():
     records = HRService.report_attendance(filters, current_user)
     tid = get_active_tenant_id(current_user)
     departments = HRService.list_departments(current_user)
-    users = (
-        User.query.filter(User.tenant_id == tid, User.is_active)
-        .order_by(User.full_name)
-        .all()
-        if tid
-        else []
-    )
+    users = User.query.filter(User.tenant_id == tid, User.is_active).order_by(User.full_name).all() if tid else []
     return render_template(
         "hr/attendance.html",
         records=records,
@@ -60,9 +54,7 @@ def clock_in():
 def clock_out():
     try:
         att = HRService.clock_out(current_user)
-        flash(
-            gettext(f"تم تسجيل الانصراف. عدد ساعات العمل: {att.work_hours}"), "success"
-        )
+        flash(gettext(f"تم تسجيل الانصراف. عدد ساعات العمل: {att.work_hours}"), "success")
     except ValueError as e:
         flash(str(e), "danger")
     return redirect(url_for("hr.attendance"))
@@ -76,13 +68,7 @@ def leaves_list():
     leaves = HRService.list_leaves(filters, current_user)
     tid = get_active_tenant_id(current_user)
     leave_types = tenant_query(LeaveType).filter_by(is_active=True).all() if tid else []
-    users = (
-        User.query.filter(User.tenant_id == tid, User.is_active)
-        .order_by(User.full_name)
-        .all()
-        if tid
-        else []
-    )
+    users = User.query.filter(User.tenant_id == tid, User.is_active).order_by(User.full_name).all() if tid else []
     return render_template(
         "hr/leave_list.html",
         leaves=leaves,
@@ -102,11 +88,7 @@ def request_leave():
             return redirect(url_for("hr.leaves_list"))
         except Exception as e:
             flash(gettext(f"حدث خطأ: {e}"), "danger")
-    leave_types = (
-        tenant_query(LeaveType).filter_by(is_active=True).all()
-        if get_active_tenant_id(current_user)
-        else []
-    )
+    leave_types = tenant_query(LeaveType).filter_by(is_active=True).all() if get_active_tenant_id(current_user) else []
     return render_template("hr/leave_form.html", leave_types=leave_types)
 
 
@@ -142,9 +124,7 @@ def refuse_leave(leave_id):
 @permission_required("hr.view")
 def departments_list():
     departments = HRService.list_departments(current_user)
-    return render_template(
-        "hr/attendance.html", departments=departments, tab="departments"
-    )
+    return render_template("hr/attendance.html", departments=departments, tab="departments")
 
 
 @hr_bp.route("/departments/create", methods=["POST"])

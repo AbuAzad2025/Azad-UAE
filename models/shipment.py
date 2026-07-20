@@ -26,9 +26,7 @@ class Shipment(db.Model):
     recipient_name = db.Column(db.String(200))
     recipient_phone = db.Column(db.String(50))
     recipient_address = db.Column(db.Text)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),

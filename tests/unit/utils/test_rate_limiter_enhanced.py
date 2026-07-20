@@ -52,9 +52,7 @@ class TestSmartRateLimit:
 
     def test_allows_requests_under_limit(self, flask_app):
         now = datetime(2026, 6, 1, 12, 0, 0)
-        with flask_app.test_request_context(
-            "/api/test", environ_base={"REMOTE_ADDR": "10.0.0.1"}
-        ):
+        with flask_app.test_request_context("/api/test", environ_base={"REMOTE_ADDR": "10.0.0.1"}):
             with (
                 patch(
                     "utils.rate_limiter_enhanced.current_user",
@@ -72,9 +70,7 @@ class TestSmartRateLimit:
     def test_blocks_when_window_limit_exceeded(self, flask_app):
         now = datetime(2026, 6, 1, 12, 0, 0)
         recent = [now - timedelta(seconds=5), now - timedelta(seconds=10)]
-        with flask_app.test_request_context(
-            "/api/test", environ_base={"REMOTE_ADDR": "10.0.0.2"}
-        ):
+        with flask_app.test_request_context("/api/test", environ_base={"REMOTE_ADDR": "10.0.0.2"}):
             with (
                 patch(
                     "utils.rate_limiter_enhanced.current_user",
@@ -91,9 +87,7 @@ class TestSmartRateLimit:
     def test_prunes_expired_requests_from_window(self, flask_app):
         now = datetime(2026, 6, 1, 12, 0, 0)
         stale = [now - timedelta(seconds=120)]
-        with flask_app.test_request_context(
-            "/api/test", environ_base={"REMOTE_ADDR": "10.0.0.3"}
-        ):
+        with flask_app.test_request_context("/api/test", environ_base={"REMOTE_ADDR": "10.0.0.3"}):
             with (
                 patch(
                     "utils.rate_limiter_enhanced.current_user",
@@ -112,9 +106,7 @@ class TestSmartRateLimit:
 
 class TestAdaptiveRateLimit:
     def test_owner_gets_highest_limit(self, flask_app):
-        with flask_app.test_request_context(
-            "/api/adaptive", environ_base={"REMOTE_ADDR": "1.1.1.1"}
-        ):
+        with flask_app.test_request_context("/api/adaptive", environ_base={"REMOTE_ADDR": "1.1.1.1"}):
             with (
                 patch("utils.rate_limiter_enhanced.current_user", _owner_user()),
                 patch("utils.rate_limiter_enhanced.cache.get", return_value=999),
@@ -147,9 +139,7 @@ class TestAdaptiveRateLimit:
                 assert flask_app.view_functions["adaptive_endpoint"]() == {"ok": True}
 
     def test_anonymous_user_gets_reduced_limit_and_blocks(self, flask_app):
-        with flask_app.test_request_context(
-            "/api/adaptive", environ_base={"REMOTE_ADDR": "8.8.8.8"}
-        ):
+        with flask_app.test_request_context("/api/adaptive", environ_base={"REMOTE_ADDR": "8.8.8.8"}):
             with (
                 patch(
                     "utils.rate_limiter_enhanced.current_user",

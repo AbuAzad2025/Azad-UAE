@@ -18,9 +18,7 @@ class StoreOnlinePaymentService:
 
     @staticmethod
     def _vault_for_tenant(tenant_id=None) -> PaymentVault | None:
-        vault = (
-            PaymentVault.get_tenant_vault(tenant_id) if tenant_id is not None else None
-        )
+        vault = PaymentVault.get_tenant_vault(tenant_id) if tenant_id is not None else None
         return vault or PaymentVault.get_platform_vault()
 
     @staticmethod
@@ -29,16 +27,12 @@ class StoreOnlinePaymentService:
         if not vault:
             return False
         key = (getattr(vault, "nowpayments_api_key", None) or "").strip()
-        return bool(
-            key or (current_app.config.get("NOWPAYMENTS_API_KEY") or "").strip()
-        )
+        return bool(key or (current_app.config.get("NOWPAYMENTS_API_KEY") or "").strip())
 
     @staticmethod
     def _api_key(tenant_id=None) -> str:
         vault = StoreOnlinePaymentService._vault_for_tenant(tenant_id)
-        key = (
-            (getattr(vault, "nowpayments_api_key", None) or "").strip() if vault else ""
-        )
+        key = (getattr(vault, "nowpayments_api_key", None) or "").strip() if vault else ""
         if not key:
             key = (current_app.config.get("NOWPAYMENTS_API_KEY") or "").strip()
         if not key:
@@ -46,18 +40,14 @@ class StoreOnlinePaymentService:
         return key
 
     @staticmethod
-    def create_payment_for_sale(
-        sale, store, *, customer_email: str | None = None, crypto_currency: str = "btc"
-    ):
+    def create_payment_for_sale(sale, store, *, customer_email: str | None = None, crypto_currency: str = "btc"):
         amount_aed = float(Decimal(str(sale.amount_aed or 0)))
         if amount_aed < 1:
             raise ValueError("الحد الأدنى للدفع الإلكتروني 1 AED.")
         amount = float(Decimal(str(sale.total_amount or 0)))
 
         currency = (sale.currency or get_system_default_currency()).lower()
-        order_id = (
-            f"{StoreOnlinePaymentService.ORDER_PREFIX}{sale.id}_{store.tenant_id}"
-        )
+        order_id = f"{StoreOnlinePaymentService.ORDER_PREFIX}{sale.id}_{store.tenant_id}"
         ipn_url = get_nowpayments_ipn_url()
 
         payload = {
@@ -72,9 +62,7 @@ class StoreOnlinePaymentService:
             payload["customer_email"] = customer_email
 
         headers = {
-            "x-api-key": StoreOnlinePaymentService._api_key(
-                getattr(store, "tenant_id", None)
-            ),
+            "x-api-key": StoreOnlinePaymentService._api_key(getattr(store, "tenant_id", None)),
             "Content-Type": "application/json",
         }
         response = requests.post(
@@ -104,9 +92,7 @@ class StoreOnlinePaymentService:
 
     @staticmethod
     def parse_store_order_id(order_id: str) -> tuple[int, int] | None:
-        if not order_id or not order_id.startswith(
-            StoreOnlinePaymentService.ORDER_PREFIX
-        ):
+        if not order_id or not order_id.startswith(StoreOnlinePaymentService.ORDER_PREFIX):
             return None
         try:
             rest = order_id[len(StoreOnlinePaymentService.ORDER_PREFIX) :]

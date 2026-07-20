@@ -76,14 +76,10 @@ class TestAnalyticsEndpoints:
         assert resp.get_json()["success"] is True
         assert isinstance(resp.get_json()["data"], list)
 
-    def test_revenue_trend_with_sales(
-        self, app, auth_client, db_session, sample_tenant, sample_user, sample_branch
-    ):
+    def test_revenue_trend_with_sales(self, app, auth_client, db_session, sample_tenant, sample_user, sample_branch):
         from models import Sale, Customer
 
-        cust = Customer(
-            tenant_id=sample_tenant.id, name="Analytics Cust", phone="050111"
-        )
+        cust = Customer(tenant_id=sample_tenant.id, name="Analytics Cust", phone="050111")
         db_session.add(cust)
         db_session.flush()
         sale = Sale(

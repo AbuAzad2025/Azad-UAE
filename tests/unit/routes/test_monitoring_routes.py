@@ -75,9 +75,7 @@ class TestMonitoringDashboard:
                 "routes.monitoring.LoggingCore.get_system_health",
                 return_value={"status": "healthy"},
             ),
-            patch(
-                "routes.monitoring.LoggingCore.get_app_metrics", return_value={"cpu": 1}
-            ),
+            patch("routes.monitoring.LoggingCore.get_app_metrics", return_value={"cpu": 1}),
             patch("routes.monitoring.render_template", return_value="ok") as render,
         ):
             resp = monitoring_client.get("/monitoring/dashboard")

@@ -18,16 +18,12 @@ def smart_rate_limit(max_requests: int, window_seconds: int = 60):
             now = datetime.now()
 
             requests_made = [
-                req_time
-                for req_time in requests_made
-                if (now - req_time).total_seconds() < window_seconds
+                req_time for req_time in requests_made if (now - req_time).total_seconds() < window_seconds
             ]
 
             if len(requests_made) >= max_requests:
                 return (
-                    jsonify(
-                        {"error": "Rate limit exceeded", "retry_after": window_seconds}
-                    ),
+                    jsonify({"error": "Rate limit exceeded", "retry_after": window_seconds}),
                     429,
                 )
 

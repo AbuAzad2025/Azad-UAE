@@ -10,9 +10,7 @@ from datetime import datetime, timezone
 import uuid
 
 
-def _make_tenant(
-    db_session, name, slug, currency="ILS", piv=False, tax_rate=Decimal("5.00")
-):
+def _make_tenant(db_session, name, slug, currency="ILS", piv=False, tax_rate=Decimal("5.00")):
     from models import Tenant
 
     suffix = str(uuid.uuid4())[:8]
@@ -60,9 +58,7 @@ def _make_warehouse(db_session, tenant_id, branch_id, allow_neg=False):
     return w
 
 
-def _make_user(
-    db_session, tenant_id, branch_id=None, role_slug="seller", is_owner=False
-):
+def _make_user(db_session, tenant_id, branch_id=None, role_slug="seller", is_owner=False):
     from models import User, Role
 
     suffix = str(uuid.uuid4())[:8]
@@ -273,11 +269,7 @@ class TestTenantDashboardStats:
             cost=Decimal("30.000"),
         )
         ctx = build_company_dashboard_context(t.id)
-        expected_net = (
-            float(ctx["month_sales_amount"])
-            - ctx["month_cogs"]
-            - ctx["month_commissions"]
-        )
+        expected_net = float(ctx["month_sales_amount"]) - ctx["month_cogs"] - ctx["month_commissions"]
         assert abs(ctx["month_net_profit"] - expected_net) < 0.01
 
     def test_branch_scope_filters_stats(self, db_session):
@@ -330,14 +322,10 @@ class TestDashboardPermissions:
         from models import User, Role, Tenant
 
         suffix = str(uuid.uuid4())[:8]
-        t = Tenant(
-            name=f"EdP_CT_{suffix}", name_ar=f"EdP_CT_{suffix}", slug=f"edp_ct_{suffix}"
-        )
+        t = Tenant(name=f"EdP_CT_{suffix}", name_ar=f"EdP_CT_{suffix}", slug=f"edp_ct_{suffix}")
         db_session.add(t)
         db_session.flush()
-        role = Role(
-            name=f"CashierEdP_{suffix}", slug=f"cashier_edp_{suffix}", is_active=True
-        )
+        role = Role(name=f"CashierEdP_{suffix}", slug=f"cashier_edp_{suffix}", is_active=True)
         db_session.add(role)
         db_session.flush()
         u = User(

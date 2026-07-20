@@ -264,9 +264,7 @@ def test_restore_wrong_scope():
 
 
 def test_restore_missing_confirmation():
-    result = restore_scoped_to_target(
-        "/x", {"backup_scope": SCOPE_TENANT}, "postgres://t"
-    )
+    result = restore_scoped_to_target("/x", {"backup_scope": SCOPE_TENANT}, "postgres://t")
     assert result["ok"] is False
 
 
@@ -283,9 +281,7 @@ def test_restore_remap_confirmation_required():
 
 
 def test_restore_same_database_url(mocker):
-    mocker.patch(
-        "services.backup_service.BackupService._urls_same_database", return_value=True
-    )
+    mocker.patch("services.backup_service.BackupService._urls_same_database", return_value=True)
     result = restore_scoped_to_target(
         "/x",
         {"backup_scope": SCOPE_TENANT},
@@ -296,12 +292,8 @@ def test_restore_same_database_url(mocker):
 
 
 def test_restore_no_data_directory(mocker):
-    mocker.patch(
-        "services.backup_service.BackupService._urls_same_database", return_value=False
-    )
-    mocker.patch(
-        "services.backup_scoped_engine.ensure_target_schema", return_value=(True, "")
-    )
+    mocker.patch("services.backup_service.BackupService._urls_same_database", return_value=False)
+    mocker.patch("services.backup_scoped_engine.ensure_target_schema", return_value=(True, ""))
     result = restore_scoped_to_target(
         "/tmp/empty_extract",
         {"backup_scope": SCOPE_TENANT, "tenant_id": 1},
@@ -312,9 +304,7 @@ def test_restore_no_data_directory(mocker):
 
 
 def test_restore_schema_failure(mocker):
-    mocker.patch(
-        "services.backup_service.BackupService._urls_same_database", return_value=False
-    )
+    mocker.patch("services.backup_service.BackupService._urls_same_database", return_value=False)
     mocker.patch(
         "services.backup_scoped_engine.ensure_target_schema",
         return_value=(False, "schema boom"),
@@ -333,9 +323,7 @@ def test_ensure_target_schema_flask_upgrade_success(mocker):
         os.environ,
         {"DATABASE_URL": "postgres://src", "SQLALCHEMY_DATABASE_URI": "postgres://src"},
     )
-    mocker.patch(
-        "services.backup_service.BackupService._urls_same_database", return_value=True
-    )
+    mocker.patch("services.backup_service.BackupService._urls_same_database", return_value=True)
     proc = mocker.MagicMock(returncode=0, stderr="", stdout="")
     mocker.patch("services.backup_exec.run_python_module", return_value=proc)
     mocker.patch("app.create_app", side_effect=RuntimeError("skip app init"))
@@ -346,9 +334,7 @@ def test_ensure_target_schema_flask_upgrade_success(mocker):
 
 def test_ensure_target_schema_flask_upgrade_failure(mocker):
     mocker.patch.dict(os.environ, {}, clear=False)
-    mocker.patch(
-        "services.backup_service.BackupService._urls_same_database", return_value=True
-    )
+    mocker.patch("services.backup_service.BackupService._urls_same_database", return_value=True)
     proc = mocker.MagicMock(returncode=1, stderr="upgrade failed", stdout="")
     mocker.patch("services.backup_exec.run_python_module", return_value=proc)
     ok, err = ensure_target_schema("postgres://target")
@@ -366,9 +352,7 @@ def test_ensure_target_schema_pg_dump_restore_success(mocker, tmp_path):
             "SQLALCHEMY_DATABASE_URI": "postgres://src/db",
         },
     )
-    mocker.patch(
-        "services.backup_service.BackupService._urls_same_database", return_value=False
-    )
+    mocker.patch("services.backup_service.BackupService._urls_same_database", return_value=False)
     mocker.patch(
         "services.backup_service.BackupService._parse_db_url",
         side_effect=lambda url: {
@@ -385,14 +369,10 @@ def test_ensure_target_schema_pg_dump_restore_success(mocker, tmp_path):
     )
     dump_proc = mocker.MagicMock(returncode=0)
     restore_proc = mocker.MagicMock(returncode=0)
-    mocker.patch(
-        "services.backup_exec.run_pg_tool", side_effect=[dump_proc, restore_proc]
-    )
+    mocker.patch("services.backup_exec.run_pg_tool", side_effect=[dump_proc, restore_proc])
     mocker.patch(
         "tempfile.NamedTemporaryFile",
-        return_value=mocker.MagicMock(
-            name=str(schema_file), __enter__=lambda s: s, __exit__=lambda *a: None
-        ),
+        return_value=mocker.MagicMock(name=str(schema_file), __enter__=lambda s: s, __exit__=lambda *a: None),
     )
     mocker.patch("os.path.isfile", return_value=True)
     ok, err = ensure_target_schema("postgres://tgt/db")
@@ -402,9 +382,7 @@ def test_ensure_target_schema_pg_dump_restore_success(mocker, tmp_path):
 def test_ensure_target_schema_pg_restore_alembic_probe(mocker, tmp_path):
     schema_file = tmp_path / "schema.sql"
     mocker.patch.dict(os.environ, {"DATABASE_URL": "postgres://src/db"})
-    mocker.patch(
-        "services.backup_service.BackupService._urls_same_database", return_value=False
-    )
+    mocker.patch("services.backup_service.BackupService._urls_same_database", return_value=False)
     mocker.patch(
         "services.backup_service.BackupService._parse_db_url",
         return_value={
@@ -421,14 +399,10 @@ def test_ensure_target_schema_pg_restore_alembic_probe(mocker, tmp_path):
     )
     dump_proc = mocker.MagicMock(returncode=0)
     restore_proc = mocker.MagicMock(returncode=1, stderr="warn", stdout="")
-    mocker.patch(
-        "services.backup_exec.run_pg_tool", side_effect=[dump_proc, restore_proc]
-    )
+    mocker.patch("services.backup_exec.run_pg_tool", side_effect=[dump_proc, restore_proc])
     mocker.patch(
         "tempfile.NamedTemporaryFile",
-        return_value=mocker.MagicMock(
-            name=str(schema_file), __enter__=lambda s: s, __exit__=lambda *a: None
-        ),
+        return_value=mocker.MagicMock(name=str(schema_file), __enter__=lambda s: s, __exit__=lambda *a: None),
     )
     mocker.patch("os.path.isfile", return_value=True)
     conn = mocker.MagicMock()
@@ -484,9 +458,7 @@ def _mock_restore_engine(
     engine.begin.return_value.__enter__.return_value = conn
     engine.begin.return_value.__exit__.return_value = None
     mocker.patch("sqlalchemy.create_engine", return_value=engine)
-    mocker.patch(
-        "services.backup_scoped_engine.table_exists", return_value=table_exists
-    )
+    mocker.patch("services.backup_scoped_engine.table_exists", return_value=table_exists)
     return conn
 
 
@@ -496,12 +468,8 @@ def test_restore_tenant_success_non_remap(mocker, tmp_path):
         "customers": [{"id": 10, "tenant_id": 1, "name": "C"}],
     }
     _write_scope_data(tmp_path, tables)
-    mocker.patch(
-        "services.backup_service.BackupService._urls_same_database", return_value=False
-    )
-    mocker.patch(
-        "services.backup_scoped_engine.ensure_target_schema", return_value=(True, "")
-    )
+    mocker.patch("services.backup_service.BackupService._urls_same_database", return_value=False)
+    mocker.patch("services.backup_scoped_engine.ensure_target_schema", return_value=(True, ""))
     _mock_restore_engine(mocker)
     result = restore_scoped_to_target(
         str(tmp_path),
@@ -521,12 +489,8 @@ def test_restore_legacy_export_json(mocker, tmp_path):
         }
     }
     (tmp_path / "tenant_export.json").write_text(json.dumps(doc), encoding="utf-8")
-    mocker.patch(
-        "services.backup_service.BackupService._urls_same_database", return_value=False
-    )
-    mocker.patch(
-        "services.backup_scoped_engine.ensure_target_schema", return_value=(True, "")
-    )
+    mocker.patch("services.backup_service.BackupService._urls_same_database", return_value=False)
+    mocker.patch("services.backup_scoped_engine.ensure_target_schema", return_value=(True, ""))
     _mock_restore_engine(mocker)
     result = restore_scoped_to_target(
         str(tmp_path),
@@ -545,12 +509,8 @@ def test_restore_remap_tenant_branch_store(mocker, tmp_path):
         "customers": [{"id": 10, "tenant_id": 1}],
     }
     _write_scope_data(tmp_path, tables)
-    mocker.patch(
-        "services.backup_service.BackupService._urls_same_database", return_value=False
-    )
-    mocker.patch(
-        "services.backup_scoped_engine.ensure_target_schema", return_value=(True, "")
-    )
+    mocker.patch("services.backup_service.BackupService._urls_same_database", return_value=False)
+    mocker.patch("services.backup_scoped_engine.ensure_target_schema", return_value=(True, ""))
     _mock_restore_engine(mocker)
     next_id = iter(range(600, 700))
     mocker.patch(
@@ -574,12 +534,8 @@ def test_restore_remap_tenant_branch_store(mocker, tmp_path):
 def test_restore_remap_missing_tenants_row(mocker, tmp_path):
     tables = {"customers": [{"id": 1, "tenant_id": 1}]}
     _write_scope_data(tmp_path, tables)
-    mocker.patch(
-        "services.backup_service.BackupService._urls_same_database", return_value=False
-    )
-    mocker.patch(
-        "services.backup_scoped_engine.ensure_target_schema", return_value=(True, "")
-    )
+    mocker.patch("services.backup_service.BackupService._urls_same_database", return_value=False)
+    mocker.patch("services.backup_scoped_engine.ensure_target_schema", return_value=(True, ""))
     _mock_restore_engine(mocker)
     result = restore_scoped_to_target(
         str(tmp_path),
@@ -597,12 +553,8 @@ def test_restore_insert_warning_continues(mocker, tmp_path):
         "customers": [{"id": 10, "tenant_id": 1}],
     }
     _write_scope_data(tmp_path, tables)
-    mocker.patch(
-        "services.backup_service.BackupService._urls_same_database", return_value=False
-    )
-    mocker.patch(
-        "services.backup_scoped_engine.ensure_target_schema", return_value=(True, "")
-    )
+    mocker.patch("services.backup_service.BackupService._urls_same_database", return_value=False)
+    mocker.patch("services.backup_scoped_engine.ensure_target_schema", return_value=(True, ""))
     _mock_restore_engine(mocker, insert_raises=RuntimeError("dup"))
     result = restore_scoped_to_target(
         str(tmp_path),
@@ -617,12 +569,8 @@ def test_restore_insert_warning_continues(mocker, tmp_path):
 def test_restore_skips_missing_table(mocker, tmp_path):
     tables = {"tenants": [{"id": 1, "slug": "acme"}], "ghost": [{"id": 1}]}
     _write_scope_data(tmp_path, tables)
-    mocker.patch(
-        "services.backup_service.BackupService._urls_same_database", return_value=False
-    )
-    mocker.patch(
-        "services.backup_scoped_engine.ensure_target_schema", return_value=(True, "")
-    )
+    mocker.patch("services.backup_service.BackupService._urls_same_database", return_value=False)
+    mocker.patch("services.backup_scoped_engine.ensure_target_schema", return_value=(True, ""))
     _mock_restore_engine(mocker, table_exists=False)
     result = restore_scoped_to_target(
         str(tmp_path),
@@ -641,12 +589,8 @@ def test_restore_uploads_tar_safe_extract(mocker, tmp_path):
     uploads_dir.mkdir()
     arc_path = tmp_path / "uploads.tar.gz"
     arc_path.write_bytes(b"fake")
-    mocker.patch(
-        "services.backup_service.BackupService._urls_same_database", return_value=False
-    )
-    mocker.patch(
-        "services.backup_scoped_engine.ensure_target_schema", return_value=(True, "")
-    )
+    mocker.patch("services.backup_service.BackupService._urls_same_database", return_value=False)
+    mocker.patch("services.backup_scoped_engine.ensure_target_schema", return_value=(True, ""))
     _mock_restore_engine(mocker)
     member_ok = mocker.MagicMock(name="ok.txt")
     member_ok.name = "ok.txt"
@@ -675,12 +619,8 @@ def test_restore_uploads_tar_interrupted_stream(mocker, tmp_path):
     uploads_dir = tmp_path / "uploads_restore"
     uploads_dir.mkdir()
     (tmp_path / "uploads.tar.gz").write_bytes(b"fake")
-    mocker.patch(
-        "services.backup_service.BackupService._urls_same_database", return_value=False
-    )
-    mocker.patch(
-        "services.backup_scoped_engine.ensure_target_schema", return_value=(True, "")
-    )
+    mocker.patch("services.backup_service.BackupService._urls_same_database", return_value=False)
+    mocker.patch("services.backup_scoped_engine.ensure_target_schema", return_value=(True, ""))
     _mock_restore_engine(mocker)
     mocker.patch("tarfile.open", side_effect=EOFError("truncated gzip"))
     result = restore_scoped_to_target(
@@ -697,12 +637,8 @@ def test_restore_uploads_tar_interrupted_stream(mocker, tmp_path):
 def test_restore_prep_transaction_failure(mocker, tmp_path):
     tables = {"tenants": [{"id": 1, "slug": "acme"}]}
     _write_scope_data(tmp_path, tables)
-    mocker.patch(
-        "services.backup_service.BackupService._urls_same_database", return_value=False
-    )
-    mocker.patch(
-        "services.backup_scoped_engine.ensure_target_schema", return_value=(True, "")
-    )
+    mocker.patch("services.backup_service.BackupService._urls_same_database", return_value=False)
+    mocker.patch("services.backup_scoped_engine.ensure_target_schema", return_value=(True, ""))
     conn = mocker.MagicMock()
     prep = mocker.MagicMock()
     prep.__enter__.return_value = conn
@@ -728,9 +664,7 @@ def test_ensure_target_schema_runs_core_data(mocker):
         os.environ,
         {"DATABASE_URL": "postgres://src", "SQLALCHEMY_DATABASE_URI": "postgres://src"},
     )
-    mocker.patch(
-        "services.backup_service.BackupService._urls_same_database", return_value=True
-    )
+    mocker.patch("services.backup_service.BackupService._urls_same_database", return_value=True)
     proc = mocker.MagicMock(returncode=0, stderr="", stdout="")
     mocker.patch("services.backup_exec.run_python_module", return_value=proc)
     app = mocker.MagicMock()
@@ -748,9 +682,7 @@ def test_ensure_target_schema_runs_core_data(mocker):
 def test_ensure_target_schema_pg_restore_alembic_probe_exception(mocker, tmp_path):
     schema_file = tmp_path / "schema.sql"
     mocker.patch.dict(os.environ, {"DATABASE_URL": "postgres://src/db"})
-    mocker.patch(
-        "services.backup_service.BackupService._urls_same_database", return_value=False
-    )
+    mocker.patch("services.backup_service.BackupService._urls_same_database", return_value=False)
     mocker.patch(
         "services.backup_service.BackupService._parse_db_url",
         return_value={
@@ -767,14 +699,10 @@ def test_ensure_target_schema_pg_restore_alembic_probe_exception(mocker, tmp_pat
     )
     dump_proc = mocker.MagicMock(returncode=0)
     restore_proc = mocker.MagicMock(returncode=1, stderr="schema warn", stdout="")
-    mocker.patch(
-        "services.backup_exec.run_pg_tool", side_effect=[dump_proc, restore_proc]
-    )
+    mocker.patch("services.backup_exec.run_pg_tool", side_effect=[dump_proc, restore_proc])
     mocker.patch(
         "tempfile.NamedTemporaryFile",
-        return_value=mocker.MagicMock(
-            name=str(schema_file), __enter__=lambda s: s, __exit__=lambda *a: None
-        ),
+        return_value=mocker.MagicMock(name=str(schema_file), __enter__=lambda s: s, __exit__=lambda *a: None),
     )
     mocker.patch("os.path.isfile", return_value=True)
     mocker.patch("sqlalchemy.create_engine", side_effect=RuntimeError("probe fail"))
@@ -790,12 +718,8 @@ def test_restore_branch_remap(mocker, tmp_path):
         "customers": [{"id": 10, "tenant_id": 1, "branch_id": 5}],
     }
     _write_scope_data(tmp_path, tables)
-    mocker.patch(
-        "services.backup_service.BackupService._urls_same_database", return_value=False
-    )
-    mocker.patch(
-        "services.backup_scoped_engine.ensure_target_schema", return_value=(True, "")
-    )
+    mocker.patch("services.backup_service.BackupService._urls_same_database", return_value=False)
+    mocker.patch("services.backup_scoped_engine.ensure_target_schema", return_value=(True, ""))
     _mock_restore_engine(mocker)
     result = restore_scoped_to_target(
         str(tmp_path),
@@ -817,12 +741,8 @@ def test_restore_branch_scope_delete(mocker, tmp_path):
         "customers": [{"id": 10, "tenant_id": 1, "branch_id": 5}],
     }
     _write_scope_data(tmp_path, tables)
-    mocker.patch(
-        "services.backup_service.BackupService._urls_same_database", return_value=False
-    )
-    mocker.patch(
-        "services.backup_scoped_engine.ensure_target_schema", return_value=(True, "")
-    )
+    mocker.patch("services.backup_service.BackupService._urls_same_database", return_value=False)
+    mocker.patch("services.backup_scoped_engine.ensure_target_schema", return_value=(True, ""))
     _mock_restore_engine(mocker, column_names=["id", "tenant_id", "branch_id"])
     result = restore_scoped_to_target(
         str(tmp_path),
@@ -836,20 +756,14 @@ def test_restore_branch_scope_delete(mocker, tmp_path):
 def test_restore_skips_empty_table_rows(mocker, tmp_path):
     data_dir = tmp_path / "data"
     data_dir.mkdir()
-    (data_dir / "tenants.jsonl").write_text(
-        '{"id": 1, "slug": "acme"}\n', encoding="utf-8"
-    )
+    (data_dir / "tenants.jsonl").write_text('{"id": 1, "slug": "acme"}\n', encoding="utf-8")
     (data_dir / "customers.jsonl").write_text("", encoding="utf-8")
     (data_dir / "schema_meta.json").write_text(
         json.dumps({"table_order": ["tenants", "customers"]}),
         encoding="utf-8",
     )
-    mocker.patch(
-        "services.backup_service.BackupService._urls_same_database", return_value=False
-    )
-    mocker.patch(
-        "services.backup_scoped_engine.ensure_target_schema", return_value=(True, "")
-    )
+    mocker.patch("services.backup_service.BackupService._urls_same_database", return_value=False)
+    mocker.patch("services.backup_scoped_engine.ensure_target_schema", return_value=(True, ""))
     _mock_restore_engine(mocker)
     result = restore_scoped_to_target(
         str(tmp_path),
@@ -866,12 +780,8 @@ def test_restore_replication_role_errors(mocker, tmp_path):
         "customers": [{"id": 10, "tenant_id": 1}],
     }
     _write_scope_data(tmp_path, tables)
-    mocker.patch(
-        "services.backup_service.BackupService._urls_same_database", return_value=False
-    )
-    mocker.patch(
-        "services.backup_scoped_engine.ensure_target_schema", return_value=(True, "")
-    )
+    mocker.patch("services.backup_service.BackupService._urls_same_database", return_value=False)
+    mocker.patch("services.backup_scoped_engine.ensure_target_schema", return_value=(True, ""))
     _mock_restore_engine(mocker, replication_role_raises=True)
     result = restore_scoped_to_target(
         str(tmp_path),
@@ -891,12 +801,8 @@ def test_restore_remap_reuses_existing_id_map(mocker, tmp_path):
         ],
     }
     _write_scope_data(tmp_path, tables)
-    mocker.patch(
-        "services.backup_service.BackupService._urls_same_database", return_value=False
-    )
-    mocker.patch(
-        "services.backup_scoped_engine.ensure_target_schema", return_value=(True, "")
-    )
+    mocker.patch("services.backup_service.BackupService._urls_same_database", return_value=False)
+    mocker.patch("services.backup_scoped_engine.ensure_target_schema", return_value=(True, ""))
     _mock_restore_engine(mocker)
     next_id = iter(range(700, 710))
     mocker.patch(

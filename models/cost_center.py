@@ -12,9 +12,7 @@ class CostCenter(db.Model):
     """
 
     __tablename__ = "cost_centers"
-    __table_args__ = (
-        db.UniqueConstraint("tenant_id", "code", name="uq_cost_centers_tenant_code"),
-    )
+    __table_args__ = (db.UniqueConstraint("tenant_id", "code", name="uq_cost_centers_tenant_code"),)
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -32,9 +30,7 @@ class CostCenter(db.Model):
     level = db.Column(db.Integer, default=0)
 
     # النوع
-    center_type = db.Column(
-        db.String(30), default="department"
-    )  # department, branch, project, product_line
+    center_type = db.Column(db.String(30), default="department")  # department, branch, project, product_line
 
     # المسؤول
     manager_id = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
@@ -101,9 +97,7 @@ class CostCenter(db.Model):
         )
 
         if period_start and period_end:
-            revenue_query = revenue_query.filter(
-                func.date(GLJournalEntry.entry_date).between(period_start, period_end)
-            )
+            revenue_query = revenue_query.filter(func.date(GLJournalEntry.entry_date).between(period_start, period_end))
 
         revenues = revenue_query.scalar() or 0
 
@@ -118,9 +112,7 @@ class CostCenter(db.Model):
         )
 
         if period_start and period_end:
-            expense_query = expense_query.filter(
-                func.date(GLJournalEntry.entry_date).between(period_start, period_end)
-            )
+            expense_query = expense_query.filter(func.date(GLJournalEntry.entry_date).between(period_start, period_end))
 
         expenses = expense_query.scalar() or 0
 

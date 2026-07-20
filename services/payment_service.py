@@ -53,11 +53,7 @@ class PaymentService:
             return scoped_branch_id
         if user is not None and getattr(user, "branch_id", None):
             return user.branch_id
-        return (
-            getattr(current_user, "branch_id", None)
-            if getattr(current_user, "is_authenticated", False)
-            else None
-        )
+        return getattr(current_user, "branch_id", None) if getattr(current_user, "is_authenticated", False) else None
 
     @staticmethod
     def create_payment(payment_data):
@@ -78,12 +74,8 @@ class PaymentService:
 
         supplier_id = payment_data.get("supplier_id")
         amount = payment_data.get("amount")
-        currency = validate_currency_code(
-            payment_data.get("currency", get_system_default_currency())
-        )
-        payment_method = validate_payment_method(
-            payment_data.get("payment_method", "cash")
-        )
+        currency = validate_currency_code(payment_data.get("currency", get_system_default_currency()))
+        payment_method = validate_payment_method(payment_data.get("payment_method", "cash"))
         notes = payment_data.get("notes")
         user_exchange_rate = payment_data.get("user_exchange_rate")
         reference_number = payment_data.get("reference_number")
@@ -92,11 +84,7 @@ class PaymentService:
         bank_name = payment_data.get("bank_name") or "Bank"
         branch_id = PaymentService._resolve_branch_id(
             payment_data.get("branch_id"),
-            user=(
-                current_user
-                if getattr(current_user, "is_authenticated", False)
-                else None
-            ),
+            user=(current_user if getattr(current_user, "is_authenticated", False) else None),
         )
 
         supplier = db.session.get(Supplier, supplier_id)
@@ -112,9 +100,7 @@ class PaymentService:
                 tenant_id=getattr(supplier, "tenant_id", None),
             )
 
-            exchange_rate = PaymentService._resolve_transaction_rate(
-                currency, user_exchange_rate
-            )
+            exchange_rate = PaymentService._resolve_transaction_rate(currency, user_exchange_rate)
 
             payment = Payment(
                 tenant_id=getattr(supplier, "tenant_id", None)
@@ -135,11 +121,7 @@ class PaymentService:
                 payment_method=payment_method,
                 reference_number=reference_number,
                 notes=notes,
-                user_id=(
-                    current_user.id
-                    if current_user and current_user.is_authenticated
-                    else 1
-                ),
+                user_id=(current_user.id if current_user and current_user.is_authenticated else 1),
                 branch_id=branch_id,
                 payment_confirmed=(payment_method != "cheque"),
             )
@@ -155,8 +137,7 @@ class PaymentService:
                     tenant_id=getattr(supplier, "tenant_id", None)
                     or (
                         getattr(current_user, "tenant_id", None)
-                        if current_user
-                        and getattr(current_user, "is_authenticated", False)
+                        if current_user and getattr(current_user, "is_authenticated", False)
                         else None
                     ),
                     cheque_number=cheque_number,
@@ -210,9 +191,7 @@ class PaymentService:
                     },
                     {
                         "account": credit_account,
-                        "concept_code": GLService.get_payment_credit_concept(
-                            payment_method
-                        ),
+                        "concept_code": GLService.get_payment_credit_concept(payment_method),
                         "credit": payment.amount,
                         "description": f"سند صرف {payment.payment_number}",
                     },
@@ -234,9 +213,7 @@ class PaymentService:
             try:
                 db.session.flush()
             except Exception:
-                current_app.logger.exception(
-                    "Payment flush failed for supplier payment"
-                )
+                current_app.logger.exception("Payment flush failed for supplier payment")
                 raise
 
             return payment
@@ -264,12 +241,8 @@ class PaymentService:
 
         customer_id = payment_data.get("customer_id")
         amount = payment_data.get("amount")
-        currency = validate_currency_code(
-            payment_data.get("currency", get_system_default_currency())
-        )
-        payment_method = validate_payment_method(
-            payment_data.get("payment_method", "cash")
-        )
+        currency = validate_currency_code(payment_data.get("currency", get_system_default_currency()))
+        payment_method = validate_payment_method(payment_data.get("payment_method", "cash"))
         notes = payment_data.get("notes")
         user_exchange_rate = payment_data.get("user_exchange_rate")
         reference_number = payment_data.get("reference_number")
@@ -311,11 +284,7 @@ class PaymentService:
 
             branch_id = PaymentService._resolve_branch_id(
                 payment_data.get("branch_id"),
-                user=(
-                    current_user
-                    if getattr(current_user, "is_authenticated", False)
-                    else None
-                ),
+                user=(current_user if getattr(current_user, "is_authenticated", False) else None),
                 sale=source_sale,
             )
 
@@ -327,9 +296,7 @@ class PaymentService:
                 tenant_id=tenant_id,
             )
 
-            exchange_rate = PaymentService._resolve_transaction_rate(
-                currency, user_exchange_rate
-            )
+            exchange_rate = PaymentService._resolve_transaction_rate(currency, user_exchange_rate)
 
             receipt = Receipt(
                 tenant_id=tenant_id,
@@ -349,11 +316,7 @@ class PaymentService:
                 cheque_date=cheque_date,
                 bank_name=bank_name,
                 notes=notes,
-                user_id=(
-                    current_user.id
-                    if current_user and current_user.is_authenticated
-                    else 1
-                ),
+                user_id=(current_user.id if current_user and current_user.is_authenticated else 1),
                 branch_id=branch_id,
             )
 
@@ -368,8 +331,7 @@ class PaymentService:
                     tenant_id=getattr(customer, "tenant_id", None)
                     or (
                         getattr(current_user, "tenant_id", None)
-                        if current_user
-                        and getattr(current_user, "is_authenticated", False)
+                        if current_user and getattr(current_user, "is_authenticated", False)
                         else None
                     ),
                     cheque_number=cheque_number,
@@ -405,9 +367,7 @@ class PaymentService:
             else:
                 # GL Entry for Standard Receipt (Cash/Bank)
                 try:
-                    GLService.ensure_core_accounts(
-                        tenant_id=getattr(receipt, "tenant_id", None)
-                    )
+                    GLService.ensure_core_accounts(tenant_id=getattr(receipt, "tenant_id", None))
                     payment_account = GLService.get_payment_debit_account(
                         receipt.payment_method,
                         branch_id=receipt.branch_id,
@@ -423,17 +383,13 @@ class PaymentService:
                     lines = [
                         {
                             "account": payment_account,
-                            "concept_code": GLService.get_payment_debit_concept(
-                                receipt.payment_method
-                            ),
+                            "concept_code": GLService.get_payment_debit_concept(receipt.payment_method),
                             "debit": receipt.amount,
                             "description": f"قبض من {customer.name}",
                         },
                         {
                             "account": credit_account,
-                            "concept_code": GLService.get_customer_credit_concept(
-                                customer
-                            ),
+                            "concept_code": GLService.get_customer_credit_concept(customer),
                             "credit": receipt.amount,
                             "description": f"سند قبض {receipt.receipt_number}",
                         },
@@ -450,11 +406,7 @@ class PaymentService:
                     )
 
                     # FX Gain/Loss auto-posting for direct receipt (same currency, different rate vs original invoice)
-                    if (
-                        allocate_to_sales
-                        and source_sale
-                        and source_sale.currency == receipt.currency
-                    ):
+                    if allocate_to_sales and source_sale and source_sale.currency == receipt.currency:
                         sale_rate = Decimal(str(source_sale.exchange_rate or 1))
                         receipt_rate = Decimal(str(receipt.exchange_rate or 1))
                         if sale_rate != receipt_rate and receipt.amount > 0:
@@ -464,9 +416,7 @@ class PaymentService:
                             actual_aed = (receipt.amount * receipt_rate).quantize(
                                 Decimal("0.001"), rounding=ROUND_HALF_UP
                             )
-                            fx_diff = (actual_aed - expected_aed).quantize(
-                                Decimal("0.001"), rounding=ROUND_HALF_UP
-                            )
+                            fx_diff = (actual_aed - expected_aed).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
                             if abs(fx_diff) > Decimal("0.01"):
                                 try:
                                     fx_lines = []
@@ -525,9 +475,7 @@ class PaymentService:
                                         description=f"FX Gain/Loss - Receipt {receipt.receipt_number}",
                                         reference_type=GLRef.RECEIPT,
                                         reference_id=receipt.id,
-                                        currency=resolve_tenant_base_currency(
-                                            tenant_id=tenant_id
-                                        ),
+                                        currency=resolve_tenant_base_currency(tenant_id=tenant_id),
                                         exchange_rate=1.0,
                                         branch_id=receipt.branch_id,
                                         tenant_id=tenant_id,
@@ -539,9 +487,7 @@ class PaymentService:
                                         fx_err,
                                     )
                 except Exception as _e:
-                    current_app.logger.exception(
-                        "GL posting failed for receipt: %s", _e
-                    )
+                    current_app.logger.exception("GL posting failed for receipt: %s", _e)
                     raise ValueError(f"فشل الترحيل المحاسبي لسند القبض: {_e}") from _e
 
                 # تحديث رصيد العميل التراكمي (ما دُفع منه)
@@ -564,24 +510,17 @@ class PaymentService:
 
                     sale_balance_aed = Decimal(str(sale.balance_due or 0))
                     requested_amount = Decimal(str(allocated or 0))
-                    requested_amount_aed = (requested_amount * exchange_rate).quantize(
-                        Decimal("0.001")
-                    )
-                    allocated_amount_aed = min(
-                        requested_amount_aed, remaining_amount_aed, sale_balance_aed
-                    )
+                    requested_amount_aed = (requested_amount * exchange_rate).quantize(Decimal("0.001"))
+                    allocated_amount_aed = min(requested_amount_aed, remaining_amount_aed, sale_balance_aed)
                     if allocated_amount_aed <= 0:
                         continue
-                    allocated_amount = (allocated_amount_aed / exchange_rate).quantize(
-                        Decimal("0.001")
-                    )
+                    allocated_amount = (allocated_amount_aed / exchange_rate).quantize(Decimal("0.001"))
 
                     # Create Payment record linked to Sale (Crucial for recalculation)
                     from models import Payment
 
                     sale_payment = Payment(
-                        tenant_id=getattr(sale, "tenant_id", None)
-                        or getattr(customer, "tenant_id", None),
+                        tenant_id=getattr(sale, "tenant_id", None) or getattr(customer, "tenant_id", None),
                         payment_number=generate_number(
                             "PAY-S",
                             Payment,
@@ -602,11 +541,7 @@ class PaymentService:
                         payment_confirmed=receipt.payment_confirmed,
                         cheque_id=receipt.cheque_id,
                         notes=f"Allocated from Receipt {receipt.receipt_number}",
-                        user_id=(
-                            current_user.id
-                            if current_user and current_user.is_authenticated
-                            else 1
-                        ),
+                        user_id=(current_user.id if current_user and current_user.is_authenticated else 1),
                         branch_id=sale.branch_id or receipt.branch_id,
                     )
                     db.session.add(sale_payment)
@@ -616,9 +551,7 @@ class PaymentService:
                     sale.paid_amount_aed += allocated_amount_aed
                     sale_rate = Decimal(str(sale.exchange_rate or 1))
                     if sale_rate > 0:
-                        sale.paid_amount += (allocated_amount_aed / sale_rate).quantize(
-                            Decimal("0.001")
-                        )
+                        sale.paid_amount += (allocated_amount_aed / sale_rate).quantize(Decimal("0.001"))
                     # sale.balance_due -= allocated_amount # Let recalculate handle this
 
                     sale.recalculate_payment_status()
@@ -628,9 +561,7 @@ class PaymentService:
             try:
                 db.session.flush()
             except Exception:
-                current_app.logger.exception(
-                    "Receipt flush failed for %s", receipt.receipt_number
-                )
+                current_app.logger.exception("Receipt flush failed for %s", receipt.receipt_number)
                 raise
 
             current_app.logger.info(f"Receipt created: {receipt.receipt_number}")
@@ -731,9 +662,7 @@ class PaymentService:
                 "id": s.id,
                 "sale_number": s.sale_number,
                 "sale_date": (
-                    s.sale_date.strftime("%Y-%m-%d")
-                    if getattr(s.sale_date, "strftime", None)
-                    else str(s.sale_date)
+                    s.sale_date.strftime("%Y-%m-%d") if getattr(s.sale_date, "strftime", None) else str(s.sale_date)
                 ),
                 "total_amount": float(s.total_amount),
                 "balance_due": float(s.balance_due),
@@ -781,8 +710,7 @@ class PaymentService:
                 from models import Payment
 
                 sale_payment = Payment(
-                    tenant_id=getattr(sale, "tenant_id", None)
-                    or getattr(customer, "tenant_id", None),
+                    tenant_id=getattr(sale, "tenant_id", None) or getattr(customer, "tenant_id", None),
                     payment_number=generate_number(
                         "PAY-S",
                         Payment,
@@ -803,11 +731,7 @@ class PaymentService:
                     payment_confirmed=receipt.payment_confirmed,
                     cheque_id=receipt.cheque_id,
                     notes=f"Allocated from Receipt {receipt.receipt_number}",
-                    user_id=(
-                        current_user.id
-                        if current_user and current_user.is_authenticated
-                        else 1
-                    ),
+                    user_id=(current_user.id if current_user and current_user.is_authenticated else 1),
                     branch_id=sale.branch_id or receipt.branch_id,
                 )
                 db.session.add(sale_payment)
@@ -817,13 +741,9 @@ class PaymentService:
             try:
                 db.session.flush()
             except Exception:
-                current_app.logger.exception(
-                    "Receipt allocation flush failed for %s", receipt.receipt_number
-                )
+                current_app.logger.exception("Receipt allocation flush failed for %s", receipt.receipt_number)
                 raise
-            current_app.logger.info(
-                f"Receipt {receipt.receipt_number} allocated to sales"
-            )
+            current_app.logger.info(f"Receipt {receipt.receipt_number} allocated to sales")
         except Exception:
             current_app.logger.exception("Receipt allocation failed")
             raise

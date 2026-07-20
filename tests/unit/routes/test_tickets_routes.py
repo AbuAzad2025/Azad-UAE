@@ -25,14 +25,8 @@ def _ticket_patches(**kwargs):
     tickets = kwargs.get("tickets", [])
     with ExitStack() as stack:
         stack.enter_context(patch("routes.tickets.render_template", return_value="ok"))
-        stack.enter_context(
-            patch(
-                "routes.tickets.get_active_tenant_id", return_value=kwargs.get("tid", 1)
-            )
-        )
-        stack.enter_context(
-            patch("routes.tickets.TicketService.search_tickets", return_value=tickets)
-        )
+        stack.enter_context(patch("routes.tickets.get_active_tenant_id", return_value=kwargs.get("tid", 1)))
+        stack.enter_context(patch("routes.tickets.TicketService.search_tickets", return_value=tickets))
         stack.enter_context(
             patch(
                 "routes.tickets.TicketCategory.query",
@@ -51,11 +45,7 @@ def _ticket_patches(**kwargs):
                 _chain_query(all=kwargs.get("customers", [])),
             )
         )
-        stack.enter_context(
-            patch(
-                "routes.tickets.User.query", _chain_query(all=kwargs.get("users", []))
-            )
-        )
+        stack.enter_context(patch("routes.tickets.User.query", _chain_query(all=kwargs.get("users", []))))
         stack.enter_context(patch("extensions.limiter.limit", return_value=lambda f: f))
         yield
 
@@ -74,9 +64,7 @@ class TestTicketsAuth:
             resp = tickets_client.get("/tickets/")
         assert resp.status_code == 401
 
-    def test_list_forbidden_without_permission(
-        self, tickets_client, bypass_permission_auth
-    ):
+    def test_list_forbidden_without_permission(self, tickets_client, bypass_permission_auth):
         bypass_permission_auth.has_permission.return_value = False
         bypass_permission_auth.is_super_admin.return_value = False
         with (
@@ -95,9 +83,7 @@ class TestTicketsList:
 
     def test_list_with_filters(self, tickets_client):
         with _ticket_patches():
-            resp = tickets_client.get(
-                "/tickets/?status=open&category_id=1&assigned_user_id=2&search=bug"
-            )
+            resp = tickets_client.get("/tickets/?status=open&category_id=1&assigned_user_id=2&search=bug")
         assert resp.status_code == 200
 
 
@@ -115,9 +101,7 @@ class TestTicketsCreate:
                 return_value=_mock_ticket(),
             ),
         ):
-            resp = tickets_client.post(
-                "/tickets/create", data={"subject": "Help"}, follow_redirects=False
-            )
+            resp = tickets_client.post("/tickets/create", data={"subject": "Help"}, follow_redirects=False)
         assert resp.status_code == 302
         assert "/tickets/" in resp.location
 
@@ -137,9 +121,7 @@ class TestTicketsDetail:
     def test_detail_success(self, tickets_client):
         with (
             _ticket_patches(),
-            patch(
-                "routes.tickets.TicketService.get_ticket", return_value=_mock_ticket()
-            ),
+            patch("routes.tickets.TicketService.get_ticket", return_value=_mock_ticket()),
         ):
             resp = tickets_client.get("/tickets/7")
         assert resp.status_code == 200
@@ -162,9 +144,7 @@ class TestTicketsWorkflow:
             _ticket_patches(),
             patch("routes.tickets.TicketService.add_comment", return_value=MagicMock()),
         ):
-            resp = tickets_client.post(
-                "/tickets/1/comment", data={"body": "note"}, follow_redirects=False
-            )
+            resp = tickets_client.post("/tickets/1/comment", data={"body": "note"}, follow_redirects=False)
         assert resp.status_code == 302
 
     def test_add_comment_error(self, tickets_client):
@@ -175,9 +155,7 @@ class TestTicketsWorkflow:
                 side_effect=ValueError("empty"),
             ),
         ):
-            resp = tickets_client.post(
-                "/tickets/1/comment", data={}, follow_redirects=False
-            )
+            resp = tickets_client.post("/tickets/1/comment", data={}, follow_redirects=False)
         assert resp.status_code == 302
 
     def test_assign_success(self, tickets_client):
@@ -203,9 +181,7 @@ class TestTicketsWorkflow:
                 side_effect=ValueError("bad"),
             ),
         ):
-            resp = tickets_client.post(
-                "/tickets/1/assign", data={}, follow_redirects=False
-            )
+            resp = tickets_client.post("/tickets/1/assign", data={}, follow_redirects=False)
         assert resp.status_code == 302
 
     def test_resolve_success(self, tickets_client):

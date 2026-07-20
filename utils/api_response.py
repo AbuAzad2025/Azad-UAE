@@ -50,9 +50,7 @@ def error_response(
     return jsonify(response), status_code
 
 
-def paginated_response(
-    items: list, page: int, per_page: int, total: int, message: str | None = None
-):
+def paginated_response(items: list, page: int, per_page: int, total: int, message: str | None = None):
     """Return a paginated success response with metadata."""
     return success_response(
         data=items,

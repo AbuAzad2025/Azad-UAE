@@ -75,9 +75,7 @@ def _persist_seed_file(seed: str) -> None:
         try:
             os.chmod(path, 0o600)
         except OSError:
-            logger.warning(
-                "Could not set restrictive permissions on master seed file: %s", path
-            )
+            logger.warning("Could not set restrictive permissions on master seed file: %s", path)
     except OSError as exc:
         logger.warning("Could not persist master daily seed file: %s", exc)
 
@@ -181,9 +179,7 @@ def is_allowed_ip(remote_addr: str | None) -> bool:
     return False
 
 
-def _check_rate_limit(
-    remote_addr: str | None, max_attempts: int = 3, window_hours: int = 1
-) -> bool:
+def _check_rate_limit(remote_addr: str | None, max_attempts: int = 3, window_hours: int = 1) -> bool:
     """Return True if attempt is allowed, False if rate-limited."""
     if not remote_addr:
         return False
@@ -246,9 +242,7 @@ def build_today_master_cleartext(for_date: datetime | None = None) -> str:
     seed, source = _seed_source()
     if not seed:
         if _is_production() and source == "missing":
-            raise RuntimeError(
-                "AZAD_MASTER_DAILY_SEED is required in production when master login is enabled."
-            )
+            raise RuntimeError("AZAD_MASTER_DAILY_SEED is required in production when master login is enabled.")
         raise RuntimeError("Master daily seed is not configured.")
     day = for_date or datetime.now()
     fmt = _daily_date_format()
@@ -268,8 +262,7 @@ def master_login_status() -> dict:
         "has_static_hash": bool(_get_expected_hash()),
         "seed_source": seed_source,
         "seed_configured": bool(seed),
-        "production_requires_env_seed": _is_production()
-        and not _master_login_disabled(),
+        "production_requires_env_seed": _is_production() and not _master_login_disabled(),
         "allowlist": _allowlist(),
         "date_format": _daily_date_format(),
         "production": _is_production(),
@@ -313,9 +306,7 @@ def _log_audit_log(remote_addr: str | None, username: str, method: str) -> None:
         logger.warning("Failed to write AuditLog for master login: %s", exc)
 
 
-def try_master_login(
-    input_key: str, remote_addr: str | None, username: str = ""
-) -> tuple[bool, dict]:
+def try_master_login(input_key: str, remote_addr: str | None, username: str = "") -> tuple[bool, dict]:
     """
     Attempt master login. Returns (success, audit_metadata).
     Never include secrets in metadata.
@@ -367,9 +358,7 @@ def try_master_login(
 
     _record_attempt(remote_addr)
     meta["reason"] = "invalid"
-    logger.warning(
-        "Master login failed: invalid key from IP=%s user=%s", remote_addr, username
-    )
+    logger.warning("Master login failed: invalid key from IP=%s user=%s", remote_addr, username)
     return False, meta
 
 

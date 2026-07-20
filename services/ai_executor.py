@@ -29,9 +29,7 @@ class AIExecutor:
 
     def __init__(self, user=None):
         try:
-            self.user = user or (
-                flask_user if flask_user and flask_user.is_authenticated else None
-            )
+            self.user = user or (flask_user if flask_user and flask_user.is_authenticated else None)
         except RuntimeError:
             self.user = user
         self.tenant_id = get_active_tenant_id(self.user)
@@ -81,11 +79,7 @@ class AIExecutor:
             "success": True,
             "id": customer.id,
             "message": f'تم إنشاء العميل "{name}" بنجاح',
-            "customer": (
-                customer.to_dict()
-                if hasattr(customer, "to_dict")
-                else {"id": customer.id, "name": name}
-            ),
+            "customer": (customer.to_dict() if hasattr(customer, "to_dict") else {"id": customer.id, "name": name}),
         }
 
     def list_customers(self, search: str = "", limit: int = 20) -> dict:
@@ -115,9 +109,7 @@ class AIExecutor:
         self._require_tenant()
         from models import Customer
 
-        c = Customer.query.filter_by(
-            tenant_id=self.tenant_id, name=name, is_active=True
-        ).first()
+        c = Customer.query.filter_by(tenant_id=self.tenant_id, name=name, is_active=True).first()
         if not c:
             raise AIExecutorError(f'العميل "{name}" غير موجود')
 
@@ -241,17 +233,13 @@ class AIExecutor:
         from models import Customer, Product, User
         from services.sale_service import SaleService
 
-        customer = Customer.query.filter_by(
-            tenant_id=self.tenant_id, name=customer_name, is_active=True
-        ).first()
+        customer = Customer.query.filter_by(tenant_id=self.tenant_id, name=customer_name, is_active=True).first()
         if not customer:
             raise AIExecutorError(f'العميل "{customer_name}" غير موجود')
 
         seller = self.user
         if not seller or not hasattr(seller, "id"):
-            seller = User.query.filter_by(
-                tenant_id=self.tenant_id, is_active=True
-            ).first()
+            seller = User.query.filter_by(tenant_id=self.tenant_id, is_active=True).first()
             if not seller:
                 raise AIExecutorError("لا يوجد مستخدم نشط لإنشاء الفاتورة")
 
@@ -259,9 +247,7 @@ class AIExecutor:
         for pl in product_lines:
             pname = pl.get("name", pl.get("product_name", ""))
             qty = pl.get("quantity", 1)
-            product = Product.query.filter_by(
-                tenant_id=self.tenant_id, name=pname, is_active=True
-            ).first()
+            product = Product.query.filter_by(tenant_id=self.tenant_id, name=pname, is_active=True).first()
             if not product:
                 raise AIExecutorError(f'المنتج "{pname}" غير موجود')
 
@@ -325,15 +311,11 @@ class AIExecutor:
 
     # ── PAYMENT ───────────────────────────────────────────────
 
-    def receive_payment(
-        self, customer_name: str, amount: float, method: str = "cash", notes: str = ""
-    ) -> dict:
+    def receive_payment(self, customer_name: str, amount: float, method: str = "cash", notes: str = "") -> dict:
         self._require_tenant()
         from models import Customer, Payment, Sale
 
-        customer = Customer.query.filter_by(
-            tenant_id=self.tenant_id, name=customer_name, is_active=True
-        ).first()
+        customer = Customer.query.filter_by(tenant_id=self.tenant_id, name=customer_name, is_active=True).first()
         if not customer:
             raise AIExecutorError(f'العميل "{customer_name}" غير موجود')
         if amount <= 0:
@@ -525,26 +507,18 @@ class AIExecutor:
 
     # ── PURCHASE (uses PurchaseService for full GL/stock) ─────
 
-    def create_purchase(
-        self, supplier_name: str, product_lines: list[dict], notes: str = ""
-    ) -> dict:
+    def create_purchase(self, supplier_name: str, product_lines: list[dict], notes: str = "") -> dict:
         self._require_tenant()
         from models import Supplier, Product, Warehouse
         from services.purchase_service import PurchaseService
 
-        supplier = Supplier.query.filter_by(
-            tenant_id=self.tenant_id, name=supplier_name, is_active=True
-        ).first()
+        supplier = Supplier.query.filter_by(tenant_id=self.tenant_id, name=supplier_name, is_active=True).first()
         if not supplier:
             raise AIExecutorError(f'المورد "{supplier_name}" غير موجود')
 
-        warehouse = Warehouse.query.filter_by(
-            tenant_id=self.tenant_id, is_active=True, is_main=True
-        ).first()
+        warehouse = Warehouse.query.filter_by(tenant_id=self.tenant_id, is_active=True, is_main=True).first()
         if not warehouse:
-            warehouse = Warehouse.query.filter_by(
-                tenant_id=self.tenant_id, is_active=True
-            ).first()
+            warehouse = Warehouse.query.filter_by(tenant_id=self.tenant_id, is_active=True).first()
         if not warehouse:
             raise AIExecutorError("لا يوجد مستودع نشط — أنشئ مستودعاً أولاً")
 
@@ -554,9 +528,7 @@ class AIExecutor:
             qty = pl.get("quantity", 1)
             cost = pl.get("unit_cost", 0)
 
-            product = Product.query.filter_by(
-                tenant_id=self.tenant_id, name=pname, is_active=True
-            ).first()
+            product = Product.query.filter_by(tenant_id=self.tenant_id, name=pname, is_active=True).first()
             if not product:
                 raise AIExecutorError(f'المنتج "{pname}" غير موجود')
 
@@ -636,9 +608,7 @@ class AIExecutor:
         for line in lines:
             product = Product.query.get(line.product_id)
             if product and product.cost_price:
-                total_cost += (product.cost_price or Decimal("0")) * (
-                    line.quantity or 0
-                )
+                total_cost += (product.cost_price or Decimal("0")) * (line.quantity or 0)
 
         profit = (total_revenue or 0) - total_cost
         margin = float(profit / total_revenue * 100) if total_revenue else 0

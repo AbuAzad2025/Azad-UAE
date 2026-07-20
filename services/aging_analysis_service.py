@@ -57,12 +57,7 @@ class AgingAnalysisService:
         }
 
         # جميع العملاء النشطين
-        customers = (
-            tenant_query(Customer)
-            .filter_by(is_active=True)
-            .order_by(Customer.name)
-            .all()
-        )
+        customers = tenant_query(Customer).filter_by(is_active=True).order_by(Customer.name).all()
 
         for customer in customers:
             aging: dict[str, Any] = {
@@ -81,9 +76,7 @@ class AgingAnalysisService:
                 Sale.query.filter(
                     Sale.customer_id == customer.id,
                     Sale.tenant_id == tid,
-                    Sale.payment_status.in_(
-                        tuple(s for s in SALE_PAYMENT_STATUSES if s != "paid")
-                    ),
+                    Sale.payment_status.in_(tuple(s for s in SALE_PAYMENT_STATUSES if s != "paid")),
                     Sale.status == "confirmed",
                     func.date(Sale.sale_date) <= as_of_date,
                 )
@@ -91,15 +84,11 @@ class AgingAnalysisService:
                 .all()
             )
             if branch_id:
-                unpaid_sales = [
-                    sale for sale in unpaid_sales if sale.branch_id == branch_id
-                ]
+                unpaid_sales = [sale for sale in unpaid_sales if sale.branch_id == branch_id]
 
             for sale in unpaid_sales:
                 # حساب الرصيد المتبقي
-                balance = (sale.amount_aed or Decimal("0")) - (
-                    sale.paid_amount_aed or Decimal("0")
-                )
+                balance = (sale.amount_aed or Decimal("0")) - (sale.paid_amount_aed or Decimal("0"))
 
                 if balance > 0:
                     # حساب عمر الفاتورة
@@ -194,12 +183,7 @@ class AgingAnalysisService:
         }
 
         # جميع الموردين النشطين
-        suppliers = (
-            tenant_query(Supplier)
-            .filter_by(is_active=True)
-            .order_by(Supplier.name)
-            .all()
-        )
+        suppliers = tenant_query(Supplier).filter_by(is_active=True).order_by(Supplier.name).all()
 
         for supplier in suppliers:
             aging: dict[str, Any] = {
@@ -222,9 +206,7 @@ class AgingAnalysisService:
                 func.date(Purchase.purchase_date) <= as_of_date,
             ).order_by(Purchase.purchase_date)
             if branch_id:
-                purchases_query = purchases_query.filter(
-                    Purchase.branch_id == branch_id
-                )
+                purchases_query = purchases_query.filter(Purchase.branch_id == branch_id)
             all_purchases = purchases_query.all()
 
             payments_query = db.session.query(func.sum(Payment.amount_aed)).filter(
@@ -242,11 +224,7 @@ class AgingAnalysisService:
 
             for purchase in all_purchases:
                 purchase_total = Decimal(str(purchase.total_amount or 0))
-                allocated_paid = (
-                    min(purchase_total, remaining_paid)
-                    if remaining_paid > 0
-                    else Decimal("0")
-                )
+                allocated_paid = min(purchase_total, remaining_paid) if remaining_paid > 0 else Decimal("0")
                 balance = purchase_total - allocated_paid
                 remaining_paid = max(Decimal("0"), remaining_paid - allocated_paid)
 
@@ -277,11 +255,7 @@ class AgingAnalysisService:
                     aging["invoices"].append(
                         {
                             "purchase_number": purchase.purchase_number,
-                            "purchase_date": (
-                                purchase.purchase_date.date()
-                                if purchase.purchase_date
-                                else None
-                            ),
+                            "purchase_date": (purchase.purchase_date.date() if purchase.purchase_date else None),
                             "total": float(purchase_total),
                             "paid": float(allocated_paid),
                             "balance": float(balance),
@@ -327,11 +301,7 @@ class AgingAnalysisService:
         from services.gl_service import GL_ACCOUNTS
 
         code = GL_ACCOUNTS.get(
-            (
-                "receivable"
-                if "AR" in concept_code or "receivable" in concept_code
-                else "payable"
-            ),
+            ("receivable" if "AR" in concept_code or "receivable" in concept_code else "payable"),
             "1130",
         )
         if "payable" in concept_code or "AP" in concept_code:
@@ -350,9 +320,7 @@ class AgingAnalysisService:
         elif isinstance(as_of_date, str):
             as_of_date = datetime.strptime(as_of_date, "%Y-%m-%d").date()
 
-        ar_report = AgingAnalysisService.get_receivables_aging(
-            as_of_date, branch_id, tid
-        )
+        ar_report = AgingAnalysisService.get_receivables_aging(as_of_date, branch_id, tid)
         aging_total = Decimal(str(ar_report["totals"]["total"]))
 
         ar_acc = AgingAnalysisService._resolve_aging_account("AR", tid, branch_id)
@@ -360,8 +328,7 @@ class AgingAnalysisService:
         if ar_acc:
             query = (
                 db.session.query(
-                    func.coalesce(func.sum(GLJournalLine.debit), 0)
-                    - func.coalesce(func.sum(GLJournalLine.credit), 0)
+                    func.coalesce(func.sum(GLJournalLine.debit), 0) - func.coalesce(func.sum(GLJournalLine.credit), 0)
                 )
                 .join(GLJournalEntry)
                 .filter(
@@ -401,8 +368,7 @@ class AgingAnalysisService:
         if ap_acc:
             query = (
                 db.session.query(
-                    func.coalesce(func.sum(GLJournalLine.credit), 0)
-                    - func.coalesce(func.sum(GLJournalLine.debit), 0)
+                    func.coalesce(func.sum(GLJournalLine.credit), 0) - func.coalesce(func.sum(GLJournalLine.debit), 0)
                 )
                 .join(GLJournalEntry)
                 .filter(

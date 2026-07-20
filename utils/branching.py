@@ -99,11 +99,7 @@ def get_accessible_branches_query(user=None):
 def get_accessible_branches(user=None):
     from models import Branch
 
-    return (
-        get_accessible_branches_query(user)
-        .order_by(Branch.is_main.desc(), Branch.code, Branch.name)
-        .all()
-    )
+    return get_accessible_branches_query(user).order_by(Branch.is_main.desc(), Branch.code, Branch.name).all()
 
 
 def user_can_access_branch(branch_id, user=None):
@@ -115,9 +111,7 @@ def user_can_access_branch(branch_id, user=None):
         branch_id = int(branch_id)
     except (TypeError, ValueError):
         return False
-    return db.session.query(
-        get_accessible_branches_query(user).filter(Branch.id == branch_id).exists()
-    ).scalar()
+    return db.session.query(get_accessible_branches_query(user).filter(Branch.id == branch_id).exists()).scalar()
 
 
 def get_main_branch():
@@ -154,9 +148,7 @@ def get_active_branch_id(user=None):
     if not user or not getattr(user, "is_authenticated", False):
         return None
 
-    session_branch_id = (
-        session.get(ACTIVE_BRANCH_SESSION_KEY) if has_request_context() else None
-    )
+    session_branch_id = session.get(ACTIVE_BRANCH_SESSION_KEY) if has_request_context() else None
     session_mode = get_active_branch_mode()
 
     if is_global_user(user):
@@ -170,11 +162,7 @@ def get_active_branch_id(user=None):
         return None
 
     user_branch_id = getattr(user, "branch_id", None)
-    if (
-        user_branch_id
-        and session_branch_id
-        and int(session_branch_id or 0) == int(user_branch_id or 0)
-    ):
+    if user_branch_id and session_branch_id and int(session_branch_id or 0) == int(user_branch_id or 0):
         return int(user_branch_id or 0)
     return int(user_branch_id or 0) if user_branch_id else None
 
@@ -263,10 +251,7 @@ def get_branch_stock_map(product_ids=None, warehouse_ids=None):
     if product_ids:
         query = query.filter(StockMovement.product_id.in_(product_ids))
 
-    return {
-        product_id: qty or Decimal("0")
-        for product_id, qty in query.group_by(StockMovement.product_id).all()
-    }
+    return {product_id: qty or Decimal("0") for product_id, qty in query.group_by(StockMovement.product_id).all()}
 
 
 def get_product_stock(product_id, *, warehouse_id=None, warehouse_ids=None, user=None):
@@ -275,9 +260,7 @@ def get_product_stock(product_id, *, warehouse_id=None, warehouse_ids=None, user
     elif warehouse_ids is None:
         warehouse_ids = get_accessible_warehouse_ids(user)
 
-    stock_map = get_branch_stock_map(
-        product_ids=[product_id], warehouse_ids=warehouse_ids
-    )
+    stock_map = get_branch_stock_map(product_ids=[product_id], warehouse_ids=warehouse_ids)
     return stock_map.get(product_id, Decimal("0"))
 
 
@@ -319,11 +302,7 @@ def ensure_warehouse_access(warehouse_id, user=None):
     if not warehouse_id:
         raise ValueError("⚠️ يجب اختيار مستودع صالح.")
 
-    warehouse = (
-        get_accessible_warehouses_query(user)
-        .filter(Warehouse.id == warehouse_id)
-        .first()
-    )
+    warehouse = get_accessible_warehouses_query(user).filter(Warehouse.id == warehouse_id).first()
     if not warehouse:
         raise ValueError("⚠️ المستودع المحدد خارج نطاق الفرع أو غير نشط.")
     return warehouse

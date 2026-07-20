@@ -53,9 +53,7 @@ def index():
     branch_id = branch_scope_id()
     if branch_id is not None:
         query = query.filter(Purchase.branch_id == branch_id)
-    pagination = query.order_by(Purchase.purchase_date.desc()).paginate(
-        page=page, per_page=per_page, error_out=False
-    )
+    pagination = query.order_by(Purchase.purchase_date.desc()).paginate(page=page, per_page=per_page, error_out=False)
 
     return render_template(
         "purchases/index.html",
@@ -70,9 +68,7 @@ def index():
 @permission_required("manage_purchases")
 @limiter.limit("10 per minute", methods=["POST"])
 def create():
-    warehouse_id_val = (
-        request.form.get("warehouse_id", type=int) if request.method == "POST" else None
-    )
+    warehouse_id_val = request.form.get("warehouse_id", type=int) if request.method == "POST" else None
 
     if request.method == "POST":
         try:
@@ -80,9 +76,7 @@ def create():
 
             warehouse_id_val = request.form.get("warehouse_id", type=int)
             if not warehouse_id_val:
-                flash(
-                    gettext("⚠️ يجب اختيار المستودع الذي ستُضاف إليه البضاعة."), "danger"
-                )
+                flash(gettext("⚠️ يجب اختيار المستودع الذي ستُضاف إليه البضاعة."), "danger")
                 return redirect(url_for("purchases.create"))
             ensure_warehouse_access(warehouse_id_val, user=current_user)
 
@@ -94,15 +88,9 @@ def create():
                 product_id = request.form.get(f"lines[{i}][product_id]", type=int)
                 quantity = request.form.get(f"lines[{i}][quantity]", type=float)
                 unit_cost = request.form.get(f"lines[{i}][unit_cost]", type=float)
-                discount_percent = request.form.get(
-                    f"lines[{i}][discount_percent]", type=float, default=0
-                )
+                discount_percent = request.form.get(f"lines[{i}][discount_percent]", type=float, default=0)
                 serials_raw = request.form.get(f"lines[{i}][serials]", "")
-                serials = (
-                    [s.strip() for s in serials_raw.split("\n") if s.strip()]
-                    if serials_raw
-                    else []
-                )
+                serials = [s.strip() for s in serials_raw.split("\n") if s.strip()] if serials_raw else []
                 if product_id and quantity and quantity > 0:
                     lines_data.append(
                         {
@@ -135,19 +123,13 @@ def create():
                     warehouse_id=warehouse_id_val,
                     currency=request.form.get("currency") or default_currency,
                     user_exchange_rate=request.form.get("exchange_rate", type=float),
-                    discount_amount=request.form.get(
-                        "discount_amount", type=float, default=0
-                    ),
+                    discount_amount=request.form.get("discount_amount", type=float, default=0),
                     tax_rate=request.form.get("tax_rate", type=float, default=0),
                     notes=request.form.get("notes"),
                     freight=request.form.get("freight", type=float, default=0),
                     insurance=request.form.get("insurance", type=float, default=0),
-                    customs_duty=request.form.get(
-                        "customs_duty", type=float, default=0
-                    ),
-                    other_landed_cost=request.form.get(
-                        "other_landed_cost", type=float, default=0
-                    ),
+                    customs_duty=request.form.get("customs_duty", type=float, default=0),
+                    other_landed_cost=request.form.get("other_landed_cost", type=float, default=0),
                 )
 
             flash(gettext("✅ تم إنشاء فاتورة الشراء بنجاح!"), "success")
@@ -162,9 +144,7 @@ def create():
 
             current_app.logger.error(f"Traceback: {traceback.format_exc()}")
             flash(
-                gettext(
-                    f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."
-                ),
+                gettext(f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."),
                 "danger",
             )
 
@@ -230,13 +210,9 @@ def print_purchase(**kwargs):
     if settings and settings.enable_qr_code:
         from services.document_verification_service import DocumentVerificationService
 
-        ver = DocumentVerificationService.get_or_create_verification(
-            "purchase", purchase.id, tid
-        )
+        ver = DocumentVerificationService.get_or_create_verification("purchase", purchase.id, tid)
         if ver:
-            ver_url = url_for(
-                "public.verify_document", token=ver.public_token, _external=True
-            )
+            ver_url = url_for("public.verify_document", token=ver.public_token, _external=True)
             qr_data_url = generate_qr_data_url(ver_url)
     return render_template(
         "purchases/print.html",
@@ -264,9 +240,7 @@ def edit(**kwargs):
 
     if purchase.get_paid_amount() > 0:
         flash(
-            gettext(
-                "⚠️ لا يمكن تعديل فاتورة شراء تم الدفع عليها.\n💡 للحفاظ على السجلات المحاسبية."
-            ),
+            gettext("⚠️ لا يمكن تعديل فاتورة شراء تم الدفع عليها.\n💡 للحفاظ على السجلات المحاسبية."),
             "danger",
         )
         return redirect(url_for("purchases.view", id=record_id))
@@ -309,9 +283,7 @@ def delete(**kwargs):
     if purchase.get_paid_amount() > 0:
         has_links = True
 
-    linked_cheques = Cheque.query.filter_by(
-        purchase_id=purchase.id, tenant_id=purchase.tenant_id
-    ).count()
+    linked_cheques = Cheque.query.filter_by(purchase_id=purchase.id, tenant_id=purchase.tenant_id).count()
     if linked_cheques > 0:
         has_links = True
 
@@ -338,9 +310,7 @@ def delete(**kwargs):
             with atomic_transaction("purchase_archive"):
                 db.session.flush()
             flash(
-                gettext(
-                    f'✅ تم أرشفة فاتورة الشراء "{purchase.purchase_number}" (لوجود ارتباطات مالية)'
-                ),
+                gettext(f'✅ تم أرشفة فاتورة الشراء "{purchase.purchase_number}" (لوجود ارتباطات مالية)'),
                 "warning",
             )
         elif has_stock:
@@ -373,17 +343,13 @@ def delete(**kwargs):
                 if purchase.supplier_id:
                     from models import Supplier
 
-                    supplier = Supplier.query.filter_by(
-                        id=purchase.supplier_id, tenant_id=purchase.tenant_id
-                    ).first()
+                    supplier = Supplier.query.filter_by(id=purchase.supplier_id, tenant_id=purchase.tenant_id).first()
                     if supplier:
                         from decimal import Decimal
 
                         supplier.apply_payment(-Decimal(str(purchase.amount_aed or 0)))
 
-                PurchaseLine.query.filter_by(
-                    purchase_id=purchase.id, tenant_id=purchase.tenant_id
-                ).delete()
+                PurchaseLine.query.filter_by(purchase_id=purchase.id, tenant_id=purchase.tenant_id).delete()
                 db.session.delete(purchase)
                 LoggingCore.log_audit("delete", "purchases", record_id)
             flash(
@@ -445,11 +411,7 @@ def purchase_return(**kwargs):
         return redirect(url_for("purchases.view", id=record_id))
 
     if request.method == "POST":
-        lines_data = (
-            request.json.get("lines", [])
-            if request.is_json
-            else request.form.getlist("lines")
-        )
+        lines_data = request.json.get("lines", []) if request.is_json else request.form.getlist("lines")
         reason = request.form.get("reason", "")
         notes = request.form.get("notes", "")
 
@@ -467,9 +429,7 @@ def purchase_return(**kwargs):
                     notes=notes,
                 )
             flash(
-                gettext(
-                    f"✅ تم إنشاء مرتجع المشتريات رقم {result.return_number} بنجاح!"
-                ),
+                gettext(f"✅ تم إنشاء مرتجع المشتريات رقم {result.return_number} بنجاح!"),
                 "success",
             )
             return redirect(url_for("purchases.view", id=record_id))
@@ -487,9 +447,7 @@ def purchase_return(**kwargs):
         returns_query = returns_query.filter(PurchaseReturn.tenant_id == tid)
     returns = returns_query.order_by(PurchaseReturn.created_at.desc()).all()
     return_lines = (
-        PurchaseReturnLine.query.filter(
-            PurchaseReturnLine.return_id.in_([r.id for r in returns])
-        ).all()
+        PurchaseReturnLine.query.filter(PurchaseReturnLine.return_id.in_([r.id for r in returns])).all()
         if returns
         else []
     )
@@ -543,9 +501,9 @@ def api_calculate_purchase_totals():
         prices_include_vat = bool(data.get("prices_include_vat", False))
         if prices_include_vat:
             if tax_rate > 0:
-                taxable_amount = (
-                    subtotal / (Decimal("1") + (tax_rate / Decimal("100")))
-                ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                taxable_amount = (subtotal / (Decimal("1") + (tax_rate / Decimal("100")))).quantize(
+                    Decimal("0.01"), rounding=ROUND_HALF_UP
+                )
                 tax_amount = subtotal - taxable_amount
             else:
                 taxable_amount = subtotal
@@ -581,6 +539,4 @@ def api_calculate_purchase_totals():
 
     except Exception:
         current_app.logger.exception("calculate_purchase_totals failed")
-        return jsonify(
-            {"success": False, "error": gettext("تعذر حساب الإجماليات حالياً")}
-        ), 500
+        return jsonify({"success": False, "error": gettext("تعذر حساب الإجماليات حالياً")}), 500

@@ -147,9 +147,7 @@ class IntelligentAssistant:
             analysis = self._analyze_and_reason(intent, real_data, conversation_context)
 
             # ========== المرحلة 4: التوليد الديناميكي ==========
-            response = self._generate_dynamic_response(
-                intent, analysis, entities, real_data
-            )
+            response = self._generate_dynamic_response(intent, analysis, entities, real_data)
 
             # ========== المرحلة 5: التعلم ==========
             self._learn_from_interaction(message, response, user_id)
@@ -159,9 +157,7 @@ class IntelligentAssistant:
                 "response": response,
                 "intent": intent,
                 "confidence": understanding["confidence"],
-                "data_used": (
-                    len(real_data) if isinstance(real_data, list) else bool(real_data)
-                ),
+                "data_used": (len(real_data) if isinstance(real_data, list) else bool(real_data)),
                 "method": "intelligent_ai",  # ليس pattern matching!
             }
 
@@ -197,9 +193,7 @@ class IntelligentAssistant:
             }
 
             # دمج النتائج
-            final_intent = semantic_result.get("intent") or neural_understanding.get(
-                "intent"
-            )
+            final_intent = semantic_result.get("intent") or neural_understanding.get("intent")
             confidence = max(
                 semantic_result.get("confidence", 0),
                 neural_understanding.get("confidence", 0),
@@ -237,12 +231,8 @@ class IntelligentAssistant:
         entities["numbers"] = [float(n) for n in numbers]
 
         # المبالغ (بالعملة)
-        amounts = re.findall(
-            r"(\d+(?:,\d+)*(?:\.\d+)?)\s*(درهم|دولار|ريال|AED|USD|SAR)", message
-        )
-        entities["amounts"] = [
-            {"value": float(a[0].replace(",", "")), "currency": a[1]} for a in amounts
-        ]
+        amounts = re.findall(r"(\d+(?:,\d+)*(?:\.\d+)?)\s*(درهم|دولار|ريال|AED|USD|SAR)", message)
+        entities["amounts"] = [{"value": float(a[0].replace(",", "")), "currency": a[1]} for a in amounts]
 
         # الأسماء (كلمات بحروف كبيرة أو بعد "العميل" أو "الزبون")
         name_patterns = [
@@ -290,9 +280,7 @@ class IntelligentAssistant:
                 data["system_stats"] = {
                     "total_customers": _f(Customer).filter_by(is_active=True).count(),
                     "total_products": _f(Product).filter_by(is_active=True).count(),
-                    "total_sales_today": _f(Sale)
-                    .filter(func.date(Sale.sale_date) == datetime.now().date())
-                    .count(),
+                    "total_sales_today": _f(Sale).filter(func.date(Sale.sale_date) == datetime.now().date()).count(),
                 }
             except Exception as exc:
                 logger.debug("System stats collection failed: %s", exc)
@@ -301,29 +289,20 @@ class IntelligentAssistant:
             if intent in ["sales_analysis", "customer_balance", "inventory_check"]:
                 try:
                     thirty_days_ago = datetime.now() - timedelta(days=30)
-                    recent_sales = (
-                        _f(Sale).filter(Sale.sale_date >= thirty_days_ago).all()
-                    )
+                    recent_sales = _f(Sale).filter(Sale.sale_date >= thirty_days_ago).all()
 
                     data["recent_sales"] = {
                         "count": len(recent_sales),
-                        "total_amount": sum(
-                            float(s.total_amount) for s in recent_sales
-                        ),
+                        "total_amount": sum(float(s.total_amount) for s in recent_sales),
                         "avg_amount": (
-                            sum(float(s.total_amount) for s in recent_sales)
-                            / len(recent_sales)
-                            if recent_sales
-                            else 0
+                            sum(float(s.total_amount) for s in recent_sales) / len(recent_sales) if recent_sales else 0
                         ),
                         "sales": [
                             {
                                 "id": s.id,
                                 "date": s.sale_date.strftime("%Y-%m-%d"),
                                 "amount": float(s.total_amount),
-                                "customer": (
-                                    s.customer.name if s.customer else "غير محدد"
-                                ),
+                                "customer": (s.customer.name if s.customer else "غير محدد"),
                             }
                             for s in recent_sales[-10:]
                         ],
@@ -334,16 +313,10 @@ class IntelligentAssistant:
             if intent in ["customer_balance"] and entities.get("names"):
                 try:
                     customer_name = entities["names"][0]
-                    customer = (
-                        _f(Customer)
-                        .filter(Customer.name.ilike(f"%{customer_name}%"))
-                        .first()
-                    )
+                    customer = _f(Customer).filter(Customer.name.ilike(f"%{customer_name}%")).first()
 
                     if customer:
-                        data["customer_data"] = (
-                            self.data_analyzer.analyze_customer_debt(customer.id)
-                        )
+                        data["customer_data"] = self.data_analyzer.analyze_customer_debt(customer.id)
                 except Exception as exc:
                     logger.debug("Customer data collection failed: %s", exc)
 
@@ -393,28 +366,18 @@ class IntelligentAssistant:
 
                 # الاستنتاجات
                 if sales_data["count"] == 0:
-                    analysis["warnings"].append(
-                        "⚠️ لا توجد مبيعات في آخر 30 يوم - مشكلة خطيرة!"
-                    )
-                    analysis["recommendations"].append(
-                        "💡 راجع استراتيجية التسويق فوراً"
-                    )
+                    analysis["warnings"].append("⚠️ لا توجد مبيعات في آخر 30 يوم - مشكلة خطيرة!")
+                    analysis["recommendations"].append("💡 راجع استراتيجية التسويق فوراً")
                 elif sales_data["count"] < 5:
                     analysis["warnings"].append("⚠️ المبيعات ضعيفة جداً")
                     analysis["recommendations"].append("💡 تواصل مع العملاء القدامى")
                 else:
                     avg_per_day = sales_data["count"] / 30
                     if avg_per_day < 1:
-                        analysis["insights"].append(
-                            f"📊 متوسط المبيعات: {avg_per_day:.1f} فاتورة/يوم"
-                        )
-                        analysis["recommendations"].append(
-                            "💡 استهدف 3-5 فواتير يومياً لنمو صحي"
-                        )
+                        analysis["insights"].append(f"📊 متوسط المبيعات: {avg_per_day:.1f} فاتورة/يوم")
+                        analysis["recommendations"].append("💡 استهدف 3-5 فواتير يومياً لنمو صحي")
                     else:
-                        analysis["insights"].append(
-                            f"✅ أداء جيد: {avg_per_day:.1f} فاتورة/يوم"
-                        )
+                        analysis["insights"].append(f"✅ أداء جيد: {avg_per_day:.1f} فاتورة/يوم")
 
                 # التنبؤ باستخدام Neural Engine
                 try:
@@ -430,25 +393,15 @@ class IntelligentAssistant:
                 low_stock = data["low_stock_products"]
 
                 if len(low_stock) == 0:
-                    analysis["insights"].append(
-                        "✅ المخزون صحي - لا توجد منتجات بمخزون منخفض"
-                    )
+                    analysis["insights"].append("✅ المخزون صحي - لا توجد منتجات بمخزون منخفض")
                 elif len(low_stock) < 5:
-                    analysis["warnings"].append(
-                        f"⚠️ {len(low_stock)} منتجات بمخزون منخفض"
-                    )
-                    analysis["recommendations"].append(
-                        "💡 اطلب تجديد المخزون هذا الأسبوع"
-                    )
+                    analysis["warnings"].append(f"⚠️ {len(low_stock)} منتجات بمخزون منخفض")
+                    analysis["recommendations"].append("💡 اطلب تجديد المخزون هذا الأسبوع")
                 else:
-                    analysis["warnings"].append(
-                        f"🔴 {len(low_stock)} منتج بمخزون منخفض - عاجل!"
-                    )
+                    analysis["warnings"].append(f"🔴 {len(low_stock)} منتج بمخزون منخفض - عاجل!")
                     analysis["recommendations"].append("💡 اطلب من الموردين فوراً!")
                     total_deficit = sum(p["deficit"] for p in low_stock)
-                    analysis["insights"].append(
-                        f"📊 العجز الكلي: {total_deficit:.0f} وحدة"
-                    )
+                    analysis["insights"].append(f"📊 العجز الكلي: {total_deficit:.0f} وحدة")
 
             elif intent == "customer_balance" and "customer_data" in data:
                 customer_data = data["customer_data"]
@@ -460,29 +413,17 @@ class IntelligentAssistant:
                     if total_debt == 0:
                         analysis["insights"].append("✅ العميل ليس عليه ديون")
                     elif total_debt < 1000:
-                        analysis["insights"].append(
-                            f"💰 رصيد العميل: {total_debt:,.2f} درهم (طبيعي)"
-                        )
+                        analysis["insights"].append(f"💰 رصيد العميل: {total_debt:,.2f} درهم (طبيعي)")
                     elif total_debt < 5000:
-                        analysis["warnings"].append(
-                            f"⚠️ رصيد العميل: {total_debt:,.2f} درهم"
-                        )
-                        analysis["recommendations"].append(
-                            "💡 تواصل للتحصيل خلال أسبوع"
-                        )
+                        analysis["warnings"].append(f"⚠️ رصيد العميل: {total_debt:,.2f} درهم")
+                        analysis["recommendations"].append("💡 تواصل للتحصيل خلال أسبوع")
                     else:
-                        analysis["warnings"].append(
-                            f"🔴 رصيد مرتفع: {total_debt:,.2f} درهم!"
-                        )
-                        analysis["recommendations"].append(
-                            "💡 متابعة عاجلة + إيقاف الائتمان"
-                        )
+                        analysis["warnings"].append(f"🔴 رصيد مرتفع: {total_debt:,.2f} درهم!")
+                        analysis["recommendations"].append("💡 متابعة عاجلة + إيقاف الائتمان")
 
                     # تحليل التأخير
                     if debt_info["overdue_count"] > 0:
-                        analysis["warnings"].append(
-                            f"⏰ {debt_info['overdue_count']} فاتورة متأخرة أكثر من 30 يوم"
-                        )
+                        analysis["warnings"].append(f"⏰ {debt_info['overdue_count']} فاتورة متأخرة أكثر من 30 يوم")
 
             return analysis
 
@@ -491,9 +432,7 @@ class IntelligentAssistant:
             return {"insights": [], "warnings": [], "recommendations": []}
 
     @staticmethod
-    def _generate_dynamic_response(
-        intent: str, analysis: Dict, _entities: Dict, data: Dict
-    ) -> str:
+    def _generate_dynamic_response(intent: str, analysis: Dict, _entities: Dict, data: Dict) -> str:
         """توليد رد ديناميكي - ليس مسبق الحفظ"""
         try:
             # بناء الرد بناءً على البيانات الحقيقية
@@ -513,9 +452,7 @@ class IntelligentAssistant:
 
             elif intent == "who_are_you":
                 response_parts.append("🤖 **أنا أزاد (AZAD)**\n")
-                response_parts.append(
-                    "مساعد ذكي متطور تم تطويري خصيصاً لإدارة الكراجات والمحاسبة."
-                )
+                response_parts.append("مساعد ذكي متطور تم تطويري خصيصاً لإدارة الكراجات والمحاسبة.")
                 response_parts.append("\n💪 **قدراتي:**")
                 response_parts.append("• 💰 **محاسب:** فواتير، سندات، ضرائب")
                 response_parts.append("• 🔧 **مهندس:** معلومات قطع غيار، صيانة")
@@ -545,12 +482,8 @@ class IntelligentAssistant:
                     sales_info = data["recent_sales"]
                     response_parts.append("📈 **آخر 30 يوم:**")
                     response_parts.append(f"• عدد الفواتير: **{sales_info['count']}**")
-                    response_parts.append(
-                        f"• الإجمالي: **{sales_info['total_amount']:,.0f} درهم**"
-                    )
-                    response_parts.append(
-                        f"• المتوسط: **{sales_info['avg_amount']:,.0f} درهم/فاتورة**"
-                    )
+                    response_parts.append(f"• الإجمالي: **{sales_info['total_amount']:,.0f} درهم**")
+                    response_parts.append(f"• المتوسط: **{sales_info['avg_amount']:,.0f} درهم/فاتورة**")
                     response_parts.append("")
 
             elif intent == "customer_balance":
@@ -561,17 +494,11 @@ class IntelligentAssistant:
                     debt = data["customer_data"]["debt_analysis"]
 
                     response_parts.append(f"👤 **العميل:** {cust['name']}")
-                    response_parts.append(
-                        f"💵 **الرصيد الكلي:** {debt['total_debt']:,.2f} درهم"
-                    )
-                    response_parts.append(
-                        f"📄 **فواتير غير مدفوعة:** {debt['unpaid_sales_count']}"
-                    )
+                    response_parts.append(f"💵 **الرصيد الكلي:** {debt['total_debt']:,.2f} درهم")
+                    response_parts.append(f"📄 **فواتير غير مدفوعة:** {debt['unpaid_sales_count']}")
 
                     if debt["overdue_count"] > 0:
-                        response_parts.append(
-                            f"⏰ **متأخرة (+30 يوم):** {debt['overdue_count']}"
-                        )
+                        response_parts.append(f"⏰ **متأخرة (+30 يوم):** {debt['overdue_count']}")
                     response_parts.append("")
 
             elif intent == "inventory_check":
@@ -581,13 +508,9 @@ class IntelligentAssistant:
                     low_stock = data["low_stock_products"]
 
                     if len(low_stock) == 0:
-                        response_parts.append(
-                            "✅ **المخزون صحي!** جميع المنتجات فوق الحد الأدنى"
-                        )
+                        response_parts.append("✅ **المخزون صحي!** جميع المنتجات فوق الحد الأدنى")
                     else:
-                        response_parts.append(
-                            f"⚠️ **منتجات بمخزون منخفض:** {len(low_stock)}\n"
-                        )
+                        response_parts.append(f"⚠️ **منتجات بمخزون منخفض:** {len(low_stock)}\n")
                         response_parts.append("**أبرزها:**")
                         for p in low_stock[:5]:
                             response_parts.append(
@@ -677,9 +600,7 @@ intelligent_assistant = IntelligentAssistant()
 
 
 # دالة مساعدة
-def intelligent_response(
-    message: str, user_id: Optional[int] = None, context: Optional[dict] = None
-) -> str:
+def intelligent_response(message: str, user_id: Optional[int] = None, context: Optional[dict] = None) -> str:
     """الحصول على رد ذكي"""
     result = intelligent_assistant.process(message, user_id, context)
     return result.get("response", "عذراً، حدث خطأ")

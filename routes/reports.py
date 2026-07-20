@@ -57,9 +57,7 @@ def get_confirmed_sale_paid_aed(sale_id, tenant_id=None, branch_id=None):
 
 
 @cached_query(timeout=60, key_prefix="supplier_paid")
-def get_confirmed_supplier_paid_aed(
-    supplier_id, purchase_id=None, tenant_id=None, branch_id=None
-):
+def get_confirmed_supplier_paid_aed(supplier_id, purchase_id=None, tenant_id=None, branch_id=None):
     from models import Payment
 
     q = db.session.query(func.coalesce(func.sum(Payment.amount_aed), 0)).filter(
@@ -84,9 +82,7 @@ def _scoped_customer_query():
     if scoped_branch_id is None:
         return query
 
-    sale_ids = select(Sale.customer_id).where(
-        Sale.customer_id.isnot(None), Sale.branch_id == scoped_branch_id
-    )
+    sale_ids = select(Sale.customer_id).where(Sale.customer_id.isnot(None), Sale.branch_id == scoped_branch_id)
     payment_ids = select(Payment.customer_id).where(
         Payment.customer_id.isnot(None), Payment.branch_id == scoped_branch_id
     )
@@ -113,9 +109,7 @@ def _scoped_supplier_query():
     payment_ids = select(Payment.supplier_id).where(
         Payment.supplier_id.isnot(None), Payment.branch_id == scoped_branch_id
     )
-    return tenant_query(Supplier).filter(
-        Supplier.id.in_(purchase_ids.union(payment_ids))
-    )
+    return tenant_query(Supplier).filter(Supplier.id.in_(purchase_ids.union(payment_ids)))
 
 
 @reports_bp.route("/")
@@ -147,13 +141,9 @@ def partners():
         .filter(Sale.status == "confirmed")
     )
     if tenant_id is not None:
-        entries_query = entries_query.filter(
-            PartnerCommissionEntry.tenant_id == tenant_id
-        )
+        entries_query = entries_query.filter(PartnerCommissionEntry.tenant_id == tenant_id)
     if scoped_branch_id is not None:
-        entries_query = entries_query.filter(
-            PartnerCommissionEntry.branch_id == scoped_branch_id
-        )
+        entries_query = entries_query.filter(PartnerCommissionEntry.branch_id == scoped_branch_id)
     if date_from:
         entries_query = entries_query.filter(func.date(Sale.sale_date) >= date_from)
     if date_to:
@@ -168,12 +158,8 @@ def partners():
                 Customer.name.label("partner_name"),
                 PartnerCommissionEntry.percentage.label("percentage"),
                 func.coalesce(func.sum(SaleLine.quantity), 0).label("total_qty"),
-                func.coalesce(
-                    func.sum(PartnerCommissionEntry.base_amount_aed), 0
-                ).label("total_revenue"),
-                func.coalesce(
-                    func.sum(PartnerCommissionEntry.commission_amount_aed), 0
-                ).label("partner_share_amount"),
+                func.coalesce(func.sum(PartnerCommissionEntry.base_amount_aed), 0).label("total_revenue"),
+                func.coalesce(func.sum(PartnerCommissionEntry.commission_amount_aed), 0).label("partner_share_amount"),
                 Customer.id.label("partner_id"),
             )
             .join(Sale, PartnerCommissionEntry.sale_id == Sale.id)
@@ -203,9 +189,7 @@ def partners():
             total_qty = Decimal(str(r.total_qty or 0))
             total_revenue = Decimal(str(r.total_revenue or 0))
             partner_amount = Decimal(str(r.partner_share_amount or 0))
-            avg_unit_price = (
-                (total_revenue / total_qty) if total_qty > 0 else Decimal("0")
-            )
+            avg_unit_price = (total_revenue / total_qty) if total_qty > 0 else Decimal("0")
             partners_data.append(
                 {
                     "product_name": r.product_name or "",
@@ -217,9 +201,7 @@ def partners():
                     "partner_share_amount": partner_amount,
                 }
             )
-            partner_share_totals[r.partner_id] = (
-                partner_share_totals.get(r.partner_id, Decimal("0")) + partner_amount
-            )
+            partner_share_totals[r.partner_id] = partner_share_totals.get(r.partner_id, Decimal("0")) + partner_amount
     else:
         partner_products = tenant_query(Product).filter(
             Product.is_active,
@@ -231,9 +213,7 @@ def partners():
 
         for product in partner_products:
             sales_query = (
-                tenant_query(SaleLine)
-                .join(Sale)
-                .filter(SaleLine.product_id == product.id, Sale.status == "confirmed")
+                tenant_query(SaleLine).join(Sale).filter(SaleLine.product_id == product.id, Sale.status == "confirmed")
             )
             if tenant_id is not None:
                 sales_query = sales_query.filter(SaleLine.tenant_id == tenant_id)
@@ -269,14 +249,10 @@ def partners():
                     )
 
                     p_id = share.partner_customer.id
-                    partner_share_totals[p_id] = (
-                        partner_share_totals.get(p_id, Decimal("0")) + partner_amount
-                    )
+                    partner_share_totals[p_id] = partner_share_totals.get(p_id, Decimal("0")) + partner_amount
 
     # Find products linked to a merchant
-    merchant_products = tenant_query(Product).filter(
-        Product.merchant_customer_id.isnot(None), Product.is_active
-    )
+    merchant_products = tenant_query(Product).filter(Product.merchant_customer_id.isnot(None), Product.is_active)
     if tenant_id is not None:
         merchant_products = merchant_products.filter(Product.tenant_id == tenant_id)
     merchant_products = merchant_products.all()
@@ -286,9 +262,7 @@ def partners():
 
     for product in merchant_products:
         sales_query = (
-            tenant_query(SaleLine)
-            .join(Sale)
-            .filter(SaleLine.product_id == product.id, Sale.status == "confirmed")
+            tenant_query(SaleLine).join(Sale).filter(SaleLine.product_id == product.id, Sale.status == "confirmed")
         )
         if tenant_id is not None:
             sales_query = sales_query.filter(SaleLine.tenant_id == tenant_id)
@@ -328,15 +302,11 @@ def partners():
 
             m_id = merchant.id if merchant else product.merchant_customer_id
             if m_id is not None:
-                merchant_share_totals[m_id] = (
-                    merchant_share_totals.get(m_id, Decimal("0")) + merchant_amount
-                )
+                merchant_share_totals[m_id] = merchant_share_totals.get(m_id, Decimal("0")) + merchant_amount
 
     # --- 2. FINANCIAL SUMMARIES (Partners & Merchants) ---
     def get_financials(customer_type, share_totals_dict):
-        customers = (
-            _scoped_customer_query().filter_by(customer_type=customer_type).all()
-        )
+        customers = _scoped_customer_query().filter_by(customer_type=customer_type).all()
         summary_list = []
 
         for cust in customers:
@@ -354,43 +324,21 @@ def partners():
                 Payment.payment_confirmed,
             )
             if tenant_id is not None:
-                paid_query_total = paid_query_total.filter(
-                    Payment.tenant_id == tenant_id
-                )
+                paid_query_total = paid_query_total.filter(Payment.tenant_id == tenant_id)
                 receipts_query = receipts_query.filter(Receipt.tenant_id == tenant_id)
-                payment_in_query = payment_in_query.filter(
-                    Payment.tenant_id == tenant_id
-                )
+                payment_in_query = payment_in_query.filter(Payment.tenant_id == tenant_id)
             if date_from:
-                paid_query_total = paid_query_total.filter(
-                    func.date(Payment.payment_date) >= date_from
-                )
-                receipts_query = receipts_query.filter(
-                    func.date(Receipt.receipt_date) >= date_from
-                )
-                payment_in_query = payment_in_query.filter(
-                    func.date(Payment.payment_date) >= date_from
-                )
+                paid_query_total = paid_query_total.filter(func.date(Payment.payment_date) >= date_from)
+                receipts_query = receipts_query.filter(func.date(Receipt.receipt_date) >= date_from)
+                payment_in_query = payment_in_query.filter(func.date(Payment.payment_date) >= date_from)
             if date_to:
-                paid_query_total = paid_query_total.filter(
-                    func.date(Payment.payment_date) <= date_to
-                )
-                receipts_query = receipts_query.filter(
-                    func.date(Receipt.receipt_date) <= date_to
-                )
-                payment_in_query = payment_in_query.filter(
-                    func.date(Payment.payment_date) <= date_to
-                )
+                paid_query_total = paid_query_total.filter(func.date(Payment.payment_date) <= date_to)
+                receipts_query = receipts_query.filter(func.date(Receipt.receipt_date) <= date_to)
+                payment_in_query = payment_in_query.filter(func.date(Payment.payment_date) <= date_to)
             if scoped_branch_id is not None:
-                paid_query_total = paid_query_total.filter(
-                    Payment.branch_id == scoped_branch_id
-                )
-                receipts_query = receipts_query.filter(
-                    Receipt.branch_id == scoped_branch_id
-                )
-                payment_in_query = payment_in_query.filter(
-                    Payment.branch_id == scoped_branch_id
-                )
+                paid_query_total = paid_query_total.filter(Payment.branch_id == scoped_branch_id)
+                receipts_query = receipts_query.filter(Receipt.branch_id == scoped_branch_id)
+                payment_in_query = payment_in_query.filter(Payment.branch_id == scoped_branch_id)
 
             total_paid_to = paid_query_total.scalar() or Decimal("0")
             total_receipts = receipts_query.scalar() or Decimal("0")
@@ -448,35 +396,17 @@ def partners():
         )
 
         if date_from:
-            purchases_query = purchases_query.filter(
-                func.date(Purchase.purchase_date) >= date_from
-            )
-            paid_query_total = paid_query_total.filter(
-                func.date(Payment.payment_date) >= date_from
-            )
-            received_query = received_query.filter(
-                func.date(Payment.payment_date) >= date_from
-            )
+            purchases_query = purchases_query.filter(func.date(Purchase.purchase_date) >= date_from)
+            paid_query_total = paid_query_total.filter(func.date(Payment.payment_date) >= date_from)
+            received_query = received_query.filter(func.date(Payment.payment_date) >= date_from)
         if date_to:
-            purchases_query = purchases_query.filter(
-                func.date(Purchase.purchase_date) <= date_to
-            )
-            paid_query_total = paid_query_total.filter(
-                func.date(Payment.payment_date) <= date_to
-            )
-            received_query = received_query.filter(
-                func.date(Payment.payment_date) <= date_to
-            )
+            purchases_query = purchases_query.filter(func.date(Purchase.purchase_date) <= date_to)
+            paid_query_total = paid_query_total.filter(func.date(Payment.payment_date) <= date_to)
+            received_query = received_query.filter(func.date(Payment.payment_date) <= date_to)
         if scoped_branch_id is not None:
-            purchases_query = purchases_query.filter(
-                Purchase.branch_id == scoped_branch_id
-            )
-            paid_query_total = paid_query_total.filter(
-                Payment.branch_id == scoped_branch_id
-            )
-            received_query = received_query.filter(
-                Payment.branch_id == scoped_branch_id
-            )
+            purchases_query = purchases_query.filter(Purchase.branch_id == scoped_branch_id)
+            paid_query_total = paid_query_total.filter(Payment.branch_id == scoped_branch_id)
+            received_query = received_query.filter(Payment.branch_id == scoped_branch_id)
 
         total_purchases = purchases_query.scalar() or Decimal("0")
         total_paid_to = paid_query_total.scalar() or Decimal("0")
@@ -550,9 +480,7 @@ def sales():
     total_due = Decimal("0")
 
     for sale in sales_list:
-        confirmed_paid = get_confirmed_sale_paid_aed(
-            sale.id, tenant_id, scoped_branch_id
-        )
+        confirmed_paid = get_confirmed_sale_paid_aed(sale.id, tenant_id, scoped_branch_id)
         sale._confirmed_paid = confirmed_paid
         total_sales += sale.amount_aed or Decimal("0")
         total_paid += confirmed_paid
@@ -575,9 +503,7 @@ def sales():
     if tenant_id is not None:
         customers_query = customers_query.filter(Customer.tenant_id == tenant_id)
     if scoped_branch_id is not None:
-        customer_ids = select(Sale.customer_id).where(
-            Sale.branch_id == scoped_branch_id, Sale.customer_id.isnot(None)
-        )
+        customer_ids = select(Sale.customer_id).where(Sale.branch_id == scoped_branch_id, Sale.customer_id.isnot(None))
         customers_query = customers_query.filter(Customer.id.in_(customer_ids))
     customers = customers_query.order_by(Customer.name).limit(500).all()
 
@@ -589,9 +515,7 @@ def sales():
 
         sellers_query = scoped_user_query(active_only=True)
         if scoped_branch_id is not None:
-            seller_ids = select(Sale.seller_id).where(
-                Sale.branch_id == scoped_branch_id, Sale.seller_id.isnot(None)
-            )
+            seller_ids = select(Sale.seller_id).where(Sale.branch_id == scoped_branch_id, Sale.seller_id.isnot(None))
             sellers_query = sellers_query.filter(User.id.in_(seller_ids))
         sellers = sellers_query.order_by(User.username).limit(500).all()
 
@@ -663,9 +587,7 @@ def sales_export():
     data = []
     for s in sales_list:
         total_aed = Decimal(str(s.amount_aed or 0))
-        paid_aed = Decimal(
-            str(get_confirmed_sale_paid_aed(s.id, tenant_id, scoped_branch_id) or 0)
-        )
+        paid_aed = Decimal(str(get_confirmed_sale_paid_aed(s.id, tenant_id, scoped_branch_id) or 0))
         due_aed = total_aed - paid_aed
         data.append(
             [
@@ -674,11 +596,7 @@ def sales_export():
                 s.customer.name if s.customer else "",
                 s.seller.get_display_name() if s.seller else "",
                 (s.branch.name if s.branch else ""),
-                (
-                    (s.warehouse.name_ar or s.warehouse.name)
-                    if getattr(s, "warehouse", None)
-                    else ""
-                ),
+                ((s.warehouse.name_ar or s.warehouse.name) if getattr(s, "warehouse", None) else ""),
                 s.currency or "",
                 float(s.exchange_rate or 1),
                 float(total_aed),
@@ -690,9 +608,7 @@ def sales_export():
 
     base_name = f"sales_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     if fmt == "xlsx":
-        output = ExportService.export_to_xlsx(
-            data, headers, filename=f"{base_name}.xlsx", sheet_name="Sales"
-        )
+        output = ExportService.export_to_xlsx(data, headers, filename=f"{base_name}.xlsx", sheet_name="Sales")
         return send_file(
             output,
             mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -805,12 +721,7 @@ def purchases():
     # Get suppliers for filter within the active branch scope only
     from models import Supplier
 
-    suppliers = (
-        _scoped_supplier_query()
-        .filter(Supplier.is_active)
-        .order_by(Supplier.name)
-        .all()
-    )
+    suppliers = _scoped_supplier_query().filter(Supplier.is_active).order_by(Supplier.name).all()
 
     return render_template(
         "reports/purchases.html",
@@ -879,11 +790,7 @@ def purchases_export():
                 p.purchase_date.strftime("%Y-%m-%d") if p.purchase_date else "",
                 p.supplier.name if p.supplier else "",
                 (p.branch.name if p.branch else ""),
-                (
-                    (p.warehouse.name_ar or p.warehouse.name)
-                    if getattr(p, "warehouse", None)
-                    else ""
-                ),
+                ((p.warehouse.name_ar or p.warehouse.name) if getattr(p, "warehouse", None) else ""),
                 p.currency or "",
                 float(p.exchange_rate or 1),
                 float(Decimal(str(p.amount_aed or 0))),
@@ -894,9 +801,7 @@ def purchases_export():
 
     base_name = f"purchases_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     if fmt == "xlsx":
-        output = ExportService.export_to_xlsx(
-            data, headers, filename=f"{base_name}.xlsx", sheet_name="Purchases"
-        )
+        output = ExportService.export_to_xlsx(data, headers, filename=f"{base_name}.xlsx", sheet_name="Purchases")
         return send_file(
             output,
             mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -926,17 +831,11 @@ def ar_reconciliation():
         branch_id = scoped_branch_id
     elif scoped_branch_id is not None and branch_id != scoped_branch_id:
         return render_template("errors/403.html"), 403
-    elif (
-        scoped_branch_id is None
-        and branch_id is not None
-        and not user_can_access_branch(branch_id, current_user)
-    ):
+    elif scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
         return render_template("errors/403.html"), 403
 
     tenant_id = get_active_tenant_id(current_user)
-    report = ARReconciliationService.build_report(
-        tenant_id=tenant_id, branch_id=branch_id
-    )
+    report = ARReconciliationService.build_report(tenant_id=tenant_id, branch_id=branch_id)
     branches = get_accessible_branches(current_user)
     return render_template(
         "reports/ar_reconciliation.html",
@@ -968,29 +867,19 @@ def inventory_reconciliation():
         branch_id = scoped_branch_id
     elif scoped_branch_id is not None and branch_id != scoped_branch_id:
         return render_template("errors/403.html"), 403
-    elif (
-        scoped_branch_id is None
-        and branch_id is not None
-        and not user_can_access_branch(branch_id, current_user)
-    ):
+    elif scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
         return render_template("errors/403.html"), 403
 
     tenant_id = get_active_tenant_id(current_user)
     warehouses_query = WarehouseModel.query.filter_by(is_active=True)
     if tenant_id is not None:
-        warehouses_query = warehouses_query.filter(
-            WarehouseModel.tenant_id == tenant_id
-        )
+        warehouses_query = warehouses_query.filter(WarehouseModel.tenant_id == tenant_id)
     if branch_id is not None:
-        warehouses_query = warehouses_query.filter(
-            WarehouseModel.branch_id == branch_id
-        )
+        warehouses_query = warehouses_query.filter(WarehouseModel.branch_id == branch_id)
     else:
         accessible_ids = get_accessible_warehouse_ids(current_user)
         if accessible_ids:
-            warehouses_query = warehouses_query.filter(
-                WarehouseModel.id.in_(accessible_ids)
-            )
+            warehouses_query = warehouses_query.filter(WarehouseModel.id.in_(accessible_ids))
         elif not current_user.is_admin():
             warehouses_query = warehouses_query.filter(WarehouseModel.id < 0)
     warehouses = warehouses_query.order_by(WarehouseModel.name).all()
@@ -1039,18 +928,12 @@ def inventory_reconciliation_export():
         branch_id = scoped_branch_id
     elif scoped_branch_id is not None and branch_id != scoped_branch_id:
         return render_template("errors/403.html"), 403
-    elif (
-        scoped_branch_id is None
-        and branch_id is not None
-        and not user_can_access_branch(branch_id, current_user)
-    ):
+    elif scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
         return render_template("errors/403.html"), 403
 
     tenant_id = get_active_tenant_id(current_user)
     if warehouse_id is not None:
-        warehouse = WarehouseModel.query.filter_by(
-            id=warehouse_id, is_active=True
-        ).first()
+        warehouse = WarehouseModel.query.filter_by(id=warehouse_id, is_active=True).first()
         if (
             not warehouse
             or (tenant_id is not None and warehouse.tenant_id != tenant_id)
@@ -1103,9 +986,7 @@ def inventory_reconciliation_export():
 
     base_name = f"inventory_reconciliation_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     if fmt == "xlsx":
-        output = ExportService.export_to_xlsx(
-            data, headers, filename=f"{base_name}.xlsx", sheet_name="Inventory"
-        )
+        output = ExportService.export_to_xlsx(data, headers, filename=f"{base_name}.xlsx", sheet_name="Inventory")
         return send_file(
             output,
             mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -1142,9 +1023,7 @@ def receivables():
     all_sales = all_sales.order_by(Sale.sale_date.desc()).limit(5000).all()
 
     all_sales = [
-        sale
-        for sale in all_sales
-        if (sale.amount_aed or Decimal("0")) > (sale.paid_amount_aed or Decimal("0"))
+        sale for sale in all_sales if (sale.amount_aed or Decimal("0")) > (sale.paid_amount_aed or Decimal("0"))
     ]
 
     aging_data: dict[str, Any] = {
@@ -1160,9 +1039,7 @@ def receivables():
         if sale_date.tzinfo is None:
             sale_date = sale_date.replace(tzinfo=timezone.utc)
         days_old = (now - sale_date).days
-        balance = (sale.amount_aed or Decimal("0")) - (
-            sale.paid_amount_aed or Decimal("0")
-        )
+        balance = (sale.amount_aed or Decimal("0")) - (sale.paid_amount_aed or Decimal("0"))
 
         sale.days_old = days_old
         sale.calculated_balance = balance
@@ -1198,9 +1075,7 @@ def receivables():
     if tenant_id is not None:
         customers_query = customers_query.filter(Customer.tenant_id == tenant_id)
     if scoped_branch_id is not None:
-        customer_ids = select(Sale.customer_id).where(
-            Sale.branch_id == scoped_branch_id, Sale.customer_id.isnot(None)
-        )
+        customer_ids = select(Sale.customer_id).where(Sale.branch_id == scoped_branch_id, Sale.customer_id.isnot(None))
         customers_query = customers_query.filter(Customer.id.in_(customer_ids))
     customers = customers_query.order_by(Customer.name).limit(500).all()
 
@@ -1236,9 +1111,7 @@ def receivables_export():
     all_sales = all_sales.order_by(Sale.sale_date.desc()).limit(5000).all()
 
     all_sales = [
-        sale
-        for sale in all_sales
-        if (sale.amount_aed or Decimal("0")) > (sale.paid_amount_aed or Decimal("0"))
+        sale for sale in all_sales if (sale.amount_aed or Decimal("0")) > (sale.paid_amount_aed or Decimal("0"))
     ]
 
     def bucket_for(days_old: int) -> str:
@@ -1270,9 +1143,7 @@ def receivables_export():
         if sale_date and sale_date.tzinfo is None:
             sale_date = sale_date.replace(tzinfo=timezone.utc)
         days_old = (now - sale_date).days if sale_date else 0
-        balance = (sale.amount_aed or Decimal("0")) - (
-            sale.paid_amount_aed or Decimal("0")
-        )
+        balance = (sale.amount_aed or Decimal("0")) - (sale.paid_amount_aed or Decimal("0"))
         data.append(
             [
                 bucket_for(days_old),
@@ -1289,9 +1160,7 @@ def receivables_export():
 
     base_name = f"receivables_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     if fmt == "xlsx":
-        output = ExportService.export_to_xlsx(
-            data, headers, filename=f"{base_name}.xlsx", sheet_name="Receivables"
-        )
+        output = ExportService.export_to_xlsx(data, headers, filename=f"{base_name}.xlsx", sheet_name="Receivables")
         return send_file(
             output,
             mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -1338,11 +1207,7 @@ def inventory():
         branch_id = scoped_branch_id
     elif scoped_branch_id is not None and branch_id != scoped_branch_id:
         return render_template("errors/403.html"), 403
-    elif (
-        scoped_branch_id is None
-        and branch_id is not None
-        and not user_can_access_branch(branch_id, current_user)
-    ):
+    elif scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
         return render_template("errors/403.html"), 403
 
     tenant_id = get_active_tenant_id(current_user)
@@ -1358,9 +1223,7 @@ def inventory():
             warehouses_query = warehouses_query.filter(Warehouse.id.in_(accessible_ids))
         elif not current_user.is_admin():
             warehouses_query = warehouses_query.filter(Warehouse.id < 0)
-    warehouses = warehouses_query.order_by(
-        Warehouse.is_main.desc(), Warehouse.name
-    ).all()
+    warehouses = warehouses_query.order_by(Warehouse.is_main.desc(), Warehouse.name).all()
 
     selected_warehouse = None
     if warehouse_id is not None:
@@ -1368,9 +1231,7 @@ def inventory():
         if not selected_warehouse and not current_user.is_admin():
             return render_template("errors/403.html"), 403
         if not selected_warehouse:
-            selected_warehouse = Warehouse.query.filter_by(
-                id=warehouse_id, is_active=True
-            ).first()
+            selected_warehouse = Warehouse.query.filter_by(id=warehouse_id, is_active=True).first()
             if not selected_warehouse:
                 return render_template("errors/404.html"), 404
             if tenant_id is not None and selected_warehouse.tenant_id != tenant_id:
@@ -1413,9 +1274,7 @@ def inventory():
     if tenant_id is not None:
         out_query = out_query.filter(StockMovement.tenant_id == tenant_id)
     if out_date_from:
-        out_query = out_query.filter(
-            func.date(StockMovement.created_at) >= out_date_from
-        )
+        out_query = out_query.filter(func.date(StockMovement.created_at) >= out_date_from)
     if out_date_to:
         out_query = out_query.filter(func.date(StockMovement.created_at) <= out_date_to)
     out_map = dict(out_query.group_by(StockMovement.product_id).all())
@@ -1431,13 +1290,9 @@ def inventory():
     if tenant_id is not None:
         sold_query = sold_query.filter(StockMovement.tenant_id == tenant_id)
     if out_date_from:
-        sold_query = sold_query.filter(
-            func.date(StockMovement.created_at) >= out_date_from
-        )
+        sold_query = sold_query.filter(func.date(StockMovement.created_at) >= out_date_from)
     if out_date_to:
-        sold_query = sold_query.filter(
-            func.date(StockMovement.created_at) <= out_date_to
-        )
+        sold_query = sold_query.filter(func.date(StockMovement.created_at) <= out_date_to)
     sold_map = dict(sold_query.group_by(StockMovement.product_id).all())
 
     query = tenant_query(Product).filter_by(is_active=True)
@@ -1537,11 +1392,7 @@ def inventory_export():
         branch_id = scoped_branch_id
     elif scoped_branch_id is not None and branch_id != scoped_branch_id:
         return render_template("errors/403.html"), 403
-    elif (
-        scoped_branch_id is None
-        and branch_id is not None
-        and not user_can_access_branch(branch_id, current_user)
-    ):
+    elif scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
         return render_template("errors/403.html"), 403
 
     tenant_id = get_active_tenant_id(current_user)
@@ -1565,9 +1416,7 @@ def inventory_export():
         if not selected_warehouse and not current_user.is_admin():
             return render_template("errors/403.html"), 403
         if not selected_warehouse:
-            selected_warehouse = Warehouse.query.filter_by(
-                id=warehouse_id, is_active=True
-            ).first()
+            selected_warehouse = Warehouse.query.filter_by(id=warehouse_id, is_active=True).first()
             if not selected_warehouse:
                 return render_template("errors/404.html"), 404
             if tenant_id is not None and selected_warehouse.tenant_id != tenant_id:
@@ -1613,9 +1462,7 @@ def inventory_export():
     if tenant_id is not None:
         out_query = out_query.filter(StockMovement.tenant_id == tenant_id)
     if out_date_from:
-        out_query = out_query.filter(
-            func.date(StockMovement.created_at) >= out_date_from
-        )
+        out_query = out_query.filter(func.date(StockMovement.created_at) >= out_date_from)
     if out_date_to:
         out_query = out_query.filter(func.date(StockMovement.created_at) <= out_date_to)
     out_map = dict(out_query.group_by(StockMovement.product_id).all())
@@ -1631,13 +1478,9 @@ def inventory_export():
     if tenant_id is not None:
         sold_query = sold_query.filter(StockMovement.tenant_id == tenant_id)
     if out_date_from:
-        sold_query = sold_query.filter(
-            func.date(StockMovement.created_at) >= out_date_from
-        )
+        sold_query = sold_query.filter(func.date(StockMovement.created_at) >= out_date_from)
     if out_date_to:
-        sold_query = sold_query.filter(
-            func.date(StockMovement.created_at) <= out_date_to
-        )
+        sold_query = sold_query.filter(func.date(StockMovement.created_at) <= out_date_to)
     sold_map = dict(sold_query.group_by(StockMovement.product_id).all())
 
     query = tenant_query(Product).filter_by(is_active=True)
@@ -1691,9 +1534,7 @@ def inventory_export():
 
     base_name = f"inventory_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     if fmt == "xlsx":
-        output = ExportService.export_to_xlsx(
-            data, headers, filename=f"{base_name}.xlsx", sheet_name="Inventory"
-        )
+        output = ExportService.export_to_xlsx(data, headers, filename=f"{base_name}.xlsx", sheet_name="Inventory")
         return send_file(
             output,
             mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -1809,15 +1650,11 @@ def api_entity_search():
             .all()
         )
         for s in suppliers:
-            results.append(
-                {"id": s.id, "name": s.name, "phone": s.phone, "type": "supplier"}
-            )
+            results.append({"id": s.id, "name": s.name, "phone": s.phone, "type": "supplier"})
 
     else:  # customer, partner, merchant
         q_filter = _scoped_customer_query().filter(
-            db.or_(
-                Customer.name.ilike(f"%{query}%"), Customer.phone.ilike(f"%{query}%")
-            )
+            db.or_(Customer.name.ilike(f"%{query}%"), Customer.phone.ilike(f"%{query}%"))
         )
 
         if entity_type == "partner":
@@ -1829,9 +1666,7 @@ def api_entity_search():
 
         customers = q_filter.limit(10).all()
         for c in customers:
-            results.append(
-                {"id": c.id, "name": c.name, "phone": c.phone, "type": c.customer_type}
-            )
+            results.append({"id": c.id, "name": c.name, "phone": c.phone, "type": c.customer_type})
 
     return jsonify(results)
 
@@ -1861,9 +1696,7 @@ def entity_report_fragment(entity_type, **kwargs):
             entity = tenant_get_or_404(Supplier, record_id)
             if (
                 report_branch_scope_id() is not None
-                and not db.session.query(
-                    _scoped_supplier_query().filter_by(id=record_id).exists()
-                ).scalar()
+                and not db.session.query(_scoped_supplier_query().filter_by(id=record_id).exists()).scalar()
             ):
                 return render_template("errors/403.html"), 403
             context["entity"] = entity
@@ -1879,9 +1712,7 @@ def entity_report_fragment(entity_type, **kwargs):
                 )
                 .join(Purchase)
                 .join(Product)
-                .filter(
-                    Purchase.supplier_id == record_id, Purchase.status == "confirmed"
-                )
+                .filter(Purchase.supplier_id == record_id, Purchase.status == "confirmed")
             )
             if tenant_id is not None:
                 p_lines = p_lines.filter(Purchase.tenant_id == tenant_id)
@@ -1894,9 +1725,7 @@ def entity_report_fragment(entity_type, **kwargs):
                     "name": p.name,
                     "quantity": p.qty,
                     "total": p.total,
-                    "last_date": (
-                        p.last_date.strftime("%Y-%m-%d") if p.last_date else "-"
-                    ),
+                    "last_date": (p.last_date.strftime("%Y-%m-%d") if p.last_date else "-"),
                 }
                 for p in p_lines
             ]
@@ -1909,9 +1738,7 @@ def entity_report_fragment(entity_type, **kwargs):
                 purchases = purchases.filter(Purchase.branch_id == scoped_branch_id)
             purchases = purchases.order_by(Purchase.purchase_date.desc()).all()
 
-            fifo_purchases = sorted(
-                purchases, key=lambda p: (p.purchase_date or datetime.min, p.id or 0)
-            )
+            fifo_purchases = sorted(purchases, key=lambda p: (p.purchase_date or datetime.min, p.id or 0))
 
             supplier_payments_base = Payment.query.filter(
                 Payment.supplier_id == record_id,
@@ -1919,20 +1746,12 @@ def entity_report_fragment(entity_type, **kwargs):
                 Payment.payment_confirmed,
             )
             if tenant_id is not None:
-                supplier_payments_base = supplier_payments_base.filter(
-                    Payment.tenant_id == tenant_id
-                )
+                supplier_payments_base = supplier_payments_base.filter(Payment.tenant_id == tenant_id)
             if scoped_branch_id is not None:
-                supplier_payments_base = supplier_payments_base.filter(
-                    Payment.branch_id == scoped_branch_id
-                )
+                supplier_payments_base = supplier_payments_base.filter(Payment.branch_id == scoped_branch_id)
 
-            direct_payments = supplier_payments_base.filter(
-                Payment.purchase_id.isnot(None)
-            ).all()
-            unallocated_payments = supplier_payments_base.filter(
-                Payment.purchase_id.is_(None)
-            ).all()
+            direct_payments = supplier_payments_base.filter(Payment.purchase_id.isnot(None)).all()
+            unallocated_payments = supplier_payments_base.filter(Payment.purchase_id.is_(None)).all()
             has_direct_allocation = len(direct_payments) > 0
 
             if has_direct_allocation:
@@ -1940,30 +1759,17 @@ def entity_report_fragment(entity_type, **kwargs):
                 for pymt in direct_payments:
                     pid = pymt.purchase_id
                     if pid:
-                        paid_map[pid] = paid_map.get(pid, Decimal("0")) + Decimal(
-                            str(pymt.amount_aed or 0)
-                        )
-                unallocated_credit = sum(
-                    Decimal(str(p.amount_aed or 0)) for p in unallocated_payments
-                )
+                        paid_map[pid] = paid_map.get(pid, Decimal("0")) + Decimal(str(pymt.amount_aed or 0))
+                unallocated_credit = sum(Decimal(str(p.amount_aed or 0)) for p in unallocated_payments)
             else:
                 total_paid_fifo = Decimal(
-                    str(
-                        supplier_payments_base.with_entities(
-                            func.sum(Payment.amount_aed)
-                        ).scalar()
-                        or 0
-                    )
+                    str(supplier_payments_base.with_entities(func.sum(Payment.amount_aed)).scalar() or 0)
                 )
                 remaining_paid = total_paid_fifo
                 paid_map = {}
                 for p in fifo_purchases:
                     amount = Decimal(str(p.amount_aed or 0))
-                    allocated = (
-                        min(amount, remaining_paid)
-                        if remaining_paid > 0
-                        else Decimal("0")
-                    )
+                    allocated = min(amount, remaining_paid) if remaining_paid > 0 else Decimal("0")
                     paid_map[p.id] = allocated
                     remaining_paid = max(Decimal("0"), remaining_paid - allocated)
                 unallocated_credit = Decimal("0")
@@ -1975,28 +1781,21 @@ def entity_report_fragment(entity_type, **kwargs):
                     "status": p.status,
                     "amount": p.amount_aed or 0,
                     "paid": paid_map.get(p.id, Decimal("0")),
-                    "balance": (
-                        Decimal(str(p.amount_aed or 0))
-                        - paid_map.get(p.id, Decimal("0"))
-                    ),
+                    "balance": (Decimal(str(p.amount_aed or 0)) - paid_map.get(p.id, Decimal("0"))),
                 }
                 for p in purchases
             ]
             context["allocation_exact"] = has_direct_allocation
             context["unallocated_supplier_credit"] = unallocated_credit
 
-            payments = Payment.query.filter_by(
-                supplier_id=record_id, payment_confirmed=True
-            )
+            payments = Payment.query.filter_by(supplier_id=record_id, payment_confirmed=True)
             if tenant_id is not None:
                 payments = payments.filter(Payment.tenant_id == tenant_id)
             if scoped_branch_id is not None:
                 payments = payments.filter(Payment.branch_id == scoped_branch_id)
             payments = payments.order_by(Payment.payment_date.desc()).all()
             total_purchases_amount = sum((p.amount_aed or 0) for p in purchases)
-            total_payments_amount = sum(
-                (p.amount_aed or 0) for p in payments if p.direction == "outgoing"
-            )
+            total_payments_amount = sum((p.amount_aed or 0) for p in payments if p.direction == "outgoing")
 
             # Balance
             context["balance"] = total_purchases_amount - total_payments_amount
@@ -2017,9 +1816,7 @@ def entity_report_fragment(entity_type, **kwargs):
             entity = tenant_get_or_404(Customer, record_id)
             if (
                 report_branch_scope_id() is not None
-                and not db.session.query(
-                    _scoped_customer_query().filter_by(id=record_id).exists()
-                ).scalar()
+                and not db.session.query(_scoped_customer_query().filter_by(id=record_id).exists()).scalar()
             ):
                 return render_template("errors/403.html"), 403
             context["entity"] = entity
@@ -2035,44 +1832,28 @@ def entity_report_fragment(entity_type, **kwargs):
             total_sales_query = db.session.query(func.sum(Sale.amount_aed)).filter(
                 Sale.customer_id == record_id, Sale.status == "confirmed"
             )
-            total_receipts_query = db.session.query(
-                func.sum(Receipt.amount_aed)
-            ).filter(Receipt.customer_id == record_id, Receipt.payment_confirmed)
+            total_receipts_query = db.session.query(func.sum(Receipt.amount_aed)).filter(
+                Receipt.customer_id == record_id, Receipt.payment_confirmed
+            )
             # Payments made TO customer (e.g. returns/share/drawings)
-            total_payments_query = db.session.query(
-                func.sum(Payment.amount_aed)
-            ).filter(
+            total_payments_query = db.session.query(func.sum(Payment.amount_aed)).filter(
                 Payment.customer_id == record_id,
                 Payment.direction == "outgoing",
                 Payment.payment_confirmed,
             )
             if tenant_id is not None:
-                total_sales_query = total_sales_query.filter(
-                    Sale.tenant_id == tenant_id
-                )
-                total_receipts_query = total_receipts_query.filter(
-                    Receipt.tenant_id == tenant_id
-                )
-                total_payments_query = total_payments_query.filter(
-                    Payment.tenant_id == tenant_id
-                )
+                total_sales_query = total_sales_query.filter(Sale.tenant_id == tenant_id)
+                total_receipts_query = total_receipts_query.filter(Receipt.tenant_id == tenant_id)
+                total_payments_query = total_payments_query.filter(Payment.tenant_id == tenant_id)
             if scoped_branch_id is not None:
-                total_sales_query = total_sales_query.filter(
-                    Sale.branch_id == scoped_branch_id
-                )
-                total_receipts_query = total_receipts_query.filter(
-                    Receipt.branch_id == scoped_branch_id
-                )
-                total_payments_query = total_payments_query.filter(
-                    Payment.branch_id == scoped_branch_id
-                )
+                total_sales_query = total_sales_query.filter(Sale.branch_id == scoped_branch_id)
+                total_receipts_query = total_receipts_query.filter(Receipt.branch_id == scoped_branch_id)
+                total_payments_query = total_payments_query.filter(Payment.branch_id == scoped_branch_id)
             total_sales = total_sales_query.scalar() or 0
             total_receipts = total_receipts_query.scalar() or 0
             total_payments_to = total_payments_query.scalar() or 0
 
-            context["balance"] = (
-                total_sales + total_payments_to
-            ) - total_receipts  # Positive means they owe us
+            context["balance"] = (total_sales + total_payments_to) - total_receipts  # Positive means they owe us
             context["balance_label"] = gettext("مستحق لنا")
             if context["balance"] < 0:
                 context["balance"] = abs(context["balance"])
@@ -2101,9 +1882,7 @@ def entity_report_fragment(entity_type, **kwargs):
                     "name": p.name,
                     "quantity": p.qty,
                     "total": p.total,
-                    "last_date": (
-                        p.last_date.strftime("%Y-%m-%d") if p.last_date else "-"
-                    ),
+                    "last_date": (p.last_date.strftime("%Y-%m-%d") if p.last_date else "-"),
                 }
                 for p in s_lines
             ]
@@ -2127,16 +1906,10 @@ def entity_report_fragment(entity_type, **kwargs):
                     )
                 )
                 if tenant_id is not None:
-                    shared_products_query = shared_products_query.filter(
-                        Sale.tenant_id == tenant_id
-                    )
+                    shared_products_query = shared_products_query.filter(Sale.tenant_id == tenant_id)
                 if scoped_branch_id is not None:
-                    shared_products_query = shared_products_query.filter(
-                        Sale.branch_id == scoped_branch_id
-                    )
-                shared_products_query = shared_products_query.group_by(
-                    Product.name, ProductPartner.percentage
-                ).all()
+                    shared_products_query = shared_products_query.filter(Sale.branch_id == scoped_branch_id)
+                shared_products_query = shared_products_query.group_by(Product.name, ProductPartner.percentage).all()
 
                 for sp in shared_products_query:
                     share_amount = sp.total_sales * (sp.percentage / 100)
@@ -2145,11 +1918,7 @@ def entity_report_fragment(entity_type, **kwargs):
                             "name": f"{sp.name} (Share: {sp.percentage}%)",
                             "quantity": sp.qty,
                             "total": share_amount,
-                            "last_date": (
-                                sp.last_date.strftime("%Y-%m-%d")
-                                if sp.last_date
-                                else "-"
-                            ),
+                            "last_date": (sp.last_date.strftime("%Y-%m-%d") if sp.last_date else "-"),
                         }
                     )
 
@@ -2171,16 +1940,10 @@ def entity_report_fragment(entity_type, **kwargs):
                     )
                 )
                 if tenant_id is not None:
-                    merchant_products_query = merchant_products_query.filter(
-                        Sale.tenant_id == tenant_id
-                    )
+                    merchant_products_query = merchant_products_query.filter(Sale.tenant_id == tenant_id)
                 if scoped_branch_id is not None:
-                    merchant_products_query = merchant_products_query.filter(
-                        Sale.branch_id == scoped_branch_id
-                    )
-                merchant_products_query = merchant_products_query.group_by(
-                    Product.name, Product.merchant_share
-                ).all()
+                    merchant_products_query = merchant_products_query.filter(Sale.branch_id == scoped_branch_id)
+                merchant_products_query = merchant_products_query.group_by(Product.name, Product.merchant_share).all()
 
                 for mp in merchant_products_query:
                     share_pct = mp.merchant_share or 100
@@ -2190,11 +1953,7 @@ def entity_report_fragment(entity_type, **kwargs):
                             "name": f"{mp.name} (Merchant: {share_pct}%)",
                             "quantity": mp.qty,
                             "total": share_amount,
-                            "last_date": (
-                                mp.last_date.strftime("%Y-%m-%d")
-                                if mp.last_date
-                                else "-"
-                            ),
+                            "last_date": (mp.last_date.strftime("%Y-%m-%d") if mp.last_date else "-"),
                         }
                     )
 
@@ -2217,20 +1976,14 @@ def entity_report_fragment(entity_type, **kwargs):
                 for s in sales
             ]
 
-            receipts = Receipt.query.filter_by(
-                customer_id=record_id, payment_confirmed=True
-            )
-            payments_out = Payment.query.filter_by(
-                customer_id=record_id, direction="outgoing", payment_confirmed=True
-            )
+            receipts = Receipt.query.filter_by(customer_id=record_id, payment_confirmed=True)
+            payments_out = Payment.query.filter_by(customer_id=record_id, direction="outgoing", payment_confirmed=True)
             if tenant_id is not None:
                 receipts = receipts.filter(Receipt.tenant_id == tenant_id)
                 payments_out = payments_out.filter(Payment.tenant_id == tenant_id)
             if scoped_branch_id is not None:
                 receipts = receipts.filter(Receipt.branch_id == scoped_branch_id)
-                payments_out = payments_out.filter(
-                    Payment.branch_id == scoped_branch_id
-                )
+                payments_out = payments_out.filter(Payment.branch_id == scoped_branch_id)
             receipts = receipts.all()
             payments_out = payments_out.all()
 
@@ -2302,11 +2055,6 @@ def top_selling():
     if date_to:
         query = query.filter(func.date(Sale.sale_date) <= date_to)
 
-    products = (
-        query.group_by(Product.id, Product.name)
-        .order_by(func.sum(SaleLine.quantity).desc())
-        .limit(limit)
-        .all()
-    )
+    products = query.group_by(Product.id, Product.name).order_by(func.sum(SaleLine.quantity).desc()).limit(limit).all()
 
     return render_template("reports/top_selling.html", products=products)

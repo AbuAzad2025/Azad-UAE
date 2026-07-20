@@ -77,9 +77,7 @@ class TestBootstrapKeys:
         app.config = {}
         with (
             patch("utils.bootstrap_keys.ensure_secret_key", return_value="s") as sec,
-            patch(
-                "utils.bootstrap_keys.ensure_card_encryption_key", return_value="c"
-            ) as card,
+            patch("utils.bootstrap_keys.ensure_card_encryption_key", return_value="c") as card,
         ):
             bootstrap_keys(app, instance_dir=None)
         assert sec.called

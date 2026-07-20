@@ -60,9 +60,7 @@ class TransformersBrain:
         # ذاكرة السياق
         self.context_memory: list[dict[str, Any]] = []
 
-        logger.info(
-            f"🤖 Transformers Brain initialized - Vocab: {vocab_size}, Model: {d_model}, Heads: {n_heads}"
-        )
+        logger.info(f"🤖 Transformers Brain initialized - Vocab: {vocab_size}, Model: {d_model}, Heads: {n_heads}")
 
     @staticmethod
     def _build_vocabulary() -> dict:
@@ -125,9 +123,7 @@ class TransformersBrain:
     # Self-Attention Mechanism - آلية الانتباه الذاتي
     # ========================================================================
 
-    def self_attention(
-        self, query: List[float], key: List[float], value: List[float]
-    ) -> List[float]:
+    def self_attention(self, query: List[float], key: List[float], value: List[float]) -> List[float]:
         """
         آلية الانتباه الذاتي
 
@@ -156,9 +152,7 @@ class TransformersBrain:
 
         return output
 
-    def multi_head_attention(
-        self, query: List[float], key: List[float], value: List[float]
-    ) -> List[float]:
+    def multi_head_attention(self, query: List[float], key: List[float], value: List[float]) -> List[float]:
         """
         الانتباه متعدد الرؤوس
 
@@ -294,9 +288,7 @@ class TransformersBrain:
         tokens = self._tokenize(text)
 
         # 2. Word Embeddings (تضمين الكلمات)
-        embeddings = [
-            self._get_embedding(token, pos) for pos, token in enumerate(tokens)
-        ]
+        embeddings = [self._get_embedding(token, pos) for pos, token in enumerate(tokens)]
 
         # 3. تطبيق Transformer Blocks
         transformed = embeddings[0] if embeddings else [0.0] * self.d_model
@@ -450,9 +442,7 @@ class TransformersBrain:
 
         if intent == "question":
             if entities["tax_terms"]:
-                response = (
-                    "📊 بناءً على تحليل Transformers، سأجيب عن سؤالك حول الضرائب..."
-                )
+                response = "📊 بناءً على تحليل Transformers، سأجيب عن سؤالك حول الضرائب..."
             elif entities["accounting_terms"]:
                 response = "💼 بناءً على فهمي العميق للمحاسبة..."
             else:

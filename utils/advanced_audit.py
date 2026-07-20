@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from flask import request
 from flask_login import current_user
 from extensions import db
+from utils.db_safety import atomic_transaction
 import hashlib
 
 
@@ -37,11 +38,12 @@ def log_sensitive_action(
             user_agent=request.headers.get("User-Agent") if request else None,
         )
 
-        db.session.add(audit_entry)
-        db.session.flush()
+        with atomic_transaction("audit_log"):
+            db.session.add(audit_entry)
+            db.session.flush()
 
-        if severity == "high":
-            notify_admin_of_sensitive_action(action, audit_entry)
+            if severity == "high":
+                notify_admin_of_sensitive_action(action, audit_entry)
 
     except Exception:
         import logging
@@ -84,8 +86,8 @@ def get_security_events(user_id: int | None = None, days: int = 30):
     if user_id:
         query = query.filter_by(user_id=user_id)
 
-    query = query.filter(
-        AuditLog.action.in_(["login", "logout", "delete", "update"])
-    ).order_by(AuditLog.created_at.desc())
+    query = query.filter(AuditLog.action.in_(["login", "logout", "delete", "update"])).order_by(
+        AuditLog.created_at.desc()
+    )
 
     return query.limit(100).all()

@@ -11,17 +11,13 @@ from services.project_service import ProjectService
 
 
 def _patch_tenant(mocker, tenant_id):
-    mocker.patch(
-        "services.project_service.get_active_tenant_id", return_value=tenant_id
-    )
+    mocker.patch("services.project_service.get_active_tenant_id", return_value=tenant_id)
     mocker.patch("services.project_service.is_global_owner_user", return_value=False)
     mocker.patch("services.project_service.branch_scope_id_for", return_value=None)
 
 
 class TestCreateProject:
-    def test_create_project_with_stages(
-        self, db_session, sample_user, sample_tenant, mocker
-    ):
+    def test_create_project_with_stages(self, db_session, sample_user, sample_tenant, mocker):
         _patch_tenant(mocker, sample_tenant.id)
         project = ProjectService.create_project({"name": "Alpha Project"}, sample_user)
         assert project.name == "Alpha Project"
@@ -36,15 +32,11 @@ class TestCreateProject:
 
     def test_create_project_no_tenant(self, sample_user, mocker):
         mocker.patch("services.project_service.get_active_tenant_id", return_value=None)
-        mocker.patch(
-            "services.project_service.is_global_owner_user", return_value=False
-        )
+        mocker.patch("services.project_service.is_global_owner_user", return_value=False)
         with pytest.raises(ValueError, match="شركة نشطة"):
             ProjectService.create_project({"name": "X"}, sample_user)
 
-    def test_create_with_dates_and_customer(
-        self, db_session, sample_user, sample_tenant, sample_customer, mocker
-    ):
+    def test_create_with_dates_and_customer(self, db_session, sample_user, sample_tenant, sample_customer, mocker):
         _patch_tenant(mocker, sample_tenant.id)
         project = ProjectService.create_project(
             {
@@ -72,9 +64,7 @@ class TestGetUpdateProject:
         with pytest.raises(ValueError, match="غير موجود"):
             ProjectService.get_project(99999, sample_user)
 
-    def test_tenant_mismatch_raises(
-        self, db_session, sample_user, sample_tenant, mocker
-    ):
+    def test_tenant_mismatch_raises(self, db_session, sample_user, sample_tenant, mocker):
         _patch_tenant(mocker, sample_tenant.id)
         project = ProjectService.create_project({"name": "Owned"}, sample_user)
         intruder = MagicMock()
@@ -102,24 +92,18 @@ class TestGetUpdateProject:
 
 
 class TestListProjects:
-    def test_list_projects_tenant_scoped(
-        self, db_session, sample_user, sample_tenant, mocker
-    ):
+    def test_list_projects_tenant_scoped(self, db_session, sample_user, sample_tenant, mocker):
         _patch_tenant(mocker, sample_tenant.id)
         ProjectService.create_project({"name": "Listed"}, sample_user)
         projects = ProjectService.list_projects(sample_user)
         assert any(p.name == "Listed" for p in projects)
 
-    def test_list_projects_branch_scope(
-        self, db_session, sample_user, sample_tenant, sample_branch, mocker
-    ):
+    def test_list_projects_branch_scope(self, db_session, sample_user, sample_tenant, sample_branch, mocker):
         mocker.patch(
             "services.project_service.get_active_tenant_id",
             return_value=sample_tenant.id,
         )
-        mocker.patch(
-            "services.project_service.is_global_owner_user", return_value=False
-        )
+        mocker.patch("services.project_service.is_global_owner_user", return_value=False)
         mocker.patch(
             "services.project_service.branch_scope_id_for",
             return_value=sample_branch.id,
@@ -152,39 +136,27 @@ class TestTasks:
         assert task.name == "First Task"
         assert task.planned_hours == Decimal("8")
 
-    def test_create_task_missing_name(
-        self, db_session, sample_user, sample_tenant, mocker
-    ):
+    def test_create_task_missing_name(self, db_session, sample_user, sample_tenant, mocker):
         _patch_tenant(mocker, sample_tenant.id)
         project = ProjectService.create_project({"name": "P"}, sample_user)
         with pytest.raises(ValueError, match="اسم المهمة"):
             ProjectService.create_task(project.id, {}, sample_user)
 
-    def test_create_task_invalid_stage(
-        self, db_session, sample_user, sample_tenant, mocker
-    ):
+    def test_create_task_invalid_stage(self, db_session, sample_user, sample_tenant, mocker):
         _patch_tenant(mocker, sample_tenant.id)
         project = ProjectService.create_project({"name": "P2"}, sample_user)
         with pytest.raises(ValueError, match="المرحلة"):
-            ProjectService.create_task(
-                project.id, {"name": "T", "stage_id": 99999}, sample_user
-            )
+            ProjectService.create_task(project.id, {"name": "T", "stage_id": 99999}, sample_user)
 
     def test_move_task(self, db_session, sample_user, sample_tenant, mocker):
         _patch_tenant(mocker, sample_tenant.id)
         project = ProjectService.create_project({"name": "Move Proj"}, sample_user)
-        stages = (
-            TaskStage.query.filter_by(project_id=project.id)
-            .order_by(TaskStage.sequence)
-            .all()
-        )
+        stages = TaskStage.query.filter_by(project_id=project.id).order_by(TaskStage.sequence).all()
         task = ProjectService.create_task(project.id, {"name": "Movable"}, sample_user)
         moved = ProjectService.move_task(task.id, stages[1].id, sample_user)
         assert moved.stage_id == stages[1].id
 
-    def test_move_task_invalid_stage(
-        self, db_session, sample_user, sample_tenant, mocker
-    ):
+    def test_move_task_invalid_stage(self, db_session, sample_user, sample_tenant, mocker):
         _patch_tenant(mocker, sample_tenant.id)
         project = ProjectService.create_project({"name": "Bad Move"}, sample_user)
         other = ProjectService.create_project({"name": "Other"}, sample_user)
@@ -199,16 +171,12 @@ class TestTimesheet:
         _patch_tenant(mocker, sample_tenant.id)
         project = ProjectService.create_project({"name": "Time Proj"}, sample_user)
         task = ProjectService.create_task(project.id, {"name": "Work"}, sample_user)
-        ts = ProjectService.log_timesheet(
-            task.id, {"hours": "2.5", "description": "dev"}, sample_user
-        )
+        ts = ProjectService.log_timesheet(task.id, {"hours": "2.5", "description": "dev"}, sample_user)
         assert ts.hours == Decimal("2.5")
         db_session.refresh(task)
         assert task.effective_hours == Decimal("2.5")
 
-    def test_log_timesheet_zero_hours(
-        self, db_session, sample_user, sample_tenant, mocker
-    ):
+    def test_log_timesheet_zero_hours(self, db_session, sample_user, sample_tenant, mocker):
         _patch_tenant(mocker, sample_tenant.id)
         project = ProjectService.create_project({"name": "Zero"}, sample_user)
         task = ProjectService.create_task(project.id, {"name": "Idle"}, sample_user)
@@ -229,9 +197,7 @@ class TestGanttAndMembers:
     def test_add_member(self, db_session, sample_user, sample_tenant, mocker):
         _patch_tenant(mocker, sample_tenant.id)
         project = ProjectService.create_project({"name": "Team"}, sample_user)
-        member = ProjectService.add_member(
-            project.id, sample_user.id, "lead", sample_user
-        )
+        member = ProjectService.add_member(project.id, sample_user.id, "lead", sample_user)
         assert member.role == "lead"
 
     def test_add_duplicate_member(self, db_session, sample_user, sample_tenant, mocker):
@@ -243,9 +209,7 @@ class TestGanttAndMembers:
 
 
 class TestProjectEdgeCases:
-    def test_update_project_dates_and_customer(
-        self, db_session, sample_user, sample_tenant, sample_customer, mocker
-    ):
+    def test_update_project_dates_and_customer(self, db_session, sample_user, sample_tenant, sample_customer, mocker):
         _patch_tenant(mocker, sample_tenant.id)
         project = ProjectService.create_project({"name": "Edge"}, sample_user)
         updated = ProjectService.update_project(
@@ -270,14 +234,10 @@ class TestProjectEdgeCases:
         with pytest.raises(ValueError, match="غير موجودة"):
             ProjectService.log_timesheet(99999, {"hours": "1"}, sample_user)
 
-    def test_create_task_with_parent(
-        self, db_session, sample_user, sample_tenant, mocker
-    ):
+    def test_create_task_with_parent(self, db_session, sample_user, sample_tenant, mocker):
         _patch_tenant(mocker, sample_tenant.id)
         project = ProjectService.create_project({"name": "Parent Proj"}, sample_user)
-        parent = ProjectService.create_task(
-            project.id, {"name": "Parent Task"}, sample_user
-        )
+        parent = ProjectService.create_task(project.id, {"name": "Parent Task"}, sample_user)
         child = ProjectService.create_task(
             project.id,
             {
@@ -290,12 +250,8 @@ class TestProjectEdgeCases:
         assert child.parent_id == parent.id
         assert child.date_deadline is not None
 
-    def test_create_contract_branch_denied(
-        self, db_session, sample_user, sample_tenant, sample_branch, mocker
-    ):
-        mocker.patch(
-            "services.hr_service.get_active_tenant_id", return_value=sample_tenant.id
-        )
+    def test_create_contract_branch_denied(self, db_session, sample_user, sample_tenant, sample_branch, mocker):
+        mocker.patch("services.hr_service.get_active_tenant_id", return_value=sample_tenant.id)
         mocker.patch("services.hr_service.is_global_owner_user", return_value=False)
         mocker.patch(
             "services.hr_service.branch_scope_id_for",
@@ -317,78 +273,50 @@ class TestProjectEdgeCases:
 class TestProjectServiceCommitRollbackPaths:
     def test_create_project_flush_failure(self, sample_user, sample_tenant, mocker):
         _patch_tenant(mocker, sample_tenant.id)
-        mocker.patch.object(
-            db.session, "flush", side_effect=RuntimeError("flush failed")
-        )
+        mocker.patch.object(db.session, "flush", side_effect=RuntimeError("flush failed"))
         with pytest.raises(RuntimeError, match="flush failed"):
             ProjectService.create_project({"name": "Flush Fail"}, sample_user)
 
     def test_create_project_commit_failure(self, sample_user, sample_tenant, mocker):
         _patch_tenant(mocker, sample_tenant.id)
-        mocker.patch.object(
-            db.session, "flush", side_effect=RuntimeError("commit failed")
-        )
+        mocker.patch.object(db.session, "flush", side_effect=RuntimeError("commit failed"))
         with pytest.raises(RuntimeError, match="commit failed"):
             ProjectService.create_project({"name": "Commit Fail"}, sample_user)
 
-    def test_update_project_commit_failure(
-        self, db_session, sample_user, sample_tenant, mocker
-    ):
+    def test_update_project_commit_failure(self, db_session, sample_user, sample_tenant, mocker):
         _patch_tenant(mocker, sample_tenant.id)
         project = ProjectService.create_project({"name": "Upd Fail"}, sample_user)
-        mocker.patch.object(
-            db.session, "flush", side_effect=RuntimeError("commit failed")
-        )
+        mocker.patch.object(db.session, "flush", side_effect=RuntimeError("commit failed"))
         with pytest.raises(RuntimeError, match="commit failed"):
             ProjectService.update_project(project.id, {"name": "New"}, sample_user)
 
-    def test_create_task_commit_failure(
-        self, db_session, sample_user, sample_tenant, mocker
-    ):
+    def test_create_task_commit_failure(self, db_session, sample_user, sample_tenant, mocker):
         _patch_tenant(mocker, sample_tenant.id)
         project = ProjectService.create_project({"name": "Task Fail"}, sample_user)
-        mocker.patch.object(
-            db.session, "flush", side_effect=RuntimeError("commit failed")
-        )
+        mocker.patch.object(db.session, "flush", side_effect=RuntimeError("commit failed"))
         with pytest.raises(RuntimeError, match="commit failed"):
             ProjectService.create_task(project.id, {"name": "T"}, sample_user)
 
-    def test_move_task_commit_failure(
-        self, db_session, sample_user, sample_tenant, mocker
-    ):
+    def test_move_task_commit_failure(self, db_session, sample_user, sample_tenant, mocker):
         _patch_tenant(mocker, sample_tenant.id)
         project = ProjectService.create_project({"name": "Move Fail"}, sample_user)
-        stages = (
-            TaskStage.query.filter_by(project_id=project.id)
-            .order_by(TaskStage.sequence)
-            .all()
-        )
+        stages = TaskStage.query.filter_by(project_id=project.id).order_by(TaskStage.sequence).all()
         task = ProjectService.create_task(project.id, {"name": "M"}, sample_user)
-        mocker.patch.object(
-            db.session, "flush", side_effect=RuntimeError("commit failed")
-        )
+        mocker.patch.object(db.session, "flush", side_effect=RuntimeError("commit failed"))
         with pytest.raises(RuntimeError, match="commit failed"):
             ProjectService.move_task(task.id, stages[0].id, sample_user)
 
-    def test_log_timesheet_commit_failure(
-        self, db_session, sample_user, sample_tenant, mocker
-    ):
+    def test_log_timesheet_commit_failure(self, db_session, sample_user, sample_tenant, mocker):
         _patch_tenant(mocker, sample_tenant.id)
         project = ProjectService.create_project({"name": "TS Fail"}, sample_user)
         task = ProjectService.create_task(project.id, {"name": "W"}, sample_user)
-        mocker.patch.object(
-            db.session, "flush", side_effect=RuntimeError("commit failed")
-        )
+        mocker.patch.object(db.session, "flush", side_effect=RuntimeError("commit failed"))
         with pytest.raises(RuntimeError, match="commit failed"):
             ProjectService.log_timesheet(task.id, {"hours": "1"}, sample_user)
 
-    def test_add_member_commit_failure(
-        self, db_session, sample_user, sample_tenant, mocker
-    ):
+    def test_add_member_commit_failure(self, db_session, sample_user, sample_tenant, mocker):
         _patch_tenant(mocker, sample_tenant.id)
         project = ProjectService.create_project({"name": "Mem Fail"}, sample_user)
-        mocker.patch.object(
-            db.session, "flush", side_effect=RuntimeError("commit failed")
-        )
+        mocker.patch.object(db.session, "flush", side_effect=RuntimeError("commit failed"))
         with pytest.raises(RuntimeError, match="commit failed"):
             ProjectService.add_member(project.id, sample_user.id, "member", sample_user)

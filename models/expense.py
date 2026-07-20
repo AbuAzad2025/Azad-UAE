@@ -5,11 +5,7 @@ from utils.currency_utils import context_aware_default_currency
 
 class ExpenseCategory(db.Model):
     __tablename__ = "expense_categories"
-    __table_args__ = (
-        db.UniqueConstraint(
-            "tenant_id", "name", name="uq_expense_categories_tenant_name"
-        ),
-    )
+    __table_args__ = (db.UniqueConstraint("tenant_id", "name", name="uq_expense_categories_tenant_name"),)
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -22,14 +18,10 @@ class ExpenseCategory(db.Model):
     name_ar = db.Column(db.String(100))
     gl_account_code = db.Column(db.String(20))
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
     expenses = db.relationship("Expense", back_populates="category", lazy="dynamic")
-    tenant = db.relationship(
-        "Tenant", backref="expense_categories", foreign_keys=[tenant_id]
-    )
+    tenant = db.relationship("Tenant", backref="expense_categories", foreign_keys=[tenant_id])
 
     def __repr__(self):
         return f"<ExpenseCategory {self.name}>"
@@ -37,11 +29,7 @@ class ExpenseCategory(db.Model):
 
 class Expense(db.Model):
     __tablename__ = "expenses"
-    __table_args__ = (
-        db.UniqueConstraint(
-            "tenant_id", "expense_number", name="uq_expenses_tenant_expense_number"
-        ),
-    )
+    __table_args__ = (db.UniqueConstraint("tenant_id", "expense_number", name="uq_expenses_tenant_expense_number"),)
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -52,17 +40,13 @@ class Expense(db.Model):
     )
     expense_number = db.Column(db.String(50), nullable=False, index=True)
 
-    category_id = db.Column(
-        db.Integer, db.ForeignKey("expense_categories.id"), nullable=False, index=True
-    )
+    category_id = db.Column(db.Integer, db.ForeignKey("expense_categories.id"), nullable=False, index=True)
 
     description = db.Column(db.String(255), nullable=False)
     description_ar = db.Column(db.String(255))
 
     amount = db.Column(db.Numeric(15, 3), nullable=False)
-    currency = db.Column(
-        db.String(3), default=context_aware_default_currency, nullable=False
-    )
+    currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
     amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
 
@@ -95,9 +79,7 @@ class Expense(db.Model):
     status = db.Column(db.String(20), default="confirmed", index=True)
     is_active = db.Column(db.Boolean, default=True, index=True)
 
-    user_id = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=False, index=True
-    )
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     created_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -106,17 +88,13 @@ class Expense(db.Model):
     )
 
     # Branch Support
-    branch_id = db.Column(
-        db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True
-    )
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True)
     is_reversed = db.Column(db.Boolean, default=False, index=True)
 
     category = db.relationship("ExpenseCategory", back_populates="expenses")
     tenant = db.relationship("Tenant", backref="expenses", foreign_keys=[tenant_id])
     user = db.relationship("User", foreign_keys=[user_id])
-    branch = db.relationship(
-        "Branch", backref="simple_expenses", foreign_keys=[branch_id]
-    )
+    branch = db.relationship("Branch", backref="simple_expenses", foreign_keys=[branch_id])
 
     def __repr__(self):
         return f"<Expense {self.expense_number}>"

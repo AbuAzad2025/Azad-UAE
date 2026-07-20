@@ -40,9 +40,7 @@ class KSAStrategy(LocalizationStrategy):
         return Decimal("0")
 
     @staticmethod
-    def _extract_tax_from_inclusive(
-        total: Decimal, rate: Decimal
-    ) -> tuple[Decimal, Decimal]:
+    def _extract_tax_from_inclusive(total: Decimal, rate: Decimal) -> tuple[Decimal, Decimal]:
         total = Decimal(str(total))
         rate = Decimal(str(rate))
         if rate <= 0:
@@ -64,9 +62,7 @@ class KSAStrategy(LocalizationStrategy):
                 "total_amount": amount,
                 "rate_applied": Decimal("0"),
             }
-        tax = (amount * rate / Decimal("100")).quantize(
-            _TWO_PLACES, rounding=ROUND_HALF_UP
-        )
+        tax = (amount * rate / Decimal("100")).quantize(_TWO_PLACES, rounding=ROUND_HALF_UP)
         total = amount + tax
         return {
             "tax_amount": tax,

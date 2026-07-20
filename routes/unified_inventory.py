@@ -17,11 +17,7 @@ uinv_bp = Blueprint("unified_inventory", __name__, url_prefix="/uinv")
 def campaigns_index():
     tid = get_active_tenant_id(current_user)
     if tid:
-        campaigns = (
-            Campaign.query.filter_by(tenant_id=tid, is_active=True)
-            .order_by(Campaign.created_at.desc())
-            .all()
-        )
+        campaigns = Campaign.query.filter_by(tenant_id=tid, is_active=True).order_by(Campaign.created_at.desc()).all()
     else:
         campaigns = []
     return render_template("unified_inventory/campaigns.html", campaigns=campaigns)
@@ -62,11 +58,7 @@ def campaigns_create():
 def warranty_index():
     tid = get_active_tenant_id(current_user)
     if tid:
-        claims = (
-            WarrantyClaim.query.filter_by(tenant_id=tid)
-            .order_by(WarrantyClaim.claim_date.desc())
-            .all()
-        )
+        claims = WarrantyClaim.query.filter_by(tenant_id=tid).order_by(WarrantyClaim.claim_date.desc()).all()
     else:
         claims = []
     return render_template("unified_inventory/warranty.html", claims=claims)
@@ -105,11 +97,7 @@ def warranty_create():
 def shipments_index():
     tid = get_active_tenant_id(current_user)
     if tid:
-        shipments = (
-            Shipment.query.filter_by(tenant_id=tid)
-            .order_by(Shipment.created_at.desc())
-            .all()
-        )
+        shipments = Shipment.query.filter_by(tenant_id=tid).order_by(Shipment.created_at.desc()).all()
     else:
         shipments = []
     return render_template("unified_inventory/shipments.html", shipments=shipments)

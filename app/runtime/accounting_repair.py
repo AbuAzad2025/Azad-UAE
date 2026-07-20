@@ -37,17 +37,13 @@ def repair_accounting_data():
         if tenant_id is None:
             from models import Tenant
 
-            default_tenant = (
-                Tenant.query.filter_by(is_active=True).order_by(Tenant.id.asc()).first()
-            )
+            default_tenant = Tenant.query.filter_by(is_active=True).order_by(Tenant.id.asc()).first()
             tenant_id = default_tenant.id if default_tenant else None
 
         GLService.ensure_core_accounts(tenant_id=tenant_id)
 
     merchant = (
-        Customer.query.filter_by(customer_type="merchant", tenant_id=tenant_id)
-        .order_by(Customer.id.asc())
-        .first()
+        Customer.query.filter_by(customer_type="merchant", tenant_id=tenant_id).order_by(Customer.id.asc()).first()
     )
     if not merchant:
         merchant = Customer(
@@ -70,9 +66,7 @@ def repair_accounting_data():
         updated_products += 1
 
     backfilled_entries = 0
-    legacy_entries = GLJournalEntry.query.filter(
-        GLJournalEntry.reference_type.is_(None)
-    ).all()
+    legacy_entries = GLJournalEntry.query.filter(GLJournalEntry.reference_type.is_(None)).all()
     for entry in legacy_entries:
         description = entry.description or ""
         match = re.search(r"رقم\s+([A-Za-z0-9\-]+)", description)
@@ -81,8 +75,7 @@ def repair_accounting_data():
 
         cheque_number = match.group(1).strip()
         cheque = Cheque.query.filter(
-            (Cheque.cheque_number == cheque_number)
-            | (Cheque.cheque_bank_number == cheque_number)
+            (Cheque.cheque_number == cheque_number) | (Cheque.cheque_bank_number == cheque_number)
         ).first()
         if not cheque:
             continue
@@ -107,15 +100,11 @@ def repair_accounting_data():
     inventory_account = gl_helpers.get_account("1140", tenant_id)
     equity_account = gl_helpers.get_account("3200", tenant_id)
     if not inventory_account or not equity_account:
-        raise RuntimeError(
-            f"الحسابات 1140 أو 3200 غير موجودة لـ tenant_id={tenant_id}."
-        )
+        raise RuntimeError(f"الحسابات 1140 أو 3200 غير موجودة لـ tenant_id={tenant_id}.")
 
     gl_inventory = sum(
         Decimal(str(line.debit or 0)) - Decimal(str(line.credit or 0))
-        for line in GLJournalLine.query.filter(
-            GLJournalLine.account_id == inventory_account.id
-        ).all()
+        for line in GLJournalLine.query.filter(GLJournalLine.account_id == inventory_account.id).all()
     )
     from utils.tenant_orm import tenant_query
 
@@ -165,9 +154,7 @@ def repair_accounting_data():
 
         branch = (
             Branch.query.filter_by(tenant_id=int(tenant_id), is_main=True).first()
-            or Branch.query.filter_by(tenant_id=int(tenant_id))
-            .order_by(Branch.id.asc())
-            .first()
+            or Branch.query.filter_by(tenant_id=int(tenant_id)).order_by(Branch.id.asc()).first()
         )
         GLService.post_entry(
             lines=lines,

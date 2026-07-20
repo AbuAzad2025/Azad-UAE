@@ -35,15 +35,9 @@ def register_stock_commands(app):
 
 def register_backup_commands(app):
     @app.cli.command("backup")
-    @click.option(
-        "--scope", default="system", help="Backup scope: system, tenant, branch, store"
-    )
-    @click.option(
-        "--tenant-id", type=int, default=None, help="Tenant ID for tenant scope"
-    )
-    @click.option(
-        "--branch-id", type=int, default=None, help="Branch ID for branch scope"
-    )
+    @click.option("--scope", default="system", help="Backup scope: system, tenant, branch, store")
+    @click.option("--tenant-id", type=int, default=None, help="Tenant ID for tenant scope")
+    @click.option("--branch-id", type=int, default=None, help="Branch ID for branch scope")
     def backup_cmd(scope, tenant_id, branch_id):
         """Run a manual backup."""
         from services.backup_service import BackupService
@@ -80,9 +74,7 @@ def register_reset_platform_db_command(app):
             for table in insp.get_table_names():
                 conn.execute(text(f'DROP TABLE IF EXISTS "{table}" CASCADE'))
 
-        click.echo(
-            "Creating schema from squashed baseline migration (explicit, no db.create_all)..."
-        )
+        click.echo("Creating schema from squashed baseline migration (explicit, no db.create_all)...")
         from flask_migrate import upgrade
 
         upgrade()
@@ -460,9 +452,7 @@ def _do_seed_demo(_app):
     # 4. Categories
     cat_objs = []
     for cdata in categories:
-        cat = ProductCategory(
-            tenant_id=tid, name=cdata["name"], name_ar=cdata["name_ar"], is_active=True
-        )
+        cat = ProductCategory(tenant_id=tid, name=cdata["name"], name_ar=cdata["name_ar"], is_active=True)
         db.session.add(cat)
         db.session.flush()
         cat_objs.append(cat)
@@ -593,8 +583,7 @@ def _do_seed_demo(_app):
     from services.stock_service import StockService
 
     all_branches = [("MAIN", branch, warehouse)] + [
-        (b["code"], branch_map[b["code"]][0], branch_map[b["code"]][1])
-        for b in branches
+        (b["code"], branch_map[b["code"]][0], branch_map[b["code"]][1]) for b in branches
     ]
     product_idx = 0
     for br_code, br, wh in all_branches:
@@ -662,19 +651,13 @@ def _do_seed_demo(_app):
         user = User.query.filter_by(username=uname).first()
         if not user:
             continue
-        emp = Employee.query.filter_by(
-            tenant_id=tid, name=(user.full_name_ar or uname)
-        ).first()
+        emp = Employee.query.filter_by(tenant_id=tid, name=(user.full_name_ar or uname)).first()
         if not emp:
             emp = Employee(tenant_id=tid, name=(user.full_name_ar or uname))
             db.session.add(emp)
             db.session.flush()
-        if not PayrollTransaction.query.filter_by(
-            tenant_id=tid, employee_id=emp.id
-        ).first():
-            db.session.add(
-                PayrollTransaction(tenant_id=tid, employee_id=emp.id, net_salary=salary)
-            )
+        if not PayrollTransaction.query.filter_by(tenant_id=tid, employee_id=emp.id).first():
+            db.session.add(PayrollTransaction(tenant_id=tid, employee_id=emp.id, net_salary=salary))
 
     # 14. Expense Categories
     exp_cat_names = ["إيجار", "كهرباء وماء", "صيانة"]
@@ -700,13 +683,9 @@ def _do_seed_demo(_app):
     for cust, prod, amount, pay_method, paid in sale_specs:
         if not cust or not prod:
             continue
-        pws = ProductWarehouseStock.query.filter_by(
-            tenant_id=tid, product_id=prod.id
-        ).first()
+        pws = ProductWarehouseStock.query.filter_by(tenant_id=tid, product_id=prod.id).first()
         sale_wh_id = pws.warehouse_id if pws else warehouse.id
-        lines_data = [
-            {"product": prod, "quantity": 1, "unit_price": Decimal(str(amount))}
-        ]
+        lines_data = [{"product": prod, "quantity": 1, "unit_price": Decimal(str(amount))}]
         payment_data = None
         if paid and paid > 0:
             payment_data = {
@@ -740,9 +719,7 @@ def _do_seed_demo(_app):
         if not sup or not prod:
             continue
         pur_wh_id = warehouse.id
-        lines_data = [
-            {"product_id": prod.id, "quantity": 1, "unit_cost": Decimal(str(amount))}
-        ]
+        lines_data = [{"product_id": prod.id, "quantity": 1, "unit_cost": Decimal(str(amount))}]
         _purchase = PurchaseService.create_purchase(
             user=seller,
             supplier_data={"supplier_id": sup.id},
@@ -805,9 +782,7 @@ def _do_seed_demo(_app):
     # 19. POS enablement + sessions — up to 5
     demo_tenant.enable_pos = True
     demo_tenant.enable_payroll = True
-    pos_cashier = (
-        User.query.filter_by(tenant_id=tid, username="demo_cashier1").first() or seller
-    )
+    pos_cashier = User.query.filter_by(tenant_id=tid, username="demo_cashier1").first() or seller
     pos_sessions = [
         ("MAIN", 500.0, 3200.0),
         ("DBX", 300.0, 1500.0),
@@ -817,9 +792,7 @@ def _do_seed_demo(_app):
         sess = PosSession(
             tenant_id=tid,
             branch_id=br.id,
-            user_id=(
-                pos_cashier.id if pos_cashier else (seller.id if seller else None)
-            ),
+            user_id=(pos_cashier.id if pos_cashier else (seller.id if seller else None)),
             session_number=f"DEMO-POS-{i + 1:03d}",
             opening_balance_cash=opening,
             total_sales=total_sales,
@@ -869,9 +842,7 @@ def _do_seed_demo(_app):
     # Recompute customer balances from posted sales/payments
     # (stored sign convention: negative = customer owes us)
     for cust in Customer.query.filter_by(tenant_id=tid).all():
-        bal = db.session.query(
-            db.func.coalesce(db.func.sum(Sale.paid_amount_aed - Sale.amount_aed), 0)
-        ).filter(
+        bal = db.session.query(db.func.coalesce(db.func.sum(Sale.paid_amount_aed - Sale.amount_aed), 0)).filter(
             Sale.customer_id == cust.id,
             Sale.status == "confirmed",
             Sale.is_active,
@@ -908,32 +879,15 @@ def register_sanitize_command(app):
         from models.tenant import Tenant
         from services.tenant_provisioning import provision_tenant_gl
 
-        bt_null = (
-            db.session.execute(
-                text("SELECT COUNT(*) FROM tenants WHERE business_type IS NULL")
-            ).scalar()
-            or 0
-        )
-        ind_null = (
-            db.session.execute(
-                text("SELECT COUNT(*) FROM tenants WHERE industry IS NULL")
-            ).scalar()
-            or 0
-        )
+        bt_null = db.session.execute(text("SELECT COUNT(*) FROM tenants WHERE business_type IS NULL")).scalar() or 0
+        ind_null = db.session.execute(text("SELECT COUNT(*) FROM tenants WHERE industry IS NULL")).scalar() or 0
 
         if commit:
-            db.session.execute(
-                text(
-                    "UPDATE tenants SET business_type = 'general' WHERE business_type IS NULL"
-                )
-            )
-            db.session.execute(
-                text("UPDATE tenants SET industry = 'retail' WHERE industry IS NULL")
-            )
+            db.session.execute(text("UPDATE tenants SET business_type = 'general' WHERE business_type IS NULL"))
+            db.session.execute(text("UPDATE tenants SET industry = 'retail' WHERE industry IS NULL"))
             db.session.commit()
             click.echo(
-                f"Backfilled business_type='general' on {bt_null} tenant(s); "
-                f"industry='retail' on {ind_null} tenant(s)."
+                f"Backfilled business_type='general' on {bt_null} tenant(s); industry='retail' on {ind_null} tenant(s)."
             )
         else:
             click.echo(

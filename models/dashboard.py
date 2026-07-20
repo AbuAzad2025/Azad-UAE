@@ -47,9 +47,7 @@ class UserDashboardLayout(db.Model):
 
     layout_json = db.Column(JSONB, nullable=False)
 
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -57,9 +55,7 @@ class UserDashboardLayout(db.Model):
         nullable=False,
     )
 
-    __table_args__ = (
-        db.UniqueConstraint("tenant_id", "user_id", name="uq_tenant_user_layout"),
-    )
+    __table_args__ = (db.UniqueConstraint("tenant_id", "user_id", name="uq_tenant_user_layout"),)
 
     def __repr__(self):
         return f"<UserDashboardLayout user={self.user_id}>"

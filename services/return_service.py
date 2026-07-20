@@ -43,9 +43,7 @@ class ReturnService:
         if value is None or value == "":
             return None
         try:
-            amount = Decimal(str(value)).quantize(
-                Decimal("0.001"), rounding=ROUND_HALF_UP
-            )
+            amount = Decimal(str(value)).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         except Exception:
             raise ValueError(f"{field_name} is invalid.")
         if amount < 0:
@@ -61,18 +59,14 @@ class ReturnService:
         platform_owner = is_platform_owner(user)
 
         if platform_owner:
-            if active_tenant_id is not None and int(sale.tenant_id) != int(
-                active_tenant_id
-            ):
+            if active_tenant_id is not None and int(sale.tenant_id) != int(active_tenant_id):
                 raise ValueError("Sale is outside the active tenant.")
         else:
             if active_tenant_id is None or int(sale.tenant_id) != int(active_tenant_id):
                 raise ValueError("Sale is outside your tenant scope.")
 
         scoped_branch_id = branch_scope_id_for(user)
-        if scoped_branch_id is not None and int(sale.branch_id or 0) != int(
-            scoped_branch_id
-        ):
+        if scoped_branch_id is not None and int(sale.branch_id or 0) != int(scoped_branch_id):
             raise ValueError("Sale is outside the allowed branch scope.")
 
         is_seller = getattr(user, "is_seller", None)
@@ -110,9 +104,7 @@ class ReturnService:
             if sale.status == "pending":
                 raise ValueError("Cannot create return for a pending sale.")
 
-            manual_refund_amount = ReturnService._optional_money(
-                manual_refund_amount, "manual_refund_amount"
-            )
+            manual_refund_amount = ReturnService._optional_money(manual_refund_amount, "manual_refund_amount")
 
             tenant_id = sale.tenant_id
             processed_by = getattr(user, "id", None) or user_id
@@ -165,31 +157,23 @@ class ReturnService:
                     raise ValueError(f"Sale line {sale_line_id} not found.")
 
                 if sale_line.sale_id != sale.id:
-                    raise ValueError(
-                        f"Sale line {sale_line_id} does not belong to sale {sale.id}."
-                    )
+                    raise ValueError(f"Sale line {sale_line_id} does not belong to sale {sale.id}.")
 
                 if int(sale_line.tenant_id) != int(tenant_id):
                     raise ValueError("Sale line is outside tenant scope.")
 
-                product = sale_line.product or db.session.get(
-                    Product, sale_line.product_id
-                )
+                product = sale_line.product or db.session.get(Product, sale_line.product_id)
                 if not product:
                     raise ValueError("Returned product was not found.")
 
-                condition = ReturnService._normalize_condition(
-                    line_data.get("condition")
-                )
+                condition = ReturnService._normalize_condition(line_data.get("condition"))
                 is_good = condition == "good"
 
-                previous_returned = db.session.query(
-                    db.func.sum(ProductReturnLine.quantity)
-                ).join(ProductReturn).filter(
-                    ProductReturnLine.sale_line_id == sale_line.id
-                ).filter(ProductReturn.status != "rejected").filter(
-                    ProductReturn.tenant_id == tenant_id
-                ).scalar() or Decimal("0")
+                previous_returned = db.session.query(db.func.sum(ProductReturnLine.quantity)).join(
+                    ProductReturn
+                ).filter(ProductReturnLine.sale_line_id == sale_line.id).filter(
+                    ProductReturn.status != "rejected"
+                ).filter(ProductReturn.tenant_id == tenant_id).scalar() or Decimal("0")
 
                 if (previous_returned + quantity) > sale_line.quantity:
                     raise ValueError(
@@ -216,13 +200,9 @@ class ReturnService:
                         ).first()
 
                         if not serial_obj:
-                            raise ValueError(
-                                f"Serial {serial_number} is not linked to this sale line."
-                            )
+                            raise ValueError(f"Serial {serial_number} is not linked to this sale line.")
                         if serial_obj.status != "sold":
-                            raise ValueError(
-                                f"Serial {serial_number} is not sold and cannot be returned."
-                            )
+                            raise ValueError(f"Serial {serial_number} is not sold and cannot be returned.")
 
                         serial_obj.status = "available" if is_good else "defective"
                         serial_obj.sale_line_id = None
@@ -230,38 +210,32 @@ class ReturnService:
                         serial_obj.warranty_end_date = None
                         db.session.add(serial_obj)
                 else:
-                    unexpected_serials = ReturnService._serials_from_line_data(
-                        line_data
-                    )
+                    unexpected_serials = ReturnService._serials_from_line_data(line_data)
                     if unexpected_serials:
-                        raise ValueError(
-                            f"Product {product.name} does not use serial numbers."
-                        )
+                        raise ValueError(f"Product {product.name} does not use serial numbers.")
 
                 sold_qty = ReturnService._sale_line_sold_qty(sale_line)
                 if sold_qty <= 0:
                     raise ValueError("Invalid sale line quantity.")
 
-                effective_unit_price = (
-                    Decimal(str(sale_line.line_total or 0)) / sold_qty
-                ).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
-                line_total = (effective_unit_price * quantity).quantize(
+                effective_unit_price = (Decimal(str(sale_line.line_total or 0)) / sold_qty).quantize(
                     Decimal("0.001"), rounding=ROUND_HALF_UP
                 )
+                line_total = (effective_unit_price * quantity).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
                 sale_subtotal = Decimal(str(sale.subtotal or 0))
                 if sale_subtotal > 0 and sale.discount_amount > 0:
-                    discount_share = (
-                        line_total / sale_subtotal * Decimal(str(sale.discount_amount))
-                    ).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+                    discount_share = (line_total / sale_subtotal * Decimal(str(sale.discount_amount))).quantize(
+                        Decimal("0.001"), rounding=ROUND_HALF_UP
+                    )
                     net_line_return = line_total - discount_share
                 else:
                     net_line_return = line_total
 
                 if sale_subtotal > 0 and sale.shipping_cost > 0:
-                    shipping_share = (
-                        line_total / sale_subtotal * Decimal(str(sale.shipping_cost))
-                    ).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+                    shipping_share = (line_total / sale_subtotal * Decimal(str(sale.shipping_cost))).quantize(
+                        Decimal("0.001"), rounding=ROUND_HALF_UP
+                    )
                     net_line_return += shipping_share
 
                 if net_line_return < Decimal("0"):
@@ -313,9 +287,7 @@ class ReturnService:
                             .first()
                         )
                         if cost_hist and cost_hist.movement_unit_cost:
-                            original_cost = abs(
-                                Decimal(str(cost_hist.movement_unit_cost))
-                            )
+                            original_cost = abs(Decimal(str(cost_hist.movement_unit_cost)))
                     except Exception:
                         logger.warning(
                             "Failed to fetch cost history for return cost calculation, product %s sale %s",
@@ -328,9 +300,7 @@ class ReturnService:
                     if original_cost <= Decimal("0"):
                         original_cost = Decimal(str(product.cost_price or 0))
                     cost_unit = original_cost
-                    cost_value = (quantity * cost_unit).quantize(
-                        Decimal("0.001"), rounding=ROUND_HALF_UP
-                    )
+                    cost_value = (quantity * cost_unit).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
                     if cost_value > 0:
                         cost_lines.append(
@@ -399,11 +369,7 @@ class ReturnService:
                                     movement_type="return",
                                     reference_type=GLRef.PRODUCT_RETURN,
                                     reference_id=product_return.id,
-                                    old_average_cost=(
-                                        old_avg.quantize(Decimal("0.0001"))
-                                        if old_avg
-                                        else None
-                                    ),
+                                    old_average_cost=(old_avg.quantize(Decimal("0.0001")) if old_avg else None),
                                     new_average_cost=new_avg,
                                     quantity_change=qty_decimal,
                                     old_total_quantity=old_qty,
@@ -428,33 +394,24 @@ class ReturnService:
             if lines_added == 0:
                 raise ValueError("At least one returned item is required.")
 
-            product_return.total_amount = total_gross_return.quantize(
-                Decimal("0.001"), rounding=ROUND_HALF_UP
-            )
+            product_return.total_amount = total_gross_return.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
             tax_rate = Decimal(str(sale.tax_rate or 0))
             if not should_post_vat_gl(tenant_id):
                 tax_rate = Decimal("0")
 
-            auto_net_return_amount = total_net_return.quantize(
+            auto_net_return_amount = total_net_return.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+            auto_tax_amount = (auto_net_return_amount * (tax_rate / Decimal("100"))).quantize(
                 Decimal("0.001"), rounding=ROUND_HALF_UP
             )
-            auto_tax_amount = (
-                auto_net_return_amount * (tax_rate / Decimal("100"))
-            ).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
             auto_gross_return_amount = auto_net_return_amount + auto_tax_amount
 
-            final_refund_amount = (
-                manual_refund_amount
-                if manual_refund_amount is not None
-                else auto_gross_return_amount
-            )
+            final_refund_amount = manual_refund_amount if manual_refund_amount is not None else auto_gross_return_amount
             if manual_refund_amount is not None:
                 if tax_rate > 0:
-                    net_return_amount = (
-                        final_refund_amount
-                        / (Decimal("1") + (tax_rate / Decimal("100")))
-                    ).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+                    net_return_amount = (final_refund_amount / (Decimal("1") + (tax_rate / Decimal("100")))).quantize(
+                        Decimal("0.001"), rounding=ROUND_HALF_UP
+                    )
                     tax_amount = final_refund_amount - net_return_amount
                 else:
                     net_return_amount = final_refund_amount
@@ -513,9 +470,7 @@ class ReturnService:
                             branch_id=product_return.branch_id,
                             tenant_id=tenant_id,
                         ),
-                        "concept_code": GLService.get_customer_credit_concept(
-                            sale.customer
-                        ),
+                        "concept_code": GLService.get_customer_credit_concept(sale.customer),
                         "debit": 0,
                         "credit": final_refund_amount,
                         "description": f"Credit Customer for Return {sale.sale_number}",

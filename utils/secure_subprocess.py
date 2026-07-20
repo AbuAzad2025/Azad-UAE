@@ -37,9 +37,7 @@ _PG_TOOL_BASENAMES = frozenset(
     }
 )
 _GIT_BASENAMES = frozenset({"git", "git.exe"})
-_PYTHON_BASENAMES = frozenset(
-    {os.path.basename(sys.executable), "python", "python.exe"}
-)
+_PYTHON_BASENAMES = frozenset({os.path.basename(sys.executable), "python", "python.exe"})
 
 
 def _executable_basename(path: str) -> str:
@@ -135,9 +133,7 @@ class SecureSubprocess:
     ) -> subprocess.CompletedProcess:
         """Run a ``.py`` file under the repo root (path-traversal guarded)."""
         root: str = os.path.abspath(os.path.join(os.path.dirname(str(__file__)), ".."))
-        script = os.path.normpath(
-            os.path.join(root, script_rel_path.replace("/", os.sep))
-        )
+        script = os.path.normpath(os.path.join(root, script_rel_path.replace("/", os.sep)))
         if not script.endswith(".py") or not os.path.isfile(script):
             raise ValueError("script must be an existing .py under repo root")
         if os.path.commonpath([root, script]) != root:

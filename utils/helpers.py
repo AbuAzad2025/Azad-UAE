@@ -64,9 +64,7 @@ def generate_number(
 ):
     year = datetime.now().strftime(date_format)
 
-    resolved_branch_code = _resolve_branch_code(
-        branch_code=branch_code, branch_id=branch_id
-    )
+    resolved_branch_code = _resolve_branch_code(branch_code=branch_code, branch_id=branch_id)
     pattern = _build_number_pattern(prefix, resolved_branch_code, year)
 
     q = db.session.query(model).filter(getattr(model, field_name).like(pattern))
@@ -116,18 +114,12 @@ def generate_number_and_save(
             return save_func(number)
         except IntegrityError:
             continue
-    raise RuntimeError(
-        f"Could not generate unique number after {max_attempts} attempts"
-    )
+    raise RuntimeError(f"Could not generate unique number after {max_attempts} attempts")
 
 
-def get_next_number(
-    prefix, model_class, number_field="number", branch_code=None, branch_id=None
-):
+def get_next_number(prefix, model_class, number_field="number", branch_code=None, branch_id=None):
     year = datetime.now().strftime("%Y")
-    resolved_branch_code = _resolve_branch_code(
-        branch_code=branch_code, branch_id=branch_id
-    )
+    resolved_branch_code = _resolve_branch_code(branch_code=branch_code, branch_id=branch_id)
     pattern = _build_number_pattern(prefix, resolved_branch_code, year)
 
     last_record = (
@@ -137,11 +129,7 @@ def get_next_number(
         .first()
     )
 
-    last_num = (
-        _parse_sequence_suffix(getattr(last_record, number_field))
-        if last_record
-        else None
-    )
+    last_num = _parse_sequence_suffix(getattr(last_record, number_field)) if last_record else None
     next_num = (last_num + 1) if last_num is not None else 1
 
     if resolved_branch_code:
@@ -172,20 +160,12 @@ def _resolve_format_currency_settings():
         from models.system_settings import SystemSettings
 
         settings = SystemSettings.get_current()
-        settings_currency = (
-            getattr(settings, "default_currency", None) or ""
-        ).strip() or None
-        settings_symbol = (
-            getattr(settings, "currency_symbol", None) or ""
-        ).strip() or None
-        settings_position = (
-            getattr(settings, "currency_position", None) or ""
-        ).strip() or None
+        settings_currency = (getattr(settings, "default_currency", None) or "").strip() or None
+        settings_symbol = (getattr(settings, "currency_symbol", None) or "").strip() or None
+        settings_position = (getattr(settings, "currency_position", None) or "").strip() or None
         settings_decimals = getattr(settings, "decimal_places", None)
     except Exception:
-        logger.debug(
-            "Failed to load currency format settings from SystemSettings", exc_info=True
-        )
+        logger.debug("Failed to load currency format settings from SystemSettings", exc_info=True)
     try:
         from models.tenant import Tenant
 
@@ -193,9 +173,7 @@ def _resolve_format_currency_settings():
         if tenant and tenant.default_currency:
             settings_currency = settings_currency or tenant.default_currency
     except Exception:
-        logger.debug(
-            "Failed to load tenant default currency for formatting", exc_info=True
-        )
+        logger.debug("Failed to load tenant default currency for formatting", exc_info=True)
     return settings_currency, settings_symbol, settings_position, settings_decimals
 
 
@@ -207,35 +185,19 @@ def format_currency(amount, currency=None, lang="ar"):
         if isinstance(amount, (int, float)):
             amount = Decimal(str(amount))
 
-        settings_currency, settings_symbol, settings_position, settings_decimals = (
-            _resolve_format_currency_settings()
-        )
+        settings_currency, settings_symbol, settings_position, settings_decimals = _resolve_format_currency_settings()
 
         from utils.currency_utils import (
             get_system_default_currency,
             get_currency_symbol,
         )
 
-        currency = (
-            currency or settings_currency or get_system_default_currency()
-        ).upper()
-        decimals = (
-            settings_decimals
-            if isinstance(settings_decimals, int) and settings_decimals >= 0
-            else 2
-        )
+        currency = (currency or settings_currency or get_system_default_currency()).upper()
+        decimals = settings_decimals if isinstance(settings_decimals, int) and settings_decimals >= 0 else 2
         formatted = f"{amount:,.{decimals}f}"
 
-        symbol = (
-            settings_symbol
-            if settings_currency == currency and settings_symbol
-            else get_currency_symbol(currency)
-        )
-        position = (
-            settings_position
-            if settings_currency == currency and settings_position
-            else None
-        )
+        symbol = settings_symbol if settings_currency == currency and settings_symbol else get_currency_symbol(currency)
+        position = settings_position if settings_currency == currency and settings_position else None
         if position not in ("before", "after"):
             position = "after" if lang == "ar" else "before"
 
@@ -292,14 +254,9 @@ def create_audit_log(action, table_name=None, record_id=None, changes=None):
     try:
         user_id = None
         if current_user:
-            if (
-                hasattr(current_user, "is_authenticated")
-                and current_user.is_authenticated
-            ):
+            if hasattr(current_user, "is_authenticated") and current_user.is_authenticated:
                 user_id = current_user.id
-            elif hasattr(
-                current_user, "id"
-            ):  # In case we mocked it with a simple object
+            elif hasattr(current_user, "id"):  # In case we mocked it with a simple object
                 user_id = current_user.id
 
         log = AuditLog(
@@ -338,10 +295,7 @@ def allowed_file(filename, allowed_extensions=None):
                 if isinstance(ext_set, set):
                     allowed_extensions.update(ext_set)
 
-    return (
-        "." in filename
-        and "." + filename.rsplit(".", 1)[1].lower() in allowed_extensions
-    )
+    return "." in filename and "." + filename.rsplit(".", 1)[1].lower() in allowed_extensions
 
 
 def save_uploaded_file(file, upload_folder="uploads", allowed_extensions=None):

@@ -184,9 +184,7 @@ class TestVoucherSubmitAssurance:
     def test_voucher_incoming_supplier_cheque(self, payments_client, mocker):
         supplier = MagicMock(id=2, name="Sup", tenant_id=1)
         supplier.apply_payment = MagicMock()
-        mocker.patch(
-            "routes.payments._resolve_transaction_rate", return_value=Decimal("1")
-        )
+        mocker.patch("routes.payments._resolve_transaction_rate", return_value=Decimal("1"))
         mocker.patch("utils.helpers.generate_number", return_value="PAY-IN-CHQ")
         mocker.patch("routes.payments.post_or_fail")
         mocker.patch("services.gl_service.GLService.ensure_core_accounts")
@@ -242,9 +240,7 @@ class TestVoucherSubmitAssurance:
             follow_redirects=False,
         )
         assert resp.status_code == 302
-        assert "/payments/receipts" in resp.location or resp.location.endswith(
-            "/receipts"
-        )
+        assert "/payments/receipts" in resp.location or resp.location.endswith("/receipts")
 
 
 class TestCreateFromSaleAndPaymentAssurance:
@@ -279,9 +275,7 @@ class TestCreateFromSaleAndPaymentAssurance:
             patch("utils.decorators.branch_scope_id", return_value=None),
             patch("routes.payments.get_system_default_currency", return_value="AED"),
         ):
-            resp = payments_client.get(
-                "/payments/create_from_sale/5", follow_redirects=False
-            )
+            resp = payments_client.get("/payments/create_from_sale/5", follow_redirects=False)
         assert resp.status_code == 302
         assert "amount=100" in resp.location or "amount=100.0" in resp.location
 
@@ -349,9 +343,7 @@ class TestCreateFromSaleAndPaymentAssurance:
             patch("utils.decorators.branch_scope_id", return_value=None),
             patch("routes.payments.get_system_default_currency", return_value="AED"),
         ):
-            resp = payments_client.get(
-                "/payments/create_payment/8", follow_redirects=False
-            )
+            resp = payments_client.get("/payments/create_payment/8", follow_redirects=False)
         assert resp.status_code == 302
         assert "currency=USD" in resp.location
 
@@ -375,9 +367,7 @@ class TestCreateFromSaleAndPaymentAssurance:
             patch("utils.decorators.branch_scope_id", return_value=None),
             patch("routes.payments.render_template", return_value="form") as render,
         ):
-            resp = payments_client.post(
-                "/payments/create_payment/8", data={"amount": "50"}
-            )
+            resp = payments_client.post("/payments/create_payment/8", data={"amount": "50"})
         assert resp.status_code == 200
         render.assert_called_once()
 
@@ -430,14 +420,10 @@ class TestReceiptViewPrintAssurance:
     def test_print_receipt_redirects_to_payment(self, payments_client):
         payment = _mock_payment()
         with patch("routes.payments.tenant_get", side_effect=[None, payment]):
-            resp = payments_client.get(
-                "/payments/receipts/99/print", follow_redirects=False
-            )
+            resp = payments_client.get("/payments/receipts/99/print", follow_redirects=False)
         assert resp.status_code == 302
 
-    def test_print_receipt_seller_forbidden(
-        self, payments_client, bypass_permission_auth
-    ):
+    def test_print_receipt_seller_forbidden(self, payments_client, bypass_permission_auth):
         receipt = _mock_receipt(user_id=99, branch_id=1)
         bypass_permission_auth.is_seller = MagicMock(return_value=True)
         bypass_permission_auth.is_owner = False
@@ -447,15 +433,11 @@ class TestReceiptViewPrintAssurance:
             patch("utils.decorators.branch_scope_id", return_value=None),
             patch("routes.payments.render_template", return_value="ok"),
         ):
-            resp = payments_client.get(
-                "/payments/receipts/1/print", follow_redirects=False
-            )
+            resp = payments_client.get("/payments/receipts/1/print", follow_redirects=False)
         assert resp.status_code == 302
 
     def test_print_receipt_sale_branch_ok(self, payments_client):
-        receipt = _mock_receipt(
-            branch_id=1, source_type="sale", source_id=10, user_id=42
-        )
+        receipt = _mock_receipt(branch_id=1, source_type="sale", source_id=10, user_id=42)
         sale = MagicMock(branch_id=1)
         settings = MagicMock(active_template="modern", enable_qr_code=False)
         with (
@@ -472,9 +454,7 @@ class TestReceiptViewPrintAssurance:
             patch("models.Branch") as branch_q,
             patch("routes.payments.render_template", return_value="ok") as render,
         ):
-            branch_q.query.filter_by.return_value.first.return_value = MagicMock(
-                name="Branch"
-            )
+            branch_q.query.filter_by.return_value.first.return_value = MagicMock(name="Branch")
             resp = payments_client.get("/payments/receipts/1/print")
         assert resp.status_code == 200
         render.assert_called_once()
@@ -541,9 +521,7 @@ class TestArchiveRestoreDeleteAssurance:
             patch("routes.payments.render_template", return_value="403") as render,
         ):
             ar.query = q
-            resp = payments_client.post(
-                "/payments/receipts/3/restore", follow_redirects=False
-            )
+            resp = payments_client.post("/payments/receipts/3/restore", follow_redirects=False)
         assert resp.status_code == 403
         render.assert_called_with("errors/403.html")
 
@@ -559,9 +537,7 @@ class TestArchiveRestoreDeleteAssurance:
             patch("routes.payments.render_template", return_value="403") as render,
         ):
             ar.query = q
-            resp = payments_client.post(
-                "/payments/payments/4/restore", follow_redirects=False
-            )
+            resp = payments_client.post("/payments/payments/4/restore", follow_redirects=False)
         assert resp.status_code == 403
         render.assert_called_with("errors/403.html")
 
@@ -572,9 +548,7 @@ class TestArchiveRestoreDeleteAssurance:
             patch("utils.decorators.branch_scope_id", return_value=1),
             patch("routes.payments.render_template", return_value="403") as render,
         ):
-            resp = payments_client.post(
-                "/payments/receipts/1/archive", follow_redirects=False
-            )
+            resp = payments_client.post("/payments/receipts/1/archive", follow_redirects=False)
         assert resp.status_code == 403
         render.assert_called_with("errors/403.html")
 
@@ -585,9 +559,7 @@ class TestArchiveRestoreDeleteAssurance:
             patch("utils.decorators.branch_scope_id", return_value=1),
             patch("routes.payments.render_template", return_value="403") as render,
         ):
-            resp = payments_client.post(
-                "/payments/payments/2/archive", follow_redirects=False
-            )
+            resp = payments_client.post("/payments/payments/2/archive", follow_redirects=False)
         assert resp.status_code == 403
         render.assert_called_with("errors/403.html")
 
@@ -598,9 +570,7 @@ class TestArchiveRestoreDeleteAssurance:
             patch("utils.decorators.branch_scope_id", return_value=1),
             patch("routes.payments.render_template", return_value="403") as render,
         ):
-            resp = payments_client.post(
-                "/payments/receipts/1/delete", follow_redirects=False
-            )
+            resp = payments_client.post("/payments/receipts/1/delete", follow_redirects=False)
         assert resp.status_code == 403
         render.assert_called_with("errors/403.html")
 
@@ -611,16 +581,12 @@ class TestArchiveRestoreDeleteAssurance:
             patch("utils.decorators.branch_scope_id", return_value=1),
             patch("routes.payments.render_template", return_value="403") as render,
         ):
-            resp = payments_client.post(
-                "/payments/payments/2/delete", follow_redirects=False
-            )
+            resp = payments_client.post("/payments/payments/2/delete", follow_redirects=False)
         assert resp.status_code == 403
         render.assert_called_with("errors/403.html")
 
     def test_delete_receipt_hard_delete_with_cheque(self, payments_client, mocker):
-        receipt = _mock_receipt(
-            branch_id=1, source_type="manual", source_id=None, cheque_id=None
-        )
+        receipt = _mock_receipt(branch_id=1, source_type="manual", source_id=None, cheque_id=None)
         cheque = MagicMock()
         receipt.cheque = cheque
         mocker.patch("services.gl_service.GLService.reverse_entry")
@@ -631,18 +597,12 @@ class TestArchiveRestoreDeleteAssurance:
         ):
             session.delete = MagicMock()
             session.commit = MagicMock()
-            resp = payments_client.post(
-                "/payments/receipts/1/delete", follow_redirects=False
-            )
+            resp = payments_client.post("/payments/receipts/1/delete", follow_redirects=False)
         assert resp.status_code == 302
         session.delete.assert_any_call(cheque)
 
-    def test_delete_receipt_hard_delete_marks_sale_unpaid(
-        self, payments_client, mocker
-    ):
-        receipt = _mock_receipt(
-            branch_id=1, source_type="sale", source_id=5, cheque_id=None
-        )
+    def test_delete_receipt_hard_delete_marks_sale_unpaid(self, payments_client, mocker):
+        receipt = _mock_receipt(branch_id=1, source_type="sale", source_id=5, cheque_id=None)
         receipt.amount = Decimal("150")
         receipt.amount_aed = Decimal("150")
         sale = MagicMock(
@@ -660,9 +620,7 @@ class TestArchiveRestoreDeleteAssurance:
         ):
             sale_model.query.filter_by.return_value.first.return_value = sale
             session.commit = MagicMock()
-            resp = payments_client.post(
-                "/payments/receipts/1/delete", follow_redirects=False
-            )
+            resp = payments_client.post("/payments/receipts/1/delete", follow_redirects=False)
         assert resp.status_code == 302
         assert sale.payment_status == "unpaid"
 
@@ -676,9 +634,7 @@ class TestArchiveRestoreDeleteAssurance:
             patch("routes.payments.tenant_get_or_404", return_value=payment),
             patch("utils.decorators.branch_scope_id", return_value=None),
         ):
-            resp = payments_client.post(
-                "/payments/payments/2/delete", follow_redirects=False
-            )
+            resp = payments_client.post("/payments/payments/2/delete", follow_redirects=False)
         assert resp.status_code == 302
 
 
@@ -723,9 +679,7 @@ class TestReceiptsListAssurance:
         q.filter.return_value = q
         q.order_by.return_value.limit.return_value.all.return_value = [customer]
         with patch("routes.payments._scoped_customers_query", return_value=q):
-            data = payments_client.get(
-                "/payments/search-entities?type=customers&q=Ali"
-            ).get_json()
+            data = payments_client.get("/payments/search-entities?type=customers&q=Ali").get_json()
         assert data[0]["display"] == "Ali - 050"
 
 
@@ -760,9 +714,7 @@ class TestPaymentsGapCoverage:
         render.assert_called_with("errors/403.html")
 
     def test_print_receipt_qr_and_currency_fallback(self, payments_client):
-        receipt = _mock_receipt(
-            branch_id=1, source_type="sale", source_id=10, user_id=42
-        )
+        receipt = _mock_receipt(branch_id=1, source_type="sale", source_id=10, user_id=42)
         receipt.user = MagicMock(
             get_display_name=MagicMock(return_value="User AR"),
             full_name="User",
@@ -792,9 +744,7 @@ class TestPaymentsGapCoverage:
             patch("models.Branch") as branch_cls,
             patch("routes.payments.render_template", return_value="ok") as render,
         ):
-            branch_cls.query.filter_by.return_value.first.return_value = MagicMock(
-                name="Branch"
-            )
+            branch_cls.query.filter_by.return_value.first.return_value = MagicMock(name="Branch")
             resp = payments_client.get("/payments/receipts/1/print")
         assert resp.status_code == 200
         qr.assert_called_once()
@@ -811,9 +761,7 @@ class TestPaymentsGapCoverage:
             amount_aed=Decimal("50"),
         )
         payment_cls = MagicMock(return_value=payment_inst)
-        mocker.patch(
-            "routes.payments._resolve_transaction_rate", return_value=Decimal("1")
-        )
+        mocker.patch("routes.payments._resolve_transaction_rate", return_value=Decimal("1"))
         mocker.patch("utils.helpers.generate_number", return_value="REC-1")
         mocker.patch("routes.payments.post_or_fail")
         mocker.patch("services.gl_service.GLService.ensure_core_accounts")
@@ -864,9 +812,7 @@ class TestPaymentsGapCoverage:
                 side_effect=RuntimeError("tenant fx"),
             ),
             patch("routes.payments.get_system_default_currency", return_value="AED"),
-            patch(
-                "routes.payments.PaymentService.create_receipt", return_value=receipt
-            ),
+            patch("routes.payments.PaymentService.create_receipt", return_value=receipt),
         ):
             resp = payments_client.post(
                 "/payments/voucher/submit",
@@ -882,9 +828,7 @@ class TestPaymentsGapCoverage:
         assert resp.status_code == 302
 
     def test_delete_receipt_sale_partial_status(self, payments_client, mocker):
-        receipt = _mock_receipt(
-            branch_id=1, source_type="sale", source_id=5, cheque_id=None
-        )
+        receipt = _mock_receipt(branch_id=1, source_type="sale", source_id=5, cheque_id=None)
         receipt.amount = Decimal("50")
         receipt.amount_aed = Decimal("50")
         sale = MagicMock(
@@ -902,9 +846,7 @@ class TestPaymentsGapCoverage:
         ):
             sale_model.query.filter_by.return_value.first.return_value = sale
             session.commit = MagicMock()
-            resp = payments_client.post(
-                "/payments/receipts/1/delete", follow_redirects=False
-            )
+            resp = payments_client.post("/payments/receipts/1/delete", follow_redirects=False)
         assert resp.status_code == 302
         assert sale.payment_status == "partial"
 
@@ -921,9 +863,7 @@ class TestPaymentsGapCoverage:
         ):
             supplier_cls.query.filter_by.return_value.first.return_value = supplier
             session.commit = MagicMock()
-            resp = payments_client.post(
-                "/payments/payments/2/delete", follow_redirects=False
-            )
+            resp = payments_client.post("/payments/payments/2/delete", follow_redirects=False)
         assert resp.status_code == 302
         supplier.apply_payment.assert_called_once()
 
@@ -956,9 +896,7 @@ class TestPaymentsGapCoverage:
         assert render.call_args.kwargs["archived_items"] == []
 
     def test_create_receipt_redirects_to_voucher(self, payments_client):
-        resp = payments_client.get(
-            "/payments/receipts/create?customer_id=1", follow_redirects=False
-        )
+        resp = payments_client.get("/payments/receipts/create?customer_id=1", follow_redirects=False)
         assert resp.status_code == 302
 
     def test_api_customer_balance_currency_fallback(self, payments_client):
@@ -988,9 +926,7 @@ class TestReceiptsPaginationGap:
             return "ok"
 
         with _payments_patches(receipts=receipts, count_receipts=100):
-            with patch(
-                "routes.payments.render_template", side_effect=render_side_effect
-            ):
+            with patch("routes.payments.render_template", side_effect=render_side_effect):
                 resp = payments_client.get("/payments/receipts?per_page=10&page=5")
         assert resp.status_code == 200
 
@@ -1008,9 +944,7 @@ class TestCreateFromSaleCurrencyFallback:
         )
         receipt = MagicMock(id=12)
         mocker.patch("routes.payments.tenant_get_or_404", return_value=sale)
-        mocker.patch(
-            "routes.payments.PaymentService.create_receipt", return_value=receipt
-        )
+        mocker.patch("routes.payments.PaymentService.create_receipt", return_value=receipt)
         mocker.patch(
             "routes.payments.resolve_default_currency",
             side_effect=RuntimeError("curr fail"),
@@ -1049,9 +983,7 @@ class TestVoucherCurrencyInnerExcept:
                 side_effect=RuntimeError("tenant fx"),
             ),
             patch("routes.payments.get_system_default_currency", return_value="AED"),
-            patch(
-                "routes.payments.PaymentService.create_receipt", return_value=receipt
-            ),
+            patch("routes.payments.PaymentService.create_receipt", return_value=receipt),
         ):
             resp = payments_client.post(
                 "/payments/voucher/submit",
@@ -1112,9 +1044,7 @@ class TestPaymentsFinalGaps:
         )
         receipt = MagicMock(id=11)
         mocker.patch("routes.payments.tenant_get_or_404", return_value=sale)
-        mocker.patch(
-            "routes.payments.PaymentService.create_receipt", return_value=receipt
-        )
+        mocker.patch("routes.payments.PaymentService.create_receipt", return_value=receipt)
         with (
             patch("utils.decorators.branch_scope_id", return_value=None),
             patch("routes.payments.LoggingCore.log_audit"),
@@ -1128,9 +1058,7 @@ class TestPaymentsFinalGaps:
         assert resp.status_code == 302
         assert "/receipts/11" in resp.location
 
-    def test_create_from_sale_currency_log_error_inner_except(
-        self, payments_client, mocker
-    ):
+    def test_create_from_sale_currency_log_error_inner_except(self, payments_client, mocker):
         sale = MagicMock(
             id=5,
             branch_id=1,
@@ -1143,9 +1071,7 @@ class TestPaymentsFinalGaps:
         )
         receipt = MagicMock(id=12)
         mocker.patch("routes.payments.tenant_get_or_404", return_value=sale)
-        mocker.patch(
-            "routes.payments.PaymentService.create_receipt", return_value=receipt
-        )
+        mocker.patch("routes.payments.PaymentService.create_receipt", return_value=receipt)
         mocker.patch(
             "routes.payments.resolve_default_currency",
             side_effect=RuntimeError("curr fail"),
@@ -1169,9 +1095,7 @@ class TestPaymentsFinalGaps:
                 resp = create_from_sale(5)
         assert resp.status_code == 302
 
-    def test_create_payment_currency_log_error_inner_except(
-        self, payments_client, mocker
-    ):
+    def test_create_payment_currency_log_error_inner_except(self, payments_client, mocker):
         purchase = MagicMock(
             id=8,
             branch_id=1,
@@ -1223,16 +1147,12 @@ class TestPaymentsFinalGaps:
         ):
             session.delete = MagicMock()
             session.commit = MagicMock()
-            resp = payments_client.post(
-                "/payments/payments/2/delete", follow_redirects=False
-            )
+            resp = payments_client.post("/payments/payments/2/delete", follow_redirects=False)
         assert resp.status_code == 302
         session.delete.assert_any_call(cheque)
 
     def test_delete_receipt_sale_marks_paid(self, payments_client, mocker):
-        receipt = _mock_receipt(
-            branch_id=1, source_type="sale", source_id=5, cheque_id=None
-        )
+        receipt = _mock_receipt(branch_id=1, source_type="sale", source_id=5, cheque_id=None)
         receipt.amount = Decimal("50")
         receipt.amount_aed = Decimal("50")
         sale = MagicMock(
@@ -1250,9 +1170,7 @@ class TestPaymentsFinalGaps:
         ):
             sale_model.query.filter_by.return_value.first.return_value = sale
             session.commit = MagicMock()
-            resp = payments_client.post(
-                "/payments/receipts/1/delete", follow_redirects=False
-            )
+            resp = payments_client.post("/payments/receipts/1/delete", follow_redirects=False)
         assert resp.status_code == 302
         assert sale.payment_status == "paid"
         assert sale.balance_due == 0

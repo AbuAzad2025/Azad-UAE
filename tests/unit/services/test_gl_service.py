@@ -33,12 +33,8 @@ def _post_entry(entry_id, *, user_id=1):
     """Validate and post a draft journal entry so read methods can find it."""
     from services.advanced_journal_manager import AdvancedJournalEntryManager
 
-    AdvancedJournalEntryManager.validate_entry(
-        entry_id=entry_id, validated_by=user_id, commit=False
-    )
-    AdvancedJournalEntryManager.post_entry(
-        entry_id=entry_id, posted_by=user_id, commit=False
-    )
+    AdvancedJournalEntryManager.validate_entry(entry_id=entry_id, validated_by=user_id, commit=False)
+    AdvancedJournalEntryManager.post_entry(entry_id=entry_id, posted_by=user_id, commit=False)
     db.session.flush()
 
 
@@ -56,28 +52,19 @@ class TestPostingHelpers:
     def test_payment_debit_concept(self):
         assert GLService.get_payment_debit_concept("cash") == "CASH"
         assert GLService.get_payment_debit_concept("bank_transfer") == "BANK"
-        assert (
-            GLService.get_payment_debit_concept("cheque") == "CHEQUES_UNDER_COLLECTION"
-        )
+        assert GLService.get_payment_debit_concept("cheque") == "CHEQUES_UNDER_COLLECTION"
         assert GLService.get_payment_debit_concept(None) == "CASH"
 
     def test_payment_credit_concept(self):
-        assert (
-            GLService.get_payment_credit_concept("cheque") == "DEFERRED_CHEQUES_PAYABLE"
-        )
+        assert GLService.get_payment_credit_concept("cheque") == "DEFERRED_CHEQUES_PAYABLE"
         assert GLService.get_payment_credit_concept("unknown") is None
 
     def test_customer_credit_concept(self):
         partner = MagicMock(customer_type="partner")
         merchant = MagicMock(customer_type="merchant")
         regular = MagicMock(customer_type="retail")
-        assert (
-            GLService.get_customer_credit_concept(partner) == "PARTNER_CURRENT_ACCOUNT"
-        )
-        assert (
-            GLService.get_customer_credit_concept(merchant)
-            == "MERCHANT_CURRENT_ACCOUNT"
-        )
+        assert GLService.get_customer_credit_concept(partner) == "PARTNER_CURRENT_ACCOUNT"
+        assert GLService.get_customer_credit_concept(merchant) == "MERCHANT_CURRENT_ACCOUNT"
         assert GLService.get_customer_credit_concept(regular) == "AR"
         assert GLService.get_customer_credit_concept(None) == "AR"
 
@@ -94,27 +81,19 @@ class TestResolveJournalLineAccount:
                 sample_tenant.id,
             )
 
-    def test_legacy_account_resolution(
-        self, db_session, sample_tenant, sample_gl_accounts
-    ):
+    def test_legacy_account_resolution(self, db_session, sample_tenant, sample_gl_accounts):
         acct = GLService._resolve_journal_line_account(
             {"account": "1111"},
             sample_tenant.id,
         )
         assert acct.code == "1111"
 
-    def test_inactive_account_raises(
-        self, db_session, sample_tenant, sample_gl_accounts
-    ):
-        acct = GLAccount.query.filter_by(
-            tenant_id=sample_tenant.id, code="1111"
-        ).first()
+    def test_inactive_account_raises(self, db_session, sample_tenant, sample_gl_accounts):
+        acct = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="1111").first()
         acct.is_active = False
         db_session.flush()
         with pytest.raises(ValueError, match="inactive"):
-            GLService._resolve_journal_line_account(
-                {"account": "1111"}, sample_tenant.id
-            )
+            GLService._resolve_journal_line_account({"account": "1111"}, sample_tenant.id)
 
     def test_header_account_raises(self, db_session, sample_tenant, sample_gl_accounts):
         header = GLAccount(
@@ -128,9 +107,7 @@ class TestResolveJournalLineAccount:
         db_session.add(header)
         db_session.flush()
         with pytest.raises(ValueError, match="header"):
-            GLService._resolve_journal_line_account(
-                {"account": "1999"}, sample_tenant.id
-            )
+            GLService._resolve_journal_line_account({"account": "1999"}, sample_tenant.id)
 
     def test_missing_ok_returns_none(self, sample_tenant):
         result = GLService._resolve_journal_line_account(
@@ -143,9 +120,7 @@ class TestResolveJournalLineAccount:
 
 
 class TestCreateJournalEntry:
-    def test_balanced_entry_created(
-        self, db_session, sample_tenant, sample_gl_accounts, mocker
-    ):
+    def test_balanced_entry_created(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch("services.gl_helpers.assert_period_open")
         entry = GLService.create_journal_entry(
             datetime(2026, 6, 15, tzinfo=timezone.utc),
@@ -160,9 +135,7 @@ class TestCreateJournalEntry:
         lines = GLJournalLine.query.filter_by(entry_id=entry.id).all()
         assert len(lines) == 2
 
-    def test_unbalanced_raises(
-        self, db_session, sample_tenant, sample_gl_accounts, mocker
-    ):
+    def test_unbalanced_raises(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         from services.gl_posting import UnbalancedJournalEntryError
 
         mocker.patch("services.gl_helpers.assert_period_open")
@@ -178,9 +151,7 @@ class TestCreateJournalEntry:
                 tenant_id=sample_tenant.id,
             )
 
-    def test_wrong_branch_tenant_raises(
-        self, db_session, sample_tenant, sample_branch, sample_gl_accounts, mocker
-    ):
+    def test_wrong_branch_tenant_raises(self, db_session, sample_tenant, sample_branch, sample_gl_accounts, mocker):
         from models import Tenant, Branch
 
         other = Tenant(
@@ -208,9 +179,7 @@ class TestCreateJournalEntry:
 
 
 class TestPostEntry:
-    def test_converts_with_exchange_rate(
-        self, db_session, sample_tenant, sample_gl_accounts, mocker
-    ):
+    def test_converts_with_exchange_rate(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch("services.gl_helpers.assert_period_open")
         lines = [
             {"account": "1111", "debit": Decimal("10"), "credit": Decimal("0")},
@@ -234,9 +203,7 @@ class TestVatReport:
         assert result["tax_disabled"] is True
         assert result["vat_output"] == 0.0
 
-    def test_vat_report_with_postings(
-        self, db_session, sample_tenant, sample_gl_accounts, mocker
-    ):
+    def test_vat_report_with_postings(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch("services.gl_helpers.assert_period_open")
         mocker.patch("utils.tax_settings.is_tax_enabled", return_value=True)
         entry = GLService.create_journal_entry(
@@ -254,9 +221,7 @@ class TestVatReport:
 
 
 class TestReverseEntry:
-    def test_reverse_by_reference(
-        self, db_session, sample_tenant, sample_gl_accounts, mocker
-    ):
+    def test_reverse_by_reference(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch("services.gl_helpers.assert_period_open")
         GLService.create_journal_entry(
             datetime(2026, 6, 1, tzinfo=timezone.utc),
@@ -267,9 +232,7 @@ class TestReverseEntry:
             reference_id=42,
         )
         db_session.commit()
-        reversed_entries = GLService.reverse_entry(
-            "sale", 42, tenant_id=sample_tenant.id
-        )
+        reversed_entries = GLService.reverse_entry("sale", 42, tenant_id=sample_tenant.id)
         assert reversed_entries is not None
         assert len(reversed_entries) >= 1
 
@@ -278,9 +241,7 @@ class TestReverseEntry:
 
 
 class TestLiquidityAccounts:
-    def test_get_default_cash(
-        self, db_session, sample_tenant, sample_branch, sample_gl_accounts
-    ):
+    def test_get_default_cash(self, db_session, sample_tenant, sample_branch, sample_gl_accounts):
         code = GLService.get_default_liquidity_account(
             "cash",
             tenant_id=sample_tenant.id,
@@ -290,13 +251,9 @@ class TestLiquidityAccounts:
 
     def test_unsupported_kind_raises(self, sample_tenant):
         with pytest.raises(ValueError, match="Unsupported"):
-            GLService.get_default_liquidity_account(
-                "crypto", tenant_id=sample_tenant.id
-            )
+            GLService.get_default_liquidity_account("crypto", tenant_id=sample_tenant.id)
 
-    def test_payment_debit_account_cash(
-        self, db_session, sample_tenant, sample_branch, sample_gl_accounts
-    ):
+    def test_payment_debit_account_cash(self, db_session, sample_tenant, sample_branch, sample_gl_accounts):
         code = GLService.get_payment_debit_account(
             "cash",
             tenant_id=sample_tenant.id,
@@ -305,49 +262,25 @@ class TestLiquidityAccounts:
         assert code is not None
 
     def test_payment_debit_cheque_legacy(self, sample_tenant, mocker):
-        mocker.patch(
-            "services.gl_service.is_dynamic_gl_mapping_enabled", return_value=False
-        )
-        assert (
-            GLService.get_payment_debit_account("cheque", tenant_id=sample_tenant.id)
-            == "1150"
-        )
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=False)
+        assert GLService.get_payment_debit_account("cheque", tenant_id=sample_tenant.id) == "1150"
 
     def test_customer_credit_legacy_codes(self, sample_tenant, mocker):
-        mocker.patch(
-            "services.gl_service.is_dynamic_gl_mapping_enabled", return_value=False
-        )
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=False)
         partner = MagicMock(customer_type="partner")
         merchant = MagicMock(customer_type="merchant")
-        assert (
-            GLService.get_customer_credit_account(partner, tenant_id=sample_tenant.id)
-            == "2150"
-        )
-        assert (
-            GLService.get_customer_credit_account(merchant, tenant_id=sample_tenant.id)
-            == "2115"
-        )
-        assert (
-            GLService.get_customer_credit_account(None, tenant_id=sample_tenant.id)
-            == "1130"
-        )
+        assert GLService.get_customer_credit_account(partner, tenant_id=sample_tenant.id) == "2150"
+        assert GLService.get_customer_credit_account(merchant, tenant_id=sample_tenant.id) == "2115"
+        assert GLService.get_customer_credit_account(None, tenant_id=sample_tenant.id) == "1130"
 
-    def test_payment_credit_account_cheque(
-        self, db_session, sample_tenant, sample_gl_accounts, mocker
-    ):
-        mocker.patch(
-            "services.gl_service.is_dynamic_gl_mapping_enabled", return_value=False
-        )
-        code = GLService.get_payment_credit_account(
-            "cheque", tenant_id=sample_tenant.id
-        )
+    def test_payment_credit_account_cheque(self, db_session, sample_tenant, sample_gl_accounts, mocker):
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=False)
+        code = GLService.get_payment_credit_account("cheque", tenant_id=sample_tenant.id)
         assert code == GL_ACCOUNTS["deferred_cheques"]
 
 
 class TestManualEntry:
-    def test_create_manual_entry(
-        self, db_session, sample_tenant, sample_user, sample_gl_accounts, mocker
-    ):
+    def test_create_manual_entry(self, db_session, sample_tenant, sample_user, sample_gl_accounts, mocker):
         mocker.patch("services.gl_helpers.assert_period_open")
         entry = GLService.create_manual_entry(
             "Manual test",
@@ -357,9 +290,7 @@ class TestManualEntry:
         )
         assert entry.entry_type == "manual"
 
-    def test_create_manual_invalid_account(
-        self, db_session, sample_tenant, sample_user, mocker
-    ):
+    def test_create_manual_invalid_account(self, db_session, sample_tenant, sample_user, mocker):
         mocker.patch("services.gl_helpers.assert_period_open")
         with pytest.raises(ValueError, match="غير موجود"):
             GLService.create_manual_entry(
@@ -370,13 +301,9 @@ class TestManualEntry:
 
 
 class TestBalancesAndStatements:
-    def test_account_balance_for_branch(
-        self, db_session, sample_tenant, sample_gl_accounts, mocker
-    ):
+    def test_account_balance_for_branch(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch("services.gl_helpers.assert_period_open")
-        cash = GLAccount.query.filter_by(
-            tenant_id=sample_tenant.id, code="1111"
-        ).first()
+        cash = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="1111").first()
         entry = GLService.create_journal_entry(
             datetime(2026, 6, 1, tzinfo=timezone.utc),
             "Balance test",
@@ -384,22 +311,16 @@ class TestBalancesAndStatements:
             tenant_id=sample_tenant.id,
         )
         _post_entry(entry.id)
-        balance = GLService.get_account_balance_for_branch(
-            cash.id, tenant_id=sample_tenant.id
-        )
+        balance = GLService.get_account_balance_for_branch(cash.id, tenant_id=sample_tenant.id)
         assert balance is not None
 
     def test_missing_account_returns_none(self, mocker):
         mocker.patch("services.gl_service.db.session.get", return_value=None)
         assert GLService.get_account_balance_for_branch(999999) is None
 
-    def test_account_statement(
-        self, db_session, sample_tenant, sample_gl_accounts, mocker
-    ):
+    def test_account_statement(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch("services.gl_helpers.assert_period_open")
-        cash = GLAccount.query.filter_by(
-            tenant_id=sample_tenant.id, code="1111"
-        ).first()
+        cash = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="1111").first()
         entry = GLService.create_journal_entry(
             datetime(2026, 6, 10, tzinfo=timezone.utc),
             "Statement",
@@ -416,9 +337,7 @@ class TestBalancesAndStatements:
         assert "transactions" in stmt
         assert stmt["closing_balance"] is not None
 
-    def test_general_ledger(
-        self, db_session, sample_tenant, sample_gl_accounts, mocker
-    ):
+    def test_general_ledger(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch("services.gl_helpers.assert_period_open")
         entry = GLService.create_journal_entry(
             datetime(2026, 6, 5, tzinfo=timezone.utc),
@@ -435,9 +354,7 @@ class TestBalancesAndStatements:
         assert isinstance(ledger, list)
         assert any(item["account_code"] == "1111" for item in ledger)
 
-    def test_partner_ledger(
-        self, db_session, sample_tenant, sample_gl_accounts, mocker
-    ):
+    def test_partner_ledger(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         from models import Partner
 
         mocker.patch("services.gl_helpers.assert_period_open")
@@ -504,9 +421,7 @@ class TestAccountCodeForConcept:
     def test_no_mapping_raises(self, sample_tenant, mocker):
         mocker.patch("services.gl_service.resolve_gl_account", return_value=None)
         with pytest.raises(GLMappingError):
-            GLService.get_account_code_for_concept(
-                "UNKNOWN_XYZ", tenant_id=sample_tenant.id
-            )
+            GLService.get_account_code_for_concept("UNKNOWN_XYZ", tenant_id=sample_tenant.id)
 
 
 class TestReconciliationCheck:
@@ -535,12 +450,8 @@ class TestPaymentConceptsExtended:
 
 
 class TestDynamicMappingPaths:
-    def test_resolve_with_dynamic_mapping_account_code_only_raises(
-        self, sample_tenant, mocker
-    ):
-        mocker.patch(
-            "services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True
-        )
+    def test_resolve_with_dynamic_mapping_account_code_only_raises(self, sample_tenant, mocker):
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
         mocker.patch("services.gl_service.resolve_gl_account", return_value=None)
         with pytest.raises(GLMappingError, match="No approved GL concept"):
             GLService._resolve_journal_line_account(
@@ -549,46 +460,33 @@ class TestDynamicMappingPaths:
             )
 
     def test_get_customer_credit_dynamic_mapping(self, sample_tenant, mocker):
-        mocker.patch(
-            "services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True
-        )
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
         acct = MagicMock(code="1131")
         mocker.patch("services.gl_service.resolve_gl_account", return_value=acct)
         code = GLService.get_customer_credit_account(None, tenant_id=sample_tenant.id)
         assert code == "1131"
 
     def test_get_customer_credit_dynamic_missing_raises(self, sample_tenant, mocker):
-        mocker.patch(
-            "services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True
-        )
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
         mocker.patch("services.gl_service.resolve_gl_account", return_value=None)
         with pytest.raises(GLMappingError):
             GLService.get_customer_credit_account(None, tenant_id=sample_tenant.id)
 
     def test_cheque_debit_dynamic_mapping(self, sample_tenant, mocker):
-        mocker.patch(
-            "services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True
-        )
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
         acct = MagicMock(code="1150")
         mocker.patch("services.gl_service.resolve_gl_account", return_value=acct)
-        assert (
-            GLService.get_payment_debit_account("cheque", tenant_id=sample_tenant.id)
-            == "1150"
-        )
+        assert GLService.get_payment_debit_account("cheque", tenant_id=sample_tenant.id) == "1150"
 
     def test_cheque_debit_dynamic_missing_raises(self, sample_tenant, mocker):
-        mocker.patch(
-            "services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True
-        )
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
         mocker.patch("services.gl_service.resolve_gl_account", return_value=None)
         with pytest.raises(GLMappingError):
             GLService.get_payment_debit_account("cheque", tenant_id=sample_tenant.id)
 
 
 class TestManualEntryNotes:
-    def test_manual_entry_with_notes_commits(
-        self, db_session, sample_tenant, sample_user, sample_gl_accounts, mocker
-    ):
+    def test_manual_entry_with_notes_commits(self, db_session, sample_tenant, sample_user, sample_gl_accounts, mocker):
         mocker.patch("services.gl_helpers.assert_period_open")
         entry = GLService.create_manual_entry(
             "Noted entry",
@@ -601,9 +499,7 @@ class TestManualEntryNotes:
 
 
 class TestVatAndTrialFilters:
-    def test_vat_report_with_branch_filter(
-        self, db_session, sample_tenant, sample_branch, sample_gl_accounts, mocker
-    ):
+    def test_vat_report_with_branch_filter(self, db_session, sample_tenant, sample_branch, sample_gl_accounts, mocker):
         mocker.patch("services.gl_helpers.assert_period_open")
         mocker.patch("utils.tax_settings.is_tax_enabled", return_value=True)
         entry = GLService.create_journal_entry(
@@ -617,14 +513,10 @@ class TestVatAndTrialFilters:
             branch_id=sample_branch.id,
         )
         _post_entry(entry.id)
-        result = GLService.get_vat_report(
-            tenant_id=sample_tenant.id, branch_id=sample_branch.id
-        )
+        result = GLService.get_vat_report(tenant_id=sample_tenant.id, branch_id=sample_branch.id)
         assert "vat_output" in result
 
-    def test_trial_balance_with_date_range(
-        self, db_session, sample_tenant, sample_gl_accounts, mocker
-    ):
+    def test_trial_balance_with_date_range(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch("services.gl_helpers.assert_period_open")
         entry = GLService.create_journal_entry(
             datetime(2026, 5, 1, tzinfo=timezone.utc),
@@ -642,9 +534,7 @@ class TestVatAndTrialFilters:
 
 
 class TestLiquidityEdgeCases:
-    def test_multiple_cash_accounts_requires_branch(
-        self, db_session, sample_tenant, sample_gl_accounts
-    ):
+    def test_multiple_cash_accounts_requires_branch(self, db_session, sample_tenant, sample_gl_accounts):
         cash_accounts = GLAccount.query.filter_by(
             tenant_id=sample_tenant.id,
             liquidity_kind="cash",
@@ -653,21 +543,13 @@ class TestLiquidityEdgeCases:
         ).all()
         if len(cash_accounts) > 1:
             with pytest.raises(ValueError, match="branch_id is required"):
-                GLService.get_default_liquidity_account(
-                    "cash", tenant_id=sample_tenant.id
-                )
+                GLService.get_default_liquidity_account("cash", tenant_id=sample_tenant.id)
         else:
             with pytest.raises(ValueError):
-                GLService.get_default_liquidity_account(
-                    "cash", tenant_id=sample_tenant.id
-                )
+                GLService.get_default_liquidity_account("cash", tenant_id=sample_tenant.id)
 
-    def test_payment_credit_bank_path(
-        self, db_session, sample_tenant, sample_branch, sample_gl_accounts, mocker
-    ):
-        mocker.patch(
-            "services.gl_service.is_dynamic_gl_mapping_enabled", return_value=False
-        )
+    def test_payment_credit_bank_path(self, db_session, sample_tenant, sample_branch, sample_gl_accounts, mocker):
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=False)
         code = GLService.get_payment_credit_account(
             "bank_transfer", tenant_id=sample_tenant.id, branch_id=sample_branch.id
         )
@@ -696,9 +578,7 @@ class TestGlServiceCoverageGaps:
         assert GLService.get_payment_credit_concept("bank") == "BANK"
 
     def test_ensure_core_and_validate_tree_resolve_tenant(self, sample_tenant, mocker):
-        mocker.patch(
-            "services.gl_helpers.resolve_tenant_id", return_value=sample_tenant.id
-        )
+        mocker.patch("services.gl_helpers.resolve_tenant_id", return_value=sample_tenant.id)
         mocker.patch(
             "services.gl_service.GLTreeBuilder.build",
             return_value={
@@ -708,16 +588,12 @@ class TestGlServiceCoverageGaps:
                 "deactivated": [],
             },
         )
-        mocker.patch(
-            "services.gl_service.GLTreeBuilder.validate_tree", return_value={"ok": True}
-        )
+        mocker.patch("services.gl_service.GLTreeBuilder.validate_tree", return_value={"ok": True})
         assert GLService.ensure_core_accounts(tenant_id=None)["created"] == []
         assert GLService.validate_account_tree(tenant_id=None) == {"ok": True}
 
     def test_resolve_non_posting_concept_raises(self, sample_tenant, mocker):
-        mocker.patch(
-            "services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True
-        )
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
         with pytest.raises(GLMappingError, match="Non-posting"):
             GLService._resolve_journal_line_account(
                 {"concept_code": "LANDED_COST"},
@@ -725,9 +601,7 @@ class TestGlServiceCoverageGaps:
             )
 
     def test_resolve_liquidity_missing_account_code(self, sample_tenant, mocker):
-        mocker.patch(
-            "services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True
-        )
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
         with pytest.raises(GLMappingError, match="explicit GL account"):
             GLService._resolve_journal_line_account(
                 {"concept_code": "CASH"},
@@ -735,12 +609,8 @@ class TestGlServiceCoverageGaps:
                 branch_id=1,
             )
 
-    def test_resolve_liquidity_wrong_kind(
-        self, db_session, sample_tenant, sample_branch, sample_gl_accounts, mocker
-    ):
-        mocker.patch(
-            "services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True
-        )
+    def test_resolve_liquidity_wrong_kind(self, db_session, sample_tenant, sample_branch, sample_gl_accounts, mocker):
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
         acct = GLAccount(
             tenant_id=sample_tenant.id,
             branch_id=sample_branch.id,
@@ -760,12 +630,8 @@ class TestGlServiceCoverageGaps:
                 branch_id=sample_branch.id,
             )
 
-    def test_resolve_liquidity_success(
-        self, db_session, sample_tenant, sample_branch, mocker
-    ):
-        mocker.patch(
-            "services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True
-        )
+    def test_resolve_liquidity_success(self, db_session, sample_tenant, sample_branch, mocker):
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
         acct = GLAccount(
             tenant_id=sample_tenant.id,
             branch_id=sample_branch.id,
@@ -786,9 +652,7 @@ class TestGlServiceCoverageGaps:
         assert resolved.code == "LCASH2"
 
     def test_resolve_record_requires_explicit_flag(self, sample_tenant, mocker):
-        mocker.patch(
-            "services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True
-        )
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
         with pytest.raises(GLMappingError, match="explicit_account_allowed"):
             GLService._resolve_journal_line_account(
                 {"concept_code": "FIXED_ASSET_ASSET", "account_code": "1240"},
@@ -796,9 +660,7 @@ class TestGlServiceCoverageGaps:
             )
 
     def test_resolve_record_missing_account_code(self, sample_tenant, mocker):
-        mocker.patch(
-            "services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True
-        )
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
         with pytest.raises(GLMappingError, match="explicit GL account code"):
             GLService._resolve_journal_line_account(
                 {"concept_code": "FIXED_ASSET_ASSET", "explicit_account_allowed": True},
@@ -806,9 +668,7 @@ class TestGlServiceCoverageGaps:
             )
 
     def test_resolve_record_explicit_not_found(self, sample_tenant, mocker):
-        mocker.patch(
-            "services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True
-        )
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
         with pytest.raises(GLMappingError, match="does not exist"):
             GLService._resolve_journal_line_account(
                 {
@@ -826,9 +686,7 @@ class TestGlServiceCoverageGaps:
         sample_branch,
         mocker,
     ):
-        mocker.patch(
-            "services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True
-        )
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
         inactive = GLAccount(
             tenant_id=sample_tenant.id,
             code="INACT1",
@@ -894,9 +752,7 @@ class TestGlServiceCoverageGaps:
     ):
         from models import Tenant, Branch
 
-        mocker.patch(
-            "services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True
-        )
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
         other = Tenant(
             name="Other GL",
             name_ar="Other",
@@ -940,9 +796,7 @@ class TestGlServiceCoverageGaps:
     ):
         from models import Branch
 
-        mocker.patch(
-            "services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True
-        )
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
         other_branch = Branch(
             tenant_id=sample_tenant.id,
             name="Other Br",
@@ -991,9 +845,7 @@ class TestGlServiceCoverageGaps:
     ):
         from models import Branch
 
-        mocker.patch(
-            "services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True
-        )
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
         other_branch = Branch(
             tenant_id=sample_tenant.id,
             name="Liq Other",
@@ -1022,9 +874,7 @@ class TestGlServiceCoverageGaps:
             )
 
     def test_resolve_mapping_dynamic_enabled(self, sample_tenant, mocker):
-        mocker.patch(
-            "services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True
-        )
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
         acct = MagicMock(code="4100")
         mocker.patch("services.gl_service.resolve_gl_account", return_value=acct)
         resolved = GLService._resolve_journal_line_account(
@@ -1034,9 +884,7 @@ class TestGlServiceCoverageGaps:
         assert resolved.code == "4100"
 
     def test_resolve_dynamic_disabled_concept_resolves(self, sample_tenant, mocker):
-        mocker.patch(
-            "services.gl_service.is_dynamic_gl_mapping_enabled", return_value=False
-        )
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=False)
         acct = MagicMock(code="4100", is_header=False, is_active=True)
         mocker.patch("services.gl_service.resolve_gl_account", return_value=acct)
         resolved = GLService._resolve_journal_line_account(
@@ -1045,12 +893,8 @@ class TestGlServiceCoverageGaps:
         )
         assert resolved.code == "4100"
 
-    def test_resolve_legacy_ensure_core_creates_account(
-        self, db_session, sample_tenant, mocker
-    ):
-        mocker.patch(
-            "services.gl_service.is_dynamic_gl_mapping_enabled", return_value=False
-        )
+    def test_resolve_legacy_ensure_core_creates_account(self, db_session, sample_tenant, mocker):
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=False)
         mocker.patch("services.gl_service.resolve_gl_account", return_value=None)
         orphan = GLAccount(
             tenant_id=sample_tenant.id,
@@ -1071,9 +915,7 @@ class TestGlServiceCoverageGaps:
         )
         assert resolved.code == "8888"
 
-    def test_create_journal_entry_missing_branch(
-        self, db_session, sample_tenant, sample_gl_accounts, mocker
-    ):
+    def test_create_journal_entry_missing_branch(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch("services.gl_helpers.assert_period_open")
         with pytest.raises(GLMappingError, match="does not exist"):
             GLService.create_journal_entry(
@@ -1099,9 +941,7 @@ class TestGlServiceCoverageGaps:
             return None
 
         mocker.patch("services.gl_service.db.session.get", side_effect=_get)
-        mocker.patch(
-            "services.gl_service.resolve_tenant_base_currency", return_value="AED"
-        )
+        mocker.patch("services.gl_service.resolve_tenant_base_currency", return_value="AED")
         entry = GLService.create_journal_entry(
             datetime(2026, 6, 1, tzinfo=timezone.utc),
             "Currency fallback",
@@ -1131,9 +971,7 @@ class TestGlServiceCoverageGaps:
         )
         db_session.add(other)
         db_session.flush()
-        foreign = Branch(
-            tenant_id=other.id, name="Line Foreign", code="LFR", is_main=True
-        )
+        foreign = Branch(tenant_id=other.id, name="Line Foreign", code="LFR", is_main=True)
         db_session.add(foreign)
         db_session.flush()
         lines_missing = [
@@ -1169,13 +1007,9 @@ class TestGlServiceCoverageGaps:
                 tenant_id=sample_tenant.id,
             )
 
-    def test_post_entry_negative_rate_foreign_currency(
-        self, db_session, sample_tenant, sample_gl_accounts, mocker
-    ):
+    def test_post_entry_negative_rate_foreign_currency(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch("services.gl_helpers.assert_period_open")
-        mocker.patch(
-            "services.gl_service.resolve_tenant_base_currency", return_value="AED"
-        )
+        mocker.patch("services.gl_service.resolve_tenant_base_currency", return_value="AED")
         entry = GLService.post_entry(
             _balanced_lines(Decimal("5")),
             description="Negative rate",
@@ -1229,13 +1063,9 @@ class TestGlServiceCoverageGaps:
         result = GLService.get_vat_report(tenant_id=sample_tenant.id)
         assert result["vat_output"] == 0.0
 
-    def test_reverse_entry_resolves_tenant(
-        self, db_session, sample_tenant, sample_gl_accounts, mocker
-    ):
+    def test_reverse_entry_resolves_tenant(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch("services.gl_helpers.assert_period_open")
-        mocker.patch(
-            "services.gl_helpers.resolve_tenant_id", return_value=sample_tenant.id
-        )
+        mocker.patch("services.gl_helpers.resolve_tenant_id", return_value=sample_tenant.id)
         GLService.create_journal_entry(
             datetime(2026, 6, 1, tzinfo=timezone.utc),
             "Rev",
@@ -1262,14 +1092,9 @@ class TestGlServiceCoverageGaps:
         )
         db_session.add(solo)
         db_session.flush()
-        assert (
-            GLService.get_default_liquidity_account("cash", tenant_id=sample_tenant.id)
-            == "SOLO1"
-        )
+        assert GLService.get_default_liquidity_account("cash", tenant_id=sample_tenant.id) == "SOLO1"
 
-    def test_default_liquidity_branch_missing(
-        self, db_session, sample_tenant, sample_branch, mocker
-    ):
+    def test_default_liquidity_branch_missing(self, db_session, sample_tenant, sample_branch, mocker):
         mocker.patch.object(GLService, "ensure_core_accounts", return_value={})
         with pytest.raises(ValueError, match="branch_id"):
             GLService.get_default_liquidity_account(
@@ -1278,29 +1103,12 @@ class TestGlServiceCoverageGaps:
                 branch_id=sample_branch.id,
             )
 
-    def test_payment_debit_bank_and_default(
-        self, db_session, sample_tenant, sample_branch, mocker
-    ):
-        mocker.patch(
-            "services.gl_service.is_dynamic_gl_mapping_enabled", return_value=False
-        )
-        mocker.patch.object(
-            GLService, "get_default_liquidity_account", return_value="1120"
-        )
-        assert (
-            GLService.get_payment_debit_account(
-                "bank_transfer", tenant_id=sample_tenant.id
-            )
-            == "1120"
-        )
-        assert (
-            GLService.get_payment_debit_account("card", tenant_id=sample_tenant.id)
-            == "1120"
-        )
-        assert (
-            GLService.get_payment_debit_account("wire", tenant_id=sample_tenant.id)
-            == "1120"
-        )
+    def test_payment_debit_bank_and_default(self, db_session, sample_tenant, sample_branch, mocker):
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=False)
+        mocker.patch.object(GLService, "get_default_liquidity_account", return_value="1120")
+        assert GLService.get_payment_debit_account("bank_transfer", tenant_id=sample_tenant.id) == "1120"
+        assert GLService.get_payment_debit_account("card", tenant_id=sample_tenant.id) == "1120"
+        assert GLService.get_payment_debit_account("wire", tenant_id=sample_tenant.id) == "1120"
 
     def test_manual_entry_branch_from_user_and_current_user(
         self,
@@ -1338,9 +1146,7 @@ class TestGlServiceCoverageGaps:
         mocker,
     ):
         mocker.patch("services.gl_helpers.assert_period_open")
-        payable = GLAccount.query.filter_by(
-            tenant_id=sample_tenant.id, code="2111"
-        ).first()
+        payable = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="2111").first()
         entry = GLService.create_journal_entry(
             datetime(2026, 6, 4, tzinfo=timezone.utc),
             "Payable",
@@ -1352,9 +1158,7 @@ class TestGlServiceCoverageGaps:
             branch_id=sample_branch.id,
         )
         _post_entry(entry.id)
-        balance = GLService.get_account_balance_for_branch(
-            payable.id, branch_id=sample_branch.id
-        )
+        balance = GLService.get_account_balance_for_branch(payable.id, branch_id=sample_branch.id)
         assert balance is not None
         assert balance != 0
 
@@ -1367,9 +1171,7 @@ class TestGlServiceCoverageGaps:
         mocker,
     ):
         mocker.patch("services.gl_helpers.assert_period_open")
-        payable = GLAccount.query.filter_by(
-            tenant_id=sample_tenant.id, code="2111"
-        ).first()
+        payable = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="2111").first()
         entry = GLService.create_journal_entry(
             datetime(2026, 6, 6, tzinfo=timezone.utc),
             "Stmt payable",
@@ -1469,14 +1271,10 @@ class TestGlServiceCoverageGaps:
             branch_id=sample_branch.id,
         )
         _post_entry(entry.id)
-        tb = GLService.get_trial_balance(
-            branch_id=sample_branch.id, tenant_id=sample_tenant.id
-        )
+        tb = GLService.get_trial_balance(branch_id=sample_branch.id, tenant_id=sample_tenant.id)
         assert tb["total_debit"] >= 0
 
-    def test_account_code_for_concept_mapping_error_fallback(
-        self, sample_tenant, mocker
-    ):
+    def test_account_code_for_concept_mapping_error_fallback(self, sample_tenant, mocker):
         mocker.patch(
             "services.gl_service.resolve_gl_account",
             side_effect=GLMappingError(
@@ -1502,9 +1300,7 @@ class TestGlServiceCoverageGaps:
     ):
         from models import Branch
 
-        mocker.patch(
-            "services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True
-        )
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
         other_branch = Branch(
             tenant_id=sample_tenant.id,
             name="Rec Other",
@@ -1535,13 +1331,9 @@ class TestGlServiceCoverageGaps:
                 branch_id=sample_branch.id,
             )
 
-    def test_post_entry_clamps_zero_rate(
-        self, db_session, sample_tenant, sample_gl_accounts, mocker
-    ):
+    def test_post_entry_clamps_zero_rate(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch("services.gl_helpers.assert_period_open")
-        mocker.patch(
-            "services.gl_service.resolve_tenant_base_currency", return_value="AED"
-        )
+        mocker.patch("services.gl_service.resolve_tenant_base_currency", return_value="AED")
         entry = GLService.post_entry(
             _balanced_lines(Decimal("7")),
             description="Clamp rate",
@@ -1554,21 +1346,15 @@ class TestGlServiceCoverageGaps:
     def test_account_code_for_concept_resolves_mapping(self, sample_tenant, mocker):
         acct = MagicMock(code="4100")
         mocker.patch("services.gl_service.resolve_gl_account", return_value=acct)
-        code = GLService.get_account_code_for_concept(
-            "SALES_REVENUE", tenant_id=sample_tenant.id
-        )
+        code = GLService.get_account_code_for_concept("SALES_REVENUE", tenant_id=sample_tenant.id)
         assert code == "4100"
 
-    def test_reconciliation_dynamic_concept_line(
-        self, db_session, sample_tenant, sample_gl_accounts, mocker
-    ):
+    def test_reconciliation_dynamic_concept_line(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch(
             "services.gl_account_resolver.is_dynamic_gl_mapping_enabled",
             return_value=True,
         )
-        acct = GLAccount.query.filter_by(
-            tenant_id=sample_tenant.id, code="1131"
-        ).first()
+        acct = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="1131").first()
         mocker.patch("services.gl_service.resolve_gl_account", return_value=acct)
         result = GLService.reconciliation_check(tenant_id=sample_tenant.id)
         assert result["ar_gl_balance"] >= 0.0
@@ -1602,9 +1388,7 @@ class TestGlServiceCoverageGaps:
             "services.gl_account_resolver.is_dynamic_gl_mapping_enabled",
             return_value=True,
         )
-        acct = GLAccount.query.filter_by(
-            tenant_id=sample_tenant.id, code="1131"
-        ).first()
+        acct = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="1131").first()
         mocker.patch("services.gl_service.resolve_gl_account", return_value=acct)
         result = GLService.reconciliation_check(
             tenant_id=sample_tenant.id,
@@ -1619,17 +1403,9 @@ class TestGlServiceCoverageGaps:
         sample_branch,
         mocker,
     ):
-        mocker.patch.object(
-            GLService, "get_default_liquidity_account", return_value="1110"
-        )
-        assert (
-            GLService.get_payment_credit_account("cash", tenant_id=sample_tenant.id)
-            == "1110"
-        )
-        assert (
-            GLService.get_payment_credit_account("wire", tenant_id=sample_tenant.id)
-            == "1110"
-        )
+        mocker.patch.object(GLService, "get_default_liquidity_account", return_value="1110")
+        assert GLService.get_payment_credit_account("cash", tenant_id=sample_tenant.id) == "1110"
+        assert GLService.get_payment_credit_account("wire", tenant_id=sample_tenant.id) == "1110"
 
     def test_reconciliation_legacy_path(
         self,
@@ -1645,9 +1421,7 @@ class TestGlServiceCoverageGaps:
             "services.gl_account_resolver.is_dynamic_gl_mapping_enabled",
             return_value=False,
         )
-        result = GLService.reconciliation_check(
-            tenant_id=sample_tenant.id, branch_id=sample_branch.id
-        )
+        result = GLService.reconciliation_check(tenant_id=sample_tenant.id, branch_id=sample_branch.id)
         assert "ar_difference" in result
 
     def test_resolve_record_success(
@@ -1657,9 +1431,7 @@ class TestGlServiceCoverageGaps:
         sample_branch,
         mocker,
     ):
-        mocker.patch(
-            "services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True
-        )
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
         rec = GLAccount(
             tenant_id=sample_tenant.id,
             branch_id=sample_branch.id,

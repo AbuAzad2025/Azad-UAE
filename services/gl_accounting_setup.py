@@ -663,9 +663,7 @@ class GLAccountingSetupService:
             if action.action_type != "create_account":
                 continue
             try:
-                account = GLAccountingSetupService._create_account(
-                    tenant, action.concept_code
-                )
+                account = GLAccountingSetupService._create_account(tenant, action.concept_code)
                 db.session.add(account)
                 if not dry_run:
                     db.session.flush()
@@ -744,9 +742,7 @@ class GLAccountingSetupService:
     def execute_all(dry_run: bool = True) -> list[SetupResult]:
         """Apply the plan to every tenant."""
         tenants = Tenant.query.order_by(Tenant.id.asc()).all()
-        return [
-            GLAccountingSetupService.execute(t.id, dry_run=dry_run) for t in tenants
-        ]
+        return [GLAccountingSetupService.execute(t.id, dry_run=dry_run) for t in tenants]
 
     @staticmethod
     def validate(tenant_id: int | None = None) -> dict[str, object]:
@@ -837,24 +833,18 @@ class GLAccountingSetupService:
     # ================================================================
 
     @staticmethod
-    def _find_best_candidate(
-        tenant: Tenant, rule: ConceptSetupRule
-    ) -> GLAccount | None:
+    def _find_best_candidate(tenant: Tenant, rule: ConceptSetupRule) -> GLAccount | None:
         """Find the best existing postable GL account for a concept."""
         # 1. Exact legacy code match
         if rule.legacy_code:
-            acc = GLAccount.query.filter_by(
-                tenant_id=tenant.id, code=rule.legacy_code
-            ).first()
+            acc = GLAccount.query.filter_by(tenant_id=tenant.id, code=rule.legacy_code).first()
             if acc and acc.is_active and not acc.is_header:
                 if not rule.expected_types or acc.type in rule.expected_types:
                     return acc
 
         # 2. Name search (exact/partial, EN + AR)
         if rule.search_names:
-            accounts = GLAccount.query.filter_by(
-                tenant_id=tenant.id, is_active=True, is_header=False
-            ).all()
+            accounts = GLAccount.query.filter_by(tenant_id=tenant.id, is_active=True, is_header=False).all()
             for pattern in rule.search_names:
                 for account in accounts:
                     if rule.expected_types and account.type not in rule.expected_types:
@@ -866,16 +856,12 @@ class GLAccountingSetupService:
 
         # 3. Parent-code child scan
         if rule.parent_code_hint:
-            parent = GLAccount.query.filter_by(
-                tenant_id=tenant.id, code=rule.parent_code_hint
-            ).first()
+            parent = GLAccount.query.filter_by(tenant_id=tenant.id, code=rule.parent_code_hint).first()
             if parent:
                 postable = [
                     c
                     for c in parent.children
-                    if c.is_active
-                    and not c.is_header
-                    and (not rule.expected_types or c.type in rule.expected_types)
+                    if c.is_active and not c.is_header and (not rule.expected_types or c.type in rule.expected_types)
                 ]
                 if postable:
                     # Prefer primary / main / default
@@ -898,17 +884,13 @@ class GLAccountingSetupService:
 
         parent = None
         if rule.parent_code_hint:
-            parent = GLAccount.query.filter_by(
-                tenant_id=tenant.id, code=rule.parent_code_hint
-            ).first()
+            parent = GLAccount.query.filter_by(tenant_id=tenant.id, code=rule.parent_code_hint).first()
 
         if "code_suffix" in tmpl:
             base = rule.parent_code_hint or str(tmpl.get("code_near", ""))
             code = GLAccountingSetupService._next_child_code(tenant.id, base)
         elif "code_near" in tmpl:
-            code = GLAccountingSetupService._next_available_code(
-                tenant.id, str(tmpl["code_near"])
-            )
+            code = GLAccountingSetupService._next_available_code(tenant.id, str(tmpl["code_near"]))
         else:
             raise ValueError(f"No code strategy for concept {concept_code}")
 
@@ -955,8 +937,6 @@ class GLAccountingSetupService:
             return base_code
         for offset in range(1, 100):
             candidate = str(int(base_code) + offset)
-            if not GLAccount.query.filter_by(
-                tenant_id=tenant_id, code=candidate
-            ).first():
+            if not GLAccount.query.filter_by(tenant_id=tenant_id, code=candidate).first():
                 return candidate
         raise RuntimeError(f"No available code near {base_code} for tenant {tenant_id}")

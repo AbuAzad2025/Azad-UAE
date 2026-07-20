@@ -24,9 +24,7 @@ class FiscalPositionService:
 
         # Auto-match by country
         tenant_id = customer.tenant_id
-        country = getattr(customer, "country", None) or getattr(
-            customer, "address_country", None
-        )
+        country = getattr(customer, "country", None) or getattr(customer, "address_country", None)
         if country:
             pos = FiscalPosition.query.filter(
                 FiscalPosition.tenant_id == tenant_id,
@@ -37,9 +35,7 @@ class FiscalPositionService:
             if pos:
                 return pos
 
-        return FiscalPosition.query.filter_by(
-            tenant_id=tenant_id, code="local", is_active=True
-        ).first()
+        return FiscalPosition.query.filter_by(tenant_id=tenant_id, code="local", is_active=True).first()
 
     @staticmethod
     def apply_to_sale(sale, customer_id=None):
@@ -97,11 +93,7 @@ class FiscalPositionService:
                 tax = db.session.get(TaxCalculationRule, source_tax_id)
                 tax_rate = Decimal(str(tax.rate if tax else 0))
         else:
-            tax = (
-                db.session.get(TaxCalculationRule, source_tax_id)
-                if source_tax_id
-                else None
-            )
+            tax = db.session.get(TaxCalculationRule, source_tax_id) if source_tax_id else None
             tax_rate = Decimal(str(tax.rate if tax else 0))
 
         net = Decimal(str(line.unit_price or 0)) * Decimal(str(line.quantity or 1))

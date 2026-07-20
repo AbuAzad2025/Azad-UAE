@@ -27,6 +27,4 @@ class ShopStockAlert(db.Model):
         default=lambda: datetime.now(timezone.utc),
     )
 
-    __table_args__ = (
-        db.UniqueConstraint("email", "product_id", name="uq_stock_alert_email_product"),
-    )
+    __table_args__ = (db.UniqueConstraint("email", "product_id", name="uq_stock_alert_email_product"),)

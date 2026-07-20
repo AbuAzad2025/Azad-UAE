@@ -38,9 +38,7 @@ except ImportError:
 def create_app(config_class=Config) -> Flask:
     config._init_env()
     # Flask app is inside app/ package; templates/static live at project root
-    project_root: str = os.path.abspath(
-        os.path.join(str(os.path.dirname(__file__)), "..")
-    )
+    project_root: str = os.path.abspath(os.path.join(str(os.path.dirname(__file__)), ".."))
     app = Flask(
         __name__,
         template_folder=os.path.join(project_root, "templates"),
@@ -58,23 +56,15 @@ def create_app(config_class=Config) -> Flask:
     assert_production_sanity(config_class)
 
     # Dev mode: auto-generate owner password if empty
-    if (
-        app.config.get("DEBUG")
-        or app.config.get("APP_ENV", "production") != "production"
-    ):
+    if app.config.get("DEBUG") or app.config.get("APP_ENV", "production") != "production":
         if not os.environ.get("OWNER_PASSWORD"):
             import secrets
             import string
 
-            _generated = "".join(
-                secrets.choice(string.ascii_letters + string.digits + "@$!%*?&")
-                for _ in range(20)
-            )
+            _generated = "".join(secrets.choice(string.ascii_letters + string.digits + "@$!%*?&") for _ in range(20))
             app.config["OWNER_PASSWORD"] = _generated
             os.environ["OWNER_PASSWORD"] = _generated
-            print(
-                f"\r\n{'=' * 60}\r\n[DEV MODE] Auto-generated OWNER_PASSWORD: {_generated}\r\n{'=' * 60}\r\n"
-            )
+            print(f"\r\n{'=' * 60}\r\n[DEV MODE] Auto-generated OWNER_PASSWORD: {_generated}\r\n{'=' * 60}\r\n")
 
     init_extensions(app)
 
@@ -83,9 +73,7 @@ def create_app(config_class=Config) -> Flask:
 
     @login_manager.user_loader
     def load_user(user_id):
-        return db.session.get(
-            User, int(user_id), execution_options={"skip_tenant_scope": True}
-        )
+        return db.session.get(User, int(user_id), execution_options={"skip_tenant_scope": True})
 
     @login_manager.unauthorized_handler
     def _handle_unauthorized():
@@ -115,17 +103,11 @@ def create_app(config_class=Config) -> Flask:
             with app.app_context():
                 result = run_default_tenant_maintenance_api()
                 if result.get("action_needed"):
-                    app.logger.info(
-                        f"[OK] Default tenant maintenance completed: {result}"
-                    )
+                    app.logger.info(f"[OK] Default tenant maintenance completed: {result}")
                 else:
-                    app.logger.info(
-                        "[OK] Default tenant maintenance check passed - no action needed"
-                    )
+                    app.logger.info("[OK] Default tenant maintenance check passed - no action needed")
         else:
-            app.logger.info(
-                "Default tenant maintenance service not available - skipping"
-            )
+            app.logger.info("Default tenant maintenance service not available - skipping")
 
     # Proxy Fix for Nginx/Cloudflare
     cast(Any, app).wsgi_app = ProxyFix(app.wsgi_app, x_host=1, x_prefix=1)
@@ -219,20 +201,12 @@ def create_app(config_class=Config) -> Flask:
                             503,
                         )
 
-                if (
-                    g.active_tenant_id is not None
-                    and not is_global_owner_user(_cu)
-                    and _bp not in _skip
-                ):
+                if g.active_tenant_id is not None and not is_global_owner_user(_cu) and _bp not in _skip:
                     from flask import render_template as _rt
                     from models.tenant import Tenant as _Tn
 
                     _tenant = db.session.get(_Tn, int(g.active_tenant_id))
-                    if (
-                        _tenant
-                        and not _tenant.is_lifetime
-                        and not _tenant.is_subscription_active()
-                    ):
+                    if _tenant and not _tenant.is_lifetime and not _tenant.is_subscription_active():
                         return (
                             _rt(
                                 "public/subscription_expired.html",
@@ -247,16 +221,8 @@ def create_app(config_class=Config) -> Flask:
                     )
                     from models.tenant import Tenant as _Tn
 
-                    _t = (
-                        db.session.get(_Tn, int(g.active_tenant_id))
-                        if g.active_tenant_id
-                        else None
-                    )
-                    if (
-                        _t
-                        and SaaSProvisioningService.is_demo_tenant(_t)
-                        and _bp in ("owner", "payment_vault")
-                    ):
+                    _t = db.session.get(_Tn, int(g.active_tenant_id)) if g.active_tenant_id else None
+                    if _t and SaaSProvisioningService.is_demo_tenant(_t) and _bp in ("owner", "payment_vault"):
                         abort(404)
 
         return None
@@ -264,9 +230,7 @@ def create_app(config_class=Config) -> Flask:
     # Security Headers + Request ID
     @app.after_request
     def add_security_headers(response):
-        if "charset" not in response.content_type and response.content_type.startswith(
-            "text/"
-        ):
+        if "charset" not in response.content_type and response.content_type.startswith("text/"):
             response.headers["Content-Type"] = response.content_type + "; charset=utf-8"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "SAMEORIGIN"
@@ -275,9 +239,7 @@ def create_app(config_class=Config) -> Flask:
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         if not app.debug and app.config.get("APP_ENV", "").lower() == "production":
-            response.headers["Strict-Transport-Security"] = (
-                "max-age=31536000; includeSubDomains"
-            )
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         csp = (
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "

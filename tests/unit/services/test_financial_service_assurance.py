@@ -64,9 +64,7 @@ class TestDashboardContext:
         expense_q = MagicMock()
         expense_q.filter.return_value = expense_q
         expense_q.scalar.return_value = Decimal("400")
-        mocker.patch(
-            "services.financial_service.db.session"
-        ).query.return_value = expense_q
+        mocker.patch("services.financial_service.db.session").query.return_value = expense_q
 
         from services.financial_service import FinancialService
 
@@ -84,9 +82,7 @@ class TestDashboardContext:
         expense_q = MagicMock()
         expense_q.filter.return_value = expense_q
         expense_q.scalar.return_value = Decimal("0")
-        mocker.patch(
-            "services.financial_service.db.session"
-        ).query.return_value = expense_q
+        mocker.patch("services.financial_service.db.session").query.return_value = expense_q
 
         from services.financial_service import FinancialService
 
@@ -126,9 +122,7 @@ class TestFinancialOverview:
         from services.financial_service import FinancialService
 
         with app.app_context():
-            html = FinancialService.financial_overview(
-                "month", tid=1, scoped_branch_id=None
-            )
+            html = FinancialService.financial_overview("month", tid=1, scoped_branch_id=None)
 
         assert html == "<html/>"
         data = mock_render.call_args.kwargs["financial_data"]
@@ -136,15 +130,9 @@ class TestFinancialOverview:
         assert data["platform_mode"] is False
 
     def test_platform_mode_when_tid_none(self, app, mocker):
-        mocker.patch(
-            "services.financial_service.FinancialService.sum_sales", return_value=0
-        )
-        mocker.patch(
-            "services.financial_service.FinancialService.sum_purchases", return_value=0
-        )
-        mocker.patch(
-            "services.financial_service.FinancialService.sum_receipts", return_value=0
-        )
+        mocker.patch("services.financial_service.FinancialService.sum_sales", return_value=0)
+        mocker.patch("services.financial_service.FinancialService.sum_purchases", return_value=0)
+        mocker.patch("services.financial_service.FinancialService.sum_receipts", return_value=0)
 
         session = mocker.patch("services.financial_service.db.session")
         q = MagicMock()
@@ -169,12 +157,8 @@ class TestFinancialOverview:
             "services.financial_service.FinancialService.sum_sales",
             return_value=0,
         )
-        mocker.patch(
-            "services.financial_service.FinancialService.sum_purchases", return_value=0
-        )
-        mocker.patch(
-            "services.financial_service.FinancialService.sum_receipts", return_value=0
-        )
+        mocker.patch("services.financial_service.FinancialService.sum_purchases", return_value=0)
+        mocker.patch("services.financial_service.FinancialService.sum_receipts", return_value=0)
         session = mocker.patch("services.financial_service.db.session")
         q = MagicMock()
         q.filter.return_value = q
@@ -190,15 +174,9 @@ class TestFinancialOverview:
         assert sum_sales.call_args.kwargs["branch_id"] == 2
 
     def test_today_period(self, app, mocker):
-        sum_sales = mocker.patch(
-            "services.financial_service.FinancialService.sum_sales", return_value=0
-        )
-        mocker.patch(
-            "services.financial_service.FinancialService.sum_purchases", return_value=0
-        )
-        mocker.patch(
-            "services.financial_service.FinancialService.sum_receipts", return_value=0
-        )
+        sum_sales = mocker.patch("services.financial_service.FinancialService.sum_sales", return_value=0)
+        mocker.patch("services.financial_service.FinancialService.sum_purchases", return_value=0)
+        mocker.patch("services.financial_service.FinancialService.sum_receipts", return_value=0)
         session = mocker.patch("services.financial_service.db.session")
         q = MagicMock()
         q.filter.return_value = q
@@ -213,15 +191,9 @@ class TestFinancialOverview:
         assert sum_sales.call_args.kwargs["date_from"] is not None
 
     def test_week_period(self, app, mocker):
-        sum_sales = mocker.patch(
-            "services.financial_service.FinancialService.sum_sales", return_value=0
-        )
-        mocker.patch(
-            "services.financial_service.FinancialService.sum_purchases", return_value=0
-        )
-        mocker.patch(
-            "services.financial_service.FinancialService.sum_receipts", return_value=0
-        )
+        sum_sales = mocker.patch("services.financial_service.FinancialService.sum_sales", return_value=0)
+        mocker.patch("services.financial_service.FinancialService.sum_purchases", return_value=0)
+        mocker.patch("services.financial_service.FinancialService.sum_receipts", return_value=0)
         session = mocker.patch("services.financial_service.db.session")
         q = MagicMock()
         q.filter.return_value = q
@@ -274,9 +246,7 @@ class TestSumFiltersExtended:
         self._scalar_chain(mocker, Decimal("25"))
         from services.financial_service import FinancialService
 
-        FinancialService.sum_receipts(
-            1, date_from=date(2025, 1, 1), date_to=date(2025, 6, 30)
-        )
+        FinancialService.sum_receipts(1, date_from=date(2025, 1, 1), date_to=date(2025, 6, 30))
 
     def test_dashboard_december_month_end(self, mocker):
         mocker.patch(
@@ -286,9 +256,7 @@ class TestSumFiltersExtended:
         expense_q = MagicMock()
         expense_q.filter.return_value = expense_q
         expense_q.scalar.return_value = Decimal("100")
-        mocker.patch(
-            "services.financial_service.db.session"
-        ).query.return_value = expense_q
+        mocker.patch("services.financial_service.db.session").query.return_value = expense_q
         mocker.patch(
             "services.financial_service.datetime",
         )
@@ -301,9 +269,7 @@ class TestSumFiltersExtended:
 
         from services.financial_service import FinancialService
 
-        ctx = FinancialService.get_financial_dashboard_advanced_context(
-            tenant_id=1, branch_id=2
-        )
+        ctx = FinancialService.get_financial_dashboard_advanced_context(tenant_id=1, branch_id=2)
         assert len(ctx["months_data"]) == 12
         expense_q.filter.assert_called()
 
@@ -315,13 +281,9 @@ class TestSumFiltersExtended:
         expense_q = MagicMock()
         expense_q.filter.return_value = expense_q
         expense_q.scalar.return_value = Decimal("50")
-        mocker.patch(
-            "services.financial_service.db.session"
-        ).query.return_value = expense_q
+        mocker.patch("services.financial_service.db.session").query.return_value = expense_q
 
         from services.financial_service import FinancialService
 
-        FinancialService.get_financial_dashboard_advanced_context(
-            tenant_id=1, branch_id=3
-        )
+        FinancialService.get_financial_dashboard_advanced_context(tenant_id=1, branch_id=3)
         assert expense_q.filter.call_count >= 3

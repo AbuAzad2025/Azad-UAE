@@ -21,16 +21,12 @@ class StoreAnalyticsService:
     def order_stats(tenant_id: int) -> dict:
         tid = int(tenant_id)
         base = Sale.query.filter_by(tenant_id=tid, source="online_store")
-        today_start = datetime.now(timezone.utc).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+        today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
         week_start = StoreAnalyticsService._since(7)
         month_start = StoreAnalyticsService._since(30)
 
         def _sum(q):
-            return q.with_entities(
-                func.coalesce(func.sum(Sale.total_amount), 0)
-            ).scalar() or Decimal("0")
+            return q.with_entities(func.coalesce(func.sum(Sale.total_amount), 0)).scalar() or Decimal("0")
 
         return {
             "pending": base.filter_by(status="pending").count(),
@@ -40,15 +36,9 @@ class StoreAnalyticsService:
             "orders_today": base.filter(Sale.sale_date >= today_start).count(),
             "orders_week": base.filter(Sale.sale_date >= week_start).count(),
             "orders_month": base.filter(Sale.sale_date >= month_start).count(),
-            "revenue_today": _sum(
-                base.filter(Sale.sale_date >= today_start, Sale.status == "confirmed")
-            ),
-            "revenue_week": _sum(
-                base.filter(Sale.sale_date >= week_start, Sale.status == "confirmed")
-            ),
-            "revenue_month": _sum(
-                base.filter(Sale.sale_date >= month_start, Sale.status == "confirmed")
-            ),
+            "revenue_today": _sum(base.filter(Sale.sale_date >= today_start, Sale.status == "confirmed")),
+            "revenue_week": _sum(base.filter(Sale.sale_date >= week_start, Sale.status == "confirmed")),
+            "revenue_month": _sum(base.filter(Sale.sale_date >= month_start, Sale.status == "confirmed")),
         }
 
     @staticmethod
@@ -87,22 +77,16 @@ class StoreAnalyticsService:
         return result
 
     @staticmethod
-    def low_stock_products(
-        tenant_id: int, threshold: Decimal | None = None
-    ) -> list[dict]:
+    def low_stock_products(tenant_id: int, threshold: Decimal | None = None) -> list[dict]:
         store = StoreService.get_tenant_store(tenant_id, create=False)
         if threshold is None:
             threshold = Decimal(str(getattr(store, "low_stock_threshold", None) or 5))
-        products, stock_map = StoreService.get_catalog_products(
-            tenant_id, include_zero=True
-        )
+        products, stock_map = StoreService.get_catalog_products(tenant_id, include_zero=True)
         alerts = []
         for product in products:
             qty = stock_map.get(product.id, Decimal("0"))
             if qty <= threshold:
-                alerts.append(
-                    {"product": product, "quantity": qty, "threshold": threshold}
-                )
+                alerts.append({"product": product, "quantity": qty, "threshold": threshold})
         alerts.sort(key=lambda row: row["quantity"])
         return alerts
 

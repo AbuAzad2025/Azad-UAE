@@ -46,9 +46,7 @@ class TestGraphQLValidation:
 
     def test_introspection_blocked_in_production(self, graphql_client, monkeypatch):
         _prod_env(monkeypatch)
-        resp = graphql_client.post(
-            "/graphql", json={"query": "{ __schema { queryType { name } } }"}
-        )
+        resp = graphql_client.post("/graphql", json={"query": "{ __schema { queryType { name } } }"})
         assert resp.status_code == 403
 
     def test_mutations_disabled_in_production(self, graphql_client, monkeypatch):
@@ -84,9 +82,7 @@ class TestGraphQLExecution:
         mock_schema = MagicMock()
         mock_schema.execute.return_value = mock_result
         with patch("routes.graphql.build_schema", return_value=mock_schema):
-            resp = graphql_client.post(
-                "/graphql", json={"query": "{ allSales { id } }"}
-            )
+            resp = graphql_client.post("/graphql", json={"query": "{ allSales { id } }"})
         body = resp.get_json()
         assert "errors" in body
         assert "resolver failed" in body["errors"][0]
@@ -98,17 +94,13 @@ class TestGraphQLPlayground:
         resp = graphql_client.get("/graphql/playground")
         assert resp.status_code == 404
 
-    def test_playground_403_non_owner(
-        self, graphql_client, monkeypatch, bypass_admin_auth
-    ):
+    def test_playground_403_non_owner(self, graphql_client, monkeypatch, bypass_admin_auth):
         _dev_env(monkeypatch)
         bypass_admin_auth.is_owner = False
         resp = graphql_client.get("/graphql/playground")
         assert resp.status_code == 403
 
-    def test_playground_200_for_owner(
-        self, graphql_client, monkeypatch, bypass_admin_auth
-    ):
+    def test_playground_200_for_owner(self, graphql_client, monkeypatch, bypass_admin_auth):
         _dev_env(monkeypatch)
         bypass_admin_auth.is_owner = True
         resp = graphql_client.get("/graphql/playground")

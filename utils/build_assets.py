@@ -65,11 +65,7 @@ def _process_file(src_path: str) -> dict[str, Any] | None:
     else:
         with open(min_path, "w", encoding="utf-8") as f:
             f.write(minified_bytes or "")
-        final_content = (
-            minified_bytes.encode("utf-8")
-            if isinstance(minified_bytes, str)
-            else minified_bytes
-        )
+        final_content = minified_bytes.encode("utf-8") if isinstance(minified_bytes, str) else minified_bytes
     digest = hashlib.md5(final_content, usedforsecurity=False).hexdigest()[:12]
     hash_name = f"{stem}.{digest}.min{ext}"
     hash_path = os.path.join(dir_name, hash_name)
@@ -77,11 +73,7 @@ def _process_file(src_path: str) -> dict[str, Any] | None:
         shutil.copy2(src_path, hash_path)
     else:
         with open(hash_path, "w", encoding="utf-8") as f:
-            f.write(
-                minified_bytes
-                if isinstance(minified_bytes, str)
-                else minified_bytes.decode("utf-8")
-            )
+            f.write(minified_bytes if isinstance(minified_bytes, str) else minified_bytes.decode("utf-8"))
     gz_path = _gzip_file(hash_path)
     return {
         "file": base_name,
@@ -92,9 +84,7 @@ def _process_file(src_path: str) -> dict[str, Any] | None:
     }
 
 
-def _collect_files(
-    base_dir: str, sub_dir: str, extensions: tuple[str, ...]
-) -> list[str]:
+def _collect_files(base_dir: str, sub_dir: str, extensions: tuple[str, ...]) -> list[str]:
     target = os.path.join(base_dir, sub_dir)
     if not os.path.isdir(target):
         return []

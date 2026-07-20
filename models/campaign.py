@@ -27,9 +27,7 @@ class Campaign(db.Model):
     usage_limit = db.Column(db.Integer)
     usage_count = db.Column(db.Integer, default=0)
     coupon_code = db.Column(db.String(50), index=True)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
 
@@ -60,9 +58,7 @@ class SaleCampaign(db.Model):
         index=True,
     )
     discount_amount = db.Column(db.Numeric(15, 3), nullable=False)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     campaign = db.relationship("Campaign", foreign_keys=[campaign_id])

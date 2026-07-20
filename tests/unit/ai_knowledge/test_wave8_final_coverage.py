@@ -13,9 +13,7 @@ import pytest
 
 @pytest.fixture
 def knowledge_path(tmp_path):
-    with patch(
-        "ai_knowledge.get_knowledge_path", side_effect=lambda name: str(tmp_path / name)
-    ):
+    with patch("ai_knowledge.get_knowledge_path", side_effect=lambda name: str(tmp_path / name)):
         yield tmp_path
 
 
@@ -134,9 +132,7 @@ class TestWave8ActionDispatcher:
         line = MagicMock(product_id=1, quantity=2)
         product = MagicMock(cost_price=Decimal("10"))
         with (
-            patch(
-                "ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1
-            ),
+            patch("ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1),
             patch("ai_knowledge.action_dispatcher._has_permission", return_value=True),
             patch("ai_knowledge.action_dispatcher.db") as db,
             patch("models.Sale"),
@@ -153,9 +149,7 @@ class TestWave8ActionDispatcher:
             chain.scalar.side_effect = RuntimeError("db")
             assert action_dispatcher.dispatch("profit_summary", {}).success is False
         with (
-            patch(
-                "ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1
-            ),
+            patch("ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1),
             patch("ai_knowledge.action_dispatcher._has_permission", return_value=True),
             patch("services.ai_executor.AIExecutor") as Ex,
         ):
@@ -270,9 +264,7 @@ class TestWave8AzadResponses:
             ap.is_inappropriate_message.return_value = "normal"
             ap.get_help_intro.return_value = "intro"
             bg.get_beginner_response.return_value = None
-            out = responses.smart_response(
-                "سؤال عام balance debt فاتورة invoice تقرير report"
-            )
+            out = responses.smart_response("سؤال عام balance debt فاتورة invoice تقرير report")
             assert "جرّب" in out
         assert "لم أتمكن" in responses._handle_product_stock_query("مخزون stock فقط")
         assert "لم أتمكن" in responses._handle_search_query("ابحث")
@@ -285,9 +277,7 @@ class TestWave8AzadResponses:
         patch.stopall()
         with patch("ai_knowledge.personality.azad_responses.document_generator") as dg:
             dg.generate_invoice.return_value = (None, "not found")
-            assert "not found" in responses._handle_document_generation(
-                "ولد generate فاتورة invoice 1"
-            )
+            assert "not found" in responses._handle_document_generation("ولد generate فاتورة invoice 1")
 
 
 class TestWave8NeuralEngine:
@@ -300,9 +290,7 @@ class TestWave8NeuralEngine:
         return eng
 
     def test_cash_flow_single_month(self, engine):
-        cols = _patch_model_cols(
-            "models.Sale", "models.Purchase", "models.Expense", "models.Receipt"
-        )
+        cols = _patch_model_cols("models.Sale", "models.Purchase", "models.Expense", "models.Receipt")
         try:
             with (
                 patch.object(engine, "_load_model", return_value=True),
@@ -328,9 +316,7 @@ class TestWave8NeuralEngine:
             _stop_patches(cols)
 
     def test_train_insufficient_data_paths(self, engine):
-        cols = _patch_model_cols(
-            "models.Sale", "models.Customer", "models.SaleLine", "models.Product"
-        )
+        cols = _patch_model_cols("models.Sale", "models.Customer", "models.SaleLine", "models.Product")
         try:
             with patch("extensions.db") as mock_db:
                 chain = _db_chain(mock_db)
@@ -399,36 +385,18 @@ class TestWave8NeuralEngine:
         ctx = MagicMock()
         ctx.__enter__ = MagicMock(return_value=None)
         ctx.__exit__ = MagicMock(return_value=False)
-        with patch.object(
-            engine, "_train_customer_internal", side_effect=RuntimeError("x")
-        ):
-            assert (
-                engine.train_customer_classifier(from_app_context=ctx)["success"]
-                is False
-            )
+        with patch.object(engine, "_train_customer_internal", side_effect=RuntimeError("x")):
+            assert engine.train_customer_classifier(from_app_context=ctx)["success"] is False
         with patch.object(
             engine,
             "_classify_customer_internal",
             return_value={"classification": "vip"},
         ):
-            assert (
-                engine.classify_customer_intelligence(1, from_app_context=ctx)[
-                    "classification"
-                ]
-                == "vip"
-            )
-        with patch.object(
-            engine, "_train_demand_internal", side_effect=RuntimeError("x")
-        ):
-            assert (
-                engine.train_demand_predictor(from_app_context=ctx)["success"] is False
-            )
-        with patch.object(
-            engine, "_predict_demand_internal", return_value={"forecast": []}
-        ):
-            assert (
-                engine.predict_product_demand(1, from_app_context=ctx)["forecast"] == []
-            )
+            assert engine.classify_customer_intelligence(1, from_app_context=ctx)["classification"] == "vip"
+        with patch.object(engine, "_train_demand_internal", side_effect=RuntimeError("x")):
+            assert engine.train_demand_predictor(from_app_context=ctx)["success"] is False
+        with patch.object(engine, "_predict_demand_internal", return_value={"forecast": []}):
+            assert engine.predict_product_demand(1, from_app_context=ctx)["forecast"] == []
 
     def test_demand_train_with_samples(self, engine):
         cols = _patch_model_cols("models.Sale", "models.SaleLine", "models.Product")
@@ -455,9 +423,7 @@ class TestWave8NeuralEngine:
         ctx = MagicMock()
         ctx.__enter__ = MagicMock(return_value=None)
         ctx.__exit__ = MagicMock(return_value=False)
-        with patch.object(
-            engine, "train_price_optimizer", side_effect=RuntimeError("boom")
-        ):
+        with patch.object(engine, "train_price_optimizer", side_effect=RuntimeError("boom")):
             r = engine.train_all_models(ctx)
             assert "price_optimizer" in r["results"]
 
@@ -467,9 +433,7 @@ class TestWave8Analytics:
         from ai_knowledge.analytics.analytics_predictions import CashFlowAnalytics
 
         assert CashFlowAnalytics.working_capital_ratio(150, 100)["status"] == "good"
-        assert (
-            CashFlowAnalytics.working_capital_ratio(120, 100)["status"] == "acceptable"
-        )
+        assert CashFlowAnalytics.working_capital_ratio(120, 100)["status"] == "acceptable"
         assert CashFlowAnalytics.working_capital_ratio(80, 100)["status"] == "critical"
 
     def test_data_analyzer_trends_and_payments(self):
@@ -490,9 +454,7 @@ class TestWave8Analytics:
             r = analyzer.analyze_sales_performance(14)
             assert r["success"] is True
             assert r["analysis"]["trend"] in ("تصاعدي", "تنازلي", "مستقر")
-        pay = MagicMock(
-            amount=Decimal("50"), payment_method="cash", payment_date=datetime.now()
-        )
+        pay = MagicMock(amount=Decimal("50"), payment_method="cash", payment_date=datetime.now())
         with patch("models.Payment") as Payment, patch("extensions.db.session"):
             Payment.query.filter.return_value.all.return_value = [pay]
             Payment.payment_date = _Col()
@@ -548,9 +510,7 @@ class TestWave8AgentsAndCore:
             patch("extensions.db.session") as session,
         ):
             Customer.query.filter.return_value.first.return_value = customer
-            session.query.return_value.filter.return_value.first.side_effect = (
-                RuntimeError("x")
-            )
+            session.query.return_value.filter.return_value.first.side_effect = RuntimeError("x")
             data2 = ia._collect_real_data("customer_balance", {"names": ["Ali"]}, 1)
             assert "customer_data" not in data2
         product = MagicMock(id=1, name="P", current_stock=1, min_stock_alert=5)
@@ -578,9 +538,7 @@ class TestWave8AgentsAndCore:
             inv = ia._collect_real_data("inventory_check", {}, 1)
             assert inv.get("low_stock_products")
             chain.filter.side_effect = RuntimeError("x")
-            assert "low_stock_products" not in ia._collect_real_data(
-                "inventory_check", {}, 1
-            )
+            assert "low_stock_products" not in ia._collect_real_data("inventory_check", {}, 1)
         analysis = ia._analyze_and_reason(
             "customer_balance",
             {
@@ -699,9 +657,7 @@ class TestWave8RemainingModules:
         sale = MagicMock(id=1, customer_id=1, total_amount=Decimal("100"))
         with patch("models.Sale") as Sale, patch("models.Customer") as Customer:
             Sale.query.get.return_value = sale
-            Customer.query.get.return_value = MagicMock(
-                name="Ali", phone="050", address="DXB"
-            )
+            Customer.query.get.return_value = MagicMock(name="Ali", phone="050", address="DXB")
             content, msg = DocumentGenerator.generate_invoice(1)
             assert content or msg
             Sale.query.get.return_value = None
@@ -838,17 +794,11 @@ class TestWave8ExtraPush:
         for model in engine.models.values():
             if hasattr(model, "max_iter"):
                 model.max_iter = 50
-        with patch.object(
-            engine, "_train_customer_internal", return_value={"success": True}
-        ):
+        with patch.object(engine, "_train_customer_internal", return_value={"success": True}):
             assert engine.train_customer_classifier()["success"] is True
-        with patch.object(
-            engine, "_train_demand_internal", return_value={"success": True}
-        ):
+        with patch.object(engine, "_train_demand_internal", return_value={"success": True}):
             assert engine.train_demand_predictor()["success"] is True
-        with patch.object(
-            engine, "_predict_demand_internal", return_value={"forecast": [1]}
-        ):
+        with patch.object(engine, "_predict_demand_internal", return_value={"forecast": [1]}):
             assert engine.predict_product_demand(1)["forecast"]
         with (
             patch.object(engine, "_load_model", return_value=True),
@@ -870,9 +820,7 @@ class TestWave8ExtraPush:
             engine.models["inventory_optimizer"] = MagicMock()
             engine.models["inventory_optimizer"].predict.return_value = np.array([15.0])
             engine.scalers["inventory_optimizer"] = MagicMock()
-            engine.scalers["inventory_optimizer"].transform.return_value = np.array(
-                [[1.0] * 6]
-            )
+            engine.scalers["inventory_optimizer"].transform.return_value = np.array([[1.0] * 6])
             assert engine._optimize_stock_internal(1)["model"] == "neural_network"
 
     def test_data_analyzer_declining_trend(self):
@@ -948,9 +896,7 @@ class TestWave8ExtraPush:
                 "summary": {"total_customers": 1},
             }
             da.get_financial_ratios.return_value = {"current_ratio": 2}
-            ContextEngine.enhance_response(
-                "حلل analyze sales", "base", {"is_owner": True}
-            )
+            ContextEngine.enhance_response("حلل analyze sales", "base", {"is_owner": True})
             ke.search_knowledge.return_value = [{"title": "t"}]
             ContextEngine.enhance_response("ابحث search tax", "base", {})
             ls.get_learning_insights.return_value = {"patterns": 1}
@@ -963,14 +909,10 @@ class TestWave8ExtraPush:
         with patch.object(ls, "_save_tenant_data") as save:
             ls.learn_from_interaction("q", "a", tenant_id=5)
             save.assert_called()
-        with patch(
-            "ai_knowledge.core.memory_system.LongTermMemory.remember_procedure"
-        ) as rp:
+        with patch("ai_knowledge.core.memory_system.LongTermMemory.remember_procedure") as rp:
             from ai_knowledge.core.memory_system import LongTermMemory
 
-            LongTermMemory.remember_procedure(
-                MagicMock(), "proc", ["step1"], category="sales"
-            )
+            LongTermMemory.remember_procedure(MagicMock(), "proc", ["step1"], category="sales")
             rp.assert_called()
         re = ReasoningEngine()
         re.technical_reasoning("فرامل ضعيفة brake weak")

@@ -81,15 +81,11 @@ class TestAPIBalanceIsolation:
 
                     # Request tenant B's customer from tenant A context - should return 0.0
                     result = _customer_balance(customer_b.id)
-                    assert result == 0.0, (
-                        "Cross-tenant customer balance must return 0.0"
-                    )
+                    assert result == 0.0, "Cross-tenant customer balance must return 0.0"
 
                     # Request tenant A's own customer - should return balance
                     result = _customer_balance(customer_a.id)
-                    assert result == 0.0, (
-                        "Own tenant customer returns 0.0 (no transactions yet)"
-                    )
+                    assert result == 0.0, "Own tenant customer returns 0.0 (no transactions yet)"
 
     def test_supplier_balance_cross_tenant_returns_zero(self, app, db_session):
         """Tenant A user requesting tenant B supplier balance returns 0.0 without branch scope."""
@@ -114,15 +110,11 @@ class TestAPIBalanceIsolation:
 
                     # Request tenant B's supplier from tenant A context - should return 0.0
                     result = _supplier_balance(supplier_b.id)
-                    assert result == 0.0, (
-                        "Cross-tenant supplier balance must return 0.0"
-                    )
+                    assert result == 0.0, "Cross-tenant supplier balance must return 0.0"
 
                     # Request tenant A's own supplier - should return balance
                     result = _supplier_balance(supplier_a.id)
-                    assert result == 0.0, (
-                        "Own tenant supplier returns 0.0 (no transactions yet)"
-                    )
+                    assert result == 0.0, "Own tenant supplier returns 0.0 (no transactions yet)"
 
     def test_missing_customer_balance_returns_zero(self, app, db_session):
         """Non-existent customer ID returns 0.0 (same as cross-tenant)."""

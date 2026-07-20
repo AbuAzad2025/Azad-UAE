@@ -85,9 +85,7 @@ class TestReceivablesAging:
 
         from services.aging_analysis_service import AgingAnalysisService
 
-        report = AgingAnalysisService.get_receivables_aging(
-            as_of_date=as_of, tenant_id=1
-        )
+        report = AgingAnalysisService.get_receivables_aging(as_of_date=as_of, tenant_id=1)
         assert report["customer_count"] == 1
         assert report["customers"][0]["invoices"][0]["age_category"] == bucket
         assert report["totals"]["total"] == pytest.approx(1000.0)
@@ -168,9 +166,7 @@ class TestPayablesAging:
         from services.aging_analysis_service import AgingAnalysisService
 
         with app.app_context():
-            report = AgingAnalysisService.get_payables_aging(
-                as_of_date=date(2025, 6, 1), tenant_id=1
-            )
+            report = AgingAnalysisService.get_payables_aging(as_of_date=date(2025, 6, 1), tenant_id=1)
 
         invoices = report["suppliers"][0]["invoices"]
         assert invoices[0]["paid"] == pytest.approx(800.0)
@@ -196,9 +192,7 @@ class TestPayablesAging:
         pay_q = MagicMock()
         pay_q.filter.return_value = pay_q
         pay_q.scalar.return_value = Decimal("0")
-        mocker.patch(
-            "services.aging_analysis_service.db.session"
-        ).query.return_value = pay_q
+        mocker.patch("services.aging_analysis_service.db.session").query.return_value = pay_q
 
         from services.aging_analysis_service import AgingAnalysisService
 
@@ -227,9 +221,7 @@ class TestGLVerification:
         gl_q.join.return_value = gl_q
         gl_q.filter.return_value = gl_q
         gl_q.scalar.return_value = Decimal("5000.005")
-        mocker.patch(
-            "services.aging_analysis_service.db.session"
-        ).query.return_value = gl_q
+        mocker.patch("services.aging_analysis_service.db.session").query.return_value = gl_q
 
         from services.aging_analysis_service import AgingAnalysisService
 
@@ -288,9 +280,7 @@ class TestReceivablesStringDate:
         )
         from services.aging_analysis_service import AgingAnalysisService
 
-        report = AgingAnalysisService.get_receivables_aging(
-            as_of_date="2025-06-30", tenant_id=1
-        )
+        report = AgingAnalysisService.get_receivables_aging(as_of_date="2025-06-30", tenant_id=1)
         assert report["as_of_date"] == date(2025, 6, 30)
 
 
@@ -301,9 +291,7 @@ class TestPayablesExtended:
         purchase_q = MagicMock()
         purchase_q.filter.return_value = purchase_q
         purchase_q.order_by.return_value = purchase_q
-        purchase_q.all.return_value = [
-            _purchase("P-1", date(2025, 1, 1), 400, branch_id=2)
-        ]
+        purchase_q.all.return_value = [_purchase("P-1", date(2025, 1, 1), 400, branch_id=2)]
         mocker.patch.object(
             __import__("models", fromlist=["Purchase"]).Purchase,
             "query",
@@ -313,9 +301,7 @@ class TestPayablesExtended:
         pay_q = MagicMock()
         pay_q.filter.return_value = pay_q
         pay_q.scalar.return_value = Decimal("0")
-        mocker.patch(
-            "services.aging_analysis_service.db.session"
-        ).query.return_value = pay_q
+        mocker.patch("services.aging_analysis_service.db.session").query.return_value = pay_q
 
         from services.aging_analysis_service import AgingAnalysisService
 
@@ -328,9 +314,7 @@ class TestPayablesExtended:
         assert report["as_of_date"] == date(2025, 6, 1)
         assert purchase_q.filter.call_count >= 1
 
-    @pytest.mark.parametrize(
-        "days_ago,bucket", [(15, "0-30"), (45, "31-60"), (75, "61-90"), (100, "91-120")]
-    )
+    @pytest.mark.parametrize("days_ago,bucket", [(15, "0-30"), (45, "31-60"), (75, "61-90"), (100, "91-120")])
     def test_payables_age_buckets(self, mocker, app, days_ago, bucket):
         supplier = MagicMock(id=21, name="Supp B")
         _mock_tenant_suppliers(mocker, [supplier])
@@ -349,16 +333,12 @@ class TestPayablesExtended:
         pay_q = MagicMock()
         pay_q.filter.return_value = pay_q
         pay_q.scalar.return_value = Decimal("0")
-        mocker.patch(
-            "services.aging_analysis_service.db.session"
-        ).query.return_value = pay_q
+        mocker.patch("services.aging_analysis_service.db.session").query.return_value = pay_q
 
         from services.aging_analysis_service import AgingAnalysisService
 
         with app.app_context():
-            report = AgingAnalysisService.get_payables_aging(
-                as_of_date=as_of, tenant_id=1
-            )
+            report = AgingAnalysisService.get_payables_aging(as_of_date=as_of, tenant_id=1)
         assert report["suppliers"][0]["invoices"][0]["age_category"] == bucket
 
 
@@ -377,9 +357,7 @@ class TestGLVerificationExtended:
         gl_q.join.return_value = gl_q
         gl_q.filter.return_value = gl_q
         gl_q.scalar.return_value = Decimal("1000")
-        mocker.patch(
-            "services.aging_analysis_service.db.session"
-        ).query.return_value = gl_q
+        mocker.patch("services.aging_analysis_service.db.session").query.return_value = gl_q
 
         from services.aging_analysis_service import AgingAnalysisService
 
@@ -398,9 +376,7 @@ class TestGLVerificationExtended:
         )
         from services.aging_analysis_service import AgingAnalysisService
 
-        AgingAnalysisService.verify_receivables_with_gl(
-            as_of_date="2025-01-15", tenant_id=1
-        )
+        AgingAnalysisService.verify_receivables_with_gl(as_of_date="2025-01-15", tenant_id=1)
 
     def test_payables_string_as_of_date(self, mocker):
         mocker.patch(
@@ -413,9 +389,7 @@ class TestGLVerificationExtended:
         )
         from services.aging_analysis_service import AgingAnalysisService
 
-        AgingAnalysisService.verify_payables_with_gl(
-            as_of_date="2025-02-20", tenant_id=1
-        )
+        AgingAnalysisService.verify_payables_with_gl(as_of_date="2025-02-20", tenant_id=1)
 
     def test_receivables_out_of_balance(self, mocker):
         mocker.patch(
@@ -431,13 +405,9 @@ class TestGLVerificationExtended:
         gl_q.join.return_value = gl_q
         gl_q.filter.return_value = gl_q
         gl_q.scalar.return_value = Decimal("400")
-        mocker.patch(
-            "services.aging_analysis_service.db.session"
-        ).query.return_value = gl_q
+        mocker.patch("services.aging_analysis_service.db.session").query.return_value = gl_q
 
         from services.aging_analysis_service import AgingAnalysisService
 
-        result = AgingAnalysisService.verify_receivables_with_gl(
-            tenant_id=1, branch_id=1
-        )
+        result = AgingAnalysisService.verify_receivables_with_gl(tenant_id=1, branch_id=1)
         assert result["in_balance"] is False

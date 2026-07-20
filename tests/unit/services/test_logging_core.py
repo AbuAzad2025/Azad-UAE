@@ -104,9 +104,7 @@ class TestFormattersAndFilters:
         try:
             raise ValueError("boom")
         except ValueError:
-            record = logging.LogRecord(
-                "n", logging.ERROR, __file__, 1, "fail", (), sys.exc_info()
-            )
+            record = logging.LogRecord("n", logging.ERROR, __file__, 1, "fail", (), sys.exc_info())
         record.request_id = "r"
         payload = json.loads(_JsonFormatter().format(record))
         assert payload["level"] == "ERROR"
@@ -163,9 +161,7 @@ class TestErrorLogging:
     def test_log_error_persists(self, mocker):
         persist = mocker.patch.object(LoggingCore, "_persist_error", return_value=42)
         LoggingCore.log_error = _REAL_LOG_ERROR
-        row_id = LoggingCore.log_error(
-            "fail", category="BACKEND", exception=ValueError("x")
-        )
+        row_id = LoggingCore.log_error("fail", category="BACKEND", exception=ValueError("x"))
         assert row_id == 42
         persist.assert_called_once()
 
@@ -187,12 +183,7 @@ class TestErrorLogging:
         mocker.patch.object(LoggingCore, "_find_duplicate", return_value=7)
         mocker.patch.object(LoggingCore, "_bump_duplicate", return_value=30)
         mocker.patch.object(LoggingCore, "_fire_alert_callbacks")
-        assert (
-            LoggingCore._persist_error(
-                "m", category="BACKEND", level="ERROR", source="s"
-            )
-            == 7
-        )
+        assert LoggingCore._persist_error("m", category="BACKEND", level="ERROR", source="s") == 7
 
     def test_persist_error_fresh_insert(self, app, mocker):
         mocker.patch.object(LoggingCore, "_find_duplicate", return_value=None)
@@ -201,23 +192,14 @@ class TestErrorLogging:
         ctx = MagicMock()
         ctx.__enter__.return_value = conn
         mocker.patch("extensions.db.engine.connect", return_value=ctx)
-        row_id = LoggingCore._persist_error(
-            "new", category="BACKEND", level="ERROR", source="s"
-        )
+        row_id = LoggingCore._persist_error("new", category="BACKEND", level="ERROR", source="s")
         assert row_id == 99
 
     def test_persist_error_fallback_on_db_failure(self, app, mocker):
         mocker.patch.object(LoggingCore, "_find_duplicate", return_value=None)
-        mocker.patch(
-            "extensions.db.engine.connect", side_effect=RuntimeError("db down")
-        )
+        mocker.patch("extensions.db.engine.connect", side_effect=RuntimeError("db down"))
         fb = mocker.patch.object(LoggingCore, "_fallback_write")
-        assert (
-            LoggingCore._persist_error(
-                "x", category="BACKEND", level="ERROR", source="s"
-            )
-            is None
-        )
+        assert LoggingCore._persist_error("x", category="BACKEND", level="ERROR", source="s") is None
         fb.assert_called_once()
 
     def test_find_and_bump_duplicate_errors(self, mocker):
@@ -241,9 +223,7 @@ class TestErrorQueries:
         E.query = q
         mocker.patch(
             "extensions.db.session.query"
-        ).return_value.distinct.return_value.order_by.return_value.all.return_value = [
-            ("BACKEND",)
-        ]
+        ).return_value.distinct.return_value.order_by.return_value.all.return_value = [("BACKEND",)]
         items, pagination, cats, levels, srcs, stats = LoggingCore.get_error_logs(
             category="BACKEND", level="ERROR", is_resolved="0"
         )
@@ -303,9 +283,7 @@ class TestAuditAndSecurity:
         q.count.return_value = 0
         q.filter.return_value = q
         mocker.patch("models.audit.AuditLog").query = q
-        mocker.patch(
-            "models.user.User"
-        ).query.filter_by.return_value.all.return_value = []
+        mocker.patch("models.user.User").query.filter_by.return_value.all.return_value = []
         mocker.patch("extensions.db.func")
         LoggingCore.get_audit_logs(tenant_id=1, action="create", user_id=2)
 
@@ -325,9 +303,7 @@ class TestHealthAndMetrics:
     def test_health_check(self, app, mocker):
         mocker.patch.object(LoggingCore, "_check_db", return_value={"healthy": True})
         mocker.patch.object(LoggingCore, "_check_disk", return_value={"healthy": True})
-        mocker.patch.object(
-            LoggingCore, "_check_memory", return_value={"healthy": True}
-        )
+        mocker.patch.object(LoggingCore, "_check_memory", return_value={"healthy": True})
         mocker.patch.object(LoggingCore, "_check_cpu", return_value={"healthy": True})
         hc = LoggingCore.health_check()
         assert hc["status"] == "healthy"
@@ -353,9 +329,7 @@ class TestHealthAndMetrics:
         product.query.count.return_value = 3
         product.query.filter.return_value.count.return_value = 0
 
-        def fake_import(
-            name, globals_dict=None, locals_dict=None, fromlist=(), level=0
-        ):
+        def fake_import(name, globals_dict=None, locals_dict=None, fromlist=(), level=0):
             if name == "models":
                 pkg = type("models", (), {})()
                 pkg.Sale = sale
@@ -372,18 +346,10 @@ class TestHealthAndMetrics:
         assert "error" in LoggingCore.get_app_metrics()
 
     def test_get_system_health(self, mocker):
-        mocker.patch.object(
-            LoggingCore, "check_database", return_value={"healthy": True}
-        )
-        mocker.patch.object(
-            LoggingCore, "get_disk_usage", return_value={"healthy": True}
-        )
-        mocker.patch.object(
-            LoggingCore, "get_memory_usage", return_value={"healthy": True}
-        )
-        mocker.patch.object(
-            LoggingCore, "get_cpu_usage", return_value={"healthy": True}
-        )
+        mocker.patch.object(LoggingCore, "check_database", return_value={"healthy": True})
+        mocker.patch.object(LoggingCore, "get_disk_usage", return_value={"healthy": True})
+        mocker.patch.object(LoggingCore, "get_memory_usage", return_value={"healthy": True})
+        mocker.patch.object(LoggingCore, "get_cpu_usage", return_value={"healthy": True})
         assert LoggingCore.get_system_health()["status"] == "healthy"
 
 
@@ -415,19 +381,13 @@ class TestPerformanceAndActivity:
     def test_log_performance_metric(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         LoggingCore.log_performance_metric("latency", 12.5, tags={"route": "/x"})
-        basedir = os.path.abspath(
-            os.path.join(os.path.dirname(logging_core.__file__), os.pardir)
-        )
+        basedir = os.path.abspath(os.path.join(os.path.dirname(logging_core.__file__), os.pardir))
         assert os.path.exists(os.path.join(basedir, "logs", "performance.log"))
 
     def test_get_performance_metrics_data(self, tmp_path, monkeypatch):
-        basedir = os.path.abspath(
-            os.path.join(os.path.dirname(logging_core.__file__), os.pardir)
-        )
+        basedir = os.path.abspath(os.path.join(os.path.dirname(logging_core.__file__), os.pardir))
         os.makedirs(os.path.join(basedir, "logs"), exist_ok=True)
-        with open(
-            os.path.join(basedir, "logs", "performance.log"), "w", encoding="utf-8"
-        ) as f:
+        with open(os.path.join(basedir, "logs", "performance.log"), "w", encoding="utf-8") as f:
             f.write("SLOW endpoint\n")
         data = LoggingCore.get_performance_metrics_data()
         assert data["slow_queries_count"] == 1
@@ -485,17 +445,13 @@ class TestPerformanceAndActivity:
             models.AuditLog = original
 
     def test_generate_device_fingerprint(self, app):
-        with app.test_request_context(
-            "/", headers={"User-Agent": "pytest", "Accept-Language": "en"}
-        ):
+        with app.test_request_context("/", headers={"User-Agent": "pytest", "Accept-Language": "en"}):
             fp = LoggingCore.generate_device_fingerprint()
             assert len(fp) == 16
 
     def test_track_login_attempt_success_and_lock(self, mocker):
         user = MagicMock(login_attempts=4)
-        mocker.patch(
-            "models.User"
-        ).query.filter_by.return_value.first.return_value = user
+        mocker.patch("models.User").query.filter_by.return_value.first.return_value = user
         mock_db = mocker.patch("extensions.db")
         LoggingCore.track_login_attempt("alice", success=False, ip_address="1.1.1.1")
         assert user.login_attempts == 5

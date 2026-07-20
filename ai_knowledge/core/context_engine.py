@@ -40,11 +40,7 @@ class ContextEngine:
         context_data = {
             "user_role": context.get("is_owner", False) if context else False,
             "previous_interactions": [],  # سيتم تطويره لاحقاً
-            "system_state": (
-                system_integrator.get_system_summary()
-                if intent in ["analysis", "data_query"]
-                else None
-            ),
+            "system_state": (system_integrator.get_system_summary() if intent in ["analysis", "data_query"] else None),
         }
 
         return {
@@ -111,12 +107,8 @@ class ContextEngine:
                     additional_info.append("\n\n📊 **معلومات إضافية:**")
                     ratios = financial_data.get("ratios", {})
                     if ratios:
-                        additional_info.append(
-                            f"• هامش الربح الإجمالي: {ratios.get('gross_profit_margin', 0):.1f}%"
-                        )
-                        additional_info.append(
-                            f"• هامش الربح الصافي: {ratios.get('net_profit_margin', 0):.1f}%"
-                        )
+                        additional_info.append(f"• هامش الربح الإجمالي: {ratios.get('gross_profit_margin', 0):.1f}%")
+                        additional_info.append(f"• هامش الربح الصافي: {ratios.get('net_profit_margin', 0):.1f}%")
             except Exception as exc:
                 logger.debug("Financial ratios enrichment failed: %s", exc)
 
@@ -127,15 +119,9 @@ class ContextEngine:
                 if summary.get("success"):
                     sys_data = summary.get("summary", {})
                     additional_info.append("\n\n📈 **حالة النظام:**")
-                    additional_info.append(
-                        f"• إجمالي العملاء: {sys_data.get('total_customers', 0)}"
-                    )
-                    additional_info.append(
-                        f"• إجمالي المنتجات: {sys_data.get('total_products', 0)}"
-                    )
-                    additional_info.append(
-                        f"• المبيعات اليوم: {sys_data.get('today_sales', 0)} درهم"
-                    )
+                    additional_info.append(f"• إجمالي العملاء: {sys_data.get('total_customers', 0)}")
+                    additional_info.append(f"• إجمالي المنتجات: {sys_data.get('total_products', 0)}")
+                    additional_info.append(f"• المبيعات اليوم: {sys_data.get('today_sales', 0)} درهم")
             except Exception as exc:
                 logger.debug("System summary enrichment failed: %s", exc)
 
@@ -169,15 +155,9 @@ class ContextEngine:
             learning_insights = learning_system.get_learning_insights()
             if learning_insights.get("total_interactions", 0) > 10:
                 additional_info.append("\n\n💡 **من خبرتي معك:**")
-                top_topic = (
-                    learning_insights.get("top_topics", [{}])[0]
-                    if learning_insights.get("top_topics")
-                    else {}
-                )
+                top_topic = learning_insights.get("top_topics", [{}])[0] if learning_insights.get("top_topics") else {}
                 if top_topic:
-                    additional_info.append(
-                        f"• أكثر موضوع تهتم به: {top_topic.get('topic', 'غير محدد')}"
-                    )
+                    additional_info.append(f"• أكثر موضوع تهتم به: {top_topic.get('topic', 'غير محدد')}")
         except Exception as exc:
             logger.debug("Learning insights enrichment failed: %s", exc)
 

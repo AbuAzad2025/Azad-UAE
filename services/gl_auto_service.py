@@ -26,23 +26,17 @@ def ensure_balance_consistency(connection, model, record_id):
 
         if model == Customer:
             result = connection.execute(
-                Sale.__table__.select().where(
-                    Sale.customer_id == record_id, Sale.status == "confirmed"
-                )
+                Sale.__table__.select().where(Sale.customer_id == record_id, Sale.status == "confirmed")
             ).fetchall()
             calculated_balance = sum(
-                (row.amount_aed or Decimal("0")) - (row.paid_amount_aed or Decimal("0"))
-                for row in result
+                (row.amount_aed or Decimal("0")) - (row.paid_amount_aed or Decimal("0")) for row in result
             )
-            customer = connection.execute(
-                Customer.__table__.select().where(Customer.id == record_id)
-            ).first()
+            customer = connection.execute(Customer.__table__.select().where(Customer.id == record_id)).first()
             stored_balance = customer.balance if customer else Decimal("0")
             return {
                 "stored": stored_balance,
                 "calculated": calculated_balance,
-                "consistent": abs(stored_balance - calculated_balance)
-                < Decimal("0.01"),
+                "consistent": abs(stored_balance - calculated_balance) < Decimal("0.01"),
             }
     except Exception as e:
         logger.error(f"Failed to check balance consistency: {e}")
@@ -54,13 +48,9 @@ def validate_journal_entry_balance(mapper, connection, target):
         debit = target.total_debit or Decimal("0")
         credit = target.total_credit or Decimal("0")
         if (debit > 0 or credit > 0) and abs(debit - credit) > Decimal("0.01"):
-            logger.error(
-                f"Journal entry {target.entry_number} is UNBALANCED! Debit: {debit}, Credit: {credit}"
-            )
+            logger.error(f"Journal entry {target.entry_number} is UNBALANCED! Debit: {debit}, Credit: {credit}")
             raise ValueError(f"القيد غير متوازن! المدين: {debit}, الدائن: {credit}")
-        logger.info(
-            f"Journal entry {target.entry_number} is balanced: {debit} = {credit}"
-        )
+        logger.info(f"Journal entry {target.entry_number} is balanced: {debit} = {credit}")
     except ValueError:
         raise
     except Exception as e:
@@ -94,9 +84,7 @@ def register_validation_event_listeners():
     def _validate_purchase(mapper, connection, target):
         try:
             if target.amount_aed and target.amount_aed < 0:
-                logger.error(
-                    f"Purchase {target.purchase_number}: Negative amount detected!"
-                )
+                logger.error(f"Purchase {target.purchase_number}: Negative amount detected!")
         except Exception as e:
             logger.error(f"Failed to validate purchase: {e}")
 
@@ -120,8 +108,6 @@ def register_validation_event_listeners():
     def _validate_product_stock(mapper, connection, target):
         try:
             if target.current_stock and target.current_stock < 0:
-                logger.warning(
-                    f"Product {target.name}: Negative stock detected ({target.current_stock})"
-                )
+                logger.warning(f"Product {target.name}: Negative stock detected ({target.current_stock})")
         except Exception as e:
             logger.error(f"Failed to validate product stock: {e}")

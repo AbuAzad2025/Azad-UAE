@@ -55,9 +55,7 @@ def store_service_mocks():
     physical_wh.id = 20
     sale_query = _chain_query(all=[_mock_sale()])
     product_query = MagicMock()
-    product_query.filter_by.return_value.order_by.return_value.all.return_value = [
-        _mock_product()
-    ]
+    product_query.filter_by.return_value.order_by.return_value.all.return_value = [_mock_product()]
     product_query.filter_by.return_value.first.return_value = _mock_product()
     customer_query = MagicMock()
     customer_query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
@@ -67,9 +65,7 @@ def store_service_mocks():
         patch("routes.store.StoreService.get_tenant_store", return_value=store),
         patch("routes.store.StoreService.ensure_tenant_store", return_value=store),
         patch("routes.store.StoreService.get_online_warehouse", return_value=online_wh),
-        patch(
-            "routes.store.StoreService.ensure_online_warehouse", return_value=online_wh
-        ),
+        patch("routes.store.StoreService.ensure_online_warehouse", return_value=online_wh),
         patch("routes.store.StoreService.count_visible_products", return_value=3),
         patch(
             "routes.store.StoreService.online_stock_map",
@@ -94,9 +90,7 @@ def store_service_mocks():
             "routes.store.StoreService.ensure_unique_subdomain",
             side_effect=lambda s, tenant_id=None: s,
         ),
-        patch(
-            "routes.store.StoreOrderService.order_counts", return_value={"pending": 2}
-        ),
+        patch("routes.store.StoreOrderService.order_counts", return_value={"pending": 2}),
         patch(
             "routes.store.StoreOrderService.STORE_ORDER_STATUSES",
             ("pending", "confirmed", "processing", "shipped", "delivered", "cancelled"),
@@ -107,22 +101,14 @@ def store_service_mocks():
             {"pending": "بانتظار التأكيد", "confirmed": "مؤكد"},
             create=True,
         ),
-        patch(
-            "routes.store.StoreOrderService.get_tenant_order", return_value=_mock_sale()
-        ),
+        patch("routes.store.StoreOrderService.get_tenant_order", return_value=_mock_sale()),
         patch("routes.store.StoreOrderService.is_fulfilled", return_value=False),
-        patch(
-            "routes.store.StoreOrderService.validate_stock_for_order", return_value=[]
-        ),
+        patch("routes.store.StoreOrderService.validate_stock_for_order", return_value=[]),
         patch("routes.store.StoreOrderService.confirm_order"),
         patch("routes.store.StoreOrderService.cancel_order"),
-        patch(
-            "routes.store.StoreOrderService.status_label", return_value="قيد الانتظار"
-        ),
+        patch("routes.store.StoreOrderService.status_label", return_value="قيد الانتظار"),
         patch("routes.store.StoreAnalyticsService.low_stock_products", return_value=[]),
-        patch(
-            "routes.store.StoreAnalyticsService.order_stats", return_value={"total": 5}
-        ),
+        patch("routes.store.StoreAnalyticsService.order_stats", return_value={"total": 5}),
         patch("routes.store.StoreAnalyticsService.top_products", return_value=[]),
         patch("routes.store.StoreAnalyticsService.daily_orders_chart", return_value=[]),
         patch("routes.store.StoreCouponService.list_for_tenant", return_value=[]),
@@ -225,9 +211,7 @@ class TestStoreAdminSettings:
         )
         assert resp.status_code in (302, 303)
 
-    def test_settings_post_validation_error_missing_title_when_enabled(
-        self, store_client, store_service_mocks
-    ):
+    def test_settings_post_validation_error_missing_title_when_enabled(self, store_client, store_service_mocks):
         with patch("routes.store.render_template", return_value="settings") as render:
             resp = store_client.post(
                 "/store/admin/settings",
@@ -240,9 +224,7 @@ class TestStoreAdminSettings:
         assert resp.status_code == 200
         assert render.called
 
-    def test_settings_post_platform_disabled_blocks_enable(
-        self, store_client, store_service_mocks
-    ):
+    def test_settings_post_platform_disabled_blocks_enable(self, store_client, store_service_mocks):
         store_service_mocks["store"].platform_disabled = True
         resp = store_client.post(
             "/store/admin/settings",
@@ -283,9 +265,7 @@ class TestStoreAdminCatalog:
 
     def test_catalog_include_zero(self, store_client):
         with (
-            patch(
-                "routes.store.StoreService.get_catalog_products", return_value=([], {})
-            ),
+            patch("routes.store.StoreService.get_catalog_products", return_value=([], {})),
             patch("routes.store.render_template", return_value="catalog") as render,
         ):
             resp = store_client.get("/store/admin/catalog?all=1")
@@ -360,24 +340,18 @@ class TestStoreAdminOrders:
         assert render.call_args[0][0] == "store/admin_order_detail.html"
 
     def test_order_detail_not_found(self, store_client):
-        with patch(
-            "routes.store.StoreOrderService.get_tenant_order", return_value=None
-        ):
+        with patch("routes.store.StoreOrderService.get_tenant_order", return_value=None):
             resp = store_client.get("/store/admin/orders/999")
         assert resp.status_code == 404
 
     def test_order_confirm_success(self, store_client):
         with patch("routes.store.StoreOrderService.confirm_order") as confirm:
-            resp = store_client.post(
-                "/store/admin/orders/100/confirm", data={"mark_paid": "on"}
-            )
+            resp = store_client.post("/store/admin/orders/100/confirm", data={"mark_paid": "on"})
         confirm.assert_called_once()
         assert resp.status_code in (302, 303)
 
     def test_order_confirm_not_found(self, store_client):
-        with patch(
-            "routes.store.StoreOrderService.get_tenant_order", return_value=None
-        ):
+        with patch("routes.store.StoreOrderService.get_tenant_order", return_value=None):
             resp = store_client.post("/store/admin/orders/999/confirm")
         assert resp.status_code == 404
 
@@ -396,9 +370,7 @@ class TestStoreAdminOrders:
         assert resp.status_code in (302, 303)
 
     def test_order_cancel_not_found(self, store_client):
-        with patch(
-            "routes.store.StoreOrderService.get_tenant_order", return_value=None
-        ):
+        with patch("routes.store.StoreOrderService.get_tenant_order", return_value=None):
             resp = store_client.post("/store/admin/orders/999/cancel")
         assert resp.status_code == 404
 
@@ -408,9 +380,7 @@ class TestStoreAdminCustomers:
         account = MagicMock()
         account.id = 1
         customer_query = MagicMock()
-        customer_query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [
-            account
-        ]
+        customer_query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [account]
         with (
             patch("routes.store.ShopCustomerAccount.query", customer_query),
             patch("routes.store.render_template", return_value="customers") as render,
@@ -499,9 +469,7 @@ class TestStoreSettingsExtended:
         resp = store_client.get("/store/admin/settings")
         assert resp.status_code == 200
 
-    def test_settings_post_min_order_and_subdomain(
-        self, store_client, store_service_mocks
-    ):
+    def test_settings_post_min_order_and_subdomain(self, store_client, store_service_mocks):
         resp = store_client.post(
             "/store/admin/settings",
             data={
@@ -547,9 +515,7 @@ class TestStoreSettingsExtended:
 
 
 class TestStoreTransferExtended:
-    def test_transfer_from_online_default_source(
-        self, store_client, store_service_mocks
-    ):
+    def test_transfer_from_online_default_source(self, store_client, store_service_mocks):
         resp = store_client.post(
             "/store/admin/transfer",
             data={
@@ -615,8 +581,6 @@ class TestStoreOrdersExtended:
             resp = store_client.post("/store/admin/orders/100/cancel")
         assert resp.status_code in (302, 303)
 
-    def test_order_detail_pending_shows_whatsapp(
-        self, store_client, store_service_mocks
-    ):
+    def test_order_detail_pending_shows_whatsapp(self, store_client, store_service_mocks):
         resp = store_client.get("/store/admin/orders/100")
         assert resp.status_code == 200

@@ -28,9 +28,7 @@ class AutoApprovalService:
             dict: نتائج العملية
         """
         try:
-            threshold_time = datetime.now(timezone.utc) - timedelta(
-                hours=hours_threshold
-            )
+            threshold_time = datetime.now(timezone.utc) - timedelta(hours=hours_threshold)
 
             # جلب التبرعات المعلقة الأقدم من ساعة
             pending_donations = Donation.query.filter(
@@ -65,9 +63,7 @@ class AutoApprovalService:
                 db.session.flush()
 
             if approved_count > 0:
-                logger.info(
-                    f"✅ Auto-approved {approved_count} donations, total: ${approved_amount}"
-                )
+                logger.info(f"✅ Auto-approved {approved_count} donations, total: ${approved_amount}")
 
             return {
                 "success": True,
@@ -92,9 +88,7 @@ class AutoApprovalService:
             dict: نتائج العملية
         """
         try:
-            threshold_time = datetime.now(timezone.utc) - timedelta(
-                hours=hours_threshold
-            )
+            threshold_time = datetime.now(timezone.utc) - timedelta(hours=hours_threshold)
 
             # جلب المشتريات المعلقة الأقدم من ساعة
             pending_purchases = PackagePurchase.query.filter(
@@ -140,9 +134,7 @@ class AutoApprovalService:
                 db.session.flush()
 
             if approved_count > 0:
-                logger.info(
-                    f"✅ Auto-approved {approved_count} purchases, total: ${approved_amount}"
-                )
+                logger.info(f"✅ Auto-approved {approved_count} purchases, total: ${approved_amount}")
 
             return {
                 "success": True,
@@ -166,22 +158,16 @@ class AutoApprovalService:
         logger.info("🔄 Running auto-approval service...")
 
         # قبول التبرعات
-        donations_result = AutoApprovalService.approve_pending_donations(
-            hours_threshold=1
-        )
+        donations_result = AutoApprovalService.approve_pending_donations(hours_threshold=1)
 
         # قبول المشتريات
-        purchases_result = AutoApprovalService.approve_pending_purchases(
-            hours_threshold=1
-        )
+        purchases_result = AutoApprovalService.approve_pending_purchases(hours_threshold=1)
 
         return {
             "donations": donations_result,
             "purchases": purchases_result,
-            "total_approved": donations_result.get("approved_count", 0)
-            + purchases_result.get("approved_count", 0),
-            "total_amount": donations_result.get("approved_amount", 0)
-            + purchases_result.get("approved_amount", 0),
+            "total_approved": donations_result.get("approved_count", 0) + purchases_result.get("approved_count", 0),
+            "total_amount": donations_result.get("approved_amount", 0) + purchases_result.get("approved_amount", 0),
         }
 
 

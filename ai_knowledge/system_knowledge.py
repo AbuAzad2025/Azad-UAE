@@ -910,10 +910,7 @@ def get_model_info(model_name: str) -> dict | None:
             return {**val, "_key": key}
     # Try partial match
     for key, val in MODELS.items():
-        if (
-            model_name.lower() in key.lower()
-            or model_name.lower() in val["table"].lower()
-        ):
+        if model_name.lower() in key.lower() or model_name.lower() in val["table"].lower():
             return {**val, "_key": key}
     return None
 

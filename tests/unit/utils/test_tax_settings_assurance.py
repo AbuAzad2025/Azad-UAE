@@ -29,9 +29,7 @@ class TestResolveTenant:
         assert _resolve_tenant() is tenant
 
     def test_resolve_current_exception_returns_none(self, mocker):
-        mocker.patch(
-            "models.tenant.Tenant.get_current", side_effect=RuntimeError("no ctx")
-        )
+        mocker.patch("models.tenant.Tenant.get_current", side_effect=RuntimeError("no ctx"))
         from utils.tax_settings import _resolve_tenant
 
         assert _resolve_tenant() is None

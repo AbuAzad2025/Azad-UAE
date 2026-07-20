@@ -49,9 +49,7 @@ class LocalizationStrategy(ABC):
         Return dict with: xml_payload, qr_base64, invoice_hash.
         Subclasses should override this for country-specific e-invoice generation.
         """
-        raise NotImplementedError(
-            f"E-invoice generation not supported for {self.country_code}"
-        )
+        raise NotImplementedError(f"E-invoice generation not supported for {self.country_code}")
 
     def get_wps_format(self, employees: list) -> dict:
         """

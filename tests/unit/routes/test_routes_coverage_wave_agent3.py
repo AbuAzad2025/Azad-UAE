@@ -26,9 +26,7 @@ class TestTreasuryExportBranchAccess:
             ),
             patch("routes.treasury.report_branch_scope_id", return_value=None),
             patch("routes.treasury.user_can_access_branch", return_value=False),
-            patch(
-                "routes.treasury.render_template", return_value="forbidden"
-            ) as render,
+            patch("routes.treasury.render_template", return_value="forbidden") as render,
         ):
             resp = treasury_client.get("/reports/treasury/export?branch_id=9")
         assert resp.status_code == 403

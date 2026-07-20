@@ -23,9 +23,7 @@ class Tenant(db.Model):
     name_en = db.Column(db.String(200))
     slug = db.Column(db.String(100), unique=True, nullable=False, index=True)
 
-    business_type = db.Column(
-        db.String(50), default="general"
-    )  # retail, wholesale, services, etc.
+    business_type = db.Column(db.String(50), default="general")  # retail, wholesale, services, etc.
     industry = db.Column(db.String(100))  # automotive, heavy_equipment, etc.
 
     # Contact Info - معلومات التواصل
@@ -54,12 +52,8 @@ class Tenant(db.Model):
     brand_color_secondary = db.Column(db.String(20), default="#D4AF37")
 
     # Subscription - الاشتراك
-    subscription_plan = db.Column(
-        db.String(50), default="basic"
-    )  # basic, pro, enterprise
-    subscription_plan_duration = db.Column(
-        db.String(20), default="monthly"
-    )  # monthly, annual, lifetime
+    subscription_plan = db.Column(db.String(50), default="basic")  # basic, pro, enterprise
+    subscription_plan_duration = db.Column(db.String(20), default="monthly")  # monthly, annual, lifetime
     subscription_start = db.Column(db.DateTime)
     subscription_end = db.Column(db.DateTime)
     is_trial = db.Column(db.Boolean, default=False)
@@ -141,9 +135,7 @@ class Tenant(db.Model):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
-    created_by = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=True, index=True
-    )
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True, index=True)
 
     created_by_user = db.relationship("User", foreign_keys=[created_by])
 
@@ -170,9 +162,7 @@ class Tenant(db.Model):
             if current_user and getattr(current_user, "is_authenticated", False):
                 active_tid = get_active_tenant_id(current_user)
                 if active_tid:
-                    tenant = Tenant.query.filter_by(
-                        id=int(active_tid), is_active=True
-                    ).first()
+                    tenant = Tenant.query.filter_by(id=int(active_tid), is_active=True).first()
                     if tenant:
                         return tenant
                 if not is_platform_owner(current_user):
@@ -184,16 +174,12 @@ class Tenant(db.Model):
             import logging
 
             logger = logging.getLogger("azad.security")
-            logger.debug(
-                "Failed to resolve active tenant from user relationship", exc_info=True
-            )
+            logger.debug("Failed to resolve active tenant from user relationship", exc_info=True)
 
         import logging
 
         logger = logging.getLogger("azad.security")
-        logger.warning(
-            "Tenant.get_current() returned None — unauthenticated or no active tenant resolved"
-        )
+        logger.warning("Tenant.get_current() returned None — unauthenticated or no active tenant resolved")
         return None
 
     @property
@@ -219,9 +205,7 @@ class Tenant(db.Model):
         labels = {"monthly": "شهري", "annual": "سنوي", "lifetime": "مدى الحياة"}
         if lang == "en":
             labels = {"monthly": "Monthly", "annual": "Annual", "lifetime": "Lifetime"}
-        return labels.get(
-            self.subscription_plan_duration, self.subscription_plan_duration
-        )
+        return labels.get(self.subscription_plan_duration, self.subscription_plan_duration)
 
     def extend_subscription(self, days: int) -> "Tenant":
         """Extend (or set, if unset) the subscription end date by ``days``.
@@ -289,9 +273,7 @@ class Tenant(db.Model):
             "is_active": self.is_active,
             "subscription_plan": self.subscription_plan,
             "subscription_plan_duration": self.subscription_plan_duration,
-            "subscription_end": (
-                self.subscription_end.isoformat() if self.subscription_end else None
-            ),
+            "subscription_end": (self.subscription_end.isoformat() if self.subscription_end else None),
             "enable_auto_backup": self.enable_auto_backup,
             "is_trial": self.is_trial,
         }

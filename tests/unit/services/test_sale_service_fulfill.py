@@ -231,9 +231,7 @@ class TestCreatePaymentForSale:
             gl.get_payment_debit_concept.return_value = "CASH"
             gl.get_customer_credit_account.return_value = "1200"
             gl.get_customer_credit_concept.return_value = "AR"
-            SaleService.create_payment_for_sale(
-                sale, 100, "cash", currency="AED", exchange_rate=1.0
-            )
+            SaleService.create_payment_for_sale(sale, 100, "cash", currency="AED", exchange_rate=1.0)
             mock_db.add.assert_called()
             sale.recalculate_payment_status.assert_called()
 
@@ -278,7 +276,5 @@ class TestCreatePaymentForSale:
             gl.get_customer_credit_account.return_value = "1200"
             gl.get_customer_credit_concept.return_value = "AR"
             gl.get_account_code_for_concept.return_value = "4900"
-            SaleService.create_payment_for_sale(
-                sale, 100, "cash", currency="USD", exchange_rate=3.8
-            )
+            SaleService.create_payment_for_sale(sale, 100, "cash", currency="USD", exchange_rate=3.8)
             assert post.call_count >= 2

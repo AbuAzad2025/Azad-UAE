@@ -60,9 +60,7 @@ class LongTermMemory:
             try:
                 with open(file_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                if memory_type != "preferences" and not isinstance(
-                    data.get("memories"), list
-                ):
+                if memory_type != "preferences" and not isinstance(data.get("memories"), list):
                     return default
                 return data
             except (json.JSONDecodeError, OSError) as exc:
@@ -193,11 +191,7 @@ class LongTermMemory:
 
         للحفاظ على السياق في المحادثات الطويلة
         """
-        user_conversations = [
-            mem
-            for mem in self.episodic_memory["memories"]
-            if mem.get("user_id") == user_id
-        ]
+        user_conversations = [mem for mem in self.episodic_memory["memories"] if mem.get("user_id") == user_id]
 
         # الأحدث أولاً
         user_conversations.reverse()
@@ -330,9 +324,7 @@ class LongTermMemory:
         # تنظيف المحادثات القديمة
         original_count = len(self.episodic_memory["memories"])
         self.episodic_memory["memories"] = [
-            mem
-            for mem in self.episodic_memory["memories"]
-            if mem.get("timestamp", "") > cutoff_str
+            mem for mem in self.episodic_memory["memories"] if mem.get("timestamp", "") > cutoff_str
         ]
 
         deleted = original_count - len(self.episodic_memory["memories"])
@@ -358,14 +350,10 @@ class LongTermMemory:
             "episodic": {
                 "count": len(self.episodic_memory["memories"]),
                 "oldest": (
-                    self.episodic_memory["memories"][0]["timestamp"]
-                    if self.episodic_memory["memories"]
-                    else None
+                    self.episodic_memory["memories"][0]["timestamp"] if self.episodic_memory["memories"] else None
                 ),
                 "newest": (
-                    self.episodic_memory["memories"][-1]["timestamp"]
-                    if self.episodic_memory["memories"]
-                    else None
+                    self.episodic_memory["memories"][-1]["timestamp"] if self.episodic_memory["memories"] else None
                 ),
             },
             "semantic": {"count": len(self.semantic_memory["memories"])},

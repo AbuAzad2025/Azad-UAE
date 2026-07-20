@@ -27,11 +27,7 @@ class TestFrontendSecurityAudit:
         for path, text in js_files.items():
             for line_num, line in enumerate(text.split("\r\n"), 1):
                 if price_pattern.search(line):
-                    if (
-                        "data." not in line
-                        and "response." not in line
-                        and "result." not in line
-                    ):
+                    if "data." not in line and "response." not in line and "result." not in line:
                         issues.append(f"{path.name}:{line_num}: {line.strip()[:80]}")
         assert issues == [], f"Hardcoded prices in JS: {issues[:20]}"
 
@@ -55,10 +51,7 @@ class TestFrontendSecurityAudit:
                 lines = text.splitlines()
                 for i, line in enumerate(lines, 1):
                     if "localStorage.setItem" in line:
-                        if any(
-                            kw in line
-                            for kw in ["password", "token", "secret", "key", "api"]
-                        ):
+                        if any(kw in line for kw in ["password", "token", "secret", "key", "api"]):
                             issues.append(f"{path.name}:{i}: {line.strip()[:80]}")
         assert issues == [], f"Sensitive data in localStorage: {issues[:20]}"
 
@@ -72,17 +65,11 @@ class TestFrontendSecurityAudit:
                 continue
             if "fetch" in text or "$.ajax" in text:
                 # Check if file has any CSRF reference
-                has_csrf = (
-                    "X-CSRFToken" in text
-                    or "csrf-token" in text
-                    or "csrf" in text.lower()
-                )
+                has_csrf = "X-CSRFToken" in text or "csrf-token" in text or "csrf" in text.lower()
                 if not has_csrf:
                     # Check line by line for POST
                     for i, line in enumerate(text.splitlines(), 1):
-                        if ("$.ajax" in line or "fetch(" in line) and (
-                            "POST" in line or "post" in line
-                        ):
+                        if ("$.ajax" in line or "fetch(" in line) and ("POST" in line or "post" in line):
                             issues.append(f"{path.name}:{i}: POST AJAX without CSRF")
                             break
         assert issues == [], f"Missing CSRF in POST AJAX: {issues[:20]}"
@@ -108,9 +95,7 @@ class TestFrontendSecurityAudit:
                 text = path.read_text(encoding="utf-8")
             except UnicodeDecodeError:
                 text = path.read_text(encoding="utf-8", errors="replace")
-            if "<form" in text.lower() and (
-                'method="post"' in text.lower() or "method='post'" in text.lower()
-            ):
+            if "<form" in text.lower() and ('method="post"' in text.lower() or "method='post'" in text.lower()):
                 if "csrf_token" not in text and "hidden_tag" not in text:
                     rel = str(path.relative_to(templates_dir))
                     issues.append(rel)

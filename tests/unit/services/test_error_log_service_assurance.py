@@ -88,9 +88,7 @@ class TestFilteringAndPagination:
         log_file = tmp_path / "many.log"
         blocks = []
         for i in range(5):
-            blocks.append(
-                f"[2025-06-01 12:{i:02d}:00] ERROR in mod{i}:1\nMessage: err {i}\nPath: /\n"
-            )
+            blocks.append(f"[2025-06-01 12:{i:02d}:00] ERROR in mod{i}:1\nMessage: err {i}\nPath: /\n")
         log_file.write_text("\n\n".join(blocks), encoding="utf-8")
 
         rows, total_pages, total, _ = ErrorLogService.get_parsed_errors(

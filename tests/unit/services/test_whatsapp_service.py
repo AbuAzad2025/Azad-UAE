@@ -67,9 +67,7 @@ class TestSendInvoice:
             return resp
 
         mocker.patch("services.whatsapp_service.requests.post", side_effect=fake_post)
-        result = WhatsAppService.send_invoice(
-            "971501234567", "INV-2", pdf_url="https://pdf.example/a.pdf"
-        )
+        result = WhatsAppService.send_invoice("971501234567", "INV-2", pdf_url="https://pdf.example/a.pdf")
         assert result["success"] is True
         assert captured["url"].endswith("/messages/document")
         assert captured["data"]["document"] == "https://pdf.example/a.pdf"
@@ -99,9 +97,7 @@ class TestSendPaymentReminder:
         assert result["phone"] == "971501112222"
 
     def test_failure(self, whatsapp_env, mocker):
-        mocker.patch(
-            "services.whatsapp_service.requests.post", side_effect=RuntimeError("net")
-        )
+        mocker.patch("services.whatsapp_service.requests.post", side_effect=RuntimeError("net"))
         result = WhatsAppService.send_payment_reminder("0501234567", "Ali", 10)
         assert result["success"] is False
 
@@ -113,18 +109,12 @@ class TestSendCustomMessage:
     def test_success(self, whatsapp_env, mocker):
         resp = MagicMock()
         resp.json.return_value = {"id": "c-1"}
-        post = mocker.patch(
-            "services.whatsapp_service.requests.post", return_value=resp
-        )
+        post = mocker.patch("services.whatsapp_service.requests.post", return_value=resp)
 
         result = WhatsAppService.send_custom_message("0501234567", "Hello")
         assert result["success"] is True
         assert post.call_args.kwargs["data"]["body"] == "Hello"
 
     def test_failure(self, whatsapp_env, mocker):
-        mocker.patch(
-            "services.whatsapp_service.requests.post", side_effect=ValueError("bad")
-        )
-        assert (
-            WhatsAppService.send_custom_message("0501234567", "x")["success"] is False
-        )
+        mocker.patch("services.whatsapp_service.requests.post", side_effect=ValueError("bad"))
+        assert WhatsAppService.send_custom_message("0501234567", "x")["success"] is False

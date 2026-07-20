@@ -80,9 +80,7 @@ class TestBalanceByPrefix:
 
         from services.advanced_analytics import AdvancedFinancialAnalytics
 
-        total = AdvancedFinancialAnalytics._calculate_balance_by_prefix(
-            "11", date_to=date.today(), tenant_id=1
-        )
+        total = AdvancedFinancialAnalytics._calculate_balance_by_prefix("11", date_to=date.today(), tenant_id=1)
         assert total == Decimal("500")
 
     def test_revenue_credit_normal_subtracts_debit(self, mocker):
@@ -175,9 +173,7 @@ class TestComparativeAndBreakdown:
 
         from services.advanced_analytics import AdvancedFinancialAnalytics
 
-        data = AdvancedFinancialAnalytics.get_comparative_analysis(
-            periods=["current", "bogus"]
-        )
+        data = AdvancedFinancialAnalytics.get_comparative_analysis(periods=["current", "bogus"])
         assert "current" in data
         assert "bogus" not in data
         assert data["current"]["margin"] == pytest.approx(0.0)
@@ -189,9 +185,7 @@ class TestComparativeAndBreakdown:
         )
         from services.advanced_analytics import AdvancedFinancialAnalytics
 
-        data = AdvancedFinancialAnalytics.get_comparative_analysis(
-            periods=["current", "last_month", "last_year"]
-        )
+        data = AdvancedFinancialAnalytics.get_comparative_analysis(periods=["current", "last_month", "last_year"])
         assert set(data.keys()) == {"current", "last_month", "last_year"}
 
     def test_expense_breakdown_zero_total_percentages(self, mocker):
@@ -199,9 +193,7 @@ class TestComparativeAndBreakdown:
         acct.code = "5100"
         acct.full_name = "Rent"
         acct.id = 1
-        mocker.patch(
-            "utils.gl_tenant.scope_gl_accounts"
-        ).return_value.all.return_value = [acct]
+        mocker.patch("utils.gl_tenant.scope_gl_accounts").return_value.all.return_value = [acct]
         mocker.patch(
             "services.gl_service.GLService.get_all_account_balances",
             return_value={1: Decimal("0")},
@@ -216,9 +208,7 @@ class TestComparativeAndBreakdown:
     def test_revenue_breakdown_sorted_desc(self, mocker):
         low = MagicMock(code="4100", full_name="Low", id=1)
         high = MagicMock(code="4200", full_name="High", id=2)
-        mocker.patch(
-            "utils.gl_tenant.scope_gl_accounts"
-        ).return_value.all.return_value = [low, high]
+        mocker.patch("utils.gl_tenant.scope_gl_accounts").return_value.all.return_value = [low, high]
         mocker.patch(
             "services.gl_service.GLService.get_all_account_balances",
             return_value={1: Decimal("100"), 2: Decimal("900")},
@@ -295,24 +285,18 @@ class TestAccountTypeBalance:
     def test_full_balance_when_no_date_range(self, mocker):
         acct = MagicMock()
         acct.get_balance.return_value = Decimal("-750")
-        mocker.patch(
-            "utils.gl_tenant.scope_gl_accounts"
-        ).return_value.all.return_value = [acct]
+        mocker.patch("utils.gl_tenant.scope_gl_accounts").return_value.all.return_value = [acct]
 
         from services.advanced_analytics import AdvancedFinancialAnalytics
 
-        total = AdvancedFinancialAnalytics._calculate_account_type_balance(
-            "revenue", tenant_id=1
-        )
+        total = AdvancedFinancialAnalytics._calculate_account_type_balance("revenue", tenant_id=1)
         assert total == Decimal("750")
 
     def test_dated_account_type_balance_expense(self, mocker):
         line = MagicMock(amount_aed=Decimal("100"))
         acct = MagicMock()
         acct.get_balance.return_value = Decimal("0")
-        mocker.patch(
-            "utils.gl_tenant.scope_gl_accounts"
-        ).return_value.all.return_value = [acct]
+        mocker.patch("utils.gl_tenant.scope_gl_accounts").return_value.all.return_value = [acct]
         lines_q = MagicMock()
         lines_q.join.return_value = lines_q
         lines_q.filter.return_value = lines_q
@@ -354,9 +338,7 @@ class TestAccountTypeBalance:
     def test_dated_revenue_balance_credit_normal_subtracts(self, mocker):
         line = MagicMock(amount_aed=Decimal("75"))
         acct = MagicMock()
-        mocker.patch(
-            "utils.gl_tenant.scope_gl_accounts"
-        ).return_value.all.return_value = [acct]
+        mocker.patch("utils.gl_tenant.scope_gl_accounts").return_value.all.return_value = [acct]
         lines_q = MagicMock()
         lines_q.join.return_value = lines_q
         lines_q.filter.return_value = lines_q
@@ -374,9 +356,7 @@ class TestAccountTypeBalance:
 
     def test_expense_breakdown_positive_percentage(self, mocker):
         acct = MagicMock(code="5100", full_name="Rent", id=1)
-        mocker.patch(
-            "utils.gl_tenant.scope_gl_accounts"
-        ).return_value.all.return_value = [acct]
+        mocker.patch("utils.gl_tenant.scope_gl_accounts").return_value.all.return_value = [acct]
         mocker.patch(
             "services.gl_service.GLService.get_all_account_balances",
             return_value={1: Decimal("300")},
@@ -388,9 +368,7 @@ class TestAccountTypeBalance:
 
     def test_revenue_breakdown_zero_total_percentage(self, mocker):
         acct = MagicMock(code="4100", full_name="Sales", id=1)
-        mocker.patch(
-            "utils.gl_tenant.scope_gl_accounts"
-        ).return_value.all.return_value = [acct]
+        mocker.patch("utils.gl_tenant.scope_gl_accounts").return_value.all.return_value = [acct]
         mocker.patch(
             "services.gl_service.GLService.get_all_account_balances",
             return_value={1: Decimal("0")},

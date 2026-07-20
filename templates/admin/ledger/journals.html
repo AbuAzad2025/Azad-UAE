@@ -81,7 +81,7 @@
                   <i class="fas fa-eye"></i>
                 </a>{% endif %}
                 {% if not entry.is_reversed %}
-                <button type="button" class="btn btn-outline-danger" onclick="reverseEntry({{ entry.id }})" title="{{ t('Reverse Entry') }}">
+                <button type="button" class="btn btn-outline-danger" data-action="reverse-entry" data-entry-id="{{ entry.id }}" title="{{ t('Reverse Entry') }}">
                   <i class="fas fa-undo"></i>
                 </button>
                 {% endif %}
@@ -190,6 +190,12 @@
 
 {% block scripts %}
 <script>
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action="reverse-entry"]');
+  if (!el) return;
+  reverseEntry(Number(el.dataset.entryId));
+});
+
 function reverseEntry(entryId) {
   if (confirm("{{ t('Are you sure you want to reverse this entry? This action cannot be undone.') }}")) {
     fetch(`/ledger/entry/${entryId}/reverse`, {

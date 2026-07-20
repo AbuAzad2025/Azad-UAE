@@ -42,9 +42,7 @@ def extract_scoped_bundle(archive_path: str, work_dir: str) -> Dict[str, Any]:
             if member in names:
                 tar.extract(member, work_dir, filter="data")
                 out[member] = os.path.join(work_dir, member)
-        if "data/schema_meta.json" in names or any(
-            n.startswith("data/") for n in names
-        ):
+        if "data/schema_meta.json" in names or any(n.startswith("data/") for n in names):
             for n in names:
                 if n.startswith("data/"):
                     tar.extract(n, work_dir, filter="data")
@@ -181,9 +179,7 @@ def _apply_row_remap(
     return out
 
 
-def _delete_tenant_scoped_data(
-    conn: Connection, tenant_id: int, branch_id: Optional[int] = None
-) -> None:
+def _delete_tenant_scoped_data(conn: Connection, tenant_id: int, branch_id: Optional[int] = None) -> None:
     from sqlalchemy import text
 
     from services.backup_scope_config import TABLE_EXPORT_ORDER, table_exists
@@ -198,8 +194,7 @@ def _delete_tenant_scoped_data(
             r[0]
             for r in conn.execute(
                 text(
-                    "SELECT column_name FROM information_schema.columns "
-                    "WHERE table_schema='public' AND table_name=:t"
+                    "SELECT column_name FROM information_schema.columns WHERE table_schema='public' AND table_name=:t"
                 ),
                 {"t": table},
             )
@@ -207,17 +202,11 @@ def _delete_tenant_scoped_data(
         try:
             with conn.begin_nested():
                 if table == "tenants":
-                    conn.execute(
-                        text("DELETE FROM tenants WHERE id = :tid"), {"tid": tenant_id}
-                    )
+                    conn.execute(text("DELETE FROM tenants WHERE id = :tid"), {"tid": tenant_id})
                 elif branch_id is not None and "branch_id" in cols:
-                    conn.execute(
-                        delete_where_query(conn, table, "branch_id", branch_id)
-                    )
+                    conn.execute(delete_where_query(conn, table, "branch_id", branch_id))
                 elif "tenant_id" in cols:
-                    conn.execute(
-                        delete_where_query(conn, table, "tenant_id", tenant_id)
-                    )
+                    conn.execute(delete_where_query(conn, table, "tenant_id", tenant_id))
         except Exception as exc:
             logger.debug("delete scoped %s: %s", table, exc)
 
@@ -314,9 +303,7 @@ def import_scoped_tables(
             new_branch_id=new_branch_id,
             new_store_id=new_store_id,
         )
-        id_maps.setdefault("tenants", {})[
-            (tables.get("tenants") or [{}])[0].get("id", source_tenant_id)
-        ] = tgt_tid
+        id_maps.setdefault("tenants", {})[(tables.get("tenants") or [{}])[0].get("id", source_tenant_id)] = tgt_tid
 
     engine = create_engine(target_url)
     if dry_run:
@@ -343,10 +330,7 @@ def import_scoped_tables(
         result["products_expected"] = expected_products
         result["products_inserted"] = result["inserted"].get("products", 0)
         result["rows_skipped"] = max(0, expected_products - result["products_inserted"])
-        if any(
-            result["inserted"].get(t, 0) == 0 and tables.get(t)
-            for t in ("tenants", "roles", "branches")
-        ):
+        if any(result["inserted"].get(t, 0) == 0 and tables.get(t) for t in ("tenants", "roles", "branches")):
             result["ok"] = False
         return result
 
@@ -376,9 +360,7 @@ def import_scoped_tables(
         result["ok"] = False
     if expected_products and inserted_products < expected_products:
         result["ok"] = False
-        result["errors"].append(
-            f"products: expected {expected_products} inserted {inserted_products}"
-        )
+        result["errors"].append(f"products: expected {expected_products} inserted {inserted_products}")
     elif result["errors"]:
         result["ok"] = sum(result["inserted"].values()) > 0
     return result
@@ -430,16 +412,12 @@ def verify_scoped_restore(
             try:
                 with conn.begin_nested():
                     if table == "tenants":
-                        actual = conn.execute(
-                            select_where_query(conn, table, "id", tid)
-                        ).scalar()
+                        actual = conn.execute(select_where_query(conn, table, "id", tid)).scalar()
                     elif table_exists(
                         conn,
                         table,
                     ) and _table_has_column(conn, table, "tenant_id"):
-                        actual = conn.execute(
-                            select_where_query(conn, table, "tenant_id", tid)
-                        ).scalar()
+                        actual = conn.execute(select_where_query(conn, table, "tenant_id", tid)).scalar()
                     else:
                         continue
                     out["counts"][table] = int(actual or 0)
@@ -447,12 +425,8 @@ def verify_scoped_restore(
                     if table in core_tables and act_n < exp_n:
                         out["ok"] = False
                         out["errors"].append(f"{table}: expected>={exp_n} got {act_n}")
-                    elif table not in optional_low and act_n < max(
-                        1, int(exp_n * 0.85)
-                    ):
-                        out["warnings"].append(
-                            f"{table}: expected>={exp_n} got {act_n}"
-                        )
+                    elif table not in optional_low and act_n < max(1, int(exp_n * 0.85)):
+                        out["warnings"].append(f"{table}: expected>={exp_n} got {act_n}")
             except Exception as exc:
                 logger.debug("verify count %s: %s", table, exc)
         try:
@@ -486,9 +460,7 @@ def verify_scoped_restore(
                     ).scalar()
                     if int(orphan_merchant or 0) > 0:
                         out["ok"] = False
-                        out["errors"].append(
-                            f"orphan products.merchant_customer_id count={orphan_merchant}"
-                        )
+                        out["errors"].append(f"orphan products.merchant_customer_id count={orphan_merchant}")
             except Exception as exc:
                 logger.debug("verify orphan merchant_customer_id: %s", exc)
     return out
@@ -515,15 +487,9 @@ def restore_scoped_backup(
         outcome["errors"].append(f"Typed confirmation {required!r} required")
         return outcome
 
-    current_url = (
-        os.environ.get("DATABASE_URL")
-        or os.environ.get("SQLALCHEMY_DATABASE_URI")
-        or ""
-    )
+    current_url = os.environ.get("DATABASE_URL") or os.environ.get("SQLALCHEMY_DATABASE_URI") or ""
     if backup_service_cls._urls_same_database(current_url, target_database_url):
-        outcome["errors"].append(
-            "Target database is the same as current DATABASE_URL — use a new database"
-        )
+        outcome["errors"].append("Target database is the same as current DATABASE_URL — use a new database")
         return outcome
 
     verify = backup_service_cls.verify_backup(filename)
@@ -561,9 +527,7 @@ def restore_scoped_backup(
             from sqlalchemy import create_engine, text
 
             with create_engine(target_database_url).connect() as conn:
-                max_id = conn.execute(
-                    text("SELECT COALESCE(MAX(id),0) FROM tenants")
-                ).scalar()
+                max_id = conn.execute(text("SELECT COALESCE(MAX(id),0) FROM tenants")).scalar()
             tgt_tid = int(max_id or 0) + 1
 
         import_result = import_scoped_tables(
@@ -594,8 +558,7 @@ def restore_scoped_backup(
             outcome["target_tenant_id"] = tgt_tid
             outcome["scope"] = scope
             outcome["note"] = (
-                "dry-run: restoration simulated and rolled back — no changes "
-                "persisted to the target database"
+                "dry-run: restoration simulated and rolled back — no changes persisted to the target database"
             )
             return outcome
 

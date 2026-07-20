@@ -62,9 +62,7 @@ class IndustryService:
 
     @staticmethod
     def get_business_type_choices():
-        return [
-            (code, f"{ar} / {en}") for code, (ar, en) in BUSINESS_TYPE_LABELS.items()
-        ]
+        return [(code, f"{ar} / {en}") for code, (ar, en) in BUSINESS_TYPE_LABELS.items()]
 
     @staticmethod
     def validate_industry_code(code):
@@ -72,9 +70,7 @@ class IndustryService:
 
     @staticmethod
     def get_product_effective_industry(product, tenant):
-        return getattr(product, "industry", None) or getattr(
-            tenant, "business_type", "general"
-        )
+        return getattr(product, "industry", None) or getattr(tenant, "business_type", "general")
 
     @staticmethod
     def get_all_field_names_for(industry_code):

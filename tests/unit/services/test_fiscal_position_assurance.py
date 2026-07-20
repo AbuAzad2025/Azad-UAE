@@ -10,9 +10,7 @@ class TestGetForCustomer:
     """get_for_customer — explicit, country auto-match, local fallback."""
 
     def test_returns_none_when_customer_missing(self, mocker):
-        mocker.patch(
-            "services.fiscal_position_service.db.session.get", return_value=None
-        )
+        mocker.patch("services.fiscal_position_service.db.session.get", return_value=None)
         from services.fiscal_position_service import FiscalPositionService
 
         assert FiscalPositionService.get_for_customer(99) is None
@@ -97,9 +95,7 @@ class TestApplyAndCompute:
 
         from services.fiscal_position_service import FiscalPositionService
 
-        tax_amount, rate = FiscalPositionService.compute_tax_for_line(
-            line, fiscal_position_id=1
-        )
+        tax_amount, rate = FiscalPositionService.compute_tax_for_line(line, fiscal_position_id=1)
         assert rate == Decimal("5")
         assert tax_amount == Decimal("10.000")
 
@@ -115,8 +111,6 @@ class TestApplyAndCompute:
 
         from services.fiscal_position_service import FiscalPositionService
 
-        tax_amount, rate = FiscalPositionService.compute_tax_for_line(
-            line, fiscal_position_id=2
-        )
+        tax_amount, rate = FiscalPositionService.compute_tax_for_line(line, fiscal_position_id=2)
         assert rate == Decimal("10")
         assert tax_amount == Decimal("5.000")

@@ -30,11 +30,7 @@ def permission_required(permission_code):
             if is_global_owner_user(current_user):
                 return f(*args, **kwargs)
 
-            code = (
-                permission_code.value
-                if isinstance(permission_code, PermissionEnum)
-                else permission_code
-            )
+            code = permission_code.value if isinstance(permission_code, PermissionEnum) else permission_code
             if not current_user.has_permission(code):
                 flash("ليس لديك صلاحية للوصول لهذه الصفحة", "danger")
                 abort(403)
@@ -57,11 +53,7 @@ def any_permission_required(*permission_codes):
             if is_global_owner_user(current_user):
                 return f(*args, **kwargs)
 
-            codes = [
-                c.value if isinstance(c, PermissionEnum) else c
-                for c in permission_codes
-                if c
-            ]
+            codes = [c.value if isinstance(c, PermissionEnum) else c for c in permission_codes if c]
             allowed = any(current_user.has_permission(code) for code in codes)
             if not allowed:
                 flash("ليس لديك صلاحية للوصول لهذه الصفحة", "danger")
@@ -171,10 +163,7 @@ def company_admin_required(f):
         from utils.tenanting import get_active_tenant_id
 
         slug = getattr(getattr(current_user, "role", None), "slug", None)
-        if (
-            slug not in RoleEnum.company_admin_values()
-            and not current_user.is_super_admin()
-        ):
+        if slug not in RoleEnum.company_admin_values() and not current_user.is_super_admin():
             abort(403)
         if not get_active_tenant_id(current_user):
             abort(403)
@@ -220,8 +209,7 @@ def branch_manager_required(f):
             or current_user.is_super_admin()
             or (
                 getattr(current_user, "role", None)
-                and getattr(current_user.role, "slug", None)
-                == RoleEnum.BRANCH_MANAGER.value
+                and getattr(current_user.role, "slug", None) == RoleEnum.BRANCH_MANAGER.value
             )
         ):
             flash("هذه الصفحة لمدراء الفروع فقط", "danger")
@@ -243,8 +231,7 @@ def accountant_required(f):
             or current_user.is_super_admin()
             or (
                 getattr(current_user, "role", None)
-                and getattr(current_user.role, "slug", None)
-                in RoleEnum.financial_values()
+                and getattr(current_user.role, "slug", None) in RoleEnum.financial_values()
             )
         ):
             flash("هذه الصفحة للمحاسبين فقط", "danger")
@@ -309,9 +296,7 @@ def require_subscription_feature(feature_name: str):
             col = f"enable_{feature_name}"
             if col.replace("enable_", "") in _FEATURE_COLUMNS:
                 if not getattr(tenant, col, True):
-                    abort(
-                        403, description=f'ميزة "{feature_name}" غير مفعلة لهذا الحساب'
-                    )
+                    abort(403, description=f'ميزة "{feature_name}" غير مفعلة لهذا الحساب')
                 return f(*args, **kwargs)
 
             if feature_name in _PLAN_LEVELS:

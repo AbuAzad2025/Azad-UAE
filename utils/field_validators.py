@@ -29,9 +29,9 @@ ALLOWED_PAYMENT_TYPES = frozenset(PAYMENT_TYPES) | frozenset({"sale"})  # legacy
 CANONICAL_PAYMENT_TYPE_SALE = "sale_payment"
 PAYMENT_TYPE_LEGACY_WRITE = {"sale": CANONICAL_PAYMENT_TYPE_SALE}
 
-ALLOWED_STOCK_MOVEMENT_TYPES = frozenset(
-    t[0] for t in STOCK_MOVEMENT_TYPES
-) | frozenset({"transfer", "test_store_setup"})
+ALLOWED_STOCK_MOVEMENT_TYPES = frozenset(t[0] for t in STOCK_MOVEMENT_TYPES) | frozenset(
+    {"transfer", "test_store_setup"}
+)
 
 _GL_SIDE_TOLERANCE = Decimal("0.01")
 
@@ -40,59 +40,40 @@ class FieldValidationError(ValueError):
     """Invalid user/service input for a canonical field."""
 
 
-def validate_currency_code(
-    value: Optional[str], *, field_label: str = "currency"
-) -> str:
+def validate_currency_code(value: Optional[str], *, field_label: str = "currency") -> str:
     if value is None or not str(value).strip():
         raise FieldValidationError(f"{field_label}: العملة مطلوبة.")
     code = str(value).strip().upper()
     if not _CURRENCY_RE.match(code):
-        raise FieldValidationError(
-            f"{field_label}: يجب أن تكون رمز ISO من 3 أحرف (مثل AED)."
-        )
+        raise FieldValidationError(f"{field_label}: يجب أن تكون رمز ISO من 3 أحرف (مثل AED).")
     return code
 
 
 def normalize_user_email_required(value: Optional[str]) -> str:
     if value is None or not str(value).strip():
-        raise FieldValidationError(
-            "البريد الإلكتروني مطلوب. / Email is required.\nمثال: ahmed@example.com"
-        )
+        raise FieldValidationError("البريد الإلكتروني مطلوب. / Email is required.\nمثال: ahmed@example.com")
     email = str(value).strip().lower()
     if len(email) > 254:
-        raise FieldValidationError(
-            "البريد الإلكتروني طويل جداً. / Email exceeds maximum length."
-        )
+        raise FieldValidationError("البريد الإلكتروني طويل جداً. / Email exceeds maximum length.")
     if not _USER_EMAIL_RE.match(email):
-        raise FieldValidationError(
-            "البريد الإلكتروني غير صحيح. / Invalid email format.\n"
-            "مثال: ahmed@example.com"
-        )
+        raise FieldValidationError("البريد الإلكتروني غير صحيح. / Invalid email format.\nمثال: ahmed@example.com")
     return email
 
 
-def normalize_phone_optional(
-    value: Optional[str], *, field_label: str = "phone"
-) -> Optional[str]:
+def normalize_phone_optional(value: Optional[str], *, field_label: str = "phone") -> Optional[str]:
     if value is None:
         return None
     text = str(value).strip()
     if not text:
         return None
     if len(text) > _PHONE_MAX_LEN:
-        raise FieldValidationError(
-            f"{field_label}: الطول الأقصى {_PHONE_MAX_LEN} حرفاً."
-        )
+        raise FieldValidationError(f"{field_label}: الطول الأقصى {_PHONE_MAX_LEN} حرفاً.")
     if not _PHONE_ALLOWED_RE.match(text):
-        raise FieldValidationError(
-            f"{field_label}: أحرف غير مسموحة (استخدم أرقاماً و + - مسافات فقط)."
-        )
+        raise FieldValidationError(f"{field_label}: أحرف غير مسموحة (استخدم أرقاماً و + - مسافات فقط).")
     return text
 
 
-def validate_sale_status(
-    value: Optional[str], *, allow_none: bool = False
-) -> Optional[str]:
+def validate_sale_status(value: Optional[str], *, allow_none: bool = False) -> Optional[str]:
     if value is None or not str(value).strip():
         if allow_none:
             return None
@@ -163,6 +144,4 @@ def validate_gl_line_sides(
     if d <= 0 and c <= 0:
         raise FieldValidationError("سطر القيد: يجب أن يحتوي على مبلغ مدين أو دائن.")
     if d > tol and c > tol:
-        raise FieldValidationError(
-            "سطر القيد: لا يجوز أن يكون المدين والدائن كلاهما أكبر من صفر في نفس السطر."
-        )
+        raise FieldValidationError("سطر القيد: لا يجوز أن يكون المدين والدائن كلاهما أكبر من صفر في نفس السطر.")

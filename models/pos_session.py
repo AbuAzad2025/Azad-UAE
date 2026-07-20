@@ -7,9 +7,7 @@ class PosSession(db.Model):
     __tablename__ = "pos_sessions"
 
     __table_args__ = (
-        db.UniqueConstraint(
-            "tenant_id", "session_number", name="uq_pos_sessions_tenant_session_number"
-        ),
+        db.UniqueConstraint("tenant_id", "session_number", name="uq_pos_sessions_tenant_session_number"),
         db.Index("idx_pos_session_branch_status", "branch_id", "status"),
         db.Index("idx_pos_session_user_status", "user_id", "status"),
     )
@@ -21,17 +19,11 @@ class PosSession(db.Model):
         nullable=False,
         index=True,
     )
-    branch_id = db.Column(
-        db.Integer, db.ForeignKey("branches.id"), nullable=False, index=True
-    )
-    user_id = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=False, index=True
-    )
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     session_number = db.Column(db.String(50), nullable=False, index=True)
 
-    opened_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
-    )
+    opened_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     closed_at = db.Column(db.DateTime, nullable=True)
 
     opening_balance_cash = db.Column(db.Numeric(15, 3), default=0)
@@ -47,9 +39,7 @@ class PosSession(db.Model):
     status = db.Column(db.String(20), default="open", index=True)
     notes = db.Column(db.Text)
 
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -62,9 +52,7 @@ class PosSession(db.Model):
 
     def close(self, closing_cash: Decimal, notes: str | None = None):
         self.closing_balance_cash = closing_cash
-        self.expected_balance = Decimal(str(self.opening_balance_cash or 0)) + Decimal(
-            str(self.total_cash_sales or 0)
-        )
+        self.expected_balance = Decimal(str(self.opening_balance_cash or 0)) + Decimal(str(self.total_cash_sales or 0))
         self.difference = closing_cash - self.expected_balance
         self.status = "closed"
         self.closed_at = datetime.now(timezone.utc)

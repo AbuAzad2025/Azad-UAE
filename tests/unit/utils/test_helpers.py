@@ -43,9 +43,7 @@ class TestGenerateNumber:
         q.filter.return_value = q
         q.order_by.return_value.first.return_value = None
         with patch("utils.helpers.db.session.query", return_value=q):
-            result = h.generate_number(
-                "INV", MagicMock(), field_name="sale_number", tenant_id=1
-            )
+            result = h.generate_number("INV", MagicMock(), field_name="sale_number", tenant_id=1)
         assert result.endswith("-0001")
 
     def test_increments_from_latest(self, app):
@@ -56,9 +54,7 @@ class TestGenerateNumber:
         q.filter.return_value = q
         q.order_by.return_value.first.return_value = latest
         with patch("utils.helpers.db.session.query", return_value=q):
-            result = h.generate_number(
-                "INV", model, field_name="sale_number", tenant_id=1
-            )
+            result = h.generate_number("INV", model, field_name="sale_number", tenant_id=1)
         assert result.endswith("-0008")
 
     def test_invalid_suffix_starts_at_one(self, app):
@@ -67,9 +63,7 @@ class TestGenerateNumber:
         q.filter.return_value = q
         q.order_by.return_value.first.return_value = latest
         with patch("utils.helpers.db.session.query", return_value=q):
-            result = h.generate_number(
-                "INV", MagicMock(tenant_id=1), field_name="sale_number"
-            )
+            result = h.generate_number("INV", MagicMock(tenant_id=1), field_name="sale_number")
         assert result.endswith("-0001")
 
     def test_with_branch_code(self, app):
@@ -77,9 +71,7 @@ class TestGenerateNumber:
         q.filter.return_value = q
         q.order_by.return_value.first.return_value = None
         with patch("utils.helpers.db.session.query", return_value=q):
-            result = h.generate_number(
-                "SO", MagicMock(tenant_id=1), field_name="num", branch_code="BR01"
-            )
+            result = h.generate_number("SO", MagicMock(tenant_id=1), field_name="num", branch_code="BR01")
         assert "-BR01-" in result
 
 
@@ -104,9 +96,7 @@ class TestGenerateNumberAndSave:
             patch("utils.helpers.db.session.rollback"),
         ):
             with pytest.raises(RuntimeError):
-                h.generate_number_and_save(
-                    "P", MagicMock(), "num", save, max_attempts=2
-                )
+                h.generate_number_and_save("P", MagicMock(), "num", save, max_attempts=2)
 
 
 class TestGetNextNumber:
@@ -115,9 +105,7 @@ class TestGetNextNumber:
         q.filter.return_value = q
         q.order_by.return_value.first.return_value = None
         with patch("utils.helpers.db.session.query", return_value=q):
-            result = h.get_next_number(
-                "PO", MagicMock(), number_field="number", branch_code="BR01"
-            )
+            result = h.get_next_number("PO", MagicMock(), number_field="number", branch_code="BR01")
         assert "-BR01-" in result
 
     def test_no_records(self, app):
@@ -186,9 +174,7 @@ class TestFormatCurrency:
                 "utils.helpers._resolve_format_currency_settings",
                 return_value=(None, None, None, None),
             ),
-            patch(
-                "utils.currency_utils.get_system_default_currency", return_value="AED"
-            ),
+            patch("utils.currency_utils.get_system_default_currency", return_value="AED"),
             patch("utils.currency_utils.get_currency_symbol", return_value="د.إ"),
         ):
             result = h.format_currency(1234.5, lang="ar")
@@ -263,9 +249,7 @@ class TestCreateAuditLog:
 
         real_import = builtins.__import__
 
-        def blocked_import(
-            name, globals_dict=None, locals_dict=None, fromlist=(), level=0
-        ):
+        def blocked_import(name, globals_dict=None, locals_dict=None, fromlist=(), level=0):
             if name == "flask_login":
                 raise ImportError("blocked")
             return real_import(name, globals_dict, locals_dict, fromlist, level)
@@ -329,9 +313,7 @@ class TestAllowedFile:
 
     def test_allowed_extension(self, app):
         with app.app_context():
-            assert (
-                h.allowed_file("photo.PNG", allowed_extensions={".png", ".jpg"}) is True
-            )
+            assert h.allowed_file("photo.PNG", allowed_extensions={".png", ".jpg"}) is True
 
     def test_merged_extension_sets(self, app):
         with app.app_context():
@@ -390,9 +372,7 @@ class TestSaveUploadedFile:
             app.config["ALLOWED_UPLOAD_EXTENSIONS"] = {"all": {"png"}}
             app.static_folder = str(static_dir)
             with patch("utils.helpers.os.makedirs"), patch.object(f, "save"):
-                path = h.save_uploaded_file(
-                    f, upload_folder="uploads", allowed_extensions={".png"}
-                )
+                path = h.save_uploaded_file(f, upload_folder="uploads", allowed_extensions={".png"})
         assert path.startswith("uploads/")
 
 

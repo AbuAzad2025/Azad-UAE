@@ -47,9 +47,7 @@ def resolve_default_currency(tenant=None) -> str:
         if val:
             return val.upper()
     except Exception:
-        logger.debug(
-            "Failed to resolve default currency from SystemSettings", exc_info=True
-        )
+        logger.debug("Failed to resolve default currency from SystemSettings", exc_info=True)
     return get_system_default_currency()
 
 

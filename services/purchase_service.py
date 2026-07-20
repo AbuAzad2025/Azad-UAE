@@ -96,9 +96,7 @@ class PurchaseService:
         supplier = None
         if supplier_id:
             # Validate supplier belongs to the same tenant as the warehouse
-            supplier = Supplier.query.filter_by(
-                id=supplier_id, tenant_id=warehouse.tenant_id
-            ).first()
+            supplier = Supplier.query.filter_by(id=supplier_id, tenant_id=warehouse.tenant_id).first()
             if not supplier:
                 raise ValueError("⚠️ المورد المحدد غير موجود أو لا ينتمي لنفس الشركة.")
             supplier_name = supplier.name
@@ -124,9 +122,7 @@ class PurchaseService:
 
         # Resolve tenant from warehouse (validated above) or active context
         tenant_id = (
-            get_active_tenant_id(user)
-            or getattr(user, "tenant_id", None)
-            or getattr(warehouse, "tenant_id", None)
+            get_active_tenant_id(user) or getattr(user, "tenant_id", None) or getattr(warehouse, "tenant_id", None)
         )
 
         # Generate Number
@@ -141,13 +137,9 @@ class PurchaseService:
 
         from utils.tax_settings import get_prices_include_vat
 
-        prices_include_vat = get_prices_include_vat(
-            tenant_id=tenant_id, branch_id=purchase_branch_id
-        )
+        prices_include_vat = get_prices_include_vat(tenant_id=tenant_id, branch_id=purchase_branch_id)
 
-        base_currency = PurchaseService.resolve_tenant_base_currency(
-            tenant_id=tenant_id
-        )
+        base_currency = PurchaseService.resolve_tenant_base_currency(tenant_id=tenant_id)
         rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
             currency,
             base_currency,
@@ -245,9 +237,7 @@ class PurchaseService:
                             ProductSerial.serial_number.in_(clean_serials),
                         ).count()
                         if existing_serials > 0:
-                            raise ValueError(
-                                f'⚠️ بعض الأرقام التسلسلية موجودة مسبقاً للمنتج "{product.name}".'
-                            )
+                            raise ValueError(f'⚠️ بعض الأرقام التسلسلية موجودة مسبقاً للمنتج "{product.name}".')
 
                         for sn in clean_serials:
                             serial_obj = ProductSerial(
@@ -262,9 +252,8 @@ class PurchaseService:
                                 from datetime import datetime, timedelta
 
                                 serial_obj.warranty_start_date = datetime.now()
-                                serial_obj.warranty_end_date = (
-                                    datetime.now()
-                                    + timedelta(days=int(product.warranty_days))
+                                serial_obj.warranty_end_date = datetime.now() + timedelta(
+                                    days=int(product.warranty_days)
                                 )
                             db.session.add(serial_obj)
 
@@ -283,9 +272,7 @@ class PurchaseService:
             for line in purchase.lines:
                 if line.line_total and line.line_total > 0:
                     ratio = line.line_total / purchase.subtotal
-                    line.landed_cost = (total_landed * ratio).quantize(
-                        Decimal("0.001"), rounding=ROUND_HALF_UP
-                    )
+                    line.landed_cost = (total_landed * ratio).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
         db.session.flush()
 
@@ -295,9 +282,7 @@ class PurchaseService:
         # GL Entries
         GLService.ensure_core_accounts(tenant_id=tenant_id)
 
-        capitalize_landed = current_app.config.get(
-            "ENABLE_LANDED_COST_CAPITALIZATION", True
-        )
+        capitalize_landed = current_app.config.get("ENABLE_LANDED_COST_CAPITALIZATION", True)
 
         # Inventory debit should be VAT-exclusive (taxable_amount) plus landed costs if capitalized
         inventory_debit = purchase.taxable_amount or Decimal("0")
@@ -415,9 +400,7 @@ class PurchaseService:
             .scalar()
         )
         if direct_paid and Decimal(str(direct_paid)) > 0:
-            raise ValueError(
-                "لا يمكن إلغاء فاتورة شراء لها مدفوعات مؤكدة. قم بإلغاء المدفوعات أولاً."
-            )
+            raise ValueError("لا يمكن إلغاء فاتورة شراء لها مدفوعات مؤكدة. قم بإلغاء المدفوعات أولاً.")
 
         supplier = purchase.supplier
         amount_aed = Decimal(str(purchase.amount_aed or 0))
@@ -453,9 +436,7 @@ class PurchaseService:
         try:
             db.session.flush()
         except Exception:
-            current_app.logger.exception(
-                "Purchase cancel flush failed for %s", purchase.purchase_number
-            )
+            current_app.logger.exception("Purchase cancel flush failed for %s", purchase.purchase_number)
             raise
 
         LoggingCore.log_audit("cancel", "purchases", purchase.id)
@@ -516,9 +497,7 @@ class PurchaseService:
             if quantity <= 0:
                 continue
 
-            line_total = (quantity * unit_cost).quantize(
-                _D("0.001"), rounding=ROUND_HALF_UP
-            )
+            line_total = (quantity * unit_cost).quantize(_D("0.001"), rounding=ROUND_HALF_UP)
             subtotal += line_total
 
             return_line = PurchaseReturnLine(
@@ -585,11 +564,7 @@ class PurchaseService:
                         .order_by(ProductCostHistory.id.desc())
                         .first()
                     )
-                    original_unit_cost = (
-                        abs(_D(str(cost_history.movement_unit_cost)))
-                        if cost_history
-                        else unit_cost
-                    )
+                    original_unit_cost = abs(_D(str(cost_history.movement_unit_cost))) if cost_history else unit_cost
 
                     old_qty = pwc.total_quantity
                     old_value = pwc.total_value
@@ -601,9 +576,7 @@ class PurchaseService:
 
                     pwc.total_quantity = new_qty if new_qty >= 0 else _D("0")
                     pwc.total_value = new_value if new_value >= 0 else _D("0")
-                    pwc.average_cost = (
-                        new_avg.quantize(_D("0.0001")) if new_qty > 0 else _D("0")
-                    )
+                    pwc.average_cost = new_avg.quantize(_D("0.0001")) if new_qty > 0 else _D("0")
                     pwc.last_updated = datetime.now(timezone.utc)
 
                     pch = ProductCostHistory(
@@ -613,9 +586,7 @@ class PurchaseService:
                         movement_type="purchase_reversal",
                         reference_type=GLRef.PURCHASE,
                         reference_id=purchase_return.id,
-                        old_average_cost=(
-                            old_avg.quantize(_D("0.0001")) if old_avg else None
-                        ),
+                        old_average_cost=(old_avg.quantize(_D("0.0001")) if old_avg else None),
                         new_average_cost=pwc.average_cost,
                         quantity_change=-quantity,
                         old_total_quantity=old_qty,
@@ -636,9 +607,7 @@ class PurchaseService:
         # حساب الضريبة التناسبية
         if purchase.tax_amount and purchase.subtotal and purchase.subtotal > 0:
             tax_ratio = subtotal / _D(str(purchase.subtotal))
-            tax_amount = (_D(str(purchase.tax_amount)) * tax_ratio).quantize(
-                _D("0.01"), rounding=ROUND_HALF_UP
-            )
+            tax_amount = (_D(str(purchase.tax_amount)) * tax_ratio).quantize(_D("0.01"), rounding=ROUND_HALF_UP)
 
         purchase_return.subtotal = subtotal
         purchase_return.tax_amount = tax_amount
@@ -652,29 +621,23 @@ class PurchaseService:
             except Exception:
                 tax_rate = Decimal("0")
             if tax_rate > 0:
-                inventory_credit = (
-                    subtotal / (Decimal("1") + (tax_rate / Decimal("100")))
-                ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                inventory_credit = (subtotal / (Decimal("1") + (tax_rate / Decimal("100")))).quantize(
+                    Decimal("0.01"), rounding=ROUND_HALF_UP
+                )
         if capitalized:
             for return_line in purchase_return.lines:
                 if return_line.purchase_line_id:
                     pl = next(
-                        (
-                            line
-                            for line in purchase.lines
-                            if line.id == return_line.purchase_line_id
-                        ),
+                        (line for line in purchase.lines if line.id == return_line.purchase_line_id),
                         None,
                     )
                     if pl and pl.landed_cost and pl.landed_cost > 0:
                         landed_ratio = (
-                            _D(str(pl.landed_cost)) / _D(str(pl.line_total))
-                            if pl.line_total > 0
-                            else _D("0")
+                            _D(str(pl.landed_cost)) / _D(str(pl.line_total)) if pl.line_total > 0 else _D("0")
                         )
-                        inventory_credit += (
-                            _D(str(return_line.line_total)) * landed_ratio
-                        ).quantize(_D("0.001"), rounding=ROUND_HALF_UP)
+                        inventory_credit += (_D(str(return_line.line_total)) * landed_ratio).quantize(
+                            _D("0.001"), rounding=ROUND_HALF_UP
+                        )
 
         purchase_return.total_amount = inventory_credit + tax_amount
         purchase_return.calculate_totals()
@@ -722,8 +685,7 @@ class PurchaseService:
         if purchase.supplier:
             supplier = purchase.supplier
             supplier.total_purchases_aed = max(
-                (supplier.total_purchases_aed or _D("0"))
-                - _D(str(purchase_return.amount_aed or 0)),
+                (supplier.total_purchases_aed or _D("0")) - _D(str(purchase_return.amount_aed or 0)),
                 _D("0"),
             )
 

@@ -120,9 +120,7 @@ def _create_sale(db_session, ctx, quantity=3, unit_price=100, tax_rate=0):
     from models import Sale, SaleLine, ProductWarehouseStock
     from utils.helpers import generate_number
 
-    sale_number = generate_number(
-        "S", Sale, "sale_number", branch_id=ctx["branch"].id, tenant_id=ctx["tenant"].id
-    )
+    sale_number = generate_number("S", Sale, "sale_number", branch_id=ctx["branch"].id, tenant_id=ctx["tenant"].id)
     subtotal = Decimal(str(unit_price * quantity))
     total = subtotal
     tax_amt = Decimal("0")
@@ -179,15 +177,11 @@ def _create_sale(db_session, ctx, quantity=3, unit_price=100, tax_rate=0):
     )
     db_session.add(sm)
 
-    pws = ProductWarehouseStock.query.filter_by(
-        product_id=ctx["product"].id, warehouse_id=ctx["warehouse"].id
-    ).first()
+    pws = ProductWarehouseStock.query.filter_by(product_id=ctx["product"].id, warehouse_id=ctx["warehouse"].id).first()
     if pws:
         pws.quantity -= Decimal(str(quantity))
         db_session.add(pws)
-    ctx["product"].current_stock = (
-        ctx["product"].current_stock or Decimal("0")
-    ) - Decimal(str(quantity))
+    ctx["product"].current_stock = (ctx["product"].current_stock or Decimal("0")) - Decimal(str(quantity))
     db_session.commit()
 
     return sale, sale_line
@@ -227,9 +221,7 @@ class TestReturnsApiCreate:
                 follow_redirects=False,
             )
 
-        assert resp.status_code == 200, (
-            f"Expected 200, got {resp.status_code}: {resp.data}"
-        )
+        assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.data}"
         data = resp.get_json()
         assert data["success"] is True
         assert "return_id" in data
@@ -239,9 +231,7 @@ class TestReturnsApiCreate:
         product_return = ProductReturn.query.get(data["return_id"])
         assert product_return is not None
 
-        return_lines = ProductReturnLine.query.filter_by(
-            return_id=product_return.id
-        ).all()
+        return_lines = ProductReturnLine.query.filter_by(return_id=product_return.id).all()
         assert len(return_lines) == 1
         assert return_lines[0].quantity == Decimal("2")
         assert return_lines[0].line_total == Decimal("200")
@@ -249,9 +239,7 @@ class TestReturnsApiCreate:
         stock_after_return = ProductWarehouseStock.query.filter_by(
             product_id=ctx["product"].id, warehouse_id=ctx["warehouse"].id
         ).first()
-        assert stock_after_return.quantity == Decimal("49"), (
-            f"Expected 49, got {stock_after_return.quantity}"
-        )
+        assert stock_after_return.quantity == Decimal("49"), f"Expected 49, got {stock_after_return.quantity}"
 
         gl_entries = GLJournalEntry.query.filter(
             GLJournalEntry.reference_type == "ProductReturn",
@@ -260,13 +248,9 @@ class TestReturnsApiCreate:
         assert len(gl_entries) >= 1
         total_debit = sum((e.total_debit or 0) for e in gl_entries)
         total_credit = sum((e.total_credit or 0) for e in gl_entries)
-        assert total_debit == total_credit, (
-            f"GL unbalanced: debit={total_debit} credit={total_credit}"
-        )
+        assert total_debit == total_credit, f"GL unbalanced: debit={total_debit} credit={total_credit}"
 
-        revenue_entries = [
-            e for e in gl_entries if "Sales Return" in (e.description or "")
-        ]
+        revenue_entries = [e for e in gl_entries if "Sales Return" in (e.description or "")]
         cost_entries = [e for e in gl_entries if "COGS" in (e.description or "")]
         assert len(revenue_entries) >= 1
         assert len(cost_entries) >= 1
@@ -280,9 +264,7 @@ class TestReturnsApiCreate:
         from models import ProductReturn, ProductReturnLine
 
         ctx = _setup_tenant(db_session)
-        sale, sale_line = _create_sale(
-            db_session, ctx, quantity=2, unit_price=100, tax_rate=5
-        )
+        sale, sale_line = _create_sale(db_session, ctx, quantity=2, unit_price=100, tax_rate=5)
 
         with client:
             resp = client.post(
@@ -309,18 +291,14 @@ class TestReturnsApiCreate:
                 follow_redirects=False,
             )
 
-        assert resp.status_code == 200, (
-            f"Expected 200, got {resp.status_code}: {resp.data}"
-        )
+        assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.data}"
         data = resp.get_json()
         assert data["success"] is True
 
         product_return = ProductReturn.query.get(data["return_id"])
         assert product_return is not None
 
-        return_lines = ProductReturnLine.query.filter_by(
-            return_id=product_return.id
-        ).all()
+        return_lines = ProductReturnLine.query.filter_by(return_id=product_return.id).all()
         assert len(return_lines) == 1
         assert return_lines[0].quantity == Decimal("1")
 
@@ -332,9 +310,7 @@ class TestReturnsApiCreate:
 
         total_debit = sum((e.total_debit or 0) for e in gl_entries)
         total_credit = sum((e.total_credit or 0) for e in gl_entries)
-        assert total_debit == total_credit, (
-            f"GL unbalanced: debit={total_debit} credit={total_credit}"
-        )
+        assert total_debit == total_credit, f"GL unbalanced: debit={total_debit} credit={total_credit}"
 
         revenue_entry = None
         cost_entry = None
@@ -391,9 +367,7 @@ class TestReturnsApiCreate:
                 follow_redirects=False,
             )
 
-        assert resp.status_code == 200, (
-            f"Expected 200, got {resp.status_code}: {resp.data}"
-        )
+        assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.data}"
         data = resp.get_json()
         assert data["success"] is True
         assert float(data["refund_amount"]) == 200.0

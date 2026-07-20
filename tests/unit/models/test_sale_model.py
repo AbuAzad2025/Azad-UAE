@@ -69,9 +69,7 @@ class TestSaleCalculateTotals:
         sale.tenant_id = 1
         sale.paid_amount = Decimal("0")
         sale.lines = [_line()]
-        with patch(
-            "utils.currency_utils.resolve_tenant_base_currency", return_value="AED"
-        ):
+        with patch("utils.currency_utils.resolve_tenant_base_currency", return_value="AED"):
             sale.calculate_totals()
         assert sale.total_amount > sale.subtotal
         assert sale.tax_amount > Decimal("0")
@@ -89,9 +87,7 @@ class TestSaleCalculateTotals:
         sale.tenant_id = 1
         sale.paid_amount = Decimal("0")
         sale.lines = [_line()]
-        with patch(
-            "utils.currency_utils.resolve_tenant_base_currency", return_value="AED"
-        ):
+        with patch("utils.currency_utils.resolve_tenant_base_currency", return_value="AED"):
             sale.calculate_totals()
         assert sale.tax_amount >= Decimal("0")
 
@@ -108,9 +104,7 @@ class TestSaleCalculateTotals:
         sale.discount_amount = Decimal("0")
         sale.shipping_cost = Decimal("0")
         sale.lines = [_line()]
-        with patch(
-            "utils.currency_utils.resolve_tenant_base_currency", return_value="AED"
-        ):
+        with patch("utils.currency_utils.resolve_tenant_base_currency", return_value="AED"):
             sale.calculate_totals()
         assert sale.tax_amount == Decimal("0")
 
@@ -127,9 +121,7 @@ class TestSaleCalculateTotals:
         sale.discount_amount = Decimal("0")
         sale.shipping_cost = Decimal("0")
         sale.lines = [_line()]
-        with patch(
-            "utils.currency_utils.resolve_tenant_base_currency", return_value="AED"
-        ):
+        with patch("utils.currency_utils.resolve_tenant_base_currency", return_value="AED"):
             sale.calculate_totals()
         assert sale.amount_aed != sale.total_amount
 
@@ -153,9 +145,7 @@ class TestSalePaymentStatus:
         sale.tenant_id = 1
         sale.payments = [self._payment(100)]
         sale.returns = []
-        with patch(
-            "utils.currency_utils.resolve_tenant_base_currency", return_value="AED"
-        ):
+        with patch("utils.currency_utils.resolve_tenant_base_currency", return_value="AED"):
             sale.recalculate_payment_status()
         assert sale.payment_status == "paid"
         assert sale.balance_due == Decimal("0")
@@ -170,9 +160,7 @@ class TestSalePaymentStatus:
         sale.tenant_id = 1
         sale.payments = [self._payment(150)]
         sale.returns = []
-        with patch(
-            "utils.currency_utils.resolve_tenant_base_currency", return_value="AED"
-        ):
+        with patch("utils.currency_utils.resolve_tenant_base_currency", return_value="AED"):
             sale.recalculate_payment_status()
         assert sale.payment_status == "paid"
         assert sale.balance_due < Decimal("0")
@@ -186,9 +174,7 @@ class TestSalePaymentStatus:
         sale.tenant_id = 1
         sale.payments = [self._payment(40)]
         sale.returns = []
-        with patch(
-            "utils.currency_utils.resolve_tenant_base_currency", return_value="AED"
-        ):
+        with patch("utils.currency_utils.resolve_tenant_base_currency", return_value="AED"):
             sale.recalculate_payment_status()
         assert sale.payment_status == "partial"
 
@@ -202,9 +188,7 @@ class TestSalePaymentStatus:
         sale.tenant_id = 1
         sale.payments = [self._payment(50, confirmed=False, method="cheque")]
         sale.returns = []
-        with patch(
-            "utils.currency_utils.resolve_tenant_base_currency", return_value="AED"
-        ):
+        with patch("utils.currency_utils.resolve_tenant_base_currency", return_value="AED"):
             sale.recalculate_payment_status()
         assert sale.payment_status == "pending_cheque"
 
@@ -219,9 +203,7 @@ class TestSalePaymentStatus:
         sale.payments = []
         ret = MagicMock(status="approved", amount_aed=Decimal("20"))
         sale.returns = [ret]
-        with patch(
-            "utils.currency_utils.resolve_tenant_base_currency", return_value="AED"
-        ):
+        with patch("utils.currency_utils.resolve_tenant_base_currency", return_value="AED"):
             sale.recalculate_payment_status()
         assert sale.payment_status == "partial"
 
@@ -261,9 +243,7 @@ class TestSalePaymentStatus:
         from models.sale import Sale
 
         bad = MagicMock(payment_confirmed=False, payment_method="cheque")
-        type(bad).amount_aed = property(
-            lambda _self: (_ for _ in ()).throw(RuntimeError("bad"))
-        )
+        type(bad).amount_aed = property(lambda _self: (_ for _ in ()).throw(RuntimeError("bad")))
         sale = Sale()
         sale.payments = [bad]
         assert sale.pending_cheques_amount == Decimal("0")
@@ -272,9 +252,7 @@ class TestSalePaymentStatus:
         from models.sale import Sale
 
         bad = MagicMock(payment_confirmed=True)
-        type(bad).amount_aed = property(
-            lambda _self: (_ for _ in ()).throw(RuntimeError("bad"))
-        )
+        type(bad).amount_aed = property(lambda _self: (_ for _ in ()).throw(RuntimeError("bad")))
         sale = Sale()
         sale.payments = [bad]
         assert sale.confirmed_payments_amount == Decimal("0")

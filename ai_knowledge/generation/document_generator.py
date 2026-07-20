@@ -204,19 +204,11 @@ class DocumentGenerator:
                             float(sale.total_amount),
                             float(sale.paid_amount),
                             float(sale.balance_due),
-                            (
-                                "مدفوع"
-                                if sale.balance_due == 0
-                                else "جزئي"
-                                if sale.paid_amount > 0
-                                else "غير مدفوع"
-                            ),
+                            ("مدفوع" if sale.balance_due == 0 else "جزئي" if sale.paid_amount > 0 else "غير مدفوع"),
                         ]
                     )
 
-                filename = (
-                    f"sales_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-                )
+                filename = f"sales_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 
             elif data_type == "customers":
                 customers = Customer.query.all()
@@ -243,9 +235,7 @@ class DocumentGenerator:
                         ]
                     )
 
-                filename = (
-                    f"customers_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-                )
+                filename = f"customers_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 
             elif data_type == "products":
                 products = Product.query.all()
@@ -272,9 +262,7 @@ class DocumentGenerator:
                         ]
                     )
 
-                filename = (
-                    f"products_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-                )
+                filename = f"products_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 
             else:
                 return None, "نوع البيانات غير صحيح"
@@ -287,9 +275,7 @@ class DocumentGenerator:
 
             # تحويل إلى BytesIO
             output_bytes = io.BytesIO()
-            output_bytes.write(
-                output.getvalue().encode("utf-8-sig")
-            )  # UTF-8 with BOM for Excel
+            output_bytes.write(output.getvalue().encode("utf-8-sig"))  # UTF-8 with BOM for Excel
             output_bytes.seek(0)
 
             return output_bytes, filename

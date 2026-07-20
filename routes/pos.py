@@ -58,9 +58,7 @@ def _pos_register_context():
     from services.industry_service import get_pos_profile
 
     warehouses = [
-        w
-        for w in get_accessible_warehouses(current_user)
-        if w.is_active and w.warehouse_type != w.TYPE_ONLINE
+        w for w in get_accessible_warehouses(current_user) if w.is_active and w.warehouse_type != w.TYPE_ONLINE
     ]
     tenant = Tenant.get_current()
     tenant_default_currency = resolve_default_currency(tenant) if tenant else "AED"
@@ -141,9 +139,7 @@ def api_order_types():
     """Return the tenant's configured, active POS order types."""
     tid = get_active_tenant_id(current_user)
     if not tid:
-        return jsonify(
-            {"success": False, "error": gettext("لا يوجد فرع/شركة نشطة")}
-        ), 400
+        return jsonify({"success": False, "error": gettext("لا يوجد فرع/شركة نشطة")}), 400
     types = PosOrderType.for_tenant(tid, active_only=True)
     default = PosOrderType.default_for_tenant(tid)
     return jsonify(
@@ -259,9 +255,7 @@ def api_products():
         per_page=per_page,
         category_id=category_id,
     )
-    results = [
-        serialize_pos_product(p, stock_map, warehouse_id=warehouse_id) for p in products
-    ]
+    results = [serialize_pos_product(p, stock_map, warehouse_id=warehouse_id) for p in products]
     return jsonify(results)
 
 
@@ -400,53 +394,39 @@ def api_checkout():
         try:
             customer = get_pos_walkin_customer()
         except ValueError:
-            return jsonify(
-                {"success": False, "error": gettext("بيانات العميل غير صالحة.")}
-            ), 400
+            return jsonify({"success": False, "error": gettext("بيانات العميل غير صالحة.")}), 400
     else:
         customer = tenant_get(Customer, int(customer_id or 0))
         if not customer or not customer.is_active:
             return (
-                jsonify(
-                    {"success": False, "error": gettext("العميل غير صالح أو غير نشط.")}
-                ),
+                jsonify({"success": False, "error": gettext("العميل غير صالح أو غير نشط.")}),
                 400,
             )
 
     warehouse_id = payload.get("warehouse_id")
     if warehouse_id:
         try:
-            warehouse = ensure_warehouse_access(
-                int(warehouse_id or 0), user=current_user
-            )
+            warehouse = ensure_warehouse_access(int(warehouse_id or 0), user=current_user)
             warehouse_id = warehouse.id
         except ValueError:
             return (
-                jsonify(
-                    {"success": False, "error": gettext("بيانات المستودع غير صالحة.")}
-                ),
+                jsonify({"success": False, "error": gettext("بيانات المستودع غير صالحة.")}),
                 400,
             )
     else:
         warehouse_id = None
 
-    currency = (
-        (payload.get("currency") or context_aware_default_currency()).strip().upper()
-    )
+    currency = (payload.get("currency") or context_aware_default_currency()).strip().upper()
     exchange_rate = payload.get("exchange_rate", 1.0)
 
     lines = payload.get("lines") or []
     if not isinstance(lines, list) or not lines:
-        return jsonify(
-            {"success": False, "error": gettext("يرجى إضافة منتجات للسلة.")}
-        ), 400
+        return jsonify({"success": False, "error": gettext("يرجى إضافة منتجات للسلة.")}), 400
 
     try:
         merged = merge_checkout_lines(lines)
     except ValueError:
-        return jsonify(
-            {"success": False, "error": gettext("بيانات السلة غير صالحة.")}
-        ), 400
+        return jsonify({"success": False, "error": gettext("بيانات السلة غير صالحة.")}), 400
 
     lines_data = []
     product_ids = [int(r["product_id"]) for r in merged]
@@ -476,11 +456,7 @@ def api_checkout():
             )
 
         if getattr(product, "has_serial_number", False):
-            serials = (
-                row.get("serials")
-                or payload.get("serials", {}).get(str(product.id))
-                or []
-            )
+            serials = row.get("serials") or payload.get("serials", {}).get(str(product.id)) or []
             clean_serials = [s.strip() for s in serials if s and s.strip()]
             expected_qty = int(row["quantity"])
             if len(clean_serials) != expected_qty:
@@ -502,9 +478,7 @@ def api_checkout():
                 "product": product,
                 "quantity": row["quantity"],
                 "discount_percent": float(row["discount_percent"]),
-                "unit_price": (
-                    float(row["unit_price"]) if row["unit_price"] is not None else None
-                ),
+                "unit_price": (float(row["unit_price"]) if row["unit_price"] is not None else None),
                 "serials": row.get("serials", []),
             }
         )
@@ -513,14 +487,9 @@ def api_checkout():
         product = ld["product"]
         unit_price = ld.get("unit_price")
         if unit_price is not None:
-            standard_price = float(
-                product.get_price_for_customer(customer.customer_type)
-            )
+            standard_price = float(product.get_price_for_customer(customer.customer_type))
             if abs(float(unit_price) - standard_price) > 0.001:
-                if (
-                    not current_user.has_permission(PermissionEnum.OVERRIDE_SALE_PRICE)
-                    and not current_user.is_owner
-                ):
+                if not current_user.has_permission(PermissionEnum.OVERRIDE_SALE_PRICE) and not current_user.is_owner:
                     return (
                         jsonify(
                             {
@@ -547,9 +516,7 @@ def api_checkout():
     payment_method = (payload.get("payment_method") or "").strip()
     paid_amount = payload.get("paid_amount", 0) or 0
     payment_currency = (payload.get("payment_currency") or currency).strip().upper()
-    payment_exchange_rate = (
-        payload.get("payment_exchange_rate", exchange_rate) or exchange_rate
-    )
+    payment_exchange_rate = payload.get("payment_exchange_rate", exchange_rate) or exchange_rate
     reference_number = (payload.get("reference_number") or "").strip() or None
 
     payment_data = None
@@ -560,9 +527,7 @@ def api_checkout():
 
     if paid_amount_decimal > 0:
         if not payment_method:
-            return jsonify(
-                {"success": False, "error": gettext("يرجى اختيار طريقة الدفع.")}
-            ), 400
+            return jsonify({"success": False, "error": gettext("يرجى اختيار طريقة الدفع.")}), 400
         payment_data = {
             "amount": float(paid_amount_decimal),
             "payment_method": payment_method,
@@ -594,24 +559,18 @@ def api_checkout():
             # Resolve the configured order type (legacy fallback preserved).
             tid = get_active_tenant_id(current_user)
             order_type = (payload.get("order_type") or "").strip()
-            ot = (
-                PosOrderType.get_by_code(tid, order_type, active_only=True)
-                if order_type
-                else None
-            )
+            ot = PosOrderType.get_by_code(tid, order_type, active_only=True) if order_type else None
             if not ot:
                 ot = PosOrderType.default_for_tenant(tid)
                 order_type = ot.code if ot else ""
             sale.order_type = order_type
             sale.pos_session_id = session.id
             db.session.add(sale)
-            session.total_sales = Decimal(str(session.total_sales or 0)) + Decimal(
-                str(sale.total_amount or 0)
-            )
+            session.total_sales = Decimal(str(session.total_sales or 0)) + Decimal(str(sale.total_amount or 0))
             if payment_data and payment_data.get("payment_method") == "cash":
-                session.total_cash_sales = Decimal(
-                    str(session.total_cash_sales or 0)
-                ) + Decimal(str(payment_data.get("amount", 0)))
+                session.total_cash_sales = Decimal(str(session.total_cash_sales or 0)) + Decimal(
+                    str(payment_data.get("amount", 0))
+                )
             db.session.add(session)
             log_mutation(
                 "create",
@@ -624,11 +583,7 @@ def api_checkout():
                 },
             )
 
-            kds_enabled = (
-                bool(ot.kds_enabled)
-                if ot
-                else (order_type in ("dine_in", "takeaway", "delivery"))
-            )
+            kds_enabled = bool(ot.kds_enabled) if ot else (order_type in ("dine_in", "takeaway", "delivery"))
             if kds_enabled:
                 from models import PosKdsOrder
 
@@ -641,8 +596,7 @@ def api_checkout():
                     items_json=json.dumps(
                         [
                             {
-                                "name": getattr(ld["product"], "name_ar", None)
-                                or ld["product"].name,
+                                "name": getattr(ld["product"], "name_ar", None) or ld["product"].name,
                                 "quantity": float(ld["quantity"]),
                                 "unit_price": float(ld.get("unit_price") or 0),
                                 "notes": ld.get("notes", ""),
@@ -661,9 +615,7 @@ def api_checkout():
             jsonify(
                 {
                     "success": False,
-                    "error": gettext(
-                        "فشل إنشاء الفاتورة. تحقق من البيانات وحاول مرة أخرى."
-                    ),
+                    "error": gettext("فشل إنشاء الفاتورة. تحقق من البيانات وحاول مرة أخرى."),
                 }
             ),
             500,
@@ -742,9 +694,7 @@ def api_session_open():
             jsonify(
                 {
                     "success": False,
-                    "error": gettext(
-                        f"توجد جلسة مفتوحة بالفعل: {existing.session_number}. يرجى إغلاقها أولاً."
-                    ),
+                    "error": gettext(f"توجد جلسة مفتوحة بالفعل: {existing.session_number}. يرجى إغلاقها أولاً."),
                 }
             ),
             409,
@@ -753,17 +703,13 @@ def api_session_open():
     branch_id = get_active_branch_id(current_user)
     if not branch_id:
         return (
-            jsonify(
-                {"success": False, "error": gettext("لا يوجد فرع نشط. يرجى تحديد فرع.")}
-            ),
+            jsonify({"success": False, "error": gettext("لا يوجد فرع نشط. يرجى تحديد فرع.")}),
             400,
         )
 
     try:
         with atomic_transaction("pos_session_open"):
-            session = create_pos_session(
-                current_user, branch_id, opening_balance, notes
-            )
+            session = create_pos_session(current_user, branch_id, opening_balance, notes)
     except Exception as exc:
         return jsonify({"success": False, "error": str(exc)}), 400
 
@@ -820,9 +766,7 @@ def api_session_close():
                 "id": session.id,
                 "number": session.session_number,
                 "opened_at": session.opened_at.isoformat(),
-                "closed_at": (
-                    session.closed_at.isoformat() if session.closed_at else None
-                ),
+                "closed_at": (session.closed_at.isoformat() if session.closed_at else None),
                 "opening_balance": float(session.opening_balance_cash or 0),
                 "closing_balance": float(session.closing_balance_cash or 0),
                 "expected_balance": float(session.expected_balance or 0),
@@ -845,9 +789,7 @@ def api_session_report():
     if session_id:
         session = tenant_get(PosSession, session_id)
         if not session:
-            return jsonify(
-                {"success": False, "error": gettext("الجلسة غير موجودة.")}
-            ), 404
+            return jsonify({"success": False, "error": gettext("الجلسة غير موجودة.")}), 404
     else:
         session = get_active_session(current_user)
         if not session:
@@ -871,25 +813,15 @@ def api_session_report():
                 "user_id": session.user_id,
                 "branch_id": session.branch_id,
                 "opened_at": session.opened_at.isoformat(),
-                "closed_at": (
-                    session.closed_at.isoformat() if session.closed_at else None
-                ),
+                "closed_at": (session.closed_at.isoformat() if session.closed_at else None),
                 "opening_balance": float(session.opening_balance_cash or 0),
                 "closing_balance": (
-                    float(session.closing_balance_cash or 0)
-                    if session.closing_balance_cash is not None
-                    else None
+                    float(session.closing_balance_cash or 0) if session.closing_balance_cash is not None else None
                 ),
                 "expected_balance": (
-                    float(session.expected_balance or 0)
-                    if session.expected_balance is not None
-                    else None
+                    float(session.expected_balance or 0) if session.expected_balance is not None else None
                 ),
-                "difference": (
-                    float(session.difference or 0)
-                    if session.difference is not None
-                    else None
-                ),
+                "difference": (float(session.difference or 0) if session.difference is not None else None),
                 "total_sales": float(session.total_sales or 0),
                 "total_cash_sales": float(session.total_cash_sales or 0),
                 "total_card_sales": float(session.total_card_sales or 0),
@@ -1019,9 +951,7 @@ def api_shift_reconcile():
 
     shift = _get_active_shift(current_user)
     if not shift:
-        return jsonify(
-            {"success": False, "error": gettext("لا توجد وردية مفتوحة.")}
-        ), 404
+        return jsonify({"success": False, "error": gettext("لا توجد وردية مفتوحة.")}), 404
 
     try:
         with atomic_transaction("pos_shift_reconcile"):
@@ -1040,15 +970,11 @@ def api_shift_reconcile():
 def api_shift_close():
     shift = _get_active_shift(current_user)
     if not shift:
-        return jsonify(
-            {"success": False, "error": gettext("لا توجد وردية مفتوحة.")}
-        ), 404
+        return jsonify({"success": False, "error": gettext("لا توجد وردية مفتوحة.")}), 404
 
     if shift.status == PosShift.SHIFT_OPEN:
         return (
-            jsonify(
-                {"success": False, "error": gettext("يرجى تسوية الوردية قبل إغلاقها.")}
-            ),
+            jsonify({"success": False, "error": gettext("يرجى تسوية الوردية قبل إغلاقها.")}),
             400,
         )
 
@@ -1065,9 +991,7 @@ def api_shift_close():
 def _accumulate_shift_totals(shift: PosShift):
     from models import Sale
 
-    sales = Sale.query.filter(
-        Sale.tenant_id == shift.tenant_id, Sale.pos_session_id == shift.session_id
-    ).all()
+    sales = Sale.query.filter(Sale.tenant_id == shift.tenant_id, Sale.pos_session_id == shift.session_id).all()
     total = Decimal("0")
     cash = Decimal("0")
     card = Decimal("0")
@@ -1119,9 +1043,7 @@ def kds_stream():
                 msg = q.get()
                 yield msg
         except GeneratorExit:
-            _KDS_SUBSCRIBERS[:] = [
-                entry for entry in _KDS_SUBSCRIBERS if entry[1] is not q
-            ]
+            _KDS_SUBSCRIBERS[:] = [entry for entry in _KDS_SUBSCRIBERS if entry[1] is not q]
 
     return stream(), {
         "Content-Type": "text/event-stream",
@@ -1137,12 +1059,7 @@ def kds_orders():
     from models import PosKdsOrder
 
     tid = get_active_tenant_id(current_user)
-    orders = (
-        PosKdsOrder.query.filter_by(tenant_id=tid)
-        .order_by(PosKdsOrder.created_at.desc())
-        .limit(50)
-        .all()
-    )
+    orders = PosKdsOrder.query.filter_by(tenant_id=tid).order_by(PosKdsOrder.created_at.desc()).limit(50).all()
     return jsonify(
         [
             {
@@ -1290,13 +1207,7 @@ def hardware_print_receipt():
         return jsonify(result), resp.status_code
     except requests.RequestException:
         return (
-            jsonify(
-                {
-                    "error": gettext(
-                        "وكيل الأجهزة غير متصل. تأكد من تشغيل pos_hardware_agent.py"
-                    )
-                }
-            ),
+            jsonify({"error": gettext("وكيل الأجهزة غير متصل. تأكد من تشغيل pos_hardware_agent.py")}),
             503,
         )
     except Exception as e:
@@ -1393,11 +1304,7 @@ def api_floor_tables(floor_id):
     floor = PosFloor.query.filter_by(id=floor_id, tenant_id=tid).first()
     if not floor:
         return jsonify({"error": gettext("الطابق غير موجود")}), 404
-    tables = (
-        PosTable.query.filter_by(floor_id=floor_id, is_active=True)
-        .order_by(PosTable.sort_order)
-        .all()
-    )
+    tables = PosTable.query.filter_by(floor_id=floor_id, is_active=True).order_by(PosTable.sort_order).all()
     return jsonify(
         [
             {

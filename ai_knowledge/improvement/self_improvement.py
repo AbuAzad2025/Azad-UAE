@@ -175,8 +175,7 @@ class AzadSelfImprovement:
                         "area": area,
                         "score": config["current_score"],
                         "target_score": config["target_score"],
-                        "improvement_needed": config["target_score"]
-                        - config["current_score"],
+                        "improvement_needed": config["target_score"] - config["current_score"],
                         "description": self._get_area_description(area),
                     }
                 )
@@ -194,8 +193,7 @@ class AzadSelfImprovement:
                         "area": area,
                         "current_score": config["current_score"],
                         "potential_score": config["target_score"],
-                        "improvement_potential": config["target_score"]
-                        - config["current_score"],
+                        "improvement_potential": config["target_score"] - config["current_score"],
                         "description": self._get_area_description(area),
                     }
                 )
@@ -300,9 +298,7 @@ class AzadSelfImprovement:
 
         # تحسين عشوائي لمجال آخر
         available_areas = [
-            area
-            for area in self.improvement_areas.keys()
-            if area not in [w["area"] for w in weaknesses[:2]]
+            area for area in self.improvement_areas.keys() if area not in [w["area"] for w in weaknesses[:2]]
         ]
 
         if available_areas:
@@ -364,9 +360,7 @@ class AzadSelfImprovement:
             progress_report["area_progress"][area] = {
                 "current_score": config["current_score"],
                 "target_score": config["target_score"],
-                "progress_percentage": round(
-                    (config["current_score"] / config["target_score"]) * 100, 1
-                ),
+                "progress_percentage": round((config["current_score"] / config["target_score"]) * 100, 1),
                 "remaining": round(config["target_score"] - config["current_score"], 2),
             }
 
@@ -396,9 +390,7 @@ class AzadSelfImprovement:
                 target_score = goal["target_score"]
                 initial_score = goal["current_score"]
 
-                progress = (
-                    (current_score - initial_score) / (target_score - initial_score)
-                ) * 100
+                progress = ((current_score - initial_score) / (target_score - initial_score)) * 100
 
                 goals_progress.append(
                     {

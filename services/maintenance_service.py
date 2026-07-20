@@ -76,16 +76,12 @@ class MaintenanceService:
             tenant_reports = []
 
             for tenant in tenants:
-                print(
-                    f"\nProcessing Tenant: {tenant.name} (ID: {tenant.id}, Slug: {tenant.slug})"
-                )
+                print(f"\nProcessing Tenant: {tenant.name} (ID: {tenant.id}, Slug: {tenant.slug})")
                 print("-" * 80)
 
                 try:
                     # Build the GL tree
-                    audit_report = GLTreeBuilder.build(
-                        tenant.id, cleanup_extra=cleanup_extra, commit=True
-                    )
+                    audit_report = GLTreeBuilder.build(tenant.id, cleanup_extra=cleanup_extra, commit=True)
 
                     # Print results
                     created_count = len(audit_report["created"])
@@ -94,12 +90,7 @@ class MaintenanceService:
                     deactivated_count = len(audit_report["deactivated"])
                     errors_count = len(audit_report["errors"])
 
-                    if (
-                        created_count
-                        or updated_count
-                        or converted_count
-                        or deactivated_count
-                    ):
+                    if created_count or updated_count or converted_count or deactivated_count:
                         tenants_updated += 1
 
                     total_created += created_count
@@ -124,22 +115,16 @@ class MaintenanceService:
                     if validation["valid"]:
                         print("  Validation: ✅ Tree is valid!")
                         print(f"  Total accounts: {validation['total_accounts']}")
-                        print(
-                            f"  Core accounts present: {validation['core_accounts_found']}"
-                        )
+                        print(f"  Core accounts present: {validation['core_accounts_found']}")
                         if validation["extra_accounts"]:
-                            print(
-                                f"  Extra accounts found: {len(validation['extra_accounts'])}"
-                            )
+                            print(f"  Extra accounts found: {len(validation['extra_accounts'])}")
                     else:
                         print("  Validation: ❌ Tree has issues!")
                         for issue in validation["issues"]:
                             print(f"    - {issue['code']}: {issue['issue']}")
 
                         if validation["missing_core_accounts"]:
-                            print(
-                                f"    - Missing {len(validation['missing_core_accounts'])} core accounts!"
-                            )
+                            print(f"    - Missing {len(validation['missing_core_accounts'])} core accounts!")
 
                     tenant_reports.append(
                         {
@@ -190,10 +175,7 @@ class MaintenanceService:
         dt = (data_type or "").lower()
         if "boolean" in dt:
             return False
-        if any(
-            k in dt
-            for k in ("int", "numeric", "decimal", "money", "real", "double", "float")
-        ):
+        if any(k in dt for k in ("int", "numeric", "decimal", "money", "real", "double", "float")):
             return 0
         if "json" in dt:
             return "{}"
@@ -236,27 +218,17 @@ class MaintenanceService:
                 if default is not None and str(default).upper() != "NULL":
                     continue  # DB will supply the default on insert/update
                 assert_known_column(engine, "tenants", name)
-                cur = conn.execute(
-                    select(tenants_tbl.c[name])
-                    .where(tenants_tbl.c.slug == "default")
-                    .limit(1)
-                ).scalar()
+                cur = conn.execute(select(tenants_tbl.c[name]).where(tenants_tbl.c.slug == "default").limit(1)).scalar()
                 if cur is None:
                     val = MaintenanceService._default_for_type(dtype)
                     fixed.append(f"tenants.{name} <- {val!r} ({dtype})")
                     if not dry_run:
                         if isinstance(val, str) and val == "now()":
                             conn.execute(
-                                update(tenants_tbl)
-                                .where(tenants_tbl.c.slug == "default")
-                                .values({name: func.now()})
+                                update(tenants_tbl).where(tenants_tbl.c.slug == "default").values({name: func.now()})
                             )
                         else:
-                            conn.execute(
-                                update(tenants_tbl)
-                                .where(tenants_tbl.c.slug == "default")
-                                .values({name: val})
-                            )
+                            conn.execute(update(tenants_tbl).where(tenants_tbl.c.slug == "default").values({name: val}))
         return fixed
 
     @staticmethod
@@ -280,15 +252,9 @@ class MaintenanceService:
             demo = Tenant.query.filter_by(slug="default").first()
             if not demo:
                 return "No default tenant found"
-            result = BackupService.create_backup(
-                scope="tenant", tenant_id=demo.id, manual=True
-            )
+            result = BackupService.create_backup(scope="tenant", tenant_id=demo.id, manual=True)
         if isinstance(result, dict):
-            return (
-                result.get("filename")
-                or result.get("manifest", {}).get("backup_scope")
-                or str(result)
-            )
+            return result.get("filename") or result.get("manifest", {}).get("backup_scope") or str(result)
         return str(result)
 
     @staticmethod
@@ -390,9 +356,7 @@ class MaintenanceService:
                     failed.append((db, str(e)))
 
             # List remaining azad databases
-            result = conn.execute(
-                text("SELECT datname FROM pg_database WHERE datname LIKE '%azad%'")
-            ).fetchall()
+            result = conn.execute(text("SELECT datname FROM pg_database WHERE datname LIKE '%azad%'")).fetchall()
             remaining = [r[0] for r in result]
 
         return {

@@ -69,9 +69,7 @@ class TestDeleteTenantScopedData:
             result = MagicMock()
             if "information_schema" in sql:
                 if "tenant_id" in sql or params and params.get("t") == "sales":
-                    result.__iter__ = lambda _self: iter(
-                        [("tenant_id",), ("branch_id",)]
-                    )
+                    result.__iter__ = lambda _self: iter([("tenant_id",), ("branch_id",)])
                 else:
                     result.__iter__ = lambda _self: iter([("id",)])
             else:
@@ -232,9 +230,7 @@ class TestVerifyScopedRestoreExtended:
             "services.backup_scope_config.table_exists",
             side_effect=lambda c, t: t == "tenants",
         )
-        mocker.patch(
-            "services.backup_scoped_restore._table_has_column", return_value=True
-        )
+        mocker.patch("services.backup_scoped_restore._table_has_column", return_value=True)
         out = verify_scoped_restore(
             "postgresql://localhost/target",
             {"row_counts_per_table": {"tenants": 0, "missing_tbl": 5}},
@@ -246,9 +242,7 @@ class TestVerifyScopedRestoreExtended:
     def test_warning_on_non_core_shortfall(self, mocker):
         TestVerifyScopedRestoreExtended._mock_conn_engine(mocker, [1, 0, 0])
         mocker.patch("services.backup_scope_config.table_exists", return_value=True)
-        mocker.patch(
-            "services.backup_scoped_restore._table_has_column", return_value=True
-        )
+        mocker.patch("services.backup_scoped_restore._table_has_column", return_value=True)
         out = verify_scoped_restore(
             "postgresql://localhost/target",
             {"row_counts_per_table": {"tenants": 1, "warehouses": 10}},
@@ -260,9 +254,7 @@ class TestVerifyScopedRestoreExtended:
     def test_orphan_tenant_fk_on_sales(self, mocker):
         TestVerifyScopedRestoreExtended._mock_conn_engine(mocker, [1, 3])
         mocker.patch("services.backup_scope_config.table_exists", return_value=True)
-        mocker.patch(
-            "services.backup_scoped_restore._table_has_column", return_value=True
-        )
+        mocker.patch("services.backup_scoped_restore._table_has_column", return_value=True)
         out = verify_scoped_restore(
             "postgresql://localhost/target",
             {"row_counts_per_table": {"tenants": 1}},
@@ -282,9 +274,7 @@ class TestVerifyScopedRestoreExtended:
         engine.connect.return_value.__exit__ = MagicMock(return_value=False)
         mocker.patch("sqlalchemy.create_engine", return_value=engine)
         mocker.patch("services.backup_scope_config.table_exists", return_value=True)
-        mocker.patch(
-            "services.backup_scoped_restore._table_has_column", return_value=True
-        )
+        mocker.patch("services.backup_scoped_restore._table_has_column", return_value=True)
         out = verify_scoped_restore(
             "postgresql://localhost/target",
             {"row_counts_per_table": {"tenants": 1}},
@@ -419,9 +409,7 @@ class TestRestoreScopedBackupFlow:
                 "row_counts_per_table": {"tenants": 1, "products": 1},
             },
         }
-        archive = TestRestoreScopedBackupFlow._write_minimal_bundle(
-            tmp_path, include_uploads=True
-        )
+        archive = TestRestoreScopedBackupFlow._write_minimal_bundle(tmp_path, include_uploads=True)
         mock_cls._backup_path.return_value = archive
         mocker.patch(
             "services.backup_scoped_engine.ensure_target_schema",
@@ -464,9 +452,7 @@ class TestRestoreScopedBackupFlow:
             "valid": True,
             "manifest": {"backup_scope": SCOPE_TENANT, "tenant_id": 7},
         }
-        mock_cls._backup_path.return_value = (
-            TestRestoreScopedBackupFlow._write_minimal_bundle(tmp_path)
-        )
+        mock_cls._backup_path.return_value = TestRestoreScopedBackupFlow._write_minimal_bundle(tmp_path)
         mocker.patch(
             "services.backup_scoped_engine.ensure_target_schema",
             return_value=(True, None),
@@ -490,9 +476,7 @@ class TestRestoreScopedBackupFlow:
             "valid": True,
             "manifest": {"backup_scope": SCOPE_TENANT, "tenant_id": 7},
         }
-        mock_cls._backup_path.return_value = (
-            TestRestoreScopedBackupFlow._write_minimal_bundle(tmp_path)
-        )
+        mock_cls._backup_path.return_value = TestRestoreScopedBackupFlow._write_minimal_bundle(tmp_path)
         mocker.patch(
             "services.backup_scoped_engine.ensure_target_schema",
             return_value=(True, None),
@@ -562,9 +546,7 @@ class TestRestoreScopedBackupFlow:
         engine.connect.return_value.__exit__ = MagicMock(return_value=False)
         mocker.patch("sqlalchemy.create_engine", return_value=engine)
         mocker.patch("services.backup_scope_config.table_exists", return_value=True)
-        mocker.patch(
-            "services.backup_scoped_restore._table_has_column", return_value=False
-        )
+        mocker.patch("services.backup_scoped_restore._table_has_column", return_value=False)
         out = verify_scoped_restore(
             "postgresql://localhost/target",
             {"row_counts_per_table": {"roles": 5}},
@@ -584,9 +566,7 @@ class TestRestoreScopedBackupFlow:
                 "row_counts_per_table": {"tenants": 1, "products": 1},
             },
         }
-        mock_cls._backup_path.return_value = (
-            TestRestoreScopedBackupFlow()._write_minimal_bundle(tmp_path)
-        )
+        mock_cls._backup_path.return_value = TestRestoreScopedBackupFlow()._write_minimal_bundle(tmp_path)
         mocker.patch(
             "services.backup_scoped_engine.ensure_target_schema",
             return_value=(True, None),

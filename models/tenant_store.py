@@ -16,16 +16,12 @@ class TenantStore(db.Model):
         unique=True,
         index=True,
     )
-    warehouse_id = db.Column(
-        db.Integer, db.ForeignKey("warehouses.id"), nullable=False, index=True
-    )
+    warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id"), nullable=False, index=True)
 
     is_enabled = db.Column(db.Boolean, default=False, nullable=False)
     # Platform-owner hard lock (force-OFF). When True the store is forced closed
     # regardless of is_enabled, and the tenant owner cannot re-enable it.
-    platform_disabled = db.Column(
-        db.Boolean, default=False, nullable=False, server_default="false"
-    )
+    platform_disabled = db.Column(db.Boolean, default=False, nullable=False, server_default="false")
     store_slug = db.Column(db.String(100), unique=True, nullable=False, index=True)
     title = db.Column(db.String(200))
     tagline = db.Column(db.String(255))
@@ -61,9 +57,7 @@ class TenantStore(db.Model):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    tenant = db.relationship(
-        "Tenant", backref=db.backref("store", uselist=False), foreign_keys=[tenant_id]
-    )
+    tenant = db.relationship("Tenant", backref=db.backref("store", uselist=False), foreign_keys=[tenant_id])
     warehouse = db.relationship("Warehouse", foreign_keys=[warehouse_id])
 
     def __repr__(self):
@@ -75,9 +69,7 @@ class TenantStore(db.Model):
         path = self.logo_path.lstrip("/")
         if path.startswith("static/"):
             path = path[7:]
-        return (
-            f"/static/{path}" if not path.startswith("uploads/") else f"/static/{path}"
-        )
+        return f"/static/{path}" if not path.startswith("uploads/") else f"/static/{path}"
 
     def seo_title(self, lang="ar") -> str:
         if lang == "en" and self.meta_title_en:

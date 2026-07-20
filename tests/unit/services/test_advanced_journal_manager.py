@@ -86,14 +86,10 @@ class TestCreateEntryWithValidation:
 
     def test_creates_balanced_entry(self, mocker):
         entry = _mock_entry()
-        mocker.patch(
-            "services.gl_service.GLService.create_manual_entry", return_value=entry
-        )
+        mocker.patch("services.gl_service.GLService.create_manual_entry", return_value=entry)
         mocker.patch.object(AdvancedJournalEntryManager, "_log_audit")
         lines = [{"debit": 100, "credit": 0}, {"debit": 0, "credit": 100}]
-        result = AdvancedJournalEntryManager.create_entry_with_validation(
-            "ok", lines, created_by=1
-        )
+        result = AdvancedJournalEntryManager.create_entry_with_validation("ok", lines, created_by=1)
         assert result is entry
 
 
@@ -101,9 +97,7 @@ class TestUpdateEntry:
     def test_rejects_posted_entry(self):
         entry = _mock_entry(status="posted")
         with (
-            patch.object(
-                AdvancedJournalEntryManager, "_entry_or_404", return_value=entry
-            ),
+            patch.object(AdvancedJournalEntryManager, "_entry_or_404", return_value=entry),
             pytest.raises(ValueError),
         ):
             AdvancedJournalEntryManager.update_entry(1, {}, 1)
@@ -111,9 +105,7 @@ class TestUpdateEntry:
     def test_rejects_reversed_entry(self):
         entry = _mock_entry(status="reversed")
         with (
-            patch.object(
-                AdvancedJournalEntryManager, "_entry_or_404", return_value=entry
-            ),
+            patch.object(AdvancedJournalEntryManager, "_entry_or_404", return_value=entry),
             pytest.raises(ValueError),
         ):
             AdvancedJournalEntryManager.update_entry(1, {}, 1)
@@ -121,9 +113,7 @@ class TestUpdateEntry:
     def test_rejects_unbalanced_line_update(self):
         entry = _mock_entry()
         with (
-            patch.object(
-                AdvancedJournalEntryManager, "_entry_or_404", return_value=entry
-            ),
+            patch.object(AdvancedJournalEntryManager, "_entry_or_404", return_value=entry),
             pytest.raises(ValueError, match="غير متوازن"),
         ):
             AdvancedJournalEntryManager.update_entry(
@@ -134,9 +124,7 @@ class TestUpdateEntry:
 
     def test_commits_on_success(self, mocker):
         entry = _mock_entry()
-        mocker.patch.object(
-            AdvancedJournalEntryManager, "_entry_or_404", return_value=entry
-        )
+        mocker.patch.object(AdvancedJournalEntryManager, "_entry_or_404", return_value=entry)
         mocker.patch.object(AdvancedJournalEntryManager, "_log_audit")
         mock_db = mocker.patch("services.advanced_journal_manager.db")
         result = AdvancedJournalEntryManager.update_entry(1, {"description": "new"}, 1)
@@ -145,9 +133,7 @@ class TestUpdateEntry:
 
     def test_rolls_back_on_commit_failure(self, mocker):
         entry = _mock_entry()
-        mocker.patch.object(
-            AdvancedJournalEntryManager, "_entry_or_404", return_value=entry
-        )
+        mocker.patch.object(AdvancedJournalEntryManager, "_entry_or_404", return_value=entry)
         mocker.patch.object(AdvancedJournalEntryManager, "_log_audit")
         mock_db = mocker.patch("services.advanced_journal_manager.db")
         mock_db.session.flush.side_effect = RuntimeError("db fail")
@@ -160,9 +146,7 @@ class TestReverseEntryAdvanced:
     def test_rejects_already_reversed(self):
         entry = _mock_entry(status="reversed")
         with (
-            patch.object(
-                AdvancedJournalEntryManager, "_entry_or_404", return_value=entry
-            ),
+            patch.object(AdvancedJournalEntryManager, "_entry_or_404", return_value=entry),
             pytest.raises(ValueError, match="معكوس مسبقاً"),
         ):
             AdvancedJournalEntryManager.reverse_entry_advanced(1, 1, "reason")
@@ -170,9 +154,7 @@ class TestReverseEntryAdvanced:
     def test_rejects_unposted(self):
         entry = _mock_entry(status="draft")
         with (
-            patch.object(
-                AdvancedJournalEntryManager, "_entry_or_404", return_value=entry
-            ),
+            patch.object(AdvancedJournalEntryManager, "_entry_or_404", return_value=entry),
             pytest.raises(ValueError, match="لا يمكن عكس قيد بحالة"),
         ):
             AdvancedJournalEntryManager.reverse_entry_advanced(1, 1, "reason")
@@ -180,20 +162,14 @@ class TestReverseEntryAdvanced:
     def test_creates_reversal_and_commits(self, mocker):
         entry = _mock_entry(status="posted")
         reversal = _mock_entry(id=2, status="posted")
-        mocker.patch.object(
-            AdvancedJournalEntryManager, "_entry_or_404", return_value=entry
-        )
+        mocker.patch.object(AdvancedJournalEntryManager, "_entry_or_404", return_value=entry)
         mocker.patch.object(
             AdvancedJournalEntryManager,
             "create_entry_with_validation",
             return_value=reversal,
         )
-        mocker.patch.object(
-            AdvancedJournalEntryManager, "validate_entry", return_value=reversal
-        )
-        mocker.patch.object(
-            AdvancedJournalEntryManager, "post_entry", return_value=reversal
-        )
+        mocker.patch.object(AdvancedJournalEntryManager, "validate_entry", return_value=reversal)
+        mocker.patch.object(AdvancedJournalEntryManager, "post_entry", return_value=reversal)
         mocker.patch.object(AdvancedJournalEntryManager, "_log_audit")
         mock_db = mocker.patch("services.advanced_journal_manager.db")
         result = AdvancedJournalEntryManager.reverse_entry_advanced(1, 1, "correction")
@@ -204,20 +180,14 @@ class TestReverseEntryAdvanced:
     def test_rolls_back_on_commit_failure(self, mocker):
         entry = _mock_entry(status="posted")
         reversal = _mock_entry(id=2, status="posted")
-        mocker.patch.object(
-            AdvancedJournalEntryManager, "_entry_or_404", return_value=entry
-        )
+        mocker.patch.object(AdvancedJournalEntryManager, "_entry_or_404", return_value=entry)
         mocker.patch.object(
             AdvancedJournalEntryManager,
             "create_entry_with_validation",
             return_value=reversal,
         )
-        mocker.patch.object(
-            AdvancedJournalEntryManager, "validate_entry", return_value=reversal
-        )
-        mocker.patch.object(
-            AdvancedJournalEntryManager, "post_entry", return_value=reversal
-        )
+        mocker.patch.object(AdvancedJournalEntryManager, "validate_entry", return_value=reversal)
+        mocker.patch.object(AdvancedJournalEntryManager, "post_entry", return_value=reversal)
         mocker.patch.object(AdvancedJournalEntryManager, "_log_audit")
         mock_db = mocker.patch("services.advanced_journal_manager.db")
         mock_db.session.flush.side_effect = RuntimeError("fail")
@@ -230,9 +200,7 @@ class TestDeleteEntry:
     def test_rejects_posted(self):
         entry = _mock_entry(status="posted")
         with (
-            patch.object(
-                AdvancedJournalEntryManager, "_entry_or_404", return_value=entry
-            ),
+            patch.object(AdvancedJournalEntryManager, "_entry_or_404", return_value=entry),
             pytest.raises(ValueError),
         ):
             AdvancedJournalEntryManager.delete_entry(1, 1, "reason")
@@ -240,9 +208,7 @@ class TestDeleteEntry:
     def test_rejects_reversed_entry(self):
         entry = _mock_entry(status="reversed")
         with (
-            patch.object(
-                AdvancedJournalEntryManager, "_entry_or_404", return_value=entry
-            ),
+            patch.object(AdvancedJournalEntryManager, "_entry_or_404", return_value=entry),
             pytest.raises(ValueError),
         ):
             AdvancedJournalEntryManager.delete_entry(1, 1, "reason")
@@ -250,18 +216,14 @@ class TestDeleteEntry:
     def test_rejects_linked_reversal(self):
         entry = _mock_entry(status="draft", reversed_entry_id=5)
         with (
-            patch.object(
-                AdvancedJournalEntryManager, "_entry_or_404", return_value=entry
-            ),
+            patch.object(AdvancedJournalEntryManager, "_entry_or_404", return_value=entry),
             pytest.raises(ValueError, match="قيود عكسية"),
         ):
             AdvancedJournalEntryManager.delete_entry(1, 1, "reason")
 
     def test_soft_deletes_and_commits(self, mocker):
         entry = _mock_entry(status="draft")
-        mocker.patch.object(
-            AdvancedJournalEntryManager, "_entry_or_404", return_value=entry
-        )
+        mocker.patch.object(AdvancedJournalEntryManager, "_entry_or_404", return_value=entry)
         mocker.patch.object(AdvancedJournalEntryManager, "_log_audit")
         mock_db = mocker.patch("services.advanced_journal_manager.db")
         assert AdvancedJournalEntryManager.delete_entry(1, 1, "cleanup") is True
@@ -270,9 +232,7 @@ class TestDeleteEntry:
 
     def test_delete_rollback_on_commit_failure(self, mocker):
         entry = _mock_entry(status="draft")
-        mocker.patch.object(
-            AdvancedJournalEntryManager, "_entry_or_404", return_value=entry
-        )
+        mocker.patch.object(AdvancedJournalEntryManager, "_entry_or_404", return_value=entry)
         mocker.patch.object(AdvancedJournalEntryManager, "_log_audit")
         mock_db = mocker.patch("services.advanced_journal_manager.db")
         mock_db.session.flush.side_effect = RuntimeError("delete fail")
@@ -285,9 +245,7 @@ class TestApproveEntry:
     def test_rejects_already_posted(self):
         entry = _mock_entry(status="posted")
         with (
-            patch.object(
-                AdvancedJournalEntryManager, "_entry_or_404", return_value=entry
-            ),
+            patch.object(AdvancedJournalEntryManager, "_entry_or_404", return_value=entry),
             pytest.raises(ValueError),
         ):
             AdvancedJournalEntryManager.approve_entry(1, 1)
@@ -295,9 +253,7 @@ class TestApproveEntry:
     def test_rejects_unbalanced(self, mocker):
         entry = _mock_entry(status="draft")
         entry.lines[0].debit = Decimal("200")
-        mocker.patch.object(
-            AdvancedJournalEntryManager, "_entry_or_404", return_value=entry
-        )
+        mocker.patch.object(AdvancedJournalEntryManager, "_entry_or_404", return_value=entry)
         mocker.patch.object(AdvancedJournalEntryManager, "_log_audit")
         mocker.patch("services.advanced_journal_manager.db")
         AdvancedJournalEntryManager.approve_entry(1, 1)
@@ -309,9 +265,7 @@ class TestApproveEntry:
         credit_line.debit = Decimal("0")
         credit_line.credit = Decimal("100")
         entry = _mock_entry(status="draft", lines=[_mock_entry().lines[0], credit_line])
-        mocker.patch.object(
-            AdvancedJournalEntryManager, "_entry_or_404", return_value=entry
-        )
+        mocker.patch.object(AdvancedJournalEntryManager, "_entry_or_404", return_value=entry)
         mocker.patch.object(AdvancedJournalEntryManager, "_log_audit")
         mocker.patch("services.advanced_journal_manager.db")
         result = AdvancedJournalEntryManager.approve_entry(1, 1, "ok")
@@ -322,9 +276,7 @@ class TestApproveEntry:
         credit_line.debit = Decimal("0")
         credit_line.credit = Decimal("100")
         entry = _mock_entry(status="draft", lines=[_mock_entry().lines[0], credit_line])
-        mocker.patch.object(
-            AdvancedJournalEntryManager, "_entry_or_404", return_value=entry
-        )
+        mocker.patch.object(AdvancedJournalEntryManager, "_entry_or_404", return_value=entry)
         mocker.patch.object(AdvancedJournalEntryManager, "_log_audit")
         mock_db = mocker.patch("services.advanced_journal_manager.db")
         mock_db.session.flush.side_effect = RuntimeError("fail")
@@ -363,17 +315,13 @@ class TestGetEntryHistory:
 class TestLogAudit:
     def test_creates_audit_record(self, mocker):
         entry = _mock_entry(tenant_id=3)
-        mocker.patch(
-            "services.advanced_journal_manager.GLJournalEntry"
-        ).query.get.return_value = entry
+        mocker.patch("services.advanced_journal_manager.GLJournalEntry").query.get.return_value = entry
         mock_db = mocker.patch("services.advanced_journal_manager.db")
         AdvancedJournalEntryManager._log_audit(1, "create", None, {"x": 1}, "reason", 5)
         mock_db.session.add.assert_called_once()
 
     def test_log_audit_when_entry_missing(self, mocker):
-        mocker.patch(
-            "services.advanced_journal_manager.GLJournalEntry"
-        ).query.get.return_value = None
+        mocker.patch("services.advanced_journal_manager.GLJournalEntry").query.get.return_value = None
         mock_db = mocker.patch("services.advanced_journal_manager.db")
         AdvancedJournalEntryManager._log_audit(99, "delete", {"id": 1}, None, "gone", 2)
         added = mock_db.session.add.call_args[0][0]

@@ -178,9 +178,7 @@ class TestPOSEdgeCases:
         alert = page.locator("#posAlert")
         alert_text = alert.text_content() if alert.is_visible() else ""
         # Verify: either button was disabled OR an error message about empty cart is shown
-        assert is_disabled or any(
-            kw in (alert_text or "") for kw in ["سلة", "يرجى إضافة", "لا توجد"]
-        )
+        assert is_disabled or any(kw in (alert_text or "") for kw in ["سلة", "يرجى إضافة", "لا توجد"])
 
     def test_remove_item_from_cart(self, cashier_context):
         """Add an item then remove it; cart should become empty."""
@@ -200,9 +198,7 @@ class TestPOSEdgeCases:
         assert empty_row.count() > 0 or page.locator("#cartTable tbody tr").count() == 0
         # Total should be zero
         total_text = page.locator("#grandTotal").text_content() or ""
-        total_val = (
-            total_text.replace(",", "").replace(" ", "").replace("AED", "").strip()
-        )
+        total_val = total_text.replace(",", "").replace(" ", "").replace("AED", "").strip()
         assert float(total_val or "0") == 0.0
         page.close()
 
@@ -252,14 +248,8 @@ class TestPOSEdgeCases:
         # Verify subtotal and total are > 0
         subtotal_text = page.locator("#kpiSubtotal").text_content() or "0"
         total_text = page.locator("#grandTotal").text_content() or "0"
-        subtotal_val = float(
-            subtotal_text.replace(",", "").replace(" ", "").replace("AED", "").strip()
-            or "0"
-        )
-        total_val = float(
-            total_text.replace(",", "").replace(" ", "").replace("AED", "").strip()
-            or "0"
-        )
+        subtotal_val = float(subtotal_text.replace(",", "").replace(" ", "").replace("AED", "").strip() or "0")
+        total_val = float(total_text.replace(",", "").replace(" ", "").replace("AED", "").strip() or "0")
         assert subtotal_val > 0
         assert total_val > 0
         page.close()
@@ -277,9 +267,7 @@ class TestPOSEdgeCases:
         # Verify customer hint shows walk-in customer
         hint = page.locator("#customerSelectedHint")
         hint_text = hint.text_content() or ""
-        assert (
-            "عميل" in hint_text or "walkin" in hint_text.lower() or "نقدي" in hint_text
-        )
+        assert "عميل" in hint_text or "walkin" in hint_text.lower() or "نقدي" in hint_text
         # Now scan an item
         page.locator("#barcodeInput").fill("123456")
         page.locator("#barcodeInput").press("Enter")
@@ -293,9 +281,7 @@ class TestPOSEdgeCases:
         page = cashier_context.new_page()
         page.goto(f"{BASE_URL}/pos")
         page.wait_for_selector("#barcodeInput", timeout=5000)
-        csrf = page.evaluate(
-            "document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || ''"
-        )
+        csrf = page.evaluate("document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || ''")
         response = page.evaluate(
             """async (csrf) => {
             const resp = await fetch('/pos/api/checkout', {
@@ -324,9 +310,7 @@ class TestPOSEdgeCases:
         page = cashier_context.new_page()
         page.goto(f"{BASE_URL}/pos")
         page.wait_for_selector("#barcodeInput", timeout=5000)
-        csrf = page.evaluate(
-            "document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || ''"
-        )
+        csrf = page.evaluate("document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || ''")
         # Open a session first via API
         page.evaluate(
             """async (csrf) => {

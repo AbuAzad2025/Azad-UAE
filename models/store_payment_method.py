@@ -61,9 +61,7 @@ class StorePaymentMethod(db.Model):
     def normalize_code(raw: str) -> str:
         code = (raw or "").strip().lower().replace("-", "_").replace(" ", "_")
         if not CODE_PATTERN.match(code):
-            raise ValueError(
-                "رمز طريقة الدفع: حروف إنجليزية صغيرة وأرقام وشرطة سفلية فقط."
-            )
+            raise ValueError("رمز طريقة الدفع: حروف إنجليزية صغيرة وأرقام وشرطة سفلية فقط.")
         return code
 
     def __repr__(self):

@@ -16,17 +16,13 @@ from PIL import Image
 
 @pytest.fixture
 def knowledge_path(tmp_path):
-    with patch(
-        "ai_knowledge.get_knowledge_path", side_effect=lambda name: str(tmp_path / name)
-    ):
+    with patch("ai_knowledge.get_knowledge_path", side_effect=lambda name: str(tmp_path / name)):
         yield tmp_path
 
 
 def _sale_mock():
     customer = MagicMock(name="Ali", phone="0501234567", address="Dubai")
-    payment = MagicMock(
-        payment_method="cash", amount=Decimal("100"), created_at=datetime(2025, 6, 1)
-    )
+    payment = MagicMock(payment_method="cash", amount=Decimal("100"), created_at=datetime(2025, 6, 1))
     line = MagicMock(
         quantity=2,
         unit_price=Decimal("50"),
@@ -94,9 +90,7 @@ class TestTrainer:
         trainer = Trainer()
         trainer.quick_learner = None
         with patch.dict("sys.modules", {"ai_knowledge.learning_engine": None}):
-            with patch(
-                "ai_knowledge.learning.quick_learner.quick_learner", MagicMock()
-            ) as ql:
+            with patch("ai_knowledge.learning.quick_learner.quick_learner", MagicMock()) as ql:
                 assert trainer._get_ql() is ql
 
     def test_seed_expertise_read_error(self, knowledge_path, tmp_path):
@@ -211,9 +205,7 @@ class TestMemorySystem:
         from ai_knowledge.core.memory_system import LongTermMemory, get_memory_system
 
         mem = LongTermMemory()
-        mem.remember_conversation(
-            1, "كم المخزون المتاح", "المخزون جيد", {"page": "inventory"}
-        )
+        mem.remember_conversation(1, "كم المخزون المتاح", "المخزون جيد", {"page": "inventory"})
         mem.remember_fact("ضريبة القيمة المضافة 5%", "tax", source="system")
         mem.remember_procedure("إنشاء فاتورة", ["افتح المبيعات", "أضف عميل"], "sales")
         mem.remember_user_preference(1, "language", "ar")
@@ -425,20 +417,14 @@ class TestGenerationCore:
         assert "SELECT" in gen.generate_sql_query(
             "select", "sales", {"where": {"id": 1}, "order_by": "id", "limit": 10}
         )
-        assert "INSERT" in gen.generate_sql_query(
-            "insert", "t", {"columns": ["a"], "values": ["x"]}
-        )
-        assert "UPDATE" in gen.generate_sql_query(
-            "update", "t", {"set": {"a": "b"}, "where": {"id": 1}}
-        )
+        assert "INSERT" in gen.generate_sql_query("insert", "t", {"columns": ["a"], "values": ["x"]})
+        assert "UPDATE" in gen.generate_sql_query("update", "t", {"set": {"a": "b"}, "where": {"id": 1}})
         assert gen.generate_sql_query("bad", "t").startswith("--")
         assert "def calc" in gen.generate_python_function("calc", "حساب الربح", ["x"])
         assert "predict" in gen.generate_python_function("pred", "توقع المبيعات")
         assert "Product" in gen.generate_python_function("find", "بحث منتج")
         assert "def generic" in gen.generate_python_function("generic", "other")
-        assert "sales" in gen.generate_report_query(
-            "sales", {"start_date": "2025-01-01", "end_date": "2025-06-01"}
-        )
+        assert "sales" in gen.generate_report_query("sales", {"start_date": "2025-01-01", "end_date": "2025-06-01"})
         assert "products" in gen.generate_report_query("inventory")
         assert "customers" in gen.generate_report_query("customers")
         assert "Unknown" in gen.generate_report_query("other")
@@ -448,9 +434,7 @@ class TestGenerationCore:
         assert fixed2["changes"]
         fixed3 = gen.fix_code("x = db", "NameError: name 'db' is not defined")
         assert "db" in fixed3["fixed_code"]
-        opt = gen.optimize_code(
-            "for x in y:\n    z.append(x)\n" + "db.session.add(x)\n" * 6
-        )
+        opt = gen.optimize_code("for x in y:\n    z.append(x)\n" + "db.session.add(x)\n" * 6)
         assert opt["performance_gain_percent"] > 0
         assert get_code_generator() is get_code_generator()
 
@@ -463,9 +447,7 @@ class TestLearningEngineConsolidated:
         impl.learn.return_value = True
         impl.get_answer.return_value = "answer"
         impl.knowledge_base = {}
-        with patch(
-            "ai_knowledge.learning.quick_learner.QuickLearner", return_value=impl
-        ):
+        with patch("ai_knowledge.learning.quick_learner.QuickLearner", return_value=impl):
             QuickLearner._klass = None
             ql = QuickLearner()
             ql.learn("q", "a", "cat", 1)
@@ -478,9 +460,7 @@ class TestLearningEngineConsolidated:
         from ai_knowledge.learning_engine import AutoRetrainingScheduler
 
         with (
-            patch.object(
-                AutoRetrainingScheduler, "get_last_training_info", return_value=None
-            ),
+            patch.object(AutoRetrainingScheduler, "get_last_training_info", return_value=None),
             patch("models.Sale") as MockSale,
         ):
             MockSale.query.filter_by.return_value.count.return_value = 150
@@ -491,9 +471,7 @@ class TestLearningEngineConsolidated:
                 json.dumps(
                     [
                         {
-                            "timestamp": (
-                                datetime.now() - timedelta(days=8)
-                            ).isoformat(),
+                            "timestamp": (datetime.now() - timedelta(days=8)).isoformat(),
                             "sales_count": 5,
                         }
                     ]
@@ -509,9 +487,7 @@ class TestLearningEngineConsolidated:
                 },
             ):
                 assert AutoRetrainingScheduler.should_retrain() is True
-        with patch.object(
-            AutoRetrainingScheduler, "get_last_training_info", return_value=None
-        ):
+        with patch.object(AutoRetrainingScheduler, "get_last_training_info", return_value=None):
             with patch("models.Sale") as MockSale:
                 MockSale.query.filter_by.return_value.count.return_value = 50
                 assert AutoRetrainingScheduler.should_retrain() is False
@@ -531,9 +507,7 @@ class TestLearningEngineConsolidated:
         with patch.object(AutoRetrainingScheduler, "TRAINING_LOG_FILE", str(log_path)):
             AutoRetrainingScheduler.log_training(10, {"ok": True})
             assert AutoRetrainingScheduler.get_last_training_info() is not None
-        with patch.object(
-            AutoRetrainingScheduler, "should_retrain", return_value=False
-        ):
+        with patch.object(AutoRetrainingScheduler, "should_retrain", return_value=False):
             assert "message" in AutoRetrainingScheduler.check_and_train_if_needed()
 
     def test_continuous_learner(self, knowledge_path):
@@ -544,9 +518,7 @@ class TestLearningEngineConsolidated:
 
         learner = ContinuousLearner()
         with (
-            patch.object(
-                learner, "learn_from_wikipedia", return_value={"success": True}
-            ),
+            patch.object(learner, "learn_from_wikipedia", return_value={"success": True}),
             patch.object(
                 learner,
                 "learn_arxiv_papers",
@@ -606,14 +578,8 @@ class TestNeuralNetworkConsolidatedDeep:
 
         engine = AzadNeuralEngine()
         with patch.object(engine, "_load_model", return_value=False):
-            assert (
-                engine.predict_optimal_price(100, 2, "merchant")["model"]
-                == "rule_based"
-            )
-            assert (
-                engine.validate_accounting_entry(100, 100, 2, "Sale")["is_correct"]
-                is True
-            )
+            assert engine.predict_optimal_price(100, 2, "merchant")["model"] == "rule_based"
+            assert engine.validate_accounting_entry(100, 100, 2, "Sale")["is_correct"] is True
         with (
             patch("extensions.db") as mock_db,
             patch("models.Customer"),
@@ -630,9 +596,7 @@ class TestActionDispatcherHandlers:
     @pytest.fixture
     def permitted(self):
         return (
-            patch(
-                "ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1
-            ),
+            patch("ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1),
             patch("ai_knowledge.action_dispatcher._is_owner", return_value=True),
             patch("ai_knowledge.action_dispatcher._audit"),
             patch("ai_knowledge.action_dispatcher._log_ai_error"),
@@ -651,9 +615,7 @@ class TestActionDispatcherHandlers:
             Customer.query.filter_by.return_value.first.return_value = None
             r = action_dispatcher.dispatch("customer_balance", {"name": "missing"})
             assert r.success is False
-            cust = MagicMock(
-                id=1, name="Ali", balance=Decimal("2500"), credit_limit=Decimal("1000")
-            )
+            cust = MagicMock(id=1, name="Ali", balance=Decimal("2500"), credit_limit=Decimal("1000"))
             Customer.query.filter_by.return_value.first.return_value = cust
             r2 = action_dispatcher.dispatch("customer_balance", {"name": "Ali"})
             assert r2.success is True
@@ -662,10 +624,7 @@ class TestActionDispatcherHandlers:
         from ai_knowledge.action_dispatcher import action_dispatcher
 
         with permitted[0], permitted[1], permitted[2], permitted[3]:
-            assert (
-                action_dispatcher.dispatch("create_customer", {"name": ""}).success
-                is False
-            )
+            assert action_dispatcher.dispatch("create_customer", {"name": ""}).success is False
 
     def test_list_products_and_stock(self, permitted, mock_ai_user):
         from ai_knowledge.action_dispatcher import action_dispatcher
@@ -690,10 +649,7 @@ class TestActionDispatcherHandlers:
             list_q.order_by.return_value.limit.return_value.all.return_value = [product]
             Product.query = list_q
             Product.name = MagicMock()
-            assert (
-                action_dispatcher.dispatch("list_products", {"search": "bolt"}).success
-                is True
-            )
+            assert action_dispatcher.dispatch("list_products", {"search": "bolt"}).success is True
 
     def test_sales_payment_expense(self, permitted, mock_ai_user):
         from ai_knowledge.action_dispatcher import action_dispatcher
@@ -750,17 +706,9 @@ class TestActionDispatcherHandlers:
                 "payment_id": 1,
             }
             assert (
-                action_dispatcher.dispatch(
-                    "receive_payment", {"customer_name": "Ali", "amount": 100}
-                ).success
-                is True
+                action_dispatcher.dispatch("receive_payment", {"customer_name": "Ali", "amount": 100}).success is True
             )
-            assert (
-                action_dispatcher.dispatch(
-                    "add_expense", {"description": "fuel", "amount": 50}
-                ).success
-                is True
-            )
+            assert action_dispatcher.dispatch("add_expense", {"description": "fuel", "amount": 50}).success is True
 
     def test_supplier_reports_employee(self, permitted, mock_ai_user):
         from ai_knowledge.action_dispatcher import action_dispatcher
@@ -778,13 +726,8 @@ class TestActionDispatcherHandlers:
             patch("ai_knowledge.action_dispatcher.db.session") as session,
         ):
             Supplier.return_value = MagicMock(id=1)
-            assert (
-                action_dispatcher.dispatch("create_supplier", {"name": "Sup"}).success
-                is True
-            )
-            session.query.return_value.filter.return_value.scalar.return_value = (
-                Decimal("1000")
-            )
+            assert action_dispatcher.dispatch("create_supplier", {"name": "Sup"}).success is True
+            session.query.return_value.filter.return_value.scalar.return_value = Decimal("1000")
             Sale.query.filter_by.return_value.count.return_value = 5
             assert action_dispatcher.dispatch("sales_summary", {}).success is True
             session.query.return_value.join.return_value.filter.return_value.all.return_value = []
@@ -794,12 +737,7 @@ class TestActionDispatcherHandlers:
                 "message": "ok",
                 "id": 2,
             }
-            assert (
-                action_dispatcher.dispatch(
-                    "create_employee", {"name": "Emp", "salary": 3000}
-                ).success
-                is True
-            )
+            assert action_dispatcher.dispatch("create_employee", {"name": "Emp", "salary": 3000}).success is True
             Ex.return_value.create_purchase.return_value = {
                 "success": True,
                 "message": "ok",
@@ -900,9 +838,7 @@ class TestPersonalityCoreDeep:
                 "ai_knowledge.personality.azad_responses.understand_message",
                 return_value={"intent": "greeting", "confidence": 0.9},
             ),
-            patch(
-                "ai_knowledge.personality.azad_responses.intelligent_assistant"
-            ) as ia,
+            patch("ai_knowledge.personality.azad_responses.intelligent_assistant") as ia,
             patch("ai_knowledge.personality.azad_responses.learning_system") as ls,
             patch("ai_knowledge.personality.azad_responses.azad_personality") as ap,
         ):

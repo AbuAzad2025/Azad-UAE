@@ -46,9 +46,7 @@ ID_ATTR = re.compile(r'(?<![-\w])id\s*=\s*"([^"{%]+)"')
 FORM_BLOCK = re.compile(r"<form\b.*?</form>", re.IGNORECASE | re.DOTALL)
 METHOD_POST = re.compile(r'\bmethod\s*=\s*["\']?post\b', re.IGNORECASE)
 CSRF_TOKEN = re.compile(r"csrf_token|hidden_tag\s*\(")
-STATIC_REF = re.compile(
-    r"url_for\(\s*['\"]static['\"]\s*,\s*filename\s*=\s*['\"]([^'\"]+)['\"]"
-)
+STATIC_REF = re.compile(r"url_for\(\s*['\"]static['\"]\s*,\s*filename\s*=\s*['\"]([^'\"]+)['\"]")
 HTML_TAG = re.compile(r"<html\b[^>]*>", re.IGNORECASE)
 DIR_COND = re.compile(r"\{%\s*if[^%]*%\}\s*dir\s*=|dir\s*=\s*\"\{\{")
 SCRIPT_BLOCK = re.compile(r"<script\b(?![^>]*\bsrc\s*=)[^>]*>(.*?)</script>", re.IGNORECASE | re.DOTALL)

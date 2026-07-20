@@ -24,9 +24,7 @@ class TestDepreciationScheduleTenantIsolation:
         assert hasattr(DepreciationSchedule, "asset")
         assert hasattr(DepreciationSchedule, "journal_entry")
 
-    def test_fixed_asset_status_enum_values(
-        self, db_session, sample_tenant, sample_branch
-    ):
+    def test_fixed_asset_status_enum_values(self, db_session, sample_tenant, sample_branch):
         """Test that FixedAsset has correct enum/status values"""
         # Create GL account
         expense_account = GLAccount(
@@ -81,11 +79,7 @@ class TestDepreciationScheduleTenantIsolation:
         assert tenant_id_column.index
 
         # Check foreign key
-        fks = [
-            fk
-            for fk in DepreciationSchedule.__table__.foreign_keys
-            if "tenants" in str(fk)
-        ]
+        fks = [fk for fk in DepreciationSchedule.__table__.foreign_keys if "tenants" in str(fk)]
         assert len(fks) > 0
         # The foreign key should reference the tenants table
         assert "tenants" in str(fks[0])

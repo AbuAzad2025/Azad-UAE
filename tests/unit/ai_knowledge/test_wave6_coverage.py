@@ -14,9 +14,7 @@ import pytest
 
 @pytest.fixture
 def knowledge_path(tmp_path):
-    with patch(
-        "ai_knowledge.get_knowledge_path", side_effect=lambda name: str(tmp_path / name)
-    ):
+    with patch("ai_knowledge.get_knowledge_path", side_effect=lambda name: str(tmp_path / name)):
         yield tmp_path
 
 
@@ -220,9 +218,7 @@ class TestActionDispatcherWave6:
         from ai_knowledge.action_dispatcher import action_dispatcher
 
         with (
-            patch(
-                "ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1
-            ),
+            patch("ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1),
             patch("ai_knowledge.action_dispatcher._has_permission", return_value=True),
             patch("services.ai_executor.AIExecutor") as Ex,
         ):
@@ -254,15 +250,9 @@ class TestActionDispatcherWave6:
                 is False
             )
             ex.create_employee.return_value = {"success": False, "message": "fail"}
-            assert (
-                action_dispatcher.dispatch("create_employee", {"name": "E"}).success
-                is False
-            )
+            assert action_dispatcher.dispatch("create_employee", {"name": "E"}).success is False
             ex.create_employee.side_effect = RuntimeError("x")
-            assert (
-                action_dispatcher.dispatch("create_employee", {"name": "E"}).success
-                is False
-            )
+            assert action_dispatcher.dispatch("create_employee", {"name": "E"}).success is False
             ex.create_purchase.return_value = {
                 "success": True,
                 "message": "ok",
@@ -290,9 +280,7 @@ class TestActionDispatcherWave6:
                 is False
             )
         with (
-            patch(
-                "ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1
-            ),
+            patch("ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1),
             patch("ai_knowledge.action_dispatcher._has_permission", return_value=True),
             patch("ai_knowledge.action_dispatcher._is_owner", return_value=True),
             patch("models.Supplier") as Supplier,
@@ -300,14 +288,9 @@ class TestActionDispatcherWave6:
         ):
             Supplier.return_value = MagicMock(id=1)
             sess.flush.side_effect = RuntimeError("fail")
-            assert (
-                action_dispatcher.dispatch("create_supplier", {"name": "S"}).success
-                is False
-            )
+            assert action_dispatcher.dispatch("create_supplier", {"name": "S"}).success is False
         with (
-            patch(
-                "ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1
-            ),
+            patch("ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1),
             patch("ai_knowledge.action_dispatcher._has_permission", return_value=True),
             patch("ai_knowledge.action_dispatcher._is_owner", return_value=True),
             patch("models.User") as User,
@@ -535,9 +518,7 @@ class TestSystemIntegrationWave6:
                 customer_type="VIP",
                 get_balance_aed=lambda: Decimal("0"),
             )
-            Customer.query.order_by.return_value.limit.return_value.all.return_value = [
-                recent_c
-            ]
+            Customer.query.order_by.return_value.limit.return_value.all.return_value = [recent_c]
             Sale.query.count.return_value = 10
             Sale.query.filter.return_value.count.return_value = 2
             Sale.query.order_by.return_value.limit.return_value.all.return_value = []
@@ -653,14 +634,10 @@ class TestIntelligentAssistantWave6:
 
         assistant = IntelligentAssistant()
         zero_sales = {"recent_sales": {"count": 0, "total_amount": 0, "avg_amount": 0}}
-        assert assistant._analyze_and_reason("sales_analysis", zero_sales, {})[
-            "warnings"
-        ]
+        assert assistant._analyze_and_reason("sales_analysis", zero_sales, {})["warnings"]
         weak = {"recent_sales": {"count": 3, "total_amount": 300, "avg_amount": 100}}
         assert assistant._analyze_and_reason("sales_analysis", weak, {})["warnings"]
-        good = {
-            "recent_sales": {"count": 60, "total_amount": 60000, "avg_amount": 1000}
-        }
+        good = {"recent_sales": {"count": 60, "total_amount": 60000, "avg_amount": 1000}}
         assistant._neural_engine = MagicMock()
         assistant._neural_engine.predict_next_week_sales = MagicMock(
             return_value={"success": True, "predicted_amount": 5000}
@@ -670,18 +647,11 @@ class TestIntelligentAssistantWave6:
         assistant._neural_engine.predict_next_week_sales.side_effect = RuntimeError()
         assistant._analyze_and_reason("sales_analysis", good, {})
         inv_ok = {"low_stock_products": []}
-        assert (
-            "صحي"
-            in assistant._analyze_and_reason("inventory_check", inv_ok, {})["insights"][
-                0
-            ]
-        )
+        assert "صحي" in assistant._analyze_and_reason("inventory_check", inv_ok, {})["insights"][0]
         inv_few = {"low_stock_products": [{"deficit": 2}] * 3}
         assert assistant._analyze_and_reason("inventory_check", inv_few, {})["warnings"]
         inv_many = {"low_stock_products": [{"deficit": 5}] * 6}
-        assert assistant._analyze_and_reason("inventory_check", inv_many, {})[
-            "warnings"
-        ]
+        assert assistant._analyze_and_reason("inventory_check", inv_many, {})["warnings"]
         cust = {
             "customer_data": {
                 "success": True,
@@ -710,12 +680,8 @@ class TestIntelligentAssistantWave6:
         assert assistant._generate_dynamic_response("who_are_you", {}, {}, {})
         assert assistant._generate_dynamic_response("praise", {}, {}, {})
         assert assistant._generate_dynamic_response("complaint", {}, {}, {})
-        sales_data = {
-            "recent_sales": {"count": 5, "total_amount": 5000, "avg_amount": 1000}
-        }
-        assert assistant._generate_dynamic_response(
-            "sales_analysis", {"insights": ["i"]}, {}, sales_data
-        )
+        sales_data = {"recent_sales": {"count": 5, "total_amount": 5000, "avg_amount": 1000}}
+        assert assistant._generate_dynamic_response("sales_analysis", {"insights": ["i"]}, {}, sales_data)
         cd = {
             "customer_data": {
                 "success": True,
@@ -728,12 +694,8 @@ class TestIntelligentAssistantWave6:
             }
         }
         assert assistant._generate_dynamic_response("customer_balance", {}, {}, cd)
-        inv = {
-            "low_stock_products": [{"name": "P", "current_stock": 1, "min_alert": 5}]
-        }
-        assert assistant._generate_dynamic_response(
-            "inventory_check", {"warnings": ["w"]}, {}, inv
-        )
+        inv = {"low_stock_products": [{"name": "P", "current_stock": 1, "min_alert": 5}]}
+        assert assistant._generate_dynamic_response("inventory_check", {"warnings": ["w"]}, {}, inv)
         bad_analysis = MagicMock()
         bad_analysis.get = MagicMock(side_effect=RuntimeError("fail"))
         with patch.object(
@@ -817,9 +779,7 @@ class TestAzadResponsesWave6:
                 "success": True,
                 "summary": {},
             }
-            assert "بيانات العميل" in responses._handle_customer_info_query(
-                "بيانات عميل أحمد"
-            )
+            assert "بيانات العميل" in responses._handle_customer_info_query("بيانات عميل أحمد")
             si.get_system_summary.return_value = {"success": False, "error": "e"}
             assert "e" in responses._handle_system_summary_query()
             si.get_system_summary.return_value = {"success": True, "summary": {}}
@@ -896,9 +856,7 @@ class TestNeuralEngineWave6:
         ctx = MagicMock()
         ctx.__enter__ = MagicMock(return_value=None)
         ctx.__exit__ = MagicMock(return_value=False)
-        with patch.object(
-            engine, "_train_price_internal", return_value={"success": True}
-        ):
+        with patch.object(engine, "_train_price_internal", return_value={"success": True}):
             assert engine.train_price_optimizer(from_app_context=ctx)["success"] is True
         with patch.object(engine, "_train_fraud_internal", side_effect=RuntimeError()):
             assert engine.train_fraud_detector()["success"] is False
@@ -917,16 +875,12 @@ class TestNeuralEngineWave6:
             patch("models.Receipt"),
             patch("utils.tenanting.get_active_tenant_id", return_value=1),
         ):
-            cols = _patch_model_cols(
-                "models.Sale", "models.Purchase", "models.Expense", "models.Receipt"
-            )
+            cols = _patch_model_cols("models.Sale", "models.Purchase", "models.Expense", "models.Receipt")
             try:
                 chain = _db_chain(mock_db)
                 chain.scalar.return_value = Decimal("1000")
                 chain.all.return_value = []
-                assert "predictions" in engine.predict_cash_flow(
-                    3
-                ) or "trend" in engine.predict_cash_flow(3)
+                assert "predictions" in engine.predict_cash_flow(3) or "trend" in engine.predict_cash_flow(3)
             finally:
                 _stop_patches(cols)
 
@@ -936,11 +890,7 @@ class TestMasterBrainWave6:
         from ai_knowledge.agents.master_brain import MasterBrain
 
         brain = MasterBrain()
-        eng = {
-            "sensors": {
-                "MAF": {"name_ar": "تدفق", "function": "قياس", "testing": "فحص"}
-            }
-        }
+        eng = {"sensors": {"MAF": {"name_ar": "تدفق", "function": "قياس", "testing": "فحص"}}}
         r = brain._synthesize_answer("MAF sensor", {"steps": []}, None, eng, "question")
         assert "تدفق" in r["text"]
         tax = {"uae_vat": {"rate": 5, "registration_threshold": 375000}}
@@ -993,10 +943,7 @@ class TestSecondaryModulesWave6:
         mgr.process_message(99, "hello")
         assert mgr.get_conversation_history(99)
         gen = CodeGenerator()
-        assert (
-            "DELETE"
-            in gen.generate_sql_query("delete", "t", {"where": {"id": 1}}).upper()
-        )
+        assert "DELETE" in gen.generate_sql_query("delete", "t", {"where": {"id": 1}}).upper()
         assert gen.fix_code("x", "AttributeError")["fixed_code"]
         assert "optimized_code" in gen.optimize_code("for i in range(1000): pass")
 
@@ -1266,9 +1213,7 @@ class TestWave6FinalPush:
 
         assert sk.get_model_info("Sale") or sk.get_model_info("sales")
         assert sk.get_model_info("unknown_model_xyz") is None
-        assert sk.get_permission_info("manage_sales") or isinstance(
-            sk.get_permission_info("x"), (dict, type(None))
-        )
+        assert sk.get_permission_info("manage_sales") or isinstance(sk.get_permission_info("x"), (dict, type(None)))
         assert sk.get_role_info("owner") or sk.get_role_info("seller")
         hits = sk.search_knowledge("tenant")
         assert isinstance(hits, list)
@@ -1283,9 +1228,7 @@ class TestWave6FinalPush:
 
         gen = CodeGenerator()
         assert "-- Unsupported" in gen.generate_sql_query("drop", "t", {})
-        assert isinstance(
-            gen.generate_python_function("calc", "حساب total", ["x"]), str
-        )
+        assert isinstance(gen.generate_python_function("calc", "حساب total", ["x"]), str)
         assert isinstance(gen.generate_python_function("pred", "predict sales"), str)
         assert gen.generate_report_query("profit", {}) or gen.generate_report_query(
             "sales", {"start_date": "2025-01-01"}
@@ -1336,16 +1279,11 @@ class TestWave6FinalPush:
         engine = AzadNeuralEngine()
         _fast_models(engine)
         with patch.object(engine, "_load_model", return_value=False):
-            assert (
-                engine.validate_accounting_entry(50, 100, 1, "Sale")["is_correct"]
-                is False
-            )
+            assert engine.validate_accounting_entry(50, 100, 1, "Sale")["is_correct"] is False
         ctx = MagicMock()
         ctx.__enter__ = MagicMock(return_value=None)
         ctx.__exit__ = MagicMock(return_value=False)
-        with patch.object(
-            engine, "_train_sales_internal", return_value={"success": True}
-        ):
+        with patch.object(engine, "_train_sales_internal", return_value={"success": True}):
             engine.train_sales_forecaster(from_app_context=ctx)
 
     def test_learning_and_context_remaining(self, knowledge_path):
@@ -1360,12 +1298,7 @@ class TestWave6FinalPush:
             ls._save_tenant_data(99)
         with patch("ai_knowledge.core.context_engine.system_integrator") as si:
             si.get_system_summary.return_value = {"success": True, "summary": {}}
-            assert (
-                ContextEngine.analyze_context("حلل analyze", {"is_owner": True})[
-                    "intent"
-                ]
-                == "analysis"
-            )
+            assert ContextEngine.analyze_context("حلل analyze", {"is_owner": True})["intent"] == "analysis"
         mgr = ConversationManager()
         mgr.end_conversation(1)
         ai = AzadSelfImprovement()
@@ -1375,13 +1308,9 @@ class TestWave6FinalPush:
     def test_action_tenant_guard_direct(self):
         from ai_knowledge.action_dispatcher import _tenant_guard, _require_tenant
 
-        with patch(
-            "ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=None
-        ):
+        with patch("ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=None):
             tid, guard = _tenant_guard()
             assert tid is None
             assert guard.success is False
-        with patch(
-            "ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=5
-        ):
+        with patch("ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=5):
             assert _require_tenant() == 5

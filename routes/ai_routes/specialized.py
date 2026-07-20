@@ -94,9 +94,7 @@ def ask_genius():
         if not question:
             return jsonify({"success": False, "error": gettext("السؤال مطلوب")}), 400
 
-        result = AIService.ask_genius(
-            question=question, context=context, user_id=current_user.id
-        )
+        result = AIService.ask_genius(question=question, context=context, user_id=current_user.id)
 
         return jsonify({"success": True, "result": result})
     except Exception as e:

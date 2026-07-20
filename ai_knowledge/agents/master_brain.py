@@ -329,17 +329,13 @@ class MasterBrain:
             knowledge = self._retrieve_knowledge(domain, question)
 
             # 3. التفكير المنطقي
-            reasoning_result = self._think_logically(
-                question, intent, knowledge, context
-            )
+            reasoning_result = self._think_logically(question, intent, knowledge, context)
 
             # 4. استخدام النماذج العصبية (إذا لزم الأمر)
             neural_result = self._use_neural_if_needed(intent, context) or {}
 
             # 5. دمج كل المصادر
-            answer = self._synthesize_answer(
-                question, reasoning_result, neural_result, knowledge, intent
-            )
+            answer = self._synthesize_answer(question, reasoning_result, neural_result, knowledge, intent)
 
             # 6. التذكر
             if user_id:
@@ -383,16 +379,11 @@ class MasterBrain:
         q_lower = question.lower()
 
         # تحديد المجال
-        if any(
-            kw in q_lower
-            for kw in ["قيد", "محاسبة", "مدين", "دائن", "ميزانية", "ربح", "خسارة"]
-        ):
+        if any(kw in q_lower for kw in ["قيد", "محاسبة", "مدين", "دائن", "ميزانية", "ربح", "خسارة"]):
             domain = "accounting"
         elif any(kw in q_lower for kw in ["ضريبة", "vat", "القيمة المضافة", "جمارك"]):
             domain = "taxes"
-        elif any(
-            kw in q_lower for kw in ["مخزون", "طلب", "eoq", "reorder", "safety stock"]
-        ):
+        elif any(kw in q_lower for kw in ["مخزون", "طلب", "eoq", "reorder", "safety stock"]):
             domain = "management"
         elif any(kw in q_lower for kw in ["محرك", "صيانة", "زيت", "فرامل", "إصلاح"]):
             domain = "engineering"
@@ -434,9 +425,7 @@ class MasterBrain:
         return {}
 
     @staticmethod
-    def _think_logically(
-        question: str, _intent: str, knowledge: dict, context: dict
-    ) -> dict:
+    def _think_logically(question: str, _intent: str, knowledge: dict, context: dict) -> dict:
         """التفكير المنطقي العميق"""
         available_data = list(context.keys()) if context else []
         steps = [
@@ -461,9 +450,7 @@ class MasterBrain:
                 }
             )
 
-        steps.append(
-            {"step": 4, "thought": "الوصول للحل الأمثل", "action": "conclusion"}
-        )
+        steps.append({"step": 4, "thought": "الوصول للحل الأمثل", "action": "conclusion"})
 
         return {"steps": steps, "confidence": 0.9}
 
@@ -514,10 +501,7 @@ class MasterBrain:
                     sources.append("قاعدة المعرفة المحاسبية")
                     confidence = 0.98
 
-                elif (
-                    "قيد مزدوج" in question.lower()
-                    or "double entry" in question.lower()
-                ):
+                elif "قيد مزدوج" in question.lower() or "double entry" in question.lower():
                     answer_parts.append(f"📚 {knowledge['principles']['double_entry']}")
                     sources.append("المبادئ المحاسبية")
                     confidence = 1.0
@@ -526,12 +510,8 @@ class MasterBrain:
             if "vat" in knowledge or "uae_vat" in knowledge:
                 if "ضريبة" in question.lower() or "vat" in question.lower():
                     vat_info = knowledge.get("uae_vat", {})
-                    answer_parts.append(
-                        f"💰 ضريبة القيمة المضافة في الإمارات: {vat_info.get('rate', 5)}%"
-                    )
-                    answer_parts.append(
-                        f"حد التسجيل: {vat_info.get('registration_threshold', 375000):,} درهم"
-                    )
+                    answer_parts.append(f"💰 ضريبة القيمة المضافة في الإمارات: {vat_info.get('rate', 5)}%")
+                    answer_parts.append(f"حد التسجيل: {vat_info.get('registration_threshold', 375000):,} درهم")
                     sources.append("قوانين الضرائب الإماراتية")
                     confidence = 1.0
 
@@ -539,12 +519,8 @@ class MasterBrain:
             if "sensors" in knowledge:
                 for sensor_code, sensor_data in knowledge.get("sensors", {}).items():
                     if sensor_code.lower() in question.lower():
-                        answer_parts.append(
-                            f"🚗 {sensor_data.get('name_ar', sensor_code)}"
-                        )
-                        answer_parts.append(
-                            f"الوظيفة: {sensor_data.get('function', '')}"
-                        )
+                        answer_parts.append(f"🚗 {sensor_data.get('name_ar', sensor_code)}")
+                        answer_parts.append(f"الوظيفة: {sensor_data.get('function', '')}")
                         if "testing" in sensor_data:
                             answer_parts.append(f"الفحص: {sensor_data['testing']}")
                         sources.append("خبير كمبيوترات السيارات - ECU")
@@ -561,9 +537,7 @@ class MasterBrain:
         # إجابة من النماذج العصبية
         if neural:
             if "predicted_price" in neural:
-                answer_parts.append(
-                    f"🧠 السعر المقترح (بالشبكات العصبية): {neural['predicted_price']:.2f} AED"
-                )
+                answer_parts.append(f"🧠 السعر المقترح (بالشبكات العصبية): {neural['predicted_price']:.2f} AED")
                 answer_parts.append(f"الهامش: {neural.get('margin_percent', 0):.1f}%")
                 answer_parts.append(f"الثقة: {neural.get('confidence', 0):.0%}")
                 sources.append("الشبكة العصبية للتسعير")
@@ -572,9 +546,7 @@ class MasterBrain:
             elif "forecast" in neural:
                 answer_parts.append("📈 توقع المبيعات (بالشبكات العصبية):")
                 for day in neural.get("forecast", [])[:3]:
-                    answer_parts.append(
-                        f"- {day.get('day_name', '')}: {day.get('amount', 0):,.0f} AED"
-                    )
+                    answer_parts.append(f"- {day.get('day_name', '')}: {day.get('amount', 0):,.0f} AED")
                 sources.append("الشبكة العصبية للتوقعات")
                 confidence = 0.94
 
@@ -615,9 +587,7 @@ class MasterBrain:
 
         # الاحتفاظ بآخر 100 فقط للسرعة
         if len(self.unified_memory["conversations"]) > 100:
-            self.unified_memory["conversations"] = self.unified_memory["conversations"][
-                -100:
-            ]
+            self.unified_memory["conversations"] = self.unified_memory["conversations"][-100:]
 
     @staticmethod
     def _generate_smart_suggestions(_intent: str, domain: str) -> List[str]:
@@ -650,9 +620,7 @@ class MasterBrain:
             ],
         }
 
-        return suggestions.get(
-            domain, ["اسأل عن المحاسبة", "اسأل عن الضرائب", "اسأل عن المخزون"]
-        )
+        return suggestions.get(domain, ["اسأل عن المحاسبة", "اسأل عن الضرائب", "اسأل عن المخزون"])
 
     # ========================================================================
     # دوال متقدمة سريعة
@@ -662,24 +630,16 @@ class MasterBrain:
     def quick_calc(formula_name: str, **params) -> dict:
         """حسابات سريعة للصيغ الشائعة"""
         formulas: dict[str, Callable[..., Any]] = {
-            "gross_margin": lambda sales, cogs: (
-                ((sales - cogs) / sales * 100) if sales > 0 else 0
-            ),
-            "net_margin": lambda revenue, expenses: (
-                ((revenue - expenses) / revenue * 100) if revenue > 0 else 0
-            ),
+            "gross_margin": lambda sales, cogs: ((sales - cogs) / sales * 100) if sales > 0 else 0,
+            "net_margin": lambda revenue, expenses: ((revenue - expenses) / revenue * 100) if revenue > 0 else 0,
             "current_ratio": lambda current_assets, current_liabilities: (
                 current_assets / current_liabilities if current_liabilities > 0 else 0
             ),
             "eoq": lambda annual_demand, order_cost, holding_cost: (
-                (2 * annual_demand * order_cost / holding_cost) ** 0.5
-                if holding_cost > 0
-                else 0
+                (2 * annual_demand * order_cost / holding_cost) ** 0.5 if holding_cost > 0 else 0
             ),
             "break_even": lambda fixed_costs, price, variable_cost: (
-                fixed_costs / (price - variable_cost)
-                if (price - variable_cost) > 0
-                else 0
+                fixed_costs / (price - variable_cost) if (price - variable_cost) > 0 else 0
             ),
             "vat": lambda amount: amount * 0.05,
             "price_with_vat": lambda amount: amount * 1.05,
@@ -710,10 +670,7 @@ class MasterBrain:
                         for sub_key, sub_value in value.items():
                             if concept.lower() in sub_key.lower():
                                 return f"📚 {sub_value}"
-                            if (
-                                isinstance(sub_value, str)
-                                and concept.lower() in sub_value.lower()
-                            ):
+                            if isinstance(sub_value, str) and concept.lower() in sub_value.lower():
                                 return f"📚 {sub_value}"
 
         return f"🤔 لم أجد شرح مباشر لـ '{concept}'. يمكنك السؤال بشكل أكثر تحديداً؟"
@@ -755,9 +712,7 @@ def get_master_brain():
 # ============================================================================
 
 
-def ask_azad(
-    question: str, context: Optional[dict] = None, user_id: Optional[int] = None
-) -> dict:
+def ask_azad(question: str, context: Optional[dict] = None, user_id: Optional[int] = None) -> dict:
     """
     اسأل أزاد - الواجهة البسيطة
 

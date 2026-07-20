@@ -71,11 +71,7 @@ class TestMaintenanceAlerts:
         mocker.patch(
             "models.Product.query",
             new_callable=mocker.PropertyMock,
-            return_value=MagicMock(
-                filter_by=MagicMock(
-                    return_value=MagicMock(all=MagicMock(return_value=[product]))
-                )
-            ),
+            return_value=MagicMock(filter_by=MagicMock(return_value=MagicMock(all=MagicMock(return_value=[product])))),
         )
         mocker.patch(
             "services.predictive_maintenance.PredictiveMaintenanceService.predict_next_maintenance",
@@ -97,11 +93,7 @@ class TestMaintenanceAlerts:
         mocker.patch(
             "models.Product.query",
             new_callable=mocker.PropertyMock,
-            return_value=MagicMock(
-                filter_by=MagicMock(
-                    return_value=MagicMock(all=MagicMock(return_value=[p1, p2]))
-                )
-            ),
+            return_value=MagicMock(filter_by=MagicMock(return_value=MagicMock(all=MagicMock(return_value=[p1, p2])))),
         )
         mocker.patch(
             "services.predictive_maintenance.PredictiveMaintenanceService.predict_next_maintenance",
@@ -122,11 +114,7 @@ class TestMaintenanceAlerts:
         mocker.patch(
             "models.Product.query",
             new_callable=mocker.PropertyMock,
-            return_value=MagicMock(
-                filter_by=MagicMock(
-                    return_value=MagicMock(all=MagicMock(return_value=[product]))
-                )
-            ),
+            return_value=MagicMock(filter_by=MagicMock(return_value=MagicMock(all=MagicMock(return_value=[product])))),
         )
         mocker.patch(
             "services.predictive_maintenance.PredictiveMaintenanceService.predict_next_maintenance",
@@ -152,9 +140,7 @@ class TestProductLifecycle:
 
         from services.predictive_maintenance import PredictiveMaintenanceService
 
-        assert PredictiveMaintenanceService.analyze_product_lifecycle(1) == {
-            "status": "no_data"
-        }
+        assert PredictiveMaintenanceService.analyze_product_lifecycle(1) == {"status": "no_data"}
 
     def test_lifecycle_metrics_computed(self, mocker):
         start = datetime(2025, 1, 1)
@@ -186,6 +172,4 @@ class TestProductLifecycle:
     def test_lifecycle_stage_boundaries(self, days, txns, stage):
         from services.predictive_maintenance import PredictiveMaintenanceService
 
-        assert (
-            PredictiveMaintenanceService._determine_lifecycle_stage(days, txns) == stage
-        )
+        assert PredictiveMaintenanceService._determine_lifecycle_stage(days, txns) == stage

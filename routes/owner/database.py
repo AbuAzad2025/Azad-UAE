@@ -125,9 +125,7 @@ def execute_query():
 
         data = [dict(zip(columns, row)) for row in rows]
 
-        _audit_owner_db_action(
-            "execute_query", {"query_prefix": query_text[:200], "row_count": len(data)}
-        )
+        _audit_owner_db_action("execute_query", {"query_prefix": query_text[:200], "row_count": len(data)})
 
         return jsonify({"success": True, "rows": data, "count": len(data)})
 
@@ -233,9 +231,7 @@ def browse_table(table_name):
         total = count_result.scalar()
 
         offset = (page - 1) * per_page
-        result = db.session.execute(
-            select_all_query(db.engine, safe_table, limit=per_page, offset=offset)
-        )
+        result = db.session.execute(select_all_query(db.engine, safe_table, limit=per_page, offset=offset))
 
         rows = result.fetchall()
         columns = result.keys()
@@ -267,20 +263,14 @@ def update_row(table_name, row_id):
 
     updates = request.get_json(silent=True) or {}
     if not updates:
-        return jsonify(
-            {"success": False, "error": gettext("لا توجد بيانات للتحديث")}
-        ), 400
+        return jsonify({"success": False, "error": gettext("لا توجد بيانات للتحديث")}), 400
 
     try:
         inspector = inspect(db.engine)
         columns = {col["name"] for col in inspector.get_columns(safe_table)}
-        pk_cols = (
-            inspector.get_pk_constraint(safe_table).get("constrained_columns") or []
-        )
+        pk_cols = inspector.get_pk_constraint(safe_table).get("constrained_columns") or []
         if not pk_cols:
-            return jsonify(
-                {"success": False, "error": gettext("الجدول بدون مفتاح أساسي")}
-            ), 400
+            return jsonify({"success": False, "error": gettext("الجدول بدون مفتاح أساسي")}), 400
         pk_name = pk_cols[0]
 
         safe_updates = {}
@@ -290,14 +280,10 @@ def update_row(table_name, row_id):
             safe_updates[col] = val if val != "" else None
 
         if not safe_updates:
-            return jsonify(
-                {"success": False, "error": gettext("لا حقول صالحة للتحديث")}
-            ), 400
+            return jsonify({"success": False, "error": gettext("لا حقول صالحة للتحديث")}), 400
 
         with atomic_transaction("update_table_row"):
-            db.session.execute(
-                update_row_query(db.engine, safe_table, pk_name, row_id, safe_updates)
-            )
+            db.session.execute(update_row_query(db.engine, safe_table, pk_name, row_id, safe_updates))
 
         LoggingCore.log_audit(
             "update_row",
@@ -308,9 +294,7 @@ def update_row(table_name, row_id):
         return jsonify({"success": True})
     except Exception:
         current_app.logger.exception("Owner table row update failed")
-        return jsonify(
-            {"success": False, "error": gettext("تعذر تحديث السجل حالياً")}
-        ), 500
+        return jsonify({"success": False, "error": gettext("تعذر تحديث السجل حالياً")}), 500
 
 
 @owner_bp.route("/edit-table-data/<table_name>")
@@ -327,9 +311,7 @@ def edit_table_data(table_name):
         rows = result.fetchall()
         columns = result.keys()
 
-        return render_template(
-            "owner/edit_table.html", table_name=safe_table, columns=columns, rows=rows
-        )
+        return render_template("owner/edit_table.html", table_name=safe_table, columns=columns, rows=rows)
 
     except Exception as e:
         flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
@@ -416,14 +398,10 @@ def export_database():
             ]
             proc = run_pg_tool(cmd, env=env, timeout=3600)
             if proc.returncode != 0:
-                raise RuntimeError(
-                    (proc.stderr or proc.stdout or "pg_dump failed")[:200]
-                )
+                raise RuntimeError((proc.stderr or proc.stdout or "pg_dump failed")[:200])
 
             flash(gettext(f"✅ تم التصدير: {filename}"), "success")
-            _audit_owner_db_action(
-                "export_database", {"format": "sql", "filename": filename}
-            )
+            _audit_owner_db_action("export_database", {"format": "sql", "filename": filename})
 
         elif export_format == "json":
             filename = f"db_export_{timestamp}.json"
@@ -449,9 +427,7 @@ def export_database():
             )
 
     except Exception as e:
-        current_app.logger.error(
-            "export_database failed user_id=%s: %s", current_user.id, e
-        )
+        current_app.logger.error("export_database failed user_id=%s: %s", current_user.id, e)
         flash(gettext(f"❌ خطأ في التصدير: {str(e)}"), "danger")
 
     return redirect(url_for("owner.database_tools"))
@@ -550,11 +526,7 @@ def database_optimize():
         if vacuum_result.get("success") and analyze_result.get("success"):
             flash(gettext("✅ تم تحسين قاعدة البيانات وتحليل الجداول بنجاح"), "success")
         else:
-            msg = (
-                vacuum_result.get("error")
-                or analyze_result.get("error")
-                or gettext("عملية التحسين لم تكتمل")
-            )
+            msg = vacuum_result.get("error") or analyze_result.get("error") or gettext("عملية التحسين لم تكتمل")
             flash(gettext(f"⚠️ تحذير: {msg}"), "warning")
     except Exception as e:
         flash(gettext(f"❌ خطأ في التحسين: {str(e)}"), "danger")
@@ -578,9 +550,7 @@ def verify_backups():
                 {
                     "filename": fn or "Unknown",
                     "size": backup.get("size_mb", 0),
-                    "created": backup.get(
-                        "datetime", backup.get("timestamp", "Unknown")
-                    ),
+                    "created": backup.get("datetime", backup.get("timestamp", "Unknown")),
                     "valid": bool(result.get("valid")),
                     "format": result.get("format"),
                     "errors": result.get("errors", []),
@@ -605,12 +575,10 @@ def data_cleanup():
             flash(gettext("⚠️ يرجى اختيار نوع البيانات للحذف."), "warning")
             stats = {
                 "old_logs": AuditLog.query.filter(
-                    AuditLog.created_at
-                    < datetime.now(timezone.utc) - timedelta(days=90)
+                    AuditLog.created_at < datetime.now(timezone.utc) - timedelta(days=90)
                 ).count(),
                 "old_archived": ArchivedRecord.query.filter(
-                    ArchivedRecord.archived_at
-                    < datetime.now(timezone.utc) - timedelta(days=180)
+                    ArchivedRecord.archived_at < datetime.now(timezone.utc) - timedelta(days=180)
                 ).count(),
             }
             return render_template("owner/data_cleanup.html", stats=stats)
@@ -621,13 +589,9 @@ def data_cleanup():
         try:
             with atomic_transaction("data_cleanup"):
                 if cleanup_type == "logs":
-                    deleted_count = AuditLog.query.filter(
-                        AuditLog.created_at < cutoff_date
-                    ).delete()
+                    deleted_count = AuditLog.query.filter(AuditLog.created_at < cutoff_date).delete()
                 elif cleanup_type == "archived":
-                    deleted_count = ArchivedRecord.query.filter(
-                        ArchivedRecord.archived_at < cutoff_date
-                    ).delete()
+                    deleted_count = ArchivedRecord.query.filter(ArchivedRecord.archived_at < cutoff_date).delete()
         except Exception as e:
             flash(gettext(f"❌ خطأ في التنظيف: {str(e)}"), "danger")
             return redirect(url_for("owner.data_cleanup"))
@@ -640,8 +604,7 @@ def data_cleanup():
             AuditLog.created_at < datetime.now(timezone.utc) - timedelta(days=90)
         ).count(),
         "old_archived": ArchivedRecord.query.filter(
-            ArchivedRecord.archived_at
-            < datetime.now(timezone.utc) - timedelta(days=180)
+            ArchivedRecord.archived_at < datetime.now(timezone.utc) - timedelta(days=180)
         ).count(),
     }
 
@@ -664,9 +627,7 @@ def export_excel(table_name):
             table_name,
             current_user.id,
         )
-        flash(
-            gettext("❌ تصدير جداول بيانات المستأجرين محظور من لوحة المالك"), "danger"
-        )
+        flash(gettext("❌ تصدير جداول بيانات المستأجرين محظور من لوحة المالك"), "danger")
         return redirect(url_for("owner.import_export_tools"))
 
     flash(gettext("❌ جدول غير موجود"), "danger")
@@ -681,9 +642,7 @@ def api_recent_audit_logs():
     from sqlalchemy import desc
 
     logs = (
-        AuditLog.query.filter(
-            AuditLog.action.in_(["fix_cost_centers", "rebuild_gl_tree"])
-        )
+        AuditLog.query.filter(AuditLog.action.in_(["fix_cost_centers", "rebuild_gl_tree"]))
         .order_by(desc(AuditLog.created_at))
         .limit(20)
         .all()
@@ -695,9 +654,7 @@ def api_recent_audit_logs():
                 {
                     "timestamp": log.created_at.strftime("%Y-%m-%d %H:%M:%S"),
                     "action": log.action,
-                    "success": (
-                        log.metadata.get("success", True) if log.metadata else True
-                    ),
+                    "success": (log.metadata.get("success", True) if log.metadata else True),
                     "details": log.details or "",
                 }
                 for log in logs

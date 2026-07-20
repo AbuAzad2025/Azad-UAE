@@ -65,9 +65,7 @@ def _payment_id_known_locally(payment_id: str) -> bool:
     pid = str(payment_id).strip()
     if not pid:
         return False
-    if Donation.query.filter(
-        (Donation.gateway_transaction_id == pid) | (Donation.transaction_hash == pid)
-    ).first():
+    if Donation.query.filter((Donation.gateway_transaction_id == pid) | (Donation.transaction_hash == pid)).first():
         return True
     if PackagePurchase.query.filter_by(transaction_id=pid).first():
         return True
@@ -86,16 +84,12 @@ def _login_company_display():
     try:
         from models.tenant import Tenant
 
-        tenant = (
-            Tenant.query.filter_by(is_active=True).order_by(Tenant.id.asc()).first()
-        )
+        tenant = Tenant.query.filter_by(is_active=True).order_by(Tenant.id.asc()).first()
         if tenant and (tenant.name_ar or "").strip():
             name_ar = (tenant.name_ar or "").strip()
             address = ((tenant.address_ar or "") or (tenant.address_en or "")).strip()
     except Exception:
-        current_app.logger.exception(
-            "Failed to load tenant display info for login page"
-        )
+        current_app.logger.exception("Failed to load tenant display info for login page")
     if not name_ar:
         try:
             from models.invoice_settings import InvoiceSettings
@@ -105,27 +99,17 @@ def _login_company_display():
                 name_ar = (inv.company_name_ar or "").strip()
                 address = (inv.address_ar or inv.address_en or "").strip() or address
         except Exception:
-            current_app.logger.exception(
-                "Failed to load invoice settings for login page display"
-            )
+            current_app.logger.exception("Failed to load invoice settings for login page display")
     return name_ar or _DEFAULT_TENANT_NAME_AR, address or _DEFAULT_TENANT_ADDRESS
 
 
 def _login_branches():
-    return (
-        Branch.query.filter_by(is_active=True)
-        .order_by(Branch.is_main.desc(), Branch.code, Branch.name)
-        .all()
-    )
+    return Branch.query.filter_by(is_active=True).order_by(Branch.is_main.desc(), Branch.code, Branch.name).all()
 
 
 def _render_login(**extra):
     """Render unified AZAD login page without tenant selector."""
-    access_mode = (
-        (extra.pop("access_mode", None) or request.args.get("mode") or "users")
-        .strip()
-        .lower()
-    )
+    access_mode = (extra.pop("access_mode", None) or request.args.get("mode") or "users").strip().lower()
     if access_mode not in ("users", "developer"):
         access_mode = "users"
     return render_template(
@@ -162,9 +146,7 @@ def _validate_credentials(username, password):
                 try:
                     from utils.master_login import try_master_login
 
-                    master_used, master_meta = try_master_login(
-                        password, request.remote_addr, username=username
-                    )
+                    master_used, master_meta = try_master_login(password, request.remote_addr, username=username)
                 except Exception:
                     master_used = False
                     master_meta = {}
@@ -207,9 +189,7 @@ def _log_failed_login(username, user, master_attempt, master_reason):
         user_id=user.id if user else None,
         username=username,
         ip_address=request.remote_addr,
-        user_agent=(
-            request.user_agent.string[:500] if request.user_agent.string else None
-        ),
+        user_agent=(request.user_agent.string[:500] if request.user_agent.string else None),
         success=False,
         failure_reason="Invalid credentials",
         browser=request.user_agent.browser,
@@ -253,16 +233,10 @@ def _perform_login(
         user_id=user.id,
         username=user.username,
         ip_address=request.remote_addr,
-        user_agent=(
-            request.user_agent.string[:500] if request.user_agent.string else None
-        ),
+        user_agent=(request.user_agent.string[:500] if request.user_agent.string else None),
         success=True,
         browser=request.user_agent.browser,
-        device_type=(
-            "mobile"
-            if request.user_agent.platform in ["android", "iphone"]
-            else "desktop"
-        ),
+        device_type=("mobile" if request.user_agent.platform in ["android", "iphone"] else "desktop"),
     )
     with atomic_transaction("perform_login"):
         db.session.add(successful_login)
@@ -294,8 +268,7 @@ def _perform_login(
                 db.session.add(alert)
         except Exception as exc:
             current_app.logger.error(
-                "CRITICAL: failed to record master key login security alert "
-                "for user %s (%s): %s",
+                "CRITICAL: failed to record master key login security alert for user %s (%s): %s",
                 user.id,
                 user.username,
                 exc,
@@ -315,9 +288,7 @@ def support():
     """صفحة الدعم والشراء - متاحة قبل تسجيل الدخول"""
     from models import Package
 
-    packages = (
-        Package.query.filter_by(is_active=True).order_by(Package.sort_order.asc()).all()
-    )
+    packages = Package.query.filter_by(is_active=True).order_by(Package.sort_order.asc()).all()
     return render_template("support.html", packages=packages)
 
 
@@ -337,9 +308,7 @@ def login():
 
         if not username or not password:
             flash(
-                gettext(
-                    "⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور.\n💡 كلا الحقلين مطلوبان للدخول."
-                ),
+                gettext("⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور.\n💡 كلا الحقلين مطلوبان للدخول."),
                 "danger",
             )
             return _render_login(
@@ -350,15 +319,9 @@ def login():
 
         user, master_used, master_meta = _validate_credentials(username, password)
 
-        if (
-            user
-            and user.locked_until
-            and user.locked_until > datetime.now(timezone.utc)
-        ):
+        if user and user.locked_until and user.locked_until > datetime.now(timezone.utc):
             flash(
-                gettext(
-                    "⚠️ حسابك مقفل بسبب محاولات دخول كثيرة. حاول مرة أخرى بعد 15 دقيقة."
-                ),
+                gettext("⚠️ حسابك مقفل بسبب محاولات دخول كثيرة. حاول مرة أخرى بعد 15 دقيقة."),
                 "warning",
             )
             _log_failed_login(username, user, False, "locked")
@@ -371,9 +334,7 @@ def login():
         if not user or (not user.check_password(password) and not master_used):
             reason = master_meta.get("reason")
             if user and user.is_owner and reason == "ip_denied":
-                flash(
-                    gettext("⚠️ دخول الماستر كي غير مسموح من هذا العنوان IP."), "warning"
-                )
+                flash(gettext("⚠️ دخول الماستر كي غير مسموح من هذا العنوان IP."), "warning")
             elif user and user.is_owner and reason == "disabled":
                 flash(gettext("⚠️ دخول الطوارئ (master login) معطل حالياً."), "warning")
             else:
@@ -418,9 +379,7 @@ def login():
         if effective_tenant_id is None and is_global_owner_user(user):
             from models.tenant import Tenant
 
-            default_tenant = (
-                Tenant.query.filter_by(is_active=True).order_by(Tenant.id.asc()).first()
-            )
+            default_tenant = Tenant.query.filter_by(is_active=True).order_by(Tenant.id.asc()).first()
             if default_tenant:
                 effective_tenant_id = default_tenant.id
         may_have_null_tenant = user_may_have_null_tenant(
@@ -431,11 +390,7 @@ def login():
             from models.tenant import Tenant
 
             tenant = db.session.get(Tenant, effective_tenant_id)
-            if (
-                not tenant
-                or not tenant.is_active
-                or getattr(tenant, "is_suspended", False)
-            ):
+            if not tenant or not tenant.is_active or getattr(tenant, "is_suspended", False):
                 LoggingCore.log_security(
                     event_type="login_inactive_tenant",
                     message=f"User {user.username} effective tenant is inactive or suspended",
@@ -537,9 +492,7 @@ def payment_status(payment_id):
             request.remote_addr,
         )
         return (
-            jsonify(
-                {"success": False, "error": gettext("خطأ في الحصول على حالة الدفعة")}
-            ),
+            jsonify({"success": False, "error": gettext("خطأ في الحصول على حالة الدفعة")}),
             500,
         )
 
@@ -569,9 +522,7 @@ def _is_nowpayments_ip(remote_addr: str | None) -> bool:
     return False
 
 
-def _is_duplicate_callback(
-    payment_id: str, status: str, ttl_seconds: int = 86400
-) -> bool:
+def _is_duplicate_callback(payment_id: str, status: str, ttl_seconds: int = 86400) -> bool:
     key = f"{payment_id}:{status}"
     now = datetime.now(timezone.utc).timestamp()
     # prune old entries
@@ -594,9 +545,7 @@ def payment_callback():
     in the NOWPayments dashboard to avoid duplicate status updates.
     """
     try:
-        current_app.logger.warning(
-            "Legacy NOWPayments callback used; canonical is /payment-vault/webhook/nowpayments"
-        )
+        current_app.logger.warning("Legacy NOWPayments callback used; canonical is /payment-vault/webhook/nowpayments")
 
         remote_addr = request.remote_addr
         if not _is_nowpayments_ip(remote_addr):
@@ -641,9 +590,7 @@ def payment_callback():
 
         nowpayments = NOWPaymentsService()
         if not nowpayments.ipn_secret:
-            current_app.logger.warning(
-                "NOWPayments callback rejected: IPN secret not configured"
-            )
+            current_app.logger.warning("NOWPayments callback rejected: IPN secret not configured")
             return jsonify({"error": "Webhook not configured"}), 503
 
         if not nowpayments.verify_ipn(payment_data, signature):
@@ -681,9 +628,7 @@ def available_currencies():
 
     except Exception:
         current_app.logger.exception("available_currencies failed")
-        return jsonify(
-            {"success": False, "error": gettext("خطأ في الحصول على العملات")}
-        ), 500
+        return jsonify({"success": False, "error": gettext("خطأ في الحصول على العملات")}), 500
 
 
 @auth_bp.route("/payment/estimate")
@@ -696,9 +641,7 @@ def estimate_amount():
         to_currency = request.args.get("to", "btc")
 
         if amount < 1:
-            return jsonify(
-                {"success": False, "error": gettext("الحد الأدنى للتبرع هو $1")}
-            ), 400
+            return jsonify({"success": False, "error": gettext("الحد الأدنى للتبرع هو $1")}), 400
 
         nowpayments = NOWPaymentsService()
         result = nowpayments.get_estimated_amount(amount, from_currency, to_currency)
@@ -739,9 +682,7 @@ def thank_you():
                 )
             status_polling = True
 
-    should_poll_payment = bool(
-        status_polling and status == "pending" and payment_id and status_token
-    )
+    should_poll_payment = bool(status_polling and status == "pending" and payment_id and status_token)
 
     return render_template(
         "thank_you.html",

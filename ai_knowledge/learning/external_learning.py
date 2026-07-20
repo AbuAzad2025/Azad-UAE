@@ -40,9 +40,7 @@ class ExternalLearningSystem:
         self.learned_data = self._load_learned_data()
         self.learning_log = []
 
-        logger.info(
-            "📚 External Learning System initialized with massive knowledge sources"
-        )
+        logger.info("📚 External Learning System initialized with massive knowledge sources")
 
     @staticmethod
     def _initialize_sources() -> dict:
@@ -417,9 +415,7 @@ class ExternalLearningSystem:
                         {
                             "category": category,
                             "name": source_name,
-                            "description": source_data.get(
-                                "description", source_data.get("name", "")
-                            ),
+                            "description": source_data.get("description", source_data.get("name", "")),
                             "url": source_data.get("url", ""),
                             "auto_learning": source_data.get("auto_learning", False),
                         }

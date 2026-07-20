@@ -55,9 +55,7 @@ class TestHelpers:
         assert _first_non_null(None, None) is None
 
     def test_ensure_column_skips_existing(self, mocker):
-        mocker.patch(
-            "app.runtime.branch_repair.inspect", return_value=_inspector(["branch_id"])
-        )
+        mocker.patch("app.runtime.branch_repair.inspect", return_value=_inspector(["branch_id"]))
         conn = MagicMock()
         ctx = MagicMock()
         ctx.__enter__.return_value = conn
@@ -90,9 +88,7 @@ class TestEnsureBranchIsolation:
 
         main = MagicMock(id=10)
         Branch = MagicMock()
-        Branch.query.filter_by.return_value.order_by.return_value.first.return_value = (
-            main
-        )
+        Branch.query.filter_by.return_value.order_by.return_value.first.return_value = main
         models.Branch = Branch
 
         wh = MagicMock(branch_id=None)
@@ -110,9 +106,7 @@ class TestEnsureBranchIsolation:
         Sale.query.filter.return_value.all.return_value = [sale]
         models.Sale = Sale
 
-        purchase = MagicMock(
-            branch_id=None, warehouse=None, user=MagicMock(branch_id=4)
-        )
+        purchase = MagicMock(branch_id=None, warehouse=None, user=MagicMock(branch_id=4))
         Purchase = _empty_query_model()
         Purchase.query.filter.return_value.all.return_value = [purchase]
         models.Purchase = Purchase
@@ -142,9 +136,7 @@ class TestEnsureBranchIsolation:
         Cheque.query.filter.return_value.all.return_value = [cheque]
         models.Cheque = Cheque
 
-        gl_entry = MagicMock(
-            branch_id=None, reference_type="Payment", reference_id=1, user=None
-        )
+        gl_entry = MagicMock(branch_id=None, reference_type="Payment", reference_id=1, user=None)
         GLJournalEntry = _empty_query_model()
         GLJournalEntry.query.filter.return_value.all.return_value = [gl_entry]
         models.GLJournalEntry = GLJournalEntry
@@ -163,9 +155,7 @@ class TestEnsureBranchIsolation:
         mocker.patch("app.runtime.branch_repair.db")
 
         Branch = MagicMock()
-        Branch.query.filter_by.return_value.order_by.return_value.first.return_value = (
-            None
-        )
+        Branch.query.filter_by.return_value.order_by.return_value.first.return_value = None
         new_branch = MagicMock(id=1)
         Branch.return_value = new_branch
         models.Branch = Branch
@@ -182,9 +172,7 @@ class TestEnsureBranchIsolation:
         ):
             setattr(models, name, _empty_query_model())
         Tenant = MagicMock()
-        Tenant.query.filter_by.return_value.order_by.return_value.first.return_value = (
-            MagicMock(id=1)
-        )
+        Tenant.query.filter_by.return_value.order_by.return_value.first.return_value = MagicMock(id=1)
         models.Tenant = Tenant
 
         result = ensure_branch_isolation_schema_and_data()
@@ -197,9 +185,7 @@ class TestEnsureBranchIsolation:
         mock_db = mocker.patch("app.runtime.branch_repair.db")
         main = MagicMock(id=2)
         Branch = MagicMock()
-        Branch.query.filter_by.return_value.order_by.return_value.first.return_value = (
-            main
-        )
+        Branch.query.filter_by.return_value.order_by.return_value.first.return_value = main
         models.Branch = Branch
         for name in (
             "Warehouse",

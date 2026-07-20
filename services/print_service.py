@@ -114,9 +114,7 @@ class PrintService:
         return render_template(template, **ctx)
 
     @staticmethod
-    def render_pdf(
-        template, extra_context=None, tenant_id=None, filename="document.pdf"
-    ):
+    def render_pdf(template, extra_context=None, tenant_id=None, filename="document.pdf"):
         """Render template as PDF bytes using WeasyPrint."""
 
         html = PrintService.render_print(template, extra_context, tenant_id)
@@ -124,22 +122,16 @@ class PrintService:
             import weasyprint
 
             pdf_bytes = weasyprint.HTML(string=html).write_pdf()
-            logger.info(
-                "PDF generated via WeasyPrint: %s (%d bytes)", filename, len(pdf_bytes)
-            )
+            logger.info("PDF generated via WeasyPrint: %s (%d bytes)", filename, len(pdf_bytes))
             return pdf_bytes
         except ImportError:
-            logger.warning(
-                "WeasyPrint not available, falling back to HTML-only PDF wrappers"
-            )
+            logger.warning("WeasyPrint not available, falling back to HTML-only PDF wrappers")
             pdf_header = (
                 b'<!DOCTYPE html><html><head><meta charset="UTF-8">'
                 b"<style>body{font-family:sans-serif}</style></head><body>"
             )
             pdf_footer = b'<p style="text-align:center;color:#999;margin-top:2cm">'
-            pdf_footer += (
-                b"PDF export requires WeasyPrint to be installed.</p></body></html>"
-            )
+            pdf_footer += b"PDF export requires WeasyPrint to be installed.</p></body></html>"
             return pdf_header + html.encode("utf-8") + pdf_footer
         except Exception as e:
             logger.error("PDF generation failed: %s", e)
@@ -147,9 +139,7 @@ class PrintService:
             return html.encode("utf-8")
 
     @staticmethod
-    def create_snapshot(
-        tenant_id, document_type, document_id, reason="print", document=None
-    ):
+    def create_snapshot(tenant_id, document_type, document_id, reason="print", document=None):
         """Capture an immutable snapshot of a document at print/finalize/amend time."""
         from utils.tenant_branding import resolve_tenant_branding
         from models.document_snapshot import DocumentSnapshot
@@ -158,9 +148,7 @@ class PrintService:
         try:
             entry = PrintService.PRINTABLE_DOCUMENTS.get(document_type)
             if not entry:
-                logger.warning(
-                    "No registry entry for %s, skipping snapshot", document_type
-                )
+                logger.warning("No registry entry for %s, skipping snapshot", document_type)
                 return
 
             if document is None:
@@ -171,9 +159,7 @@ class PrintService:
                 document = query.first()
 
             if document is None:
-                logger.warning(
-                    "Document %s#%d not found for snapshot", document_type, document_id
-                )
+                logger.warning("Document %s#%d not found for snapshot", document_type, document_id)
                 return
 
             effective_tenant_id = tenant_id
@@ -181,14 +167,9 @@ class PrintService:
                 effective_tenant_id = getattr(document, "tenant_id", None)
 
             try:
-                snapshot_data = (
-                    document.to_dict() if hasattr(document, "to_dict") else {}
-                )
+                snapshot_data = document.to_dict() if hasattr(document, "to_dict") else {}
                 if not snapshot_data:
-                    snapshot_data = {
-                        c.name: getattr(document, c.name, None)
-                        for c in document.__table__.columns
-                    }
+                    snapshot_data = {c.name: getattr(document, c.name, None) for c in document.__table__.columns}
             except Exception as e:
                 logger.warning("Could not serialize document for snapshot: %s", e)
                 snapshot_data = {}
@@ -205,9 +186,7 @@ class PrintService:
                 created_by=PrintService._user_context().get("print_user_id"),
             )
             db.session.add(snap)
-            logger.info(
-                "Snapshot created: %s #%d (%s)", document_type, document_id, reason
-            )
+            logger.info("Snapshot created: %s #%d (%s)", document_type, document_id, reason)
         except Exception as e:
             logger.warning("Snapshot creation failed (non-blocking): %s", e)
 

@@ -10,9 +10,7 @@ class TestPermissionModel:
     def test_repr_and_to_dict(self):
         from models.user import Permission
 
-        perm = Permission(
-            code="manage_sales", name="Sales", name_ar="مبيعات", category="sales"
-        )
+        perm = Permission(code="manage_sales", name="Sales", name_ar="مبيعات", category="sales")
         assert "manage_sales" in repr(perm)
         data = perm.to_dict()
         assert data["code"] == "manage_sales"

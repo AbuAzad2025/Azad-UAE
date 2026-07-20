@@ -42,15 +42,10 @@ def main() -> int:
         except OSError as exc:
             failures.append((rel, 0, f"unreadable file: {exc}"))
 
-    print(
-        f"Jinja template gate: parsed {len(templates)} template(s) "
-        f"under templates/ — {len(failures)} failure(s)."
-    )
+    print(f"Jinja template gate: parsed {len(templates)} template(s) under templates/ — {len(failures)} failure(s).")
     for rel, line, message in failures:
         # GitHub Actions annotation format
-        print(
-            f"::error file=templates/{rel},line={line}::Jinja syntax error: {message}"
-        )
+        print(f"::error file=templates/{rel},line={line}::Jinja syntax error: {message}")
 
     if not templates:
         print("::error::No templates found — the gate itself must be misconfigured.")

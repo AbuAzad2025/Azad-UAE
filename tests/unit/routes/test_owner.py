@@ -6,9 +6,7 @@ def _clean_db(db_session):
     from extensions import db
 
     db.session.execute(
-        db.text(
-            "TRUNCATE TABLE invoice_settings, login_history, users, roles, tenants RESTART IDENTITY CASCADE"
-        )
+        db.text("TRUNCATE TABLE invoice_settings, login_history, users, roles, tenants RESTART IDENTITY CASCADE")
     )
     db.session.commit()
     db_session.expire_all()

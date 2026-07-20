@@ -20,11 +20,7 @@ def generate_qr_data_url(data: str | dict[str, Any], size: int = 120) -> str:
         return ""
 
     try:
-        payload = (
-            json.dumps(data, ensure_ascii=False, separators=(",", ":"))
-            if isinstance(data, dict)
-            else str(data)
-        )
+        payload = json.dumps(data, ensure_ascii=False, separators=(",", ":")) if isinstance(data, dict) else str(data)
     except Exception:
         payload = str(data)
 

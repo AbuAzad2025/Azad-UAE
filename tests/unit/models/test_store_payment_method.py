@@ -66,7 +66,5 @@ class TestStorePaymentMethodHelpers:
             StorePaymentMethod.normalize_code("123bad")
 
     def test_repr(self):
-        pm = StorePaymentMethod(
-            code="cod", name_ar="نقد", name_en="COD", is_enabled=True
-        )
+        pm = StorePaymentMethod(code="cod", name_ar="نقد", name_en="COD", is_enabled=True)
         assert "cod" in repr(pm)

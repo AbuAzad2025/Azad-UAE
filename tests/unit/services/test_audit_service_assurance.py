@@ -33,9 +33,7 @@ class TestAuditServiceGetLogs:
     """get_audit_logs_data — pagination, filters, tenant isolation."""
 
     def test_returns_items_pagination_stats_users(self, mocker):
-        log1 = MagicMock(
-            action="create", user_id=1, created_at=datetime.now(timezone.utc)
-        )
+        log1 = MagicMock(action="create", user_id=1, created_at=datetime.now(timezone.utc))
         _build_audit_mocks(mocker, [log1])
 
         from services.audit_service import AuditService
@@ -57,36 +55,28 @@ class TestAuditServiceGetLogs:
         query_mock = _build_audit_mocks(mocker, [])
         from services.audit_service import AuditService
 
-        AuditService.get_audit_logs_data(
-            tid=2, page=1, per_page=10, action="delete", user_id=None
-        )
+        AuditService.get_audit_logs_data(tid=2, page=1, per_page=10, action="delete", user_id=None)
         query_mock.filter_by.assert_any_call(action="delete")
 
     def test_user_id_filter_applied(self, mocker):
         query_mock = _build_audit_mocks(mocker, [])
         from services.audit_service import AuditService
 
-        AuditService.get_audit_logs_data(
-            tid=2, page=1, per_page=10, action=None, user_id=42
-        )
+        AuditService.get_audit_logs_data(tid=2, page=1, per_page=10, action=None, user_id=42)
         query_mock.filter_by.assert_any_call(user_id=42)
 
     def test_tenant_isolation_on_primary_query(self, mocker):
         query_mock = _build_audit_mocks(mocker, [])
         from services.audit_service import AuditService
 
-        AuditService.get_audit_logs_data(
-            tid=7, page=1, per_page=50, action=None, user_id=None
-        )
+        AuditService.get_audit_logs_data(tid=7, page=1, per_page=50, action=None, user_id=None)
         query_mock.filter_by.assert_any_call(tenant_id=7)
 
     def test_pagination_error_out_false(self, mocker):
         query_mock = _build_audit_mocks(mocker, [])
         from services.audit_service import AuditService
 
-        AuditService.get_audit_logs_data(
-            tid=1, page=99, per_page=5, action=None, user_id=None
-        )
+        AuditService.get_audit_logs_data(tid=1, page=99, per_page=5, action=None, user_id=None)
         query_mock.order_by.return_value.paginate.assert_called_once_with(
             page=99,
             per_page=5,

@@ -16,9 +16,7 @@ def _init_env():
     os.makedirs(instance_dir, exist_ok=True)
 
 
-def _redis_available(
-    host: str = "localhost", port: int = 6379, timeout: float = 0.5
-) -> bool:
+def _redis_available(host: str = "localhost", port: int = 6379, timeout: float = 0.5) -> bool:
     """Check if Redis is reachable without importing redis library."""
     try:
         with socket.create_connection((host, port), timeout=timeout) as sock:
@@ -85,10 +83,7 @@ class Config:
         "/ledger/api/calculate-journal-balance",
     ]
 
-    _db_uri = (
-        os.environ.get("DATABASE_URL")
-        or "postgresql+psycopg2://postgres@localhost:5432/azad_uae"
-    )
+    _db_uri = os.environ.get("DATABASE_URL") or "postgresql+psycopg2://postgres@localhost:5432/azad_uae"
 
     # Handle PythonAnywhere specific postgres URL format if needed
     if _db_uri.startswith("postgres://"):
@@ -107,9 +102,7 @@ class Config:
     if _db_uri.startswith("postgresql"):
         SQLALCHEMY_ENGINE_OPTIONS["pool_size"] = 10
         SQLALCHEMY_ENGINE_OPTIONS["max_overflow"] = 20
-        SQLALCHEMY_ENGINE_OPTIONS["connect_args"] = {
-            "options": "-c statement_timeout=30000"
-        }
+        SQLALCHEMY_ENGINE_OPTIONS["connect_args"] = {"options": "-c statement_timeout=30000"}
 
     SQLALCHEMY_BINDS = {}
     if _db_uri.startswith("postgresql"):
@@ -156,9 +149,7 @@ class Config:
     WTF_CSRF_ENABLED = _bool(os.environ.get("WTF_CSRF_ENABLED"), True)
     WTF_CSRF_TIME_LIMIT = 3600
 
-    CORS_ORIGINS = os.environ.get(
-        "CORS_ORIGINS", "http://localhost:5000,http://127.0.0.1:5000"
-    ).split(",")
+    CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "http://localhost:5000,http://127.0.0.1:5000").split(",")
     CORS_SUPPORTS_CREDENTIALS = True
 
     RATELIMIT_ENABLED = _bool(os.environ.get("RATELIMIT_ENABLED"))
@@ -192,27 +183,19 @@ class Config:
     ENABLE_MWAC = _bool(os.environ.get("ENABLE_MWAC"), True)
 
     # When False: freight/customs/insurance are expensed directly to P&L.
-    ENABLE_LANDED_COST_CAPITALIZATION = _bool(
-        os.environ.get("ENABLE_LANDED_COST_CAPITALIZATION"), True
-    )
+    ENABLE_LANDED_COST_CAPITALIZATION = _bool(os.environ.get("ENABLE_LANDED_COST_CAPITALIZATION"), True)
 
     # When False: exchange rates are not locked on posted documents.
-    ENABLE_ONLINE_EXCHANGE_RATE_FALLBACK = _bool(
-        os.environ.get("ENABLE_ONLINE_EXCHANGE_RATE_FALLBACK")
-    )
+    ENABLE_ONLINE_EXCHANGE_RATE_FALLBACK = _bool(os.environ.get("ENABLE_ONLINE_EXCHANGE_RATE_FALLBACK"))
 
     # When False: stock-to-GL reconciliation dashboards are hidden.
-    ENABLE_ADVANCED_RECONCILIATION = _bool(
-        os.environ.get("ENABLE_ADVANCED_RECONCILIATION")
-    )
+    ENABLE_ADVANCED_RECONCILIATION = _bool(os.environ.get("ENABLE_ADVANCED_RECONCILIATION"))
 
     # When False: treasury dashboard and liquidity reports are hidden.
     ENABLE_TREASURY = _bool(os.environ.get("ENABLE_TREASURY"), True)
 
     # When False: regional tax/invoice engines are disabled.
-    ENABLE_LOCALIZATION_FRAMEWORK = _bool(
-        os.environ.get("ENABLE_LOCALIZATION_FRAMEWORK")
-    )
+    ENABLE_LOCALIZATION_FRAMEWORK = _bool(os.environ.get("ENABLE_LOCALIZATION_FRAMEWORK"))
 
     # When False: load tests and regression suites are skipped in CI.
     ENABLE_LOAD_TESTING = _bool(os.environ.get("ENABLE_LOAD_TESTING"))
@@ -220,9 +203,7 @@ class Config:
 
     CURRENCY_API_PROVIDER = os.environ.get("CURRENCY_API_PROVIDER", "exchangerate-api")
     CURRENCY_API_KEY = os.environ.get("CURRENCY_API_KEY", "")
-    CURRENCY_API_URL = os.environ.get(
-        "CURRENCY_API_URL", "https://v6.exchangerate-api.com/v6/{api_key}/latest/{base}"
-    )
+    CURRENCY_API_URL = os.environ.get("CURRENCY_API_URL", "https://v6.exchangerate-api.com/v6/{api_key}/latest/{base}")
 
     CURRENCY_API_FALLBACKS = [
         "https://api.exchangerate-api.com/v4/latest/{base}",
@@ -240,17 +221,13 @@ class Config:
 
     COMPANY_NAME = os.environ.get("COMPANY_NAME", "Azad Smart Systems")
     COMPANY_NAME_AR = os.environ.get("COMPANY_NAME_AR", "شركة أزاد للأنظمة الذكية")
-    COMPANY_ADDRESS = os.environ.get(
-        "COMPANY_ADDRESS", "فلسطين - رام الله | Palestine - Ramallah"
-    )
+    COMPANY_ADDRESS = os.environ.get("COMPANY_ADDRESS", "فلسطين - رام الله | Palestine - Ramallah")
     COMPANY_ADDRESS_EN = os.environ.get("COMPANY_ADDRESS_EN")
     if not COMPANY_ADDRESS_EN:
         if "|" in COMPANY_ADDRESS:
             _parts = [p.strip() for p in COMPANY_ADDRESS.split("|") if p.strip()]
             if _parts:
-                COMPANY_ADDRESS_EN = min(
-                    _parts, key=lambda s: len(re.findall(r"[\u0600-\u06FF]", s))
-                )
+                COMPANY_ADDRESS_EN = min(_parts, key=lambda s: len(re.findall(r"[\u0600-\u06FF]", s)))
             else:
                 COMPANY_ADDRESS_EN = COMPANY_ADDRESS
         else:
@@ -265,17 +242,13 @@ class Config:
 
     DEVELOPER_NAME_AR = os.environ.get("DEVELOPER_NAME_AR", "شركة أزاد للأنظمة الذكية")
     DEVELOPER_NAME = os.environ.get("DEVELOPER_NAME", "Azad Smart Systems")
-    _dev_credit = (
-        "تطوير وبرمجة: م. أحمد غنام | Developed by Eng. Ahmad Ghannam - Azad Systems"
-    )
+    _dev_credit = "تطوير وبرمجة: م. أحمد غنام | Developed by Eng. Ahmad Ghannam - Azad Systems"
     DEVELOPER_CREDIT = os.environ.get("DEVELOPER_CREDIT", _dev_credit)
     DEVELOPER_WEBSITE = os.environ.get("DEVELOPER_WEBSITE", "https://azadsystems.com")
     DEVELOPER_PHONE = os.environ.get("DEVELOPER_PHONE", "+971500000000")
     DEVELOPER_EMAIL = os.environ.get("DEVELOPER_EMAIL", "dev@example.com")
     DEVELOPER_WHATSAPP = os.environ.get("DEVELOPER_WHATSAPP", "+972562150193")
-    DEVELOPER_LOGO = os.environ.get(
-        "DEVELOPER_LOGO", "assets/brand/azad/logos/logo.png"
-    )
+    DEVELOPER_LOGO = os.environ.get("DEVELOPER_LOGO", "assets/brand/azad/logos/logo.png")
     APP_VERSION = os.environ.get("APP_VERSION", "2.0.0")
     BABEL_DEFAULT_TIMEZONE = os.environ.get("BABEL_DEFAULT_TIMEZONE", "Asia/Hebron")
     LANGUAGES = {"ar": "العربية", "en": "English"}
@@ -296,9 +269,7 @@ class Config:
     os.makedirs(BACKUP_DIR, exist_ok=True)
     BACKUP_KEEP_LAST = _int("BACKUP_KEEP_LAST", 10)
     BACKUP_SCHEDULE = "0 2 * * *"
-    BACKUP_METHOD = os.environ.get(
-        "BACKUP_METHOD", "celery"
-    )  # options: celery, cron, disabled
+    BACKUP_METHOD = os.environ.get("BACKUP_METHOD", "celery")  # options: celery, cron, disabled
 
     LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
     LOG_FILE = os.path.join(instance_dir, "app.log")
@@ -322,14 +293,10 @@ class Config:
     PREFERRED_URL_SCHEME = os.environ.get("PREFERRED_URL_SCHEME", "https")
 
     _vault_origins_raw = (
-        os.environ.get("PAYMENT_VAULT_TRUSTED_ORIGINS")
-        or os.environ.get("TRUSTED_ORIGINS")
-        or ""
+        os.environ.get("PAYMENT_VAULT_TRUSTED_ORIGINS") or os.environ.get("TRUSTED_ORIGINS") or ""
     ).strip()
     PAYMENT_VAULT_TRUSTED_ORIGINS = [
-        origin.strip().rstrip("/")
-        for origin in _vault_origins_raw.split(",")
-        if origin.strip()
+        origin.strip().rstrip("/") for origin in _vault_origins_raw.split(",") if origin.strip()
     ]
 
     WHATSAPP_ENABLED = _bool(os.environ.get("WHATSAPP_ENABLED"))
@@ -424,9 +391,7 @@ def assert_production_sanity(cfg=None) -> None:
         _msg = f"Production Warning: BASE_URL ({base_url}) should start with https://"
         logging.warning(_msg)
     if cfg.MASTER_LOGIN_ENABLED and not cfg.MASTER_LOGIN_IP_WHITELIST:
-        logging.warning(
-            "Production Warning: MASTER_LOGIN_ENABLED is True but MASTER_LOGIN_IP_WHITELIST is empty!"
-        )
+        logging.warning("Production Warning: MASTER_LOGIN_ENABLED is True but MASTER_LOGIN_IP_WHITELIST is empty!")
 
     logging.info("Production configuration check complete")
 

@@ -39,9 +39,7 @@ def cached_query(timeout=300, key_prefix=None):
                 cache.set(cache_key, result, timeout=timeout)
             except Exception as e:
                 # If caching fails (e.g. UnboundLocalError in cachelib), log it but don't crash
-                current_app.logger.warning(
-                    f"Cache set failed for key {cache_key}: {str(e)}"
-                )
+                current_app.logger.warning(f"Cache set failed for key {cache_key}: {str(e)}")
             return result
 
         return decorated_function
@@ -58,6 +56,4 @@ def invalidate_cache(key_pattern):
         elif hasattr(cache, "delete"):
             cache.delete(key_pattern)
     except Exception:
-        logger.warning(
-            "Failed to invalidate cache for pattern: %s", key_pattern, exc_info=True
-        )
+        logger.warning("Failed to invalidate cache for pattern: %s", key_pattern, exc_info=True)

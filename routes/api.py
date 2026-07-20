@@ -34,14 +34,13 @@ _DEV_TRUSTED_ORIGINS = frozenset(
 
 
 def _is_production_env() -> bool:
-    app_env = (
-        (current_app.config.get("APP_ENV") or os.environ.get("APP_ENV") or "production")
-        .strip()
-        .lower()
+    app_env = (current_app.config.get("APP_ENV") or os.environ.get("APP_ENV") or "production").strip().lower()
+    debug = bool(current_app.config.get("DEBUG")) or (os.environ.get("DEBUG") or "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "y",
     )
-    debug = bool(current_app.config.get("DEBUG")) or (
-        os.environ.get("DEBUG") or ""
-    ).strip().lower() in ("1", "true", "yes", "y")
     return app_env == "production" and not debug
 
 
@@ -73,17 +72,11 @@ def _trusted_telemetry_origins() -> frozenset[str]:
         "CORS_ORIGINS",
         "PAYMENT_VAULT_TRUSTED_ORIGINS",
     ):
-        origins.update(
-            _split_origins(current_app.config.get(key) or os.environ.get(key))
-        )
+        origins.update(_split_origins(current_app.config.get(key) or os.environ.get(key)))
     if origins:
         return frozenset(origins)
     if _is_production_env():
-        base = (
-            (current_app.config.get("BASE_URL") or os.environ.get("BASE_URL") or "")
-            .strip()
-            .rstrip("/")
-        )
+        base = (current_app.config.get("BASE_URL") or os.environ.get("BASE_URL") or "").strip().rstrip("/")
         return frozenset({base}) if base else frozenset()
     return _DEV_TRUSTED_ORIGINS
 
@@ -99,26 +92,20 @@ def _validate_public_telemetry_origin():
 
     trusted = _trusted_telemetry_origins()
     if not trusted:
-        current_app.logger.warning(
-            "client_error telemetry rejected: no trusted origins configured"
-        )
+        current_app.logger.warning("client_error telemetry rejected: no trusted origins configured")
         return jsonify({"success": False, "error": "Origin policy not configured"}), 503
 
     if origin:
         if origin in trusted:
             return None
-        current_app.logger.warning(
-            "client_error telemetry rejected: origin=%s", origin[:120]
-        )
+        current_app.logger.warning("client_error telemetry rejected: origin=%s", origin[:120])
         return jsonify({"success": False, "error": gettext("Origin غير مسموح")}), 403
 
     if referer:
         ref_origin = _origin_from_referer(referer)
         if ref_origin and ref_origin in trusted:
             return None
-        current_app.logger.warning(
-            "client_error telemetry rejected: referer=%s", referer[:120]
-        )
+        current_app.logger.warning("client_error telemetry rejected: referer=%s", referer[:120])
         return jsonify({"success": False, "error": gettext("Referer غير مسموح")}), 403
 
     return jsonify({"success": False, "error": gettext("Origin أو Referer مطلوب")}), 403
@@ -135,9 +122,7 @@ def _scoped_customer_query():
     if scoped_branch_id is None:
         return query
 
-    sale_ids = select(Sale.customer_id).where(
-        Sale.customer_id.isnot(None), Sale.branch_id == scoped_branch_id
-    )
+    sale_ids = select(Sale.customer_id).where(Sale.customer_id.isnot(None), Sale.branch_id == scoped_branch_id)
     payment_ids = select(Payment.customer_id).where(
         Payment.customer_id.isnot(None), Payment.branch_id == scoped_branch_id
     )
@@ -172,11 +157,7 @@ def _customer_balance(customer_id):
     if scoped_branch_id is None:
         customer = _scoped_customer_query().filter(Customer.id == customer_id).first()
         return float(customer.get_balance_aed()) if customer else 0.0
-    return float(
-        PaymentService.get_customer_balance_scoped(
-            customer_id, branch_id=scoped_branch_id
-        )
-    )
+    return float(PaymentService.get_customer_balance_scoped(customer_id, branch_id=scoped_branch_id))
 
 
 def _supplier_balance(supplier_id):
@@ -184,11 +165,7 @@ def _supplier_balance(supplier_id):
     if scoped_branch_id is None:
         supplier = _scoped_supplier_query().filter(Supplier.id == supplier_id).first()
         return float(supplier.get_balance_aed()) if supplier else 0.0
-    return float(
-        PaymentService.get_supplier_balance_scoped(
-            supplier_id, branch_id=scoped_branch_id
-        )
-    )
+    return float(PaymentService.get_supplier_balance_scoped(supplier_id, branch_id=scoped_branch_id))
 
 
 @api_bp.route("/health")
@@ -347,16 +324,12 @@ def currency_rate(from_currency, to_currency):
         resp.headers["Expires"] = "0"
         return resp
     except Exception:
-        current_app.logger.exception(
-            "currency_rate failed from=%s to=%s", from_currency, to_currency
-        )
+        current_app.logger.exception("currency_rate failed from=%s to=%s", from_currency, to_currency)
         resp = make_response(
             jsonify(
                 {
                     "success": False,
-                    "error": gettext(
-                        "تعذر جلب سعر الصرف الآن. الرجاء المحاولة لاحقاً أو إدخال السعر يدوياً."
-                    ),
+                    "error": gettext("تعذر جلب سعر الصرف الآن. الرجاء المحاولة لاحقاً أو إدخال السعر يدوياً."),
                     "manual_input_required": True,
                 }
             ),
@@ -372,9 +345,7 @@ def currencies():
     from services.currency_service import CurrencyService
 
     codes = CurrencyService.get_supported_currencies()
-    currency_items = [
-        {"code": c, "label": CurrencyService.get_currency_label(c)} for c in codes
-    ]
+    currency_items = [{"code": c, "label": CurrencyService.get_currency_label(c)} for c in codes]
     return jsonify(
         {
             "success": True,
@@ -400,16 +371,10 @@ def api_search():
     if search_type == "products":
         warehouse_id = request.args.get("warehouse_id", type=int)
         purpose = request.args.get("purpose", "").strip()
-        warehouse_ids = (
-            [warehouse_id]
-            if warehouse_id
-            else get_accessible_warehouse_ids(current_user)
-        )
+        warehouse_ids = [warehouse_id] if warehouse_id else get_accessible_warehouse_ids(current_user)
         tid = get_active_tenant_id(current_user)
         if purpose == "purchase":
-            products_query = Product.query.filter(
-                Product.is_active, Product.tenant_id == tid
-            )
+            products_query = Product.query.filter(Product.is_active, Product.tenant_id == tid)
         else:
             products_query = StockService.get_visible_products_query(current_user)
         if query:
@@ -453,9 +418,7 @@ def api_search():
         return jsonify({"results": results, "has_more": len(results) >= per_page})
 
     elif search_type == "suppliers":
-        base_query = (
-            _scoped_supplier_query().filter(Supplier.is_active).order_by(Supplier.name)
-        )
+        base_query = _scoped_supplier_query().filter(Supplier.is_active).order_by(Supplier.name)
 
         if query:
             base_query = base_query.filter(
@@ -494,9 +457,7 @@ def api_search():
         return jsonify({"results": results, "has_more": has_more})
 
     else:
-        base_query = (
-            _scoped_customer_query().filter(Customer.is_active).order_by(Customer.name)
-        )
+        base_query = _scoped_customer_query().filter(Customer.is_active).order_by(Customer.name)
 
         if query:
             base_query = base_query.filter(
@@ -540,9 +501,7 @@ def check_username():
     import re
 
     if not re.match(r"^[a-zA-Z0-9_]{3,20}$", username):
-        return jsonify(
-            {"available": False, "error": gettext("استخدم حروف إنجليزية وأرقام و_ فقط")}
-        )
+        return jsonify({"available": False, "error": gettext("استخدم حروف إنجليزية وأرقام و_ فقط")})
 
     tid = get_active_tenant_id(current_user)
     existing = User.query.filter_by(username=username)
@@ -580,24 +539,15 @@ def products_low_stock():
                     "id": product.id,
                     "name": product.name,
                     "sku": product.sku,
-                    "current_stock": float(
-                        getattr(product, "visible_stock", product.current_stock or 0)
-                    ),
+                    "current_stock": float(getattr(product, "visible_stock", product.current_stock or 0)),
                     "min_stock_alert": float(product.min_stock_alert or 0),
                     "needed": float(
-                        (product.min_stock_alert or 0)
-                        - (
-                            getattr(
-                                product, "visible_stock", product.current_stock or 0
-                            )
-                        )
+                        (product.min_stock_alert or 0) - (getattr(product, "visible_stock", product.current_stock or 0))
                     ),
                 }
             )
 
-        return jsonify(
-            {"success": True, "products": products_data, "count": len(products_data)}
-        )
+        return jsonify({"success": True, "products": products_data, "count": len(products_data)})
 
     except Exception:
         current_app.logger.exception("products_low_stock failed")
@@ -629,9 +579,7 @@ def exchange_rates_display():
     else:
         symbols = ExchangeRateService.DISPLAY_CURRENCIES
 
-    result = ExchangeRateService.get_online_rates_for_display(
-        base=base, symbols=symbols
-    )
+    result = ExchangeRateService.get_online_rates_for_display(base=base, symbols=symbols)
     resp = make_response(jsonify(result), 200)
     resp.headers["Cache-Control"] = "private, max-age=300"
     return resp
@@ -805,9 +753,7 @@ def _query_products(warehouse_id=None):
             )
         )
     products = products.order_by(Product.name).limit(20).all()
-    warehouse_ids = (
-        [warehouse_id] if warehouse_id else get_accessible_warehouse_ids(current_user)
-    )
+    warehouse_ids = [warehouse_id] if warehouse_id else get_accessible_warehouse_ids(current_user)
     stock_map = (
         get_branch_stock_map(
             product_ids=[p.id for p in products],

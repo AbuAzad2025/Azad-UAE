@@ -28,9 +28,7 @@ class TestTenantIsolation:
         db_session.add(role_a)
         db_session.flush()
 
-        branch_a = Branch(
-            tenant_id=tenant_a.id, name=f"BrA {ta_id}", code=f"BA{ta_id[:4]}"
-        )
+        branch_a = Branch(tenant_id=tenant_a.id, name=f"BrA {ta_id}", code=f"BA{ta_id[:4]}")
         db_session.add(branch_a)
         db_session.flush()
 
@@ -46,9 +44,7 @@ class TestTenantIsolation:
         db_session.add(user_a)
         db_session.flush()
 
-        customer_a = Customer(
-            tenant_id=tenant_a.id, name=f"CustA {ta_id}", phone=f"050{ta_id}"
-        )
+        customer_a = Customer(tenant_id=tenant_a.id, name=f"CustA {ta_id}", phone=f"050{ta_id}")
         db_session.add(customer_a)
         db_session.flush()
 
@@ -68,9 +64,7 @@ class TestTenantIsolation:
         db_session.add(role_b)
         db_session.flush()
 
-        branch_b = Branch(
-            tenant_id=tenant_b.id, name=f"BrB {tb_id}", code=f"BB{tb_id[:4]}"
-        )
+        branch_b = Branch(tenant_id=tenant_b.id, name=f"BrB {tb_id}", code=f"BB{tb_id[:4]}")
         db_session.add(branch_b)
         db_session.flush()
 
@@ -86,9 +80,7 @@ class TestTenantIsolation:
         db_session.add(user_b)
         db_session.flush()
 
-        customer_b = Customer(
-            tenant_id=tenant_b.id, name=f"CustB {tb_id}", phone=f"050{tb_id}"
-        )
+        customer_b = Customer(tenant_id=tenant_b.id, name=f"CustB {tb_id}", phone=f"050{tb_id}")
         db_session.add(customer_b)
         db_session.flush()
 
@@ -108,12 +100,8 @@ class TestTenantIsolation:
 
             scoped = tenant_query(Customer).all()
             scoped_ids = {c.id for c in scoped}
-            assert customer_a.id in scoped_ids, (
-                "Tenant A's own customer missing from scoped query"
-            )
-            assert customer_b.id not in scoped_ids, (
-                "Tenant B's customer leaked into Tenant A's scoped query"
-            )
+            assert customer_a.id in scoped_ids, "Tenant A's own customer missing from scoped query"
+            assert customer_b.id not in scoped_ids, "Tenant B's customer leaked into Tenant A's scoped query"
 
         with app.test_request_context():
             login_user(user_b, remember=False)
@@ -123,12 +111,8 @@ class TestTenantIsolation:
 
             scoped = tenant_query(Customer).all()
             scoped_ids = {c.id for c in scoped}
-            assert customer_b.id in scoped_ids, (
-                "Tenant B's own customer missing from scoped query"
-            )
-            assert customer_a.id not in scoped_ids, (
-                "Tenant A's customer leaked into Tenant B's scoped query"
-            )
+            assert customer_b.id in scoped_ids, "Tenant B's own customer missing from scoped query"
+            assert customer_a.id not in scoped_ids, "Tenant A's customer leaked into Tenant B's scoped query"
 
         # --- Test 3: Without authentication, tenant_query returns all (no tenant filter) ---
         with app.test_request_context():

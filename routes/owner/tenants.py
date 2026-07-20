@@ -64,12 +64,8 @@ def tenant_stores():
 def tenant_ai():
     """Platform-level per-tenant AI visibility toggle."""
     tenants = Tenant.query.filter_by(is_active=True).order_by(Tenant.name.asc()).all()
-    tenant_ai_levels = {
-        int(t.id): get_tenant_ai_level(int(t.id), default="execute") for t in tenants
-    }
-    return render_template(
-        "owner/tenant_ai.html", tenants=tenants, tenant_ai_levels=tenant_ai_levels
-    )
+    tenant_ai_levels = {int(t.id): get_tenant_ai_level(int(t.id), default="execute") for t in tenants}
+    return render_template("owner/tenant_ai.html", tenants=tenants, tenant_ai_levels=tenant_ai_levels)
 
 
 @owner_bp.route("/tenant-ai/<int:tenant_id>/toggle", methods=["POST"])
@@ -82,12 +78,7 @@ def tenant_ai_toggle(tenant_id):
 
     enabled = request.form.get("enable_ai") == "1"
     ai_access_level = (
-        (
-            request.form.get("ai_access_level")
-            or get_tenant_ai_level(int(tenant.id), default="execute")
-        )
-        .strip()
-        .lower()
+        (request.form.get("ai_access_level") or get_tenant_ai_level(int(tenant.id), default="execute")).strip().lower()
     )
     if ai_access_level not in ("basic", "advanced", "execute"):
         ai_access_level = "execute"
@@ -107,9 +98,7 @@ def tenant_ai_toggle(tenant_id):
         )
         _invalidate_owner_changes()
         flash(
-            gettext(
-                f"تم {'تفعيل' if enabled else 'إيقاف'} المساعد الذكي للتينانت: {tenant.name_ar or tenant.name}"
-            ),
+            gettext(f"تم {'تفعيل' if enabled else 'إيقاف'} المساعد الذكي للتينانت: {tenant.name_ar or tenant.name}"),
             "success",
         )
     except Exception as exc:
@@ -140,9 +129,7 @@ def tenant_store_platform_toggle(store_id):
         _invalidate_owner_changes()
         flash(
             (
-                gettext(
-                    "تم تعطيل المتجر من مستوى المنصة. لا يستطيع مالك التينانت تفعيله."
-                )
+                gettext("تم تعطيل المتجر من مستوى المنصة. لا يستطيع مالك التينانت تفعيله.")
                 if disabled
                 else gettext("تم فك القفل. أصبح التحكم بيد مالك التينانت.")
             ),
@@ -204,9 +191,7 @@ def tenant_create():
                 max_suppliers=int(request.form.get("max_suppliers", 200)),
                 max_branches=int(request.form.get("max_branches", 3)),
                 max_warehouses=int(request.form.get("max_warehouses", 2)),
-                max_invoices_per_month=int(
-                    request.form.get("max_invoices_per_month", 1000)
-                ),
+                max_invoices_per_month=int(request.form.get("max_invoices_per_month", 1000)),
                 max_sales_per_month=int(request.form.get("max_sales_per_month", 5000)),
                 data_retention_days=int(request.form.get("data_retention_days", 365)),
                 enable_pos=request.form.get("enable_pos") == "on",
@@ -215,8 +200,7 @@ def tenant_create():
                 enable_expenses=request.form.get("enable_expenses") == "on",
                 enable_store=request.form.get("enable_store") == "on",
                 allow_data_export=request.form.get("allow_data_export") == "on",
-                allow_custom_integrations=request.form.get("allow_custom_integrations")
-                == "on",
+                allow_custom_integrations=request.form.get("allow_custom_integrations") == "on",
                 is_active=True,
                 is_suspended=False,
             )
@@ -236,9 +220,7 @@ def tenant_create():
                 # failures when products are later created with opening balances.
                 GLService.ensure_gl_mappings(tenant_id=tenant.id)
             _invalidate_owner_changes()
-            _audit_owner_db_action(
-                "tenant_create", {"tenant_id": tenant.id, "slug": slug}
-            )
+            _audit_owner_db_action("tenant_create", {"tenant_id": tenant.id, "slug": slug})
             flash(gettext(f'تم إنشاء التينانت "{tenant.name_ar}" بنجاح.'), "success")
             return redirect(url_for("owner.tenants_list"))
         except Exception as e:
@@ -313,57 +295,29 @@ def tenant_edit(tenant_id):
                 tenant.name_ar = request.form.get("name_ar", tenant.name_ar).strip()
                 tenant.name_en = request.form.get("name_en", tenant.name_en).strip()
                 tenant.slug = request.form.get("slug", tenant.slug).strip()
-                tenant.business_type = request.form.get(
-                    "business_type", tenant.business_type
-                ).strip()
-                tenant.phone_1 = (
-                    request.form.get("phone_1", tenant.phone_1).strip() or None
-                )
-                tenant.phone_2 = (
-                    request.form.get("phone_2", tenant.phone_2).strip() or None
-                )
+                tenant.business_type = request.form.get("business_type", tenant.business_type).strip()
+                tenant.phone_1 = request.form.get("phone_1", tenant.phone_1).strip() or None
+                tenant.phone_2 = request.form.get("phone_2", tenant.phone_2).strip() or None
                 tenant.email = request.form.get("email", tenant.email).strip() or None
-                tenant.address_ar = (
-                    request.form.get("address_ar", tenant.address_ar).strip() or None
-                )
+                tenant.address_ar = request.form.get("address_ar", tenant.address_ar).strip() or None
                 tenant.default_currency = (
-                    request.form.get(
-                        "default_currency", tenant.default_currency
-                    ).strip()
+                    request.form.get("default_currency", tenant.default_currency).strip()
                     or get_system_default_currency()
                 )
-                tenant.max_users = int(
-                    request.form.get("max_users", tenant.max_users or 5)
-                )
-                tenant.max_products = int(
-                    request.form.get("max_products", tenant.max_products or 1000)
-                )
-                tenant.max_customers = int(
-                    request.form.get("max_customers", tenant.max_customers or 500)
-                )
-                tenant.max_suppliers = int(
-                    request.form.get("max_suppliers", tenant.max_suppliers or 200)
-                )
-                tenant.max_branches = int(
-                    request.form.get("max_branches", tenant.max_branches or 3)
-                )
-                tenant.max_warehouses = int(
-                    request.form.get("max_warehouses", tenant.max_warehouses or 2)
-                )
+                tenant.max_users = int(request.form.get("max_users", tenant.max_users or 5))
+                tenant.max_products = int(request.form.get("max_products", tenant.max_products or 1000))
+                tenant.max_customers = int(request.form.get("max_customers", tenant.max_customers or 500))
+                tenant.max_suppliers = int(request.form.get("max_suppliers", tenant.max_suppliers or 200))
+                tenant.max_branches = int(request.form.get("max_branches", tenant.max_branches or 3))
+                tenant.max_warehouses = int(request.form.get("max_warehouses", tenant.max_warehouses or 2))
                 tenant.max_invoices_per_month = int(
-                    request.form.get(
-                        "max_invoices_per_month", tenant.max_invoices_per_month or 1000
-                    )
+                    request.form.get("max_invoices_per_month", tenant.max_invoices_per_month or 1000)
                 )
                 tenant.max_sales_per_month = int(
-                    request.form.get(
-                        "max_sales_per_month", tenant.max_sales_per_month or 5000
-                    )
+                    request.form.get("max_sales_per_month", tenant.max_sales_per_month or 5000)
                 )
                 tenant.data_retention_days = int(
-                    request.form.get(
-                        "data_retention_days", tenant.data_retention_days or 365
-                    )
+                    request.form.get("data_retention_days", tenant.data_retention_days or 365)
                 )
                 tenant.enable_pos = request.form.get("enable_pos") == "on"
                 tenant.enable_payroll = request.form.get("enable_payroll") == "on"
@@ -371,12 +325,8 @@ def tenant_edit(tenant_id):
                 tenant.enable_expenses = request.form.get("enable_expenses") == "on"
                 tenant.enable_store = request.form.get("enable_store") == "on"
                 tenant.allow_data_export = request.form.get("allow_data_export") == "on"
-                tenant.allow_custom_integrations = (
-                    request.form.get("allow_custom_integrations") == "on"
-                )
-                tenant.prices_include_vat = (
-                    request.form.get("prices_include_vat") == "on"
-                )
+                tenant.allow_custom_integrations = request.form.get("allow_custom_integrations") == "on"
+                tenant.prices_include_vat = request.form.get("prices_include_vat") == "on"
                 tenant.updated_at = datetime.now(timezone.utc)
             _invalidate_owner_changes()
             _audit_owner_db_action("tenant_edit", {"tenant_id": tenant_id})
@@ -406,9 +356,7 @@ def tenant_delete(tenant_id):
     active_users = User.query.filter_by(tenant_id=tenant_id, is_active=True).count()
     if active_users > 0:
         flash(
-            gettext(
-                f"⚠️ التينانت يحتوي على {active_users} مستخدمين نشطين. قم بتعطيلهم أولاً أو قم بالتعليق."
-            ),
+            gettext(f"⚠️ التينانت يحتوي على {active_users} مستخدمين نشطين. قم بتعطيلهم أولاً أو قم بالتعليق."),
             "warning",
         )
         return redirect(url_for("owner.tenants_list"))
@@ -424,9 +372,7 @@ def tenant_delete(tenant_id):
         return redirect(url_for("owner.tenants_list"))
     _invalidate_owner_changes()
     _audit_owner_db_action("tenant_soft_delete", {"tenant_id": tenant_id})
-    flash(
-        gettext(f'تم حذف التينانت "{tenant.name_ar or tenant.name}" بنجاح.'), "success"
-    )
+    flash(gettext(f'تم حذف التينانت "{tenant.name_ar or tenant.name}" بنجاح.'), "success")
     return redirect(url_for("owner.tenants_list"))
 
 
@@ -468,9 +414,7 @@ def api_tenant_toggle_status(tenant_id):
             {
                 "success": True,
                 "is_active": tenant.is_active,
-                "message": gettext(
-                    f'تم {status_label} التينانت "{tenant.name_ar or tenant.name}" بنجاح'
-                ),
+                "message": gettext(f'تم {status_label} التينانت "{tenant.name_ar or tenant.name}" بنجاح'),
             }
         )
     except Exception as e:
@@ -564,9 +508,7 @@ def tenant_extend_subscription(tenant_id):
             },
         )
         flash(
-            gettext(
-                f'تم تحديث اشتراك التينانت "{tenant.name_ar or tenant.name}" بنجاح.'
-            ),
+            gettext(f'تم تحديث اشتراك التينانت "{tenant.name_ar or tenant.name}" بنجاح.'),
             "success",
         )
     except Exception as e:
@@ -620,24 +562,14 @@ def api_tenant_extend_subscription(tenant_id):
             {
                 "success": True,
                 "subscription_end": (
-                    tenant.subscription_end.isoformat()
-                    if isinstance(tenant.subscription_end, datetime)
-                    else None
+                    tenant.subscription_end.isoformat() if isinstance(tenant.subscription_end, datetime) else None
                 ),
-                "subscription_plan": (
-                    tenant.subscription_plan
-                    if isinstance(tenant.subscription_plan, str)
-                    else None
-                ),
+                "subscription_plan": (tenant.subscription_plan if isinstance(tenant.subscription_plan, str) else None),
                 "subscription_plan_duration": (
-                    tenant.subscription_plan_duration
-                    if isinstance(tenant.subscription_plan_duration, str)
-                    else None
+                    tenant.subscription_plan_duration if isinstance(tenant.subscription_plan_duration, str) else None
                 ),
                 "is_trial": bool(tenant.is_trial),
-                "message": gettext(
-                    f"تم تحديث اشتراك التينانت '{tenant.name_ar or tenant.name}'"
-                ),
+                "message": gettext(f"تم تحديث اشتراك التينانت '{tenant.name_ar or tenant.name}'"),
             }
         )
     except Exception as e:

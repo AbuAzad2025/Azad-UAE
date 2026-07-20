@@ -44,9 +44,7 @@ class TestPurchaseReturnValidations:
         purchase.lines = []
         user = MagicMock()
         user.id = 1
-        lines_data = [
-            {"purchase_line_id": 1, "product_id": 1, "quantity": 2, "unit_cost": 10}
-        ]
+        lines_data = [{"purchase_line_id": 1, "product_id": 1, "quantity": 2, "unit_cost": 10}]
         with patch("services.purchase_service.generate_number") as mock_gn:
             mock_gn.return_value = "PR-001"
             with patch("services.purchase_service.db") as mock_db:
@@ -60,9 +58,7 @@ class TestPurchaseReturnValidations:
                             with patch("services.purchase_service.LoggingCore"):
                                 from models.purchase_return import PurchaseReturn
 
-                                result = PurchaseService.create_purchase_return(
-                                    purchase, user, lines_data
-                                )
+                                result = PurchaseService.create_purchase_return(purchase, user, lines_data)
                                 assert result is not None
                                 assert isinstance(result, PurchaseReturn)
                                 assert mock_ss.remove_stock.called

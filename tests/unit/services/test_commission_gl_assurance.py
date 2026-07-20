@@ -18,9 +18,7 @@ class TestPostSaleCommissions:
 
     def test_returns_none_when_total_non_positive(self, mocker):
         entry = MagicMock(commission_amount_aed=Decimal("0"))
-        PartnerCommissionEntry = mocker.patch(
-            "services.commission_gl_service.PartnerCommissionEntry"
-        )
+        PartnerCommissionEntry = mocker.patch("services.commission_gl_service.PartnerCommissionEntry")
         PartnerCommissionEntry.query.filter_by.return_value.all.return_value = [entry]
         from services.commission_gl_service import post_sale_commissions
 
@@ -29,20 +27,14 @@ class TestPostSaleCommissions:
 
     def test_posts_commission_with_currency_fallback(self, mocker):
         entry = MagicMock(commission_amount_aed=Decimal("50"))
-        PartnerCommissionEntry = mocker.patch(
-            "services.commission_gl_service.PartnerCommissionEntry"
-        )
+        PartnerCommissionEntry = mocker.patch("services.commission_gl_service.PartnerCommissionEntry")
         PartnerCommissionEntry.query.filter_by.return_value.all.return_value = [entry]
         mocker.patch(
             "utils.currency_utils.resolve_tenant_base_currency",
             side_effect=RuntimeError("no currency"),
         )
-        ensure = mocker.patch(
-            "services.commission_gl_service.GLService.ensure_core_accounts"
-        )
-        post = mocker.patch(
-            "services.commission_gl_service.post_or_fail", return_value=MagicMock(id=9)
-        )
+        ensure = mocker.patch("services.commission_gl_service.GLService.ensure_core_accounts")
+        post = mocker.patch("services.commission_gl_service.post_or_fail", return_value=MagicMock(id=9))
         from services.commission_gl_service import post_sale_commissions
 
         sale = MagicMock(

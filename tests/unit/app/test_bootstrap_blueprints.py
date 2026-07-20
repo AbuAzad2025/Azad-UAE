@@ -33,9 +33,7 @@ class TestImportBp:
     def test_import_bp_failure_logs_and_raises(self, flask_app):
         real_import = builtins.__import__
 
-        def selective_import(
-            name, globals_dict=None, locals_dict=None, fromlist=(), level=0
-        ):
+        def selective_import(name, globals_dict=None, locals_dict=None, fromlist=(), level=0):
             if name == "routes.nonexistent_xyz":
                 raise ImportError("missing module")
             return real_import(name, globals_dict, locals_dict, fromlist, level)
@@ -64,17 +62,13 @@ class TestImportBp:
             "services.logging_core.LoggingCore.log_error",
             side_effect=RuntimeError("log fail"),
         ):
-            resp = flask_app.test_client().get(
-                "/ai/another-route", follow_redirects=False
-            )
+            resp = flask_app.test_client().get("/ai/another-route", follow_redirects=False)
         assert resp.status_code == 302
 
     def test_import_bp_log_db_failure(self, flask_app):
         real_import = builtins.__import__
 
-        def selective_import(
-            name, globals_dict=None, locals_dict=None, fromlist=(), level=0
-        ):
+        def selective_import(name, globals_dict=None, locals_dict=None, fromlist=(), level=0):
             if name == "routes.broken_bp_xyz":
                 raise ImportError("missing module")
             return real_import(name, globals_dict, locals_dict, fromlist, level)
@@ -166,9 +160,7 @@ class TestAiFallback:
 
         monkeypatch.setattr("flask.session", _BrokenSession())
         with patch("services.logging_core.LoggingCore.log_error") as log_err:
-            resp = flask_app.test_client().get(
-                "/ai/another-route", follow_redirects=False
-            )
+            resp = flask_app.test_client().get("/ai/another-route", follow_redirects=False)
         assert resp.status_code == 302
         log_err.assert_called_once()
 

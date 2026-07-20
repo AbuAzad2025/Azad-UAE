@@ -38,9 +38,7 @@ class TestHelpersSecondPass:
         stream = MagicMock()
         stream.reconfigure.side_effect = OSError("nope")
         stream.buffer = io.BytesIO(b"")
-        with patch(
-            "services.logging_core.io.TextIOWrapper", side_effect=OSError("wrap fail")
-        ):
+        with patch("services.logging_core.io.TextIOWrapper", side_effect=OSError("wrap fail")):
             assert _ensure_utf8_stream(stream) is stream
 
     def test_get_request_id_generates_and_stores(self, app):
@@ -91,9 +89,7 @@ class TestFormattersSecondPass:
         try:
             raise ValueError("trace me")
         except ValueError:
-            record = logging.LogRecord(
-                "n", logging.ERROR, __file__, 1, "fail", (), sys.exc_info()
-            )
+            record = logging.LogRecord("n", logging.ERROR, __file__, 1, "fail", (), sys.exc_info())
         record.request_id = "r"
         text = _ColorFormatter().format(record)
         assert "trace me" in text
@@ -180,9 +176,7 @@ class TestSetupSecondPass:
         import warnings as builtin_warnings
 
         mock_req = MagicMock()
-        type(mock_req).method = property(
-            lambda self: (_ for _ in ()).throw(RuntimeError("route fail"))
-        )
+        type(mock_req).method = property(lambda self: (_ for _ in ()).throw(RuntimeError("route fail")))
         mock_req.path = "/x"
         mocker.patch("services.logging_core.has_request_context", return_value=True)
         mocker.patch("services.logging_core.request", mock_req)
@@ -262,9 +256,7 @@ class TestSetupSecondPass:
         monkeypatch.chdir(tmp_path)
         app = Flask(__name__)
         handler = MagicMock(spec=RotatingFileHandler)
-        type(handler).baseFilename = property(
-            lambda self: (_ for _ in ()).throw(RuntimeError("bad path"))
-        )
+        type(handler).baseFilename = property(lambda self: (_ for _ in ()).throw(RuntimeError("bad path")))
         LoggingCore._handlers = {"broken": handler}
         LoggingCore._run_self_diagnostics(app)
 
@@ -275,9 +267,7 @@ class TestAlertCallbacksSecondPass:
         LoggingCore._fire_alert_callbacks("BACKEND", "ERROR", "m", 1)
 
     def test_fire_alert_callbacks_swallows_errors(self):
-        LoggingCore._alert_callbacks = [
-            lambda *a: (_ for _ in ()).throw(RuntimeError("cb fail"))
-        ]
+        LoggingCore._alert_callbacks = [lambda *a: (_ for _ in ()).throw(RuntimeError("cb fail"))]
         LoggingCore._fire_alert_callbacks("BACKEND", "ERROR", "m", 1)
         LoggingCore._alert_callbacks = []
 
@@ -290,9 +280,7 @@ class TestTraceAndErrorSecondPass:
     def test_log_error_logger_failure_still_returns(self, mocker):
         LoggingCore.log_error = _REAL_LOG_ERROR
         mocker.patch.object(LoggingCore, "_persist_error", return_value=5)
-        mocker.patch(
-            "services.logging_core.logger.error", side_effect=RuntimeError("log fail")
-        )
+        mocker.patch("services.logging_core.logger.error", side_effect=RuntimeError("log fail"))
         assert LoggingCore.log_error("boom") == 5
 
     def test_log_frontend_error_truncates_long_stack(self, mocker):
@@ -315,12 +303,7 @@ class TestTraceAndErrorSecondPass:
         ctx = MagicMock()
         ctx.__enter__.return_value = conn
         mocker.patch("extensions.db.engine.connect", return_value=ctx)
-        assert (
-            LoggingCore._persist_error(
-                "m", category="BACKEND", level="ERROR", source="s"
-            )
-            == 11
-        )
+        assert LoggingCore._persist_error("m", category="BACKEND", level="ERROR", source="s") == 11
 
     def test_persist_error_with_extra_dict(self, app, mocker):
         mocker.patch.object(LoggingCore, "_find_duplicate", return_value=None)
@@ -329,9 +312,7 @@ class TestTraceAndErrorSecondPass:
         ctx = MagicMock()
         ctx.__enter__.return_value = conn
         mocker.patch("extensions.db.engine.connect", return_value=ctx)
-        row = LoggingCore._persist_error(
-            "m", category="BACKEND", level="ERROR", source="s", extra={"safe": "v"}
-        )
+        row = LoggingCore._persist_error("m", category="BACKEND", level="ERROR", source="s", extra={"safe": "v"})
         assert row == 12
 
     def test_persist_error_json_payload(self, app, mocker):
@@ -342,9 +323,7 @@ class TestTraceAndErrorSecondPass:
         ctx.__enter__.return_value = conn
         mocker.patch("extensions.db.engine.connect", return_value=ctx)
         with app.test_request_context("/api", method="POST", json={"token": "secret"}):
-            row = LoggingCore._persist_error(
-                "m", category="BACKEND", level="ERROR", source="s"
-            )
+            row = LoggingCore._persist_error("m", category="BACKEND", level="ERROR", source="s")
         assert row == 13
 
     def test_persist_error_form_payload(self, app, mocker):
@@ -355,9 +334,7 @@ class TestTraceAndErrorSecondPass:
         ctx.__enter__.return_value = conn
         mocker.patch("extensions.db.engine.connect", return_value=ctx)
         with app.test_request_context("/form", method="POST", data={"name": "x"}):
-            row = LoggingCore._persist_error(
-                "m", category="BACKEND", level="ERROR", source="s"
-            )
+            row = LoggingCore._persist_error("m", category="BACKEND", level="ERROR", source="s")
         assert row == 14
 
     def test_persist_error_payload_read_failure(self, mocker):
@@ -373,9 +350,7 @@ class TestTraceAndErrorSecondPass:
         mock_req.form = None
         mocker.patch("services.logging_core.has_request_context", return_value=True)
         mocker.patch("services.logging_core.request", mock_req)
-        row = LoggingCore._persist_error(
-            "m", category="BACKEND", level="ERROR", source="s"
-        )
+        row = LoggingCore._persist_error("m", category="BACKEND", level="ERROR", source="s")
         assert row == 15
 
     def test_persist_error_frontend_url_endpoint(self, mocker):
@@ -406,14 +381,10 @@ class TestTraceAndErrorSecondPass:
         mock_req.url = "http://localhost/ok"
         mock_req.method = "GET"
         mock_req.headers = {}
-        type(mock_req).path = property(
-            lambda self: (_ for _ in ()).throw(RuntimeError("path fail"))
-        )
+        type(mock_req).path = property(lambda self: (_ for _ in ()).throw(RuntimeError("path fail")))
         mocker.patch("services.logging_core.has_request_context", return_value=True)
         mocker.patch("services.logging_core.request", mock_req)
-        row = LoggingCore._persist_error(
-            "m", category="BACKEND", level="ERROR", source="s"
-        )
+        row = LoggingCore._persist_error("m", category="BACKEND", level="ERROR", source="s")
         assert row == 17
 
     def test_persist_error_rate_spike_fires_alert(self, app, mocker):
@@ -427,15 +398,11 @@ class TestTraceAndErrorSecondPass:
         LoggingCore._alert_callbacks = [cb]
         for _ in range(25):
             LoggingCore._rate_monitor.record("SPIKE")
-        row = LoggingCore._persist_error(
-            "m", category="SPIKE", level="ERROR", source="s"
-        )
+        row = LoggingCore._persist_error("m", category="SPIKE", level="ERROR", source="s")
         assert row == 18
         cb.assert_called()
         LoggingCore._alert_callbacks = []
-        LoggingCore._rate_monitor = __import__(
-            "services.logging_core", fromlist=["_RateMonitor"]
-        )._RateMonitor()
+        LoggingCore._rate_monitor = __import__("services.logging_core", fromlist=["_RateMonitor"])._RateMonitor()
 
     def test_persist_error_db_retry_exhausted(self, mocker):
         mocker.patch.object(LoggingCore, "_find_duplicate", return_value=None)
@@ -443,12 +410,7 @@ class TestTraceAndErrorSecondPass:
         mocker.patch("services.logging_core.time.sleep")
         mocker.patch("services.logging_core._DB_RETRY_MAX_SECONDS", 0.05)
         fb = mocker.patch.object(LoggingCore, "_fallback_write")
-        assert (
-            LoggingCore._persist_error(
-                "x", category="BACKEND", level="ERROR", source="s"
-            )
-            is None
-        )
+        assert LoggingCore._persist_error("x", category="BACKEND", level="ERROR", source="s") is None
         fb.assert_called_once()
 
     def test_find_duplicate_success(self, mocker):
@@ -487,12 +449,8 @@ class TestErrorQueriesSecondPass:
         q.filter_by.return_value = q
         q.order_by.return_value.all.return_value = []
         mocker.patch("models.error_audit_log.ErrorAuditLog").query = q
-        LoggingCore.export_error_logs(
-            category="API", level="WARN", is_resolved="1", fmt="json"
-        )
-        LoggingCore.export_error_logs(
-            category="API", level="WARN", is_resolved="0", fmt="txt"
-        )
+        LoggingCore.export_error_logs(category="API", level="WARN", is_resolved="1", fmt="json")
+        LoggingCore.export_error_logs(category="API", level="WARN", is_resolved="0", fmt="txt")
 
     def test_mark_error_resolved_failure(self, mocker):
         mocker.patch("extensions.db.engine.connect", side_effect=RuntimeError("db"))
@@ -601,9 +559,7 @@ class TestTableHelpersSecondPass:
             assert LoggingCore._resolve_table_name("sales") == "Sales"
 
     def test_get_db_stats_sensitive_and_exception(self, mocker):
-        mocker.patch.object(
-            LoggingCore, "_resolve_table_name", side_effect=["users", "sales", None]
-        )
+        mocker.patch.object(LoggingCore, "_resolve_table_name", side_effect=["users", "sales", None])
         mocker.patch.object(LoggingCore, "log_audit")
         exec_mock = MagicMock()
         exec_mock.fetchall.return_value = [("users",), ("sales",), ("DROP",)]
@@ -627,9 +583,7 @@ class TestMiscSecondPass:
 
     def test_track_login_attempt_commit_failure(self, mocker):
         user = MagicMock(login_attempts=0)
-        mocker.patch(
-            "models.User"
-        ).query.filter_by.return_value.first.return_value = user
+        mocker.patch("models.User").query.filter_by.return_value.first.return_value = user
         mock_session = mocker.patch("utils.db_safety.db.session")
         mock_session.flush.side_effect = RuntimeError("commit fail")
         with pytest.raises(RuntimeError):
@@ -673,9 +627,7 @@ class TestAutoCleanupSecondPass:
 
     def test_auto_cleanup_table_failure(self, mocker):
         mocker.patch("shutil.disk_usage", return_value=(100, 50, 50))
-        mocker.patch(
-            "extensions.db.engine.connect", side_effect=RuntimeError("cleanup fail")
-        )
+        mocker.patch("extensions.db.engine.connect", side_effect=RuntimeError("cleanup fail"))
         results = LoggingCore.auto_cleanup()
         assert results["error_audit_logs"] == 0
 
@@ -688,17 +640,12 @@ class TestAutoCleanupSecondPass:
                 raise KeyboardInterrupt("stop worker")
 
         mocker.patch("services.logging_core.time.sleep", side_effect=fake_sleep)
-        cleanup = mocker.patch.object(
-            LoggingCore, "auto_cleanup", return_value={"error_audit_logs": 1}
-        )
+        cleanup = mocker.patch.object(LoggingCore, "auto_cleanup", return_value={"error_audit_logs": 1})
         thread_cls = mocker.patch("threading.Thread")
         captured = {}
 
         def start_thread():
-            target = (
-                thread_cls.call_args.kwargs.get("target")
-                or thread_cls.call_args[1]["target"]
-            )
+            target = thread_cls.call_args.kwargs.get("target") or thread_cls.call_args[1]["target"]
             captured["target"] = target
             target()
 
@@ -718,16 +665,11 @@ class TestAutoCleanupSecondPass:
                 raise KeyboardInterrupt("stop loop")
 
         mocker.patch("services.logging_core.time.sleep", side_effect=fake_sleep)
-        mocker.patch.object(
-            LoggingCore, "auto_cleanup", side_effect=RuntimeError("cleanup fail")
-        )
+        mocker.patch.object(LoggingCore, "auto_cleanup", side_effect=RuntimeError("cleanup fail"))
         thread_cls = mocker.patch("threading.Thread")
 
         def capture_and_run():
-            target = (
-                thread_cls.call_args.kwargs.get("target")
-                or thread_cls.call_args[1]["target"]
-            )
+            target = thread_cls.call_args.kwargs.get("target") or thread_cls.call_args[1]["target"]
             try:
                 target()
             except KeyboardInterrupt:

@@ -14,9 +14,7 @@ def gl_ensure_core_accounts(tenant_id=None):
 def gl_get_customer_credit_account(customer, branch_id=None, tenant_id=None):
     from services.gl_service import GLService
 
-    return GLService.get_customer_credit_account(
-        customer, branch_id=branch_id, tenant_id=tenant_id
-    )
+    return GLService.get_customer_credit_account(customer, branch_id=branch_id, tenant_id=tenant_id)
 
 
 def gl_get_customer_credit_concept(customer):
@@ -25,14 +23,10 @@ def gl_get_customer_credit_concept(customer):
     return GLService.get_customer_credit_concept(customer)
 
 
-def gl_get_default_liquidity_account(
-    liquidity_kind="bank", tenant_id=None, branch_id=None
-):
+def gl_get_default_liquidity_account(liquidity_kind="bank", tenant_id=None, branch_id=None):
     from services.gl_service import GLService
 
-    return GLService.get_default_liquidity_account(
-        liquidity_kind, branch_id=branch_id, tenant_id=tenant_id
-    )
+    return GLService.get_default_liquidity_account(liquidity_kind, branch_id=branch_id, tenant_id=tenant_id)
 
 
 def gl_create_manual_entry(*args, **kwargs):
@@ -68,9 +62,7 @@ def gl_post_or_fail(
     )
 
 
-def gl_resolve_exchange_rate(
-    transaction_date, from_currency, to_currency=None, tenant_id=None
-):
+def gl_resolve_exchange_rate(transaction_date, from_currency, to_currency=None, tenant_id=None):
     from services.exchange_rate_service import ExchangeRateService
     from utils.currency_utils import get_system_default_currency
 

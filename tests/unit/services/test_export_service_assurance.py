@@ -81,9 +81,7 @@ class TestPdfReport:
     def test_empty_table_omits_table_block(self):
         from services.export_service import ExportService
 
-        html = ExportService.generate_pdf_report(
-            "Empty", {"stats": {}, "table_data": [], "table_headers": []}
-        )
+        html = ExportService.generate_pdf_report("Empty", {"stats": {}, "table_data": [], "table_headers": []})
         assert "<table>" not in html
 
 

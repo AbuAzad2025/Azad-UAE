@@ -52,9 +52,7 @@ class TestShopWishlistDefaults:
 
 
 class TestShopWishlistConstraints:
-    def test_account_product_pair_unique(
-        self, db_session, sample_tenant, sample_product, shop_account, wishlist_item
-    ):
+    def test_account_product_pair_unique(self, db_session, sample_tenant, sample_product, shop_account, wishlist_item):
         from models.shop_wishlist import ShopWishlist
 
         db_session.add(

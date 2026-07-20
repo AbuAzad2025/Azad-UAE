@@ -53,16 +53,10 @@ def upgrade():
         sa.Column("amount", sa.Numeric(precision=15, scale=2), nullable=False),
         sa.Column("currency", sa.String(length=10), nullable=True),
         sa.Column("exchange_rate", sa.Numeric(precision=15, scale=6), nullable=True),
-        sa.Column(
-            "clearance_exchange_rate", sa.Numeric(precision=15, scale=6), nullable=True
-        ),
+        sa.Column("clearance_exchange_rate", sa.Numeric(precision=15, scale=6), nullable=True),
         sa.Column("amount_aed", sa.Numeric(precision=15, scale=2), nullable=True),
-        sa.Column(
-            "actual_amount_aed", sa.Numeric(precision=15, scale=2), nullable=True
-        ),
-        sa.Column(
-            "currency_gain_loss", sa.Numeric(precision=15, scale=2), nullable=True
-        ),
+        sa.Column("actual_amount_aed", sa.Numeric(precision=15, scale=2), nullable=True),
+        sa.Column("currency_gain_loss", sa.Numeric(precision=15, scale=2), nullable=True),
         sa.Column("issue_date", sa.Date(), nullable=False),
         sa.Column("due_date", sa.Date(), nullable=False),
         sa.Column("deposit_date", sa.Date(), nullable=True),
@@ -92,9 +86,7 @@ def upgrade():
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.Column("user_id", sa.Integer(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "tenant_id", "cheque_number", name="uq_cheques_tenant_cheque_number"
-        ),
+        sa.UniqueConstraint("tenant_id", "cheque_number", name="uq_cheques_tenant_cheque_number"),
     )
     op.create_table(
         "currencies",
@@ -123,9 +115,7 @@ def upgrade():
         sa.Column("is_required", sa.Boolean(), nullable=True),
         sa.Column("is_active", sa.Boolean(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "industry_code", "field_code", name="uq_industry_field_code"
-        ),
+        sa.UniqueConstraint("industry_code", "field_code", name="uq_industry_field_code"),
     )
     op.create_table(
         "packages",
@@ -190,9 +180,7 @@ def upgrade():
         sa.Column("user_id", sa.Integer(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "tenant_id", "payment_number", name="uq_payments_tenant_payment_number"
-        ),
+        sa.UniqueConstraint("tenant_id", "payment_number", name="uq_payments_tenant_payment_number"),
     )
     op.create_table(
         "permissions",
@@ -233,9 +221,7 @@ def upgrade():
         sa.Column("user_id", sa.Integer(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "tenant_id", "receipt_number", name="uq_receipts_tenant_receipt_number"
-        ),
+        sa.UniqueConstraint("tenant_id", "receipt_number", name="uq_receipts_tenant_receipt_number"),
     )
     op.create_table(
         "roles",
@@ -501,9 +487,7 @@ def upgrade():
         sa.Column("total_budgeted", sa.Numeric(precision=18, scale=3), nullable=True),
         sa.Column("total_actual", sa.Numeric(precision=18, scale=3), nullable=True),
         sa.Column("total_variance", sa.Numeric(precision=18, scale=3), nullable=True),
-        sa.Column(
-            "variance_percentage", sa.Numeric(precision=5, scale=2), nullable=True
-        ),
+        sa.Column("variance_percentage", sa.Numeric(precision=5, scale=2), nullable=True),
         sa.Column("status", sa.String(length=20), nullable=True),
         sa.Column("notes", sa.Text(), nullable=True),
         sa.Column("created_by", sa.Integer(), nullable=True),
@@ -513,9 +497,7 @@ def upgrade():
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.Column("approved_at", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "tenant_id", "budget_number", name="uq_budgets_tenant_budget_number"
-        ),
+        sa.UniqueConstraint("tenant_id", "budget_number", name="uq_budgets_tenant_budget_number"),
     )
     op.create_table(
         "campaigns",
@@ -525,9 +507,7 @@ def upgrade():
         sa.Column("name_ar", sa.String(length=200), nullable=True),
         sa.Column("campaign_type", sa.String(length=30), nullable=False),
         sa.Column("discount_value", sa.Numeric(precision=15, scale=3), nullable=False),
-        sa.Column(
-            "max_discount_amount", sa.Numeric(precision=15, scale=3), nullable=True
-        ),
+        sa.Column("max_discount_amount", sa.Numeric(precision=15, scale=3), nullable=True),
         sa.Column("start_date", sa.DateTime(), nullable=False),
         sa.Column("end_date", sa.DateTime(), nullable=False),
         sa.Column("min_order_amount", sa.Numeric(precision=15, scale=3), nullable=True),
@@ -836,9 +816,7 @@ def upgrade():
         sa.Column("is_active", sa.Boolean(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "tenant_id", "name", name="uq_expense_categories_tenant_name"
-        ),
+        sa.UniqueConstraint("tenant_id", "name", name="uq_expense_categories_tenant_name"),
     )
     op.create_table(
         "fiscal_positions",
@@ -914,9 +892,7 @@ def upgrade():
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "tenant_id", "entry_number", name="uq_gl_journal_entries_tenant_number"
-        ),
+        sa.UniqueConstraint("tenant_id", "entry_number", name="uq_gl_journal_entries_tenant_number"),
     )
     op.create_table(
         "gl_periods",
@@ -930,9 +906,7 @@ def upgrade():
         sa.Column("notes", sa.Text(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "tenant_id", "year", "month", name="uq_gl_periods_tenant_ym"
-        ),
+        sa.UniqueConstraint("tenant_id", "year", "month", name="uq_gl_periods_tenant_ym"),
     )
     op.create_table(
         "integration_settings",
@@ -948,9 +922,7 @@ def upgrade():
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.Column("updated_by", sa.Integer(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "tenant_id", "service_name", name="uq_integration_settings_tenant_service"
-        ),
+        sa.UniqueConstraint("tenant_id", "service_name", name="uq_integration_settings_tenant_service"),
     )
     op.create_table(
         "invoice_settings",
@@ -1079,30 +1051,16 @@ def upgrade():
         sa.Column("email", sa.String(length=120), nullable=True),
         sa.Column("address", sa.Text(), nullable=True),
         sa.Column("id_number", sa.String(length=100), nullable=True),
-        sa.Column(
-            "investment_amount", sa.Numeric(precision=15, scale=3), nullable=True
-        ),
+        sa.Column("investment_amount", sa.Numeric(precision=15, scale=3), nullable=True),
         sa.Column("share_percentage", sa.Numeric(precision=5, scale=2), nullable=True),
-        sa.Column(
-            "fixed_monthly_amount", sa.Numeric(precision=15, scale=3), nullable=True
-        ),
-        sa.Column(
-            "expense_share_percentage", sa.Numeric(precision=5, scale=2), nullable=True
-        ),
-        sa.Column(
-            "loss_share_percentage", sa.Numeric(precision=5, scale=2), nullable=True
-        ),
-        sa.Column(
-            "min_profit_threshold", sa.Numeric(precision=15, scale=3), nullable=True
-        ),
+        sa.Column("fixed_monthly_amount", sa.Numeric(precision=15, scale=3), nullable=True),
+        sa.Column("expense_share_percentage", sa.Numeric(precision=5, scale=2), nullable=True),
+        sa.Column("loss_share_percentage", sa.Numeric(precision=5, scale=2), nullable=True),
+        sa.Column("min_profit_threshold", sa.Numeric(precision=15, scale=3), nullable=True),
         sa.Column("current_balance", sa.Numeric(precision=15, scale=3), nullable=True),
-        sa.Column(
-            "total_profit_received", sa.Numeric(precision=15, scale=3), nullable=True
-        ),
+        sa.Column("total_profit_received", sa.Numeric(precision=15, scale=3), nullable=True),
         sa.Column("total_loss_borne", sa.Numeric(precision=15, scale=3), nullable=True),
-        sa.Column(
-            "total_withdrawals", sa.Numeric(precision=15, scale=3), nullable=True
-        ),
+        sa.Column("total_withdrawals", sa.Numeric(precision=15, scale=3), nullable=True),
         sa.Column(
             "total_additional_investment",
             sa.Numeric(precision=15, scale=3),
@@ -1149,12 +1107,8 @@ def upgrade():
         sa.Column("square_access_token", sa.String(length=255), nullable=True),
         sa.Column("razorpay_key_id", sa.String(length=255), nullable=True),
         sa.Column("razorpay_key_secret", sa.String(length=255), nullable=True),
-        sa.Column(
-            "min_donation_amount", sa.Numeric(precision=10, scale=2), nullable=True
-        ),
-        sa.Column(
-            "max_donation_amount", sa.Numeric(precision=10, scale=2), nullable=True
-        ),
+        sa.Column("min_donation_amount", sa.Numeric(precision=10, scale=2), nullable=True),
+        sa.Column("max_donation_amount", sa.Numeric(precision=10, scale=2), nullable=True),
         sa.Column("daily_limit", sa.Numeric(precision=15, scale=2), nullable=True),
         sa.Column("donations_enabled", sa.Boolean(), nullable=True),
         sa.Column("donation_page_enabled", sa.Boolean(), nullable=True),
@@ -1203,12 +1157,8 @@ def upgrade():
         sa.Column("session_number", sa.String(length=50), nullable=False),
         sa.Column("opened_at", sa.DateTime(), nullable=False),
         sa.Column("closed_at", sa.DateTime(), nullable=True),
-        sa.Column(
-            "opening_balance_cash", sa.Numeric(precision=15, scale=3), nullable=True
-        ),
-        sa.Column(
-            "closing_balance_cash", sa.Numeric(precision=15, scale=3), nullable=True
-        ),
+        sa.Column("opening_balance_cash", sa.Numeric(precision=15, scale=3), nullable=True),
+        sa.Column("closing_balance_cash", sa.Numeric(precision=15, scale=3), nullable=True),
         sa.Column("expected_balance", sa.Numeric(precision=15, scale=3), nullable=True),
         sa.Column("difference", sa.Numeric(precision=15, scale=3), nullable=True),
         sa.Column("total_sales", sa.Numeric(precision=15, scale=3), nullable=True),
@@ -1219,9 +1169,7 @@ def upgrade():
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "tenant_id", "session_number", name="uq_pos_sessions_tenant_session_number"
-        ),
+        sa.UniqueConstraint("tenant_id", "session_number", name="uq_pos_sessions_tenant_session_number"),
     )
     op.create_table(
         "print_history",
@@ -1248,9 +1196,7 @@ def upgrade():
         sa.Column("is_active", sa.Boolean(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "tenant_id", "name", name="uq_product_categories_tenant_name"
-        ),
+        sa.UniqueConstraint("tenant_id", "name", name="uq_product_categories_tenant_name"),
     )
     op.create_table(
         "profit_centers",
@@ -1366,9 +1312,7 @@ def upgrade():
         sa.Column("credit_limit", sa.Numeric(precision=15, scale=3), nullable=True),
         sa.Column("payment_terms_days", sa.Integer(), nullable=True),
         sa.Column("preferred_currency", sa.String(length=3), nullable=True),
-        sa.Column(
-            "total_purchases_aed", sa.Numeric(precision=15, scale=3), nullable=True
-        ),
+        sa.Column("total_purchases_aed", sa.Numeric(precision=15, scale=3), nullable=True),
         sa.Column("total_paid_aed", sa.Numeric(precision=15, scale=3), nullable=True),
         sa.Column("last_purchase_date", sa.DateTime(), nullable=True),
         sa.Column("notes", sa.Text(), nullable=True),
@@ -1468,9 +1412,7 @@ def upgrade():
         sa.Column("vat_enabled", sa.Boolean(), nullable=True),
         sa.Column("vat_number", sa.String(length=50), nullable=True),
         sa.Column("tax_id_number", sa.String(length=50), nullable=True),
-        sa.Column(
-            "azad_platform_fee_rate", sa.Numeric(precision=5, scale=2), nullable=True
-        ),
+        sa.Column("azad_platform_fee_rate", sa.Numeric(precision=5, scale=2), nullable=True),
         sa.Column(
             "subscription_monthly_fee_aed",
             sa.Numeric(precision=15, scale=3),
@@ -1583,9 +1525,7 @@ def upgrade():
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "tenant_id", "expense_number", name="uq_advanced_expenses_tenant_number"
-        ),
+        sa.UniqueConstraint("tenant_id", "expense_number", name="uq_advanced_expenses_tenant_number"),
     )
     op.create_table(
         "bank_reconciliations",
@@ -1605,15 +1545,9 @@ def upgrade():
             sa.Numeric(precision=18, scale=3),
             nullable=True,
         ),
-        sa.Column(
-            "closing_balance_per_bank", sa.Numeric(precision=18, scale=3), nullable=True
-        ),
-        sa.Column(
-            "outstanding_deposits", sa.Numeric(precision=18, scale=3), nullable=True
-        ),
-        sa.Column(
-            "outstanding_withdrawals", sa.Numeric(precision=18, scale=3), nullable=True
-        ),
+        sa.Column("closing_balance_per_bank", sa.Numeric(precision=18, scale=3), nullable=True),
+        sa.Column("outstanding_deposits", sa.Numeric(precision=18, scale=3), nullable=True),
+        sa.Column("outstanding_withdrawals", sa.Numeric(precision=18, scale=3), nullable=True),
         sa.Column("bank_charges", sa.Numeric(precision=18, scale=3), nullable=True),
         sa.Column("bank_interest", sa.Numeric(precision=18, scale=3), nullable=True),
         sa.Column("errors_in_books", sa.Numeric(precision=18, scale=3), nullable=True),
@@ -1643,9 +1577,7 @@ def upgrade():
         sa.Column("budgeted_amount", sa.Numeric(precision=18, scale=3), nullable=False),
         sa.Column("actual_amount", sa.Numeric(precision=18, scale=3), nullable=True),
         sa.Column("variance", sa.Numeric(precision=18, scale=3), nullable=True),
-        sa.Column(
-            "variance_percentage", sa.Numeric(precision=8, scale=2), nullable=True
-        ),
+        sa.Column("variance_percentage", sa.Numeric(precision=8, scale=2), nullable=True),
         sa.Column("notes", sa.Text(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -1682,9 +1614,7 @@ def upgrade():
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "tenant_id", "team_id", "user_id", name="uq_crm_team_member_tenant"
-        ),
+        sa.UniqueConstraint("tenant_id", "team_id", "user_id", name="uq_crm_team_member_tenant"),
     )
     op.create_table(
         "customers",
@@ -1788,9 +1718,7 @@ def upgrade():
         sa.Column("branch_id", sa.Integer(), nullable=True),
         sa.Column("is_reversed", sa.Boolean(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "tenant_id", "expense_number", name="uq_expenses_tenant_expense_number"
-        ),
+        sa.UniqueConstraint("tenant_id", "expense_number", name="uq_expenses_tenant_expense_number"),
     )
     op.create_table(
         "fixed_assets",
@@ -1810,9 +1738,7 @@ def upgrade():
         sa.Column("depreciation_method", sa.String(length=30), nullable=True),
         sa.Column("useful_life_years", sa.Integer(), nullable=False),
         sa.Column("useful_life_months", sa.Integer(), nullable=True),
-        sa.Column(
-            "accumulated_depreciation", sa.Numeric(precision=18, scale=3), nullable=True
-        ),
+        sa.Column("accumulated_depreciation", sa.Numeric(precision=18, scale=3), nullable=True),
         sa.Column("book_value", sa.Numeric(precision=18, scale=3), nullable=True),
         sa.Column("last_depreciation_date", sa.Date(), nullable=True),
         sa.Column("location", sa.String(length=200), nullable=True),
@@ -1821,17 +1747,13 @@ def upgrade():
         sa.Column("status", sa.String(length=20), nullable=True),
         sa.Column("disposal_date", sa.Date(), nullable=True),
         sa.Column("disposal_price", sa.Numeric(precision=18, scale=3), nullable=True),
-        sa.Column(
-            "disposal_gain_loss", sa.Numeric(precision=18, scale=3), nullable=True
-        ),
+        sa.Column("disposal_gain_loss", sa.Numeric(precision=18, scale=3), nullable=True),
         sa.Column("notes", sa.Text(), nullable=True),
         sa.Column("created_by", sa.Integer(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "tenant_id", "asset_number", name="uq_fixed_assets_tenant_asset_number"
-        ),
+        sa.UniqueConstraint("tenant_id", "asset_number", name="uq_fixed_assets_tenant_asset_number"),
     )
     op.create_table(
         "gl_account_mappings",
@@ -1928,18 +1850,10 @@ def upgrade():
         sa.Column("net_profit", sa.Numeric(precision=15, scale=3), nullable=True),
         sa.Column("share_percentage", sa.Numeric(precision=5, scale=2), nullable=True),
         sa.Column("share_amount", sa.Numeric(precision=15, scale=3), nullable=True),
-        sa.Column(
-            "expense_share_percentage", sa.Numeric(precision=5, scale=2), nullable=True
-        ),
-        sa.Column(
-            "expense_share_amount", sa.Numeric(precision=15, scale=3), nullable=True
-        ),
-        sa.Column(
-            "loss_share_percentage", sa.Numeric(precision=5, scale=2), nullable=True
-        ),
-        sa.Column(
-            "loss_share_amount", sa.Numeric(precision=15, scale=3), nullable=True
-        ),
+        sa.Column("expense_share_percentage", sa.Numeric(precision=5, scale=2), nullable=True),
+        sa.Column("expense_share_amount", sa.Numeric(precision=15, scale=3), nullable=True),
+        sa.Column("loss_share_percentage", sa.Numeric(precision=5, scale=2), nullable=True),
+        sa.Column("loss_share_amount", sa.Numeric(precision=15, scale=3), nullable=True),
         sa.Column("fixed_amount", sa.Numeric(precision=15, scale=3), nullable=True),
         sa.Column("net_due", sa.Numeric(precision=15, scale=3), nullable=True),
         sa.Column("status", sa.String(length=20), nullable=True),
@@ -2001,9 +1915,7 @@ def upgrade():
         sa.Column("days_worked", sa.Numeric(precision=5, scale=2), nullable=True),
         sa.Column("allowances", sa.Numeric(precision=10, scale=2), nullable=True),
         sa.Column("deductions", sa.Numeric(precision=10, scale=2), nullable=True),
-        sa.Column(
-            "advances_deducted", sa.Numeric(precision=10, scale=2), nullable=True
-        ),
+        sa.Column("advances_deducted", sa.Numeric(precision=10, scale=2), nullable=True),
         sa.Column("net_salary", sa.Numeric(precision=10, scale=2), nullable=False),
         sa.Column("payment_date", sa.Date(), nullable=True),
         sa.Column("status", sa.String(length=20), nullable=True),
@@ -2061,18 +1973,14 @@ def upgrade():
         sa.Column("freight", sa.Numeric(precision=15, scale=3), nullable=False),
         sa.Column("insurance", sa.Numeric(precision=15, scale=3), nullable=False),
         sa.Column("customs_duty", sa.Numeric(precision=15, scale=3), nullable=False),
-        sa.Column(
-            "other_landed_cost", sa.Numeric(precision=15, scale=3), nullable=False
-        ),
+        sa.Column("other_landed_cost", sa.Numeric(precision=15, scale=3), nullable=False),
         sa.Column("status", sa.String(length=20), nullable=True),
         sa.Column("notes", sa.Text(), nullable=True),
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "tenant_id", "purchase_number", name="uq_purchases_tenant_purchase_number"
-        ),
+        sa.UniqueConstraint("tenant_id", "purchase_number", name="uq_purchases_tenant_purchase_number"),
     )
     op.create_table(
         "salary_advances",
@@ -2099,9 +2007,7 @@ def upgrade():
         sa.Column("tenant_id", sa.Integer(), nullable=False),
         sa.Column("warehouse_id", sa.Integer(), nullable=False),
         sa.Column("is_enabled", sa.Boolean(), nullable=False),
-        sa.Column(
-            "platform_disabled", sa.Boolean(), server_default="false", nullable=False
-        ),
+        sa.Column("platform_disabled", sa.Boolean(), server_default="false", nullable=False),
         sa.Column("store_slug", sa.String(length=100), nullable=False),
         sa.Column("title", sa.String(length=200), nullable=True),
         sa.Column("tagline", sa.String(length=255), nullable=True),
@@ -2118,9 +2024,7 @@ def upgrade():
         sa.Column("meta_description_en", sa.String(length=500), nullable=True),
         sa.Column("return_policy_ar", sa.Text(), nullable=True),
         sa.Column("return_policy_en", sa.Text(), nullable=True),
-        sa.Column(
-            "low_stock_threshold", sa.Numeric(precision=15, scale=3), nullable=True
-        ),
+        sa.Column("low_stock_threshold", sa.Numeric(precision=15, scale=3), nullable=True),
         sa.Column("notify_whatsapp_on_order", sa.Boolean(), nullable=False),
         sa.Column("notify_email_on_order", sa.Boolean(), nullable=False),
         sa.Column("subdomain", sa.String(length=100), nullable=True),
@@ -2196,9 +2100,7 @@ def upgrade():
         sa.Column("tenant_id", sa.Integer(), nullable=False),
         sa.Column("asset_id", sa.Integer(), nullable=False),
         sa.Column("period_date", sa.Date(), nullable=False),
-        sa.Column(
-            "depreciation_amount", sa.Numeric(precision=18, scale=3), nullable=False
-        ),
+        sa.Column("depreciation_amount", sa.Numeric(precision=18, scale=3), nullable=False),
         sa.Column(
             "accumulated_depreciation",
             sa.Numeric(precision=18, scale=3),
@@ -2385,9 +2287,7 @@ def upgrade():
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "tenant_id", "sale_number", name="uq_sales_tenant_sale_number"
-        ),
+        sa.UniqueConstraint("tenant_id", "sale_number", name="uq_sales_tenant_sale_number"),
     )
     op.create_table(
         "shop_customer_accounts",
@@ -2465,9 +2365,7 @@ def upgrade():
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "idempotency_key", name="uq_azad_platform_fees_idempotency_key"
-        ),
+        sa.UniqueConstraint("idempotency_key", name="uq_azad_platform_fees_idempotency_key"),
     )
     op.create_table(
         "bank_statement_lines",
@@ -2573,21 +2471,13 @@ def upgrade():
         sa.Column("reference_type", sa.String(length=50), nullable=True),
         sa.Column("reference_id", sa.Integer(), nullable=True),
         sa.Column("old_average_cost", sa.Numeric(precision=18, scale=6), nullable=True),
-        sa.Column(
-            "new_average_cost", sa.Numeric(precision=18, scale=6), nullable=False
-        ),
+        sa.Column("new_average_cost", sa.Numeric(precision=18, scale=6), nullable=False),
         sa.Column("quantity_change", sa.Numeric(precision=18, scale=3), nullable=False),
-        sa.Column(
-            "old_total_quantity", sa.Numeric(precision=18, scale=3), nullable=True
-        ),
-        sa.Column(
-            "new_total_quantity", sa.Numeric(precision=18, scale=3), nullable=False
-        ),
+        sa.Column("old_total_quantity", sa.Numeric(precision=18, scale=3), nullable=True),
+        sa.Column("new_total_quantity", sa.Numeric(precision=18, scale=3), nullable=False),
         sa.Column("old_total_value", sa.Numeric(precision=18, scale=3), nullable=True),
         sa.Column("new_total_value", sa.Numeric(precision=18, scale=3), nullable=False),
-        sa.Column(
-            "movement_unit_cost", sa.Numeric(precision=18, scale=6), nullable=True
-        ),
+        sa.Column("movement_unit_cost", sa.Numeric(precision=18, scale=6), nullable=True),
         sa.Column("currency", sa.String(length=3), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
@@ -2615,9 +2505,7 @@ def upgrade():
         sa.Column("percentage", sa.Numeric(precision=5, scale=2), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "product_id", "partner_customer_id", name="uq_product_partner"
-        ),
+        sa.UniqueConstraint("product_id", "partner_customer_id", name="uq_product_partner"),
     )
     op.create_table(
         "product_price_tiers",
@@ -2631,9 +2519,7 @@ def upgrade():
         sa.Column("is_active", sa.Boolean(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "tenant_id", "product_id", "tier_code", name="uq_product_price_tier"
-        ),
+        sa.UniqueConstraint("tenant_id", "product_id", "tier_code", name="uq_product_price_tier"),
     )
     op.create_table(
         "product_returns",
@@ -2656,9 +2542,7 @@ def upgrade():
         sa.Column("processed_by", sa.Integer(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "tenant_id", "return_number", name="uq_product_returns_tenant_return_number"
-        ),
+        sa.UniqueConstraint("tenant_id", "return_number", name="uq_product_returns_tenant_return_number"),
     )
     op.create_table(
         "product_warehouse_stock",
@@ -2673,9 +2557,7 @@ def upgrade():
         sa.Column("warehouse_country_of_origin", sa.String(length=100), nullable=True),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "tenant_id", "product_id", "warehouse_id", name="uq_product_warehouse_stock"
-        ),
+        sa.UniqueConstraint("tenant_id", "product_id", "warehouse_id", name="uq_product_warehouse_stock"),
     )
     op.create_table(
         "project_members",
@@ -2771,9 +2653,7 @@ def upgrade():
         sa.Column("name", sa.String(length=100), nullable=False),
         sa.Column("name_ar", sa.String(length=100), nullable=True),
         sa.Column("sku", sa.String(length=100), nullable=True),
-        sa.Column(
-            "price_adjustment", sa.Numeric(precision=15, scale=3), nullable=False
-        ),
+        sa.Column("price_adjustment", sa.Numeric(precision=15, scale=3), nullable=False),
         sa.Column("stock_quantity", sa.Numeric(precision=15, scale=3), nullable=False),
         sa.Column("sort_order", sa.Integer(), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False),
@@ -2824,9 +2704,7 @@ def upgrade():
         sa.Column("product_id", sa.Integer(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "account_id", "product_id", name="uq_wishlist_account_product"
-        ),
+        sa.UniqueConstraint("account_id", "product_id", name="uq_wishlist_account_product"),
     )
     op.create_table(
         "stock_movements",
@@ -2883,9 +2761,7 @@ def upgrade():
         sa.Column("cost_basis", sa.Numeric(precision=15, scale=3), nullable=True),
         sa.Column("profit_margin", sa.Numeric(precision=15, scale=3), nullable=True),
         sa.Column("base_amount_aed", sa.Numeric(precision=15, scale=3), nullable=False),
-        sa.Column(
-            "commission_amount_aed", sa.Numeric(precision=15, scale=3), nullable=False
-        ),
+        sa.Column("commission_amount_aed", sa.Numeric(precision=15, scale=3), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -2922,9 +2798,7 @@ def upgrade():
         sa.Column("created_at", sa.DateTime(), nullable=True),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "tenant_id", "serial_number", name="uq_serial_tenant_serial"
-        ),
+        sa.UniqueConstraint("tenant_id", "serial_number", name="uq_serial_tenant_serial"),
     )
     op.create_table(
         "product_warehouse_costs",
@@ -3016,75 +2890,33 @@ def upgrade():
     )
 
     with op.batch_alter_table("branches", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_branches_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_branches_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_branches_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_branches_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_branches_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_branches_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("cheques", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_cheques_branch_id"), ["branch_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_cheques_cheque_number"), ["cheque_number"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_cheques_cheque_type"), ["cheque_type"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_cheques_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_cheques_customer_id"), ["customer_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_cheques_due_date"), ["due_date"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_cheques_expense_id"), ["expense_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_cheques_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_cheques_is_overdue"), ["is_overdue"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_cheques_payment_id"), ["payment_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_cheques_purchase_id"), ["purchase_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_cheques_receipt_id"), ["receipt_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_cheques_sale_id"), ["sale_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_cheques_branch_id"), ["branch_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_cheques_cheque_number"), ["cheque_number"], unique=False)
+        batch_op.create_index(batch_op.f("ix_cheques_cheque_type"), ["cheque_type"], unique=False)
+        batch_op.create_index(batch_op.f("ix_cheques_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_cheques_customer_id"), ["customer_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_cheques_due_date"), ["due_date"], unique=False)
+        batch_op.create_index(batch_op.f("ix_cheques_expense_id"), ["expense_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_cheques_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_cheques_is_overdue"), ["is_overdue"], unique=False)
+        batch_op.create_index(batch_op.f("ix_cheques_payment_id"), ["payment_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_cheques_purchase_id"), ["purchase_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_cheques_receipt_id"), ["receipt_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_cheques_sale_id"), ["sale_id"], unique=False)
         batch_op.create_index(batch_op.f("ix_cheques_status"), ["status"], unique=False)
-        batch_op.create_index(
-            batch_op.f("ix_cheques_supplier_id"), ["supplier_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_cheques_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_cheques_user_id"), ["user_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_cheques_supplier_id"), ["supplier_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_cheques_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_cheques_user_id"), ["user_id"], unique=False)
 
     with op.batch_alter_table("currencies", schema=None) as batch_op:
         batch_op.create_index(batch_op.f("ix_currencies_code"), ["code"], unique=True)
-        batch_op.create_index(
-            batch_op.f("ix_currencies_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_currencies_is_active"), ["is_active"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_currencies_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_currencies_is_active"), ["is_active"], unique=False)
 
     with op.batch_alter_table("industry_field_definitions", schema=None) as batch_op:
         batch_op.create_index(
@@ -3099,118 +2931,58 @@ def upgrade():
         )
 
     with op.batch_alter_table("packages", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_packages_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_packages_is_active"), ["is_active"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_packages_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_packages_is_active"), ["is_active"], unique=False)
 
     with op.batch_alter_table("payments", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_payments_branch_id"), ["branch_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_payments_cheque_id"), ["cheque_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_payments_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_payments_customer_id"), ["customer_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_payments_direction"), ["direction"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_payments_branch_id"), ["branch_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_payments_cheque_id"), ["cheque_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_payments_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_payments_customer_id"), ["customer_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_payments_direction"), ["direction"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_payments_payment_confirmed"),
             ["payment_confirmed"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_payments_payment_date"), ["payment_date"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_payments_payment_number"), ["payment_number"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_payments_payment_type"), ["payment_type"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_payments_purchase_id"), ["purchase_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_payments_sale_id"), ["sale_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_payments_supplier_id"), ["supplier_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_payments_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_payments_user_id"), ["user_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_payments_payment_date"), ["payment_date"], unique=False)
+        batch_op.create_index(batch_op.f("ix_payments_payment_number"), ["payment_number"], unique=False)
+        batch_op.create_index(batch_op.f("ix_payments_payment_type"), ["payment_type"], unique=False)
+        batch_op.create_index(batch_op.f("ix_payments_purchase_id"), ["purchase_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_payments_sale_id"), ["sale_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_payments_supplier_id"), ["supplier_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_payments_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_payments_user_id"), ["user_id"], unique=False)
 
     with op.batch_alter_table("permissions", schema=None) as batch_op:
         batch_op.create_index(batch_op.f("ix_permissions_code"), ["code"], unique=True)
-        batch_op.create_index(
-            batch_op.f("ix_permissions_created_at"), ["created_at"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_permissions_created_at"), ["created_at"], unique=False)
 
     with op.batch_alter_table("receipts", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_receipts_branch_id"), ["branch_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_receipts_cheque_id"), ["cheque_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_receipts_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_receipts_customer_id"), ["customer_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_receipts_direction"), ["direction"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_receipts_branch_id"), ["branch_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_receipts_cheque_id"), ["cheque_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_receipts_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_receipts_customer_id"), ["customer_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_receipts_direction"), ["direction"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_receipts_payment_confirmed"),
             ["payment_confirmed"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_receipts_receipt_date"), ["receipt_date"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_receipts_receipt_number"), ["receipt_number"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_receipts_source_id"), ["source_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_receipts_source_type"), ["source_type"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_receipts_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_receipts_user_id"), ["user_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_receipts_receipt_date"), ["receipt_date"], unique=False)
+        batch_op.create_index(batch_op.f("ix_receipts_receipt_number"), ["receipt_number"], unique=False)
+        batch_op.create_index(batch_op.f("ix_receipts_source_id"), ["source_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_receipts_source_type"), ["source_type"], unique=False)
+        batch_op.create_index(batch_op.f("ix_receipts_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_receipts_user_id"), ["user_id"], unique=False)
 
     with op.batch_alter_table("roles", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_roles_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_roles_is_active"), ["is_active"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_roles_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_roles_is_active"), ["is_active"], unique=False)
         batch_op.create_index(batch_op.f("ix_roles_slug"), ["slug"], unique=True)
 
     with op.batch_alter_table("store_payment_methods", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_store_payment_methods_code"), ["code"], unique=True
-        )
+        batch_op.create_index(batch_op.f("ix_store_payment_methods_code"), ["code"], unique=True)
         batch_op.create_index(
             batch_op.f("ix_store_payment_methods_created_at"),
             ["created_at"],
@@ -3223,118 +2995,58 @@ def upgrade():
         )
 
     with op.batch_alter_table("tenants", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_tenants_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_tenants_created_by"), ["created_by"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_tenants_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_tenants_is_suspended"), ["is_suspended"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_tenants_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_tenants_created_by"), ["created_by"], unique=False)
+        batch_op.create_index(batch_op.f("ix_tenants_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_tenants_is_suspended"), ["is_suspended"], unique=False)
         batch_op.create_index(batch_op.f("ix_tenants_slug"), ["slug"], unique=True)
-        batch_op.create_index(
-            batch_op.f("ix_tenants_tax_number"), ["tax_number"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_tenants_tax_number"), ["tax_number"], unique=False)
 
     with op.batch_alter_table("users", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_users_branch_id"), ["branch_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_users_created_at"), ["created_at"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_users_branch_id"), ["branch_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_users_created_at"), ["created_at"], unique=False)
         batch_op.create_index(batch_op.f("ix_users_email"), ["email"], unique=True)
-        batch_op.create_index(
-            batch_op.f("ix_users_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_users_is_owner"), ["is_owner"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_users_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_users_is_owner"), ["is_owner"], unique=False)
         batch_op.create_index(batch_op.f("ix_users_role_id"), ["role_id"], unique=False)
-        batch_op.create_index(
-            batch_op.f("ix_users_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_users_username"), ["username"], unique=True
-        )
+        batch_op.create_index(batch_op.f("ix_users_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_users_username"), ["username"], unique=True)
 
     with op.batch_alter_table("ai_expertise", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_ai_expertise_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_ai_expertise_domain"), ["domain"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_ai_expertise_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_ai_expertise_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_ai_expertise_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_ai_expertise_domain"), ["domain"], unique=False)
+        batch_op.create_index(batch_op.f("ix_ai_expertise_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_ai_expertise_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("ai_interactions", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_ai_interactions_created_at"), ["created_at"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_ai_interactions_created_at"), ["created_at"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_ai_interactions_is_training_sample"),
             ["is_training_sample"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_ai_interactions_session_id"), ["session_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_ai_interactions_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_ai_interactions_user_id"), ["user_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_ai_interactions_session_id"), ["session_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_ai_interactions_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_ai_interactions_user_id"), ["user_id"], unique=False)
 
     with op.batch_alter_table("ai_memories", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_ai_memories_category"), ["category"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_ai_memories_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_ai_memories_is_active"), ["is_active"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_ai_memories_category"), ["category"], unique=False)
+        batch_op.create_index(batch_op.f("ix_ai_memories_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_ai_memories_is_active"), ["is_active"], unique=False)
         batch_op.create_index(batch_op.f("ix_ai_memories_key"), ["key"], unique=False)
-        batch_op.create_index(
-            batch_op.f("ix_ai_memories_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_ai_memories_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("api_keys", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_api_keys_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_api_keys_created_by"), ["created_by"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_api_keys_is_active"), ["is_active"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_api_keys_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_api_keys_created_by"), ["created_by"], unique=False)
+        batch_op.create_index(batch_op.f("ix_api_keys_is_active"), ["is_active"], unique=False)
         batch_op.create_index(batch_op.f("ix_api_keys_scope"), ["scope"], unique=False)
 
     with op.batch_alter_table("archived_records", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_archived_records_archived_at"), ["archived_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_archived_records_archived_by"), ["archived_by"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_archived_records_table_name"), ["table_name"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_archived_records_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_archived_records_archived_at"), ["archived_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_archived_records_archived_by"), ["archived_by"], unique=False)
+        batch_op.create_index(batch_op.f("ix_archived_records_table_name"), ["table_name"], unique=False)
+        batch_op.create_index(batch_op.f("ix_archived_records_tenant_id"), ["tenant_id"], unique=False)
         batch_op.create_index(
             "ix_archived_records_tenant_table",
             ["tenant_id", "table_name"],
@@ -3342,38 +3054,18 @@ def upgrade():
         )
 
     with op.batch_alter_table("attendances", schema=None) as batch_op:
-        batch_op.create_index(
-            "ix_attendance_user_date", ["user_id", "check_in"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_attendances_branch_id"), ["branch_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_attendances_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_attendances_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_attendances_user_id"), ["user_id"], unique=False
-        )
+        batch_op.create_index("ix_attendance_user_date", ["user_id", "check_in"], unique=False)
+        batch_op.create_index(batch_op.f("ix_attendances_branch_id"), ["branch_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_attendances_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_attendances_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_attendances_user_id"), ["user_id"], unique=False)
 
     with op.batch_alter_table("audit_logs", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_audit_logs_action"), ["action"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_audit_logs_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_audit_logs_table_name"), ["table_name"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_audit_logs_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_audit_logs_user_id"), ["user_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_audit_logs_action"), ["action"], unique=False)
+        batch_op.create_index(batch_op.f("ix_audit_logs_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_audit_logs_table_name"), ["table_name"], unique=False)
+        batch_op.create_index(batch_op.f("ix_audit_logs_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_audit_logs_user_id"), ["user_id"], unique=False)
 
     with op.batch_alter_table("azad_subscription_fees", schema=None) as batch_op:
         batch_op.create_index(
@@ -3386,9 +3078,7 @@ def upgrade():
             ["billing_period_start", "billing_period_end"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_azad_subscription_fees_status"), ["status"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_azad_subscription_fees_status"), ["status"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_azad_subscription_fees_tenant_id"),
             ["tenant_id"],
@@ -3401,53 +3091,25 @@ def upgrade():
         )
 
     with op.batch_alter_table("budgets", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_budgets_approved_by"), ["approved_by"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_budgets_branch_id"), ["branch_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_budgets_budget_number"), ["budget_number"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_budgets_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_budgets_created_by"), ["created_by"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_budgets_fiscal_year"), ["fiscal_year"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_budgets_approved_by"), ["approved_by"], unique=False)
+        batch_op.create_index(batch_op.f("ix_budgets_branch_id"), ["branch_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_budgets_budget_number"), ["budget_number"], unique=False)
+        batch_op.create_index(batch_op.f("ix_budgets_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_budgets_created_by"), ["created_by"], unique=False)
+        batch_op.create_index(batch_op.f("ix_budgets_fiscal_year"), ["fiscal_year"], unique=False)
         batch_op.create_index(batch_op.f("ix_budgets_status"), ["status"], unique=False)
-        batch_op.create_index(
-            batch_op.f("ix_budgets_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_budgets_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("campaigns", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_campaigns_coupon_code"), ["coupon_code"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_campaigns_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_campaigns_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_campaigns_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_campaigns_coupon_code"), ["coupon_code"], unique=False)
+        batch_op.create_index(batch_op.f("ix_campaigns_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_campaigns_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_campaigns_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("card_payments", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_card_payments_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_card_payments_status"), ["status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_card_payments_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_card_payments_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_card_payments_status"), ["status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_card_payments_tenant_id"), ["tenant_id"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_card_payments_transaction_id"),
             ["transaction_id"],
@@ -3455,65 +3117,31 @@ def upgrade():
         )
 
     with op.batch_alter_table("cost_centers", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_cost_centers_code"), ["code"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_cost_centers_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_cost_centers_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_cost_centers_manager_id"), ["manager_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_cost_centers_parent_id"), ["parent_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_cost_centers_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_cost_centers_code"), ["code"], unique=False)
+        batch_op.create_index(batch_op.f("ix_cost_centers_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_cost_centers_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_cost_centers_manager_id"), ["manager_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_cost_centers_parent_id"), ["parent_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_cost_centers_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("crm_stages", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_crm_stages_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_crm_stages_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_crm_stages_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_crm_stages_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_crm_stages_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_crm_stages_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("crm_teams", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_crm_teams_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_crm_teams_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_crm_teams_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_crm_teams_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_crm_teams_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_crm_teams_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("departments", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_departments_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_departments_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_departments_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_departments_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_departments_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_departments_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("document_sequences", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_document_sequences_code"), ["code"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_document_sequences_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_document_sequences_code"), ["code"], unique=False)
+        batch_op.create_index(batch_op.f("ix_document_sequences_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("document_snapshots", schema=None) as batch_op:
         batch_op.create_index(
@@ -3521,20 +3149,14 @@ def upgrade():
             ["tenant_id", "document_type", "document_id"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_document_snapshots_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_document_snapshots_created_by"), ["created_by"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_document_snapshots_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_document_snapshots_created_by"), ["created_by"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_document_snapshots_document_type"),
             ["document_type"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_document_snapshots_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_document_snapshots_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("document_verifications", schema=None) as batch_op:
         batch_op.create_index(
@@ -3554,93 +3176,47 @@ def upgrade():
         )
 
     with op.batch_alter_table("donations", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_donations_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_donations_status"), ["status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_donations_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_donations_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_donations_status"), ["status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_donations_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("email_lists", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_email_lists_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_email_lists_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_email_lists_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_email_lists_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_email_lists_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_email_lists_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("email_templates", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_email_templates_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_email_templates_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_email_templates_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_email_templates_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_email_templates_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_email_templates_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("employees", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_employees_branch_id"), ["branch_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_employees_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_employees_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_employees_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_employees_branch_id"), ["branch_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_employees_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_employees_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_employees_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("error_audit_logs", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_error_audit_logs_category"), ["category"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_error_audit_logs_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_error_audit_logs_fingerprint"), ["fingerprint"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_error_audit_logs_category"), ["category"], unique=False)
+        batch_op.create_index(batch_op.f("ix_error_audit_logs_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_error_audit_logs_fingerprint"), ["fingerprint"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_error_audit_logs_first_seen_at"),
             ["first_seen_at"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_error_audit_logs_is_resolved"), ["is_resolved"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_error_audit_logs_is_resolved"), ["is_resolved"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_error_audit_logs_last_seen_at"),
             ["last_seen_at"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_error_audit_logs_level"), ["level"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_error_audit_logs_request_id"), ["request_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_error_audit_logs_resolved_by"), ["resolved_by"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_error_audit_logs_source"), ["source"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_error_audit_logs_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_error_audit_logs_user_id"), ["user_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_error_audit_logs_level"), ["level"], unique=False)
+        batch_op.create_index(batch_op.f("ix_error_audit_logs_request_id"), ["request_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_error_audit_logs_resolved_by"), ["resolved_by"], unique=False)
+        batch_op.create_index(batch_op.f("ix_error_audit_logs_source"), ["source"], unique=False)
+        batch_op.create_index(batch_op.f("ix_error_audit_logs_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_error_audit_logs_user_id"), ["user_id"], unique=False)
 
     with op.batch_alter_table("exchange_rate_records", schema=None) as batch_op:
         batch_op.create_index(
@@ -3675,92 +3251,48 @@ def upgrade():
         )
 
     with op.batch_alter_table("exchange_rates", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_exchange_rates_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_exchange_rates_created_by"), ["created_by"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_exchange_rates_currency_id"), ["currency_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_exchange_rates_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_exchange_rates_created_by"), ["created_by"], unique=False)
+        batch_op.create_index(batch_op.f("ix_exchange_rates_currency_id"), ["currency_id"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_exchange_rates_from_currency"),
             ["from_currency"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_exchange_rates_to_currency"), ["to_currency"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_exchange_rates_valid_from"), ["valid_from"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_exchange_rates_to_currency"), ["to_currency"], unique=False)
+        batch_op.create_index(batch_op.f("ix_exchange_rates_valid_from"), ["valid_from"], unique=False)
 
     with op.batch_alter_table("expense_categories", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_expense_categories_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_expense_categories_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_expense_categories_name"), ["name"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_expense_categories_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_expense_categories_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_expense_categories_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_expense_categories_name"), ["name"], unique=False)
+        batch_op.create_index(batch_op.f("ix_expense_categories_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("fiscal_positions", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_fiscal_positions_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_fiscal_positions_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("gl_accounts", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_gl_accounts_branch_id"), ["branch_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_gl_accounts_branch_id"), ["branch_id"], unique=False)
         batch_op.create_index(batch_op.f("ix_gl_accounts_code"), ["code"], unique=False)
-        batch_op.create_index(
-            batch_op.f("ix_gl_accounts_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_gl_accounts_industry_code"), ["industry_code"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_gl_accounts_is_active"), ["is_active"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_gl_accounts_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_gl_accounts_industry_code"), ["industry_code"], unique=False)
+        batch_op.create_index(batch_op.f("ix_gl_accounts_is_active"), ["is_active"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_gl_accounts_liquidity_kind"),
             ["liquidity_kind"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_gl_accounts_module_code"), ["module_code"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_gl_accounts_parent_id"), ["parent_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_gl_accounts_sub_type"), ["sub_type"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_gl_accounts_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_gl_accounts_module_code"), ["module_code"], unique=False)
+        batch_op.create_index(batch_op.f("ix_gl_accounts_parent_id"), ["parent_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_gl_accounts_sub_type"), ["sub_type"], unique=False)
+        batch_op.create_index(batch_op.f("ix_gl_accounts_tenant_id"), ["tenant_id"], unique=False)
         batch_op.create_index(batch_op.f("ix_gl_accounts_type"), ["type"], unique=False)
 
     with op.batch_alter_table("gl_journal_entries", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_gl_journal_entries_branch_id"), ["branch_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_gl_journal_entries_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_gl_journal_entries_created_by"), ["created_by"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_gl_journal_entries_entry_date"), ["entry_date"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_gl_journal_entries_branch_id"), ["branch_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_gl_journal_entries_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_gl_journal_entries_created_by"), ["created_by"], unique=False)
+        batch_op.create_index(batch_op.f("ix_gl_journal_entries_entry_date"), ["entry_date"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_gl_journal_entries_entry_number"),
             ["entry_number"],
@@ -3771,12 +3303,8 @@ def upgrade():
             ["reversed_entry_id"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_gl_journal_entries_status"), ["status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_gl_journal_entries_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_gl_journal_entries_status"), ["status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_gl_journal_entries_tenant_id"), ["tenant_id"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_gl_journal_entries_validated_by"),
             ["validated_by"],
@@ -3784,15 +3312,9 @@ def upgrade():
         )
 
     with op.batch_alter_table("gl_periods", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_gl_periods_closed_by"), ["closed_by"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_gl_periods_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_gl_periods_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_gl_periods_closed_by"), ["closed_by"], unique=False)
+        batch_op.create_index(batch_op.f("ix_gl_periods_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_gl_periods_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("integration_settings", schema=None) as batch_op:
         batch_op.create_index(
@@ -3805,9 +3327,7 @@ def upgrade():
             ["service_name"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_integration_settings_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_integration_settings_tenant_id"), ["tenant_id"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_integration_settings_updated_by"),
             ["updated_by"],
@@ -3815,257 +3335,123 @@ def upgrade():
         )
 
     with op.batch_alter_table("invoice_settings", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_invoice_settings_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_invoice_settings_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_invoice_settings_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_invoice_settings_updated_by"), ["updated_by"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_invoice_settings_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_invoice_settings_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_invoice_settings_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_invoice_settings_updated_by"), ["updated_by"], unique=False)
 
     with op.batch_alter_table("leave_types", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_leave_types_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_leave_types_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_leave_types_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_leave_types_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_leave_types_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_leave_types_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("login_history", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_login_history_user_id"), ["user_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_login_history_user_id"), ["user_id"], unique=False)
 
     with op.batch_alter_table("package_purchases", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_package_purchases_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_package_purchases_package_id"), ["package_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_package_purchases_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_package_purchases_package_id"), ["package_id"], unique=False)
 
     with op.batch_alter_table("partners", schema=None) as batch_op:
         batch_op.create_index(batch_op.f("ix_partners_code"), ["code"], unique=False)
-        batch_op.create_index(
-            batch_op.f("ix_partners_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_partners_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_partners_scope_id"), ["scope_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_partners_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_partners_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_partners_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_partners_scope_id"), ["scope_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_partners_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("payment_vault", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_payment_vault_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_payment_vault_tenant_id"), ["tenant_id"], unique=True
-        )
+        batch_op.create_index(batch_op.f("ix_payment_vault_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_payment_vault_tenant_id"), ["tenant_id"], unique=True)
 
     with op.batch_alter_table("payroll_settings", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_payroll_settings_tenant_id"), ["tenant_id"], unique=True
-        )
+        batch_op.create_index(batch_op.f("ix_payroll_settings_tenant_id"), ["tenant_id"], unique=True)
 
     with op.batch_alter_table("pos_floors", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_pos_floors_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_pos_floors_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("pos_sessions", schema=None) as batch_op:
-        batch_op.create_index(
-            "idx_pos_session_branch_status", ["branch_id", "status"], unique=False
-        )
-        batch_op.create_index(
-            "idx_pos_session_user_status", ["user_id", "status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_pos_sessions_branch_id"), ["branch_id"], unique=False
-        )
+        batch_op.create_index("idx_pos_session_branch_status", ["branch_id", "status"], unique=False)
+        batch_op.create_index("idx_pos_session_user_status", ["user_id", "status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_pos_sessions_branch_id"), ["branch_id"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_pos_sessions_session_number"),
             ["session_number"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_pos_sessions_status"), ["status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_pos_sessions_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_pos_sessions_user_id"), ["user_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_pos_sessions_status"), ["status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_pos_sessions_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_pos_sessions_user_id"), ["user_id"], unique=False)
 
     with op.batch_alter_table("print_history", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_print_history_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_print_history_document_id"), ["document_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_print_history_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_print_history_document_id"), ["document_id"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_print_history_document_type"),
             ["document_type"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_print_history_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_print_history_user_id"), ["user_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_print_history_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_print_history_user_id"), ["user_id"], unique=False)
 
     with op.batch_alter_table("product_categories", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_product_categories_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_product_categories_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_product_categories_name"), ["name"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_product_categories_parent_id"), ["parent_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_product_categories_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_product_categories_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_product_categories_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_product_categories_name"), ["name"], unique=False)
+        batch_op.create_index(batch_op.f("ix_product_categories_parent_id"), ["parent_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_product_categories_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("profit_centers", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_profit_centers_code"), ["code"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_profit_centers_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_profit_centers_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_profit_centers_manager_id"), ["manager_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_profit_centers_parent_id"), ["parent_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_profit_centers_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_profit_centers_code"), ["code"], unique=False)
+        batch_op.create_index(batch_op.f("ix_profit_centers_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_profit_centers_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_profit_centers_manager_id"), ["manager_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_profit_centers_parent_id"), ["parent_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_profit_centers_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("security_alerts", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_security_alerts_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_security_alerts_resolved_by"), ["resolved_by"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_security_alerts_user_id"), ["user_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_security_alerts_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_security_alerts_resolved_by"), ["resolved_by"], unique=False)
+        batch_op.create_index(batch_op.f("ix_security_alerts_user_id"), ["user_id"], unique=False)
 
     with op.batch_alter_table("shipments", schema=None) as batch_op:
-        batch_op.create_index(
-            "ix_shipment_source", ["source_type", "source_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_shipments_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_shipments_source_id"), ["source_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_shipments_status"), ["status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_shipments_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index("ix_shipment_source", ["source_type", "source_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_shipments_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_shipments_source_id"), ["source_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_shipments_status"), ["status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_shipments_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("shop_newsletters", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_shop_newsletters_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_shop_newsletters_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_shop_newsletters_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_shop_newsletters_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_shop_newsletters_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_shop_newsletters_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("store_coupons", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_store_coupons_code"), ["code"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_store_coupons_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_store_coupons_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_store_coupons_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_store_coupons_code"), ["code"], unique=False)
+        batch_op.create_index(batch_op.f("ix_store_coupons_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_store_coupons_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_store_coupons_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("suppliers", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_suppliers_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_suppliers_created_by"), ["created_by"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_suppliers_is_active"), ["is_active"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_suppliers_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_suppliers_created_by"), ["created_by"], unique=False)
+        batch_op.create_index(batch_op.f("ix_suppliers_is_active"), ["is_active"], unique=False)
         batch_op.create_index(batch_op.f("ix_suppliers_name"), ["name"], unique=False)
-        batch_op.create_index(
-            batch_op.f("ix_suppliers_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_suppliers_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("system_settings", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_system_settings_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_system_settings_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_system_settings_updated_by"), ["updated_by"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_system_settings_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_system_settings_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_system_settings_updated_by"), ["updated_by"], unique=False)
 
     with op.batch_alter_table("ticket_categories", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_ticket_categories_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_ticket_categories_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_ticket_categories_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_ticket_categories_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_ticket_categories_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_ticket_categories_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("ticket_priorities", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_ticket_priorities_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_ticket_priorities_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_ticket_priorities_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_ticket_priorities_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_ticket_priorities_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_ticket_priorities_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("warehouses", schema=None) as batch_op:
         batch_op.create_index(
@@ -4073,27 +3459,13 @@ def upgrade():
             ["allow_negative_inventory"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_warehouses_branch_id"), ["branch_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_warehouses_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_warehouses_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_warehouses_manager_id"), ["manager_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_warehouses_parent_id"), ["parent_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_warehouses_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_warehouses_warehouse_type"), ["warehouse_type"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_warehouses_branch_id"), ["branch_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_warehouses_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_warehouses_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_warehouses_manager_id"), ["manager_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_warehouses_parent_id"), ["parent_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_warehouses_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_warehouses_warehouse_type"), ["warehouse_type"], unique=False)
 
     with op.batch_alter_table("advanced_expenses", schema=None) as batch_op:
         batch_op.create_index(
@@ -4101,20 +3473,14 @@ def upgrade():
             ["approved_by"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_advanced_expenses_branch_id"), ["branch_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_advanced_expenses_branch_id"), ["branch_id"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_advanced_expenses_category_id"),
             ["category_id"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_advanced_expenses_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_advanced_expenses_created_by"), ["created_by"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_advanced_expenses_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_advanced_expenses_created_by"), ["created_by"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_advanced_expenses_expense_date"),
             ["expense_date"],
@@ -4140,9 +3506,7 @@ def upgrade():
             ["supplier_id"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_advanced_expenses_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_advanced_expenses_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("bank_reconciliations", schema=None) as batch_op:
         batch_op.create_index(
@@ -4175,160 +3539,80 @@ def upgrade():
             ["reconciliation_number"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_bank_reconciliations_status"), ["status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_bank_reconciliations_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_bank_reconciliations_status"), ["status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_bank_reconciliations_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("budget_lines", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_budget_lines_account_id"), ["account_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_budget_lines_budget_id"), ["budget_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_budget_lines_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_budget_lines_account_id"), ["account_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_budget_lines_budget_id"), ["budget_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_budget_lines_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("cash_boxes", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_cash_boxes_branch_id"), ["branch_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_cash_boxes_branch_id"), ["branch_id"], unique=False)
         batch_op.create_index(batch_op.f("ix_cash_boxes_code"), ["code"], unique=False)
-        batch_op.create_index(
-            batch_op.f("ix_cash_boxes_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_cash_boxes_gl_account_id"), ["gl_account_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_cash_boxes_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_cash_boxes_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_cash_boxes_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_cash_boxes_gl_account_id"), ["gl_account_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_cash_boxes_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_cash_boxes_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("crm_team_members", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_crm_team_members_team_id"), ["team_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_crm_team_members_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_crm_team_members_user_id"), ["user_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_crm_team_members_team_id"), ["team_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_crm_team_members_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_crm_team_members_user_id"), ["user_id"], unique=False)
 
     with op.batch_alter_table("customers", schema=None) as batch_op:
-        batch_op.create_index(
-            "idx_customer_active_type", ["is_active", "customer_type"], unique=False
-        )
+        batch_op.create_index("idx_customer_active_type", ["is_active", "customer_type"], unique=False)
         batch_op.create_index("idx_customer_balance", ["balance"], unique=False)
-        batch_op.create_index(
-            batch_op.f("ix_customers_created_at"), ["created_at"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_customers_created_at"), ["created_at"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_customers_customer_classification"),
             ["customer_classification"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_customers_customer_type"), ["customer_type"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_customers_customer_type"), ["customer_type"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_customers_fiscal_position_id"),
             ["fiscal_position_id"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_customers_is_active"), ["is_active"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_customers_is_active"), ["is_active"], unique=False)
         batch_op.create_index(batch_op.f("ix_customers_name"), ["name"], unique=False)
-        batch_op.create_index(
-            batch_op.f("ix_customers_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_customers_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("customs_taxes", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_customs_taxes_created_at"), ["created_at"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_customs_taxes_created_at"), ["created_at"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_customs_taxes_gl_account_id"),
             ["gl_account_id"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_customs_taxes_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_customs_taxes_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_customs_taxes_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_customs_taxes_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("email_campaigns", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_email_campaigns_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_email_campaigns_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_email_campaigns_list_id"), ["list_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_email_campaigns_status"), ["status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_email_campaigns_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_email_campaigns_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_email_campaigns_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_email_campaigns_list_id"), ["list_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_email_campaigns_status"), ["status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_email_campaigns_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("employee_leaves", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_employee_leaves_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_employee_leaves_employee_id"), ["employee_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_employee_leaves_status"), ["status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_employee_leaves_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_employee_leaves_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_employee_leaves_employee_id"), ["employee_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_employee_leaves_status"), ["status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_employee_leaves_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("expenses", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_expenses_branch_id"), ["branch_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_expenses_category_id"), ["category_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_expenses_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_expenses_expense_date"), ["expense_date"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_expenses_expense_number"), ["expense_number"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_expenses_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_expenses_is_reversed"), ["is_reversed"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_expenses_status"), ["status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_expenses_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_expenses_user_id"), ["user_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_expenses_branch_id"), ["branch_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_expenses_category_id"), ["category_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_expenses_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_expenses_expense_date"), ["expense_date"], unique=False)
+        batch_op.create_index(batch_op.f("ix_expenses_expense_number"), ["expense_number"], unique=False)
+        batch_op.create_index(batch_op.f("ix_expenses_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_expenses_is_reversed"), ["is_reversed"], unique=False)
+        batch_op.create_index(batch_op.f("ix_expenses_status"), ["status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_expenses_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_expenses_user_id"), ["user_id"], unique=False)
 
     with op.batch_alter_table("fixed_assets", schema=None) as batch_op:
         batch_op.create_index(
@@ -4336,26 +3620,16 @@ def upgrade():
             ["asset_account_id"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_fixed_assets_asset_number"), ["asset_number"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_fixed_assets_branch_id"), ["branch_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_fixed_assets_category"), ["category"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_fixed_assets_asset_number"), ["asset_number"], unique=False)
+        batch_op.create_index(batch_op.f("ix_fixed_assets_branch_id"), ["branch_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_fixed_assets_category"), ["category"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_fixed_assets_cost_center_id"),
             ["cost_center_id"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_fixed_assets_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_fixed_assets_created_by"), ["created_by"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_fixed_assets_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_fixed_assets_created_by"), ["created_by"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_fixed_assets_depreciation_account_id"),
             ["depreciation_account_id"],
@@ -4366,20 +3640,12 @@ def upgrade():
             ["expense_account_id"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_fixed_assets_purchase_date"), ["purchase_date"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_fixed_assets_status"), ["status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_fixed_assets_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_fixed_assets_purchase_date"), ["purchase_date"], unique=False)
+        batch_op.create_index(batch_op.f("ix_fixed_assets_status"), ["status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_fixed_assets_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("gl_account_mappings", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_gl_account_mappings_branch_id"), ["branch_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_gl_account_mappings_branch_id"), ["branch_id"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_gl_account_mappings_concept_code"),
             ["concept_code"],
@@ -4395,17 +3661,13 @@ def upgrade():
             ["gl_account_id"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_gl_account_mappings_is_active"), ["is_active"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_gl_account_mappings_is_active"), ["is_active"], unique=False)
         batch_op.create_index(
             "ix_gl_account_mappings_tenant_concept_active",
             ["tenant_id", "concept_code", "is_active"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_gl_account_mappings_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_gl_account_mappings_tenant_id"), ["tenant_id"], unique=False)
         batch_op.create_index(
             "uq_gl_account_mappings_tenant_concept_branch",
             ["tenant_id", "concept_code", "branch_id"],
@@ -4422,31 +3684,21 @@ def upgrade():
         )
 
     with op.batch_alter_table("gl_journal_lines", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_gl_journal_lines_account_id"), ["account_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_gl_journal_lines_branch_id"), ["branch_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_gl_journal_lines_account_id"), ["account_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_gl_journal_lines_branch_id"), ["branch_id"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_gl_journal_lines_cost_center_id"),
             ["cost_center_id"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_gl_journal_lines_entry_id"), ["entry_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_gl_journal_lines_partner_id"), ["partner_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_gl_journal_lines_entry_id"), ["entry_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_gl_journal_lines_partner_id"), ["partner_id"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_gl_journal_lines_profit_center_id"),
             ["profit_center_id"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_gl_journal_lines_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_gl_journal_lines_tenant_id"), ["tenant_id"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_gl_journal_lines_warehouse_id"),
             ["warehouse_id"],
@@ -4454,15 +3706,9 @@ def upgrade():
         )
 
     with op.batch_alter_table("job_positions", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_job_positions_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_job_positions_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_job_positions_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_job_positions_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_job_positions_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_job_positions_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("journal_entry_audits", schema=None) as batch_op:
         batch_op.create_index(
@@ -4475,29 +3721,15 @@ def upgrade():
             ["performed_by"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_journal_entry_audits_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_journal_entry_audits_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("leave_requests", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_leave_requests_branch_id"), ["branch_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_leave_requests_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_leave_requests_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_leave_requests_state"), ["state"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_leave_requests_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_leave_requests_user_id"), ["user_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_leave_requests_branch_id"), ["branch_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_leave_requests_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_leave_requests_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_leave_requests_state"), ["state"], unique=False)
+        batch_op.create_index(batch_op.f("ix_leave_requests_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_leave_requests_user_id"), ["user_id"], unique=False)
 
     with op.batch_alter_table("partner_profit_distributions", schema=None) as batch_op:
         batch_op.create_index(
@@ -4532,15 +3764,9 @@ def upgrade():
         )
 
     with op.batch_alter_table("payment_logs", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_payment_logs_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_payment_logs_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_payment_logs_vault_id"), ["vault_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_payment_logs_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_payment_logs_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_payment_logs_vault_id"), ["vault_id"], unique=False)
 
     with op.batch_alter_table("payment_transactions", schema=None) as batch_op:
         batch_op.create_index(
@@ -4548,17 +3774,11 @@ def upgrade():
             ["created_at"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_payment_transactions_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_payment_transactions_vault_id"), ["vault_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_payment_transactions_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_payment_transactions_vault_id"), ["vault_id"], unique=False)
 
     with op.batch_alter_table("payroll_transactions", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_payroll_transactions_branch_id"), ["branch_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_payroll_transactions_branch_id"), ["branch_id"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_payroll_transactions_created_by"),
             ["created_by"],
@@ -4574,94 +3794,44 @@ def upgrade():
             ["gl_entry_id"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_payroll_transactions_status"), ["status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_payroll_transactions_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_payroll_transactions_status"), ["status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_payroll_transactions_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("pos_tables", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_pos_tables_floor_id"), ["floor_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_pos_tables_status"), ["status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_pos_tables_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_pos_tables_floor_id"), ["floor_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_pos_tables_status"), ["status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_pos_tables_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("purchases", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_purchases_branch_id"), ["branch_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_purchases_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_purchases_purchase_date"), ["purchase_date"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_purchases_branch_id"), ["branch_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_purchases_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_purchases_purchase_date"), ["purchase_date"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_purchases_purchase_number"),
             ["purchase_number"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_purchases_status"), ["status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_purchases_supplier_id"), ["supplier_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_purchases_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_purchases_user_id"), ["user_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_purchases_warehouse_id"), ["warehouse_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_purchases_status"), ["status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_purchases_supplier_id"), ["supplier_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_purchases_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_purchases_user_id"), ["user_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_purchases_warehouse_id"), ["warehouse_id"], unique=False)
 
     with op.batch_alter_table("salary_advances", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_salary_advances_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_salary_advances_created_by"), ["created_by"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_salary_advances_employee_id"), ["employee_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_salary_advances_gl_entry_id"), ["gl_entry_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_salary_advances_status"), ["status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_salary_advances_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_salary_advances_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_salary_advances_created_by"), ["created_by"], unique=False)
+        batch_op.create_index(batch_op.f("ix_salary_advances_employee_id"), ["employee_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_salary_advances_gl_entry_id"), ["gl_entry_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_salary_advances_status"), ["status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_salary_advances_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("tenant_stores", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_tenant_stores_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_tenant_stores_custom_domain"), ["custom_domain"], unique=True
-        )
-        batch_op.create_index(
-            batch_op.f("ix_tenant_stores_store_slug"), ["store_slug"], unique=True
-        )
-        batch_op.create_index(
-            batch_op.f("ix_tenant_stores_subdomain"), ["subdomain"], unique=True
-        )
-        batch_op.create_index(
-            batch_op.f("ix_tenant_stores_tenant_id"), ["tenant_id"], unique=True
-        )
-        batch_op.create_index(
-            batch_op.f("ix_tenant_stores_warehouse_id"), ["warehouse_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_tenant_stores_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_tenant_stores_custom_domain"), ["custom_domain"], unique=True)
+        batch_op.create_index(batch_op.f("ix_tenant_stores_store_slug"), ["store_slug"], unique=True)
+        batch_op.create_index(batch_op.f("ix_tenant_stores_subdomain"), ["subdomain"], unique=True)
+        batch_op.create_index(batch_op.f("ix_tenant_stores_tenant_id"), ["tenant_id"], unique=True)
+        batch_op.create_index(batch_op.f("ix_tenant_stores_warehouse_id"), ["warehouse_id"], unique=False)
 
     with op.batch_alter_table("bank_reconciliation_items", schema=None) as batch_op:
         batch_op.create_index(
@@ -4686,49 +3856,23 @@ def upgrade():
         )
 
     with op.batch_alter_table("card_vault", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_card_vault_card_hash"), ["card_hash"], unique=True
-        )
-        batch_op.create_index(
-            batch_op.f("ix_card_vault_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_card_vault_created_by"), ["created_by"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_card_vault_customer_id"), ["customer_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_card_vault_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_card_vault_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_card_vault_card_hash"), ["card_hash"], unique=True)
+        batch_op.create_index(batch_op.f("ix_card_vault_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_card_vault_created_by"), ["created_by"], unique=False)
+        batch_op.create_index(batch_op.f("ix_card_vault_customer_id"), ["customer_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_card_vault_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_card_vault_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("crm_leads", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_crm_leads_branch_id"), ["branch_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_crm_leads_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_crm_leads_customer_id"), ["customer_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_crm_leads_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_crm_leads_stage_id"), ["stage_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_crm_leads_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_crm_leads_branch_id"), ["branch_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_crm_leads_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_crm_leads_customer_id"), ["customer_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_crm_leads_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_crm_leads_stage_id"), ["stage_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_crm_leads_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("depreciation_schedules", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_depreciation_schedules_asset_id"), ["asset_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_depreciation_schedules_asset_id"), ["asset_id"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_depreciation_schedules_created_at"),
             ["created_at"],
@@ -4751,35 +3895,17 @@ def upgrade():
         )
 
     with op.batch_alter_table("email_subscribers", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_email_subscribers_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_email_subscribers_list_id"), ["list_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_email_subscribers_status"), ["status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_email_subscribers_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_email_subscribers_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_email_subscribers_list_id"), ["list_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_email_subscribers_status"), ["status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_email_subscribers_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("hr_contracts", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_hr_contracts_branch_id"), ["branch_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_hr_contracts_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_hr_contracts_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_hr_contracts_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_hr_contracts_user_id"), ["user_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_hr_contracts_branch_id"), ["branch_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_hr_contracts_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_hr_contracts_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_hr_contracts_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_hr_contracts_user_id"), ["user_id"], unique=False)
 
     with op.batch_alter_table("partner_transactions", schema=None) as batch_op:
         batch_op.create_index(
@@ -4802,49 +3928,29 @@ def upgrade():
             ["partner_id"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_partner_transactions_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_partner_transactions_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("products", schema=None) as batch_op:
-        batch_op.create_index(
-            "idx_product_active_stock", ["is_active", "current_stock"], unique=False
-        )
-        batch_op.create_index(
-            "idx_product_category_active", ["category_id", "is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_products_barcode"), ["barcode"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_products_category_id"), ["category_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_products_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_products_is_active"), ["is_active"], unique=False
-        )
+        batch_op.create_index("idx_product_active_stock", ["is_active", "current_stock"], unique=False)
+        batch_op.create_index("idx_product_category_active", ["category_id", "is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_products_barcode"), ["barcode"], unique=False)
+        batch_op.create_index(batch_op.f("ix_products_category_id"), ["category_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_products_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_products_is_active"), ["is_active"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_products_merchant_customer_id"),
             ["merchant_customer_id"],
             unique=False,
         )
         batch_op.create_index(batch_op.f("ix_products_name"), ["name"], unique=False)
-        batch_op.create_index(
-            batch_op.f("ix_products_part_number"), ["part_number"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_products_part_number"), ["part_number"], unique=False)
         batch_op.create_index(batch_op.f("ix_products_sku"), ["sku"], unique=False)
-        batch_op.create_index(
-            batch_op.f("ix_products_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_products_tenant_id"), ["tenant_id"], unique=False)
         batch_op.create_index(
             "uq_products_tenant_barcode",
             ["tenant_id", "barcode"],
             unique=True,
-            postgresql_where=sa.text(
-                "(barcode IS NOT NULL) AND (TRIM(barcode::text) <> '')"
-            ),
+            postgresql_where=sa.text("(barcode IS NOT NULL) AND (TRIM(barcode::text) <> '')"),
         )
         batch_op.create_index(
             "uq_products_tenant_sku",
@@ -4854,51 +3960,29 @@ def upgrade():
         )
 
     with op.batch_alter_table("projects", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_projects_branch_id"), ["branch_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_projects_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_projects_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_projects_status"), ["status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_projects_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_projects_branch_id"), ["branch_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_projects_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_projects_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_projects_status"), ["status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_projects_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("purchase_returns", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_purchase_returns_branch_id"), ["branch_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_purchase_returns_created_at"), ["created_at"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_purchase_returns_branch_id"), ["branch_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_purchase_returns_created_at"), ["created_at"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_purchase_returns_processed_by"),
             ["processed_by"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_purchase_returns_purchase_id"), ["purchase_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_purchase_returns_return_date"), ["return_date"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_purchase_returns_purchase_id"), ["purchase_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_purchase_returns_return_date"), ["return_date"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_purchase_returns_return_number"),
             ["return_number"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_purchase_returns_supplier_id"), ["supplier_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_purchase_returns_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_purchase_returns_supplier_id"), ["supplier_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_purchase_returns_tenant_id"), ["tenant_id"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_purchase_returns_warehouse_id"),
             ["warehouse_id"],
@@ -4906,64 +3990,30 @@ def upgrade():
         )
 
     with op.batch_alter_table("sales", schema=None) as batch_op:
-        batch_op.create_index(
-            "idx_sale_customer_date", ["customer_id", "sale_date"], unique=False
-        )
-        batch_op.create_index(
-            "idx_sale_payment_status", ["payment_status", "customer_id"], unique=False
-        )
-        batch_op.create_index(
-            "idx_sale_status_date", ["status", "sale_date"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_sales_branch_id"), ["branch_id"], unique=False
-        )
+        batch_op.create_index("idx_sale_customer_date", ["customer_id", "sale_date"], unique=False)
+        batch_op.create_index("idx_sale_payment_status", ["payment_status", "customer_id"], unique=False)
+        batch_op.create_index("idx_sale_status_date", ["status", "sale_date"], unique=False)
+        batch_op.create_index(batch_op.f("ix_sales_branch_id"), ["branch_id"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_sales_checkout_payment_method"),
             ["checkout_payment_method"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_sales_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_sales_customer_id"), ["customer_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_sales_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_sales_order_type"), ["order_type"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_sales_payment_status"), ["payment_status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_sales_pos_session_id"), ["pos_session_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_sales_sale_date"), ["sale_date"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_sales_sale_number"), ["sale_number"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_sales_sales_rep_id"), ["sales_rep_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_sales_seller_id"), ["seller_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_sales_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_sales_customer_id"), ["customer_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_sales_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_sales_order_type"), ["order_type"], unique=False)
+        batch_op.create_index(batch_op.f("ix_sales_payment_status"), ["payment_status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_sales_pos_session_id"), ["pos_session_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_sales_sale_date"), ["sale_date"], unique=False)
+        batch_op.create_index(batch_op.f("ix_sales_sale_number"), ["sale_number"], unique=False)
+        batch_op.create_index(batch_op.f("ix_sales_sales_rep_id"), ["sales_rep_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_sales_seller_id"), ["seller_id"], unique=False)
         batch_op.create_index(batch_op.f("ix_sales_source"), ["source"], unique=False)
         batch_op.create_index(batch_op.f("ix_sales_status"), ["status"], unique=False)
-        batch_op.create_index(
-            batch_op.f("ix_sales_table_id"), ["table_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_sales_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_sales_warehouse_id"), ["warehouse_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_sales_table_id"), ["table_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_sales_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_sales_warehouse_id"), ["warehouse_id"], unique=False)
 
     with op.batch_alter_table("shop_customer_accounts", schema=None) as batch_op:
         batch_op.create_index(
@@ -4976,9 +4026,7 @@ def upgrade():
             ["customer_id"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_shop_customer_accounts_email"), ["email"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_shop_customer_accounts_email"), ["email"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_shop_customer_accounts_is_active"),
             ["is_active"],
@@ -5006,9 +4054,7 @@ def upgrade():
             ["is_active"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_tax_calculation_rules_tax_id"), ["tax_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_tax_calculation_rules_tax_id"), ["tax_id"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_tax_calculation_rules_tenant_id"),
             ["tenant_id"],
@@ -5021,46 +4067,22 @@ def upgrade():
             ["assigned_user_id"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_tickets_branch_id"), ["branch_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_tickets_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_tickets_customer_id"), ["customer_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_tickets_is_active"), ["is_active"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_tickets_branch_id"), ["branch_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_tickets_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_tickets_customer_id"), ["customer_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_tickets_is_active"), ["is_active"], unique=False)
         batch_op.create_index(batch_op.f("ix_tickets_number"), ["number"], unique=False)
         batch_op.create_index(batch_op.f("ix_tickets_status"), ["status"], unique=False)
-        batch_op.create_index(
-            batch_op.f("ix_tickets_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_tickets_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("azad_platform_fees", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_azad_platform_fees_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_azad_platform_fees_payment_id"), ["payment_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_azad_platform_fees_sale_id"), ["sale_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_azad_platform_fees_status"), ["status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_azad_platform_fees_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            "ix_azad_platform_fees_tenant_sale", ["tenant_id", "sale_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_azad_platform_fees_vault_id"), ["vault_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_azad_platform_fees_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_azad_platform_fees_payment_id"), ["payment_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_azad_platform_fees_sale_id"), ["sale_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_azad_platform_fees_status"), ["status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_azad_platform_fees_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index("ix_azad_platform_fees_tenant_sale", ["tenant_id", "sale_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_azad_platform_fees_vault_id"), ["vault_id"], unique=False)
 
     with op.batch_alter_table("bank_statement_lines", schema=None) as batch_op:
         batch_op.create_index(
@@ -5093,20 +4115,14 @@ def upgrade():
             ["reconciliation_item_id"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_bank_statement_lines_reference"), ["reference"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_bank_statement_lines_reference"), ["reference"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_bank_statement_lines_statement_date"),
             ["statement_date"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_bank_statement_lines_status"), ["status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_bank_statement_lines_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_bank_statement_lines_status"), ["status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_bank_statement_lines_tenant_id"), ["tenant_id"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_bank_statement_lines_transaction_date"),
             ["transaction_date"],
@@ -5114,26 +4130,14 @@ def upgrade():
         )
 
     with op.batch_alter_table("campaign_logs", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_campaign_logs_campaign_id"), ["campaign_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_campaign_logs_status"), ["status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_campaign_logs_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_campaign_logs_campaign_id"), ["campaign_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_campaign_logs_status"), ["status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_campaign_logs_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("crm_activities", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_crm_activities_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_crm_activities_lead_id"), ["lead_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_crm_activities_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_crm_activities_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_crm_activities_lead_id"), ["lead_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_crm_activities_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("fiscal_position_tax_rules", schema=None) as batch_op:
         batch_op.create_index(
@@ -5148,32 +4152,16 @@ def upgrade():
         )
 
     with op.batch_alter_table("pos_kds_orders", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_pos_kds_orders_branch_id"), ["branch_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_pos_kds_orders_sale_id"), ["sale_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_pos_kds_orders_session_id"), ["session_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_pos_kds_orders_status"), ["status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_pos_kds_orders_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_pos_kds_orders_branch_id"), ["branch_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_pos_kds_orders_sale_id"), ["sale_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_pos_kds_orders_session_id"), ["session_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_pos_kds_orders_status"), ["status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_pos_kds_orders_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("pos_table_orders", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_pos_table_orders_sale_id"), ["sale_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_pos_table_orders_table_id"), ["table_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_pos_table_orders_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_pos_table_orders_sale_id"), ["sale_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_pos_table_orders_table_id"), ["table_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_pos_table_orders_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("product_cost_history", schema=None) as batch_op:
         batch_op.create_index(
@@ -5186,9 +4174,7 @@ def upgrade():
             ["product_id"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_product_cost_history_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_product_cost_history_tenant_id"), ["tenant_id"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_product_cost_history_warehouse_id"),
             ["warehouse_id"],
@@ -5201,40 +4187,22 @@ def upgrade():
             ["product_id", "image_type", "sort_order"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_product_images_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_product_images_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_product_images_product_id"), ["product_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_product_images_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_product_images_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_product_images_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_product_images_product_id"), ["product_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_product_images_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("product_partners", schema=None) as batch_op:
-        batch_op.create_index(
-            "idx_product_partner_partner", ["partner_customer_id"], unique=False
-        )
-        batch_op.create_index(
-            "idx_product_partner_product", ["product_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_product_partners_created_at"), ["created_at"], unique=False
-        )
+        batch_op.create_index("idx_product_partner_partner", ["partner_customer_id"], unique=False)
+        batch_op.create_index("idx_product_partner_product", ["product_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_product_partners_created_at"), ["created_at"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_product_partners_partner_customer_id"),
             ["partner_customer_id"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_product_partners_product_id"), ["product_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_product_partners_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_product_partners_product_id"), ["product_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_product_partners_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("product_price_tiers", schema=None) as batch_op:
         batch_op.create_index(
@@ -5242,39 +4210,25 @@ def upgrade():
             ["created_at"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_product_price_tiers_is_active"), ["is_active"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_product_price_tiers_is_active"), ["is_active"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_product_price_tiers_product_id"),
             ["product_id"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_product_price_tiers_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_product_price_tiers_tier_code"), ["tier_code"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_product_price_tiers_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_product_price_tiers_tier_code"), ["tier_code"], unique=False)
 
     with op.batch_alter_table("product_returns", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_product_returns_branch_id"), ["branch_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_product_returns_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_product_returns_customer_id"), ["customer_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_product_returns_branch_id"), ["branch_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_product_returns_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_product_returns_customer_id"), ["customer_id"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_product_returns_processed_by"),
             ["processed_by"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_product_returns_return_date"), ["return_date"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_product_returns_return_date"), ["return_date"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_product_returns_return_number"),
             ["return_number"],
@@ -5285,15 +4239,9 @@ def upgrade():
             ["reverses_invoice_id"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_product_returns_sale_id"), ["sale_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_product_returns_status"), ["status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_product_returns_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_product_returns_sale_id"), ["sale_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_product_returns_status"), ["status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_product_returns_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("product_warehouse_stock", schema=None) as batch_op:
         batch_op.create_index(
@@ -5313,51 +4261,25 @@ def upgrade():
         )
 
     with op.batch_alter_table("project_members", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_project_members_project_id"), ["project_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_project_members_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_project_members_user_id"), ["user_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_project_members_project_id"), ["project_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_project_members_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_project_members_user_id"), ["user_id"], unique=False)
 
     with op.batch_alter_table("purchase_lines", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_purchase_lines_product_id"), ["product_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_purchase_lines_purchase_id"), ["purchase_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_purchase_lines_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_purchase_lines_product_id"), ["product_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_purchase_lines_purchase_id"), ["purchase_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_purchase_lines_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("sale_campaigns", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_sale_campaigns_campaign_id"), ["campaign_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_sale_campaigns_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_sale_campaigns_sale_id"), ["sale_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_sale_campaigns_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_sale_campaigns_campaign_id"), ["campaign_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_sale_campaigns_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_sale_campaigns_sale_id"), ["sale_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_sale_campaigns_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("sale_lines", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_sale_lines_product_id"), ["product_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_sale_lines_sale_id"), ["sale_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_sale_lines_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_sale_lines_product_id"), ["product_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_sale_lines_sale_id"), ["sale_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_sale_lines_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("shop_abandoned_carts", schema=None) as batch_op:
         batch_op.create_index(
@@ -5370,20 +4292,12 @@ def upgrade():
             ["created_at"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_shop_abandoned_carts_recovered"), ["recovered"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_shop_abandoned_carts_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_shop_abandoned_carts_recovered"), ["recovered"], unique=False)
+        batch_op.create_index(batch_op.f("ix_shop_abandoned_carts_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("shop_loyalty", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_shop_loyalty_account_id"), ["account_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_shop_loyalty_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_shop_loyalty_account_id"), ["account_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_shop_loyalty_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("shop_loyalty_transactions", schema=None) as batch_op:
         batch_op.create_index(
@@ -5430,21 +4344,11 @@ def upgrade():
         )
 
     with op.batch_alter_table("shop_reviews", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_shop_reviews_account_id"), ["account_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_shop_reviews_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_shop_reviews_is_approved"), ["is_approved"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_shop_reviews_product_id"), ["product_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_shop_reviews_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_shop_reviews_account_id"), ["account_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_shop_reviews_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_shop_reviews_is_approved"), ["is_approved"], unique=False)
+        batch_op.create_index(batch_op.f("ix_shop_reviews_product_id"), ["product_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_shop_reviews_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("shop_saved_payments", schema=None) as batch_op:
         batch_op.create_index(
@@ -5457,58 +4361,34 @@ def upgrade():
             ["created_at"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_shop_saved_payments_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_shop_saved_payments_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("shop_stock_alerts", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_shop_stock_alerts_created_at"), ["created_at"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_shop_stock_alerts_created_at"), ["created_at"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_shop_stock_alerts_is_notified"),
             ["is_notified"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_shop_stock_alerts_product_id"), ["product_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_shop_stock_alerts_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_shop_stock_alerts_product_id"), ["product_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_shop_stock_alerts_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("shop_wishlist", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_shop_wishlist_account_id"), ["account_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_shop_wishlist_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_shop_wishlist_product_id"), ["product_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_shop_wishlist_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_shop_wishlist_account_id"), ["account_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_shop_wishlist_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_shop_wishlist_product_id"), ["product_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_shop_wishlist_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("stock_movements", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_stock_movements_created_at"), ["created_at"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_stock_movements_created_at"), ["created_at"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_stock_movements_movement_type"),
             ["movement_type"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_stock_movements_product_id"), ["product_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_stock_movements_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_stock_movements_user_id"), ["user_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_stock_movements_product_id"), ["product_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_stock_movements_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_stock_movements_user_id"), ["user_id"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_stock_movements_warehouse_id"),
             ["warehouse_id"],
@@ -5516,23 +4396,13 @@ def upgrade():
         )
 
     with op.batch_alter_table("task_stages", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_task_stages_project_id"), ["project_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_task_stages_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_task_stages_project_id"), ["project_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_task_stages_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("ticket_comments", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_ticket_comments_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_ticket_comments_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_ticket_comments_ticket_id"), ["ticket_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_ticket_comments_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_ticket_comments_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_ticket_comments_ticket_id"), ["ticket_id"], unique=False)
 
     with op.batch_alter_table("partner_commission_entries", schema=None) as batch_op:
         batch_op.create_index(
@@ -5582,31 +4452,19 @@ def upgrade():
             ["product_id"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_product_return_lines_return_id"), ["return_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_product_return_lines_return_id"), ["return_id"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_product_return_lines_sale_line_id"),
             ["sale_line_id"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_product_return_lines_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_product_return_lines_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("product_serials", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_product_serials_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_product_serials_imei1"), ["imei1"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_product_serials_imei2"), ["imei2"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_product_serials_product_id"), ["product_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_product_serials_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_product_serials_imei1"), ["imei1"], unique=False)
+        batch_op.create_index(batch_op.f("ix_product_serials_imei2"), ["imei2"], unique=False)
+        batch_op.create_index(batch_op.f("ix_product_serials_product_id"), ["product_id"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_product_serials_purchase_line_id"),
             ["purchase_line_id"],
@@ -5622,12 +4480,8 @@ def upgrade():
             ["serial_number"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_product_serials_status"), ["status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_product_serials_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_product_serials_status"), ["status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_product_serials_tenant_id"), ["tenant_id"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_product_serials_warehouse_id"),
             ["warehouse_id"],
@@ -5698,67 +4552,33 @@ def upgrade():
         )
 
     with op.batch_alter_table("tasks", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_tasks_assigned_user_id"), ["assigned_user_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_tasks_branch_id"), ["branch_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_tasks_created_at"), ["created_at"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_tasks_is_active"), ["is_active"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_tasks_project_id"), ["project_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_tasks_stage_id"), ["stage_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_tasks_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_tasks_assigned_user_id"), ["assigned_user_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_tasks_branch_id"), ["branch_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_tasks_created_at"), ["created_at"], unique=False)
+        batch_op.create_index(batch_op.f("ix_tasks_is_active"), ["is_active"], unique=False)
+        batch_op.create_index(batch_op.f("ix_tasks_project_id"), ["project_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_tasks_stage_id"), ["stage_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_tasks_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("warranty_claims", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_warranty_claims_claim_date"), ["claim_date"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_warranty_claims_product_id"), ["product_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_warranty_claims_sale_id"), ["sale_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_warranty_claims_claim_date"), ["claim_date"], unique=False)
+        batch_op.create_index(batch_op.f("ix_warranty_claims_product_id"), ["product_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_warranty_claims_sale_id"), ["sale_id"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_warranty_claims_sale_line_id"),
             ["sale_line_id"],
             unique=False,
         )
-        batch_op.create_index(
-            batch_op.f("ix_warranty_claims_status"), ["status"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_warranty_claims_tenant_id"), ["tenant_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_warranty_claims_status"), ["status"], unique=False)
+        batch_op.create_index(batch_op.f("ix_warranty_claims_tenant_id"), ["tenant_id"], unique=False)
 
     with op.batch_alter_table("timesheets", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_timesheets_branch_id"), ["branch_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_timesheets_created_at"), ["created_at"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_timesheets_branch_id"), ["branch_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_timesheets_created_at"), ["created_at"], unique=False)
         batch_op.create_index(batch_op.f("ix_timesheets_date"), ["date"], unique=False)
-        batch_op.create_index(
-            batch_op.f("ix_timesheets_task_id"), ["task_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_timesheets_tenant_id"), ["tenant_id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_timesheets_user_id"), ["user_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_timesheets_task_id"), ["task_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_timesheets_tenant_id"), ["tenant_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_timesheets_user_id"), ["user_id"], unique=False)
 
     with op.batch_alter_table("branches"):
         op.create_foreign_key(
@@ -5770,37 +4590,21 @@ def upgrade():
             ondelete="CASCADE",
         )
     with op.batch_alter_table("cheques"):
-        op.create_foreign_key(
-            "fk_cheques_branch_id", "cheques", "branches", ["branch_id"], ["id"]
-        )
+        op.create_foreign_key("fk_cheques_branch_id", "cheques", "branches", ["branch_id"], ["id"])
     with op.batch_alter_table("cheques"):
-        op.create_foreign_key(
-            "fk_cheques_customer_id", "cheques", "customers", ["customer_id"], ["id"]
-        )
+        op.create_foreign_key("fk_cheques_customer_id", "cheques", "customers", ["customer_id"], ["id"])
     with op.batch_alter_table("cheques"):
-        op.create_foreign_key(
-            "fk_cheques_expense_id", "cheques", "expenses", ["expense_id"], ["id"]
-        )
+        op.create_foreign_key("fk_cheques_expense_id", "cheques", "expenses", ["expense_id"], ["id"])
     with op.batch_alter_table("cheques"):
-        op.create_foreign_key(
-            "fk_cheques_payment_id", "cheques", "payments", ["payment_id"], ["id"]
-        )
+        op.create_foreign_key("fk_cheques_payment_id", "cheques", "payments", ["payment_id"], ["id"])
     with op.batch_alter_table("cheques"):
-        op.create_foreign_key(
-            "fk_cheques_purchase_id", "cheques", "purchases", ["purchase_id"], ["id"]
-        )
+        op.create_foreign_key("fk_cheques_purchase_id", "cheques", "purchases", ["purchase_id"], ["id"])
     with op.batch_alter_table("cheques"):
-        op.create_foreign_key(
-            "fk_cheques_receipt_id", "cheques", "receipts", ["receipt_id"], ["id"]
-        )
+        op.create_foreign_key("fk_cheques_receipt_id", "cheques", "receipts", ["receipt_id"], ["id"])
     with op.batch_alter_table("cheques"):
-        op.create_foreign_key(
-            "fk_cheques_sale_id", "cheques", "sales", ["sale_id"], ["id"]
-        )
+        op.create_foreign_key("fk_cheques_sale_id", "cheques", "sales", ["sale_id"], ["id"])
     with op.batch_alter_table("cheques"):
-        op.create_foreign_key(
-            "fk_cheques_supplier_id", "cheques", "suppliers", ["supplier_id"], ["id"]
-        )
+        op.create_foreign_key("fk_cheques_supplier_id", "cheques", "suppliers", ["supplier_id"], ["id"])
     with op.batch_alter_table("cheques"):
         op.create_foreign_key(
             "fk_cheques_tenant_id",
@@ -5811,33 +4615,19 @@ def upgrade():
             ondelete="CASCADE",
         )
     with op.batch_alter_table("cheques"):
-        op.create_foreign_key(
-            "fk_cheques_user_id", "cheques", "users", ["user_id"], ["id"]
-        )
+        op.create_foreign_key("fk_cheques_user_id", "cheques", "users", ["user_id"], ["id"])
     with op.batch_alter_table("payments"):
-        op.create_foreign_key(
-            "fk_payments_branch_id", "payments", "branches", ["branch_id"], ["id"]
-        )
+        op.create_foreign_key("fk_payments_branch_id", "payments", "branches", ["branch_id"], ["id"])
     with op.batch_alter_table("payments"):
-        op.create_foreign_key(
-            "fk_payments_cheque_id", "payments", "cheques", ["cheque_id"], ["id"]
-        )
+        op.create_foreign_key("fk_payments_cheque_id", "payments", "cheques", ["cheque_id"], ["id"])
     with op.batch_alter_table("payments"):
-        op.create_foreign_key(
-            "fk_payments_customer_id", "payments", "customers", ["customer_id"], ["id"]
-        )
+        op.create_foreign_key("fk_payments_customer_id", "payments", "customers", ["customer_id"], ["id"])
     with op.batch_alter_table("payments"):
-        op.create_foreign_key(
-            "fk_payments_purchase_id", "payments", "purchases", ["purchase_id"], ["id"]
-        )
+        op.create_foreign_key("fk_payments_purchase_id", "payments", "purchases", ["purchase_id"], ["id"])
     with op.batch_alter_table("payments"):
-        op.create_foreign_key(
-            "fk_payments_sale_id", "payments", "sales", ["sale_id"], ["id"]
-        )
+        op.create_foreign_key("fk_payments_sale_id", "payments", "sales", ["sale_id"], ["id"])
     with op.batch_alter_table("payments"):
-        op.create_foreign_key(
-            "fk_payments_supplier_id", "payments", "suppliers", ["supplier_id"], ["id"]
-        )
+        op.create_foreign_key("fk_payments_supplier_id", "payments", "suppliers", ["supplier_id"], ["id"])
     with op.batch_alter_table("payments"):
         op.create_foreign_key(
             "fk_payments_tenant_id",
@@ -5848,21 +4638,13 @@ def upgrade():
             ondelete="CASCADE",
         )
     with op.batch_alter_table("payments"):
-        op.create_foreign_key(
-            "fk_payments_user_id", "payments", "users", ["user_id"], ["id"]
-        )
+        op.create_foreign_key("fk_payments_user_id", "payments", "users", ["user_id"], ["id"])
     with op.batch_alter_table("receipts"):
-        op.create_foreign_key(
-            "fk_receipts_branch_id", "receipts", "branches", ["branch_id"], ["id"]
-        )
+        op.create_foreign_key("fk_receipts_branch_id", "receipts", "branches", ["branch_id"], ["id"])
     with op.batch_alter_table("receipts"):
-        op.create_foreign_key(
-            "fk_receipts_cheque_id", "receipts", "cheques", ["cheque_id"], ["id"]
-        )
+        op.create_foreign_key("fk_receipts_cheque_id", "receipts", "cheques", ["cheque_id"], ["id"])
     with op.batch_alter_table("receipts"):
-        op.create_foreign_key(
-            "fk_receipts_customer_id", "receipts", "customers", ["customer_id"], ["id"]
-        )
+        op.create_foreign_key("fk_receipts_customer_id", "receipts", "customers", ["customer_id"], ["id"])
     with op.batch_alter_table("receipts"):
         op.create_foreign_key(
             "fk_receipts_tenant_id",
@@ -5873,17 +4655,11 @@ def upgrade():
             ondelete="CASCADE",
         )
     with op.batch_alter_table("receipts"):
-        op.create_foreign_key(
-            "fk_receipts_user_id", "receipts", "users", ["user_id"], ["id"]
-        )
+        op.create_foreign_key("fk_receipts_user_id", "receipts", "users", ["user_id"], ["id"])
     with op.batch_alter_table("tenants"):
-        op.create_foreign_key(
-            "fk_tenants_created_by", "tenants", "users", ["created_by"], ["id"]
-        )
+        op.create_foreign_key("fk_tenants_created_by", "tenants", "users", ["created_by"], ["id"])
     with op.batch_alter_table("users"):
-        op.create_foreign_key(
-            "fk_users_branch_id", "users", "branches", ["branch_id"], ["id"]
-        )
+        op.create_foreign_key("fk_users_branch_id", "users", "branches", ["branch_id"], ["id"])
     with op.batch_alter_table("users"):
         op.create_foreign_key("fk_users_role_id", "users", "roles", ["role_id"], ["id"])
     with op.batch_alter_table("users"):
@@ -5932,9 +4708,7 @@ def upgrade():
             ondelete="CASCADE",
         )
     with op.batch_alter_table("api_keys"):
-        op.create_foreign_key(
-            "fk_api_keys_created_by", "api_keys", "users", ["created_by"], ["id"]
-        )
+        op.create_foreign_key("fk_api_keys_created_by", "api_keys", "users", ["created_by"], ["id"])
     with op.batch_alter_table("archived_records"):
         op.create_foreign_key(
             "fk_archived_records_archived_by",
@@ -5989,9 +4763,7 @@ def upgrade():
             ondelete="CASCADE",
         )
     with op.batch_alter_table("audit_logs"):
-        op.create_foreign_key(
-            "fk_audit_logs_user_id", "audit_logs", "users", ["user_id"], ["id"]
-        )
+        op.create_foreign_key("fk_audit_logs_user_id", "audit_logs", "users", ["user_id"], ["id"])
     with op.batch_alter_table("azad_subscription_fees"):
         op.create_foreign_key(
             "fk_azad_subscription_fees_tenant_id",
@@ -6002,17 +4774,11 @@ def upgrade():
             ondelete="CASCADE",
         )
     with op.batch_alter_table("budgets"):
-        op.create_foreign_key(
-            "fk_budgets_approved_by", "budgets", "users", ["approved_by"], ["id"]
-        )
+        op.create_foreign_key("fk_budgets_approved_by", "budgets", "users", ["approved_by"], ["id"])
     with op.batch_alter_table("budgets"):
-        op.create_foreign_key(
-            "fk_budgets_branch_id", "budgets", "branches", ["branch_id"], ["id"]
-        )
+        op.create_foreign_key("fk_budgets_branch_id", "budgets", "branches", ["branch_id"], ["id"])
     with op.batch_alter_table("budgets"):
-        op.create_foreign_key(
-            "fk_budgets_created_by", "budgets", "users", ["created_by"], ["id"]
-        )
+        op.create_foreign_key("fk_budgets_created_by", "budgets", "users", ["created_by"], ["id"])
     with op.batch_alter_table("budgets"):
         op.create_foreign_key(
             "fk_budgets_tenant_id",
@@ -6189,9 +4955,7 @@ def upgrade():
             ondelete="CASCADE",
         )
     with op.batch_alter_table("employees"):
-        op.create_foreign_key(
-            "fk_employees_branch_id", "employees", "branches", ["branch_id"], ["id"]
-        )
+        op.create_foreign_key("fk_employees_branch_id", "employees", "branches", ["branch_id"], ["id"])
     with op.batch_alter_table("employees"):
         op.create_foreign_key(
             "fk_employees_tenant_id",
@@ -6278,9 +5042,7 @@ def upgrade():
             ondelete="CASCADE",
         )
     with op.batch_alter_table("gl_accounts"):
-        op.create_foreign_key(
-            "fk_gl_accounts_branch_id", "gl_accounts", "branches", ["branch_id"], ["id"]
-        )
+        op.create_foreign_key("fk_gl_accounts_branch_id", "gl_accounts", "branches", ["branch_id"], ["id"])
     with op.batch_alter_table("gl_accounts"):
         op.create_foreign_key(
             "fk_gl_accounts_parent_id",
@@ -6340,9 +5102,7 @@ def upgrade():
             ["id"],
         )
     with op.batch_alter_table("gl_periods"):
-        op.create_foreign_key(
-            "fk_gl_periods_closed_by", "gl_periods", "users", ["closed_by"], ["id"]
-        )
+        op.create_foreign_key("fk_gl_periods_closed_by", "gl_periods", "users", ["closed_by"], ["id"])
     with op.batch_alter_table("gl_periods"):
         op.create_foreign_key(
             "fk_gl_periods_tenant_id",
@@ -6396,9 +5156,7 @@ def upgrade():
             ondelete="CASCADE",
         )
     with op.batch_alter_table("login_history"):
-        op.create_foreign_key(
-            "fk_login_history_user_id", "login_history", "users", ["user_id"], ["id"]
-        )
+        op.create_foreign_key("fk_login_history_user_id", "login_history", "users", ["user_id"], ["id"])
     with op.batch_alter_table("package_purchases"):
         op.create_foreign_key(
             "fk_package_purchases_package_id",
@@ -6461,9 +5219,7 @@ def upgrade():
             ondelete="CASCADE",
         )
     with op.batch_alter_table("pos_sessions"):
-        op.create_foreign_key(
-            "fk_pos_sessions_user_id", "pos_sessions", "users", ["user_id"], ["id"]
-        )
+        op.create_foreign_key("fk_pos_sessions_user_id", "pos_sessions", "users", ["user_id"], ["id"])
     with op.batch_alter_table("print_history"):
         op.create_foreign_key(
             "fk_print_history_tenant_id",
@@ -6474,9 +5230,7 @@ def upgrade():
             ondelete="CASCADE",
         )
     with op.batch_alter_table("print_history"):
-        op.create_foreign_key(
-            "fk_print_history_user_id", "print_history", "users", ["user_id"], ["id"]
-        )
+        op.create_foreign_key("fk_print_history_user_id", "print_history", "users", ["user_id"], ["id"])
     with op.batch_alter_table("product_categories"):
         op.create_foreign_key(
             "fk_product_categories_parent_id",
@@ -6579,9 +5333,7 @@ def upgrade():
             ondelete="CASCADE",
         )
     with op.batch_alter_table("suppliers"):
-        op.create_foreign_key(
-            "fk_suppliers_created_by", "suppliers", "users", ["created_by"], ["id"]
-        )
+        op.create_foreign_key("fk_suppliers_created_by", "suppliers", "users", ["created_by"], ["id"])
     with op.batch_alter_table("suppliers"):
         op.create_foreign_key(
             "fk_suppliers_tenant_id",
@@ -6627,17 +5379,11 @@ def upgrade():
             ondelete="CASCADE",
         )
     with op.batch_alter_table("warehouses"):
-        op.create_foreign_key(
-            "fk_warehouses_branch_id", "warehouses", "branches", ["branch_id"], ["id"]
-        )
+        op.create_foreign_key("fk_warehouses_branch_id", "warehouses", "branches", ["branch_id"], ["id"])
     with op.batch_alter_table("warehouses"):
-        op.create_foreign_key(
-            "fk_warehouses_manager_id", "warehouses", "users", ["manager_id"], ["id"]
-        )
+        op.create_foreign_key("fk_warehouses_manager_id", "warehouses", "users", ["manager_id"], ["id"])
     with op.batch_alter_table("warehouses"):
-        op.create_foreign_key(
-            "fk_warehouses_parent_id", "warehouses", "warehouses", ["parent_id"], ["id"]
-        )
+        op.create_foreign_key("fk_warehouses_parent_id", "warehouses", "warehouses", ["parent_id"], ["id"])
     with op.batch_alter_table("warehouses"):
         op.create_foreign_key(
             "fk_warehouses_tenant_id",
@@ -6771,9 +5517,7 @@ def upgrade():
             ondelete="CASCADE",
         )
     with op.batch_alter_table("cash_boxes"):
-        op.create_foreign_key(
-            "fk_cash_boxes_branch_id", "cash_boxes", "branches", ["branch_id"], ["id"]
-        )
+        op.create_foreign_key("fk_cash_boxes_branch_id", "cash_boxes", "branches", ["branch_id"], ["id"])
     with op.batch_alter_table("cash_boxes"):
         op.create_foreign_key(
             "fk_cash_boxes_gl_account_id",
@@ -6897,9 +5641,7 @@ def upgrade():
             ondelete="CASCADE",
         )
     with op.batch_alter_table("expenses"):
-        op.create_foreign_key(
-            "fk_expenses_branch_id", "expenses", "branches", ["branch_id"], ["id"]
-        )
+        op.create_foreign_key("fk_expenses_branch_id", "expenses", "branches", ["branch_id"], ["id"])
     with op.batch_alter_table("expenses"):
         op.create_foreign_key(
             "fk_expenses_category_id",
@@ -6918,9 +5660,7 @@ def upgrade():
             ondelete="CASCADE",
         )
     with op.batch_alter_table("expenses"):
-        op.create_foreign_key(
-            "fk_expenses_user_id", "expenses", "users", ["user_id"], ["id"]
-        )
+        op.create_foreign_key("fk_expenses_user_id", "expenses", "users", ["user_id"], ["id"])
     with op.batch_alter_table("fixed_assets"):
         op.create_foreign_key(
             "fk_fixed_assets_asset_account_id",
@@ -7268,9 +6008,7 @@ def upgrade():
             ondelete="CASCADE",
         )
     with op.batch_alter_table("pos_tables"):
-        op.create_foreign_key(
-            "fk_pos_tables_floor_id", "pos_tables", "pos_floors", ["floor_id"], ["id"]
-        )
+        op.create_foreign_key("fk_pos_tables_floor_id", "pos_tables", "pos_floors", ["floor_id"], ["id"])
     with op.batch_alter_table("pos_tables"):
         op.create_foreign_key(
             "fk_pos_tables_tenant_id",
@@ -7281,9 +6019,7 @@ def upgrade():
             ondelete="CASCADE",
         )
     with op.batch_alter_table("purchases"):
-        op.create_foreign_key(
-            "fk_purchases_branch_id", "purchases", "branches", ["branch_id"], ["id"]
-        )
+        op.create_foreign_key("fk_purchases_branch_id", "purchases", "branches", ["branch_id"], ["id"])
     with op.batch_alter_table("purchases"):
         op.create_foreign_key(
             "fk_purchases_supplier_id",
@@ -7302,9 +6038,7 @@ def upgrade():
             ondelete="CASCADE",
         )
     with op.batch_alter_table("purchases"):
-        op.create_foreign_key(
-            "fk_purchases_user_id", "purchases", "users", ["user_id"], ["id"]
-        )
+        op.create_foreign_key("fk_purchases_user_id", "purchases", "users", ["user_id"], ["id"])
     with op.batch_alter_table("purchases"):
         op.create_foreign_key(
             "fk_purchases_warehouse_id",
@@ -7397,9 +6131,7 @@ def upgrade():
             ondelete="CASCADE",
         )
     with op.batch_alter_table("card_vault"):
-        op.create_foreign_key(
-            "fk_card_vault_created_by", "card_vault", "users", ["created_by"], ["id"]
-        )
+        op.create_foreign_key("fk_card_vault_created_by", "card_vault", "users", ["created_by"], ["id"])
     with op.batch_alter_table("card_vault"):
         op.create_foreign_key(
             "fk_card_vault_customer_id",
@@ -7703,13 +6435,9 @@ def upgrade():
             ["id"],
         )
     with op.batch_alter_table("sales"):
-        op.create_foreign_key(
-            "fk_sales_branch_id", "sales", "branches", ["branch_id"], ["id"]
-        )
+        op.create_foreign_key("fk_sales_branch_id", "sales", "branches", ["branch_id"], ["id"])
     with op.batch_alter_table("sales"):
-        op.create_foreign_key(
-            "fk_sales_customer_id", "sales", "customers", ["customer_id"], ["id"]
-        )
+        op.create_foreign_key("fk_sales_customer_id", "sales", "customers", ["customer_id"], ["id"])
     with op.batch_alter_table("sales"):
         op.create_foreign_key(
             "fk_sales_pos_session_id",
@@ -7719,17 +6447,11 @@ def upgrade():
             ["id"],
         )
     with op.batch_alter_table("sales"):
-        op.create_foreign_key(
-            "fk_sales_sales_rep_id", "sales", "users", ["sales_rep_id"], ["id"]
-        )
+        op.create_foreign_key("fk_sales_sales_rep_id", "sales", "users", ["sales_rep_id"], ["id"])
     with op.batch_alter_table("sales"):
-        op.create_foreign_key(
-            "fk_sales_seller_id", "sales", "users", ["seller_id"], ["id"]
-        )
+        op.create_foreign_key("fk_sales_seller_id", "sales", "users", ["seller_id"], ["id"])
     with op.batch_alter_table("sales"):
-        op.create_foreign_key(
-            "fk_sales_table_id", "sales", "pos_tables", ["table_id"], ["id"]
-        )
+        op.create_foreign_key("fk_sales_table_id", "sales", "pos_tables", ["table_id"], ["id"])
     with op.batch_alter_table("sales"):
         op.create_foreign_key(
             "fk_sales_tenant_id",
@@ -7740,9 +6462,7 @@ def upgrade():
             ondelete="CASCADE",
         )
     with op.batch_alter_table("sales"):
-        op.create_foreign_key(
-            "fk_sales_warehouse_id", "sales", "warehouses", ["warehouse_id"], ["id"]
-        )
+        op.create_foreign_key("fk_sales_warehouse_id", "sales", "warehouses", ["warehouse_id"], ["id"])
     with op.batch_alter_table("shop_customer_accounts"):
         op.create_foreign_key(
             "fk_shop_customer_accounts_customer_id",
@@ -8033,9 +6753,7 @@ def upgrade():
             ["id"],
         )
     with op.batch_alter_table("pos_kds_orders"):
-        op.create_foreign_key(
-            "fk_pos_kds_orders_sale_id", "pos_kds_orders", "sales", ["sale_id"], ["id"]
-        )
+        op.create_foreign_key("fk_pos_kds_orders_sale_id", "pos_kds_orders", "sales", ["sale_id"], ["id"])
     with op.batch_alter_table("pos_kds_orders"):
         op.create_foreign_key(
             "fk_pos_kds_orders_session_id",
@@ -8321,9 +7039,7 @@ def upgrade():
             ondelete="CASCADE",
         )
     with op.batch_alter_table("sale_lines"):
-        op.create_foreign_key(
-            "fk_sale_lines_product_id", "sale_lines", "products", ["product_id"], ["id"]
-        )
+        op.create_foreign_key("fk_sale_lines_product_id", "sale_lines", "products", ["product_id"], ["id"])
     with op.batch_alter_table("sale_lines"):
         op.create_foreign_key(
             "fk_sale_lines_sale_id",

@@ -86,9 +86,7 @@ def process_cheque_receive(cheque):
             fallback_key="receivable",
         )
     )
-    credit_concept = (
-        gl_get_customer_credit_concept(cheque.customer) if cheque.customer_id else "AR"
-    )
+    credit_concept = gl_get_customer_credit_concept(cheque.customer) if cheque.customer_id else "AR"
     lines = [
         {
             "account": GLService.get_account_code_for_concept(
@@ -211,9 +209,7 @@ def _create_clearing_journal_entry(cheque):
                 "description": f"صرف شيك رقم {cheque.cheque_bank_number}",
             }
         )
-        if cheque.currency_gain_loss and abs(cheque.currency_gain_loss) > Decimal(
-            "0.01"
-        ):
+        if cheque.currency_gain_loss and abs(cheque.currency_gain_loss) > Decimal("0.01"):
             if cheque.currency_gain_loss > 0:
                 lines.append(
                     {
@@ -268,9 +264,7 @@ def _create_clearing_journal_entry(cheque):
                 "description": f"صرف شيك رقم {cheque.cheque_bank_number}",
             }
         )
-        if cheque.currency_gain_loss and abs(cheque.currency_gain_loss) > Decimal(
-            "0.01"
-        ):
+        if cheque.currency_gain_loss and abs(cheque.currency_gain_loss) > Decimal("0.01"):
             if cheque.currency_gain_loss > 0:
                 lines.append(
                     {
@@ -374,11 +368,7 @@ def _create_bounce_journal_entry(cheque):
                 fallback_key="receivable",
             )
         )
-        ar_concept = (
-            gl_get_customer_credit_concept(cheque.customer)
-            if cheque.customer_id
-            else "AR"
-        )
+        ar_concept = gl_get_customer_credit_concept(cheque.customer) if cheque.customer_id else "AR"
         lines.append(
             {
                 "account": ar_account,
@@ -528,16 +518,12 @@ def process_cheque_bounce(cheque, reason, bounce_fee=None):
                     tenant_id=getattr(cheque, "tenant_id", None),
                 )
             except Exception as fee_err:
-                logger.error(
-                    f"Failed to post bounce fee for cheque {cheque.id}: {fee_err}"
-                )
+                logger.error(f"Failed to post bounce fee for cheque {cheque.id}: {fee_err}")
         if cheque.cheque_type == "incoming" and cheque.customer_id:
             try:
                 cheque.customer.adjust_balance(-(cheque.amount_aed or Decimal("0")))
             except Exception as cust_err:
-                logger.error(
-                    f"Failed to adjust customer balance on bounce cheque {cheque.id}: {cust_err}"
-                )
+                logger.error(f"Failed to adjust customer balance on bounce cheque {cheque.id}: {cust_err}")
         from models.payment import Payment, Receipt
 
         tid = getattr(cheque, "tenant_id", None)
@@ -547,11 +533,7 @@ def process_cheque_bounce(cheque, reason, bounce_fee=None):
         payment = pmt_q.first()
         if payment:
             payment.reject_payment(reason)
-        if (
-            cheque.cheque_type == "outgoing"
-            and cheque.supplier_id
-            and not cheque.expense_id
-        ):
+        if cheque.cheque_type == "outgoing" and cheque.supplier_id and not cheque.expense_id:
             from models.supplier import Supplier
 
             supplier_q = Supplier.query.filter_by(id=cheque.supplier_id)
@@ -588,11 +570,7 @@ def _create_cancel_journal_entry(cheque):
                 fallback_key="receivable",
             )
         )
-        ar_concept = (
-            gl_get_customer_credit_concept(cheque.customer)
-            if cheque.customer_id
-            else "AR"
-        )
+        ar_concept = gl_get_customer_credit_concept(cheque.customer) if cheque.customer_id else "AR"
         lines = [
             {
                 "account": ar_account,
@@ -708,12 +686,7 @@ def process_cheque_cancel(cheque, reason=None, *, create_gl=True):
 
     # Cancelling an outgoing supplier cheque restores AP in the GL, so restore
     # the cached supplier paid total to keep the balance consistent.
-    if (
-        create_gl
-        and cheque.cheque_type == "outgoing"
-        and cheque.supplier_id
-        and not cheque.expense_id
-    ):
+    if create_gl and cheque.cheque_type == "outgoing" and cheque.supplier_id and not cheque.expense_id:
         from models.supplier import Supplier
 
         tid = getattr(cheque, "tenant_id", None)
@@ -742,9 +715,7 @@ def register_cheque_event_listeners():
                 today = date.today()
                 days_overdue = (today - due).days
                 if days_overdue > 7:
-                    logger.warning(
-                        f"Cheque {target.cheque_number} overdue by {days_overdue} days"
-                    )
+                    logger.warning(f"Cheque {target.cheque_number} overdue by {days_overdue} days")
         except Exception as e:
             logger.error(f"Failed to check cheque status: {e}")
 
@@ -753,8 +724,6 @@ def register_cheque_event_listeners():
         try:
             if target.status in ["cleared", "bounced"]:
                 status_ar = "تم الصرف" if target.status == "cleared" else "مرتد"
-                logger.info(
-                    f"Cheque {target.cheque_number} status changed to: {status_ar}"
-                )
+                logger.info(f"Cheque {target.cheque_number} status changed to: {status_ar}")
         except Exception as e:
             logger.error(f"Failed to log cheque status change: {e}")

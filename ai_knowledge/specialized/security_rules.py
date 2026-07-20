@@ -102,11 +102,7 @@ class SecurityRules:
     def log_security_event(event_type, details):
         """تسجيل الأحداث الأمنية"""
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        user = (
-            current_user.username
-            if current_user and current_user.is_authenticated
-            else "غير مسجل"
-        )
+        user = current_user.username if current_user and current_user.is_authenticated else "غير مسجل"
 
         log_entry = f"[{timestamp}] {event_type}: {details} - المستخدم: {user}"
 

@@ -11,9 +11,7 @@ class ShopReview(db.Model):
         nullable=False,
         index=True,
     )
-    product_id = db.Column(
-        db.Integer, db.ForeignKey("products.id"), nullable=False, index=True
-    )
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False, index=True)
     account_id = db.Column(
         db.Integer,
         db.ForeignKey("shop_customer_accounts.id"),
@@ -30,6 +28,4 @@ class ShopReview(db.Model):
         index=True,
         default=lambda: datetime.now(timezone.utc),
     )
-    product = db.relationship(
-        "Product", backref=db.backref("shop_reviews", lazy="dynamic")
-    )
+    product = db.relationship("Product", backref=db.backref("shop_reviews", lazy="dynamic"))

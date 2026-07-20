@@ -54,9 +54,7 @@ def _scoped_customer_query():
 def _customer_in_scope(customer_id):
     if branch_scope_id() is None:
         return True
-    return db.session.query(
-        _scoped_customer_query().filter(Customer.id == customer_id).exists()
-    ).scalar()
+    return db.session.query(_scoped_customer_query().filter(Customer.id == customer_id).exists()).scalar()
 
 
 def _get_customer_balance(customer_id):
@@ -64,9 +62,7 @@ def _get_customer_balance(customer_id):
     if scoped_branch_id is None:
         customer = tenant_get_or_404(Customer, customer_id)
         return PaymentService.get_customer_balance_aed(customer)
-    return PaymentService.get_customer_balance_scoped(
-        customer_id, branch_id=scoped_branch_id
-    )
+    return PaymentService.get_customer_balance_scoped(customer_id, branch_id=scoped_branch_id)
 
 
 def _get_unpaid_sales(customer_id):
@@ -122,19 +118,11 @@ def _attach_customer_branch_labels(customers):
             branch_map[cid].add(bid)
             branch_ids.add(bid)
 
-    branches = (
-        Branch.query.filter(Branch.id.in_(branch_ids)).all() if branch_ids else []
-    )
-    branch_labels = {
-        b.id: (f"{b.name} ({b.code})" if getattr(b, "code", None) else b.name)
-        for b in branches
-    }
+    branches = Branch.query.filter(Branch.id.in_(branch_ids)).all() if branch_ids else []
+    branch_labels = {b.id: (f"{b.name} ({b.code})" if getattr(b, "code", None) else b.name) for b in branches}
 
     for customer in customers:
-        labels = [
-            branch_labels.get(bid, str(bid))
-            for bid in sorted(branch_map.get(customer.id, set()))
-        ]
+        labels = [branch_labels.get(bid, str(bid)) for bid in sorted(branch_map.get(customer.id, set()))]
         customer.branch_labels = labels
 
 
@@ -164,9 +152,7 @@ def index():
 
     query = query.filter_by(is_active=True)
 
-    pagination = query.order_by(Customer.name).paginate(
-        page=page, per_page=per_page, error_out=False
-    )
+    pagination = query.order_by(Customer.name).paginate(page=page, per_page=per_page, error_out=False)
 
     show_branch_columns = should_show_all_branch_columns(current_user)
     if show_branch_columns:
@@ -229,9 +215,7 @@ def export():
         receipts_rows = (
             db.session.query(
                 Receipt.customer_id,
-                db.func.coalesce(db.func.sum(Receipt.amount_aed), 0).label(
-                    "receipts_total"
-                ),
+                db.func.coalesce(db.func.sum(Receipt.amount_aed), 0).label("receipts_total"),
             )
             .filter(
                 Receipt.branch_id == scoped_branch,
@@ -243,9 +227,7 @@ def export():
         outgoing_rows = (
             db.session.query(
                 Payment.customer_id,
-                db.func.coalesce(db.func.sum(Payment.amount_aed), 0).label(
-                    "outgoing_total"
-                ),
+                db.func.coalesce(db.func.sum(Payment.amount_aed), 0).label("outgoing_total"),
             )
             .filter(
                 Payment.direction == "outgoing",
@@ -299,9 +281,7 @@ def export():
 
     base_name = f"customers_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     if fmt == "xlsx":
-        output = ExportService.export_to_xlsx(
-            data, headers, filename=f"{base_name}.xlsx", sheet_name="Customers"
-        )
+        output = ExportService.export_to_xlsx(data, headers, filename=f"{base_name}.xlsx", sheet_name="Customers")
         return send_file(
             output,
             mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -357,9 +337,7 @@ def create():
                 email=form.email.data,
                 address=form.address.data,
                 tax_number=form.tax_number.data,
-                preferred_currency=validate_currency_code(
-                    form.preferred_currency.data or default_currency
-                ),
+                preferred_currency=validate_currency_code(form.preferred_currency.data or default_currency),
                 is_active=bool(form.is_active.data),
                 notes=form.notes.data,
             )
@@ -438,9 +416,7 @@ def edit(**kwargs):
                 customer.address = request.form.get("address")
                 customer.tax_number = request.form.get("tax_number")
                 customer.preferred_currency = validate_currency_code(
-                    request.form.get("preferred_currency")
-                    or request.form.get("default_currency")
-                    or default_currency
+                    request.form.get("preferred_currency") or request.form.get("default_currency") or default_currency
                 )
                 is_active_raw = request.form.get("is_active", "1")
                 customer.is_active = str(is_active_raw) in ("1", "true", "on", "True")
@@ -475,20 +451,12 @@ def delete(**kwargs):
             sales_query = Sale.query.filter_by(customer_id=record_id, tenant_id=tid)
             from models import Payment, Receipt
 
-            payments_query = Payment.query.filter_by(
-                customer_id=record_id, tenant_id=tid
-            )
-            receipts_query = Receipt.query.filter_by(
-                customer_id=record_id, tenant_id=tid
-            )
+            payments_query = Payment.query.filter_by(customer_id=record_id, tenant_id=tid)
+            receipts_query = Receipt.query.filter_by(customer_id=record_id, tenant_id=tid)
             if branch_scope_id() is not None:
                 sales_query = sales_query.filter(Sale.branch_id == branch_scope_id())
-                payments_query = payments_query.filter(
-                    Payment.branch_id == branch_scope_id()
-                )
-                receipts_query = receipts_query.filter(
-                    Receipt.branch_id == branch_scope_id()
-                )
+                payments_query = payments_query.filter(Payment.branch_id == branch_scope_id())
+                receipts_query = receipts_query.filter(Receipt.branch_id == branch_scope_id())
             sales_count = sales_query.count()
             payments_count = payments_query.count()
             receipts_count = receipts_query.count()
@@ -525,9 +493,7 @@ def delete(**kwargs):
                         "warning",
                     )
         except Exception as inner_e:
-            current_app.logger.error(
-                f"Error falling back to soft delete for customer {record_id}: {inner_e}"
-            )
+            current_app.logger.error(f"Error falling back to soft delete for customer {record_id}: {inner_e}")
             from utils.error_messages import ErrorMessages
 
             flash(ErrorMessages.delete_failed(gettext("العميل")), "danger")
@@ -557,9 +523,7 @@ def statement(**kwargs):
     from models import Payment, Receipt
 
     tid = get_active_tenant_id(current_user)
-    sales_query = Sale.query.filter_by(
-        customer_id=record_id, status="confirmed", tenant_id=tid
-    )
+    sales_query = Sale.query.filter_by(customer_id=record_id, status="confirmed", tenant_id=tid)
     payments_query = Payment.query.filter_by(customer_id=record_id, tenant_id=tid)
     receipts_query = Receipt.query.filter_by(customer_id=record_id, tenant_id=tid)
     if branch_scope_id() is not None:
@@ -569,21 +533,13 @@ def statement(**kwargs):
 
     if date_from:
         sales_query = sales_query.filter(func.date(Sale.sale_date) >= date_from)
-        payments_query = payments_query.filter(
-            func.date(Payment.payment_date) >= date_from
-        )
-        receipts_query = receipts_query.filter(
-            func.date(Receipt.receipt_date) >= date_from
-        )
+        payments_query = payments_query.filter(func.date(Payment.payment_date) >= date_from)
+        receipts_query = receipts_query.filter(func.date(Receipt.receipt_date) >= date_from)
 
     if date_to:
         sales_query = sales_query.filter(func.date(Sale.sale_date) <= date_to)
-        payments_query = payments_query.filter(
-            func.date(Payment.payment_date) <= date_to
-        )
-        receipts_query = receipts_query.filter(
-            func.date(Receipt.receipt_date) <= date_to
-        )
+        payments_query = payments_query.filter(func.date(Payment.payment_date) <= date_to)
+        receipts_query = receipts_query.filter(func.date(Receipt.receipt_date) <= date_to)
 
     sales = sales_query.order_by(Sale.sale_date).all()
     payments = payments_query.order_by(Payment.payment_date).all()
@@ -598,27 +554,13 @@ def statement(**kwargs):
             unit_price = Decimal(str(line.unit_price or 0))
             discount_percent = Decimal(str(line.discount_percent or 0))
             gross_amount = quantity * unit_price
-            discount_value = (
-                (gross_amount * discount_percent / Decimal("100"))
-                if discount_percent
-                else Decimal("0")
-            )
+            discount_value = (gross_amount * discount_percent / Decimal("100")) if discount_percent else Decimal("0")
             sale_lines_data.append(
                 {
                     "index": idx,
-                    "product_name": (
-                        line.product.get_display_name("ar")
-                        if line.product
-                        else gettext("بند غير معرف")
-                    ),
-                    "product_sku": (
-                        line.product.sku if line.product and line.product.sku else None
-                    ),
-                    "unit": (
-                        line.product.unit
-                        if line.product and hasattr(line.product, "unit")
-                        else None
-                    ),
+                    "product_name": (line.product.get_display_name("ar") if line.product else gettext("بند غير معرف")),
+                    "product_sku": (line.product.sku if line.product and line.product.sku else None),
+                    "unit": (line.product.unit if line.product and hasattr(line.product, "unit") else None),
                     "quantity": float(quantity),
                     "unit_price": float(unit_price),
                     "discount_percent": float(discount_percent),
@@ -657,11 +599,7 @@ def statement(**kwargs):
                     "status_ar": (
                         payment.status_ar
                         if hasattr(payment, "status_ar")
-                        else (
-                            gettext("مؤكدة ✅")
-                            if payment.payment_confirmed
-                            else gettext("معلقة ⏳")
-                        )
+                        else (gettext("مؤكدة ✅") if payment.payment_confirmed else gettext("معلقة ⏳"))
                     ),
                     "payment_confirmed": payment.payment_confirmed,
                     "user": (
@@ -671,9 +609,7 @@ def statement(**kwargs):
                     ),
                     "notes": payment.notes or "",
                     "direction": payment.direction,
-                    "cheque_number": (
-                        cheque.cheque_number if cheque else payment.cheque_number
-                    ),
+                    "cheque_number": (cheque.cheque_number if cheque else payment.cheque_number),
                     "cheque_bank": cheque.bank_name if cheque else payment.bank_name,
                     "cheque_due_date": cheque.due_date if cheque else None,
                 }
@@ -725,12 +661,8 @@ def statement(**kwargs):
         )
 
     for payment in payments:
-        credit_amount = (
-            float(payment.amount_aed or 0) if payment.direction == "incoming" else 0.0
-        )
-        debit_amount = (
-            float(payment.amount_aed or 0) if payment.direction != "incoming" else 0.0
-        )
+        credit_amount = float(payment.amount_aed or 0) if payment.direction == "incoming" else 0.0
+        debit_amount = float(payment.amount_aed or 0) if payment.direction != "incoming" else 0.0
 
         cheque = payment.cheque if hasattr(payment, "cheque") else None
 
@@ -738,9 +670,7 @@ def statement(**kwargs):
             {
                 "date": payment.payment_date,
                 "type": "payment",
-                "reference": payment.reference_number
-                or payment.payment_number
-                or gettext(f"دفع #{payment.id}"),
+                "reference": payment.reference_number or payment.payment_number or gettext(f"دفع #{payment.id}"),
                 "debit": debit_amount,
                 "credit": credit_amount,
                 "balance": 0,
@@ -754,11 +684,7 @@ def statement(**kwargs):
                 "status": (
                     payment.status_ar
                     if hasattr(payment, "status_ar")
-                    else (
-                        gettext("مؤكدة ✅")
-                        if payment.payment_confirmed
-                        else gettext("معلقة ⏳")
-                    )
+                    else (gettext("مؤكدة ✅") if payment.payment_confirmed else gettext("معلقة ⏳"))
                 ),
                 "payment": {
                     "id": payment.id,
@@ -781,11 +707,7 @@ def statement(**kwargs):
                     "status_ar": (
                         payment.status_ar
                         if hasattr(payment, "status_ar")
-                        else (
-                            gettext("مؤكدة ✅")
-                            if payment.payment_confirmed
-                            else gettext("معلقة ⏳")
-                        )
+                        else (gettext("مؤكدة ✅") if payment.payment_confirmed else gettext("معلقة ⏳"))
                     ),
                     "user": (
                         payment.user.get_display_name("ar")
@@ -793,13 +715,9 @@ def statement(**kwargs):
                         else (payment.user.full_name if payment.user else None)
                     ),
                     "notes": payment.notes or "",
-                    "cheque_number": (
-                        cheque.cheque_number if cheque else payment.cheque_number
-                    ),
+                    "cheque_number": (cheque.cheque_number if cheque else payment.cheque_number),
                     "cheque_bank": cheque.bank_name if cheque else payment.bank_name,
-                    "cheque_due_date": (
-                        cheque.due_date if cheque else payment.cheque_date
-                    ),
+                    "cheque_due_date": (cheque.due_date if cheque else payment.cheque_date),
                     "cheque_clearance_date": cheque.clearance_date if cheque else None,
                 },
             }
@@ -808,9 +726,7 @@ def statement(**kwargs):
     allocated_receipt_numbers = set()
     for t in transactions:
         if t["type"] == "payment":
-            ref = t.get("reference", "") or t.get("payment", {}).get(
-                "reference_number", ""
-            )
+            ref = t.get("reference", "") or t.get("payment", {}).get("reference_number", "")
             if ref:
                 allocated_receipt_numbers.add(ref)
 
@@ -833,9 +749,7 @@ def statement(**kwargs):
                 "exchange_rate": 1.0,
                 "paid_amount": float(receipt.amount_aed or 0),
                 "balance_due": 0,
-                "status": gettext("مؤكدة")
-                if receipt.payment_confirmed
-                else gettext("معلقة"),
+                "status": gettext("مؤكدة") if receipt.payment_confirmed else gettext("معلقة"),
             }
         )
 
@@ -843,11 +757,7 @@ def statement(**kwargs):
 
     opening_balance = 0
     if date_from:
-        cutoff = (
-            datetime.strptime(date_from, "%Y-%m-%d").date()
-            if isinstance(date_from, str)
-            else date_from
-        )
+        cutoff = datetime.strptime(date_from, "%Y-%m-%d").date() if isinstance(date_from, str) else date_from
         remaining = []
         for trans in transactions:
             tdate = trans.get("date")
@@ -857,11 +767,7 @@ def statement(**kwargs):
                 is_confirmed = (
                     trans.get("payment", {}).get("payment_confirmed", True)
                     if trans["type"] == "payment"
-                    else (
-                        trans.get("status") != gettext("معلقة")
-                        if trans["type"] == "receipt"
-                        else True
-                    )
+                    else (trans.get("status") != gettext("معلقة") if trans["type"] == "receipt" else True)
                 )
                 if is_confirmed:
                     opening_balance += trans["credit"] - trans["debit"]
@@ -870,9 +776,7 @@ def statement(**kwargs):
         transactions = remaining
 
     if transaction_type in {"sale", "payment", "receipt"}:
-        transactions = [
-            trans for trans in transactions if trans["type"] == transaction_type
-        ]
+        transactions = [trans for trans in transactions if trans["type"] == transaction_type]
 
     # Insert opening balance entry
     if opening_balance != 0 or date_from:
@@ -903,11 +807,7 @@ def statement(**kwargs):
         is_confirmed = (
             trans.get("payment", {}).get("payment_confirmed", True)
             if trans["type"] == "payment"
-            else (
-                trans.get("status") != gettext("معلقة")
-                if trans["type"] == "receipt"
-                else True
-            )
+            else (trans.get("status") != gettext("معلقة") if trans["type"] == "receipt" else True)
         )
         if is_confirmed:
             running_balance += trans["credit"] - trans["debit"]
@@ -934,9 +834,7 @@ def api_search():
     query = request.args.get("q", "")
     request.args.get("page", 1, type=int)
     per_page = 20
-    base_query = (
-        _scoped_customer_query().filter(Customer.is_active).order_by(Customer.name)
-    )
+    base_query = _scoped_customer_query().filter(Customer.is_active).order_by(Customer.name)
 
     if query and len(query) >= 1:
         customers = (
@@ -993,9 +891,7 @@ def customer_balance(**kwargs):
                     "id": s.id,
                     "sale_number": s.sale_number,
                     "sale_date": (
-                        s.sale_date.strftime("%Y-%m-%d")
-                        if getattr(s.sale_date, "strftime", None)
-                        else str(s.sale_date)
+                        s.sale_date.strftime("%Y-%m-%d") if getattr(s.sale_date, "strftime", None) else str(s.sale_date)
                     ),
                     "total_amount": float(s.total_amount),
                     "balance_due": float(s.balance_due),

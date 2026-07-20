@@ -184,9 +184,7 @@ class TestApiHelpers:
 
     def test_customer_balance_no_customer(self, mocker):
         mocker.patch("routes.api.branch_scope_id", return_value=None)
-        mocker.patch(
-            "routes.api._scoped_customer_query"
-        ).return_value.filter.return_value.first.return_value = None
+        mocker.patch("routes.api._scoped_customer_query").return_value.filter.return_value.first.return_value = None
         from routes.api import _customer_balance
 
         assert _customer_balance(1) == 0.0
@@ -205,9 +203,7 @@ class TestApiHelpers:
         supplier = MagicMock()
         supplier.get_balance_aed.return_value = Decimal("10")
         mocker.patch("routes.api.branch_scope_id", return_value=None)
-        mocker.patch(
-            "routes.api._scoped_supplier_query"
-        ).return_value.filter.return_value.first.return_value = supplier
+        mocker.patch("routes.api._scoped_supplier_query").return_value.filter.return_value.first.return_value = supplier
         from routes.api import _supplier_balance
 
         assert _supplier_balance(3) == 10.0
@@ -325,9 +321,7 @@ class TestApiEndpoints:
         assert resp.get_json()["available"] is False
 
     def test_check_username_available(self, api_client, mocker):
-        mocker.patch(
-            "routes.api.User.query"
-        ).filter_by.return_value.filter.return_value.first.return_value = None
+        mocker.patch("routes.api.User.query").filter_by.return_value.filter.return_value.first.return_value = None
         resp = api_client.get("/api/check-username?username=valid_user")
         assert resp.get_json()["available"] is True
 
@@ -340,9 +334,7 @@ class TestApiEndpoints:
             min_stock_alert=10,
             visible_stock=1,
         )
-        mocker.patch(
-            "routes.api.StockService.get_low_stock_products", return_value=[product]
-        )
+        mocker.patch("routes.api.StockService.get_low_stock_products", return_value=[product])
         resp = api_client.get("/api/products/low-stock")
         assert resp.status_code == 200
         assert resp.get_json()["count"] == 1
@@ -462,9 +454,7 @@ class TestApiEndpoints:
         )
         mocker.patch("routes.api.db.session.get", return_value=product)
         mocker.patch("routes.api.get_branch_stock_map", return_value={9: Decimal("4")})
-        mocker.patch(
-            "utils.branching.ensure_warehouse_access", return_value=MagicMock(id=1)
-        )
+        mocker.patch("utils.branching.ensure_warehouse_access", return_value=MagicMock(id=1))
         resp = api_client.get("/api/products/9/info?warehouse_id=1")
         assert resp.status_code == 200
         assert resp.get_json()["success"] is True
@@ -477,16 +467,12 @@ class TestApiEndpoints:
 
     def test_product_by_barcode(self, api_client, mocker):
         product = SimpleNamespace(id=4, name="Bar", sku="SKU")
-        mocker.patch(
-            "routes.api.Product.query"
-        ).filter.return_value.filter.return_value.first.return_value = product
+        mocker.patch("routes.api.Product.query").filter.return_value.filter.return_value.first.return_value = product
         resp = api_client.get("/api/products/barcode/ABC123")
         assert resp.status_code == 200
 
     def test_barcode_validate(self, api_client, mocker):
-        mocker.patch(
-            "routes.api.Product.query"
-        ).filter.return_value.filter.return_value.first.return_value = None
+        mocker.patch("routes.api.Product.query").filter.return_value.filter.return_value.first.return_value = None
         resp = api_client.get("/api/barcode/validate?code=NEW123")
         assert resp.get_json()["valid"] is True
 
@@ -505,9 +491,7 @@ class TestApiEndpoints:
         mock_q.order_by.return_value = mock_q
         mock_q.limit.return_value = mock_q
         mock_q.all.return_value = [wh]
-        mocker.patch.object(
-            api_module, "get_accessible_warehouses", return_value=mock_q, create=True
-        )
+        mocker.patch.object(api_module, "get_accessible_warehouses", return_value=mock_q, create=True)
         resp = api_client.get("/api/warehouses?q=Main")
         assert resp.status_code == 200
 
@@ -575,16 +559,12 @@ class TestApiEndpoints:
             min_stock_alert=Decimal("1"),
         )
         mocker.patch("routes.api.db.session.get", return_value=product)
-        mocker.patch(
-            "utils.branching.ensure_warehouse_access", side_effect=ValueError("denied")
-        )
+        mocker.patch("utils.branching.ensure_warehouse_access", side_effect=ValueError("denied"))
         resp = api_client.get("/api/products/9/info?warehouse_id=1")
         assert resp.status_code == 403
 
     def test_product_by_barcode_not_found(self, api_client, mocker):
-        mocker.patch(
-            "routes.api.Product.query"
-        ).filter.return_value.filter.return_value.first.return_value = None
+        mocker.patch("routes.api.Product.query").filter.return_value.filter.return_value.first.return_value = None
         resp = api_client.get("/api/products/barcode/MISSING")
         assert resp.status_code == 404
 
@@ -647,9 +627,7 @@ class TestApiEndpoints:
         mock_q.order_by.return_value = mock_q
         mock_q.limit.return_value = mock_q
         mock_q.all.return_value = [wh]
-        mocker.patch.object(
-            api_module, "get_accessible_warehouses", return_value=mock_q
-        )
+        mocker.patch.object(api_module, "get_accessible_warehouses", return_value=mock_q)
         resp = api_client.get("/api/search_warehouses?q=Branch")
         assert resp.status_code == 200
         assert resp.get_json()["results"][0]["id"] == 2

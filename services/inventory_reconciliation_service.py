@@ -49,9 +49,7 @@ class InventoryReconciliationService:
         try:
             if len(text_value) == 10:
                 parsed_date = date.fromisoformat(text_value)
-                return datetime.combine(
-                    parsed_date, time.max if end_of_day else time.min
-                )
+                return datetime.combine(parsed_date, time.max if end_of_day else time.min)
             return datetime.fromisoformat(text_value)
         except ValueError:
             return None
@@ -78,9 +76,7 @@ class InventoryReconciliationService:
         which reassigned the *loop variable* without mutating debit_q/credit_q.
         Filters were silently ignored.  Now we apply filters directly to both queries.
         """
-        date_start, date_end = InventoryReconciliationService._date_bounds(
-            date_from, date_to
-        )
+        date_start, date_end = InventoryReconciliationService._date_bounds(date_from, date_to)
 
         debit_q = (
             db.session.query(func.coalesce(func.sum(GLJournalLine.debit), 0))
@@ -110,9 +106,7 @@ class InventoryReconciliationService:
             debit_q = debit_q.filter(GLJournalEntry.entry_date <= date_end)
             credit_q = credit_q.filter(GLJournalEntry.entry_date <= date_end)
 
-        return Decimal(str(debit_q.scalar() or 0)) - Decimal(
-            str(credit_q.scalar() or 0)
-        )
+        return Decimal(str(debit_q.scalar() or 0)) - Decimal(str(credit_q.scalar() or 0))
 
     @classmethod
     def _movement_net_qty(
@@ -179,9 +173,9 @@ class InventoryReconciliationService:
         if warehouse_id is not None:
             pwc_query = pwc_query.filter_by(warehouse_id=warehouse_id)
         if branch_id is not None:
-            pwc_query = pwc_query.join(
-                Warehouse, ProductWarehouseCost.warehouse_id == Warehouse.id
-            ).filter(Warehouse.branch_id == branch_id)
+            pwc_query = pwc_query.join(Warehouse, ProductWarehouseCost.warehouse_id == Warehouse.id).filter(
+                Warehouse.branch_id == branch_id
+            )
             if tenant_id is not None:
                 pwc_query = pwc_query.filter(Warehouse.tenant_id == tenant_id)
 
@@ -214,9 +208,7 @@ class InventoryReconciliationService:
                     "product_id": pwc.product_id,
                     "product_name": product.name if product else f"#{pwc.product_id}",
                     "warehouse_id": pwc.warehouse_id,
-                    "warehouse_name": (
-                        warehouse.name if warehouse else f"#{pwc.warehouse_id}"
-                    ),
+                    "warehouse_name": (warehouse.name if warehouse else f"#{pwc.warehouse_id}"),
                     "pwc_qty": float(pwc.total_quantity or 0),
                     "movement_qty": float(movement_qty),
                     "qty_diff": float(qty_diff),
@@ -343,11 +335,7 @@ class InventoryReconciliationService:
 
         # If the current report scope has a single warehouse, legacy untagged
         # GL can be displayed on that row while still marked as unallocated.
-        if (
-            len(wh_rows) == 1
-            and warehouse_id is None
-            and abs(unallocated_gl_value) > RECON_TOLERANCE
-        ):
+        if len(wh_rows) == 1 and warehouse_id is None and abs(unallocated_gl_value) > RECON_TOLERANCE:
             row = wh_rows[0]
             effective_gl = Decimal(str(row["gl_value"])) + unallocated_gl_value
             value_diff = Decimal(str(row["pwc_value"])) - effective_gl
@@ -371,15 +359,10 @@ class InventoryReconciliationService:
         report["summary"]["total_gl_value"] = float(total_gl_value)
         report["summary"]["overall_value_diff"] = float(overall_value_diff)
         report["summary"]["all_matched_qty"] = all(r["matched_qty"] for r in wh_rows)
-        report["summary"]["all_matched_value"] = (
-            abs(overall_value_diff) <= RECON_TOLERANCE and not has_unallocated_gl
-        )
+        report["summary"]["all_matched_value"] = abs(overall_value_diff) <= RECON_TOLERANCE and not has_unallocated_gl
         report["summary"]["has_unallocated_gl"] = has_unallocated_gl
-        report["summary"]["all_warehouse_values_matched"] = all(
-            r["matched_value"] for r in wh_rows
-        )
+        report["summary"]["all_warehouse_values_matched"] = all(r["matched_value"] for r in wh_rows)
         report["summary"]["all_matched"] = (
-            report["summary"]["all_matched_qty"]
-            and report["summary"]["all_matched_value"]
+            report["summary"]["all_matched_qty"] and report["summary"]["all_matched_value"]
         )
         return report

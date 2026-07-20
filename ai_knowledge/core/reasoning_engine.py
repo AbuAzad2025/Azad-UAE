@@ -124,17 +124,11 @@ class ReasoningEngine:
             problem_type = "pricing"
         elif any(kw in problem_lower for kw in ["مخزون", "stock", "inventory"]):
             problem_type = "inventory"
-        elif any(
-            kw in problem_lower for kw in ["توقع", "predict", "forecast", "متوقع"]
-        ):
+        elif any(kw in problem_lower for kw in ["توقع", "predict", "forecast", "متوقع"]):
             problem_type = "prediction"
-        elif any(
-            kw in problem_lower for kw in ["قيد", "journal", "محاسبة", "accounting"]
-        ):
+        elif any(kw in problem_lower for kw in ["قيد", "journal", "محاسبة", "accounting"]):
             problem_type = "accounting"
-        elif any(
-            kw in problem_lower for kw in ["صيانة", "maintenance", "إصلاح", "repair"]
-        ):
+        elif any(kw in problem_lower for kw in ["صيانة", "maintenance", "إصلاح", "repair"]):
             problem_type = "maintenance"
         elif any(kw in problem_lower for kw in ["عميل", "customer", "client"]):
             problem_type = "customer"
@@ -198,9 +192,7 @@ class ReasoningEngine:
             )
         else:
             # مشكلة عامة
-            sub_problems.extend(
-                ["فهم المشكلة", "تحليل المعطيات", "تطبيق المنطق", "استخلاص الحل"]
-            )
+            sub_problems.extend(["فهم المشكلة", "تحليل المعطيات", "تطبيق المنطق", "استخلاص الحل"])
 
         return sub_problems
 
@@ -210,20 +202,14 @@ class ReasoningEngine:
         # محاكاة التفكير المنطقي
 
         if "سعر التكلفة" in sub_problem:
-            reasoning = (
-                "سعر التكلفة هو الأساس، يجب أن يكون السعر النهائي أعلى منه لتحقيق الربح"
-            )
+            reasoning = "سعر التكلفة هو الأساس، يجب أن يكون السعر النهائي أعلى منه لتحقيق الربح"
             solution = context.get("cost_price", 100) if context else 100
             confidence = 1.0
 
         elif "نوع العميل" in sub_problem:
             reasoning = "نوع العميل يحدد الهامش: Regular=30%, Merchant=20%, Partner=15%"
-            customer_type = (
-                context.get("customer_type", "regular") if context else "regular"
-            )
-            margin = {"regular": 1.30, "merchant": 1.20, "partner": 1.15}.get(
-                customer_type, 1.25
-            )
+            customer_type = context.get("customer_type", "regular") if context else "regular"
+            margin = {"regular": 1.30, "merchant": 1.20, "partner": 1.15}.get(customer_type, 1.25)
             solution = margin
             confidence = 0.9
 
@@ -300,9 +286,7 @@ class ReasoningEngine:
         }
 
     @staticmethod
-    def _generate_alternatives(
-        _problem: str, _context: dict, main_solution: Any
-    ) -> List[dict]:
+    def _generate_alternatives(_problem: str, _context: dict, main_solution: Any) -> List[dict]:
         """توليد حلول بديلة"""
         alternatives = []
 
@@ -395,28 +379,16 @@ class ReasoningEngine:
                 result = numbers[0] - sum(numbers[1:])
                 steps.append(f"الطرح: {numbers[0]} - {sum(numbers[1:])} = {result}")
 
-            elif (
-                "×" in calculation_problem
-                or "*" in calculation_problem
-                or "ضرب" in calculation_problem
-            ):
+            elif "×" in calculation_problem or "*" in calculation_problem or "ضرب" in calculation_problem:
                 operation = "multiplication"
                 result = 1
                 for n in numbers:
                     result *= n
                 steps.append(f"الضرب: {' × '.join(map(str, numbers))} = {result}")
 
-            elif (
-                "÷" in calculation_problem
-                or "/" in calculation_problem
-                or "قسمة" in calculation_problem
-            ):
+            elif "÷" in calculation_problem or "/" in calculation_problem or "قسمة" in calculation_problem:
                 operation = "division"
-                result = (
-                    numbers[0] / numbers[1]
-                    if len(numbers) > 1 and numbers[1] != 0
-                    else 0
-                )
+                result = numbers[0] / numbers[1] if len(numbers) > 1 and numbers[1] != 0 else 0
                 steps.append(f"القسمة: {numbers[0]} ÷ {numbers[1]} = {result}")
 
             elif "%" in calculation_problem or "نسبة" in calculation_problem:
@@ -474,19 +446,13 @@ class ReasoningEngine:
                 gross_profit = sales - costs
                 gross_margin = (gross_profit / sales) * 100
 
-                reasoning.append(
-                    "هامش الربح الإجمالي = (المبيعات - التكلفة) / المبيعات"
-                )
-                reasoning.append(
-                    f"= ({sales} - {costs}) / {sales} = {gross_margin:.1f}%"
-                )
+                reasoning.append("هامش الربح الإجمالي = (المبيعات - التكلفة) / المبيعات")
+                reasoning.append(f"= ({sales} - {costs}) / {sales} = {gross_margin:.1f}%")
 
                 metrics["gross_margin"] = gross_margin
 
                 if gross_margin < 20:
-                    reasoning.append(
-                        "⚠️ الهامش منخفض - حاول زيادة الأسعار أو تقليل التكاليف"
-                    )
+                    reasoning.append("⚠️ الهامش منخفض - حاول زيادة الأسعار أو تقليل التكاليف")
                 elif gross_margin > 40:
                     reasoning.append("✅ الهامش ممتاز - استمر")
 
@@ -516,10 +482,7 @@ class ReasoningEngine:
                     reasoning.append("✅ سيولة ممتازة")
 
             # التوصية النهائية
-            if (
-                metrics.get("net_margin", 0) > 15
-                and metrics.get("current_ratio", 0) > 1.5
-            ):
+            if metrics.get("net_margin", 0) > 15 and metrics.get("current_ratio", 0) > 1.5:
                 recommendation = "🎯 الوضع المالي ممتاز - استمر في الاستراتيجية الحالية"
             elif metrics.get("net_margin", 0) < 5:
                 recommendation = "⚠️ الربحية منخفضة - راجع التكاليف والأسعار"

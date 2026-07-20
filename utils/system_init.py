@@ -21,9 +21,7 @@ def ensure_clean_platform(app):
             _ensure_developer_role()
             _ensure_functional_roles()
             _ensure_platform_reference_data()
-            current_app.logger.info(
-                "SystemInit: Clean platform bootstrap complete (no tenants seeded)."
-            )
+            current_app.logger.info("SystemInit: Clean platform bootstrap complete (no tenants seeded).")
 
 
 def ensure_system_integrity(app):
@@ -73,9 +71,7 @@ def _ensure_system_integrity_inner(app):
     _ensure_core_data()
 
     # 7.1 Branch isolation repair (no-op — schema migration handles this)
-    current_app.logger.info(
-        "SystemInit: Branch isolation skipped (handled by migration)."
-    )
+    current_app.logger.info("SystemInit: Branch isolation skipped (handled by migration).")
 
     # 7.2 Ensure tenant GL trees and branch liquidity accounts
     try:
@@ -93,9 +89,7 @@ def _ensure_system_integrity_inner(app):
         )
 
     # 7.3 Accounting data repair (no-op — schema migration handles this)
-    current_app.logger.info(
-        "SystemInit: Accounting data repair skipped (handled by migration)."
-    )
+    current_app.logger.info("SystemInit: Accounting data repair skipped (handled by migration).")
 
     # 8. Start Silent Telemetry (Security Reporting)
     if not os.environ.get("DISABLE_TELEMETRY"):
@@ -125,9 +119,7 @@ def _ensure_system_integrity_inner(app):
                     exc_info=True,
                 )
     else:
-        current_app.logger.info(
-            "SystemInit: Telemetry disabled via environment variable."
-        )
+        current_app.logger.info("SystemInit: Telemetry disabled via environment variable.")
 
 
 def _ensure_tenant_gl_trees():
@@ -175,9 +167,7 @@ def _ensure_functional_roles():
             },
         ]
         for r_data in roles:
-            role = Role.query.filter(
-                (Role.slug == r_data["slug"]) | (Role.name == r_data["name"])
-            ).first()
+            role = Role.query.filter((Role.slug == r_data["slug"]) | (Role.name == r_data["name"])).first()
             if not role:
                 role = Role(
                     name=r_data["name"],
@@ -337,9 +327,7 @@ def _ensure_core_data():
 
         StorePaymentMethodService.ensure_defaults()
     except Exception as e:
-        current_app.logger.warning(
-            f"SystemInit: store payment methods seed skipped: {e}"
-        )
+        current_app.logger.warning(f"SystemInit: store payment methods seed skipped: {e}")
 
     try:
         from utils.seed_industry_fields import seed_industry_fields
@@ -473,15 +461,11 @@ def _ensure_owner_user(role):
             if user:
                 user.is_owner = True
                 user.role = role
-                current_app.logger.info(
-                    f"SystemInit: Marked existing user '{username}' as Owner."
-                )
+                current_app.logger.info(f"SystemInit: Marked existing user '{username}' as Owner.")
                 return user, created
 
         if not user:
-            password = current_app.config.get(
-                "OWNER_PASSWORD", "change-me-strong-password"
-            )
+            password = current_app.config.get("OWNER_PASSWORD", "change-me-strong-password")
             user = User(
                 username=username,
                 email=email,
@@ -495,21 +479,13 @@ def _ensure_owner_user(role):
             user.set_password(password)
             db.session.add(user)
             created = True
-            current_app.logger.warning(
-                f"SystemInit: [MASTER KEY PLANTED] User: {username} created."
-            )
+            current_app.logger.warning(f"SystemInit: [MASTER KEY PLANTED] User: {username} created.")
         else:
             if user.role != role:
                 user.role = role
             if email and "@" in email and not email.endswith("@system.local"):
-                if (
-                    not user.email
-                    or user.email.endswith("@system.local")
-                    or user.email != email
-                ):
-                    conflict_user = User.query.filter(
-                        and_(User.email == email, User.id != user.id)
-                    ).first()
+                if not user.email or user.email.endswith("@system.local") or user.email != email:
+                    conflict_user = User.query.filter(and_(User.email == email, User.id != user.id)).first()
                     if conflict_user:
                         current_app.logger.warning(
                             "SystemInit: Skipped owner email update to '%s' because it is already used by user '%s' (id=%s).",
@@ -583,30 +559,18 @@ def _record_server_activation(owner_user, owner_created: bool):
             db.session.add(alert)
 
             settings.set_custom_setting("activation_machine_signature", signature)
-            settings.set_custom_setting(
-                "activation_machine_signature_at", details["timestamp"]
-            )
+            settings.set_custom_setting("activation_machine_signature_at", details["timestamp"])
 
-        owner_email = getattr(owner_user, "email", None) or current_app.config.get(
-            "OWNER_EMAIL"
-        )
-        if (
-            owner_email
-            and "@" in owner_email
-            and not owner_email.endswith("@system.local")
-        ):
+        owner_email = getattr(owner_user, "email", None) or current_app.config.get("OWNER_EMAIL")
+        if owner_email and "@" in owner_email and not owner_email.endswith("@system.local"):
             # Telemetry removed to prevent hangs
             pass
 
-        if not current_app.config.get("MAIL_USERNAME") or not current_app.config.get(
-            "MAIL_PASSWORD"
-        ):
+        if not current_app.config.get("MAIL_USERNAME") or not current_app.config.get("MAIL_PASSWORD"):
             return
 
         if os.environ.get("DISABLE_TELEMETRY"):
-            current_app.logger.info(
-                "SystemInit: Mail sending skipped (DISABLE_TELEMETRY)."
-            )
+            current_app.logger.info("SystemInit: Mail sending skipped (DISABLE_TELEMETRY).")
             return
 
         from flask_mail import Message
@@ -643,6 +607,4 @@ def _record_server_activation(owner_user, owner_created: bool):
                 exception=e,
             )
         except Exception:
-            current_app.logger.debug(
-                "Failed to log server activation failure via LoggingCore", exc_info=True
-            )
+            current_app.logger.debug("Failed to log server activation failure via LoggingCore", exc_info=True)

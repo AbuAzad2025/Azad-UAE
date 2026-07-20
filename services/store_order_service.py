@@ -114,11 +114,7 @@ class StoreOrderService:
             )
             if internal_method == "cod":
                 internal_method = "cash"
-            amount_to_pay = (
-                sale.balance_due
-                if sale.balance_due and sale.balance_due > 0
-                else sale.total_amount
-            )
+            amount_to_pay = sale.balance_due if sale.balance_due and sale.balance_due > 0 else sale.total_amount
             payment = SaleService.create_payment_for_sale(
                 sale=sale,
                 amount=amount_to_pay,
@@ -158,9 +154,7 @@ class StoreOrderService:
         if existing:
             return
 
-        account = ShopCustomerAccount.query.filter_by(
-            customer_id=sale.customer_id, tenant_id=sale.tenant_id
-        ).first()
+        account = ShopCustomerAccount.query.filter_by(customer_id=sale.customer_id, tenant_id=sale.tenant_id).first()
         if not account:
             return
         from decimal import Decimal
@@ -183,9 +177,7 @@ class StoreOrderService:
         if not txn:
             return
 
-        account = ShopCustomerAccount.query.filter_by(
-            customer_id=sale.customer_id, tenant_id=sale.tenant_id
-        ).first()
+        account = ShopCustomerAccount.query.filter_by(customer_id=sale.customer_id, tenant_id=sale.tenant_id).first()
         if not account:
             return
 
@@ -235,9 +227,7 @@ class StoreOrderService:
         except Exception:
             raise
 
-        current_app.logger.info(
-            "Store order cancelled (unfulfilled): %s", sale.sale_number
-        )
+        current_app.logger.info("Store order cancelled (unfulfilled): %s", sale.sale_number)
         return sale
 
     @staticmethod
@@ -246,9 +236,7 @@ class StoreOrderService:
         issues = []
         warehouse_id = sale.warehouse_id
         for line in sale.lines:  # type: ignore[attr-defined]
-            available, msg = StockService.check_availability_in_warehouse(
-                line.product_id, line.quantity, warehouse_id
-            )
+            available, msg = StockService.check_availability_in_warehouse(line.product_id, line.quantity, warehouse_id)
             if not available:
                 name = line.product.name if line.product else str(line.product_id)
                 issues.append(f"{name}: {msg}")

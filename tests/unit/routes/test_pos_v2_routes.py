@@ -83,9 +83,7 @@ def _pos_enabled_patches(**kwargs):
 
     def _query_side(model):
         q = MagicMock()
-        q.filter.return_value.with_for_update.return_value.all.return_value = (
-            _default_locked_products
-        )
+        q.filter.return_value.with_for_update.return_value.all.return_value = _default_locked_products
         q.filter.return_value.all.return_value = []
         return q
 
@@ -100,9 +98,7 @@ def _pos_enabled_patches(**kwargs):
         stack.enter_context(patch("extensions.limiter.limit", return_value=lambda f: f))
         # Mock PosShift.query so _get_active_shift() and checkout work
         pos_shift_q = MagicMock()
-        pos_shift_q.filter.return_value.order_by.return_value.first.return_value = (
-            MagicMock(status="open")
-        )
+        pos_shift_q.filter.return_value.order_by.return_value.first.return_value = MagicMock(status="open")
         for m in ("filter", "filter_by", "order_by"):
             getattr(pos_shift_q, m).return_value = pos_shift_q
         stack.enter_context(patch("routes.pos.PosShift.query", pos_shift_q))
@@ -200,14 +196,8 @@ def _pos_api_patches(**kwargs):
                     ),
                 )
             )
-            stack.enter_context(
-                patch(
-                    "routes.pos.ensure_warehouse_access", return_value=MagicMock(id=3)
-                )
-            )
-            stack.enter_context(
-                patch("routes.pos.context_aware_default_currency", return_value="AED")
-            )
+            stack.enter_context(patch("routes.pos.ensure_warehouse_access", return_value=MagicMock(id=3)))
+            stack.enter_context(patch("routes.pos.context_aware_default_currency", return_value="AED"))
             stack.enter_context(
                 patch(
                     "routes.pos.get_active_branch_id",
@@ -455,9 +445,7 @@ class TestPosCheckout:
             resp = pos_client.post("/pos/api/checkout", json=self._checkout_payload())
         assert resp.status_code == 400
 
-    def test_checkout_price_override_forbidden(
-        self, pos_client, bypass_permission_auth
-    ):
+    def test_checkout_price_override_forbidden(self, pos_client, bypass_permission_auth):
         product = _mock_product()
         bypass_permission_auth.has_permission.return_value = False
         bypass_permission_auth.is_owner = False
@@ -481,22 +469,16 @@ class TestPosCheckout:
         with (
             _pos_api_patches(tenant_get=lambda m, i: product),
             patch("routes.pos._notify_kds") as notify,
-            patch(
-                "models.PosKdsOrder", return_value=MagicMock(id=7, order_number="S-100")
-            ),
+            patch("models.PosKdsOrder", return_value=MagicMock(id=7, order_number="S-100")),
         ):
-            resp = pos_client.post(
-                "/pos/api/checkout", json=self._checkout_payload(order_type="dine_in")
-            )
+            resp = pos_client.post("/pos/api/checkout", json=self._checkout_payload(order_type="dine_in"))
         assert resp.get_json()["success"] is True
         notify.assert_called_once()
 
     def test_checkout_sale_service_error(self, pos_client):
         with (
             _pos_api_patches(),
-            patch(
-                "routes.pos.SaleService.create_sale", side_effect=ValueError("stock")
-            ),
+            patch("routes.pos.SaleService.create_sale", side_effect=ValueError("stock")),
         ):
             resp = pos_client.post("/pos/api/checkout", json=self._checkout_payload())
         assert resp.status_code == 400
@@ -514,9 +496,7 @@ class TestPosCheckout:
             _pos_api_patches(),
             patch("routes.pos.ensure_warehouse_access", side_effect=ValueError("bad")),
         ):
-            resp = pos_client.post(
-                "/pos/api/checkout", json=self._checkout_payload(warehouse_id=99)
-            )
+            resp = pos_client.post("/pos/api/checkout", json=self._checkout_payload(warehouse_id=99))
         assert resp.status_code == 400
 
     def test_checkout_missing_payment_method(self, pos_client):
@@ -632,9 +612,7 @@ class TestPosCheckout:
             _pos_api_patches(),
             patch("routes.pos.SaleService.create_sale") as create_sale,
         ):
-            create_sale.return_value = MagicMock(
-                id=100, sale_number="S-100", tenant_id=1, total_amount=Decimal("50")
-            )
+            create_sale.return_value = MagicMock(id=100, sale_number="S-100", tenant_id=1, total_amount=Decimal("50"))
             resp = pos_client.post(
                 "/pos/api/checkout",
                 json=self._checkout_payload(qa_marker=True, notes="test"),
@@ -656,16 +634,12 @@ class TestPosSessionApi:
 
     def test_session_open_conflict(self, pos_client):
         with _pos_api_patches():
-            resp = pos_client.post(
-                "/pos/api/session/open", json={"opening_balance": 50}
-            )
+            resp = pos_client.post("/pos/api/session/open", json={"opening_balance": 50})
         assert resp.status_code == 409
 
     def test_session_open_success(self, pos_client):
         with _pos_api_patches(session=None, new_session=_mock_session()):
-            resp = pos_client.post(
-                "/pos/api/session/open", json={"opening_balance": 50}
-            )
+            resp = pos_client.post("/pos/api/session/open", json={"opening_balance": 50})
         assert resp.status_code == 201
 
     def test_session_open_no_branch(self, pos_client):
@@ -675,13 +649,9 @@ class TestPosSessionApi:
 
     def test_session_close_success(self, pos_client):
         closed = _mock_session()
-        closed.closed_at = MagicMock(
-            isoformat=MagicMock(return_value="2026-06-01T12:00:00")
-        )
+        closed.closed_at = MagicMock(isoformat=MagicMock(return_value="2026-06-01T12:00:00"))
         with _pos_api_patches(session=closed):
-            resp = pos_client.post(
-                "/pos/api/session/close", json={"closing_balance": 120}
-            )
+            resp = pos_client.post("/pos/api/session/close", json={"closing_balance": 120})
         assert resp.get_json()["success"] is True
 
     def test_session_close_requires_json(self, pos_client):
@@ -697,9 +667,7 @@ class TestPosSessionApi:
                 side_effect=ValueError("no session"),
             ),
         ):
-            resp = pos_client.post(
-                "/pos/api/session/close", json={"closing_balance": 0}
-            )
+            resp = pos_client.post("/pos/api/session/close", json={"closing_balance": 0})
         assert resp.status_code == 404
 
     def test_session_open_requires_json(self, pos_client):
@@ -720,9 +688,7 @@ class TestPosSessionApi:
             _pos_api_patches(),
             patch("routes.pos.close_pos_session", side_effect=RuntimeError("fail")),
         ):
-            resp = pos_client.post(
-                "/pos/api/session/close", json={"closing_balance": 0}
-            )
+            resp = pos_client.post("/pos/api/session/close", json={"closing_balance": 0})
         assert resp.status_code == 400
 
     def test_session_report_missing(self, pos_client):
@@ -751,9 +717,7 @@ class TestPosHardware:
             _pos_api_patches(),
             patch("routes.pos.requests.post", return_value=response),
         ):
-            resp = pos_client.post(
-                "/pos/api/hardware/print-receipt", json={"lines": []}
-            )
+            resp = pos_client.post("/pos/api/hardware/print-receipt", json={"lines": []})
         assert resp.status_code == 200
 
     def test_print_receipt_agent_down(self, pos_client):
@@ -841,9 +805,7 @@ class TestPosKds:
             items_json="[]",
         )
         chain = MagicMock()
-        chain.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [
-            order
-        ]
+        chain.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [order]
         with _pos_api_patches(), patch("models.PosKdsOrder.query", chain):
             resp = pos_client.get("/pos/api/kds/orders")
         assert resp.status_code == 200
@@ -856,9 +818,7 @@ class TestPosKds:
             patch("routes.pos._notify_kds"),
         ):
             q.filter_by.return_value.first.return_value = order
-            resp = pos_client.post(
-                "/pos/api/kds/orders/1/status", json={"status": "ready"}
-            )
+            resp = pos_client.post("/pos/api/kds/orders/1/status", json={"status": "ready"})
         assert resp.get_json()["success"] is True
 
     def test_kds_update_status_served_sets_completed_at(self, pos_client):
@@ -869,9 +829,7 @@ class TestPosKds:
             patch("routes.pos._notify_kds"),
         ):
             q.filter_by.return_value.first.return_value = order
-            resp = pos_client.post(
-                "/pos/api/kds/orders/1/status", json={"status": "served"}
-            )
+            resp = pos_client.post("/pos/api/kds/orders/1/status", json={"status": "served"})
         assert resp.get_json()["success"] is True
         assert order.completed_at is not None
 
@@ -886,9 +844,7 @@ class TestPosKds:
             msg = q.get_nowait()
             assert "ping" in msg
         finally:
-            pos_module._KDS_SUBSCRIBERS[:] = [
-                entry for entry in pos_module._KDS_SUBSCRIBERS if entry[1] is not q
-            ]
+            pos_module._KDS_SUBSCRIBERS[:] = [entry for entry in pos_module._KDS_SUBSCRIBERS if entry[1] is not q]
 
     def test_notify_kds_skips_other_tenant_subscribers(self):
         import queue
@@ -914,9 +870,7 @@ class TestPosKds:
             pos_module._notify_kds({"type": "ping", "tenant_id": 1}, tenant_id=1)
             assert (1, bad_q) not in pos_module._KDS_SUBSCRIBERS
         finally:
-            pos_module._KDS_SUBSCRIBERS[:] = [
-                entry for entry in pos_module._KDS_SUBSCRIBERS if entry[1] is not bad_q
-            ]
+            pos_module._KDS_SUBSCRIBERS[:] = [entry for entry in pos_module._KDS_SUBSCRIBERS if entry[1] is not bad_q]
 
     def test_kds_stream_subscribe_and_cleanup(self, pos_client, bypass_permission_auth):
         import queue
@@ -925,9 +879,7 @@ class TestPosKds:
         real_q = queue.Queue()
         with _pos_api_patches(), patch("routes.pos._queue.Queue", return_value=real_q):
             with pos_client.application.test_request_context():
-                with patch(
-                    "flask_login.utils._get_user", return_value=bypass_permission_auth
-                ):
+                with patch("flask_login.utils._get_user", return_value=bypass_permission_auth):
                     gen, headers = kds_stream()
                 real_q.put("event-data")
                 assert next(gen) == "event-data"
@@ -946,18 +898,14 @@ class TestPosKds:
     def test_kds_update_not_found(self, pos_client):
         with _pos_api_patches(), patch("models.PosKdsOrder.query") as q:
             q.filter_by.return_value.first.return_value = None
-            resp = pos_client.post(
-                "/pos/api/kds/orders/9/status", json={"status": "ready"}
-            )
+            resp = pos_client.post("/pos/api/kds/orders/9/status", json={"status": "ready"})
         assert resp.status_code == 404
 
     def test_kds_update_invalid_status(self, pos_client):
         order = MagicMock(id=1)
         with _pos_api_patches(), patch("models.PosKdsOrder.query") as q:
             q.filter_by.return_value.first.return_value = order
-            resp = pos_client.post(
-                "/pos/api/kds/orders/1/status", json={"status": "bogus"}
-            )
+            resp = pos_client.post("/pos/api/kds/orders/1/status", json={"status": "bogus"})
         assert resp.status_code == 400
 
     def test_floor_create_missing_name(self, pos_client):
@@ -1018,9 +966,7 @@ class TestPosFloors:
             patch("models.PosTable", return_value=table),
         ):
             fq.filter_by.return_value.first.return_value = floor
-            resp = pos_client.post(
-                "/pos/api/tables/create", json={"floor_id": 1, "label": "T2"}
-            )
+            resp = pos_client.post("/pos/api/tables/create", json={"floor_id": 1, "label": "T2"})
         assert resp.get_json()["success"] is True
 
     def test_table_create_missing_fields(self, pos_client):
@@ -1031,18 +977,14 @@ class TestPosFloors:
     def test_table_create_floor_not_found(self, pos_client):
         with _pos_api_patches(), patch("models.PosFloor.query") as fq:
             fq.filter_by.return_value.first.return_value = None
-            resp = pos_client.post(
-                "/pos/api/tables/create", json={"floor_id": 99, "label": "T9"}
-            )
+            resp = pos_client.post("/pos/api/tables/create", json={"floor_id": 99, "label": "T9"})
         assert resp.status_code == 404
 
     def test_table_status_update(self, pos_client):
         table = MagicMock(id=5)
         with _pos_api_patches(), patch("models.PosTable.query") as tq:
             tq.filter_by.return_value.first.return_value = table
-            resp = pos_client.post(
-                "/pos/api/tables/5/status", json={"status": "occupied"}
-            )
+            resp = pos_client.post("/pos/api/tables/5/status", json={"status": "occupied"})
         assert resp.get_json()["success"] is True
 
     def test_table_status_not_found(self, pos_client):
@@ -1087,9 +1029,7 @@ class TestPosCustomerDisplay:
     @staticmethod
     def _tenant_request(tenant_id=1):
         req = MagicMock()
-        req.args.get = lambda key, **kwargs: (
-            tenant_id if key == "tenant_id" else kwargs.get("default")
-        )
+        req.args.get = lambda key, **kwargs: tenant_id if key == "tenant_id" else kwargs.get("default")
         return patch("routes.pos.request", req)
 
     def test_customer_display_page(self, pos_client):
@@ -1165,9 +1105,7 @@ class TestPosCustomerDisplay:
         line.product.name = "Item"
         line.quantity = Decimal("2")
         line.line_total = Decimal("50")
-        sale = MagicMock(
-            id=100, sale_number="S-100", total_amount=Decimal("50"), lines=[line]
-        )
+        sale = MagicMock(id=100, sale_number="S-100", total_amount=Decimal("50"), lines=[line])
         with (
             self._tenant_request(1),
             patch("routes.pos.db.session") as sess,
@@ -1176,9 +1114,7 @@ class TestPosCustomerDisplay:
             patch("time.sleep"),
         ):
             sess.get.return_value = session
-            sale_q.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
-                sale
-            ]
+            sale_q.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [sale]
             kds_q.filter_by.return_value.first.return_value = None
             gen, _ = customer_display_stream(1)
             msg = next(gen)
@@ -1195,9 +1131,7 @@ class TestPosCustomerDisplay:
         line.product.name = "Item"
         line.quantity = Decimal("1")
         line.line_total = Decimal("10")
-        sale = MagicMock(
-            id=100, sale_number="S-100", total_amount=Decimal("10"), lines=[line]
-        )
+        sale = MagicMock(id=100, sale_number="S-100", total_amount=Decimal("10"), lines=[line])
         kds_order = MagicMock(status="preparing")
         calls = {"get": 0}
 
@@ -1213,9 +1147,7 @@ class TestPosCustomerDisplay:
             patch("time.sleep") as sleep,
         ):
             sess.get.side_effect = get_session
-            sale_q.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
-                sale
-            ]
+            sale_q.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [sale]
             kds_q.filter_by.return_value.first.return_value = kds_order
             gen, _ = customer_display_stream(1)
             first = json.loads(next(gen).split("data: ", 1)[1])

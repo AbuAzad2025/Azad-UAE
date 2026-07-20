@@ -40,9 +40,7 @@ class TestSlugMapping:
 
 
 class TestDiscoverTenantFolders:
-    @patch(
-        "utils.tenant_assets.os.listdir", return_value=["alhazem", ".hidden", "default"]
-    )
+    @patch("utils.tenant_assets.os.listdir", return_value=["alhazem", ".hidden", "default"])
     @patch(
         "utils.tenant_assets.os.path.isdir",
         side_effect=lambda p: not p.endswith(".hidden"),
@@ -71,9 +69,7 @@ class TestBrandingPaths:
     def test_branding_paths_empty_when_no_files(self, _root, _isfile):
         assert branding_paths_for_folder("empty") == {}
 
-    @patch(
-        "utils.tenant_assets.branding_paths_for_folder", return_value={"logo_url": "x"}
-    )
+    @patch("utils.tenant_assets.branding_paths_for_folder", return_value={"logo_url": "x"})
     @patch("utils.tenant_assets.folder_for_slug", return_value="default")
     def test_branding_for_tenant_slug(self, _folder, _paths):
         assert branding_for_tenant_slug("default") == {"logo_url": "x"}

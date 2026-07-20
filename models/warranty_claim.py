@@ -30,9 +30,7 @@ class WarrantyClaim(db.Model):
         nullable=False,
         index=True,
     )
-    claim_date = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    claim_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     claim_type = db.Column(db.String(20), nullable=False)
     description = db.Column(db.Text)
     status = db.Column(db.String(20), default="open", index=True)

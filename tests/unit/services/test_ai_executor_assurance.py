@@ -38,9 +38,7 @@ class TestAIExecutorInit:
         assert ex.tenant_id == 5
 
     def test_init_runtime_error_uses_explicit_user(self, mocker):
-        mocker.patch(
-            "services.ai_executor.flask_user", side_effect=RuntimeError("no context")
-        )
+        mocker.patch("services.ai_executor.flask_user", side_effect=RuntimeError("no context"))
         mocker.patch("services.ai_executor.get_active_tenant_id", return_value=3)
         from services.ai_executor import AIExecutor
 
@@ -154,14 +152,10 @@ class TestAIExecutorPaymentMatching:
 
             cust_q = MagicMock()
             cust_q.filter_by.return_value.first.return_value = customer
-            mocker.patch.object(
-                Customer, "query", new_callable=mocker.PropertyMock, return_value=cust_q
-            )
+            mocker.patch.object(Customer, "query", new_callable=mocker.PropertyMock, return_value=cust_q)
             sale_q = MagicMock()
             sale_q.filter.return_value.order_by.return_value.all.return_value = sales
-            mocker.patch.object(
-                Sale, "query", new_callable=mocker.PropertyMock, return_value=sale_q
-            )
+            mocker.patch.object(Sale, "query", new_callable=mocker.PropertyMock, return_value=sale_q)
             mocker.patch.object(executor, "_generate_number", return_value="PAY-001")
             mocker.patch("services.ai_executor.db.session")
             return executor.receive_payment("Acme", amount)
@@ -211,9 +205,7 @@ class TestAIExecutorFallbacks:
     """Execution fallbacks — number generation and executor cache."""
 
     def test_generate_number_fallback_on_failure(self, mocker):
-        mocker.patch(
-            "utils.helpers.generate_number", side_effect=RuntimeError("db down")
-        )
+        mocker.patch("utils.helpers.generate_number", side_effect=RuntimeError("db down"))
         from services.ai_executor import AIExecutor
 
         num = AIExecutor._generate_number("PAY", MagicMock())
@@ -231,9 +223,7 @@ class TestAIExecutorFallbacks:
 
     def test_profit_summary_zero_revenue_margin(self, executor, mocker):
         mocker.patch("services.ai_executor.db.session")
-        mocker.patch(
-            "services.ai_executor.db.session.query"
-        ).return_value.filter.return_value.scalar.return_value = 0
+        mocker.patch("services.ai_executor.db.session.query").return_value.filter.return_value.scalar.return_value = 0
         Sale = mocker.patch("models.Sale")
         Sale.query.filter.return_value.count.return_value = 0
         SaleLine = mocker.patch("models.SaleLine")
@@ -281,12 +271,8 @@ class TestAIExecutorFallbacks:
             from models import Sale
 
             mock_q = MagicMock()
-            mock_q.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [
-                sale
-            ]
-            mocker.patch.object(
-                Sale, "query", new_callable=mocker.PropertyMock, return_value=mock_q
-            )
+            mock_q.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [sale]
+            mocker.patch.object(Sale, "query", new_callable=mocker.PropertyMock, return_value=mock_q)
             result = executor.list_sales(limit=5)
         assert result["success"] is True
         assert len(result["sales"]) == 1
@@ -310,9 +296,7 @@ class TestAIExecutorFallbacks:
 
             mock_q = MagicMock()
             mock_q.filter.return_value.all.return_value = [product]
-            mocker.patch.object(
-                Product, "query", new_callable=mocker.PropertyMock, return_value=mock_q
-            )
+            mocker.patch.object(Product, "query", new_callable=mocker.PropertyMock, return_value=mock_q)
             result = executor.check_stock()
         assert result["count"] == 1
         assert result["low_stock"][0]["name"] == "Low Item"
@@ -374,9 +358,7 @@ class TestAIExecutorErrorPaths:
         Product = mocker.patch("models.Product")
         Product.query.filter_by.return_value.first.return_value = product
         sale = MagicMock(id=1, sale_number="S-1", total_amount=Decimal("200"))
-        create_sale = mocker.patch(
-            "services.sale_service.SaleService.create_sale", return_value=sale
-        )
+        create_sale = mocker.patch("services.sale_service.SaleService.create_sale", return_value=sale)
         executor.create_sale("Acme", [{"name": "Widget"}], paid_amount=50)
         assert create_sale.call_args.kwargs["payment_data"]["amount"] == 50
 
@@ -395,25 +377,19 @@ class TestAIExecutorErrorPaths:
             paid_amount=Decimal("0"),
             payment_status="unpaid",
         )
-        sale2 = MagicMock(
-            balance_due=Decimal("50"), paid_amount=Decimal("0"), payment_status="unpaid"
-        )
+        sale2 = MagicMock(balance_due=Decimal("50"), paid_amount=Decimal("0"), payment_status="unpaid")
         with app.app_context():
             from models import Customer, Sale
 
             cust_q = MagicMock()
             cust_q.filter_by.return_value.first.return_value = customer
-            mocker.patch.object(
-                Customer, "query", new_callable=mocker.PropertyMock, return_value=cust_q
-            )
+            mocker.patch.object(Customer, "query", new_callable=mocker.PropertyMock, return_value=cust_q)
             sale_q = MagicMock()
             sale_q.filter.return_value.order_by.return_value.all.return_value = [
                 sale1,
                 sale2,
             ]
-            mocker.patch.object(
-                Sale, "query", new_callable=mocker.PropertyMock, return_value=sale_q
-            )
+            mocker.patch.object(Sale, "query", new_callable=mocker.PropertyMock, return_value=sale_q)
             mocker.patch.object(executor, "_generate_number", return_value="PAY-002")
             mocker.patch("services.ai_executor.db.session")
             executor.receive_payment("Acme", 100)

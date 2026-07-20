@@ -81,9 +81,7 @@ class TestTreasuryServiceGaps:
         cb_q.filter.return_value = cb_q
         cb_q.order_by.return_value = cb_q
         cb_q.all.return_value = []
-        mocker.patch(
-            "models.CashBox.query", new_callable=mocker.PropertyMock, return_value=cb_q
-        )
+        mocker.patch("models.CashBox.query", new_callable=mocker.PropertyMock, return_value=cb_q)
 
         acc = MagicMock(
             id=1,
@@ -129,9 +127,7 @@ class TestTreasuryServiceGaps:
         mock_q.filter.return_value = mock_q
         mock_q.order_by.return_value = mock_q
         mock_q.all.return_value = [cheque]
-        mocker.patch(
-            "models.Cheque.query", new_callable=mocker.PropertyMock, return_value=mock_q
-        )
+        mocker.patch("models.Cheque.query", new_callable=mocker.PropertyMock, return_value=mock_q)
 
         from services.treasury_service import TreasuryService
 
@@ -153,21 +149,15 @@ class TestShopCustomerAuthGaps:
         from services.shop_customer_auth_service import ShopCustomerAuthService
 
         with pytest.raises(ValueError, match="الاسم"):
-            ShopCustomerAuthService.register(
-                sample_tenant.id, "A", "a@b.co", "05012345678", "pass12"
-            )
+            ShopCustomerAuthService.register(sample_tenant.id, "A", "a@b.co", "05012345678", "pass12")
 
     def test_register_short_password(self, sample_tenant):
         from services.shop_customer_auth_service import ShopCustomerAuthService
 
         with pytest.raises(ValueError, match="كلمة المرور"):
-            ShopCustomerAuthService.register(
-                sample_tenant.id, "Ali", "a@b.co", "05012345678", "123"
-            )
+            ShopCustomerAuthService.register(sample_tenant.id, "Ali", "a@b.co", "05012345678", "123")
 
-    def test_register_updates_existing_customer_address(
-        self, db_session, sample_tenant
-    ):
+    def test_register_updates_existing_customer_address(self, db_session, sample_tenant):
         from extensions import db
         from models import Customer
         from services.shop_customer_auth_service import ShopCustomerAuthService
@@ -197,9 +187,7 @@ class TestShopCustomerAuthGaps:
         [
             (
                 "register",
-                lambda svc, tid: svc.register(
-                    tid, "Ali", "c1@shop.test", "05044445555", "pass1234"
-                ),
+                lambda svc, tid: svc.register(tid, "Ali", "c1@shop.test", "05044445555", "pass1234"),
             ),
             (
                 "authenticate",
@@ -215,17 +203,13 @@ class TestShopCustomerAuthGaps:
             ),
         ],
     )
-    def test_commit_failure_rolls_back(
-        self, db_session, sample_tenant, method_name, call_fn, mocker
-    ):
+    def test_commit_failure_rolls_back(self, db_session, sample_tenant, method_name, call_fn, mocker):
         from services.shop_customer_auth_service import ShopCustomerAuthService
 
         if method_name == "authenticate":
             from tests.unit.services.test_shop_customer_auth_service import _account
 
-            _account(
-                db_session, sample_tenant.id, email="c2@shop.test", password="pass1234"
-            )
+            _account(db_session, sample_tenant.id, email="c2@shop.test", password="pass1234")
         elif method_name == "request_password_reset":
             from tests.unit.services.test_shop_customer_auth_service import _account
 
@@ -235,9 +219,7 @@ class TestShopCustomerAuthGaps:
 
             acc = _account(db_session, sample_tenant.id, email="c4@shop.test")
             acc.password_reset_token = "tok"
-            acc.password_reset_expires_at = datetime.now(timezone.utc) + timedelta(
-                hours=1
-            )
+            acc.password_reset_expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
             db_session.commit()
 
         mocker.patch(
@@ -257,9 +239,7 @@ class TestShopCustomerAuthGaps:
         from services.shop_customer_auth_service import ShopCustomerAuthService
 
         with pytest.raises(ValueError, match="رمز"):
-            ShopCustomerAuthService.reset_password(
-                sample_tenant.id, "missing-token", "newpass1"
-            )
+            ShopCustomerAuthService.reset_password(sample_tenant.id, "missing-token", "newpass1")
 
 
 class TestStoreOnlinePaymentGaps:
@@ -291,9 +271,7 @@ class TestStoreOnlinePaymentGaps:
         store = MagicMock(tenant_id=2, title="Shop")
         resp = MagicMock(status_code=200, text="")
         resp.json.return_value = {"payment_id": "p1"}
-        mocker.patch(
-            "services.store_online_payment_service.requests.post", return_value=resp
-        )
+        mocker.patch("services.store_online_payment_service.requests.post", return_value=resp)
         mocker.patch(
             "services.store_online_payment_service.StoreOnlinePaymentService._api_key",
             return_value="k",
@@ -331,14 +309,10 @@ class TestStoreCheckoutGaps:
 
         with app.app_context():
             with pytest.raises(ValueError, match="الهاتف"):
-                StoreCheckoutService.build_lines_from_cart(
-                    1, {1: 1}, online_warehouse_id=1
-                )
+                StoreCheckoutService.build_lines_from_cart(1, {1: 1}, online_warehouse_id=1)
 
     def test_stock_check_failure_message(self, app, mocker):
-        product = MagicMock(
-            id=1, name="Widget", has_serial_number=False, tenant_id=1, is_active=True
-        )
+        product = MagicMock(id=1, name="Widget", has_serial_number=False, tenant_id=1, is_active=True)
         mocker.patch(
             "services.store_checkout_service.Product.query"
         ).filter_by.return_value.first.return_value = product
@@ -355,17 +329,13 @@ class TestStoreCheckoutGaps:
 
         with app.app_context():
             with pytest.raises(ValueError, match="Widget"):
-                StoreCheckoutService.build_lines_from_cart(
-                    1, {1: 1}, online_warehouse_id=1
-                )
+                StoreCheckoutService.build_lines_from_cart(1, {1: 1}, online_warehouse_id=1)
 
 
 class TestStoreOrderGaps:
     def test_reverse_loyalty_without_account(self, mocker, online_sale):
         txn = MagicMock(points=10)
-        mocker.patch(
-            "models.shop_loyalty.ShopLoyaltyTransaction.query"
-        ).filter_by.return_value.first.return_value = txn
+        mocker.patch("models.shop_loyalty.ShopLoyaltyTransaction.query").filter_by.return_value.first.return_value = txn
         mocker.patch(
             "models.shop_customer_account.ShopCustomerAccount.query"
         ).filter_by.return_value.first.return_value = None
@@ -382,25 +352,19 @@ class TestSaleServiceGaps:
 
         customer = MagicMock(is_active=True, id=1, tenant_id=1, customer_type="regular")
         seller = MagicMock(is_active=True, id=2, tenant_id=1, branch_id=1)
-        product = MagicMock(
-            id=1, is_active=True, has_serial_number=False, partner_shares=[]
-        )
+        product = MagicMock(id=1, is_active=True, has_serial_number=False, partner_shares=[])
         lines = [{"product": product, "quantity": 1, "unit_price": 10}]
         with (
             patch("services.sale_service.get_active_tenant_id", return_value=1),
             patch("models.Warehouse") as mock_wh,
             patch("services.sale_service.ExchangeRateService") as mock_ex,
-            patch(
-                "services.sale_service.normalize_tax_rate", return_value=Decimal("5")
-            ),
+            patch("services.sale_service.normalize_tax_rate", return_value=Decimal("5")),
             patch("utils.tax_settings.get_prices_include_vat", return_value=True),
         ):
             wh = MagicMock(id=1, branch_id=1)
             mock_wh.query.filter_by.return_value = mock_wh.query
             mock_wh.query.first.return_value = wh
-            mock_ex.resolve_exchange_rate_for_transaction.return_value = {
-                "rate_mode": "needs_input"
-            }
+            mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate_mode": "needs_input"}
             with app.app_context():
                 with pytest.raises(ValueError, match="سعر الصرف"):
                     SaleService.create_sale(customer, seller, lines, currency="USD")
@@ -410,17 +374,13 @@ class TestSaleServiceGaps:
 
         customer = MagicMock(is_active=True, id=1, tenant_id=1, customer_type="regular")
         seller = MagicMock(is_active=True, id=2, tenant_id=1, branch_id=1)
-        product = MagicMock(
-            id=1, is_active=True, has_serial_number=False, partner_shares=[]
-        )
+        product = MagicMock(id=1, is_active=True, has_serial_number=False, partner_shares=[])
         lines = [{"product": product, "quantity": 1, "unit_price": 10}]
         with (
             patch("services.sale_service.get_active_tenant_id", return_value=1),
             patch("models.Warehouse") as mock_wh,
             patch("services.sale_service.ExchangeRateService") as mock_ex,
-            patch(
-                "services.sale_service.normalize_tax_rate", return_value=Decimal("5")
-            ),
+            patch("services.sale_service.normalize_tax_rate", return_value=Decimal("5")),
             patch("utils.tax_settings.get_prices_include_vat", return_value=True),
         ):
             wh = MagicMock(id=1, branch_id=1)
@@ -509,17 +469,13 @@ class TestPaymentServiceGaps:
                 MagicMock(is_authenticated=True, id=1, tenant_id=1),
             ),
             patch("services.payment_service.generate_number", return_value="RCV-SKIP"),
-            patch.object(
-                PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")
-            ),
+            patch.object(PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")),
             patch.object(PaymentService, "_resolve_branch_id", return_value=1),
             patch("services.payment_service.GLService") as gl,
             patch("services.payment_service.post_or_fail"),
             patch("services.payment_service.Receipt", return_value=receipt),
         ):
-            mock_db.session.get.side_effect = lambda model, pk: (
-                customer if pk == 1 else None
-            )
+            mock_db.session.get.side_effect = lambda model, pk: customer if pk == 1 else None
             gl.get_payment_debit_account.return_value = "1100"
             gl.get_payment_debit_concept.return_value = "CASH"
             gl.get_customer_credit_account.return_value = "1200"
@@ -543,9 +499,7 @@ class TestLoggingCoreGaps:
         saved = sys.modules.pop(mod_name, None)
         real_import = builtins.__import__
 
-        def blocked_import(
-            name, globals_dict=None, locals_dict=None, fromlist=(), level=0
-        ):
+        def blocked_import(name, globals_dict=None, locals_dict=None, fromlist=(), level=0):
             if name == "colorama":
                 raise ImportError("blocked")
             return real_import(name, globals_dict, locals_dict, fromlist, level)
@@ -574,9 +528,7 @@ class TestInventoryReconciliationGaps:
             InventoryReconciliationService,
         )
 
-        assert (
-            InventoryReconciliationService._date_bound("   ", end_of_day=False) is None
-        )
+        assert InventoryReconciliationService._date_bound("   ", end_of_day=False) is None
 
     def test_build_report_with_branch_filter(self, mocker):
         pwc_q = MagicMock()
@@ -585,9 +537,7 @@ class TestInventoryReconciliationGaps:
         pwc_q.filter.return_value = pwc_q
         pwc_q.all.return_value = []
         mocker.patch.object(
-            __import__(
-                "models", fromlist=["ProductWarehouseCost"]
-            ).ProductWarehouseCost,
+            __import__("models", fromlist=["ProductWarehouseCost"]).ProductWarehouseCost,
             "query",
             new_callable=mocker.PropertyMock,
             return_value=pwc_q,
@@ -603,9 +553,7 @@ class TestInventoryReconciliationGaps:
 
 class TestRealTimeListenersGaps:
     def test_send_notification_print_failure(self, mocker):
-        mock_print = mocker.patch(
-            "builtins.print", side_effect=[RuntimeError("print fail"), None]
-        )
+        mock_print = mocker.patch("builtins.print", side_effect=[RuntimeError("print fail"), None])
         from services.real_time_listeners import RealTimeAccountingListeners
 
         RealTimeAccountingListeners._send_notification("Title", "hello", level="info")
@@ -624,9 +572,7 @@ class TestReturnServiceGaps:
         sale = _sale(id=1, tenant_id=1)
         line = _sale_line(sale_id=1, tenant_id=99)
         session = mocker.patch("services.return_service.db.session")
-        session.get.side_effect = lambda model, pk: {sale.id: sale, line.id: line}.get(
-            pk
-        )
+        session.get.side_effect = lambda model, pk: {sale.id: sale, line.id: line}.get(pk)
         session.query.return_value.join.return_value.filter.return_value.filter.return_value.filter.return_value.scalar.return_value = Decimal(
             "0"
         )
@@ -723,9 +669,7 @@ class TestGlServiceGaps:
             GLService.get_default_liquidity_account("cash", tenant_id=sample_tenant.id)
 
     def test_manual_entry_inactive_account(self, sample_tenant, mocker):
-        acct = MagicMock(
-            is_header=False, is_active=False, full_name="Inactive", code="I1"
-        )
+        acct = MagicMock(is_header=False, is_active=False, full_name="Inactive", code="I1")
         mocker.patch("services.gl_service.gl_helpers.get_account", return_value=acct)
         mocker.patch(
             "services.gl_service.gl_helpers.resolve_tenant_id",
@@ -769,9 +713,7 @@ class TestGlServiceGaps:
 
 class TestStoreCheckoutRemainingGaps:
     def test_missing_product_in_cart(self, app, mocker):
-        mocker.patch(
-            "services.store_checkout_service.Product.query"
-        ).filter_by.return_value.first.return_value = None
+        mocker.patch("services.store_checkout_service.Product.query").filter_by.return_value.first.return_value = None
         mocker.patch(
             "services.store_checkout_service.StoreService.online_stock_map",
             return_value={1: Decimal("5")},
@@ -780,9 +722,7 @@ class TestStoreCheckoutRemainingGaps:
 
         with app.app_context():
             with pytest.raises(ValueError, match="غير متاح"):
-                StoreCheckoutService.build_lines_from_cart(
-                    1, {1: 1}, online_warehouse_id=1
-                )
+                StoreCheckoutService.build_lines_from_cart(1, {1: 1}, online_warehouse_id=1)
 
 
 class TestInventoryWarehouseFilter:
@@ -791,9 +731,7 @@ class TestInventoryWarehouseFilter:
         pwc_q.filter_by.return_value = pwc_q
         pwc_q.all.return_value = []
         mocker.patch.object(
-            __import__(
-                "models", fromlist=["ProductWarehouseCost"]
-            ).ProductWarehouseCost,
+            __import__("models", fromlist=["ProductWarehouseCost"]).ProductWarehouseCost,
             "query",
             new_callable=mocker.PropertyMock,
             return_value=pwc_q,
@@ -802,9 +740,7 @@ class TestInventoryWarehouseFilter:
             InventoryReconciliationService,
         )
 
-        report = InventoryReconciliationService.build_report(
-            tenant_id=1, warehouse_id=7
-        )
+        report = InventoryReconciliationService.build_report(tenant_id=1, warehouse_id=7)
         assert report["rows"] == []
         pwc_q.filter_by.assert_any_call(warehouse_id=7)
 
@@ -853,9 +789,7 @@ class TestPaymentServiceRemainingGaps:
                 MagicMock(is_authenticated=True, id=1, tenant_id=1),
             ),
             patch("services.payment_service.generate_number", return_value="PAY-BRK"),
-            patch.object(
-                PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")
-            ),
+            patch.object(PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")),
             patch.object(PaymentService, "_resolve_branch_id", return_value=1),
             patch("services.payment_service.GLService") as gl,
             patch("services.payment_service.post_or_fail"),
@@ -918,17 +852,13 @@ class TestPaymentServiceRemainingGaps:
                 MagicMock(is_authenticated=True, id=1, tenant_id=1),
             ),
             patch("services.payment_service.generate_number", return_value="RCV-ZB"),
-            patch.object(
-                PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")
-            ),
+            patch.object(PaymentService, "_resolve_transaction_rate", return_value=Decimal("1")),
             patch.object(PaymentService, "_resolve_branch_id", return_value=1),
             patch("services.payment_service.GLService") as gl,
             patch("services.payment_service.post_or_fail"),
             patch("services.payment_service.Receipt", return_value=receipt),
         ):
-            mock_db.session.get.side_effect = lambda model, pk: (
-                customer if pk == 1 else sale
-            )
+            mock_db.session.get.side_effect = lambda model, pk: customer if pk == 1 else sale
             gl.get_payment_debit_account.return_value = "1100"
             gl.get_payment_debit_concept.return_value = "CASH"
             gl.get_customer_credit_account.return_value = "1200"
@@ -999,9 +929,7 @@ class TestPaymentServiceRemainingGaps:
 
         with (
             app.app_context(),
-            patch.object(
-                PaymentService, "get_unpaid_sales", return_value=[sale1, sale2]
-            ),
+            patch.object(PaymentService, "get_unpaid_sales", return_value=[sale1, sale2]),
             patch("services.payment_service.generate_number", return_value="PAY-OLD"),
             patch("services.payment_service.db"),
             patch(
@@ -1122,9 +1050,7 @@ class TestReturnServiceSoldQty:
         product = _product(has_serial_number=False)
         helper = TestCreateReturn()
         helper._patch_common(mocker, sale, line, product)
-        mocker.patch.object(
-            ReturnService, "_sale_line_sold_qty", return_value=Decimal("0")
-        )
+        mocker.patch.object(ReturnService, "_sale_line_sold_qty", return_value=Decimal("0"))
 
         with app.app_context():
             with pytest.raises(ValueError, match="Invalid sale line quantity"):
@@ -1140,9 +1066,7 @@ class TestSaleServiceRemainingGaps:
         from tests.unit.services.test_sale_service_chunk3 import _actors, _create_ctx
 
         customer, seller, product = _actors(
-            partner_shares=[
-                MagicMock(partner_customer_id=10, percentage=Decimal("10"))
-            ],
+            partner_shares=[MagicMock(partner_customer_id=10, percentage=Decimal("10"))],
         )
         partner = MagicMock(customer_type="partner")
         with _create_ctx(customer, seller, product) as (svc, stock, db_sess, _):
@@ -1175,17 +1099,13 @@ class TestSaleServiceRemainingGaps:
 
         result = SaleService._commission_base_aed(Decimal("10"), BadRate())
         assert result == Decimal("10")
-        assert SaleService._commission_base_aed(Decimal("0"), Decimal("1")) == Decimal(
-            "0"
-        )
+        assert SaleService._commission_base_aed(Decimal("0"), Decimal("1")) == Decimal("0")
 
     def test_commission_skips_zero_amount(self, app):
         from tests.unit.services.test_sale_service_chunk3 import _actors, _create_ctx
 
         customer, seller, product = _actors(
-            partner_shares=[
-                MagicMock(partner_customer_id=10, percentage=Decimal("0.001"))
-            ],
+            partner_shares=[MagicMock(partner_customer_id=10, percentage=Decimal("0.001"))],
         )
         partner = MagicMock(customer_type="partner")
         with _create_ctx(customer, seller, product) as (svc, stock, db_sess, _):
@@ -1206,9 +1126,7 @@ class TestSaleServiceRemainingGaps:
 
         customer, seller, product = _actors()
         payment_data = {"amount": -5, "currency": "AED", "exchange_rate": 1.0}
-        with _create_ctx(
-            customer, seller, product, payment_data=payment_data, expect_error=True
-        ) as (svc, _, _, _):
+        with _create_ctx(customer, seller, product, payment_data=payment_data, expect_error=True) as (svc, _, _, _):
             with patch.object(SaleService, "fulfill_sale"):
                 with pytest.raises(ValueError, match="سالب"):
                     svc.create_sale(

@@ -107,9 +107,7 @@ class TestHelpers:
             with pytest.raises(ValueError, match="الدور"):
                 users_routes._validate_user_branch(None, None)
 
-    def test_validate_user_branch_requires_branch(
-        self, app, db_session, users_manager, sample_branch
-    ):
+    def test_validate_user_branch_requires_branch(self, app, db_session, users_manager, sample_branch):
         users_routes = _users_routes()
         from models import Role
 
@@ -141,9 +139,7 @@ class TestHelpers:
             with pytest.raises(ValueError, match="خارج نطاق"):
                 users_routes._validate_user_branch(seller.id, 999999999)
 
-    def test_available_branches_and_username_example(
-        self, app, users_manager, sample_branch
-    ):
+    def test_available_branches_and_username_example(self, app, users_manager, sample_branch):
         users_routes = _users_routes()
         with app.test_request_context():
             from flask_login import login_user
@@ -153,9 +149,7 @@ class TestHelpers:
             assert any(b.id == sample_branch.id for b in branches)
             assert "_ahmad" in users_routes._username_example()
 
-    def test_ensure_user_in_scope_blocks_other_branch(
-        self, app, db_session, users_manager, sample_tenant
-    ):
+    def test_ensure_user_in_scope_blocks_other_branch(self, app, db_session, users_manager, sample_tenant):
         users_routes = _users_routes()
         from models import Branch, Role, User
 
@@ -283,9 +277,7 @@ class TestCreate:
         )
         assert resp.status_code == 200
 
-    def test_create_tenant_limit(
-        self, users_client, sample_tenant, sample_branch, mocker
-    ):
+    def test_create_tenant_limit(self, users_client, sample_tenant, sample_branch, mocker):
         from models import Role
         from utils.tenant_limits import TenantLimitError
 
@@ -299,18 +291,14 @@ class TestCreate:
             data={
                 "role_id": role.id,
                 "branch_id": sample_branch.id,
-                "username": _tenant_username(
-                    sample_tenant, f"limit{uuid.uuid4().hex[:6]}"
-                ),
+                "username": _tenant_username(sample_tenant, f"limit{uuid.uuid4().hex[:6]}"),
                 "email": f"limit_{uuid.uuid4().hex[:6]}@example.com",
                 "password": STRONG_PASSWORD,
             },
         )
         assert resp.status_code == 200
 
-    def test_create_duplicate_username(
-        self, users_client, sample_tenant, sample_branch, users_manager
-    ):
+    def test_create_duplicate_username(self, users_client, sample_tenant, sample_branch, users_manager):
         from models import Role
 
         role = Role.query.filter_by(slug="seller").first()
@@ -335,9 +323,7 @@ class TestCreate:
             data={
                 "role_id": role.id,
                 "branch_id": sample_branch.id,
-                "username": _tenant_username(
-                    sample_tenant, f"weak{uuid.uuid4().hex[:6]}"
-                ),
+                "username": _tenant_username(sample_tenant, f"weak{uuid.uuid4().hex[:6]}"),
                 "email": f"weak_{uuid.uuid4().hex[:6]}@example.com",
                 "password": "short",
             },
@@ -387,9 +373,7 @@ class TestCreate:
         assert resp.status_code == 302
         assert User.query.filter_by(username=username).first() is not None
 
-    def test_create_exception_handler(
-        self, users_client, sample_tenant, sample_branch, mocker
-    ):
+    def test_create_exception_handler(self, users_client, sample_tenant, sample_branch, mocker):
         from models import Role
 
         role = Role.query.filter_by(slug="seller").first()
@@ -399,9 +383,7 @@ class TestCreate:
             data={
                 "role_id": role.id,
                 "branch_id": sample_branch.id,
-                "username": _tenant_username(
-                    sample_tenant, f"err{uuid.uuid4().hex[:6]}"
-                ),
+                "username": _tenant_username(sample_tenant, f"err{uuid.uuid4().hex[:6]}"),
                 "email": f"err_{uuid.uuid4().hex[:6]}@example.com",
                 "password": STRONG_PASSWORD,
             },
@@ -414,9 +396,7 @@ class TestView:
         resp = users_client.get(f"/users/{users_manager.id}")
         assert resp.status_code == 200
 
-    def test_view_other_branch_forbidden(
-        self, users_client, db_session, sample_tenant, users_manager
-    ):
+    def test_view_other_branch_forbidden(self, users_client, db_session, sample_tenant, users_manager):
         from models import Branch, Role, User
 
         branch = Branch(
@@ -461,9 +441,7 @@ class TestEdit:
         db_session.commit()
         assert users_client.get(f"/users/{target.id}/edit").status_code == 200
 
-    def test_edit_success(
-        self, users_client, db_session, sample_tenant, sample_branch, mocker
-    ):
+    def test_edit_success(self, users_client, db_session, sample_tenant, sample_branch, mocker):
         from models import Role, User
 
         role = Role.query.filter_by(slug="seller").first()
@@ -492,9 +470,7 @@ class TestEdit:
         )
         assert resp.status_code == 302
 
-    def test_edit_weak_password(
-        self, users_client, db_session, sample_tenant, sample_branch
-    ):
+    def test_edit_weak_password(self, users_client, db_session, sample_tenant, sample_branch):
         from models import Role, User
 
         role = Role.query.filter_by(slug="seller").first()
@@ -521,9 +497,7 @@ class TestEdit:
         )
         assert resp.status_code == 200
 
-    def test_edit_missing_email(
-        self, users_client, db_session, sample_tenant, sample_branch
-    ):
+    def test_edit_missing_email(self, users_client, db_session, sample_tenant, sample_branch):
         from models import Role, User
 
         role = Role.query.filter_by(slug="seller").first()
@@ -552,9 +526,7 @@ class TestEdit:
         db.session.refresh(target)
         assert target.email == original_email
 
-    def test_edit_higher_role_rejected(
-        self, users_client, db_session, sample_tenant, sample_branch
-    ):
+    def test_edit_higher_role_rejected(self, users_client, db_session, sample_tenant, sample_branch):
         from models import Role, User
 
         seller = Role.query.filter_by(slug="seller").first()
@@ -586,9 +558,7 @@ class TestEdit:
         )
         assert resp.status_code == 200
 
-    def test_edit_exception(
-        self, users_client, db_session, sample_tenant, sample_branch, mocker
-    ):
+    def test_edit_exception(self, users_client, db_session, sample_tenant, sample_branch, mocker):
         from models import Role, User
 
         role = Role.query.filter_by(slug="seller").first()
@@ -617,9 +587,7 @@ class TestEdit:
 
 
 class TestToggleActive:
-    def test_toggle_active(
-        self, users_client, db_session, sample_tenant, sample_branch, mocker
-    ):
+    def test_toggle_active(self, users_client, db_session, sample_tenant, sample_branch, mocker):
         from models import Role, User
 
         role = Role.query.filter_by(slug="seller").first()
@@ -635,9 +603,7 @@ class TestToggleActive:
         db_session.add(target)
         db_session.commit()
         mocker.patch("routes.users.LoggingCore.log_audit")
-        resp = users_client.post(
-            f"/users/{target.id}/toggle-active", follow_redirects=False
-        )
+        resp = users_client.post(f"/users/{target.id}/toggle-active", follow_redirects=False)
         assert resp.status_code == 302
         db.session.refresh(target)
         assert target.is_active is False
@@ -645,14 +611,10 @@ class TestToggleActive:
 
 class TestDelete:
     def test_delete_self_forbidden(self, users_client, users_manager):
-        resp = users_client.post(
-            f"/users/{users_manager.id}/delete", follow_redirects=False
-        )
+        resp = users_client.post(f"/users/{users_manager.id}/delete", follow_redirects=False)
         assert resp.status_code == 302
 
-    def test_delete_higher_role_forbidden(
-        self, users_client, db_session, sample_tenant, sample_branch
-    ):
+    def test_delete_higher_role_forbidden(self, users_client, db_session, sample_tenant, sample_branch):
         from models import Role, User
 
         dev = Role.query.filter_by(slug="developer").first()
@@ -674,9 +636,7 @@ class TestDelete:
         resp = users_client.post(f"/users/{target.id}/delete", follow_redirects=False)
         assert resp.status_code == 302
 
-    def test_delete_deactivates_when_has_sales(
-        self, users_client, db_session, sample_tenant, sample_branch, mocker
-    ):
+    def test_delete_deactivates_when_has_sales(self, users_client, db_session, sample_tenant, sample_branch, mocker):
         from unittest.mock import MagicMock
         from models import Role, User
 
@@ -701,17 +661,10 @@ class TestDelete:
         mocker.patch("models.Sale", sale_mock)
         audit = mocker.patch("routes.users.LoggingCore.log_audit")
         mocker.patch.object(db.session, "commit", return_value=None)
-        assert (
-            users_client.post(
-                f"/users/{target_id}/delete", follow_redirects=False
-            ).status_code
-            == 302
-        )
+        assert users_client.post(f"/users/{target_id}/delete", follow_redirects=False).status_code == 302
         audit.assert_called_once_with("deactivate", "users", target_id)
 
-    def test_delete_hard_when_no_sales(
-        self, users_client, db_session, sample_tenant, sample_branch, mocker
-    ):
+    def test_delete_hard_when_no_sales(self, users_client, db_session, sample_tenant, sample_branch, mocker):
         from unittest.mock import MagicMock
         from models import Role, User
 
@@ -739,9 +692,7 @@ class TestDelete:
         assert resp.status_code == 302
         audit.assert_called_once_with("delete", "users", target_id)
 
-    def test_delete_exception(
-        self, users_client, db_session, sample_tenant, sample_branch, mocker
-    ):
+    def test_delete_exception(self, users_client, db_session, sample_tenant, sample_branch, mocker):
         from models import Role, User
 
         role = Role.query.filter_by(slug="seller").first()
@@ -773,9 +724,7 @@ class TestCoverageWaveAgent3:
         with app.test_request_context():
             assert users_routes._ensure_user_in_scope(target) is target
 
-    def test_create_system_wide_username_conflict(
-        self, users_client, db_session, sample_tenant, sample_branch
-    ):
+    def test_create_system_wide_username_conflict(self, users_client, db_session, sample_tenant, sample_branch):
         from models import Role, User
 
         role = Role.query.filter_by(slug="seller").first()
@@ -803,9 +752,7 @@ class TestCoverageWaveAgent3:
         )
         assert resp.status_code == 200
 
-    def test_edit_success_sets_new_password(
-        self, users_client, db_session, sample_tenant, sample_branch, mocker
-    ):
+    def test_edit_success_sets_new_password(self, users_client, db_session, sample_tenant, sample_branch, mocker):
         from models import Role, User
 
         role = Role.query.filter_by(slug="seller").first()

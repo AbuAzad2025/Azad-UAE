@@ -22,9 +22,7 @@ from services.industry_service import (
 )
 
 
-def validate_tenant_industry(
-    business_type: Optional[str], industry: Optional[str] = None
-):
+def validate_tenant_industry(business_type: Optional[str], industry: Optional[str] = None):
     """Application-level enforcement for new tenant creation.
 
     Raises ValueError if a mandatory field is missing. Unknown (legacy) codes

@@ -264,7 +264,7 @@
 
               <div class="input-group-append">
 
-                <button class="btn btn-outline-success btn-sm" onclick="updateTenantSetting('default_tax_rate', $('#taxRateInput').val())">
+                <button class="btn btn-outline-success btn-sm" data-action="update-tenant-setting" data-key="default_tax_rate" data-source="#taxRateInput">
 
                   <i class="fas fa-save"></i>
 
@@ -286,7 +286,7 @@
 
                 {% if tenant.prices_include_vat %}checked{% endif %}
 
-                onchange="updateTenantSetting('prices_include_vat', this.checked)">
+                data-action="update-tenant-setting-checked" data-key="prices_include_vat">
 
               <label class="custom-control-label" for="pricesIncludeVatSwitch">
 
@@ -308,7 +308,7 @@
 
               <div class="input-group-append">
 
-                <button class="btn btn-outline-success btn-sm" onclick="updateTenantSetting('logo_url', $('#logoUrlInput').val())">
+                <button class="btn btn-outline-success btn-sm" data-action="update-tenant-setting" data-key="logo_url" data-source="#logoUrlInput">
 
                   <i class="fas fa-save"></i>
 
@@ -328,7 +328,7 @@
 
               <input type="checkbox" class="custom-control-input" id="warehouseNegSwitch"
 
-                onchange="toggleWarehouseNegative()">
+                data-action="toggle-warehouse-negative">
 
               <label class="custom-control-label" for="warehouseNegSwitch"></label>
 
@@ -353,6 +353,20 @@
 {% block extra_js %}
 
 <script>
+
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  if (el.dataset.action === 'update-tenant-setting') updateTenantSetting(el.dataset.key, $(el.dataset.source).val());
+});
+
+document.addEventListener('change', (e) => {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const action = el.dataset.action;
+  if (action === 'update-tenant-setting-checked') updateTenantSetting(el.dataset.key, el.checked);
+  else if (action === 'toggle-warehouse-negative') toggleWarehouseNegative();
+});
 
 function updateTenantSetting(field, value) {
 

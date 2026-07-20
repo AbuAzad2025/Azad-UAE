@@ -46,9 +46,7 @@ def _returns_patches(**kwargs):
                 return_value=kwargs.get("branch_scope"),
             )
         )
-        stack.enter_context(
-            patch("routes.returns.should_show_all_branch_columns", return_value=False)
-        )
+        stack.enter_context(patch("routes.returns.should_show_all_branch_columns", return_value=False))
         stack.enter_context(patch("routes.returns.ProductReturn.query", returns_q))
         stack.enter_context(patch("routes.returns.LoggingCore.log_audit"))
         stack.enter_context(patch("extensions.limiter.limit", return_value=lambda f: f))
@@ -247,9 +245,7 @@ class TestReturnsApiCreate:
         with (
             _returns_patches(),
             patch("utils.tenanting.tenant_get_or_404"),
-            patch(
-                "routes.returns.ReturnService.create_return", return_value=result
-            ) as create,
+            patch("routes.returns.ReturnService.create_return", return_value=result) as create,
         ):
             returns_client.post(
                 "/returns/api/create",

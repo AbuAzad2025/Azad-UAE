@@ -42,17 +42,13 @@ class BankReconciliationService:
         # حساب رصيد الدفاتر
         from services.gl_service import GLService
 
-        statement = GLService.get_account_statement(
-            bank_account_id, date_from=None, date_to=period_end
-        )
+        statement = GLService.get_account_statement(bank_account_id, date_from=None, date_to=period_end)
 
         closing_balance_per_books = Decimal(str(statement["closing_balance"]))
         opening_balance = Decimal(str(statement["opening_balance"]))
 
         # إنشاء المطابقة
-        reconciliation_number = generate_number(
-            "BR", BankReconciliation, "reconciliation_number"
-        )
+        reconciliation_number = generate_number("BR", BankReconciliation, "reconciliation_number")
 
         reconciliation = BankReconciliation(
             tenant_id=bank_account.tenant_id,
@@ -63,8 +59,7 @@ class BankReconciliationService:
             opening_balance_per_books=opening_balance,
             closing_balance_per_books=closing_balance_per_books,
             closing_balance_per_bank=closing_balance_per_bank,
-            created_by=created_by
-            or (current_user.id if current_user.is_authenticated else None),
+            created_by=created_by or (current_user.id if current_user.is_authenticated else None),
         )
 
         db.session.add(reconciliation)
@@ -169,9 +164,7 @@ class BankReconciliationService:
         return item
 
     @staticmethod
-    def add_bank_interest(
-        reconciliation_id, amount, description, transaction_date=None
-    ):
+    def add_bank_interest(reconciliation_id, amount, description, transaction_date=None):
         """
         إضافة فائدة بنكية
         """
@@ -297,9 +290,7 @@ class BankReconciliationService:
         bank_account = tenant_get_or_404(GLAccount, bank_account_id)
         tid = bank_account.tenant_id
 
-        statement = GLService.get_account_statement(
-            bank_account_id, date_from=period_start, date_to=period_end
-        )
+        statement = GLService.get_account_statement(bank_account_id, date_from=period_start, date_to=period_end)
 
         in_q = Cheque.query.filter(
             Cheque.cheque_type == "incoming",
@@ -391,11 +382,7 @@ class BankReconciliationService:
                     gl_date = gl.entry.entry_date if gl.entry else stmt.transaction_date
                     date_diff = abs((stmt.transaction_date - gl_date).days)
                     if date_diff <= date_tolerance_days:
-                        match_type = (
-                            "exact"
-                            if abs(stmt_amount - gl_amount) < Decimal("0.001")
-                            else "amount_date"
-                        )
+                        match_type = "exact" if abs(stmt_amount - gl_amount) < Decimal("0.001") else "amount_date"
                         matches.append(
                             {
                                 "statement_line_id": stmt.id,
@@ -412,9 +399,7 @@ class BankReconciliationService:
         return matches
 
     @staticmethod
-    def import_bank_statement(
-        tenant_id, bank_account_id, csv_rows, statement_date=None
-    ):
+    def import_bank_statement(tenant_id, bank_account_id, csv_rows, statement_date=None):
         """
         Import bank statement lines from CSV.
         csv_rows: list of dicts with keys: date, reference, description, amount
@@ -498,24 +483,14 @@ class BankReconciliationService:
         date_diff, gl = candidates[0]
         match_type = (
             "exact"
-            if abs(
-                stmt_amount
-                - _decimal(str(gl.debit or 0))
-                - _decimal(str(gl.credit or 0))
-            )
-            < _decimal("0.001")
+            if abs(stmt_amount - _decimal(str(gl.debit or 0)) - _decimal(str(gl.credit or 0))) < _decimal("0.001")
             else "amount_date"
         )
         return {
             "statement_line_id": stmt.id,
             "journal_line_id": gl.id,
             "match_type": match_type,
-            "amount_diff": float(
-                abs(
-                    stmt_amount
-                    - (_decimal(str(gl.debit or 0)) - _decimal(str(gl.credit or 0)))
-                )
-            ),
+            "amount_diff": float(abs(stmt_amount - (_decimal(str(gl.debit or 0)) - _decimal(str(gl.credit or 0))))),
             "date_diff": date_diff,
         }
 
@@ -569,8 +544,7 @@ class BankReconciliationService:
                 {
                     "account": (
                         str(stmt.bank_account.code)
-                        if getattr(stmt, "bank_account", None)
-                        and getattr(stmt.bank_account, "code", None)
+                        if getattr(stmt, "bank_account", None) and getattr(stmt.bank_account, "code", None)
                         else str(bank_account_id)
                     ),
                     "concept_code": "BANK",
@@ -609,9 +583,7 @@ class BankReconciliationService:
         try:
             db.session.flush()
         except Exception:
-            logger.exception(
-                "Failed to flush after routing orphan transactions to suspense"
-            )
+            logger.exception("Failed to flush after routing orphan transactions to suspense")
             raise
 
         return results

@@ -31,19 +31,13 @@ class HRService:
         if is_global_owner_user(user):
             return
         scoped = branch_scope_id_for(user)
-        if (
-            scoped is not None
-            and branch_id is not None
-            and int(branch_id) != int(scoped)
-        ):
+        if scoped is not None and branch_id is not None and int(branch_id) != int(scoped):
             raise ValueError("لا يمكنك التعامل مع سجل من فرع آخر.")
 
     @staticmethod
     def clock_in(user, branch_id=None):
         tid = HRService._tid(user)
-        today_start = datetime.now(timezone.utc).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+        today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
         existing = Attendance.query.filter(
             Attendance.user_id == user.id,
             Attendance.check_in >= today_start,
@@ -70,9 +64,7 @@ class HRService:
 
     @staticmethod
     def clock_out(user):
-        today_start = datetime.now(timezone.utc).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+        today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
         att = (
             Attendance.query.filter(
                 Attendance.user_id == user.id,
@@ -107,14 +99,9 @@ class HRService:
         if tid is not None:
             query = query.filter(Attendance.tenant_id == tid)
         if date_from:
-            query = query.filter(
-                Attendance.check_in >= datetime.fromisoformat(date_from)
-            )
+            query = query.filter(Attendance.check_in >= datetime.fromisoformat(date_from))
         if date_to:
-            query = query.filter(
-                Attendance.check_in
-                <= datetime.fromisoformat(date_to).replace(hour=23, minute=59)
-            )
+            query = query.filter(Attendance.check_in <= datetime.fromisoformat(date_to).replace(hour=23, minute=59))
         return query.order_by(Attendance.check_in.desc()).all()
 
     @staticmethod
@@ -130,15 +117,10 @@ class HRService:
         if filters.get("user_id"):
             query = query.filter(Attendance.user_id == int(filters["user_id"]))
         if filters.get("date_from"):
-            query = query.filter(
-                Attendance.check_in >= datetime.fromisoformat(filters["date_from"])
-            )
+            query = query.filter(Attendance.check_in >= datetime.fromisoformat(filters["date_from"]))
         if filters.get("date_to"):
             query = query.filter(
-                Attendance.check_in
-                <= datetime.fromisoformat(filters["date_to"]).replace(
-                    hour=23, minute=59
-                )
+                Attendance.check_in <= datetime.fromisoformat(filters["date_to"]).replace(hour=23, minute=59)
             )
         return query.order_by(Attendance.check_in.desc()).all()
 
@@ -274,20 +256,12 @@ class HRService:
             tenant_id=int(tid),
             branch_id=int(branch_id) if branch_id else None,
             user_id=int(data["user_id"]),
-            department_id=(
-                int(data["department_id"]) if data.get("department_id") else None
-            ),
+            department_id=(int(data["department_id"]) if data.get("department_id") else None),
             job_id=int(data["job_id"]) if data.get("job_id") else None,
             date_start=(
-                datetime.strptime(data["date_start"], "%Y-%m-%d").date()
-                if data.get("date_start")
-                else date.today()
+                datetime.strptime(data["date_start"], "%Y-%m-%d").date() if data.get("date_start") else date.today()
             ),
-            date_end=(
-                datetime.strptime(data["date_end"], "%Y-%m-%d").date()
-                if data.get("date_end")
-                else None
-            ),
+            date_end=(datetime.strptime(data["date_end"], "%Y-%m-%d").date() if data.get("date_end") else None),
             wage=Decimal(str(data.get("wage", 0))),
             state=data.get("state", "draft"),
         )
@@ -307,14 +281,10 @@ class PayrollEngine:
     @staticmethod
     def assert_mutable(transaction):
         if transaction.status in PayrollEngine.LOCKED_STATUSES:
-            raise ImmutableRecordError(
-                f"لا يمكن تعديل معاملة راتب في حالة {transaction.status}."
-            )
+            raise ImmutableRecordError(f"لا يمكن تعديل معاملة راتب في حالة {transaction.status}.")
 
     @staticmethod
-    def register_employee_debt(
-        employee_id, tenant_id, amount, month, year, reason="payroll_shortfall"
-    ):
+    def register_employee_debt(employee_id, tenant_id, amount, month, year, reason="payroll_shortfall"):
         entry = {
             "employee_id": int(employee_id),
             "tenant_id": int(tenant_id) if tenant_id is not None else None,
@@ -359,11 +329,7 @@ class PayrollEngine:
             leave_penalty = rate * leave_days
         else:
             earned = raw_basic
-            rate = (
-                (earned / Decimal("30")).quantize(Decimal("0.01"))
-                if earned > 0
-                else Decimal("0")
-            )
+            rate = (earned / Decimal("30")).quantize(Decimal("0.01")) if earned > 0 else Decimal("0")
             leave_penalty = rate * leave_days
 
         net = earned + allow - deduct - leave_penalty
@@ -456,9 +422,7 @@ class PayrollService:
     @staticmethod
     def assert_batch_mutable(batch):
         if batch.status in PayrollEngine.LOCKED_STATUSES:
-            raise ImmutableRecordError(
-                f"لا يمكن تعديل دفعة رواتب في حالة {batch.status}."
-            )
+            raise ImmutableRecordError(f"لا يمكن تعديل دفعة رواتب في حالة {batch.status}.")
 
     @staticmethod
     def update_allowances(transaction, new_allowances, batch=None):
@@ -493,9 +457,7 @@ class PayrollService:
         total_net = Decimal("0")
         total_deductions = Decimal("0")
         for tx in batch.transactions:
-            total_expense += Decimal(str(tx.basic_amount or 0)) + Decimal(
-                str(tx.allowances or 0)
-            )
+            total_expense += Decimal(str(tx.basic_amount or 0)) + Decimal(str(tx.allowances or 0))
             total_net += Decimal(str(tx.net_salary or 0))
             total_deductions += Decimal(str(tx.deductions or 0))
 

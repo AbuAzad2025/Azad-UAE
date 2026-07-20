@@ -38,9 +38,7 @@ class TestTaxService:
         assert result["tax_amount"] == Decimal("5")
 
     def test_calculate_purchase_tax(self, mocker):
-        mocker.patch(
-            "services.tax_service.TaxService._get_strategy", return_value=_strategy()
-        )
+        mocker.patch("services.tax_service.TaxService._get_strategy", return_value=_strategy())
         purchase = MagicMock(amount_aed=200, tax_rate=5)
 
         from services.tax_service import TaxService
@@ -59,9 +57,7 @@ class TestTaxService:
         assert TaxService._get_strategy().country_code == "AE"
 
     def test_get_vat_return_gl_fallback_on_error(self, mocker):
-        mocker.patch(
-            "services.tax_service.TaxService._get_strategy", return_value=_strategy()
-        )
+        mocker.patch("services.tax_service.TaxService._get_strategy", return_value=_strategy())
         mocker.patch(
             "services.gl_service.GLService.get_vat_report",
             side_effect=RuntimeError("gl"),
@@ -73,9 +69,7 @@ class TestTaxService:
         assert result["net_vat"] == Decimal("60")
 
     def test_get_vat_return_uses_gl_amounts(self, mocker):
-        mocker.patch(
-            "services.tax_service.TaxService._get_strategy", return_value=_strategy()
-        )
+        mocker.patch("services.tax_service.TaxService._get_strategy", return_value=_strategy())
         mocker.patch(
             "services.gl_service.GLService.get_vat_report",
             return_value={"vat_output": 150, "vat_input": 50},

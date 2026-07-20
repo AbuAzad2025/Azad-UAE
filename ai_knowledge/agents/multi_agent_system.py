@@ -308,9 +308,7 @@ class MultiAgentCoordinator:
             "all_scores": agent_scores,
         }
 
-    def collaborative_solve(
-        self, complex_task: str, context: dict | None = None
-    ) -> dict:
+    def collaborative_solve(self, complex_task: str, context: dict | None = None) -> dict:
         """
         حل تعاوني بين وكلاء متعددين
 
@@ -333,11 +331,7 @@ class MultiAgentCoordinator:
             "task": complex_task,
             "agents_involved": list(results.keys()),
             "individual_results": results,
-            "confidence": (
-                sum(r.get("confidence", 0) for r in results.values()) / len(results)
-                if results
-                else 0
-            ),
+            "confidence": (sum(r.get("confidence", 0) for r in results.values()) / len(results) if results else 0),
         }
 
         return combined

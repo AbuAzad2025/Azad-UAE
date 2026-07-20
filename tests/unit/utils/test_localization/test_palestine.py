@@ -56,14 +56,10 @@ class TestPalestineValidateTaxNumber:
 
 class TestPalestineCurrency:
     def test_same_currency_passthrough(self, strategy):
-        assert strategy.convert_to_local_currency(Decimal("100"), "ILS") == Decimal(
-            "100.00"
-        )
+        assert strategy.convert_to_local_currency(Decimal("100"), "ILS") == Decimal("100.00")
 
     def test_missing_conversion_raises(self, strategy):
-        with patch(
-            "utils.helpers.convert_currency", side_effect=KeyError("rate missing")
-        ):
+        with patch("utils.helpers.convert_currency", side_effect=KeyError("rate missing")):
             with pytest.raises(KeyError):
                 strategy.convert_to_local_currency(Decimal("50"), "USD", "ILS")
 

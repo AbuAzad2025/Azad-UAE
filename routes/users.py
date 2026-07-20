@@ -145,9 +145,7 @@ def index():
 def create():
     current_level = role_level_for_user(current_user)
     roles = Role.query.filter_by(is_active=True).all()
-    roles = [
-        r for r in roles if role_level_for(getattr(r, "slug", None)) <= current_level
-    ]
+    roles = [r for r in roles if role_level_for(getattr(r, "slug", None)) <= current_level]
     branches = _available_branches()
     default_form = {"is_active": "1"}
 
@@ -175,9 +173,7 @@ def create():
 
             tid = get_active_tenant_id(current_user)
             tenant = db.session.get(Tenant, int(tid)) if tid else None
-            uname_err = validate_username_for_user(
-                username, is_owner=False, tenant=tenant
-            )
+            uname_err = validate_username_for_user(username, is_owner=False, tenant=tenant)
             if uname_err:
                 prefix = tenant_username_prefix(tenant) if tenant else "CODE"
                 flash(gettext(f"{uname_err}\nمثال: {prefix}_ahmad"), "danger")
@@ -273,23 +269,17 @@ def edit(**kwargs):
 
     current_level = role_level_for_user(current_user)
     roles = Role.query.filter_by(is_active=True).all()
-    roles = [
-        r for r in roles if role_level_for(getattr(r, "slug", None)) <= current_level
-    ]
+    roles = [r for r in roles if role_level_for(getattr(r, "slug", None)) <= current_level]
     branches = _available_branches()
 
     if request.method == "POST":
         try:
             with atomic_transaction("user_update"):
                 try:
-                    user.email = normalize_user_email_required(
-                        request.form.get("email")
-                    )
+                    user.email = normalize_user_email_required(request.form.get("email"))
                 except FieldValidationError as exc:
                     flash(str(exc), "danger")
-                    return render_template(
-                        "users/edit.html", user=user, roles=roles, branches=branches
-                    )
+                    return render_template("users/edit.html", user=user, roles=roles, branches=branches)
                 user.full_name = request.form.get("full_name")
                 user.full_name_ar = request.form.get("full_name_ar")
                 user.phone = normalize_phone_optional(request.form.get("phone"))
@@ -299,9 +289,7 @@ def edit(**kwargs):
 
                 if role_level_for(getattr(role, "slug", None)) > current_level:
                     flash(gettext("لا يمكنك تعيين دور أعلى من دورك."), "danger")
-                    return render_template(
-                        "users/edit.html", user=user, roles=roles, branches=branches
-                    )
+                    return render_template("users/edit.html", user=user, roles=roles, branches=branches)
 
                 user.role_id = role_id
                 user.branch_id = branch_id
@@ -312,9 +300,7 @@ def edit(**kwargs):
                     is_valid, pwd_errors = PasswordValidator.validate(new_password)
                     if not is_valid:
                         flash(ErrorMessages.weak_password(pwd_errors), "danger")
-                        return render_template(
-                            "users/edit.html", user=user, roles=roles, branches=branches
-                        )
+                        return render_template("users/edit.html", user=user, roles=roles, branches=branches)
                     user.set_password(new_password)
 
                 user.is_active = request.form.get("is_active") == "1"
@@ -327,9 +313,7 @@ def edit(**kwargs):
         except Exception as e:
             current_app.logger.error("Error updating user %s: %s", record_id, e)
             flash(ErrorMessages.update_failed("user"), "danger")
-            return render_template(
-                "users/edit.html", user=user, roles=roles, branches=branches
-            )
+            return render_template("users/edit.html", user=user, roles=roles, branches=branches)
 
     return render_template("users/edit.html", user=user, roles=roles, branches=branches)
 
@@ -377,9 +361,7 @@ def delete(**kwargs):
 
     if user.id == current_user.id:
         flash(
-            gettext(
-                "لا يمكنك حذف حسابك الخاص. اطلب من مدير آخر حذف حسابك إذا لزم الأمر."
-            ),
+            gettext("لا يمكنك حذف حسابك الخاص. اطلب من مدير آخر حذف حسابك إذا لزم الأمر."),
             "danger",
         )
         return redirect(url_for("users.index"))
@@ -403,9 +385,7 @@ def delete(**kwargs):
 
         if has_sales:
             flash(
-                gettext(
-                    f'تم إلغاء تفعيل المستخدم "{user.username}" (لديه {sales_count} عملية مسجلة). '
-                ),
+                gettext(f'تم إلغاء تفعيل المستخدم "{user.username}" (لديه {sales_count} عملية مسجلة). '),
                 gettext("لا يمكن حذفه نهائياً للحفاظ على السجلات."),
                 "warning",
             )

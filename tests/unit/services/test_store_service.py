@@ -34,9 +34,7 @@ class TestWarehouseBootstrap:
     def test_get_online_warehouse_none(self, sample_tenant):
         assert StoreService.get_online_warehouse(sample_tenant.id) is None
 
-    def test_ensure_online_warehouse_creates(
-        self, db_session, sample_tenant, sample_branch
-    ):
+    def test_ensure_online_warehouse_creates(self, db_session, sample_tenant, sample_branch):
         wh = StoreService.ensure_online_warehouse(sample_tenant.id)
         assert wh.is_online is True
         assert wh.tenant_id == sample_tenant.id
@@ -47,9 +45,7 @@ class TestWarehouseBootstrap:
         with pytest.raises(ValueError, match="الشركة"):
             StoreService.ensure_online_warehouse(999999999)
 
-    def test_assert_single_online_warehouse_raises(
-        self, online_warehouse, sample_tenant
-    ):
+    def test_assert_single_online_warehouse_raises(self, online_warehouse, sample_tenant):
         with pytest.raises(ValueError, match="أونلاين"):
             StoreService.assert_single_online_warehouse(sample_tenant.id)
 
@@ -63,18 +59,14 @@ class TestTenantStoreBootstrap:
     def test_ensure_tenant_store_backfills_warehouse(self, mocker, sample_tenant):
         store = MagicMock(warehouse_id=None, tenant_id=sample_tenant.id)
         mocker.patch.object(StoreService, "get_tenant_store", return_value=None)
-        mocker.patch(
-            "services.store_service.TenantStore.query"
-        ).filter_by.return_value.first.return_value = store
+        mocker.patch("services.store_service.TenantStore.query").filter_by.return_value.first.return_value = store
         wh = MagicMock(id=77)
         mocker.patch.object(StoreService, "ensure_online_warehouse", return_value=wh)
         updated = StoreService.ensure_tenant_store(sample_tenant.id)
         assert updated.warehouse_id == 77
 
     def test_ensure_tenant_store_missing_tenant_raises(self, mocker):
-        mocker.patch(
-            "services.store_service.TenantStore.query"
-        ).filter_by.return_value.first.return_value = None
+        mocker.patch("services.store_service.TenantStore.query").filter_by.return_value.first.return_value = None
         mocker.patch("services.store_service.db.session.get", return_value=None)
         with pytest.raises(ValueError, match="الشركة غير موجودة"):
             StoreService.ensure_tenant_store(999999)
@@ -105,9 +97,7 @@ class TestCatalogAndStock:
     def test_online_stock_map_empty_without_warehouse(self, sample_tenant):
         assert StoreService.online_stock_map(sample_tenant.id) == {}
 
-    def test_online_stock_map_with_warehouse(
-        self, mocker, sample_tenant, online_warehouse
-    ):
+    def test_online_stock_map_with_warehouse(self, mocker, sample_tenant, online_warehouse):
         mocker.patch(
             "services.store_service.get_branch_stock_map",
             return_value={1: Decimal("5")},
@@ -148,9 +138,7 @@ class TestCatalogAndStock:
         )
         assert StoreService.count_visible_products(sample_tenant.id) == 2
 
-    def test_get_related_products(
-        self, mocker, sample_tenant, sample_product_with_stock
-    ):
+    def test_get_related_products(self, mocker, sample_tenant, sample_product_with_stock):
         peer = MagicMock(
             id=sample_product_with_stock.id + 1,
             category_id=sample_product_with_stock.category_id,
@@ -179,9 +167,7 @@ class TestCatalogAndStock:
 class TestPlatformFlags:
     def test_stores_globally_enabled(self, mocker):
         settings = MagicMock(enable_ecommerce=True)
-        mocker.patch(
-            "models.system_settings.SystemSettings.get_current", return_value=settings
-        )
+        mocker.patch("models.system_settings.SystemSettings.get_current", return_value=settings)
         assert StoreService.stores_globally_enabled() is True
 
     def test_stores_globally_enabled_fallback(self, mocker):
@@ -193,9 +179,7 @@ class TestPlatformFlags:
 
     def test_set_stores_globally_enabled(self, mocker):
         settings = MagicMock()
-        mocker.patch(
-            "models.system_settings.SystemSettings.get_current", return_value=settings
-        )
+        mocker.patch("models.system_settings.SystemSettings.get_current", return_value=settings)
         StoreService.set_stores_globally_enabled(True)
         assert settings.enable_ecommerce is True
 
@@ -224,9 +208,7 @@ class TestPublicAvailability:
         mocker.patch.object(StoreService, "stores_globally_enabled", return_value=False)
         assert StoreService.is_store_publicly_available(tenant_store) is False
 
-    def test_unavailable_when_tenant_suspended(
-        self, mocker, tenant_store, sample_tenant
-    ):
+    def test_unavailable_when_tenant_suspended(self, mocker, tenant_store, sample_tenant):
         sample_tenant.is_suspended = True
         mocker.patch.object(StoreService, "stores_globally_enabled", return_value=True)
         assert StoreService.is_store_publicly_available(tenant_store) is False
@@ -313,30 +295,22 @@ class TestCartHelpers:
 
 class TestLoyaltyAndVariants:
     def test_earn_loyalty_new_account(self, mocker, sample_tenant):
-        mocker.patch(
-            "models.shop_loyalty.ShopLoyalty.query"
-        ).filter_by.return_value.first.return_value = None
+        mocker.patch("models.shop_loyalty.ShopLoyalty.query").filter_by.return_value.first.return_value = None
         add = mocker.patch("extensions.db.session.add")
         StoreService.earn_loyalty_points(sample_tenant.id, 9, 1, Decimal("25"))
         assert add.call_count == 2
 
     def test_earn_loyalty_existing_account(self, mocker, sample_tenant):
         lp = MagicMock(points=10, points_earned=10)
-        mocker.patch(
-            "models.shop_loyalty.ShopLoyalty.query"
-        ).filter_by.return_value.first.return_value = lp
+        mocker.patch("models.shop_loyalty.ShopLoyalty.query").filter_by.return_value.first.return_value = lp
         StoreService.earn_loyalty_points(sample_tenant.id, 9, 1, Decimal("25"))
         assert lp.points == 35
 
     def test_redeem_loyalty_success(self, mocker, sample_tenant):
         lp = MagicMock(points=100, points_redeemed=0)
-        mocker.patch(
-            "models.shop_loyalty.ShopLoyalty.query"
-        ).filter_by.return_value.first.return_value = lp
+        mocker.patch("models.shop_loyalty.ShopLoyalty.query").filter_by.return_value.first.return_value = lp
         mocker.patch("extensions.db.session.add")
-        assert StoreService.redeem_loyalty_points(sample_tenant.id, 9, 40) == Decimal(
-            "0.4"
-        )
+        assert StoreService.redeem_loyalty_points(sample_tenant.id, 9, 40) == Decimal("0.4")
         assert lp.points == 60
 
     def test_redeem_insufficient_raises(self, db_session, sample_tenant):
@@ -349,9 +323,7 @@ class TestLoyaltyAndVariants:
     def test_get_product_variants_empty(self, sample_tenant):
         assert StoreService.get_product_variants(sample_tenant.id, 999666) == []
 
-    def test_get_recently_viewed_products(
-        self, db_session, sample_tenant, sample_product
-    ):
+    def test_get_recently_viewed_products(self, db_session, sample_tenant, sample_product):
         ordered = StoreService.get_recently_viewed_products(
             sample_tenant.id,
             [sample_product.id],
@@ -371,9 +343,7 @@ class TestLoyaltyAndVariants:
             "services.store_service.get_accessible_warehouses",
             return_value=[online_warehouse, sample_warehouse],
         )
-        physical = StoreService.get_physical_warehouses(
-            sample_tenant.id, user=MagicMock()
-        )
+        physical = StoreService.get_physical_warehouses(sample_tenant.id, user=MagicMock())
         assert sample_warehouse in physical
         assert online_warehouse not in physical
 
@@ -384,23 +354,17 @@ class TestLoyaltyAndVariants:
 
 
 class TestStoreServiceExtended:
-    def test_get_online_warehouse_create_true_bootstraps(
-        self, db_session, sample_tenant, sample_branch
-    ):
+    def test_get_online_warehouse_create_true_bootstraps(self, db_session, sample_tenant, sample_branch):
         wh = StoreService.get_online_warehouse(sample_tenant.id, create=True)
         assert wh is not None
         assert wh.is_online is True
 
-    def test_get_tenant_store_create_true(
-        self, db_session, sample_tenant, sample_branch
-    ):
+    def test_get_tenant_store_create_true(self, db_session, sample_tenant, sample_branch):
         store = StoreService.get_tenant_store(sample_tenant.id, create=True)
         assert store is not None
         assert store.tenant_id == sample_tenant.id
 
-    def test_ensure_online_warehouse_code_name_collision(
-        self, mocker, sample_tenant, sample_branch
-    ):
+    def test_ensure_online_warehouse_code_name_collision(self, mocker, sample_tenant, sample_branch):
         tenant = mocker.MagicMock()
         tenant.name = "Acme"
         tenant.name_ar = "Acme AR"
@@ -438,12 +402,8 @@ class TestStoreServiceExtended:
         assert len(related) == 1
         assert related[0]["product"].id == 1
 
-    def test_assert_single_online_warehouse_excludes_self(
-        self, online_warehouse, sample_tenant
-    ):
-        StoreService.assert_single_online_warehouse(
-            sample_tenant.id, warehouse_id=online_warehouse.id
-        )
+    def test_assert_single_online_warehouse_excludes_self(self, online_warehouse, sample_tenant):
+        StoreService.assert_single_online_warehouse(sample_tenant.id, warehouse_id=online_warehouse.id)
 
     def test_set_platform_disabled_rollback_on_error(self, tenant_store, mocker):
         mocker.patch("extensions.db.session.commit", side_effect=RuntimeError("fail"))
@@ -457,9 +417,7 @@ class TestStoreServiceExtended:
         assert StoreService.get_store_by_host(None) is None
 
     def test_ensure_unique_subdomain_excludes_self(self, db_session, tenant_store):
-        slug = StoreService.ensure_unique_subdomain(
-            tenant_store.subdomain, tenant_id=tenant_store.tenant_id
-        )
+        slug = StoreService.ensure_unique_subdomain(tenant_store.subdomain, tenant_id=tenant_store.tenant_id)
         assert slug == tenant_store.subdomain
 
     def test_get_public_catalog_sort_and_filters(self, mocker, sample_tenant):
@@ -531,9 +489,7 @@ class TestStoreServiceExtended:
             "services.store_service.StoreService.online_stock_map",
             return_value={99: Decimal("5")},
         )
-        mocker.patch(
-            "services.store_service.Product.query"
-        ).filter_by.return_value.first.return_value = None
+        mocker.patch("services.store_service.Product.query").filter_by.return_value.first.return_value = None
         totals = StoreService.cart_totals(sample_tenant.id, {"99": 2})
         assert totals["lines"] == []
 
@@ -542,9 +498,7 @@ class TestStoreServiceExtended:
             "services.store_service.StoreService.online_stock_map",
             return_value={sample_product.id: Decimal("1")},
         )
-        mocker.patch(
-            "services.store_service.Product.query"
-        ).filter_by.return_value.first.return_value = sample_product
+        mocker.patch("services.store_service.Product.query").filter_by.return_value.first.return_value = sample_product
         totals = StoreService.cart_totals(sample_tenant.id, {str(sample_product.id): 5})
         assert totals["lines"][0]["quantity"] == Decimal("1")
 
@@ -576,9 +530,7 @@ class TestStoreServiceExtended:
         related = StoreService.get_related_products(sample_tenant.id, 99, 3, limit=2)
         assert len(related) == 2
 
-    def test_get_public_catalog_excludes_serial_and_filters(
-        self, mocker, sample_tenant
-    ):
+    def test_get_public_catalog_excludes_serial_and_filters(self, mocker, sample_tenant):
         serial = MagicMock(
             id=1,
             has_serial_number=True,
@@ -647,16 +599,12 @@ class TestStoreServiceExtended:
         )
         assert StoreService.get_public_catalog(sample_tenant.id)["total"] == 0
 
-    def test_cart_totals_zero_qty_after_cap_skipped(
-        self, mocker, sample_tenant, sample_product
-    ):
+    def test_cart_totals_zero_qty_after_cap_skipped(self, mocker, sample_tenant, sample_product):
         mocker.patch(
             "services.store_service.StoreService.online_stock_map",
             return_value={sample_product.id: Decimal("0")},
         )
-        mocker.patch(
-            "services.store_service.Product.query"
-        ).filter_by.return_value.first.return_value = sample_product
+        mocker.patch("services.store_service.Product.query").filter_by.return_value.first.return_value = sample_product
         totals = StoreService.cart_totals(sample_tenant.id, {str(sample_product.id): 3})
         assert totals["lines"] == []
 

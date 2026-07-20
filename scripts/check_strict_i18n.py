@@ -58,18 +58,14 @@ IGNORE_PATTERNS = [
 
 SKIP_RAW_TAGS = {"code", "pre", "samp", "kbd", "script", "style"}
 
-RTL_CONTENT_MARKER = re.compile(
-    r"[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]{2,}"
-)
+RTL_CONTENT_MARKER = re.compile(r"[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]{2,}")
 
 TRANSLATION_CALL = re.compile(
     r"(?:\{\{?\s*_\s*\(|gettext\s*\(|lazy_gettext\s*\(|lazy_pgettext\s*\(|ngettext\s*\(|"
     r"\{\{?\s*t\s*\(|[^A-Za-z0-9_]t\s*\()"
 )
 
-FLASK_ROUTE_BARE_STRING = re.compile(
-    r"return\s+(?:render_template|redirect|jsonify|make_response)\s*\("
-)
+FLASK_ROUTE_BARE_STRING = re.compile(r"return\s+(?:render_template|redirect|jsonify|make_response)\s*\(")
 
 
 # Tracks whether the current scan position is inside a triple-quoted string
@@ -234,16 +230,12 @@ def scan_file(filepath):
         # Track <script>/<style> raw blocks so their JS/CSS content is never
         # treated as user-facing template text.
         if ext == ".html":
-            if re.search(r"<\s*script\b", line) and not re.search(
-                r"<\s*/\s*script\s*>", line
-            ):
+            if re.search(r"<\s*script\b", line) and not re.search(r"<\s*/\s*script\s*>", line):
                 in_raw = True
             elif re.search(r"<\s*/\s*script\s*>", line):
                 in_raw = False
                 continue
-            elif re.search(r"<\s*style\b", line) and not re.search(
-                r"<\s*/\s*style\s*>", line
-            ):
+            elif re.search(r"<\s*style\b", line) and not re.search(r"<\s*/\s*style\s*>", line):
                 in_raw = True
             elif re.search(r"<\s*/\s*style\s*>", line):
                 in_raw = False
@@ -300,12 +292,8 @@ def scan_file(filepath):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Strict i18n linter for RTL translation enforcement"
-    )
-    parser.add_argument(
-        "--fix", action="store_true", help="Not implemented: auto-wrap strings"
-    )
+    parser = argparse.ArgumentParser(description="Strict i18n linter for RTL translation enforcement")
+    parser.add_argument("--fix", action="store_true", help="Not implemented: auto-wrap strings")
     parser.add_argument(
         "--exclude-dirs",
         nargs="*",
@@ -324,9 +312,7 @@ def main():
 
     scan_dirs = []
     for p in args.paths:
-        if os.path.basename(p) in skip_dirs and os.path.isdir(
-            os.path.join(REPO_ROOT, p)
-        ):
+        if os.path.basename(p) in skip_dirs and os.path.isdir(os.path.join(REPO_ROOT, p)):
             continue
         full = os.path.join(REPO_ROOT, p)
         if os.path.isdir(full):

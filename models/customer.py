@@ -21,9 +21,7 @@ class Customer(db.Model):
     name = db.Column(db.String(200), nullable=False, index=True)
     name_ar = db.Column(db.String(200))
 
-    customer_type = db.Column(
-        db.String(20), nullable=False, default="regular", index=True
-    )
+    customer_type = db.Column(db.String(20), nullable=False, default="regular", index=True)
 
     customer_classification = db.Column(db.String(20), default="regular", index=True)
 
@@ -32,9 +30,7 @@ class Customer(db.Model):
     address = db.Column(db.Text)
     tax_number = db.Column(db.String(50))
     country = db.Column(db.String(2))  # ISO country code for fiscal position matching
-    fiscal_position_id = db.Column(
-        db.Integer, db.ForeignKey("fiscal_positions.id"), nullable=True, index=True
-    )
+    fiscal_position_id = db.Column(db.Integer, db.ForeignKey("fiscal_positions.id"), nullable=True, index=True)
 
     preferred_currency = db.Column(
         db.String(3), default=context_aware_default_currency
@@ -64,9 +60,7 @@ class Customer(db.Model):
     sales = db.relationship("Sale", back_populates="customer", lazy="dynamic")
     receipts = db.relationship("Receipt", back_populates="customer", lazy="dynamic")
     tenant = db.relationship("Tenant", backref="customers", foreign_keys=[tenant_id])
-    fiscal_position = db.relationship(
-        "FiscalPosition", foreign_keys=[fiscal_position_id]
-    )
+    fiscal_position = db.relationship("FiscalPosition", foreign_keys=[fiscal_position_id])
 
     def __repr__(self):
         return f"<Customer {self.name}>"
@@ -133,9 +127,7 @@ class Customer(db.Model):
             "regular": {"ar": "عادي", "en": "Regular"},
             "inactive": {"ar": "غير نشط", "en": "Inactive"},
         }
-        return classifications.get(self.customer_classification, {}).get(
-            lang, self.customer_classification
-        )
+        return classifications.get(self.customer_classification, {}).get(lang, self.customer_classification)
 
     def update_classification(self):
         from decimal import Decimal

@@ -31,12 +31,8 @@ class ProductWarehouseCost(db.Model):
         nullable=False,
         index=True,
     )
-    product_id = db.Column(
-        db.Integer, db.ForeignKey("products.id"), nullable=False, index=True
-    )
-    warehouse_id = db.Column(
-        db.Integer, db.ForeignKey("warehouses.id"), nullable=False, index=True
-    )
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False, index=True)
+    warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id"), nullable=False, index=True)
 
     # MWAC fields
     average_cost = db.Column(db.Numeric(18, 6), default=0, nullable=False)
@@ -48,12 +44,8 @@ class ProductWarehouseCost(db.Model):
     )  # TODO: use Config.DEFAULT_CURRENCY
 
     # Lock to prevent concurrent WAC updates
-    last_updated = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
-    )
-    updated_by_movement_id = db.Column(
-        db.Integer, db.ForeignKey("stock_movements.id"), nullable=True, index=True
-    )
+    last_updated = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_by_movement_id = db.Column(db.Integer, db.ForeignKey("stock_movements.id"), nullable=True, index=True)
 
     # Audit
     created_at = db.Column(
@@ -70,9 +62,7 @@ class ProductWarehouseCost(db.Model):
 
     product = db.relationship("Product", backref="warehouse_costs")
     warehouse = db.relationship("Warehouse", backref="product_costs")
-    tenant = db.relationship(
-        "Tenant", backref="product_warehouse_costs", foreign_keys=[tenant_id]
-    )
+    tenant = db.relationship("Tenant", backref="product_warehouse_costs", foreign_keys=[tenant_id])
 
     def __repr__(self):
         return f"<ProductWarehouseCost p={self.product_id} w={self.warehouse_id} cost={self.average_cost}>"

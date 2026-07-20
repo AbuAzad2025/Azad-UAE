@@ -148,11 +148,7 @@ class CurrencyService:
 
         # Check cache first
         cache_entry = CurrencyService._rates_cache.get(base)
-        if (
-            cache_entry
-            and (time.time() - cache_entry["timestamp"])
-            < CurrencyService.CACHE_TTL_SECONDS
-        ):
+        if cache_entry and (time.time() - cache_entry["timestamp"]) < CurrencyService.CACHE_TTL_SECONDS:
             return cache_entry["rates"].copy()
 
         rates = {}
@@ -229,9 +225,7 @@ class CurrencyService:
 
                 # Cross rate: Base -> Target
                 # 1 Base = (val_target / val_base) Target
-                rates[curr] = (val_target / val_base).quantize(
-                    Decimal("0.000001"), rounding=ROUND_HALF_UP
-                )
+                rates[curr] = (val_target / val_base).quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)
 
         CurrencyService._rates_cache[base] = {"timestamp": time.time(), "rates": rates}
         return rates
@@ -262,9 +256,7 @@ class CurrencyService:
                 rate = Decimal(str(user_rate))
                 if rate > Decimal("0"):
                     return {
-                        "rate": rate.quantize(
-                            Decimal("0.000001"), rounding=ROUND_HALF_UP
-                        ),
+                        "rate": rate.quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP),
                         "source": "user_input",
                         "cached": False,
                         "age_seconds": 0,
@@ -287,9 +279,7 @@ class CurrencyService:
             cached_rate = cached_rates.get(to_currency)
             if cached_rate and age < CurrencyService.CACHE_TTL_SECONDS:
                 return {
-                    "rate": Decimal(str(cached_rate)).quantize(
-                        Decimal("0.000001"), rounding=ROUND_HALF_UP
-                    ),
+                    "rate": Decimal(str(cached_rate)).quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP),
                     "source": "cache",
                     "cached": True,
                     "age_seconds": age,
@@ -304,9 +294,7 @@ class CurrencyService:
             rate = http_rates.get(to_currency)
             if rate and rate > Decimal("0"):
                 return {
-                    "rate": Decimal(str(rate)).quantize(
-                        Decimal("0.000001"), rounding=ROUND_HALF_UP
-                    ),
+                    "rate": Decimal(str(rate)).quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP),
                     "source": "open_er_api",
                     "cached": False,
                     "age_seconds": 0,
@@ -316,9 +304,7 @@ class CurrencyService:
             try:
                 c = CurrencyRates()
                 rate = c.get_rate(from_currency, to_currency)
-                rate = Decimal(str(rate)).quantize(
-                    Decimal("0.000001"), rounding=ROUND_HALF_UP
-                )
+                rate = Decimal(str(rate)).quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)
                 CurrencyService._rates_cache[from_currency] = {
                     "timestamp": now_ts,
                     "rates": {from_currency: Decimal("1.000000"), to_currency: rate},
@@ -344,9 +330,7 @@ class CurrencyService:
 
         val_target = get_aed_value(to_currency)
         val_base = get_aed_value(from_currency)
-        fallback_rate = (val_target / val_base).quantize(
-            Decimal("0.000001"), rounding=ROUND_HALF_UP
-        )
+        fallback_rate = (val_target / val_base).quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)
         return {
             "rate": fallback_rate,
             "source": "fallback_static",
@@ -356,7 +340,5 @@ class CurrencyService:
 
     @staticmethod
     def get_exchange_rate(from_currency, to_currency="AED", user_rate=None):
-        details = CurrencyService.get_exchange_rate_details(
-            from_currency, to_currency, user_rate=user_rate
-        )
+        details = CurrencyService.get_exchange_rate_details(from_currency, to_currency, user_rate=user_rate)
         return details["rate"]

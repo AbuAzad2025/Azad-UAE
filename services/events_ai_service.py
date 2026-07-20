@@ -18,11 +18,7 @@ def _learn_sale_patterns(mapper, connection, target):
             "customer_id": target.customer_id,
             "amount": float(target.amount_aed),
             "items_count": len(target.lines) if target.lines else 0,
-            "discount_percent": (
-                float(target.discount_amount / target.subtotal * 100)
-                if target.subtotal > 0
-                else 0
-            ),
+            "discount_percent": (float(target.discount_amount / target.subtotal * 100) if target.subtotal > 0 else 0),
             "payment_status": target.payment_status,
             "time_pattern": {
                 "day_of_week": day_of_week,
@@ -38,9 +34,7 @@ def _learn_sale_patterns(mapper, connection, target):
             user_feedback=5,
             context={"type": "sale_pattern", "data": learning_data},
         )
-        logger.info(
-            f"AI Learned: Sale {target.sale_number} | {day_of_week} {hour}:00 | {target.amount_aed} AED"
-        )
+        logger.info(f"AI Learned: Sale {target.sale_number} | {day_of_week} {hour}:00 | {target.amount_aed} AED")
     except Exception as e:
         logger.error(f"AI learning failed: {e}")
 
@@ -59,9 +53,7 @@ def _customer_analysis(mapper, connection, target):
         alerts = []
         if target.balance and target.balance > Decimal("10000"):
             alerts.append("high_balance")
-            logger.info(
-                f"AI Priority: Customer {target.id} - High balance: {target.balance} AED"
-            )
+            logger.info(f"AI Priority: Customer {target.id} - High balance: {target.balance} AED")
         if target.balance > target.credit_limit > 0:
             alerts.append("credit_limit_exceeded")
             logger.warning(f"AI Alert: Customer {target.id} exceeded credit limit!")
@@ -94,9 +86,7 @@ def _learn_product_performance(mapper, connection, target):
             "cost_price": float(target.cost_price or 0),
             "sell_price": float(target.regular_price or 0),
             "margin": float(
-                (target.regular_price - target.cost_price)
-                if target.regular_price and target.cost_price
-                else 0
+                (target.regular_price - target.cost_price) if target.regular_price and target.cost_price else 0
             ),
         }
         learning_system = AzadLearningSystem()
@@ -107,9 +97,7 @@ def _learn_product_performance(mapper, connection, target):
             context={"type": "product_performance", "product_id": target.id},
         )
         if target.current_stock < target.min_stock_alert:
-            logger.warning(
-                f"AI Reorder Alert: Product {target.name} - Stock: {target.current_stock}"
-            )
+            logger.warning(f"AI Reorder Alert: Product {target.name} - Stock: {target.current_stock}")
     except Exception as e:
         logger.error(f"AI product learning failed: {e}")
 
@@ -117,9 +105,7 @@ def _learn_product_performance(mapper, connection, target):
 def _detect_stock_anomaly(mapper, connection, target):
     try:
         if target.current_stock and target.current_stock < target.min_stock_alert:
-            logger.warning(
-                f"AI Alert: Product {target.id} ({target.name}) - Low stock: {target.current_stock}"
-            )
+            logger.warning(f"AI Alert: Product {target.id} ({target.name}) - Low stock: {target.current_stock}")
         if target.current_stock and target.current_stock > 1000:
             logger.warning(
                 f"AI Alert: Product {target.id} ({target.name}) - High stock: {target.current_stock} - Possible slow-moving item"
@@ -136,35 +122,23 @@ def _comprehensive_sale_analysis(mapper, connection, target):
         insights = []
         if target.amount_aed and target.amount_aed > Decimal("50000"):
             anomalies.append("large_amount")
-            logger.warning(
-                f"AI Anomaly: Large sale! {target.sale_number} - {target.amount_aed} AED"
-            )
+            logger.warning(f"AI Anomaly: Large sale! {target.sale_number} - {target.amount_aed} AED")
         if target.discount_amount and target.subtotal:
             discount_percent = (target.discount_amount / target.subtotal) * 100
             if discount_percent > Decimal("50"):
                 anomalies.append("large_discount")
-                logger.warning(
-                    f"AI Anomaly: Large discount! {target.sale_number} - {discount_percent:.1f}%"
-                )
+                logger.warning(f"AI Anomaly: Large discount! {target.sale_number} - {discount_percent:.1f}%")
         if target.lines:
-            total_cost = sum(
-                line.cost_price * line.quantity
-                for line in target.lines
-                if line.cost_price
-            )
+            total_cost = sum(line.cost_price * line.quantity for line in target.lines if line.cost_price)
             if total_cost > 0:
                 profit = target.amount_aed - total_cost
                 margin_percent = (profit / total_cost) * 100
                 if margin_percent < 10:
                     insights.append("low_margin")
-                    logger.warning(
-                        f"AI Insight: Low profit margin! {target.sale_number} - {margin_percent:.1f}%"
-                    )
+                    logger.warning(f"AI Insight: Low profit margin! {target.sale_number} - {margin_percent:.1f}%")
                 elif margin_percent > 100:
                     insights.append("high_margin")
-                    logger.info(
-                        f"AI Insight: Excellent profit! {target.sale_number} - {margin_percent:.1f}%"
-                    )
+                    logger.info(f"AI Insight: Excellent profit! {target.sale_number} - {margin_percent:.1f}%")
         learning_system = AzadLearningSystem()
         learning_system.learn_from_interaction(
             question=f"Sale analysis - {target.sale_number}",
@@ -230,23 +204,17 @@ def _learn_sales_practices(mapper, connection, target):
             "sale_number": target.sale_number,
             "payment_terms": {
                 "cash_percentage": (
-                    float(target.paid_amount_aed / target.amount_aed * 100)
-                    if target.amount_aed > 0
-                    else 0
+                    float(target.paid_amount_aed / target.amount_aed * 100) if target.amount_aed > 0 else 0
                 ),
                 "credit_given": target.payment_status in ["unpaid", "partial"],
             },
             "discount_strategy": {
                 "discount_amount": float(target.discount_amount or 0),
                 "discount_percent": (
-                    float(target.discount_amount / target.subtotal * 100)
-                    if target.subtotal > 0
-                    else 0
+                    float(target.discount_amount / target.subtotal * 100) if target.subtotal > 0 else 0
                 ),
             },
-            "shipping_included": (
-                target.shipping_cost > 0 if target.shipping_cost else False
-            ),
+            "shipping_included": (target.shipping_cost > 0 if target.shipping_cost else False),
             "tax_applied": target.tax_amount > 0 if target.tax_amount else False,
         }
         learning_system = AzadLearningSystem()
@@ -256,9 +224,7 @@ def _learn_sales_practices(mapper, connection, target):
             user_feedback=5,
             context={"type": "professional_learning", "subtype": "sales_practice"},
         )
-        logger.info(
-            f"AI Professional: Learned sales practice from {target.sale_number}"
-        )
+        logger.info(f"AI Professional: Learned sales practice from {target.sale_number}")
     except Exception as e:
         logger.error(f"AI professional learning failed: {e}")
 
@@ -280,9 +246,7 @@ def _learn_procurement_strategy(mapper, connection, target):
             user_feedback=5,
             context={"type": "professional_learning", "subtype": "procurement"},
         )
-        logger.info(
-            f"AI Professional: Learned procurement from {target.purchase_number}"
-        )
+        logger.info(f"AI Professional: Learned procurement from {target.purchase_number}")
     except Exception as e:
         logger.error(f"AI procurement learning failed: {e}")
 
@@ -295,9 +259,7 @@ def _learn_expense_patterns(mapper, connection, target):
             "category_id": target.category_id,
             "amount": float(target.amount_aed),
             "payment_method": target.payment_method,
-            "is_recurring": (
-                target.is_recurring if hasattr(target, "is_recurring") else False
-            ),
+            "is_recurring": (target.is_recurring if hasattr(target, "is_recurring") else False),
         }
         learning_system = AzadLearningSystem()
         learning_system.learn_from_interaction(
@@ -306,9 +268,7 @@ def _learn_expense_patterns(mapper, connection, target):
             user_feedback=5,
             context={"type": "professional_learning", "subtype": "expense_management"},
         )
-        logger.info(
-            f"AI Professional: Learned expense pattern - {target.amount_aed} AED"
-        )
+        logger.info(f"AI Professional: Learned expense pattern - {target.amount_aed} AED")
     except Exception as e:
         logger.error(f"AI expense learning failed: {e}")
 
@@ -326,9 +286,7 @@ def _learn_accounting_entries(mapper, connection, target):
             "entry_number": target.entry_number,
             "total_debit": float(target.total_debit or 0),
             "total_credit": float(target.total_credit or 0),
-            "is_balanced": (
-                target.is_balanced() if hasattr(target, "is_balanced") else True
-            ),
+            "is_balanced": (target.is_balanced() if hasattr(target, "is_balanced") else True),
             "reference_type": target.reference_type,
             "reference_id": target.reference_id,
             "lines_count": lines_count,
@@ -360,9 +318,7 @@ def _learn_revenue_recognition(mapper, connection, target):
             "revenue_recognized": target.status == "confirmed",
             "cash_received": float(target.paid_amount_aed or 0),
             "accounts_receivable": float(target.balance_due or 0),
-            "recognition_principle": (
-                "accrual" if target.status == "confirmed" else "cash"
-            ),
+            "recognition_principle": ("accrual" if target.status == "confirmed" else "cash"),
         }
         learning_system = AzadLearningSystem()
         learning_system.learn_from_interaction(
@@ -386,12 +342,7 @@ def _learn_expense_recognition(mapper, connection, target):
             "recognized_as_expense": target.status == "confirmed",
             "cash_paid": float(getattr(target, "paid_amount_aed", 0) or 0),
             "accounts_payable": float(
-                (
-                    (target.amount_aed or 0)
-                    - (getattr(target, "paid_amount_aed", 0) or 0)
-                )
-                if target.amount_aed
-                else 0
+                ((target.amount_aed or 0) - (getattr(target, "paid_amount_aed", 0) or 0)) if target.amount_aed else 0
             ),
         }
         learning_system = AzadLearningSystem()
@@ -412,9 +363,7 @@ def _predict_future_sales(mapper, connection, target):
 
         thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
         recent_sales = connection.execute(
-            Sale.__table__.select().where(
-                Sale.sale_date >= thirty_days_ago, Sale.status == "confirmed"
-            )
+            Sale.__table__.select().where(Sale.sale_date >= thirty_days_ago, Sale.status == "confirmed")
         ).fetchall()
         if len(recent_sales) > 10:
             total_recent = sum(sale.amount_aed or Decimal("0") for sale in recent_sales)
@@ -481,9 +430,7 @@ def _predict_customer_churn(mapper, connection, target):
                 )
             elif days_since_purchase > 60:
                 churn_risk = "medium"
-                logger.info(
-                    f"AI Churn Risk: Customer {target.id} - {days_since_purchase} days inactive - Medium risk"
-                )
+                logger.info(f"AI Churn Risk: Customer {target.id} - {days_since_purchase} days inactive - Medium risk")
             else:
                 churn_risk = "low"
             from ai_knowledge.core.learning_system import AzadLearningSystem
@@ -491,9 +438,7 @@ def _predict_customer_churn(mapper, connection, target):
             learning_system = AzadLearningSystem()
             learning_system.learn_from_interaction(
                 question=f"Customer churn prediction - {target.id}",
-                response=json.dumps(
-                    {"days_inactive": days_since_purchase, "risk": churn_risk}
-                ),
+                response=json.dumps({"days_inactive": days_since_purchase, "risk": churn_risk}),
                 user_feedback=5,
                 context={"type": "predictive_learning", "subtype": "churn_prediction"},
             )
@@ -507,14 +452,10 @@ def _neural_auto_retrain(mapper, connection, target):
         from ai_knowledge.learning.auto_retraining import AutoRetrainingScheduler
         from flask import current_app
 
-        total_sales = connection.execute(
-            Sale.__table__.select().where(Sale.status == "confirmed")
-        ).fetchall()
+        total_sales = connection.execute(Sale.__table__.select().where(Sale.status == "confirmed")).fetchall()
         sales_count = len(total_sales)
         if sales_count % 100 == 0:
-            logger.info(
-                f"Neural Milestone: {sales_count} sales - Checking auto-retraining..."
-            )
+            logger.info(f"Neural Milestone: {sales_count} sales - Checking auto-retraining...")
             try:
                 import threading
 
@@ -537,14 +478,10 @@ def _neural_customer_data(mapper, connection, target):
     try:
         from models import Customer
 
-        total_customers = connection.execute(
-            Customer.__table__.select().where(Customer.is_active)
-        ).fetchall()
+        total_customers = connection.execute(Customer.__table__.select().where(Customer.is_active)).fetchall()
         customers_count = len(total_customers)
         if customers_count % 50 == 0:
-            logger.info(
-                f"Neural: {customers_count} customers - Retraining customer classifier..."
-            )
+            logger.info(f"Neural: {customers_count} customers - Retraining customer classifier...")
     except Exception as e:
         logger.error(f"Neural customer accumulation failed: {e}")
 
@@ -553,13 +490,9 @@ def _neural_inventory_learning(mapper, connection, target):
     try:
         if hasattr(target, "current_stock"):
             if target.current_stock == 0:
-                logger.warning(
-                    f"Neural Alert: Product {target.id} out of stock - Learning from stockout event"
-                )
+                logger.warning(f"Neural Alert: Product {target.id} out of stock - Learning from stockout event")
             elif target.current_stock < target.min_stock_alert:
-                logger.info(
-                    f"Neural: Product {target.id} low stock - Updating demand predictions"
-                )
+                logger.info(f"Neural: Product {target.id} low stock - Updating demand predictions")
     except Exception as e:
         logger.error(f"Neural inventory learning failed: {e}")
 
@@ -597,9 +530,7 @@ def _intelligent_sale_analysis(mapper, connection, target):
         }
         insights = []
         if sale_context["profit_margin"] < 10:
-            insights.append(
-                f"⚠️ هامش ربح منخفض ({sale_context['profit_margin']:.1f}%) - راجع التسعير"
-            )
+            insights.append(f"⚠️ هامش ربح منخفض ({sale_context['profit_margin']:.1f}%) - راجع التسعير")
         elif sale_context["profit_margin"] > 40:
             insights.append(f"✅ هامش ربح ممتاز ({sale_context['profit_margin']:.1f}%)")
         if sale_context["amount"] > 10000:
@@ -607,9 +538,7 @@ def _intelligent_sale_analysis(mapper, connection, target):
         if sale_context["items_count"] > 10:
             insights.append(f"📦 طلبية كبيرة: {sale_context['items_count']} صنف")
         if insights:
-            logger.info(
-                f"Intelligent Insights for Sale {target.sale_number}: {' | '.join(insights)}"
-            )
+            logger.info(f"Intelligent Insights for Sale {target.sale_number}: {' | '.join(insights)}")
     except Exception as e:
         logger.error(f"Intelligent sale analysis failed: {e}")
 
@@ -626,13 +555,9 @@ def _intelligent_customer_monitoring(mapper, connection, target):
         if debt_analysis["success"]:
             debt_info = debt_analysis["debt_analysis"]
             if debt_info["total_debt"] > 10000:
-                logger.warning(
-                    f"High debt alert: Customer {target.id} owes {debt_info['total_debt']:,.0f} AED"
-                )
+                logger.warning(f"High debt alert: Customer {target.id} owes {debt_info['total_debt']:,.0f} AED")
             if debt_info["overdue_count"] > 3:
-                logger.warning(
-                    f"Payment issue: Customer {target.id} has {debt_info['overdue_count']} overdue invoices"
-                )
+                logger.warning(f"Payment issue: Customer {target.id} has {debt_info['overdue_count']} overdue invoices")
     except Exception as e:
         logger.error(f"Intelligent customer monitoring failed: {e}")
 
@@ -642,16 +567,12 @@ def _intelligent_inventory_alert(mapper, connection, target):
         if target.current_stock <= target.min_stock_alert:
             days_until_stockout = 0
             if target.current_stock > 0:
-                days_until_stockout = target.current_stock / (
-                    target.min_stock_alert * 0.1
-                )
+                days_until_stockout = target.current_stock / (target.min_stock_alert * 0.1)
             if days_until_stockout < 7:
                 logger.warning(
                     f"Intelligent Alert: Product {target.id} ({target.name}) will run out in ~{days_until_stockout:.0f} days!"
                 )
-                logger.info(
-                    f"Recommendation: Order at least {target.min_stock_alert * 2:.0f} units"
-                )
+                logger.info(f"Recommendation: Order at least {target.min_stock_alert * 2:.0f} units")
     except Exception as e:
         logger.error(f"Intelligent inventory alert failed: {e}")
 

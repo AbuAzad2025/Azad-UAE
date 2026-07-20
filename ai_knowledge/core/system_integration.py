@@ -39,9 +39,7 @@ class SystemIntegrator:
             if customer_name_or_id.isdigit():
                 customer = Customer.query.get(int(customer_name_or_id))
             else:
-                q = Customer.query.filter(
-                    Customer.name.ilike(f"%{customer_name_or_id}%")
-                )
+                q = Customer.query.filter(Customer.name.ilike(f"%{customer_name_or_id}%"))
                 if tid is not None:
                     q = q.filter(Customer.tenant_id == tid)
                 customer = q.first()
@@ -66,9 +64,7 @@ class SystemIntegrator:
                     "name": customer.name,
                     "balance_aed": float(balance_aed),
                     "total_sales": total_sales,
-                    "last_sale_date": (
-                        last_sale.created_at.strftime("%Y-%m-%d") if last_sale else None
-                    ),
+                    "last_sale_date": (last_sale.created_at.strftime("%Y-%m-%d") if last_sale else None),
                     "customer_type": customer.customer_type,
                     "phone": customer.phone,
                     "email": customer.email,
@@ -88,9 +84,7 @@ class SystemIntegrator:
             if str(supplier_name_or_id).isdigit():
                 supplier = Supplier.query.get(int(supplier_name_or_id))
             else:
-                q = Supplier.query.filter(
-                    Supplier.name.ilike(f"%{supplier_name_or_id}%")
-                )
+                q = Supplier.query.filter(Supplier.name.ilike(f"%{supplier_name_or_id}%"))
                 if tid is not None:
                     q = q.filter(Supplier.tenant_id == tid)
                 supplier = q.first()
@@ -106,9 +100,7 @@ class SystemIntegrator:
             # حساب الرصيد - استخدام الدالة المحدثة
             balance_aed = supplier.get_balance_aed()  # ✅ الدالة الصحيحة
             total_purchases = supplier.purchases.count()
-            last_purchase = supplier.purchases.order_by(
-                Purchase.created_at.desc()
-            ).first()
+            last_purchase = supplier.purchases.order_by(Purchase.created_at.desc()).first()
 
             return {
                 "success": True,
@@ -117,11 +109,7 @@ class SystemIntegrator:
                     "name": supplier.name,
                     "balance_aed": float(balance_aed),
                     "total_purchases": total_purchases,
-                    "last_purchase_date": (
-                        last_purchase.created_at.strftime("%Y-%m-%d")
-                        if last_purchase
-                        else None
-                    ),
+                    "last_purchase_date": (last_purchase.created_at.strftime("%Y-%m-%d") if last_purchase else None),
                     "supplier_type": supplier.supplier_type,
                     "phone": supplier.phone,
                     "email": supplier.email,
@@ -147,16 +135,10 @@ class SystemIntegrator:
 
             if tid is not None:
                 sales = (
-                    Sale.query.filter_by(customer_id=customer.id, tenant_id=tid)
-                    .order_by(Sale.created_at.desc())
-                    .all()
+                    Sale.query.filter_by(customer_id=customer.id, tenant_id=tid).order_by(Sale.created_at.desc()).all()
                 )
             else:
-                sales = (
-                    Sale.query.filter_by(customer_id=customer.id)
-                    .order_by(Sale.created_at.desc())
-                    .all()
-                )
+                sales = Sale.query.filter_by(customer_id=customer.id).order_by(Sale.created_at.desc()).all()
             total_sales = len(sales)
             total_amount = sum(float(sale.total_amount) for sale in sales)
             paid_amount = sum(float(sale.paid_amount) for sale in sales)
@@ -253,8 +235,7 @@ class SystemIntegrator:
 
             tid = _active_tid()
             q = Product.query.filter(
-                (Product.name.ilike(f"%{product_name_or_sku}%"))
-                | (Product.sku.ilike(f"%{product_name_or_sku}%"))
+                (Product.name.ilike(f"%{product_name_or_sku}%")) | (Product.sku.ilike(f"%{product_name_or_sku}%"))
             )
             if tid is not None:
                 q = q.filter(Product.tenant_id == tid)
@@ -277,14 +258,8 @@ class SystemIntegrator:
                     "current_stock": product.current_stock,
                     "alert_limit": product.min_stock_alert,
                     "unit_price": float(product.unit_price),
-                    "category": (
-                        product.category.name if product.category else "غير محدد"
-                    ),
-                    "status": (
-                        "منخفض"
-                        if product.current_stock <= product.min_stock_alert
-                        else "جيد"
-                    ),
+                    "category": (product.category.name if product.category else "غير محدد"),
+                    "status": ("منخفض" if product.current_stock <= product.min_stock_alert else "جيد"),
                 },
             }
 
@@ -306,25 +281,17 @@ class SystemIntegrator:
             vip_customers = base_c.filter(Customer.customer_type == "VIP").count()
 
             total_sales = base_s.count()
-            today_sales = base_s.filter(
-                Sale.created_at >= datetime.now().date()
-            ).count()
+            today_sales = base_s.filter(Sale.created_at >= datetime.now().date()).count()
 
             total_products = base_pr.count()
-            low_stock_products = base_pr.filter(
-                Product.current_stock <= Product.min_stock_alert
-            ).count()
+            low_stock_products = base_pr.filter(Product.current_stock <= Product.min_stock_alert).count()
             out_of_stock_products = base_pr.filter(Product.current_stock == 0).count()
 
             total_payments = base_pm.count()
-            today_payments = base_pm.filter(
-                Payment.created_at >= datetime.now().date()
-            ).count()
+            today_payments = base_pm.filter(Payment.created_at >= datetime.now().date()).count()
 
             recent_sales = base_s.order_by(Sale.created_at.desc()).limit(5).all()
-            recent_customers = (
-                base_c.order_by(Customer.created_at.desc()).limit(5).all()
-            )
+            recent_customers = base_c.order_by(Customer.created_at.desc()).limit(5).all()
 
             return {
                 "success": True,
@@ -348,9 +315,7 @@ class SystemIntegrator:
                         "recent": [
                             {
                                 "id": s.id,
-                                "customer": (
-                                    s.customer.name if s.customer else "غير محدد"
-                                ),
+                                "customer": (s.customer.name if s.customer else "غير محدد"),
                                 "amount": float(s.total_amount),
                                 "date": s.created_at.strftime("%Y-%m-%d %H:%M"),
                             }
@@ -387,20 +352,12 @@ class SystemIntegrator:
             total_payments_amount = base_pay_q.scalar() or Decimal("0")
             total_receivables = total_sales_amount - total_payments_amount
 
-            today_sales = base_sale_q.filter(
-                Sale.created_at >= datetime.now().date()
-            ).scalar() or Decimal("0")
+            today_sales = base_sale_q.filter(Sale.created_at >= datetime.now().date()).scalar() or Decimal("0")
 
-            today_payments = base_pay_q.filter(
-                Payment.created_at >= datetime.now().date()
-            ).scalar() or Decimal("0")
+            today_payments = base_pay_q.filter(Payment.created_at >= datetime.now().date()).scalar() or Decimal("0")
 
-            month_start = datetime.now().replace(
-                day=1, hour=0, minute=0, second=0, microsecond=0
-            )
-            monthly_sales = base_sale_q.filter(
-                Sale.created_at >= month_start
-            ).scalar() or Decimal("0")
+            month_start = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            monthly_sales = base_sale_q.filter(Sale.created_at >= month_start).scalar() or Decimal("0")
 
             return {
                 "success": True,
@@ -429,9 +386,7 @@ class SystemIntegrator:
             base_pr = _maybe_tenant_query(Product)
 
             if data_type in ["all", "customers"]:
-                customers = (
-                    base_c.filter(Customer.name.ilike(f"%{query}%")).limit(10).all()
-                )
+                customers = base_c.filter(Customer.name.ilike(f"%{query}%")).limit(10).all()
 
                 results["customers"] = [
                     {
@@ -446,10 +401,7 @@ class SystemIntegrator:
 
             if data_type in ["all", "products"]:
                 products = (
-                    base_pr.filter(
-                        (Product.name.ilike(f"%{query}%"))
-                        | (Product.sku.ilike(f"%{query}%"))
-                    )
+                    base_pr.filter((Product.name.ilike(f"%{query}%")) | (Product.sku.ilike(f"%{query}%")))
                     .limit(10)
                     .all()
                 )
@@ -470,9 +422,7 @@ class SystemIntegrator:
                 base_s_q = Sale.query.join(Customer)
                 if tid is not None:
                     base_s_q = base_s_q.filter(Sale.tenant_id == tid)
-                sales = (
-                    base_s_q.filter(Customer.name.ilike(f"%{query}%")).limit(10).all()
-                )
+                sales = base_s_q.filter(Customer.name.ilike(f"%{query}%")).limit(10).all()
 
                 results["sales"] = [
                     {

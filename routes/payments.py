@@ -66,9 +66,7 @@ def _resolve_transaction_rate(currency, user_rate=None):
     from utils.currency_utils import resolve_tenant_base_currency
     from utils.tenanting import get_active_tenant_id
 
-    base_currency = resolve_tenant_base_currency(
-        tenant_id=get_active_tenant_id(current_user)
-    )
+    base_currency = resolve_tenant_base_currency(tenant_id=get_active_tenant_id(current_user))
     rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
         currency,
         base_currency,
@@ -100,9 +98,7 @@ def _archived_item_branch_id(archived_record):
 
 def _scoped_customer_balance(customer_id):
     branch_id = _current_branch_id()
-    return float(
-        PaymentService.get_customer_balance_scoped(customer_id, branch_id=branch_id)
-    )
+    return float(PaymentService.get_customer_balance_scoped(customer_id, branch_id=branch_id))
 
 
 def _scoped_customer_unpaid_sales(customer_id):
@@ -163,18 +159,14 @@ def _build_receipts_json_response(paginated_items, pagination):
                 "id": item.get("id"),
                 "type": item.get("type"),
                 "number": item.get("number"),
-                "payment_date": (
-                    item.get("date").isoformat() if item.get("date") else None
-                ),
+                "payment_date": (item.get("date").isoformat() if item.get("date") else None),
                 "total_amount": amount_value,
                 "currency": item.get("currency"),
                 "method": item.get("payment_method"),
                 "direction": direction,
                 "status": _receipt_item_status(item),
                 "notes": item.get("notes") or "",
-                "entity_display": item.get("customer_name")
-                or item.get("supplier_name")
-                or "-",
+                "entity_display": item.get("customer_name") or item.get("supplier_name") or "-",
                 "customer_name": item.get("customer_name"),
                 "supplier_name": item.get("supplier_name"),
                 "source_type": item.get("source_type"),
@@ -227,9 +219,7 @@ def receipts():
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 20, type=int)
     search = request.args.get("search", "", type=str)
-    direction_filter = request.args.get(
-        "direction", "", type=str
-    )  # incoming, outgoing, all
+    direction_filter = request.args.get("direction", "", type=str)  # incoming, outgoing, all
 
     receipts_query = tenant_query(Receipt)
     payments_query = tenant_query(Payment)
@@ -259,19 +249,11 @@ def receipts():
     from models import ArchivedRecord
 
     tid = get_active_tenant_id(current_user)
-    archived_receipts_select = select(ArchivedRecord.record_id).where(
-        ArchivedRecord.table_name == "receipts"
-    )
-    archived_payments_select = select(ArchivedRecord.record_id).where(
-        ArchivedRecord.table_name == "payments"
-    )
+    archived_receipts_select = select(ArchivedRecord.record_id).where(ArchivedRecord.table_name == "receipts")
+    archived_payments_select = select(ArchivedRecord.record_id).where(ArchivedRecord.table_name == "payments")
     if tid is not None:
-        archived_receipts_select = archived_receipts_select.where(
-            ArchivedRecord.tenant_id == tid
-        )
-        archived_payments_select = archived_payments_select.where(
-            ArchivedRecord.tenant_id == tid
-        )
+        archived_receipts_select = archived_receipts_select.where(ArchivedRecord.tenant_id == tid)
+        archived_payments_select = archived_payments_select.where(ArchivedRecord.tenant_id == tid)
 
     receipts_query = receipts_query.filter(Receipt.id.notin_(archived_receipts_select))
     payments_query = payments_query.filter(Payment.id.notin_(archived_payments_select))
@@ -287,12 +269,8 @@ def receipts():
         payments_query = payments_query.filter(Payment.branch_id == branch_id)
     fetch_limit = max(page * per_page, per_page)
     total = receipts_query.count() + payments_query.count()
-    all_receipts = (
-        receipts_query.order_by(Receipt.receipt_date.desc()).limit(fetch_limit).all()
-    )
-    all_payments = (
-        payments_query.order_by(Payment.payment_date.desc()).limit(fetch_limit).all()
-    )
+    all_receipts = receipts_query.order_by(Receipt.receipt_date.desc()).limit(fetch_limit).all()
+    all_payments = payments_query.order_by(Payment.payment_date.desc()).limit(fetch_limit).all()
 
     combined_items = []
 
@@ -366,9 +344,7 @@ def receipts():
             self.prev_num = page - 1 if self.has_prev else None
             self.next_num = page + 1 if self.has_next else None
 
-        def iter_pages(
-            self, left_edge=1, right_edge=1, left_current=2, right_current=2
-        ):
+        def iter_pages(self, left_edge=1, right_edge=1, left_current=2, right_current=2):
             last = 0
             for num in range(1, self.pages + 1):
                 if (
@@ -381,14 +357,9 @@ def receipts():
                     yield num
                     last = num
 
-    pagination = SimplePagination(
-        page=page, per_page=per_page, total=total, items=paginated_items
-    )
+    pagination = SimplePagination(page=page, per_page=per_page, total=total, items=paginated_items)
 
-    wants_json = (
-        request.args.get("format") == "json"
-        or request.accept_mimetypes.best == "application/json"
-    )
+    wants_json = request.args.get("format") == "json" or request.accept_mimetypes.best == "application/json"
     if wants_json:
         return _build_receipts_json_response(paginated_items, pagination)
 
@@ -473,9 +444,7 @@ def view_payment(**kwargs):
     payment_branch_id = payment.branch_id
     if not _in_scope_branch(payment_branch_id):
         return render_template("errors/403.html"), 403
-    return render_template(
-        "payments/view_receipt.html", receipt=payment, is_payment=True
-    )
+    return render_template("payments/view_receipt.html", receipt=payment, is_payment=True)
 
 
 @payments_bp.route("/payments/<int:id>/print")
@@ -496,11 +465,7 @@ def print_payment(**kwargs):
     tid = getattr(payment, "tenant_id", None)
     tenant, settings, company = InvoiceSettings.company_print_context(tid)
     print_branding = get_print_header_context(tid)
-    print_branch = (
-        Branch.query.filter_by(id=payment_branch_id, tenant_id=tid).first()
-        if payment_branch_id
-        else None
-    )
+    print_branch = Branch.query.filter_by(id=payment_branch_id, tenant_id=tid).first() if payment_branch_id else None
     try:
         default_currency = resolve_default_currency(tenant)
     except Exception:
@@ -514,20 +479,14 @@ def print_payment(**kwargs):
             else (payment.user.username if payment.user else "")
         )
     )
-    amount_in_words = number_to_arabic_words(
-        float(payment.amount or 0), payment.currency or default_currency
-    )
+    amount_in_words = number_to_arabic_words(float(payment.amount or 0), payment.currency or default_currency)
     qr_data_url = ""
     if settings and settings.enable_qr_code:
         from services.document_verification_service import DocumentVerificationService
 
-        ver = DocumentVerificationService.get_or_create_verification(
-            "payment", payment.id, tid
-        )
+        ver = DocumentVerificationService.get_or_create_verification("payment", payment.id, tid)
         if ver:
-            ver_url = url_for(
-                "public.verify_document", token=ver.public_token, _external=True
-            )
+            ver_url = url_for("public.verify_document", token=ver.public_token, _external=True)
             qr_data_url = generate_qr_data_url(ver_url)
         else:
             qr_data_url = generate_qr_data_url(
@@ -536,11 +495,7 @@ def print_payment(**kwargs):
                     "n": payment.payment_number,
                     "a": float(payment.amount or 0),
                     "c": payment.currency or default_currency,
-                    "d": (
-                        payment.payment_date.strftime("%Y-%m-%d")
-                        if payment.payment_date
-                        else ""
-                    ),
+                    "d": (payment.payment_date.strftime("%Y-%m-%d") if payment.payment_date else ""),
                     "co": company.get("name_ar") or (tenant.name_ar if tenant else ""),
                     "u": print_user_name,
                     "b": print_branch.name if print_branch else "",
@@ -579,9 +534,7 @@ def archive_payment(**kwargs):
     try:
         archive_service = ArchiveService()
         with atomic_transaction("payment_archive"):
-            archive_service.archive_record(
-                "payments", payment, reason=gettext("تم أرشفة سند الصرف")
-            )
+            archive_service.archive_record("payments", payment, reason=gettext("تم أرشفة سند الصرف"))
             LoggingCore.log_audit("archive", "payments", payment.id)
 
     except Exception as e:
@@ -601,9 +554,7 @@ def restore_payment(**kwargs):
 
     record_id = kwargs.pop("id")
     tid = get_active_tenant_id(current_user)
-    archived_query = ArchivedRecord.query.filter_by(
-        table_name="payments", record_id=record_id
-    )
+    archived_query = ArchivedRecord.query.filter_by(table_name="payments", record_id=record_id)
     if tid is not None:
         archived_query = archived_query.filter(ArchivedRecord.tenant_id == tid)
     archived = archived_query.first_or_404()
@@ -647,16 +598,12 @@ def create_from_sale(sale_id):
         try:
             amount = request.form.get("amount", type=float)
             try:
-                default_currency = (
-                    sale.currency or ""
-                ).strip() or resolve_default_currency()
+                default_currency = (sale.currency or "").strip() or resolve_default_currency()
             except Exception as e:
                 import sys
                 import traceback
 
-                sys.stderr.write(
-                    f"[PAYMENTS_WARNING] Failed to get tenant default currency: {e}\n"
-                )
+                sys.stderr.write(f"[PAYMENTS_WARNING] Failed to get tenant default currency: {e}\n")
                 traceback.print_exc()
                 try:
                     LoggingCore.log_error(
@@ -667,12 +614,8 @@ def create_from_sale(sale_id):
                         exception=e,
                     )
                 except Exception:
-                    current_app.logger.exception(
-                        "Failed to log currency resolution error for sale payment"
-                    )
-                default_currency = (
-                    sale.currency or ""
-                ).strip() or resolve_default_currency()
+                    current_app.logger.exception("Failed to log currency resolution error for sale payment")
+                default_currency = (sale.currency or "").strip() or resolve_default_currency()
             currency = request.form.get("currency") or default_currency
             user_exchange_rate = request.form.get("exchange_rate", type=float)
             payment_method_value = (request.form.get("payment_method") or "").strip()
@@ -747,17 +690,13 @@ def create_voucher():
     customers = _scoped_customers_query().order_by(Customer.name).all()
     suppliers = _scoped_suppliers_query().order_by(Supplier.name).all()
 
-    customers_data = [
-        {"id": c.id, "name": c.name, "type": c.customer_type} for c in customers
-    ]
+    customers_data = [{"id": c.id, "name": c.name, "type": c.customer_type} for c in customers]
 
     suppliers_data = [{"id": s.id, "name": s.name} for s in suppliers]
 
     preselected_direction = request.args.get("direction", "incoming")
     preselected_party_type = request.args.get("party_type", "customer")
-    preselected_party_id = request.args.get("party_id", type=int) or request.args.get(
-        "customer_id", type=int
-    )
+    preselected_party_id = request.args.get("party_id", type=int) or request.args.get("customer_id", type=int)
     preselected_amount = request.args.get("amount", type=float)
     preselected_currency = request.args.get("currency")
     preselected_exchange_rate = request.args.get("exchange_rate", type=float)
@@ -797,9 +736,7 @@ def create_voucher_submit():
             import sys
             import traceback
 
-            sys.stderr.write(
-                f"[PAYMENTS_WARNING] Failed to get tenant default currency (voucher submit): {e}\n"
-            )
+            sys.stderr.write(f"[PAYMENTS_WARNING] Failed to get tenant default currency (voucher submit): {e}\n")
             traceback.print_exc()
             try:
                 LoggingCore.log_error(
@@ -810,9 +747,7 @@ def create_voucher_submit():
                     exception=e,
                 )
             except Exception:
-                current_app.logger.exception(
-                    "Failed to log currency resolution error for voucher submit"
-                )
+                current_app.logger.exception("Failed to log currency resolution error for voucher submit")
             default_currency = get_system_default_currency()
         currency = request.form.get("currency") or default_currency
         user_exchange_rate = request.form.get("exchange_rate", type=float, default=1.0)
@@ -838,9 +773,7 @@ def create_voucher_submit():
                     "user_exchange_rate": user_exchange_rate,
                     "payment_method": payment_method,
                     "notes": notes,
-                    "cheque_number": (
-                        cheque_number if payment_method == "cheque" else None
-                    ),
+                    "cheque_number": (cheque_number if payment_method == "cheque" else None),
                     "cheque_date": cheque_date if payment_method == "cheque" else None,
                     "bank_name": bank_name if payment_method == "cheque" else None,
                     "branch_id": branch_id,
@@ -865,9 +798,7 @@ def create_voucher_submit():
                 if not supplier:
                     flash(gettext("المورد المحدد خارج نطاق الفرع الحالي"), "danger")
                     return redirect(url_for("payments.create_voucher"))
-                tenant_id = getattr(
-                    supplier, "tenant_id", None
-                ) or get_active_tenant_id(current_user)
+                tenant_id = getattr(supplier, "tenant_id", None) or get_active_tenant_id(current_user)
                 with atomic_transaction("supplier_refund_creation"):
                     payment = Payment(
                         tenant_id=tenant_id,
@@ -888,9 +819,7 @@ def create_voucher_submit():
                         amount_aed=amount_aed,
                         payment_method=payment_method,
                         notes=notes,
-                        cheque_number=(
-                            cheque_number if payment_method == "cheque" else None
-                        ),
+                        cheque_number=(cheque_number if payment_method == "cheque" else None),
                         cheque_date=cheque_date if payment_method == "cheque" else None,
                         bank_name=bank_name if payment_method == "cheque" else None,
                         user_id=current_user.id,
@@ -910,21 +839,15 @@ def create_voucher_submit():
                         [
                             {
                                 "account": credit_account,
-                                "concept_code": GLService.get_payment_debit_concept(
-                                    payment_method
-                                ),
+                                "concept_code": GLService.get_payment_debit_concept(payment_method),
                                 "debit": payment.amount,
-                                "description": gettext(
-                                    f"استرداد من مورد {supplier.name}"
-                                ),
+                                "description": gettext(f"استرداد من مورد {supplier.name}"),
                             },
                             {
                                 "account": "2110",
                                 "concept_code": "AP",
                                 "credit": payment.amount,
-                                "description": gettext(
-                                    f"سند قبض {payment.payment_number}"
-                                ),
+                                "description": gettext(f"سند قبض {payment.payment_number}"),
                             },
                         ],
                         description=f"Supplier refund {payment.payment_number}",
@@ -955,9 +878,7 @@ def create_voucher_submit():
                 if not supplier:
                     flash(gettext("المورد المحدد خارج نطاق الفرع الحالي"), "danger")
                     return redirect(url_for("payments.create_voucher"))
-                tenant_id = getattr(
-                    supplier, "tenant_id", None
-                ) or get_active_tenant_id(current_user)
+                tenant_id = getattr(supplier, "tenant_id", None) or get_active_tenant_id(current_user)
                 with atomic_transaction("supplier_payment_creation"):
                     payment = Payment(
                         tenant_id=tenant_id,
@@ -978,9 +899,7 @@ def create_voucher_submit():
                         amount_aed=amount_aed,
                         payment_method=payment_method,
                         notes=notes,
-                        cheque_number=(
-                            cheque_number if payment_method == "cheque" else None
-                        ),
+                        cheque_number=(cheque_number if payment_method == "cheque" else None),
                         cheque_date=cheque_date if payment_method == "cheque" else None,
                         bank_name=bank_name if payment_method == "cheque" else None,
                         user_id=current_user.id,
@@ -1004,9 +923,7 @@ def create_voucher_submit():
                             exchange_rate=payment.exchange_rate,
                             amount_aed=payment.amount_aed,
                             issue_date=(
-                                datetime.strptime(date_str, "%Y-%m-%d").date()
-                                if date_str
-                                else datetime.now().date()
+                                datetime.strptime(date_str, "%Y-%m-%d").date() if date_str else datetime.now().date()
                             ),
                             due_date=(
                                 datetime.strptime(cheque_date, "%Y-%m-%d").date()
@@ -1041,19 +958,13 @@ def create_voucher_submit():
                                 "account": "2110",
                                 "concept_code": "AP",
                                 "debit": payment.amount,
-                                "description": gettext(
-                                    f"سداد للمورد {payment.supplier_name}"
-                                ),
+                                "description": gettext(f"سداد للمورد {payment.supplier_name}"),
                             },
                             {
                                 "account": credit_account,
-                                "concept_code": GLService.get_payment_credit_concept(
-                                    payment_method
-                                ),
+                                "concept_code": GLService.get_payment_credit_concept(payment_method),
                                 "credit": payment.amount,
-                                "description": gettext(
-                                    f"سند صرف {payment.payment_number}"
-                                ),
+                                "description": gettext(f"سند صرف {payment.payment_number}"),
                             },
                         ]
                         post_or_fail(
@@ -1078,9 +989,7 @@ def create_voucher_submit():
                 if not customer:
                     flash(gettext("العميل المحدد خارج نطاق الفرع الحالي"), "danger")
                     return redirect(url_for("payments.create_voucher"))
-                tenant_id = getattr(
-                    customer, "tenant_id", None
-                ) or get_active_tenant_id(current_user)
+                tenant_id = getattr(customer, "tenant_id", None) or get_active_tenant_id(current_user)
                 with atomic_transaction("customer_refund_creation"):
                     payment = Payment(
                         tenant_id=tenant_id,
@@ -1100,9 +1009,7 @@ def create_voucher_submit():
                         amount_aed=amount_aed,
                         payment_method=payment_method,
                         notes=notes,
-                        cheque_number=(
-                            cheque_number if payment_method == "cheque" else None
-                        ),
+                        cheque_number=(cheque_number if payment_method == "cheque" else None),
                         cheque_date=cheque_date if payment_method == "cheque" else None,
                         bank_name=bank_name if payment_method == "cheque" else None,
                         user_id=current_user.id,
@@ -1126,9 +1033,7 @@ def create_voucher_submit():
                             exchange_rate=payment.exchange_rate,
                             amount_aed=payment.amount_aed,
                             issue_date=(
-                                datetime.strptime(date_str, "%Y-%m-%d").date()
-                                if date_str
-                                else datetime.now().date()
+                                datetime.strptime(date_str, "%Y-%m-%d").date() if date_str else datetime.now().date()
                             ),
                             due_date=(
                                 datetime.strptime(cheque_date, "%Y-%m-%d").date()
@@ -1166,21 +1071,15 @@ def create_voucher_submit():
                         lines = [
                             {
                                 "account": debit_account,
-                                "concept_code": GLService.get_customer_credit_concept(
-                                    customer
-                                ),
+                                "concept_code": GLService.get_customer_credit_concept(customer),
                                 "debit": payment.amount,
                                 "description": gettext(f"سداد/سحب {customer.name}"),
                             },
                             {
                                 "account": credit_account,
-                                "concept_code": GLService.get_payment_credit_concept(
-                                    payment_method
-                                ),
+                                "concept_code": GLService.get_payment_credit_concept(payment_method),
                                 "credit": payment.amount,
-                                "description": gettext(
-                                    f"سند صرف {payment.payment_number}"
-                                ),
+                                "description": gettext(f"سند صرف {payment.payment_number}"),
                             },
                         ]
                         post_or_fail(
@@ -1235,11 +1134,7 @@ def view_receipt(**kwargs):
     if not _in_scope_branch(receipt_branch_id):
         return render_template("errors/403.html"), 403
 
-    if (
-        current_user.is_seller()
-        and not current_user.is_owner
-        and receipt.user_id != current_user.id
-    ):
+    if current_user.is_seller() and not current_user.is_owner and receipt.user_id != current_user.id:
         flash(gettext("ليس لديك صلاحية لعرض هذا السند"), "danger")
         return redirect(url_for("payments.receipts"))
 
@@ -1269,11 +1164,7 @@ def print_receipt(**kwargs):
     if not _in_scope_branch(receipt_branch_id):
         return render_template("errors/403.html"), 403
 
-    if (
-        current_user.is_seller()
-        and not current_user.is_owner
-        and receipt.user_id != current_user.id
-    ):
+    if current_user.is_seller() and not current_user.is_owner and receipt.user_id != current_user.id:
         flash(gettext("ليس لديك صلاحية لطباعة هذا السند"), "danger")
         return redirect(url_for("payments.receipts"))
 
@@ -1283,19 +1174,13 @@ def print_receipt(**kwargs):
     settings = InvoiceSettings.get_active(tid)
     print_branding = get_print_header_context(tid)
 
-    template = (
-        settings.active_template if settings and settings.active_template else "modern"
-    )
+    template = settings.active_template if settings and settings.active_template else "modern"
     template_path = f"receipts/{template}.html"
 
     from models import Branch
 
     tenant, settings, company = InvoiceSettings.company_print_context(tid)
-    print_branch = (
-        Branch.query.filter_by(id=receipt_branch_id, tenant_id=tid).first()
-        if receipt_branch_id
-        else None
-    )
+    print_branch = Branch.query.filter_by(id=receipt_branch_id, tenant_id=tid).first() if receipt_branch_id else None
     try:
         default_currency = resolve_default_currency(tenant)
     except Exception:
@@ -1309,20 +1194,14 @@ def print_receipt(**kwargs):
             else (receipt.user.username if receipt.user else "")
         )
     )
-    amount_in_words = number_to_arabic_words(
-        float(receipt.amount or 0), receipt.currency or default_currency
-    )
+    amount_in_words = number_to_arabic_words(float(receipt.amount or 0), receipt.currency or default_currency)
     qr_data_url = ""
     if settings and settings.enable_qr_code:
         from services.document_verification_service import DocumentVerificationService
 
-        ver = DocumentVerificationService.get_or_create_verification(
-            "receipt", receipt.id, tid
-        )
+        ver = DocumentVerificationService.get_or_create_verification("receipt", receipt.id, tid)
         if ver:
-            ver_url = url_for(
-                "public.verify_document", token=ver.public_token, _external=True
-            )
+            ver_url = url_for("public.verify_document", token=ver.public_token, _external=True)
             qr_data_url = generate_qr_data_url(ver_url)
         else:
             qr_data_url = generate_qr_data_url(
@@ -1331,11 +1210,7 @@ def print_receipt(**kwargs):
                     "n": receipt.receipt_number,
                     "a": float(receipt.amount or 0),
                     "c": receipt.currency or default_currency,
-                    "d": (
-                        receipt.receipt_date.strftime("%Y-%m-%d")
-                        if receipt.receipt_date
-                        else ""
-                    ),
+                    "d": (receipt.receipt_date.strftime("%Y-%m-%d") if receipt.receipt_date else ""),
                     "co": company.get("name_ar") or (tenant.name_ar if tenant else ""),
                     "u": print_user_name,
                     "b": print_branch.name if print_branch else "",
@@ -1360,9 +1235,7 @@ def print_receipt(**kwargs):
         import sys
         import traceback
 
-        sys.stderr.write(
-            f"[PAYMENTS_WARNING] Failed to render custom receipt template, falling back to modern: {e}\n"
-        )
+        sys.stderr.write(f"[PAYMENTS_WARNING] Failed to render custom receipt template, falling back to modern: {e}\n")
         traceback.print_exc()
         try:
             LoggingCore.log_error(
@@ -1373,9 +1246,7 @@ def print_receipt(**kwargs):
                 exception=e,
             )
         except Exception:
-            current_app.logger.exception(
-                "Failed to log receipt template rendering error"
-            )
+            current_app.logger.exception("Failed to log receipt template rendering error")
         return render_template(
             "receipts/modern.html",
             receipt=receipt,
@@ -1401,20 +1272,12 @@ def archived_receipts():
 
     tid = get_active_tenant_id(current_user)
 
-    archived_receipts_query = db.session.query(ArchivedRecord).filter(
-        ArchivedRecord.table_name == "receipts"
-    )
+    archived_receipts_query = db.session.query(ArchivedRecord).filter(ArchivedRecord.table_name == "receipts")
     if tid is not None:
-        archived_receipts_query = archived_receipts_query.filter(
-            ArchivedRecord.tenant_id == tid
-        )
-    archived_payments_query = db.session.query(ArchivedRecord).filter(
-        ArchivedRecord.table_name == "payments"
-    )
+        archived_receipts_query = archived_receipts_query.filter(ArchivedRecord.tenant_id == tid)
+    archived_payments_query = db.session.query(ArchivedRecord).filter(ArchivedRecord.table_name == "payments")
     if tid is not None:
-        archived_payments_query = archived_payments_query.filter(
-            ArchivedRecord.tenant_id == tid
-        )
+        archived_payments_query = archived_payments_query.filter(ArchivedRecord.tenant_id == tid)
 
     archived_items = []
 
@@ -1427,9 +1290,7 @@ def archived_receipts():
                 "id": archived.record_id,
                 "number": data.get("receipt_number"),
                 "date": (
-                    datetime.fromisoformat(
-                        data.get("receipt_date").replace("Z", "+00:00")
-                    )
+                    datetime.fromisoformat(data.get("receipt_date").replace("Z", "+00:00"))
                     if isinstance(data.get("receipt_date"), str)
                     else data.get("receipt_date")
                 ),
@@ -1453,9 +1314,7 @@ def archived_receipts():
                 "id": archived.record_id,
                 "number": data.get("payment_number"),
                 "date": (
-                    datetime.fromisoformat(
-                        data.get("payment_date").replace("Z", "+00:00")
-                    )
+                    datetime.fromisoformat(data.get("payment_date").replace("Z", "+00:00"))
                     if isinstance(data.get("payment_date"), str)
                     else data.get("payment_date")
                 ),
@@ -1490,9 +1349,7 @@ def archive_receipt(**kwargs):
     try:
         with atomic_transaction("receipt_archive"):
             archive_service = ArchiveService()
-            archive_service.archive_record(
-                "receipts", receipt, reason=gettext("تم أرشفة سند القبض")
-            )
+            archive_service.archive_record("receipts", receipt, reason=gettext("تم أرشفة سند القبض"))
             LoggingCore.log_audit("archive", "receipts", receipt.id)
     except Exception:
         current_app.logger.exception("Failed to archive receipt %s", record_id)
@@ -1553,9 +1410,7 @@ def delete_receipt(**kwargs):
             if receipt.source_type == "sale" and receipt.source_id:
                 from models import Sale
 
-                sale = Sale.query.filter_by(
-                    id=receipt.source_id, tenant_id=receipt.tenant_id
-                ).first()
+                sale = Sale.query.filter_by(id=receipt.source_id, tenant_id=receipt.tenant_id).first()
                 if sale:
                     sale.paid_amount -= receipt.amount
                     sale.paid_amount_aed -= receipt.amount_aed
@@ -1577,9 +1432,7 @@ def delete_receipt(**kwargs):
 
             if has_links:
                 archive_service = ArchiveService()
-                archive_service.archive_record(
-                    "receipts", receipt, reason=gettext("تم أرشفة السند لوجود ارتباطات")
-                )
+                archive_service.archive_record("receipts", receipt, reason=gettext("تم أرشفة السند لوجود ارتباطات"))
 
                 if receipt.cheque:
                     archive_service.archive_record(
@@ -1590,9 +1443,7 @@ def delete_receipt(**kwargs):
 
                 LoggingCore.log_audit("archive", "receipts", record_id)
                 flash(
-                    gettext(
-                        f'تم أرشفة سند القبض "{receipt.receipt_number}" (لوجود حركات مرتبطة)'
-                    ),
+                    gettext(f'تم أرشفة سند القبض "{receipt.receipt_number}" (لوجود حركات مرتبطة)'),
                     "warning",
                 )
             else:
@@ -1644,9 +1495,7 @@ def delete_payment(**kwargs):
         with atomic_transaction("payment_delete"):
             if has_links:
                 archive_service = ArchiveService()
-                archive_service.archive_record(
-                    "payments", payment, reason=gettext("تم أرشفة السند لوجود ارتباطات")
-                )
+                archive_service.archive_record("payments", payment, reason=gettext("تم أرشفة السند لوجود ارتباطات"))
 
                 if payment.cheque:
                     archive_service.archive_record(
@@ -1657,9 +1506,7 @@ def delete_payment(**kwargs):
 
                 LoggingCore.log_audit("archive", "payments", record_id)
                 flash(
-                    gettext(
-                        f'تم أرشفة سند الصرف "{payment.payment_number}" (لوجود حركات مرتبطة)'
-                    ),
+                    gettext(f'تم أرشفة سند الصرف "{payment.payment_number}" (لوجود حركات مرتبطة)'),
                     "warning",
                 )
             else:
@@ -1675,9 +1522,7 @@ def delete_payment(**kwargs):
                 if payment.supplier_id:
                     from models import Supplier
 
-                    supplier = Supplier.query.filter_by(
-                        id=payment.supplier_id, tenant_id=payment.tenant_id
-                    ).first()
+                    supplier = Supplier.query.filter_by(id=payment.supplier_id, tenant_id=payment.tenant_id).first()
                     if supplier:
                         supplier.apply_payment(-Decimal(str(payment.amount_aed or 0)))
 
@@ -1710,11 +1555,7 @@ def create_payment(purchase_id):
     purchase = tenant_get_or_404(Purchase, purchase_id)
     if not _in_scope_branch(purchase.branch_id):
         return render_template("errors/403.html"), 403
-    supplier = (
-        tenant_get(Supplier, purchase.supplier_id, or_404=False)
-        if purchase.supplier_id
-        else None
-    )
+    supplier = tenant_get(Supplier, purchase.supplier_id, or_404=False) if purchase.supplier_id else None
 
     paid_amount = (
         db.session.query(func.sum(Payment.amount_aed))
@@ -1767,13 +1608,9 @@ def create_payment(purchase_id):
                     form_data=request.form,
                 )
             notes = request.form.get("notes", "")
-            user_exchange_rate = request.form.get(
-                "exchange_rate", type=float, default=1.0
-            )
+            user_exchange_rate = request.form.get("exchange_rate", type=float, default=1.0)
             try:
-                default_currency = (
-                    purchase.currency or ""
-                ).strip() or resolve_default_currency()
+                default_currency = (purchase.currency or "").strip() or resolve_default_currency()
             except Exception as e:
                 import sys
                 import traceback
@@ -1791,12 +1628,8 @@ def create_payment(purchase_id):
                         exception=e,
                     )
                 except Exception:
-                    current_app.logger.exception(
-                        "Failed to log currency resolution error for purchase payment"
-                    )
-                default_currency = (
-                    purchase.currency or ""
-                ).strip() or get_system_default_currency()
+                    current_app.logger.exception("Failed to log currency resolution error for purchase payment")
+                default_currency = (purchase.currency or "").strip() or get_system_default_currency()
             currency = request.form.get("currency") or default_currency
 
             reference_number = request.form.get("reference_number")
@@ -1813,27 +1646,19 @@ def create_payment(purchase_id):
                     gettext("المبلغ غير صحيح.\nتحقق من الصيغة الصحيحة وحاول مرة أخرى."),
                     "danger",
                 )
-                return redirect(
-                    url_for("payments.create_payment", purchase_id=purchase_id)
-                )
+                return redirect(url_for("payments.create_payment", purchase_id=purchase_id))
 
             amount_decimal = Decimal(str(amount))
-            exchange_rate_decimal = _resolve_transaction_rate(
-                currency, user_exchange_rate
-            )
+            exchange_rate_decimal = _resolve_transaction_rate(currency, user_exchange_rate)
             amount_aed = amount_decimal * exchange_rate_decimal
             if amount_aed > Decimal(str(balance_aed)):
                 flash(
                     gettext("المبلغ غير صحيح.\nتحقق من الصيغة الصحيحة وحاول مرة أخرى."),
                     "danger",
                 )
-                return redirect(
-                    url_for("payments.create_payment", purchase_id=purchase_id)
-                )
+                return redirect(url_for("payments.create_payment", purchase_id=purchase_id))
 
-            tenant_id = getattr(purchase, "tenant_id", None) or get_active_tenant_id(
-                current_user
-            )
+            tenant_id = getattr(purchase, "tenant_id", None) or get_active_tenant_id(current_user)
             with atomic_transaction("purchase_payment_creation"):
                 payment_number = generate_number(
                     "PAY",
@@ -1862,15 +1687,11 @@ def create_payment(purchase_id):
 
                 if payment_method_value == "bank_transfer":
                     payment.bank_name = bank_name_transfer or bank_name
-                    payment.reference_number = (
-                        reference_number_transfer or reference_number
-                    )
+                    payment.reference_number = reference_number_transfer or reference_number
                 elif payment_method_value == "card":
                     payment.reference_number = reference_number_card or reference_number
                     if card_last4:
-                        payment.notes = gettext(
-                            f"{payment.notes or ''} بطاقة آخر 4: {card_last4}"
-                        ).strip()
+                        payment.notes = gettext(f"{payment.notes or ''} بطاقة آخر 4: {card_last4}").strip()
                 elif payment_method_value == "e_wallet":
                     from flask import request as _req
 
@@ -1924,15 +1745,11 @@ def create_payment(purchase_id):
                             "account": "2110",
                             "concept_code": "AP",
                             "debit": payment.amount,
-                            "description": gettext(
-                                f"سداد للمورد {payment.supplier_name}"
-                            ),
+                            "description": gettext(f"سداد للمورد {payment.supplier_name}"),
                         },
                         {
                             "account": cash_or_bank,
-                            "concept_code": GLService.get_payment_credit_concept(
-                                payment_method_value
-                            ),
+                            "concept_code": GLService.get_payment_credit_concept(payment_method_value),
                             "credit": payment.amount,
                             "description": gettext(f"سند صرف {payment.payment_number}"),
                         },
@@ -1983,9 +1800,7 @@ def api_customer_balance(customer_id):
     for sale in unpaid_sales:
         sale_rate = float(sale.exchange_rate or 1)
         balance_due_aed = float(sale.balance_due or 0)
-        if (
-            sale.currency or default_currency
-        ) != get_system_default_currency() and sale_rate > 0:
+        if (sale.currency or default_currency) != get_system_default_currency() and sale_rate > 0:
             balance_due_display = balance_due_aed / sale_rate
         else:
             balance_due_display = balance_due_aed

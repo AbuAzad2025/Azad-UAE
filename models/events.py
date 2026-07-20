@@ -34,9 +34,7 @@ def register_all_listeners():
         register_ai_listeners()
         register_neural_training_listeners()
     else:
-        logger.info(
-            "AI ORM listeners skipped (AI_ORM_LISTENERS_ENABLED=false or production default)"
-        )
+        logger.info("AI ORM listeners skipped (AI_ORM_LISTENERS_ENABLED=false or production default)")
     register_automatic_gl_listeners()
     logger.info(
         "[OK] Event listeners registered (core + validation + audit; AI=%s)",
@@ -53,9 +51,7 @@ def register_sale_listeners():
         if not target.is_active or target.status == "cancelled":
             return
         try:
-            logger.debug(
-                f"Sale {target.sale_number} changed for customer {target.customer_id}"
-            )
+            logger.debug(f"Sale {target.sale_number} changed for customer {target.customer_id}")
         except Exception:
             try:
                 logger.debug("Sale after_insert event listener failed", exc_info=True)
@@ -84,9 +80,7 @@ def register_receipt_listeners():
 
     @event.listens_for(Receipt, "before_delete")
     def _h2(mapper, connection, target):
-        logger.warning(
-            f"Attempted to delete receipt {target.receipt_number} - use cancellation instead"
-        )
+        logger.warning(f"Attempted to delete receipt {target.receipt_number} - use cancellation instead")
 
 
 def register_purchase_listeners():
@@ -98,14 +92,10 @@ def register_purchase_listeners():
         if target.status == "cancelled":
             return
         try:
-            logger.debug(
-                f"Purchase {target.purchase_number} changed for supplier {target.supplier_id}"
-            )
+            logger.debug(f"Purchase {target.purchase_number} changed for supplier {target.supplier_id}")
         except Exception:
             try:
-                logger.debug(
-                    "Purchase after_insert event listener failed", exc_info=True
-                )
+                logger.debug("Purchase after_insert event listener failed", exc_info=True)
             except Exception:
                 pass
 
@@ -165,9 +155,7 @@ def register_product_return_listeners():
     def _h(mapper, connection, target):
         try:
             if target.status == "approved":
-                logger.info(
-                    f"Product return {target.return_number} approved - stock will be updated via StockMovement"
-                )
+                logger.info(f"Product return {target.return_number} approved - stock will be updated via StockMovement")
         except Exception as e:
             logger.error(f"Failed to process product return: {e}")
 
@@ -180,9 +168,7 @@ def register_expense_listeners():
     def _h(mapper, connection, target):
         try:
             if target.is_active:
-                logger.info(
-                    f"Expense recorded: {target.amount_aed} AED - Category: {target.category_id}"
-                )
+                logger.info(f"Expense recorded: {target.amount_aed} AED - Category: {target.category_id}")
         except Exception as e:
             logger.error(f"Failed to log expense: {e}")
 
@@ -204,21 +190,15 @@ def register_audit_listeners():
 
     @event.listens_for(Sale, "after_delete")
     def _h1(mapper, connection, target):
-        logger.warning(
-            f"DELETED: Sale {target.sale_number} - Amount: {target.amount_aed} AED"
-        )
+        logger.warning(f"DELETED: Sale {target.sale_number} - Amount: {target.amount_aed} AED")
 
     @event.listens_for(Purchase, "after_delete")
     def _h2(mapper, connection, target):
-        logger.warning(
-            f"DELETED: Purchase {target.purchase_number} - Amount: {target.amount_aed} AED"
-        )
+        logger.warning(f"DELETED: Purchase {target.purchase_number} - Amount: {target.amount_aed} AED")
 
     @event.listens_for(Receipt, "after_delete")
     def _h3(mapper, connection, target):
-        logger.warning(
-            f"DELETED: Receipt {target.receipt_number} - Amount: {target.amount_aed} AED"
-        )
+        logger.warning(f"DELETED: Receipt {target.receipt_number} - Amount: {target.amount_aed} AED")
 
     @event.listens_for(Payment, "after_delete")
     def _h4(mapper, connection, target):
@@ -238,9 +218,7 @@ def register_neural_training_listeners():
 
 
 def register_automatic_gl_listeners():
-    logger.info(
-        "Automatic GL listeners skipped - relying on Service layer for accurate GL entries"
-    )
+    logger.info("Automatic GL listeners skipped - relying on Service layer for accurate GL entries")
 
 
 def register_advanced_sale_listener():
@@ -267,17 +245,13 @@ def register_advanced_sale_listener():
                 )
             ).fetchall()
             new_balance = sum(
-                (sale.amount_aed or Decimal("0"))
-                - (sale.paid_amount_aed or Decimal("0"))
-                for sale in sales
+                (sale.amount_aed or Decimal("0")) - (sale.paid_amount_aed or Decimal("0")) for sale in sales
             )
             connection.execute(
                 Customer.__table__.update()
                 .where(Customer.id == target.customer_id)
                 .values(balance=new_balance, updated_at=datetime.now(timezone.utc))
             )
-            logger.info(
-                f"Auto-updated customer {target.customer_id} balance to {new_balance} AED"
-            )
+            logger.info(f"Auto-updated customer {target.customer_id} balance to {new_balance} AED")
         except Exception as e:
             logger.error(f"Failed to auto-update customer balance: {e}")

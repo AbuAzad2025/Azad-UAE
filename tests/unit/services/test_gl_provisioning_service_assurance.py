@@ -16,17 +16,13 @@ class TestProvisionResult:
 
 class TestProvisionTenant:
     def test_tenant_not_found(self, mocker):
-        mocker.patch(
-            "services.gl_provisioning_service.db.session.get", return_value=None
-        )
+        mocker.patch("services.gl_provisioning_service.db.session.get", return_value=None)
         result = GLProvisioningService.provision_tenant(999)
         assert "not found" in result.errors[0]
 
     def test_provision_success_commits(self, mocker):
         tenant = SimpleNamespace(id=1, default_currency="USD", business_type="general")
-        mocker.patch(
-            "services.gl_provisioning_service.db.session.get", return_value=tenant
-        )
+        mocker.patch("services.gl_provisioning_service.db.session.get", return_value=tenant)
         mocker.patch.object(GLProvisioningService, "_provision_base_accounts")
         mocker.patch.object(GLProvisioningService, "_provision_industry_accounts")
         mocker.patch.object(GLProvisioningService, "_provision_module_mappings")
@@ -37,9 +33,7 @@ class TestProvisionTenant:
 
     def test_provision_exception_rolls_back(self, mocker):
         tenant = SimpleNamespace(id=1, default_currency="AED", business_type="general")
-        mocker.patch(
-            "services.gl_provisioning_service.db.session.get", return_value=tenant
-        )
+        mocker.patch("services.gl_provisioning_service.db.session.get", return_value=tenant)
         mocker.patch.object(
             GLProvisioningService,
             "_provision_base_accounts",
@@ -62,9 +56,7 @@ class TestProvisionBaseAccounts:
         session = mocker.patch("services.gl_provisioning_service.db.session")
         session.query.return_value = existing_q
         mocker.patch("services.gl_provisioning_service.GLAccount").query = parent_q
-        tmpl = GLAccountTemplate(
-            "9999", "Test", "اختبار", "asset", 2, False, "1110", module_code="core"
-        )
+        tmpl = GLAccountTemplate("9999", "Test", "اختبار", "asset", 2, False, "1110", module_code="core")
         mocker.patch("services.gl_provisioning_service.BASE_ACCOUNTS", [tmpl])
         GLProvisioningService._provision_base_accounts(tenant, result)
         assert result.created_accounts == 1
@@ -148,16 +140,12 @@ class TestProvisionModuleMappings:
         mocker.patch("services.gl_provisioning_service.GLAccount").query = account_q
         mapping = SimpleNamespace(concept_code="AR", account_code="1130")
         mod = SimpleNamespace(required=True, feature_flag=None, mappings=[mapping])
-        mocker.patch(
-            "services.gl_provisioning_service.GL_MODULE_DEFINITIONS", {"sales": mod}
-        )
+        mocker.patch("services.gl_provisioning_service.GL_MODULE_DEFINITIONS", {"sales": mod})
         mocker.patch(
             "services.gl_provisioning_service.GL_CONCEPT_REGISTRY",
             {"AR": {"resolution_mode": "mapping"}},
         )
-        mocker.patch(
-            "services.gl_provisioning_service.RESOLUTION_MODE_MAPPING", "mapping"
-        )
+        mocker.patch("services.gl_provisioning_service.RESOLUTION_MODE_MAPPING", "mapping")
         GLProvisioningService._provision_module_mappings(tenant, result)
         assert any("not found" in e for e in result.errors)
 
@@ -166,9 +154,7 @@ class TestProvisionModuleMappings:
         result = ProvisionResult(tenant_id=1)
         existing_q = MagicMock()
         existing_q.filter_by.return_value.all.return_value = []
-        account = SimpleNamespace(
-            id=1, tenant_id=2, is_active=True, is_header=False, code="1130"
-        )
+        account = SimpleNamespace(id=1, tenant_id=2, is_active=True, is_header=False, code="1130")
         account_q = MagicMock()
         account_q.filter_by.return_value.first.return_value = account
         session = mocker.patch("services.gl_provisioning_service.db.session")
@@ -176,16 +162,12 @@ class TestProvisionModuleMappings:
         mocker.patch("services.gl_provisioning_service.GLAccount").query = account_q
         mapping = SimpleNamespace(concept_code="AR", account_code="1130")
         mod = SimpleNamespace(required=True, feature_flag=None, mappings=[mapping])
-        mocker.patch(
-            "services.gl_provisioning_service.GL_MODULE_DEFINITIONS", {"sales": mod}
-        )
+        mocker.patch("services.gl_provisioning_service.GL_MODULE_DEFINITIONS", {"sales": mod})
         mocker.patch(
             "services.gl_provisioning_service.GL_CONCEPT_REGISTRY",
             {"AR": {"resolution_mode": "mapping"}},
         )
-        mocker.patch(
-            "services.gl_provisioning_service.RESOLUTION_MODE_MAPPING", "mapping"
-        )
+        mocker.patch("services.gl_provisioning_service.RESOLUTION_MODE_MAPPING", "mapping")
         GLProvisioningService._provision_module_mappings(tenant, result)
         assert any("different tenant" in e for e in result.errors)
 
@@ -194,9 +176,7 @@ class TestProvisionModuleMappings:
         result = ProvisionResult(tenant_id=1)
         existing_q = MagicMock()
         existing_q.filter_by.return_value.all.return_value = []
-        account = SimpleNamespace(
-            id=2, tenant_id=1, is_active=False, is_header=False, code="1130"
-        )
+        account = SimpleNamespace(id=2, tenant_id=1, is_active=False, is_header=False, code="1130")
         account_q = MagicMock()
         account_q.filter_by.return_value.first.return_value = account
         session = mocker.patch("services.gl_provisioning_service.db.session")
@@ -204,16 +184,12 @@ class TestProvisionModuleMappings:
         mocker.patch("services.gl_provisioning_service.GLAccount").query = account_q
         mapping = SimpleNamespace(concept_code="AR", account_code="1130")
         mod = SimpleNamespace(required=True, feature_flag=None, mappings=[mapping])
-        mocker.patch(
-            "services.gl_provisioning_service.GL_MODULE_DEFINITIONS", {"sales": mod}
-        )
+        mocker.patch("services.gl_provisioning_service.GL_MODULE_DEFINITIONS", {"sales": mod})
         mocker.patch(
             "services.gl_provisioning_service.GL_CONCEPT_REGISTRY",
             {"AR": {"resolution_mode": "mapping"}},
         )
-        mocker.patch(
-            "services.gl_provisioning_service.RESOLUTION_MODE_MAPPING", "mapping"
-        )
+        mocker.patch("services.gl_provisioning_service.RESOLUTION_MODE_MAPPING", "mapping")
         GLProvisioningService._provision_module_mappings(tenant, result)
         assert any("inactive" in e for e in result.errors)
 
@@ -222,9 +198,7 @@ class TestProvisionModuleMappings:
         result = ProvisionResult(tenant_id=1)
         existing_q = MagicMock()
         existing_q.filter_by.return_value.all.return_value = []
-        account = SimpleNamespace(
-            id=3, tenant_id=1, is_active=True, is_header=True, code="1130"
-        )
+        account = SimpleNamespace(id=3, tenant_id=1, is_active=True, is_header=True, code="1130")
         account_q = MagicMock()
         account_q.filter_by.return_value.first.return_value = account
         session = mocker.patch("services.gl_provisioning_service.db.session")
@@ -232,16 +206,12 @@ class TestProvisionModuleMappings:
         mocker.patch("services.gl_provisioning_service.GLAccount").query = account_q
         mapping = SimpleNamespace(concept_code="AR", account_code="1130")
         mod = SimpleNamespace(required=True, feature_flag=None, mappings=[mapping])
-        mocker.patch(
-            "services.gl_provisioning_service.GL_MODULE_DEFINITIONS", {"sales": mod}
-        )
+        mocker.patch("services.gl_provisioning_service.GL_MODULE_DEFINITIONS", {"sales": mod})
         mocker.patch(
             "services.gl_provisioning_service.GL_CONCEPT_REGISTRY",
             {"AR": {"resolution_mode": "mapping"}},
         )
-        mocker.patch(
-            "services.gl_provisioning_service.RESOLUTION_MODE_MAPPING", "mapping"
-        )
+        mocker.patch("services.gl_provisioning_service.RESOLUTION_MODE_MAPPING", "mapping")
         GLProvisioningService._provision_module_mappings(tenant, result)
         assert any("header" in e for e in result.errors)
 
@@ -250,9 +220,7 @@ class TestProvisionModuleMappings:
         result = ProvisionResult(tenant_id=1)
         existing_q = MagicMock()
         existing_q.filter_by.return_value.all.return_value = []
-        account = SimpleNamespace(
-            id=5, tenant_id=1, is_active=True, is_header=False, code="1130"
-        )
+        account = SimpleNamespace(id=5, tenant_id=1, is_active=True, is_header=False, code="1130")
         account_q = MagicMock()
         account_q.filter_by.return_value.first.return_value = account
         session = mocker.patch("services.gl_provisioning_service.db.session")
@@ -260,16 +228,12 @@ class TestProvisionModuleMappings:
         mocker.patch("services.gl_provisioning_service.GLAccount").query = account_q
         mapping = SimpleNamespace(concept_code="AR", account_code="1130")
         mod = SimpleNamespace(required=True, feature_flag=None, mappings=[mapping])
-        mocker.patch(
-            "services.gl_provisioning_service.GL_MODULE_DEFINITIONS", {"sales": mod}
-        )
+        mocker.patch("services.gl_provisioning_service.GL_MODULE_DEFINITIONS", {"sales": mod})
         mocker.patch(
             "services.gl_provisioning_service.GL_CONCEPT_REGISTRY",
             {"AR": {"resolution_mode": "mapping"}},
         )
-        mocker.patch(
-            "services.gl_provisioning_service.RESOLUTION_MODE_MAPPING", "mapping"
-        )
+        mocker.patch("services.gl_provisioning_service.RESOLUTION_MODE_MAPPING", "mapping")
         GLProvisioningService._provision_module_mappings(tenant, result)
         assert result.created_mappings == 1
 
@@ -282,9 +246,7 @@ class TestProvisionModuleMappings:
         session.query.return_value = existing_q
         mapping = SimpleNamespace(concept_code="AR", account_code="1130")
         mod = SimpleNamespace(required=True, feature_flag=None, mappings=[mapping])
-        mocker.patch(
-            "services.gl_provisioning_service.GL_MODULE_DEFINITIONS", {"sales": mod}
-        )
+        mocker.patch("services.gl_provisioning_service.GL_MODULE_DEFINITIONS", {"sales": mod})
         GLProvisioningService._provision_module_mappings(tenant, result)
         assert result.skipped_mappings >= 1
 
@@ -310,18 +272,14 @@ class TestProvisionModuleMappings:
             feature_flag="enable_treasury",
             mappings=[SimpleNamespace(concept_code="X", account_code="Y")],
         )
-        mocker.patch(
-            "services.gl_provisioning_service.GL_MODULE_DEFINITIONS", {"treasury": mod}
-        )
+        mocker.patch("services.gl_provisioning_service.GL_MODULE_DEFINITIONS", {"treasury": mod})
         GLProvisioningService._provision_module_mappings(tenant, result)
         assert result.created_mappings == 0
 
 
 class TestMissingAndValidate:
     def test_get_missing_accounts_no_tenant(self, mocker):
-        mocker.patch(
-            "services.gl_provisioning_service.db.session.get", return_value=None
-        )
+        mocker.patch("services.gl_provisioning_service.db.session.get", return_value=None)
         assert GLProvisioningService.get_missing_accounts(1) == []
 
     def test_get_missing_accounts_lists_gaps(self, mocker):
@@ -335,15 +293,11 @@ class TestMissingAndValidate:
         assert len(missing) == len(BASE_ACCOUNTS)
 
     def test_get_missing_mappings_no_tenant(self, mocker):
-        mocker.patch(
-            "services.gl_provisioning_service.db.session.get", return_value=None
-        )
+        mocker.patch("services.gl_provisioning_service.db.session.get", return_value=None)
         assert GLProvisioningService.get_missing_mappings(1) == []
 
     def test_validate_tenant_chart_not_found(self, mocker):
-        mocker.patch(
-            "services.gl_provisioning_service.db.session.get", return_value=None
-        )
+        mocker.patch("services.gl_provisioning_service.db.session.get", return_value=None)
         result = GLProvisioningService.validate_tenant_chart(1)
         assert "not found" in result["errors"][0]
 
@@ -378,28 +332,18 @@ class TestMissingAndValidate:
 
     def test_validate_tenant_chart_ok_flags(self, mocker):
         tenant = SimpleNamespace(id=1, business_type="general")
-        mocker.patch(
-            "services.gl_provisioning_service.db.session.get", return_value=tenant
-        )
-        mocker.patch.object(
-            GLProvisioningService, "get_missing_accounts", return_value=[]
-        )
-        mocker.patch.object(
-            GLProvisioningService, "get_missing_mappings", return_value=[]
-        )
+        mocker.patch("services.gl_provisioning_service.db.session.get", return_value=tenant)
+        mocker.patch.object(GLProvisioningService, "get_missing_accounts", return_value=[])
+        mocker.patch.object(GLProvisioningService, "get_missing_mappings", return_value=[])
         result = GLProvisioningService.validate_tenant_chart(1)
         assert result["accounts_ok"] is True
         assert result["mappings_ok"] is True
 
     def test_validate_tenant_chart_with_gaps(self, mocker):
         tenant = SimpleNamespace(id=1, business_type="general")
-        mocker.patch(
-            "services.gl_provisioning_service.db.session.get", return_value=tenant
-        )
+        mocker.patch("services.gl_provisioning_service.db.session.get", return_value=tenant)
         gap = BASE_ACCOUNTS[0]
-        mocker.patch.object(
-            GLProvisioningService, "get_missing_accounts", return_value=[gap]
-        )
+        mocker.patch.object(GLProvisioningService, "get_missing_accounts", return_value=[gap])
         mocker.patch.object(
             GLProvisioningService,
             "get_missing_mappings",

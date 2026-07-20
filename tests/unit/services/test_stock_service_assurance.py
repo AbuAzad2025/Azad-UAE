@@ -93,9 +93,7 @@ def _purchase_line(**kwargs):
     line = MagicMock()
     line.product_id = kwargs.get("product_id", 1)
     line.quantity = kwargs.get("quantity", Decimal("5"))
-    line.landed_inventory_unit_cost = kwargs.get(
-        "landed_inventory_unit_cost", Decimal("10")
-    )
+    line.landed_inventory_unit_cost = kwargs.get("landed_inventory_unit_cost", Decimal("10"))
     line.inventory_unit_cost = kwargs.get("inventory_unit_cost", Decimal("8"))
     return line
 
@@ -195,15 +193,10 @@ class TestResolveGlConceptAccount:
             "services.gl_account_resolver.is_dynamic_gl_mapping_enabled",
             return_value=True,
         )
-        mocker.patch(
-            "services.gl_account_resolver.resolve_gl_account", return_value=resolved
-        )
+        mocker.patch("services.gl_account_resolver.resolve_gl_account", return_value=resolved)
         from services.stock_service import _resolve_gl_concept_account
 
-        assert (
-            _resolve_gl_concept_account("INVENTORY_ASSET", "1140", tenant_id=1)
-            == "9999"
-        )
+        assert _resolve_gl_concept_account("INVENTORY_ASSET", "1140", tenant_id=1) == "9999"
 
     def test_dynamic_mapping_exception_falls_back(self, mocker):
         mocker.patch(
@@ -214,32 +207,22 @@ class TestResolveGlConceptAccount:
             "services.gl_account_resolver.resolve_gl_account",
             side_effect=RuntimeError("fail"),
         )
-        mocker.patch(
-            "services.gl_service.GL_ACCOUNT_CONCEPTS", {"INV": "INVENTORY_ASSET"}
-        )
+        mocker.patch("services.gl_service.GL_ACCOUNT_CONCEPTS", {"INV": "INVENTORY_ASSET"})
         mocker.patch("services.gl_service.GL_ACCOUNTS", {})
         from services.stock_service import _resolve_gl_concept_account
 
-        assert (
-            _resolve_gl_concept_account("INVENTORY_ASSET", "1140", tenant_id=1)
-            == "1140"
-        )
+        assert _resolve_gl_concept_account("INVENTORY_ASSET", "1140", tenant_id=1) == "1140"
 
     def test_legacy_concept_lookup(self, mocker):
         mocker.patch(
             "services.gl_account_resolver.is_dynamic_gl_mapping_enabled",
             return_value=False,
         )
-        mocker.patch(
-            "services.gl_service.GL_ACCOUNT_CONCEPTS", {"INV": "INVENTORY_ASSET"}
-        )
+        mocker.patch("services.gl_service.GL_ACCOUNT_CONCEPTS", {"INV": "INVENTORY_ASSET"})
         mocker.patch("services.gl_service.GL_ACCOUNTS", {"INV": "1140"})
         from services.stock_service import _resolve_gl_concept_account
 
-        assert (
-            _resolve_gl_concept_account("INVENTORY_ASSET", "9999", tenant_id=1)
-            == "1140"
-        )
+        assert _resolve_gl_concept_account("INVENTORY_ASSET", "9999", tenant_id=1) == "1140"
 
     def test_fallback_when_no_tenant(self, mocker):
         mocker.patch(
@@ -248,18 +231,13 @@ class TestResolveGlConceptAccount:
         )
         from services.stock_service import _resolve_gl_concept_account
 
-        assert (
-            _resolve_gl_concept_account("INVENTORY_ASSET", "1140", tenant_id=None)
-            == "1140"
-        )
+        assert _resolve_gl_concept_account("INVENTORY_ASSET", "1140", tenant_id=None) == "1140"
 
 
 class TestAddRemoveStock:
     def test_add_stock_positive_quantity(self, mocker):
         movement = MagicMock()
-        mock_create = mocker.patch(
-            "services.stock_service.StockService.create_movement", return_value=movement
-        )
+        mock_create = mocker.patch("services.stock_service.StockService.create_movement", return_value=movement)
         from services.stock_service import StockService
 
         result = StockService.add_stock(1, 5, warehouse_id=5)
@@ -282,9 +260,7 @@ class TestAddRemoveStock:
 class TestAdjustStock:
     def test_happy_path_posts_gl(self, mocker, app):
         movement = MagicMock()
-        mocker.patch(
-            "services.stock_service.StockService.create_movement", return_value=movement
-        )
+        mocker.patch("services.stock_service.StockService.create_movement", return_value=movement)
         mocker.patch("services.stock_service.StockService._post_adjustment_gl")
         from services.stock_service import StockService
 
@@ -340,9 +316,7 @@ class TestPostAdjustmentGl:
         warehouse = _warehouse()
         session = mocker.patch("services.stock_service.db.session")
         session.get.side_effect = lambda model, pk: product if pk == 1 else warehouse
-        mocker.patch(
-            "services.stock_service._resolve_gl_concept_account", return_value="1140"
-        )
+        mocker.patch("services.stock_service._resolve_gl_concept_account", return_value="1140")
         mocker.patch("services.gl_service.GLService.ensure_core_accounts")
         mock_post = mocker.patch("services.gl_posting.post_or_fail")
         from services.stock_service import StockService
@@ -363,9 +337,7 @@ class TestPostAdjustmentGl:
         product = _product()
         session = mocker.patch("services.stock_service.db.session")
         session.get.return_value = product
-        mocker.patch(
-            "services.stock_service._resolve_gl_concept_account", return_value="1140"
-        )
+        mocker.patch("services.stock_service._resolve_gl_concept_account", return_value="1140")
         mocker.patch("services.gl_service.GLService.ensure_core_accounts")
         mock_post = mocker.patch("services.gl_posting.post_or_fail")
         from services.stock_service import StockService
@@ -388,12 +360,8 @@ class TestAddOpeningStock:
         session = mocker.patch("services.stock_service.db.session")
         session.get.side_effect = lambda model, pk: product if pk == 1 else warehouse
         movement = MagicMock()
-        mocker.patch(
-            "services.stock_service.StockService.create_movement", return_value=movement
-        )
-        mocker.patch(
-            "services.stock_service._resolve_gl_concept_account", return_value="1140"
-        )
+        mocker.patch("services.stock_service.StockService.create_movement", return_value=movement)
+        mocker.patch("services.stock_service._resolve_gl_concept_account", return_value="1140")
         mocker.patch("services.gl_service.GLService.ensure_core_accounts")
         mock_post = mocker.patch("services.gl_posting.post_or_fail")
         from services.stock_service import StockService
@@ -423,16 +391,12 @@ class TestCreateMovement:
     def test_missing_product_raises(self, mocker, app):
         session = mocker.patch("services.stock_service.db.session")
         session.get.return_value = None
-        mocker.patch(
-            "services.stock_service.current_user", MagicMock(is_authenticated=False)
-        )
+        mocker.patch("services.stock_service.current_user", MagicMock(is_authenticated=False))
         from services.stock_service import StockService
 
         with app.app_context():
             with pytest.raises(ValueError, match="المنتج غير موجود"):
-                StockService.create_movement(
-                    999, Decimal("1"), "purchase", warehouse_id=5
-                )
+                StockService.create_movement(999, Decimal("1"), "purchase", warehouse_id=5)
 
     def test_invalid_warehouse_raises(self, mocker, app):
         product = _product()
@@ -443,9 +407,7 @@ class TestCreateMovement:
 
         with app.app_context():
             with pytest.raises(ValueError, match="المستودع"):
-                StockService.create_movement(
-                    1, Decimal("1"), "purchase", warehouse_id=99
-                )
+                StockService.create_movement(1, Decimal("1"), "purchase", warehouse_id=99)
 
     def test_cross_tenant_warehouse_raises(self, mocker, app):
         product = _product(tenant_id=1)
@@ -457,9 +419,7 @@ class TestCreateMovement:
 
         with app.app_context():
             with pytest.raises(ValueError, match="لا ينتمي"):
-                StockService.create_movement(
-                    1, Decimal("1"), "purchase", warehouse_id=9
-                )
+                StockService.create_movement(1, Decimal("1"), "purchase", warehouse_id=9)
 
     def test_auto_creates_warehouse_when_missing(self, mocker, app):
         product = _product(tenant_id=1)
@@ -473,9 +433,7 @@ class TestCreateMovement:
         wh_cls.return_value = new_wh
         mocker.patch("services.stock_service.StockMovement", return_value=MagicMock())
         pws_q = _patch_pws_query(mocker, pws=None)
-        pws_cls = mocker.patch(
-            "services.stock_service.ProductWarehouseStock", return_value=MagicMock()
-        )
+        pws_cls = mocker.patch("services.stock_service.ProductWarehouseStock", return_value=MagicMock())
         pws_cls.query = pws_q
         mocker.patch(
             "services.stock_service.current_user",
@@ -505,9 +463,7 @@ class TestCreateMovement:
         from services.stock_service import StockService
 
         with app.app_context():
-            result = StockService.create_movement(
-                1, Decimal("5"), "purchase", warehouse_id=5
-            )
+            result = StockService.create_movement(1, Decimal("5"), "purchase", warehouse_id=5)
         assert result is movement
         assert pws.quantity == Decimal("55")
 
@@ -523,9 +479,7 @@ class TestCreateMovement:
         pws_cls.return_value = new_pws
         pws_cls.query = pws_q
         mocker.patch("services.stock_service.StockMovement", return_value=MagicMock())
-        mocker.patch(
-            "services.stock_service.current_user", MagicMock(is_authenticated=False)
-        )
+        mocker.patch("services.stock_service.current_user", MagicMock(is_authenticated=False))
         from services.stock_service import StockService
 
         with app.app_context():
@@ -593,9 +547,7 @@ class TestCreateMovement:
         from services.stock_service import StockService
 
         with app.app_context():
-            result = StockService.create_movement(
-                1, Decimal("1"), "purchase", warehouse_id=5
-            )
+            result = StockService.create_movement(1, Decimal("1"), "purchase", warehouse_id=5)
         assert result.user_id is None
         mock_logger.debug.assert_called_once()
 
@@ -607,9 +559,7 @@ class TestCreateMovement:
         _patch_warehouse_query(mocker, warehouse=warehouse)
         _patch_pws_query(mocker, pws=_pws())
         mocker.patch("services.stock_service.StockMovement", return_value=MagicMock())
-        mocker.patch(
-            "services.stock_service.current_user", MagicMock(is_authenticated=False)
-        )
+        mocker.patch("services.stock_service.current_user", MagicMock(is_authenticated=False))
         mock_logger = mocker.patch("services.stock_service.current_app.logger")
         mock_logger.info.side_effect = RuntimeError("log fail")
         from services.stock_service import StockService
@@ -626,16 +576,12 @@ class TestCreateMovement:
         _patch_warehouse_query(mocker, warehouse=warehouse)
         _patch_pws_query(mocker, pws=pws, lock_error=True)
         mocker.patch("services.stock_service.StockMovement", return_value=MagicMock())
-        mocker.patch(
-            "services.stock_service.current_user", MagicMock(is_authenticated=False)
-        )
+        mocker.patch("services.stock_service.current_user", MagicMock(is_authenticated=False))
         from services.stock_service import StockService
 
         with app.app_context():
             with pytest.raises(RuntimeError, match="no lock"):
-                StockService.create_movement(
-                    1, Decimal("1"), "purchase", warehouse_id=5
-                )
+                StockService.create_movement(1, Decimal("1"), "purchase", warehouse_id=5)
 
     def test_warehouse_tenant_backfill(self, mocker, app):
         product = _product(tenant_id=1)
@@ -799,9 +745,7 @@ class TestResolveCogsUnitCost:
         mocker.patch("services.stock_service.ProductWarehouseCost.query", pwc_q)
         from services.stock_service import StockService
 
-        cost, source = StockService._resolve_cogs_unit_cost(
-            1, 5, 1, line_cost_price=Decimal("25")
-        )
+        cost, source = StockService._resolve_cogs_unit_cost(1, 5, 1, line_cost_price=Decimal("25"))
         assert cost == Decimal("25")
         assert source == "cost_price"
 
@@ -841,9 +785,7 @@ class TestCalculateSaleCogs:
             average_cost=Decimal("50"),
         )
         pwc_q = MagicMock()
-        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = (
-            pwc
-        )
+        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = pwc
         mocker.patch("services.stock_service.ProductWarehouseCost.query", pwc_q)
         mocker.patch("services.stock_service.ProductCostHistory")
         mocker.patch("services.stock_service.db.session")
@@ -851,9 +793,7 @@ class TestCalculateSaleCogs:
         mocker.patch("services.stock_service.db.session").get.return_value = warehouse
         from services.stock_service import StockService
 
-        sale = _sale(
-            lines=[_sale_line(quantity=Decimal("2"), cost_price=Decimal("50"))]
-        )
+        sale = _sale(lines=[_sale_line(quantity=Decimal("2"), cost_price=Decimal("50"))])
         with app.app_context():
             app.config["ENABLE_MWAC"] = True
             total = StockService.calculate_sale_cogs_and_deduct(sale)
@@ -861,9 +801,7 @@ class TestCalculateSaleCogs:
 
     def test_mwac_fallback_warning(self, mocker, app):
         pwc_q = MagicMock()
-        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = (
-            None
-        )
+        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = None
         mocker.patch("services.stock_service.ProductWarehouseCost.query", pwc_q)
         mocker.patch("services.stock_service.db.session")
         warehouse = _warehouse(allow_negative_inventory=False)
@@ -884,9 +822,7 @@ class TestCalculateSaleCogs:
 
     def test_negative_inventory_new_pwc(self, mocker, app):
         pwc_q = MagicMock()
-        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = (
-            None
-        )
+        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = None
         new_pwc = MagicMock(average_cost=Decimal("30"))
         pwc_cls = mocker.patch("services.stock_service.ProductWarehouseCost")
         pwc_cls.query = pwc_q
@@ -914,9 +850,7 @@ class TestCalculateSaleCogs:
             average_cost=Decimal("50"),
         )
         pwc_q = MagicMock()
-        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = (
-            pwc
-        )
+        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = pwc
         mocker.patch("services.stock_service.ProductWarehouseCost.query", pwc_q)
         mocker.patch("services.stock_service.ProductCostHistory")
         session = mocker.patch("services.stock_service.db.session")
@@ -956,9 +890,7 @@ class TestCalculateSaleCogs:
         )
         mocker.patch("services.stock_service._safe_for_update", return_value=pwc)
         mocker.patch("services.stock_service.ProductCostHistory")
-        mocker.patch(
-            "services.stock_service.db.session"
-        ).get.return_value = _warehouse()
+        mocker.patch("services.stock_service.db.session").get.return_value = _warehouse()
         from services.stock_service import StockService
 
         sale = _sale(lines=[_sale_line(quantity=Decimal("1"))])
@@ -984,9 +916,7 @@ class TestProcessPurchaseLines:
 
     def test_with_mwac_and_landed_cost(self, mocker, app):
         mocker.patch("services.stock_service.StockService.add_stock")
-        mock_wac = mocker.patch(
-            "services.stock_service.StockService._update_wac_on_receipt"
-        )
+        mock_wac = mocker.patch("services.stock_service.StockService._update_wac_on_receipt")
         product = _product()
         pwc = _pwc(total_quantity=Decimal("10"), total_value=Decimal("100"))
         pwc_q = MagicMock()
@@ -1005,9 +935,7 @@ class TestProcessPurchaseLines:
 
     def test_inventory_unit_cost_when_landed_disabled(self, mocker, app):
         mocker.patch("services.stock_service.StockService.add_stock")
-        mock_wac = mocker.patch(
-            "services.stock_service.StockService._update_wac_on_receipt"
-        )
+        mock_wac = mocker.patch("services.stock_service.StockService._update_wac_on_receipt")
         product = _product()
         pwc_q = MagicMock()
         pwc_q.filter_by.return_value.all.return_value = []
@@ -1071,9 +999,7 @@ class TestProcessPurchaseLines:
 class TestUpdateWacOnReceipt:
     def test_first_receipt_creates_pwc(self, mocker):
         pwc_q = MagicMock()
-        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = (
-            None
-        )
+        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = None
         new_pwc = MagicMock(average_cost=Decimal("5.0000"))
         pwc_cls = mocker.patch("services.stock_service.ProductWarehouseCost")
         pwc_cls.query = pwc_q
@@ -1100,9 +1026,7 @@ class TestUpdateWacOnReceipt:
             average_cost=Decimal("10"),
         )
         pwc_q = MagicMock()
-        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = (
-            pwc
-        )
+        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = pwc
         mocker.patch("services.stock_service.ProductWarehouseCost.query", pwc_q)
         mocker.patch("services.stock_service.ProductCostHistory")
         mocker.patch("services.stock_service.db.session")
@@ -1126,9 +1050,7 @@ class TestUpdateWacOnReceipt:
             average_cost=Decimal("10"),
         )
         pwc_q = MagicMock()
-        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = (
-            pwc
-        )
+        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = pwc
         mocker.patch("services.stock_service.ProductWarehouseCost.query", pwc_q)
         mocker.patch("services.stock_service.ProductCostHistory")
         mocker.patch("services.stock_service.db.session")
@@ -1237,9 +1159,7 @@ class TestPostRetrospectiveCostAdjustment:
         warehouse = _warehouse()
         session = mocker.patch("services.stock_service.db.session")
         session.get.side_effect = lambda model, pk: product if pk == 1 else warehouse
-        mocker.patch(
-            "services.stock_service._resolve_gl_concept_account", return_value="1140"
-        )
+        mocker.patch("services.stock_service._resolve_gl_concept_account", return_value="1140")
         mocker.patch("services.gl_service.GLService.ensure_core_accounts")
         mocker.patch("services.gl_posting.post_or_fail")
         from services.stock_service import StockService
@@ -1262,9 +1182,7 @@ class TestPostRetrospectiveCostAdjustment:
         warehouse = _warehouse()
         session = mocker.patch("services.stock_service.db.session")
         session.get.side_effect = lambda model, pk: product if pk == 1 else warehouse
-        mocker.patch(
-            "services.stock_service._resolve_gl_concept_account", return_value="1140"
-        )
+        mocker.patch("services.stock_service._resolve_gl_concept_account", return_value="1140")
         mocker.patch("services.gl_service.GLService.ensure_core_accounts")
         mocker.patch("services.gl_posting.post_or_fail")
         from services.stock_service import StockService
@@ -1287,13 +1205,9 @@ class TestPostRetrospectiveCostAdjustment:
         warehouse = _warehouse()
         session = mocker.patch("services.stock_service.db.session")
         session.get.side_effect = lambda model, pk: product if pk == 1 else warehouse
-        mocker.patch(
-            "services.stock_service._resolve_gl_concept_account", return_value="1140"
-        )
+        mocker.patch("services.stock_service._resolve_gl_concept_account", return_value="1140")
         mocker.patch("services.gl_service.GLService.ensure_core_accounts")
-        mocker.patch(
-            "services.gl_posting.post_or_fail", side_effect=RuntimeError("gl fail")
-        )
+        mocker.patch("services.gl_posting.post_or_fail", side_effect=RuntimeError("gl fail"))
         mock_logger = mocker.patch("services.stock_service.current_app.logger")
         from services.stock_service import StockService
 
@@ -1330,9 +1244,7 @@ class TestReverseSale:
             average_cost=Decimal("50"),
         )
         pwc_q = MagicMock()
-        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = (
-            pwc
-        )
+        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = pwc
         mocker.patch("services.stock_service.ProductWarehouseCost.query", pwc_q)
         history = MagicMock()
         history.movement_unit_cost = Decimal("50")
@@ -1355,9 +1267,7 @@ class TestReverseSale:
             average_cost=Decimal("50"),
         )
         pwc_q = MagicMock()
-        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = (
-            pwc
-        )
+        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = pwc
         mocker.patch("services.stock_service.ProductWarehouseCost.query", pwc_q)
         pch_q = MagicMock()
         pch_q.filter_by.return_value.order_by.return_value.first.return_value = None
@@ -1407,9 +1317,7 @@ class TestReversePurchase:
             average_cost=Decimal("10"),
         )
         pwc_q = MagicMock()
-        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = (
-            pwc
-        )
+        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = pwc
         mocker.patch("services.stock_service.ProductWarehouseCost.query", pwc_q)
         history = MagicMock()
         history.movement_unit_cost = Decimal("10")
@@ -1432,9 +1340,7 @@ class TestReversePurchase:
             average_cost=Decimal("10"),
         )
         pwc_q = MagicMock()
-        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = (
-            pwc
-        )
+        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = pwc
         mocker.patch("services.stock_service.ProductWarehouseCost.query", pwc_q)
         history = MagicMock()
         history.movement_unit_cost = Decimal("10")
@@ -1481,9 +1387,7 @@ class TestReversePurchase:
             average_cost=Decimal("12"),
         )
         pwc_q = MagicMock()
-        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = (
-            pwc
-        )
+        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = pwc
         mocker.patch("services.stock_service.ProductWarehouseCost.query", pwc_q)
         pch_q = MagicMock()
         pch_q.filter_by.return_value.order_by.return_value.first.return_value = None
@@ -1507,9 +1411,7 @@ class TestAvailability:
         assert "غير موجود" in msg
 
     def test_check_inactive_product(self, mocker):
-        mocker.patch("services.stock_service.db.session").get.return_value = _product(
-            is_active=False
-        )
+        mocker.patch("services.stock_service.db.session").get.return_value = _product(is_active=False)
         from services.stock_service import StockService
 
         ok, msg = StockService.check_availability(1, 1)
@@ -1517,9 +1419,7 @@ class TestAvailability:
         assert "غير نشط" in msg
 
     def test_check_insufficient(self, mocker):
-        mocker.patch("services.stock_service.db.session").get.return_value = _product(
-            current_stock=Decimal("1")
-        )
+        mocker.patch("services.stock_service.db.session").get.return_value = _product(current_stock=Decimal("1"))
         from services.stock_service import StockService
 
         ok, msg = StockService.check_availability(1, 5)
@@ -1527,9 +1427,7 @@ class TestAvailability:
         assert "غير كاف" in msg
 
     def test_check_success(self, mocker):
-        mocker.patch("services.stock_service.db.session").get.return_value = _product(
-            current_stock=Decimal("10")
-        )
+        mocker.patch("services.stock_service.db.session").get.return_value = _product(current_stock=Decimal("10"))
         from services.stock_service import StockService
 
         ok, msg = StockService.check_availability(1, 3)
@@ -1544,9 +1442,7 @@ class TestAvailability:
         assert ok is False
 
     def test_check_in_warehouse_inactive_product(self, mocker):
-        mocker.patch("services.stock_service.db.session").get.return_value = _product(
-            is_active=False
-        )
+        mocker.patch("services.stock_service.db.session").get.return_value = _product(is_active=False)
         from services.stock_service import StockService
 
         ok, msg = StockService.check_availability_in_warehouse(1, 1, 5)
@@ -1564,9 +1460,7 @@ class TestAvailability:
 
     def test_check_in_warehouse_negative_allowed(self, mocker):
         mocker.patch("services.stock_service.db.session").get.return_value = _product()
-        _patch_warehouse_query(
-            mocker, warehouse=_warehouse(allow_negative_inventory=True)
-        )
+        _patch_warehouse_query(mocker, warehouse=_warehouse(allow_negative_inventory=True))
         from services.stock_service import StockService
 
         ok, msg = StockService.check_availability_in_warehouse(1, 999, 5)
@@ -1618,9 +1512,7 @@ class TestInventoryQueries:
         assert StockService.get_product_stock(1, warehouse_ids=[1, 2]) == Decimal("9")
 
     def test_get_product_stock_with_user(self, mocker):
-        mocker.patch(
-            "services.stock_service.get_accessible_warehouse_ids", return_value=[1]
-        )
+        mocker.patch("services.stock_service.get_accessible_warehouse_ids", return_value=[1])
         mocker.patch(
             "services.stock_service.get_branch_stock_map",
             return_value={1: Decimal("3")},
@@ -1637,9 +1529,7 @@ class TestInventoryQueries:
             "services.stock_service.StockService.get_visible_products_query",
             return_value=query,
         )
-        mocker.patch(
-            "services.stock_service.get_accessible_warehouse_ids", return_value=[1]
-        )
+        mocker.patch("services.stock_service.get_accessible_warehouse_ids", return_value=[1])
         mocker.patch(
             "services.stock_service.get_branch_stock_map",
             return_value={1: Decimal("2")},
@@ -1653,9 +1543,7 @@ class TestInventoryQueries:
             "services.stock_service.StockService.get_visible_products_query",
             return_value=MagicMock(),
         )
-        mocker.patch(
-            "services.stock_service.get_accessible_warehouse_ids", return_value=[]
-        )
+        mocker.patch("services.stock_service.get_accessible_warehouse_ids", return_value=[])
         from services.stock_service import StockService
 
         assert StockService.get_low_stock_products(user=MagicMock()) == []
@@ -1668,9 +1556,7 @@ class TestInventoryQueries:
             "services.stock_service.StockService.get_visible_products_query",
             return_value=query,
         )
-        mocker.patch(
-            "services.stock_service.get_accessible_warehouse_ids", return_value=None
-        )
+        mocker.patch("services.stock_service.get_accessible_warehouse_ids", return_value=None)
         from services.stock_service import StockService
 
         assert StockService.get_low_stock_products() == [product]
@@ -1686,9 +1572,7 @@ class TestInventoryQueries:
             "services.stock_service.StockService.get_visible_products_query",
             return_value=query,
         )
-        mocker.patch(
-            "services.stock_service.get_accessible_warehouse_ids", return_value=None
-        )
+        mocker.patch("services.stock_service.get_accessible_warehouse_ids", return_value=None)
         from services.stock_service import StockService
 
         result = StockService.get_low_stock_products(limit=1)
@@ -1702,9 +1586,7 @@ class TestInventoryQueries:
             "services.stock_service.StockService.get_visible_products_query",
             return_value=query,
         )
-        mocker.patch(
-            "services.stock_service.get_accessible_warehouse_ids", return_value=[1]
-        )
+        mocker.patch("services.stock_service.get_accessible_warehouse_ids", return_value=[1])
         mocker.patch(
             "services.stock_service.get_branch_stock_map",
             return_value={1: Decimal("0")},
@@ -1718,9 +1600,7 @@ class TestInventoryQueries:
             "services.stock_service.StockService.get_visible_products_query",
             return_value=MagicMock(),
         )
-        mocker.patch(
-            "services.stock_service.get_accessible_warehouse_ids", return_value=[]
-        )
+        mocker.patch("services.stock_service.get_accessible_warehouse_ids", return_value=[])
         from services.stock_service import StockService
 
         assert StockService.get_out_of_stock_products(user=MagicMock()) == []
@@ -1733,9 +1613,7 @@ class TestInventoryQueries:
             "services.stock_service.StockService.get_visible_products_query",
             return_value=query,
         )
-        mocker.patch(
-            "services.stock_service.get_accessible_warehouse_ids", return_value=None
-        )
+        mocker.patch("services.stock_service.get_accessible_warehouse_ids", return_value=None)
         from services.stock_service import StockService
 
         assert product in StockService.get_out_of_stock_products()
@@ -1749,9 +1627,7 @@ class TestInventoryQueries:
 
 class TestReconcileStock:
     @staticmethod
-    def _setup_reconcile_queries(
-        mocker, *, existing_rows, movement_rows, pws_sum_rows, products
-    ):
+    def _setup_reconcile_queries(mocker, *, existing_rows, movement_rows, pws_sum_rows, products):
         session = mocker.patch("services.stock_service.db.session")
 
         existing_q = MagicMock()
@@ -1764,9 +1640,7 @@ class TestReconcileStock:
 
         pws_q = MagicMock()
         pws_q.filter.return_value = pws_q
-        pws_q.filter_by.return_value.first.return_value = MagicMock(
-            quantity=Decimal("5")
-        )
+        pws_q.filter_by.return_value.first.return_value = MagicMock(quantity=Decimal("5"))
         pws_q.group_by.return_value.all.return_value = pws_sum_rows
 
         product_q = MagicMock()

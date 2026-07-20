@@ -35,7 +35,7 @@
 
           <div class="form-group">
             <label for="target_db">{{ _('قاعدة البيانات المستهدفة:') }}</label>
-            <select name="target_db" id="target_db" class="form-control" onchange="toggleConfig()" aria-label="target db">
+            <select name="target_db" id="target_db" class="form-control" data-action="toggle-config" aria-label="target db">
               <option value="">{{ t('None') }}</option>
               <option value="postgresql">{{ _('PostgreSQL (موصى به للإنتاج)') }}</option>
             </select>
@@ -103,6 +103,12 @@
 
 {% block extra_js %}
 <script>
+document.addEventListener('change', (e) => {
+  const el = e.target.closest('[data-action="toggle-config"]');
+  if (!el) return;
+  toggleConfig();
+});
+
 function toggleConfig() {
   const target = document.getElementById('target_db').value;
   document.getElementById('postgresqlConfig').style.display = target === 'postgresql' ? 'block' : 'none';

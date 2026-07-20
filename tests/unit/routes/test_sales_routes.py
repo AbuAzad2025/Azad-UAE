@@ -31,9 +31,7 @@ def _mock_sale(**kwargs):
     sale.calculate_totals = MagicMock()
     sale.seller = kwargs.get(
         "seller",
-        MagicMock(
-            full_name="Seller", username="seller", get_display_name=lambda _: "Seller"
-        ),
+        MagicMock(full_name="Seller", username="seller", get_display_name=lambda _: "Seller"),
     )
     sale.customer = kwargs.get("customer", MagicMock(name="Customer"))
     return sale
@@ -72,9 +70,7 @@ def _sales_patches(**kwargs):
     def _tenant_get_or_404(model, pk, user=None):
         name = getattr(model, "__name__", str(model))
         if name == "Sale":
-            return (
-                sale if int(pk) == int(sale.id) else (_ for _ in ()).throw(NotFound())
-            )
+            return sale if int(pk) == int(sale.id) else (_ for _ in ()).throw(NotFound())
         if name == "Customer":
             return _mock_customer(id=pk)
         if name == "Product":
@@ -85,9 +81,7 @@ def _sales_patches(**kwargs):
         return _tenant_get_or_404(model, pk)
 
     def _tenant_query(model):
-        return _chain_query(
-            all=kwargs.get("sales_list", [sale]), count=kwargs.get("count", 1)
-        )
+        return _chain_query(all=kwargs.get("sales_list", [sale]), count=kwargs.get("count", 1))
 
     def _session_get(model, pk):
         name = getattr(model, "__name__", str(model))
@@ -114,32 +108,16 @@ def _sales_patches(**kwargs):
 
     with ExitStack() as stack:
         stack.enter_context(patch("routes.sales.render_template", return_value="ok"))
-        stack.enter_context(
-            patch(
-                "routes.sales.get_active_tenant_id", return_value=kwargs.get("tid", 1)
-            )
-        )
-        stack.enter_context(
-            patch("routes.sales.tenant_query", side_effect=_tenant_query)
-        )
-        stack.enter_context(
-            patch("routes.sales.tenant_get_or_404", side_effect=_tenant_get_or_404)
-        )
+        stack.enter_context(patch("routes.sales.get_active_tenant_id", return_value=kwargs.get("tid", 1)))
+        stack.enter_context(patch("routes.sales.tenant_query", side_effect=_tenant_query))
+        stack.enter_context(patch("routes.sales.tenant_get_or_404", side_effect=_tenant_get_or_404))
         stack.enter_context(patch("routes.sales.tenant_get", side_effect=_tenant_get))
-        stack.enter_context(
-            patch("routes.sales.db.session.get", side_effect=_session_get)
-        )
-        stack.enter_context(
-            patch(
-                "routes.sales.db.session.query", side_effect=lambda *a, **k: archived_q
-            )
-        )
+        stack.enter_context(patch("routes.sales.db.session.get", side_effect=_session_get))
+        stack.enter_context(patch("routes.sales.db.session.query", side_effect=lambda *a, **k: archived_q))
         stack.enter_context(patch("routes.sales.db.session.commit"))
         stack.enter_context(patch("routes.sales.db.session.rollback"))
         stack.enter_context(patch("routes.sales.db.session.delete"))
-        stack.enter_context(
-            patch("routes.sales.should_show_all_branch_columns", return_value=False)
-        )
+        stack.enter_context(patch("routes.sales.should_show_all_branch_columns", return_value=False))
         stack.enter_context(
             patch(
                 "routes.sales.StoreService.get_physical_warehouses",
@@ -156,14 +134,10 @@ def _sales_patches(**kwargs):
         stack.enter_context(
             patch(
                 "routes.sales.atomic_transaction",
-                return_value=MagicMock(
-                    __enter__=lambda s: None, __exit__=lambda s, *a: None
-                ),
+                return_value=MagicMock(__enter__=lambda s: None, __exit__=lambda s, *a: None),
             )
         )
-        stack.enter_context(
-            patch("routes.sales.SaleService.create_sale", return_value=sale)
-        )
+        stack.enter_context(patch("routes.sales.SaleService.create_sale", return_value=sale))
         stack.enter_context(patch("routes.sales.SaleService.cancel_sale"))
         stack.enter_context(
             patch(
@@ -177,14 +151,8 @@ def _sales_patches(**kwargs):
                 return_value=Decimal("25"),
             )
         )
-        stack.enter_context(
-            patch("utils.currency_utils.resolve_default_currency", return_value="AED")
-        )
-        stack.enter_context(
-            patch(
-                "utils.currency_utils.get_system_default_currency", return_value="AED"
-            )
-        )
+        stack.enter_context(patch("utils.currency_utils.resolve_default_currency", return_value="AED"))
+        stack.enter_context(patch("utils.currency_utils.get_system_default_currency", return_value="AED"))
         stack.enter_context(patch("routes.sales.LoggingCore.log_audit"))
         stack.enter_context(patch("routes.sales.LoggingCore.log_error"))
         stack.enter_context(
@@ -197,32 +165,22 @@ def _sales_patches(**kwargs):
                 ),
             )
         )
-        stack.enter_context(
-            patch("routes.sales.number_to_arabic_words", return_value="مائة")
-        )
+        stack.enter_context(patch("routes.sales.number_to_arabic_words", return_value="مائة"))
         stack.enter_context(
             patch(
                 "routes.sales.generate_qr_data_url",
                 return_value="data:image/png;base64,x",
             )
         )
-        stack.enter_context(
-            patch("utils.tenant_branding.get_print_header_context", return_value={})
-        )
-        stack.enter_context(
-            patch("models.User.query", _chain_query(all=kwargs.get("users", [])))
-        )
+        stack.enter_context(patch("utils.tenant_branding.get_print_header_context", return_value={}))
+        stack.enter_context(patch("models.User.query", _chain_query(all=kwargs.get("users", []))))
         stack.enter_context(
             patch(
                 "models.Payment.query",
                 _chain_query(count=kwargs.get("payment_count", 0)),
             )
         )
-        stack.enter_context(
-            patch(
-                "models.Cheque.query", _chain_query(count=kwargs.get("cheque_count", 0))
-            )
-        )
+        stack.enter_context(patch("models.Cheque.query", _chain_query(count=kwargs.get("cheque_count", 0))))
         stack.enter_context(patch("models.ArchivedRecord.query", archived_q))
         stack.enter_context(patch("services.archive_service.ArchiveService"))
         stack.enter_context(patch("services.gl_service.GLService.reverse_entry"))
@@ -260,9 +218,7 @@ class TestSalesAuth:
             resp = sales_client.get("/sales/")
         assert resp.status_code == 401
 
-    def test_index_forbidden_without_permission(
-        self, sales_client, bypass_permission_auth
-    ):
+    def test_index_forbidden_without_permission(self, sales_client, bypass_permission_auth):
         bypass_permission_auth.has_permission.return_value = False
         bypass_permission_auth.is_super_admin.return_value = False
         with (
@@ -285,9 +241,7 @@ class TestSalesIndex:
             _sales_patches(),
             patch("utils.decorators.branch_scope_id", return_value=2),
         ):
-            resp = sales_client.get(
-                "/sales/?search=acme&status=draft&payment_status=unpaid&page=2"
-            )
+            resp = sales_client.get("/sales/?search=acme&status=draft&payment_status=unpaid&page=2")
         assert resp.status_code == 200
 
 
@@ -322,9 +276,7 @@ class TestSalesCreate:
 
     def test_create_post_no_lines(self, sales_client):
         with _sales_patches():
-            resp = sales_client.post(
-                "/sales/create", data={"customer_id": "5", "line_count": "0"}
-            )
+            resp = sales_client.post("/sales/create", data={"customer_id": "5", "line_count": "0"})
         assert resp.status_code == 302
 
     def test_create_post_negative_quantity_skipped(self, sales_client):
@@ -437,9 +389,7 @@ class TestSalesCreate:
     def test_create_post_value_error(self, sales_client):
         with (
             _sales_patches(),
-            patch(
-                "routes.sales.SaleService.create_sale", side_effect=ValueError("stock")
-            ),
+            patch("routes.sales.SaleService.create_sale", side_effect=ValueError("stock")),
         ):
             resp = sales_client.post(
                 "/sales/create",
@@ -456,9 +406,7 @@ class TestSalesCreate:
     def test_create_post_generic_error(self, sales_client):
         with (
             _sales_patches(),
-            patch(
-                "routes.sales.SaleService.create_sale", side_effect=RuntimeError("db")
-            ),
+            patch("routes.sales.SaleService.create_sale", side_effect=RuntimeError("db")),
         ):
             resp = sales_client.post(
                 "/sales/create",
@@ -501,17 +449,13 @@ class TestSalesPrint:
     def test_print_template_fallback(self, sales_client):
         with (
             _sales_patches(),
-            patch(
-                "routes.sales.render_template", side_effect=[Exception("missing"), "ok"]
-            ),
+            patch("routes.sales.render_template", side_effect=[Exception("missing"), "ok"]),
         ):
             resp = sales_client.get("/sales/1/print")
         assert resp.status_code == 200
 
     def test_print_with_qr(self, sales_client):
-        settings = MagicMock(
-            enable_qr_code=True, active_template="modern", company_name_ar="Co"
-        )
+        settings = MagicMock(enable_qr_code=True, active_template="modern", company_name_ar="Co")
         with (
             _sales_patches(),
             patch("routes.sales.InvoiceSettings.get_active", return_value=settings),
@@ -555,9 +499,7 @@ class TestSalesEdit:
 
     def test_edit_notes_only_when_gl(self, sales_client):
         with _sales_patches(has_gl=True):
-            resp = sales_client.post(
-                "/sales/1/edit", data={"notes": "updated"}, follow_redirects=False
-            )
+            resp = sales_client.post("/sales/1/edit", data={"notes": "updated"}, follow_redirects=False)
         assert resp.status_code == 302
 
     def test_edit_discount_update(self, sales_client):
@@ -603,9 +545,7 @@ class TestSalesCancel:
     def test_cancel_error(self, sales_client):
         with (
             _sales_patches(),
-            patch(
-                "routes.sales.SaleService.cancel_sale", side_effect=RuntimeError("x")
-            ),
+            patch("routes.sales.SaleService.cancel_sale", side_effect=RuntimeError("x")),
         ):
             resp = sales_client.post("/sales/1/cancel")
         assert resp.status_code == 302
@@ -619,9 +559,7 @@ class TestSalesApiPrice:
 
     def test_api_get_price_success(self, sales_client):
         with _sales_patches():
-            resp = sales_client.get(
-                "/sales/api/get-price?product_id=10&customer_id=5&warehouse_id=1"
-            )
+            resp = sales_client.get("/sales/api/get-price?product_id=10&customer_id=5&warehouse_id=1")
         assert resp.status_code == 200
         assert resp.get_json()["price"] == 99.0
 
@@ -691,9 +629,7 @@ class TestSalesDeleteArchive:
         assert resp.status_code == 302
 
     def test_delete_success(self, sales_owner_client):
-        with _sales_patches(
-            sale=_mock_sale(status="draft"), payment_count=1, cheque_count=1
-        ):
+        with _sales_patches(sale=_mock_sale(status="draft"), payment_count=1, cheque_count=1):
             resp = sales_owner_client.post("/sales/1/delete", follow_redirects=False)
         assert resp.status_code == 302
 
@@ -760,9 +696,7 @@ class TestSalesCalculateTotals:
             resp = sales_client.post(
                 "/sales/api/calculate-totals",
                 json={
-                    "lines": [
-                        {"quantity": 2, "unit_price": 50, "discount_percent": 10}
-                    ],
+                    "lines": [{"quantity": 2, "unit_price": 50, "discount_percent": 10}],
                     "discount_amount": 5,
                     "shipping_cost": 10,
                     "tax_rate": 5,
@@ -778,9 +712,7 @@ class TestSalesCalculateTotals:
             resp = sales_client.post(
                 "/sales/api/calculate-totals",
                 json={
-                    "lines": [
-                        {"quantity": 1, "unit_price": 105, "discount_percent": 0}
-                    ],
+                    "lines": [{"quantity": 1, "unit_price": 105, "discount_percent": 0}],
                     "tax_rate": 5,
                     "prices_include_vat": True,
                 },
@@ -798,9 +730,7 @@ class TestSalesCalculateTotals:
             resp = sales_client.post(
                 "/sales/api/calculate-totals",
                 json={
-                    "lines": [
-                        {"quantity": 2, "unit_price": 52.5, "discount_percent": 0}
-                    ],
+                    "lines": [{"quantity": 2, "unit_price": 52.5, "discount_percent": 0}],
                     "tax_rate": 5,
                     "prices_include_vat": True,
                 },

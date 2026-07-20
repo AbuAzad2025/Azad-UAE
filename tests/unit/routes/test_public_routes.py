@@ -49,21 +49,15 @@ class TestPublicPricing:
         with patch("routes.public.render_template", return_value="pricing") as render:
             resp = public_client.get("/pricing")
         assert resp.status_code == 200
-        render.assert_called_once_with(
-            "public/pricing.html", packages=[], is_en=False, developer_whatsapp_link=""
-        )
+        render.assert_called_once_with("public/pricing.html", packages=[], is_en=False, developer_whatsapp_link="")
 
     def test_pricing_english_session(self, public_client):
         with public_client.session_transaction() as sess:
             sess["language"] = "en"
-        with patch(
-            "routes.public.render_template", return_value="pricing-en"
-        ) as render:
+        with patch("routes.public.render_template", return_value="pricing-en") as render:
             resp = public_client.get("/pricing")
         assert resp.status_code == 200
-        render.assert_called_once_with(
-            "public/pricing.html", packages=[], is_en=True, developer_whatsapp_link=""
-        )
+        render.assert_called_once_with("public/pricing.html", packages=[], is_en=True, developer_whatsapp_link="")
 
 
 class TestPublicFeatures:
@@ -76,9 +70,7 @@ class TestPublicFeatures:
     def test_features_english_session(self, public_client):
         with public_client.session_transaction() as sess:
             sess["language"] = "en"
-        with patch(
-            "routes.public.render_template", return_value="features-en"
-        ) as render:
+        with patch("routes.public.render_template", return_value="features-en") as render:
             resp = public_client.get("/features")
         assert resp.status_code == 200
         render.assert_called_once_with("public/features_en.html")
@@ -110,9 +102,7 @@ class TestPublicContact:
     def test_contact_english_session(self, public_client):
         with public_client.session_transaction() as sess:
             sess["language"] = "en"
-        with patch(
-            "routes.public.render_template", return_value="contact-en"
-        ) as render:
+        with patch("routes.public.render_template", return_value="contact-en") as render:
             resp = public_client.get("/contact")
         assert resp.status_code == 200
         render.assert_called_once_with("public/contact_en.html")
@@ -218,9 +208,7 @@ class TestPublicDonateSubmit:
         with (
             _vault_patch(vault),
             patch("flask.flash") as flash,
-            patch(
-                "routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)
-            ),
+            patch("routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)),
         ):
             resp = public_client.post("/donate/submit", data={"amount": "5"})
         assert resp.status_code == 302
@@ -234,9 +222,7 @@ class TestPublicDonateSubmit:
         with (
             _vault_patch(vault),
             patch("flask.flash") as flash,
-            patch(
-                "routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)
-            ),
+            patch("routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)),
         ):
             resp = public_client.post("/donate/submit", data={"amount": "5"})
         assert resp.status_code == 302
@@ -250,9 +236,7 @@ class TestPublicDonateSubmit:
         with (
             _vault_patch(vault),
             patch("flask.flash") as flash,
-            patch(
-                "routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)
-            ),
+            patch("routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)),
         ):
             resp = public_client.post("/donate/submit", data={"amount": "500"})
         assert resp.status_code == 302
@@ -265,9 +249,7 @@ class TestPublicDonateSubmit:
         with (
             _vault_patch(vault),
             patch("flask.flash") as flash,
-            patch(
-                "routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)
-            ),
+            patch("routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)),
         ):
             resp = public_client.post("/donate/submit", data={"amount": "500"})
         assert resp.status_code == 302
@@ -281,9 +263,7 @@ class TestPublicDonateSubmit:
             _vault_patch(vault),
             patch("extensions.db.session") as mock_session,
             patch("flask.flash") as flash,
-            patch(
-                "routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)
-            ),
+            patch("routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)),
         ):
             mock_session.commit.side_effect = RuntimeError("db fail")
             resp = public_client.post("/donate/submit", data={"amount": "50"})
@@ -299,9 +279,7 @@ class TestPublicDonateSubmit:
             _vault_patch(vault),
             patch("extensions.db.session") as mock_session,
             patch("flask.flash") as flash,
-            patch(
-                "routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)
-            ),
+            patch("routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)),
         ):
             mock_session.commit.side_effect = RuntimeError("db fail")
             resp = public_client.post("/donate/submit", data={"amount": "50"})

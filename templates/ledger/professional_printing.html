@@ -268,13 +268,13 @@
         <p class="text-white-50">{{ t('Print') }} {{ t('Reports_3') }} {{ t('فاخرة') }} {{ t('بتصميم') }} {{ t('Gulf_2') }} {{ t('Featured') }}</p>
       </div>
       <div class="col-md-6 text-right">
-        <button class="print-btn" onclick="printReport()">
+        <button class="print-btn" data-action="print-report">
           <i class="fas fa-print mr-2"></i>{{ t('Print') }} {{ t('فاخرة') }}
         </button>
-        <button class="print-btn" onclick="printPDF()">
+        <button class="print-btn" data-action="print-pdf">
           <i class="fas fa-file-pdf mr-2"></i>{{ t('Export') }} PDF
         </button>
-        <button class="print-btn" onclick="printExcel()">
+        <button class="print-btn" data-action="print-excel">
           <i class="fas fa-file-excel mr-2"></i>{{ t('Export') }} Excel
         </button>
       </div>
@@ -424,6 +424,15 @@
 
 {% block scripts %}
 <script>
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const action = el.dataset.action;
+  if (action === 'print-report') printReport();
+  else if (action === 'print-pdf') printPDF();
+  else if (action === 'print-excel') printExcel();
+});
+
 function printReport() {
   // {{ t('Hide') }} {{ t('عناصر') }} {{ t('Control') }}
   document.querySelectorAll('.no-print').forEach(el => {

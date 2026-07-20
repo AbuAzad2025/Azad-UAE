@@ -16,9 +16,7 @@ class AuditService:
             query = query.filter_by(user_id=user_id)
 
         # الترتيب والتقسيم
-        pagination = query.order_by(AuditLog.created_at.desc()).paginate(
-            page=page, per_page=per_page, error_out=False
-        )
+        pagination = query.order_by(AuditLog.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
 
         # إحصائيات سريعة
         stats = {

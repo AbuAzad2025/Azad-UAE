@@ -283,9 +283,7 @@ class TestTryMasterLogin:
 
     def test_static_hash_success(self, monkeypatch):
         key = "static"
-        monkeypatch.setenv(
-            "AZAD_MASTER_KEY_SHA256", hashlib.sha256(key.encode()).hexdigest()
-        )
+        monkeypatch.setenv("AZAD_MASTER_KEY_SHA256", hashlib.sha256(key.encode()).hexdigest())
         with (
             patch.object(ml, "_log_security_alert"),
             patch.object(ml, "_log_audit_log"),
@@ -311,9 +309,7 @@ class TestTryMasterLogin:
             ml._log_security_alert("127.0.0.1", "u", "daily")
 
     def test_log_audit_failure(self, caplog):
-        with patch(
-            "utils.master_login.LoggingCore", side_effect=ImportError("x"), create=True
-        ):
+        with patch("utils.master_login.LoggingCore", side_effect=ImportError("x"), create=True):
             ml._log_audit_log("127.0.0.1", "u", "daily")
 
     def test_log_security_alert_db_failure(self):

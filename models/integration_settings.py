@@ -15,11 +15,7 @@ class IntegrationSettings(db.Model):
     """
 
     __tablename__ = "integration_settings"
-    __table_args__ = (
-        db.UniqueConstraint(
-            "tenant_id", "service_name", name="uq_integration_settings_tenant_service"
-        ),
-    )
+    __table_args__ = (db.UniqueConstraint("tenant_id", "service_name", name="uq_integration_settings_tenant_service"),)
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -41,9 +37,7 @@ class IntegrationSettings(db.Model):
     last_test_message = db.Column(db.Text)  # رسالة الاختبار
 
     # Meta
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -116,9 +110,7 @@ class IntegrationSettings(db.Model):
             "service_name": self.service_name,
             "enabled": self.enabled,
             "config": self.get_config(),
-            "last_tested_at": (
-                self.last_tested_at.isoformat() if self.last_tested_at else None
-            ),
+            "last_tested_at": (self.last_tested_at.isoformat() if self.last_tested_at else None),
             "last_test_status": self.last_test_status,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

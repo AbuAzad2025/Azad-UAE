@@ -84,7 +84,4 @@ class TestPaymentsListPage:
             )
             resp = client.get("/payments/receipts")
         assert resp.status_code == 200
-        assert (
-            receipt.receipt_number.encode() in resp.data
-            or b"receipt" in resp.data.lower()
-        )
+        assert receipt.receipt_number.encode() in resp.data or b"receipt" in resp.data.lower()

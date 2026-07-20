@@ -53,9 +53,7 @@ def warehouse_mocks():
     warehouse_query = MagicMock()
     warehouse_query.filter_by.return_value.all.return_value = [_warehouse(1)]
     warehouse_query.filter_by.return_value.first.return_value = _warehouse(1)
-    warehouse_query.filter_by.return_value.order_by.return_value.first.return_value = (
-        _warehouse(1, is_main=True)
-    )
+    warehouse_query.filter_by.return_value.order_by.return_value.first.return_value = _warehouse(1, is_main=True)
     stock_session_query = MagicMock()
     stock_session_query.filter_by.return_value.group_by.return_value.all.return_value = [
         (1, Decimal("15")),
@@ -195,9 +193,7 @@ class TestWarehouseIndex:
 
 class TestWarehouseMovements:
     def test_movements_renders(self, warehouse_client):
-        with patch(
-            "routes.warehouse.render_template", return_value="movements"
-        ) as render:
+        with patch("routes.warehouse.render_template", return_value="movements") as render:
             resp = warehouse_client.get("/warehouse/movements")
         assert resp.status_code == 200
         assert render.call_args[0][0] == "warehouse/movements.html"
@@ -269,9 +265,7 @@ class TestWarehouseCreate:
         assert resp.status_code == 200
         assert render.call_args[0][0] == "warehouse/create_warehouse.html"
 
-    def test_create_post_success_redirects(
-        self, warehouse_admin_client, warehouse_mocks
-    ):
+    def test_create_post_success_redirects(self, warehouse_admin_client, warehouse_mocks):
         wh_query = warehouse_mocks["warehouse_query"]
         wh_query.filter_by.return_value.first.return_value = None
         atomic_cm = MagicMock()
@@ -279,9 +273,7 @@ class TestWarehouseCreate:
         atomic_cm.__exit__ = MagicMock(return_value=False)
         with (
             patch("routes.warehouse.db.session") as mock_session,
-            patch(
-                "routes.warehouse.atomic_transaction", return_value=atomic_cm
-            ) as atomic_mock,
+            patch("routes.warehouse.atomic_transaction", return_value=atomic_cm) as atomic_mock,
         ):
             resp = warehouse_admin_client.post(
                 "/warehouse/create",
@@ -393,9 +385,7 @@ class TestWarehouseList:
         assert resp.status_code == 200
         assert render.call_args[0][0] == "warehouse/list_warehouses.html"
 
-    def test_list_shows_all_tenant_warehouses_regardless_of_branch_scope(
-        self, warehouse_client
-    ):
+    def test_list_shows_all_tenant_warehouses_regardless_of_branch_scope(self, warehouse_client):
         wh_a = _warehouse(1, branch_id=1)
         wh_a.name = "WH-A"
         wh_b = _warehouse(2, branch_id=2)
@@ -462,9 +452,7 @@ class TestWarehouseDelete:
 class TestWarehouseAddStock:
     def test_add_stock_bad_quantity_returns_400(self, warehouse_client):
         with patch("routes.warehouse.tenant_get_or_404", return_value=_product()):
-            resp = warehouse_client.post(
-                "/warehouse/add-stock/1", data={"quantity": "0"}
-            )
+            resp = warehouse_client.post("/warehouse/add-stock/1", data={"quantity": "0"})
         assert resp.status_code == 400
         assert resp.get_json()["success"] is False
 
@@ -496,9 +484,7 @@ class TestWarehouseUploadImage:
 
     def test_upload_success(self, warehouse_client, mock_user):
         mock_user.has_permission.side_effect = lambda code: code == "manage_products"
-        with patch(
-            "utils.helpers.save_uploaded_file", return_value="uploads/products/p.jpg"
-        ):
+        with patch("utils.helpers.save_uploaded_file", return_value="uploads/products/p.jpg"):
             resp = warehouse_client.post(
                 "/warehouse/api/upload_product_image",
                 data={"file": (BytesIO(b"fake-image"), "p.jpg")},
@@ -515,9 +501,7 @@ class TestWarehouseExtended:
         assert resp.status_code == 200
         warehouse_mocks["visible_query"].filter_by.assert_called_with(category_id=3)
 
-    def test_index_no_warehouse_ids_uses_current_stock(
-        self, warehouse_client, warehouse_mocks
-    ):
+    def test_index_no_warehouse_ids_uses_current_stock(self, warehouse_client, warehouse_mocks):
         with (
             patch("routes.warehouse.get_accessible_warehouse_ids", return_value=[]),
             patch("routes.warehouse.render_template", return_value="idx"),
@@ -525,13 +509,9 @@ class TestWarehouseExtended:
             resp = warehouse_client.get("/warehouse/")
         assert resp.status_code == 200
 
-    def test_movements_product_and_type_filters(
-        self, warehouse_client, warehouse_mocks
-    ):
+    def test_movements_product_and_type_filters(self, warehouse_client, warehouse_mocks):
         with patch("routes.warehouse.render_template", return_value="mov"):
-            resp = warehouse_client.get(
-                "/warehouse/movements?product=5&type=in&warehouse=1"
-            )
+            resp = warehouse_client.get("/warehouse/movements?product=5&type=in&warehouse=1")
         assert resp.status_code == 200
 
     def test_movements_branch_scope_empty_warehouses(self, warehouse_client):
@@ -557,9 +537,7 @@ class TestWarehouseExtended:
         product_query.filter_by.return_value.first.return_value = product
         with (
             patch("routes.warehouse.tenant_get_or_404", return_value=wh),
-            patch(
-                "routes.warehouse.db.session.query", return_value=stock_session_query
-            ),
+            patch("routes.warehouse.db.session.query", return_value=stock_session_query),
             patch("routes.warehouse.Product.query", product_query),
             patch("routes.warehouse.render_template", return_value="view") as render,
         ):
@@ -567,9 +545,7 @@ class TestWarehouseExtended:
         assert resp.status_code == 200
         assert render.call_args[1]["stock"] == []
 
-    def test_create_post_online_warehouse_success(
-        self, warehouse_admin_client, warehouse_mocks
-    ):
+    def test_create_post_online_warehouse_success(self, warehouse_admin_client, warehouse_mocks):
         wh_query = warehouse_mocks["warehouse_query"]
         wh_query.filter_by.return_value.first.return_value = None
         with (
@@ -644,9 +620,7 @@ class TestWarehouseExtended:
 
     def test_create_post_generic_exception(self, warehouse_admin_client):
         with (
-            patch(
-                "routes.warehouse.atomic_transaction", side_effect=RuntimeError("fail")
-            ),
+            patch("routes.warehouse.atomic_transaction", side_effect=RuntimeError("fail")),
             patch("routes.warehouse.render_template", return_value="create"),
         ):
             resp = warehouse_admin_client.post(
@@ -697,9 +671,7 @@ class TestWarehouseExtended:
             patch("routes.warehouse.StockService.adjust_stock", return_value=movement),
             patch("routes.warehouse.db.session"),
         ):
-            resp = warehouse_client.post(
-                "/warehouse/add-stock/1", data={"quantity": "3"}
-            )
+            resp = warehouse_client.post("/warehouse/add-stock/1", data={"quantity": "3"})
         assert resp.status_code == 200
 
     def test_add_stock_no_warehouse_400(self, warehouse_client):
@@ -709,9 +681,7 @@ class TestWarehouseExtended:
             patch("routes.warehouse.tenant_query", return_value=empty_query),
             patch("routes.warehouse.branch_scope_id", return_value=None),
         ):
-            resp = warehouse_client.post(
-                "/warehouse/add-stock/1", data={"quantity": "2"}
-            )
+            resp = warehouse_client.post("/warehouse/add-stock/1", data={"quantity": "2"})
         assert resp.status_code == 400
 
     def test_add_stock_exception_500(self, warehouse_client):
@@ -721,9 +691,7 @@ class TestWarehouseExtended:
                 "routes.warehouse.StockService.adjust_stock",
                 side_effect=RuntimeError("fail"),
             ),
-            patch(
-                "routes.warehouse.ErrorMessages.unexpected_error", return_value="error"
-            ),
+            patch("routes.warehouse.ErrorMessages.unexpected_error", return_value="error"),
         ):
             resp = warehouse_client.post(
                 "/warehouse/add-stock/1",
@@ -736,9 +704,7 @@ class TestWarehouseExtended:
 
     def test_upload_value_error(self, warehouse_client, mock_user):
         mock_user.has_permission.side_effect = lambda code: code == "manage_products"
-        with patch(
-            "utils.helpers.save_uploaded_file", side_effect=ValueError("bad type")
-        ):
+        with patch("utils.helpers.save_uploaded_file", side_effect=ValueError("bad type")):
             resp = warehouse_client.post(
                 "/warehouse/api/upload_product_image",
                 data={"file": (BytesIO(b"x"), "bad.exe")},
@@ -748,9 +714,7 @@ class TestWarehouseExtended:
 
     def test_upload_server_error(self, warehouse_client, mock_user):
         mock_user.has_permission.side_effect = lambda code: code == "manage_products"
-        with patch(
-            "utils.helpers.save_uploaded_file", side_effect=RuntimeError("disk")
-        ):
+        with patch("utils.helpers.save_uploaded_file", side_effect=RuntimeError("disk")):
             resp = warehouse_client.post(
                 "/warehouse/api/upload_product_image",
                 data={"file": (BytesIO(b"x"), "p.jpg")},
@@ -789,9 +753,7 @@ class TestWarehouseExtended:
         product_query.filter_by.return_value.first.return_value = product
         with (
             patch("routes.warehouse.tenant_get_or_404", return_value=wh),
-            patch(
-                "routes.warehouse.db.session.query", return_value=stock_session_query
-            ),
+            patch("routes.warehouse.db.session.query", return_value=stock_session_query),
             patch("routes.warehouse.Product.query", product_query),
             patch("routes.warehouse.render_template", return_value="view") as render,
         ):
@@ -801,9 +763,7 @@ class TestWarehouseExtended:
         assert len(stock) == 1
         assert stock[0]["quantity"] == 12.0
 
-    def test_create_post_invalid_warehouse_type_defaults(
-        self, warehouse_admin_client, warehouse_mocks
-    ):
+    def test_create_post_invalid_warehouse_type_defaults(self, warehouse_admin_client, warehouse_mocks):
         wh_query = warehouse_mocks["warehouse_query"]
         wh_query.filter_by.return_value.first.return_value = None
         with (
@@ -858,9 +818,7 @@ class TestWarehouseExtended:
         movement.product = _product(1)
         main_wh = _warehouse(3, branch_id=2, is_main=True)
         wh_query = MagicMock()
-        wh_query.filter_by.return_value.order_by.return_value.first.return_value = (
-            main_wh
-        )
+        wh_query.filter_by.return_value.order_by.return_value.first.return_value = main_wh
         wh_query.filter_by.return_value.first.return_value = main_wh
         with (
             patch("routes.warehouse.tenant_get_or_404", return_value=_product(1)),
@@ -869,8 +827,6 @@ class TestWarehouseExtended:
             patch("routes.warehouse.StockService.adjust_stock", return_value=movement),
             patch("routes.warehouse.db.session"),
         ):
-            resp = warehouse_client.post(
-                "/warehouse/add-stock/1", data={"quantity": "3"}
-            )
+            resp = warehouse_client.post("/warehouse/add-stock/1", data={"quantity": "3"})
         assert resp.status_code == 200
         assert resp.get_json()["success"] is True

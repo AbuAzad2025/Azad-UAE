@@ -27,9 +27,7 @@ from utils.gl_tenant import gl_account_query, gl_entry_query, active_tenant_id
 from utils.db_safety import atomic_transaction
 from utils.tenanting import tenant_get_or_404
 
-advanced_ledger_bp = Blueprint(
-    "advanced_ledger", __name__, url_prefix="/ledger/advanced"
-)
+advanced_ledger_bp = Blueprint("advanced_ledger", __name__, url_prefix="/ledger/advanced")
 
 
 def _accounts():
@@ -96,11 +94,7 @@ def professional_printing():
 def customs_taxes():
     """إدارة الجمارك والضرائب"""
     tid = active_tenant_id(current_user)
-    taxes = (
-        CustomsTax.query.filter_by(is_active=True, tenant_id=tid)
-        .order_by(CustomsTax.name_ar)
-        .all()
-    )
+    taxes = CustomsTax.query.filter_by(is_active=True, tenant_id=tid).order_by(CustomsTax.name_ar).all()
     return render_template("ledger/advanced/customs_taxes.html", taxes=taxes)
 
 
@@ -109,12 +103,7 @@ def customs_taxes():
 @admin_required
 def add_customs_tax():
     """إضافة ضريبة أو جمرك جديد"""
-    accounts = (
-        _accounts()
-        .filter_by(is_active=True, is_header=False)
-        .order_by(GLAccount.code)
-        .all()
-    )
+    accounts = _accounts().filter_by(is_active=True, is_header=False).order_by(GLAccount.code).all()
 
     if request.method == "POST":
         try:
@@ -137,13 +126,9 @@ def add_customs_tax():
                 is_percentage=bool(request.form.get("is_percentage")),
                 fixed_amount=Decimal(str(request.form.get("fixed_amount") or "0")),
                 gl_account_id=gl_account_id,
-                effective_from=datetime.strptime(
-                    request.form.get("effective_from") or "", "%Y-%m-%d"
-                ).date(),
+                effective_from=datetime.strptime(request.form.get("effective_from") or "", "%Y-%m-%d").date(),
                 effective_to=(
-                    datetime.strptime(
-                        request.form.get("effective_to") or "", "%Y-%m-%d"
-                    ).date()
+                    datetime.strptime(request.form.get("effective_to") or "", "%Y-%m-%d").date()
                     if request.form.get("effective_to")
                     else None
                 ),
@@ -176,14 +161,8 @@ def add_customs_tax():
 def expense_categories():
     """إدارة فئات المصروفات المتقدمة"""
     tid = active_tenant_id(current_user)
-    categories = (
-        ExpenseCategory.query.filter_by(is_active=True, tenant_id=tid)
-        .order_by(ExpenseCategory.name)
-        .all()
-    )
-    return render_template(
-        "ledger/advanced/expense_categories.html", categories=categories
-    )
+    categories = ExpenseCategory.query.filter_by(is_active=True, tenant_id=tid).order_by(ExpenseCategory.name).all()
+    return render_template("ledger/advanced/expense_categories.html", categories=categories)
 
 
 @advanced_ledger_bp.route("/expense-categories/add", methods=["GET", "POST"])
@@ -192,15 +171,8 @@ def expense_categories():
 def add_expense_category():
     """إضافة فئة مصروفات جديدة"""
     tid = active_tenant_id(current_user)
-    parent_categories = ExpenseCategory.query.filter_by(
-        is_active=True, tenant_id=tid
-    ).all()
-    accounts = (
-        _accounts()
-        .filter_by(is_active=True, is_header=False)
-        .order_by(GLAccount.code)
-        .all()
-    )
+    parent_categories = ExpenseCategory.query.filter_by(is_active=True, tenant_id=tid).all()
+    accounts = _accounts().filter_by(is_active=True, is_header=False).order_by(GLAccount.code).all()
 
     if request.method == "POST":
         try:
@@ -214,11 +186,7 @@ def add_expense_category():
                     form_data=request.form,
                 )
 
-            (
-                request.form.get("parent_id", type=int)
-                if request.form.get("parent_id")
-                else None
-            )
+            (request.form.get("parent_id", type=int) if request.form.get("parent_id") else None)
 
             tid = active_tenant_id(current_user)
             account = _accounts().filter_by(id=gl_account_id).first()
@@ -290,17 +258,11 @@ def add_advanced_expense():
             expense = AdvancedExpense(
                 tenant_id=tid,
                 expense_number=f"EXP-{datetime.now().strftime('%Y%m%d%H%M%S')}",
-                expense_date=datetime.strptime(
-                    request.form.get("expense_date") or "", "%Y-%m-%d"
-                ).date(),
+                expense_date=datetime.strptime(request.form.get("expense_date") or "", "%Y-%m-%d").date(),
                 description=request.form.get("description"),
                 description_ar=request.form.get("description_ar"),
                 category_id=int(request.form.get("category_id") or 0),
-                supplier_id=(
-                    int(request.form.get("supplier_id") or 0)
-                    if request.form.get("supplier_id")
-                    else None
-                ),
+                supplier_id=(int(request.form.get("supplier_id") or 0) if request.form.get("supplier_id") else None),
                 amount=Decimal(str(request.form.get("amount") or "0")),
                 currency=request.form.get("currency") or default_currency,
                 exchange_rate=Decimal(str(request.form.get("exchange_rate") or "0")),
@@ -315,9 +277,7 @@ def add_advanced_expense():
                 payment_method=request.form.get("payment_method"),
                 payment_status=request.form.get("payment_status", "pending"),
                 due_date=(
-                    datetime.strptime(
-                        request.form.get("due_date") or "", "%Y-%m-%d"
-                    ).date()
+                    datetime.strptime(request.form.get("due_date") or "", "%Y-%m-%d").date()
                     if request.form.get("due_date")
                     else None
                 ),
@@ -349,11 +309,7 @@ def add_advanced_expense():
     categories = ExpenseCategory.query.filter_by(is_active=True, tenant_id=tid).all()
     from models import Supplier
 
-    suppliers = (
-        Supplier.query.filter_by(tenant_id=tid)
-        .with_entities(Supplier.id, Supplier.name)
-        .all()
-    )
+    suppliers = Supplier.query.filter_by(tenant_id=tid).with_entities(Supplier.id, Supplier.name).all()
 
     return render_template(
         "ledger/advanced/add_advanced_expense.html",
@@ -379,9 +335,7 @@ def journal_management():
     return render_template("ledger/advanced/journal_management.html", entries=entries)
 
 
-@advanced_ledger_bp.route(
-    "/journal-management/<int:entry_id>/reverse", methods=["POST"]
-)
+@advanced_ledger_bp.route("/journal-management/<int:entry_id>/reverse", methods=["POST"])
 @login_required
 @admin_required
 def reverse_journal_entry(entry_id):
@@ -398,9 +352,7 @@ def reverse_journal_entry(entry_id):
             )
 
         flash(
-            gettext(
-                f"✅ تم عكس القيد بنجاح - القيد العكسي: {reversal_entry.entry_number}"
-            ),
+            gettext(f"✅ تم عكس القيد بنجاح - القيد العكسي: {reversal_entry.entry_number}"),
             "success",
         )
 
@@ -422,9 +374,7 @@ def delete_journal_entry(entry_id):
         reason = request.form.get("reason", gettext("حذف القيد"))
 
         with atomic_transaction("delete_journal_entry"):
-            AdvancedJournalEntryManager.delete_entry(
-                entry_id=entry_id, deleted_by=current_user, reason=reason
-            )
+            AdvancedJournalEntryManager.delete_entry(entry_id=entry_id, deleted_by=current_user, reason=reason)
 
         flash(gettext("✅ تم إلغاء القيد بنجاح"), "success")
 
@@ -437,9 +387,7 @@ def delete_journal_entry(entry_id):
     return redirect(url_for("advanced_ledger.journal_management"))
 
 
-@advanced_ledger_bp.route(
-    "/journal-management/<int:entry_id>/approve", methods=["POST"]
-)
+@advanced_ledger_bp.route("/journal-management/<int:entry_id>/approve", methods=["POST"])
 @login_required
 @admin_required
 def approve_journal_entry(entry_id):
@@ -471,28 +419,14 @@ def approve_journal_entry(entry_id):
 def cheque_integration():
     """تكامل الشيكات مع النظام المحاسبي"""
     tid = active_tenant_id(current_user)
-    recent_cheques = (
-        Cheque.query.filter_by(tenant_id=tid)
-        .order_by(Cheque.updated_at.desc())
-        .limit(20)
-        .all()
-    )
+    recent_cheques = Cheque.query.filter_by(tenant_id=tid).order_by(Cheque.updated_at.desc()).limit(20).all()
 
     stats = {
         "total_cheques": Cheque.query.filter_by(tenant_id=tid).count(),
-        "pending_cheques": Cheque.query.filter_by(
-            tenant_id=tid, status="pending"
-        ).count(),
-        "cleared_cheques": Cheque.query.filter_by(
-            tenant_id=tid, status="cleared"
-        ).count(),
-        "bounced_cheques": Cheque.query.filter_by(
-            tenant_id=tid, status="bounced"
-        ).count(),
-        "total_amount": db.session.query(db.func.sum(Cheque.amount_aed))
-        .filter_by(tenant_id=tid)
-        .scalar()
-        or 0,
+        "pending_cheques": Cheque.query.filter_by(tenant_id=tid, status="pending").count(),
+        "cleared_cheques": Cheque.query.filter_by(tenant_id=tid, status="cleared").count(),
+        "bounced_cheques": Cheque.query.filter_by(tenant_id=tid, status="bounced").count(),
+        "total_amount": db.session.query(db.func.sum(Cheque.amount_aed)).filter_by(tenant_id=tid).scalar() or 0,
     }
 
     return render_template(
@@ -502,9 +436,7 @@ def cheque_integration():
     )
 
 
-@advanced_ledger_bp.route(
-    "/cheque-integration/<int:cheque_id>/receive", methods=["POST"]
-)
+@advanced_ledger_bp.route("/cheque-integration/<int:cheque_id>/receive", methods=["POST"])
 @login_required
 @admin_required
 def receive_cheque(cheque_id):
@@ -512,9 +444,7 @@ def receive_cheque(cheque_id):
     cheque = tenant_get_or_404(Cheque, cheque_id)
     try:
         with atomic_transaction("advanced_receive_cheque"):
-            entry = ChequeAccountingIntegration.receive_cheque(
-                cheque_id=cheque.id, received_by=current_user
-            )
+            entry = ChequeAccountingIntegration.receive_cheque(cheque_id=cheque.id, received_by=current_user)
 
         flash(
             gettext(f"✅ تم تسجيل استلام الشيك بنجاح - القيد: {entry.entry_number}"),
@@ -699,8 +629,6 @@ def api_forecasting():
     """API للتوقعات المالية"""
     months_ahead = int(request.args.get("months", 6))
 
-    forecast = AdvancedFinancialAnalytics.get_forecasting_data(
-        months_ahead=months_ahead
-    )
+    forecast = AdvancedFinancialAnalytics.get_forecasting_data(months_ahead=months_ahead)
 
     return jsonify({"success": True, "forecast": forecast})

@@ -53,18 +53,14 @@ def main():
             # Find a product with existing PWC
             pwc = ProductWarehouseCost.query.filter_by(tenant_id=tid).first()
             if not pwc:
-                print(
-                    "FAIL: No ProductWarehouseCost record found. Run seed_opening_wac.py first."
-                )
+                print("FAIL: No ProductWarehouseCost record found. Run seed_opening_wac.py first.")
                 return 1
 
             product = Product.query.get(pwc.product_id)
             warehouse = Warehouse.query.get(pwc.warehouse_id)
             print(f"Product: {product.name} (id={product.id})")
             print(f"Warehouse: {warehouse.name} (id={warehouse.id})")
-            print(
-                f"Initial PWC: qty={pwc.total_quantity} avg_cost={pwc.average_cost} value={pwc.total_value}"
-            )
+            print(f"Initial PWC: qty={pwc.total_quantity} avg_cost={pwc.average_cost} value={pwc.total_value}")
 
             old_pwc_qty = pwc.total_quantity
             old_pwc_avg = pwc.average_cost
@@ -124,21 +120,17 @@ def main():
             # Refresh PWC
             db.session.refresh(pwc)
             print(f"\r\nAfter Purchase (qty={purchase_qty} @ {new_unit_cost}):")
-            print(
-                f"  PWC qty={pwc.total_quantity} avg_cost={pwc.average_cost} value={pwc.total_value}"
-            )
+            print(f"  PWC qty={pwc.total_quantity} avg_cost={pwc.average_cost} value={pwc.total_value}")
 
             # Verify WAC formula
             expected_qty = old_pwc_qty + purchase_qty
             expected_value = old_pwc_val + (purchase_qty * new_unit_cost)
             expected_avg = expected_value / expected_qty
 
-            assert pwc.total_quantity == expected_qty, (
-                f"Qty mismatch: {pwc.total_quantity} != {expected_qty}"
+            assert pwc.total_quantity == expected_qty, f"Qty mismatch: {pwc.total_quantity} != {expected_qty}"
+            assert abs(pwc.average_cost - expected_avg.quantize(Decimal("0.0001"))) < Decimal("0.001"), (
+                f"Avg mismatch: {pwc.average_cost} != {expected_avg}"
             )
-            assert abs(
-                pwc.average_cost - expected_avg.quantize(Decimal("0.0001"))
-            ) < Decimal("0.001"), f"Avg mismatch: {pwc.average_cost} != {expected_avg}"
             print("  ✅ WAC recalculation correct")
 
             # Verify ProductCostHistory for purchase
@@ -149,9 +141,7 @@ def main():
                 reference_type="Purchase",
                 reference_id=purchase.id,
             ).first()
-            assert purchase_history is not None, (
-                "Missing ProductCostHistory for purchase"
-            )
+            assert purchase_history is not None, "Missing ProductCostHistory for purchase"
             print("  ✅ ProductCostHistory record exists for purchase")
 
             # Step 2: Create a sale and verify COGS
@@ -201,9 +191,7 @@ def main():
 
             # Process sale (stock + COGS)
             StockService.process_sale_lines(sale, warehouse_id=warehouse.id)
-            cogs_total = StockService.calculate_sale_cogs_and_deduct(
-                sale, warehouse_id=warehouse.id
-            )
+            cogs_total = StockService.calculate_sale_cogs_and_deduct(sale, warehouse_id=warehouse.id)
             db.session.commit()
 
             expected_cogs = (pwc.average_cost * sale_qty).quantize(Decimal("0.001"))
@@ -211,16 +199,12 @@ def main():
             print(f"  COGS computed: {cogs_total}")
             print(f"  Expected COGS: {expected_cogs}")
 
-            assert abs(cogs_total - expected_cogs) < Decimal("0.01"), (
-                f"COGS mismatch: {cogs_total} != {expected_cogs}"
-            )
+            assert abs(cogs_total - expected_cogs) < Decimal("0.01"), f"COGS mismatch: {cogs_total} != {expected_cogs}"
             print("  ✅ COGS computed correctly from WAC")
 
             # Refresh PWC after sale
             db.session.refresh(pwc)
-            print(
-                f"  PWC qty={pwc.total_quantity} avg_cost={pwc.average_cost} value={pwc.total_value}"
-            )
+            print(f"  PWC qty={pwc.total_quantity} avg_cost={pwc.average_cost} value={pwc.total_value}")
 
             expected_qty_after_sale = expected_qty - sale_qty
             assert pwc.total_quantity == expected_qty_after_sale, (
@@ -295,9 +279,7 @@ def main():
                     },
                 )
                 db.session.commit()
-                print(
-                    f"PWC restored to qty={old_pwc_qty} avg={old_pwc_avg} val={old_pwc_val}"
-                )
+                print(f"PWC restored to qty={old_pwc_qty} avg={old_pwc_avg} val={old_pwc_val}")
 
             # Restore original MWAC flag
             current_app.config["ENABLE_MWAC"] = mwac_original

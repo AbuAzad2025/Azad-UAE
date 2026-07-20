@@ -39,9 +39,7 @@ def _minimal_app(extra_patches=None, config_class=None):
 class TestFactoryRoutes:
     def test_favicon_route(self, monkeypatch):
         monkeypatch.setenv("SKIP_SYSTEM_INTEGRITY", "1")
-        with _minimal_app(
-            [patch("app.factory.send_from_directory", return_value="ico")]
-        ) as app:
+        with _minimal_app([patch("app.factory.send_from_directory", return_value="ico")]) as app:
             with app.test_client() as client:
                 resp = client.get("/favicon.ico")
             assert resp.status_code == 200
@@ -142,9 +140,7 @@ class TestFactoryRoutes:
     def test_load_user_returns_user(self, monkeypatch):
         monkeypatch.setenv("SKIP_SYSTEM_INTEGRITY", "1")
         user = MagicMock()
-        with _minimal_app(
-            [patch("app.factory.db.session.get", return_value=user)]
-        ) as app:
+        with _minimal_app([patch("app.factory.db.session.get", return_value=user)]) as app:
             loader = app.login_manager._user_callback
             assert loader("7") is user
 
@@ -222,9 +218,7 @@ class TestFactoryRoutes:
         try:
             real_import = builtins.__import__
 
-            def blocked(
-                name, globals_dict=None, locals_dict=None, fromlist=(), level=0
-            ):
+            def blocked(name, globals_dict=None, locals_dict=None, fromlist=(), level=0):
                 if name == "flask_compress":
                     raise ImportError("blocked for test")
                 return real_import(name, globals_dict, locals_dict, fromlist, level)

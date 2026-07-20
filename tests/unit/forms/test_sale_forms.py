@@ -60,9 +60,7 @@ class TestSaleFormValid:
         assert form.validate() is True
         assert form.payment_method.data == ""
 
-    @pytest.mark.parametrize(
-        "method", ["cash", "card", "bank_transfer", "cheque", "e_wallet"]
-    )
+    @pytest.mark.parametrize("method", ["cash", "card", "bank_transfer", "cheque", "e_wallet"])
     def test_every_payment_method_choice_accepted(self, method):
         form = _sale_form({**VALID_PAYLOAD, "payment_method": method})
         assert form.validate() is True

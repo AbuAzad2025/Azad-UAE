@@ -26,11 +26,7 @@ class TestOwnerBlueprintDefinition:
 
         assert callable(routes.owner._owner_ip_guard)
         # Blueprint-scoped before-request handlers are tracked on the blueprint.
-        before_funcs = [
-            fn
-            for funcs in routes.owner.owner_bp.before_request_funcs.values()
-            for fn in funcs
-        ]
+        before_funcs = [fn for funcs in routes.owner.owner_bp.before_request_funcs.values() for fn in funcs]
         assert routes.owner._owner_ip_guard in before_funcs
 
 

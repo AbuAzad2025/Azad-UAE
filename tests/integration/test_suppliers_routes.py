@@ -70,9 +70,7 @@ class TestSupplierCreate:
             )
         assert resp.status_code == 200
 
-        supplier = Supplier.query.filter_by(
-            phone=f"0501111{str(tenant.id)[-4:]}"
-        ).first()
+        supplier = Supplier.query.filter_by(phone=f"0501111{str(tenant.id)[-4:]}").first()
         assert supplier is not None, "Supplier not created"
         assert supplier.tenant_id == tenant.id, "Supplier not linked to tenant"
 
@@ -133,9 +131,7 @@ class TestSupplierBranchIsolation:
         db_session.add(u2)
         db_session.flush()
 
-        supplier = Supplier(
-            tenant_id=tenant.id, name=f"SuppB1 {tid}", phone="0502222222"
-        )
+        supplier = Supplier(tenant_id=tenant.id, name=f"SuppB1 {tid}", phone="0502222222")
         db_session.add(supplier)
         db_session.flush()
 
@@ -171,9 +167,7 @@ class TestSupplierBranchIsolation:
             resp = client.get("/suppliers/")
         assert resp.status_code == 200
         html = resp.data.decode("utf-8")
-        assert f"SuppB1 {tid}" not in html, (
-            "Supplier from Branch 1 visible in Branch 2 list"
-        )
+        assert f"SuppB1 {tid}" not in html, "Supplier from Branch 1 visible in Branch 2 list"
 
     def test_supplier_branch_isolation_reverse(self, app, db_session, client):
         """Supplier in Branch 2 must NOT appear in Branch 1's list."""
@@ -230,9 +224,7 @@ class TestSupplierBranchIsolation:
         db_session.add(u2)
         db_session.flush()
 
-        supplier = Supplier(
-            tenant_id=tenant.id, name=f"SuppB2 {tid}", phone="0503333333"
-        )
+        supplier = Supplier(tenant_id=tenant.id, name=f"SuppB2 {tid}", phone="0503333333")
         db_session.add(supplier)
         db_session.flush()
 
@@ -268,9 +260,7 @@ class TestSupplierBranchIsolation:
             resp = client.get("/suppliers/")
         assert resp.status_code == 200
         html = resp.data.decode("utf-8")
-        assert f"SuppB2 {tid}" not in html, (
-            "Supplier from Branch 2 visible in Branch 1 list"
-        )
+        assert f"SuppB2 {tid}" not in html, "Supplier from Branch 2 visible in Branch 1 list"
 
 
 class TestSupplierStatement:
@@ -311,9 +301,7 @@ class TestSupplierStatement:
         db_session.add(user)
         db_session.flush()
 
-        supplier = Supplier(
-            tenant_id=tenant.id, name=f"StmtSupp {tid}", phone="0504444444"
-        )
+        supplier = Supplier(tenant_id=tenant.id, name=f"StmtSupp {tid}", phone="0504444444")
         db_session.add(supplier)
         db_session.flush()
         db_session.commit()
@@ -407,9 +395,7 @@ class TestPayablesReport:
         db_session.add(user)
         db_session.flush()
 
-        supplier = Supplier(
-            tenant_id=tenant.id, name=f"PaySupp {tid}", phone="0505555555"
-        )
+        supplier = Supplier(tenant_id=tenant.id, name=f"PaySupp {tid}", phone="0505555555")
         db_session.add(supplier)
         db_session.flush()
 
@@ -495,9 +481,7 @@ class TestSupplierChequeReport:
         db_session.add(user)
         db_session.flush()
 
-        supplier = Supplier(
-            tenant_id=tenant.id, name=f"ChqSupp {tid}", phone="0506666666"
-        )
+        supplier = Supplier(tenant_id=tenant.id, name=f"ChqSupp {tid}", phone="0506666666")
         db_session.add(supplier)
         db_session.flush()
         db_session.commit()
@@ -610,9 +594,7 @@ class TestSupplierAgeing:
         db_session.add(user)
         db_session.flush()
 
-        supplier = Supplier(
-            tenant_id=tenant.id, name=f"AgeSupp {tid}", phone="0507777777"
-        )
+        supplier = Supplier(tenant_id=tenant.id, name=f"AgeSupp {tid}", phone="0507777777")
         db_session.add(supplier)
         db_session.flush()
 
@@ -692,9 +674,7 @@ class TestSupplierDelete:
         db_session.add(user)
         db_session.flush()
 
-        supplier = Supplier(
-            tenant_id=tenant.id, name=f"DelSupp {tid}", phone="0508888888"
-        )
+        supplier = Supplier(tenant_id=tenant.id, name=f"DelSupp {tid}", phone="0508888888")
         db_session.add(supplier)
         db_session.flush()
 
@@ -727,17 +707,13 @@ class TestSupplierDelete:
             )
             assert resp.status_code == 200
 
-            resp = client.post(
-                f"/suppliers/{supplier.id}/delete", follow_redirects=True
-            )
+            resp = client.post(f"/suppliers/{supplier.id}/delete", follow_redirects=True)
         assert resp.status_code == 200
 
         db_session.expire_all()
         deleted = Supplier.query.get(supplier.id)
         assert deleted is not None, "Supplier hard-deleted despite having purchases"
-        assert deleted.is_active is False, (
-            "Supplier should be inactive after soft-delete"
-        )
+        assert deleted.is_active is False, "Supplier should be inactive after soft-delete"
 
     def test_delete_supplier_without_links_hard_deletes(self, app, db_session, client):
         """Supplier with NO linked records must be hard-deleted."""
@@ -776,9 +752,7 @@ class TestSupplierDelete:
         db_session.add(user)
         db_session.flush()
 
-        supplier = Supplier(
-            tenant_id=tenant.id, name=f"Del2Supp {tid}", phone="0509999999"
-        )
+        supplier = Supplier(tenant_id=tenant.id, name=f"Del2Supp {tid}", phone="0509999999")
         db_session.add(supplier)
         db_session.flush()
         db_session.commit()
@@ -794,9 +768,7 @@ class TestSupplierDelete:
             )
             assert resp.status_code == 200
 
-            resp = client.post(
-                f"/suppliers/{supplier.id}/delete", follow_redirects=True
-            )
+            resp = client.post(f"/suppliers/{supplier.id}/delete", follow_redirects=True)
         assert resp.status_code == 200
 
         db_session.expire_all()
@@ -843,9 +815,7 @@ class TestSupplierSearch:
         db_session.add(user)
         db_session.flush()
 
-        supplier = Supplier(
-            tenant_id=tenant.id, name=f"FindMeSupp {tid}", phone="0500001111"
-        )
+        supplier = Supplier(tenant_id=tenant.id, name=f"FindMeSupp {tid}", phone="0500001111")
         db_session.add(supplier)
         db_session.flush()
 

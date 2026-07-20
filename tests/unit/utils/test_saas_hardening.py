@@ -24,9 +24,7 @@ class TestCrossTenantWriteBlock:
             yield
         ctx.pop()
 
-    def test_cross_tenant_insert_raises_isolation_error(
-        self, app, db_session, sample_tenant
-    ):
+    def test_cross_tenant_insert_raises_isolation_error(self, app, db_session, sample_tenant):
         from models import Product
         from models.tenant import Tenant
         from utils.tenant_orm import TenantIsolationError
@@ -43,9 +41,7 @@ class TestCrossTenantWriteBlock:
         db_session.refresh(other)
 
         with app.test_request_context():
-            with patch(
-                "utils.tenant_orm._active_tenant_for_orm", return_value=sample_tenant.id
-            ):
+            with patch("utils.tenant_orm._active_tenant_for_orm", return_value=sample_tenant.id):
                 product = Product(
                     name="Cross-tenant",
                     sku=f"X-{uuid.uuid4().hex[:8]}",
@@ -57,9 +53,7 @@ class TestCrossTenantWriteBlock:
                     db_session.flush()
                 db_session.rollback()
 
-    def test_cross_tenant_update_raises_isolation_error(
-        self, app, db_session, sample_tenant, sample_product
-    ):
+    def test_cross_tenant_update_raises_isolation_error(self, app, db_session, sample_tenant, sample_product):
         from models.tenant import Tenant
         from utils.tenant_orm import TenantIsolationError
         import uuid
@@ -78,9 +72,7 @@ class TestCrossTenantWriteBlock:
         db_session.commit()
 
         with app.test_request_context():
-            with patch(
-                "utils.tenant_orm._active_tenant_for_orm", return_value=sample_tenant.id
-            ):
+            with patch("utils.tenant_orm._active_tenant_for_orm", return_value=sample_tenant.id):
                 sample_product.name = "Hacked name"
                 db_session.add(sample_product)
                 with pytest.raises(TenantIsolationError, match="Cross-tenant UPDATE"):
@@ -91,9 +83,7 @@ class TestCrossTenantWriteBlock:
 class TestSubscriptionExpiryEnforcement:
     """Verify expired subscription returns HTTP 402."""
 
-    def test_expired_subscription_blocks_request(
-        self, app, client, sample_tenant, sample_user
-    ):
+    def test_expired_subscription_blocks_request(self, app, client, sample_tenant, sample_user):
         sample_tenant.subscription_end = datetime.now(timezone.utc) - timedelta(days=1)
         sample_tenant.subscription_plan_duration = "monthly"
         db.session.flush()
@@ -190,9 +180,7 @@ class TestDynamicResourceLimits:
                 with pytest.raises(TenantLimitError):
                     check_sales_monthly_limit()
 
-    def test_enforce_resource_limit_decorator_returns_403(
-        self, app, db_session, sample_tenant, sample_user
-    ):
+    def test_enforce_resource_limit_decorator_returns_403(self, app, db_session, sample_tenant, sample_user):
         from datetime import datetime, timezone
         from decimal import Decimal
         from models import Sale

@@ -19,9 +19,7 @@ class TestSerialTracking:
         assert SerialTrackingService.validate_imei("12345678901234a") is False
 
     def test_assign_serial_not_found_returns_none(self, mocker):
-        mocker.patch(
-            "models.product_serial.ProductSerial.query"
-        ).get.return_value = None
+        mocker.patch("models.product_serial.ProductSerial.query").get.return_value = None
         from services.serial_tracking_service import SerialTrackingService
 
         assert SerialTrackingService.assign_serial_to_warehouse(99, 1) is None
@@ -38,9 +36,7 @@ class TestSerialTracking:
 
     def test_assign_serial_rejects_double_assignment(self, mocker):
         serial = MagicMock(warehouse_id=1)
-        mocker.patch(
-            "models.product_serial.ProductSerial.query"
-        ).get.return_value = serial
+        mocker.patch("models.product_serial.ProductSerial.query").get.return_value = serial
         from services.serial_tracking_service import SerialTrackingService
 
         with pytest.raises(ValueError, match="already assigned"):
@@ -48,9 +44,7 @@ class TestSerialTracking:
 
     def test_assign_serial_success(self, mocker):
         serial = MagicMock(warehouse_id=None)
-        mocker.patch(
-            "models.product_serial.ProductSerial.query"
-        ).get.return_value = serial
+        mocker.patch("models.product_serial.ProductSerial.query").get.return_value = serial
         from services.serial_tracking_service import SerialTrackingService
 
         result = SerialTrackingService.assign_serial_to_warehouse(1, 9)
@@ -58,18 +52,14 @@ class TestSerialTracking:
 
     def test_transfer_serial_wrong_warehouse_returns_none(self, mocker):
         serial = MagicMock(warehouse_id=2)
-        mocker.patch(
-            "models.product_serial.ProductSerial.query"
-        ).get.return_value = serial
+        mocker.patch("models.product_serial.ProductSerial.query").get.return_value = serial
         from services.serial_tracking_service import SerialTrackingService
 
         assert SerialTrackingService.transfer_serial(1, 1, 3) is None
 
     def test_transfer_serial_success(self, mocker):
         serial = MagicMock(warehouse_id=1)
-        mocker.patch(
-            "models.product_serial.ProductSerial.query"
-        ).get.return_value = serial
+        mocker.patch("models.product_serial.ProductSerial.query").get.return_value = serial
         from services.serial_tracking_service import SerialTrackingService
 
         assert SerialTrackingService.transfer_serial(1, 1, 5).warehouse_id == 5
@@ -85,9 +75,7 @@ class TestSerialTracking:
         assert SerialTrackingService.get_serial_by_imei("123456789012345", 1) is found
 
     def test_get_serials_in_warehouse(self, mocker):
-        mocker.patch(
-            "models.product_serial.ProductSerial.query"
-        ).filter_by.return_value.all.return_value = []
+        mocker.patch("models.product_serial.ProductSerial.query").filter_by.return_value.all.return_value = []
         from services.serial_tracking_service import SerialTrackingService
 
         assert SerialTrackingService.get_serials_in_warehouse(3) == []
@@ -101,9 +89,7 @@ class TestShipmentService:
         from services.shipment_service import ShipmentService
 
         with app.app_context():
-            shipment = ShipmentService.create_shipment(
-                "sale", 10, "DHL", "TRK-1", tenant_id=1
-            )
+            shipment = ShipmentService.create_shipment("sale", 10, "DHL", "TRK-1", tenant_id=1)
         assert shipment.status == "pending"
         assert shipment.shipping_cost == 0
         mock_session.add.assert_called_once()
@@ -125,17 +111,13 @@ class TestShipmentService:
 
     def test_get_shipments_for_sale(self, mocker):
         rows = [MagicMock()]
-        mocker.patch(
-            "models.shipment.Shipment.query"
-        ).filter_by.return_value.all.return_value = rows
+        mocker.patch("models.shipment.Shipment.query").filter_by.return_value.all.return_value = rows
         from services.shipment_service import ShipmentService
 
         assert ShipmentService.get_shipments_for_sale(5) == rows
 
     def test_get_shipments_for_purchase(self, mocker):
-        mocker.patch(
-            "models.shipment.Shipment.query"
-        ).filter_by.return_value.all.return_value = []
+        mocker.patch("models.shipment.Shipment.query").filter_by.return_value.all.return_value = []
         from services.shipment_service import ShipmentService
 
         assert ShipmentService.get_shipments_for_purchase(8) == []

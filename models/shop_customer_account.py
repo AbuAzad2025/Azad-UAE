@@ -8,9 +8,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 class ShopCustomerAccount(db.Model):
     __tablename__ = "shop_customer_accounts"
-    __table_args__ = (
-        db.UniqueConstraint("tenant_id", "email", name="uq_shop_customer_tenant_email"),
-    )
+    __table_args__ = (db.UniqueConstraint("tenant_id", "email", name="uq_shop_customer_tenant_email"),)
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -19,9 +17,7 @@ class ShopCustomerAccount(db.Model):
         nullable=False,
         index=True,
     )
-    customer_id = db.Column(
-        db.Integer, db.ForeignKey("customers.id"), nullable=False, index=True
-    )
+    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=False, index=True)
     email = db.Column(db.String(120), nullable=False, index=True)
     phone = db.Column(db.String(30))
     name = db.Column(db.String(200), nullable=False)
@@ -38,9 +34,7 @@ class ShopCustomerAccount(db.Model):
         index=True,
     )
 
-    tenant = db.relationship(
-        "Tenant", backref=db.backref("shop_customers", lazy="dynamic")
-    )
+    tenant = db.relationship("Tenant", backref=db.backref("shop_customers", lazy="dynamic"))
     customer = db.relationship("Customer", foreign_keys=[customer_id])
 
     def set_password(self, password: str):

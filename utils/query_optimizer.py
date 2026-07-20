@@ -19,9 +19,7 @@ def optimize_query(model, relationships=None, strategy="joined"):
 
 
 def paginate_optimized(query, page=1, per_page=20):
-    return query.paginate(
-        page=page, per_page=per_page, error_out=False, max_per_page=100
-    )
+    return query.paginate(page=page, per_page=per_page, error_out=False, max_per_page=100)
 
 
 def batch_fetch(model, ids, relationships=None):
@@ -42,9 +40,7 @@ def prefetch_related(instances, relationship_name, related_model):
     instance_ids = [instance.id for instance in instances]
 
     foreign_key = f"{instances[0].__tablename__}_id"
-    related_items = related_model.query.filter(
-        getattr(related_model, foreign_key).in_(instance_ids)
-    ).all()
+    related_items = related_model.query.filter(getattr(related_model, foreign_key).in_(instance_ids)).all()
 
     related_map = {}
     for item in related_items:

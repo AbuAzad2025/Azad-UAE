@@ -120,9 +120,7 @@ def _seed(db):
         user.set_password(password)
         db.session.add(user)
         db.session.flush()
-        users.append(
-            {"slug": slug, "email": email, "password": password, "user_id": user.id}
-        )
+        users.append({"slug": slug, "email": email, "password": password, "user_id": user.id})
 
     db.session.commit()
     return tenant, branch, warehouse, users

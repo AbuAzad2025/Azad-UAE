@@ -114,9 +114,7 @@ class TestAuthenticatedApi:
             missing = auth_client.get("/api/products/999999/info")
             barcode = auth_client.get(f"/api/products/barcode/{barcode_value}")
             validate_empty = auth_client.get("/api/barcode/validate")
-            validate_dup = auth_client.get(
-                f"/api/barcode/validate?code={barcode_value}"
-            )
+            validate_dup = auth_client.get(f"/api/barcode/validate?code={barcode_value}")
         assert info.status_code == 200
         assert info.get_json()["success"] is True
         assert missing.status_code == 404
@@ -132,9 +130,7 @@ class TestAuthenticatedApi:
 
     def test_exchange_rates_display(self, app, auth_client):
         with app.app_context():
-            resp = auth_client.get(
-                "/api/exchange-rates/display?base=USD&symbols=AED,EUR"
-            )
+            resp = auth_client.get("/api/exchange-rates/display?base=USD&symbols=AED,EUR")
         assert resp.status_code == 200
 
     def test_products_low_stock(self, app, auth_client, mocker):
@@ -186,9 +182,7 @@ class TestAuthenticatedApi:
         mock_q.order_by.return_value = mock_q
         mock_q.limit.return_value = mock_q
         mock_q.all.return_value = [wh]
-        mocker.patch.object(
-            api_module, "get_accessible_warehouses", return_value=mock_q, create=True
-        )
+        mocker.patch.object(api_module, "get_accessible_warehouses", return_value=mock_q, create=True)
         with app.app_context():
             resp = auth_client.get("/api/warehouses?q=Main")
         assert resp.status_code == 200
@@ -254,10 +248,7 @@ class TestApiHelpers:
                 "https://a.com",
                 "https://b.com",
             }
-            assert (
-                _origin_from_referer("https://shop.example/page")
-                == "https://shop.example"
-            )
+            assert _origin_from_referer("https://shop.example/page") == "https://shop.example"
             assert _origin_from_referer("") is None
 
     def test_is_production_env_testing_false(self, app):

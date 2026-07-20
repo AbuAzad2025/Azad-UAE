@@ -156,8 +156,8 @@
                   </a>
                   {% endif %}
                   {% if table.name not in ['users', 'alembic_version', 'system_settings'] %}
-                  <button class="btn btn-danger" 
-                          onclick="truncateTable({{ table.name|tojson }})"
+                  <button class="btn btn-danger"
+                          data-action="truncate-table" data-table-name="{{ table.name }}"
                           title="{{ _('حذف كل البيانات - خطير جداً!') }}">
                     <i class="fas fa-trash"></i> {{ _('مسح الكل') }}
                   </button>
@@ -198,7 +198,7 @@
         <div class="row">
           <div class="col-md-6">
             <form class="needs-validation" action="{{ url_for('owner.fix_cost_centers') }}" method="POST"
-                  onsubmit="return confirmMaintenance(this, 'FIX_COST_CENTERS')">
+                  data-action="confirm-maintenance" data-key="FIX_COST_CENTERS">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
               <button type="submit" class="btn btn-warning btn-block btn-lg" id="btn-fix-cost-centers">
                 <i class="fas fa-wrench mr-2"></i> {{ _('إصلاح فهارس مراكز التكلفة') }}
@@ -212,7 +212,7 @@
           </div>
           <div class="col-md-6">
             <form class="needs-validation" action="{{ url_for('owner.rebuild_gl_tree') }}" method="POST"
-                  onsubmit="return confirmMaintenance(this, 'REBUILD_GL_TREE')">
+                  data-action="confirm-maintenance" data-key="REBUILD_GL_TREE">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
               <div class="custom-control custom-checkbox mb-2">
                 <input type="checkbox" class="custom-control-input" id="cleanup_extra" name="cleanup_extra">
@@ -236,7 +236,7 @@
         <div class="row">
           <div class="col-md-4">
             <form class="needs-validation" action="{{ url_for('owner.maintenance_run_default_tenant_maintenance') }}" method="POST"
-                  onsubmit="return confirmMaintenance(this, 'RUN_DEFAULT_TENANT_MAINTENANCE')">
+                  data-action="confirm-maintenance" data-key="RUN_DEFAULT_TENANT_MAINTENANCE">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
               <div class="custom-control custom-checkbox mb-2">
                 <input type="checkbox" class="custom-control-input" id="maint_dry_run" name="dry_run">
@@ -255,7 +255,7 @@
           </div>
           <div class="col-md-4">
             <form class="needs-validation" action="{{ url_for('owner.maintenance_cleanup_test_dbs') }}" method="POST"
-                  onsubmit="return confirmMaintenance(this, 'CLEANUP_TEST_DBS')">
+                  data-action="confirm-maintenance" data-key="CLEANUP_TEST_DBS">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
               <div class="custom-control custom-checkbox mb-2">
                 <input type="checkbox" class="custom-control-input" id="cleanup_dry_run" name="dry_run">
@@ -274,7 +274,7 @@
           </div>
           <div class="col-md-4">
             <form class="needs-validation" action="{{ url_for('owner.maintenance_fix_default_tenant') }}" method="POST"
-                  onsubmit="return confirmMaintenance(this, 'FIX_DEFAULT_TENANT')">
+                  data-action="confirm-maintenance" data-key="FIX_DEFAULT_TENANT">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
               <div class="custom-control custom-checkbox mb-2">
                 <input type="checkbox" class="custom-control-input" id="fix_dry_run" name="dry_run">
@@ -304,7 +304,7 @@
         <div class="row">
           <div class="col-md-6">
             <form class="needs-validation" action="{{ url_for('owner.maintenance_regenerate_default_backup') }}" method="POST"
-                  onsubmit="return confirmMaintenance(this, 'REGENERATE_DEFAULT_BACKUP')">
+                  data-action="confirm-maintenance" data-key="REGENERATE_DEFAULT_BACKUP">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
               <div class="custom-control custom-checkbox mb-2">
                 <input type="checkbox" class="custom-control-input" id="backup_dry_run" name="dry_run">
@@ -328,7 +328,7 @@
             <div class="card">
               <div class="card-header d-flex justify-content-between">
                 <h5 class="mb-0"><i class="fas fa-history mr-2"></i>{{ _('سجل عمليات الصيانة الأخيرة') }}</h5>
-                <button class="btn btn-sm btn-outline-secondary" onclick="refreshAuditLog()">
+                <button class="btn btn-sm btn-outline-secondary" data-action="refresh-audit-log">
                   <i class="fas fa-sync-alt"></i> {{ _('تحديث') }}
                 </button>
               </div>
@@ -365,6 +365,20 @@
 {% block extra_js %}
 <script src="{{ url_for('static', filename='adminlte/plugins/sweetalert2/sweetalert2.all.min.js') }}"></script>
 <script>
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const action = el.dataset.action;
+  if (action === 'truncate-table') truncateTable(el.dataset.tableName);
+  else if (action === 'refresh-audit-log') refreshAuditLog();
+});
+
+document.addEventListener('submit', (e) => {
+  const el = e.target.closest('[data-action="confirm-maintenance"]');
+  if (!el) return;
+  if (!confirmMaintenance(el, el.dataset.key)) e.preventDefault();
+});
+
 function truncateTable(tableName) {
   Swal.fire({
     title: 'تحذير خطير!',

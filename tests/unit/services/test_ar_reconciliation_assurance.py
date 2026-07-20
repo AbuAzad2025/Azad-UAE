@@ -35,15 +35,11 @@ class TestARGLBalance:
             (None, None, "100", "400", Decimal("-300")),
         ],
     )
-    def test_gl_balance_scoping(
-        self, mocker, tenant_id, branch_id, debit, credit, expected
-    ):
+    def test_gl_balance_scoping(self, mocker, tenant_id, branch_id, debit, credit, expected):
         self._mock_scalar_chain(mocker, debit, credit)
         from services.ar_reconciliation_service import ARReconciliationService
 
-        result = ARReconciliationService._gl_balance(
-            account_id=10, tenant_id=tenant_id, branch_id=branch_id
-        )
+        result = ARReconciliationService._gl_balance(account_id=10, tenant_id=tenant_id, branch_id=branch_id)
         assert result == expected
 
 
@@ -129,9 +125,7 @@ class TestARBuildReport:
         acc_q = MagicMock()
         acc_q.filter_by.return_value = acc_q
         acc_q.first.return_value = acc
-        mocker.patch.object(
-            GLAccount, "query", new_callable=mocker.PropertyMock, return_value=acc_q
-        )
+        mocker.patch.object(GLAccount, "query", new_callable=mocker.PropertyMock, return_value=acc_q)
         mocker.patch(
             "services.ar_reconciliation_service.scope_gl_accounts",
             side_effect=lambda q, **kw: q,
@@ -172,9 +166,7 @@ class TestARBuildReport:
         acc_q.filter_by.return_value = acc_q
         acc_q.first.return_value = None
         with app.app_context():
-            mocker.patch.object(
-                GLAccount, "query", new_callable=mocker.PropertyMock, return_value=acc_q
-            )
+            mocker.patch.object(GLAccount, "query", new_callable=mocker.PropertyMock, return_value=acc_q)
             mocker.patch(
                 "services.ar_reconciliation_service.scope_gl_accounts",
                 side_effect=lambda q, **kw: q,

@@ -7,9 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from flask import Flask
 
-warnings.filterwarnings(
-    "ignore", message="coroutine 'AsyncMockMixin._execute_mock_call' was never awaited"
-)
+warnings.filterwarnings("ignore", message="coroutine 'AsyncMockMixin._execute_mock_call' was never awaited")
 
 for _mod in ("numpy", "pandas"):
     if _mod not in sys.modules:
@@ -80,11 +78,7 @@ def _create_test_user(
         db_session.add(tenant)
         db_session.flush()
 
-    role = (
-        db_session.query(Role)
-        .filter_by(slug="super_admin" if is_admin else "manager")
-        .first()
-    )
+    role = db_session.query(Role).filter_by(slug="super_admin" if is_admin else "manager").first()
     if not role:
         role = Role(
             name="Super Admin" if is_admin else "Manager",
@@ -114,18 +108,14 @@ def _create_test_user(
     for perm_code in perm_codes:
         perm = db_session.query(Permission).filter_by(code=perm_code).first()
         if not perm:
-            perm = Permission(
-                code=perm_code, name=perm_code, name_ar=perm_code, category="test"
-            )
+            perm = Permission(code=perm_code, name=perm_code, name_ar=perm_code, category="test")
             db_session.add(perm)
             db_session.flush()
         # Check if permission is already assigned to role
         if perm not in role.permissions:
             role.permissions.append(perm)
 
-    branch = (
-        db_session.query(Branch).filter_by(tenant_id=tenant_id, is_main=True).first()
-    )
+    branch = db_session.query(Branch).filter_by(tenant_id=tenant_id, is_main=True).first()
     if not branch:
         branch = Branch(
             tenant_id=tenant_id,
@@ -379,9 +369,7 @@ class TestFactory:
         sale = Sale(
             tenant_id=self.user.tenant_id,
             customer_id=customer.id,
-            sale_number=kwargs.pop(
-                "sale_number", f"S-{datetime.now().strftime('%Y%m%d%H%M%S')}"
-            ),
+            sale_number=kwargs.pop("sale_number", f"S-{datetime.now().strftime('%Y%m%d%H%M%S')}"),
             sale_date=kwargs.pop("sale_date", datetime.now()),
             subtotal=kwargs.pop("subtotal", total_amount),
             total_amount=total_amount,
@@ -409,17 +397,13 @@ class TestFactory:
             tenant_id=self.user.tenant_id,
             customer_id=customer.id,
             sale_id=sale.id if sale else None,
-            payment_number=kwargs.pop(
-                "payment_number", f"P-{datetime.now().strftime('%Y%m%d%H%M%S')}"
-            ),
+            payment_number=kwargs.pop("payment_number", f"P-{datetime.now().strftime('%Y%m%d%H%M%S')}"),
             payment_date=kwargs.pop("payment_date", datetime.now()),
             amount_aed=amount,
             amount=amount,
             currency=kwargs.pop("currency", "AED"),
             exchange_rate=kwargs.pop("exchange_rate", 1),
-            reference_number=kwargs.pop(
-                "reference_number", f"REF-{datetime.now().strftime('%Y%m%d%H%M%S')}"
-            ),
+            reference_number=kwargs.pop("reference_number", f"REF-{datetime.now().strftime('%Y%m%d%H%M%S')}"),
             payment_method=kwargs.pop("payment_method", "cash"),
             payment_confirmed=kwargs.pop("payment_confirmed", True),
             direction=kwargs.pop("direction", "incoming"),
@@ -436,9 +420,7 @@ class TestFactory:
         receipt = Receipt(
             tenant_id=self.user.tenant_id,
             customer_id=customer.id,
-            receipt_number=kwargs.pop(
-                "receipt_number", f"RCV-{datetime.now().strftime('%Y%m%d%H%M%S')}"
-            ),
+            receipt_number=kwargs.pop("receipt_number", f"RCV-{datetime.now().strftime('%Y%m%d%H%M%S')}"),
             receipt_date=kwargs.pop("receipt_date", datetime.now()),
             amount_aed=amount,
             amount=amount,
@@ -578,9 +560,7 @@ def mock_ai_service():
         ),
         (
             "chat_response",
-            patch(
-                "routes.ai_routes.AIService.chat_response", return_value="mocked chat"
-            ),
+            patch("routes.ai_routes.AIService.chat_response", return_value="mocked chat"),
         ),
         (
             "get_exchange_rate_suggestion",
@@ -647,9 +627,7 @@ def mock_ai_service():
         ),
         (
             "generate_business_insights",
-            patch(
-                "routes.ai_routes.AIService.generate_business_insights", return_value=[]
-            ),
+            patch("routes.ai_routes.AIService.generate_business_insights", return_value=[]),
         ),
         (
             "contextual_help",
@@ -905,9 +883,7 @@ def app_factory():
         import sys
         import os
 
-        project_root = os.path.dirname(
-            os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        )
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
         sys.path.insert(0, project_root)
         from tests.conftest import TestConfig
         from extensions import db

@@ -88,9 +88,7 @@ class TestKSAEInvoice:
         sale = MagicMock(spec=["id", "total_aed"])
         sale.id = 1
         sale.total_aed = Decimal("100")
-        with patch.object(
-            strategy, "sign_zatca_payload", return_value="mocked-signature"
-        ) as signer:
+        with patch.object(strategy, "sign_zatca_payload", return_value="mocked-signature") as signer:
             result = strategy.generate_einvoice(sale)
         assert result["invoice_hash"] == "mocked-signature"
         signer.assert_called_once()

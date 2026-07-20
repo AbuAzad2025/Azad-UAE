@@ -11,9 +11,7 @@ import pytest
 
 @pytest.fixture
 def knowledge_path(tmp_path):
-    with patch(
-        "ai_knowledge.get_knowledge_path", side_effect=lambda name: str(tmp_path / name)
-    ):
+    with patch("ai_knowledge.get_knowledge_path", side_effect=lambda name: str(tmp_path / name)):
         yield tmp_path
 
 
@@ -101,9 +99,7 @@ class TestNeuralEngineDeep:
 
     def test_classify_exception(self, knowledge_path):
         engine = self._engine(knowledge_path)
-        with patch.object(
-            engine, "_classify_customer_internal", side_effect=RuntimeError("fail")
-        ):
+        with patch.object(engine, "_classify_customer_internal", side_effect=RuntimeError("fail")):
             assert engine.classify_customer_intelligence(1)["confidence"] == 0
 
     @staticmethod
@@ -167,9 +163,7 @@ class TestNeuralEngineDeep:
         ctx = MagicMock()
         ctx.return_value.__enter__ = MagicMock(return_value=None)
         ctx.return_value.__exit__ = MagicMock(return_value=False)
-        with patch.object(
-            engine, "_train_maintenance_internal", return_value={"success": True}
-        ) as inner:
+        with patch.object(engine, "_train_maintenance_internal", return_value={"success": True}) as inner:
             engine.train_maintenance_prediction(from_app_context=ctx)
             inner.assert_called_once()
 
@@ -193,9 +187,7 @@ class TestReasoningEngineDeep:
         ],
     )
     def test_think_problem_types(self, engine, problem):
-        result = engine.think(
-            problem, {"cost_price": 80, "customer_type": "vip", "quantity": 2}
-        )
+        result = engine.think(problem, {"cost_price": 80, "customer_type": "vip", "quantity": 2})
         assert result.get("solution") is not None or result.get("reasoning_steps")
 
     def test_business_reasoning(self, engine):
@@ -366,9 +358,7 @@ class TestSystemIntegrationDeep:
             phone="050",
             get_balance_aed=lambda: Decimal("100"),
         )
-        product = MagicMock(
-            id=2, name="Filter", sku="F1", current_stock=5, unit_price=Decimal("50")
-        )
+        product = MagicMock(id=2, name="Filter", sku="F1", current_stock=5, unit_price=Decimal("50"))
         sale = MagicMock(
             id=3,
             total_amount=Decimal("200"),
@@ -380,15 +370,9 @@ class TestSystemIntegrationDeep:
             patch("models.Product") as MockP,
             patch("models.Sale") as MockS,
         ):
-            MockC.query.filter.return_value.limit.return_value.all.return_value = [
-                customer
-            ]
-            MockP.query.filter.return_value.limit.return_value.all.return_value = [
-                product
-            ]
-            MockS.query.join.return_value.filter.return_value.limit.return_value.all.return_value = [
-                sale
-            ]
+            MockC.query.filter.return_value.limit.return_value.all.return_value = [customer]
+            MockP.query.filter.return_value.limit.return_value.all.return_value = [product]
+            MockS.query.join.return_value.filter.return_value.limit.return_value.all.return_value = [sale]
             for dtype in ("all", "customers", "products", "sales"):
                 result = integrator.search_data("Ali", dtype)
                 assert result["success"] is True
@@ -492,9 +476,7 @@ class TestCodeGeneratorDeep:
         return CodeGenerator()
 
     def test_sql_update(self, gen):
-        sql = gen.generate_sql_query(
-            "update", "products", {"set": {"price": "10"}, "where": {"id": "1"}}
-        )
+        sql = gen.generate_sql_query("update", "products", {"set": {"price": "10"}, "where": {"id": "1"}})
         assert "UPDATE products" in sql
 
     def test_fix_and_optimize(self, gen):
@@ -504,17 +486,12 @@ class TestCodeGeneratorDeep:
         assert "    " in indent["fixed_code"]
         name = gen.fix_code("db.add(x)", "NameError: name 'db' is not defined")
         assert "extensions" in name["fixed_code"]
-        loop = (
-            "items = []\nfor x in range(10):\n    items.append(x)\n"
-            + "db.session.add(x)\n" * 6
-        )
+        loop = "items = []\nfor x in range(10):\n    items.append(x)\n" + "db.session.add(x)\n" * 6
         opt = gen.optimize_code(loop + ".all()")
         assert opt["performance_gain_percent"] > 0
 
     def test_report_queries(self, gen):
-        sales = gen.generate_report_query(
-            "sales", {"start_date": "2025-01-01", "end_date": "2025-01-31"}
-        )
+        sales = gen.generate_report_query("sales", {"start_date": "2025-01-01", "end_date": "2025-01-31"})
         assert "SELECT" in sales
         assert "products" in gen.generate_report_query("inventory").lower()
         assert "customers" in gen.generate_report_query("customers").lower()
@@ -632,9 +609,7 @@ class TestSecurityRulesDeep:
         with patch("ai_knowledge.specialized.security_rules.current_user", owner):
             ok, msg = SecurityRules.check_user_permissions("delete_all")
             assert ok is True
-        seller = MagicMock(
-            is_authenticated=True, is_owner=False, role=MagicMock(slug="seller")
-        )
+        seller = MagicMock(is_authenticated=True, is_owner=False, role=MagicMock(slug="seller"))
         with patch("ai_knowledge.specialized.security_rules.current_user", seller):
             ok, _ = SecurityRules.check_user_permissions("edit_own")
             assert ok is True
@@ -649,9 +624,7 @@ class TestSecurityRulesDeep:
         user = MagicMock(is_authenticated=True, is_owner=False)
         with (
             patch("ai_knowledge.specialized.security_rules.current_user", user),
-            patch.object(
-                SecurityRules, "can_access_sensitive_info", return_value=False
-            ),
+            patch.object(SecurityRules, "can_access_sensitive_info", return_value=False),
         ):
             filtered = SecurityRules.filter_sensitive_data(
                 {

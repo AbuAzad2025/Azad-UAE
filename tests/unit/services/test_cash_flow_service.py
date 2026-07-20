@@ -89,9 +89,7 @@ def cf_seed(
             tenant_id=tid,
             branch_id=bid,
             entry_number=entry_number,
-            entry_date=datetime.combine(
-                entry_date, datetime.min.time(), tzinfo=timezone.utc
-            ),
+            entry_date=datetime.combine(entry_date, datetime.min.time(), tzinfo=timezone.utc),
             description=f"CF test {entry_number}",
             is_posted=True,
             total_debit=sum(d for _, d, _c in lines),
@@ -315,9 +313,7 @@ class TestCashFlowOperating:
         assert op["net_cash_from_operating"] == cf_seed["expected_operating_net"]
         assert len(op["items"]) == 4
 
-    def test_operating_zero_when_no_salary_account(
-        self, db_session, sample_tenant, sample_branch
-    ):
+    def test_operating_zero_when_no_salary_account(self, db_session, sample_tenant, sample_branch):
         tid = sample_tenant.id
         GLAccount.query.filter_by(tenant_id=tid, code="6100").delete()
         db_session.commit()
@@ -384,9 +380,7 @@ class TestCashFlowBalance:
         )
         assert float(beginning) == cf_seed["expected_cash_beginning"]
 
-    def test_cash_balance_ending_includes_in_period_movements(
-        self, cf_seed, db_session
-    ):
+    def test_cash_balance_ending_includes_in_period_movements(self, cf_seed, db_session):
         tid = cf_seed["tenant_id"]
         bid = cf_seed["branch_id"]
         uid = uuid.uuid4().hex[:6]
@@ -395,9 +389,7 @@ class TestCashFlowBalance:
             tenant_id=tid,
             branch_id=bid,
             entry_number=f"JE-CF-END-{uid}",
-            entry_date=datetime.combine(
-                IN_PERIOD, datetime.min.time(), tzinfo=timezone.utc
-            ),
+            entry_date=datetime.combine(IN_PERIOD, datetime.min.time(), tzinfo=timezone.utc),
             description="In-period cash deposit",
             is_posted=True,
             total_debit=Decimal("500"),
@@ -456,13 +448,9 @@ class TestGenerateCashFlow:
 
         assert report["net_change_in_cash"] == pytest.approx(expected_net)
         assert report["cash_beginning"] == cf_seed["expected_cash_beginning"]
-        assert report["cash_ending"] == pytest.approx(
-            report["cash_beginning"] + report["net_change_in_cash"]
-        )
+        assert report["cash_ending"] == pytest.approx(report["cash_beginning"] + report["net_change_in_cash"])
 
-    def test_branch_isolation_excludes_other_branch(
-        self, cf_seed, db_session, sample_tenant
-    ):
+    def test_branch_isolation_excludes_other_branch(self, cf_seed, db_session, sample_tenant):
         other = Branch(
             tenant_id=sample_tenant.id,
             name="Other Branch",
@@ -483,9 +471,7 @@ class TestGenerateCashFlow:
                 amount_aed=Decimal("5000"),
                 payment_method="cash",
                 payment_confirmed=True,
-                receipt_date=datetime.combine(
-                    IN_PERIOD, datetime.min.time(), tzinfo=timezone.utc
-                ),
+                receipt_date=datetime.combine(IN_PERIOD, datetime.min.time(), tzinfo=timezone.utc),
             )
         )
         db_session.commit()

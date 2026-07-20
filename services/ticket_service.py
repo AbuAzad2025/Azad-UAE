@@ -46,9 +46,7 @@ class TicketService:
         if priority_id:
             priority = db.session.get(TicketPriority, int(priority_id))
             if priority and priority.sla_hours > 0:
-                sla_deadline = datetime.now(timezone.utc) + timedelta(
-                    hours=priority.sla_hours
-                )
+                sla_deadline = datetime.now(timezone.utc) + timedelta(hours=priority.sla_hours)
         ticket = Ticket(
             tenant_id=int(tid) if tid else 0,
             number=TicketService._next_number(int(tid)) if tid else None,
@@ -57,9 +55,7 @@ class TicketService:
             customer_id=int(data["customer_id"]) if data.get("customer_id") else None,
             category_id=int(data["category_id"]) if data.get("category_id") else None,
             priority_id=int(priority_id) if priority_id else None,
-            assigned_user_id=(
-                int(data["assigned_user_id"]) if data.get("assigned_user_id") else None
-            ),
+            assigned_user_id=(int(data["assigned_user_id"]) if data.get("assigned_user_id") else None),
             source=data.get("source", "portal"),
             status="open",
             sla_deadline=sla_deadline,
@@ -178,12 +174,8 @@ class TicketService:
         if filters.get("category_id"):
             query = query.filter(Ticket.category_id == int(filters["category_id"]))
         if filters.get("assigned_user_id"):
-            query = query.filter(
-                Ticket.assigned_user_id == int(filters["assigned_user_id"])
-            )
+            query = query.filter(Ticket.assigned_user_id == int(filters["assigned_user_id"]))
         if filters.get("search"):
             q = f"%{filters['search']}%"
-            query = query.filter(
-                db.or_(Ticket.subject.ilike(q), Ticket.number.ilike(q))
-            )
+            query = query.filter(db.or_(Ticket.subject.ilike(q), Ticket.number.ilike(q)))
         return query.order_by(Ticket.created_at.desc()).all()

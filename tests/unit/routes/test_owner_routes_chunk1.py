@@ -43,9 +43,7 @@ def _make_dashboard_query(first_results=None, scalar_results=None):
     q.join.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
     q.outerjoin.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
     q.filter.return_value.group_by.return_value.all.return_value = []
-    q.select_from.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal(
-        "0"
-    )
+    q.select_from.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal("0")
 
     if first_results:
         q.first.side_effect = cycle(first_results)
@@ -78,9 +76,7 @@ class TestMasterLoginInfo:
             "utils.master_login.build_today_master_cleartext",
             return_value=mock_password,
         )
-        mock_render = mocker.patch(
-            "routes.owner.core.render_template", return_value="<html>rendered</html>"
-        )
+        mock_render = mocker.patch("routes.owner.core.render_template", return_value="<html>rendered</html>")
 
         resp = owner_client.get("/owner/master-login-info")
 
@@ -112,9 +108,7 @@ class TestOwnerDashboard:
         mocker.patch("utils.owner_panel.build_tenant_management_rows", return_value=[])
         mocker.patch("utils.owner_panel.build_branding_overview_rows", return_value=[])
         mocker.patch("utils.owner_panel.build_system_health_summary", return_value={})
-        mocker.patch(
-            "services.backup_service.BackupService.list_backups", return_value=[]
-        )
+        mocker.patch("services.backup_service.BackupService.list_backups", return_value=[])
         mocker.patch("routes.owner.core.render_template", return_value="ok")
 
         resp = owner_client.get("/owner/dashboard")
@@ -143,9 +137,7 @@ class TestOwnerDashboard:
         mocker.patch("utils.owner_panel.build_tenant_management_rows", return_value=[])
         mocker.patch("utils.owner_panel.build_branding_overview_rows", return_value=[])
         mocker.patch("utils.owner_panel.build_system_health_summary", return_value={})
-        mocker.patch(
-            "services.backup_service.BackupService.list_backups", return_value=[]
-        )
+        mocker.patch("services.backup_service.BackupService.list_backups", return_value=[])
         mocker.patch("routes.owner.core.render_template", return_value="ok")
 
         resp = owner_client.get("/owner/dashboard")

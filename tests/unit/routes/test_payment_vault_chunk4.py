@@ -27,12 +27,8 @@ def mock_unlocked_vault(mocker):
     vault.daily_limit = 5000.0
     vault.auto_lock_minutes = 30
     vault.max_failed_attempts = 5
-    mocker.patch(
-        "routes.payment_vault._get_vault_for_current_tenant", return_value=vault
-    )
-    mocker.patch(
-        "routes.payment_vault.PaymentVault.get_platform_vault", return_value=vault
-    )
+    mocker.patch("routes.payment_vault._get_vault_for_current_tenant", return_value=vault)
+    mocker.patch("routes.payment_vault.PaymentVault.get_platform_vault", return_value=vault)
     return vault
 
 
@@ -42,9 +38,7 @@ def _patch_render(mocker):
 
 
 class TestSettingsPostBranches:
-    def test_settings_post_invalid_numeric_defaults(
-        self, vault_owner_client, mock_unlocked_vault, mocker
-    ):
+    def test_settings_post_invalid_numeric_defaults(self, vault_owner_client, mock_unlocked_vault, mocker):
         mocker.patch("routes.payment_vault.PaymentLog.log_action")
         resp = vault_owner_client.post(
             "/payment-vault/settings",
@@ -70,9 +64,7 @@ class TestSettingsPostBranches:
 
 
 class TestChangePasswordPost:
-    def test_change_password_empty_fields(
-        self, vault_owner_client, mock_unlocked_vault
-    ):
+    def test_change_password_empty_fields(self, vault_owner_client, mock_unlocked_vault):
         resp = vault_owner_client.post(
             "/payment-vault/change-password",
             data={
@@ -83,9 +75,7 @@ class TestChangePasswordPost:
         )
         assert resp.status_code == 200
 
-    def test_change_password_wrong_current(
-        self, vault_owner_client, mock_unlocked_vault
-    ):
+    def test_change_password_wrong_current(self, vault_owner_client, mock_unlocked_vault):
         mock_unlocked_vault.check_vault_password.return_value = False
         resp = vault_owner_client.post(
             "/payment-vault/change-password",
@@ -119,9 +109,7 @@ class TestChangePasswordPost:
         )
         assert resp.status_code == 200
 
-    def test_change_password_success(
-        self, vault_owner_client, mock_unlocked_vault, mocker
-    ):
+    def test_change_password_success(self, vault_owner_client, mock_unlocked_vault, mocker):
         mocker.patch("routes.payment_vault.PaymentLog.log_action")
         resp = vault_owner_client.post(
             "/payment-vault/change-password",
@@ -140,13 +128,9 @@ class TestWebhook500Handlers:
     PAYLOAD = b'{"id":"evt_fail","type":"payment_intent.succeeded","created_at":"2026-06-27T12:00:00+00:00"}'
     NP_PAYLOAD = b'{"payment_id":"np1","payment_status":"finished","created_at":"2026-06-27T12:00:00+00:00"}'
 
-    def test_stripe_webhook_processing_exception(
-        self, vault_owner_client, mock_unlocked_vault, mocker
-    ):
+    def test_stripe_webhook_processing_exception(self, vault_owner_client, mock_unlocked_vault, mocker):
         mocker.patch("routes.payment_vault._is_duplicate_webhook", return_value=False)
-        mocker.patch(
-            "routes.payment_vault._reject_stale_webhook_timestamp", return_value=None
-        )
+        mocker.patch("routes.payment_vault._reject_stale_webhook_timestamp", return_value=None)
         mocker.patch(
             "services.webhook_service.WebhookService.verify_stripe_signature",
             return_value=True,
@@ -163,13 +147,9 @@ class TestWebhook500Handlers:
         )
         assert resp.status_code == 500
 
-    def test_nowpayments_webhook_processing_exception(
-        self, vault_owner_client, mock_unlocked_vault, mocker
-    ):
+    def test_nowpayments_webhook_processing_exception(self, vault_owner_client, mock_unlocked_vault, mocker):
         mocker.patch("routes.payment_vault._is_duplicate_webhook", return_value=False)
-        mocker.patch(
-            "routes.payment_vault._reject_stale_webhook_timestamp", return_value=None
-        )
+        mocker.patch("routes.payment_vault._reject_stale_webhook_timestamp", return_value=None)
         mocker.patch(
             "services.webhook_service.WebhookService.verify_nowpayments_signature",
             return_value=True,
@@ -217,25 +197,17 @@ class TestPurchaseDonationApi500:
 
     @pytest.fixture(autouse=True)
     def _patch_security(self, mocker):
-        mocker.patch(
-            "routes.payment_vault._validate_public_api_origin", return_value=None
-        )
+        mocker.patch("routes.payment_vault._validate_public_api_origin", return_value=None)
         mocker.patch("routes.payment_vault._validate_api_key", return_value=None)
         mocker.patch("routes.payment_vault._check_idempotency_key", return_value=None)
 
-    def test_purchase_api_exception_returns_500(
-        self, vault_owner_client, mocker, mock_db
-    ):
-        mocker.patch(
-            "routes.payment_vault.db.session.get", side_effect=RuntimeError("db down")
-        )
+    def test_purchase_api_exception_returns_500(self, vault_owner_client, mocker, mock_db):
+        mocker.patch("routes.payment_vault.db.session.get", side_effect=RuntimeError("db down"))
         resp = vault_owner_client.post(self.PURCHASE, json=self.PURCHASE_DATA)
         assert resp.status_code == 500
         assert resp.get_json()["success"] is False
 
-    def test_donation_api_exception_returns_500(
-        self, vault_owner_client, mocker, mock_db
-    ):
+    def test_donation_api_exception_returns_500(self, vault_owner_client, mocker, mock_db):
         mocker.patch("routes.payment_vault.NOWPaymentsService")
         mock_db.session.commit.side_effect = RuntimeError("commit fail")
         resp = vault_owner_client.post(self.DONATION, json=self.DONATION_DATA)
@@ -249,9 +221,7 @@ class TestPurchaseDonationApiValidation:
 
     @pytest.fixture(autouse=True)
     def _patch_security(self, mocker):
-        mocker.patch(
-            "routes.payment_vault._validate_public_api_origin", return_value=None
-        )
+        mocker.patch("routes.payment_vault._validate_public_api_origin", return_value=None)
         mocker.patch("routes.payment_vault._validate_api_key", return_value=None)
         mocker.patch("routes.payment_vault._check_idempotency_key", return_value=None)
 
@@ -341,15 +311,11 @@ class TestPaymentVaultModel:
         from models.payment_vault import PaymentVault
 
         mock_q = MagicMock()
-        mock_q.filter.return_value.order_by.return_value.first.return_value = MagicMock(
-            id=1
-        )
+        mock_q.filter.return_value.order_by.return_value.first.return_value = MagicMock(id=1)
         mocker.patch.object(PaymentVault, "query", mock_q)
         assert PaymentVault.get_platform_vault().id == 1
 
-        mock_q.filter_by.return_value.order_by.return_value.first.return_value = (
-            MagicMock(id=2)
-        )
+        mock_q.filter_by.return_value.order_by.return_value.first.return_value = MagicMock(id=2)
         assert PaymentVault.get_tenant_vault(5).id == 2
 
     def test_check_vault_password(self):

@@ -43,17 +43,13 @@ class TestPosOrderTypeDefaults:
     def test_display_name_falls_back_to_english(self, db_session, sample_tenant):
         from models.pos_order_type import PosOrderType
 
-        ot = PosOrderType(
-            tenant_id=sample_tenant.id, code="en_only", name_ar="", name_en="Pickup"
-        )
+        ot = PosOrderType(tenant_id=sample_tenant.id, code="en_only", name_ar="", name_en="Pickup")
         assert ot.display_name == "Pickup"
 
     def test_display_name_falls_back_to_code(self, db_session, sample_tenant):
         from models.pos_order_type import PosOrderType
 
-        ot = PosOrderType(
-            tenant_id=sample_tenant.id, code="code_only", name_ar="", name_en=None
-        )
+        ot = PosOrderType(tenant_id=sample_tenant.id, code="code_only", name_ar="", name_en=None)
         assert ot.display_name == "code_only"
 
     def test_to_dict_shape(self, order_type):
@@ -78,16 +74,12 @@ class TestPosOrderTypeConstraints:
     def test_code_unique_per_tenant(self, db_session, sample_tenant, order_type):
         from models.pos_order_type import PosOrderType
 
-        db_session.add(
-            PosOrderType(tenant_id=sample_tenant.id, code="in_store", name_ar="نسخة")
-        )
+        db_session.add(PosOrderType(tenant_id=sample_tenant.id, code="in_store", name_ar="نسخة"))
         with pytest.raises(IntegrityError):
             db_session.flush()
         db_session.rollback()
 
-    def test_same_code_allowed_for_other_tenant(
-        self, db_session, sample_tenant, order_type
-    ):
+    def test_same_code_allowed_for_other_tenant(self, db_session, sample_tenant, order_type):
         from models import Tenant
         from models.pos_order_type import PosOrderType
 
@@ -101,9 +93,7 @@ class TestPosOrderTypeConstraints:
         )
         db_session.add(other)
         db_session.flush()
-        db_session.add(
-            PosOrderType(tenant_id=other.id, code="in_store", name_ar="في المتجر")
-        )
+        db_session.add(PosOrderType(tenant_id=other.id, code="in_store", name_ar="في المتجر"))
         db_session.commit()
 
 
@@ -113,12 +103,8 @@ class TestPosOrderTypeQueries:
 
         db_session.add_all(
             [
-                PosOrderType(
-                    tenant_id=sample_tenant.id, code="b", name_ar="ب", sort_order=20
-                ),
-                PosOrderType(
-                    tenant_id=sample_tenant.id, code="a", name_ar="أ", sort_order=10
-                ),
+                PosOrderType(tenant_id=sample_tenant.id, code="b", name_ar="ب", sort_order=20),
+                PosOrderType(tenant_id=sample_tenant.id, code="a", name_ar="أ", sort_order=10),
                 PosOrderType(
                     tenant_id=sample_tenant.id,
                     code="off",
@@ -145,16 +131,10 @@ class TestPosOrderTypeQueries:
     def test_get_by_code_active_only(self, db_session, sample_tenant):
         from models.pos_order_type import PosOrderType
 
-        db_session.add(
-            PosOrderType(
-                tenant_id=sample_tenant.id, code="off", name_ar="م", is_active=False
-            )
-        )
+        db_session.add(PosOrderType(tenant_id=sample_tenant.id, code="off", name_ar="م", is_active=False))
         db_session.commit()
 
-        assert (
-            PosOrderType.get_by_code(sample_tenant.id, "off", active_only=True) is None
-        )
+        assert PosOrderType.get_by_code(sample_tenant.id, "off", active_only=True) is None
         assert PosOrderType.get_by_code(sample_tenant.id, "off") is not None
 
     def test_default_for_tenant_prefers_flagged(self, db_session, sample_tenant):
@@ -162,9 +142,7 @@ class TestPosOrderTypeQueries:
 
         db_session.add_all(
             [
-                PosOrderType(
-                    tenant_id=sample_tenant.id, code="z", name_ar="ز", sort_order=1
-                ),
+                PosOrderType(tenant_id=sample_tenant.id, code="z", name_ar="ز", sort_order=1),
                 PosOrderType(
                     tenant_id=sample_tenant.id,
                     code="flagged",
@@ -178,19 +156,13 @@ class TestPosOrderTypeQueries:
 
         assert PosOrderType.default_for_tenant(sample_tenant.id).code == "flagged"
 
-    def test_default_for_tenant_falls_back_to_first_active(
-        self, db_session, sample_tenant
-    ):
+    def test_default_for_tenant_falls_back_to_first_active(self, db_session, sample_tenant):
         from models.pos_order_type import PosOrderType
 
         db_session.add_all(
             [
-                PosOrderType(
-                    tenant_id=sample_tenant.id, code="b", name_ar="ب", sort_order=20
-                ),
-                PosOrderType(
-                    tenant_id=sample_tenant.id, code="a", name_ar="أ", sort_order=10
-                ),
+                PosOrderType(tenant_id=sample_tenant.id, code="b", name_ar="ب", sort_order=20),
+                PosOrderType(tenant_id=sample_tenant.id, code="a", name_ar="أ", sort_order=10),
             ]
         )
         db_session.commit()
@@ -230,10 +202,7 @@ class TestDefaultSeedData:
         # Idempotent: a second call seeds nothing more.
         ensure_default_pos_order_types(sample_tenant.id)
         db_session.commit()
-        assert (
-            PosOrderType.query.filter_by(tenant_id=sample_tenant.id).count()
-            == first_count
-        )
+        assert PosOrderType.query.filter_by(tenant_id=sample_tenant.id).count() == first_count
 
     def test_ensure_default_skips_configured_tenant(self, db_session, order_type):
         from models.pos_order_type import PosOrderType, ensure_default_pos_order_types

@@ -23,18 +23,10 @@ class PurchaseReturn(db.Model):
     )
     return_number = db.Column(db.String(50), nullable=False, index=True)
 
-    purchase_id = db.Column(
-        db.Integer, db.ForeignKey("purchases.id"), nullable=False, index=True
-    )
-    supplier_id = db.Column(
-        db.Integer, db.ForeignKey("suppliers.id"), nullable=False, index=True
-    )
-    warehouse_id = db.Column(
-        db.Integer, db.ForeignKey("warehouses.id"), nullable=True, index=True
-    )
-    branch_id = db.Column(
-        db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True
-    )
+    purchase_id = db.Column(db.Integer, db.ForeignKey("purchases.id"), nullable=False, index=True)
+    supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.id"), nullable=False, index=True)
+    warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id"), nullable=True, index=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True)
 
     return_date = db.Column(
         db.DateTime,
@@ -47,9 +39,7 @@ class PurchaseReturn(db.Model):
     tax_amount = db.Column(db.Numeric(15, 3), default=0)
     total_amount = db.Column(db.Numeric(15, 3), nullable=False, default=0)
 
-    currency = db.Column(
-        db.String(3), default=context_aware_default_currency, nullable=False
-    )
+    currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
     amount_aed = db.Column(db.Numeric(15, 3), nullable=False, default=0)
 
@@ -75,9 +65,7 @@ class PurchaseReturn(db.Model):
     purchase = db.relationship("Purchase", backref="returns")
     supplier = db.relationship("Supplier", backref="purchase_returns")
     warehouse = db.relationship("Warehouse", foreign_keys=[warehouse_id])
-    branch = db.relationship(
-        "Branch", backref="purchase_returns", foreign_keys=[branch_id]
-    )
+    branch = db.relationship("Branch", backref="purchase_returns", foreign_keys=[branch_id])
     user = db.relationship("User", foreign_keys=[processed_by])
     lines = db.relationship(
         "PurchaseReturnLine",
@@ -87,16 +75,10 @@ class PurchaseReturn(db.Model):
     )
 
     def calculate_totals(self):
-        self.subtotal = sum(
-            (Decimal(str(line.line_total)) for line in self.lines), Decimal("0")
-        )
+        self.subtotal = sum((Decimal(str(line.line_total)) for line in self.lines), Decimal("0"))
         self.total_amount = self.subtotal
-        exchange_rate_decimal = (
-            Decimal(str(self.exchange_rate)) if self.exchange_rate else Decimal("1")
-        )
-        self.amount_aed = (self.total_amount * exchange_rate_decimal).quantize(
-            Decimal("0.001"), rounding=ROUND_HALF_UP
-        )
+        exchange_rate_decimal = Decimal(str(self.exchange_rate)) if self.exchange_rate else Decimal("1")
+        self.amount_aed = (self.total_amount * exchange_rate_decimal).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
 
 class PurchaseReturnLine(db.Model):
@@ -109,15 +91,9 @@ class PurchaseReturnLine(db.Model):
         nullable=False,
         index=True,
     )
-    return_id = db.Column(
-        db.Integer, db.ForeignKey("purchase_returns.id"), nullable=False, index=True
-    )
-    purchase_line_id = db.Column(
-        db.Integer, db.ForeignKey("purchase_lines.id"), index=True
-    )
-    product_id = db.Column(
-        db.Integer, db.ForeignKey("products.id"), nullable=False, index=True
-    )
+    return_id = db.Column(db.Integer, db.ForeignKey("purchase_returns.id"), nullable=False, index=True)
+    purchase_line_id = db.Column(db.Integer, db.ForeignKey("purchase_lines.id"), index=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False, index=True)
 
     quantity = db.Column(db.Numeric(15, 3), nullable=False)
     unit_cost = db.Column(db.Numeric(15, 3), nullable=False)

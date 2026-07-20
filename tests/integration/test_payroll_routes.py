@@ -90,9 +90,7 @@ class TestPayrollProcess:
             except TypeError:
                 pass
 
-        tx = PayrollTransaction.query.filter_by(
-            employee_id=employee.id, tenant_id=tenant.id
-        ).first()
+        tx = PayrollTransaction.query.filter_by(employee_id=employee.id, tenant_id=tenant.id).first()
         assert tx is not None, "PayrollTransaction was not created"
         assert tx.basic_amount == Decimal("3000"), f"basic={tx.basic_amount}"
         assert tx.net_salary == Decimal("3500"), f"net={tx.net_salary}"
@@ -106,6 +104,4 @@ class TestPayrollProcess:
         assert len(gl_entries) >= 1
         total_debit = sum((e.total_debit or 0) for e in gl_entries)
         total_credit = sum((e.total_credit or 0) for e in gl_entries)
-        assert total_debit == total_credit, (
-            f"GL unbalanced: debit={total_debit} credit={total_credit}"
-        )
+        assert total_debit == total_credit, f"GL unbalanced: debit={total_debit} credit={total_credit}"

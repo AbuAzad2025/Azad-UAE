@@ -18,9 +18,7 @@ class TestNullStrategy:
 
     def test_format_tax_return(self):
         s = NullStrategy()
-        report = s.format_tax_return(
-            Decimal("10"), Decimal("5"), "2026-01-01", "2026-06-30"
-        )
+        report = s.format_tax_return(Decimal("10"), Decimal("5"), "2026-01-01", "2026-06-30")
         assert report["country"] == "XX"
         assert report["net_payable"] == Decimal("0")
         assert report["format"] == "null"

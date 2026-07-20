@@ -159,9 +159,7 @@ if not getattr(NonCallableMock, "_azad_py314_name_guard", False):
     NonCallableMock._azad_py314_name_guard = True
 
 _LOGGING_CORE_METHODS = ("log_audit", "_fallback_write", "log_error", "log_security")
-_LOGGING_CORE_ORIGINALS = {
-    name: LoggingCore.__dict__[name] for name in _LOGGING_CORE_METHODS
-}
+_LOGGING_CORE_ORIGINALS = {name: LoggingCore.__dict__[name] for name in _LOGGING_CORE_METHODS}
 
 
 def make_sync_logger_mock(name="logger"):
@@ -421,9 +419,7 @@ def _resync_service_model_bindings():
     import models
 
     polluted_types = (MagicMock, NonCallableMock)
-    model_exports = [
-        name for name in models.__all__ if isinstance(getattr(models, name, None), type)
-    ]
+    model_exports = [name for name in models.__all__ if isinstance(getattr(models, name, None), type)]
 
     for mod_name, mod in list(sys.modules.items()):
         if not mod_name.startswith("services."):
@@ -523,10 +519,7 @@ def _restore_polluted_service_class_methods():
 
         mod = importlib.import_module(mod_name)
         cls = getattr(mod, cls_name)
-        if any(
-            isinstance(getattr(cls, name, None), polluted_types)
-            for name in method_names
-        ):
+        if any(isinstance(getattr(cls, name, None), polluted_types) for name in method_names):
             importlib.reload(mod)
 
     for name, original in _LOGGING_CORE_ORIGINALS.items():
@@ -788,11 +781,7 @@ def sample_user(db_session, sample_tenant, sample_role, sample_branch):
 
     unique = str(uuid.uuid4())[:8]
     # For super_admin/global roles, don't assign branch_id so they can access all branches
-    branch_id = (
-        None
-        if sample_role.slug in ("super_admin", "owner", "developer")
-        else sample_branch.id
-    )
+    branch_id = None if sample_role.slug in ("super_admin", "owner", "developer") else sample_branch.id
     user = User(
         username=f"testuser-{unique}",
         email=f"user-{unique}@example.com",

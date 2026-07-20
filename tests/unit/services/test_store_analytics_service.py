@@ -113,9 +113,7 @@ class TestTopProducts:
 
 
 class TestLowStockProducts:
-    def test_uses_store_threshold(
-        self, mocker, sample_tenant, tenant_store, sample_product_with_stock
-    ):
+    def test_uses_store_threshold(self, mocker, sample_tenant, tenant_store, sample_product_with_stock):
         mocker.patch.object(
             StoreAnalyticsService,
             "_since",
@@ -151,12 +149,8 @@ class TestLowStockProducts:
 
 
 class TestDailyOrdersChart:
-    def test_groups_by_day(
-        self, db_session, sample_tenant, sample_user, sample_customer, online_warehouse
-    ):
-        day = datetime.now(timezone.utc).replace(
-            hour=12, minute=0, second=0, microsecond=0
-        )
+    def test_groups_by_day(self, db_session, sample_tenant, sample_user, sample_customer, online_warehouse):
+        day = datetime.now(timezone.utc).replace(hour=12, minute=0, second=0, microsecond=0)
         for i in range(2):
             sale = Sale(
                 tenant_id=sample_tenant.id,

@@ -12,21 +12,11 @@ class ProductForm(FlaskForm):
     barcode = StringField("الباركود", validators=[Optional()])
     category_id = SelectField("التصنيف", coerce=int, validators=[Optional()])
     country_of_origin = StringField("بلد المنشأ", validators=[Optional()])
-    regular_price = DecimalField(
-        "السعر العادي", validators=[DataRequired(), NumberRange(min=0)]
-    )
-    merchant_price = DecimalField(
-        "سعر التاجر", validators=[Optional(), NumberRange(min=0)]
-    )
-    partner_price = DecimalField(
-        "سعر الشريك", validators=[Optional(), NumberRange(min=0)]
-    )
-    cost_price = DecimalField(
-        "سعر التكلفة", validators=[Optional(), NumberRange(min=0)]
-    )
-    current_stock = DecimalField(
-        "الكمية الحالية", default=Decimal(), validators=[Optional(), NumberRange(min=0)]
-    )
+    regular_price = DecimalField("السعر العادي", validators=[DataRequired(), NumberRange(min=0)])
+    merchant_price = DecimalField("سعر التاجر", validators=[Optional(), NumberRange(min=0)])
+    partner_price = DecimalField("سعر الشريك", validators=[Optional(), NumberRange(min=0)])
+    cost_price = DecimalField("سعر التكلفة", validators=[Optional(), NumberRange(min=0)])
+    current_stock = DecimalField("الكمية الحالية", default=Decimal(), validators=[Optional(), NumberRange(min=0)])
     min_stock_alert = DecimalField(
         "الحد الأدنى للتنبيه",
         default=Decimal(),
@@ -46,9 +36,7 @@ class ProductForm(FlaskForm):
         default="piece",
         validators=[Optional()],
     )
-    warranty_period = DecimalField(
-        "فترة الكفالة", validators=[Optional(), NumberRange(min=0)]
-    )
+    warranty_period = DecimalField("فترة الكفالة", validators=[Optional(), NumberRange(min=0)])
     warranty_unit = SelectField(
         "وحدة الكفالة",
         choices=[("days", "يوم"), ("months", "شهر"), ("years", "سنة")],

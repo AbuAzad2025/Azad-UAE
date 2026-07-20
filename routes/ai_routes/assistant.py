@@ -41,9 +41,7 @@ def assistant_page():
         return render_template(
             "ai/assistant.html",
             ai_enabled=bool(
-                state.get("allowed")
-                and state.get("global_enabled")
-                and state.get("tenant_enabled") is not False
+                state.get("allowed") and state.get("global_enabled") and state.get("tenant_enabled") is not False
             ),
             ai_access_state=state,
             ai_disable_reason=disable_reason,
@@ -103,26 +101,20 @@ def config():
 
             os.environ[key_name] = api_key
 
-            current_app.logger.info(
-                f"✅ {key_name} updated successfully by user {current_user.username}"
-            )
+            current_app.logger.info(f"✅ {key_name} updated successfully by user {current_user.username}")
 
             return jsonify(
                 {
                     "success": True,
                     "message": gettext(f"تم حفظ مفتاح {provider.upper()} بنجاح! ✅"),
                     "provider": provider,
-                    "expires_in": gettext("24 ساعة")
-                    if provider == "groq"
-                    else gettext("حسب اشتراكك"),
+                    "expires_in": gettext("24 ساعة") if provider == "groq" else gettext("حسب اشتراكك"),
                 }
             )
 
         except Exception:
             current_app.logger.exception("Failed to save AI API key")
-            return jsonify(
-                {"success": False, "message": gettext("تعذر حفظ إعدادات AI حالياً")}
-            )
+            return jsonify({"success": False, "message": gettext("تعذر حفظ إعدادات AI حالياً")})
 
     current_groq = os.environ.get("GROQ_API_KEY", "")
     current_openai = os.environ.get("OPENAI_API_KEY", "")
@@ -143,13 +135,9 @@ def config():
 def upload_excel():
     """رفع ومعالجة ملف Excel للمنتجات - المعالج الذكي الخارق"""
     try:
-        max_bytes = int(
-            current_app.config.get("MAX_CONTENT_LENGTH") or (16 * 1024 * 1024)
-        )
+        max_bytes = int(current_app.config.get("MAX_CONTENT_LENGTH") or (16 * 1024 * 1024))
         if request.content_length and request.content_length > max_bytes:
-            return jsonify(
-                {"success": False, "error": gettext("حجم الملف كبير جداً")}
-            ), 413
+            return jsonify({"success": False, "error": gettext("حجم الملف كبير جداً")}), 413
 
         if "file" not in request.files:
             return jsonify({"success": False, "error": gettext("لم يتم رفع ملف")}), 400
@@ -160,21 +148,15 @@ def upload_excel():
             from models import Warehouse
 
             tid = get_active_tenant_id(current_user)
-            warehouse = Warehouse.query.filter_by(
-                is_active=True, is_main=True, tenant_id=tid
-            ).first()
+            warehouse = Warehouse.query.filter_by(is_active=True, is_main=True, tenant_id=tid).first()
             if not warehouse:
-                warehouse = Warehouse.query.filter_by(
-                    is_active=True, tenant_id=tid
-                ).first()
+                warehouse = Warehouse.query.filter_by(is_active=True, tenant_id=tid).first()
             if warehouse:
                 warehouse_id = warehouse.id
 
         filename = secure_filename(file.filename or "")
         if not filename:
-            return jsonify(
-                {"success": False, "error": gettext("لم يتم اختيار ملف")}
-            ), 400
+            return jsonify({"success": False, "error": gettext("لم يتم اختيار ملف")}), 400
 
         if not filename.lower().endswith((".xlsx", ".xls")):
             return (
@@ -191,9 +173,7 @@ def upload_excel():
         file_size = file.stream.tell()
         file.stream.seek(0)
         if file_size > max_bytes:
-            return jsonify(
-                {"success": False, "error": gettext("حجم الملف كبير جداً")}
-            ), 413
+            return jsonify({"success": False, "error": gettext("حجم الملف كبير جداً")}), 413
 
         result = _process_excel_intelligently(file, warehouse_id, current_user)
 
@@ -201,9 +181,7 @@ def upload_excel():
 
     except Exception as e:
         return (
-            jsonify(
-                {"success": False, "error": gettext(f"خطأ في معالجة الملف: {str(e)}")}
-            ),
+            jsonify({"success": False, "error": gettext(f"خطأ في معالجة الملف: {str(e)}")}),
             500,
         )
 
@@ -221,9 +199,7 @@ def _process_excel_intelligently(file, warehouse_id, user):
         if not column_mapping:
             return {
                 "success": False,
-                "error": gettext(
-                    "لم أستطع فهم هيكل الملف. تأكد من وجود أعمدة: الاسم، رقم القطعة، السعر"
-                ),
+                "error": gettext("لم أستطع فهم هيكل الملف. تأكد من وجود أعمدة: الاسم، رقم القطعة، السعر"),
             }
 
         warehouse = Warehouse.query.filter_by(id=warehouse_id, tenant_id=tid).first()
@@ -244,10 +220,7 @@ def _process_excel_intelligently(file, warehouse_id, user):
                     part_number = str(row[column_mapping["part_number"]]).strip()
                     price = float(row[column_mapping["price"]])
 
-                    if (
-                        "quantity" in column_mapping
-                        and column_mapping["quantity"] in row
-                    ):
+                    if "quantity" in column_mapping and column_mapping["quantity"] in row:
                         quantity_val = row[column_mapping["quantity"]]
                         if pd.isna(quantity_val) or quantity_val == "":
                             quantity = 0
@@ -259,17 +232,13 @@ def _process_excel_intelligently(file, warehouse_id, user):
                     if not name or name == "nan" or part_number == "nan":
                         continue
 
-                    existing_product = Product.query.filter_by(
-                        part_number=part_number, tenant_id=tid
-                    ).first()
+                    existing_product = Product.query.filter_by(part_number=part_number, tenant_id=tid).first()
 
                     if existing_product:
                         existing_product.regular_price = price
                         products_updated += 1
                         if quantity > 0:
-                            wh_import = Warehouse.query.filter_by(
-                                tenant_id=tid, is_active=True
-                            ).first()
+                            wh_import = Warehouse.query.filter_by(tenant_id=tid, is_active=True).first()
                             StockService.add_stock(
                                 product_id=existing_product.id,
                                 quantity=quantity,

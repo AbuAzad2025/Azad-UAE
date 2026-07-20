@@ -113,9 +113,7 @@ class TestInventoryReconciliationTask:
             return_value=report,
         )
         mock_db = mocker.patch("extensions.db")
-        mock_db.session.query.return_value.distinct.return_value.order_by.return_value.all.return_value = [
-            (1,)
-        ]
+        mock_db.session.query.return_value.distinct.return_value.order_by.return_value.all.return_value = [(1,)]
 
         from services.celery_tasks import run_inventory_reconciliation
         import logging
@@ -231,9 +229,7 @@ class TestAbandonedCartReminders:
         mock_q.filter.return_value.all.side_effect = [[cart], []]
         mocker.patch("models.shop_abandoned_cart.ShopAbandonedCart.query", mock_q)
         store = MagicMock(email="store@test.com")
-        mocker.patch(
-            "services.store_service.StoreService.get_tenant_store", return_value=store
-        )
+        mocker.patch("services.store_service.StoreService.get_tenant_store", return_value=store)
         mocker.patch("extensions.db.session")
 
         from services.celery_tasks import send_abandoned_cart_reminders
@@ -248,9 +244,7 @@ class TestAbandonedCartReminders:
         mock_q = MagicMock()
         mock_q.filter.return_value.all.side_effect = [[cart], []]
         mocker.patch("models.shop_abandoned_cart.ShopAbandonedCart.query", mock_q)
-        mocker.patch(
-            "services.store_service.StoreService.get_tenant_store", return_value=None
-        )
+        mocker.patch("services.store_service.StoreService.get_tenant_store", return_value=None)
 
         from services.celery_tasks import send_abandoned_cart_reminders
 

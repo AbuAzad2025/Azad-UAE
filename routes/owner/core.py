@@ -134,9 +134,7 @@ def system_stats():
     try:
         db_stats, restricted_count = LoggingCore.get_db_stats_context()
     except Exception as e:
-        current_app.logger.error(
-            "system_stats failed user_id=%s: %s", current_user.id, e
-        )
+        current_app.logger.error("system_stats failed user_id=%s: %s", current_user.id, e)
         flash(gettext("❌ خطأ في جلب الإحصائيات. حاول تحديث الصفحة."), "danger")
         return redirect(url_for("owner.dashboard"))
 
@@ -165,9 +163,7 @@ def audit_logs():
     per_page = request.args.get("per_page", 50, type=int)
     tid = get_active_tenant_id(current_user)
 
-    logs, pagination, stats, users = LoggingCore.get_audit_logs(
-        tid, page, per_page, action, user_id
-    )
+    logs, pagination, stats, users = LoggingCore.get_audit_logs(tid, page, per_page, action, user_id)
 
     return render_template(
         "owner/audit_logs.html",
@@ -186,13 +182,11 @@ def archived():
     page = request.args.get("page", 1, type=int)
     table_name = request.args.get("table", "", type=str)
 
-    pagination = ArchiveService.get_archived_records_query(
-        table_name=table_name or None
-    ).paginate(page=page, per_page=50, error_out=False)
-
-    return render_template(
-        "owner/archived.html", records=pagination.items, pagination=pagination
+    pagination = ArchiveService.get_archived_records_query(table_name=table_name or None).paginate(
+        page=page, per_page=50, error_out=False
     )
+
+    return render_template("owner/archived.html", records=pagination.items, pagination=pagination)
 
 
 @owner_bp.route("/financial-overview")
@@ -208,10 +202,7 @@ def financial_overview():
     force_platform = request.args.get("_platform", type=int) == 1
     tid = (
         None
-        if (
-            is_global_owner_user(current_user)
-            and (force_platform or get_active_tenant_id(current_user) is None)
-        )
+        if (is_global_owner_user(current_user) and (force_platform or get_active_tenant_id(current_user) is None))
         else get_active_tenant_id(current_user)
     )
     return FinancialService.financial_overview(period, tid, scoped_branch_id)
@@ -223,9 +214,7 @@ def config():
     from flask import current_app
 
     config_data = {
-        "DATABASE_URL": _mask_db_uri(
-            current_app.config.get("SQLALCHEMY_DATABASE_URI", "")
-        ),
+        "DATABASE_URL": _mask_db_uri(current_app.config.get("SQLALCHEMY_DATABASE_URI", "")),
         "DEBUG": current_app.config.get("DEBUG", False),
         "APP_ENV": current_app.config.get("APP_ENV", ""),
         "DEFAULT_CURRENCY": current_app.config.get("DEFAULT_CURRENCY", ""),
@@ -251,9 +240,7 @@ def cards_vault():
     if tid is not None:
         query = query.filter(CardVault.tenant_id == tid)
 
-    pagination = query.order_by(CardVault.created_at.desc()).paginate(
-        page=page, per_page=50, error_out=False
-    )
+    pagination = query.order_by(CardVault.created_at.desc()).paginate(page=page, per_page=50, error_out=False)
 
     total_cards = CardVault.query.filter_by(is_active=True)
     if tid is not None:
@@ -269,20 +256,14 @@ def cards_vault():
         "total_cards": total_cards,
         "total_usage": total_usage,
         "visa_count": (
-            CardVault.query.filter_by(card_type="visa", is_active=True)
-            .filter(CardVault.tenant_id == tid)
-            .count()
+            CardVault.query.filter_by(card_type="visa", is_active=True).filter(CardVault.tenant_id == tid).count()
             if tid is not None
             else CardVault.query.filter_by(card_type="visa", is_active=True).count()
         ),
         "mastercard_count": (
-            CardVault.query.filter_by(card_type="mastercard", is_active=True)
-            .filter(CardVault.tenant_id == tid)
-            .count()
+            CardVault.query.filter_by(card_type="mastercard", is_active=True).filter(CardVault.tenant_id == tid).count()
             if tid is not None
-            else CardVault.query.filter_by(
-                card_type="mastercard", is_active=True
-            ).count()
+            else CardVault.query.filter_by(card_type="mastercard", is_active=True).count()
         ),
     }
 

@@ -65,15 +65,11 @@ def add_employee():
                 if form_branch_id != scoped_branch_id:
                     flash(gettext("لا يمكنك ربط الموظف إلا بفرعك الحالي."), "danger")
                     tid = get_active_tenant_id(current_user)
-                    branches = Branch.query.filter_by(
-                        id=scoped_branch_id, is_active=True
-                    )
+                    branches = Branch.query.filter_by(id=scoped_branch_id, is_active=True)
                     if tid is not None:
                         branches = branches.filter(Branch.tenant_id == tid)
                     branches = branches.all()
-                    return render_template(
-                        "payroll/add_employee.html", branches=branches
-                    )
+                    return render_template("payroll/add_employee.html", branches=branches)
             with atomic_transaction("payroll_add_employee"):
                 PayrollService.create_employee(request.form)
             flash(gettext("تم إضافة الموظف بنجاح"), "success")
@@ -126,9 +122,7 @@ def advances():
     scoped_branch_id = branch_scope_id()
     tid = get_active_tenant_id(current_user)
     employees_query = Employee.query.filter_by(is_active=True)
-    advances_query = SalaryAdvance.query.join(
-        Employee, SalaryAdvance.employee_id == Employee.id
-    )
+    advances_query = SalaryAdvance.query.join(Employee, SalaryAdvance.employee_id == Employee.id)
     if tid is not None:
         employees_query = employees_query.filter(Employee.tenant_id == tid)
         advances_query = advances_query.filter(Employee.tenant_id == tid)
@@ -137,9 +131,7 @@ def advances():
         advances_query = advances_query.filter(Employee.branch_id == scoped_branch_id)
     employees = employees_query.order_by(Employee.name).all()
     advance_list = advances_query.order_by(SalaryAdvance.date.desc()).limit(50).all()
-    return render_template(
-        "payroll/advances.html", advances=advance_list, employees=employees
-    )
+    return render_template("payroll/advances.html", advances=advance_list, employees=employees)
 
 
 @payroll_bp.route("/process", methods=["GET", "POST"])
@@ -163,9 +155,7 @@ def process_payroll():
                 month = int(month_str)
                 year = int(year_str)
                 with atomic_transaction("payroll_generate_branch"):
-                    gen, skipped = PayrollService.generate_branch_payroll(
-                        branch_id, month, year, current_user.id
-                    )
+                    gen, skipped = PayrollService.generate_branch_payroll(branch_id, month, year, current_user.id)
                 flash(
                     gettext(
                         f"تم توليد الرواتب بنجاح: {gen} موظف، وتم تخطي {skipped} (تمت معالجتهم سابقاً أو نظام مياومة)"
@@ -209,22 +199,14 @@ def process_payroll():
     if tid is not None:
         employees_query = employees_query.filter(Employee.tenant_id == tid)
         branches_query = branches_query.filter(Branch.tenant_id == tid)
-        transactions_query = transactions_query.filter(
-            PayrollTransaction.tenant_id == tid
-        )
+        transactions_query = transactions_query.filter(PayrollTransaction.tenant_id == tid)
     if scoped_branch_id is not None:
         employees_query = employees_query.filter(Employee.branch_id == scoped_branch_id)
         branches_query = branches_query.filter(Branch.id == scoped_branch_id)
-        transactions_query = transactions_query.filter(
-            PayrollTransaction.branch_id == scoped_branch_id
-        )
+        transactions_query = transactions_query.filter(PayrollTransaction.branch_id == scoped_branch_id)
     employees = employees_query.order_by(Employee.name).all()
     branches = branches_query.order_by(Branch.code, Branch.name).all()
-    transactions = (
-        transactions_query.order_by(PayrollTransaction.payment_date.desc())
-        .limit(50)
-        .all()
-    )
+    transactions = transactions_query.order_by(PayrollTransaction.payment_date.desc()).limit(50).all()
     today = datetime.now()
     return render_template(
         "payroll/process.html",
@@ -243,9 +225,7 @@ def salary_slip(**kwargs):
     tid = get_active_tenant_id(current_user)
     transaction_query = PayrollTransaction.query.filter_by(id=record_id)
     if tid is not None:
-        transaction_query = transaction_query.filter(
-            PayrollTransaction.tenant_id == tid
-        )
+        transaction_query = transaction_query.filter(PayrollTransaction.tenant_id == tid)
     transaction = transaction_query.first_or_404()
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is not None and transaction.branch_id != scoped_branch_id:

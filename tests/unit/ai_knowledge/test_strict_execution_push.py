@@ -87,9 +87,7 @@ class TestContinuousLearnerPush:
         from ai_knowledge.learning.continuous_learner import ContinuousLearner
 
         learner = ContinuousLearner()
-        with patch.object(
-            learner.session, "get", return_value=MagicMock(status_code=500)
-        ):
+        with patch.object(learner.session, "get", return_value=MagicMock(status_code=500)):
             result = learner.learn_arxiv_papers("ml")
         assert result["success"] is False
 
@@ -98,9 +96,7 @@ class TestContinuousLearnerPush:
 
         learner = ContinuousLearner()
         with (
-            patch.object(
-                learner, "learn_from_wikipedia", return_value={"success": True}
-            ),
+            patch.object(learner, "learn_from_wikipedia", return_value={"success": True}),
             patch.object(
                 learner,
                 "learn_arxiv_papers",
@@ -123,12 +119,7 @@ class TestContinuousLearnerPush:
         from ai_knowledge.learning.continuous_learner import evaluate_and_learn
 
         svc = MagicMock()
-        assert (
-            evaluate_and_learn(
-                [{"question": "", "expected_keywords": ["a"]}], ai_service=svc
-            )
-            == []
-        )
+        assert evaluate_and_learn([{"question": "", "expected_keywords": ["a"]}], ai_service=svc) == []
 
     def test_evaluate_and_learn_success(self):
         from ai_knowledge.learning.continuous_learner import evaluate_and_learn
@@ -154,9 +145,7 @@ class TestContinuousLearnerPush:
         svc.ask_genius.side_effect = RuntimeError("api fail")
         memory = MagicMock()
         svc.get_learning_system.return_value = memory
-        results = evaluate_and_learn(
-            [{"question": "x", "expected_keywords": ["a"]}], ai_service=svc
-        )
+        results = evaluate_and_learn([{"question": "x", "expected_keywords": ["a"]}], ai_service=svc)
         assert results[0]["success"] is False
 
 
@@ -298,9 +287,7 @@ class TestContinuousLearnerExtended:
         from ai_knowledge.learning.continuous_learner import ContinuousLearner
 
         learner = ContinuousLearner()
-        with patch.object(
-            learner.session, "get", return_value=MagicMock(status_code=404)
-        ):
+        with patch.object(learner.session, "get", return_value=MagicMock(status_code=404)):
             result = learner.learn_from_wikipedia("Missing")
         assert result["success"] is False
 
@@ -323,12 +310,7 @@ class TestContinuousLearnerExtended:
             return real_import(name, *args, **kwargs)
 
         with patch("builtins.__import__", side_effect=selective_import):
-            assert (
-                evaluate_and_learn(
-                    [{"question": "q", "expected_keywords": ["a"]}], ai_service=None
-                )
-                == []
-            )
+            assert evaluate_and_learn([{"question": "q", "expected_keywords": ["a"]}], ai_service=None) == []
 
 
 class TestContextEngineExtended:

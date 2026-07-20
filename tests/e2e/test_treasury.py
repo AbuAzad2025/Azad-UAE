@@ -29,9 +29,7 @@ def _assert_branch_filter_enforced(report_all, report_branch):
     all_count = report_all["liquidity"]["account_count"]
     branch_count = report_branch["liquidity"]["account_count"]
     if branch_count > all_count:
-        raise AssertionError(
-            f"Branch filter inflated accounts: all={all_count} branch={branch_count}"
-        )
+        raise AssertionError(f"Branch filter inflated accounts: all={all_count} branch={branch_count}")
     print("  [PASS] Branch filter reduces or maintains account count")
 
 
@@ -44,15 +42,11 @@ def _assert_cheque_buckets_non_overlapping(report):
             for item in b["items"]:
                 cid = item["id"]
                 if cid in all_ids:
-                    raise AssertionError(
-                        f"Cheque {cid} appears in multiple buckets ({direction})"
-                    )
+                    raise AssertionError(f"Cheque {cid} appears in multiple buckets ({direction})")
                 all_ids.add(cid)
         total_items = sum(len(b["items"]) for b in buckets.values())
         if total_items != len(all_ids):
-            raise AssertionError(
-                f"Bucket overlap or missing: total_items={total_items} unique={len(all_ids)}"
-            )
+            raise AssertionError(f"Bucket overlap or missing: total_items={total_items} unique={len(all_ids)}")
     print("  [PASS] Cheque buckets are non-overlapping")
 
 
@@ -64,9 +58,7 @@ def _assert_cheque_bucket_math(report):
             expected = sum(Decimal(str(i["amount_aed"])) for i in b["items"])
             actual = Decimal(str(b["total_amount"]))
             if abs(expected - actual) > Decimal("0.01"):
-                raise AssertionError(
-                    f"{direction}/{key} bucket total mismatch: expected={expected} actual={actual}"
-                )
+                raise AssertionError(f"{direction}/{key} bucket total mismatch: expected={expected} actual={actual}")
     print("  [PASS] Cheque bucket totals match item sums")
 
 
@@ -88,9 +80,7 @@ def _assert_gl_balances_sensible(report):
     for a in report["liquidity"]["accounts"]:
         if a["source"] == "gl_account" and a["kind"] in ("cash", "bank"):
             if a["balance_aed"] < -1000000:
-                raise AssertionError(
-                    f"Suspicious GL balance: {a['code']} = {a['balance_aed']}"
-                )
+                raise AssertionError(f"Suspicious GL balance: {a['code']} = {a['balance_aed']}")
     print("  [PASS] GL balances are within sensible range")
 
 
@@ -119,9 +109,7 @@ def main():
 
         print("\n=== Check: Branch Filter Enforcement ===")
         try:
-            report_branch = TreasuryService.build_dashboard(
-                tenant_id=tenant_id, branch_id=1
-            )
+            report_branch = TreasuryService.build_dashboard(tenant_id=tenant_id, branch_id=1)
             _assert_branch_filter_enforced(report_all, report_branch)
         except AssertionError as e:
             errors.append(str(e))

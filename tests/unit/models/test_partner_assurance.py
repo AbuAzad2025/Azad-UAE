@@ -38,9 +38,7 @@ class TestPartnerProperties:
         assert _partner_stub(scope_type="branch", scope_id=3).scope_label == "فرع #3"
 
     def test_scope_label_warehouse(self):
-        assert (
-            _partner_stub(scope_type="warehouse", scope_id=8).scope_label == "مستودع #8"
-        )
+        assert _partner_stub(scope_type="warehouse", scope_id=8).scope_label == "مستودع #8"
 
     def test_scope_label_unknown(self):
         assert _partner_stub(scope_type="other").scope_label == "—"

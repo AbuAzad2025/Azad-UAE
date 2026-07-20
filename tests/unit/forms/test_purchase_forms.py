@@ -49,9 +49,7 @@ class TestPurchaseFormValid:
 
     def test_tax_rate_boundaries_accepted(self):
         for rate in ("0", "100"):
-            form = _purchase_form(
-                {"supplier_name": "S", "currency": "AED", "tax_rate": rate}
-            )
+            form = _purchase_form({"supplier_name": "S", "currency": "AED", "tax_rate": rate})
             assert form.validate() is True
             assert form.tax_rate.data == Decimal(rate)
 
@@ -100,36 +98,26 @@ class TestPurchaseFormInvalid:
         assert form.errors["currency"] == [INVALID_CHOICE_MSG]
 
     def test_malformed_email_rejected(self):
-        form = _purchase_form(
-            {"supplier_name": "S", "currency": "AED", "supplier_email": "bad"}
-        )
+        form = _purchase_form({"supplier_name": "S", "currency": "AED", "supplier_email": "bad"})
         assert form.validate() is False
         assert form.errors["supplier_email"] == [INVALID_EMAIL_MSG]
 
     def test_tax_rate_above_100_rejected(self):
-        form = _purchase_form(
-            {"supplier_name": "S", "currency": "AED", "tax_rate": "101"}
-        )
+        form = _purchase_form({"supplier_name": "S", "currency": "AED", "tax_rate": "101"})
         assert form.validate() is False
         assert form.errors["tax_rate"] == [RANGE_TAX_MSG]
 
     def test_negative_tax_rate_rejected(self):
-        form = _purchase_form(
-            {"supplier_name": "S", "currency": "AED", "tax_rate": "-1"}
-        )
+        form = _purchase_form({"supplier_name": "S", "currency": "AED", "tax_rate": "-1"})
         assert form.validate() is False
         assert form.errors["tax_rate"] == [RANGE_TAX_MSG]
 
     def test_negative_discount_rejected(self):
-        form = _purchase_form(
-            {"supplier_name": "S", "currency": "AED", "discount_amount": "-0.5"}
-        )
+        form = _purchase_form({"supplier_name": "S", "currency": "AED", "discount_amount": "-0.5"})
         assert form.validate() is False
         assert form.errors["discount_amount"] == [MIN_ZERO_MSG]
 
     def test_negative_exchange_rate_rejected(self):
-        form = _purchase_form(
-            {"supplier_name": "S", "currency": "AED", "exchange_rate": "-2"}
-        )
+        form = _purchase_form({"supplier_name": "S", "currency": "AED", "exchange_rate": "-2"})
         assert form.validate() is False
         assert form.errors["exchange_rate"] == [MIN_ZERO_MSG]

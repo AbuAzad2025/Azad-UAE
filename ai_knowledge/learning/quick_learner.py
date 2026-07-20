@@ -25,9 +25,7 @@ class QuickLearner:
         from extensions import db
         from models.ai import AiMemory
 
-        existing = AiMemory.query.filter_by(
-            key=question.strip().lower(), tenant_id=tenant_id
-        ).first()
+        existing = AiMemory.query.filter_by(key=question.strip().lower(), tenant_id=tenant_id).first()
         if existing:
             existing.value = answer
             existing.category = category
@@ -47,9 +45,7 @@ class QuickLearner:
         db.session.flush()
         return True
 
-    def get_answer(
-        self, question: str, tenant_id: Optional[int] = None
-    ) -> Optional[str]:
+    def get_answer(self, question: str, tenant_id: Optional[int] = None) -> Optional[str]:
         """البحث عن إجابة — مطابقة تامة أو جزئية أو ضبابية مع عزل حسب المستأجر."""
         from extensions import db
         from models.ai import AiMemory

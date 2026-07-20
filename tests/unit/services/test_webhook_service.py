@@ -104,9 +104,7 @@ class TestVerifyNowpaymentsSignature:
         payload = b'{"payment_id":"1"}'
         sig = _np_sig(secret, payload)
         assert WebhookService.verify_nowpayments_signature(payload, sig, secret) is True
-        assert (
-            WebhookService.verify_nowpayments_signature(payload, "bad", secret) is False
-        )
+        assert WebhookService.verify_nowpayments_signature(payload, "bad", secret) is False
 
 
 class TestProcessNowpaymentsWebhook:
@@ -165,9 +163,7 @@ class TestPurchaseWebhook:
     def test_finished_activates(self, db_session, mocker):
         pkg = _package(db_session)
         purchase = _purchase(db_session, pkg, payment_id=f"pay-{uuid.uuid4().hex[:6]}")
-        notify = mocker.patch(
-            "services.webhook_service.NotificationService.notify_purchase_activated"
-        )
+        notify = mocker.patch("services.webhook_service.NotificationService.notify_purchase_activated")
 
         result = WebhookService._process_purchase_webhook(
             {
@@ -183,9 +179,7 @@ class TestPurchaseWebhook:
 
     def test_failed_status(self, db_session):
         pkg = _package(db_session)
-        purchase = _purchase(
-            db_session, pkg, payment_id=f"pay-fail-{uuid.uuid4().hex[:6]}"
-        )
+        purchase = _purchase(db_session, pkg, payment_id=f"pay-fail-{uuid.uuid4().hex[:6]}")
         result = WebhookService._process_purchase_webhook(
             {
                 "payment_id": purchase.transaction_id,
@@ -198,9 +192,7 @@ class TestPurchaseWebhook:
 
     def test_commit_failure(self, db_session, mocker):
         pkg = _package(db_session)
-        purchase = _purchase(
-            db_session, pkg, payment_id=f"pay-db-{uuid.uuid4().hex[:6]}"
-        )
+        purchase = _purchase(db_session, pkg, payment_id=f"pay-db-{uuid.uuid4().hex[:6]}")
         mocker.patch.object(db.session, "commit", side_effect=RuntimeError("db"))
         with pytest.raises(RuntimeError, match="db"):
             WebhookService._process_purchase_webhook(
@@ -241,9 +233,7 @@ class TestDonationWebhook:
             transaction_hash=f"hash-{uuid.uuid4().hex[:10]}",
             gateway_transaction_id=gateway_id,
         )
-        mocker.patch(
-            "services.webhook_service.NotificationService.notify_payment_received"
-        )
+        mocker.patch("services.webhook_service.NotificationService.notify_payment_received")
         result = WebhookService._process_donation_webhook(
             {
                 "payment_id": gateway_id,
@@ -296,9 +286,7 @@ class TestStoreOrderWebhook:
         )
         assert result["error"] == "Store sale not found"
 
-    def test_gateway_ref_mismatch_logs(
-        self, db_session, sample_tenant, sample_customer, sample_user, mocker
-    ):
+    def test_gateway_ref_mismatch_logs(self, db_session, sample_tenant, sample_customer, sample_user, mocker):
         sale = _store_sale(
             db_session,
             sample_tenant,
@@ -316,9 +304,7 @@ class TestStoreOrderWebhook:
             }
         )
 
-    def test_idempotent_confirmed_records_fee(
-        self, db_session, sample_tenant, sample_customer, sample_user, mocker
-    ):
+    def test_idempotent_confirmed_records_fee(self, db_session, sample_tenant, sample_customer, sample_user, mocker):
         sale = _store_sale(
             db_session,
             sample_tenant,
@@ -327,9 +313,7 @@ class TestStoreOrderWebhook:
             status="confirmed",
             checkout_gateway_ref="ref-1",
         )
-        fee = mocker.patch(
-            "services.azad_platform_fee_service.AzadPlatformFeeService.record_store_online_fee"
-        )
+        fee = mocker.patch("services.azad_platform_fee_service.AzadPlatformFeeService.record_store_online_fee")
         order_id = f"STORE_{sale.id}_{sample_tenant.id}"
         result = WebhookService._process_store_order_webhook(
             {
@@ -341,15 +325,9 @@ class TestStoreOrderWebhook:
         assert "idempotent" in result["message"]
         fee.assert_called_once()
 
-    def test_confirms_pending_sale(
-        self, db_session, sample_tenant, sample_customer, sample_user, mocker
-    ):
-        sale = _store_sale(
-            db_session, sample_tenant, sample_customer, sample_user, status="pending"
-        )
-        confirm = mocker.patch(
-            "services.store_order_service.StoreOrderService.confirm_order"
-        )
+    def test_confirms_pending_sale(self, db_session, sample_tenant, sample_customer, sample_user, mocker):
+        sale = _store_sale(db_session, sample_tenant, sample_customer, sample_user, status="pending")
+        confirm = mocker.patch("services.store_order_service.StoreOrderService.confirm_order")
         order_id = f"STORE_{sale.id}_{sample_tenant.id}"
         result = WebhookService._process_store_order_webhook(
             {
@@ -361,12 +339,8 @@ class TestStoreOrderWebhook:
         assert result["success"] is True
         confirm.assert_called_once_with(sale, mark_paid=True)
 
-    def test_confirm_value_error_skipped(
-        self, db_session, sample_tenant, sample_customer, sample_user, mocker
-    ):
-        sale = _store_sale(
-            db_session, sample_tenant, sample_customer, sample_user, status="pending"
-        )
+    def test_confirm_value_error_skipped(self, db_session, sample_tenant, sample_customer, sample_user, mocker):
+        sale = _store_sale(db_session, sample_tenant, sample_customer, sample_user, status="pending")
         mocker.patch(
             "services.store_order_service.StoreOrderService.confirm_order",
             side_effect=ValueError("skip"),
@@ -382,15 +356,9 @@ class TestStoreOrderWebhook:
             is True
         )
 
-    def test_cancel_pending_on_failure(
-        self, db_session, sample_tenant, sample_customer, sample_user, mocker
-    ):
-        sale = _store_sale(
-            db_session, sample_tenant, sample_customer, sample_user, status="pending"
-        )
-        cancel = mocker.patch(
-            "services.store_order_service.StoreOrderService.cancel_order"
-        )
+    def test_cancel_pending_on_failure(self, db_session, sample_tenant, sample_customer, sample_user, mocker):
+        sale = _store_sale(db_session, sample_tenant, sample_customer, sample_user, status="pending")
+        cancel = mocker.patch("services.store_order_service.StoreOrderService.cancel_order")
         order_id = f"STORE_{sale.id}_{sample_tenant.id}"
         WebhookService._process_store_order_webhook(
             {
@@ -400,9 +368,7 @@ class TestStoreOrderWebhook:
         )
         cancel.assert_called_once_with(sale)
 
-    def test_idempotent_commit_failure(
-        self, db_session, sample_tenant, sample_customer, sample_user, mocker
-    ):
+    def test_idempotent_commit_failure(self, db_session, sample_tenant, sample_customer, sample_user, mocker):
         sale = _store_sale(
             db_session,
             sample_tenant,
@@ -410,9 +376,7 @@ class TestStoreOrderWebhook:
             sample_user,
             status="confirmed",
         )
-        mocker.patch(
-            "services.azad_platform_fee_service.AzadPlatformFeeService.record_store_online_fee"
-        )
+        mocker.patch("services.azad_platform_fee_service.AzadPlatformFeeService.record_store_online_fee")
         mocker.patch.object(db.session, "commit", side_effect=RuntimeError("db"))
         order_id = f"STORE_{sale.id}_{sample_tenant.id}"
         with pytest.raises(RuntimeError):
@@ -436,9 +400,7 @@ class TestStripe:
         assert WebhookService.verify_stripe_signature(b"{}", "sig", "whsec") is False
 
     def test_process_success_event(self, mocker):
-        notify = mocker.patch(
-            "services.webhook_service.NotificationService.notify_payment_received"
-        )
+        notify = mocker.patch("services.webhook_service.NotificationService.notify_payment_received")
         result = WebhookService.process_stripe_webhook(
             {
                 "type": "payment_intent.succeeded",
@@ -449,9 +411,7 @@ class TestStripe:
         notify.assert_called_once()
 
     def test_process_failed_event(self, mocker):
-        alert = mocker.patch(
-            "services.webhook_service.NotificationService.notify_security_alert"
-        )
+        alert = mocker.patch("services.webhook_service.NotificationService.notify_security_alert")
         result = WebhookService.process_stripe_webhook(
             {
                 "type": "payment_intent.payment_failed",
@@ -467,9 +427,7 @@ class TestStripe:
         alert.assert_called_once()
 
     def test_unhandled_event(self):
-        result = WebhookService.process_stripe_webhook(
-            {"type": "customer.created", "data": {}}
-        )
+        result = WebhookService.process_stripe_webhook({"type": "customer.created", "data": {}})
         assert result["message"] == "Event acknowledged"
 
     def test_process_exception(self, mocker):
@@ -489,15 +447,9 @@ class TestStripe:
 
 class TestRouting:
     def test_routes_purchase_donation_store(self, mocker):
-        purchase = mocker.patch.object(
-            WebhookService, "_process_purchase_webhook", return_value={"ok": 1}
-        )
-        donation = mocker.patch.object(
-            WebhookService, "_process_donation_webhook", return_value={"ok": 2}
-        )
-        store = mocker.patch.object(
-            WebhookService, "_process_store_order_webhook", return_value={"ok": 3}
-        )
+        purchase = mocker.patch.object(WebhookService, "_process_purchase_webhook", return_value={"ok": 1})
+        donation = mocker.patch.object(WebhookService, "_process_donation_webhook", return_value={"ok": 2})
+        store = mocker.patch.object(WebhookService, "_process_store_order_webhook", return_value={"ok": 3})
 
         WebhookService.process_nowpayments_webhook({"order_id": "PURCHASE_1"})
         purchase.assert_called_once()

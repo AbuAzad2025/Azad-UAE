@@ -28,9 +28,7 @@ class TestDateBounds:
             InventoryReconciliationService,
         )
 
-        result = InventoryReconciliationService._date_bound(
-            value, end_of_day=end_of_day
-        )
+        result = InventoryReconciliationService._date_bound(value, end_of_day=end_of_day)
         if expected_hour is None:
             assert result is None
         elif isinstance(value, datetime):
@@ -43,9 +41,7 @@ class TestDateBounds:
             InventoryReconciliationService,
         )
 
-        start, end = InventoryReconciliationService._date_bounds(
-            "2025-01-01", "2025-01-31"
-        )
+        start, end = InventoryReconciliationService._date_bounds("2025-01-01", "2025-01-31")
         assert start.day == 1 and start.hour == 0
         assert end.day == 31 and end.hour == 23
 
@@ -54,9 +50,7 @@ class TestDateBounds:
             InventoryReconciliationService,
         )
 
-        result = InventoryReconciliationService._date_bound(
-            date(2025, 3, 15), end_of_day=True
-        )
+        result = InventoryReconciliationService._date_bound(date(2025, 3, 15), end_of_day=True)
         assert result.hour == 23 and result.day == 15
 
     def test_date_bound_iso_datetime_string(self):
@@ -64,9 +58,7 @@ class TestDateBounds:
             InventoryReconciliationService,
         )
 
-        result = InventoryReconciliationService._date_bound(
-            "2025-03-15T08:30:00", end_of_day=False
-        )
+        result = InventoryReconciliationService._date_bound("2025-03-15T08:30:00", end_of_day=False)
         assert result.hour == 8
 
 
@@ -162,9 +154,7 @@ class TestBuildReport:
         pwc_q.filter_by.return_value = pwc_q
         pwc_q.all.return_value = [pwc]
         mocker.patch.object(
-            __import__(
-                "models", fromlist=["ProductWarehouseCost"]
-            ).ProductWarehouseCost,
+            __import__("models", fromlist=["ProductWarehouseCost"]).ProductWarehouseCost,
             "query",
             new_callable=mocker.PropertyMock,
             return_value=pwc_q,
@@ -208,9 +198,7 @@ class TestBuildReport:
         pwc_q.filter.return_value = pwc_q
         pwc_q.all.return_value = []
         mocker.patch.object(
-            __import__(
-                "models", fromlist=["ProductWarehouseCost"]
-            ).ProductWarehouseCost,
+            __import__("models", fromlist=["ProductWarehouseCost"]).ProductWarehouseCost,
             "query",
             new_callable=mocker.PropertyMock,
             return_value=pwc_q,
@@ -236,9 +224,7 @@ class TestBuildReport:
         pwc_q.filter_by.return_value = pwc_q
         pwc_q.all.return_value = [pwc]
         mocker.patch.object(
-            __import__(
-                "models", fromlist=["ProductWarehouseCost"]
-            ).ProductWarehouseCost,
+            __import__("models", fromlist=["ProductWarehouseCost"]).ProductWarehouseCost,
             "query",
             new_callable=mocker.PropertyMock,
             return_value=pwc_q,

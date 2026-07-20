@@ -54,18 +54,14 @@ class TestPartnersBranchScopeWave:
         supplier = MagicMock(id=1, name="Sup", tenant_id=1)
         with (
             patch("routes.reports.db.session.query", side_effect=session_query),
-            patch(
-                "routes.reports.tenant_query", return_value=_chain_query_stub(all=[])
-            ),
+            patch("routes.reports.tenant_query", return_value=_chain_query_stub(all=[])),
             patch("routes.reports._scoped_customer_query") as scq,
             patch("routes.reports._scoped_supplier_query") as ssq,
             patch("routes.reports.report_branch_scope_id", return_value=7),
         ):
             scq.return_value.filter_by.return_value.all.return_value = [partner_cust]
             ssq.return_value.all.return_value = [supplier]
-            resp = reports_client.get(
-                "/reports/partners?date_from=2025-01-01&date_to=2025-12-31"
-            )
+            resp = reports_client.get("/reports/partners?date_from=2025-01-01&date_to=2025-12-31")
             assert resp.status_code == 200
 
     def test_fallback_partner_sales_branch_scoped(self, reports_client, mock_user):
@@ -176,9 +172,7 @@ class TestSalesBranchScopeWave:
             patch("routes.reports.report_branch_scope_id", return_value=4),
         ):
             Customer.query.filter.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
-            resp = reports_client.get(
-                "/reports/sales?customer=3&seller=2&date_from=2025-01-01&date_to=2025-06-30"
-            )
+            resp = reports_client.get("/reports/sales?customer=3&seller=2&date_from=2025-01-01&date_to=2025-06-30")
             assert resp.status_code == 200
 
     def test_sales_export_branch_seller_filters(self, reports_client, mock_user):
@@ -199,9 +193,7 @@ class TestSalesBranchScopeWave:
         sq = _chain_query_stub(all=[sale])
         with (
             patch("routes.reports.tenant_query", return_value=sq),
-            patch(
-                "routes.reports.get_confirmed_sale_paid_aed", return_value=Decimal("50")
-            ),
+            patch("routes.reports.get_confirmed_sale_paid_aed", return_value=Decimal("50")),
             patch("routes.reports.report_branch_scope_id", return_value=2),
             patch(
                 "services.export_service.ExportService.export_to_xlsx",
@@ -209,9 +201,7 @@ class TestSalesBranchScopeWave:
             ),
             patch("flask.send_file", return_value=_send_file_response()),
         ):
-            resp = reports_client.get(
-                "/reports/sales/export?format=xlsx&customer=1&seller=2&date_from=2025-01-01"
-            )
+            resp = reports_client.get("/reports/sales/export?format=xlsx&customer=1&seller=2&date_from=2025-01-01")
             assert resp.status_code == 200
 
 
@@ -241,9 +231,7 @@ class TestPurchasesBranchScopeWave:
             patch("routes.reports._scoped_supplier_query", return_value=sup_scoped),
             patch("routes.reports.report_branch_scope_id", return_value=6),
         ):
-            resp = reports_client.get(
-                "/reports/purchases?start_date=2025-01-01&end_date=2025-06-30&supplier_id=3"
-            )
+            resp = reports_client.get("/reports/purchases?start_date=2025-01-01&end_date=2025-06-30&supplier_id=3")
             assert resp.status_code == 200
 
     def test_purchases_export_xlsx_branch(self, reports_client, mock_user):
@@ -269,9 +257,7 @@ class TestPurchasesBranchScopeWave:
             ),
             patch("flask.send_file", return_value=_send_file_response()),
         ):
-            resp = reports_client.get(
-                "/reports/purchases/export?format=xlsx&supplier_id=1&start_date=2025-01-01"
-            )
+            resp = reports_client.get("/reports/purchases/export?format=xlsx&supplier_id=1&start_date=2025-01-01")
             assert resp.status_code == 200
 
 
@@ -282,17 +268,13 @@ class TestReconciliationWave:
             resp = reports_client.get("/reports/ar-reconciliation?branch_id=99")
             assert resp.status_code == 403
 
-    def test_inventory_reconciliation_inaccessible_branch(
-        self, reports_client, mock_user
-    ):
+    def test_inventory_reconciliation_inaccessible_branch(self, reports_client, mock_user):
         _configure_user(mock_user)
         with patch("utils.branching.user_can_access_branch", return_value=False):
             resp = reports_client.get("/reports/inventory-reconciliation?branch_id=99")
             assert resp.status_code == 403
 
-    def test_inventory_reconciliation_non_admin_no_warehouses(
-        self, reports_client, mock_user
-    ):
+    def test_inventory_reconciliation_non_admin_no_warehouses(self, reports_client, mock_user):
         _configure_user(mock_user)
         mock_user.is_admin.return_value = False
         wh_q = MagicMock()
@@ -309,24 +291,18 @@ class TestReconciliationWave:
             resp = reports_client.get("/reports/inventory-reconciliation")
             assert resp.status_code == 200
 
-    def test_inventory_reconciliation_warehouse_forbidden(
-        self, reports_client, mock_user
-    ):
+    def test_inventory_reconciliation_warehouse_forbidden(self, reports_client, mock_user):
         _configure_user(mock_user)
         wh = MagicMock()
         wh.id = 5
         wh_q = MagicMock()
-        wh_q.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = [
-            wh
-        ]
+        wh_q.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = [wh]
         with (
             patch("models.Warehouse.query", wh_q),
             patch("utils.branching.get_accessible_branches", return_value=[]),
             patch("utils.branching.get_accessible_warehouse_ids", return_value=[1]),
         ):
-            resp = reports_client.get(
-                "/reports/inventory-reconciliation?warehouse_id=5"
-            )
+            resp = reports_client.get("/reports/inventory-reconciliation?warehouse_id=5")
             assert resp.status_code == 403
 
     def test_inventory_reconciliation_export_csv(self, reports_client, mock_user):
@@ -362,14 +338,10 @@ class TestReconciliationWave:
             ),
             patch("flask.send_file", return_value=_send_file_response()),
         ):
-            resp = reports_client.get(
-                "/reports/inventory-reconciliation/export?format=csv&warehouse_id=1&branch_id=1"
-            )
+            resp = reports_client.get("/reports/inventory-reconciliation/export?format=csv&warehouse_id=1&branch_id=1")
             assert resp.status_code == 200
 
-    def test_inventory_reconciliation_export_warehouse_403(
-        self, reports_client, mock_user
-    ):
+    def test_inventory_reconciliation_export_warehouse_403(self, reports_client, mock_user):
         _configure_user(mock_user)
         mock_user.is_admin.return_value = False
         with (
@@ -380,9 +352,7 @@ class TestReconciliationWave:
             wh_model.query.filter_by.return_value.first.return_value = MagicMock(
                 id=99, tenant_id=1, branch_id=1, is_active=True
             )
-            resp = reports_client.get(
-                "/reports/inventory-reconciliation/export?warehouse_id=99&branch_id=1"
-            )
+            resp = reports_client.get("/reports/inventory-reconciliation/export?warehouse_id=99&branch_id=1")
             assert resp.status_code == 403
 
 
@@ -428,9 +398,7 @@ class TestReceivablesWave:
             ),
             patch("flask.send_file", return_value=_send_file_response()),
         ):
-            resp = reports_client.get(
-                "/reports/receivables/export?format=xlsx&customer=1"
-            )
+            resp = reports_client.get("/reports/receivables/export?format=xlsx&customer=1")
             assert resp.status_code == 200
 
 
@@ -509,9 +477,7 @@ class TestInventoryWave:
         wh_chain.filter_by.return_value = wh_inner
         wh_inner.filter.return_value = wh_inner
         product_chain = MagicMock()
-        product_chain.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = [
-            product
-        ]
+        product_chain.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = [product]
 
         def tq(model):
             if getattr(model, "__name__", "") == "Warehouse":
@@ -573,9 +539,7 @@ class TestInventoryWave:
             patch("routes.reports.tenant_query", side_effect=tq),
             patch(
                 "routes.reports.db.session.query",
-                side_effect=lambda *a, **k: _chain_query_stub(
-                    all=[(20, Decimal("12"))]
-                ),
+                side_effect=lambda *a, **k: _chain_query_stub(all=[(20, Decimal("12"))]),
             ),
             patch(
                 "services.export_service.ExportService.export_to_xlsx",
@@ -628,9 +592,7 @@ class TestInventoryWave:
             ),
             patch("flask.send_file", return_value=make_response("ok", 200)),
         ):
-            resp = reports_client.get(
-                "/reports/inventory/export?warehouse_id=10&branch_id=2"
-            )
+            resp = reports_client.get("/reports/inventory/export?warehouse_id=10&branch_id=2")
             assert resp.status_code == 200
 
 
@@ -648,9 +610,7 @@ class TestEntitySearchWave:
 
     def test_customer_search_returns_results(self, reports_client, mock_user):
         _configure_user(mock_user)
-        customer = SimpleNamespace(
-            id=2, name="John", phone="050", customer_type="regular"
-        )
+        customer = SimpleNamespace(id=2, name="John", phone="050", customer_type="regular")
         scoped = _chain_query_stub(all=[customer])
         with patch("routes.reports._scoped_customer_query", return_value=scoped):
             resp = reports_client.get("/reports/api/entity-search?type=customer&q=john")
@@ -660,9 +620,7 @@ class TestEntitySearchWave:
 
 class TestEntityFragmentWave:
     @staticmethod
-    def _supplier_purchase_payment_mocks(
-        *, branch_id=3, direct_payments=None, fifo_scalar=Decimal("0")
-    ):
+    def _supplier_purchase_payment_mocks(*, branch_id=3, direct_payments=None, fifo_scalar=Decimal("0")):
         purchase = MagicMock()
         purchase.id = 1
         purchase.purchase_number = "PO-1"
@@ -704,9 +662,7 @@ class TestEntityFragmentWave:
             "purchase_q": purchase_q,
             "session_query": session_query,
             "pay_chain": _payment_query_stub(
-                direct_all=(
-                    direct_payments if direct_payments is not None else [payment]
-                ),
+                direct_all=(direct_payments if direct_payments is not None else [payment]),
                 fifo_total=fifo_scalar,
             ),
             "branch_id": branch_id,
@@ -740,9 +696,7 @@ class TestEntityFragmentWave:
         scoped.filter_by.return_value.exists.return_value = MagicMock()
         with (
             patch("routes.reports.tenant_get_or_404", return_value=entity),
-            patch(
-                "routes.reports.report_branch_scope_id", return_value=ctx["branch_id"]
-            ),
+            patch("routes.reports.report_branch_scope_id", return_value=ctx["branch_id"]),
             patch("routes.reports._scoped_supplier_query", return_value=scoped),
             patch("routes.reports.db.session.query", side_effect=ctx["session_query"]),
             patch("models.Purchase") as Purchase,
@@ -899,9 +853,7 @@ class TestEntityFragmentDirectCall:
             branch_id=None, direct_payments=[], fifo_scalar=Decimal("250")
         )
         ctx["payment"].purchase_id = None
-        app = app_factory(
-            __import__("routes.reports", fromlist=["reports_bp"]).reports_bp
-        )
+        app = app_factory(__import__("routes.reports", fromlist=["reports_bp"]).reports_bp)
         with app.test_request_context("/reports/entity_report_fragment/supplier/12"):
             with (
                 patch("flask_login.utils._get_user", return_value=mock_user),
@@ -909,9 +861,7 @@ class TestEntityFragmentDirectCall:
                 patch("routes.reports.tenant_get_or_404", return_value=entity),
                 patch("routes.reports.report_branch_scope_id", return_value=None),
                 patch("routes.reports.render_template", return_value="ok") as render,
-                patch(
-                    "routes.reports.db.session.query", side_effect=ctx["session_query"]
-                ),
+                patch("routes.reports.db.session.query", side_effect=ctx["session_query"]),
                 patch("models.Purchase.query", ctx["purchase_q"]),
                 patch("models.Payment.query") as pay_query,
             ):
@@ -942,9 +892,7 @@ class TestEntityFragmentDirectCall:
             fifo_scalar=Decimal("400"),
         )
         ctx["purchase_q"].all.return_value = [ctx["purchase"], purchase_b]
-        app = app_factory(
-            __import__("routes.reports", fromlist=["reports_bp"]).reports_bp
-        )
+        app = app_factory(__import__("routes.reports", fromlist=["reports_bp"]).reports_bp)
         with app.test_request_context("/reports/entity_report_fragment/supplier/12"):
             with (
                 patch("flask_login.utils._get_user", return_value=mock_user),
@@ -952,9 +900,7 @@ class TestEntityFragmentDirectCall:
                 patch("routes.reports.tenant_get_or_404", return_value=entity),
                 patch("routes.reports.report_branch_scope_id", return_value=None),
                 patch("routes.reports.render_template", return_value="ok") as render,
-                patch(
-                    "routes.reports.db.session.query", side_effect=ctx["session_query"]
-                ),
+                patch("routes.reports.db.session.query", side_effect=ctx["session_query"]),
                 patch("models.Purchase.query", ctx["purchase_q"]),
                 patch("models.Payment.query") as pay_query,
             ):
@@ -1014,9 +960,7 @@ class TestEntityFragmentDirectCall:
             return _chain_query_stub(all=[])
 
         session_query.i = 1
-        app = app_factory(
-            __import__("routes.reports", fromlist=["reports_bp"]).reports_bp
-        )
+        app = app_factory(__import__("routes.reports", fromlist=["reports_bp"]).reports_bp)
         with app.test_request_context("/reports/entity_report_fragment/customer/40"):
             with (
                 patch("flask_login.utils._get_user", return_value=mock_user),
@@ -1064,9 +1008,7 @@ class TestEntityFragmentDirectCall:
                 return _chain_query_stub(all=[mp])
             return _chain_query_stub(all=[])
 
-        app = app_factory(
-            __import__("routes.reports", fromlist=["reports_bp"]).reports_bp
-        )
+        app = app_factory(__import__("routes.reports", fromlist=["reports_bp"]).reports_bp)
         with app.test_request_context("/reports/entity_report_fragment/merchant/51"):
             with (
                 patch("flask_login.utils._get_user", return_value=mock_user),
@@ -1092,14 +1034,10 @@ class TestEntityFragmentDirectCall:
         direct_pay = MagicMock(purchase_id=1, amount_aed=Decimal("200"))
         unalloc = MagicMock(purchase_id=None, amount_aed=Decimal("75"))
         ctx = TestEntityFragmentWave._supplier_purchase_payment_mocks(branch_id=3)
-        ctx["pay_chain"] = _payment_query_stub(
-            direct_all=[direct_pay], unalloc_all=[unalloc]
-        )
+        ctx["pay_chain"] = _payment_query_stub(direct_all=[direct_pay], unalloc_all=[unalloc])
         scoped = MagicMock()
         scoped.filter_by.return_value.exists.return_value = MagicMock()
-        app = app_factory(
-            __import__("routes.reports", fromlist=["reports_bp"]).reports_bp
-        )
+        app = app_factory(__import__("routes.reports", fromlist=["reports_bp"]).reports_bp)
         with app.test_request_context("/reports/entity_report_fragment/supplier/12"):
             with (
                 patch("flask_login.utils._get_user", return_value=mock_user),
@@ -1108,9 +1046,7 @@ class TestEntityFragmentDirectCall:
                 patch("routes.reports.report_branch_scope_id", return_value=3),
                 patch("routes.reports._scoped_supplier_query", return_value=scoped),
                 patch("routes.reports.render_template", return_value="ok") as render,
-                patch(
-                    "routes.reports.db.session.query", side_effect=ctx["session_query"]
-                ),
+                patch("routes.reports.db.session.query", side_effect=ctx["session_query"]),
                 patch("models.Purchase.query", ctx["purchase_q"]),
                 patch("models.Payment.query") as pay_query,
             ):
@@ -1122,9 +1058,7 @@ class TestEntityFragmentDirectCall:
 
                 entity_report_fragment("supplier", id=12)
                 assert render.call_args[1]["allocation_exact"] is True
-                assert render.call_args[1]["unallocated_supplier_credit"] == Decimal(
-                    "75"
-                )
+                assert render.call_args[1]["unallocated_supplier_credit"] == Decimal("75")
 
     def test_customer_branch_scoped_transactions(self, app_factory, mock_user):
         _configure_user(mock_user)
@@ -1175,9 +1109,7 @@ class TestEntityFragmentDirectCall:
                 return _chain_query_stub(scalar=next(scalars, Decimal("0")))
             return _chain_query_stub(all=[])
 
-        app = app_factory(
-            __import__("routes.reports", fromlist=["reports_bp"]).reports_bp
-        )
+        app = app_factory(__import__("routes.reports", fromlist=["reports_bp"]).reports_bp)
         with app.test_request_context("/reports/entity_report_fragment/customer/55"):
             with (
                 patch("flask_login.utils._get_user", return_value=mock_user),
@@ -1225,9 +1157,7 @@ class TestEntityFragmentDirectCall:
                 return _chain_query_stub(all=[])
             return _chain_query_stub(all=[sp])
 
-        app = app_factory(
-            __import__("routes.reports", fromlist=["reports_bp"]).reports_bp
-        )
+        app = app_factory(__import__("routes.reports", fromlist=["reports_bp"]).reports_bp)
         with app.test_request_context("/reports/entity_report_fragment/partner/60"):
             with (
                 patch("flask_login.utils._get_user", return_value=mock_user),
@@ -1246,17 +1176,13 @@ class TestEntityFragmentDirectCall:
                 from routes.reports import entity_report_fragment
 
                 entity_report_fragment("partner", id=60)
-                assert any(
-                    "Share:" in p["name"] for p in render.call_args[1]["products"]
-                )
+                assert any("Share:" in p["name"] for p in render.call_args[1]["products"])
 
 
 class TestTopSellingBranchWave:
     def test_top_selling_branch_scoped(self, reports_client, mock_user):
         _configure_user(mock_user)
-        row = MagicMock(
-            id=1, name="Hot", total_quantity=50, total_sales=Decimal("5000")
-        )
+        row = MagicMock(id=1, name="Hot", total_quantity=50, total_sales=Decimal("5000"))
         with (
             patch(
                 "routes.reports.db.session.query",
@@ -1264,9 +1190,7 @@ class TestTopSellingBranchWave:
             ),
             patch("routes.reports.report_branch_scope_id", return_value=8),
         ):
-            resp = reports_client.get(
-                "/reports/top-selling?date_from=2025-01-01&limit=5"
-            )
+            resp = reports_client.get("/reports/top-selling?date_from=2025-01-01&limit=5")
             assert resp.status_code == 200
 
 
@@ -1278,9 +1202,7 @@ class TestSalesExportSellerWave:
         sq = _chain_query_stub(all=[])
         with (
             patch("routes.reports.tenant_query", return_value=sq),
-            patch(
-                "routes.reports.get_confirmed_sale_paid_aed", return_value=Decimal("0")
-            ),
+            patch("routes.reports.get_confirmed_sale_paid_aed", return_value=Decimal("0")),
             patch(
                 "services.export_service.ExportService.export_to_csv",
                 return_value=_export_io(),
@@ -1298,35 +1220,25 @@ class TestReconciliationForbiddenWave:
             resp = reports_client.get("/reports/ar-reconciliation?branch_id=9")
             assert resp.status_code == 403
 
-    def test_inventory_reconciliation_scoped_branch_mismatch(
-        self, reports_client, mock_user
-    ):
+    def test_inventory_reconciliation_scoped_branch_mismatch(self, reports_client, mock_user):
         _configure_user(mock_user)
         with patch("routes.reports.report_branch_scope_id", return_value=3):
             resp = reports_client.get("/reports/inventory-reconciliation?branch_id=7")
             assert resp.status_code == 403
 
-    def test_inventory_reconciliation_export_branch_forbidden(
-        self, reports_client, mock_user
-    ):
+    def test_inventory_reconciliation_export_branch_forbidden(self, reports_client, mock_user):
         _configure_user(mock_user)
         with (
             patch("routes.reports.report_branch_scope_id", return_value=2),
             patch("utils.branching.user_can_access_branch", return_value=True),
         ):
-            resp = reports_client.get(
-                "/reports/inventory-reconciliation/export?branch_id=8"
-            )
+            resp = reports_client.get("/reports/inventory-reconciliation/export?branch_id=8")
             assert resp.status_code == 403
 
-    def test_inventory_reconciliation_export_inaccessible_branch(
-        self, reports_client, mock_user
-    ):
+    def test_inventory_reconciliation_export_inaccessible_branch(self, reports_client, mock_user):
         _configure_user(mock_user)
         with patch("utils.branching.user_can_access_branch", return_value=False):
-            resp = reports_client.get(
-                "/reports/inventory-reconciliation/export?branch_id=99"
-            )
+            resp = reports_client.get("/reports/inventory-reconciliation/export?branch_id=99")
             assert resp.status_code == 403
 
     def test_inventory_reconciliation_export_xlsx_rows(self, reports_client, mock_user):
@@ -1356,9 +1268,7 @@ class TestReconciliationForbiddenWave:
             ),
             patch("flask.send_file", return_value=_send_file_response()),
         ):
-            resp = reports_client.get(
-                "/reports/inventory-reconciliation/export?format=xlsx"
-            )
+            resp = reports_client.get("/reports/inventory-reconciliation/export?format=xlsx")
             assert resp.status_code == 200
 
 
@@ -1390,9 +1300,7 @@ class TestReceivablesExportNaiveDate:
 class TestInventoryStatsWave:
     def test_inventory_stats_computed(self, reports_client, mock_user):
         _configure_user(mock_user)
-        warehouse = SimpleNamespace(
-            id=1, name="W", is_main=True, tenant_id=1, branch_id=1
-        )
+        warehouse = SimpleNamespace(id=1, name="W", is_main=True, tenant_id=1, branch_id=1)
         product = MagicMock()
         product.id = 5
         product.name = "P"
@@ -1418,13 +1326,9 @@ class TestInventoryStatsWave:
             resp = reports_client.get("/reports/inventory?include_zero=1")
             assert resp.status_code == 200
 
-    def test_inventory_warehouse_branch_mismatch_via_lookup(
-        self, reports_client, mock_user
-    ):
+    def test_inventory_warehouse_branch_mismatch_via_lookup(self, reports_client, mock_user):
         _configure_user(mock_user)
-        warehouse = SimpleNamespace(
-            id=8, name="W", tenant_id=1, branch_id=99, is_active=True
-        )
+        warehouse = SimpleNamespace(id=8, name="W", tenant_id=1, branch_id=99, is_active=True)
         wh_chain = _chain_query_stub(all=[])
         wh_query = MagicMock()
         wh_query.filter_by.return_value.first.return_value = warehouse
@@ -1432,11 +1336,7 @@ class TestInventoryStatsWave:
         with (
             patch(
                 "routes.reports.tenant_query",
-                side_effect=lambda m: (
-                    wh_chain
-                    if getattr(m, "__name__", "") == "Warehouse"
-                    else product_chain
-                ),
+                side_effect=lambda m: wh_chain if getattr(m, "__name__", "") == "Warehouse" else product_chain,
             ),
             patch("utils.branching.get_accessible_branches", return_value=[]),
             patch("utils.branching.get_accessible_warehouse_ids", return_value=[]),
@@ -1450,13 +1350,9 @@ class TestInventoryStatsWave:
             resp = reports_client.get("/reports/inventory?warehouse_id=8&branch_id=2")
             assert resp.status_code == 403
 
-    def test_inventory_admin_appends_warehouse_via_lookup(
-        self, reports_client, mock_user
-    ):
+    def test_inventory_admin_appends_warehouse_via_lookup(self, reports_client, mock_user):
         _configure_user(mock_user)
-        warehouse = SimpleNamespace(
-            id=8, name="W", tenant_id=1, branch_id=2, is_active=True
-        )
+        warehouse = SimpleNamespace(id=8, name="W", tenant_id=1, branch_id=2, is_active=True)
         wh_chain = _chain_query_stub(all=[])
         wh_query = MagicMock()
         wh_query.filter_by.return_value.first.return_value = warehouse
@@ -1481,13 +1377,9 @@ class TestInventoryStatsWave:
             resp = reports_client.get("/reports/inventory?warehouse_id=8&branch_id=2")
             assert resp.status_code == 200
 
-    def test_inventory_export_warehouse_tenant_mismatch(
-        self, reports_client, mock_user
-    ):
+    def test_inventory_export_warehouse_tenant_mismatch(self, reports_client, mock_user):
         _configure_user(mock_user)
-        warehouse = SimpleNamespace(
-            id=10, name="W", tenant_id=99, branch_id=2, is_active=True
-        )
+        warehouse = SimpleNamespace(id=10, name="W", tenant_id=99, branch_id=2, is_active=True)
         wh_chain = _chain_query_stub(all=[])
         wh_query = MagicMock()
         wh_query.filter_by.return_value.first.return_value = warehouse
@@ -1501,18 +1393,12 @@ class TestInventoryStatsWave:
                 side_effect=lambda *a, **k: _chain_query_stub(all=[]),
             ),
         ):
-            resp = reports_client.get(
-                "/reports/inventory/export?warehouse_id=10&branch_id=2"
-            )
+            resp = reports_client.get("/reports/inventory/export?warehouse_id=10&branch_id=2")
             assert resp.status_code == 403
 
-    def test_inventory_export_warehouse_branch_mismatch(
-        self, reports_client, mock_user
-    ):
+    def test_inventory_export_warehouse_branch_mismatch(self, reports_client, mock_user):
         _configure_user(mock_user)
-        warehouse = SimpleNamespace(
-            id=10, name="W", tenant_id=1, branch_id=99, is_active=True
-        )
+        warehouse = SimpleNamespace(id=10, name="W", tenant_id=1, branch_id=99, is_active=True)
         wh_chain = _chain_query_stub(all=[])
         wh_query = MagicMock()
         wh_query.filter_by.return_value.first.return_value = warehouse
@@ -1526,9 +1412,7 @@ class TestInventoryStatsWave:
                 side_effect=lambda *a, **k: _chain_query_stub(all=[]),
             ),
         ):
-            resp = reports_client.get(
-                "/reports/inventory/export?warehouse_id=10&branch_id=2"
-            )
+            resp = reports_client.get("/reports/inventory/export?warehouse_id=10&branch_id=2")
             assert resp.status_code == 403
 
     def test_inventory_export_warehouse_not_found(self, reports_client, mock_user):
@@ -1542,9 +1426,7 @@ class TestInventoryStatsWave:
             patch("routes.reports.tenant_query", return_value=wh_chain),
             patch("models.Warehouse.query", wh_query),
         ):
-            resp = reports_client.get(
-                "/reports/inventory/export?warehouse_id=10&branch_id=2"
-            )
+            resp = reports_client.get("/reports/inventory/export?warehouse_id=10&branch_id=2")
             assert resp.status_code == 404
 
 
@@ -1632,9 +1514,7 @@ def _payment_query_stub(*, direct_all=None, unalloc_all=None, fifo_total=Decimal
 class TestPartnersCommissionRowLoop:
     def test_commission_rows_with_zero_qty(self, reports_client, mock_user):
         _configure_user(mock_user)
-        row = _partner_commission_row(
-            total_qty=Decimal("0"), total_revenue=Decimal("0")
-        )
+        row = _partner_commission_row(total_qty=Decimal("0"), total_revenue=Decimal("0"))
         entries_q = _chain_query_stub()
         exists_q = _chain_query_stub(scalar=True)
         rows_q = _chain_query_stub(all=[row])
@@ -1653,9 +1533,7 @@ class TestPartnersCommissionRowLoop:
 
         with (
             patch("routes.reports.db.session.query", side_effect=session_query),
-            patch(
-                "routes.reports.tenant_query", return_value=_chain_query_stub(all=[])
-            ),
+            patch("routes.reports.tenant_query", return_value=_chain_query_stub(all=[])),
             patch(
                 "routes.reports._scoped_customer_query",
                 return_value=_chain_query_stub(all=[]),
@@ -1666,18 +1544,14 @@ class TestPartnersCommissionRowLoop:
             ),
             patch("routes.reports.report_branch_scope_id", return_value=9),
         ):
-            resp = reports_client.get(
-                "/reports/partners?date_from=2025-01-01&date_to=2025-12-31"
-            )
+            resp = reports_client.get("/reports/partners?date_from=2025-01-01&date_to=2025-12-31")
             assert resp.status_code == 200
 
 
 class TestInventoryExportExcludeZero:
     def test_inventory_export_excludes_zero_stock(self, reports_client, mock_user):
         _configure_user(mock_user)
-        warehouse = SimpleNamespace(
-            id=1, name="W", name_ar="W", tenant_id=1, branch_id=1
-        )
+        warehouse = SimpleNamespace(id=1, name="W", name_ar="W", tenant_id=1, branch_id=1)
         product = MagicMock(
             id=6,
             name="Hidden",
@@ -1723,9 +1597,7 @@ class TestInventoryReconciliationExportAccess:
             patch("utils.branching.get_accessible_warehouse_ids", return_value=[1]),
             patch("utils.branching.user_can_access_branch", return_value=True),
         ):
-            resp = reports_client.get(
-                "/reports/inventory-reconciliation/export?warehouse_id=5&branch_id=1"
-            )
+            resp = reports_client.get("/reports/inventory-reconciliation/export?warehouse_id=5&branch_id=1")
             assert resp.status_code == 403
 
 

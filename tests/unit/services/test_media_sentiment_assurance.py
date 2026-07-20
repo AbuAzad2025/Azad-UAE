@@ -22,9 +22,7 @@ class TestProductImageService:
 
         with app.app_context():
             app.root_path = "/app"
-            image = ProductImageService.upload_image(
-                product, file_obj, "main", "ع", "en"
-            )
+            image = ProductImageService.upload_image(product, file_obj, "main", "ع", "en")
 
         assert image.tenant_id == 2
         file_obj.save.assert_called_once()
@@ -36,9 +34,7 @@ class TestProductImageService:
         mock_q.filter_by.return_value = mock_q
         mock_q.order_by.return_value = mock_q
         mock_q.all.return_value = [MagicMock()]
-        mocker.patch.object(
-            ProductImage, "query", new_callable=mocker.PropertyMock, return_value=mock_q
-        )
+        mocker.patch.object(ProductImage, "query", new_callable=mocker.PropertyMock, return_value=mock_q)
 
         from services.product_image_service import ProductImageService
 

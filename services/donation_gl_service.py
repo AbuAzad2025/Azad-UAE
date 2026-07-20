@@ -21,16 +21,10 @@ class DonationGLService:
     def _vault_accounts(vault: PaymentVault | None, tenant_id: int) -> tuple[str, str]:
         debit = (getattr(vault, "donation_debit_account", None) or "1120").strip()
         credit = (getattr(vault, "donation_credit_account", None) or "4200").strip()
-        debit_account = (
-            GLAccount.query.filter_by(code=debit, tenant_id=tenant_id)
-            .order_by(GLAccount.id.asc())
-            .first()
-        )
+        debit_account = GLAccount.query.filter_by(code=debit, tenant_id=tenant_id).order_by(GLAccount.id.asc()).first()
         if debit in ("1110", "1120") or getattr(debit_account, "is_header", False):
             liquidity_kind = "cash" if debit == "1110" else "bank"
-            debit = GLService.get_default_liquidity_account(
-                liquidity_kind, tenant_id=tenant_id
-            )
+            debit = GLService.get_default_liquidity_account(liquidity_kind, tenant_id=tenant_id)
         return debit, credit
 
     @staticmethod
@@ -52,18 +46,11 @@ class DonationGLService:
             )
             return False
 
-        vault = (
-            PaymentVault.get_tenant_vault(tenant_id)
-            or PaymentVault.get_platform_vault()
-        )
-        debit_acct, credit_acct = DonationGLService._vault_accounts(
-            vault, int(tenant_id or 0)
-        )
+        vault = PaymentVault.get_tenant_vault(tenant_id) or PaymentVault.get_platform_vault()
+        debit_acct, credit_acct = DonationGLService._vault_accounts(vault, int(tenant_id or 0))
 
         try:
-            rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
-                "USD", "AED"
-            )
+            rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction("USD", "AED")
             rate = Decimal(str(rate_info["rate"]))
         except Exception:
             rate = Decimal("3.67")
@@ -99,9 +86,7 @@ class DonationGLService:
             )
             donation.gl_posted = True
             db.session.flush()
-            current_app.logger.info(
-                f"Donation GL posted: #{donation.id} AED {amount_aed}"
-            )
+            current_app.logger.info(f"Donation GL posted: #{donation.id} AED {amount_aed}")
             return True
         except Exception as exc:
             current_app.logger.error(f"Donation GL failed #{donation.id}: {exc}")

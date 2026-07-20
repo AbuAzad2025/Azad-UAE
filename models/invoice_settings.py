@@ -105,15 +105,11 @@ class InvoiceSettings(db.Model):
     instagram_url = db.Column(db.String(200))
     whatsapp_number = db.Column(db.String(50))
 
-    active_template = db.Column(
-        db.String(50), default="modern"
-    )  # modern, classic, minimal
+    active_template = db.Column(db.String(50), default="modern")  # modern, classic, minimal
 
     # Meta
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -121,9 +117,7 @@ class InvoiceSettings(db.Model):
     )
     updated_by = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
 
-    tenant = db.relationship(
-        "Tenant", backref="invoice_settings", foreign_keys=[tenant_id]
-    )
+    tenant = db.relationship("Tenant", backref="invoice_settings", foreign_keys=[tenant_id])
     user = db.relationship("User", foreign_keys=[updated_by])
 
     def __repr__(self):
@@ -133,20 +127,14 @@ class InvoiceSettings(db.Model):
     def _seed_from_tenant(settings, tenant):
         if not tenant:
             return settings
-        settings.company_name_ar = (
-            tenant.name_ar or tenant.name or settings.company_name_ar
-        )
-        settings.company_name_en = (
-            tenant.name_en or tenant.name or settings.company_name_en
-        )
+        settings.company_name_ar = tenant.name_ar or tenant.name or settings.company_name_ar
+        settings.company_name_en = tenant.name_en or tenant.name or settings.company_name_en
         settings.address_ar = tenant.address_ar or settings.address_ar
         settings.address_en = tenant.address_en or settings.address_en
         settings.phone_1 = tenant.phone_1 or tenant.mobile or settings.phone_1
         settings.email = tenant.email or settings.email
         settings.tax_number = tenant.tax_number or settings.tax_number
-        settings.commercial_register = (
-            tenant.commercial_register or settings.commercial_register
-        )
+        settings.commercial_register = tenant.commercial_register or settings.commercial_register
         settings.license_number = tenant.license_number or settings.license_number
         return settings
 
@@ -169,15 +157,11 @@ class InvoiceSettings(db.Model):
             except Exception:
                 import logging
 
-                logging.getLogger(__name__).debug(
-                    "Failed to resolve tenant_id from current_user", exc_info=True
-                )
+                logging.getLogger(__name__).debug("Failed to resolve tenant_id from current_user", exc_info=True)
 
         if tenant_id is not None:
             tid = int(tenant_id)
-            settings = InvoiceSettings.query.filter_by(
-                is_active=True, tenant_id=tid
-            ).first()
+            settings = InvoiceSettings.query.filter_by(is_active=True, tenant_id=tid).first()
             if settings:
                 return settings
             from models.tenant import Tenant
@@ -185,9 +169,7 @@ class InvoiceSettings(db.Model):
             tenant = db.session.get(Tenant, tid)
             if tenant is None:
                 return (
-                    InvoiceSettings.query.filter_by(is_active=True)
-                    .filter(InvoiceSettings.tenant_id.is_(None))
-                    .first()
+                    InvoiceSettings.query.filter_by(is_active=True).filter(InvoiceSettings.tenant_id.is_(None)).first()
                 )
             settings = InvoiceSettings(is_active=True, tenant_id=tid)
             InvoiceSettings._seed_from_tenant(settings, tenant)
@@ -195,11 +177,7 @@ class InvoiceSettings(db.Model):
             db.session.flush()
             return settings
 
-        return (
-            InvoiceSettings.query.filter_by(is_active=True)
-            .filter(InvoiceSettings.tenant_id.is_(None))
-            .first()
-        )
+        return InvoiceSettings.query.filter_by(is_active=True).filter(InvoiceSettings.tenant_id.is_(None)).first()
 
     @staticmethod
     def company_print_context(tenant_id=None):

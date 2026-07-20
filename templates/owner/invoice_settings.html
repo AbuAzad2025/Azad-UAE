@@ -534,7 +534,7 @@
                          target="_blank" rel="noopener noreferrer" class="btn btn-outline-success">
                         <i class="fas fa-receipt"></i> {{ _('سند') }}
                       </a>
-                      <button type="button" class="btn btn-primary" onclick="applyTemplate('modern')">
+                      <button type="button" class="btn btn-primary" data-action="apply-template" data-template="modern">
                         <i class="fas fa-check"></i> {{ _('تطبيق') }}
                       </button>
                     </div>
@@ -556,7 +556,7 @@
                          target="_blank" rel="noopener noreferrer" class="btn btn-outline-success">
                         <i class="fas fa-receipt"></i> {{ _('سند') }}
                       </a>
-                      <button type="button" class="btn btn-secondary" onclick="applyTemplate('classic')">
+                      <button type="button" class="btn btn-secondary" data-action="apply-template" data-template="classic">
                         <i class="fas fa-check"></i> {{ _('تطبيق') }}
                       </button>
                     </div>
@@ -578,7 +578,7 @@
                          target="_blank" rel="noopener noreferrer" class="btn btn-outline-success">
                         <i class="fas fa-receipt"></i> {{ _('سند') }}
                       </a>
-                      <button type="button" class="btn btn-info" onclick="applyTemplate('minimal')">
+                      <button type="button" class="btn btn-info" data-action="apply-template" data-template="minimal">
                         <i class="fas fa-check"></i> {{ _('تطبيق') }}
                       </button>
                     </div>
@@ -600,7 +600,7 @@
                          target="_blank" rel="noopener noreferrer" class="btn btn-outline-success">
                         <i class="fas fa-receipt"></i> {{ _('سند') }}
                       </a>
-                      <button type="button" class="btn btn-warning" onclick="applyTemplate('gulf')">
+                      <button type="button" class="btn btn-warning" data-action="apply-template" data-template="gulf">
                         <i class="fas fa-check"></i> {{ _('تطبيق') }}
                       </button>
                     </div>
@@ -622,7 +622,7 @@
                          target="_blank" rel="noopener noreferrer" class="btn btn-outline-success">
                         <i class="fas fa-receipt"></i> {{ _('سند') }}
                       </a>
-                      <button type="button" class="btn btn-success" onclick="applyTemplate('simple')">
+                      <button type="button" class="btn btn-success" data-action="apply-template" data-template="simple">
                         <i class="fas fa-check"></i> {{ _('تطبيق') }}
                       </button>
                     </div>
@@ -721,7 +721,7 @@
               <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
                 <i class="fas fa-times"></i> إلغاء
               </a>
-              <button type="button" class="btn btn-info float-left" onclick="resetToDefaults()">
+              <button type="button" class="btn btn-info float-left" data-action="reset-defaults">
                 <i class="fas fa-undo"></i> استعادة الافتراضي
               </button>
             </div>
@@ -734,6 +734,14 @@
 </section>
 
 <script>
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const action = el.dataset.action;
+  if (action === 'apply-template') applyTemplate(el.dataset.template);
+  else if (action === 'reset-defaults') resetToDefaults();
+});
+
 // Live preview update
 $(document).ready(() => {
   // Update colors in real-time

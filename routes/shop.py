@@ -94,9 +94,7 @@ def _require_shop_account(store, ctx):
     if not account:
         flash(t("login_required", ctx.get("lang")), "warning")
 
-        return None, redirect(
-            url_for("shop.account_login", slug=store.store_slug, next=request.url)
-        )
+        return None, redirect(url_for("shop.account_login", slug=store.store_slug, next=request.url))
 
     return account, None
 
@@ -137,11 +135,7 @@ def _require_shop_customer(store, next_url=None):
 
     flash(t("login_required", shop_lang()), "warning")
 
-    return redirect(
-        url_for(
-            "shop.account_login", slug=store.store_slug, next=next_url or request.url
-        )
-    )
+    return redirect(url_for("shop.account_login", slug=store.store_slug, next=next_url or request.url))
 
 
 def _whatsapp_digits(store) -> str:
@@ -154,9 +148,9 @@ def _whatsapp_digits(store) -> str:
 
 
 def _is_ajax():
-    return (
-        request.content_type and "application/json" in request.content_type
-    ) or request.headers.get("X-Requested-With") == "XMLHttpRequest"
+    return (request.content_type and "application/json" in request.content_type) or request.headers.get(
+        "X-Requested-With"
+    ) == "XMLHttpRequest"
 
 
 def _track_cart_activity(store, account, session):
@@ -194,9 +188,7 @@ def set_lang(slug, lang_code):
 
     session["shop_lang"] = "en" if str(lang_code).lower().startswith("en") else "ar"
 
-    return redirect(
-        safe_redirect_target(request.referrer, "shop.catalog", slug=store.store_slug)
-    )
+    return redirect(safe_redirect_target(request.referrer, "shop.catalog", slug=store.store_slug))
 
 
 @shop_bp.route("/<slug>/offline")
@@ -225,9 +217,7 @@ def wishlist_add(slug, product_id):
                     product_id=product_id,
                 )
                 db.session.add(wl)
-        count = ShopWishlist.query.filter_by(
-            account_id=account.id, tenant_id=store.tenant_id
-        ).count()
+        count = ShopWishlist.query.filter_by(account_id=account.id, tenant_id=store.tenant_id).count()
         return jsonify({"success": True, "wishlisted": True, "count": count})
     return redirect(request.referrer or url_for("shop.catalog", slug=store.store_slug))
 
@@ -239,9 +229,7 @@ def wishlist_remove(slug, product_id):
     if not account:
         return jsonify({"success": False}), 401
     with atomic_transaction("wishlist_remove"):
-        ShopWishlist.query.filter_by(
-            account_id=account.id, product_id=product_id, tenant_id=store.tenant_id
-        ).delete()
+        ShopWishlist.query.filter_by(account_id=account.id, product_id=product_id, tenant_id=store.tenant_id).delete()
     if request.content_type and "application/json" in request.content_type:
         return jsonify({"success": True, "wishlisted": False})
     return redirect(request.referrer or url_for("shop.catalog", slug=store.store_slug))
@@ -263,9 +251,7 @@ def wishlist_view(slug):
         .order_by(ShopWishlist.created_at.desc())
         .all()
     )
-    return render_template(
-        "shop/wishlist.html", wishlist_items=items, noindex=True, **ctx
-    )
+    return render_template("shop/wishlist.html", wishlist_items=items, noindex=True, **ctx)
 
 
 @shop_bp.route("/<slug>/account/login", methods=["GET", "POST"])
@@ -303,9 +289,7 @@ def account_login(slug):
         except ValueError as exc:
             flash(str(exc), "danger")
 
-    return render_template(
-        "shop/account_login.html", next_url=next_url, noindex=True, **ctx
-    )
+    return render_template("shop/account_login.html", next_url=next_url, noindex=True, **ctx)
 
 
 @shop_bp.route("/<slug>/account/register", methods=["GET", "POST"])
@@ -416,9 +400,7 @@ def account_order_detail(slug, order_id):
     if not sale or sale.customer_id != account.customer_id:
         abort(404)
 
-    pay_method = StorePaymentMethodService.get_by_code(
-        sale.checkout_payment_method or "cod"
-    )
+    pay_method = StorePaymentMethodService.get_by_code(sale.checkout_payment_method or "cod")
 
     return render_template(
         "shop/account_order_detail.html",
@@ -511,9 +493,7 @@ def api_search(slug):
     q = (request.args.get("q") or "").strip()
     if not q or len(q) < 2:
         return jsonify({"results": []})
-    items = StoreService.get_public_catalog(
-        store.tenant_id, search=q, page=1, per_page=5
-    )
+    items = StoreService.get_public_catalog(store.tenant_id, search=q, page=1, per_page=5)
     results = []
     for row in items["items"]:
         product = row["product"]
@@ -523,9 +503,7 @@ def api_search(slug):
                 "name": product.get_display_name(shop_lang()),
                 "price": float(product.regular_price or 0),
                 "image": product.image_url or "",
-                "url": url_for(
-                    "shop.product_detail", slug=store.store_slug, product_id=product.id
-                ),
+                "url": url_for("shop.product_detail", slug=store.store_slug, product_id=product.id),
             }
         )
     return jsonify({"results": results})
@@ -543,9 +521,7 @@ def product_detail(slug, product_id):
 
     ctx = _store_context(store)
 
-    product = Product.query.filter_by(
-        id=product_id, tenant_id=store.tenant_id, is_active=True
-    ).first_or_404()
+    product = Product.query.filter_by(id=product_id, tenant_id=store.tenant_id, is_active=True).first_or_404()
 
     stock_map = StoreService.online_stock_map(store.tenant_id, [product.id])
 
@@ -554,9 +530,7 @@ def product_detail(slug, product_id):
     if qty <= 0 or product.has_serial_number:
         abort(404)
 
-    related_products = StoreService.get_related_products(
-        store.tenant_id, product.id, product.category_id, limit=4
-    )
+    related_products = StoreService.get_related_products(store.tenant_id, product.id, product.category_id, limit=4)
 
     recent_key = f"shop_recent_{store.tenant_id}"
     recent = session.get(recent_key, [])
@@ -574,24 +548,14 @@ def product_detail(slug, product_id):
     wa_url = ShopCustomerAuthService.whatsapp_order_url(store, product, ctx["lang"], 1)
 
     variants = StoreService.get_product_variants(store.tenant_id, product.id)
-    loyalty_points = (
-        StoreService.get_loyalty_points(ctx["shop_account"].id)
-        if ctx["shop_account"]
-        else 0
-    )
+    loyalty_points = StoreService.get_loyalty_points(ctx["shop_account"].id) if ctx["shop_account"] else 0
     reviews = (
-        ShopReview.query.filter_by(
-            product_id=product.id, tenant_id=store.tenant_id, is_approved=True
-        )
+        ShopReview.query.filter_by(product_id=product.id, tenant_id=store.tenant_id, is_approved=True)
         .order_by(ShopReview.created_at.desc())
         .all()
     )
     review_count = len(reviews)
-    avg_rating = (
-        round(sum(r.rating for r in reviews) / review_count, 1)
-        if review_count
-        else None
-    )
+    avg_rating = round(sum(r.rating for r in reviews) / review_count, 1) if review_count else None
     return render_template(
         "shop/product.html",
         product=product,
@@ -612,9 +576,7 @@ def product_detail(slug, product_id):
 def product_reviews(slug, product_id):
     store = _resolve_store(slug)
     reviews = (
-        ShopReview.query.filter_by(
-            product_id=product_id, tenant_id=store.tenant_id, is_approved=True
-        )
+        ShopReview.query.filter_by(product_id=product_id, tenant_id=store.tenant_id, is_approved=True)
         .order_by(ShopReview.created_at.desc())
         .all()
     )
@@ -647,10 +609,7 @@ def add_review(slug, product_id):
     if not rating or rating < 1 or rating > 5:
         flash("Rating must be 1-5", "danger")
         return redirect(
-            request.referrer
-            or url_for(
-                "shop.product_detail", slug=store.store_slug, product_id=product_id
-            )
+            request.referrer or url_for("shop.product_detail", slug=store.store_slug, product_id=product_id)
         )
     review = ShopReview(
         tenant_id=store.tenant_id,
@@ -664,9 +623,7 @@ def add_review(slug, product_id):
     with atomic_transaction("review_add"):
         db.session.add(review)
     flash(t("review_submitted", shop_lang()), "success")
-    return redirect(
-        url_for("shop.product_detail", slug=store.store_slug, product_id=product_id)
-    )
+    return redirect(url_for("shop.product_detail", slug=store.store_slug, product_id=product_id))
 
 
 @shop_bp.route("/<slug>/stock-alert/<int:product_id>", methods=["POST"])
@@ -677,28 +634,19 @@ def stock_alert(slug, product_id):
     if not email or "@" not in email:
         flash("Email is required", "danger")
         return redirect(
-            request.referrer
-            or url_for(
-                "shop.product_detail", slug=store.store_slug, product_id=product_id
-            )
+            request.referrer or url_for("shop.product_detail", slug=store.store_slug, product_id=product_id)
         )
     from models.shop_stock_alert import ShopStockAlert
 
-    existing = ShopStockAlert.query.filter_by(
-        email=email, product_id=product_id, tenant_id=store.tenant_id
-    ).first()
+    existing = ShopStockAlert.query.filter_by(email=email, product_id=product_id, tenant_id=store.tenant_id).first()
     if existing:
         flash(t("alert_exists", shop_lang()), "info")
     else:
         with atomic_transaction("stock_alert"):
-            alert = ShopStockAlert(
-                tenant_id=store.tenant_id, product_id=product_id, email=email
-            )
+            alert = ShopStockAlert(tenant_id=store.tenant_id, product_id=product_id, email=email)
             db.session.add(alert)
         flash(t("alert_created", shop_lang()), "success")
-    return redirect(
-        url_for("shop.product_detail", slug=store.store_slug, product_id=product_id)
-    )
+    return redirect(url_for("shop.product_detail", slug=store.store_slug, product_id=product_id))
 
 
 @shop_bp.route("/<slug>/newsletter/subscribe", methods=["POST"])
@@ -708,14 +656,10 @@ def newsletter_subscribe(slug):
     email = (request.form.get("email") or "").strip()
     if not email or "@" not in email:
         flash(t("invalid_email", shop_lang()), "danger")
-        return redirect(
-            request.referrer or url_for("shop.catalog", slug=store.store_slug)
-        )
+        return redirect(request.referrer or url_for("shop.catalog", slug=store.store_slug))
     from models.shop_newsletter import ShopNewsletter
 
-    existing = ShopNewsletter.query.filter_by(
-        tenant_id=store.tenant_id, email=email
-    ).first()
+    existing = ShopNewsletter.query.filter_by(tenant_id=store.tenant_id, email=email).first()
     if not existing:
         with atomic_transaction("newsletter_subscribe"):
             sub = ShopNewsletter(tenant_id=store.tenant_id, email=email)
@@ -765,11 +709,7 @@ def cart_add(slug):
 
         flash(t("out_of_stock", shop_lang()), "warning")
 
-        return redirect(
-            safe_redirect_target(
-                request.referrer, "shop.catalog", slug=store.store_slug
-            )
-        )
+        return redirect(safe_redirect_target(request.referrer, "shop.catalog", slug=store.store_slug))
 
     product = Product.query.filter_by(
         id=product_id,
@@ -783,11 +723,7 @@ def cart_add(slug):
                 400,
             )
         flash(t("out_of_stock", shop_lang()), "warning")
-        return redirect(
-            safe_redirect_target(
-                request.referrer, "shop.catalog", slug=store.store_slug
-            )
-        )
+        return redirect(safe_redirect_target(request.referrer, "shop.catalog", slug=store.store_slug))
 
     stock_map = StoreService.online_stock_map(store.tenant_id, [product_id])
 
@@ -808,11 +744,7 @@ def cart_add(slug):
 
         flash(t("out_of_stock", shop_lang()), "warning")
 
-        return redirect(
-            safe_redirect_target(
-                request.referrer, "shop.catalog", slug=store.store_slug
-            )
-        )
+        return redirect(safe_redirect_target(request.referrer, "shop.catalog", slug=store.store_slug))
 
     cart[str(product_id)] = new_qty
 
@@ -822,9 +754,7 @@ def cart_add(slug):
     if _is_ajax():
         cart_ajax = StoreService.get_cart(session, store.tenant_id)
         count = int(sum(cart_ajax.values()) or 0)
-        return jsonify(
-            {"success": True, "cart_count": count, "message": "Added to cart"}
-        )
+        return jsonify({"success": True, "cart_count": count, "message": "Added to cart"})
 
     return redirect(url_for("shop.cart_view", slug=store.store_slug))
 
@@ -840,9 +770,7 @@ def cart_update(slug):
 
     cart = StoreService.get_cart(session, store.tenant_id)
 
-    stock_map = StoreService.online_stock_map(
-        store.tenant_id, list(cart.keys()) or None
-    )
+    stock_map = StoreService.online_stock_map(store.tenant_id, list(cart.keys()) or None)
 
     for key in list(cart.keys()):
         field = f"qty_{key}"
@@ -944,27 +872,13 @@ def checkout(slug):
             abort(400)
 
         try:
-            name = (
-                request.form.get("customer_name")
-                or (account.name if account else "")
-                or ""
-            ).strip()
+            name = (request.form.get("customer_name") or (account.name if account else "") or "").strip()
 
-            email = (
-                request.form.get("customer_email")
-                or (account.email if account else "")
-                or ""
-            ).strip()
+            email = (request.form.get("customer_email") or (account.email if account else "") or "").strip()
 
-            phone = (
-                request.form.get("phone") or (account.phone if account else "") or ""
-            ).strip()
+            phone = (request.form.get("phone") or (account.phone if account else "") or "").strip()
 
-            address = (
-                request.form.get("address")
-                or (account.address if account else "")
-                or ""
-            ).strip()
+            address = (request.form.get("address") or (account.address if account else "") or "").strip()
 
             notes = (request.form.get("notes") or "").strip()
 
@@ -972,9 +886,7 @@ def checkout(slug):
 
             if not address:
                 raise ValueError(
-                    gettext("عنوان التوصيل مطلوب.")
-                    if ctx["lang"] == "ar"
-                    else "Delivery address is required."
+                    gettext("عنوان التوصيل مطلوب.") if ctx["lang"] == "ar" else "Delivery address is required."
                 )
 
             if min_order > 0 and totals["subtotal"] < min_order:
@@ -1015,12 +927,8 @@ def checkout(slug):
                 except ValueError as pe:
                     with atomic_transaction("checkout_payment_fail"):
                         sale.payment_status = "init_failed"
-                        sale.notes = (sale.notes or "") + gettext(
-                            f"\n[فشل init الدفع الإلكتروني: {str(pe)}]"
-                        )
-                    token = StoreCheckoutService.make_order_token(
-                        sale.id, store.tenant_id
-                    )
+                        sale.notes = (sale.notes or "") + gettext(f"\n[فشل init الدفع الإلكتروني: {str(pe)}]")
+                    token = StoreCheckoutService.make_order_token(sale.id, store.tenant_id)
                     flash(
                         str(pe) + gettext(" — تم حفظ طلبك، يمكنك إتمام الدفع لاحقاً."),
                         "warning",
@@ -1035,9 +943,7 @@ def checkout(slug):
 
             token = StoreCheckoutService.make_order_token(sale.id, store.tenant_id)
 
-            return redirect(
-                url_for("shop.order_confirmation", slug=store.store_slug, token=token)
-            )
+            return redirect(url_for("shop.order_confirmation", slug=store.store_slug, token=token))
 
         except ValueError as exc:
             flash(str(exc), "danger")
@@ -1056,11 +962,7 @@ def checkout(slug):
 
     if not payment_methods:
         flash(
-            (
-                gettext("لا توجد طرق دفع متاحة حالياً.")
-                if ctx["lang"] == "ar"
-                else "No payment methods available."
-            ),
+            (gettext("لا توجد طرق دفع متاحة حالياً.") if ctx["lang"] == "ar" else "No payment methods available."),
             "warning",
         )
     loyalty_points = StoreService.get_loyalty_points(account.id) if account else 0
@@ -1071,31 +973,17 @@ def checkout(slug):
         min_order=min_order,
         noindex=True,
         payment_methods=payment_methods,
-        payment_hint=lambda pm: StorePaymentMethodService.format_checkout_instructions(
-            pm, ctx["lang"]
-        ),
+        payment_hint=lambda pm: StorePaymentMethodService.format_checkout_instructions(pm, ctx["lang"]),
         loyalty_points=loyalty_points,
-        coupon_code=(
-            (request.form.get("coupon_code") or "").strip()
-            if request.method == "POST"
-            else ""
-        ),
+        coupon_code=((request.form.get("coupon_code") or "").strip() if request.method == "POST" else ""),
         prefilled={
             "name": (
-                (
-                    request.form.get("customer_name")
-                    or (account.name if account else "")
-                    or ""
-                )
+                (request.form.get("customer_name") or (account.name if account else "") or "")
                 if request.method == "POST"
                 else ((account.name if account else "") or "")
             ),
             "email": (
-                (
-                    request.form.get("customer_email")
-                    or (account.email if account else "")
-                    or ""
-                )
+                (request.form.get("customer_email") or (account.email if account else "") or "")
                 if request.method == "POST"
                 else ((account.email if account else "") or "")
             ),
@@ -1105,11 +993,7 @@ def checkout(slug):
                 else ((account.phone if account else "") or "")
             ),
             "address": (
-                (
-                    request.form.get("address")
-                    or (account.address if account else "")
-                    or ""
-                )
+                (request.form.get("address") or (account.address if account else "") or "")
                 if request.method == "POST"
                 else ((account.address if account else "") or "")
             ),
@@ -1137,9 +1021,7 @@ def return_policy(slug):
 def quick_view(slug, product_id):
     store = _resolve_store(slug)
     ctx = _store_context(store)
-    product = Product.query.filter_by(
-        id=product_id, tenant_id=store.tenant_id, is_active=True
-    ).first_or_404()
+    product = Product.query.filter_by(id=product_id, tenant_id=store.tenant_id, is_active=True).first_or_404()
     stock_map = StoreService.online_stock_map(store.tenant_id, [product.id])
     qty = stock_map.get(product.id, Decimal("0"))
     wa_url = (
@@ -1180,9 +1062,7 @@ def store_sitemap(slug):
 
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
-    xml.append(
-        f"  <url><loc>{base}/s/{store.store_slug}</loc><lastmod>{today}</lastmod><priority>1.0</priority></url>"
-    )
+    xml.append(f"  <url><loc>{base}/s/{store.store_slug}</loc><lastmod>{today}</lastmod><priority>1.0</priority></url>")
 
     for row in items:
         product = row["product"]
@@ -1209,9 +1089,7 @@ def store_robots(slug):
         "Disallow: /s/" + store.store_slug + "/account/",
         "Disallow: /s/" + store.store_slug + "/wishlist",
         "",
-        "Sitemap: "
-        + request.url_root.rstrip("/")
-        + url_for("shop.store_sitemap", slug=store.store_slug),
+        "Sitemap: " + request.url_root.rstrip("/") + url_for("shop.store_sitemap", slug=store.store_slug),
     ]
     return Response("\n".join(lines), mimetype="text/plain")
 
@@ -1231,9 +1109,7 @@ def account_forgot_password(slug):
 
     if request.method == "POST":
         try:
-            account = ShopCustomerAuthService.request_password_reset(
-                store.tenant_id, request.form.get("email", "")
-            )
+            account = ShopCustomerAuthService.request_password_reset(store.tenant_id, request.form.get("email", ""))
 
             if account:
                 reset_url = url_for(
@@ -1243,9 +1119,7 @@ def account_forgot_password(slug):
                     _external=True,
                 )
 
-                ShopCustomerAuthService.send_password_reset_email(
-                    account, store, reset_url
-                )
+                ShopCustomerAuthService.send_password_reset_email(account, store, reset_url)
 
             flash(t("reset_email_sent", ctx["lang"]), "success")
 
@@ -1272,9 +1146,7 @@ def account_reset_password(slug, token):
 
     if request.method == "POST":
         try:
-            ShopCustomerAuthService.reset_password(
-                store.tenant_id, token, request.form.get("password", "")
-            )
+            ShopCustomerAuthService.reset_password(store.tenant_id, token, request.form.get("password", ""))
 
             flash(t("reset_success", ctx["lang"]), "success")
 
@@ -1283,9 +1155,7 @@ def account_reset_password(slug, token):
         except ValueError as exc:
             flash(str(exc), "danger")
 
-    return render_template(
-        "shop/account_reset_password.html", token=token, noindex=True, **ctx
-    )
+    return render_template("shop/account_reset_password.html", token=token, noindex=True, **ctx)
 
 
 @shop_bp.route("/<slug>/account/payments")
@@ -1297,12 +1167,8 @@ def saved_payments(slug):
         return redirect(url_for("shop.account_login", slug=store.store_slug))
     from models.shop_saved_payment import ShopSavedPayment
 
-    payments = ShopSavedPayment.query.filter_by(
-        account_id=account.id, tenant_id=store.tenant_id
-    ).all()
-    return render_template(
-        "shop/saved_payments.html", payments=payments, noindex=True, **ctx
-    )
+    payments = ShopSavedPayment.query.filter_by(account_id=account.id, tenant_id=store.tenant_id).all()
+    return render_template("shop/saved_payments.html", payments=payments, noindex=True, **ctx)
 
 
 @shop_bp.route("/<slug>/account/payments/save", methods=["POST"])
@@ -1354,9 +1220,7 @@ def reorder(slug, sale_id):
     if not account:
         flash(t("login_required", shop_lang()), "warning")
         return redirect(url_for("shop.account_login", slug=store.store_slug))
-    sale = Sale.query.filter_by(
-        id=sale_id, tenant_id=store.tenant_id, source="online_store"
-    ).first_or_404()
+    sale = Sale.query.filter_by(id=sale_id, tenant_id=store.tenant_id, source="online_store").first_or_404()
     if sale.customer_id != account.customer_id:
         abort(404)
     lines = SaleLine.query.filter_by(sale_id=sale.id, tenant_id=store.tenant_id).all()
@@ -1364,9 +1228,7 @@ def reorder(slug, sale_id):
         flash("No items to reorder", "warning")
         return redirect(url_for("shop.account_orders", slug=store.store_slug))
     cart = StoreService.get_cart(session, store.tenant_id)
-    stock_map = StoreService.online_stock_map(
-        store.tenant_id, [line.product_id for line in lines]
-    )
+    stock_map = StoreService.online_stock_map(store.tenant_id, [line.product_id for line in lines])
     for line in lines:
         available = float(stock_map.get(line.product_id, 0))
         if available > 0:
@@ -1386,14 +1248,10 @@ def order_invoice(slug, sale_id):
     if not account:
         flash(t("login_required", ctx["lang"]), "warning")
         return redirect(url_for("shop.account_login", slug=store.store_slug))
-    sale = Sale.query.filter_by(
-        id=sale_id, tenant_id=store.tenant_id, source="online_store"
-    ).first_or_404()
+    sale = Sale.query.filter_by(id=sale_id, tenant_id=store.tenant_id, source="online_store").first_or_404()
     if sale.customer_id != account.customer_id:
         abort(404)
-    pay_method = StorePaymentMethodService.get_by_code(
-        sale.checkout_payment_method or "cod"
-    )
+    pay_method = StorePaymentMethodService.get_by_code(sale.checkout_payment_method or "cod")
     ctx.update(
         status_label=StoreOrderService.status_label(sale.status, ctx.get("lang", "")),
         pay_method=pay_method,
@@ -1419,11 +1277,7 @@ def order_track(slug):
         "shop/order_track.html",
         sale=sale,
         order_number=order_number,
-        status_label=(
-            StoreOrderService.status_label(sale.status, ctx.get("lang", ""))
-            if sale
-            else None
-        ),
+        status_label=(StoreOrderService.status_label(sale.status, ctx.get("lang", "")) if sale else None),
         **ctx,
     )
 
@@ -1444,10 +1298,6 @@ def order_confirmation(slug, token):
         id=int(payload["sale_id"]), tenant_id=store.tenant_id, source="online_store"
     ).first_or_404()
 
-    pay_method = StorePaymentMethodService.get_by_code(
-        sale.checkout_payment_method or "cod"
-    )
+    pay_method = StorePaymentMethodService.get_by_code(sale.checkout_payment_method or "cod")
 
-    return render_template(
-        "shop/order_success.html", sale=sale, token=token, pay_method=pay_method, **ctx
-    )
+    return render_template("shop/order_success.html", sale=sale, token=token, pay_method=pay_method, **ctx)

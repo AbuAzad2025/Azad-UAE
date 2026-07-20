@@ -25,9 +25,7 @@ class AzadSubscriptionFee(db.Model):
         index=True,
     )
 
-    fee_type = db.Column(
-        db.String(20), nullable=False, default="monthly"
-    )  # monthly, yearly, perpetual
+    fee_type = db.Column(db.String(20), nullable=False, default="monthly")  # monthly, yearly, perpetual
     amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
 
     billing_period_start = db.Column(db.Date, nullable=True)
@@ -43,9 +41,7 @@ class AzadSubscriptionFee(db.Model):
     # When tenant actually pays
     paid_at = db.Column(db.DateTime, nullable=True)
     paid_amount_aed = db.Column(db.Numeric(15, 3), nullable=True)
-    payment_method = db.Column(
-        db.String(50), nullable=True
-    )  # cash, bank_transfer, card
+    payment_method = db.Column(db.String(50), nullable=True)  # cash, bank_transfer, card
     payment_reference = db.Column(db.String(120), nullable=True)
 
     notes = db.Column(db.Text)

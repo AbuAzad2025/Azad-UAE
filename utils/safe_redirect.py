@@ -18,9 +18,7 @@ def is_safe_redirect_url(url: str | None) -> bool:
     return True
 
 
-def safe_redirect_target(
-    url: str | None, default_endpoint: str = "main.dashboard", **url_kwargs
-):
+def safe_redirect_target(url: str | None, default_endpoint: str = "main.dashboard", **url_kwargs):
     """Return a safe redirect target URL or url_for(default)."""
     if is_safe_redirect_url(url):
         return url

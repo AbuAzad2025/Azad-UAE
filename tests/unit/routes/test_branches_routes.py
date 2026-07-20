@@ -149,9 +149,7 @@ class TestBranchesCreate:
 
         with (
             patch("routes.branches.flash") as flash,
-            patch(
-                "routes.branches.tenant_query", return_value=_chain_query(first=None)
-            ),
+            patch("routes.branches.tenant_query", return_value=_chain_query(first=None)),
             patch(
                 "utils.tenant_limits.check_branches_limit",
                 side_effect=TenantLimitError("branches", 2, 2),
@@ -166,16 +164,12 @@ class TestBranchesCreate:
 
     def test_create_unauthenticated_401(self, branches_client):
         with unauthenticated_client(branches_client):
-            resp = branches_client.post(
-                "/branches/create", data={"name": "X", "code": "Y"}
-            )
+            resp = branches_client.post("/branches/create", data={"name": "X", "code": "Y"})
         assert resp.status_code == 401
 
     def test_create_non_admin_403(self, branches_client):
         with patch("utils.decorators.is_admin_surface_user", return_value=False):
-            resp = branches_client.post(
-                "/branches/create", data={"name": "X", "code": "Y"}
-            )
+            resp = branches_client.post("/branches/create", data={"name": "X", "code": "Y"})
         assert resp.status_code == 403
 
 

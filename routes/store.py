@@ -84,9 +84,7 @@ def admin_settings():
                 if store.platform_disabled and is_enabled:
                     is_enabled = False
                     flash(
-                        gettext(
-                            "تم تعطيل هذا المتجر من قبل مالك المنصة، ولا يمكنك تفعيله."
-                        ),
+                        gettext("تم تعطيل هذا المتجر من قبل مالك المنصة، ولا يمكنك تفعيله."),
                         "warning",
                     )
                 title = (request.form.get("title") or "").strip()
@@ -115,55 +113,29 @@ def admin_settings():
                     store.min_order_amount = Decimal(min_raw)
                 else:
                     store.min_order_amount = None
-                store.delivery_note = (
-                    request.form.get("delivery_note") or ""
-                ).strip() or None
+                store.delivery_note = (request.form.get("delivery_note") or "").strip() or None
 
-                store.meta_title = (
-                    request.form.get("meta_title") or ""
-                ).strip() or None
-                store.meta_description = (
-                    request.form.get("meta_description") or ""
-                ).strip() or None
-                store.meta_keywords = (
-                    request.form.get("meta_keywords") or ""
-                ).strip() or None
-                store.meta_title_en = (
-                    request.form.get("meta_title_en") or ""
-                ).strip() or None
-                store.meta_description_en = (
-                    request.form.get("meta_description_en") or ""
-                ).strip() or None
-                store.return_policy_ar = (
-                    request.form.get("return_policy_ar") or ""
-                ).strip() or None
-                store.return_policy_en = (
-                    request.form.get("return_policy_en") or ""
-                ).strip() or None
-                store.notify_whatsapp_on_order = (
-                    request.form.get("notify_whatsapp_on_order") == "on"
-                )
-                store.notify_email_on_order = (
-                    request.form.get("notify_email_on_order") == "on"
-                )
+                store.meta_title = (request.form.get("meta_title") or "").strip() or None
+                store.meta_description = (request.form.get("meta_description") or "").strip() or None
+                store.meta_keywords = (request.form.get("meta_keywords") or "").strip() or None
+                store.meta_title_en = (request.form.get("meta_title_en") or "").strip() or None
+                store.meta_description_en = (request.form.get("meta_description_en") or "").strip() or None
+                store.return_policy_ar = (request.form.get("return_policy_ar") or "").strip() or None
+                store.return_policy_en = (request.form.get("return_policy_en") or "").strip() or None
+                store.notify_whatsapp_on_order = request.form.get("notify_whatsapp_on_order") == "on"
+                store.notify_email_on_order = request.form.get("notify_email_on_order") == "on"
 
                 threshold_raw = (request.form.get("low_stock_threshold") or "").strip()
-                store.low_stock_threshold = (
-                    Decimal(threshold_raw) if threshold_raw else Decimal("5")
-                )
+                store.low_stock_threshold = Decimal(threshold_raw) if threshold_raw else Decimal("5")
 
                 subdomain_raw = (request.form.get("subdomain") or "").strip()
                 if subdomain_raw:
                     subdomain = StoreService.normalize_subdomain(subdomain_raw)
-                    store.subdomain = StoreService.ensure_unique_subdomain(
-                        subdomain, tenant_id=tenant_id
-                    )
+                    store.subdomain = StoreService.ensure_unique_subdomain(subdomain, tenant_id=tenant_id)
                 else:
                     store.subdomain = None
 
-                custom_domain = (
-                    (request.form.get("custom_domain") or "").strip().lower()
-                )
+                custom_domain = (request.form.get("custom_domain") or "").strip().lower()
                 if custom_domain:
                     clash = TenantStore.query.filter(
                         TenantStore.custom_domain == custom_domain,
@@ -208,9 +180,7 @@ def admin_catalog():
     store = StoreService.get_tenant_store(tenant_id, create=True)
     online_wh = StoreService.get_online_warehouse(tenant_id, create=False)
     include_zero = request.args.get("all") == "1"
-    products, stock_map = StoreService.get_catalog_products(
-        tenant_id, include_zero=include_zero
-    )
+    products, stock_map = StoreService.get_catalog_products(tenant_id, include_zero=include_zero)
 
     rows = []
     for product in products:
@@ -233,15 +203,9 @@ def admin_transfer():
     tenant_id = _tenant_id()
     store = StoreService.ensure_tenant_store(tenant_id)
     online_wh = StoreService.ensure_online_warehouse(tenant_id)
-    physical_warehouses = StoreService.get_physical_warehouses(
-        tenant_id, user=current_user
-    )
+    physical_warehouses = StoreService.get_physical_warehouses(tenant_id, user=current_user)
 
-    products = (
-        Product.query.filter_by(tenant_id=tenant_id, is_active=True)
-        .order_by(Product.name.asc())
-        .all()
-    )
+    products = Product.query.filter_by(tenant_id=tenant_id, is_active=True).order_by(Product.name.asc()).all()
 
     if request.method == "POST":
         try:
@@ -255,9 +219,7 @@ def admin_transfer():
                 if not product_id or not quantity or quantity <= 0:
                     raise ValueError(gettext("اختر منتجاً وكمية صحيحة."))
 
-                product = Product.query.filter_by(
-                    id=product_id, tenant_id=tenant_id
-                ).first()
+                product = Product.query.filter_by(id=product_id, tenant_id=tenant_id).first()
                 if not product:
                     raise ValueError(gettext("المنتج غير موجود."))
 
@@ -265,21 +227,14 @@ def admin_transfer():
                     if not source_id:
                         raise ValueError(gettext("اختر المستودع المصدر."))
                     if source_id not in [w.id for w in physical_warehouses]:
-                        raise ValueError(
-                            gettext("المستودع المحدد غير صالح أو غير متاح لك.")
-                        )
+                        raise ValueError(gettext("المستودع المحدد غير صالح أو غير متاح لك."))
                     from_id, to_id = source_id, online_wh.id
                     label = notes or gettext("نشر للمتجر — تحويل إلى مستودع أونلاين")
                 else:
                     if not source_id:
                         source_id = online_wh.id
-                    if (
-                        source_id not in [w.id for w in physical_warehouses]
-                        and source_id != online_wh.id
-                    ):
-                        raise ValueError(
-                            gettext("المستودع المحدد غير صالح أو غير متاح لك.")
-                        )
+                    if source_id not in [w.id for w in physical_warehouses] and source_id != online_wh.id:
+                        raise ValueError(gettext("المستودع المحدد غير صالح أو غير متاح لك."))
                     from_id, to_id = online_wh.id, source_id
                     label = notes or gettext("سحب من المتجر — تحويل من مستودع أونلاين")
 
@@ -330,9 +285,7 @@ def admin_orders():
     page = request.args.get("page", 1, type=int)
     status_filter = (request.args.get("status") or "").strip().lower()
     per_page = 20
-    query = Sale.query.filter_by(tenant_id=tenant_id, source="online_store").order_by(
-        Sale.sale_date.desc()
-    )
+    query = Sale.query.filter_by(tenant_id=tenant_id, source="online_store").order_by(Sale.sale_date.desc())
     if status_filter in StoreOrderService.STORE_ORDER_STATUSES:
         query = query.filter_by(status=status_filter)
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
@@ -358,18 +311,14 @@ def admin_order_detail(order_id):
     sale = StoreOrderService.get_tenant_order(tenant_id, order_id)
     if not sale:
         abort(404)
-    pay_method = StorePaymentMethodService.get_by_code(
-        sale.checkout_payment_method or "cod"
-    )
+    pay_method = StorePaymentMethodService.get_by_code(sale.checkout_payment_method or "cod")
     stock_issues = []
     if sale.status == "pending" and not StoreOrderService.is_fulfilled(sale):
         stock_issues = StoreOrderService.validate_stock_for_order(sale)
     from services.store_notification_service import StoreNotificationService
 
     wa_admin = (
-        StoreNotificationService.whatsapp_admin_link(sale, store)
-        if (sale.status == "pending" and store)
-        else None
+        StoreNotificationService.whatsapp_admin_link(sale, store) if (sale.status == "pending" and store) else None
     )
     return render_template(
         "store/admin_order_detail.html",
@@ -491,9 +440,7 @@ def admin_coupons():
                 elif action == "toggle":
                     coupon_id = int(request.form.get("coupon_id", 0) or 0)
                     enabled = request.form.get("enabled") == "1"
-                    StoreCouponService.update_coupon(
-                        coupon_id, tenant_id, {"is_active": enabled}
-                    )
+                    StoreCouponService.update_coupon(coupon_id, tenant_id, {"is_active": enabled})
                     flash(gettext("تم تحديث الكوبون."), "success")
         except ValueError as exc:
             current_app.logger.warning(f"ValueError in coupon operation: {exc}")

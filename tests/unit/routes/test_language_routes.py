@@ -66,9 +66,7 @@ class TestLanguageSet:
             assert sess.get("language") == "ar"
 
     def test_unsafe_next_falls_back(self, language_client):
-        with patch(
-            "routes.language.safe_redirect_target", return_value="/safe"
-        ) as safe:
+        with patch("routes.language.safe_redirect_target", return_value="/safe") as safe:
             resp = language_client.get("/language/set/en?next=//evil.com")
         assert resp.status_code == 302
         safe.assert_called_once()

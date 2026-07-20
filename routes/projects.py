@@ -28,9 +28,7 @@ def create_project():
             return redirect(url_for("projects.list_projects"))
         except Exception as e:
             flash(gettext(f"حدث خطأ: {e}"), "danger")
-    customers = (
-        tenant_query(Customer).filter_by(is_active=True).order_by(Customer.name).all()
-    )
+    customers = tenant_query(Customer).filter_by(is_active=True).order_by(Customer.name).all()
     return render_template("projects/task_form.html", customers=customers)
 
 
@@ -43,25 +41,11 @@ def project_detail(project_id):
     except ValueError as e:
         flash(str(e), "danger")
         return redirect(url_for("projects.list_projects"))
-    stages = (
-        TaskStage.query.filter_by(project_id=project.id)
-        .order_by(TaskStage.sequence)
-        .all()
-    )
-    tasks = (
-        Task.query.filter_by(project_id=project.id, is_active=True)
-        .order_by(Task.sort_order)
-        .all()
-    )
+    stages = TaskStage.query.filter_by(project_id=project.id).order_by(TaskStage.sequence).all()
+    tasks = Task.query.filter_by(project_id=project.id, is_active=True).order_by(Task.sort_order).all()
     tid = get_active_tenant_id(current_user)
     members = ProjectMember.query.filter_by(project_id=project.id).all()
-    users = (
-        User.query.filter(User.tenant_id == tid, User.is_active)
-        .order_by(User.full_name)
-        .all()
-        if tid
-        else []
-    )
+    users = User.query.filter(User.tenant_id == tid, User.is_active).order_by(User.full_name).all() if tid else []
     return render_template(
         "projects/detail.html",
         project=project,
@@ -89,9 +73,7 @@ def edit_project(project_id):
         except Exception as e:
             flash(gettext(f"حدث خطأ: {e}"), "danger")
     customers = tenant_query(Customer).filter_by(is_active=True).all()
-    return render_template(
-        "projects/task_form.html", project=project, customers=customers
-    )
+    return render_template("projects/task_form.html", project=project, customers=customers)
 
 
 @projects_bp.route("/<int:project_id>/tasks", methods=["POST"])

@@ -32,9 +32,7 @@ class TestCustomerInsights:
         sale = MagicMock(sale_date=datetime(2025, 6, 1))
         cq = _chain(all=[customer])
         sq = _chain(scalar=1000, count=2, first=sale)
-        mocker.patch(
-            "services.analytics_service._db_session"
-        ).return_value.query.side_effect = [cq, sq, sq, sq]
+        mocker.patch("services.analytics_service._db_session").return_value.query.side_effect = [cq, sq, sq, sq]
         from services.analytics_service import AnalyticsService
 
         data = AnalyticsService.get_customer_insights(tenant_id=1, branch_id=2)
@@ -45,9 +43,7 @@ class TestCustomerInsights:
         customer = MagicMock(name="Bob", id=2)
         cq = _chain(all=[customer])
         sq = _chain(scalar=0, count=0, first=None)
-        mocker.patch(
-            "services.analytics_service._db_session"
-        ).return_value.query.side_effect = [cq, sq, sq, sq]
+        mocker.patch("services.analytics_service._db_session").return_value.query.side_effect = [cq, sq, sq, sq]
         from services.analytics_service import AnalyticsService
 
         data = AnalyticsService.get_customer_insights(tenant_id=1)
@@ -58,9 +54,7 @@ class TestCustomerInsights:
 class TestSalesInsights:
     def test_sales_insights(self, mocker):
         daily = MagicMock(date="2025-06-01", count=3, total=Decimal("900"))
-        product = MagicMock(
-            name="Widget", total_qty=Decimal("10"), total_revenue=Decimal("500")
-        )
+        product = MagicMock(name="Widget", total_qty=Decimal("10"), total_revenue=Decimal("500"))
         session = MagicMock()
         session.query.side_effect = [_chain(all=[daily]), _chain(all=[product])]
         mocker.patch("services.analytics_service._db_session", return_value=session)
@@ -81,9 +75,7 @@ class TestProductPerformance:
             total_revenue=Decimal("2000"),
             transactions=5,
         )
-        mocker.patch(
-            "services.analytics_service._db_session"
-        ).return_value.query.return_value = _chain(all=[row])
+        mocker.patch("services.analytics_service._db_session").return_value.query.return_value = _chain(all=[row])
         from services.analytics_service import AnalyticsService
 
         perf = AnalyticsService.get_product_performance(tenant_id=1)
@@ -122,9 +114,7 @@ class TestForecasting:
         session.query.return_value.scalar.side_effect = [1000] * 12
         from services.analytics_service import AnalyticsService
 
-        history, forecast = AnalyticsService.get_forecasting_data(
-            tenant_id=1, branch_id=1
-        )
+        history, forecast = AnalyticsService.get_forecasting_data(tenant_id=1, branch_id=1)
         assert len(history) == 12
 
 
@@ -136,9 +126,9 @@ class TestDonationAnalytics:
             created_at=datetime.now(timezone.utc),
             status="completed",
         )
-        mocker.patch(
-            "services.analytics_service._db_session"
-        ).return_value.query.return_value.all.return_value = [donation]
+        mocker.patch("services.analytics_service._db_session").return_value.query.return_value.all.return_value = [
+            donation
+        ]
         mocker.patch(
             "services.analytics_service.get_active_tenant_id",
             return_value=1,
@@ -160,9 +150,7 @@ class TestDonationAnalytics:
         )
         mocker.patch(
             "services.analytics_service._db_session"
-        ).return_value.query.return_value.filter.return_value.all.return_value = [
-            donation
-        ]
+        ).return_value.query.return_value.filter.return_value.all.return_value = [donation]
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=1)
         from services.analytics_service import AnalyticsService
 
@@ -178,9 +166,7 @@ class TestDonationAnalytics:
         )
         mocker.patch(
             "services.analytics_service._db_session"
-        ).return_value.query.return_value.filter.return_value.all.return_value = [
-            donation
-        ]
+        ).return_value.query.return_value.filter.return_value.all.return_value = [donation]
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=1)
         from services.analytics_service import AnalyticsService
 
@@ -196,9 +182,7 @@ class TestDonationAnalytics:
         )
         mocker.patch(
             "services.analytics_service._db_session"
-        ).return_value.query.return_value.filter.return_value.all.return_value = [
-            donation
-        ]
+        ).return_value.query.return_value.filter.return_value.all.return_value = [donation]
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=1)
         from services.analytics_service import AnalyticsService
 
@@ -306,9 +290,7 @@ class TestDonationAnalytics:
         q = MagicMock()
         q.filter.return_value = q
         q.all.return_value = [donation]
-        mocker.patch(
-            "services.analytics_service._db_session"
-        ).return_value.query.return_value = q
+        mocker.patch("services.analytics_service._db_session").return_value.query.return_value = q
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=1)
         from services.analytics_service import AnalyticsService
 
@@ -337,9 +319,7 @@ class TestDonationAnalytics:
         q = MagicMock()
         q.filter.return_value = q
         q.all.return_value = [donation]
-        mocker.patch(
-            "services.analytics_service._db_session"
-        ).return_value.query.return_value = q
+        mocker.patch("services.analytics_service._db_session").return_value.query.return_value = q
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=1)
         from services.analytics_service import AnalyticsService
 
@@ -363,9 +343,7 @@ class TestDonationAnalytics:
         q = MagicMock()
         q.filter.return_value = q
         q.all.return_value = [purchase, donation]
-        mocker.patch(
-            "services.analytics_service._db_session"
-        ).return_value.query.return_value = q
+        mocker.patch("services.analytics_service._db_session").return_value.query.return_value = q
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=1)
         from services.analytics_service import AnalyticsService
 

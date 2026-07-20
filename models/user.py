@@ -9,9 +9,7 @@ from models.enums import RoleEnum, PermissionEnum
 role_permissions = db.Table(
     "role_permissions",
     db.Column("role_id", db.Integer, db.ForeignKey("roles.id"), primary_key=True),
-    db.Column(
-        "permission_id", db.Integer, db.ForeignKey("permissions.id"), primary_key=True
-    ),
+    db.Column("permission_id", db.Integer, db.ForeignKey("permissions.id"), primary_key=True),
 )
 
 
@@ -21,18 +19,12 @@ class Permission(db.Model):
     __tablename__ = "permissions"
 
     id = db.Column(db.Integer, primary_key=True)
-    code = db.Column(
-        db.String(50), unique=True, nullable=False, index=True
-    )  # e.g., 'manage_sales'
+    code = db.Column(db.String(50), unique=True, nullable=False, index=True)  # e.g., 'manage_sales'
     name = db.Column(db.String(100), nullable=False)  # Display name
     name_ar = db.Column(db.String(100))  # Arabic name
     description = db.Column(db.String(255))
-    category = db.Column(
-        db.String(50)
-    )  # Group permissions: 'sales', 'products', 'reports', etc.
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    category = db.Column(db.String(50))  # Group permissions: 'sales', 'products', 'reports', etc.
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
     def __repr__(self):
         return f"<Permission {self.code}>"
@@ -55,23 +47,17 @@ class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)  # Display name
     name_ar = db.Column(db.String(50))  # Arabic name
-    slug = db.Column(
-        db.String(50), unique=True, nullable=False, index=True
-    )  # e.g., 'super_admin'
+    slug = db.Column(db.String(50), unique=True, nullable=False, index=True)  # e.g., 'super_admin'
     description = db.Column(db.String(255))
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    permissions = db.relationship(
-        "Permission", secondary=role_permissions, backref="roles", lazy="joined"
-    )
+    permissions = db.relationship("Permission", secondary=role_permissions, backref="roles", lazy="joined")
     users = db.relationship("User", back_populates="role", lazy="dynamic")
 
     def __repr__(self):
@@ -106,9 +92,7 @@ class User(UserMixin, db.Model):
     full_name_ar = db.Column(db.String(100))
     phone = db.Column(db.String(50))
 
-    role_id = db.Column(
-        db.Integer, db.ForeignKey("roles.id"), nullable=False, index=True
-    )
+    role_id = db.Column(db.Integer, db.ForeignKey("roles.id"), nullable=False, index=True)
     role = db.relationship("Role", back_populates="users")
     tenant_id = db.Column(
         db.Integer,
@@ -116,9 +100,7 @@ class User(UserMixin, db.Model):
         nullable=True,
         index=True,
     )
-    branch_id = db.Column(
-        db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True
-    )  # User Home Branch
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True)  # User Home Branch
     branch = db.relationship("Branch", backref="users", foreign_keys=[branch_id])
     tenant = db.relationship("Tenant", backref="users", foreign_keys=[tenant_id])
 
@@ -133,18 +115,14 @@ class User(UserMixin, db.Model):
     login_attempts = db.Column(db.Integer, default=0)
     locked_until = db.Column(db.DateTime)
 
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    sales = db.relationship(
-        "Sale", back_populates="seller", lazy="dynamic", foreign_keys="Sale.seller_id"
-    )
+    sales = db.relationship("Sale", back_populates="seller", lazy="dynamic", foreign_keys="Sale.seller_id")
     audit_logs = db.relationship("AuditLog", back_populates="user", lazy="dynamic")
 
     def __init__(
@@ -193,9 +171,7 @@ class User(UserMixin, db.Model):
         Older hashes stored with a different count still verify via
         werkzeug's check_password_hash (which reads the count from the hash).
         """
-        self.password_hash = generate_password_hash(
-            password, method="pbkdf2:sha256:260000", salt_length=16
-        )
+        self.password_hash = generate_password_hash(password, method="pbkdf2:sha256:260000", salt_length=16)
 
     def check_password(self, password):
         """Verify password"""
@@ -217,11 +193,7 @@ class User(UserMixin, db.Model):
     def has_permission(self, permission_code):
         if self.is_owner:
             return True
-        code = (
-            permission_code.value
-            if isinstance(permission_code, PermissionEnum)
-            else permission_code
-        )
+        code = permission_code.value if isinstance(permission_code, PermissionEnum) else permission_code
         return self.role and self.role.has_permission(code)
 
     def can_see_costs(self):
@@ -268,12 +240,8 @@ class User(UserMixin, db.Model):
                 {
                     "email_verified": self.email_verified,
                     "login_attempts": self.login_attempts,
-                    "locked_until": (
-                        self.locked_until.isoformat() if self.locked_until else None
-                    ),
-                    "last_login": (
-                        self.last_login.isoformat() if self.last_login else None
-                    ),
+                    "locked_until": (self.locked_until.isoformat() if self.locked_until else None),
+                    "last_login": (self.last_login.isoformat() if self.last_login else None),
                 }
             )
 

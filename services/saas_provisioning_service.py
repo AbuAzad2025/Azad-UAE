@@ -91,14 +91,8 @@ class SaaSProvisioningService:
             "subscription_plan": tenant.subscription_plan,
             "subscription_plan_duration": tenant.subscription_plan_duration,
             "is_trial": tenant.is_trial,
-            "subscription_start": (
-                tenant.subscription_start.isoformat()
-                if tenant.subscription_start
-                else None
-            ),
-            "subscription_end": (
-                tenant.subscription_end.isoformat() if tenant.subscription_end else None
-            ),
+            "subscription_start": (tenant.subscription_start.isoformat() if tenant.subscription_start else None),
+            "subscription_end": (tenant.subscription_end.isoformat() if tenant.subscription_end else None),
         }
 
     @staticmethod
@@ -119,7 +113,4 @@ class SaaSProvisioningService:
 
     @staticmethod
     def is_demo_tenant(tenant) -> bool:
-        return (
-            getattr(tenant, "is_trial", False)
-            and getattr(tenant, "subscription_plan", "") == "demo"
-        )
+        return getattr(tenant, "is_trial", False) and getattr(tenant, "subscription_plan", "") == "demo"

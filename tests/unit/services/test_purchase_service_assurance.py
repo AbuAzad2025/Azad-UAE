@@ -123,28 +123,20 @@ def _mock_create_session(mocker, product=None, purchase_id=1, line_start_id=100)
     return session, state
 
 
-def _patch_create_common(
-    mocker, *, product=None, warehouse=None, user=None, config=None, rate_info=None
-):
+def _patch_create_common(mocker, *, product=None, warehouse=None, user=None, config=None, rate_info=None):
     warehouse = warehouse or _warehouse()
     user = user or _user()
     config = dict(config or {"ENABLE_LANDED_COST_CAPITALIZATION": True})
     rate_info = rate_info or {"rate": 1.0, "rate_mode": "auto"}
 
-    mocker.patch(
-        "services.purchase_service.ensure_warehouse_access", return_value=warehouse
-    )
-    mocker.patch(
-        "services.purchase_service.get_active_tenant_id", return_value=user.tenant_id
-    )
+    mocker.patch("services.purchase_service.ensure_warehouse_access", return_value=warehouse)
+    mocker.patch("services.purchase_service.get_active_tenant_id", return_value=user.tenant_id)
     mocker.patch("services.purchase_service.generate_number", return_value="P-001")
     mocker.patch(
         "services.purchase_service.validate_currency_code",
         side_effect=lambda c: (c or "AED").strip() or "AED",
     )
-    mocker.patch(
-        "services.purchase_service.resolve_tenant_base_currency", return_value="AED"
-    )
+    mocker.patch("services.purchase_service.resolve_tenant_base_currency", return_value="AED")
     mocker.patch(
         "services.purchase_service.ExchangeRateService.resolve_exchange_rate_for_transaction",
         return_value=rate_info,
@@ -204,9 +196,7 @@ class TestCreatePurchaseValidations:
 
     def test_foreign_supplier_rejected(self, app, mocker):
         wh = _warehouse(tenant_id=1)
-        mocker.patch(
-            "services.purchase_service.ensure_warehouse_access", return_value=wh
-        )
+        mocker.patch("services.purchase_service.ensure_warehouse_access", return_value=wh)
         supplier_q = MagicMock()
         supplier_q.filter_by.return_value.first.return_value = None
         mocker.patch("services.purchase_service.Supplier.query", supplier_q)
@@ -301,9 +291,7 @@ class TestCreatePurchaseValidations:
 class TestCreatePurchaseCurrency:
     def test_resolve_default_currency_from_tenant(self, app, mocker):
         _patch_create_common(mocker)
-        mocker.patch(
-            "services.purchase_service.resolve_default_currency", return_value="EUR"
-        )
+        mocker.patch("services.purchase_service.resolve_default_currency", return_value="EUR")
         tenant = MagicMock()
         mocker.patch("models.Tenant.get_current", return_value=tenant)
         from services.purchase_service import PurchaseService
@@ -320,9 +308,7 @@ class TestCreatePurchaseCurrency:
     def test_tenant_currency_fallback_on_exception(self, app, mocker):
         _patch_create_common(mocker)
         mocker.patch("models.Tenant.get_current", side_effect=RuntimeError("no tenant"))
-        mocker.patch(
-            "services.purchase_service.get_system_default_currency", return_value="AED"
-        )
+        mocker.patch("services.purchase_service.get_system_default_currency", return_value="AED")
         from services.purchase_service import PurchaseService
 
         with app.app_context():
@@ -336,9 +322,7 @@ class TestCreatePurchaseCurrency:
 
     def test_blank_currency_uses_system_default(self, app, mocker):
         _patch_create_common(mocker)
-        mocker.patch(
-            "services.purchase_service.get_system_default_currency", return_value="AED"
-        )
+        mocker.patch("services.purchase_service.get_system_default_currency", return_value="AED")
         from services.purchase_service import PurchaseService
 
         with app.app_context():
@@ -400,9 +384,7 @@ class TestCreatePurchaseSerials:
     def test_serial_numbers_with_warranty(self, app, mocker):
         product = _product(has_serial_number=True, warranty_days=365)
         session, _, _, _, _ = _patch_create_common(mocker, product=product)
-        mocker.patch(
-            "utils.serial_helpers.extract_serials", return_value=["SN-1", "SN-2"]
-        )
+        mocker.patch("utils.serial_helpers.extract_serials", return_value=["SN-1", "SN-2"])
         mocker.patch("utils.serial_helpers.validate_serials")
         serial_q = MagicMock()
         serial_q.filter.return_value.count.return_value = 0
@@ -440,9 +422,7 @@ class TestCreatePurchaseSerials:
 
 class TestCreatePurchaseGL:
     def test_capitalized_landed_cost_in_inventory_debit(self, app, mocker):
-        _, _, _, _, post = _patch_create_common(
-            mocker, config={"ENABLE_LANDED_COST_CAPITALIZATION": True}
-        )
+        _, _, _, _, post = _patch_create_common(mocker, config={"ENABLE_LANDED_COST_CAPITALIZATION": True})
         from services.purchase_service import PurchaseService
 
         with app.app_context():
@@ -456,15 +436,11 @@ class TestCreatePurchaseGL:
                 tax_rate=5,
             )
         gl_lines = post.call_args[0][0]
-        inventory = next(
-            line for line in gl_lines if line.get("concept_code") == "INVENTORY_ASSET"
-        )
+        inventory = next(line for line in gl_lines if line.get("concept_code") == "INVENTORY_ASSET")
         assert inventory["debit"] >= Decimal("100")
 
     def test_non_capitalized_landed_gl_lines(self, app, mocker):
-        _, _, _, _, post = _patch_create_common(
-            mocker, config={"ENABLE_LANDED_COST_CAPITALIZATION": False}
-        )
+        _, _, _, _, post = _patch_create_common(mocker, config={"ENABLE_LANDED_COST_CAPITALIZATION": False})
         from services.purchase_service import PurchaseService
 
         with app.app_context():
@@ -546,9 +522,7 @@ class TestCreatePurchaseGL:
                 discount_amount=50,
             )
         gl_lines = post.call_args[0][0]
-        inventory = next(
-            line for line in gl_lines if line.get("concept_code") == "INVENTORY_ASSET"
-        )
+        inventory = next(line for line in gl_lines if line.get("concept_code") == "INVENTORY_ASSET")
         assert inventory["debit"] == Decimal("0")
 
 
@@ -583,9 +557,7 @@ class TestCancelPurchase:
 
     def test_stock_reverse_and_gl(self, app, mocker):
         session = _patch_cancel_query(mocker, has_stock=True)
-        reverse_stock = mocker.patch(
-            "services.purchase_service.StockService.reverse_purchase"
-        )
+        reverse_stock = mocker.patch("services.purchase_service.StockService.reverse_purchase")
         reverse_gl = mocker.patch("services.purchase_service.GLService.reverse_entry")
         purchase = _purchase(supplier=None)
         from services.purchase_service import PurchaseService
@@ -638,9 +610,7 @@ def _mock_return_session(mocker):
 
 
 def _patch_return_common(mocker, purchase, *, config=None, vat_gl=True):
-    config = dict(
-        config or {"ENABLE_LANDED_COST_CAPITALIZATION": True, "ENABLE_MWAC": False}
-    )
+    config = dict(config or {"ENABLE_LANDED_COST_CAPITALIZATION": True, "ENABLE_MWAC": False})
     session, _state = _mock_return_session(mocker)
     post = mocker.patch("services.purchase_service.post_or_fail")
     mocker.patch("services.purchase_service.generate_number", return_value="PR-001")
@@ -719,9 +689,7 @@ class TestCreatePurchaseReturn:
         session.flush.assert_called()
 
     def test_prices_include_vat_inventory_credit(self, app, mocker):
-        purchase = _purchase(
-            prices_include_vat=True, tax_rate=Decimal("5"), tax_amount=Decimal("5")
-        )
+        purchase = _purchase(prices_include_vat=True, tax_rate=Decimal("5"), tax_amount=Decimal("5"))
         _session, post = _patch_return_common(mocker, purchase)
         from services.purchase_service import PurchaseService
 
@@ -739,15 +707,11 @@ class TestCreatePurchaseReturn:
                 ],
             )
         gl_lines = post.call_args[0][0]
-        inventory = next(
-            line for line in gl_lines if line.get("concept_code") == "INVENTORY_ASSET"
-        )
+        inventory = next(line for line in gl_lines if line.get("concept_code") == "INVENTORY_ASSET")
         assert inventory["credit"] < Decimal("105")
 
     def test_prices_include_vat_invalid_tax_rate(self, app, mocker):
-        purchase = _purchase(
-            prices_include_vat=True, tax_rate="bad", tax_amount=Decimal("5")
-        )
+        purchase = _purchase(prices_include_vat=True, tax_rate="bad", tax_amount=Decimal("5"))
         _patch_return_common(mocker, purchase)
         from services.purchase_service import PurchaseService
 
@@ -769,9 +733,7 @@ class TestCreatePurchaseReturn:
     def test_capitalized_landed_on_return(self, app, mocker):
         pl = _purchase_line(id=1, line_total=Decimal("100"), landed_cost=Decimal("10"))
         purchase = _purchase(lines=[pl])
-        _session, post = _patch_return_common(
-            mocker, purchase, config={"ENABLE_LANDED_COST_CAPITALIZATION": True}
-        )
+        _session, post = _patch_return_common(mocker, purchase, config={"ENABLE_LANDED_COST_CAPITALIZATION": True})
         from services.purchase_service import PurchaseService
 
         with app.app_context():
@@ -788,9 +750,7 @@ class TestCreatePurchaseReturn:
                 ],
             )
         gl_lines = post.call_args[0][0]
-        inventory = next(
-            line for line in gl_lines if line.get("concept_code") == "INVENTORY_ASSET"
-        )
+        inventory = next(line for line in gl_lines if line.get("concept_code") == "INVENTORY_ASSET")
         assert inventory["credit"] > Decimal("100")
 
     def test_vat_gl_credit_on_return(self, app, mocker):
@@ -898,15 +858,9 @@ class TestCreatePurchaseReturn:
         pwc_q = MagicMock()
         pwc_q.filter_by.return_value.first.return_value = pwc
         pch_q = MagicMock()
-        pch_q.filter_by.return_value.order_by.return_value.first.return_value = (
-            cost_history
-        )
-        monkeypatch.setattr(
-            "models.product_warehouse_cost.ProductWarehouseCost.query", pwc_q
-        )
-        monkeypatch.setattr(
-            "models.product_cost_history.ProductCostHistory.query", pch_q
-        )
+        pch_q.filter_by.return_value.order_by.return_value.first.return_value = cost_history
+        monkeypatch.setattr("models.product_warehouse_cost.ProductWarehouseCost.query", pwc_q)
+        monkeypatch.setattr("models.product_cost_history.ProductCostHistory.query", pch_q)
         mocker.patch(
             "services.purchase_service.StockService._mwac_calc",
             return_value=(Decimal("9"), Decimal("450"), Decimal("50")),
@@ -938,9 +892,7 @@ class TestCreatePurchaseReturn:
         )
         pwc_q = MagicMock()
         pwc_q.filter_by.return_value.first.return_value = None
-        monkeypatch.setattr(
-            "models.product_warehouse_cost.ProductWarehouseCost.query", pwc_q
-        )
+        monkeypatch.setattr("models.product_warehouse_cost.ProductWarehouseCost.query", pwc_q)
         mocker.patch("services.purchase_service._safe_for_update", return_value=None)
         from services.purchase_service import PurchaseService
 
@@ -974,9 +926,7 @@ class TestCreatePurchaseReturn:
         pwc_q = MagicMock()
         pwc_q.filter_by.return_value.first.return_value = pwc
         mocker.patch("services.purchase_service._safe_for_update", return_value=pwc)
-        monkeypatch.setattr(
-            "models.product_warehouse_cost.ProductWarehouseCost.query", pwc_q
-        )
+        monkeypatch.setattr("models.product_warehouse_cost.ProductWarehouseCost.query", pwc_q)
         from services.purchase_service import PurchaseService
 
         with app.app_context():
@@ -1010,12 +960,8 @@ class TestCreatePurchaseReturn:
         pwc_q.filter_by.return_value.first.return_value = pwc
         pch_q = MagicMock()
         pch_q.filter_by.return_value.order_by.return_value.first.return_value = None
-        monkeypatch.setattr(
-            "models.product_warehouse_cost.ProductWarehouseCost.query", pwc_q
-        )
-        monkeypatch.setattr(
-            "models.product_cost_history.ProductCostHistory.query", pch_q
-        )
+        monkeypatch.setattr("models.product_warehouse_cost.ProductWarehouseCost.query", pwc_q)
+        monkeypatch.setattr("models.product_cost_history.ProductCostHistory.query", pch_q)
         mocker.patch(
             "services.purchase_service.StockService._mwac_calc",
             return_value=(Decimal("-1"), Decimal("-10"), Decimal("0")),

@@ -65,9 +65,7 @@ LEGACY_REF_MAP: dict[str, str] = {
 
 def _build_variants() -> dict[str, list[str]]:
     variants: dict[str, set[str]] = {}
-    for canonical in {
-        v for v in vars(GLRef).values() if isinstance(v, str) and not v.startswith("_")
-    }:
+    for canonical in {v for v in vars(GLRef).values() if isinstance(v, str) and not v.startswith("_")}:
         variants.setdefault(canonical, set()).add(canonical)
     for legacy, canonical in LEGACY_REF_MAP.items():
         variants.setdefault(canonical, set()).add(legacy)

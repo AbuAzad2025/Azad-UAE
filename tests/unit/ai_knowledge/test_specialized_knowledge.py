@@ -44,17 +44,13 @@ class TestSecurityRules:
         user = MagicMock(is_authenticated=True, is_owner=False)
         with (
             patch("ai_knowledge.specialized.security_rules.current_user", user),
-            patch.object(
-                SecurityRules, "can_access_sensitive_info", return_value=False
-            ),
+            patch.object(SecurityRules, "can_access_sensitive_info", return_value=False),
         ):
             filtered = SecurityRules.filter_sensitive_data({"password": "secret"})
             assert filtered["password"] == "*** محمي ***"
 
     def test_sanitize_script(self):
-        assert "<script>" not in SecurityRules.sanitize_input(
-            "<script>alert(1)</script>"
-        )
+        assert "<script>" not in SecurityRules.sanitize_input("<script>alert(1)</script>")
 
     def test_singleton(self):
         assert security_rules is not None
@@ -104,10 +100,7 @@ class TestCompanyInfo:
         assert "name_ar" in COMPANY_INFO
 
     def test_welcome_message(self):
-        assert (
-            "أزاد" in get_welcome_message()
-            or COMPANY_INFO["name_en"] in get_welcome_message()
-        )
+        assert "أزاد" in get_welcome_message() or COMPANY_INFO["name_en"] in get_welcome_message()
 
 
 class TestCustoms:

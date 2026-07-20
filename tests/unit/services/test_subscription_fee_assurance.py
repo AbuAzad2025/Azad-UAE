@@ -23,18 +23,14 @@ class TestSubscriptionPeriods:
         from services.azad_subscription_fee_service import AzadSubscriptionFeeService
 
         start = date(2026, 1, 1)
-        period_start, period_end = AzadSubscriptionFeeService._period_dates(
-            fee_type, start
-        )
+        period_start, period_end = AzadSubscriptionFeeService._period_dates(fee_type, start)
         assert period_start == start
         assert period_end == start + timedelta(days=expected_days)
 
     def test_perpetual_has_no_end(self):
         from services.azad_subscription_fee_service import AzadSubscriptionFeeService
 
-        _, period_end = AzadSubscriptionFeeService._period_dates(
-            "perpetual", date(2026, 6, 1)
-        )
+        _, period_end = AzadSubscriptionFeeService._period_dates("perpetual", date(2026, 6, 1))
         assert period_end is None
 
     def test_unknown_type_defaults_monthly_window(self):
@@ -61,9 +57,7 @@ class TestCreateSubscriptionFee:
             subscription_yearly_fee_aed=None,
             subscription_perpetual_fee_aed=None,
         )
-        mocker.patch(
-            "models.system_settings.SystemSettings.get_current", return_value=settings
-        )
+        mocker.patch("models.system_settings.SystemSettings.get_current", return_value=settings)
 
         from services.azad_subscription_fee_service import AzadSubscriptionFeeService
 
@@ -72,9 +66,7 @@ class TestCreateSubscriptionFee:
         assert result is None
 
     def test_creates_fee_with_explicit_amount(self, app, mocker):
-        mocker.patch(
-            "services.azad_subscription_fee_service.GLService.ensure_core_accounts"
-        )
+        mocker.patch("services.azad_subscription_fee_service.GLService.ensure_core_accounts")
         mocker.patch("utils.tax_settings._resolve_main_branch", return_value=1)
         mocker.patch("services.azad_subscription_fee_service.post_or_fail")
         mocker.patch("services.azad_subscription_fee_service.db.session")
@@ -110,9 +102,7 @@ class TestRecordPayment:
 
     def test_rejects_non_accrued_status(self, app, mocker):
         fee = MagicMock(status="paid", amount_aed=Decimal("100"), tenant_id=1)
-        mocker.patch(
-            "services.azad_subscription_fee_service.db.session.get", return_value=fee
-        )
+        mocker.patch("services.azad_subscription_fee_service.db.session.get", return_value=fee)
 
         from services.azad_subscription_fee_service import AzadSubscriptionFeeService
 
@@ -128,12 +118,8 @@ class TestRecordPayment:
             fee_type="monthly",
             tenant_id=1,
         )
-        mocker.patch(
-            "services.azad_subscription_fee_service.db.session.get", return_value=fee
-        )
-        mocker.patch(
-            "services.azad_subscription_fee_service.GLService.ensure_core_accounts"
-        )
+        mocker.patch("services.azad_subscription_fee_service.db.session.get", return_value=fee)
+        mocker.patch("services.azad_subscription_fee_service.GLService.ensure_core_accounts")
         mocker.patch(
             "services.azad_subscription_fee_service.GLService.get_payment_credit_concept",
             return_value="BANK",
@@ -148,9 +134,7 @@ class TestRecordPayment:
         from services.azad_subscription_fee_service import AzadSubscriptionFeeService
 
         with app.app_context():
-            result = AzadSubscriptionFeeService.record_payment(
-                5, payment_method="bank_transfer"
-            )
+            result = AzadSubscriptionFeeService.record_payment(5, payment_method="bank_transfer")
 
         assert result.status == "paid"
         assert result.paid_amount_aed == Decimal("250.000")
@@ -162,9 +146,7 @@ class TestWaiveFee:
 
     def test_idempotent_on_already_cancelled(self, app, mocker):
         fee = MagicMock(status="cancelled", tenant_id=1)
-        mocker.patch(
-            "services.azad_subscription_fee_service.db.session.get", return_value=fee
-        )
+        mocker.patch("services.azad_subscription_fee_service.db.session.get", return_value=fee)
 
         from services.azad_subscription_fee_service import AzadSubscriptionFeeService
 
@@ -181,12 +163,8 @@ class TestWaiveFee:
             tenant_id=1,
             notes="",
         )
-        mocker.patch(
-            "services.azad_subscription_fee_service.db.session.get", return_value=fee
-        )
-        mock_reverse = mocker.patch(
-            "services.azad_subscription_fee_service.GLService.reverse_entry"
-        )
+        mocker.patch("services.azad_subscription_fee_service.db.session.get", return_value=fee)
+        mock_reverse = mocker.patch("services.azad_subscription_fee_service.GLService.reverse_entry")
 
         from services.azad_subscription_fee_service import AzadSubscriptionFeeService
 
@@ -200,9 +178,7 @@ class TestWaiveFee:
 class TestSettingsAmount:
     def test_settings_amount_quantizes(self, app, mocker):
         settings = MagicMock(subscription_monthly_fee_aed=Decimal("99.9999"))
-        mocker.patch(
-            "models.system_settings.SystemSettings.get_current", return_value=settings
-        )
+        mocker.patch("models.system_settings.SystemSettings.get_current", return_value=settings)
         from services.azad_subscription_fee_service import AzadSubscriptionFeeService
 
         with app.app_context():
@@ -211,9 +187,7 @@ class TestSettingsAmount:
 
     def test_settings_amount_unknown_type_returns_none(self, app, mocker):
         settings = MagicMock()
-        mocker.patch(
-            "models.system_settings.SystemSettings.get_current", return_value=settings
-        )
+        mocker.patch("models.system_settings.SystemSettings.get_current", return_value=settings)
         from services.azad_subscription_fee_service import AzadSubscriptionFeeService
 
         with app.app_context():
@@ -229,35 +203,25 @@ class TestRecordPaymentFallbacks:
             fee_type="monthly",
             tenant_id=1,
         )
-        mocker.patch(
-            "services.azad_subscription_fee_service.db.session.get", return_value=fee
-        )
-        mocker.patch(
-            "services.azad_subscription_fee_service.GLService.ensure_core_accounts"
-        )
+        mocker.patch("services.azad_subscription_fee_service.db.session.get", return_value=fee)
+        mocker.patch("services.azad_subscription_fee_service.GLService.ensure_core_accounts")
         mocker.patch(
             "services.azad_subscription_fee_service.GLService.get_payment_credit_concept",
             return_value=None,
         )
         mocker.patch("utils.tax_settings._resolve_main_branch", return_value=1)
         mocker.patch("services.azad_subscription_fee_service.post_or_fail")
-        mocker.patch(
-            "services.azad_subscription_fee_service.current_app"
-        ).logger = MagicMock()
+        mocker.patch("services.azad_subscription_fee_service.current_app").logger = MagicMock()
         from services.azad_subscription_fee_service import AzadSubscriptionFeeService
 
         with app.app_context():
-            result = AzadSubscriptionFeeService.record_payment(
-                5, payment_method="unknown"
-            )
+            result = AzadSubscriptionFeeService.record_payment(5, payment_method="unknown")
         assert result.status == "paid"
 
 
 class TestWaiveFeeErrors:
     def test_waive_fee_not_found(self, app, mocker):
-        mocker.patch(
-            "services.azad_subscription_fee_service.db.session.get", return_value=None
-        )
+        mocker.patch("services.azad_subscription_fee_service.db.session.get", return_value=None)
         from services.azad_subscription_fee_service import AzadSubscriptionFeeService
 
         with app.app_context():

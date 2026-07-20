@@ -248,9 +248,7 @@ class TestCreateReturn:
 
         with app.app_context():
             with pytest.raises(ValueError, match="At least one"):
-                ReturnService.create_return(
-                    sale.id, [{"sale_line_id": 1, "quantity": 0}], user=_user()
-                )
+                ReturnService.create_return(sale.id, [{"sale_line_id": 1, "quantity": 0}], user=_user())
 
     def test_sale_line_not_found(self, app, mocker):
         sale = _sale()
@@ -264,17 +262,13 @@ class TestCreateReturn:
 
         with app.app_context():
             with pytest.raises(ValueError, match="Sale line"):
-                ReturnService.create_return(
-                    sale.id, [{"sale_line_id": 999, "quantity": 1}], user=_user()
-                )
+                ReturnService.create_return(sale.id, [{"sale_line_id": 999, "quantity": 1}], user=_user())
 
     def test_wrong_sale_line_sale(self, app, mocker):
         sale = _sale()
         line = _sale_line(sale_id=999)
         session = mocker.patch("services.return_service.db.session")
-        session.get.side_effect = lambda model, pk: {sale.id: sale, line.id: line}.get(
-            pk
-        )
+        session.get.side_effect = lambda model, pk: {sale.id: sale, line.id: line}.get(pk)
         mocker.patch("services.return_service.generate_number", return_value="R-001")
         mocker.patch("services.return_service.get_active_tenant_id", return_value=1)
         mocker.patch("services.return_service.is_platform_owner", return_value=False)
@@ -283,17 +277,13 @@ class TestCreateReturn:
 
         with app.app_context():
             with pytest.raises(ValueError, match="does not belong"):
-                ReturnService.create_return(
-                    sale.id, [{"sale_line_id": line.id, "quantity": 1}], user=_user()
-                )
+                ReturnService.create_return(sale.id, [{"sale_line_id": line.id, "quantity": 1}], user=_user())
 
     def test_cross_tenant_line(self, app, mocker):
         sale = _sale(tenant_id=1)
         line = _sale_line(tenant_id=2)
         session = mocker.patch("services.return_service.db.session")
-        session.get.side_effect = lambda model, pk: {sale.id: sale, line.id: line}.get(
-            pk
-        )
+        session.get.side_effect = lambda model, pk: {sale.id: sale, line.id: line}.get(pk)
         mocker.patch("services.return_service.generate_number", return_value="R-001")
         mocker.patch("services.return_service.get_active_tenant_id", return_value=1)
         mocker.patch("services.return_service.is_platform_owner", return_value=False)
@@ -302,9 +292,7 @@ class TestCreateReturn:
 
         with app.app_context():
             with pytest.raises(ValueError, match="outside tenant"):
-                ReturnService.create_return(
-                    sale.id, [{"sale_line_id": line.id, "quantity": 1}], user=_user()
-                )
+                ReturnService.create_return(sale.id, [{"sale_line_id": line.id, "quantity": 1}], user=_user())
 
     def test_serial_product_validation(self, app, mocker):
         sale = _sale()
@@ -441,18 +429,14 @@ class TestCreateReturn:
         product = _product()
         line.product = product
         self._patch_common(mocker, sale, line, product)
-        mocker.patch(
-            "services.return_service.current_app.config.get", return_value=True
-        )
+        mocker.patch("services.return_service.current_app.config.get", return_value=True)
         pwc = MagicMock(
             total_quantity=Decimal("10"),
             total_value=Decimal("400"),
             average_cost=Decimal("40"),
         )
         pwc_q = MagicMock()
-        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = (
-            pwc
-        )
+        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = pwc
         mocker.patch("models.ProductWarehouseCost.query", pwc_q)
         mocker.patch(
             "services.return_service.StockService._mwac_calc",
@@ -503,9 +487,7 @@ class TestCreateReturn:
 
         with app.app_context():
             with pytest.raises(ValueError, match="Invalid return quantity"):
-                ReturnService.create_return(
-                    sale.id, [{"sale_line_id": 1, "quantity": "bad"}], user=_user()
-                )
+                ReturnService.create_return(sale.id, [{"sale_line_id": 1, "quantity": "bad"}], user=_user())
 
     def test_excess_return_quantity(self, app, mocker):
         sale = _sale()
@@ -513,9 +495,7 @@ class TestCreateReturn:
         product = _product()
         line.product = product
         session = mocker.patch("services.return_service.db.session")
-        session.get.side_effect = lambda model, pk: {sale.id: sale, line.id: line}.get(
-            pk
-        )
+        session.get.side_effect = lambda model, pk: {sale.id: sale, line.id: line}.get(pk)
         session.query.return_value.join.return_value.filter.return_value.filter.return_value.filter.return_value.scalar.return_value = Decimal(
             "1"
         )
@@ -527,9 +507,7 @@ class TestCreateReturn:
 
         with app.app_context():
             with pytest.raises(ValueError, match="Cannot return"):
-                ReturnService.create_return(
-                    sale.id, [{"sale_line_id": line.id, "quantity": 1}], user=_user()
-                )
+                ReturnService.create_return(sale.id, [{"sale_line_id": line.id, "quantity": 1}], user=_user())
 
     def test_product_cost_fallback(self, app, mocker):
         sale = _sale()
@@ -554,9 +532,7 @@ class TestCreateReturn:
         product = _product()
         line.product = product
         self._patch_common(mocker, sale, line, product)
-        mocker.patch(
-            "services.return_service.current_app.config.get", return_value=True
-        )
+        mocker.patch("services.return_service.current_app.config.get", return_value=True)
         pwc = MagicMock(
             total_quantity=Decimal("10"),
             total_value=Decimal("400"),
@@ -586,18 +562,14 @@ class TestCreateReturn:
         product = _product()
         line.product = product
         self._patch_common(mocker, sale, line, product)
-        mocker.patch(
-            "services.return_service.current_app.config.get", return_value=True
-        )
+        mocker.patch("services.return_service.current_app.config.get", return_value=True)
         pwc = MagicMock(
             total_quantity=Decimal("10"),
             total_value=Decimal("400"),
             average_cost=Decimal("40"),
         )
         pwc_q = MagicMock()
-        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = (
-            pwc
-        )
+        pwc_q.filter_by.return_value.with_for_update.return_value.first.return_value = pwc
         mocker.patch("models.ProductWarehouseCost.query", pwc_q)
         mocker.patch(
             "services.return_service.StockService._mwac_calc",

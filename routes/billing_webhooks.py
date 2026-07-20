@@ -13,9 +13,7 @@ from extensions import limiter
 
 logger = logging.getLogger(__name__)
 
-billing_webhook_bp = Blueprint(
-    "billing_webhook", __name__, url_prefix="/billing-webhook"
-)
+billing_webhook_bp = Blueprint("billing_webhook", __name__, url_prefix="/billing-webhook")
 
 _WEBHOOK_MAX_AGE = 300
 
@@ -44,9 +42,7 @@ def _is_duplicate(provider: str, event_id: str | None) -> bool:
 
         key = f"billing_webhook:{provider}:{event_id}"
         if cache.get(key):
-            logger.warning(
-                "Billing webhook duplicate blocked: %s %s", provider, event_id
-            )
+            logger.warning("Billing webhook duplicate blocked: %s %s", provider, event_id)
             return True
         cache.set(key, "1", timeout=86400)
     except Exception:
@@ -154,9 +150,7 @@ def generic_webhook():
     )
 
     try:
-        secret = current_app.config.get(
-            "BILLING_WEBHOOK_SECRET"
-        ) or current_app.config.get("SECRET_KEY")
+        secret = current_app.config.get("BILLING_WEBHOOK_SECRET") or current_app.config.get("SECRET_KEY")
         if secret:
             provided = request.headers.get("X-Webhook-Secret", "")
             if provided != secret:

@@ -75,9 +75,7 @@ class DocumentSequenceService:
             "expense": ("EXP", "{prefix}-{year}-{counter:04d}", "year", False),
         }
 
-        default = defaults.get(
-            code, ("DOC", "{prefix}-{year}-{counter:04d}", "year", False)
-        )
+        default = defaults.get(code, ("DOC", "{prefix}-{year}-{counter:04d}", "year", False))
         seq = DocumentSequence(
             tenant_id=tenant_id,
             code=code,

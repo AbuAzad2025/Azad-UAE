@@ -41,10 +41,7 @@ class TestCustomersExport:
         assert resp.status_code == 200
         assert resp.mimetype == "text/csv"
         # CSV has Arabic headers - check for either English or Arabic
-        assert (
-            b"Customer" in resp.data
-            or b"\xd8\xa7\xd9\x84\xd8\xa7\xd8\xb3\xd9\x85" in resp.data
-        )
+        assert b"Customer" in resp.data or b"\xd8\xa7\xd9\x84\xd8\xa7\xd8\xb3\xd9\x85" in resp.data
 
 
 class TestCustomersCrud:
@@ -55,9 +52,7 @@ class TestCustomersCrud:
         # Check form renders
         assert b"name" in resp.data.lower() or b"Name" in resp.data
 
-    def test_create_post_success(
-        self, auth_client, db_session, test_factory, sample_user
-    ):
+    def test_create_post_success(self, auth_client, db_session, test_factory, sample_user):
         client = auth_client
         user = sample_user
 
@@ -77,9 +72,7 @@ class TestCustomersCrud:
         # Verify customer was created in DB
         from models import Customer
 
-        customer = (
-            db_session.query(Customer).filter_by(name="New Real Customer").first()
-        )
+        customer = db_session.query(Customer).filter_by(name="New Real Customer").first()
         assert customer is not None
         assert customer.tenant_id == user.tenant_id
         assert b"New Real Customer" in resp.data
@@ -113,9 +106,7 @@ class TestCustomersCrud:
             customer_type="regular",
             phone="0509999999",
         )
-        print(
-            f"DEBUG: created customer id={customer.id}, tenant_id={customer.tenant_id}"
-        )
+        print(f"DEBUG: created customer id={customer.id}, tenant_id={customer.tenant_id}")
 
         # Check branch scope
         from utils.decorators import branch_scope_id
@@ -395,9 +386,7 @@ class TestCustomersStatement:
             direction="incoming",
         )
 
-        resp = client.get(
-            f"/customers/{customer.id}/statement?date_from=2025-01-01&date_to=2025-12-31"
-        )
+        resp = client.get(f"/customers/{customer.id}/statement?date_from=2025-01-01&date_to=2025-12-31")
         print(f"DEBUG: Status = {resp.status_code}")
         print(f"DEBUG: Response data length = {len(resp.data)}")
         if resp.status_code != 200:
@@ -435,10 +424,7 @@ class TestCustomersStatement:
 
         resp = client.get("/customers/export?format=xlsx")
         assert resp.status_code == 200
-        assert (
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            in resp.mimetype
-        )
+        assert "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" in resp.mimetype
 
 
 class TestCustomersScopedHelpers:
@@ -472,9 +458,7 @@ class TestCustomersScopedHelpers:
 
         assert _customer_in_scope(customer.id) is True
 
-    def test_attach_customer_branch_labels(
-        self, auth_client, db_session, test_factory, sample_user
-    ):
+    def test_attach_customer_branch_labels(self, auth_client, db_session, test_factory, sample_user):
         from routes.customers import _attach_customer_branch_labels
         from models import Branch
 
@@ -482,12 +466,8 @@ class TestCustomersScopedHelpers:
         user = sample_user
 
         # Create branches
-        branch1 = Branch(
-            tenant_id=user.tenant_id, name="Branch 1", code="B1", is_active=True
-        )
-        branch2 = Branch(
-            tenant_id=user.tenant_id, name="Branch 2", code="B2", is_active=True
-        )
+        branch1 = Branch(tenant_id=user.tenant_id, name="Branch 1", code="B1", is_active=True)
+        branch2 = Branch(tenant_id=user.tenant_id, name="Branch 2", code="B2", is_active=True)
         db_session.add_all([branch1, branch2])
         db_session.flush()
 
@@ -654,9 +634,7 @@ class TestCustomersCoverageGaps:
         # tenant_get_or_404 returns 404 for cross-tenant access
         assert resp.status_code == 404
 
-    def test_view_with_branch_scope(
-        self, auth_client, db_session, test_factory, sample_user
-    ):
+    def test_view_with_branch_scope(self, auth_client, db_session, test_factory, sample_user):
         from models import Branch
 
         client = auth_client
@@ -773,9 +751,7 @@ class TestCustomersCoverageGaps:
         assert b"Full Stmt Customer" in resp.data
         assert b"S-FULL-001" in resp.data
 
-    def test_statement_transaction_type_sale(
-        self, auth_client, test_factory, sample_user
-    ):
+    def test_statement_transaction_type_sale(self, auth_client, test_factory, sample_user):
         client = auth_client
         user = sample_user
 

@@ -26,9 +26,7 @@ def executor(mock_user, mocker):
 
 class TestAIExecutorExtended:
     def test_get_customer_balance_success(self, executor, mocker):
-        customer = MagicMock(
-            id=1, name="Acme", balance=Decimal("150"), credit_limit=Decimal("500")
-        )
+        customer = MagicMock(id=1, name="Acme", balance=Decimal("150"), credit_limit=Decimal("500"))
         Customer = mocker.patch("models.Customer")
         Customer.query.filter_by.return_value.first.return_value = customer
         result = executor.get_customer_balance("Acme")
@@ -62,9 +60,7 @@ class TestAIExecutorExtended:
         Product.query.filter_by.return_value.first.return_value = product
         sale = MagicMock(id=5, sale_number="S-1", total_amount=Decimal("100"))
         mocker.patch("services.sale_service.SaleService.create_sale", return_value=sale)
-        result = executor.create_sale(
-            "Acme", [{"product_name": "Widget", "quantity": 1, "unit_price": 100}]
-        )
+        result = executor.create_sale("Acme", [{"product_name": "Widget", "quantity": 1, "unit_price": 100}])
         assert result["success"] is True
         assert result["sale_number"] == "S-1"
 
@@ -101,9 +97,7 @@ class TestAIExecutorExtended:
         Expense = mocker.patch("models.Expense")
         Expense.return_value = expense
         ExpenseCategory = mocker.patch("models.ExpenseCategory")
-        ExpenseCategory.query.filter_by.return_value.first.return_value = MagicMock(
-            id=1
-        )
+        ExpenseCategory.query.filter_by.return_value.first.return_value = MagicMock(id=1)
         mocker.patch("utils.helpers.generate_number", return_value="EXP-1")
         mocker.patch("services.ai_executor.db.session")
         with app.app_context():
@@ -134,9 +128,7 @@ class TestAIExecutorExtended:
             "services.purchase_service.PurchaseService.create_purchase",
             return_value=purchase,
         )
-        result = executor.create_purchase(
-            "Vendor", [{"product_name": "Part", "quantity": 2, "unit_cost": 10}]
-        )
+        result = executor.create_purchase("Vendor", [{"product_name": "Part", "quantity": 2, "unit_cost": 10}])
         assert result["success"] is True
 
     def test_current_user_id_and_branch(self, executor):
@@ -150,8 +142,6 @@ class TestAIExecutorExtended:
             mock_q = MagicMock()
             mock_q.filter.return_value = mock_q
             mock_q.order_by.return_value.limit.return_value.all.return_value = []
-            mocker.patch.object(
-                Product, "query", new_callable=mocker.PropertyMock, return_value=mock_q
-            )
+            mocker.patch.object(Product, "query", new_callable=mocker.PropertyMock, return_value=mock_q)
             result = executor.list_products(search="bolt", limit=5)
         assert result["success"] is True

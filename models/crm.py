@@ -20,9 +20,7 @@ class CRMStage(db.Model):
     is_won = db.Column(db.Boolean, default=False)
     is_lost = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -64,13 +62,9 @@ class CRMTeam(db.Model):
     )
     name = db.Column(db.String(100), nullable=False)
     name_ar = db.Column(db.String(100))
-    leader_id = db.Column(
-        db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-    )
+    leader_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -79,9 +73,7 @@ class CRMTeam(db.Model):
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     leader = db.relationship("User", foreign_keys=[leader_id])
-    members = db.relationship(
-        "CRMTeamMember", back_populates="team", cascade="all, delete-orphan"
-    )
+    members = db.relationship("CRMTeamMember", back_populates="team", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<CRMTeam {self.name}>"
@@ -115,11 +107,7 @@ class CRMTeamMember(db.Model):
     user = db.relationship("User", foreign_keys=[user_id])
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
 
-    __table_args__ = (
-        db.UniqueConstraint(
-            "tenant_id", "team_id", "user_id", name="uq_crm_team_member_tenant"
-        ),
-    )
+    __table_args__ = (db.UniqueConstraint("tenant_id", "team_id", "user_id", name="uq_crm_team_member_tenant"),)
 
 
 class CRMLead(db.Model):
@@ -154,21 +142,15 @@ class CRMLead(db.Model):
         nullable=True,
         index=True,
     )
-    team_id = db.Column(
-        db.Integer, db.ForeignKey("crm_teams.id", ondelete="SET NULL"), nullable=True
-    )
-    assigned_user_id = db.Column(
-        db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-    )
+    team_id = db.Column(db.Integer, db.ForeignKey("crm_teams.id", ondelete="SET NULL"), nullable=True)
+    assigned_user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     expected_revenue = db.Column(db.Numeric(15, 3), default=0)
     priority = db.Column(db.String(20), default="medium")
     source = db.Column(db.String(50))
     status = db.Column(db.String(20), default="open")
     description = db.Column(db.Text)
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -182,9 +164,7 @@ class CRMLead(db.Model):
     stage = db.relationship("CRMStage", back_populates="leads", foreign_keys=[stage_id])
     team = db.relationship("CRMTeam", foreign_keys=[team_id])
     assigned_user = db.relationship("User", foreign_keys=[assigned_user_id])
-    activities = db.relationship(
-        "CRMActivity", back_populates="lead", cascade="all, delete-orphan"
-    )
+    activities = db.relationship("CRMActivity", back_populates="lead", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<CRMLead {self.name}>"
@@ -229,22 +209,16 @@ class CRMActivity(db.Model):
         nullable=False,
         index=True,
     )
-    user_id = db.Column(
-        db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-    )
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     activity_type = db.Column(db.String(30), nullable=False)
     summary = db.Column(db.String(500))
     date_deadline = db.Column(db.DateTime, nullable=True)
     done_date = db.Column(db.DateTime, nullable=True)
     is_done = db.Column(db.Boolean, default=False)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
-    lead = db.relationship(
-        "CRMLead", back_populates="activities", foreign_keys=[lead_id]
-    )
+    lead = db.relationship("CRMLead", back_populates="activities", foreign_keys=[lead_id])
     user = db.relationship("User", foreign_keys=[user_id])
 
     def __repr__(self):

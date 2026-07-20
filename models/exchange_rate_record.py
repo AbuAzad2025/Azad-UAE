@@ -37,9 +37,7 @@ class ExchangeRateRecord(db.Model):
     rate = db.Column(db.Numeric(18, 6), nullable=False)
 
     # Source tracking
-    source = db.Column(
-        db.String(30), default="manual"
-    )  # manual, api_fallback, api_primary
+    source = db.Column(db.String(30), default="manual")  # manual, api_fallback, api_primary
     api_provider = db.Column(db.String(50), nullable=True)
     api_response_id = db.Column(db.String(100), nullable=True)
 
@@ -50,9 +48,7 @@ class ExchangeRateRecord(db.Model):
     locked_by_document_id = db.Column(db.Integer, nullable=True)
 
     # Audit
-    created_by = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=True, index=True
-    )
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True, index=True)
     created_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -60,9 +56,7 @@ class ExchangeRateRecord(db.Model):
         index=True,
     )
 
-    tenant = db.relationship(
-        "Tenant", backref="exchange_rate_records", foreign_keys=[tenant_id]
-    )
+    tenant = db.relationship("Tenant", backref="exchange_rate_records", foreign_keys=[tenant_id])
     creator = db.relationship("User", foreign_keys=[created_by])
 
     def __repr__(self):

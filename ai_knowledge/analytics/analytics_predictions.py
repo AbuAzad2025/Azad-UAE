@@ -34,9 +34,7 @@ class SalesAnalytics:
         prediction = moving_average + trend
 
         # مستوى الثقة
-        variance = sum((x - moving_average) ** 2 for x in recent_months) / len(
-            recent_months
-        )
+        variance = sum((x - moving_average) ** 2 for x in recent_months) / len(recent_months)
         std_dev = variance**0.5
 
         if std_dev < moving_average * 0.1:
@@ -91,9 +89,7 @@ class SalesAnalytics:
         }
 
         # ترتيب حسب المشتريات
-        sorted_customers = sorted(
-            customers_data, key=lambda c: c.get("total_purchases", 0), reverse=True
-        )
+        sorted_customers = sorted(customers_data, key=lambda c: c.get("total_purchases", 0), reverse=True)
 
         total = len(sorted_customers)
         vip_count = max(1, int(total * 0.1))
@@ -119,9 +115,7 @@ class SalesAnalytics:
             return {"A": [], "B": [], "C": []}
 
         # ترتيب حسب الإيرادات
-        sorted_products = sorted(
-            products_data, key=lambda p: p.get("revenue", 0), reverse=True
-        )
+        sorted_products = sorted(products_data, key=lambda p: p.get("revenue", 0), reverse=True)
 
         total_revenue = sum(p.get("revenue", 0) for p in sorted_products)
 
@@ -161,11 +155,7 @@ class InventoryAnalytics:
         return {
             "reorder_point": round(reorder_point, 2),
             "current_stock": product_data.get("current_stock", 0),
-            "status": (
-                "order_now"
-                if product_data.get("current_stock", 0) <= reorder_point
-                else "ok"
-            ),
+            "status": ("order_now" if product_data.get("current_stock", 0) <= reorder_point else "ok"),
         }
 
     @staticmethod
@@ -193,9 +183,7 @@ class InventoryAnalytics:
         return {
             "eoq": round(eoq, 0),
             "orders_per_year": round(orders_per_year, 1),
-            "order_frequency_days": (
-                round(365 / orders_per_year, 0) if orders_per_year > 0 else 0
-            ),
+            "order_frequency_days": (round(365 / orders_per_year, 0) if orders_per_year > 0 else 0),
         }
 
     @staticmethod

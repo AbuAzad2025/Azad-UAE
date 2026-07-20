@@ -31,17 +31,13 @@ class TestCreateUserValidation:
         )
         with (
             patch("flask_login.utils._get_user", return_value=user),
-            patch(
-                "ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1
-            ),
+            patch("ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1),
             patch("ai_knowledge.action_dispatcher._is_owner", return_value=True),
             patch("ai_knowledge.action_dispatcher._has_permission", return_value=True),
             patch("ai_knowledge.action_dispatcher._audit"),
             patch("ai_knowledge.action_dispatcher._log_ai_error"),
         ):
-            result = action_dispatcher.dispatch(
-                "create_user", {"username": "", "password": ""}
-            )
+            result = action_dispatcher.dispatch("create_user", {"username": "", "password": ""})
             assert result.success is False
             assert "اسم المستخدم" in result.message or "كلمة المرور" in result.message
 
@@ -57,17 +53,13 @@ class TestCreateUserValidation:
         )
         with (
             patch("flask_login.utils._get_user", return_value=user),
-            patch(
-                "ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1
-            ),
+            patch("ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1),
             patch("ai_knowledge.action_dispatcher._is_owner", return_value=True),
             patch("ai_knowledge.action_dispatcher._has_permission", return_value=True),
             patch("ai_knowledge.action_dispatcher._audit"),
             patch("ai_knowledge.action_dispatcher._log_ai_error"),
         ):
-            result = action_dispatcher.dispatch(
-                "create_user", {"username": "ali", "password": ""}
-            )
+            result = action_dispatcher.dispatch("create_user", {"username": "ali", "password": ""})
             assert result.success is False
 
 

@@ -82,7 +82,7 @@
         <a href="{{ url_for('owner.create_user') }}" class="btn btn-primary btn-lg" aria-label="{{ _('إضافة مستخدم جديد') }}">
           <i class="fas fa-user-plus mr-2"></i>{{ _('إضافة مستخدم جديد') }}
         </a>
-        <button type="button" class="btn btn-info btn-lg" onclick="$('#users-table').DataTable().search('').draw();" aria-label="{{ _('تحديث القائمة') }}">
+        <button type="button" class="btn btn-info btn-lg" data-action="reset-table-search" aria-label="{{ _('تحديث القائمة') }}">
           <i class="fas fa-sync mr-2"></i>{{ t('Update') }}</button>
       </div>
     </div>
@@ -193,7 +193,7 @@
                     <i class="fas fa-edit"></i>
                   </a>
                   {% if not user.is_owner and user.id != current_user.id %}
-                  <form class="needs-validation ic-3" method="POST" action="{{ url_for('owner.delete_user', user_id=user.id) }}" onsubmit="return confirm('هل تريد تعطيل هذا المستخدم؟');">
+                  <form class="needs-validation ic-3" method="POST" action="{{ url_for('owner.delete_user', user_id=user.id) }}" data-action="confirm-submit" data-confirm-message="هل تريد تعطيل هذا المستخدم؟">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                     <button type="submit" class="btn btn-danger" title="{{ _('تعطيل') }}" aria-label="{{ _('تعطيل المستخدم') }}">
                       <i class="fas fa-ban"></i>
@@ -213,6 +213,18 @@
 </div>
 
 <script>
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action="reset-table-search"]');
+  if (!el) return;
+  $('#users-table').DataTable().search('').draw();
+});
+
+document.addEventListener('submit', (e) => {
+  const el = e.target.closest('[data-action="confirm-submit"]');
+  if (!el) return;
+  if (!confirm(el.dataset.confirmMessage)) e.preventDefault();
+});
+
 $(document).ready(() => {
   $('#users-table').DataTable({
     "language": {

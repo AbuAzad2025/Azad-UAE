@@ -7,9 +7,7 @@ from decimal import Decimal
 
 
 class TestPurchasesCreate:
-    def test_create_purchase_increases_stock_and_creates_payable(
-        self, app, db_session, client
-    ):
+    def test_create_purchase_increases_stock_and_creates_payable(self, app, db_session, client):
         from models import (
             Tenant,
             Branch,
@@ -129,12 +127,8 @@ class TestPurchasesCreate:
         assert purchase is not None, "Purchase was not created"
         assert purchase.total_amount == Decimal("600"), f"total={purchase.total_amount}"
 
-        stock_after = ProductWarehouseStock.query.filter_by(
-            product_id=product.id, warehouse_id=warehouse.id
-        ).first()
-        assert stock_after.quantity == Decimal("30"), (
-            f"Expected 30, got {stock_after.quantity}"
-        )
+        stock_after = ProductWarehouseStock.query.filter_by(product_id=product.id, warehouse_id=warehouse.id).first()
+        assert stock_after.quantity == Decimal("30"), f"Expected 30, got {stock_after.quantity}"
 
         gl_entries = GLJournalEntry.query.filter(
             GLJournalEntry.reference_type == GLRef.PURCHASE,

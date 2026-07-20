@@ -79,16 +79,12 @@ class TestRecommendPrice:
 
     def test_happy_path(self, ai_client, mock_ai_service):
         mock_ai_service.recommend_price.return_value = self.RECOMMENDED
-        resp = ai_client.post(
-            "/ai/recommend-price", json={"product_id": 1, "customer_id": 2}
-        )
+        resp = ai_client.post("/ai/recommend-price", json={"product_id": 1, "customer_id": 2})
         assert resp.status_code == 200
         assert resp.get_json()["recommended_price"] == 125.0
 
     def test_missing_json_400(self, ai_client, mock_ai_service):
-        resp = ai_client.post(
-            "/ai/recommend-price", data=b"x", content_type="application/json"
-        )
+        resp = ai_client.post("/ai/recommend-price", data=b"x", content_type="application/json")
         assert resp.status_code == 400
         mock_ai_service.recommend_price.assert_not_called()
 
@@ -106,29 +102,21 @@ class TestRecommendPrice:
 
     def test_not_found_404(self, ai_client, mock_ai_service):
         mock_ai_service.recommend_price.return_value = None
-        resp = ai_client.post(
-            "/ai/recommend-price", json={"product_id": 1, "customer_id": 2}
-        )
+        resp = ai_client.post("/ai/recommend-price", json={"product_id": 1, "customer_id": 2})
         assert resp.status_code == 404
 
     def test_timeout_503(self, ai_client, mock_ai_service):
         mock_ai_service.recommend_price.side_effect = TimeoutError("timeout")
-        resp = ai_client.post(
-            "/ai/recommend-price", json={"product_id": 1, "customer_id": 2}
-        )
+        resp = ai_client.post("/ai/recommend-price", json={"product_id": 1, "customer_id": 2})
         assert resp.status_code == 503
 
     def test_generic_error_503(self, ai_client, mock_ai_service):
         mock_ai_service.recommend_price.side_effect = RuntimeError("fail")
-        resp = ai_client.post(
-            "/ai/recommend-price", json={"product_id": 1, "customer_id": 2}
-        )
+        resp = ai_client.post("/ai/recommend-price", json={"product_id": 1, "customer_id": 2})
         assert resp.status_code == 503
 
     def test_plain_text_400(self, ai_client, mock_ai_service):
-        resp = ai_client.post(
-            "/ai/recommend-price", data="text", content_type="text/plain"
-        )
+        resp = ai_client.post("/ai/recommend-price", data="text", content_type="text/plain")
         assert resp.status_code == 400
 
 
@@ -156,9 +144,7 @@ class TestCheckStock:
         assert resp.get_json()["type"] == "error"
 
     def test_missing_json_400(self, ai_client, mock_ai_service):
-        resp = ai_client.post(
-            "/ai/check-stock", data=b"x", content_type="application/json"
-        )
+        resp = ai_client.post("/ai/check-stock", data=b"x", content_type="application/json")
         assert resp.status_code == 400
 
     def test_empty_json_400(self, ai_client, mock_ai_service):
@@ -170,9 +156,7 @@ class TestCheckStock:
         assert resp.status_code == 400
 
     def test_invalid_quantity_422(self, ai_client, mock_ai_service):
-        resp = ai_client.post(
-            "/ai/check-stock", json={"product_id": 1, "quantity": "x"}
-        )
+        resp = ai_client.post("/ai/check-stock", json={"product_id": 1, "quantity": "x"})
         assert resp.status_code == 422
 
     def test_negative_quantity_ok(self, ai_client, mock_ai_service):
@@ -240,9 +224,7 @@ class TestExchangeRate:
             assert resp.status_code == 200
 
     def test_empty_currency(self, ai_client):
-        with patch(
-            "routes.ai_routes.AIService.get_exchange_rate_suggestion", return_value={}
-        ):
+        with patch("routes.ai_routes.AIService.get_exchange_rate_suggestion", return_value={}):
             resp = ai_client.get("/ai/exchange-rate/")
             assert resp.status_code in (200, 308, 404)
 
@@ -351,9 +333,7 @@ class TestFindCompatible:
 
 class TestChatAccessPolicy:
     def test_denied_returns_403(self, ai_client):
-        with patch(
-            "routes.ai_routes.get_ai_access_state", return_value=_denied_access()
-        ):
+        with patch("routes.ai_routes.get_ai_access_state", return_value=_denied_access()):
             resp = ai_client.post("/ai/chat", json={"message": "hello"})
         assert resp.status_code == 403
         assert resp.get_json()["success"] is False
@@ -384,9 +364,7 @@ class TestChatAccessPolicy:
         assert resp.status_code == 403
 
     def test_denied_json_accept_header(self, ai_client):
-        with patch(
-            "routes.ai_routes.get_ai_access_state", return_value=_denied_access()
-        ):
+        with patch("routes.ai_routes.get_ai_access_state", return_value=_denied_access()):
             resp = ai_client.post(
                 "/ai/chat",
                 json={"message": "x"},
@@ -400,12 +378,8 @@ class TestChatCapabilityLevel:
     def test_basic_level_blocks_advanced(self, ai_client, path, method):
         state = _basic_tenant_access()
         with patch("routes.ai_routes.get_ai_access_state", return_value=state):
-            with patch(
-                "routes.ai_routes.AIService.predict_sales_trend", return_value={}
-            ):
-                with patch(
-                    "routes.ai_routes.AIService.analyze_profit_margins", return_value={}
-                ):
+            with patch("routes.ai_routes.AIService.predict_sales_trend", return_value={}):
+                with patch("routes.ai_routes.AIService.analyze_profit_margins", return_value={}):
                     with patch(
                         "routes.ai_routes.AIService.detect_sales_patterns",
                         return_value={},
@@ -434,14 +408,10 @@ class TestChatCapabilityLevel:
                                                 "routes.ai_routes.AIService.optimize_inventory_levels",
                                                 return_value={},
                                             ):
-                                                client_method = getattr(
-                                                    ai_client, method
-                                                )
+                                                client_method = getattr(ai_client, method)
                                                 resp = client_method(
                                                     path,
-                                                    headers={
-                                                        "Accept": "application/json"
-                                                    },
+                                                    headers={"Accept": "application/json"},
                                                 )
         assert resp.status_code == 403
         assert resp.get_json()["required"] == "advanced"
@@ -449,9 +419,7 @@ class TestChatCapabilityLevel:
     def test_basic_allows_chat(self, ai_client, mock_ai_service):
         state = _basic_tenant_access()
         with patch("routes.ai_routes.get_ai_access_state", return_value=state):
-            with patch(
-                "routes.ai_routes.chat._user_can_ai_execute_actions", return_value=False
-            ):
+            with patch("routes.ai_routes.chat._user_can_ai_execute_actions", return_value=False):
                 resp = ai_client.post("/ai/chat", json={"message": "مرحبا"})
         assert resp.status_code == 200
 
@@ -464,9 +432,7 @@ class TestChatCapabilityLevel:
     def test_basic_blocks_upload_excel(self, ai_client):
         state = _basic_tenant_access()
         with patch("routes.ai_routes.get_ai_access_state", return_value=state):
-            resp = ai_client.post(
-                "/ai/upload-excel", headers={"Accept": "application/json"}
-            )
+            resp = ai_client.post("/ai/upload-excel", headers={"Accept": "application/json"})
         assert resp.status_code == 403
 
 
@@ -477,9 +443,7 @@ class TestChatEndpoint:
         mock_ai_service.chat_response.assert_not_called()
 
     def test_fallback_chat_response(self, ai_client, mock_ai_service):
-        with patch(
-            "routes.ai_routes.chat._user_can_ai_execute_actions", return_value=False
-        ):
+        with patch("routes.ai_routes.chat._user_can_ai_execute_actions", return_value=False):
             resp = ai_client.post("/ai/chat", json={"message": "ما هو المخزون؟"})
         assert resp.status_code == 200
         assert resp.get_json()["response"] == "mocked chat"
@@ -512,9 +476,7 @@ class TestChatEndpoint:
 
     def test_greeting_via_intelligent_response(self, ai_client, mock_ai_service):
         with patch("ai_knowledge.action_dispatcher.action_dispatcher") as ad:
-            with patch(
-                "ai_knowledge.agents_core.intelligent_response", return_value="أهلا"
-            ) as ir:
+            with patch("ai_knowledge.agents_core.intelligent_response", return_value="أهلا") as ir:
                 ad.parse_chat_action.return_value = ("greeting", {})
                 resp = ai_client.post("/ai/chat", json={"message": "مرحبا"})
         assert resp.get_json()["response"] == "أهلا"
@@ -522,9 +484,7 @@ class TestChatEndpoint:
 
     def test_help_via_intelligent_response(self, ai_client, mock_ai_service):
         with patch("ai_knowledge.action_dispatcher.action_dispatcher") as ad:
-            with patch(
-                "ai_knowledge.agents_core.intelligent_response", return_value="مساعدة"
-            ):
+            with patch("ai_knowledge.agents_core.intelligent_response", return_value="مساعدة"):
                 ad.parse_chat_action.return_value = ("help", {})
                 resp = ai_client.post("/ai/chat", json={"message": "مساعدة"})
         assert resp.get_json()["response"] == "مساعدة"
@@ -555,28 +515,20 @@ class TestChatEndpoint:
         assert "فاتورة مبيعات" in resp.get_json()["response"]
 
     def test_trainer_called_on_chat(self, ai_client, mock_ai_service):
-        with patch(
-            "routes.ai_routes.chat._user_can_ai_execute_actions", return_value=False
-        ):
+        with patch("routes.ai_routes.chat._user_can_ai_execute_actions", return_value=False):
             with patch("ai_knowledge.trainer.trainer") as trainer:
                 ai_client.post("/ai/chat", json={"message": "سؤال"})
         trainer.learn_from_interaction.assert_called_once()
 
     def test_ai_mode_local(self, ai_client, mock_ai_service):
-        with patch(
-            "routes.ai_routes.chat._user_can_ai_execute_actions", return_value=False
-        ):
-            resp = ai_client.post(
-                "/ai/chat", json={"message": "test", "ai_mode": "local"}
-            )
+        with patch("routes.ai_routes.chat._user_can_ai_execute_actions", return_value=False):
+            resp = ai_client.post("/ai/chat", json={"message": "test", "ai_mode": "local"})
         assert resp.status_code == 200
         call_ctx = mock_ai_service.chat_response.call_args[0][1]
         assert call_ctx["force_local"] is True
 
     def test_response_includes_ai_enabled(self, ai_client, mock_ai_service):
-        with patch(
-            "routes.ai_routes.chat._user_can_ai_execute_actions", return_value=False
-        ):
+        with patch("routes.ai_routes.chat._user_can_ai_execute_actions", return_value=False):
             resp = ai_client.post("/ai/chat", json={"message": "x"})
         assert "ai_enabled" in resp.get_json()
 
@@ -661,9 +613,7 @@ class TestTrainLocalAI:
         from routes.ai_routes import train_local_ai
 
         training_file = tmp_path / "local_training.json"
-        existing = [
-            {"action": "x", "input_data": {}, "result": {}, "timestamp": "t"}
-        ] * 1001
+        existing = [{"action": "x", "input_data": {}, "result": {}, "timestamp": "t"}] * 1001
         training_file.write_text(json.dumps(existing), encoding="utf-8")
         with patch("ai_knowledge.get_knowledge_path", return_value=str(training_file)):
             train_local_ai("new", {}, {})
@@ -729,9 +679,7 @@ class TestApplySmartListeners:
 
 
 class TestCreateFinalOptions:
-    @pytest.mark.parametrize(
-        "action", ["عميل", "منتج", "فاتورة", "مصروف", "استلام", "إعطاء"]
-    )
+    @pytest.mark.parametrize("action", ["عميل", "منتج", "فاتورة", "مصروف", "استلام", "إعطاء"])
     def test_known_actions(self, action):
         from routes.ai_routes import create_final_options
 
@@ -1018,18 +966,14 @@ class TestConversationCtx:
     def test_wraps_context_data(self):
         from routes.ai_routes import _conversation_ctx
 
-        with patch(
-            "routes.ai_routes.shared._get_conversation_context", return_value={"k": "v"}
-        ):
+        with patch("routes.ai_routes.shared._get_conversation_context", return_value={"k": "v"}):
             ctx = _conversation_ctx(1, 1)
         assert ctx["k"] == "v"
 
     def test_autosave_on_setitem(self):
         from routes.ai_routes import _conversation_ctx
 
-        with patch(
-            "routes.ai_routes.shared._get_conversation_context", return_value={}
-        ):
+        with patch("routes.ai_routes.shared._get_conversation_context", return_value={}):
             with patch("utils.context_managers._set_conversation_context") as setter:
                 ctx = _conversation_ctx(5, 2)
                 ctx["a"] = 1
@@ -1038,9 +982,7 @@ class TestConversationCtx:
     def test_autosave_on_delitem(self):
         from routes.ai_routes import _conversation_ctx
 
-        with patch(
-            "routes.ai_routes.shared._get_conversation_context", return_value={"x": 1}
-        ):
+        with patch("routes.ai_routes.shared._get_conversation_context", return_value={"x": 1}):
             with patch("utils.context_managers._set_conversation_context") as setter:
                 ctx = _conversation_ctx(5, 2)
                 del ctx["x"]
@@ -1049,9 +991,7 @@ class TestConversationCtx:
     def test_autosave_on_update(self):
         from routes.ai_routes import _conversation_ctx
 
-        with patch(
-            "routes.ai_routes.shared._get_conversation_context", return_value={}
-        ):
+        with patch("routes.ai_routes.shared._get_conversation_context", return_value={}):
             with patch("utils.context_managers._set_conversation_context") as setter:
                 ctx = _conversation_ctx(3, 1)
                 ctx.update({"b": 2})
@@ -1060,9 +1000,7 @@ class TestConversationCtx:
     def test_autosave_on_clear(self):
         from routes.ai_routes import _conversation_ctx
 
-        with patch(
-            "routes.ai_routes.shared._get_conversation_context", return_value={"z": 1}
-        ):
+        with patch("routes.ai_routes.shared._get_conversation_context", return_value={"z": 1}):
             with patch("utils.context_managers._set_conversation_context") as setter:
                 ctx = _conversation_ctx(3, 1)
                 ctx.clear()
@@ -1071,9 +1009,7 @@ class TestConversationCtx:
     def test_empty_when_none(self):
         from routes.ai_routes import _conversation_ctx
 
-        with patch(
-            "routes.ai_routes.shared._get_conversation_context", return_value=None
-        ):
+        with patch("routes.ai_routes.shared._get_conversation_context", return_value=None):
             ctx = _conversation_ctx(1, None)
         assert ctx == {}
 
@@ -1098,9 +1034,7 @@ class TestProcessExcelIntelligently:
                                     with patch("routes.ai_routes._train_ai_from_excel"):
                                         Warehouse.query.filter_by.return_value.first.return_value = warehouse
                                         Product.query.filter_by.return_value.first.return_value = None
-                                        result = _process_excel_intelligently(
-                                            file_obj, 1, mock_user
-                                        )
+                                        result = _process_excel_intelligently(file_obj, 1, mock_user)
         assert result["success"] is True
 
     def test_unknown_structure(self, mock_user):
@@ -1110,9 +1044,7 @@ class TestProcessExcelIntelligently:
             "routes.ai_routes.assistant.pd.read_excel",
             return_value=pd.DataFrame({"x": [1]}),
         ):
-            with patch(
-                "routes.ai_routes._intelligent_column_detector", return_value=None
-            ):
+            with patch("routes.ai_routes._intelligent_column_detector", return_value=None):
                 result = _process_excel_intelligently(MagicMock(), 1, mock_user)
         assert result["success"] is False
 
@@ -1147,9 +1079,7 @@ class TestProcessExcelIntelligently:
                             with patch("routes.ai_routes._train_ai_from_excel"):
                                 Warehouse.query.filter_by.return_value.first.return_value = warehouse
                                 Product.query.filter_by.return_value.first.return_value = existing
-                                result = _process_excel_intelligently(
-                                    MagicMock(), 1, mock_user
-                                )
+                                result = _process_excel_intelligently(MagicMock(), 1, mock_user)
         assert result["success"] is True
         assert result["details"]["updated"] == 1
 
@@ -1166,9 +1096,7 @@ class TestProcessExcelIntelligently:
 
 class TestConfig:
     def test_get_renders_template(self, ai_client):
-        with patch(
-            "routes.ai_routes.assistant.render_template", return_value="config-page"
-        ) as rt:
+        with patch("routes.ai_routes.assistant.render_template", return_value="config-page") as rt:
             resp = ai_client.get("/ai/config")
         assert resp.status_code == 200
         assert resp.data == b"config-page"
@@ -1186,9 +1114,7 @@ class TestConfig:
         env_file = tmp_path / ".env"
         env_file.write_text("OTHER=1\n", encoding="utf-8")
         with patch("routes.ai_routes.assistant.__file__", str(fake_assistant)):
-            resp = ai_client.post(
-                "/ai/config", data={"api_key": "new-key", "provider": "groq"}
-            )
+            resp = ai_client.post("/ai/config", data={"api_key": "new-key", "provider": "groq"})
         assert resp.get_json()["success"] is True
         content = env_file.read_text(encoding="utf-8")
         assert "GROQ_API_KEY=new-key" in content
@@ -1201,9 +1127,7 @@ class TestConfig:
         env_file = tmp_path / ".env"
         env_file.write_text("GROQ_API_KEY=old\n", encoding="utf-8")
         with patch("routes.ai_routes.assistant.__file__", str(fake_assistant)):
-            resp = ai_client.post(
-                "/ai/config", data={"api_key": "updated", "provider": "groq"}
-            )
+            resp = ai_client.post("/ai/config", data={"api_key": "updated", "provider": "groq"})
         assert "GROQ_API_KEY=updated" in env_file.read_text(encoding="utf-8")
         assert resp.get_json()["success"] is True
 
@@ -1214,9 +1138,7 @@ class TestConfig:
         fake_assistant.write_text("#", encoding="utf-8")
         (tmp_path / ".env").write_text("", encoding="utf-8")
         with patch("routes.ai_routes.assistant.__file__", str(fake_assistant)):
-            resp = ai_client.post(
-                "/ai/config", data={"api_key": "g-key", "provider": "gemini"}
-            )
+            resp = ai_client.post("/ai/config", data={"api_key": "g-key", "provider": "gemini"})
         assert "GEMINI_API_KEY=g-key" in (tmp_path / ".env").read_text(encoding="utf-8")
         assert resp.get_json()["provider"] == "gemini"
 
@@ -1227,18 +1149,12 @@ class TestConfig:
         fake_assistant.write_text("#", encoding="utf-8")
         (tmp_path / ".env").write_text("", encoding="utf-8")
         with patch("routes.ai_routes.assistant.__file__", str(fake_assistant)):
-            ai_client.post(
-                "/ai/config", data={"api_key": "o-key", "provider": "openai"}
-            )
+            ai_client.post("/ai/config", data={"api_key": "o-key", "provider": "openai"})
         assert "OPENAI_API_KEY=o-key" in (tmp_path / ".env").read_text(encoding="utf-8")
 
     def test_get_passes_key_flags(self, ai_client):
-        with patch(
-            "routes.ai_routes.assistant.render_template", return_value="ok"
-        ) as rt:
-            with patch.dict(
-                "os.environ", {"GROQ_API_KEY": "x", "OPENAI_API_KEY": ""}, clear=False
-            ):
+        with patch("routes.ai_routes.assistant.render_template", return_value="ok") as rt:
+            with patch.dict("os.environ", {"GROQ_API_KEY": "x", "OPENAI_API_KEY": ""}, clear=False):
                 ai_client.get("/ai/config")
         kwargs = rt.call_args[1]
         assert kwargs["groq_key_exists"] is True
@@ -1252,31 +1168,21 @@ class TestUploadExcel:
 
     def test_wrong_extension_400(self, ai_client):
         data = {"file": (io.BytesIO(b"data"), "products.csv"), "warehouse_id": "1"}
-        resp = ai_client.post(
-            "/ai/upload-excel", data=data, content_type="multipart/form-data"
-        )
+        resp = ai_client.post("/ai/upload-excel", data=data, content_type="multipart/form-data")
         assert resp.status_code == 400
 
     def test_empty_filename_400(self, ai_client):
         data = {"file": (io.BytesIO(b""), ""), "warehouse_id": "1"}
-        resp = ai_client.post(
-            "/ai/upload-excel", data=data, content_type="multipart/form-data"
-        )
+        resp = ai_client.post("/ai/upload-excel", data=data, content_type="multipart/form-data")
         assert resp.status_code == 400
 
     def test_too_large_content_length_413(self, ai_client, app_factory):
         from routes.ai_routes import ai_bp
 
         app = app_factory(ai_bp, {"MAX_CONTENT_LENGTH": 100})
-        with patch(
-            "flask_login.utils._get_user", return_value=MagicMock(is_authenticated=True)
-        ):
-            with patch(
-                "routes.ai_routes.get_ai_access_state", return_value=_access_state()
-            ):
-                with patch(
-                    "utils.auth_helpers.is_global_owner_user", return_value=True
-                ):
+        with patch("flask_login.utils._get_user", return_value=MagicMock(is_authenticated=True)):
+            with patch("routes.ai_routes.get_ai_access_state", return_value=_access_state()):
+                with patch("utils.auth_helpers.is_global_owner_user", return_value=True):
                     with patch("extensions.limiter.limit", return_value=lambda f: f):
                         client = app.test_client()
                         resp = client.post(
@@ -1293,9 +1199,7 @@ class TestUploadExcel:
             "routes.ai_routes.assistant._process_excel_intelligently",
             return_value={"success": True, "message": "ok"},
         ):
-            resp = ai_client.post(
-                "/ai/upload-excel", data=data, content_type="multipart/form-data"
-            )
+            resp = ai_client.post("/ai/upload-excel", data=data, content_type="multipart/form-data")
         assert resp.status_code == 200
         assert resp.get_json()["success"] is True
 
@@ -1305,9 +1209,7 @@ class TestUploadExcel:
             "routes.ai_routes.assistant._process_excel_intelligently",
             side_effect=RuntimeError("boom"),
         ):
-            resp = ai_client.post(
-                "/ai/upload-excel", data=data, content_type="multipart/form-data"
-            )
+            resp = ai_client.post("/ai/upload-excel", data=data, content_type="multipart/form-data")
         assert resp.status_code == 500
 
     def test_file_size_exceeds_max_413(self, ai_client, app_factory):
@@ -1316,15 +1218,9 @@ class TestUploadExcel:
         app = app_factory(ai_bp, {"MAX_CONTENT_LENGTH": 10})
         big = io.BytesIO(b"012345678901")
         data = {"file": (big, "big.xlsx")}
-        with patch(
-            "flask_login.utils._get_user", return_value=MagicMock(is_authenticated=True)
-        ):
-            with patch(
-                "routes.ai_routes.get_ai_access_state", return_value=_access_state()
-            ):
-                with patch(
-                    "utils.auth_helpers.is_global_owner_user", return_value=True
-                ):
+        with patch("flask_login.utils._get_user", return_value=MagicMock(is_authenticated=True)):
+            with patch("routes.ai_routes.get_ai_access_state", return_value=_access_state()):
+                with patch("utils.auth_helpers.is_global_owner_user", return_value=True):
                     with patch("extensions.limiter.limit", return_value=lambda f: f):
                         client = app.test_client()
                         resp = client.post(
@@ -1343,18 +1239,14 @@ class TestUploadExcel:
                 "routes.ai_routes.assistant._process_excel_intelligently",
                 return_value={"success": True},
             ) as proc:
-                resp = ai_client.post(
-                    "/ai/upload-excel", data=data, content_type="multipart/form-data"
-                )
+                resp = ai_client.post("/ai/upload-excel", data=data, content_type="multipart/form-data")
         assert resp.status_code == 200
         proc.assert_called_once()
 
 
 class TestAssistant:
     def test_renders_template(self, ai_client):
-        with patch(
-            "routes.ai_routes.assistant.render_template", return_value="assistant"
-        ) as rt:
+        with patch("routes.ai_routes.assistant.render_template", return_value="assistant") as rt:
             with patch("utils.branching.get_accessible_warehouses", return_value=[]):
                 resp = ai_client.get("/ai/assistant")
         assert resp.status_code == 200
@@ -1362,9 +1254,7 @@ class TestAssistant:
         rt.assert_called_once()
 
     def test_passes_ai_state(self, ai_client):
-        with patch(
-            "routes.ai_routes.assistant.render_template", return_value="ok"
-        ) as rt:
+        with patch("routes.ai_routes.assistant.render_template", return_value="ok") as rt:
             with patch("utils.branching.get_accessible_warehouses", return_value=[]):
                 ai_client.get("/ai/assistant")
         assert "ai_access_state" in rt.call_args[1]
@@ -1374,23 +1264,15 @@ class TestAssistant:
             "utils.branching.get_accessible_warehouses",
             side_effect=RuntimeError("fail"),
         ):
-            with patch(
-                "routes.ai_routes.assistant.render_template", return_value="err"
-            ) as rt:
+            with patch("routes.ai_routes.assistant.render_template", return_value="err") as rt:
                 resp = ai_client.get("/ai/assistant")
         assert resp.status_code == 500
         rt.assert_called_with("errors/500.html")
 
     def test_allowed_when_denied_still_renders(self, ai_client):
-        with patch(
-            "routes.ai_routes.get_ai_access_state", return_value=_denied_access()
-        ):
-            with patch(
-                "routes.ai_routes.assistant.render_template", return_value="page"
-            ):
-                with patch(
-                    "utils.branching.get_accessible_warehouses", return_value=[]
-                ):
+        with patch("routes.ai_routes.get_ai_access_state", return_value=_denied_access()):
+            with patch("routes.ai_routes.assistant.render_template", return_value="page"):
+                with patch("utils.branching.get_accessible_warehouses", return_value=[]):
                     resp = ai_client.get("/ai/assistant")
         assert resp.status_code == 200
 
@@ -1400,9 +1282,7 @@ class TestAnalyticsGetRoutes:
     def test_happy_path(self, ai_client, path):
         patch_target = ANALYTICS_PATCHES[path]
         payload = (
-            [{"type": "info", "title": "t", "message": "m", "action": "a"}]
-            if "business" in path
-            else {"ok": True}
+            [{"type": "info", "title": "t", "message": "m", "action": "a"}] if "business" in path else {"ok": True}
         )
         with patch(patch_target, return_value=payload):
             resp = ai_client.get(path)
@@ -1416,12 +1296,8 @@ class TestAnalyticsGetRoutes:
         ],
     )
     def test_days_query_param(self, ai_client, path):
-        with patch(
-            "routes.ai_routes.AIService.predict_sales_trend", return_value={}
-        ) as m1:
-            with patch(
-                "routes.ai_routes.AIService.predict_cash_flow", return_value={}
-            ) as m2:
+        with patch("routes.ai_routes.AIService.predict_sales_trend", return_value={}) as m1:
+            with patch("routes.ai_routes.AIService.predict_cash_flow", return_value={}) as m2:
                 ai_client.get(f"{path}?days=14")
         if "predict-sales" in path:
             m1.assert_called_once_with(14)
@@ -1446,9 +1322,7 @@ class TestSmartPrice:
             "routes.ai_routes.AIService.smart_pricing_engine",
             return_value={"price": 99},
         ) as m:
-            resp = ai_client.post(
-                "/ai/smart-price", json={"product_id": 1, "customer_id": 2}
-            )
+            resp = ai_client.post("/ai/smart-price", json={"product_id": 1, "customer_id": 2})
         assert resp.status_code == 200
         m.assert_called_once_with(1, 2, 1)
 
@@ -1457,12 +1331,8 @@ class TestSmartPrice:
         assert resp.status_code == 400
 
     def test_not_found_404(self, ai_client):
-        with patch(
-            "routes.ai_routes.AIService.smart_pricing_engine", return_value=None
-        ):
-            resp = ai_client.post(
-                "/ai/smart-price", json={"product_id": 1, "customer_id": 2}
-            )
+        with patch("routes.ai_routes.AIService.smart_pricing_engine", return_value=None):
+            resp = ai_client.post("/ai/smart-price", json={"product_id": 1, "customer_id": 2})
         assert resp.status_code == 404
 
     def test_custom_quantity(self, ai_client):
@@ -1599,9 +1469,7 @@ class TestImprovementRoutes:
         with _admin_patch():
             with patch("routes.ai_routes.knowledge.self_improvement") as si:
                 si.set_improvement_goal.side_effect = RuntimeError("e")
-                resp = ai_client.post(
-                    "/ai/improvement/set-goal", json={"area": "a", "target_score": 1}
-                )
+                resp = ai_client.post("/ai/improvement/set-goal", json={"area": "a", "target_score": 1})
         assert resp.status_code == 500
 
 
@@ -1775,9 +1643,7 @@ class TestKnowledgeRoutes:
         with _admin_patch():
             with patch("routes.ai_routes.knowledge.knowledge_expander") as ke:
                 ke.add_website.return_value = {"success": True}
-                resp = ai_client.post(
-                    "/ai/knowledge/add-website", json={"url": "https://example.com"}
-                )
+                resp = ai_client.post("/ai/knowledge/add-website", json={"url": "https://example.com"})
         assert resp.status_code == 200
 
     def test_add_website_missing_url_400(self, ai_client):
@@ -1789,18 +1655,14 @@ class TestKnowledgeRoutes:
         with _admin_patch():
             with patch("routes.ai_routes.knowledge.knowledge_expander") as ke:
                 ke.add_website.side_effect = RuntimeError("e")
-                resp = ai_client.post(
-                    "/ai/knowledge/add-website", json={"url": "https://x.com"}
-                )
+                resp = ai_client.post("/ai/knowledge/add-website", json={"url": "https://x.com"})
         assert resp.status_code == 500
 
     def test_add_document_ok(self, ai_client):
         with _admin_patch():
             with patch("routes.ai_routes.knowledge.knowledge_expander") as ke:
                 ke.add_document.return_value = {"success": True}
-                resp = ai_client.post(
-                    "/ai/knowledge/add-document", json={"title": "T", "content": "C"}
-                )
+                resp = ai_client.post("/ai/knowledge/add-document", json={"title": "T", "content": "C"})
         assert resp.status_code == 200
 
     def test_add_document_missing_400(self, ai_client):
@@ -1812,9 +1674,7 @@ class TestKnowledgeRoutes:
         with _admin_patch():
             with patch("routes.ai_routes.knowledge.knowledge_expander") as ke:
                 ke.add_document.side_effect = RuntimeError("e")
-                resp = ai_client.post(
-                    "/ai/knowledge/add-document", json={"title": "T", "content": "C"}
-                )
+                resp = ai_client.post("/ai/knowledge/add-document", json={"title": "T", "content": "C"})
         assert resp.status_code == 500
 
     def test_search_ok(self, ai_client):
@@ -1864,9 +1724,7 @@ class TestNeuralStatus:
         assert resp.get_json()["success"] is False
 
     def test_status_payload(self, ai_client):
-        with patch(
-            "routes.ai_routes.AIService.get_neural_status", return_value={"models": 2}
-        ):
+        with patch("routes.ai_routes.AIService.get_neural_status", return_value={"models": 2}):
             resp = ai_client.get("/ai/neural-status")
         assert resp.get_json()["status"]["models"] == 2
 
@@ -1935,9 +1793,7 @@ class TestExternalSources:
         learning = MagicMock()
         learning.get_knowledge_sources_list.return_value = [{"id": 1}]
         learning.get_statistics.return_value = {"total": 1}
-        with patch(
-            "routes.ai_routes.specialized.get_external_learning", return_value=learning
-        ):
+        with patch("routes.ai_routes.specialized.get_external_learning", return_value=learning):
             resp = ai_client.get("/ai/external-sources")
         body = resp.get_json()
         assert body["success"] is True
@@ -1955,9 +1811,7 @@ class TestExternalSources:
         learning = MagicMock()
         learning.get_knowledge_sources_list.return_value = []
         learning.get_statistics.return_value = {"count": 5}
-        with patch(
-            "routes.ai_routes.specialized.get_external_learning", return_value=learning
-        ):
+        with patch("routes.ai_routes.specialized.get_external_learning", return_value=learning):
             resp = ai_client.get("/ai/external-sources")
         assert resp.get_json()["statistics"]["count"] == 5
 
@@ -1973,9 +1827,7 @@ class TestAskGenius:
         assert resp.status_code == 400
 
     def test_with_context(self, ai_client, mock_ai_service):
-        ai_client.post(
-            "/ai/ask-genius", json={"question": "q", "context": {"page": "sales"}}
-        )
+        ai_client.post("/ai/ask-genius", json={"question": "q", "context": {"page": "sales"}})
         kwargs = mock_ai_service.ask_genius.call_args[1]
         assert kwargs["context"]["page"] == "sales"
 
@@ -1992,9 +1844,7 @@ class TestAskGenius:
 class TestQuickCalc:
     def test_ok(self, ai_client, mock_ai_service):
         mock_ai_service.quick_calculate.return_value = {"success": True, "value": 10}
-        resp = ai_client.post(
-            "/ai/quick-calc", json={"formula": "margin", "params": {"a": 1}}
-        )
+        resp = ai_client.post("/ai/quick-calc", json={"formula": "margin", "params": {"a": 1}})
         assert resp.get_json()["success"] is True
 
     def test_missing_formula_400(self, ai_client):
@@ -2007,12 +1857,8 @@ class TestQuickCalc:
         assert resp.get_json()["success"] is False
 
     def test_calls_quick_calculate(self, ai_client):
-        with patch(
-            "routes.ai_routes.AIService.quick_calculate", return_value={"success": True}
-        ) as m:
-            ai_client.post(
-                "/ai/quick-calc", json={"formula": "vat", "params": {"rate": 5}}
-            )
+        with patch("routes.ai_routes.AIService.quick_calculate", return_value={"success": True}) as m:
+            ai_client.post("/ai/quick-calc", json={"formula": "vat", "params": {"rate": 5}})
         m.assert_called_once_with("vat", rate=5)
 
 
@@ -2167,9 +2013,7 @@ class TestProductWizardFlow:
     def test_option_two_list_products(self, mock_user):
         ctx = {"last_action": "منتج"}
         chain = MagicMock()
-        chain.all.return_value = [
-            _obj(name="P1", part_number="X", regular_price=10, current_stock=5)
-        ]
+        chain.all.return_value = [_obj(name="P1", part_number="X", regular_price=10, current_stock=5)]
         with patch("models.product.Product") as Product:
             Product.query.filter_by.return_value = chain
             result = _run_action("2", mock_user, ctx)
@@ -2286,9 +2130,7 @@ class TestColonSyntaxCommands:
         supplier = _obj(id=9)
         with patch("models.Supplier", sup_cls := MagicMock()):
             sup_cls.return_value = supplier
-            result = _run_action(
-                "مورد: SupCo, 0502222222, sup@test.com", mock_user, ctx
-            )
+            result = _run_action("مورد: SupCo, 0502222222, sup@test.com", mock_user, ctx)
         assert "تم إنشاء المورد" in result
 
     def test_invoice_colon_success(self, mock_user):
@@ -2347,9 +2189,7 @@ class TestColonSyntaxCommands:
 
     def test_show_balance_colon(self, mock_user):
         ctx = {}
-        customer = _obj(
-            id=1, name="ShowC", balance=Decimal("250"), phone="1", address="A"
-        )
+        customer = _obj(id=1, name="ShowC", balance=Decimal("250"), phone="1", address="A")
         chain = MagicMock()
         chain.first.return_value = customer
         pay_chain = MagicMock()

@@ -149,9 +149,7 @@ class TestFullBusinessCycleTenantScoping:
     def _verify_tenant_id(records, expected_tid, label):
         for name, obj in records.items():
             actual = getattr(obj, "tenant_id", None)
-            assert actual == expected_tid, (
-                f"[{label}] {name}.tenant_id={actual} != expected={expected_tid}"
-            )
+            assert actual == expected_tid, f"[{label}] {name}.tenant_id={actual} != expected={expected_tid}"
 
     def test_tenant_a_business_cycle(self, tenant_a_data):
         """Tenant A: create sale, verify tenant_id on all objects."""
@@ -195,9 +193,7 @@ class TestFullBusinessCycleTenantScoping:
             "services.gl_service.gl_helpers.resolve_tenant_id",
             return_value=TENANT_A,
         )
-        mocker.patch(
-            "models.GLAccount.query"
-        ).return_value.filter_by.return_value.first.return_value = None
+        mocker.patch("models.GLAccount.query").return_value.filter_by.return_value.first.return_value = None
 
         # Verify the aggregate balance query respects tenant_id
         from services.gl_service import GLService
@@ -211,9 +207,7 @@ class TestFullBusinessCycleTenantScoping:
 
         # Mock vault
         vault = PaymentVault(id=1, tenant_id=TENANT_A)
-        mocker.patch(
-            "models.payment_vault.PaymentVault.query"
-        ).return_value.get.return_value = vault
+        mocker.patch("models.payment_vault.PaymentVault.query").return_value.get.return_value = vault
 
         # Create transaction with explicit tenant_id
         txn = PaymentTransaction(
@@ -247,9 +241,7 @@ class TestFullBusinessCycleTenantScoping:
         # Verify filter_by was called with tenant_id. Chained calls on
         # return-value mocks are recorded in mock_calls, not method_calls.
         calls = [c for c in mock_q.mock_calls if "filter_by" in str(c)]
-        assert any(f"tenant_id={TENANT_A}" in str(c) for c in calls), (
-            "get_service_config must filter by tenant_id"
-        )
+        assert any(f"tenant_id={TENANT_A}" in str(c) for c in calls), "get_service_config must filter by tenant_id"
 
     def test_crm_team_member_tenant_inheritance(self, mocker):
         """Verify CRMTeamMember inherits tenant_id from CRMTeam."""

@@ -121,9 +121,7 @@ def app_factory():
         import sys
         import os
 
-        project_root = os.path.dirname(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        )
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         sys.path.insert(0, project_root)
         from tests.conftest import TestConfig
 
@@ -474,9 +472,7 @@ def mock_ai_service(mocker):
     """
     recommend_price = mocker.patch("routes.ai_routes.AIService.recommend_price")
     check_stock = mocker.patch("routes.ai_routes.AIService.check_stock_alert")
-    analyze_customer = mocker.patch(
-        "routes.ai_routes.AIService.analyze_customer_behavior"
-    )
+    analyze_customer = mocker.patch("routes.ai_routes.AIService.analyze_customer_behavior")
 
     return type(
         "MockAIService",

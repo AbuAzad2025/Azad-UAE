@@ -37,9 +37,7 @@ class PalestineStrategy(LocalizationStrategy):
                 return amount
         return Decimal("0")
 
-    def convert_to_local_currency(
-        self, amount, from_currency: str, to_currency: str | None = None
-    ):
+    def convert_to_local_currency(self, amount, from_currency: str, to_currency: str | None = None):
         target = (to_currency or self.currency).upper()
         source = (from_currency or self.currency).upper()
         if source not in _SUPPORTED_CURRENCIES and source != target:
@@ -63,9 +61,7 @@ class PalestineStrategy(LocalizationStrategy):
                 "total_amount": amount,
                 "rate_applied": Decimal("0"),
             }
-        tax = (amount * rate / Decimal("100")).quantize(
-            _TWO_PLACES, rounding=ROUND_HALF_UP
-        )
+        tax = (amount * rate / Decimal("100")).quantize(_TWO_PLACES, rounding=ROUND_HALF_UP)
         total = amount + tax
         return {
             "tax_amount": tax,

@@ -75,10 +75,7 @@ class TestCustomerLabels:
         assert _customer_stub(customer_type="merchant").get_type_display() == "تاجر"
 
     def test_get_classification_display(self):
-        assert (
-            _customer_stub(customer_classification="vip").get_classification_display()
-            == "VIP - عميل مميز"
-        )
+        assert _customer_stub(customer_classification="vip").get_classification_display() == "VIP - عميل مميز"
 
     @pytest.mark.parametrize(
         "total,expected",

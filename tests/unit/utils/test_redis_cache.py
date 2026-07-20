@@ -249,9 +249,7 @@ class TestDomainCacheHelpers:
 
 
 class TestRateLimitCheck:
-    def test_allows_requests_and_sets_expiry_on_first_hit(
-        self, flask_app, redis_client
-    ):
+    def test_allows_requests_and_sets_expiry_on_first_hit(self, flask_app, redis_client):
         cache_backend = MagicMock()
         cache_backend._client = redis_client
         mock_cache = MagicMock()

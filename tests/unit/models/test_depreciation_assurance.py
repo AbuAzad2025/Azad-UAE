@@ -49,9 +49,7 @@ class TestDepreciationFormulas:
         )
         monthly = asset.calculate_monthly_depreciation()
         assert monthly >= Decimal("0")
-        assert asset.remaining_book_value - monthly >= asset.salvage_value - Decimal(
-            "0.01"
-        )
+        assert asset.remaining_book_value - monthly >= asset.salvage_value - Decimal("0.01")
 
     def test_land_category_zero_depreciation(self):
         asset = self._asset(category="land")
@@ -79,9 +77,7 @@ class TestDepreciationRunMonthly:
         from services.depreciation_service import DepreciationService
 
         with app.app_context():
-            result = DepreciationService.run_monthly(
-                tenant_id=1, period_year=2026, period_month=3
-            )
+            result = DepreciationService.run_monthly(tenant_id=1, period_year=2026, period_month=3)
 
         assert result["posted"] == 1
         assert result["skipped"] == 0
@@ -103,9 +99,7 @@ class TestDepreciationRunMonthly:
 
     def test_duplicate_period_counts_as_skipped(self, app, mocker):
         asset = MagicMock(asset_number="FA-12")
-        asset.post_depreciation.side_effect = ValueError(
-            "تم ترحيل الاستهلاك لهذا الشهر مسبقاً"
-        )
+        asset.post_depreciation.side_effect = ValueError("تم ترحيل الاستهلاك لهذا الشهر مسبقاً")
         self._mock_assets_query(mocker, [asset])
         mocker.patch("services.depreciation_service.db.session")
 
@@ -180,14 +174,10 @@ class TestDepreciationRunMonthly:
         asset.expense_account = MagicMock(code="6180")
         asset.depreciation_account = MagicMock(code="1190")
 
-        mocker.patch(
-            "models.fixed_asset.DepreciationSchedule.query"
-        ).filter_by.return_value.first.return_value = None
+        mocker.patch("models.fixed_asset.DepreciationSchedule.query").filter_by.return_value.first.return_value = None
         mocker.patch("models.fixed_asset.gl_ensure_core_accounts")
         mock_entry = MagicMock(id=501)
-        mock_gl = mocker.patch(
-            "models.fixed_asset.gl_post_or_fail", return_value=mock_entry
-        )
+        mock_gl = mocker.patch("models.fixed_asset.gl_post_or_fail", return_value=mock_entry)
         mocker.patch("models.fixed_asset.db.session")
 
         with app.app_context():
@@ -220,9 +210,7 @@ class TestFixedAssetModelCoverage:
             purchase_price=Decimal(kwargs.get("purchase_price", "12000")),
             salvage_value=Decimal(kwargs.get("salvage_value", "2000")),
             useful_life_years=kwargs.get("useful_life_years", 5),
-            depreciation_method=kwargs.get(
-                "depreciation_method", kwargs.get("method", "straight_line")
-            ),
+            depreciation_method=kwargs.get("depreciation_method", kwargs.get("method", "straight_line")),
             accumulated_depreciation=Decimal(kwargs.get("accumulated", "0")),
             book_value=Decimal(kwargs.get("book_value", "10000")),
             branch_id=1,
@@ -270,9 +258,7 @@ class TestFixedAssetModelCoverage:
 
     def test_post_depreciation_zero_amount_returns_none(self, app, mocker):
         asset = self._asset(category="land")
-        mocker.patch(
-            "models.fixed_asset.DepreciationSchedule.query"
-        ).filter_by.return_value.first.return_value = None
+        mocker.patch("models.fixed_asset.DepreciationSchedule.query").filter_by.return_value.first.return_value = None
         with app.app_context():
             assert asset.post_depreciation(period_date=date(2026, 3, 1)) is None
 
@@ -281,9 +267,7 @@ class TestFixedAssetModelCoverage:
         asset.id = 1
         asset.expense_account = MagicMock(code="6180")
         asset.depreciation_account = MagicMock(code="1190")
-        mocker.patch(
-            "models.fixed_asset.DepreciationSchedule.query"
-        ).filter_by.return_value.first.return_value = None
+        mocker.patch("models.fixed_asset.DepreciationSchedule.query").filter_by.return_value.first.return_value = None
         mocker.patch("models.fixed_asset.gl_ensure_core_accounts")
         mocker.patch("models.fixed_asset.gl_post_or_fail", return_value=MagicMock(id=1))
         mocker.patch("models.fixed_asset.db.session")
@@ -301,9 +285,7 @@ class TestFixedAssetModelCoverage:
         asset.id = 2
         asset.expense_account = MagicMock(code="6180")
         asset.depreciation_account = MagicMock(code="1190")
-        mocker.patch(
-            "models.fixed_asset.DepreciationSchedule.query"
-        ).filter_by.return_value.first.return_value = None
+        mocker.patch("models.fixed_asset.DepreciationSchedule.query").filter_by.return_value.first.return_value = None
         mocker.patch("models.fixed_asset.gl_ensure_core_accounts")
         mocker.patch("models.fixed_asset.gl_post_or_fail", return_value=MagicMock(id=2))
         mocker.patch("models.fixed_asset.db.session")
@@ -354,9 +336,7 @@ class TestFixedAssetModelCoverage:
         asset.asset_account = MagicMock(code="1500")
         asset.depreciation_account = MagicMock(code="1590")
         asset.id = 4
-        mocker.patch(
-            "models.fixed_asset.gl_get_default_liquidity_account", return_value="1110"
-        )
+        mocker.patch("models.fixed_asset.gl_get_default_liquidity_account", return_value="1110")
         mocker.patch("models.fixed_asset.gl_post_entry")
         mocker.patch("models.fixed_asset.db.session")
         with app.app_context():
@@ -368,9 +348,7 @@ class TestFixedAssetModelCoverage:
         asset.asset_account = MagicMock(code="1500")
         asset.depreciation_account = MagicMock(code="1590")
         asset.id = 3
-        mocker.patch(
-            "models.fixed_asset.gl_get_default_liquidity_account", return_value="1110"
-        )
+        mocker.patch("models.fixed_asset.gl_get_default_liquidity_account", return_value="1110")
         mocker.patch("models.fixed_asset.gl_post_entry")
         mock_session = mocker.patch("models.fixed_asset.db.session")
         with app.app_context():

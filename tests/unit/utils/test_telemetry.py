@@ -118,15 +118,11 @@ class TestCollectSystemInfo:
         assert info["public_ip"] == "198.51.100.4"
 
     def test_returns_error_payload_on_failure(self):
-        with patch(
-            "utils.telemetry.socket.gethostname", side_effect=RuntimeError("boom")
-        ):
+        with patch("utils.telemetry.socket.gethostname", side_effect=RuntimeError("boom")):
             assert collect_system_info()["error"] == "boom"
 
     def test_keeps_unknown_ip_when_all_services_fail(self, monkeypatch):
-        monkeypatch.setattr(
-            telemetry_module.requests, "get", MagicMock(side_effect=RuntimeError("net"))
-        )
+        monkeypatch.setattr(telemetry_module.requests, "get", MagicMock(side_effect=RuntimeError("net")))
         with (
             patch("utils.telemetry.socket.gethostname", return_value="srv"),
             patch("utils.telemetry.platform.system", return_value="Linux"),
@@ -153,12 +149,8 @@ class TestLocalLogAndSubmit:
 
     def test_send_formsubmit_success_and_failure(self, monkeypatch):
         ok_response = MagicMock(status_code=200)
-        monkeypatch.setattr(
-            telemetry_module.requests, "post", MagicMock(return_value=ok_response)
-        )
-        assert (
-            send_formsubmit("subject", {"k": "v"}, to_email="ops@example.com") is True
-        )
+        monkeypatch.setattr(telemetry_module.requests, "post", MagicMock(return_value=ok_response))
+        assert send_formsubmit("subject", {"k": "v"}, to_email="ops@example.com") is True
         monkeypatch.setattr(
             telemetry_module.requests,
             "post",
@@ -180,9 +172,7 @@ class TestHeartbeatAndStart:
         submit.assert_not_called()
 
     def test_send_heartbeat_first_run_marks_success(self, monkeypatch):
-        monkeypatch.setattr(
-            telemetry_module, "get_machine_signature", lambda: "sig-new"
-        )
+        monkeypatch.setattr(telemetry_module, "get_machine_signature", lambda: "sig-new")
         monkeypatch.setattr(telemetry_module, "has_reported_before", lambda sig: False)
         monkeypatch.setattr(
             telemetry_module,

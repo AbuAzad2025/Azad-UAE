@@ -41,9 +41,7 @@ class TestPerformanceMonitor:
                 result = PerformanceMonitor.log_response(response)
         assert result is response
         flask_app.logger.warning.assert_called_once()
-        payload = json.loads(
-            flask_app.logger.warning.call_args.args[0].split(": ", 1)[1]
-        )
+        payload = json.loads(flask_app.logger.warning.call_args.args[0].split(": ", 1)[1])
         assert payload["method"] == "GET"
         assert payload["status"] == 200
 
@@ -130,9 +128,7 @@ class TestMetricsCollector:
             MetricsCollector.record_payment(50.0, "card")
             MetricsCollector.record_stock_change(7, 3, "in")
         assert flask_app.logger.info.call_count == 4
-        last_payload = json.loads(
-            flask_app.logger.info.call_args.args[0].replace("METRIC: ", "")
-        )
+        last_payload = json.loads(flask_app.logger.info.call_args.args[0].replace("METRIC: ", ""))
         assert last_payload["metric"] == "stock_movement"
         assert last_payload["tags"]["product_id"] == 7
 
@@ -169,27 +165,15 @@ class TestHealthCheck:
 
     def test_get_health_status_overall(self):
         with (
-            patch.object(
-                HealthCheck, "check_database", return_value={"status": "healthy"}
-            ),
-            patch.object(
-                HealthCheck, "check_redis", return_value={"status": "healthy"}
-            ),
-            patch.object(
-                HealthCheck, "check_disk_space", return_value={"status": "healthy"}
-            ),
+            patch.object(HealthCheck, "check_database", return_value={"status": "healthy"}),
+            patch.object(HealthCheck, "check_redis", return_value={"status": "healthy"}),
+            patch.object(HealthCheck, "check_disk_space", return_value={"status": "healthy"}),
         ):
             assert HealthCheck.get_health_status()["status"] == "healthy"
         with (
-            patch.object(
-                HealthCheck, "check_database", return_value={"status": "unhealthy"}
-            ),
-            patch.object(
-                HealthCheck, "check_redis", return_value={"status": "healthy"}
-            ),
-            patch.object(
-                HealthCheck, "check_disk_space", return_value={"status": "healthy"}
-            ),
+            patch.object(HealthCheck, "check_database", return_value={"status": "unhealthy"}),
+            patch.object(HealthCheck, "check_redis", return_value={"status": "healthy"}),
+            patch.object(HealthCheck, "check_disk_space", return_value={"status": "healthy"}),
         ):
             assert HealthCheck.get_health_status()["status"] == "unhealthy"
 
@@ -201,16 +185,12 @@ class TestSetupAdvancedLogging:
             file_handler.return_value = MagicMock()
             setup_advanced_logging(flask_app)
 
-        with patch.object(
-            HealthCheck, "get_health_status", return_value={"status": "healthy"}
-        ):
+        with patch.object(HealthCheck, "get_health_status", return_value={"status": "healthy"}):
             health = flask_app.test_client().get("/health")
         assert health.status_code == 200
         assert health.get_json()["status"] == "healthy"
 
-        with patch.object(
-            HealthCheck, "get_health_status", return_value={"status": "unhealthy"}
-        ):
+        with patch.object(HealthCheck, "get_health_status", return_value={"status": "unhealthy"}):
             unhealthy = flask_app.test_client().get("/health")
         assert unhealthy.status_code == 503
 

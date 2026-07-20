@@ -119,9 +119,7 @@ class TestOrmExecuteListener:
 
         mocker.patch("utils.tenant_orm.tenant_scope_enabled", return_value=True)
         mocker.patch("utils.tenant_orm._active_tenant_for_orm", return_value=3)
-        mocker.patch(
-            "utils.tenant_orm._discover_tenant_models", return_value=[MagicMock()]
-        )
+        mocker.patch("utils.tenant_orm._discover_tenant_models", return_value=[MagicMock()])
         stmt = MagicMock()
         stmt.options.return_value = "patched"
         state = MagicMock(is_select=True, statement=stmt, execution_options={})
@@ -290,9 +288,7 @@ class TestPatchSessionGet:
         torm._patch_session_get()
 
         entity = mocker.Mock(__name__="Branch")
-        result = torm.Session.get(
-            mocker.Mock(), entity, 1, execution_options={"skip_tenant_scope": True}
-        )
+        result = torm.Session.get(mocker.Mock(), entity, 1, execution_options={"skip_tenant_scope": True})
         assert result is mock_obj
 
     def test_get_with_tenant_validated_ok(self, mocker):

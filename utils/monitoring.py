@@ -60,16 +60,12 @@ class PerformanceMonitor:
                 result = f(*args, **kwargs)
                 duration = time.time() - start
 
-                current_app.logger.info(
-                    f"ENDPOINT {f.__name__}: {round(duration * 1000, 2)}ms"
-                )
+                current_app.logger.info(f"ENDPOINT {f.__name__}: {round(duration * 1000, 2)}ms")
 
                 return result
             except Exception as e:
                 duration = time.time() - start
-                current_app.logger.error(
-                    f"ENDPOINT ERROR {f.__name__}: {str(e)} after {round(duration * 1000, 2)}ms"
-                )
+                current_app.logger.error(f"ENDPOINT ERROR {f.__name__}: {str(e)} after {round(duration * 1000, 2)}ms")
                 raise
 
         return decorated
@@ -82,9 +78,7 @@ class DatabaseMonitor:
     def log_query(query, duration):
         """Log slow database queries"""
         if duration > 0.1:  # 100ms threshold
-            current_app.logger.warning(
-                f"SLOW QUERY ({round(duration * 1000, 2)}ms): {query}"
-            )
+            current_app.logger.warning(f"SLOW QUERY ({round(duration * 1000, 2)}ms): {query}")
 
 
 class ErrorLogger:
@@ -233,9 +227,7 @@ def setup_advanced_logging(app):
 
     error_handler = logging.FileHandler(os.path.join(logs_dir, "errors.log"))
     error_handler.setLevel(logging.ERROR)
-    error_formatter = logging.Formatter(
-        "%(asctime)s - %(levelname)s - %(pathname)s:%(lineno)d - %(message)s"
-    )
+    error_formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(pathname)s:%(lineno)d - %(message)s")
     error_handler.setFormatter(error_formatter)
 
     app.logger.addHandler(perf_handler)

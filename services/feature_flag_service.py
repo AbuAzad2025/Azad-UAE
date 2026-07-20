@@ -43,14 +43,10 @@ class FeatureFlagService:
     @staticmethod
     def get_all_flags(tenant_id=None) -> dict:
         """Return all flags resolved for a tenant."""
-        return {
-            k: FeatureFlagService.is_enabled(k, tenant_id) for k in FEATURE_FLAG_KEYS
-        }
+        return {k: FeatureFlagService.is_enabled(k, tenant_id) for k in FEATURE_FLAG_KEYS}
 
     @staticmethod
     def require_enabled(flag_key: str, tenant_id=None):
         """Raise if flag is not enabled."""
         if not FeatureFlagService.is_enabled(flag_key, tenant_id):
-            raise RuntimeError(
-                f"Feature flag '{flag_key}' is not enabled for tenant {tenant_id}"
-            )
+            raise RuntimeError(f"Feature flag '{flag_key}' is not enabled for tenant {tenant_id}")

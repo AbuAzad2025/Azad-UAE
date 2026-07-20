@@ -92,9 +92,7 @@ def setup_enhanced_logging(app):
     security_handler.setLevel(logging.WARNING)
     security_handler.setFormatter(
         logging.Formatter(
-            "[%(asctime)s] SECURITY - %(levelname)s\n"
-            "User: %(user)s | IP: %(ip)s\n"
-            "Message: %(message)s",
+            "[%(asctime)s] SECURITY - %(levelname)s\nUser: %(user)s | IP: %(ip)s\nMessage: %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
         )
     )
@@ -107,11 +105,7 @@ def setup_enhanced_logging(app):
         encoding="utf-8",
     )
     perf_handler.setLevel(logging.INFO)
-    perf_handler.setFormatter(
-        logging.Formatter(
-            "[%(asctime)s] PERF - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
-        )
-    )
+    perf_handler.setFormatter(logging.Formatter("[%(asctime)s] PERF - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"))
 
     app.logger.addHandler(app_handler)
     app.logger.addHandler(error_handler)
@@ -166,16 +160,12 @@ class SecurityLogger:
     @staticmethod
     def log_failed_login(username, ip_address, user_agent):
         """تسجيل محاولة دخول فاشلة"""
-        logging.warning(
-            f"فشل تسجيل الدخول: {username}", extra={"user": username, "ip": ip_address}
-        )
+        logging.warning(f"فشل تسجيل الدخول: {username}", extra={"user": username, "ip": ip_address})
 
     @staticmethod
     def log_successful_login(username, ip_address):
         """تسجيل دخول ناجح"""
-        logging.info(
-            f"تسجيل دخول ناجح: {username}", extra={"user": username, "ip": ip_address}
-        )
+        logging.info(f"تسجيل دخول ناجح: {username}", extra={"user": username, "ip": ip_address})
 
     @staticmethod
     def log_permission_denied(user, action, ip_address):

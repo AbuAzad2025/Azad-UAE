@@ -191,9 +191,7 @@ class TestCashBoxModel:
         from decimal import Decimal
         from models.cash_box import CashBox
 
-        box = CashBox(
-            code="C01", name_ar="صندوق", box_type="cash", current_balance=Decimal("500")
-        )
+        box = CashBox(code="C01", name_ar="صندوق", box_type="cash", current_balance=Decimal("500"))
         assert "C01" in repr(box)
         assert box.full_name == "C01 - صندوق"
 
@@ -380,9 +378,7 @@ class TestPosSessionModel:
         from datetime import datetime, timezone
         from models.pos_session import PosSession
 
-        session = PosSession(
-            session_number="POS-2", opened_at=datetime.now(timezone.utc)
-        )
+        session = PosSession(session_number="POS-2", opened_at=datetime.now(timezone.utc))
         assert session.duration_minutes >= 0
         assert "POS-2" in repr(session)
 
@@ -392,9 +388,7 @@ class TestProductWarehouseCostModel:
         from decimal import Decimal
         from models.product_warehouse_cost import ProductWarehouseCost
 
-        pwc = ProductWarehouseCost(
-            product_id=1, warehouse_id=2, average_cost=Decimal("10")
-        )
+        pwc = ProductWarehouseCost(product_id=1, warehouse_id=2, average_cost=Decimal("10"))
         assert "p=1" in repr(pwc)
         pwc.total_quantity = Decimal("0")
         assert pwc.is_empty is True

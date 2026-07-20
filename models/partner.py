@@ -20,9 +20,7 @@ from extensions import db
 
 class Partner(db.Model):
     __tablename__ = "partners"
-    __table_args__ = (
-        db.UniqueConstraint("tenant_id", "code", name="uq_partners_tenant_code"),
-    )
+    __table_args__ = (db.UniqueConstraint("tenant_id", "code", name="uq_partners_tenant_code"),)
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -86,9 +84,7 @@ class Partner(db.Model):
 
     notes = db.Column(db.Text)
 
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),

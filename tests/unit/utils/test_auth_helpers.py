@@ -46,14 +46,8 @@ class TestRoleHelpers:
 
     def test_user_may_have_null_tenant(self):
         assert user_may_have_null_tenant(is_owner=True) is True
-        assert (
-            user_may_have_null_tenant(is_owner=False, role=MagicMock(slug="developer"))
-            is True
-        )
-        assert (
-            user_may_have_null_tenant(is_owner=False, role=MagicMock(slug="manager"))
-            is False
-        )
+        assert user_may_have_null_tenant(is_owner=False, role=MagicMock(slug="developer")) is True
+        assert user_may_have_null_tenant(is_owner=False, role=MagicMock(slug="manager")) is False
 
     def test_role_level_for_user_with_role(self):
         role = MagicMock(slug="manager")
@@ -77,9 +71,7 @@ class TestEnforceCompanyUserTenant:
         assert enforce_company_user_tenant(user).tenant_id == 5
 
     def test_tenant_from_branch(self):
-        user = MagicMock(
-            is_owner=False, tenant_id=None, branch_id=3, role=MagicMock(slug="manager")
-        )
+        user = MagicMock(is_owner=False, tenant_id=None, branch_id=3, role=MagicMock(slug="manager"))
         branch = MagicMock(tenant_id=9)
         with patch("utils.auth_helpers.db") as mock_db:
             mock_db.session.get.return_value = branch

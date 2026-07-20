@@ -28,18 +28,14 @@ class Donation(db.Model):
     amount_crypto = db.Column(db.Numeric(20, 8))  # المبلغ بالعملة الرقمية
 
     # Payment Method - طريقة الدفع
-    payment_method = db.Column(
-        db.String(50), nullable=False
-    )  # crypto, card, paypal, bank
+    payment_method = db.Column(db.String(50), nullable=False)  # crypto, card, paypal, bank
 
     # Crypto Info - معلومات العملة الرقمية
     crypto_type = db.Column(db.String(20))  # btc, eth, usdt, usdc, bnb
     wallet_address = db.Column(db.String(200))  # عنوان المحفظة المستخدم
     transaction_hash = db.Column(db.String(200))  # Transaction ID/Hash
 
-    status = db.Column(
-        db.String(20), default="pending", index=True
-    )  # pending, confirmed, completed, failed
+    status = db.Column(db.String(20), default="pending", index=True)  # pending, confirmed, completed, failed
 
     # Donor Info - معلومات المتبرع (اختياري)
     donor_name = db.Column(db.String(200))
@@ -47,9 +43,7 @@ class Donation(db.Model):
     donor_message = db.Column(db.Text)  # رسالة من المتبرع
 
     # Purchase Info - معلومات الشراء (للمنتجات)
-    transaction_type = db.Column(
-        db.String(20), default="donation"
-    )  # donation, purchase
+    transaction_type = db.Column(db.String(20), default="donation")  # donation, purchase
     package = db.Column(db.String(50))  # basic, professional, enterprise
     customer_name = db.Column(db.String(200))  # اسم العميل (للمشتريات)
     customer_email = db.Column(db.String(200))  # إيميل العميل (للمشتريات)
@@ -94,9 +88,7 @@ class Donation(db.Model):
     gl_posted = db.Column(db.Boolean, default=False, nullable=False)
 
     def __repr__(self):
-        return (
-            f"<Donation ${self.amount_usd} via {self.payment_method} - {self.status}>"
-        )
+        return f"<Donation ${self.amount_usd} via {self.payment_method} - {self.status}>"
 
     @property
     def is_completed(self):
@@ -119,20 +111,14 @@ class Donation(db.Model):
             "status": self.status,
             "donor_name": self.donor_name,
             "created_at": self.created_at.isoformat() if self.created_at else None,
-            "confirmed_at": (
-                self.confirmed_at.isoformat() if self.confirmed_at else None
-            ),
-            "completed_at": (
-                self.completed_at.isoformat() if self.completed_at else None
-            ),
+            "confirmed_at": (self.confirmed_at.isoformat() if self.confirmed_at else None),
+            "completed_at": (self.completed_at.isoformat() if self.completed_at else None),
         }
 
     @staticmethod
     def get_total_donations(tenant_id=None):
         """إجمالي التبرعات المكتملة (مُفلتر بـ tenant_id)"""
-        q = db.session.query(db.func.sum(Donation.amount_usd)).filter_by(
-            status="completed"
-        )
+        q = db.session.query(db.func.sum(Donation.amount_usd)).filter_by(status="completed")
         if tenant_id is not None:
             q = q.filter_by(tenant_id=tenant_id)
         result = q.scalar()
