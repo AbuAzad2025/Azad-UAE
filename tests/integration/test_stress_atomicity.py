@@ -35,7 +35,7 @@ def pos_setup(
     sample_product_with_stock,
     sample_warehouse,
 ):
-    from models import PosSession
+    from models import PosSession, PosShift
 
     session = PosSession(
         tenant_id=sample_tenant.id,
@@ -46,6 +46,18 @@ def pos_setup(
         status="open",
     )
     db_session.add(session)
+    db_session.flush()
+
+    # Checkout requires an open shift on top of the open session.
+    shift = PosShift(
+        tenant_id=sample_tenant.id,
+        session_id=session.id,
+        user_id=sample_user.id,
+        shift_number="STRESS-SHIFT-001",
+        starting_cash=Decimal("0"),
+        status=PosShift.SHIFT_OPEN,
+    )
+    db_session.add(shift)
     db_session.commit()
     db_session.refresh(session)
     return {
@@ -55,6 +67,7 @@ def pos_setup(
         "product": sample_product_with_stock,
         "warehouse": sample_warehouse,
         "session": session,
+        "shift": shift,
     }
 
 
@@ -208,7 +221,7 @@ class TestPurchaseDeleteAtomicity:
         line_count_before = PurchaseLine.query.count()
 
         with patch(
-            "routes.purchases.GLService.reverse_entry",
+            "services.gl_service.GLService.reverse_entry",
             side_effect=Exception("Simulated GL failure"),
         ):
             logged_in_client.post(
@@ -239,13 +252,18 @@ class TestPurchaseDeleteAtomicity:
         purchase_id = sample_purchase.id
         purchase_count_before = Purchase.query.count()
 
-        with patch("routes.purchases.Supplier.query.filter_by") as mock_filter:
-            mock_filter.return_value.first.side_effect = Exception(
+        # routes.purchases imports Supplier locally inside the delete view,
+        # so patch the query attribute on the shared model class itself.
+        # Do not follow the redirect: base.html's tenant_usage context
+        # processor also reads Supplier.query and would see the mock.
+        with patch("models.Supplier.query") as mock_query:
+            mock_query.filter_by.return_value.first.side_effect = Exception(
                 "Supplier lookup failure"
             )
-            logged_in_client.post(
-                f"/purchases/{purchase_id}/delete", follow_redirects=True
-            )
+            resp = logged_in_client.post(f"/purchases/{purchase_id}/delete")
+
+        assert resp.status_code == 302
+        mock_query.filter_by.assert_called()
 
         db.session.expire_all()
         assert Purchase.query.count() == purchase_count_before, (

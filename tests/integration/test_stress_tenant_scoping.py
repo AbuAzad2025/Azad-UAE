@@ -13,10 +13,49 @@ TENANT_A = 1
 TENANT_B = 999
 
 
+def _create_tenant_with_user(db_session, label):
+    """Create a real tenant + seller user (FK targets for the business cycle)."""
+    import uuid
+
+    from models import Role, Tenant, User
+
+    unique = str(uuid.uuid4())[:8]
+    tenant = Tenant(
+        name=f"Stress Co {label} {unique}",
+        name_ar="شركة اختبار الإجهاد",
+        slug=f"stress-co-{label.lower()}-{unique}",
+        email=f"stress-{label.lower()}-{unique}@example.com",
+        country="AE",
+        subscription_plan="basic",
+    )
+    db_session.add(tenant)
+    db_session.flush()
+
+    role = db_session.query(Role).filter_by(slug="super_admin").first()
+    if not role:
+        role = Role(name="Super Admin", slug="super_admin", is_active=True)
+        db_session.add(role)
+        db_session.flush()
+
+    user = User(
+        username=f"stress-{label.lower()}-{unique}",
+        email=f"stress-user-{label.lower()}-{unique}@example.com",
+        full_name=f"Stress User {label}",
+        tenant_id=tenant.id,
+        role_id=role.id,
+    )
+    user.set_password("password123")
+    db_session.add(user)
+    db_session.commit()
+    return tenant, user
+
+
 @pytest.fixture
-def tenant_a_data():
+def tenant_a_data(db_session):
+    tenant, user = _create_tenant_with_user(db_session, "A")
     return {
-        "tenant_id": TENANT_A,
+        "tenant_id": tenant.id,
+        "user": user,
         "customer_name": "TestCustomer_A",
         "product_name": "Widget_A",
         "price": Decimal("100.00"),
@@ -25,9 +64,11 @@ def tenant_a_data():
 
 
 @pytest.fixture
-def tenant_b_data():
+def tenant_b_data(db_session):
+    tenant, user = _create_tenant_with_user(db_session, "B")
     return {
-        "tenant_id": TENANT_B,
+        "tenant_id": tenant.id,
+        "user": user,
         "customer_name": "TestCustomer_B",
         "product_name": "Widget_B",
         "price": Decimal("200.00"),
@@ -40,11 +81,11 @@ class TestFullBusinessCycleTenantScoping:
     is tagged with the correct tenant_id."""
 
     @staticmethod
-    def _create_sale(data, user):
+    def _create_sale(data):
         from models import Sale, SaleLine, Customer, Product, Warehouse
 
-        # All records auto-scoped by apply_tenant_scope
         tid = data["tenant_id"]
+        total = data["price"] * data["qty"]
 
         customer = Customer(
             tenant_id=tid,
@@ -66,16 +107,21 @@ class TestFullBusinessCycleTenantScoping:
             tenant_id=tid,
             name=data["product_name"],
             sku=f"SKU_{tid}",
-            cost=data["price"],
-            sale_price=data["price"],
+            cost_price=data["price"],
+            regular_price=data["price"],
         )
         db.session.add(product)
         db.session.flush()
 
         sale = Sale(
             tenant_id=tid,
+            sale_number=f"SAL-STRESS-{tid}",
             customer_id=customer.id,
-            total=data["price"] * data["qty"],
+            seller_id=data["user"].id,
+            warehouse_id=warehouse.id,
+            total_amount=total,
+            amount=total,
+            amount_aed=total,
             status="completed",
         )
         db.session.add(sale)
@@ -86,7 +132,8 @@ class TestFullBusinessCycleTenantScoping:
             sale_id=sale.id,
             product_id=product.id,
             quantity=data["qty"],
-            price=data["price"],
+            unit_price=data["price"],
+            line_total=total,
         )
         db.session.add(line)
         db.session.commit()
@@ -108,40 +155,37 @@ class TestFullBusinessCycleTenantScoping:
 
     def test_tenant_a_business_cycle(self, tenant_a_data):
         """Tenant A: create sale, verify tenant_id on all objects."""
-        records = self._create_sale(tenant_a_data, user=None)
-        self._verify_tenant_id(records, TENANT_A, "Tenant_A")
+        records = self._create_sale(tenant_a_data)
+        self._verify_tenant_id(records, tenant_a_data["tenant_id"], "Tenant_A")
 
     def test_tenant_b_business_cycle(self, tenant_b_data):
         """Tenant B: create sale, verify tenant_id on all objects."""
-        records = self._create_sale(tenant_b_data, user=None)
-        self._verify_tenant_id(records, TENANT_B, "Tenant_B")
+        records = self._create_sale(tenant_b_data)
+        self._verify_tenant_id(records, tenant_b_data["tenant_id"], "Tenant_B")
 
     def test_cross_tenant_isolation(self, tenant_a_data, tenant_b_data):
         """Verify tenant A data is not visible from tenant B context."""
-        from utils.tenanting import set_active_tenant
+        from utils.tenanting import apply_tenant_scope
 
         # Create data for both tenants
-        self._create_sale(tenant_a_data, user=None)
-        rec_b = self._create_sale(tenant_b_data, user=None)
+        rec_a = self._create_sale(tenant_a_data)
+        rec_b = self._create_sale(tenant_b_data)
+
+        tid_a = tenant_a_data["tenant_id"]
+        tid_b = tenant_b_data["tenant_id"]
 
         from models import Sale
 
-        # Switch to tenant A context
-        set_active_tenant(TENANT_A)
-        sales_a = Sale.query.filter_by(tenant_id=TENANT_A).all()
+        sales_a = Sale.query.filter_by(tenant_id=tid_a).all()
         assert len(sales_a) >= 1
 
-        # Switch to tenant B context
-        set_active_tenant(TENANT_B)
-        sales_b = Sale.query.filter_by(tenant_id=TENANT_B).all()
+        sales_b = Sale.query.filter_by(tenant_id=tid_b).all()
         assert len(sales_b) >= 1
 
-        # Verify isolation
-        set_active_tenant(TENANT_A)
-        from utils.tenanting import apply_tenant_scope
-
-        q_a = apply_tenant_scope(Sale.query, Sale)
+        # Scoped query as tenant A's user must not see tenant B rows
+        q_a = apply_tenant_scope(Sale.query, Sale, user=tenant_a_data["user"])
         ids_in_a = {s.id for s in q_a.all()}
+        assert rec_a["sale"].id in ids_in_a
         assert rec_b["sale"].id not in ids_in_a, "Tenant B sale leaked into Tenant A!"
 
     def test_gl_entry_tenant_id(self, mocker):
@@ -196,14 +240,14 @@ class TestFullBusinessCycleTenantScoping:
 
         # Mock query to verify tenant_id filtering
         mock_q = mocker.MagicMock()
-        mock_q.filter_by.return_value.first.return_value = None
         mocker.patch.object(IntegrationSettings, "query", mock_q)
 
         IntegrationSettings.get_service_config("whatsapp", tenant_id=TENANT_A)
 
-        # Verify filter_by was called with tenant_id
-        calls = [c for c in mock_q.method_calls if "filter_by" in str(c)]
-        assert any(str(TENANT_A) in str(c) for c in calls), (
+        # Verify filter_by was called with tenant_id. Chained calls on
+        # return-value mocks are recorded in mock_calls, not method_calls.
+        calls = [c for c in mock_q.mock_calls if "filter_by" in str(c)]
+        assert any(f"tenant_id={TENANT_A}" in str(c) for c in calls), (
             "get_service_config must filter by tenant_id"
         )
 
