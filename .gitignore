@@ -97,9 +97,10 @@ htmlcov/
 # Generated artifacts / reports
 tools/reports/
 
-# Node / JS dependencies (legacy — project is Python/Flask)
+# Node / JS dependencies (build tooling — app is Python/Flask)
 node_modules/
 package.json
+!/package.json
 
 # Ignore root-level legacy test/verify scripts (organized ones are in tests/ and scripts/)
 /test_*.py
