@@ -261,7 +261,10 @@ jobs:
       - name: Install Python lint tools
         run: |
           python -m pip install --upgrade pip
-          pip install ruff mypy pip-audit yamllint jinja2
+          # Full requirements are REQUIRED here: mypy needs real flask types
+          # (e.g. abort() -> NoReturn) for correct narrowing — a slim install
+          # degrades every unresolved import to Any and produces false errors.
+          pip install -r requirements.txt ruff mypy pip-audit yamllint jinja2
 
       - name: Install Node lint tools
         run: |
