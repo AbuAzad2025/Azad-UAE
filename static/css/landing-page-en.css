@@ -9,27 +9,34 @@ body {
 	justify-content: center;
 	flex-wrap: wrap;
 }
+
 .ic-2 {
 	min-width: 240px;
 }
+
 .ic-3 {
 	margin-top: 22px;
 }
+
 .ic-4 {
 	min-width: 260px;
 }
+
 .ic-5 {
 	display: inline-flex;
 	margin-top: 14px;
 }
+
 .ic-6 {
 	color: rgba(255, 255, 255, 0.9);
 	font-size: 1rem;
 	margin-bottom: 8px;
 }
+
 .ic-7 {
 	cursor: default;
 }
+
 .ic-8 {
 	margin-top: 26px;
 	display: flex;

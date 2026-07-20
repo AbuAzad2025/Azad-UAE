@@ -39,7 +39,6 @@ body {
 	border: 1px solid #e6e6e6;
 	border-radius: 10px;
 	padding: 12px;
-	page-break-inside: avoid;
 	break-inside: avoid;
 }
 
@@ -55,6 +54,7 @@ body {
 .minh {
 	min-height: 40px;
 }
+
 /* purgecss end ignore */
 
 .receipt-header {
@@ -63,7 +63,7 @@ body {
 	justify-content: space-between;
 	gap: 12px;
 	margin-bottom: 6px;
-	page-break-inside: avoid;
+	break-inside: avoid;
 }
 
 .brand {
@@ -92,6 +92,7 @@ body {
 	font-size: 12px;
 	color: #666;
 }
+
 /* purgecss end ignore */
 
 table {
@@ -129,12 +130,15 @@ thead th {
 .col-s-idx {
 	width: 10%;
 }
+
 .col-s-amt {
 	width: 22%;
 }
+
 .col-s-mth {
 	width: 20%;
 }
+
 .col-s-det {
 	width: 48%;
 }
@@ -143,6 +147,7 @@ thead th {
 	font-variant-numeric: tabular-nums;
 	text-align: end;
 }
+
 /* purgecss end ignore */
 
 .wrap {
@@ -180,6 +185,7 @@ thead th {
 footer {
 	display: none !important;
 }
+
 /* purgecss end ignore */
 
 @media print {
@@ -262,7 +268,6 @@ footer {
 	tr,
 	.payment-row,
 	.table-row {
-		page-break-inside: avoid;
 		break-inside: avoid;
 	}
 

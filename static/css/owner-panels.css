@@ -6,23 +6,28 @@
 	border: 0;
 	box-shadow: var(--ui-shadow, 0 2px 12px rgba(0, 0, 0, 0.06));
 }
+
 /* purgecss start ignore */
 .owner-badge-active {
 	background: var(--ui-success, #188a4c);
 	color: #fff;
 }
+
 .owner-badge-suspended {
 	background: var(--ui-muted, #6c757d);
 	color: #fff;
 }
+
 .owner-badge-missing {
 	background: var(--ui-danger, #b11e2b);
 	color: #fff;
 }
+
 .owner-badge-warn {
 	background: var(--ui-warning, #c97c10);
 	color: #fff;
 }
+
 /* purgecss end ignore */
 .owner-tenant-logo {
 	width: 40px;
@@ -31,18 +36,22 @@
 	border-radius: var(--ui-radius-sm, 6px);
 	background: var(--ui-surface-2, #f8f9fa);
 }
+
 .owner-table-tenants td {
 	vertical-align: middle;
 }
+
 @media (max-width: 768px) {
 	.owner-table-tenants {
 		font-size: 0.85rem;
 	}
+
 	.owner-tenant-logo {
 		width: 32px;
 		height: 32px;
 	}
 }
+
 .btn:focus-visible,
 a:focus-visible,
 .form-control:focus-visible,
@@ -53,10 +62,12 @@ a:focus-visible,
 	outline-offset: 2px;
 	box-shadow: var(--ui-focus-ring, 0 0 0 3px rgba(14, 90, 58, 0.22));
 }
+
 .btn:focus-visible {
 	position: relative;
 	z-index: 2;
 }
+
 .small-box.bg-warning,
 .small-box.bg-warning .inner h3,
 .small-box.bg-warning .inner p,
@@ -69,6 +80,7 @@ a:focus-visible,
 .card.bg-warning .card-body {
 	color: #212529;
 }
+
 .small-box.bg-warning .small-box-footer {
 	background-color: rgba(0, 0, 0, 0.1);
 }

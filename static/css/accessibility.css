@@ -18,39 +18,30 @@
 	--color-text-regular: #1f2937;
 	--color-text-muted: #4b5563;
 	--color-text-soft: #64748b;
-
 	--color-primary: #2563eb;
 	--color-primary-strong: #1d4ed8;
 	--color-on-primary: #ffffff;
-
 	--color-secondary: #475569;
 	--color-secondary-strong: #334155;
 	--color-on-secondary: #ffffff;
-
 	--color-success: #16a34a;
 	--color-success-strong: #15803d;
 	--color-on-success: #ffffff;
-
 	--color-danger: #dc2626;
 	--color-danger-strong: #b91c1c;
 	--color-on-danger: #ffffff;
-
 	--color-warning: #f97316;
 	--color-warning-strong: #ea580c;
 	--color-on-warning: #111827;
-
 	--color-info: #0ea5e9;
 	--color-info-strong: #0284c7;
 	--color-on-info: #ffffff;
-
 	--color-light: #e5e9f2;
 	--color-light-strong: #d2d7e2;
 	--color-on-light: #111827;
-
 	--color-dark: #0f172a;
 	--color-dark-strong: #0b1220;
 	--color-on-dark: #f8fafc;
-
 	--color-focus-ring: rgba(37, 99, 235, 0.35);
 	--color-input-bg: #ffffff;
 
@@ -64,7 +55,6 @@
 	--info-color: var(--color-info);
 	--light-color: var(--color-light);
 	--dark-color: var(--color-dark);
-
 	--sidebar-link-default: rgba(243, 249, 255, 0.9);
 	--sidebar-link-hover: #ffffff;
 	--sidebar-link-hover-bg: rgba(255, 255, 255, 0.25);
@@ -72,14 +62,11 @@
 	--sidebar-link-focus-border: #38bdf8;
 	--sidebar-bg: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
 	--sidebar-brand-bg: linear-gradient(135deg, #2563eb 0%, #475569 100%);
-
 	--content-bg: var(--color-surface);
 	--content-text: var(--color-text-strong);
 	--content-text-muted: var(--color-text-muted);
-
 	--card-header-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 	--card-header-text: #ffffff;
-
 	--footer-bg: #eef2f8;
 	--footer-text: var(--color-text-regular);
 }
@@ -105,16 +92,17 @@ body:not(.keep-theme) .content-wrapper {
 	padding: 0;
 	margin: -1px;
 	overflow: hidden;
-	clip: rect(0, 0, 0, 0);
+	clip-path: inset(50%);
 	white-space: nowrap;
 	border: 0;
 }
+
 .sr-only-focusable:focus {
 	position: static;
 	width: auto;
 	height: auto;
 	overflow: visible;
-	clip: auto;
+	clip-path: none;
 	white-space: normal;
 	margin: 0.5rem;
 	padding: 0.5rem 1rem;
@@ -126,6 +114,7 @@ body:not(.keep-theme) .content-wrapper {
 	text-align: center;
 	font-weight: 600;
 }
+
 a {
 	color: var(--color-primary) !important;
 	text-decoration-color: rgba(11, 94, 215, 0.35);
@@ -190,6 +179,7 @@ button:focus-visible {
 	-webkit-text-fill-color: var(--color-on-primary) !important;
 	text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
 }
+
 /* purgecss end ignore */
 
 .btn-primary:hover,
@@ -219,6 +209,7 @@ button:focus-visible {
 	color: var(--color-on-secondary) !important;
 	text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
 }
+
 /* purgecss end ignore */
 
 .btn-secondary:hover,
@@ -247,6 +238,7 @@ button:focus-visible {
 	-webkit-text-fill-color: var(--color-on-success) !important;
 	text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
 }
+
 /* purgecss end ignore */
 
 .btn-success:hover,
@@ -271,6 +263,7 @@ button:focus-visible {
 	-webkit-text-fill-color: var(--color-on-danger) !important;
 	text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
 }
+
 /* purgecss end ignore */
 
 .btn-danger:hover,
@@ -294,6 +287,7 @@ button:focus-visible {
 	color: var(--color-on-warning) !important;
 	text-shadow: none !important;
 }
+
 /* purgecss end ignore */
 
 .btn-warning:hover,
@@ -318,6 +312,7 @@ button:focus-visible {
 	-webkit-text-fill-color: var(--color-on-info) !important;
 	text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
 }
+
 /* purgecss end ignore */
 
 .btn-info:hover,
@@ -339,6 +334,7 @@ button:focus-visible {
 	color: var(--color-on-light) !important;
 	text-shadow: none !important;
 }
+
 /* purgecss end ignore */
 
 /* purgecss start ignore */
@@ -355,6 +351,7 @@ button:focus-visible {
 	color: var(--color-on-dark) !important;
 	text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
 }
+
 /* purgecss end ignore */
 
 .btn-outline-primary {
@@ -476,7 +473,7 @@ button:disabled {
 }
 
 /* Form controls */
-input:not([type="checkbox"]):not([type="radio"]),
+input:not([type="checkbox"], [type="radio"]),
 select,
 textarea,
 .form-control,
@@ -552,6 +549,7 @@ label {
 }
 
 /* Select2 overrides */
+
 /* purgecss start ignore */
 .select2-container--default .select2-selection--single,
 .select2-container--default .select2-selection--multiple {
@@ -561,6 +559,7 @@ label {
 	background-color: var(--color-input-bg) !important;
 	padding: 0.4rem 0 !important;
 }
+
 /* purgecss end ignore */
 
 /* purgecss start ignore */
@@ -570,6 +569,7 @@ label {
 	font-size: 0.95rem !important;
 	font-weight: 500 !important;
 }
+
 /* purgecss end ignore */
 
 /* purgecss start ignore */
@@ -578,12 +578,14 @@ label {
 	background-color: var(--color-surface-elevated) !important;
 	color: var(--color-text-regular) !important;
 }
+
 /* purgecss end ignore */
 
 /* purgecss start ignore */
 .select2-results__option {
 	color: var(--color-text-regular) !important;
 }
+
 /* purgecss end ignore */
 
 /* purgecss start ignore */
@@ -591,6 +593,7 @@ label {
 	background-color: var(--color-primary) !important;
 	color: var(--color-on-primary) !important;
 }
+
 /* purgecss end ignore */
 
 /* Tables */
@@ -651,21 +654,25 @@ label {
 	background-color: var(--color-success) !important;
 	color: var(--color-on-success) !important;
 }
+
 .info-box.bg-info,
 .small-box.bg-info {
 	background-color: var(--color-info) !important;
 	color: var(--color-on-info) !important;
 }
+
 .info-box.bg-danger,
 .small-box.bg-danger {
 	background-color: var(--color-danger) !important;
 	color: var(--color-on-danger) !important;
 }
+
 .info-box.bg-warning,
 .small-box.bg-warning {
 	background-color: #ffc107 !important;
 	color: #1f2937 !important;
 }
+
 .info-box.bg-orange,
 .small-box.bg-orange {
 	background-color: #fd7e14 !important;
@@ -856,6 +863,7 @@ label {
 	border-color: rgba(15, 23, 42, 0.12) !important;
 	box-shadow: none !important;
 }
+
 /* purgecss end ignore */
 
 .receipt-print :is(div, section, header)[class*="header"],
@@ -896,6 +904,7 @@ label {
 	color: var(--color-on-primary) !important;
 	border-color: var(--color-primary-strong) !important;
 }
+
 /* purgecss end ignore */
 
 .receipt-print [class*="badge"],
@@ -942,6 +951,7 @@ label {
 	border-color: rgba(15, 23, 42, 0.1) !important;
 	box-shadow: none !important;
 }
+
 /* purgecss end ignore */
 
 .receipt-print .payment-method-badge,
@@ -973,6 +983,7 @@ label {
 }
 
 /* Dark mode overrides */
+
 /* purgecss start ignore */
 .dark-mode,
 body.dark-mode {
@@ -985,12 +996,12 @@ body.dark-mode {
 	--color-text-muted: #cbd5f5;
 	--color-text-soft: #a3aed0;
 	--color-input-bg: #111a2d;
-
 	--sidebar-bg: linear-gradient(180deg, #0b1220 0%, #0f172a 100%);
 	--card-header-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 	--footer-bg: #111a2d;
 	--footer-text: #e2e8f0;
 }
+
 /* purgecss end ignore */
 
 .dark-mode .table thead th {
@@ -1055,6 +1066,7 @@ body.dark-mode {
 }
 
 /* Icons inside colored backgrounds */
+
 /* purgecss start ignore */
 .bg-primary .fas,
 .bg-primary .far,
@@ -1082,9 +1094,11 @@ body.dark-mode {
 .bg-warning .svg-inline--fa {
 	color: inherit !important;
 }
+
 /* purgecss end ignore */
 
 /* Ensure readibility inside badges and pills */
+
 /* purgecss start ignore */
 .badge .fas,
 .badge .far,
@@ -1092,6 +1106,7 @@ body.dark-mode {
 .badge .svg-inline--fa {
 	color: inherit !important;
 }
+
 /* purgecss end ignore */
 
 /* Forms inside tables */
@@ -1102,12 +1117,14 @@ table .custom-select {
 }
 
 /* Toasts / notifications */
+
 /* purgecss start ignore */
 .toast,
 .swal2-popup {
 	color: var(--color-text-regular) !important;
 	background-color: var(--color-surface-elevated) !important;
 }
+
 /* purgecss end ignore */
 
 /* purgecss start ignore */
@@ -1115,6 +1132,7 @@ table .custom-select {
 	background-color: var(--color-primary) !important;
 	color: var(--color-on-primary) !important;
 }
+
 /* purgecss end ignore */
 
 /* purgecss start ignore */
@@ -1122,6 +1140,7 @@ table .custom-select {
 	background-color: var(--color-danger) !important;
 	color: var(--color-on-danger) !important;
 }
+
 /* purgecss end ignore */
 
 /* Focus states for links in nav */

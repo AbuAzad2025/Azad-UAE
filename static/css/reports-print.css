@@ -5,11 +5,13 @@
    ═══════════════════════════════════════════════════════════ */
 
 /* ══════════════ إعدادات عامة للشاشة ══════════════ */
+
 /* purgecss start ignore */
 .print-header-report,
 .print-footer-report {
 	display: none;
 }
+
 /* purgecss end ignore */
 
 /* ══════════════ إعدادات الطباعة ══════════════ */
@@ -94,7 +96,7 @@
 		margin-bottom: 2mm !important;
 		padding: 2mm !important;
 		border-bottom: 1px solid #0d6efd !important;
-		page-break-inside: avoid !important;
+		break-inside: avoid !important;
 		-webkit-print-color-adjust: exact !important;
 		print-color-adjust: exact !important;
 	}
@@ -176,14 +178,14 @@
 		border-top: 1px solid #ddd !important;
 		padding-top: 2mm !important;
 		background: #fff !important;
-		page-break-inside: avoid !important;
+		break-inside: avoid !important;
 	}
 
 	/* ═══ البطاقات والمحتوى ═══ */
 	.card {
 		box-shadow: none !important;
 		border: 1px solid #ddd !important;
-		page-break-inside: avoid !important;
+		break-inside: avoid !important;
 		margin-bottom: 2mm !important;
 		border-radius: 0 !important;
 	}
@@ -210,7 +212,7 @@
 	#report-table {
 		width: 100% !important;
 		border-collapse: collapse !important;
-		page-break-inside: auto !important;
+		break-inside: auto !important;
 		font-size: 8pt !important;
 	}
 
@@ -249,13 +251,13 @@
 		text-align: center !important;
 		-webkit-print-color-adjust: exact !important;
 		print-color-adjust: exact !important;
-		page-break-after: avoid !important;
+		break-after: avoid !important;
 	}
 
 	.table tbody tr,
 	#report-table tbody tr {
-		page-break-inside: avoid !important;
-		page-break-after: auto !important;
+		break-inside: avoid !important;
+		break-after: auto !important;
 	}
 
 	.table tfoot th,
@@ -333,7 +335,7 @@
 		display: none !important;
 	}
 
-	/* ═══ عرض رقم الترتيب ===*/
+	/* ═══ عرض رقم الترتيب === */
 	.rank {
 		font-weight: bold !important;
 	}
@@ -354,8 +356,8 @@
 	h4,
 	h5,
 	h6 {
-		page-break-after: avoid !important;
-		page-break-inside: avoid !important;
+		break-after: avoid !important;
+		break-inside: avoid !important;
 		font-size: 10pt !important;
 		margin-top: 1mm !important;
 		margin-bottom: 1mm !important;
@@ -374,7 +376,7 @@
 		text-align: center !important;
 		font-size: 12pt !important;
 		margin: 2mm 0 !important;
-		page-break-after: avoid !important;
+		break-after: avoid !important;
 	}
 
 	/* ═══ Alerts ===  */

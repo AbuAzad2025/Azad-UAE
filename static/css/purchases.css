@@ -8,15 +8,18 @@
 	line-height: 1.7;
 	text-align: center;
 }
+
 .purchase-create-form .form-control::placeholder {
 	text-align: center;
 	color: #6c757d;
 	opacity: 0.85;
 }
+
 .purchase-create-form select.form-control option {
 	text-align: center;
 	padding: 0.75rem 1rem;
 }
+
 .purchase-create-form .input-group-text {
 	min-height: 56px;
 	display: flex;
@@ -24,6 +27,7 @@
 	justify-content: center;
 	font-size: 0.95rem;
 }
+
 /* purgecss start ignore */
 .purchase-create-form .select2-container--default .select2-selection--single {
 	height: 56px;
@@ -35,6 +39,7 @@
 	justify-content: center;
 	padding: 0 0.75rem;
 }
+
 .purchase-create-form
 	.select2-container--default
 	.select2-selection--single
@@ -46,6 +51,7 @@
 	text-align: center;
 	font-size: 1rem;
 }
+
 .purchase-create-form
 	.select2-container--default
 	.select2-selection--single
@@ -54,26 +60,32 @@
 	top: 50%;
 	transform: translateY(-50%);
 }
+
 .purchase-create-form .select2-dropdown {
 	text-align: center;
 }
+
 .purchase-create-form .select2-results__option {
 	padding-top: 0.6rem;
 	padding-bottom: 0.6rem;
 }
+
 /* purgecss end ignore */
 .purchase-create-form textarea.form-control {
 	text-align: right;
 	line-height: 1.6;
 }
+
 .purchase-create-form textarea.form-control::placeholder {
 	text-align: right;
 }
+
 .purchase-header-actions {
 	display: flex;
 	align-items: center;
 	gap: 0.75rem;
 }
+
 .purchase-header-link {
 	display: inline-flex;
 	align-items: center;
@@ -87,13 +99,16 @@
 	position: relative;
 	z-index: 1;
 }
+
 .purchase-header-link i {
 	font-size: 0.95rem;
 	color: inherit !important;
 }
+
 .purchase-header-link span {
 	color: inherit !important;
 }
+
 .purchase-header-link--primary {
 	color: #ffffff !important;
 	-webkit-text-fill-color: #ffffff !important;
@@ -102,6 +117,7 @@
 	box-shadow: 0 0 10px rgba(52, 152, 219, 0.3) !important;
 	text-shadow: none !important;
 }
+
 .purchase-header-link--secondary {
 	color: #ffffff !important;
 	-webkit-text-fill-color: #ffffff !important;
@@ -110,6 +126,7 @@
 	box-shadow: 0 0 10px rgba(52, 152, 219, 0.3) !important;
 	text-shadow: none !important;
 }
+
 /* purgecss start ignore */
 .purchase-header-link--owner {
 	color: #0d9488 !important;
@@ -117,15 +134,18 @@
 	border: 2px solid rgba(13, 148, 136, 0.3);
 	box-shadow: 0 6px 18px rgba(13, 148, 136, 0.22);
 }
+
 /* purgecss end ignore */
 .ic-1 {
 	background: #f8f9fa;
 	border: 1px solid #dee2e6;
 	border-radius: 8px;
 }
+
 .ic-2 {
 	padding: 5px;
 }
+
 .purchase-header-actions .purchase-header-link + .purchase-header-link {
 	margin-left: 0.65rem;
 }

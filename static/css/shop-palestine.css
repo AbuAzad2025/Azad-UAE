@@ -14,6 +14,7 @@
 	--ps-font-en: "Sora", "Inter", system-ui, sans-serif;
 	--ps-border: #e6e0d4;
 	--ps-surface: #faf8f3;
+
 	/* Fixed AZAD developer brand + premium ink/cream tones */
 	--azad-gold: #d7a741;
 	--azad-gold-dark: #a87922;
@@ -21,6 +22,7 @@
 	--azad-ink-2: #0a171b;
 	--azad-cream: #f7f3e9;
 	--azad-warm-white: #fffdf7;
+
 	/* Theme brand aliases (palette-faithful to the Palestine flag tones) */
 	--theme-primary: var(--ps-green);
 	--theme-secondary: var(--ps-red);
@@ -152,6 +154,7 @@ body.ps-shop.rtl {
 .ps-header .ps-brand-text h1 {
 	color: #fff;
 }
+
 .ps-header .ps-brand-text p {
 	color: rgba(255, 255, 255, 0.6);
 }
@@ -242,6 +245,7 @@ body.ps-shop.rtl {
 	border: 1px solid rgba(215, 167, 65, 0.4) !important;
 	color: var(--azad-gold);
 }
+
 /* purgecss end ignore */
 
 .ps-cart-link {
@@ -289,6 +293,7 @@ body.ps-shop.rtl {
 	position: relative;
 	overflow: hidden;
 }
+
 /* purgecss end ignore */
 
 /* purgecss start ignore */
@@ -303,6 +308,7 @@ body.ps-shop.rtl {
 	border: 3px solid rgba(212, 175, 55, 0.35);
 	pointer-events: none;
 }
+
 /* purgecss end ignore */
 
 .ps-hero h2 {
@@ -330,6 +336,7 @@ body.ps-shop.rtl {
 	font-size: 0.82rem;
 	font-weight: 600;
 }
+
 /* purgecss end ignore */
 
 .ps-toolbar {
@@ -376,6 +383,7 @@ body.ps-shop.rtl {
 	flex-wrap: wrap;
 	gap: 0.45rem;
 }
+
 /* purgecss end ignore */
 
 /* purgecss start ignore */
@@ -388,6 +396,7 @@ body.ps-shop.rtl {
 	border: 1px solid rgba(0, 122, 61, 0.2);
 	transition: all 0.2s;
 }
+
 /* purgecss end ignore */
 
 /* purgecss start ignore */
@@ -397,6 +406,7 @@ body.ps-shop.rtl {
 	color: #fff;
 	border-color: transparent;
 }
+
 /* purgecss end ignore */
 
 .ps-grid {
@@ -539,11 +549,13 @@ body.ps-shop.rtl {
 	color: #0d5c32;
 	border: 1px solid #b8dfc8;
 }
+
 .ps-alert-warning {
 	background: #fff8e6;
 	color: #7a5a00;
 	border: 1px solid #f0dfa0;
 }
+
 .ps-alert-danger {
 	background: #fdecee;
 	color: #9b1c2e;
@@ -916,10 +928,12 @@ body.ps-shop.rtl {
 	background: #fff3cd;
 	color: #856404;
 }
+
 .ps-order-badge-confirmed {
 	background: #d4edda;
 	color: #155724;
 }
+
 .ps-order-badge-cancelled {
 	background: #e2e3e5;
 	color: #383d41;
@@ -1014,6 +1028,7 @@ body.ps-shop.rtl {
 	border-color: rgba(255, 255, 255, 0.4);
 	color: #fff;
 }
+
 .ps-header .ps-btn-outline:hover {
 	background: rgba(255, 255, 255, 0.12);
 }
@@ -1104,6 +1119,7 @@ body.ps-shop.rtl {
 	background: var(--azad-gold);
 	color: var(--azad-ink);
 }
+
 .ps-hero-cta .ps-btn-primary:hover {
 	background: var(--azad-gold-dark);
 	color: #fff;
@@ -1114,6 +1130,7 @@ body.ps-shop.rtl {
 	color: #fff;
 	border: 1px solid rgba(255, 255, 255, 0.35);
 }
+
 .ps-hero-cta .ps-btn-ghost:hover {
 	background: rgba(255, 255, 255, 0.22);
 }
@@ -1230,6 +1247,7 @@ body.ps-shop.rtl {
 	font-weight: 700;
 	font-size: 0.92rem;
 }
+
 .ps-benefit-sub {
 	font-size: 0.78rem;
 	opacity: 0.65;
@@ -1249,6 +1267,7 @@ body.ps-shop.rtl {
 	color: rgba(255, 255, 255, 0.8);
 	transition: color 0.2s;
 }
+
 .ps-footer a:hover {
 	color: var(--azad-gold);
 }
@@ -1364,12 +1383,14 @@ body.ps-shop.rtl {
 	font-weight: 800;
 	color: var(--azad-gold) !important;
 }
+
 .ps-azad-en {
 	margin: 0 0 0.18rem;
 	font-size: 0.7rem;
 	letter-spacing: 0.03em;
 	opacity: 0.7;
 }
+
 .ps-azad-manager {
 	margin: 0 0 0.2rem;
 	font-size: 0.7rem;
@@ -1424,6 +1445,7 @@ body.ps-shop.rtl {
 	position: relative;
 	overflow: hidden;
 }
+
 .ps-flag-accent::before {
 	content: "";
 	position: absolute;
@@ -1447,6 +1469,7 @@ body.ps-shop.rtl {
 		display: inline-grid;
 		place-items: center;
 	}
+
 	.ps-nav {
 		display: none;
 		width: 100%;
@@ -1457,31 +1480,39 @@ body.ps-shop.rtl {
 		padding-top: 0.75rem;
 		border-top: 1px solid rgba(255, 255, 255, 0.12);
 	}
+
 	.ps-nav.is-open {
 		display: flex;
 	}
+
 	.ps-nav a,
 	.ps-nav button {
 		justify-content: flex-start;
 		width: 100%;
 	}
+
 	.ps-nav form {
 		width: 100%;
 	}
+
 	.ps-nav form .ps-btn {
 		width: 100%;
 	}
+
 	.ps-topbar-loc {
 		display: none;
 	}
+
 	.ps-footer-grid {
 		grid-template-columns: 1fr;
 		gap: 0.9rem;
 	}
+
 	.ps-footer-bottom {
 		flex-direction: column;
 		text-align: center;
 	}
+
 	.ps-category-strip {
 		grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
 	}
@@ -1492,9 +1523,11 @@ body.ps-shop.rtl {
 		grid-template-columns: 1fr 1fr;
 		gap: 0.85rem;
 	}
+
 	.ps-hero-premium {
 		padding: 1.75rem 1.25rem;
 	}
+
 	.ps-azad-logo,
 	.ps-azad-mark {
 		width: 48px;

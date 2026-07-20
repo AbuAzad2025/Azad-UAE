@@ -292,6 +292,7 @@ body.azad-login-page {
 	border: 1px solid rgba(255, 92, 115, 0.28);
 	color: #ffb1bc;
 }
+
 /* purgecss end ignore */
 
 /* purgecss start ignore */
@@ -300,6 +301,7 @@ body.azad-login-page {
 	border: 1px solid rgba(74, 222, 128, 0.24);
 	color: #a9efbf;
 }
+
 /* purgecss end ignore */
 
 /* purgecss start ignore */
@@ -308,6 +310,7 @@ body.azad-login-page {
 	border: 1px solid var(--border-gold);
 	color: var(--gold-300);
 }
+
 /* purgecss end ignore */
 
 .azad-login-form {
@@ -480,6 +483,7 @@ body.azad-login-page {
 		opacity: 0;
 		transform: translateY(12px);
 	}
+
 	to {
 		opacity: 1;
 		transform: translateY(0);
@@ -492,19 +496,24 @@ body.azad-login-page {
 		gap: 32px;
 		padding: 32px 24px 60px;
 	}
+
 	.azad-login-brand {
 		text-align: center;
 	}
+
 	.azad-login-brand__logo {
 		margin-left: auto;
 		margin-right: auto;
 	}
+
 	.azad-login-brand__text {
 		margin: 0 auto 26px;
 	}
+
 	.azad-login-trust {
 		justify-content: center;
 	}
+
 	.azad-login-card {
 		max-width: 100%;
 	}
@@ -515,26 +524,33 @@ body.azad-login-page {
 		padding: 18px 16px 44px;
 		gap: 22px;
 	}
+
 	.azad-login-brand__text {
 		display: none;
 	}
+
 	.azad-login-trust {
 		display: none;
 	}
+
 	.azad-login-card {
 		padding: 24px 18px;
 		border-radius: 18px;
 	}
+
 	.azad-login-card__title {
 		font-size: 1.35rem;
 	}
+
 	.azad-login-tabs {
 		grid-template-columns: 1fr;
 	}
+
 	.azad-login-submit {
 		min-height: 48px;
 		font-size: 0.98rem;
 	}
+
 	.azad-login-footer {
 		padding: 16px;
 	}

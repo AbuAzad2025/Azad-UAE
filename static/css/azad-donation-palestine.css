@@ -130,6 +130,7 @@ body.az-donate.ltr {
 	top: 8px;
 	inset-inline-start: 10px;
 }
+
 .az-card::after {
 	bottom: 8px;
 	inset-inline-end: 10px;
@@ -228,6 +229,7 @@ body.az-donate.ltr {
 	border-radius: 2px;
 	font-size: 0.9rem;
 }
+
 /* purgecss end ignore */
 
 /* purgecss start ignore */
@@ -235,8 +237,10 @@ body.az-donate.ltr {
 	background: #e8f5ec;
 	color: #0d4d2a;
 }
+
 .az-alert-err {
 	background: #fde8ea;
 	color: #8b1020;
 }
+
 /* purgecss end ignore */
