@@ -238,7 +238,6 @@ def chat():
 
     try:
         from models.ai import AiInteraction
-        from extensions import db
 
         log = AiInteraction(
             tenant_id=getattr(current_user, "tenant_id", None),

@@ -2,8 +2,6 @@ from contextlib import ExitStack, contextmanager
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from tests.unit.routes.conftest import (
     _chain_query,
     unauthenticated_client,
