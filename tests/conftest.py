@@ -648,18 +648,34 @@ def client(app):
 
 @pytest.fixture
 def db_session(app):
+    """Yield the scoped session wrapped in a savepoint (nested transaction).
+
+    Uses ``session.begin_nested()`` so that any test that calls ``commit()``
+    only releases the savepoint — the outer transaction remains uncommitted,
+    preventing state leakage between tests.  Teardown rolls back and removes
+    the session, restoring a clean slate for the next test.
+    """
     with app.app_context():
+        session = db.session
         try:
-            db.session.rollback()
+            session.rollback()
         except Exception:
-            db.session.remove()
-        db.session.expire_all()
-        yield db.session
+            session.remove()
+        session.expire_all()
+        nested = session.begin_nested()
         try:
-            db.session.rollback()
-        except Exception:
-            pass
-        db.session.remove()
+            yield session
+        finally:
+            try:
+                if nested.is_active:
+                    nested.rollback()
+            except Exception:
+                pass
+            try:
+                session.rollback()
+            except Exception:
+                pass
+            session.remove()
 
 
 @pytest.fixture

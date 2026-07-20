@@ -96,7 +96,19 @@ FORBIDDEN_MODEL_IMPORTS: frozenset[str] = frozenset({
     "routes",
 })
 
-# ── Data structures ────────────────────────────────────────────────────────
+def _matches_forbidden(target: str, forbidden: str) -> bool:
+    """True when *target* is exactly *forbidden* or a sub-module of it.
+
+    ``flask.request`` matches ``flask.request`` (exact).
+    ``routes`` matches ``routes`` (exact).
+    ``routes.owner`` matches ``routes`` (prefix — sub-package).
+    ``flask`` does NOT match ``flask.request`` (no reverse prefix).
+    """
+    if target == forbidden:
+        return True
+    if forbidden.endswith("*"):
+        return target.startswith(forbidden[:-1])
+    return target.startswith(forbidden + ".")
 
 
 @dataclass(frozen=True)
@@ -203,16 +215,25 @@ def _is_request_get_json(node: ast.Call) -> bool:
 
 
 def _import_target(node: ast.Import | ast.ImportFrom) -> list[str]:
-    """Return module paths imported by *node*."""
+    """Return fully-qualified import target strings.
+
+    For ``ast.Import`` (``import a.b.c``) → ``["a.b.c"]``.
+    For ``ast.ImportFrom`` (``from a.b import c, d``) → ``["a.b.c", "a.b.d"]``.
+    The bare module name (``"a.b"``) is NOT included — only the actual
+    symbols brought into scope.  This prevents false positives where
+    ``from flask import current_app`` would also flag ``flask`` itself.
+    """
     targets: list[str] = []
     if isinstance(node, ast.Import):
         for alias in node.names:
             targets.append(alias.name)
     elif isinstance(node, ast.ImportFrom):
-        if node.module:
-            targets.append(node.module)
-            for alias in node.names:
-                targets.append(f"{node.module}.{alias.name}")
+        module = node.module or ""
+        for alias in node.names:
+            if alias.name == "*":
+                targets.append(module)
+            else:
+                targets.append(f"{module}.{alias.name}" if module else alias.name)
     return targets
 
 
@@ -426,7 +447,7 @@ def check_service_imports(root: Path) -> Iterator[Violation]:
             if isinstance(node, ast.Import | ast.ImportFrom):
                 for target in _import_target(node):
                     for forbidden in FORBIDDEN_SERVICE_IMPORTS:
-                        if target == forbidden or target.startswith(forbidden + "."):
+                        if _matches_forbidden(target, forbidden):
                             yield Violation(
                                 rule="G4-ARCH",
                                 severity="error",
@@ -453,7 +474,7 @@ def check_model_imports(root: Path) -> Iterator[Violation]:
             if isinstance(node, ast.Import | ast.ImportFrom):
                 for target in _import_target(node):
                     for forbidden in FORBIDDEN_MODEL_IMPORTS:
-                        if target == forbidden or target.startswith(forbidden + "."):
+                        if _matches_forbidden(target, forbidden):
                             yield Violation(
                                 rule="G4-ARCH",
                                 severity="error",

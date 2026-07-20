@@ -92,5 +92,16 @@
 | **No dead monolithic files** | Split large modules into subpackages (`routes/owner/`, `routes/ai_routes/`). |
 | **Service subdirectories** | Large domains may use `services/gl/`, `services/store/`, etc. |
 
+## 10. TESTING INTEGRITY, AST AUDITING & ZERO-FLAKINESS
+
+| Rule | Detail |
+|------|--------|
+| **AST enforcement** | All GRIMOIRE rules are enforced by `scripts/ops/enforce_grimoire.py` using Python AST parsing — never regex. Zero false positives. |
+| **Savepoint isolation** | DB test fixtures MUST use `session.begin_nested()` (savepoints) or explicit rollback teardown. No test may leak committed state to another test. |
+| **Dynamic DB binding** | Test DB URIs MUST resolve from `app.config['SQLALCHEMY_DATABASE_URI']` — never hardcoded database names in fixture code. |
+| **Contract-based testing** | Tests verify inputs/outputs at layer boundaries (route → service). Mock at the route boundary, never inside services. |
+| **No flaky patterns** | No `time.sleep()`, no `random` without seed, no order-dependent test logic, no shared mutable state across tests. |
+| **Enforcement suite** | `tests/unit/test_grimoire_compliance.py` runs the AST checker in CI — 0 errors required, warnings tracked. |
+
 ---
 *Enforced by AST static analysis — not regex. Violations fail CI.*
