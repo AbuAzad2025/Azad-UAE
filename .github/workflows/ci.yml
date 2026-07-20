@@ -292,6 +292,9 @@ jobs:
       - name: Biome check (JS lint+format, scope from biome.json)
         run: biome check . --reporter github
 
+      - name: Frontend unit tests (vitest)
+        run: npm test
+
       # ── CSS ──
       - name: Stylelint (all project CSS)
         run: npx stylelint "static/**/*.css"
