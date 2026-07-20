@@ -342,7 +342,7 @@ class TestCardVaultImportError:
             lines = f.readlines()
 
         padding = "\n" * 6
-        block = padding + "".join(lines[9:16])
+        block = padding + "".join(lines[9:18])
 
         import builtins
 
@@ -354,7 +354,7 @@ class TestCardVaultImportError:
             return original_import(name, *args, **kwargs)
 
         builtins.__import__ = blocking_import
-        ns = {}
+        ns = {"Any": type("Any", (), {})}
         try:
             code = compile(block, src_path, "exec")
             exec(code, ns)
