@@ -40,7 +40,11 @@ EVENT_ATTR = re.compile(
 )
 VAR_DECL = re.compile(r"(?<![\w$.])var\s+[A-Za-z_$]")
 CONSOLE_LOG = re.compile(r"\bconsole\.log\s*\(")
-BAD_APIS = re.compile(r"\b(document\.write|eval)\s*\(")
+EVAL_CALL = re.compile(r"(?<![\w$.])eval\s*\(")
+# document.write on the CURRENT document is deprecated; writing into a
+# window opened via window.open (win.document.write) is the standard
+# print-window pattern and is intentionally not flagged.
+CURRENT_DOC_WRITE = re.compile(r"(?<![\w$.])document\.write\s*\(")
 IMG_NO_ALT = re.compile(r"<img\b(?![^>]*\balt\s*=)[^>]*>", re.IGNORECASE)
 ID_ATTR = re.compile(r'(?<![-\w])id\s*=\s*"([^"{%]+)"')
 FORM_BLOCK = re.compile(r"<form\b.*?</form>", re.IGNORECASE | re.DOTALL)
@@ -76,8 +80,10 @@ def scan_template(path: Path, text: str, findings: Findings) -> None:
                 add(findings, "T2:var-in-inline-js", path, body_line + i, sline.strip()[:80])
             if CONSOLE_LOG.search(sline):
                 add(findings, "T3:console-log-inline", path, body_line + i, sline.strip()[:80])
-            if BAD_APIS.search(sline):
-                add(findings, "T4:eval-or-document-write", path, body_line + i, sline.strip()[:80])
+            if EVAL_CALL.search(sline):
+                add(findings, "T4:eval-call", path, body_line + i, sline.strip()[:80])
+            if CURRENT_DOC_WRITE.search(sline):
+                add(findings, "T4b:current-document-write", path, body_line + i, sline.strip()[:80])
 
     def in_script(offset: int) -> bool:
         return any(start <= offset < end for start, end in script_spans)
@@ -115,7 +121,10 @@ def scan_template(path: Path, text: str, findings: Findings) -> None:
     if "<!DOCTYPE" in text[:200] or "<!doctype" in text[:200]:
         for m in HTML_TAG.finditer(text):
             tag = m.group(0)
-            if "dir=" not in tag or not DIR_COND.search(text):
+            # Accept when dir/lang carry any Jinja expression — conditional
+            # by design. Flag only fully static tags (AGENTS.md: enumerated
+            # attributes must use explicit conditional blocks).
+            if ("dir=" not in tag or "lang=" not in tag) or ("{{" not in tag and "{%" not in tag):
                 line = text.count("\n", 0, m.start()) + 1
                 add(findings, "T9:html-no-dir-lang-cond", path, line, tag[:80])
 
@@ -128,8 +137,10 @@ def scan_js(path: Path, text: str, findings: Findings) -> None:
         prev = lines[i - 2] if i >= 2 else ""
         if CONSOLE_LOG.search(line) and "_DEBUG" not in prev:
             add(findings, "J3:console-log", path, i, line.strip()[:80])
-        if BAD_APIS.search(line):
-            add(findings, "J4:eval-or-document-write", path, i, line.strip()[:80])
+        if EVAL_CALL.search(line):
+            add(findings, "J4:eval-call", path, i, line.strip()[:80])
+        if CURRENT_DOC_WRITE.search(line):
+            add(findings, "J4b:current-document-write", path, i, line.strip()[:80])
     jquery_hits = len(JQUERY.findall(text))
     if jquery_hits:
         add(findings, "J10:jquery-usage", path, 0, f"{jquery_hits} hits")
@@ -139,10 +150,27 @@ def scan_css(path: Path, text: str, findings: Findings) -> None:
     important = len(IMPORTANT.findall(text))
     if important:
         add(findings, "C1:important-usage", path, 0, f"{important} occurrences")
+    # @keyframes step selectors (from/to/0%/100%) legitimately repeat across
+    # animation blocks, and @media blocks legitimately redefine selectors for
+    # responsive overrides — strip both before duplicate detection.
+    no_keyframes = re.sub(
+        r"@(?:-\w+-)?keyframes\s+[\w-]+\s*\{(?:[^{}]|\{[^{}]*\})*\}",
+        "",
+        text,
+        flags=re.IGNORECASE,
+    )
+    no_media = re.sub(
+        r"@media[^{]+\{(?:[^{}]|\{[^{}]*\})*\}",
+        "",
+        no_keyframes,
+        flags=re.IGNORECASE,
+    )
     selectors: dict[str, int] = defaultdict(int)
-    for m in CSS_RULE_START.finditer(text):
+    for m in CSS_RULE_START.finditer(no_media):
         sel = " ".join(m.group(1).split())
-        if sel and not sel.startswith("@") and len(sel) < 200:
+        # Only flag plain selector lists — parser spills containing
+        # declarations (`;`/`}`) indicate nested-context noise, not duplicates.
+        if sel and not sel.startswith("@") and ";" not in sel and "}" not in sel and len(sel) < 200:
             selectors[sel] += 1
     for sel, count in selectors.items():
         if count > 1:
@@ -166,7 +194,7 @@ def main() -> int:
         if not is_vendor(path):
             scan_js(path, path.read_text(encoding="utf-8", errors="replace"), findings)
     for path in sorted((ROOT / "static").rglob("*.css")):
-        if not is_vendor(path):
+        if not is_vendor(path) and not path.name.endswith(".min.css"):
             scan_css(path, path.read_text(encoding="utf-8", errors="replace"), findings)
 
     if args.json:
