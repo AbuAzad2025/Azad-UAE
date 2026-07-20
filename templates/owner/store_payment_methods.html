@@ -59,7 +59,7 @@
               <td class="text-left">
                 <a href="{{ url_for('owner.store_payment_method_edit', method_id=m.id) }}" class="btn btn-outline-primary" title="{{ _('تعديل') }}" aria-label="{{ _('تعديل') }}"><i class="fas fa-edit"></i></a>
                 {% if not m.is_builtin %}
-                <form method="post" action="{{ url_for('owner.store_payment_method_delete', method_id=m.id) }}" class="d-inline" data-action="confirm-submit" data-confirm-message="حذف طريقة الدفع؟">
+                <form method="post" action="{{ url_for('owner.store_payment_method_delete', method_id=m.id) }}" class="d-inline" data-action="confirm-submit" data-confirm-message="{{ _('حذف طريقة الدفع؟') }}">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                   <button type="submit" class="btn btn-outline-danger" title="{{ _('حذف') }}" aria-label="{{ _('حذف') }}"><i class="fas fa-trash"></i></button>
                 </form>

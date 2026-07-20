@@ -100,7 +100,7 @@
                     </td>
                     <td>{{ r.effective_date }}</td>
                     <td>
-                      <form method="POST" action="{{ url_for('owner.exchange_rates') }}" style="display:inline" data-action="confirm-submit" data-confirm-message="حذف السجل؟">
+                      <form method="POST" action="{{ url_for('owner.exchange_rates') }}" style="display:inline" data-action="confirm-submit" data-confirm-message="{{ _('حذف السجل؟') }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="action" value="delete">
                         <input type="hidden" name="record_id" value="{{ r.id }}">
