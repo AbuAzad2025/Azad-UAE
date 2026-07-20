@@ -8,10 +8,12 @@ import hashlib
 
 Fernet: Any
 try:
-    from cryptography.fernet import Fernet
+    from cryptography.fernet import Fernet as _Fernet
 
+    Fernet = _Fernet
     HAS_CRYPTO = True
 except ImportError:
+    Fernet = Any
     HAS_CRYPTO = False
     Fernet = None
 

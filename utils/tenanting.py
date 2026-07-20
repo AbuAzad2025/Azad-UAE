@@ -90,7 +90,7 @@ def require_active_tenant_id(user=None) -> int:
     tid = get_active_tenant_id(user)
     if tid is None:
         abort(403, description="لا توجد شركة نشطة مرتبطة بهذا الحساب.")
-    return tid
+    return int(tid)
 
 
 def model_has_tenant(model) -> bool:

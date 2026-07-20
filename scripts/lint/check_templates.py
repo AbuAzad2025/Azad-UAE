@@ -28,7 +28,7 @@ def main() -> int:
         sys.stdout.reconfigure(encoding="utf-8")
 
     env = Environment(extensions=["jinja2.ext.i18n"], autoescape=True)
-    env.install_null_translations()
+    getattr(env, "install_null_translations")()
 
     templates = sorted(TEMPLATES_DIR.rglob("*.html"))
     failures: list[tuple[str, int, str]] = []
@@ -38,7 +38,7 @@ def main() -> int:
         try:
             env.parse(path.read_text(encoding="utf-8"))
         except TemplateSyntaxError as exc:
-            failures.append((rel, exc.lineno or 0, exc.message))
+            failures.append((rel, exc.lineno or 0, exc.message or ""))
         except OSError as exc:
             failures.append((rel, 0, f"unreadable file: {exc}"))
 
