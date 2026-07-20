@@ -199,3 +199,88 @@ class TestCurrencyApiConnection:
         assert resp.get_json()["success"] is False
         get.assert_not_called()
         assert row.last_test_status == "failed"
+
+
+class TestUpdateIntegration:
+    """POST /owner/integrations/update/<service> — form/route key contract.
+
+    Regression pins: HTML checkboxes post "on" (not "true"/"1"), and the
+    email form posts smtp_encryption/sender_name (previously dropped, and
+    from_email/from_name were wiped on every save).
+    """
+
+    _URL = "/owner/integrations/update/email"
+
+    def _post(self, client, mocker, data):
+        row = _integration_row("email", {})
+        _mock_config_lookup(mocker, row)
+        mocker.patch("routes.owner.settings._invalidate_owner_changes")
+        resp = client.post(self._URL, data=data, follow_redirects=False)
+        return resp, row
+
+    def test_checkbox_on_enables_integration(self, platform_owner_client, mocker):
+        resp, row = self._post(
+            platform_owner_client,
+            mocker,
+            {"enabled": "on", "smtp_host": "smtp.gmail.com"},
+        )
+        assert resp.status_code == 302
+        assert row.enabled is True
+
+    def test_unchecked_checkbox_disables(self, platform_owner_client, mocker):
+        resp, row = self._post(
+            platform_owner_client,
+            mocker,
+            {"smtp_host": "smtp.gmail.com"},
+        )
+        assert resp.status_code == 302
+        assert row.enabled is False
+
+    def test_email_form_keys_persisted(self, platform_owner_client, mocker):
+        resp, row = self._post(
+            platform_owner_client,
+            mocker,
+            {
+                "enabled": "on",
+                "smtp_host": "smtp.gmail.com",
+                "smtp_port": "465",
+                "smtp_user": "billing@garage.ae",
+                "smtp_password": "s3cret",
+                "smtp_encryption": "ssl",
+                "sender_name": "Garage UAE",
+            },
+        )
+        assert resp.status_code == 302
+        cfg = row.get_config()
+        assert cfg["smtp_host"] == "smtp.gmail.com"
+        assert cfg["smtp_port"] == "465"
+        assert cfg["smtp_encryption"] == "ssl"
+        assert cfg["smtp_use_tls"] is True
+        assert cfg["from_email"] == "billing@garage.ae"
+        assert cfg["from_name"] == "Garage UAE"
+        assert cfg["sender_name"] == "Garage UAE"
+
+    def test_encryption_none_marks_tls_false(self, platform_owner_client, mocker):
+        _, row = self._post(
+            platform_owner_client,
+            mocker,
+            {"smtp_encryption": "none", "smtp_host": "10.0.0.5"},
+        )
+        cfg = row.get_config()
+        assert cfg["smtp_encryption"] == "none"
+        assert cfg["smtp_use_tls"] is False
+
+    def test_legacy_from_keys_win_when_present(self, platform_owner_client, mocker):
+        _, row = self._post(
+            platform_owner_client,
+            mocker,
+            {
+                "smtp_user": "fallback@garage.ae",
+                "from_email": "explicit@garage.ae",
+                "from_name": "Explicit",
+                "sender_name": "Ignored Sender",
+            },
+        )
+        cfg = row.get_config()
+        assert cfg["from_email"] == "explicit@garage.ae"
+        assert cfg["from_name"] == "Explicit"

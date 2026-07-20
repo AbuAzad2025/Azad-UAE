@@ -60,7 +60,8 @@ def update_integration(service):
     try:
         integration = IntegrationSettings.get_service_config(service)
 
-        integration.enabled = request.form.get("enabled") == "true" or request.form.get("enabled") == "1"
+        # HTML checkboxes send "on" when checked; JS callers may send true/1.
+        integration.enabled = request.form.get("enabled") in ("true", "1", "on")
 
         config_data = {}
 
@@ -73,14 +74,17 @@ def update_integration(service):
             }
 
         elif service == "email":
+            encryption = request.form.get("smtp_encryption", "tls")
             config_data = {
                 "smtp_host": request.form.get("smtp_host", ""),
                 "smtp_port": request.form.get("smtp_port", "587"),
                 "smtp_user": request.form.get("smtp_user", ""),
                 "smtp_password": request.form.get("smtp_password", ""),
-                "smtp_use_tls": request.form.get("smtp_use_tls") == "true" or request.form.get("smtp_use_tls") == "1",
-                "from_email": request.form.get("from_email", ""),
-                "from_name": request.form.get("from_name", ""),
+                "smtp_encryption": encryption,
+                "smtp_use_tls": encryption in ("tls", "ssl"),
+                "from_email": request.form.get("from_email") or request.form.get("smtp_user", ""),
+                "from_name": request.form.get("from_name") or request.form.get("sender_name", ""),
+                "sender_name": request.form.get("sender_name", ""),
             }
 
         elif service == "redis":
