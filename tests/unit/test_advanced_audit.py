@@ -48,12 +48,16 @@ class TestLogSensitiveAction:
         user = MagicMock()
         user.is_authenticated = True
         user.id = 9
+        noop_cm = MagicMock()
+        noop_cm.__enter__ = MagicMock(return_value=None)
+        noop_cm.__exit__ = MagicMock(return_value=False)
 
         with (
             patch("models.AuditLog") as audit_ctor,
             patch("utils.advanced_audit.db.session", session),
             patch("utils.advanced_audit.notify_admin_of_sensitive_action") as notify,
             patch("utils.advanced_audit.current_user", user),
+            patch("utils.advanced_audit.atomic_transaction", return_value=noop_cm),
         ):
             audit_ctor.return_value = audit_entry
             with flask_app.test_request_context(
@@ -88,12 +92,16 @@ class TestLogSensitiveAction:
         audit_entry = MagicMock()
         user = MagicMock()
         user.is_authenticated = False
+        noop_cm = MagicMock()
+        noop_cm.__enter__ = MagicMock(return_value=None)
+        noop_cm.__exit__ = MagicMock(return_value=False)
 
         with (
             patch("models.AuditLog") as audit_ctor,
             patch("utils.advanced_audit.db.session"),
             patch("utils.advanced_audit.notify_admin_of_sensitive_action") as notify,
             patch("utils.advanced_audit.current_user", user),
+            patch("utils.advanced_audit.atomic_transaction", return_value=noop_cm),
         ):
             audit_ctor.return_value = audit_entry
             with flask_app.test_request_context("/"):
