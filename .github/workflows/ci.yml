@@ -141,8 +141,9 @@ jobs:
           python -c "from app import create_app; from extensions import db; app = create_app(); ctx = app.app_context(); ctx.push(); db.create_all(); ctx.pop()" || true
           # Run the assigned test group
           pytest ${{ matrix.test-path }} -v --tb=short \
-            --cov --cov-config=.coveragerc --cov-report=term \
+            --cov=. --cov-config=.coveragerc --cov-report=term \
             --cov-report=xml:coverage-${{ matrix.cov-flag }}.xml
+          ls -la .coverage* || true
 
       - name: Upload coverage to Codecov (optional)
         if: always()
