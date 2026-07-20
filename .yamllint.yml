@@ -1,0 +1,15 @@
+# yamllint configuration — gates every tracked *.yml / *.yaml file in CI.
+# Scope: GitHub workflows, funding, bandit, hadolint and any future YAML.
+extends: default
+
+rules:
+  # GitHub workflow files do not use a document-start marker.
+  document-start: disable
+  # Workflow expressions and Arabic strings legitimately exceed 80 chars.
+  line-length: disable
+  # GitHub Actions uses `on:`/`off:` keys; YAML 1.1 would read them as booleans.
+  truthy:
+    allowed-values: ["true", "false", "on", "off"]
+  # Comments in this repo often start directly after code (1 space is fine).
+  comments:
+    min-spaces-from-content: 1

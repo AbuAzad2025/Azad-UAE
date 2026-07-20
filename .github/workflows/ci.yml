@@ -1,13 +1,17 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 name: CI
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Coverage policy: every production file type is gated — Python, Jinja/HTML,
+# JavaScript, CSS, YAML and JSON. Only documentation, binary assets and
+# vendored third-party bundles (AdminLTE) may skip a CI run.
+# ─────────────────────────────────────────────────────────────────────────────
 on:
   push:
     branches: [main, develop]
     paths-ignore:
       - '**.md'
       - 'docs/**'
-      - '**.css'
       - '**.svg'
       - '**.png'
       - '**.jpg'
@@ -21,7 +25,6 @@ on:
     paths-ignore:
       - '**.md'
       - 'docs/**'
-      - '**.css'
       - '**.svg'
       - '**.png'
       - '**.jpg'
@@ -35,13 +38,22 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Least privilege by default; jobs that need more declare it themselves.
+permissions:
+  contents: read
+
 env:
   PYTHON_VERSION: '3.12'
+  NODE_VERSION: '22'
+  # Minimum total line coverage enforced in coverage-report.
+  # 0 = report-only; raise it when the team is ready to enforce a floor.
+  COVERAGE_FAIL_UNDER: '0'
 
 jobs:
   # ── Matrix engine: adapt PG version grid to Git ref ──
   determine-matrix:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -80,8 +92,11 @@ jobs:
     needs: [determine-matrix]
     name: ${{ matrix.test-group }} (PG ${{ matrix.postgres-version }})
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     strategy:
-      fail-fast: true
+      # Never cancel sibling groups: every directory must report, even when
+      # another group fails — no part of the test suite may be skipped.
+      fail-fast: false
       matrix: ${{ fromJSON(needs.determine-matrix.outputs.matrix) }}
 
     services:
@@ -106,6 +121,7 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
 
       - name: Install dependencies
         run: |
@@ -123,7 +139,7 @@ jobs:
         run: |
           # Warm up: ensure DB schema exists
           python -c "from app import create_app; from extensions import db; app = create_app(); ctx = app.app_context(); ctx.push(); db.create_all(); ctx.pop()" || true
-          # Run the assigned test group — fail-fast per job
+          # Run the assigned test group
           pytest ${{ matrix.test-path }} -v --tb=short \
             --cov --cov-config=.coveragerc --cov-report=term \
             --cov-report=xml:coverage-${{ matrix.cov-flag }}.xml
@@ -158,6 +174,7 @@ jobs:
   verify-boot:
     needs: [determine-matrix]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     services:
       postgres:
         image: postgres:15
@@ -177,6 +194,7 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -191,63 +209,130 @@ jobs:
           python -c "from app import create_app; app = create_app()"
 
   # ── Security scan (bandit) ──
+  # Scope comes ONLY from .bandit.yml — no inline excludes, so no production
+  # Python file can silently drop out of the scan.
   security-scan:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - name: Install dependencies
+          cache: pip
+      - name: Install bandit
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt bandit
-      - name: Bandit security scan
-        run: |
-          bandit -c .bandit.yml -r . --exclude '*/migrations/*,*/tests/*,*/.venv/*,*/utils/secure_subprocess.py' --quiet || bandit -c .bandit.yml -r . --exclude '*/migrations/*,*/tests/*,*/.venv/*,*/utils/secure_subprocess.py'
-          bandit -c .bandit.yml -r . --exclude '*/migrations/*,*/tests/*,*/.venv/*,*/utils/secure_subprocess.py' -f json -o bandit-report.json || true
+          pip install bandit
+      - name: Bandit security scan (gate)
+        run: bandit -c .bandit.yml -r .
+      - name: Bandit JSON report
+        if: always()
+        run: bandit -c .bandit.yml -r . -f json -o bandit-report.json || true
+      - name: Upload bandit report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: bandit-report
+          path: bandit-report.json
+          if-no-files-found: ignore
+          retention-days: 7
 
-  # ── Lint, audit, i18n, cspell ──
+  # ── Static quality gates: Python · Jinja/HTML · JS · CSS · YAML · JSON ──
   lint-audit:
+    name: Static quality (py · jinja · js · css · yaml · json)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - name: Install Python deps
+          cache: pip
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install Python lint tools
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt ruff mypy pip-audit
-      - name: Install Node deps
+          pip install ruff mypy pip-audit yamllint jinja2
+
+      - name: Install Node lint tools
         run: |
-          npm install -g @biomejs/biome cspell
-      - name: Ruff check
+          npm ci --no-audit --no-fund
+          npm install -g @biomejs/biome@2.5.4 cspell
+
+      # ── Python ──
+      - name: Ruff check (Python lint)
         run: ruff check . --output-format github
-      - name: Ruff format
+
+      - name: Ruff format (Python formatting)
         run: ruff format . --check --diff
-      - name: Mypy
+
+      - name: Mypy (Python types)
         run: mypy . --ignore-missing-imports --no-error-summary --explicit-package-bases
-      - name: Biome check (JS/CSS/JSON/HTML)
-        run: biome check . --reporter github
-      - name: pip-audit
-        run: python -m pip_audit -r requirements.txt
-      - name: Cspell (spell check templates & JS)
-        run: |
-          npx cspell --config scripts/lint/.cspell.json "templates/**/*.html" "static/js/**/*.js" "docs/**/*.md"
-      - name: Strict i18n lint
+
+      # ── Jinja / HTML templates ──
+      - name: Jinja template gate (all templates must parse)
+        run: python scripts/lint/check_templates.py
+
+      - name: Strict i18n lint (templates & Python)
         run: python scripts/check_strict_i18n.py templates routes services --exclude-dirs services
-      - name: actionlint (workflow syntax)
+
+      # ── JavaScript ──
+      - name: Biome check (JS lint+format, scope from biome.json)
+        run: biome check . --reporter github
+
+      # ── CSS ──
+      - name: Stylelint (all project CSS)
+        run: npx stylelint "static/**/*.css"
+
+      # ── JSON ──
+      - name: JSON validation (every tracked .json file)
         run: |
-          go install github.com/rhysd/actionlint/cmd/actionlint@latest 2>/dev/null || \
-            (which actionlint 2>/dev/null && actionlint .github/workflows/*.yml) || \
-            echo "::warning::actionlint not available, skipping"
-          # Alternative: use docker
-          docker run --rm -v $PWD/.github/workflows:/repo ghcr.io/rhysd/actionlint:latest 2>&1 || true
+          fail=0
+          count=0
+          while IFS= read -r f; do
+            count=$((count + 1))
+            if ! python -m json.tool "$f" > /dev/null 2>&1; then
+              echo "::error file=$f::Invalid JSON"
+              fail=1
+            fi
+          done < <(git ls-files '*.json' -- ':!:node_modules')
+          echo "Validated ${count} JSON file(s)"
+          exit $fail
+
+      # ── YAML ──
+      - name: yamllint (every tracked .yml/.yaml file)
+        run: |
+          git ls-files '*.yml' '*.yaml' -- ':!:node_modules' | \
+            xargs python -m yamllint -c .yamllint.yml
+
+      # ── Dependencies & spelling ──
+      - name: pip-audit (known vulnerabilities in requirements)
+        run: python -m pip_audit -r requirements.txt
+
+      - name: Cspell (templates & project JS)
+        run: |
+          npx cspell --config scripts/lint/.cspell.json \
+            "templates/**/*.html" "static/js/**/*.js" "static/*.js"
+
+      # ── GitHub Actions workflows themselves ──
+      - name: actionlint (workflow syntax — fails on findings)
+        run: |
+          docker run --rm -v "$PWD:/repo" -w /repo \
+            ghcr.io/rhysd/actionlint:latest .github/workflows/*.yml
 
   # ── Git & repository scanning ──
   repo-security:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
       security-events: write
@@ -277,6 +362,7 @@ jobs:
   # ── Docker infrastructure audit (Hadolint) ──
   docker-infra-audit:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - name: Hadolint Dockerfile Audit
@@ -284,9 +370,10 @@ jobs:
           echo "=== RUNNING DOCKERFILE LINT ==="
           docker run --rm -i -v "${PWD}/scripts/.hadolint.yaml:/root/.hadolint.yaml" hadolint/hadolint < scripts/lint/Dockerfile.ci
 
-  # ── API fuzz testing (Schemathesis) ──
+  # ── API fuzz testing (Schemathesis, non-blocking) ──
   api-fuzz:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     services:
       postgres:
         image: postgres:15
@@ -306,11 +393,12 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt schemathesis
-      - name: Boot app and run Schemathesis
+      - name: Boot app and run Schemathesis (non-blocking)
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
           SECRET_KEY: test-secret-key
@@ -337,6 +425,7 @@ jobs:
   # ── Tenant isolation fuzzer ──
   tenant-isolation-fuzzer:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:15
@@ -356,6 +445,7 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
@@ -370,9 +460,10 @@ jobs:
         run: |
           pytest tests/unit/utils/test_tenant_isolation_fuzzer.py -v --tb=short
 
-  # ── Lighthouse CI (web vitals) ──
+  # ── Lighthouse CI (web vitals, non-blocking) ──
   lighthouse-ci:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     services:
       postgres:
         image: postgres:15
@@ -392,12 +483,13 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt gunicorn
           npm install -g @lhci/cli
-      - name: Boot app and run Lighthouse CI
+      - name: Boot app and run Lighthouse CI (non-blocking)
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
           SECRET_KEY: test-secret-key
@@ -408,9 +500,10 @@ jobs:
           lhci autorun --config=scripts/lighthouserc.json || \
             echo "::warning::Lighthouse CI audit completed with warnings"
 
-  # ── E2E business flow tours (Playwright) ──
+  # ── E2E business flow tours (Playwright, non-blocking) ──
   e2e-tours:
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     services:
       postgres:
         image: postgres:15
@@ -430,6 +523,7 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
@@ -443,7 +537,7 @@ jobs:
           APP_ENV: testing
         run: |
           python scripts/auth/setup_test_users.py
-      - name: Run business flow tours
+      - name: Run business flow tours (non-blocking)
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
           SECRET_KEY: test-secret-key
@@ -468,6 +562,7 @@ jobs:
   coverage-report:
     needs: [test]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     if: always()
     steps:
       - uses: actions/checkout@v7
@@ -476,6 +571,7 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
 
       - name: Install coverage
         run: pip install coverage
@@ -494,12 +590,21 @@ jobs:
 
       - name: Combine coverage data
         run: |
-          # Combine all .coverage files from matrix jobs
-          coverage combine coverage-data/covdata-*/.coverage || true
+          shopt -s nullglob
+          dirs=(coverage-data/covdata-*)
+          if [ ${#dirs[@]} -eq 0 ]; then
+            echo "::warning::No coverage data artifacts found — test jobs may have failed early"
+            exit 0
+          fi
+          coverage combine "${dirs[@]}"
+
+      - name: Enforce coverage floor (COVERAGE_FAIL_UNDER=${{ env.COVERAGE_FAIL_UNDER }})
+        if: hashFiles('.coverage') != ''
+        run: coverage report --show-missing --fail-under=${{ env.COVERAGE_FAIL_UNDER }}
 
       - name: Generate comprehensive coverage report
-        run: |
-          python scripts/coverage_report.py || true
+        if: hashFiles('.coverage') != ''
+        run: python scripts/coverage_report.py
 
       - name: Upload combined coverage XML
         if: always()

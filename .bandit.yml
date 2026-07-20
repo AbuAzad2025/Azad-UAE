@@ -1,3 +1,8 @@
+# Bandit configuration — single source of truth for security-scan scope.
+# CI runs `bandit -c .bandit.yml -r .` with NO extra inline excludes, so every
+# production Python line is scanned. Exclusions below are limited to
+# non-production or generated code, each with a justification.
+
 skips:
   - B101  # assert_used — acceptable in defensive runtime assertions
   - B105  # hardcoded_password — false positives on Arabic messages, column defs, token salts
@@ -9,7 +14,12 @@ skips:
   - B113  # requests_without_timeout — all call sites pass a timeout
 
 exclude_dirs:
+  # Auto-generated Alembic revisions — not hand-written production logic.
   - 'migrations'
+  # Test code — not deployed; covered by the test suite itself.
   - 'tests'
+  # Local virtualenv — third-party, not project code.
   - '.venv'
-  - 'utils/secure_subprocess.py'
+  # NOTE: utils/secure_subprocess.py is intentionally SCANNED. It is the
+  # audited subprocess chokepoint; its two intentional primitives carry
+  # in-line `# nosec` justifications so any NEW issue there fails the build.

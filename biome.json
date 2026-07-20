@@ -1,7 +1,14 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.5.4/schema.json",
 	"files": {
-		"includes": ["static/js/**/*.js", "static/js/**/*.d.ts"]
+		"includes": [
+			"static/js/**/*.js",
+			"static/js/**/*.d.ts",
+			"static/*.js",
+			"!static/adminlte",
+			"!static/datatables",
+			"!static/theme"
+		]
 	},
 	"linter": {
 		"enabled": true,

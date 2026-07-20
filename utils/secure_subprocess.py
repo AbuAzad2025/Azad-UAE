@@ -16,7 +16,7 @@ directly.  Security guarantees enforced here:
 from __future__ import annotations
 
 import os
-import subprocess
+import subprocess  # nosec B404 -- audited chokepoint: only this module may import subprocess (shell=False + argv[0] allowlist enforced)
 import sys
 from typing import List, Mapping, Optional, Sequence
 
@@ -78,7 +78,7 @@ class SecureSubprocess:
             raise ValueError("argv required")
         _validate_basename_allowlist(argv[0], allowed_basenames)
         cmd: List[str] = [str(x) for x in argv]
-        return subprocess.run(
+        return subprocess.run(  # nosec B603 -- shell=False is mandatory and argv[0] is allowlisted by basename above
             cmd,
             shell=False,
             capture_output=True,
