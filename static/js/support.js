@@ -372,6 +372,7 @@
 		}
 	}
 	window.switchTab = switchTab;
+	window.spGetCurrentTab = () => currentTab;
 
 	async function collectSupportContactData(title) {
 		const result = await Swal.fire({

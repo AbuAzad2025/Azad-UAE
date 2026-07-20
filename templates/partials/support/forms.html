@@ -137,10 +137,10 @@
                     {{ t('للدفع') }} {{ t('Payment Method') }} {{ t('Payment Method') }}، {{ t('الرجاء') }} {{ t('استخدام') }} {{ t('PayPal') }} {{ t('أو') }} {{ t('التواصل') }} {{ t('معنا') }} {{ t('لإتمام') }} {{ t('العملية') }} {{ t('بأمان') }}.
                 </p>
                 <div class="sp-quick-contact-actions" style="justify-content:center;">
-                    <button type="button" class="sp-quick-contact-btn sp-btn-whatsapp" onclick="openWhatsApp(currentTab === 'purchase' ? 'buy_system' : 'donation_help')">
+                    <button type="button" class="sp-quick-contact-btn sp-btn-whatsapp" data-action="quick-whatsapp">
                         <i class="fab fa-whatsapp"></i> {{ t('تواصل') }} {{ t('عبر') }} WhatsApp
                     </button>
-                    <button type="button" class="sp-quick-contact-btn sp-btn-email" onclick="openSupportEmail(currentTab === 'purchase' ? 'buy_system' : 'donation_help')">
+                    <button type="button" class="sp-quick-contact-btn sp-btn-email" data-action="quick-support-email">
                         <i class="fas fa-envelope"></i> {{ t('راسلنا') }} {{ t('بالبريد') }}
                     </button>
                 </div>
@@ -229,6 +229,14 @@
                 else if (action === 'handle-paypal-payment') handlePayPalPayment();
                 else if (action === 'open-whatsapp') openWhatsApp(el.dataset.kind);
                 else if (action === 'open-support-email') openSupportEmail(el.dataset.kind);
+                else if (action === 'quick-whatsapp') {
+                    const tab = window.spGetCurrentTab ? window.spGetCurrentTab() : 'purchase';
+                    openWhatsApp(tab === 'purchase' ? 'buy_system' : 'donation_help');
+                }
+                else if (action === 'quick-support-email') {
+                    const tab = window.spGetCurrentTab ? window.spGetCurrentTab() : 'purchase';
+                    openSupportEmail(tab === 'purchase' ? 'buy_system' : 'donation_help');
+                }
             });
         }
         </script>
