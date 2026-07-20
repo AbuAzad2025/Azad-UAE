@@ -300,17 +300,17 @@
 
 		let html = "";
 		let total = 0;
+		const _esc = (v) =>
+			String(v == null ? "" : v)
+				.replace(/&/g, "&amp;")
+				.replace(/</g, "&lt;")
+				.replace(/>/g, "&gt;")
+				.replace(/"/g, "&quot;")
+				.replace(/'/g, "&#39;");
 		items.forEach((item) => {
 			const priceNum = parseFloat(item.price.replace(/[^0-9.]/g, "")) || 0;
 			const qty = parseFloat(item.qty) || 1;
 			total += priceNum * qty;
-			var _esc = (v) =>
-				String(v == null ? "" : v)
-					.replace(/&/g, "&amp;")
-					.replace(/</g, "&lt;")
-					.replace(/>/g, "&gt;")
-					.replace(/"/g, "&quot;")
-					.replace(/'/g, "&#39;");
 			html +=
 				'<div class="ps-cart-item" data-product-id="' +
 				_esc(item.pid) +

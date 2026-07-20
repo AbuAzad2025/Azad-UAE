@@ -354,8 +354,9 @@ $(() => {
     const confirm = $('#confirm_password').val();
     
     if (password !== confirm) {
-      e.preventDefault();        var _pwLabel = '{{ t('كلمة') }} {{ t('المرور') }}';
-        var _pwNote = '{{ t('كلمة') }} {{ t('المرور') }} غير {{ t('متطابقة') }}. {{ t('الرجاء') }} {{ t('التحقق') }} {{ t('والمحاولة') }} {{ t('مرة') }} {{ t('أخرى') }}.';
+      e.preventDefault();
+      const _pwLabel = '{{ t('كلمة') }} {{ t('المرور') }}';
+      const _pwNote = '{{ t('كلمة') }} {{ t('المرور') }} غير {{ t('متطابقة') }}. {{ t('الرجاء') }} {{ t('التحقق') }} {{ t('والمحاولة') }} {{ t('مرة') }} {{ t('أخرى') }}.';
         Swal.fire({
             icon: 'error',
             title: '{{ t('Error') }} في ' + _pwLabel,

@@ -255,7 +255,7 @@
     $(document).on('click', '[data-action="export-report"]', exportReport);
 
     function exportReport() {
-        var _reportLabel = "{{ t('Report') }}";
+        const _reportLabel = "{{ t('Report') }}";
         Swal.fire({
             icon: 'info',
             title: "{{ t('Export') }} " + _reportLabel,

@@ -87,6 +87,15 @@ class TestDashboard:
         resp = platform_owner_client.get("/super-admin/dashboard")
         assert resp.status_code == 200
 
+    def test_activate_form_carries_csrf_token(self, platform_owner_client):
+        """Production has WTF_CSRF_ENABLED=True — the manual override form
+        must ship a csrf_token input or every submit is rejected with 400."""
+        resp = platform_owner_client.get("/super-admin/dashboard")
+        html = resp.get_data(as_text=True)
+        form_start = html.index('action="/super-admin/activate-subscription"')
+        form_end = html.index("</form>", form_start)
+        assert 'name="csrf_token"' in html[form_start:form_end]
+
 
 class TestActivateSubscription:
     _URL = "/super-admin/activate-subscription"

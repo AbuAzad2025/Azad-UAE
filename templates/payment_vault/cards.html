@@ -297,7 +297,7 @@
     }
     
     function viewCard(id) {
-        var _errTitle = '{{ t('Error') }}';
+        const _errTitle = '{{ t('Error') }}';
         // {{ t('جلب') }} {{ t('Data') }} من {{ t('الخادم') }}
         fetch(`/payment-vault/card/${id}/decrypt`, {
             method: 'POST',

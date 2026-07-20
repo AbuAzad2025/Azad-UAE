@@ -106,7 +106,7 @@ $(document).ready(() => {
 			return;
 		}
 		const printWindow = window.open("", "_blank", "width=400,height=600");
-		var _printDoc = printWindow.document;
+		const _printDoc = printWindow.document;
 		_printDoc.open();
 		_printDoc.write("<html><head><title>طباعة الأرقام التسلسلية</title>");
 		_printDoc.write(

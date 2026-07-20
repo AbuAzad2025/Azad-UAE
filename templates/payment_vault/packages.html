@@ -333,9 +333,9 @@ function viewPackageStats(packageId, packageName) {
 }
 
 function togglePackageStatus(packageId) {
-    var _change = "{{ t('Change') }}";
-    var _status2 = "{{ t('Status_2') }}";
-    var _plan = "{{ t('Plan') }}";
+    const _change = "{{ t('Change') }}";
+    const _status2 = "{{ t('Status_2') }}";
+    const _plan = "{{ t('Plan') }}";
     Swal.fire({
         title: _change + ' ' + _status2 + ' ' + _plan,
         text: "هل {{ t('تريد') }} " + _change + ' ' + _status2 + ' هذه ' + _plan + " ({{ t('Active') }}/{{ t('معطل') }})؟",

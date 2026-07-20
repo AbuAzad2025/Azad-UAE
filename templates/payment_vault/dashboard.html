@@ -435,7 +435,7 @@
     });
     
     function lockVault() {
-        var _lockLabel = "{{ t('قفل') }}";
+        const _lockLabel = "{{ t('قفل') }}";
         Swal.fire({
             title: _lockLabel + ' {{ t("الخزينة_2") }}',
             text: 'هل أنت {{ t('متأكد') }} من ' + _lockLabel + ' {{ t('الخزينة') }} {{ t('السرية_2') }}',

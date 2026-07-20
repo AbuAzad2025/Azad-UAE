@@ -1,5 +1,5 @@
 (() => {
-	var m = document.querySelector('meta[name="pos-config"]');
+	const m = document.querySelector('meta[name="pos-config"]');
 	if (m) {
 		try {
 			window.POS_CONFIG = JSON.parse(m.getAttribute("content"));
