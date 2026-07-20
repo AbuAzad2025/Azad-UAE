@@ -583,7 +583,7 @@ setViewMode(currentMode);
 				}
 			}
 			return originalFetch
-				.apply(this, arguments)
+				.call(this, input, init)
 				.then((response) => {
 					const duration = Math.round(
 						(window.performance && performance.now ? performance.now() : Date.now()) - startedAt,
