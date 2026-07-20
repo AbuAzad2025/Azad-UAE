@@ -78,19 +78,23 @@ blockquote {
 	scrollbar-width: thin;
 	scrollbar-color: var(--az-primary) transparent;
 }
+
 *::-webkit-scrollbar {
 	width: 9px;
 	height: 9px;
 }
+
 *::-webkit-scrollbar-track {
 	background: transparent;
 }
+
 *::-webkit-scrollbar-thumb {
 	background: color-mix(in srgb, var(--az-primary) 55%, transparent);
 	border-radius: var(--az-radius-pill);
 	border: 2px solid transparent;
 	background-clip: content-box;
 }
+
 *::-webkit-scrollbar-thumb:hover {
 	background: var(--az-primary);
 	background-clip: content-box;
@@ -102,6 +106,7 @@ blockquote {
 .content-header {
 	padding: var(--az-space-4) var(--az-space-4) var(--az-space-2);
 }
+
 .content-header h1 {
 	font-size: var(--az-font-size-xl);
 	font-weight: 800;
@@ -115,22 +120,27 @@ blockquote {
 	margin: 0;
 	font-size: var(--az-font-size-sm);
 }
+
 .breadcrumb-item {
 	font-weight: 600;
 	color: var(--az-text-muted);
 }
+
 .breadcrumb-item a {
 	color: var(--az-primary);
 	text-decoration: none;
 	transition: opacity 0.15s ease;
 }
+
 .breadcrumb-item a:hover {
 	opacity: 0.8;
 	text-decoration: underline;
 }
+
 .breadcrumb-item.active {
 	color: var(--az-text-muted);
 }
+
 .breadcrumb-item + .breadcrumb-item::before {
 	color: var(--az-border);
 	font-weight: 700;
@@ -142,19 +152,24 @@ blockquote {
 	border-top: 3px solid transparent;
 	background-clip: padding-box;
 }
+
 /* Colored outline cards keep their accent strip */
 .card.card-primary {
 	border-top-color: var(--az-primary);
 }
+
 .card.card-success {
 	border-top-color: var(--az-success);
 }
+
 .card.card-danger {
 	border-top-color: var(--az-danger);
 }
+
 .card.card-warning {
 	border-top-color: var(--az-warning);
 }
+
 .card.card-info {
 	border-top-color: var(--az-info);
 }
@@ -171,6 +186,7 @@ blockquote {
 }
 
 /* ──────────────────────── 4. DASHBOARD WIDGETS ────────────────────────── */
+
 /* AdminLTE small-box / info-box brought into the token system */
 
 .small-box {
@@ -182,27 +198,33 @@ blockquote {
 		transform 0.2s ease,
 		box-shadow 0.2s ease;
 }
+
 .small-box:hover {
 	transform: translateY(-3px);
 	box-shadow: var(--az-shadow-md);
 }
+
 .small-box > .inner {
 	padding: var(--az-space-4) var(--az-space-5);
 }
+
 .small-box h3 {
 	font-weight: 800;
 	font-variant-numeric: tabular-nums;
 }
+
 .small-box .icon {
 	opacity: 0.28;
 	transition:
 		opacity 0.2s ease,
 		transform 0.2s ease;
 }
+
 .small-box:hover .icon {
 	opacity: 0.4;
 	transform: scale(1.06);
 }
+
 .small-box > .small-box-footer {
 	background: rgba(0, 0, 0, 0.12);
 	padding: 6px 0;
@@ -220,19 +242,23 @@ blockquote {
 		transform 0.2s ease,
 		box-shadow 0.2s ease;
 }
+
 .info-box:hover {
 	transform: translateY(-2px);
 	box-shadow: var(--az-shadow-md);
 }
+
 .info-box .info-box-icon {
 	border-radius: var(--az-radius-md) 0 0 var(--az-radius-md);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 }
+
 .info-box .info-box-content {
 	padding: var(--az-space-3) var(--az-space-4);
 }
+
 .info-box .info-box-number {
 	font-weight: 800;
 	font-variant-numeric: tabular-nums;
@@ -244,9 +270,11 @@ blockquote {
 	letter-spacing: 0.01rem;
 	position: relative;
 }
+
 .btn:hover {
 	transform: translateY(-1px);
 }
+
 .btn:active {
 	transform: translateY(0) scale(0.98);
 }
@@ -269,6 +297,7 @@ blockquote {
 	border: none !important;
 	color: #ffffff !important;
 }
+
 .btn-danger {
 	background: linear-gradient(
 		135deg,
@@ -278,6 +307,7 @@ blockquote {
 	border: none !important;
 	color: #ffffff !important;
 }
+
 .btn-warning {
 	background: linear-gradient(
 		135deg,
@@ -287,6 +317,7 @@ blockquote {
 	border: none !important;
 	color: #ffffff !important;
 }
+
 .btn-info {
 	background: linear-gradient(
 		135deg,
@@ -302,6 +333,7 @@ blockquote {
 	pointer-events: none;
 	opacity: 0.75;
 }
+
 .btn.is-loading::after {
 	content: "";
 	width: 1em;
@@ -314,6 +346,7 @@ blockquote {
 	vertical-align: -0.15em;
 	animation: az-pro-spin 0.7s linear infinite;
 }
+
 @keyframes az-pro-spin {
 	to {
 		transform: rotate(360deg);
@@ -350,6 +383,7 @@ blockquote {
 .table-striped tbody tr:nth-of-type(odd) {
 	background: color-mix(in srgb, var(--az-surface-2) 55%, transparent);
 }
+
 .table-hover tbody tr:hover,
 .table tbody tr:hover {
 	background: color-mix(in srgb, var(--az-primary) 7%, transparent) !important;
@@ -381,24 +415,29 @@ label,
 .was-validated .form-control:valid {
 	border-color: var(--az-success) !important;
 }
+
 .form-control.is-valid:focus,
 .was-validated .form-control:valid:focus {
 	box-shadow: 0 0 0 0.22rem
 		color-mix(in srgb, var(--az-success) 22%, transparent) !important;
 }
+
 .form-control.is-invalid,
 .was-validated .form-control:invalid {
 	border-color: var(--az-danger) !important;
 }
+
 .form-control.is-invalid:focus,
 .was-validated .form-control:invalid:focus {
 	box-shadow: 0 0 0 0.22rem
 		color-mix(in srgb, var(--az-danger) 22%, transparent) !important;
 }
+
 .valid-feedback {
 	color: var(--az-success);
 	font-weight: 600;
 }
+
 .invalid-feedback {
 	color: var(--az-danger);
 	font-weight: 600;
@@ -421,32 +460,39 @@ label,
 	box-shadow: var(--az-shadow-lg);
 	overflow: hidden;
 }
+
 .modal-header {
 	background: var(--az-surface-2);
 	border-bottom: 1px solid var(--az-border);
 	padding: var(--az-space-4) var(--az-space-5);
 }
+
 .modal-title {
 	font-weight: 800;
 	font-size: var(--az-font-size-lg);
 }
+
 .modal-header .close {
 	color: var(--az-text);
 	opacity: 0.6;
 	text-shadow: none;
 	transition: opacity 0.15s ease;
 }
+
 .modal-header .close:hover {
 	opacity: 1;
 }
+
 .modal-body {
 	padding: var(--az-space-5);
 }
+
 .modal-footer {
 	background: var(--az-surface-2);
 	border-top: 1px solid var(--az-border);
 	padding: var(--az-space-3) var(--az-space-5);
 }
+
 .modal-backdrop.show {
 	opacity: 0.55;
 	backdrop-filter: blur(3px);
@@ -462,22 +508,26 @@ label,
 	padding: 6px;
 	animation: az-pro-drop 0.16s ease;
 }
+
 @keyframes az-pro-drop {
 	from {
 		opacity: 0;
 		transform: translateY(-4px);
 	}
+
 	to {
 		opacity: 1;
 		transform: translateY(0);
 	}
 }
+
 .dropdown-divider {
 	border-top-color: var(--az-border);
 	margin: 4px 8px;
 }
 
 /* ─────────────────────── 10. BADGES — SOFT VARIANTS ───────────────────── */
+
 /* Soft professional badges (opt-in: .badge-soft-*) */
 
 .badge-soft-success {
@@ -485,21 +535,25 @@ label,
 	color: var(--az-success);
 	border: 1px solid color-mix(in srgb, var(--az-success) 30%, transparent);
 }
+
 .badge-soft-danger {
 	background: color-mix(in srgb, var(--az-danger) 14%, transparent);
 	color: var(--az-danger);
 	border: 1px solid color-mix(in srgb, var(--az-danger) 30%, transparent);
 }
+
 .badge-soft-warning {
 	background: color-mix(in srgb, var(--az-warning) 16%, transparent);
 	color: var(--az-warning);
 	border: 1px solid color-mix(in srgb, var(--az-warning) 32%, transparent);
 }
+
 .badge-soft-info {
 	background: color-mix(in srgb, var(--az-info) 14%, transparent);
 	color: var(--az-info);
 	border: 1px solid color-mix(in srgb, var(--az-info) 30%, transparent);
 }
+
 .badge-soft-primary {
 	background: color-mix(in srgb, var(--az-primary) 14%, transparent);
 	color: var(--az-primary);
@@ -517,17 +571,20 @@ label,
 	padding: var(--az-space-12) var(--az-space-6);
 	color: var(--az-text-muted);
 }
+
 .erp-empty-state i {
 	font-size: 3rem;
 	opacity: 0.35;
 	margin-bottom: var(--az-space-4);
 }
+
 .erp-empty-state .empty-title {
 	font-weight: 800;
 	font-size: var(--az-font-size-lg);
 	color: var(--az-text);
 	margin-bottom: var(--az-space-2);
 }
+
 .erp-empty-state .empty-hint {
 	font-size: var(--az-font-size-sm);
 	max-width: 420px;
@@ -543,6 +600,7 @@ label,
 	color: transparent !important;
 	pointer-events: none;
 }
+
 .skeleton::after {
 	content: "";
 	position: absolute;
@@ -556,6 +614,7 @@ label,
 	animation: az-pro-shimmer 1.4s infinite;
 	transform: translateX(-100%);
 }
+
 @keyframes az-pro-shimmer {
 	to {
 		transform: translateX(100%);
@@ -567,6 +626,7 @@ label,
 .nav-tabs {
 	border-bottom-color: var(--az-border);
 }
+
 .nav-tabs .nav-link {
 	color: var(--az-text-muted);
 	font-weight: 700;
@@ -578,10 +638,12 @@ label,
 		color 0.15s ease,
 		border-color 0.15s ease;
 }
+
 .nav-tabs .nav-link:hover {
 	color: var(--az-primary);
 	border-bottom-color: color-mix(in srgb, var(--az-primary) 40%, transparent);
 }
+
 .nav-tabs .nav-link.active {
 	color: var(--az-primary);
 	background: transparent;
@@ -596,6 +658,7 @@ label,
 		background 0.15s ease,
 		color 0.15s ease;
 }
+
 .nav-pills .nav-link.active {
 	background: linear-gradient(
 		135deg,
@@ -615,6 +678,7 @@ label,
 	height: 0.6rem;
 	overflow: hidden;
 }
+
 .progress-bar {
 	background: linear-gradient(
 		135deg,
@@ -631,10 +695,12 @@ label,
 	color: var(--az-text) !important;
 	box-shadow: var(--az-shadow-lg) !important;
 }
+
 .swal2-title {
 	color: var(--az-text) !important;
 	font-weight: 800 !important;
 }
+
 .swal2-html-container {
 	color: var(--az-text-muted) !important;
 }
@@ -646,11 +712,13 @@ label,
 	color: var(--az-text);
 	transition: background 0.15s ease;
 }
+
 .list-group-item-action:hover,
 .list-group-item-action:focus {
 	background: var(--az-surface-2);
 	color: var(--az-text);
 }
+
 .list-group-item.active {
 	background: var(--az-primary);
 	border-color: var(--az-primary);
@@ -661,6 +729,7 @@ label,
 .timeline::before {
 	background: var(--az-border);
 }
+
 .timeline > .time-label > span {
 	border-radius: var(--az-radius-pill);
 	font-weight: 700;
@@ -670,10 +739,12 @@ label,
 .content-wrapper > .content {
 	animation: az-pro-fadein 0.25s ease;
 }
+
 @keyframes az-pro-fadein {
 	from {
 		opacity: 0;
 	}
+
 	to {
 		opacity: 1;
 	}
@@ -684,6 +755,7 @@ label,
 	.dropdown-menu {
 		animation: none !important;
 	}
+
 	.skeleton::after {
 		animation: none !important;
 	}
