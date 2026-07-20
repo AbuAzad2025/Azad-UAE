@@ -990,8 +990,8 @@ function loadCustomerBalance() {
 
       let html = '<strong>{{ t('فواتير') }} غير {{ t('Paid_4') }}:</strong><ul class="mb-0">';
 
-      data.unpaid_sales.forEach((sale) => {% if current_user.has_permission('manage_sales') %
-          const saleUrl = "{{ url_for('sales.view', id=0) }}".replace('0', sale.id);% endif %
+      data.unpaid_sales.forEach((sale) => {% if current_user.has_permission('manage_sales') %}
+          const saleUrl = "{{ url_for('sales.view', id=0) }}".replace('0', sale.id);{% endif %}
 
         html += '<li><a href="' + saleUrl + '" target="_blank" rel="noopener noreferrer">' + sale.sale_number + '</a>: ' + parseFloat(sale.balance_due_aed || sale.balance_due).toFixed(2) + ' {{ tenant_currency_symbol }}</li>';
       });
