@@ -60,7 +60,7 @@ class TestRenderPrint:
             "services.print_service.PrintService._user_context",
             return_value={"print_user_id": 2},
         )
-        mock_render = mocker.patch("services.print_service.render_template", return_value="<html/>")
+        mock_render = mocker.patch("flask.render_template", return_value="<html/>")
         from services.print_service import PrintService
 
         with app.app_context():

@@ -73,15 +73,15 @@
         <aside class="sidebar">
             <h3>Quick Navigation</h3>
             <ul>
-                <li class="active" onclick="scrollToSection('overview', event)"><i class="fas fa-home"></i> Overview</li>
-                <li onclick="scrollToSection('access', event)"><i class="fas fa-user-shield"></i> Access & Roles</li>
-                <li onclick="scrollToSection('operations', event)"><i class="fas fa-cogs"></i> Daily Operations</li>
-                <li onclick="scrollToSection('finance', event)"><i class="fas fa-file-invoice-dollar"></i> Finance & Accounting</li>
-                <li onclick="scrollToSection('inventory', event)"><i class="fas fa-warehouse"></i> Inventory & Branches</li>
-                <li onclick="scrollToSection('ecommerce', event)"><i class="fas fa-store"></i> E-commerce Store</li>
-                <li onclick="scrollToSection('analytics', event)"><i class="fas fa-chart-bar"></i> Reports & Analytics</li>
-                <li onclick="scrollToSection('admin', event)"><i class="fas fa-tools"></i> Admin & Configuration</li>
-                <li onclick="scrollToSection('best-practices', event)"><i class="fas fa-check-circle"></i> Best Practices</li>
+                <li class="active" data-action="scroll-to-section" data-section="overview"><i class="fas fa-home"></i> Overview</li>
+                <li data-action="scroll-to-section" data-section="access"><i class="fas fa-user-shield"></i> Access & Roles</li>
+                <li data-action="scroll-to-section" data-section="operations"><i class="fas fa-cogs"></i> Daily Operations</li>
+                <li data-action="scroll-to-section" data-section="finance"><i class="fas fa-file-invoice-dollar"></i> Finance & Accounting</li>
+                <li data-action="scroll-to-section" data-section="inventory"><i class="fas fa-warehouse"></i> Inventory & Branches</li>
+                <li data-action="scroll-to-section" data-section="ecommerce"><i class="fas fa-store"></i> E-commerce Store</li>
+                <li data-action="scroll-to-section" data-section="analytics"><i class="fas fa-chart-bar"></i> Reports & Analytics</li>
+                <li data-action="scroll-to-section" data-section="admin"><i class="fas fa-tools"></i> Admin & Configuration</li>
+                <li data-action="scroll-to-section" data-section="best-practices"><i class="fas fa-check-circle"></i> Best Practices</li>
             </ul>
         </aside>
 
@@ -201,6 +201,12 @@
     </div>
 
     <script>
+document.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-action="scroll-to-section"]');
+    if (!el) return;
+    scrollToSection(el.dataset.section, e);
+});
+
 function scrollToSection(id, event) {
     if (!event) return;
     document.getElementById(id).scrollIntoView({ behavior: 'smooth' });

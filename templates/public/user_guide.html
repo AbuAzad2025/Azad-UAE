@@ -86,15 +86,15 @@
         <aside class="sidebar">
             <h3>المحتويات</h3>
             <ul>
-                <li class="active" onclick="scrollToSection('overview', event)"><i class="fas fa-home"></i> نظرة عامة</li>
-                <li onclick="scrollToSection('access', event)"><i class="fas fa-user-shield"></i> الدخول والصلاحيات</li>
-                <li onclick="scrollToSection('core-ops', event)"><i class="fas fa-cogs"></i> التشغيل اليومي</li>
-                <li onclick="scrollToSection('finance', event)"><i class="fas fa-file-invoice-dollar"></i> المالية والمحاسبة</li>
-                <li onclick="scrollToSection('inventory', event)"><i class="fas fa-warehouse"></i> المخزون والفروع</li>
-                <li onclick="scrollToSection('ecommerce', event)"><i class="fas fa-store"></i> المتجر الإلكتروني</li>
-                <li onclick="scrollToSection('analytics', event)"><i class="fas fa-chart-line"></i> التقارير والتحليل</li>
-                <li onclick="scrollToSection('admin', event)"><i class="fas fa-tools"></i> الإدارة والإعدادات</li>
-                <li onclick="scrollToSection('best-practices', event)"><i class="fas fa-check-circle"></i> أفضل الممارسات</li>
+                <li class="active" data-action="scroll-to-section" data-section="overview"><i class="fas fa-home"></i> نظرة عامة</li>
+                <li data-action="scroll-to-section" data-section="access"><i class="fas fa-user-shield"></i> الدخول والصلاحيات</li>
+                <li data-action="scroll-to-section" data-section="core-ops"><i class="fas fa-cogs"></i> التشغيل اليومي</li>
+                <li data-action="scroll-to-section" data-section="finance"><i class="fas fa-file-invoice-dollar"></i> المالية والمحاسبة</li>
+                <li data-action="scroll-to-section" data-section="inventory"><i class="fas fa-warehouse"></i> المخزون والفروع</li>
+                <li data-action="scroll-to-section" data-section="ecommerce"><i class="fas fa-store"></i> المتجر الإلكتروني</li>
+                <li data-action="scroll-to-section" data-section="analytics"><i class="fas fa-chart-line"></i> التقارير والتحليل</li>
+                <li data-action="scroll-to-section" data-section="admin"><i class="fas fa-tools"></i> الإدارة والإعدادات</li>
+                <li data-action="scroll-to-section" data-section="best-practices"><i class="fas fa-check-circle"></i> أفضل الممارسات</li>
             </ul>
         </aside>
 
@@ -236,6 +236,12 @@
     </footer>
 
     <script>
+document.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-action="scroll-to-section"]');
+    if (!el) return;
+    scrollToSection(el.dataset.section, e);
+});
+
 function scrollToSection(id, event) {
     if (!event) return;
     document.getElementById(id).scrollIntoView({ behavior: 'smooth' });

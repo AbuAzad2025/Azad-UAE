@@ -179,7 +179,7 @@ class TestSetupSecondPass:
         type(mock_req).method = property(lambda self: (_ for _ in ()).throw(RuntimeError("route fail")))
         mock_req.path = "/x"
         mocker.patch("services.logging_core.has_request_context", return_value=True)
-        mocker.patch("services.logging_core.request", mock_req)
+        mocker.patch("flask.request", mock_req)
         builtin_warnings.showwarning("dep msg", DeprecationWarning, __file__, 1)
 
     def test_capture_warnings_hook_failure(self, app, mocker):
@@ -349,7 +349,7 @@ class TestTraceAndErrorSecondPass:
         mock_req.get_json.side_effect = RuntimeError("bad json")
         mock_req.form = None
         mocker.patch("services.logging_core.has_request_context", return_value=True)
-        mocker.patch("services.logging_core.request", mock_req)
+        mocker.patch("flask.request", mock_req)
         row = LoggingCore._persist_error("m", category="BACKEND", level="ERROR", source="s")
         assert row == 15
 
@@ -383,7 +383,7 @@ class TestTraceAndErrorSecondPass:
         mock_req.headers = {}
         type(mock_req).path = property(lambda self: (_ for _ in ()).throw(RuntimeError("path fail")))
         mocker.patch("services.logging_core.has_request_context", return_value=True)
-        mocker.patch("services.logging_core.request", mock_req)
+        mocker.patch("flask.request", mock_req)
         row = LoggingCore._persist_error("m", category="BACKEND", level="ERROR", source="s")
         assert row == 17
 

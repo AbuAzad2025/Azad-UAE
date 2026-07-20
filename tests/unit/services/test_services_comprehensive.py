@@ -32,7 +32,7 @@ class TestPrintService:
             assert ctx["print_user_name"] == "—"
             assert ctx["print_user_id"] is None
 
-    @patch("services.print_service.render_template", return_value="<html>printed</html>")
+    @patch("flask.render_template", return_value="<html>printed</html>")
     def test_render_print_basic(self, mock_render):
         from services.print_service import PrintService
 
@@ -56,7 +56,7 @@ class TestPrintService:
                 assert result == "<html>printed</html>"
                 mock_render.assert_called_once()
 
-    @patch("services.print_service.render_template", return_value="<html>with-extra</html>")
+    @patch("flask.render_template", return_value="<html>with-extra</html>")
     def test_render_print_with_extra_context(self, mock_render):
         from services.print_service import PrintService
 

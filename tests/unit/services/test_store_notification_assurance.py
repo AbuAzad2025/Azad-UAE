@@ -112,7 +112,7 @@ class TestEmailDispatch:
         mocker.patch("extensions.mail", mock_mail)
         mocker.patch("flask_mail.Message")
         mocker.patch(
-            "services.store_notification_service.url_for",
+            "flask.url_for",
             return_value="https://app/store/admin/orders/99",
         )
 
@@ -131,7 +131,7 @@ class TestEmailDispatch:
         mocker.patch("extensions.mail", mock_mail)
         mocker.patch("flask_mail.Message")
         mocker.patch(
-            "services.store_notification_service.url_for",
+            "flask.url_for",
             side_effect=Exception("no route"),
         )
 

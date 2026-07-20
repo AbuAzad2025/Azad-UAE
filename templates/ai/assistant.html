@@ -119,7 +119,7 @@
 
 <div class="row mb-4">
   <div class="col-md-3 mb-3">
-    <div class="card text-center h-100 erp-clickable" onclick="quickAsk(&quot;{{ t('حلل') }} {{ t('Sales') }}&quot;)">
+    <div class="card text-center h-100 erp-clickable" data-action="quick-ask" data-question="{{ t('حلل') }} {{ t('Sales') }}">
       <div class="card-body">
         <i class="fas fa-chart-line fa-3x text-primary mb-2"></i>
         <h6>{{ t('توقع') }} {{ t('Sales') }}</h6>
@@ -128,7 +128,7 @@
     </div>
   </div>
   <div class="col-md-3 mb-3">
-    <div class="card text-center h-100 erp-clickable" onclick="quickAsk(&quot;{{ t('هوامش') }} {{ t('Profit') }}&quot;)">
+    <div class="card text-center h-100 erp-clickable" data-action="quick-ask" data-question="{{ t('هوامش') }} {{ t('Profit') }}">
       <div class="card-body">
         <i class="fas fa-percentage fa-3x text-success mb-2"></i>
         <h6>{{ t('هوامش') }} {{ t('Profit') }}</h6>
@@ -137,7 +137,7 @@
     </div>
   </div>
   <div class="col-md-3 mb-3">
-    <div class="card text-center h-100 erp-clickable" onclick="quickAsk(&quot;{{ t('Health') }} {{ t('Inventory') }}&quot;)">
+    <div class="card text-center h-100 erp-clickable" data-action="quick-ask" data-question="{{ t('Health') }} {{ t('Inventory') }}">
       <div class="card-body">
         <i class="fas fa-boxes fa-3x text-warning mb-2"></i>
         <h6>{{ t('Health') }} {{ t('Inventory') }}</h6>
@@ -146,7 +146,7 @@
     </div>
   </div>
   <div class="col-md-3 mb-3">
-    <div class="card text-center h-100 erp-clickable" onclick="quickAsk(&quot;{{ t('أنماط') }} {{ t('Sales') }}&quot;)">
+    <div class="card text-center h-100 erp-clickable" data-action="quick-ask" data-question="{{ t('أنماط') }} {{ t('Sales') }}">
       <div class="card-body">
         <i class="fas fa-brain fa-3x text-info mb-2"></i>
         <h6>{{ t('كشف') }} {{ t('الأنماط') }}</h6>
@@ -185,13 +185,13 @@
   <div class="px-3 py-2 bg-white border-top">
     <div class="d-flex justify-content-between mb-2">
       <div class="btn-group btn-group-sm">
-        <button type="button" class="btn btn-outline-danger" onclick="clearChat()" title="{{ t('مسح') }} {{ t('المحادثة_2') }}">
+        <button type="button" class="btn btn-outline-danger" data-action="clear-chat" title="{{ t('مسح') }} {{ t('المحادثة_2') }}">
           <i class="fas fa-trash"></i>
         </button>
-        <button type="button" class="btn btn-outline-info" onclick="getSummary()" title="{{ t('Summary') }}">
+        <button type="button" class="btn btn-outline-info" data-action="get-summary" title="{{ t('Summary') }}">
           <i class="fas fa-list"></i>
         </button>
-        <button type="button" class="btn btn-outline-success" onclick="toggleBeginnersMode()" id="beginnersBtn" title="{{ t('وضع') }} {{ t('المبتدئين') }}">
+        <button type="button" class="btn btn-outline-success" data-action="toggle-beginners-mode" id="beginnersBtn" title="{{ t('وضع') }} {{ t('المبتدئين') }}">
           <i class="fas fa-graduation-cap"></i>
         </button>
       </div>
@@ -238,7 +238,7 @@
         </select>
       </div>
       <div class="d-flex justify-content-between">
-        <button type="button" class="btn btn-secondary" onclick="hideExcelUploader()">{{ t('Cancel') }}</button>
+        <button type="button" class="btn btn-secondary" data-action="hide-excel-uploader">{{ t('Cancel') }}</button>
         <button type="submit" class="btn btn-success" id="uploadExcelBtn">
           <i class="fas fa-upload ml-1"></i>{{ t('Upload') }} {{ t('ومعالجة') }}
         </button>
@@ -256,6 +256,17 @@
 
 {% block extra_js %}
 <script>
+  document.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-action]');
+    if (!el) return;
+    const action = el.dataset.action;
+    if (action === 'quick-ask') quickAsk(el.dataset.question);
+    else if (action === 'clear-chat') clearChat();
+    else if (action === 'get-summary') getSummary();
+    else if (action === 'toggle-beginners-mode') toggleBeginnersMode();
+    else if (action === 'hide-excel-uploader') hideExcelUploader();
+  });
+
   let chatHistory = [];
   let currentDialect = 'palestinian';
   let beginnersMode = false;

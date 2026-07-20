@@ -115,7 +115,7 @@ class TestFinancialOverview:
         session.query.return_value = pay_q
 
         mock_render = mocker.patch(
-            "services.financial_service.render_template",
+            "flask.render_template",
             return_value="<html/>",
         )
 
@@ -141,7 +141,7 @@ class TestFinancialOverview:
         session.query.return_value = q
 
         mock_render = mocker.patch(
-            "services.financial_service.render_template",
+            "flask.render_template",
             return_value="ok",
         )
 
@@ -164,7 +164,7 @@ class TestFinancialOverview:
         q.filter.return_value = q
         q.scalar.return_value = 0
         session.query.return_value = q
-        mocker.patch("services.financial_service.render_template", return_value="ok")
+        mocker.patch("flask.render_template", return_value="ok")
 
         from services.financial_service import FinancialService
 
@@ -182,7 +182,7 @@ class TestFinancialOverview:
         q.filter.return_value = q
         q.scalar.return_value = 0
         session.query.return_value = q
-        mocker.patch("services.financial_service.render_template", return_value="ok")
+        mocker.patch("flask.render_template", return_value="ok")
 
         from services.financial_service import FinancialService
 
@@ -199,7 +199,7 @@ class TestFinancialOverview:
         q.filter.return_value = q
         q.scalar.return_value = 0
         session.query.return_value = q
-        mocker.patch("services.financial_service.render_template", return_value="ok")
+        mocker.patch("flask.render_template", return_value="ok")
 
         from services.financial_service import FinancialService
 
