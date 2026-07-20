@@ -65,21 +65,24 @@ def get_backend_coverage():
 
     stats = defaultdict(lambda: {"total": 0, "covered": 0, "files": 0})
 
-    for raw_path in measured_raw:
-        norm = _norm(raw_path)
-        for cat, _ in BACKEND_CATEGORIES:
-            prefix = cat + "/"
-            if norm.startswith(prefix) or f"/{prefix}" in norm:
-                try:
-                    _, stmts, _, missing, _ = cov.analysis2(raw_path)
-                    total = len(stmts)
-                    covered = total - len(missing)
-                    stats[cat]["total"] += total
-                    stats[cat]["covered"] += covered
-                    stats[cat]["files"] += 1
-                except Exception:
-                    pass
-                break
+    measured_set = {_norm(p) for p in measured_raw}
+
+    for cat, _ in BACKEND_CATEGORIES:
+        cat_dir = PROJECT_ROOT / cat
+        if not cat_dir.is_dir():
+            continue
+        for py_file in cat_dir.rglob("*.py"):
+            norm = _norm(str(py_file.relative_to(PROJECT_ROOT)))
+            try:
+                _, stmts, _, missing, _ = cov.analysis2(str(py_file))
+                total = len(stmts)
+                covered = total - len(missing)
+            except Exception:
+                total = _count_statements(py_file)
+                covered = 0
+            stats[cat]["total"] += total
+            stats[cat]["covered"] += covered
+            stats[cat]["files"] += 1
 
     results = []
     a_total = a_cov = a_files = 0
@@ -96,6 +99,18 @@ def get_backend_coverage():
     a_pct = (a_cov / a_total * 100) if a_total else 0
     results.append(("_overall", "Backend Total", a_files, a_total, a_cov, a_pct))
     return results
+
+
+def _count_statements(path: Path) -> int:
+    """Count executable statements in a Python file (approximate)."""
+    try:
+        import ast
+
+        with open(path, encoding="utf-8") as f:
+            tree = ast.parse(f.read())
+        return sum(1 for _ in ast.walk(tree) if isinstance(_, ast.stmt))
+    except Exception:
+        return 1
 
 
 # ── Frontend template coverage ────────────────────────────────────────────
