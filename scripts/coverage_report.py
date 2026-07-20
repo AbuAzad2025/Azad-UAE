@@ -60,8 +60,6 @@ def get_backend_coverage():
     except Exception:
         return None
 
-    data = cov.get_data()
-
     stats = defaultdict(lambda: {"total": 0, "covered": 0, "files": 0})
 
     for cat, _ in BACKEND_CATEGORIES:
