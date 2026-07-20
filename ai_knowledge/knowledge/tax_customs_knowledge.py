@@ -226,6 +226,9 @@ EXPORT_PROCEDURES = """
 # دليل شامل
 TAX_CUSTOMS_GUIDE = {
     "uae_vat": UAE_TAX_SYSTEM,
+    # Alias: get_tax_info("uae") builds the key "{country}_tax" — keep it
+    # resolving to the UAE VAT content instead of the "unavailable" fallback.
+    "uae_tax": UAE_TAX_SYSTEM,
     "uae_customs": CUSTOMS_UAE,
     "saudi_tax": SAUDI_TAX,
     "palestine_tax": PALESTINE_TAX,
