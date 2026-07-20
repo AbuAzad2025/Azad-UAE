@@ -112,6 +112,25 @@ def update_integration(service):
     return redirect(url_for("owner.integrations"))
 
 
+@owner_bp.route("/integrations/test/<service>", methods=["POST"])
+@owner_required
+def test_integration(service):
+    """اختبار الاتصال بالتكامل — يسجل النتيجة في last_test_* ويعيد JSON."""
+    from services.integration_service import IntegrationService
+
+    if service not in IntegrationService.TESTABLE_SERVICES:
+        abort(404)
+    try:
+        if service == "email":
+            ok, message = IntegrationService.test_email()
+        else:
+            ok, message = IntegrationService.test_currency_api()
+    except Exception as exc:
+        current_app.logger.exception("Integration test failed for %s", service)
+        return jsonify({"success": False, "message": str(exc)}), 500
+    return jsonify({"success": ok, "message": message}), 200
+
+
 @owner_bp.route("/reports")
 @owner_required
 def reports():

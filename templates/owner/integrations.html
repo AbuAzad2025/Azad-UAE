@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 
 {% block title %}شركة أزاد للأنظمة الذكية - التكاملات والربط مع الأنظمة الخارجية{% endblock %}
 
@@ -228,7 +228,7 @@
                                 <button type="submit" class="btn btn-info">
                                     <i class="fas fa-save mr-1"></i>حفظ إعدادات البريد
                                 </button>
-                                <button type="button" class="btn btn-outline-secondary" onclick="testEmail()">
+                                <button type="button" class="btn btn-outline-secondary" data-action="test-email">
                                     <i class="fas fa-paper-plane mr-1"></i>اختبار الإرسال
                                 </button>
                             </form>
@@ -411,7 +411,7 @@
                                 <button type="submit" class="btn btn-warning">
                                     <i class="fas fa-save mr-1"></i>حفظ إعدادات أسعار الصرف
                                 </button>
-                                <button type="button" class="btn btn-outline-secondary" onclick="testCurrencyAPI()">
+                                <button type="button" class="btn btn-outline-secondary" data-action="test-currency-api">
                                     <i class="fas fa-sync mr-1"></i>تحديث الأسعار الآن
                                 </button>
                             </form>
@@ -423,5 +423,49 @@
     </section>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('click', function (e) {
+    const btn = e.target.closest('[data-action="test-email"], [data-action="test-currency-api"]');
+    if (!btn) {
+        return;
+    }
+    e.preventDefault();
+    const service = btn.dataset.action === 'test-email' ? 'email' : 'currency_api';
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>{{ t("جاري الاختبار") }}';
+    fetch('{{ url_for("owner.test_integration", service="__SERVICE__") }}'.replace('__SERVICE__', service), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        }
+    })
+    .then(function (resp) { return resp.json(); })
+    .then(function (data) {
+        Swal.fire({
+            icon: data.success ? 'success' : 'error',
+            title: data.success ? '{{ t("نجح الاختبار") }}' : '{{ t("فشل الاختبار") }}',
+            text: data.message || '',
+            confirmButtonText: '{{ t("حسناً") }}'
+        });
+    })
+    .catch(function () {
+        Swal.fire({
+            icon: 'error',
+            title: '{{ t("خطأ") }}',
+            text: '{{ t("حدث خطأ في الاتصال بالخادم") }}',
+            confirmButtonText: '{{ t("حسناً") }}'
+        });
+    })
+    .finally(function () {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+    });
+});
+</script>
 {% endblock %}
 
