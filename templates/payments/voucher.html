@@ -66,7 +66,7 @@
       
       <div class="row mb-4 justify-content-center">
         <div class="col-md-5">
-          <div class="card type-card text-center p-3 selected" id="card-incoming" onclick="selectDirection('incoming')">
+          <div class="card type-card text-center p-3 selected" id="card-incoming" data-action="select-direction" data-direction="incoming">
             <i class="fas fa-arrow-down fa-2x text-success mb-2"></i>
             <h4>{{ t('Voucher_2') }} {{ t('Receipt') }} ({{ t('Income_3') }})</h4>
             <p class="text-muted small mb-0">{{ t('استلام') }} {{ t('أموال') }} من {{ t('عميل') }} أو {{ t('Supplier_2') }}</p>
@@ -74,7 +74,7 @@
           </div>
         </div>
         <div class="col-md-5">
-          <div class="card type-card text-center p-3" id="card-outgoing" onclick="selectDirection('outgoing')">
+          <div class="card type-card text-center p-3" id="card-outgoing" data-action="select-direction" data-direction="outgoing">
             <i class="fas fa-arrow-up fa-2x text-danger mb-2"></i>
             <h4>{{ t('Voucher_2') }} {{ t('صرف') }} ({{ t('Expense') }})</h4>
             <p class="text-muted small mb-0">{{ t('Payment') }} {{ t('أموال') }} {{ t('for Supplier') }} أو {{ t('عميل') }}</p>
@@ -90,7 +90,7 @@
         <div class="col-md-4">
           <div class="form-group">
             <label class="font-weight-bold">{{ t('نوع') }} {{ t('الجهة') }}</label>
-            <select class="form-control" name="party_type" id="party_type" onchange="updatePartyList()" aria-label="party type">
+            <select class="form-control" name="party_type" id="party_type" data-action="update-party-list" aria-label="party type">
               <option value="customer">{{ t('عميل') }} / {{ t('Partner') }} / {{ t('تاجر') }}</option>
               <option value="supplier">{{ t('Supplier_2') }}</option>
             </select>
@@ -140,7 +140,7 @@
         <div class="col-md-4">
           <div class="form-group">
             <label class="font-weight-bold">{{ t('طريقة') }} {{ t('Payment_2') }}</label>
-            <select class="form-control" name="payment_method" id="payment_method" onchange="toggleChequeFields()" aria-label="payment method">
+            <select class="form-control" name="payment_method" id="payment_method" data-action="toggle-cheque-fields" aria-label="payment method">
               <option value="cash">{{ t('Cash_2') }}</option>
               <option value="bank_transfer">{{ t('Transfer') }} {{ t('Bank_3') }}</option>
               <option value="cheque">{{ t('Cheque_3') }}</option>
@@ -204,6 +204,20 @@
 {% block extra_js %}
 {% include 'partials/select2_assets.html' %}
 <script>
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action="select-direction"]');
+  if (!el) return;
+  selectDirection(el.dataset.direction);
+});
+
+document.addEventListener('change', (e) => {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const action = el.dataset.action;
+  if (action === 'update-party-list') updatePartyList();
+  else if (action === 'toggle-cheque-fields') toggleChequeFields();
+});
+
 function selectDirection(dir) {
   $('.type-card').removeClass('selected');
   $('#card-' + dir).addClass('selected');

@@ -237,7 +237,7 @@
         
         
         {% if cheque.status == 'pending' %}
-        <button type="button" class="btn btn-primary btn-block mb-2" onclick="depositCheque()">
+        <button type="button" class="btn btn-primary btn-block mb-2" data-action="deposit-cheque">
           <i class="fas fa-university mr-2"></i>{{ t('إيداع') }} في {{ t('Bank') }}
         </button>
 
@@ -247,11 +247,11 @@
         </a>
         
         {% elif cheque.status == 'deposited' %}
-        <button type="button" class="btn btn-success btn-block mb-2" onclick="clearCheque()">
+        <button type="button" class="btn btn-success btn-block mb-2" data-action="clear-cheque">
           <i class="fas fa-check-circle mr-2"></i>✅ {{ t('Confirm') }} {{ t('Exchange') }} ({{ t('Bank') }} {{ t('وافق') }})
         </button>
 
-        <button type="button" class="btn btn-danger btn-block mb-2" onclick="bounceCheque()">
+        <button type="button" class="btn btn-danger btn-block mb-2" data-action="bounce-cheque">
           <i class="fas fa-times-circle mr-2"></i>❌ {{ t('رفض') }} ({{ t('Bank') }} {{ t('رفض') }})
         </button>
         
@@ -276,7 +276,7 @@
         {% endif %}
 
         {% if cheque.status not in ['cleared', 'cancelled'] %}
-        <button type="button" class="btn btn-secondary btn-block mb-2" onclick="cancelCheque()">
+        <button type="button" class="btn btn-secondary btn-block mb-2" data-action="cancel-cheque">
           <i class="fas fa-ban mr-2"></i>{{ t('Cancel') }} {{ t('Cheque') }}
         </button>
         {% endif %}
@@ -486,6 +486,16 @@
 
 {% block extra_js %}
 <script>
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const action = el.dataset.action;
+  if (action === 'deposit-cheque') depositCheque();
+  else if (action === 'clear-cheque') clearCheque();
+  else if (action === 'bounce-cheque') bounceCheque();
+  else if (action === 'cancel-cheque') cancelCheque();
+});
+
 const isForeignCurrency = {{ is_foreign_currency | tojson }};
 
 function depositCheque() {

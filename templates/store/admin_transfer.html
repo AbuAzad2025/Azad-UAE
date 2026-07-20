@@ -31,7 +31,7 @@
 
           <div class="form-group">
             <label class="font-weight-bold" for="source_warehouse_id" id="wh_label">{{ _('المستودع الفعلي') }}</label>
-            <select name="source_warehouse_id" id="source_warehouse_id" class="form-control" required onchange="filterByWarehouse()">
+            <select name="source_warehouse_id" id="source_warehouse_id" class="form-control" required data-action="filter-by-warehouse">
               <option value="">{{ _('— اختر المستودع —') }}</option>
               {% for wh in physical_warehouses %}
               <option value="{{ wh.id }}">{{ wh.name_ar or wh.name }} ({{ wh.code or wh.id }})</option>
@@ -93,6 +93,12 @@
 </div>
 
 <script>
+document.addEventListener('change', (e) => {
+  const el = e.target.closest('[data-action="filter-by-warehouse"]');
+  if (!el) return;
+  filterByWarehouse();
+});
+
 function filterByWarehouse() {
   const sel = document.getElementById('product_id');
   const wh = document.getElementById('source_warehouse_id');

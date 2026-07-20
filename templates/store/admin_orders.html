@@ -206,7 +206,7 @@
 
             {% if order.status == 'pending' %}
 
-            <form class="needs-validation d-inline" method="post" action="{{ url_for('store.admin_order_confirm', order_id=order.id) }}" onsubmit="return confirm(&quot;{{ t('Confirm') }} {{ t('الطلب') }} &quot; + {{ order.sale_number|tojson }} + &quot;؟&quot;);">
+            <form class="needs-validation d-inline" method="post" action="{{ url_for('store.admin_order_confirm', order_id=order.id) }}" data-action="confirm-order-number" data-confirm-prefix="{{ t('Confirm') }} {{ t('الطلب') }} " data-order-number="{{ order.sale_number }}" data-confirm-suffix="؟">
 
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
@@ -260,5 +260,15 @@
 
 </p>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('submit', (e) => {
+  const el = e.target.closest('[data-action="confirm-order-number"]');
+  if (!el) return;
+  if (!confirm(el.dataset.confirmPrefix + el.dataset.orderNumber + el.dataset.confirmSuffix)) e.preventDefault();
+});
+</script>
 {% endblock %}
 

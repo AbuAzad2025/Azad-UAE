@@ -103,7 +103,7 @@
           <a href="{{ url_for('owner.tenant_edit', tenant_id=tenant.id) }}" class="btn btn-light">
             <i class="bi bi-pencil mr-1"></i>{{ _('تعديل') }}
           </a>
-          <form class="needs-validation d-inline" method="POST" action="{{ url_for('owner.tenant_suspend', tenant_id=tenant.id) }}" onsubmit="return confirm('تأكيد تعليق هذا التينانت؟');">
+          <form class="needs-validation d-inline" method="POST" action="{{ url_for('owner.tenant_suspend', tenant_id=tenant.id) }}" data-action="confirm-submit" data-confirm-message="تأكيد تعليق هذا التينانت؟">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             <input type="hidden" name="reason" value="Suspended from public profile" aria-label="reason">
             <button type="submit" class="btn btn-warning">
@@ -293,6 +293,14 @@
       <small class="opacity-75">{{ _('نظام أزاد المحاسبي — Azad Accounting System') }}</small>
     </div>
   </div>
+
+  <script>
+  document.addEventListener('submit', (e) => {
+    const el = e.target.closest('[data-action="confirm-submit"]');
+    if (!el) return;
+    if (!confirm(el.dataset.confirmMessage)) e.preventDefault();
+  });
+  </script>
 
 </body>
 </html>

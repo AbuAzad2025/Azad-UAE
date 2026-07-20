@@ -76,7 +76,7 @@
                 <input type="hidden" name="ot_id" value="{{ ot.id }}">
                 <button type="submit" name="action" value="set_default" class="btn btn-sm btn-outline-primary mr-1">{{ _('افتراضي') }}</button>
                 <button type="submit" name="action" value="toggle" class="btn btn-sm btn-outline-secondary mr-1">{{ _('تبديل النشط') }}</button>
-                <button type="submit" name="action" value="delete" class="btn btn-sm btn-outline-danger" onclick="return confirm('حذف النوع؟')">{{ _('حذف') }}</button>
+                <button type="submit" name="action" value="delete" class="btn btn-sm btn-outline-danger" data-action="confirm-submit" data-confirm-message="حذف النوع؟">{{ _('حذف') }}</button>
               </form>
             </td>
           </tr>
@@ -88,4 +88,14 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action="confirm-submit"]');
+  if (!el) return;
+  if (!confirm(el.dataset.confirmMessage)) e.preventDefault();
+});
+</script>
 {% endblock %}

@@ -28,7 +28,7 @@
     <div class="ps-toolbar-row">
       <div class="ps-sort">
         <label for="sort-select">{{ t('sort_by') }}:</label>
-        <select id="sort-select" name="sort" onchange="this.form.submit()">
+        <select id="sort-select" name="sort" data-action="submit-form">
           <option value="">{{ t('default') }}</option>
           <option value="price_asc" {% if current_sort == 'price_asc' %}selected{% endif %}>{{ t('price_low') }}</option>
           <option value="price_desc" {% if current_sort == 'price_desc' %}selected{% endif %}>{{ t('price_high') }}</option>
@@ -169,4 +169,13 @@
   </div>
 </section>
 {% include 'shop/partials/quick_view_modal.html' %}
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener('change', (e) => {
+  const el = e.target.closest('[data-action="submit-form"]');
+  if (!el) return;
+  el.form.submit();
+});
+</script>
 {% endblock %}

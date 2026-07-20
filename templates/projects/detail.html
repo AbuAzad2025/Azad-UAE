@@ -8,8 +8,8 @@
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h4><i class="fas fa-project-diagram"></i> {{ project.name_ar or project.name }}</h4>
     <div>
-      <button class="btn btn-sm btn-outline-info" onclick="$('#timesheetModal').modal('show')"><i class="fas fa-clock"></i> {{ t('تسجيل') }} {{ t('Time') }}</button>
-      <button class="btn btn-sm btn-outline-secondary" onclick="$('#memberModal').modal('show')"><i class="fas fa-user-plus"></i> {{ t('Add') }} {{ t('عضو') }}</button>
+      <button class="btn btn-sm btn-outline-info" data-action="show-modal" data-target="#timesheetModal"><i class="fas fa-clock"></i> {{ t('تسجيل') }} {{ t('Time') }}</button>
+      <button class="btn btn-sm btn-outline-secondary" data-action="show-modal" data-target="#memberModal"><i class="fas fa-user-plus"></i> {{ t('Add') }} {{ t('عضو') }}</button>
       <a href="{{ url_for('projects.edit_project', project_id=project.id) }}" class="btn btn-sm btn-warning" aria-label="{{ t('Edit') }} {{ t('Project') }}"><i class="fas fa-edit"></i></a>
     </div>
   </div>
@@ -93,5 +93,12 @@
 </div>
 {% endblock %}
 {% block extra_js %}
+<script>
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action="show-modal"]');
+  if (!el) return;
+  $(el.dataset.target).modal('show');
+});
+</script>
 <script src="{{ url_for('static', filename='js/projects/kanban.js') }}"></script>
 {% endblock %}

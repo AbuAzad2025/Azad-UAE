@@ -54,7 +54,7 @@
                 <td>
                   <form class="needs-validation d-inline" method="post" action="{{ url_for('cheques.restore', id=cheque.id) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                    <button type="submit" class="btn btn-success" onclick="return confirm(&quot;{{ t('Restore') }} هذا {{ t('Cheque_2') }}&quot;)"">
+                    <button type="submit" class="btn btn-success" data-action="confirm-submit" data-confirm-message="{{ t('Restore') }} هذا {{ t('Cheque_2') }}">
                       <i class="fas fa-undo"></i> {{ t('Restore') }}
                     </button>
                   </form>
@@ -75,5 +75,15 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action="confirm-submit"]');
+  if (!el) return;
+  if (!confirm(el.dataset.confirmMessage)) e.preventDefault();
+});
+</script>
 {% endblock %}
 

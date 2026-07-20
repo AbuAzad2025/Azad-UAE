@@ -9,23 +9,23 @@
       <div class="card-body py-2">
         <form class="needs-validation form-inline" method="get">
           <label class="mr-2" for="branch_id">{{ t('Branch') }}:</label>
-          <select name="branch_id" class="form-control mr-2" onchange="this.form.submit()" id="branch_id">
+          <select name="branch_id" class="form-control mr-2" data-action="submit-form" id="branch_id">
             <option value="">-- {{ t('All') }} --</option>
             {% for branch in branches %}
             <option value="{{ branch.id }}" {% if selected_branch == branch.id %}selected{% endif %}>{{ branch.name }}</option>
             {% endfor %}
           </select>
           <label class="mr-2" for="warehouse_id">{{ t('Warehouse') }}:</label>
-          <select name="warehouse_id" class="form-control mr-2" onchange="this.form.submit()" id="warehouse_id">
+          <select name="warehouse_id" class="form-control mr-2" data-action="submit-form" id="warehouse_id">
             <option value="">-- {{ t('All') }} --</option>
             {% for wh in warehouses %}
             <option value="{{ wh.id }}" {% if selected_warehouse == wh.id %}selected{% endif %}>{{ wh.name_ar or wh.name }}</option>
             {% endfor %}
           </select>
           <label class="mr-2" for="input_date_from">{{ _('من:') }}</label>
-          <input type="date" name="date_from" class="form-control mr-2" value="{{ date_from or '' }}" onchange="this.form.submit()" id="input_date_from" aria-label="من {{ t('History') }}">
+          <input type="date" name="date_from" class="form-control mr-2" value="{{ date_from or '' }}" data-action="submit-form" id="input_date_from" aria-label="من {{ t('History') }}">
           <label class="mr-2" for="input_date_to">{{ _('إلى:') }}</label>
-          <input type="date" name="date_to" class="form-control mr-2" value="{{ date_to or '' }}" onchange="this.form.submit()" id="input_date_to" aria-label="إلى {{ t('History') }}">
+          <input type="date" name="date_to" class="form-control mr-2" value="{{ date_to or '' }}" data-action="submit-form" id="input_date_to" aria-label="إلى {{ t('History') }}">
           <div class="ml-auto">
             <a href="{{ url_for('reports.inventory_reconciliation_export', format='xlsx', branch_id=selected_branch, warehouse_id=selected_warehouse, date_from=date_from, date_to=date_to) }}" class="btn btn-success">
               <i class="fas fa-file-excel mr-1"></i>Excel
@@ -228,4 +228,14 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('change', (e) => {
+  const el = e.target.closest('[data-action="submit-form"]');
+  if (!el) return;
+  el.form.submit();
+});
+</script>
 {% endblock %}

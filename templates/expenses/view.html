@@ -226,7 +226,7 @@
 
                                 </a>
 
-                                <form class="needs-validation w-100" action="{{ url_for('expenses.delete', id=expense.id) }}" method="POST" onsubmit="return confirm(&quot;هل أنت {{ t('متأكد') }} من {{ t('Delete') }} هذا {{ t('Expense_4') }}&quot;);">
+                                <form class="needs-validation w-100" action="{{ url_for('expenses.delete', id=expense.id) }}" method="POST" data-action="confirm-submit" data-confirm-message="هل أنت {{ t('متأكد') }} من {{ t('Delete') }} هذا {{ t('Expense_4') }}">
 
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
@@ -254,5 +254,15 @@
 
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('submit', (e) => {
+  const el = e.target.closest('[data-action="confirm-submit"]');
+  if (!el) return;
+  if (!confirm(el.dataset.confirmMessage)) e.preventDefault();
+});
+</script>
 {% endblock %}
 

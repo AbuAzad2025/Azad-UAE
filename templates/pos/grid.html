@@ -74,7 +74,7 @@
         <div class="total-row grand"><span>{{ _('الإجمالي') }}</span><span><span id="kpiTotal">0.00</span> <span id="kpiCurrency">{{ tenant_currency_symbol }}</span></span></div>
       </div>
       <div class="pos-settings">
-        <div class="pos-settings-toggle" onclick="document.querySelector('.pos-settings-body').classList.toggle('d-none')">
+        <div class="pos-settings-toggle" data-action="toggle-settings-body">
           <i class="fas fa-cog mr-1"></i>{{ _('إعدادات الفاتورة') }}
         </div>
         <div class="pos-settings-body d-none">
@@ -210,6 +210,13 @@
 </div>
 {% endblock %}
 {% block extra_js %}
+<script>
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action="toggle-settings-body"]');
+  if (!el) return;
+  document.querySelector('.pos-settings-body').classList.toggle('d-none');
+});
+</script>
 <script src="{{ url_for('static', filename='js/barcode-scanner.js') }}"></script>
 <meta name="pos-base-currency" content="{{ tenant_default_currency }}">
 <meta name="pos-currency-symbol" content="{{ currency_symbol }}">

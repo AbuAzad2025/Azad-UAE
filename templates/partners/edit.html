@@ -45,7 +45,7 @@
 
           <div class="col-md-6">
             <label class="form-label fw-semibold">{{ t('مستوى') }} {{ t('الشراكة') }}</label>
-            <select name="scope_type" id="scope_type" class="form-select" onchange="updateScopeOptions()" aria-label="scope type">
+            <select name="scope_type" id="scope_type" class="form-select" data-action="update-scope-options" aria-label="scope type">
               <option value="company" {% if partner.scope_type == 'company' %}selected{% endif %}>{{ t('مستوى') }} {{ t('Company') }}</option>
               <option value="branch" {% if partner.scope_type == 'branch' %}selected{% endif %}>{{ t('Branch_2') }} {{ t('محدد') }}</option>
               <option value="warehouse" {% if partner.scope_type == 'warehouse' %}selected{% endif %}>{{ t('Warehouse_2') }} {{ t('محدد') }}</option>
@@ -130,6 +130,12 @@
 </div>
 
 <script>
+document.addEventListener('change', (e) => {
+  const el = e.target.closest('[data-action="update-scope-options"]');
+  if (!el) return;
+  updateScopeOptions();
+});
+
 const branches = {{ branches|map(attribute='id')|list|tojson }};
 const warehouses = {{ warehouses|map(attribute='id')|list|tojson }};
 const branchNames = {{ branches|map(attribute='name')|list|tojson }};

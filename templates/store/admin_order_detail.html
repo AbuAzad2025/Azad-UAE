@@ -258,7 +258,7 @@
 
         </form>
 
-        <form method="post" action="{{ url_for('store.admin_order_cancel', order_id=order.id) }}" onsubmit="return confirm(&quot;{{ t('Cancel') }} {{ t('الطلب') }} &quot; + {{ order.sale_number|tojson }} + &quot;؟&quot;);">
+        <form method="post" action="{{ url_for('store.admin_order_cancel', order_id=order.id) }}" data-action="confirm-order-number" data-confirm-prefix="{{ t('Cancel') }} {{ t('الطلب') }} " data-order-number="{{ order.sale_number }}" data-confirm-suffix="؟">
 
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
@@ -272,7 +272,7 @@
 
       <div class="card-footer">
 
-        <form method="post" action="{{ url_for('store.admin_order_cancel', order_id=order.id) }}" onsubmit="return confirm(&quot;{{ t('Cancel') }} {{ t('طلب') }} {{ t('Confirmed_2') }} {{ t('سيُعيد') }} {{ t('Inventory') }} {{ t('ويعكس') }} {{ t('القيود') }} — {{ t('متابعة_2') }}&quot;)"">
+        <form method="post" action="{{ url_for('store.admin_order_cancel', order_id=order.id) }}" data-action="confirm-submit" data-confirm-message="{{ t('Cancel') }} {{ t('طلب') }} {{ t('Confirmed_2') }} {{ t('سيُعيد') }} {{ t('Inventory') }} {{ t('ويعكس') }} {{ t('القيود') }} — {{ t('متابعة_2') }}">
 
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
@@ -296,5 +296,20 @@
 
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('submit', (e) => {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const action = el.dataset.action;
+  if (action === 'confirm-submit') {
+    if (!confirm(el.dataset.confirmMessage)) e.preventDefault();
+  } else if (action === 'confirm-order-number') {
+    if (!confirm(el.dataset.confirmPrefix + el.dataset.orderNumber + el.dataset.confirmSuffix)) e.preventDefault();
+  }
+});
+</script>
 {% endblock %}
 

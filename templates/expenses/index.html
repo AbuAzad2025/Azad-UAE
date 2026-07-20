@@ -28,7 +28,7 @@
     <div class="card-body py-2">
         <form class="needs-validation form-inline" method="get">
             <label class="mr-2" for="category">{{ t('التصنيف') }}:</label>
-            <select name="category" class="form-control mr-2" onchange="this.form.submit()" id="category">
+            <select name="category" class="form-control mr-2" data-action="submit-form" id="category">
                 <option value="">-- {{ t('All') }} --</option>
                 {% for category in categories %}
                 <option value="{{ category.id }}" {% if request.args.get('category', type=int) == category.id %}selected{% endif %}>
@@ -113,6 +113,12 @@
 {% block extra_js %}
 {% include 'partials/datatables_assets.html' %}
 <script>
+document.addEventListener('change', (e) => {
+  const el = e.target.closest('[data-action="submit-form"]');
+  if (!el) return;
+  el.form.submit();
+});
+
 (() => {
   const tableSelector = '#expensesTable';
   const printButtonSelector = '#printExpensesBtn';
