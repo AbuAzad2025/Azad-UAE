@@ -9,7 +9,7 @@
         <p class="text-muted mb-0">{{ t('جميع') }} {{ t('بطاقات') }} {{ t('Payment_2') }} {{ t('المسجلة') }} ({{ t('مشفرة') }} {{ t('وآمنة') }})</p>
     </div>
     <div>
-        <button class="btn btn-warning" onclick="toggleDecryption()">
+        <button class="btn btn-warning" data-action="toggle-decryption">
             <i class="fas fa-eye" id="decrypt-icon"></i> <span id="decrypt-text">{{ t('View') }} {{ t('Data') }} {{ t('المشفرة') }}</span>
         </button>
     </div>
@@ -229,7 +229,7 @@
                                     </tr>
                                 </table></div>
                                 
-                                <button class="btn btn-info btn-block" onclick="viewCard({{ card.id }})">
+                                <button class="btn btn-info btn-block" data-action="view-card" data-card-id="{{ card.id }}">
                                     <i class="fas fa-eye"></i> {{ t('View') }} {{ t('Details_2') }}
                                 </button>
                                 
@@ -259,6 +259,14 @@
 
 {% block extra_js %}
 <script>
+    document.addEventListener('click', (e) => {
+        const el = e.target.closest('[data-action]');
+        if (!el) return;
+        const action = el.dataset.action;
+        if (action === 'toggle-decryption') toggleDecryption();
+        else if (action === 'view-card') viewCard(Number(el.dataset.cardId));
+    });
+
     let decryptionEnabled = false;
     
     function toggleDecryption() {
