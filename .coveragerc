@@ -5,8 +5,6 @@ relative_files = True
 include = *.py
 omit =
     migrations/**
-    utils/build_assets.py
-    utils/seed_industry_fields.py
     tests/**
     tools/**
     scripts/**
