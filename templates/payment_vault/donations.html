@@ -86,7 +86,7 @@
             <form class="needs-validation row" method="GET" action="">
                 <div class="col-md-3">
                     <label>{{ t('Status') }}</label>
-                    <select name="status" class="form-control" onchange="this.form.submit()" aria-label="status">
+                    <select name="status" class="form-control" data-action="submit-form" aria-label="status">
                         <option value="">{{ t('None') }}</option>
                         <option value="completed" {% if request.args.get('status') == 'completed' %}selected{% endif %}>{{ t('Completed_2') }}</option>
                         <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>{{ t('قيد') }} {{ t('Waiting') }}</option>
@@ -96,7 +96,7 @@
                 
                 <div class="col-md-3">
                     <label>{{ t('Currency') }} {{ t('الرقمية') }}</label>
-                    <select name="crypto" class="form-control" onchange="this.form.submit()" aria-label="crypto">
+                    <select name="crypto" class="form-control" data-action="submit-form" aria-label="crypto">
                         <option value="">{{ t('None') }}</option>
                         <option value="btc" {% if request.args.get('crypto') == 'btc' %}selected{% endif %}>Bitcoin</option>
                         <option value="eth" {% if request.args.get('crypto') == 'eth' %}selected{% endif %}>Ethereum</option>
@@ -171,25 +171,25 @@
                                         <small>{{ donation.gateway_name or 'N/A' }}</small>
                                     </td>
                                     <td>
-                                        <button class="btn btn-info" onclick="viewDonation({{ donation.id }})" title="{{ t('View') }}">
+                                        <button class="btn btn-info" data-action="view-donation" data-donation-id="{{ donation.id }}" title="{{ t('View') }}">
                                             <i class="fas fa-eye"></i>
                                         </button>
                                         {% if donation.status == 'pending' %}
                                         <form method="POST" action="{{ url_for('payment_vault.approve_donation', donation_id=donation.id) }}" class="ic-1">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                                            <button type="submit" class="btn btn-success" onclick="return confirm(&quot;{{ t('قبول') }} هذا {{ t('التبرع_2') }}&quot;)" title="{{ t('Confirm') }}">
+                                            <button type="submit" class="btn btn-success" data-action="confirm-submit" data-confirm-message="{{ t('قبول') }} هذا {{ t('التبرع_2') }}" title="{{ t('Confirm') }}">
                                                 <i class="fas fa-check"></i>
                                             </button>
                                         </form>
                                         <form method="POST" action="{{ url_for('payment_vault.reject_donation', donation_id=donation.id) }}" class="ic-1">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                                            <button type="submit" class="btn btn-danger" onclick="return confirm(&quot;{{ t('رفض') }} هذا {{ t('التبرع_2') }}&quot;)" title="{{ t('Close') }}">
+                                            <button type="submit" class="btn btn-danger" data-action="confirm-submit" data-confirm-message="{{ t('رفض') }} هذا {{ t('التبرع_2') }}" title="{{ t('Close') }}">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         </form>
                                         {% endif %}
                                         {% if donation.donor_email %}
-                                        <button class="btn btn-primary" onclick="sendThankYou({{ donation.donor_email|tojson }}, {{ (donation.donor_name or 'متبرع')|tojson }}, {{ donation.amount_usd }})" title="Envelope">
+                                        <button class="btn btn-primary" data-action="send-thank-you" data-email="{{ donation.donor_email }}" data-name="{{ donation.donor_name or 'متبرع' }}" data-amount="{{ donation.amount_usd }}" title="Envelope">
                                             <i class="fas fa-envelope"></i>
                                         </button>
                                         {% endif %}
@@ -221,6 +221,22 @@
 
 {% block extra_js %}
 <script>
+document.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-action]');
+    if (!el) return;
+    const action = el.dataset.action;
+    if (action === 'confirm-submit') {
+        if (!confirm(el.dataset.confirmMessage)) e.preventDefault();
+    } else if (action === 'view-donation') viewDonation(Number(el.dataset.donationId));
+    else if (action === 'send-thank-you') sendThankYou(el.dataset.email, el.dataset.name, Number(el.dataset.amount));
+});
+
+document.addEventListener('change', (e) => {
+    const el = e.target.closest('[data-action="submit-form"]');
+    if (!el) return;
+    el.form.submit();
+});
+
 function viewDonation(id) {
     window.location.href = `/payment-vault/donation/${id}`;
 }

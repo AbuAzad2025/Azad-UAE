@@ -224,7 +224,7 @@
                         <div class="col-md-6">
                             <form class="needs-validation" method="POST" action="{{ url_for('payment_vault.approve_donation', donation_id=donation.id) }}">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                                <button type="submit" class="btn btn-success btn-block btn-lg" onclick="return confirm(&quot;{{ t('قبول') }} هذا {{ t('التبرع_2') }}&quot;)"">
+                                <button type="submit" class="btn btn-success btn-block btn-lg" data-action="confirm-submit" data-confirm-message="{{ t('قبول') }} هذا {{ t('التبرع_2') }}">
                                     <i class="fas fa-check-circle"></i> {{ t('قبول') }} {{ t('التبرع') }}
                                 </button>
                             </form>
@@ -232,7 +232,7 @@
                         <div class="col-md-6">
                             <form method="POST" action="{{ url_for('payment_vault.reject_donation', donation_id=donation.id) }}">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                                <button type="submit" class="btn btn-danger btn-block btn-lg" onclick="return confirm(&quot;{{ t('رفض') }} هذا {{ t('التبرع_2') }}&quot;)"">
+                                <button type="submit" class="btn btn-danger btn-block btn-lg" data-action="confirm-submit" data-confirm-message="{{ t('رفض') }} هذا {{ t('التبرع_2') }}">
                                     <i class="fas fa-times-circle"></i> {{ t('رفض') }} {{ t('التبرع') }}
                                 </button>
                             </form>
@@ -241,7 +241,7 @@
                         
                         {% if donation.donor_email %}
                         <div class="col-md-6 mt-3">
-                            <button class="btn btn-primary btn-block btn-lg" onclick="sendThankYou({{ donation.donor_email|tojson }}, {{ (donation.donor_name or 'متبرع')|tojson }}, {{ donation.amount_usd }})">
+                            <button class="btn btn-primary btn-block btn-lg" data-action="send-thank-you" data-email="{{ donation.donor_email }}" data-name="{{ donation.donor_name or 'متبرع' }}" data-amount="{{ donation.amount_usd }}">
                                 <i class="fas fa-envelope"></i> {{ t('Submit') }} {{ t('شكر') }}
                             </button>
                         </div>
@@ -261,6 +261,15 @@
 
 {% block extra_js %}
 <script>
+document.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-action]');
+    if (!el) return;
+    const action = el.dataset.action;
+    if (action === 'confirm-submit') {
+        if (!confirm(el.dataset.confirmMessage)) e.preventDefault();
+    } else if (action === 'send-thank-you') sendThankYou(el.dataset.email, el.dataset.name, Number(el.dataset.amount));
+});
+
 function sendThankYou(email, name, amount) {
     const subject = encodeURIComponent('{{ t("شكراً") }} على {{ t("تبرعك") }} {{ t("الكريم") }}');
     const body = encodeURIComponent(`{{ t('عزيزي') }} ${name},\n\n{{ t('نشكرك') }} على {{ t('تبرعك') }} {{ t('الكريم') }} {{ t('بمبلغ') }} $${amount}.\n\nمع {{ t('أطيب') }} {{ t('التحيات') }},\n{{ t('فريق') }} {{ developer_name_ar or developer_name or 'Azad Systems' }}`);

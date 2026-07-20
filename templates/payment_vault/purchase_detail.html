@@ -416,7 +416,7 @@
 
                                 {% if purchase.payment_status == 'pending' and purchase.activation_status != 'activated' %}
 
-                                <form class="needs-validation" method="POST" action="{{ url_for('payment_vault.activate_purchase', id=purchase.id) }}" onsubmit="return confirm(&quot;هل {{ t('تريد') }} {{ t('تفعيل') }} هذه {{ t('Plan_3') }}&quot;)"">
+                                <form class="needs-validation" method="POST" action="{{ url_for('payment_vault.activate_purchase', id=purchase.id) }}" data-action="confirm-submit" data-confirm-message="هل {{ t('تريد') }} {{ t('تفعيل') }} هذه {{ t('Plan_3') }}">
 
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
@@ -440,7 +440,7 @@
 
                                 
 
-                                <button class="btn btn-primary btn-block" onclick="sendEmailToCustomer()">
+                                <button class="btn btn-primary btn-block" data-action="send-email-customer">
 
                                     <i class="fas fa-envelope"></i> {{ t('Submit') }} {{ t('إيميل') }} {{ t('للعميل') }}
 
@@ -528,6 +528,18 @@
 
 
 <script>
+
+document.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-action]');
+    if (!el) return;
+    if (el.dataset.action === 'send-email-customer') sendEmailToCustomer();
+});
+
+document.addEventListener('submit', (e) => {
+    const el = e.target.closest('[data-action="confirm-submit"]');
+    if (!el) return;
+    if (!confirm(el.dataset.confirmMessage)) e.preventDefault();
+});
 
 function sendEmailToCustomer() {
     const email = '{{ purchase.customer_email }}';

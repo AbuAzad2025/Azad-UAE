@@ -187,7 +187,7 @@
                                         {% if purchase.payment_status == 'pending' and purchase.activation_status != 'activated' %}
                                         <form class="needs-validation ic-2" method="POST" action="{{ url_for('payment_vault.activate_purchase', id=purchase.id) }}">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                                            <button type="submit" class="btn btn-success" onclick="return confirm(&quot;هل {{ t('تريد') }} {{ t('تفعيل') }} هذه {{ t('Plan_3') }}&quot;)" title="{{ t('Confirm') }}">
+                                            <button type="submit" class="btn btn-success" data-action="confirm-submit" data-confirm-message="هل {{ t('تريد') }} {{ t('تفعيل') }} هذه {{ t('Plan_3') }}" title="{{ t('Confirm') }}">
                                                 <i class="fas fa-check"></i>
                                             </button>
                                         </form>
@@ -213,5 +213,17 @@
                 </div>
             </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('click', (e) => {
+        const el = e.target.closest('[data-action]');
+        if (!el) return;
+        if (el.dataset.action === 'confirm-submit') {
+            if (!confirm(el.dataset.confirmMessage)) e.preventDefault();
+        }
+    });
+</script>
 {% endblock %}
 

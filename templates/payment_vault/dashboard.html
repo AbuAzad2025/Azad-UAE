@@ -14,11 +14,11 @@
     <div>
         <form class="needs-validation ic-2" method="POST" action="{{ url_for('payment_vault.trigger_auto_approve') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-            <button type="submit" class="btn btn-success mr-2" onclick="return confirm(&quot;{{ t('تشغيل') }} {{ t('القبول') }} {{ t('Auto') }} {{ t('للعمليات') }} {{ t('الأقدم') }} من {{ t('ساعة_2') }}&quot;)"">
+            <button type="submit" class="btn btn-success mr-2" data-action="confirm-submit" data-confirm-message="{{ t('تشغيل') }} {{ t('القبول') }} {{ t('Auto') }} {{ t('للعمليات') }} {{ t('الأقدم') }} من {{ t('ساعة_2') }}">
                 <i class="fas fa-check-circle"></i> {{ t('قبول') }} {{ t('تلقائي') }}
             </button>
         </form>
-        <button onclick="lockVault()" class="btn btn-danger">
+        <button data-action="lock-vault" class="btn btn-danger">
             <i class="fas fa-lock"></i> {{ t('قفل') }} {{ t('الخزينة') }}
         </button>
     </div>
@@ -213,7 +213,7 @@
             </div>
             
             <div class="col-md-3">
-                <div class="quick-action" onclick="window.location.href='{{ url_for('payment_vault.view_purchases') }}'">
+                <div class="quick-action" data-action="navigate" data-url="{{ url_for('payment_vault.view_purchases') }}">
                     <i class="fas fa-shopping-cart text-primary"></i>
                     <h5>{{ t('Management') }} {{ t('Purchases') }}</h5>
                     <p class="text-muted mb-0">{{ t('View') }} {{ t('and Management') }} {{ t('جميع') }} {{ t('Purchases') }}</p>
@@ -221,7 +221,7 @@
             </div>
             
             <div class="col-md-3">
-                <div class="quick-action" onclick="window.location.href='{{ url_for('payment_vault.donations') }}'">
+                <div class="quick-action" data-action="navigate" data-url="{{ url_for('payment_vault.donations') }}">
                     <i class="fas fa-hand-holding-heart text-danger"></i>
                     <h5>{{ t('Management') }} {{ t('التبرعات') }}</h5>
                     <p class="text-muted mb-0">{{ t('View') }} {{ t('and Management') }} {{ t('جميع') }} {{ t('التبرعات') }}</p>
@@ -229,7 +229,7 @@
             </div>
             
             <div class="col-md-3">
-                <div class="quick-action" onclick="window.location.href='{{ url_for('payment_vault.packages_management') }}'">
+                <div class="quick-action" data-action="navigate" data-url="{{ url_for('payment_vault.packages_management') }}">
                     <i class="fas fa-box-open text-success"></i>
                     <h5>{{ t('Management') }} {{ t('الباقات') }}</h5>
                     <p class="text-muted mb-0">{{ t('Add') }} {{ t('وتعديل') }} {{ t('الباقات') }}</p>
@@ -237,7 +237,7 @@
             </div>
             
             <div class="col-md-3">
-                <div class="quick-action" onclick="window.location.href='{{ url_for('payment_vault.cards') }}'">
+                <div class="quick-action" data-action="navigate" data-url="{{ url_for('payment_vault.cards') }}">
                     <i class="fas fa-credit-card text-primary"></i>
                     <h5>{{ t('البطاقات') }} {{ t('المحفوظة') }}</h5>
                     <p class="text-muted mb-0">{{ t('View') }} {{ t('بطاقات') }} {{ t('Payment_2') }} ({{ t('مشفرة') }})</p>
@@ -252,7 +252,7 @@
             </div>
             
             <div class="col-md-4">
-                <div class="quick-action" onclick="window.location.href='{{ url_for('payment_vault.reports') }}'">
+                <div class="quick-action" data-action="navigate" data-url="{{ url_for('payment_vault.reports') }}">
                     <i class="fas fa-chart-line text-info"></i>
                     <h5>{{ t('Reports') }} {{ t('Finance') }}</h5>
                     <p class="text-muted mb-0">{{ t('Reports_3') }} {{ t('تفصيلية') }} {{ t('وإحصائيات') }}</p>
@@ -260,7 +260,7 @@
             </div>
             
             <div class="col-md-4">
-                <div class="quick-action" onclick="window.location.href='{{ url_for('payment_vault.settings') }}'">
+                <div class="quick-action" data-action="navigate" data-url="{{ url_for('payment_vault.settings') }}">
                     <i class="fas fa-cog text-secondary"></i>
                     <h5>{{ t('Settings') }}</h5>
                     <p class="text-muted mb-0">{{ t('Settings_2') }} {{ t('Payment_2') }} {{ t('والأمان') }}</p>
@@ -268,7 +268,7 @@
             </div>
             
             <div class="col-md-4">
-                <div class="quick-action" onclick="window.location.href='{{ url_for('payment_vault.change_password') }}'">
+                <div class="quick-action" data-action="navigate" data-url="{{ url_for('payment_vault.change_password') }}">
                     <i class="fas fa-key text-danger"></i>
                     <h5>{{ t('Change') }} {{ t('كلمة') }} {{ t('المرور') }}</h5>
                     <p class="text-muted mb-0">{{ t('Update') }} {{ t('كلمة') }} {{ t('مرور') }} {{ t('الخزينة') }}</p>
@@ -392,6 +392,16 @@
 {% block extra_js %}
 <script src="{{ url_for('static', filename='adminlte/plugins/chartjs/chart.min.js') }}"></script>
 <script>
+    document.addEventListener('click', (e) => {
+        const el = e.target.closest('[data-action]');
+        if (!el) return;
+        const action = el.dataset.action;
+        if (action === 'confirm-submit') {
+            if (!confirm(el.dataset.confirmMessage)) e.preventDefault();
+        } else if (action === 'lock-vault') lockVault();
+        else if (action === 'navigate') window.location.href = el.dataset.url;
+    });
+
     // Revenue Chart
     const ctx = document.getElementById('revenueChart').getContext('2d');
     new Chart(ctx, {
