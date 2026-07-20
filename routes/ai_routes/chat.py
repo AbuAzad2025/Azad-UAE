@@ -7,7 +7,7 @@ from flask_login import login_required, current_user
 from utils.decorators import permission_required
 from utils.tenanting import get_active_tenant_id
 from utils.ai_access import get_ai_access_state, ai_level_allows
-from extensions import limiter
+from extensions import db, limiter
 from services.ai_service import AIService
 from routes.ai_routes import ai_bp
 from routes.ai_routes.shared import _sanitize_ai_prompt, _stream_ai_response

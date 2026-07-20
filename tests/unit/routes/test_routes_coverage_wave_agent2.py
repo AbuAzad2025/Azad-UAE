@@ -229,7 +229,7 @@ class TestConversationHelpers:
                 "routes.ai_routes.shared._get_conversation_context",
                 return_value={"x": 1},
             ),
-            patch("routes.ai_routes._set_conversation_context") as setter,
+            patch("utils.context_managers._set_conversation_context") as setter,
         ):
             ctx = _conversation_ctx(1, 1)
             assert ctx.pop("x") == 1

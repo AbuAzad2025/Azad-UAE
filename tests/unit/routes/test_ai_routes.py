@@ -1030,7 +1030,7 @@ class TestConversationCtx:
         with patch(
             "routes.ai_routes.shared._get_conversation_context", return_value={}
         ):
-            with patch("routes.ai_routes._set_conversation_context") as setter:
+            with patch("utils.context_managers._set_conversation_context") as setter:
                 ctx = _conversation_ctx(5, 2)
                 ctx["a"] = 1
         setter.assert_called()
@@ -1041,7 +1041,7 @@ class TestConversationCtx:
         with patch(
             "routes.ai_routes.shared._get_conversation_context", return_value={"x": 1}
         ):
-            with patch("routes.ai_routes._set_conversation_context") as setter:
+            with patch("utils.context_managers._set_conversation_context") as setter:
                 ctx = _conversation_ctx(5, 2)
                 del ctx["x"]
         setter.assert_called()
@@ -1052,7 +1052,7 @@ class TestConversationCtx:
         with patch(
             "routes.ai_routes.shared._get_conversation_context", return_value={}
         ):
-            with patch("routes.ai_routes._set_conversation_context") as setter:
+            with patch("utils.context_managers._set_conversation_context") as setter:
                 ctx = _conversation_ctx(3, 1)
                 ctx.update({"b": 2})
         setter.assert_called()
@@ -1063,7 +1063,7 @@ class TestConversationCtx:
         with patch(
             "routes.ai_routes.shared._get_conversation_context", return_value={"z": 1}
         ):
-            with patch("routes.ai_routes._set_conversation_context") as setter:
+            with patch("utils.context_managers._set_conversation_context") as setter:
                 ctx = _conversation_ctx(3, 1)
                 ctx.clear()
         setter.assert_called()

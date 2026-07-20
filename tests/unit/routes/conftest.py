@@ -296,7 +296,7 @@ def bypass_ai_access(mock_user):
         patch("utils.tenanting.get_active_tenant_id", return_value=1),
         patch("services.logging_core.LoggingCore.log_audit"),
         patch("routes.ai_routes._get_conversation_context", return_value={}),
-        patch("routes.ai_routes._set_conversation_context"),
+        patch("utils.context_managers._set_conversation_context"),
         patch("routes.ai_routes._clear_conversation_context"),
         patch("routes.ai_routes.shared._get_conversation_context", return_value={}),
         patch("routes.ai_routes.shared._set_conversation_context"),
@@ -697,6 +697,14 @@ def mock_ai_service():
     with ExitStack() as stack:
         mocks = {name: stack.enter_context(p) for name, p in patch_specs}
         yield type("MockAIService", (), mocks)
+
+
+@pytest.fixture
+def advanced_ledger_client(app_factory, bypass_admin_auth):
+    from routes.advanced_ledger import advanced_ledger_bp
+
+    app = app_factory(advanced_ledger_bp)
+    return app.test_client()
 
 
 @pytest.fixture

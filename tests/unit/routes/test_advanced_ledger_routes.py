@@ -162,14 +162,6 @@ def _advanced_ledger_patches(**kwargs):
         yield {"render": render, "audit": audit, "session": session}
 
 
-@pytest.fixture
-def advanced_ledger_client(app_factory, bypass_admin_auth):
-    from routes.advanced_ledger import advanced_ledger_bp
-
-    app = app_factory(advanced_ledger_bp)
-    return app.test_client()
-
-
 class TestAdvancedLedgerAuth:
     def test_professional_printing_requires_login(self, advanced_ledger_client):
         with unauthenticated_client(advanced_ledger_client):
