@@ -98,7 +98,8 @@ class TestCleanupTestDatabases:
         assert result["failed"] == []
         assert isinstance(result["remaining"], list)
         # The live test database itself must still exist (proof nothing dropped).
-        assert "azad_uae_test" in result["remaining"]
+        live_db = db_session.get_bind().url.database
+        assert live_db in result["remaining"]
 
     def test_non_dry_run_issues_drop_statements(self, mocker):
         """Non-dry-run is verified only through a mocked engine boundary."""

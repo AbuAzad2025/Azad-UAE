@@ -21,10 +21,12 @@ def platform_owner_client(client, db_session):
 
     unique = str(uuid.uuid4())[:8]
     role = db_session.query(Role).filter_by(slug="owner").first()
+    created_role = None
     if not role:
         role = Role(name="Owner", slug="owner", is_active=True)
         db_session.add(role)
         db_session.flush()
+        created_role = role
     user = User(
         username=f"powner-{unique}",
         email=f"powner-{unique}@example.com",
@@ -41,7 +43,11 @@ def platform_owner_client(client, db_session):
         data={"username": user.username, "password": "password123"},
         follow_redirects=False,
     )
-    return client
+    yield client
+    db_session.delete(user)
+    if created_role is not None:
+        db_session.delete(created_role)
+    db_session.commit()
 
 
 @pytest.fixture
@@ -58,7 +64,9 @@ def sample_package(db_session):
     )
     db_session.add(package)
     db_session.commit()
-    return package
+    yield package
+    db_session.delete(package)
+    db_session.commit()
 
 
 class TestOwnerGuardContract:
