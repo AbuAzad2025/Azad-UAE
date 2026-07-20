@@ -24,7 +24,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Any
 from urllib.parse import urlparse
 
-from flask import current_app, g, has_request_context, request
+from flask import current_app, g, has_request_context
 from flask_login import current_user
 from sqlalchemy import text
 from models.error_audit_log import ErrorAuditLog
@@ -296,6 +296,8 @@ class ErrorAuditService:
                 type(exception), exception, exception.__traceback__
             )
             trace = "".join(trace_list)
+
+        from flask import request
 
         # Request context
         _url = url

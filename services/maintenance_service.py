@@ -157,7 +157,6 @@ class MaintenanceService:
                     )
 
                 except Exception as e:
-                    db.session.rollback()
                     print(f"  ERROR: Failed to process tenant {tenant.id}: {str(e)}")
                     import traceback
 

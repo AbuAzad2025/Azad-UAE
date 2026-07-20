@@ -133,9 +133,9 @@ def add_customs_tax():
                 name=request.form.get("name"),
                 name_ar=request.form.get("name_ar"),
                 tax_type=request.form.get("tax_type"),
-                rate=Decimal(request.form.get("rate", 0)),
+                rate=Decimal(str(request.form.get("rate") or "0")),
                 is_percentage=bool(request.form.get("is_percentage")),
-                fixed_amount=Decimal(request.form.get("fixed_amount", 0)),
+                fixed_amount=Decimal(str(request.form.get("fixed_amount") or "0")),
                 gl_account_id=gl_account_id,
                 effective_from=datetime.strptime(
                     request.form.get("effective_from") or "", "%Y-%m-%d"
@@ -301,16 +301,16 @@ def add_advanced_expense():
                     if request.form.get("supplier_id")
                     else None
                 ),
-                amount=Decimal(request.form.get("amount", 0)),
+                amount=Decimal(str(request.form.get("amount") or "0")),
                 currency=request.form.get("currency") or default_currency,
-                exchange_rate=Decimal(request.form.get("exchange_rate", 1)),
-                amount_aed=Decimal(request.form.get("amount_aed", 0)),
-                taxable_amount=Decimal(request.form.get("taxable_amount", 0)),
-                tax_amount=Decimal(request.form.get("tax_amount", 0)),
-                tax_rate=Decimal(request.form.get("tax_rate", 0)),
+                exchange_rate=Decimal(str(request.form.get("exchange_rate") or "0")),
+                amount_aed=Decimal(str(request.form.get("amount_aed") or "0")),
+                taxable_amount=Decimal(str(request.form.get("taxable_amount") or "0")),
+                tax_amount=Decimal(str(request.form.get("tax_amount") or "0")),
+                tax_rate=Decimal(str(request.form.get("tax_rate") or "0")),
                 tax_exempt=bool(request.form.get("tax_exempt")),
-                customs_amount=Decimal(request.form.get("customs_amount", 0)),
-                customs_rate=Decimal(request.form.get("customs_rate", 0)),
+                customs_amount=Decimal(str(request.form.get("customs_amount") or "0")),
+                customs_rate=Decimal(str(request.form.get("customs_rate") or "0")),
                 customs_exempt=bool(request.form.get("customs_exempt")),
                 payment_method=request.form.get("payment_method"),
                 payment_status=request.form.get("payment_status", "pending"),
@@ -538,8 +538,8 @@ def clear_cheque(cheque_id):
     cheque = tenant_get_or_404(Cheque, cheque_id)
     try:
         with atomic_transaction("advanced_clear_cheque"):
-            bank_charges = Decimal(request.form.get("bank_charges", 0))
-            exchange_gain_loss = Decimal(request.form.get("exchange_gain_loss", 0))
+            bank_charges = Decimal(str(request.form.get("bank_charges") or "0"))
+            exchange_gain_loss = Decimal(str(request.form.get("exchange_gain_loss") or "0"))
 
             entry = ChequeAccountingIntegration.clear_cheque(
                 cheque_id=cheque.id,

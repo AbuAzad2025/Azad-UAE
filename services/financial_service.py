@@ -1,5 +1,4 @@
 from datetime import datetime, timezone, timedelta
-from flask import render_template
 from extensions import db
 from models import Sale, Purchase, Receipt, Expense
 from sqlalchemy import func
@@ -135,6 +134,8 @@ class FinancialService:
             "net_revenue": float(sales_total - purchases_total),
             "platform_mode": tid is None,
         }
+
+        from flask import render_template
 
         return render_template(
             "owner/financial_overview.html",

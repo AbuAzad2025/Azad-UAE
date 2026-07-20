@@ -5,7 +5,7 @@ Print Service — Professional Printing Engine
 
 import logging
 
-from flask import render_template, current_app
+from flask import current_app
 from flask_login import current_user
 
 logger = logging.getLogger(__name__)
@@ -105,6 +105,8 @@ class PrintService:
     @staticmethod
     def render_print(template, extra_context=None, tenant_id=None):
         """Render a standalone print template with full tenant context."""
+        from flask import render_template
+
         ctx = PrintService._get_tenant_context(tenant_id)
         ctx.update(PrintService._user_context())
         if extra_context:

@@ -576,7 +576,7 @@ def delete_warehouse(**kwargs):
 def add_stock(product_id):
     try:
         product = tenant_get_or_404(Product, product_id)
-        quantity = Decimal(request.form.get("quantity", 0))
+        quantity = Decimal(str(request.form.get("quantity") or "0"))
         notes = request.form.get("notes", "").strip()
         warehouse_id = request.form.get("warehouse_id", type=int)
 

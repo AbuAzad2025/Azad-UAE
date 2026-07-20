@@ -7,8 +7,6 @@ import re
 
 from datetime import datetime, timezone
 
-from flask import session
-
 from extensions import db
 from models import Customer
 from models.shop_customer_account import ShopCustomerAccount
@@ -25,8 +23,10 @@ class ShopCustomerAuthService:
         return f"{ShopCustomerAuthService.SESSION_PREFIX}{int(tenant_id)}"
 
     @staticmethod
-    def get_logged_in_account(tenant_id: int) -> ShopCustomerAccount | None:
-        raw = session.get(ShopCustomerAuthService.session_key(tenant_id))
+    def get_logged_in_account(tenant_id: int, session_obj=None) -> ShopCustomerAccount | None:
+        if session_obj is None:
+            from flask import session as session_obj
+        raw = session_obj.get(ShopCustomerAuthService.session_key(tenant_id))
         if not raw:
             return None
         account = db.session.get(ShopCustomerAccount, int(raw or 0))

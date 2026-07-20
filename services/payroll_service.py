@@ -50,7 +50,7 @@ class PayrollService:
             phone=normalize_phone_optional(data.get("phone")),
             email=data.get("email"),
             employment_type=data.get("employment_type", "salary"),
-            basic_salary=Decimal(data.get("basic_salary", 0)),
+            basic_salary=Decimal(str(data.get("basic_salary") or "0")),
             branch_id=int(branch_id),
             tenant_id=tenant_id,
             joined_date=(

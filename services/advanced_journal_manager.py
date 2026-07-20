@@ -22,13 +22,13 @@ class AdvancedJournalEntryManager:
 
     @staticmethod
     def _entry_or_404(entry_id, tenant_id=None):
-        from flask import abort
+        from werkzeug.exceptions import NotFound
         from utils.gl_tenant import gl_entry_query, active_tenant_id
 
         tid = tenant_id if tenant_id is not None else active_tenant_id()
         entry = gl_entry_query(tenant_id=tid).filter_by(id=entry_id).first()
         if not entry:
-            abort(404)
+            raise NotFound()
         return entry
 
     @staticmethod

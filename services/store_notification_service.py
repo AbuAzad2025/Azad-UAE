@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from flask import current_app, url_for
+from flask import current_app
 
 from models import TenantStore
 
@@ -78,6 +78,8 @@ class StoreNotificationService:
 
             admin_url = None
             try:
+                from flask import url_for
+
                 admin_url = url_for(
                     "store.admin_order_detail", order_id=sale.id, _external=True
                 )

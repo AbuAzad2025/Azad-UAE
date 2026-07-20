@@ -509,7 +509,7 @@ def api_calculate_purchase_totals():
     from flask import jsonify
 
     try:
-        data = request.get_json(force=True)
+        data = request.get_json(silent=True)
         if not data:
             return jsonify({"success": False, "error": "No data provided"}), 400
 

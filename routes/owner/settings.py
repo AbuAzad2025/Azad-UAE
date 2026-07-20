@@ -308,7 +308,7 @@ def system_config():
                 # Azad Platform Fees
                 try:
                     fee_rate = Decimal(
-                        request.form.get("azad_platform_fee_rate", "1.00")
+                        str(request.form.get("azad_platform_fee_rate") or "0")
                     )
                     settings.azad_platform_fee_rate = fee_rate.quantize(Decimal("0.01"))
                 except Exception:

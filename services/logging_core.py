@@ -39,7 +39,7 @@ from logging.handlers import RotatingFileHandler
 from typing import Any
 from urllib.parse import urlparse
 
-from flask import g, has_request_context, request, current_app
+from flask import g, has_request_context, current_app
 from utils.db_safety import atomic_transaction
 
 try:
@@ -230,6 +230,8 @@ def _sanitize_dict(data: dict[str, Any]) -> dict[str, Any]:
 
 
 def _get_request_context() -> dict[str, Any]:
+    from flask import request
+
     ctx: dict[str, Any] = {
         "url": None,
         "method": None,
@@ -550,6 +552,8 @@ class LoggingCore:
 
         @app.after_request
         def _logging_after_request(response):
+            from flask import request
+
             start = getattr(g, "request_start_time", None)
             if start:
                 elapsed = time.time() - float(start or 0)
@@ -630,6 +634,8 @@ class LoggingCore:
                 msg = f"{category_name}: {message}"
                 if has_request_context():
                     try:
+                        from flask import request
+
                         msg += f" | route={request.method} {request.path}"
                     except Exception:
                         logger.debug(
@@ -729,6 +735,8 @@ class LoggingCore:
         """
         if not has_request_context():
             return
+        from flask import request
+
         trace_id = request.headers.get("X-Trace-Id") or request.headers.get(
             "X-Request-Id"
         )
@@ -828,6 +836,7 @@ class LoggingCore:
         extra: dict[str, Any] | None = None,
     ) -> int | None:
         from extensions import db
+        from flask import request
 
         # Request context
         ctx = _get_request_context()

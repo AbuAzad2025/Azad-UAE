@@ -168,64 +168,63 @@ def order_type_settings():
     if request.method == "POST":
         action = request.form.get("action") or ""
         try:
-            if action == "create":
-                code = (request.form.get("code") or "").strip()
-                if not code:
-                    raise ValueError(gettext("يرجى إدخال رمز النوع (code)."))
-                if PosOrderType.get_by_code(tid, code):
-                    raise ValueError(gettext("رمز النوع موجود مسبقاً."))
-                db.session.add(
-                    PosOrderType(
-                        tenant_id=tid,
-                        code=code,
-                        name_ar=(request.form.get("name_ar") or "").strip() or code,
-                        name_en=(request.form.get("name_en") or "").strip() or None,
-                        is_active=request.form.get("is_active") == "on",
-                        sort_order=int(request.form.get("sort_order") or 0),
-                        is_default=request.form.get("is_default") == "on",
-                        kds_enabled=request.form.get("kds_enabled") == "on",
+            with atomic_transaction("pos_order_type_settings"):
+                if action == "create":
+                    code = (request.form.get("code") or "").strip()
+                    if not code:
+                        raise ValueError(gettext("يرجى إدخال رمز النوع (code)."))
+                    if PosOrderType.get_by_code(tid, code):
+                        raise ValueError(gettext("رمز النوع موجود مسبقاً."))
+                    db.session.add(
+                        PosOrderType(
+                            tenant_id=tid,
+                            code=code,
+                            name_ar=(request.form.get("name_ar") or "").strip() or code,
+                            name_en=(request.form.get("name_en") or "").strip() or None,
+                            is_active=request.form.get("is_active") == "on",
+                            sort_order=int(request.form.get("sort_order") or 0),
+                            is_default=request.form.get("is_default") == "on",
+                            kds_enabled=request.form.get("kds_enabled") == "on",
+                        )
                     )
-                )
-                flash(gettext("تمت إضافة نوع الطلب."), "success")
-            elif action == "edit":
-                ot = db.session.get(PosOrderType, int(request.form.get("ot_id") or 0))
-                if not ot or ot.tenant_id != tid:
-                    raise ValueError(gettext("نوع الطلب غير موجود."))
-                ot.name_ar = (request.form.get("name_ar") or "").strip() or ot.code
-                ot.name_en = (request.form.get("name_en") or "").strip() or None
-                ot.is_active = request.form.get("is_active") == "on"
-                ot.sort_order = int(request.form.get("sort_order") or 0)
-                ot.kds_enabled = request.form.get("kds_enabled") == "on"
-                ot.is_default = request.form.get("is_default") == "on"
-                flash(gettext("تم تحديث نوع الطلب."), "success")
-            elif action == "toggle":
-                ot = db.session.get(PosOrderType, int(request.form.get("ot_id") or 0))
-                if not ot or ot.tenant_id != tid:
-                    raise ValueError(gettext("نوع الطلب غير موجود."))
-                ot.is_active = not ot.is_active
-                flash(gettext("تم تحديث حالة نوع الطلب."), "success")
-            elif action == "set_default":
-                ot = db.session.get(PosOrderType, int(request.form.get("ot_id") or 0))
-                if not ot or ot.tenant_id != tid:
-                    raise ValueError(gettext("نوع الطلب غير موجود."))
-                for o in PosOrderType.for_tenant(tid, active_only=False):
-                    o.is_default = o.id == ot.id
-                flash(gettext("تم تعيين النوع الافتراضي."), "success")
-            elif action == "delete":
-                ot = db.session.get(PosOrderType, int(request.form.get("ot_id") or 0))
-                if not ot or ot.tenant_id != tid:
-                    raise ValueError(gettext("نوع الطلب غير موجود."))
-                if ot.is_default:
-                    raise ValueError(gettext("لا يمكن حذف النوع الافتراضي."))
-                db.session.delete(ot)
-                flash(gettext("تم حذف نوع الطلب."), "success")
-            else:
-                raise ValueError(gettext("إجراء غير معروف."))
-            db.session.commit()
+                    flash(gettext("تمت إضافة نوع الطلب."), "success")
+                elif action == "edit":
+                    ot = db.session.get(PosOrderType, int(request.form.get("ot_id") or 0))
+                    if not ot or ot.tenant_id != tid:
+                        raise ValueError(gettext("نوع الطلب غير موجود."))
+                    ot.name_ar = (request.form.get("name_ar") or "").strip() or ot.code
+                    ot.name_en = (request.form.get("name_en") or "").strip() or None
+                    ot.is_active = request.form.get("is_active") == "on"
+                    ot.sort_order = int(request.form.get("sort_order") or 0)
+                    ot.kds_enabled = request.form.get("kds_enabled") == "on"
+                    ot.is_default = request.form.get("is_default") == "on"
+                    flash(gettext("تم تحديث نوع الطلب."), "success")
+                elif action == "toggle":
+                    ot = db.session.get(PosOrderType, int(request.form.get("ot_id") or 0))
+                    if not ot or ot.tenant_id != tid:
+                        raise ValueError(gettext("نوع الطلب غير موجود."))
+                    ot.is_active = not ot.is_active
+                    flash(gettext("تم تحديث حالة نوع الطلب."), "success")
+                elif action == "set_default":
+                    ot = db.session.get(PosOrderType, int(request.form.get("ot_id") or 0))
+                    if not ot or ot.tenant_id != tid:
+                        raise ValueError(gettext("نوع الطلب غير موجود."))
+                    for o in PosOrderType.for_tenant(tid, active_only=False):
+                        o.is_default = o.id == ot.id
+                    flash(gettext("تم تعيين النوع الافتراضي."), "success")
+                elif action == "delete":
+                    ot = db.session.get(PosOrderType, int(request.form.get("ot_id") or 0))
+                    if not ot or ot.tenant_id != tid:
+                        raise ValueError(gettext("نوع الطلب غير موجود."))
+                    if ot.is_default:
+                        raise ValueError(gettext("لا يمكن حذف النوع الافتراضي."))
+                    db.session.delete(ot)
+                    flash(gettext("تم حذف نوع الطلب."), "success")
+                else:
+                    raise ValueError(gettext("إجراء غير معروف."))
         except ValueError as exc:
             flash(str(exc), "warning")
         except Exception as exc:
-            db.session.rollback()
             flash(gettext(f"خطأ: {exc}"), "danger")
         return redirect(url_for("pos.order_type_settings"))
 
