@@ -27,13 +27,7 @@ self.addEventListener("activate", (event) => {
 	event.waitUntil(
 		caches
 			.keys()
-			.then((keys) =>
-				Promise.all(
-					keys.map((k) => {
-						if (k !== POS_CACHE) return caches.delete(k);
-					}),
-				),
-			)
+			.then((keys) => Promise.all(keys.filter((k) => k !== POS_CACHE).map((k) => caches.delete(k))))
 			.then(() => self.clients.claim()),
 	);
 });
@@ -61,18 +55,8 @@ function isStaticAsset(request) {
 	const url = new URL(request.url);
 	const ext = url.pathname.split(".").pop();
 	return (
-		[
-			"css",
-			"js",
-			"png",
-			"jpg",
-			"gif",
-			"svg",
-			"woff",
-			"woff2",
-			"ttf",
-			"eot",
-		].includes(ext) || ASSETS_TO_CACHE.includes(url.pathname)
+		["css", "js", "png", "jpg", "gif", "svg", "woff", "woff2", "ttf", "eot"].includes(ext) ||
+		ASSETS_TO_CACHE.includes(url.pathname)
 	);
 }
 
@@ -87,10 +71,10 @@ async function networkFirst(request) {
 	} catch {
 		const cached = await caches.match(request);
 		if (cached) return cached;
-		return new Response(
-			JSON.stringify({ error: "offline", message: "أنت غير متصل بالإنترنت" }),
-			{ status: 503, headers: { "Content-Type": "application/json" } },
-		);
+		return new Response(JSON.stringify({ error: "offline", message: "أنت غير متصل بالإنترنت" }), {
+			status: 503,
+			headers: { "Content-Type": "application/json" },
+		});
 	}
 }
 
@@ -103,8 +87,7 @@ async function networkFirstWithQueue(request) {
 		return new Response(
 			JSON.stringify({
 				queued: true,
-				message:
-					"تم حفظ الفاتورة في قائمة الانتظار. سيتم إرسالها تلقائياً عند الاتصال.",
+				message: "تم حفظ الفاتورة في قائمة الانتظار. سيتم إرسالها تلقائياً عند الاتصال.",
 			}),
 			{ status: 202, headers: { "Content-Type": "application/json" } },
 		);
