@@ -15,9 +15,10 @@ from pathlib import Path
 import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(PROJECT_ROOT / "scripts" / "ops"))
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
-from enforce_grimoire import (
+from scripts.ops.enforce_grimoire import (
     run_all_checks,
     check_atomicity,
     check_input_validation,
@@ -28,7 +29,6 @@ from enforce_grimoire import (
     check_function_length,
     check_bare_except,
     check_type_ignore,
-    check_noqa,
     check_root_cleanliness,
     Violation,
 )
@@ -122,7 +122,7 @@ def test_full_compliance_summary():
     errors = [v for v in result.violations if v.severity == "error"]
     warnings = [v for v in result.violations if v.severity == "warning"]
     print(f"\n{'='*60}")
-    print(f"Grimoire Compliance Summary")
+    print("Grimoire Compliance Summary")
     print(f"{'='*60}")
     print(f"Files scanned: {result.files_scanned}")
     print(f"Errors:   {len(errors)}")

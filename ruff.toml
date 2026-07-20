@@ -1,0 +1,5 @@
+target-version = "py312"
+line-length = 120
+
+[lint.per-file-ignores]
+"tests/unit/test_grimoire_compliance.py" = ["E402"]

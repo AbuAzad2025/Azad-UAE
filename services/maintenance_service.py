@@ -6,7 +6,6 @@ Provides internal API endpoints for the Owner Dashboard database maintenance too
 
 import os
 from sqlalchemy import create_engine, func, select, text, update, Table, MetaData
-from extensions import db
 from utils.safe_sql import assert_known_column
 
 

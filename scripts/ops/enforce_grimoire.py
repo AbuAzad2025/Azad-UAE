@@ -632,6 +632,7 @@ ALLOWED_ROOT_FILES: frozenset[str] = frozenset({
     ".gitignore", ".dockerignore", ".editorconfig", ".env",
     ".flake8", ".coveragerc", ".python-version", ".browserslistrc",
     ".bandit.yml", ".stylelintrc.json", ".yamllint.yml",
+    "ruff.toml",
     "vitest.config.js",
     "templates_rendered.json",
     "nul",

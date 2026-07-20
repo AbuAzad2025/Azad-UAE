@@ -1799,6 +1799,8 @@ class LoggingCore:
 
         Replaces utils/advanced_audit.py → generate_device_fingerprint()
         """
+        from flask import request
+
         components = [
             request.headers.get("User-Agent", ""),
             request.headers.get("Accept-Language", ""),
