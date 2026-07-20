@@ -61,18 +61,14 @@ def get_backend_coverage():
         return None
 
     data = cov.get_data()
-    measured_raw = data.measured_files()
 
     stats = defaultdict(lambda: {"total": 0, "covered": 0, "files": 0})
-
-    measured_set = {_norm(p) for p in measured_raw}
 
     for cat, _ in BACKEND_CATEGORIES:
         cat_dir = PROJECT_ROOT / cat
         if not cat_dir.is_dir():
             continue
         for py_file in cat_dir.rglob("*.py"):
-            norm = _norm(str(py_file.relative_to(PROJECT_ROOT)))
             try:
                 _, stmts, _, missing, _ = cov.analysis2(str(py_file))
                 total = len(stmts)
