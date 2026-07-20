@@ -1,5 +1,5 @@
 
-        <div id="crypto-form" class="sp-donation-form">
+        <div id="crypto-form" class="sp-donation-form" data-sp-scope="forms">
             <div class="sp-banner-crypto">
                 <i class="fab fa-bitcoin sp-section-icon-large"></i>
                 <h3 class="sp-payment-header-title">
@@ -18,27 +18,27 @@
                     <i class="fas fa-coins mr-2 sp-text-warning"></i>{{ t('اختر') }} {{ t('Amount') }} ({{ t('بالدولار') }})
                 </label>
                 <div class="sp-amount-options">
-                    <button class="sp-amount-btn" onclick="selectAmount(15, event)">
+                    <button class="sp-amount-btn" data-action="select-amount" data-amount="15">
                         <span class="sp-amount-btn-value">$15</span>
                         <small class="sp-amount-btn-label">{{ t('شكراً') }}</small>
                     </button>
-                    <button class="sp-amount-btn" onclick="selectAmount(25, event)">
+                    <button class="sp-amount-btn" data-action="select-amount" data-amount="25">
                         <span class="sp-amount-btn-value">$25</span>
                         <small class="sp-amount-btn-label">{{ t('رائع') }}</small>
                     </button>
-                    <button class="sp-amount-btn" onclick="selectAmount(50, event)">
+                    <button class="sp-amount-btn" data-action="select-amount" data-amount="50">
                         <span class="sp-amount-btn-value">$50</span>
                         <small class="sp-amount-btn-label">{{ t('Featured') }}</small>
                     </button>
-                    <button class="sp-amount-btn" onclick="selectAmount(100, event)">
+                    <button class="sp-amount-btn" data-action="select-amount" data-amount="100">
                         <span class="sp-amount-btn-value">$100</span>
                         <small class="sp-amount-btn-label">{{ t('رهيب') }}</small>
                     </button>
-                    <button class="sp-amount-btn" onclick="selectAmount(250, event)">
+                    <button class="sp-amount-btn" data-action="select-amount" data-amount="250">
                         <span class="sp-amount-btn-value">$250</span>
                         <small class="sp-amount-btn-label">{{ t('سخي') }}</small>
                     </button>
-                    <button class="sp-amount-btn" onclick="selectAmount(500, event)">
+                    <button class="sp-amount-btn" data-action="select-amount" data-amount="500">
                         <span class="sp-amount-btn-value">$500</span>
                         <small class="sp-amount-btn-label">VIP</small>
                     </button>
@@ -59,7 +59,7 @@
                 </select>
             </div>
 
-            <button class="btn btn-donate btn-block sp-btn-payment" onclick="generateCryptoPayment()">
+            <button class="btn btn-donate btn-block sp-btn-payment" data-action="generate-crypto-payment">
                 <i class="fas fa-wallet mr-2"></i>
                 <span>{{ t('Create') }} {{ t('Address_2') }} {{ t('Payment_2') }} {{ t('الآن_2') }}</span>
                 <i class="fas fa-arrow-left mr-2"></i>
@@ -94,7 +94,7 @@
 
                 <div class="sp-wallet-address">
                     <span id="walletAddress">bc1q...</span>
-                    <button class="sp-copy-btn" onclick="copyAddress()">
+                    <button class="sp-copy-btn" data-action="copy-address">
                         <i class="fas fa-copy"></i> {{ t('Backups_2') }}
                     </button>
                 </div>
@@ -114,7 +114,7 @@
             </div>
         </div>
 
-        <div id="card-form" class="sp-donation-form">
+        <div id="card-form" class="sp-donation-form" data-sp-scope="forms">
             <div class="sp-banner-card">
                 <i class="fas fa-credit-card sp-section-icon-large"></i>
                 <h3 class="sp-payment-header-title">
@@ -147,7 +147,7 @@
             </div>
         </div>
 
-        <div id="paypal-form" class="sp-donation-form">
+        <div id="paypal-form" class="sp-donation-form" data-sp-scope="forms">
             <div class="sp-banner-paypal">
                 <i class="fab fa-paypal sp-section-icon-large"></i>
                 <h3 class="sp-payment-header-title">
@@ -162,7 +162,7 @@
             </div>
 
             <div class="text-center" id="paypal-button-container">
-                <button class="btn btn-lg sp-btn-paypal" onclick="handlePayPalPayment()">
+                <button class="btn btn-lg sp-btn-paypal" data-action="handle-paypal-payment">
                     <i class="fab fa-paypal mr-2 sp-btn-icon"></i>
                     <span>{{ t('متابعة') }} مع PayPal</span>
                 </button>
@@ -172,7 +172,7 @@
             </div>
         </div>
 
-        <div id="bank-form" class="sp-donation-form">
+        <div id="bank-form" class="sp-donation-form" data-sp-scope="forms">
             <div class="sp-banner-bank">
                 <i class="fas fa-university sp-section-icon-large"></i>
                 <h3 class="sp-payment-header-title">
@@ -201,10 +201,10 @@
                 </a>
 
                 <div class="sp-quick-contact-actions sp-actions-center">
-                    <button type="button" class="sp-quick-contact-btn sp-btn-dark" onclick="openWhatsApp('buy_code')">
+                    <button type="button" class="sp-quick-contact-btn sp-btn-dark" data-action="open-whatsapp" data-kind="buy_code">
                         <i class="fas fa-code"></i> {{ t('Purchase') }} {{ t('Code') }} {{ t('عبر') }} {{ t('واتساب') }}
                     </button>
-                    <button type="button" class="sp-quick-contact-btn sp-btn-email" onclick="openSupportEmail('buy_code')">
+                    <button type="button" class="sp-quick-contact-btn sp-btn-email" data-action="open-support-email" data-kind="buy_code">
                         <i class="fas fa-file-code"></i> {{ t('Purchase') }} {{ t('Code') }} {{ t('عبر') }} {{ t('Email_2') }}
                     </button>
                 </div>
@@ -215,3 +215,20 @@
                 </div>
             </div>
         </div>
+
+        <script>
+        if (!window.__supportFormsDelegationBound) {
+            window.__supportFormsDelegationBound = true;
+            document.addEventListener('click', (e) => {
+                const el = e.target.closest('[data-action]');
+                if (!el || !el.closest('[data-sp-scope="forms"]')) return;
+                const action = el.dataset.action;
+                if (action === 'select-amount') selectAmount(Number(el.dataset.amount), e);
+                else if (action === 'generate-crypto-payment') generateCryptoPayment();
+                else if (action === 'copy-address') copyAddress();
+                else if (action === 'handle-paypal-payment') handlePayPalPayment();
+                else if (action === 'open-whatsapp') openWhatsApp(el.dataset.kind);
+                else if (action === 'open-support-email') openSupportEmail(el.dataset.kind);
+            });
+        }
+        </script>

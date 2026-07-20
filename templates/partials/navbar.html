@@ -51,7 +51,7 @@
       {% endif %}
     </div>
     <div class="erp-navbar-actions-zone">
-      <button class="btn btn-outline-light erp-navbar-tool-btn" type="button" onclick="toggleSidebarDirection();" title="{{ t('تبديل') }} {{ t('موقع') }} {{ t('Menu') }}">
+      <button class="btn btn-outline-light erp-navbar-tool-btn" type="button" data-action="toggle-sidebar-direction" title="{{ t('تبديل') }} {{ t('موقع') }} {{ t('Menu') }}">
         <i class="fas fa-exchange-alt"></i>
       </button>
       <div class="dropdown erp-navbar-tool-dropdown d-none d-md-block">
@@ -68,7 +68,7 @@
           <a class="dropdown-item" href="#" data-toggle="modal" data-target="#navbarCalculatorModal">
             <i class="fas fa-calculator text-info me-2"></i>{{ t('الآلة') }} {{ t('الحاسبة') }}
           </a>
-          <a class="dropdown-item" href="#" onclick="toggleSidebarDirection(); return false;">
+          <a class="dropdown-item" href="#" data-action="toggle-sidebar-direction">
             <i class="fas fa-exchange-alt text-success me-2"></i>{{ t('موقع') }} {{ t('Menu') }}
           </a>
           {% if current_user.is_authenticated and ai_nav_visible and current_user.has_permission('view_reports') %}
@@ -142,3 +142,14 @@
       </div>
     </div>
   </nav>
+  <script>
+  if (!window.__navbarDelegationBound) {
+      window.__navbarDelegationBound = true;
+      document.addEventListener('click', (e) => {
+          const el = e.target.closest('[data-action="toggle-sidebar-direction"]');
+          if (!el) return;
+          e.preventDefault();
+          toggleSidebarDirection();
+      });
+  }
+  </script>

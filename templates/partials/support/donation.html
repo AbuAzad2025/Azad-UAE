@@ -1,5 +1,5 @@
 
-        <div class="sp-tab-content" id="donation-tab">
+        <div class="sp-tab-content" id="donation-tab" data-sp-scope="donation">
             <div class="sp-payment-card sp-section-donation">
                 <div class="sp-section-icon-large">❤️</div>
                 <h3 class="sp-donation-title">
@@ -50,17 +50,17 @@
                     </div>
                 </div>
                 <div class="sp-quick-contact-actions">
-                    <button type="button" class="sp-quick-contact-btn sp-btn-whatsapp" onclick="openWhatsApp('donation_help')">
+                    <button type="button" class="sp-quick-contact-btn sp-btn-whatsapp" data-action="open-whatsapp" data-kind="donation_help">
                         <i class="fab fa-whatsapp"></i> {{ t('واتساب') }} {{ t('التبرع') }}
                     </button>
-                    <button type="button" class="sp-quick-contact-btn sp-btn-email" onclick="openSupportEmail('donation_help')">
+                    <button type="button" class="sp-quick-contact-btn sp-btn-email" data-action="open-support-email" data-kind="donation_help">
                         <i class="fas fa-envelope"></i> {{ t('بريد') }} {{ t('التبرع') }}
                     </button>
                 </div>
             </div>
 
             <div class="sp-payment-methods">
-                <div class="sp-payment-card" onclick="selectMethod('crypto', event)">
+                <div class="sp-payment-card" data-action="select-method" data-method="crypto">
                     <i class="fab fa-bitcoin sp-payment-icon"></i>
                     <div class="sp-payment-title">{{ t('العملات') }} {{ t('الرقمية') }}</div>
                     <p class="sp-payment-desc">
@@ -68,7 +68,7 @@
                         <br><small class="text-success"><i class="fas fa-shield-alt"></i> {{ t('آمن') }} {{ t('ومجهول') }}</small>
                     </p>
                 </div>
-                <div class="sp-payment-card" onclick="selectMethod('card', event)">
+                <div class="sp-payment-card" data-action="select-method" data-method="card">
                     <i class="fas fa-credit-card sp-payment-icon"></i>
                     <div class="sp-payment-title">{{ t('البطاقات') }} {{ t('Bank') }}</div>
                     <p class="sp-payment-desc">
@@ -76,7 +76,7 @@
                         <br><small class="text-info"><i class="fas fa-lock"></i> {{ t('تشفير') }} SSL</small>
                     </p>
                 </div>
-                <div class="sp-payment-card" onclick="selectMethod('paypal', event)">
+                <div class="sp-payment-card" data-action="select-method" data-method="paypal">
                     <i class="fab fa-paypal sp-payment-icon"></i>
                     <div class="sp-payment-title">PayPal</div>
                     <p class="sp-payment-desc">
@@ -84,7 +84,7 @@
                         <br><small class="text-primary"><i class="fas fa-check-circle"></i> {{ t('حماية') }} {{ t('المشتري') }}</small>
                     </p>
                 </div>
-                <div class="sp-payment-card" onclick="selectMethod('bank', event)">
+                <div class="sp-payment-card" data-action="select-method" data-method="bank">
                     <i class="fas fa-university sp-payment-icon"></i>
                     <div class="sp-payment-title">{{ t('Transfer') }} {{ t('Bank_3') }}</div>
                     <p class="sp-payment-desc">
@@ -94,3 +94,17 @@
                 </div>
             </div>
         </div>
+
+        <script>
+        if (!window.__supportDonationDelegationBound) {
+            window.__supportDonationDelegationBound = true;
+            document.addEventListener('click', (e) => {
+                const el = e.target.closest('[data-action]');
+                if (!el || !el.closest('[data-sp-scope="donation"]')) return;
+                const action = el.dataset.action;
+                if (action === 'open-whatsapp') openWhatsApp(el.dataset.kind);
+                else if (action === 'open-support-email') openSupportEmail(el.dataset.kind);
+                else if (action === 'select-method') selectMethod(el.dataset.method, e);
+            });
+        }
+        </script>

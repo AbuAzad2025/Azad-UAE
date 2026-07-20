@@ -50,12 +50,22 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme-pro.css') }}">
   
   
-  <link rel="stylesheet" href="{{ url_for('static', filename='fonts/tajawal/tajawal.css') }}" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="{{ url_for('static', filename='fonts/tajawal/tajawal.css') }}" media="print" data-action="media-all">
   <noscript><link rel="stylesheet" href="{{ url_for('static', filename='fonts/tajawal/tajawal.css') }}"></noscript>
-  <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}" media="print" data-action="media-all">
   <noscript><link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}"></noscript>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/sweetalert2.min.css') }}" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/sweetalert2.min.css') }}" media="print" data-action="media-all">
   <noscript><link rel="stylesheet" href="{{ url_for('static', filename='css/sweetalert2.min.css') }}"></noscript>
+  <script>
+  if (!window.__headDelegationBound) {
+      window.__headDelegationBound = true;
+      document.addEventListener('load', (e) => {
+          const el = e.target instanceof Element ? e.target.closest('[data-action]') : null;
+          if (!el) return;
+          if (el.dataset.action === 'media-all') el.media = 'all';
+      }, true);
+  }
+  </script>
   {% block extra_css %}{% endblock %}
   
   

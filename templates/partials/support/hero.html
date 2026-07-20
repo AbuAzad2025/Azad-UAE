@@ -1,5 +1,5 @@
 
-    <div class="sp-container">
+    <div class="sp-container" data-sp-scope="hero">
         <div class="sp-hero-section">
             <div class="sp-hero-content">
                 <div class="mb-4">
@@ -41,10 +41,10 @@
                             <h5>{{ t('Purchase') }} {{ t('System') }}</h5>
                             <p>{{ t('تشغيل') }} {{ t('جاهز') }} مع {{ t('الإعداد') }} {{ t('والدعم') }}.</p>
                             <div class="sp-quick-contact-actions">
-                                <button type="button" class="sp-quick-contact-btn sp-btn-whatsapp" onclick="openWhatsApp('buy_system')">
+                                <button type="button" class="sp-quick-contact-btn sp-btn-whatsapp" data-action="open-whatsapp" data-kind="buy_system">
                                     <i class="fab fa-whatsapp"></i> {{ t('واتساب') }}
                                 </button>
-                                <button type="button" class="sp-quick-contact-btn sp-btn-email" onclick="openSupportEmail('buy_system')">
+                                <button type="button" class="sp-quick-contact-btn sp-btn-email" data-action="open-support-email" data-kind="buy_system">
                                     <i class="fas fa-envelope"></i> {{ t('بريد') }}
                                 </button>
                             </div>
@@ -54,10 +54,10 @@
                             <h5>{{ t('Purchase') }} {{ t('Code') }} أو {{ t('التخصيص') }}</h5>
                             <p>{{ t('for Purchase') }} {{ t('Code') }} أو {{ t('نسخة') }} {{ t('مخصصة') }} أو {{ t('تطوير') }} {{ t('Specific_2') }}.</p>
                             <div class="sp-quick-contact-actions">
-                                <button type="button" class="sp-quick-contact-btn sp-btn-dark" onclick="openWhatsApp('buy_code')">
+                                <button type="button" class="sp-quick-contact-btn sp-btn-dark" data-action="open-whatsapp" data-kind="buy_code">
                                     <i class="fab fa-whatsapp"></i> {{ t('واتساب') }} {{ t('Code') }}
                                 </button>
-                                <button type="button" class="sp-quick-contact-btn sp-btn-email" onclick="openSupportEmail('buy_code')">
+                                <button type="button" class="sp-quick-contact-btn sp-btn-email" data-action="open-support-email" data-kind="buy_code">
                                     <i class="fas fa-paper-plane"></i> {{ t('راسلنا') }}
                                 </button>
                             </div>
@@ -67,10 +67,10 @@
                             <h5>{{ t('تبرع') }} أو {{ t('رعاية') }} {{ t('تطوير') }}</h5>
                             <p>{{ t('لتبرع') }} {{ t('مباشر') }} أو {{ t('رعاية') }} {{ t('ميزة') }} أو {{ t('تحسينات') }} {{ t('Paid_4') }}.</p>
                             <div class="sp-quick-contact-actions">
-                                <button type="button" class="sp-quick-contact-btn sp-btn-whatsapp" onclick="openWhatsApp('donation_help')">
+                                <button type="button" class="sp-quick-contact-btn sp-btn-whatsapp" data-action="open-whatsapp" data-kind="donation_help">
                                     <i class="fab fa-whatsapp"></i> {{ t('واتساب') }} {{ t('التبرع') }}
                                 </button>
-                                <button type="button" class="sp-quick-contact-btn sp-btn-email" onclick="openSupportEmail('donation_help')">
+                                <button type="button" class="sp-quick-contact-btn sp-btn-email" data-action="open-support-email" data-kind="donation_help">
                                     <i class="fas fa-envelope-open-text"></i> {{ t('بريد') }} {{ t('التبرع') }}
                                 </button>
                             </div>
@@ -80,12 +80,12 @@
 
                 <div class="sp-tab-section-label">{{ t('اختر') }} {{ t('نوع') }} {{ t('العملية') }} {{ t('أولاً') }} ثم {{ t('أكمل') }} {{ t('Payment_2') }} أو {{ t('التواصل') }} {{ t('المباشر') }}</div>
                 <div class="sp-tab-buttons">
-                    <button class="sp-tab-btn active" onclick="switchTab('purchase', event)">
+                    <button class="sp-tab-btn active" data-action="switch-tab" data-tab="purchase">
                         <i class="fas fa-shopping-cart"></i>
                         <span>{{ t('Purchase') }} {{ t('System') }}</span>
                         <small class="sp-tab-btn-sub">{{ t('احصل') }} على {{ t('System') }} {{ t('كاملاً') }}</small>
                     </button>
-                    <button class="sp-tab-btn" onclick="switchTab('donation', event)">
+                    <button class="sp-tab-btn" data-action="switch-tab" data-tab="donation">
                         <i class="fas fa-heart"></i>
                         <span>{{ t('دعم') }} {{ t('المشروع') }}</span>
                         <small class="sp-tab-btn-sub">{{ t('ساهم') }} في {{ t('التطوير') }}</small>
@@ -101,3 +101,17 @@
             </div>
         </div>
     </div>
+
+    <script>
+    if (!window.__supportHeroDelegationBound) {
+        window.__supportHeroDelegationBound = true;
+        document.addEventListener('click', (e) => {
+            const el = e.target.closest('[data-action]');
+            if (!el || !el.closest('[data-sp-scope="hero"]')) return;
+            const action = el.dataset.action;
+            if (action === 'open-whatsapp') openWhatsApp(el.dataset.kind);
+            else if (action === 'open-support-email') openSupportEmail(el.dataset.kind);
+            else if (action === 'switch-tab') switchTab(el.dataset.tab, e);
+        });
+    }
+    </script>

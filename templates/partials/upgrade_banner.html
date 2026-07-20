@@ -7,11 +7,11 @@
           <strong>{{ t('ترقية الباقة') }}</strong>
           <span class="mx-2">&mdash;</span>
           <span>{{ t('وصلت أو تقتربت من الحد المسموح في باقتك الحالية') }}</span>
-          <a href="#" class="btn btn-sm btn-warning ml-3" onclick="window.open('{{ wa_upgrade_link }}', '_blank');">
+          <a href="#" class="btn btn-sm btn-warning ml-3" data-action="open-upgrade-link" data-url="{{ wa_upgrade_link }}">
             <i class="fab fa-whatsapp ml-1"></i>{{ t('تواصل مع المطور للترقية') }}
           </a>
         </div>
-        <button type="button" class="close" data-dismiss="alert" onclick="this.closest('.alert').remove();">&times;</button>
+        <button type="button" class="close" data-dismiss="alert" data-action="dismiss-alert">&times;</button>
       </div>
       <div class="row mt-2" id="upgrade-meter-container"></div>
     </div>
@@ -36,4 +36,14 @@
     document.getElementById('upgrade-banner').style.display = '';
   }
 })();
+if (!window.__upgradeBannerDelegationBound) {
+  window.__upgradeBannerDelegationBound = true;
+  document.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-action]');
+    if (!el) return;
+    const action = el.dataset.action;
+    if (action === 'open-upgrade-link') window.open(el.dataset.url, '_blank');
+    else if (action === 'dismiss-alert') el.closest('.alert').remove();
+  });
+}
 </script>

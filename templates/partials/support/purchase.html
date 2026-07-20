@@ -1,5 +1,5 @@
 
-        <div class="sp-tab-content active" id="purchase-tab">
+        <div class="sp-tab-content active" id="purchase-tab" data-sp-scope="purchase">
 
             <div class="sp-progress-steps" id="purchase-progress">
                 <div class="sp-step active" id="step-package">
@@ -24,7 +24,7 @@
                 <div class="sp-package-grid">
                     {% if packages %}
                         {% for package in packages %}
-                        <div class="sp-package-card" onclick="selectPackage({{ package.slug|tojson }}, {{ package.price }}, event)" data-package-id="{{ package.id }}">
+                        <div class="sp-package-card" data-action="select-package" data-slug="{{ package.slug }}" data-price="{{ package.price }}" data-package-id="{{ package.id }}">
                             <div class="sp-package-name">{{ package.icon }} {{ package.name_ar }}</div>
                             <div class="sp-package-price">${{ package.price }}</div>
                             {% if package.badge_text %}
@@ -54,16 +54,16 @@
                     {{ t('يمكنك') }} {{ t('طلب') }} {{ t('Purchase') }} {{ t('System') }} أو {{ t('Code') }} أو {{ t('View') }} {{ t('Price_2') }} {{ t('مخصص') }} {{ t('مباشرة') }} دون {{ t('Waiting_2') }} {{ t('البوابة') }}.
                 </p>
                 <div class="sp-quick-contact-actions">
-                    <button type="button" class="sp-quick-contact-btn sp-btn-whatsapp" onclick="openWhatsApp('buy_system')">
+                    <button type="button" class="sp-quick-contact-btn sp-btn-whatsapp" data-action="open-whatsapp" data-kind="buy_system">
                         <i class="fab fa-whatsapp"></i> {{ t('Purchase') }} {{ t('System') }} {{ t('عبر') }} {{ t('واتساب') }}
                     </button>
-                    <button type="button" class="sp-quick-contact-btn sp-btn-dark" onclick="openWhatsApp('buy_code')">
+                    <button type="button" class="sp-quick-contact-btn sp-btn-dark" data-action="open-whatsapp" data-kind="buy_code">
                         <i class="fas fa-code"></i> {{ t('Purchase') }} {{ t('Code') }} {{ t('عبر') }} {{ t('واتساب') }}
                     </button>
-                    <button type="button" class="sp-quick-contact-btn sp-btn-email" onclick="openSupportEmail('buy_system')">
+                    <button type="button" class="sp-quick-contact-btn sp-btn-email" data-action="open-support-email" data-kind="buy_system">
                         <i class="fas fa-envelope"></i> {{ t('Purchase') }} {{ t('System') }} {{ t('عبر') }} {{ t('Email_2') }}
                     </button>
-                    <button type="button" class="sp-quick-contact-btn sp-btn-email" onclick="openSupportEmail('buy_code')">
+                    <button type="button" class="sp-quick-contact-btn sp-btn-email" data-action="open-support-email" data-kind="buy_code">
                         <i class="fas fa-file-code"></i> {{ t('Purchase') }} {{ t('Code') }} {{ t('عبر') }} {{ t('Email_2') }}
                     </button>
                 </div>
@@ -78,7 +78,7 @@
                 </div>
                 <div class="sp-payment-methods">
 
-                <div class="sp-payment-card" onclick="selectMethod('crypto', event)">
+                <div class="sp-payment-card" data-action="select-method" data-method="crypto">
                     <i class="fab fa-bitcoin sp-payment-icon"></i>
                     <div class="sp-payment-title">{{ t('العملات') }} {{ t('الرقمية') }}</div>
                     <p class="sp-payment-desc">
@@ -87,7 +87,7 @@
                     </p>
                 </div>
 
-                <div class="sp-payment-card" onclick="selectMethod('card', event)">
+                <div class="sp-payment-card" data-action="select-method" data-method="card">
                     <i class="fas fa-credit-card sp-payment-icon"></i>
                     <div class="sp-payment-title">{{ t('البطاقات') }} {{ t('Bank') }}</div>
                     <p class="sp-payment-desc">
@@ -96,7 +96,7 @@
                     </p>
                 </div>
 
-                <div class="sp-payment-card" onclick="selectMethod('paypal', event)">
+                <div class="sp-payment-card" data-action="select-method" data-method="paypal">
                     <i class="fab fa-paypal sp-payment-icon"></i>
                     <div class="sp-payment-title">PayPal</div>
                     <p class="sp-payment-desc">
@@ -105,7 +105,7 @@
                     </p>
                 </div>
 
-                <div class="sp-payment-card" onclick="selectMethod('bank', event)">
+                <div class="sp-payment-card" data-action="select-method" data-method="bank">
                     <i class="fas fa-university sp-payment-icon"></i>
                     <div class="sp-payment-title">{{ t('Transfer') }} {{ t('Bank_3') }}</div>
                     <p class="sp-payment-desc">
@@ -116,3 +116,18 @@
                 </div>
             </div>
         </div>
+
+        <script>
+        if (!window.__supportPurchaseDelegationBound) {
+            window.__supportPurchaseDelegationBound = true;
+            document.addEventListener('click', (e) => {
+                const el = e.target.closest('[data-action]');
+                if (!el || !el.closest('[data-sp-scope="purchase"]')) return;
+                const action = el.dataset.action;
+                if (action === 'select-package') selectPackage(el.dataset.slug, Number(el.dataset.price), e);
+                else if (action === 'open-whatsapp') openWhatsApp(el.dataset.kind);
+                else if (action === 'open-support-email') openSupportEmail(el.dataset.kind);
+                else if (action === 'select-method') selectMethod(el.dataset.method, e);
+            });
+        }
+        </script>

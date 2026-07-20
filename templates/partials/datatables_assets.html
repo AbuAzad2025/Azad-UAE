@@ -1,5 +1,15 @@
-<link rel="preload" href="{{ url_for('static', filename='adminlte/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}" as="style" onload="this.rel='stylesheet'">
-<link rel="preload" href="{{ url_for('static', filename='adminlte/plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}" as="style" onload="this.rel='stylesheet'">
+<link rel="preload" href="{{ url_for('static', filename='adminlte/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}" as="style" data-action="load-stylesheet">
+<link rel="preload" href="{{ url_for('static', filename='adminlte/plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}" as="style" data-action="load-stylesheet">
+<script>
+if (!window.__datatablesAssetsDelegationBound) {
+    window.__datatablesAssetsDelegationBound = true;
+    document.addEventListener('load', (e) => {
+        const el = e.target instanceof Element ? e.target.closest('[data-action="load-stylesheet"]') : null;
+        if (!el) return;
+        el.rel = 'stylesheet';
+    }, true);
+}
+</script>
 <noscript>
 <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">

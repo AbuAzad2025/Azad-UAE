@@ -1,4 +1,14 @@
-<link rel="preload" href="{{ url_for('static', filename='adminlte/plugins/select2/css/select2.min.css') }}" as="style" onload="this.rel='stylesheet'">
+<link rel="preload" href="{{ url_for('static', filename='adminlte/plugins/select2/css/select2.min.css') }}" as="style" data-action="load-stylesheet">
+<script>
+if (!window.__select2AssetsDelegationBound) {
+    window.__select2AssetsDelegationBound = true;
+    document.addEventListener('load', (e) => {
+        const el = e.target instanceof Element ? e.target.closest('[data-action="load-stylesheet"]') : null;
+        if (!el) return;
+        el.rel = 'stylesheet';
+    }, true);
+}
+</script>
 <noscript>
 <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/select2/css/select2.min.css') }}">
 </noscript>
