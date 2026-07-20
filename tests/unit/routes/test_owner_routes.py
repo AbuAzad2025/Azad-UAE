@@ -2132,7 +2132,7 @@ class TestOwnerExtendedCoverage:
                 return_value=MagicMock(returncode=0, stderr="", stdout=""),
             ),
             patch("os.makedirs"),
-            patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])),
+            patch("os.path.join", side_effect=lambda *a: str(tmp_path) + "/" + a[-1]),
         ):
             resp = owner_client.post(
                 "/owner/export-database",
@@ -2902,7 +2902,7 @@ class TestOwnerGapClosure:
         with (
             patch("routes.owner.database.db") as mock_db,
             patch("os.makedirs"),
-            patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])),
+            patch("os.path.join", side_effect=lambda *a: str(tmp_path) + "/" + a[-1]),
             patch("builtins.open", create=True) as mock_open,
         ):
             mock_db.session.execute.return_value = exec_result
@@ -3018,7 +3018,7 @@ class TestOwnerGapClosure:
             patch("routes.owner.InvoiceSettings", settings_cls),
             patch("models.invoice_settings.InvoiceSettings", settings_cls),
             patch("os.makedirs"),
-            patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])),
+            patch("os.path.join", side_effect=lambda *a: str(tmp_path) + "/" + a[-1]),
         ):
             resp = owner_client.post(
                 "/owner/invoice-settings",
@@ -3429,7 +3429,7 @@ class TestOwnerGapClosure:
             ),
             patch("services.backup_exec.run_pg_tool", return_value=proc),
             patch("os.makedirs"),
-            patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])),
+            patch("os.path.join", side_effect=lambda *a: str(tmp_path) + "/" + a[-1]),
         ):
             resp = owner_client.post(
                 "/owner/export-database",
@@ -3725,7 +3725,7 @@ class TestOwnerDirectCalls:
             patch("routes.owner.InvoiceSettings", inv_cls),
             patch("models.invoice_settings.InvoiceSettings", inv_cls),
             patch("os.makedirs"),
-            patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])),
+            patch("os.path.join", side_effect=lambda *a: str(tmp_path) + "/" + a[-1]),
         ):
             with app.test_request_context(
                 "/owner/invoice-settings",
@@ -3911,7 +3911,7 @@ class TestOwnerFinalGaps:
             _owner_route_patches(),
             patch("routes.owner.db") as mock_db,
             patch("os.makedirs"),
-            patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])),
+            patch("os.path.join", side_effect=lambda *a: str(tmp_path) + "/" + a[-1]),
             patch("builtins.open", create=True) as mock_open,
         ):
             mock_db.session.execute.return_value = exec_result
@@ -4432,7 +4432,7 @@ class TestOwnerLastMile:
             patch("routes.owner.InvoiceSettings", inv_cls),
             patch("models.invoice_settings.InvoiceSettings", inv_cls),
             patch("os.makedirs"),
-            patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])),
+            patch("os.path.join", side_effect=lambda *a: str(tmp_path) + "/" + a[-1]),
         ):
             with app.test_request_context(
                 "/owner/invoice-settings",
