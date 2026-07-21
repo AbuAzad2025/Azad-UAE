@@ -325,7 +325,7 @@ _TEMPLATE_COVERAGE_TRACKER: set[str] = set()
 _SIGNAL_CONNECTED = False
 
 
-def _on_template_rendered(_sender, template, _context, **_extra):
+def _on_template_rendered(sender, template, context=None, **_extra):
     name = getattr(template, "name", None)
     if name:
         _TEMPLATE_COVERAGE_TRACKER.add(name)
