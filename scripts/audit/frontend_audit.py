@@ -9,7 +9,8 @@ This scanner targets the gaps:
   Templates : inline event handlers, `var`/console.log/eval inside inline
               <script>, POST <form> blocks missing csrf_token, <img> without
               alt, duplicate static id= values, references to missing static
-              assets, <html> without explicit dir/lang conditional blocks.
+              assets, <html> without explicit dir/lang conditional blocks,
+              raw unescaped % inside _() gettext strings.
   JS files  : console.log / document.write / eval / var (biome covers some;
               reported here so template+JS results are comparable).
   CSS files : !important usage, duplicate selectors within a file, ID
@@ -58,6 +59,8 @@ IMPORTANT = re.compile(r"!important\b")
 CSS_ID_SELECTOR = re.compile(r"(^|[}\s])#[A-Za-z][\w-]*[\s,{]", re.MULTILINE)
 CSS_RULE_START = re.compile(r"^\s*([^{}@/][^{]*)\{", re.MULTILINE)
 JQUERY = re.compile(r"(?<![\w$])\$\s*\(")
+GETTEXT_CALL = re.compile(r"_\(\s*(['\"])(.*?)\1\s*[,)]")
+BAD_PCT = re.compile(r"%(?![\d.]*[sdfr])")
 
 
 def is_vendor(path: Path) -> bool:
@@ -127,6 +130,15 @@ def scan_template(path: Path, text: str, findings: Findings) -> None:
             if ("dir=" not in tag or "lang=" not in tag) or ("{{" not in tag and "{%" not in tag):
                 line = text.count("\n", 0, m.start()) + 1
                 add(findings, "T9:html-no-dir-lang-cond", path, line, tag[:80])
+
+    for m in GETTEXT_CALL.finditer(text):
+        # Jinja's gettext always applies %-formatting, even with no
+        # variables — a literal % (e.g. 'ضريبة %') crashes rendering with
+        # ValueError: incomplete format. Escape as %%.
+        msgid = m.group(2).replace("%%", "")
+        if BAD_PCT.search(msgid):
+            line = text.count("\n", 0, m.start()) + 1
+            add(findings, "T10:gettext-raw-percent", path, line, m.group(0)[:80])
 
 
 def scan_js(path: Path, text: str, findings: Findings) -> None:

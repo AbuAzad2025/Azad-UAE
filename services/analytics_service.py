@@ -272,6 +272,11 @@ class AnalyticsService:
         for i in range(months):
             month_start = end_date - timedelta(days=30 * (months - i))
             month_end = month_start + timedelta(days=30)
+            if i == months - 1:
+                # Half-open buckets share boundaries, so the final bucket must
+                # close over end_date itself — otherwise a record timestamped
+                # exactly at end_date (coarse clocks can equal now()) is lost.
+                month_end = end_date + timedelta(microseconds=1)
             month_label = month_start.strftime("%b %Y")
 
             # حساب المشتريات

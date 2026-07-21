@@ -86,7 +86,7 @@ def index():
         query = query.filter(Sale.branch_id == branch_id)
     from sqlalchemy.orm import joinedload
 
-    query = query.options(joinedload(Sale.customer))
+    query = query.options(joinedload(Sale.customer), joinedload(Sale.branch))
     pagination = query.order_by(Sale.sale_date.desc()).paginate(page=page, per_page=per_page, error_out=False)
 
     return render_template(

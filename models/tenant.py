@@ -154,6 +154,34 @@ class Tenant(db.Model):
 
     @staticmethod
     def get_current():
+        """Current tenant for branding/settings — never leaks another company to logged-in users.
+
+        Memoized per request (keyed by active tenant id + user id) — template
+        helpers call this per rendered row."""
+        from flask import g, has_request_context
+
+        if not has_request_context():
+            return Tenant._get_current_uncached()
+        try:
+            from flask_login import current_user
+            from utils.tenanting import get_active_tenant_id
+
+            tid = (
+                get_active_tenant_id(current_user)
+                if current_user and getattr(current_user, "is_authenticated", False)
+                else None
+            )
+        except Exception:
+            tid = "resolve-error"
+        key = f"_tenant_current_{tid}_{getattr(current_user, 'id', None)}"
+        if key in g:
+            return getattr(g, key)
+        tenant = Tenant._get_current_uncached()
+        setattr(g, key, tenant)
+        return tenant
+
+    @staticmethod
+    def _get_current_uncached():
         """Current tenant for branding/settings — never leaks another company to logged-in users."""
         try:
             from flask_login import current_user

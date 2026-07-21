@@ -717,4 +717,65 @@
 		style.appendChild(win.document.createTextNode(css));
 		win.document.head.appendChild(style);
 	};
+
+	// Unified JSON API fetch. Normalizes CSRF, JSON parsing, and non-OK
+	// responses into Error objects carrying the server's human-readable
+	// message (utils/error_messages.py) or a localized status fallback.
+	window.apiFetch = async (url, options = {}) => {
+		const opts = {
+			credentials: "same-origin",
+			...options,
+			headers: {
+				Accept: "application/json",
+				"X-CSRFToken": document.querySelector('meta[name="csrf-token"]')?.content || "",
+				...(options.body ? { "Content-Type": "application/json" } : {}),
+				...(options.headers || {}),
+			},
+		};
+		let resp;
+		try {
+			resp = await fetch(url, opts);
+		} catch {
+			throw new Error("تعذر الاتصال بالخادم — تحقق من اتصالك بالإنترنت");
+		}
+		const data = await resp.json().catch(() => ({}));
+		if (!resp.ok) {
+			const fallback = {
+				400: "طلب غير صالح",
+				401: "انتهت الجلسة — يرجى تسجيل الدخول مجدداً",
+				403: "ليس لديك صلاحية لتنفيذ هذا الإجراء",
+				404: "العنصر المطلوب غير موجود",
+				409: "تعارض في البيانات — حدّث الصفحة وحاول مجدداً",
+				419: "انتهت صلاحية النموذج — حدّث الصفحة",
+				429: "طلبات كثيرة — انتظر قليلاً ثم أعد المحاولة",
+				500: "خطأ في الخادم — حاول مرة أخرى لاحقاً",
+			};
+			throw new Error(
+				data.error || data.message || fallback[resp.status] || `خطأ غير متوقع (${resp.status})`,
+			);
+		}
+		return data;
+	};
+
+	// Systemic safety net: any async failure a caller forgot to catch becomes
+	// a localized toast instead of a silent console-only rejection.
+	window.addEventListener("unhandledrejection", (event) => {
+		console.error("Unhandled async error:", event.reason);
+		const message =
+			event.reason instanceof TypeError
+				? "تعذر الاتصال بالخادم — تحقق من اتصالك بالإنترنت"
+				: event.reason?.message || "حدث خطأ غير متوقع — حاول مرة أخرى";
+		if (window.notify?.show) {
+			window.notify.show({ type: "error", message });
+		} else if (typeof Swal !== "undefined") {
+			Swal.fire({
+				icon: "error",
+				text: message,
+				toast: true,
+				position: "top-end",
+				showConfirmButton: false,
+				timer: 5000,
+			});
+		}
+	});
 })(jQuery);

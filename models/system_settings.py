@@ -161,12 +161,22 @@ class SystemSettings(db.Model):
 
     @staticmethod
     def get_current():
-        """Get current system settings or create default"""
+        """Get current system settings or create default.
+
+        Memoized per request via flask.g — format_currency and template
+        helpers call this per rendered row, and the ORM instance is stable
+        within a request (identity map), so repeat lookups are free."""
+        from flask import g, has_request_context
+
+        if has_request_context() and "_system_settings_current" in g:
+            return g._system_settings_current
         settings = SystemSettings.query.filter_by(is_active=True).first()
         if not settings:
             settings = SystemSettings()
             db.session.add(settings)
             db.session.flush()
+        if has_request_context():
+            g._system_settings_current = settings
         return settings
 
     def get_custom_setting(self, key, default=None):

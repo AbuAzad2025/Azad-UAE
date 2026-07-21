@@ -269,44 +269,29 @@ def register_context_processors(app):
                 Customer,
                 Supplier,
             )
+            from sqlalchemy import func, select
+            from extensions import db
 
             _t = Tn.get_current()
             if _t:
-                _res_map = {
-                    "users": (
-                        "users",
-                        "User",
-                        lambda: User.query.filter(User.tenant_id == _t.id, User.is_active).count(),
-                    ),
-                    "branches": (
-                        "branches",
-                        "Branch",
-                        lambda: Branch.query.filter(Branch.tenant_id == _t.id).count(),
-                    ),
-                    "warehouses": (
-                        "warehouses",
-                        "Warehouse",
-                        lambda: Warehouse.query.filter(Warehouse.tenant_id == _t.id).count(),
-                    ),
-                    "products": (
-                        "products",
-                        "Product",
-                        lambda: Product.query.filter(Product.tenant_id == _t.id, Product.is_active).count(),
-                    ),
-                    "customers": (
-                        "customers",
-                        "Customer",
-                        lambda: Customer.query.filter(Customer.tenant_id == _t.id, Customer.is_active).count(),
-                    ),
-                    "suppliers": (
-                        "suppliers",
-                        "Supplier",
-                        lambda: Supplier.query.filter(Supplier.tenant_id == _t.id, Supplier.is_active).count(),
-                    ),
+                _res_models = {
+                    "users": (User, (User.tenant_id == _t.id, User.is_active)),
+                    "branches": (Branch, (Branch.tenant_id == _t.id,)),
+                    "warehouses": (Warehouse, (Warehouse.tenant_id == _t.id,)),
+                    "products": (Product, (Product.tenant_id == _t.id, Product.is_active)),
+                    "customers": (Customer, (Customer.tenant_id == _t.id, Customer.is_active)),
+                    "suppliers": (Supplier, (Supplier.tenant_id == _t.id, Supplier.is_active)),
                 }
-                for key, (_res_name, _model_name, _counter) in _res_map.items():
+                # One round-trip: all usage counters as scalar subqueries in a
+                # single SELECT (was 6 separate count() queries per page).
+                _count_cols = [
+                    select(func.count()).select_from(model).where(*conds).scalar_subquery().label(key)
+                    for key, (model, conds) in _res_models.items()
+                ]
+                _counts = db.session.query(*_count_cols).one()
+                for idx, key in enumerate(_res_models):
                     max_val = getattr(_t, f"max_{key}", None)  # type: int | None
-                    cur_val = _counter()
+                    cur_val = int(_counts[idx])
                     tenant_usage[key] = {
                         "current": cur_val,
                         "max": max_val,
