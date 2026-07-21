@@ -170,6 +170,26 @@ def get_template_coverage():
 # ── Frontend JS coverage ──────────────────────────────────────────────────
 
 
+def _get_vitest_coverage_pct():
+    """Read vitest coverage summary if available (clover XML or coverage-summary.json)."""
+    import xml.etree.ElementTree as ET
+
+    clover = PROJECT_ROOT / "coverage-frontend" / "clover.xml"
+    if clover.exists():
+        try:
+            tree = ET.parse(clover)
+            root = tree.getroot()
+            metrics = root.find(".//metrics")
+            if metrics is not None:
+                stmts = int(metrics.get("statements", 0))
+                covered = int(metrics.get("coveredstatements", 0))
+                if stmts > 0:
+                    return (covered / stmts) * 100
+        except Exception:
+            pass
+    return None
+
+
 def get_js_coverage(rendered_templates: set[str]):
     js_dir = PROJECT_ROOT / "static" / "js"
     all_js: set[str] = set()
@@ -244,12 +264,16 @@ def main():
         # ── JS ──
         all_js, js_ref = get_js_coverage(rendered_templates)
         js_pct = (len(js_ref) / len(all_js) * 100) if all_js else 0
+        js_test_pct = _get_vitest_coverage_pct()
         yield "### Frontend (JavaScript) — تغطية ملفات JS"
         yield ""
         yield f"- إجمالي ملفات JS: **{len(all_js)}**"
         yield f"- ملفات JS مُحمّلة عبر قوالب تم اختبارها: **{len(js_ref)}**"
         yield f"- نسبة الوصول (reachability): **{_pct(js_pct)}**"
-        yield "- ⚠️ لا يوجد إطار اختبار JS (jest/vitest)، التغطية الفعلية = **0%**"
+        if js_test_pct is not None:
+            yield f"- نسبة تغطية الاختبارات (vitest): **{_pct(js_test_pct)}**"
+        else:
+            yield "- ⚠️ لا توجد بيانات تغطية vitest — تشغيل `npm test -- --coverage`"
         yield ""
 
         # ── Summary table ──
@@ -257,13 +281,13 @@ def main():
         yield ""
         if backend:
             overall_pct = next((b[5] for b in backend if b[0] == "_overall"), 0)
-            combined = overall_pct * 0.60 + tmpl_pct * 0.25 + 0 * 0.15
+            combined = overall_pct * 0.60 + tmpl_pct * 0.25 + (js_test_pct or 0) * 0.15
             yield "| الطبقة (Layer) | النسبة (Coverage) |"
             yield "|---------------|-------------------|"
             yield f"| Backend (Python) | {_pct(overall_pct)} |"
             yield f"| Frontend (Templates) | {_pct(tmpl_pct)} |"
             yield f"| Frontend (JS reachability) | {_pct(js_pct)} |"
-            yield "| Frontend (JS test coverage) | 🔴 0.0% |"
+            yield f"| Frontend (JS test coverage) | {_pct(js_test_pct or 0)} |"
             yield f"| **النظام ككل (weighted: 60/25/15)** | **{_pct(combined)}** |"
             yield ""
         else:

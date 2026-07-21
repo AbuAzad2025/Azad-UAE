@@ -602,6 +602,12 @@ jobs:
           pattern: templates-*
           path: template-data/
 
+      - name: Download frontend coverage artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: coverage-frontend
+          path: coverage-frontend/
+
       - name: Combine coverage data
         run: |
           shopt -s nullglob
