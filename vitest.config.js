@@ -8,7 +8,7 @@ export default defineConfig({
       provider: "v8",
       include: ["static/js/**/*.js"],
       exclude: ["static/js/**/*.min.js", "**/node_modules/**"],
-      reporter: ["text", "html", "clover"],
+      reporter: ["text", "html", "json-summary"],
       reportsDirectory: "coverage-frontend",
       thresholds: { lines: 0, functions: 0 },
     },

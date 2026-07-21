@@ -172,19 +172,16 @@ def get_template_coverage():
 
 def _get_vitest_coverage_pct():
     """Read vitest coverage summary if available (clover XML or coverage-summary.json)."""
-    import xml.etree.ElementTree as ET
+    import json as json_mod
 
-    clover = PROJECT_ROOT / "coverage-frontend" / "clover.xml"
-    if clover.exists():
+    summary = PROJECT_ROOT / "coverage-frontend" / "coverage-summary.json"
+    if summary.exists():
         try:
-            tree = ET.parse(clover)
-            root = tree.getroot()
-            metrics = root.find(".//metrics")
-            if metrics is not None:
-                stmts = int(metrics.get("statements", 0))
-                covered = int(metrics.get("coveredstatements", 0))
-                if stmts > 0:
-                    return (covered / stmts) * 100
+            data = json_mod.loads(summary.read_text(encoding="utf-8"))
+            total = data.get("total", {})
+            pct = total.get("lines", {}).get("pct")
+            if pct is not None:
+                return float(pct)
         except Exception:
             pass
     return None
