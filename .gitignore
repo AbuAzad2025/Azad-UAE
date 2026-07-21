@@ -92,6 +92,7 @@ celerybeat.pid
 .pytest_cache/
 .pytest-temp/
 .coverage
+coverage-frontend/
 htmlcov/
 
 # Generated artifacts / reports
