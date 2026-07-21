@@ -143,7 +143,7 @@ jobs:
           pytest ${{ matrix.test-path }} -v --tb=short \
             --cov=. --cov-config=.coveragerc --cov-report=term \
             --cov-report=xml:coverage-${{ matrix.cov-flag }}.xml
-          ls -la .coverage* || true
+          cp .coverage coverage-data-${{ matrix.cov-flag }} 2>/dev/null || true
 
       - name: Upload coverage to Codecov (optional)
         if: always()
@@ -158,7 +158,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: covdata-${{ matrix.cov-flag }}
-          path: .coverage
+          path: coverage-data-${{ matrix.cov-flag }}
           if-no-files-found: ignore
           retention-days: 1
 
@@ -598,12 +598,13 @@ jobs:
       - name: Combine coverage data
         run: |
           shopt -s nullglob
-          dirs=(coverage-data/covdata-*)
-          if [ ${#dirs[@]} -eq 0 ]; then
+          files=(coverage-data/covdata-*/coverage-data-*)
+          if [ ${#files[@]} -eq 0 ]; then
             echo "::warning::No coverage data artifacts found — test jobs may have failed early"
             exit 0
           fi
-          coverage combine "${dirs[@]}"
+          coverage combine "${files[@]}"
+          cp .coverage coverage-combined-data
 
       - name: Enforce coverage floor (COVERAGE_FAIL_UNDER=${{ env.COVERAGE_FAIL_UNDER }})
         if: hashFiles('.coverage') != ''
@@ -613,11 +614,11 @@ jobs:
         if: hashFiles('.coverage') != ''
         run: python scripts/coverage_report.py
 
-      - name: Upload combined coverage XML
+      - name: Upload combined coverage data
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: coverage-combined
-          path: .coverage
+          path: coverage-combined-data
           if-no-files-found: ignore
           retention-days: 7
