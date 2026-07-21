@@ -1072,3 +1072,34 @@ GL_MODULE_DEFINITIONS = {
 
 VALID_INDUSTRY_CODES = frozenset(INDUSTRY_EXTENSIONS.keys())
 VALID_INDUSTRY_CODES = VALID_INDUSTRY_CODES | {"general"}
+
+ACCOUNT_TYPE_BY_ROOT = {
+    "1": "asset",
+    "2": "liability",
+    "3": "equity",
+    "4": "revenue",
+    "5": "expense",
+    "6": "expense",
+}
+
+PROTECTED_ACCOUNT_CODES = frozenset(
+    {
+        "1130",  # Accounts Receivable (AR)
+        "2110",  # Accounts Payable (AP)
+        "1140",  # Inventory Asset
+        "2120",  # VAT Payable (Tax Escrow)
+        "2121",  # VAT Output
+        "2122",  # VAT Input
+        "3200",  # Retained Earnings
+        "1150",  # Cheques Under Collection
+        "2130",  # Deferred Cheques Payable
+    }
+)
+
+
+def validate_account_code_type(code, account_type):
+    """يتطابق الجذر الرقمي للكود مع نوع الحساب — شجرة خماسية الجذور (5-6 للمصروفات)."""
+    if not code or not str(code)[0].isdigit():
+        return False
+    expected = ACCOUNT_TYPE_BY_ROOT.get(str(code)[0])
+    return expected is not None and expected == account_type

@@ -242,7 +242,7 @@ class TestAdminLedgerAccounts:
                 data={
                     "code": "2001",
                     "name": "New",
-                    "type": "asset",
+                    "type": "liability",
                     "is_active": "on",
                 },
             )
@@ -250,6 +250,19 @@ class TestAdminLedgerAccounts:
         mocks["session"].add.assert_called_once()
         mocks["session"].commit.assert_called()
         mocks["log_audit"].assert_called_with("create", "gl_accounts", 99)
+
+    def test_add_account_code_type_mismatch_rejected(self, ledger_client):
+        with (
+            _ledger_patches() as mocks,
+            patch("routes.admin_ledger.active_tenant_id", return_value=1),
+            patch("routes.admin_ledger.resolve_default_currency", return_value="AED"),
+        ):
+            resp = ledger_client.post(
+                "/admin/ledger/accounts/add",
+                data={"code": "7100", "name": "Bad", "type": "asset"},
+            )
+        assert resp.status_code == 200
+        mocks["session"].add.assert_not_called()
 
     def test_add_account_post_exception(self, ledger_client):
         with (
@@ -266,7 +279,7 @@ class TestAdminLedgerAccounts:
             mock_safety_session.commit.side_effect = RuntimeError("db fail")
             resp = ledger_client.post(
                 "/admin/ledger/accounts/add",
-                data={"code": "2002", "name": "Fail", "type": "asset"},
+                data={"code": "2002", "name": "Fail", "type": "liability"},
             )
         assert resp.status_code == 200
         mock_safety_session.rollback.assert_called()
@@ -291,13 +304,41 @@ class TestAdminLedgerAccounts:
                 data={
                     "code": "3001",
                     "name": "Updated",
-                    "type": "asset",
+                    "type": "equity",
                     "is_active": "on",
                 },
             )
         assert resp.status_code == 302
         mocks["session"].commit.assert_called()
         mocks["log_audit"].assert_called_with("update", "gl_accounts", 7)
+
+    def test_edit_account_protected_blocks_reclassification(self, ledger_client):
+        account = _mock_account(code="1130", id=7, type="asset")
+        q = _accounts_query(edit_account=account)
+        with (
+            _ledger_patches(accounts_query=q) as mocks,
+            patch("routes.admin_ledger.resolve_default_currency", return_value="AED"),
+        ):
+            resp = ledger_client.post(
+                "/admin/ledger/accounts/7/edit",
+                data={"code": "1130", "name": "AR", "type": "expense"},
+            )
+        assert resp.status_code == 302
+        mocks["session"].commit.assert_not_called()
+
+    def test_edit_account_protected_allows_name_change(self, ledger_client):
+        account = _mock_account(code="1130", id=7, type="asset")
+        q = _accounts_query(edit_account=account)
+        with (
+            _ledger_patches(accounts_query=q) as mocks,
+            patch("routes.admin_ledger.resolve_default_currency", return_value="AED"),
+        ):
+            resp = ledger_client.post(
+                "/admin/ledger/accounts/7/edit",
+                data={"code": "1130", "name": "AR Renamed", "type": "asset"},
+            )
+        assert resp.status_code == 302
+        mocks["session"].commit.assert_called()
 
     def test_delete_account_blocked_by_entries(self, ledger_client):
         account = _mock_account(id=8)
@@ -323,6 +364,15 @@ class TestAdminLedgerAccounts:
         assert resp.status_code == 302
         mocks["session"].delete.assert_called_with(account)
         mocks["log_audit"].assert_called_with("delete", "gl_accounts", 11)
+
+    def test_delete_account_protected_blocked(self, ledger_client):
+        account = _mock_account(id=12, code="2110")
+        q = _accounts_query(edit_account=account)
+        with _ledger_patches(accounts_query=q, journal_lines_first=None) as mocks:
+            resp = ledger_client.post("/admin/ledger/accounts/12/delete")
+        assert resp.status_code == 302
+        mocks["session"].delete.assert_not_called()
+        mocks["log_audit"].assert_not_called()
 
 
 class TestAdminLedgerVaultsAndJournals:
@@ -502,7 +552,7 @@ class TestAdminLedgerCoverageGaps:
                 data={
                     "code": "2100",
                     "name": "USD",
-                    "type": "asset",
+                    "type": "liability",
                     "currency": "USD",
                 },
             )
@@ -535,7 +585,7 @@ class TestAdminLedgerCoverageGaps:
                 data={
                     "code": "2101",
                     "name": "Child",
-                    "type": "asset",
+                    "type": "liability",
                     "parent_id": "5",
                 },
             )
@@ -571,7 +621,7 @@ class TestAdminLedgerCoverageGaps:
                 data={
                     "code": "3100",
                     "name": "Edited",
-                    "type": "asset",
+                    "type": "equity",
                     "parent_id": "5",
                     "is_active": "on",
                 },
@@ -594,7 +644,7 @@ class TestAdminLedgerCoverageGaps:
             mock_safety_session.commit.side_effect = RuntimeError("db")
             resp = ledger_client.post(
                 "/admin/ledger/accounts/13/edit",
-                data={"code": "3101", "name": "Fail", "type": "asset"},
+                data={"code": "3101", "name": "Fail", "type": "equity"},
             )
         assert resp.status_code == 200
         mock_safety_session.rollback.assert_called()

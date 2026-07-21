@@ -13,6 +13,7 @@ from flask_login import login_required
 from datetime import datetime, date, timedelta
 from extensions import db
 from models import GLAccount, GLJournalEntry, GLJournalLine
+from models.gl_account_registry import PROTECTED_ACCOUNT_CODES, validate_account_code_type
 from services.gl_service import GLService
 from utils.decorators import admin_required
 from services.logging_core import LoggingCore
@@ -142,6 +143,20 @@ def add_account():
                     form_data=form_values,
                 )
 
+            if not validate_account_code_type(code, account_type):
+                flash(
+                    gettext("❌ كود الحساب لا يطابق نوعه — 1 أصول، 2 خصوم، 3 حقوق ملكية، 4 إيرادات، 5-6 مصروفات"),
+                    "danger",
+                )
+                form_values = request.form.to_dict()
+                form_values["is_header"] = "on" if is_header else "off"
+                form_values["is_active"] = "on" if is_active else "off"
+                return render_template(
+                    "admin/ledger/add_account.html",
+                    parent_accounts=parent_accounts,
+                    form_data=form_values,
+                )
+
             existing = _accounts().filter_by(code=code).first()
             if existing:
                 flash(gettext("❌ كود الحساب موجود مسبقاً"), "danger")
@@ -210,10 +225,22 @@ def edit_account(**kwargs):
 
     if request.method == "POST":
         try:
-            account.code = request.form.get("code")
+            new_code = (request.form.get("code") or "").strip()
+            new_type = (request.form.get("type") or "").strip()
+            if account.code in PROTECTED_ACCOUNT_CODES and (new_code != account.code or new_type != account.type):
+                flash(gettext("❌ حساب نظامي محمي — لا يمكن تغيير كوده أو نوعه"), "danger")
+                return redirect(url_for("admin_ledger.accounts_management"))
+            if not validate_account_code_type(new_code, new_type):
+                flash(
+                    gettext("❌ كود الحساب لا يطابق نوعه — 1 أصول، 2 خصوم، 3 حقوق ملكية، 4 إيرادات، 5-6 مصروفات"),
+                    "danger",
+                )
+                return redirect(url_for("admin_ledger.edit_account", id=record_id))
+
+            account.code = new_code
             account.name = request.form.get("name")
             account.name_ar = request.form.get("name_ar")
-            account.type = request.form.get("type")
+            account.type = new_type
             account.parent_id = request.form.get("parent_id") or None
             try:
                 default_currency = resolve_default_currency()
@@ -259,6 +286,10 @@ def delete_account(**kwargs):
     account = _accounts().filter_by(id=record_id).first_or_404()
 
     try:
+        if account.code in PROTECTED_ACCOUNT_CODES:
+            flash(gettext("❌ لا يمكن حذف حساب نظامي محمي — الحسابات الضابطة جزء من بنية النظام"), "danger")
+            return redirect(url_for("admin_ledger.accounts_management"))
+
         has_entries = scoped_model_query(GLJournalLine).filter_by(account_id=record_id).first()
         if has_entries:
             flash(gettext("❌ لا يمكن حذف الحساب لوجود قيود مرتبطة به"), "danger")
