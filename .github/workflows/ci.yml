@@ -350,7 +350,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Gitleaks (secret scanning)
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Trivy filesystem scan
@@ -408,6 +408,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt schemathesis
       - name: Boot app and run Schemathesis (non-blocking)
+        continue-on-error: true
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
           SECRET_KEY: test-secret-key
@@ -417,19 +418,12 @@ jobs:
           # Start app in background
           python -m flask run --port=5000 --host=0.0.0.0 &
           sleep 5
-          # Generate OpenAPI spec if not present, or use existing
-          python -c "from app import create_app; app = create_app()" 2>&1 || true
-          # Fuzz API endpoints
-          schemathesis run http://localhost:5000/openapi.json \
+          # Fuzz API endpoints — spec is served at /api-docs/openapi.json
+          schemathesis run http://localhost:5000/api-docs/openapi.json \
             --checks all \
             --hypothesis-deadline 3000 \
             --exitfirst \
-            --base-url http://localhost:5000 || \
-          schemathesis run http://localhost:5000/swagger.json \
-            --checks all \
-            --exitfirst \
-            --base-url http://localhost:5000 || \
-          echo "::warning::Schemathesis could not find OpenAPI spec at /openapi.json or /swagger.json"
+            --base-url http://localhost:5000
 
   # ── Tenant isolation fuzzer ──
   tenant-isolation-fuzzer:
@@ -499,6 +493,7 @@ jobs:
           pip install -r requirements.txt gunicorn
           npm install -g @lhci/cli
       - name: Boot app and run Lighthouse CI (non-blocking)
+        continue-on-error: true
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
           SECRET_KEY: test-secret-key
@@ -506,8 +501,7 @@ jobs:
           APP_ENV: testing
           CI: "true"
         run: |
-          lhci autorun --config=scripts/lighthouserc.json || \
-            echo "::warning::Lighthouse CI audit completed with warnings"
+          lhci autorun --config=scripts/lighthouserc.json
 
   # ── E2E business flow tours (Playwright, non-blocking) ──
   e2e-tours:
@@ -547,6 +541,7 @@ jobs:
         run: |
           python scripts/auth/setup_test_users.py
       - name: Run business flow tours (non-blocking)
+        continue-on-error: true
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
           SECRET_KEY: test-secret-key
@@ -556,8 +551,7 @@ jobs:
         run: |
           gunicorn --bind 0.0.0.0:5000 wsgi:app --daemon --error-logfile gunicorn.log
           sleep 5
-          python -m pytest tests/e2e/tours/ -v --tb=short --base-url=http://localhost:5000 || \
-            echo "::warning::Some E2E tours failed — review logs"
+          python -m pytest tests/e2e/tours/ -v --tb=short --base-url=http://localhost:5000
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v7
