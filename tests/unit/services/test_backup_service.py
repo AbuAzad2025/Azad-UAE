@@ -1476,7 +1476,7 @@ class TestFullCoverage:
         assert BackupService._git_short_sha() == "unknown"
 
     def test_alembic_info_failure(self, mocker):
-        mocker.patch("flask_migrate.current", side_effect=RuntimeError("no alembic"))
+        mocker.patch("sqlalchemy.create_engine", side_effect=RuntimeError("no alembic"))
         assert BackupService._alembic_info() == (None, None)
 
     def test_upload_roots_exception(self, mocker, app, backup_root):

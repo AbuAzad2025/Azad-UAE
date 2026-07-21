@@ -25,6 +25,13 @@ def register_context_processors(app):
     # make t() available as a Jinja2 global so macros can use it
     app.jinja_env.globals.setdefault("t", __import__("utils.i18n", fromlist=["t"]).t)
 
+    # The same helpers are injected per-request as callable globals below; also
+    # register them as real filters so `value|format_currency` compiles too.
+    from utils.helpers import format_currency, timeago
+
+    app.jinja_env.filters.setdefault("format_currency", format_currency)
+    app.jinja_env.filters.setdefault("timeago", timeago)
+
     @app.context_processor
     def inject_has_endpoint():
         return dict(has_endpoint=lambda endpoint: endpoint in current_app.view_functions)

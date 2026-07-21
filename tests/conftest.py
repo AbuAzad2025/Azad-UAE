@@ -7,6 +7,7 @@ import shutil
 import sys
 import json
 
+import dotenv
 import pytest
 from sqlalchemy import create_engine, text as sa_text
 from sqlalchemy.pool import NullPool
@@ -143,6 +144,19 @@ _TEST_DATABASE_URL = _resolve_test_database_url()
 os.environ["DATABASE_URL"] = _TEST_DATABASE_URL
 os.environ["TEST_DATABASE_URL"] = _TEST_DATABASE_URL
 
+
+# Hermetic test env: block python-dotenv from reloading the developer's real
+# .env mid-session. config.py already imported load_dotenv at module level
+# (initial app config still works), but services/ai_service.py and
+# ai_knowledge/agents_core.py import it inside functions with override=True,
+# which would re-pollute os.environ with real API keys and the dev
+# DATABASE_URL during tests. CI has no .env; local must behave the same.
+def _blocked_load_dotenv(*args, **kwargs):
+    return False
+
+
+dotenv.load_dotenv = _blocked_load_dotenv
+
 # Global Python 3.14 Introspection Safeguard — instances raise AttributeError on __name__
 if not getattr(NonCallableMock, "_azad_py314_name_guard", False):
     _orig_mock_getattr = NonCallableMock.__getattr__
@@ -265,6 +279,60 @@ def pytest_configure(config):
         os.makedirs(temp_dir, exist_ok=True)
 
 
+def _ensure_fk_anchor_user():
+    """Create a committed anchor ``users.id=1`` row for the whole session.
+
+    Dozens of legacy tests hardcode ``created_by=1`` / ``validated_by=1``
+    FK references and historically passed only because an earlier test in
+    the same process happened to leak a user with id 1. CI always runs
+    whole directories in one process, so the leak is reliably present
+    there; isolated local runs are not. Make the anchor deterministic
+    instead of leak-dependent. The explicit id insert must be followed by
+    a setval so the users sequence does not collide with the anchor.
+    The anchor role intentionally uses the slug ``fk-anchor`` — never
+    ``super_admin``: ``sample_role`` reuses an existing super_admin row
+    as-is, so a permissionless anchor under that slug would strip every
+    authenticated test of its permissions (403s).
+    """
+    from models import Role, Tenant, User
+
+    anchor = db.session.execute(sa_text("SELECT 1 FROM users WHERE id = 1")).scalar()
+    if anchor:
+        return
+    tenant = Tenant(
+        name="FK Anchor",
+        name_ar="مرساة",
+        slug="fk-anchor",
+        email="fk-anchor@test.local",
+        phone_1="0500000000",
+        country="AE",
+        subscription_plan="basic",
+        default_currency="AED",
+        base_currency="AED",
+    )
+    db.session.add(tenant)
+    db.session.flush()
+    role = db.session.query(Role).filter_by(slug="fk-anchor").first()
+    if role is None:
+        role = Role(name="FK Anchor", slug="fk-anchor", is_active=True)
+        db.session.add(role)
+        db.session.flush()
+    user = User(
+        id=1,
+        username="fk-anchor",
+        email="fk-anchor@test.local",
+        full_name="FK Anchor",
+        tenant_id=tenant.id,
+        role_id=role.id,
+        branch_id=None,
+    )
+    user.set_password("password123")
+    db.session.add(user)
+    db.session.flush()
+    db.session.execute(sa_text("SELECT setval('users_id_seq', (SELECT MAX(id) FROM users))"))
+    db.session.commit()
+
+
 @pytest.fixture(scope="session")
 def app():
     """Create Flask app against an isolated PostgreSQL test database."""
@@ -285,6 +353,7 @@ def app():
         # creates its own engine (without NullPool / connect_timeout)
         # which can exhaust CI PostgreSQL connections.
         db.create_all()
+        _ensure_fk_anchor_user()
         yield _app
         try:
             db.session.remove()

@@ -270,6 +270,8 @@ class LongTermMemory:
         # فهرسة المحادثات
         for idx, memory in enumerate(self.episodic_memory["memories"]):
             message = memory.get("user_message", "")
+            if not isinstance(message, str):
+                continue
             for word in message.lower().split():
                 if len(word) > 3:  # تجاهل الكلمات القصيرة
                     self.memory_index[word].append(("episodic", idx))
@@ -277,6 +279,8 @@ class LongTermMemory:
         # فهرسة المعلومات
         for idx, memory in enumerate(self.semantic_memory["memories"]):
             fact = memory.get("fact", "")
+            if not isinstance(fact, str):
+                continue
             for word in fact.lower().split():
                 if len(word) > 3:
                     self.memory_index[word].append(("semantic", idx))

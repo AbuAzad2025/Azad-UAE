@@ -95,7 +95,7 @@
                   <i class="fas fa-edit"></i>
                 </a>
                 {% if current_user.has_permission('view_ledger') %}
-                <a href="{{ url_for('ledger.account_statement', id=account.id) }}" class="btn btn-outline-info" title="{{ t('كشف') }} {{ t('Account') }}">
+                <a href="{{ url_for('ledger.account_statement', account_id=account.id) }}" class="btn btn-outline-info" title="{{ t('كشف') }} {{ t('Account') }}">
                   <i class="fas fa-file-alt"></i>
                 </a>
                 {% endif %}

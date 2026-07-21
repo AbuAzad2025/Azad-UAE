@@ -11,7 +11,7 @@
     <button class="btn btn-primary" data-action="window-print">
       <i class="fas fa-print mr-2"></i>{{ t('Print') }}
     </button>
-    <a href="{{ url_for('ledger.account_statement', id=statement.account.id) }}?export=excel" class="btn btn-success">
+    <a href="{{ url_for('ledger.account_statement', account_id=statement.account.id) }}?export=excel" class="btn btn-success">
       <i class="fas fa-file-excel mr-2"></i>{{ t('Export') }} Excel
     </a>
   </div>

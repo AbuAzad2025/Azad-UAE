@@ -185,7 +185,7 @@ class TestProcessPayroll:
         txn = self._run_payroll(emp, days_worked=20)
         assert txn.basic_amount == Decimal("2000")
 
-    def test_process_duplicate_blocked(self, db_session, sample_branch, sample_tenant):
+    def test_process_duplicate_blocked(self, db_session, sample_branch, sample_tenant, sample_user):
         emp = _employee(db_session, sample_branch, sample_tenant)
         existing = PayrollTransaction(
             employee_id=emp.id,
@@ -198,7 +198,7 @@ class TestProcessPayroll:
             net_salary=Decimal("1"),
             branch_id=sample_branch.id,
             tenant_id=sample_tenant.id,
-            created_by=1,
+            created_by=sample_user.id,
             status="paid",
         )
         db_session.add(existing)
@@ -211,7 +211,7 @@ class TestProcessPayroll:
         txn = self._run_payroll(emp, deductions=200)
         assert txn.deductions == Decimal("200")
 
-    def test_process_negative_net_partial_advance(self, db_session, sample_branch, sample_tenant):
+    def test_process_negative_net_partial_advance(self, db_session, sample_branch, sample_tenant, sample_user):
         emp = _employee(db_session, sample_branch, sample_tenant, basic_salary="1000")
         adv = SalaryAdvance(
             employee_id=emp.id,
@@ -221,7 +221,7 @@ class TestProcessPayroll:
             remaining_amount=Decimal("1500"),
             status="approved",
             tenant_id=sample_tenant.id,
-            created_by=1,
+            created_by=sample_user.id,
         )
         db_session.add(adv)
         db_session.flush()
@@ -229,7 +229,7 @@ class TestProcessPayroll:
         assert txn.net_salary == Decimal("0")
         assert txn.advances_deducted == Decimal("1000")
 
-    def test_process_negative_net_raises(self, db_session, sample_branch, sample_tenant):
+    def test_process_negative_net_raises(self, db_session, sample_branch, sample_tenant, sample_user):
         emp = _employee(db_session, sample_branch, sample_tenant, basic_salary="100")
         adv = SalaryAdvance(
             employee_id=emp.id,
@@ -239,14 +239,14 @@ class TestProcessPayroll:
             remaining_amount=Decimal("0"),
             status="approved",
             tenant_id=sample_tenant.id,
-            created_by=1,
+            created_by=sample_user.id,
         )
         db_session.add(adv)
         db_session.flush()
         with pytest.raises(ValueError, match="سالب"):
             self._run_payroll(emp, deductions=200)
 
-    def test_process_advance_total_fallback_in_summary(self, db_session, sample_branch, sample_tenant):
+    def test_process_advance_total_fallback_in_summary(self, db_session, sample_branch, sample_tenant, sample_user):
         emp = _employee(db_session, sample_branch, sample_tenant, basic_salary="3000")
         adv = SalaryAdvance(
             employee_id=emp.id,
@@ -257,14 +257,14 @@ class TestProcessPayroll:
             is_deducted=False,
             status="approved",
             tenant_id=sample_tenant.id,
-            created_by=1,
+            created_by=sample_user.id,
         )
         db_session.add(adv)
         db_session.flush()
         txn = self._run_payroll(emp)
         assert txn.advances_deducted == Decimal("300")
 
-    def test_process_clamps_over_deducted_advance_total(self, db_session, sample_branch, sample_tenant):
+    def test_process_clamps_over_deducted_advance_total(self, db_session, sample_branch, sample_tenant, sample_user):
         emp = _employee(db_session, sample_branch, sample_tenant, basic_salary="2000")
         adv = SalaryAdvance(
             employee_id=emp.id,
@@ -275,14 +275,14 @@ class TestProcessPayroll:
             is_deducted=False,
             status="approved",
             tenant_id=sample_tenant.id,
-            created_by=1,
+            created_by=sample_user.id,
         )
         db_session.add(adv)
         db_session.flush()
         txn = self._run_payroll(emp)
         assert txn.advances_deducted == Decimal("0")
 
-    def test_process_multiple_advances_stops_when_applied(self, db_session, sample_branch, sample_tenant):
+    def test_process_multiple_advances_stops_when_applied(self, db_session, sample_branch, sample_tenant, sample_user):
         emp = _employee(db_session, sample_branch, sample_tenant, basic_salary="1000")
         adv1 = SalaryAdvance(
             employee_id=emp.id,
@@ -292,7 +292,7 @@ class TestProcessPayroll:
             remaining_amount=Decimal("600"),
             status="approved",
             tenant_id=sample_tenant.id,
-            created_by=1,
+            created_by=sample_user.id,
         )
         adv2 = SalaryAdvance(
             employee_id=emp.id,
@@ -302,7 +302,7 @@ class TestProcessPayroll:
             remaining_amount=Decimal("500"),
             status="approved",
             tenant_id=sample_tenant.id,
-            created_by=1,
+            created_by=sample_user.id,
         )
         adv3 = SalaryAdvance(
             employee_id=emp.id,
@@ -312,7 +312,7 @@ class TestProcessPayroll:
             remaining_amount=Decimal("100"),
             status="approved",
             tenant_id=sample_tenant.id,
-            created_by=1,
+            created_by=sample_user.id,
         )
         db_session.add_all([adv1, adv2, adv3])
         db_session.flush()
@@ -320,7 +320,9 @@ class TestProcessPayroll:
         assert txn.advances_deducted == Decimal("1000")
         assert adv3.is_deducted is False
 
-    def test_process_skips_exhausted_advance_in_distribution(self, db_session, sample_branch, sample_tenant):
+    def test_process_skips_exhausted_advance_in_distribution(
+        self, db_session, sample_branch, sample_tenant, sample_user
+    ):
         emp = _employee(db_session, sample_branch, sample_tenant, basic_salary="1000")
         exhausted = SalaryAdvance(
             employee_id=emp.id,
@@ -330,7 +332,7 @@ class TestProcessPayroll:
             remaining_amount=Decimal("0"),
             status="approved",
             tenant_id=sample_tenant.id,
-            created_by=1,
+            created_by=sample_user.id,
         )
         active = SalaryAdvance(
             employee_id=emp.id,
@@ -340,7 +342,7 @@ class TestProcessPayroll:
             remaining_amount=Decimal("200"),
             status="approved",
             tenant_id=sample_tenant.id,
-            created_by=1,
+            created_by=sample_user.id,
         )
         db_session.add_all([exhausted, active])
         db_session.flush()
@@ -371,7 +373,7 @@ class TestProcessPayroll:
             with pytest.raises(ValueError, match="شركتك"):
                 self._run_payroll(emp, actor_user=actor)
 
-    def test_process_advance_fallback_remaining(self, db_session, sample_branch, sample_tenant):
+    def test_process_advance_fallback_remaining(self, db_session, sample_branch, sample_tenant, sample_user):
         emp = _employee(db_session, sample_branch, sample_tenant, basic_salary="2000")
         adv = SalaryAdvance(
             employee_id=emp.id,
@@ -381,14 +383,14 @@ class TestProcessPayroll:
             remaining_amount=Decimal("0"),
             status="approved",
             tenant_id=sample_tenant.id,
-            created_by=1,
+            created_by=sample_user.id,
         )
         db_session.add(adv)
         db_session.flush()
         txn = self._run_payroll(emp)
         assert txn.advances_deducted == Decimal("200")
 
-    def test_process_advance_fully_deducted_flag(self, db_session, sample_branch, sample_tenant):
+    def test_process_advance_fully_deducted_flag(self, db_session, sample_branch, sample_tenant, sample_user):
         emp = _employee(db_session, sample_branch, sample_tenant, basic_salary="500")
         adv = SalaryAdvance(
             employee_id=emp.id,
@@ -398,7 +400,7 @@ class TestProcessPayroll:
             remaining_amount=Decimal("500"),
             status="approved",
             tenant_id=sample_tenant.id,
-            created_by=1,
+            created_by=sample_user.id,
         )
         db_session.add(adv)
         db_session.flush()
@@ -512,7 +514,7 @@ class TestAccrualCalculations:
 
 
 class TestGenerateBranchPayroll:
-    def test_generate_skips_daily_and_existing(self, db_session, sample_branch, sample_tenant):
+    def test_generate_skips_daily_and_existing(self, db_session, sample_branch, sample_tenant, sample_user):
         sal = _employee(db_session, sample_branch, sample_tenant, employment_type="salary")
         _employee(
             db_session,
@@ -532,7 +534,7 @@ class TestGenerateBranchPayroll:
             net_salary=Decimal("1"),
             branch_id=sample_branch.id,
             tenant_id=sample_tenant.id,
-            created_by=1,
+            created_by=sample_user.id,
             status="paid",
         )
         db_session.add(existing)

@@ -145,7 +145,7 @@
           
           <div class="col-md-6">
             <h6>{{ t('Report_2') }} {{ t('مخصص') }} {{ t('حسب') }} {{ t('Account') }}:</h6>
-            <form method="GET" action="{{ url_for('ledger.account_statement', id=0) }}" id="accountStatementForm" class="ledger-reports-form">
+            <form method="GET" action="{{ url_for('ledger.account_statement', account_id=0) }}" id="accountStatementForm" class="ledger-reports-form">
               <div class="form-group">
                 <label for="stmt_account_id">{{ t('اختر') }} {{ t('Account') }}:</label>
                 <select id="stmt_account_id" name="account_id" class="form-control" required aria-label="{{ t('اختر') }} {{ t('Account') }}">

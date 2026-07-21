@@ -22,6 +22,7 @@ Date    : 2026-06-21
 
 from decimal import Decimal, ROUND_HALF_UP
 import pytest
+from sqlalchemy import text
 
 
 @pytest.fixture(autouse=True)
@@ -33,10 +34,9 @@ def _vat_app_context(app):
 @pytest.fixture(autouse=True)
 def _vat_product(db_session, sample_tenant):
     """Ensure a product with id=1 exists for tests that reference product_id=1."""
-    from models import Product
+    from models import Customer, Product
 
-    existing = db_session.get(Product, 1)
-    if existing is None:
+    if db_session.get(Product, 1) is None:
         p = Product(
             id=1,
             tenant_id=sample_tenant.id,
@@ -47,6 +47,22 @@ def _vat_product(db_session, sample_tenant):
             current_stock=Decimal("0"),
         )
         db_session.add(p)
+        db_session.commit()
+        # Explicit id insert does not advance the sequence — realign it so
+        # later sequence-generated products do not collide with id=1.
+        db_session.execute(text("SELECT setval('products_id_seq', (SELECT MAX(id) FROM products))"))
+        db_session.commit()
+    if db_session.get(Customer, 1) is None:
+        db_session.add(
+            Customer(
+                id=1,
+                tenant_id=sample_tenant.id,
+                name="FK Anchor Customer",
+                email="fk-anchor-customer@test.local",
+            )
+        )
+        db_session.commit()
+        db_session.execute(text("SELECT setval('customers_id_seq', (SELECT MAX(id) FROM customers))"))
         db_session.commit()
 
 
