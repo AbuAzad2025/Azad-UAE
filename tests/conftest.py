@@ -339,7 +339,7 @@ def _ensure_signal_connected():
     try:
         from flask import template_rendered
 
-        template_rendered.connect(_on_template_rendered, sender=None)
+        template_rendered.connect(_on_template_rendered)
         _SIGNAL_CONNECTED = True
     except Exception:
         pass

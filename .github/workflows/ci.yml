@@ -295,8 +295,17 @@ jobs:
       - name: Biome check (JS lint+format, scope from biome.json)
         run: biome check . --reporter github
 
-      - name: Frontend unit tests (vitest)
-        run: npm test
+      - name: Frontend unit tests (vitest with coverage)
+        run: npm test -- --coverage
+
+      - name: Upload frontend coverage
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-frontend
+          path: coverage-frontend/
+          if-no-files-found: ignore
+          retention-days: 7
 
       # ── CSS ──
       - name: Stylelint (all project CSS)
@@ -414,6 +423,8 @@ jobs:
           SECRET_KEY: test-secret-key
           OWNER_PASSWORD: TestOwner@1234567890123456!
           APP_ENV: testing
+          ENABLE_SWAGGER_UI: "true"
+          DEBUG: "true"
         run: |
           # Start app in background
           python -m flask run --port=5000 --host=0.0.0.0 &
