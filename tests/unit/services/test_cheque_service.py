@@ -160,6 +160,45 @@ class TestReceiveAndIssue:
     def test_issue_incoming_returns_none(self, incoming_cheque):
         assert process_cheque_issue(incoming_cheque) is None
 
+    def _seed_posted_entry(self, db_session, cheque, reference_type):
+        from models import GLJournalEntry
+
+        entry = GLJournalEntry(
+            tenant_id=cheque.tenant_id,
+            entry_number=f"JV-{uuid.uuid4().hex[:6]}",
+            entry_date=date.today(),
+            description="existing posted entry",
+            reference_type=reference_type,
+            reference_id=cheque.id,
+            status="posted",
+            is_posted=True,
+            total_debit=Decimal("1000"),
+            total_credit=Decimal("1000"),
+        )
+        db_session.add(entry)
+        db_session.flush()
+        return entry
+
+    def test_receive_idempotent_no_double_post(self, mocker, db_session, incoming_cheque):
+        """A posted receive entry is returned as-is — never posted twice."""
+        from utils.gl_reference_types import GLRef
+
+        existing = self._seed_posted_entry(db_session, incoming_cheque, GLRef.CHEQUE_RECEIVE)
+        post = mocker.patch("services.cheque_service.gl_post_or_fail")
+        result = process_cheque_receive(incoming_cheque)
+        assert result.id == existing.id
+        post.assert_not_called()
+
+    def test_issue_idempotent_no_double_post(self, mocker, db_session, outgoing_cheque):
+        """A posted issue entry is returned as-is — never posted twice."""
+        from utils.gl_reference_types import GLRef
+
+        existing = self._seed_posted_entry(db_session, outgoing_cheque, GLRef.CHEQUE_ISSUE)
+        post = mocker.patch("services.cheque_service.gl_post_or_fail")
+        result = process_cheque_issue(outgoing_cheque)
+        assert result.id == existing.id
+        post.assert_not_called()
+
 
 class TestClearCheque:
     def test_clear_deposited_aed(self, incoming_cheque):
@@ -382,6 +421,20 @@ class TestCancelCheque:
         post = mocker.patch("services.cheque_service.gl_post_or_fail")
         process_cheque_cancel(incoming_cheque, create_gl=False)
         post.assert_not_called()
+
+    def test_cancel_bounced_skips_gl_reversal(self, incoming_cheque, mocker):
+        """A bounced cheque is already reversed by the bounce entry — no double reversal."""
+        post = mocker.patch("services.cheque_service.gl_post_or_fail")
+        incoming_cheque.status = "bounced"
+        process_cheque_cancel(incoming_cheque, reason="Give up", create_gl=True)
+        assert incoming_cheque.status == "cancelled"
+        post.assert_not_called()
+
+    def test_cancel_cleared_raises(self, incoming_cheque):
+        incoming_cheque.status = "cleared"
+        with pytest.raises(ValueError, match="صرفه"):
+            process_cheque_cancel(incoming_cheque)
+        assert incoming_cheque.status == "cleared"
 
     def test_cancel_rejects_linked_payment(self, db_session, sample_tenant, outgoing_cheque, sample_user):
         payment = Payment(

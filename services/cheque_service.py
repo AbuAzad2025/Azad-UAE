@@ -62,6 +62,22 @@ def _post_gl(cheque, lines, description, reference_type):
     )
 
 
+def _existing_posted_entry(cheque, reference_type):
+    """حارس عدم التكرار — القيد المرحّل لا يُرحَّل مرة أخرى أبداً."""
+    from models import GLJournalEntry
+    from utils.gl_reference_types import ref_variants
+
+    q = GLJournalEntry.query.filter(
+        GLJournalEntry.reference_type.in_(ref_variants(reference_type)),
+        GLJournalEntry.reference_id == cheque.id,
+        GLJournalEntry.status == "posted",
+    )
+    tid = getattr(cheque, "tenant_id", None)
+    if tid is not None:
+        q = q.filter(GLJournalEntry.tenant_id == tid)
+    return q.order_by(GLJournalEntry.id.desc()).first()
+
+
 def process_cheque_deposit(cheque, deposit_date=None):
     if cheque.status not in ["pending", "under_collection"]:
         raise ValueError(f"لا يمكن إيداع شيك بحالة: {cheque.status_ar}")
@@ -72,6 +88,9 @@ def process_cheque_deposit(cheque, deposit_date=None):
 def process_cheque_receive(cheque):
     if cheque.cheque_type != "incoming":
         return None
+    existing = _existing_posted_entry(cheque, GLRef.CHEQUE_RECEIVE)
+    if existing is not None:
+        return existing
     credit_account = (
         gl_get_customer_credit_account(
             cheque.customer,
@@ -123,6 +142,10 @@ def process_cheque_issue(cheque):
     # الشيكات المرتبطة بالمصروفات: قيد المصروف سجّل Cr. Deferred Cheques Payable مباشرة
     if cheque.expense_id:
         return None
+
+    existing = _existing_posted_entry(cheque, GLRef.CHEQUE_ISSUE)
+    if existing is not None:
+        return existing
 
     if cheque.supplier_id:
         debit_account = GLService.get_account_code_for_concept(
@@ -666,10 +689,15 @@ def process_cheque_cancel(cheque, reason=None, *, create_gl=True):
 
     if cheque.status == "cancelled":
         return
+    if cheque.status == "cleared":
+        raise ValueError("لا يمكن إلغاء شيك تم صرفه")
+    # A bounced cheque is already fully reversed by the bounce entry —
+    # cancelling it must not post the same reversal a second time.
+    skip_gl = cheque.status == "bounced"
     cheque.status = "cancelled"
     if reason:
         cheque.notes = (cheque.notes or "") + f"\nسبب الإلغاء: {reason}"
-    if create_gl:
+    if create_gl and not skip_gl:
         _create_cancel_journal_entry(cheque)
 
     tid = getattr(cheque, "tenant_id", None)
