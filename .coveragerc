@@ -1,7 +1,18 @@
 [run]
-source = .
+parallel = True
 branch = True
 relative_files = True
+source =
+    app
+    ai_knowledge
+    bootstrap
+    forms
+    models
+    routes
+    services
+    utils
+    config
+    extensions
 omit =
     migrations/**
     tests/**
@@ -12,6 +23,25 @@ omit =
     venv/**
     */site-packages/**
     node_modules/**
+
+[paths]
+source =
+    app/
+    ai_knowledge/
+    bootstrap/
+    forms/
+    models/
+    routes/
+    services/
+    utils/
+    /home/runner/work/Azad-UAE/Azad-UAE/app/
+    /home/runner/work/Azad-UAE/Azad-UAE/ai_knowledge/
+    /home/runner/work/Azad-UAE/Azad-UAE/bootstrap/
+    /home/runner/work/Azad-UAE/Azad-UAE/forms/
+    /home/runner/work/Azad-UAE/Azad-UAE/models/
+    /home/runner/work/Azad-UAE/Azad-UAE/routes/
+    /home/runner/work/Azad-UAE/Azad-UAE/services/
+    /home/runner/work/Azad-UAE/Azad-UAE/utils/
 
 [report]
 omit =
