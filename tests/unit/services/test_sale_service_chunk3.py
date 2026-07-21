@@ -579,7 +579,7 @@ class TestCreatePaymentFxAndGl:
             SaleService.create_payment_for_sale(sale, 100, "cash", currency="USD", exchange_rate=3.5)
         assert post.call_count >= 2
 
-    def test_fx_skip_on_second_post_error(self, app):
+    def test_fx_post_raises_on_second_post_error(self, app):
         from services.sale_service import SaleService
 
         sale = MagicMock(
@@ -612,8 +612,8 @@ class TestCreatePaymentFxAndGl:
             gl.get_account_code_for_concept.return_value = "4900"
             db_sess.flush = MagicMock()
             capp.logger = _logger()
-            result = SaleService.create_payment_for_sale(sale, 100, "cash", currency="USD", exchange_rate=3.5)
-        assert result is payment
+            with pytest.raises(RuntimeError, match="fx"):
+                SaleService.create_payment_for_sale(sale, 100, "cash", currency="USD", exchange_rate=3.5)
         assert post.call_count >= 2
 
 

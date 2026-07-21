@@ -943,11 +943,12 @@ class SaleService:
                             tenant_id=getattr(sale, "tenant_id", None),
                         )
                     except Exception as fx_err:
-                        current_app.logger.warning(
-                            "FX auto-posting skipped for payment %s: %s",
+                        current_app.logger.exception(
+                            "FX auto-posting failed for payment %s: %s",
                             payment.payment_number,
                             fx_err,
                         )
+                        raise
 
         return payment
 

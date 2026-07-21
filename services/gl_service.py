@@ -1,5 +1,5 @@
 import logging
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from datetime import datetime, timezone
 from typing import Any
 
@@ -607,8 +607,8 @@ class GLService:
         for line in lines:
             orig_debit = Decimal(str(line.get("debit", 0) or 0))
             orig_credit = Decimal(str(line.get("credit", 0) or 0))
-            debit = orig_debit * rate
-            credit = orig_credit * rate
+            debit = (orig_debit * rate).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+            credit = (orig_credit * rate).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
             adapted_lines.append(
                 {
                     "account_code": line.get("account_code") or line.get("account"),

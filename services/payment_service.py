@@ -567,11 +567,12 @@ class PaymentService:
                                         tenant_id=tenant_id,
                                     )
                                 except Exception as fx_err:
-                                    current_app.logger.warning(
-                                        "FX auto-posting skipped for receipt %s: %s",
+                                    current_app.logger.exception(
+                                        "FX auto-posting failed for receipt %s: %s",
                                         receipt.receipt_number,
                                         fx_err,
                                     )
+                                    raise
                 except Exception as _e:
                     current_app.logger.exception("GL posting failed for receipt: %s", _e)
                     raise ValueError(f"فشل الترحيل المحاسبي لسند القبض: {_e}") from _e

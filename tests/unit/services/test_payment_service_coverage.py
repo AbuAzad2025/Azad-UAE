@@ -1086,7 +1086,7 @@ class TestPaymentServiceChequeAndFxLoss:
                     }
                 )
 
-    def test_create_receipt_fx_post_skip_on_error(self, app):
+    def test_create_receipt_fx_post_raises_on_error(self, app):
         from services.payment_service import PaymentService
 
         customer = MagicMock(id=1, tenant_id=1, name="Cust")
@@ -1142,16 +1142,17 @@ class TestPaymentServiceChequeAndFxLoss:
             gl.get_account_code_for_concept.return_value = "4900"
             gl.ensure_core_accounts.return_value = None
             capp.logger = MagicMock()
-            PaymentService.create_receipt(
-                {
-                    "customer_id": 1,
-                    "amount": 100,
-                    "currency": "USD",
-                    "payment_method": "cash",
-                    "allocate_to_sales": {2: 100},
-                }
-            )
-            capp.logger.warning.assert_called()
+            with pytest.raises(ValueError, match="فشل الترحيل المحاسبي"):
+                PaymentService.create_receipt(
+                    {
+                        "customer_id": 1,
+                        "amount": 100,
+                        "currency": "USD",
+                        "payment_method": "cash",
+                        "allocate_to_sales": {2: 100},
+                    }
+                )
+            capp.logger.exception.assert_called()
 
     def test_allocate_receipt_zero_balance_skipped(self, app):
         from services.payment_service import PaymentService
