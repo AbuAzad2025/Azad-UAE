@@ -202,8 +202,110 @@ class TestPaymentServiceCreatePayment:
                 )
             assert result is payment
 
+    def test_create_payment_posts_fx_when_purchase_linked(self, app):
+        from services.payment_service import PaymentService
 
-class TestPaymentServiceCreateReceipt:
+        supplier = MagicMock(id=1, name="Sup", tenant_id=1)
+        purchase = MagicMock(id=7, currency="USD", exchange_rate=Decimal("3.0"))
+        payment = MagicMock(
+            id=10,
+            payment_number="PAY-1",
+            branch_id=1,
+            amount=Decimal("100"),
+            amount_aed=Decimal("350"),
+            payment_confirmed=True,
+        )
+        with (
+            app.app_context(),
+            patch("services.payment_service.db") as mock_db,
+            patch(
+                "services.payment_service.current_user",
+                MagicMock(is_authenticated=True, id=1, tenant_id=1),
+            ),
+            patch("services.payment_service.generate_number", return_value="PAY-001"),
+            patch.object(PaymentService, "_resolve_transaction_rate", return_value=Decimal("3.5")),
+            patch.object(PaymentService, "_resolve_branch_id", return_value=1),
+            patch("services.payment_service.GLService"),
+            patch("services.payment_service.post_or_fail"),
+            patch.object(PaymentService, "_post_supplier_fx_gain_loss") as fx,
+        ):
+            mock_db.session.get.side_effect = lambda model, pk: supplier if model.__name__ == "Supplier" else purchase
+            with patch("models.Payment", return_value=payment):
+                PaymentService.create_payment(
+                    {
+                        "supplier_id": 1,
+                        "amount": Decimal("100"),
+                        "currency": "USD",
+                        "payment_method": "cash",
+                        "purchase_id": 7,
+                    }
+                )
+        fx.assert_called_once_with(payment, purchase, 1)
+        assert payment.purchase_id == 7
+
+
+class TestSupplierFxGainLoss:
+    def _payment(self, amount="100", rate="3.5"):
+        return MagicMock(
+            id=10,
+            payment_number="PAY-FX-1",
+            branch_id=1,
+            amount=Decimal(amount),
+            exchange_rate=Decimal(rate),
+            currency="USD",
+        )
+
+    def _run(self, payment, purchase):
+        from services.payment_service import PaymentService
+
+        with (
+            patch("services.payment_service.GLService") as gl,
+            patch("services.payment_service.post_or_fail") as post,
+            patch("services.payment_service.resolve_tenant_base_currency", return_value="AED"),
+        ):
+            gl.get_account_code_for_concept.side_effect = lambda code, **kw: {
+                "AP": "2110",
+                "FX_LOSS": "6600",
+                "FX_GAIN": "4400",
+            }[code]
+            PaymentService._post_supplier_fx_gain_loss(payment, purchase, tenant_id=1)
+        return post
+
+    def test_fx_loss_when_rate_rises(self):
+        purchase = MagicMock(currency="USD", exchange_rate=Decimal("3.0"))
+        post = self._run(self._payment(rate="3.5"), purchase)
+        post.assert_called_once()
+        lines = post.call_args.args[0]
+        assert lines[0]["concept_code"] == "FX_LOSS"
+        assert lines[0]["debit"] == Decimal("50.000")
+        assert lines[1]["concept_code"] == "AP"
+        assert lines[1]["credit"] == Decimal("50.000")
+
+    def test_fx_gain_when_rate_falls(self):
+        purchase = MagicMock(currency="USD", exchange_rate=Decimal("3.0"))
+        post = self._run(self._payment(rate="2.5"), purchase)
+        post.assert_called_once()
+        lines = post.call_args.args[0]
+        assert lines[0]["concept_code"] == "AP"
+        assert lines[0]["debit"] == Decimal("50.000")
+        assert lines[1]["concept_code"] == "FX_GAIN"
+        assert lines[1]["credit"] == Decimal("50.000")
+
+    def test_no_fx_when_rates_match(self):
+        purchase = MagicMock(currency="USD", exchange_rate=Decimal("3.5"))
+        post = self._run(self._payment(rate="3.5"), purchase)
+        post.assert_not_called()
+
+    def test_no_fx_when_currency_differs(self):
+        purchase = MagicMock(currency="EUR", exchange_rate=Decimal("3.0"))
+        post = self._run(self._payment(rate="3.5"), purchase)
+        post.assert_not_called()
+
+    def test_no_fx_below_threshold(self):
+        purchase = MagicMock(currency="USD", exchange_rate=Decimal("3.0"))
+        post = self._run(self._payment(rate="3.00005"), purchase)
+        post.assert_not_called()
+
     def test_create_receipt_customer_not_found(self, app):
         from services.payment_service import PaymentService
 

@@ -56,6 +56,83 @@ class PaymentService:
         return getattr(current_user, "branch_id", None) if getattr(current_user, "is_authenticated", False) else None
 
     @staticmethod
+    def _post_supplier_fx_gain_loss(payment, purchase, tenant_id):
+        """ترحيل فروقات العملة المحققة عند تسوية ذمة مورد (AP) بعملة أجنبية.
+
+        مرآة منطق سند القبض: تقارن سعر فاتورة الشراء بسعر الدفع وتُرحّل
+        الفرق إلى FX_GAIN/FX_LOSS مقابل حساب AP. يرمي الاستثناء كما هو —
+        الذرّية يضمنها atomic_transaction لدى المتصل.
+        """
+        if not purchase or getattr(purchase, "currency", None) != payment.currency:
+            return
+        purchase_rate = Decimal(str(getattr(purchase, "exchange_rate", None) or 1))
+        payment_rate = Decimal(str(payment.exchange_rate or 1))
+        if purchase_rate == payment_rate or not payment.amount or payment.amount <= 0:
+            return
+        expected_aed = (payment.amount * purchase_rate).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        actual_aed = (payment.amount * payment_rate).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        fx_diff = (actual_aed - expected_aed).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        if abs(fx_diff) <= Decimal("0.01"):
+            return
+        ap_account = GLService.get_account_code_for_concept(
+            "AP",
+            branch_id=payment.branch_id,
+            tenant_id=tenant_id,
+            fallback_key="payable",
+        )
+        if fx_diff > 0:
+            fx_lines = [
+                {
+                    "account": GLService.get_account_code_for_concept(
+                        "FX_LOSS",
+                        branch_id=payment.branch_id,
+                        tenant_id=tenant_id,
+                        fallback_key="fx_loss",
+                    ),
+                    "concept_code": "FX_LOSS",
+                    "debit": fx_diff,
+                    "description": f"FX Loss - Payment {payment.payment_number}",
+                },
+                {
+                    "account": ap_account,
+                    "concept_code": "AP",
+                    "credit": fx_diff,
+                    "description": f"FX Loss Adjustment - Payment {payment.payment_number}",
+                },
+            ]
+        else:
+            gain = abs(fx_diff)
+            fx_lines = [
+                {
+                    "account": ap_account,
+                    "concept_code": "AP",
+                    "debit": gain,
+                    "description": f"FX Gain Adjustment - Payment {payment.payment_number}",
+                },
+                {
+                    "account": GLService.get_account_code_for_concept(
+                        "FX_GAIN",
+                        branch_id=payment.branch_id,
+                        tenant_id=tenant_id,
+                        fallback_key="fx_gain",
+                    ),
+                    "concept_code": "FX_GAIN",
+                    "credit": gain,
+                    "description": f"FX Gain - Payment {payment.payment_number}",
+                },
+            ]
+        post_or_fail(
+            fx_lines,
+            description=f"FX Gain/Loss - Payment {payment.payment_number}",
+            reference_type=GLRef.PAYMENT,
+            reference_id=payment.id,
+            currency=resolve_tenant_base_currency(tenant_id=tenant_id),
+            exchange_rate=1.0,
+            branch_id=payment.branch_id,
+            tenant_id=tenant_id,
+        )
+
+    @staticmethod
     def create_payment(payment_data):
         """
         Create outgoing payment (to supplier)
@@ -209,6 +286,15 @@ class PaymentService:
             except Exception as _e:
                 current_app.logger.exception("GL posting failed for payment: %s", _e)
                 raise ValueError(f"فشل الترحيل المحاسبي للدفعة: {_e}") from _e
+
+            purchase_id = payment_data.get("purchase_id")
+            if purchase_id:
+                from models import Purchase
+
+                purchase = db.session.get(Purchase, purchase_id)
+                if purchase is not None:
+                    payment.purchase_id = purchase.id
+                    PaymentService._post_supplier_fx_gain_loss(payment, purchase, tenant_id)
 
             try:
                 db.session.flush()

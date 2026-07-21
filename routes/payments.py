@@ -1765,6 +1765,10 @@ def create_payment(purchase_id):
                         tenant_id=tenant_id,
                     )
 
+                    from services.payment_service import PaymentService
+
+                    PaymentService._post_supplier_fx_gain_loss(payment, purchase, tenant_id)
+
                 supplier.apply_payment(Decimal(str(payment.amount_aed or 0)))
 
             flash(gettext("تم إنشاء سند الصرف بنجاح"), "success")
