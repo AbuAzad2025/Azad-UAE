@@ -143,7 +143,9 @@ jobs:
           pytest ${{ matrix.test-path }} -v --tb=short \
             --cov=. --cov-config=.coveragerc --cov-report=term \
             --cov-report=xml:coverage-${{ matrix.cov-flag }}.xml
-          cp .coverage.* coverage-data-${{ matrix.cov-flag }} 2>/dev/null || true
+          coverage combine 2>/dev/null || true
+          ls -la .coverage 2>/dev/null || true
+          cp .coverage coverage-data-${{ matrix.cov-flag }} 2>/dev/null || true
 
       - name: Upload coverage to Codecov (optional)
         if: always()
