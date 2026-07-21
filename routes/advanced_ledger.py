@@ -532,8 +532,9 @@ def events_stream_api():
 @permission_required("view_ledger")
 def cheque_accounting_summary_api(cheque_id):
     """API لملخص محاسبي للشيك"""
+    cheque = tenant_get_or_404(Cheque, cheque_id)
     try:
-        summary = ChequeAccountingIntegration.get_cheque_accounting_summary(cheque_id)
+        summary = ChequeAccountingIntegration.get_cheque_accounting_summary(cheque.id)
         return jsonify({"success": True, "summary": summary})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 400

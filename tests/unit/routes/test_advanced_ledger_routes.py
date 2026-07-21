@@ -483,14 +483,29 @@ class TestAdvancedLedgerAPI:
         assert resp.get_json()["success"] is True
 
     def test_cheque_accounting_summary_api(self, advanced_ledger_client):
-        with _advanced_ledger_patches():
+        with (
+            _advanced_ledger_patches(),
+            patch("routes.advanced_ledger.tenant_get_or_404", return_value=MagicMock(id=9)),
+        ):
             resp = advanced_ledger_client.get("/ledger/advanced/api/cheque/9/accounting-summary")
         assert resp.status_code == 200
         assert resp.get_json()["success"] is True
 
+    def test_cheque_summary_api_cross_tenant_blocked(self, advanced_ledger_client):
+        """A cheque outside the active tenant must 404 — never leak summary data."""
+        from werkzeug.exceptions import NotFound
+
+        with (
+            _advanced_ledger_patches(),
+            patch("routes.advanced_ledger.tenant_get_or_404", side_effect=NotFound()),
+        ):
+            resp = advanced_ledger_client.get("/ledger/advanced/api/cheque/9/accounting-summary")
+        assert resp.status_code == 404
+
     def test_cheque_summary_api_error(self, advanced_ledger_client):
         with (
             _advanced_ledger_patches(),
+            patch("routes.advanced_ledger.tenant_get_or_404", return_value=MagicMock(id=9)),
             patch(
                 "routes.advanced_ledger.ChequeAccountingIntegration.get_cheque_accounting_summary",
                 side_effect=ValueError("missing"),

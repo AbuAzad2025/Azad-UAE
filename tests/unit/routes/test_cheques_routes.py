@@ -695,9 +695,21 @@ class TestChequesActions:
     def test_delete_hard(self, cheques_admin_client):
         cheque = _mock_cheque(status="pending")
         gl_q = MagicMock()
+        gl_q.filter.return_value.first.return_value = None
         with _cheque_patches(cheque=cheque), patch("models.GLJournalEntry.query", gl_q):
             resp = cheques_admin_client.post("/cheques/1/delete", follow_redirects=False)
         assert resp.status_code == 302
+        cheque.archive.assert_not_called()
+
+    def test_delete_with_posted_gl_entries_archives_instead(self, cheques_admin_client):
+        """Posted GL entries must never be hard-deleted — the cheque is archived."""
+        cheque = _mock_cheque(status="pending")
+        gl_q = MagicMock()
+        with _cheque_patches(cheque=cheque), patch("models.GLJournalEntry.query", gl_q):
+            resp = cheques_admin_client.post("/cheques/1/delete", follow_redirects=False)
+        assert resp.status_code == 302
+        cheque.archive.assert_called_once()
+        gl_q.filter.return_value.delete.assert_not_called()
 
     def test_delete_forbidden_scope(self, cheques_admin_client):
         with _cheque_patches(in_scope=False):

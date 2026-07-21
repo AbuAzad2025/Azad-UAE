@@ -692,6 +692,26 @@ def delete(**kwargs):
     if cheque.receipt_id or cheque.payment_id or cheque.sale_id or cheque.purchase_id or cheque.expense_id:
         has_links = True
 
+    if not has_links:
+        from models import GLJournalEntry
+
+        ref_types = [
+            "cheque_receive",
+            "cheque_issue",
+            "cheque_cancel",
+            "cheque_clear",
+            "cheque_bounce",
+            "Cheque",
+        ]
+        has_links = (
+            GLJournalEntry.query.filter(
+                GLJournalEntry.reference_type.in_(ref_types),
+                GLJournalEntry.reference_id == cheque.id,
+                GLJournalEntry.tenant_id == cheque.tenant_id,
+            ).first()
+            is not None
+        )
+
     try:
         if has_links:
             reason = request.form.get("delete_reason", gettext("أرشفة بسبب وجود ارتباطات"))
@@ -706,23 +726,6 @@ def delete(**kwargs):
 
         else:
             with atomic_transaction("cheque_delete_hard"):
-                from models import GLJournalEntry
-
-                ref_types = [
-                    "cheque_receive",
-                    "cheque_issue",
-                    "cheque_cancel",
-                    "cheque_clear",
-                    "cheque_bounce",
-                    "Cheque",
-                ]
-                gl_query = GLJournalEntry.query.filter(
-                    GLJournalEntry.reference_type.in_(ref_types),
-                    GLJournalEntry.reference_id == cheque.id,
-                    GLJournalEntry.tenant_id == cheque.tenant_id,
-                )
-                gl_query.delete(synchronize_session=False)
-
                 db.session.delete(cheque)
                 LoggingCore.log_audit("delete", "cheques", record_id)
             flash(
