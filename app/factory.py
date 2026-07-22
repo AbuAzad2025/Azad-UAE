@@ -183,7 +183,7 @@ def create_app(config_class=Config) -> Flask:
         if _cu.is_authenticated:
             g.active_tenant_id = get_active_tenant_id(_cu)
             _bp = request.blueprint or ""
-            _skip = {"", "auth", "public", "language", "tenants", "owner"}
+            _skip = {"", "auth", "public", "language", "tenants", "owner", "stock_sync"}
             if _bp not in _skip and request.endpoint != "static":
                 if not is_global_owner_user(_cu) and g.active_tenant_id is None:
                     abort(403)

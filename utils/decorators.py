@@ -313,6 +313,77 @@ def require_subscription_feature(feature_name: str):
     return decorator
 
 
+# ── External POS / API-key authentication decorator ──────────────────────
+# Validates X-API-Key / X-API-Secret headers, resolves tenant, sets
+# g.active_tenant_id so existing ORM auto-scoping (tenant_orm.py) fires
+# with zero duplicated security code.
+# ------------------------------------------------------------------------
+
+
+def api_key_required(scope="read"):
+    """Require a valid tenant-scoped API key for external integrations (POS sync)."""
+
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            from flask import g, request, jsonify
+            from extensions import db
+            from utils.tenanting import without_tenant_scope, get_tenant_status
+            from utils.db_safety import atomic_transaction
+            from datetime import datetime, timezone
+
+            raw_key = (request.headers.get("X-API-Key") or "").strip()
+            raw_secret = (request.headers.get("X-API-Secret") or "").strip()
+
+            if not raw_key or not raw_secret:
+                return jsonify({"ok": False, "error": "Missing API credentials"}), 401
+
+            with without_tenant_scope():
+                from models import APIKey
+
+                api_key = db.session.query(APIKey).filter_by(
+                    key=raw_key, secret=raw_secret, is_active=True
+                ).first()
+
+            if not api_key:
+                return jsonify({"ok": False, "error": "Invalid or inactive API key"}), 403
+
+            # Tenant-scoped keys only (platform-level keys lack tenant_id)
+            if api_key.tenant_id is None:
+                return jsonify({"ok": False, "error": "API key not bound to a tenant"}), 403
+
+            # Scope check
+            key_scope = getattr(api_key, "scope", "write") or "write"
+            if scope == "write" and key_scope == "read":
+                return jsonify({"ok": False, "error": "Read-only API key"}), 403
+
+            # Tenant health check (suspension, subscription expiry)
+            status = get_tenant_status(api_key.tenant_id)
+            if not status["ok"]:
+                return (
+                    jsonify({"ok": False, "error": status.get("reason") or "Tenant inactive"}),
+                    403,
+                )
+
+            # Activate tenant for ORM auto-scoping
+            g.active_tenant_id = api_key.tenant_id
+
+            # Track usage (best-effort)
+            try:
+                with atomic_transaction("api_key_usage_tracking"):
+                    api_key.last_used = datetime.now(timezone.utc)
+                    api_key.usage_count = (api_key.usage_count or 0) + 1
+                    db.session.flush()
+            except Exception:
+                pass
+
+            return f(*args, **kwargs)
+
+        return decorated_function
+
+    return decorator
+
+
 # ── Resource-limit enforcement decorator ──────────────────────────────
 # Calls ``utils/tenant_limits.py`` convenience helpers before the route
 # executes.  Raises HTTP 403 with a user-facing message when the limit

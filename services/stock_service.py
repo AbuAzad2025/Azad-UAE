@@ -398,6 +398,25 @@ class StockService:
                     exc_info=True,
                 )
 
+            # Real-time broadcast (best-effort; outer atomic_transaction governs
+            # the actual commit so a later rollback may leave subscribers with
+            # a stale event — they will receive the corrected event on retry).
+            try:
+                from services.websocket_service import broadcast_stock_alert
+
+                broadcast_stock_alert(
+                    {
+                        "product_id": product_id,
+                        "warehouse_id": getattr(warehouse, "id", None),
+                        "movement_type": movement_type,
+                        "quantity": str(qty),
+                        "current_stock": str(product.current_stock),
+                        "tenant_id": tenant_id,
+                    }
+                )
+            except Exception:
+                pass
+
             return movement
 
         except Exception as e:

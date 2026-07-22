@@ -16,8 +16,10 @@ class APIKey(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     last_used = db.Column(db.DateTime)
     usage_count = db.Column(db.Integer, default=0)
+    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id"), nullable=True, index=True)
     created_by = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
 
+    tenant = db.relationship("Tenant", backref="api_keys")
     creator = db.relationship("User", backref="api_keys_created")
 
     @staticmethod

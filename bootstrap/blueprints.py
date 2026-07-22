@@ -178,6 +178,7 @@ def register_blueprints(app):
     email_marketing_bp = _import_bp(app, "routes.email_marketing", "email_marketing_bp")
     printing_bp = _import_bp(app, "routes.printing", "printing_bp")
     billing_webhook_bp = _import_bp(app, "routes.billing_webhooks", "billing_webhook_bp")
+    stock_sync_bp = _import_bp(app, "routes.stock_sync", "stock_sync_bp")
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
@@ -226,5 +227,6 @@ def register_blueprints(app):
     app.register_blueprint(email_marketing_bp)
     app.register_blueprint(printing_bp)
     app.register_blueprint(billing_webhook_bp)
+    app.register_blueprint(stock_sync_bp)
 
     return app

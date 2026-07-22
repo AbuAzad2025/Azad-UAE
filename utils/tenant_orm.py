@@ -144,6 +144,11 @@ def tenant_scope_enabled() -> bool:
     bp = request.blueprint or ""
     if bp in _SKIP_BLUEPRINTS:
         return False
+    # API-key-authenticated requests (e.g. external POS sync) set
+    # g.active_tenant_id explicitly; ORM scoping must apply even though
+    # current_user is anonymous.
+    if getattr(g, "active_tenant_id", None) is not None:
+        return True
     try:
         from flask_login import current_user
 

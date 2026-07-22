@@ -56,6 +56,7 @@ from .advanced_accounting import CustomsTax, AdvancedExpense, TaxCalculationRule
 from .login_history import LoginHistory
 from .security_alert import SecurityAlert
 from .api_key import APIKey
+from .sync_batch import SyncBatch
 from .product_serial import ProductSerial
 from .payroll import Employee, SalaryAdvance, PayrollTransaction
 from .payroll_settings import PayrollSettings
@@ -178,6 +179,7 @@ __all__ = [
     "LoginHistory",
     "SecurityAlert",
     "APIKey",
+    "SyncBatch",
     "Employee",
     "SalaryAdvance",
     "PayrollTransaction",
