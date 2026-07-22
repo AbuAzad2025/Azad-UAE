@@ -341,9 +341,7 @@ def api_key_required(scope="read"):
             with without_tenant_scope():
                 from models import APIKey
 
-                api_key = db.session.query(APIKey).filter_by(
-                    key=raw_key, secret=raw_secret, is_active=True
-                ).first()
+                api_key = db.session.query(APIKey).filter_by(key=raw_key, secret=raw_secret, is_active=True).first()
 
             if not api_key:
                 return jsonify({"ok": False, "error": "Invalid or inactive API key"}), 403
