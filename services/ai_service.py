@@ -1056,12 +1056,10 @@ class AIService:
 
     @staticmethod
     def _execute_ai_action(groq_response, user_id):
-        """تنفيذ الأوامر التي يطلبها Groq — يستخدم AIExecutor الحقيقي"""
+        """تنفيذ الأوامر التي يطلبها Groq — يمر عبر ActionDispatcher لضمان RBAC و confirmation gate."""
         try:
             import json
             import re
-            from flask_login import current_user as flask_user
-            from services.ai_executor import AIExecutor
 
             json_match = re.search(r'\{[\s\S]*"action"[\s\S]*\}', groq_response)
             if not json_match:
@@ -1070,81 +1068,23 @@ class AIService:
             action_data = json.loads(json_match.group(0))
             action_type = action_data.get("action", "")
             data = action_data.get("data", {})
-            message = action_data.get("message", "")
 
             if not action_type:
                 return None
 
-            user = flask_user if flask_user.is_authenticated else None
-            ex = AIExecutor(user=user)
-            result = None
+            # Route through ActionDispatcher for unified RBAC + confirmation + audit
+            from ai_knowledge.action_dispatcher import ActionDispatcher
 
-            if action_type == "create_customer":
-                result = ex.create_customer(
-                    name=data.get("name") or data.get("الاسم", ""),
-                    phone=data.get("phone") or data.get("الهاتف", ""),
-                    email=data.get("email", ""),
-                    address=data.get("address") or data.get("العنوان", ""),
-                    customer_type=data.get("customer_type", "regular"),
-                )
-            elif action_type == "create_product":
-                result = ex.create_product(
-                    name=data.get("name") or data.get("الاسم", ""),
-                    sku=data.get("sku") or data.get("رقم_القطعة", ""),
-                    regular_price=float(data.get("price") or data.get("سعر", 0)),
-                    cost_price=float(data.get("cost_price", 0)),
-                    current_stock=float(data.get("stock") or data.get("الكمية", 0)),
-                    unit=data.get("unit", "piece"),
-                )
-            elif action_type == "create_sale":
-                lines_raw = data.get("lines") or data.get("products", [])
-                if isinstance(lines_raw, list) and len(lines_raw) > 0:
-                    product_lines = lines_raw
-                else:
-                    product_lines = [
-                        {
-                            "name": data.get("product_name") or data.get("اسم_المنتج", ""),
-                            "quantity": int(data.get("quantity", 1)),
-                        }
-                    ]
-                result = ex.create_sale(
-                    customer_name=data.get("customer_name") or data.get("اسم_العميل", ""),
-                    product_lines=product_lines,
-                    payment_method=data.get("payment_method", "cash"),
-                    paid_amount=float(data.get("paid_amount", data.get("المبلغ", 0))),
-                    notes=message,
-                )
-            elif action_type == "receive_payment":
-                result = ex.receive_payment(
-                    customer_name=data.get("customer_name") or data.get("اسم_العميل", ""),
-                    amount=float(data.get("amount") or data.get("المبلغ", 0)),
-                    method=data.get("method") or data.get("طريقة_الدفع", "cash"),
-                )
-            elif action_type == "add_expense":
-                result = ex.add_expense(
-                    description=data.get("description") or data.get("الوصف", ""),
-                    amount=float(data.get("amount") or data.get("المبلغ", 0)),
-                    payment_method=data.get("payment_method", "cash"),
-                )
-            elif action_type == "create_supplier":
-                result = ex.create_supplier(
-                    name=data.get("name") or data.get("الاسم", ""),
-                    phone=data.get("phone") or data.get("الهاتف", ""),
-                    email=data.get("email", ""),
-                )
-            elif action_type == "create_employee":
-                result = ex.create_employee(
-                    name=data.get("name") or data.get("الاسم", ""),
-                    phone=data.get("phone") or data.get("الهاتف", ""),
-                    basic_salary=float(data.get("salary") or data.get("الراتب", 0)),
-                )
+            dispatcher = ActionDispatcher()
+            result = dispatcher.dispatch(action_type, data)
 
-            if result and result.get("success"):
-                return f"{result['message']}\n\n<sub>🤖 تم التنفيذ بواسطة أزاد</sub>"
-            elif result:
-                return f"⚠️ {result.get('message', 'حدث خطأ أثناء التنفيذ')}\n\n<sub>🤖 أزاد</sub>"
-
-            return None
+            if result.needs_confirmation:
+                return f"⚠️ {result.message}\n\n<sub>🤖 أزاد — يرجى التأكيد قبل التنفيذ</sub>"
+            if result.needs_permission:
+                return f"🚫 {result.message}\n\n<sub>🤖 أزاد — صلاحية مرفوضة</sub>"
+            if result.success:
+                return f"{result.message}\n\n<sub>🤖 تم التنفيذ بواسطة أزاد</sub>"
+            return f"⚠️ {result.message}\n\n<sub>🤖 أزاد</sub>"
 
         except Exception as e:
             logger.warning("Action execution error: %s", e)

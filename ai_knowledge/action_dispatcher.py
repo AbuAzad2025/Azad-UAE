@@ -125,12 +125,14 @@ class ActionResult:
         data: Any = None,
         action_type: str = "",
         needs_permission: str = "",
+        needs_confirmation: bool = False,
     ):
         self.success = success
         self.message = message
         self.data = data or {}
         self.action_type = action_type
         self.needs_permission = needs_permission
+        self.needs_confirmation = needs_confirmation
 
     def to_dict(self) -> dict:
         return {
@@ -138,6 +140,7 @@ class ActionResult:
             "message": self.message,
             "data": self.data,
             "action_type": self.action_type,
+            "needs_confirmation": self.needs_confirmation,
         }
 
 
@@ -157,12 +160,14 @@ class ActionDispatcher:
         handler: Callable,
         permission: str = "",
         description: str = "",
+        confirm_required: bool = False,
     ):
         """Register an action handler."""
         self._registry[action_type] = {
             "handler": handler,
             "permission": permission,
             "description": description,
+            "confirm_required": confirm_required,
         }
 
     def _register_all(self):
@@ -715,8 +720,10 @@ class ActionDispatcher:
             except Exception as e:
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
-        # Register all actions
-        self._register("create_customer", _create_customer, "manage_customers", "إنشاء عميل جديد")
+        # Register all actions — destructive mutations require explicit confirmation
+        self._register(
+            "create_customer", _create_customer, "manage_customers", "إنشاء عميل جديد", confirm_required=True
+        )
         self._register("list_customers", _list_customers, "manage_customers", "عرض العملاء")
         self._register(
             "customer_balance",
@@ -724,19 +731,19 @@ class ActionDispatcher:
             "manage_customers",
             "عرض رصيد عميل",
         )
-        self._register("create_product", _create_product, "manage_products", "إنشاء منتج جديد")
+        self._register("create_product", _create_product, "manage_products", "إنشاء منتج جديد", confirm_required=True)
         self._register("list_products", _list_products, "manage_products", "عرض المنتجات")
         self._register("check_stock", _check_stock, "manage_warehouse", "فحص المخزون")
-        self._register("create_sale", _create_sale, "manage_sales", "إنشاء فاتورة مبيعات")
+        self._register("create_sale", _create_sale, "manage_sales", "إنشاء فاتورة مبيعات", confirm_required=True)
         self._register("list_sales", _list_sales, "manage_sales", "عرض الفواتير")
-        self._register("receive_payment", _receive_payment, "manage_payments", "استلام دفعة")
-        self._register("add_expense", _add_expense, "manage_expenses", "تسجيل مصروف")
-        self._register("create_supplier", _create_supplier, "manage_suppliers", "إنشاء مورد")
+        self._register("receive_payment", _receive_payment, "manage_payments", "استلام دفعة", confirm_required=True)
+        self._register("add_expense", _add_expense, "manage_expenses", "تسجيل مصروف", confirm_required=True)
+        self._register("create_supplier", _create_supplier, "manage_suppliers", "إنشاء مورد", confirm_required=True)
         self._register("sales_summary", _sales_summary, "view_reports", "ملخص المبيعات")
         self._register("profit_summary", _profit_summary, "view_reports", "ملخص الأرباح")
-        self._register("create_employee", _create_employee, "manage_employees", "إنشاء موظف")
-        self._register("create_purchase", _create_purchase, "manage_purchases", "إنشاء أمر شراء")
-        self._register("create_user", _create_user, "manage_users", "إنشاء مستخدم")
+        self._register("create_employee", _create_employee, "manage_employees", "إنشاء موظف", confirm_required=True)
+        self._register("create_purchase", _create_purchase, "manage_purchases", "إنشاء أمر شراء", confirm_required=True)
+        self._register("create_user", _create_user, "manage_users", "إنشاء مستخدم", confirm_required=True)
 
     def get_registered_actions(self) -> list[str]:
         """List all registered action types."""
@@ -744,7 +751,7 @@ class ActionDispatcher:
 
     def dispatch(self, action_type: str, args: dict | None = None) -> ActionResult:
         """
-        Execute an action with permission check and error handling.
+        Execute an action with permission check, confirmation gate, and error handling.
         Returns ActionResult with success/failure, message, and data.
         """
         action = self._registry.get(action_type)
@@ -763,6 +770,14 @@ class ActionDispatcher:
                 False,
                 f"ليس لديك صلاحية لهذه العملية. تحتاج صلاحية: {perm}",
                 needs_permission=perm,
+            )
+
+        # Confirmation gate for destructive actions
+        if action.get("confirm_required") and not (args or {}).get("confirmed"):
+            return ActionResult(
+                False,
+                f"هذه العملية ({action_type}) تتطلب تأكيداً صريحاً. يرجى إعادة الإرسال مع confirmed=true",
+                needs_confirmation=True,
             )
 
         # Execute

@@ -64,6 +64,29 @@ def _process_user_action(message, user):
         tid = get_active_tenant_id(user)
         ctx = _conversation_ctx(user_id, tid)
 
+        # ── Per-flow RBAC: validate permission for the current wizard context ──
+        _WIZARD_PERM_MAP = {
+            gettext("رصيد"): "manage_payments",
+            gettext("استلام"): "manage_payments",
+            gettext("إعطاء"): "manage_payments",
+            gettext("عميل"): "manage_customers",
+            gettext("منتج"): "manage_products",
+            gettext("فاتورة"): "manage_sales",
+            gettext("مصروف"): "manage_expenses",
+            gettext("مورد"): "manage_suppliers",
+            gettext("مشتريات"): "manage_purchases",
+            gettext("شيك"): "manage_cheques",
+            gettext("دفتر"): "manage_ledger",
+            gettext("مستودع"): "manage_warehouse",
+            gettext("مستخدم"): "manage_users",
+        }
+        _current_flow = ctx.get("last_action")
+        if _current_flow and _current_flow in _WIZARD_PERM_MAP:
+            _needed = _WIZARD_PERM_MAP[_current_flow]
+            if not getattr(user, "is_owner", False) and not user.has_permission(_needed):
+                del ctx
+                return f"🚫 ليس لديك صلاحية '{_needed}' للقيام بهذه العملية. يرجى التواصل مع المسؤول."
+
         if any(
             word in msg_lower
             for word in [
