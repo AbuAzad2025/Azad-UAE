@@ -362,7 +362,9 @@ def edit(**kwargs):
 
                 exchange_rate = _resolve_transaction_rate(expense.currency)
                 expense.exchange_rate = exchange_rate
-                expense.amount_aed = convert_and_quantize_aed(new_amount, expense.currency, exchange_rate, tenant_id=expense.tenant_id)
+                expense.amount_aed = convert_and_quantize_aed(
+                    new_amount, expense.currency, exchange_rate, tenant_id=expense.tenant_id
+                )
 
                 if financial_change and expense.status == "confirmed":
                     from utils.gl_tenant import reverse_document_gl

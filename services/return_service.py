@@ -422,10 +422,13 @@ class ReturnService:
 
             product_return.refund_amount = final_refund_amount
             from utils.currency_utils import convert_and_quantize_aed
+
             exchange_rate = Decimal(str(product_return.exchange_rate or 1))
             product_return.amount_aed = convert_and_quantize_aed(
-                final_refund_amount, product_return.currency, exchange_rate,
-                tenant_id=getattr(product_return, 'tenant_id', None),
+                final_refund_amount,
+                product_return.currency,
+                exchange_rate,
+                tenant_id=getattr(product_return, "tenant_id", None),
             )
 
             if manual_refund_amount is not None:

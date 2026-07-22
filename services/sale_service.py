@@ -762,7 +762,9 @@ class SaleService:
 
         # Calculate AED amount using centralized utility
         exchange_rate_decimal = Decimal(str(exchange_rate))
-        amount_aed = convert_and_quantize_aed(amount_decimal, currency, exchange_rate_decimal, tenant_id=getattr(sale, "tenant_id", None))
+        amount_aed = convert_and_quantize_aed(
+            amount_decimal, currency, exchange_rate_decimal, tenant_id=getattr(sale, "tenant_id", None)
+        )
 
         payment = Payment(
             tenant_id=getattr(sale, "tenant_id", None),
@@ -881,10 +883,14 @@ class SaleService:
             expected_aed = None
             if sale_currency == pay_currency:
                 if sale_rate != exchange_rate_decimal:
-                    expected_aed = convert_and_quantize_aed(amount_decimal, currency, sale_rate, tenant_id=getattr(sale, "tenant_id", None))
+                    expected_aed = convert_and_quantize_aed(
+                        amount_decimal, currency, sale_rate, tenant_id=getattr(sale, "tenant_id", None)
+                    )
             else:
                 sale_amount = Decimal(str(getattr(sale, "grand_total", None) or sale.total_amount or 0))
-                expected_aed = convert_and_quantize_aed(sale_amount, sale.currency, sale_rate, tenant_id=getattr(sale, "tenant_id", None))
+                expected_aed = convert_and_quantize_aed(
+                    sale_amount, sale.currency, sale_rate, tenant_id=getattr(sale, "tenant_id", None)
+                )
             if expected_aed is not None:
                 fx_diff = (amount_aed - expected_aed).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
                 if abs(fx_diff) > Decimal("0.01"):

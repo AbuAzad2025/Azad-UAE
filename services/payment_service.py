@@ -75,10 +75,14 @@ class PaymentService:
         purchase_currency = getattr(purchase, "currency", None) or ""
         payment_currency = getattr(payment, "currency", None) or ""
         if purchase_currency.upper() == payment_currency.upper():
-            expected_aed = convert_and_quantize_aed(payment.amount, payment_currency, purchase_rate, tenant_id=tenant_id)
+            expected_aed = convert_and_quantize_aed(
+                payment.amount, payment_currency, purchase_rate, tenant_id=tenant_id
+            )
             actual_aed = convert_and_quantize_aed(payment.amount, payment_currency, payment_rate, tenant_id=tenant_id)
         else:
-            expected_aed = convert_and_quantize_aed(purchase.amount, purchase_currency, purchase_rate, tenant_id=tenant_id)
+            expected_aed = convert_and_quantize_aed(
+                purchase.amount, purchase_currency, purchase_rate, tenant_id=tenant_id
+            )
             actual_aed = convert_and_quantize_aed(payment.amount, payment_currency, payment_rate, tenant_id=tenant_id)
         fx_diff = (actual_aed - expected_aed).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         if abs(fx_diff) <= Decimal("0.01"):
@@ -203,7 +207,9 @@ class PaymentService:
                 amount=Decimal(str(amount)),
                 currency=currency,
                 exchange_rate=exchange_rate,
-                amount_aed=convert_and_quantize_aed(amount, currency, exchange_rate, tenant_id=getattr(supplier, 'tenant_id', None)),
+                amount_aed=convert_and_quantize_aed(
+                    amount, currency, exchange_rate, tenant_id=getattr(supplier, "tenant_id", None)
+                ),
                 payment_method=payment_method,
                 reference_number=reference_number,
                 notes=notes,
@@ -233,7 +239,9 @@ class PaymentService:
                     amount=Decimal(str(amount)),
                     currency=currency,
                     exchange_rate=exchange_rate,
-                    amount_aed=convert_and_quantize_aed(amount, currency, exchange_rate, tenant_id=getattr(supplier, 'tenant_id', None)),
+                    amount_aed=convert_and_quantize_aed(
+                        amount, currency, exchange_rate, tenant_id=getattr(supplier, "tenant_id", None)
+                    ),
                     issue_date=datetime.now(timezone.utc).date(),
                     due_date=cheque_date or datetime.now(timezone.utc).date(),
                     bank_name=bank_name,
@@ -606,7 +614,9 @@ class PaymentService:
 
                     sale_balance_aed = Decimal(str(sale.balance_due or 0))
                     requested_amount = Decimal(str(allocated or 0))
-                    requested_amount_aed = convert_and_quantize_aed(requested_amount, currency, exchange_rate, tenant_id=tenant_id)
+                    requested_amount_aed = convert_and_quantize_aed(
+                        requested_amount, currency, exchange_rate, tenant_id=tenant_id
+                    )
                     allocated_amount_aed = min(requested_amount_aed, remaining_amount_aed, sale_balance_aed)
                     if allocated_amount_aed <= 0:
                         continue

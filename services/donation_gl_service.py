@@ -55,6 +55,7 @@ class DonationGLService:
         except Exception:
             rate = Decimal("3.67")
         from utils.currency_utils import convert_and_quantize_aed
+
         amount_aed = convert_and_quantize_aed(amount_usd, "USD", rate, tenant_id=tenant_id)
 
         method_label = donation.payment_method or "donation"
