@@ -60,30 +60,42 @@ class PaymentService:
     def _post_supplier_fx_gain_loss(payment, purchase, tenant_id):
         """ترحيل فروقات العملة المحققة عند تسوية ذمة مورد (AP) بعملة أجنبية.
 
-        مقارنة سعر فاتورة الشراء بسعر الدفع:
-        - نفس العملة: المقارنة بين سعري الصرف المختلفين للمبلغ المدفوع.
-        - عملتان مختلفتان: المقارنة بين القيمة الأصلية للشراء بالعملة الأصلية
-          والقيمة الفعلية للدفع بالعملة المدفوعة.
-        يُرحّل الفرق إلى FX_GAIN/FX_LOSS مقابل حساب AP.
+        - نفس العملة بسعرين مختلفين: الفرق يُحسب على مبلغ الدفعة نفسها.
+        - تسوية متقاطعة العملات: لا فروقات على الدفعات الجزئية — الفرق يبقى في
+          الرصيد المفتوح المحمول بالعملة الأساسية، ويُحسب عند الإقفال النهائي
+          كفرق بين القيمة الفعلية للدفعة والرصيد الدفتري المتبقي قبلها.
+        الشيكات غير المؤكدة تُستثنى — فروقاتها تُرحّل عند التحصيل.
+        يرمي الاستثناء كما هو — الذرّية يضمنها atomic_transaction لدى المتصل.
         """
         if not purchase:
             return
+        if not getattr(payment, "payment_confirmed", True):
+            return
         purchase_rate = Decimal(str(getattr(purchase, "exchange_rate", None) or 1))
         payment_rate = Decimal(str(payment.exchange_rate or 1))
-        if purchase_rate == payment_rate or not payment.amount or payment.amount <= 0:
+        if not payment.amount or payment.amount <= 0:
             return
         purchase_currency = getattr(purchase, "currency", None) or ""
         payment_currency = getattr(payment, "currency", None) or ""
+        actual_aed = convert_and_quantize_aed(payment.amount, payment_currency, payment_rate, tenant_id=tenant_id)
         if purchase_currency.upper() == payment_currency.upper():
+            if purchase_rate == payment_rate:
+                return
             expected_aed = convert_and_quantize_aed(
                 payment.amount, payment_currency, purchase_rate, tenant_id=tenant_id
             )
-            actual_aed = convert_and_quantize_aed(payment.amount, payment_currency, payment_rate, tenant_id=tenant_id)
         else:
-            expected_aed = convert_and_quantize_aed(
-                purchase.amount, purchase_currency, purchase_rate, tenant_id=tenant_id
+            paid_incl_current = Decimal(str(purchase.get_paid_amount() or 0))
+            paid_before = paid_incl_current - Decimal(str(payment.amount_aed or actual_aed))
+            open_before = (Decimal(str(purchase.amount_aed or 0)) - paid_before).quantize(
+                Decimal("0.001"), rounding=ROUND_HALF_UP
             )
-            actual_aed = convert_and_quantize_aed(payment.amount, payment_currency, payment_rate, tenant_id=tenant_id)
+            if open_before <= 0:
+                return
+            remaining_after = (open_before - actual_aed).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+            if remaining_after > Decimal("0.01"):
+                return
+            expected_aed = open_before
         fx_diff = (actual_aed - expected_aed).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         if abs(fx_diff) <= Decimal("0.01"):
             return
@@ -513,11 +525,11 @@ class PaymentService:
                         sale_rate = Decimal(str(source_sale.exchange_rate or 1))
                         receipt_rate = Decimal(str(receipt.exchange_rate or 1))
                         if sale_rate != receipt_rate and receipt.amount > 0:
-                            expected_aed = (receipt.amount * sale_rate).quantize(
-                                Decimal("0.001"), rounding=ROUND_HALF_UP
+                            expected_aed = convert_and_quantize_aed(
+                                receipt.amount, receipt.currency, sale_rate, tenant_id=tenant_id
                             )
-                            actual_aed = (receipt.amount * receipt_rate).quantize(
-                                Decimal("0.001"), rounding=ROUND_HALF_UP
+                            actual_aed = convert_and_quantize_aed(
+                                receipt.amount, receipt.currency, receipt_rate, tenant_id=tenant_id
                             )
                             fx_diff = (actual_aed - expected_aed).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
                             if abs(fx_diff) > Decimal("0.01"):

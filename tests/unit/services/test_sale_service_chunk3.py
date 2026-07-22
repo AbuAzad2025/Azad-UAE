@@ -616,6 +616,119 @@ class TestCreatePaymentFxAndGl:
                 SaleService.create_payment_for_sale(sale, 100, "cash", currency="USD", exchange_rate=3.5)
         assert post.call_count >= 2
 
+    def test_fx_cross_currency_final_settlement(self, app):
+        from services.sale_service import SaleService
+
+        sale = MagicMock(
+            branch_id=1,
+            tenant_id=1,
+            customer_id=1,
+            seller_id=1,
+            sale_number="S-1",
+            customer=MagicMock(apply_receipt=MagicMock()),
+            exchange_rate=Decimal("3.0"),
+            currency="EUR",
+            amount_aed=Decimal("300"),
+        )
+        sale.recalculate_payment_status = MagicMock()
+        sale.payments = [MagicMock(payment_confirmed=True, amount_aed=Decimal("350"))]
+        sale.returns = []
+        payment = MagicMock(payment_number="PAY-XFINAL", id=11, payment_confirmed=True)
+        with (
+            patch("services.sale_service.generate_number", return_value="PAY-XFINAL"),
+            patch("services.sale_service.GLService") as gl,
+            patch("services.sale_service.post_or_fail") as post,
+            patch("services.sale_service.db.session") as db_sess,
+            patch("services.sale_service.Payment", return_value=payment),
+        ):
+            gl.get_payment_debit_account.return_value = "1100"
+            gl.get_payment_debit_concept.return_value = "CASH"
+            gl.get_customer_credit_account.return_value = "1200"
+            gl.get_customer_credit_concept.return_value = "AR"
+            gl.get_account_code_for_concept.return_value = "4900"
+            db_sess.flush = MagicMock()
+            SaleService.create_payment_for_sale(sale, 100, "cash", currency="USD", exchange_rate=3.5)
+        assert post.call_count >= 2
+        fx_lines = post.call_args_list[-1].args[0]
+        assert fx_lines[0]["concept_code"] == "AR"
+        assert fx_lines[0]["debit"] == Decimal("50.000")
+        assert fx_lines[1]["concept_code"] == "FX_GAIN"
+        assert fx_lines[1]["credit"] == Decimal("50.000")
+
+    def test_no_fx_cross_currency_partial_settlement(self, app):
+        from services.sale_service import SaleService
+
+        sale = MagicMock(
+            branch_id=1,
+            tenant_id=1,
+            customer_id=1,
+            seller_id=1,
+            sale_number="S-1",
+            customer=MagicMock(apply_receipt=MagicMock()),
+            exchange_rate=Decimal("3.0"),
+            currency="EUR",
+            amount_aed=Decimal("300"),
+        )
+        sale.recalculate_payment_status = MagicMock()
+        sale.payments = [MagicMock(payment_confirmed=True, amount_aed=Decimal("175"))]
+        sale.returns = []
+        payment = MagicMock(payment_number="PAY-XPART", id=12, payment_confirmed=True)
+        with (
+            patch("services.sale_service.generate_number", return_value="PAY-XPART"),
+            patch("services.sale_service.GLService") as gl,
+            patch("services.sale_service.post_or_fail") as post,
+            patch("services.sale_service.db.session") as db_sess,
+            patch("services.sale_service.Payment", return_value=payment),
+        ):
+            gl.get_payment_debit_account.return_value = "1100"
+            gl.get_payment_debit_concept.return_value = "CASH"
+            gl.get_customer_credit_account.return_value = "1200"
+            gl.get_customer_credit_concept.return_value = "AR"
+            gl.get_account_code_for_concept.return_value = "4900"
+            db_sess.flush = MagicMock()
+            SaleService.create_payment_for_sale(sale, 50, "cash", currency="USD", exchange_rate=3.5)
+        assert post.call_count == 1
+
+    def test_no_fx_for_unconfirmed_cheque(self, app):
+        from services.sale_service import SaleService
+
+        sale = MagicMock(
+            branch_id=1,
+            tenant_id=1,
+            customer_id=1,
+            seller_id=1,
+            sale_number="S-1",
+            customer=MagicMock(apply_receipt=MagicMock()),
+            exchange_rate=Decimal("3.8"),
+            currency="USD",
+        )
+        sale.recalculate_payment_status = MagicMock()
+        payment = MagicMock(payment_number="PAY-CHQ", id=13, payment_confirmed=False)
+        with (
+            patch("services.sale_service.generate_number", return_value="PAY-CHQ"),
+            patch("services.sale_service.GLService") as gl,
+            patch("services.sale_service.post_or_fail") as post,
+            patch("services.sale_service.db.session") as db_sess,
+            patch("services.sale_service.Payment", return_value=payment),
+        ):
+            gl.get_payment_debit_account.return_value = "1100"
+            gl.get_payment_debit_concept.return_value = "CASH"
+            gl.get_customer_credit_account.return_value = "1200"
+            gl.get_customer_credit_concept.return_value = "AR"
+            gl.get_account_code_for_concept.return_value = "4900"
+            db_sess.flush = MagicMock()
+            SaleService.create_payment_for_sale(
+                sale,
+                100,
+                "cheque",
+                currency="USD",
+                exchange_rate=3.5,
+                cheque_number="CHQ-1",
+                cheque_date="2026-08-01",
+                bank_name="Test Bank",
+            )
+        assert post.call_count == 1
+
 
 class TestCancelSale:
     @staticmethod

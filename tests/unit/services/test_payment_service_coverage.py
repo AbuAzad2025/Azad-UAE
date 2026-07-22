@@ -296,10 +296,33 @@ class TestSupplierFxGainLoss:
         post = self._run(self._payment(rate="3.5"), purchase)
         post.assert_not_called()
 
-    def test_fx_when_currency_differs(self):
-        purchase = MagicMock(currency="EUR", exchange_rate=Decimal("3.0"), amount=Decimal("100"))
-        post = self._run(self._payment(rate="3.5"), purchase)
+    def test_fx_when_currency_differs_final_settlement(self):
+        purchase = MagicMock(currency="EUR", exchange_rate=Decimal("3.0"), amount_aed=Decimal("300"))
+        purchase.get_paid_amount.return_value = Decimal("350")
+        payment = self._payment(rate="3.5")
+        payment.amount_aed = Decimal("350")
+        post = self._run(payment, purchase)
         post.assert_called_once()
+        lines = post.call_args.args[0]
+        assert lines[0]["concept_code"] == "FX_LOSS"
+        assert lines[0]["debit"] == Decimal("50.000")
+        assert lines[1]["concept_code"] == "AP"
+        assert lines[1]["credit"] == Decimal("50.000")
+
+    def test_no_fx_when_currency_differs_partial_settlement(self):
+        purchase = MagicMock(currency="EUR", exchange_rate=Decimal("3.0"), amount_aed=Decimal("300"))
+        purchase.get_paid_amount.return_value = Decimal("175")
+        payment = self._payment(amount="50", rate="3.5")
+        payment.amount_aed = Decimal("175")
+        post = self._run(payment, purchase)
+        post.assert_not_called()
+
+    def test_no_fx_for_unconfirmed_cheque(self):
+        purchase = MagicMock(currency="USD", exchange_rate=Decimal("3.0"))
+        payment = self._payment(rate="3.5")
+        payment.payment_confirmed = False
+        post = self._run(payment, purchase)
+        post.assert_not_called()
 
     def test_no_fx_below_threshold(self):
         purchase = MagicMock(currency="USD", exchange_rate=Decimal("3.0"))

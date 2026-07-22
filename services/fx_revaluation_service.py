@@ -44,9 +44,10 @@ def _open_sales(tenant_id: int | None, base_currency: str):
     from models import Sale
 
     q = Sale.query.filter(
-        Sale.payment_status.in_(["unpaid", "partial"]),
+        Sale.payment_status.in_(["unpaid", "partial", "pending_cheque"]),
         Sale.currency != base_currency,
         Sale.status != "cancelled",
+        Sale.balance_due > _THRESHOLD,
     )
     if tenant_id is not None:
         q = q.filter(Sale.tenant_id == tenant_id)
@@ -71,13 +72,34 @@ def _open_purchases(tenant_id: int | None, base_currency: str):
     return results
 
 
+def _posted_period_entries(period_month: str, tenant_id: int | None) -> list[int]:
+    """IDs of live (posted, non-reversed) revaluation entries for a period."""
+    from models.gl import GLJournalEntry
+
+    tag = f"{_REVALUATION_TAG}|{period_month}"
+    q = GLJournalEntry.query.filter(
+        GLJournalEntry.notes.like(f"%{tag}%"),
+        GLJournalEntry.status == "posted",
+        GLJournalEntry.is_reversed.is_(False),
+    )
+    if tenant_id is not None:
+        q = q.filter(GLJournalEntry.tenant_id == tenant_id)
+    return [e.id for e in q.all()]
+
+
 def revaluate_open_items(tenant_id: int | None = None) -> dict:
     """Run month-end revaluation for all open foreign-currency AR/AP.
+
+    Idempotent per period: if live revaluation entries already exist for the
+    current YYYY-MM period, the run is skipped — reverse them first via
+    ``reverse_previous_revaluation``.
 
     Returns a summary dict with keys: ar_count, ap_count, ar_diff, ap_diff,
     entry_ids.
     """
     base_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
+    now = datetime.now(timezone.utc)
+    period = now.strftime("%Y-%m")
     summary = {
         "ar_count": 0,
         "ap_count": 0,
@@ -85,7 +107,19 @@ def revaluate_open_items(tenant_id: int | None = None) -> dict:
         "ap_diff": Decimal("0"),
         "entry_ids": [],
         "errors": [],
+        "skipped_existing_period": False,
     }
+
+    existing = _posted_period_entries(period, tenant_id)
+    if existing:
+        logger.warning(
+            "FX revaluation for %s already posted (entries %s) — skipping; reverse them first",
+            period,
+            existing,
+        )
+        summary["skipped_existing_period"] = True
+        summary["entry_ids"] = existing
+        return summary
 
     open_sales = _open_sales(tenant_id, base_currency)
     open_purchases = _open_purchases(tenant_id, base_currency)
@@ -94,7 +128,6 @@ def revaluate_open_items(tenant_id: int | None = None) -> dict:
         logger.info("No open foreign-currency items to revaluate for tenant %s", tenant_id)
         return summary
 
-    now = datetime.now(timezone.utc)
     ar_concept = GLService.get_account_code_for_concept(
         "AR",
         tenant_id=tenant_id,
@@ -150,18 +183,25 @@ def _post_ar_revaluation(open_sales, base_currency, tenant_id, now, ar_concept, 
     for sale in open_sales:
         current = _current_rate(sale.currency, base_currency, tenant_id)
         original = Decimal(str(sale.exchange_rate or 1))
+        if original <= 0:
+            original = Decimal("1")
         if current == original:
             continue
 
-        original_aed = Decimal(str(sale.amount_aed or 0))
+        # إعادة التقييم على الرصيد المفتوح فقط — الجزء المُسوّى تحققت فروقاته
+        # عند السداد ولا يجوز إعادة تقييمه.
+        open_base = Decimal(str(sale.balance_due or 0)).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        if open_base <= _THRESHOLD:
+            continue
+        open_doc = open_base / original
         revalued = convert_and_quantize_aed(
-            Decimal(str(sale.amount or 0)),
+            open_doc,
             sale.currency,
             current,
             base_currency=base_currency,
             tenant_id=tenant_id,
         )
-        fx_diff = (revalued - original_aed).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        fx_diff = (revalued - open_base).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         if abs(fx_diff) <= _THRESHOLD:
             continue
 
@@ -210,18 +250,25 @@ def _post_ap_revaluation(open_purchases, base_currency, tenant_id, now, ap_conce
     for purchase, balance_aed in open_purchases:
         current = _current_rate(purchase.currency, base_currency, tenant_id)
         original = Decimal(str(purchase.exchange_rate or 1))
+        if original <= 0:
+            original = Decimal("1")
         if current == original:
             continue
 
-        original_aed = Decimal(str(purchase.amount_aed or 0))
+        # إعادة التقييم على الرصيد المفتوح فقط — الجزء المُسوّى تحققت فروقاته
+        # عند السداد ولا يجوز إعادة تقييمه.
+        open_base = Decimal(str(balance_aed or 0)).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        if open_base <= _THRESHOLD:
+            continue
+        open_doc = open_base / original
         revalued = convert_and_quantize_aed(
-            Decimal(str(purchase.amount or 0)),
+            open_doc,
             purchase.currency,
             current,
             base_currency=base_currency,
             tenant_id=tenant_id,
         )
-        fx_diff = (revalued - original_aed).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        fx_diff = (revalued - open_base).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         if abs(fx_diff) <= _THRESHOLD:
             continue
 

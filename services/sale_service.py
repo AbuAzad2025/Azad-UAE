@@ -875,8 +875,9 @@ class SaleService:
         sale.recalculate_payment_status()
         db.session.flush()
 
-        # FX Gain/Loss auto-posting (same currency different rate OR cross-currency settlement)
-        if currency and amount_decimal > 0:
+        # FX Gain/Loss auto-posting (same currency different rate, or final cross-currency settlement)
+        # الشيكات غير المؤكدة تُستثنى — فروقاتها تُرحّل عند التحصيل عبر مسار الشيك.
+        if payment.payment_confirmed and currency and amount_decimal > 0:
             sale_rate = Decimal(str(sale.exchange_rate or 1))
             sale_currency = str(getattr(sale, "currency", "") or "").upper()
             pay_currency = str(currency or "").upper()
@@ -887,10 +888,25 @@ class SaleService:
                         amount_decimal, currency, sale_rate, tenant_id=getattr(sale, "tenant_id", None)
                     )
             else:
-                sale_amount = Decimal(str(getattr(sale, "grand_total", None) or sale.total_amount or 0))
-                expected_aed = convert_and_quantize_aed(
-                    sale_amount, sale.currency, sale_rate, tenant_id=getattr(sale, "tenant_id", None)
+                # تسوية متقاطعة العملات: لا فروقات على الدفعات الجزئية — الفرق
+                # يبقى في الرصيد المفتوح ويُحسب عند الإقفال النهائي كفرق بين
+                # القيمة الفعلية للدفعة والرصيد الدفتري المتبقي قبلها (غير المصفّر).
+                paid_incl_current = Decimal("0")
+                for p in getattr(sale, "payments", None) or []:
+                    if getattr(p, "payment_confirmed", True):
+                        paid_incl_current += Decimal(str(getattr(p, "amount_aed", 0) or 0))
+                returns_total = Decimal("0")
+                for ret in getattr(sale, "returns", None) or []:
+                    if getattr(ret, "status", "approved") in ["approved", "completed"]:
+                        returns_total += Decimal(str(getattr(ret, "amount_aed", 0) or 0))
+                booked_aed = Decimal(str(getattr(sale, "amount_aed", 0) or 0))
+                open_before = (booked_aed - paid_incl_current - returns_total + amount_aed).quantize(
+                    Decimal("0.001"), rounding=ROUND_HALF_UP
                 )
+                if open_before > 0:
+                    remaining_after = (open_before - amount_aed).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+                    if remaining_after <= Decimal("0.01"):
+                        expected_aed = open_before
             if expected_aed is not None:
                 fx_diff = (amount_aed - expected_aed).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
                 if abs(fx_diff) > Decimal("0.01"):
