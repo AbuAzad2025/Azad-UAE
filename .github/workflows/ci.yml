@@ -428,13 +428,20 @@ jobs:
         run: |
           # Start app in background
           python -m flask run --port=5000 --host=0.0.0.0 &
-          sleep 5
-          # Fuzz API endpoints — spec is served at /api-docs/openapi.json
+          # Wait for app to be ready (max 30s)
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:5000/api-docs/openapi.json > /dev/null 2>&1; then
+              echo "App ready after ${i}s"
+              break
+            fi
+            sleep 1
+          done
+          # Fuzz public + documented API endpoints — spec served at /api-docs/openapi.json
           schemathesis run http://localhost:5000/api-docs/openapi.json \
             --checks all \
             --hypothesis-deadline 3000 \
             --exitfirst \
-            --base-url http://localhost:5000
+            --base-url http://localhost:5000/api
 
   # ── Tenant isolation fuzzer ──
   tenant-isolation-fuzzer:

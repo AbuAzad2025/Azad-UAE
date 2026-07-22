@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="{{ _('تسجيل الدخول الآمن إلى نظام ازاد للأنظمة الذكية') }}">
   <title>{{ _('شركة ازاد للأنظمة الذكية — دخول آمن') }}</title>
   <link rel="icon" href="{{ url_for('static', filename='assets/brand/azad/favicons/favicon.png') }}" type="image/png">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/brand/azad/icons/icon-192.png') }}">
@@ -55,10 +56,10 @@
         <p class="azad-login-card__sub" id="loginModeHint">{{ _('دخول مستخدمي الشركات') }}</p>
 
         <div class="azad-login-tabs" role="tablist" aria-label="{{ _('نوع الدخول') }}">
-          <button type="button" class="azad-login-tab is-active" data-access-mode="users" role="tab" aria-selected="true">
+          <button type="button" class="azad-login-tab is-active" data-access-mode="users" role="tab" aria-selected="true" aria-controls="azadLoginForm">
             <i class="fas fa-user" aria-hidden="true"></i> {{ _('دخول الشركات') }}
           </button>
-          <button type="button" class="azad-login-tab" data-access-mode="developer" role="tab" aria-selected="false">
+          <button type="button" class="azad-login-tab" data-access-mode="developer" role="tab" aria-selected="false" aria-controls="azadLoginForm">
             <i class="fas fa-code" aria-hidden="true"></i> {{ _('المنصة') }}
           </button>
         </div>
