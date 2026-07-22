@@ -587,7 +587,7 @@ class ExchangeRateService:
         from_currency: str,
         to_currency: str,
         tenant_id: int | None = None,
-    ) -> float | None:
+    ) -> str | None:
         """Fetch online rate, auto-save to exchange_rate_records, return the rate.
 
         Delegates to the public get_online_rate implementation.
@@ -611,7 +611,7 @@ class ExchangeRateService:
     def _save_rate_record(
         from_currency: str,
         to_currency: str,
-        rate: float,
+        rate: str,
         source: str,
         tenant_id: int | None = None,
         api_provider: str | None = None,
@@ -666,7 +666,7 @@ class ExchangeRateService:
             ExchangeRateService._save_rate_record(
                 from_currency=from_currency,
                 to_currency=to_currency,
-                rate=rate,
+                rate=str(rate),
                 source="manual",
                 tenant_id=tenant_id,
             )
