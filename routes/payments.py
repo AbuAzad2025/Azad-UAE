@@ -792,7 +792,8 @@ def create_voucher_submit():
 
                 exchange_rate = _resolve_transaction_rate(currency, user_exchange_rate)
                 amount_decimal = Decimal(str(amount))
-                amount_aed = amount_decimal * exchange_rate
+                from utils.currency_utils import convert_and_quantize_aed
+                amount_aed = convert_and_quantize_aed(amount_decimal, currency, exchange_rate)
 
                 supplier = _ensure_supplier_scope(party_id)
                 if not supplier:
@@ -871,7 +872,8 @@ def create_voucher_submit():
 
             exchange_rate = _resolve_transaction_rate(currency, user_exchange_rate)
             amount_decimal = Decimal(str(amount))
-            amount_aed = amount_decimal * exchange_rate
+            from utils.currency_utils import convert_and_quantize_aed
+            amount_aed = convert_and_quantize_aed(amount_decimal, currency, exchange_rate)
 
             if party_type == "supplier":
                 supplier = _ensure_supplier_scope(party_id)

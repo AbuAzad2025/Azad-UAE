@@ -14,6 +14,7 @@ from utils.branching import branch_scope_id_for
 from utils.currency_utils import (
     get_system_default_currency,
     resolve_tenant_base_currency,
+    convert_and_quantize_aed,
 )
 from utils.field_validators import (
     canonical_payment_type,
@@ -59,18 +60,26 @@ class PaymentService:
     def _post_supplier_fx_gain_loss(payment, purchase, tenant_id):
         """ترحيل فروقات العملة المحققة عند تسوية ذمة مورد (AP) بعملة أجنبية.
 
-        مرآة منطق سند القبض: تقارن سعر فاتورة الشراء بسعر الدفع وتُرحّل
-        الفرق إلى FX_GAIN/FX_LOSS مقابل حساب AP. يرمي الاستثناء كما هو —
-        الذرّية يضمنها atomic_transaction لدى المتصل.
+        مقارنة سعر فاتورة الشراء بسعر الدفع:
+        - نفس العملة: المقارنة بين سعري الصرف المختلفين للمبلغ المدفوع.
+        - عملتان مختلفتان: المقارنة بين القيمة الأصلية للشراء بالعملة الأصلية
+          والقيمة الفعلية للدفع بالعملة المدفوعة.
+        يُرحّل الفرق إلى FX_GAIN/FX_LOSS مقابل حساب AP.
         """
-        if not purchase or getattr(purchase, "currency", None) != payment.currency:
+        if not purchase:
             return
         purchase_rate = Decimal(str(getattr(purchase, "exchange_rate", None) or 1))
         payment_rate = Decimal(str(payment.exchange_rate or 1))
         if purchase_rate == payment_rate or not payment.amount or payment.amount <= 0:
             return
-        expected_aed = (payment.amount * purchase_rate).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
-        actual_aed = (payment.amount * payment_rate).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        purchase_currency = getattr(purchase, "currency", None) or ""
+        payment_currency = getattr(payment, "currency", None) or ""
+        if purchase_currency.upper() == payment_currency.upper():
+            expected_aed = convert_and_quantize_aed(payment.amount, payment_currency, purchase_rate, tenant_id=tenant_id)
+            actual_aed = convert_and_quantize_aed(payment.amount, payment_currency, payment_rate, tenant_id=tenant_id)
+        else:
+            expected_aed = convert_and_quantize_aed(purchase.amount, purchase_currency, purchase_rate, tenant_id=tenant_id)
+            actual_aed = convert_and_quantize_aed(payment.amount, payment_currency, payment_rate, tenant_id=tenant_id)
         fx_diff = (actual_aed - expected_aed).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         if abs(fx_diff) <= Decimal("0.01"):
             return
@@ -194,7 +203,7 @@ class PaymentService:
                 amount=Decimal(str(amount)),
                 currency=currency,
                 exchange_rate=exchange_rate,
-                amount_aed=Decimal(str(amount)) * exchange_rate,
+                amount_aed=convert_and_quantize_aed(amount, currency, exchange_rate, tenant_id=getattr(supplier, 'tenant_id', None)),
                 payment_method=payment_method,
                 reference_number=reference_number,
                 notes=notes,
@@ -224,7 +233,7 @@ class PaymentService:
                     amount=Decimal(str(amount)),
                     currency=currency,
                     exchange_rate=exchange_rate,
-                    amount_aed=Decimal(str(amount)) * exchange_rate,
+                    amount_aed=convert_and_quantize_aed(amount, currency, exchange_rate, tenant_id=getattr(supplier, 'tenant_id', None)),
                     issue_date=datetime.now(timezone.utc).date(),
                     due_date=cheque_date or datetime.now(timezone.utc).date(),
                     bank_name=bank_name,
@@ -394,7 +403,7 @@ class PaymentService:
                 amount=Decimal(str(amount)),
                 currency=currency,
                 exchange_rate=exchange_rate,
-                amount_aed=Decimal(str(amount)) * exchange_rate,
+                amount_aed=convert_and_quantize_aed(amount, currency, exchange_rate, tenant_id=tenant_id),
                 payment_method=payment_method,
                 payment_confirmed=(payment_method != "cheque"),
                 reference_number=reference_number,
@@ -427,7 +436,7 @@ class PaymentService:
                     amount=Decimal(str(amount)),
                     currency=currency,
                     exchange_rate=exchange_rate,
-                    amount_aed=Decimal(str(amount)) * exchange_rate,
+                    amount_aed=convert_and_quantize_aed(amount, currency, exchange_rate, tenant_id=tenant_id),
                     issue_date=receipt.receipt_date.date(),  # تاريخ الإصدار = تاريخ السند
                     due_date=cheque_date,  # تاريخ الاستحقاق
                     bank_name=bank_name,
@@ -597,7 +606,7 @@ class PaymentService:
 
                     sale_balance_aed = Decimal(str(sale.balance_due or 0))
                     requested_amount = Decimal(str(allocated or 0))
-                    requested_amount_aed = (requested_amount * exchange_rate).quantize(Decimal("0.001"))
+                    requested_amount_aed = convert_and_quantize_aed(requested_amount, currency, exchange_rate, tenant_id=tenant_id)
                     allocated_amount_aed = min(requested_amount_aed, remaining_amount_aed, sale_balance_aed)
                     if allocated_amount_aed <= 0:
                         continue

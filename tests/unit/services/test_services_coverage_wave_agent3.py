@@ -300,7 +300,7 @@ class TestExchangeRateServiceResolve:
         db_session.add(record)
         db_session.flush()
         rate = ExchangeRateService._get_last_known_rate("GBP", "AED", sample_tenant.id)
-        assert rate == 4.75
+        assert Decimal(rate) == Decimal("4.75")
 
 
 # ---------------------------------------------------------------------------

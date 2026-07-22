@@ -34,15 +34,13 @@ def validate_cheque(cheque):
 
 
 def calculate_amount_aed(cheque):
-    from utils.currency_utils import get_system_default_currency
+    from utils.currency_utils import get_system_default_currency, convert_and_quantize_aed
 
     base_currency = get_system_default_currency()
-    if cheque.currency == base_currency:
-        cheque.amount_aed = cheque.amount
-    elif cheque.exchange_rate:
-        cheque.amount_aed = cheque.amount * cheque.exchange_rate
-    else:
-        cheque.amount_aed = cheque.amount
+    cheque.amount_aed = convert_and_quantize_aed(
+        cheque.amount, cheque.currency, cheque.exchange_rate,
+        base_currency=base_currency, tenant_id=getattr(cheque, 'tenant_id', None),
+    )
 
 
 def _post_gl(cheque, lines, description, reference_type):
@@ -348,7 +346,8 @@ def process_cheque_clear(cheque, clearance_date=None, clearance_exchange_rate=No
                 cheque.clearance_exchange_rate = Decimal(str(cheque.exchange_rate))
         else:
             cheque.clearance_exchange_rate = Decimal("1.0")
-        cheque.actual_amount_aed = cheque.amount * cheque.clearance_exchange_rate
+        from utils.currency_utils import convert_and_quantize_aed as _cq
+        cheque.actual_amount_aed = _cq(cheque.amount, cheque.currency, cheque.clearance_exchange_rate, tenant_id=getattr(cheque, 'tenant_id', None))
         cheque.currency_gain_loss = cheque.actual_amount_aed - cheque.amount_aed
         _create_clearing_journal_entry(cheque)
         from models.payment import Payment, Receipt

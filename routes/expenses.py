@@ -22,7 +22,7 @@ from utils.db_safety import atomic_transaction
 from utils.branching import should_show_all_branch_columns
 from services.logging_core import LoggingCore
 from utils.helpers import generate_number
-from utils.currency_utils import resolve_default_currency, get_system_default_currency
+from utils.currency_utils import resolve_default_currency, get_system_default_currency, convert_and_quantize_aed
 from utils.tenanting import (
     tenant_query,
     tenant_get_or_404,
@@ -184,7 +184,7 @@ def create():
                     amount=amount,
                     currency=currency,
                     exchange_rate=exchange_rate,
-                    amount_aed=amount * exchange_rate,
+                    amount_aed=convert_and_quantize_aed(amount, currency, exchange_rate, tenant_id=tenant_id),
                     payment_method=request.form.get("payment_method"),
                     reference_number=request.form.get("reference_number"),
                     cheque_number=request.form.get("cheque_number"),
@@ -360,9 +360,9 @@ def edit(**kwargs):
                 expense.supplier_name = new_supplier_name
                 expense.notes = new_notes
 
-                exchange_rate = CurrencyService.get_exchange_rate(expense.currency)
+                exchange_rate = _resolve_transaction_rate(expense.currency)
                 expense.exchange_rate = exchange_rate
-                expense.amount_aed = new_amount * exchange_rate
+                expense.amount_aed = convert_and_quantize_aed(new_amount, expense.currency, exchange_rate, tenant_id=expense.tenant_id)
 
                 if financial_change and expense.status == "confirmed":
                     from utils.gl_tenant import reverse_document_gl

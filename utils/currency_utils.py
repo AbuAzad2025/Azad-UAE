@@ -1,4 +1,5 @@
 import logging
+from decimal import Decimal, ROUND_HALF_UP
 
 from config import Config
 from extensions import db
@@ -99,6 +100,41 @@ def resolve_tenant_base_currency(tenant=None, tenant_id=None) -> str:
     if tenant_id is not None:
         return get_tenant_base_currency(tenant_id)
     return get_system_default_currency()
+
+
+_AED_QUANTUM = Decimal("0.001")
+
+
+def convert_and_quantize_aed(amount, currency, exchange_rate, base_currency=None, tenant_id=None):
+    """Centralized currency → base-currency conversion with strict quantization.
+
+    Returns a ``Decimal`` always quantized to 0.001 (AED precision) using
+    ``ROUND_HALF_UP``.  This is the **single source of truth** for computing
+    ``amount_aed`` across every module.
+
+    Parameters
+    ----------
+    amount : Decimal | str | float
+        The transaction amount in the original (transaction) currency.
+    currency : str
+        ISO 4217 code of the transaction currency.
+    exchange_rate : Decimal | str | float
+        The rate from *currency* → *base_currency* (how many base-currency
+        units equal one unit of *currency*).
+    base_currency : str, optional
+        The tenant's base currency.  Resolved automatically from
+        *tenant_id* when omitted.
+    tenant_id : int, optional
+        Used to resolve *base_currency* when it is not passed explicitly.
+    """
+    amt = Decimal(str(amount)) if amount is not None else Decimal("0")
+    rate = Decimal(str(exchange_rate)) if exchange_rate is not None else Decimal("1")
+
+    if base_currency is None:
+        base_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
+    if (currency or "").upper() == (base_currency or "").upper():
+        return amt.quantize(_AED_QUANTUM, rounding=ROUND_HALF_UP)
+    return (amt * rate).quantize(_AED_QUANTUM, rounding=ROUND_HALF_UP)
 
 
 def get_currency_symbol(code):

@@ -140,7 +140,7 @@ class TestResolveTransactionRate:
             fixed_rate=Decimal("3.67"),
         )
         assert result["rate_mode"] == "frozen"
-        assert result["rate"] == 3.67
+        assert Decimal(result["rate"]) == Decimal("3.67")
 
     def test_user_rate(self):
         result = _ERS().resolve_exchange_rate_for_transaction(
@@ -149,11 +149,11 @@ class TestResolveTransactionRate:
             user_rate=3.68,
         )
         assert result["source"] == "user_manual"
-        assert result["rate"] == 3.68
+        assert Decimal(result["rate"]) == Decimal("3.68")
 
     def test_parity(self):
         result = _ERS().resolve_exchange_rate_for_transaction("AED", "AED")
-        assert result["rate"] == 1.0
+        assert Decimal(result["rate"]) == Decimal("1")
         assert result["source"] == "parity"
 
     def test_admin_rate(self, db_session, sample_tenant):
@@ -173,7 +173,7 @@ class TestResolveTransactionRate:
             tenant_id=sample_tenant.id,
         )
         assert result["source"] == "admin_manual"
-        assert result["rate"] == 3.65
+        assert Decimal(result["rate"]) == Decimal("3.65")
 
     def test_online_rate(self, mocker, sample_tenant):
         mocker.patch(

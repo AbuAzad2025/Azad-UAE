@@ -10,7 +10,7 @@ from utils.gl_reference_types import GLRef
 from services.commission_gl_service import post_sale_commissions
 from services.gl_service import GLService
 from utils.branching import ensure_warehouse_access
-from utils.currency_utils import resolve_default_currency, get_system_default_currency
+from utils.currency_utils import resolve_default_currency, get_system_default_currency, convert_and_quantize_aed
 from utils.field_validators import (
     canonical_payment_type,
     validate_currency_code,
@@ -760,9 +760,9 @@ class SaleService:
             tenant_id=getattr(sale, "tenant_id", None),
         )
 
-        # Calculate AED amount with proper rounding using PROVIDED exchange rate
+        # Calculate AED amount using centralized utility
         exchange_rate_decimal = Decimal(str(exchange_rate))
-        amount_aed = (amount_decimal * exchange_rate_decimal).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        amount_aed = convert_and_quantize_aed(amount_decimal, currency, exchange_rate_decimal, tenant_id=getattr(sale, "tenant_id", None))
 
         payment = Payment(
             tenant_id=getattr(sale, "tenant_id", None),
@@ -873,11 +873,19 @@ class SaleService:
         sale.recalculate_payment_status()
         db.session.flush()
 
-        # FX Gain/Loss auto-posting for direct payments (same currency, different rate)
-        if currency and str(currency).upper() == str(sale.currency).upper():
+        # FX Gain/Loss auto-posting (same currency different rate OR cross-currency settlement)
+        if currency and amount_decimal > 0:
             sale_rate = Decimal(str(sale.exchange_rate or 1))
-            if sale_rate != exchange_rate_decimal and amount_decimal > 0:
-                expected_aed = (amount_decimal * sale_rate).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+            sale_currency = str(getattr(sale, "currency", "") or "").upper()
+            pay_currency = str(currency or "").upper()
+            expected_aed = None
+            if sale_currency == pay_currency:
+                if sale_rate != exchange_rate_decimal:
+                    expected_aed = convert_and_quantize_aed(amount_decimal, currency, sale_rate, tenant_id=getattr(sale, "tenant_id", None))
+            else:
+                sale_amount = Decimal(str(getattr(sale, "grand_total", None) or sale.total_amount or 0))
+                expected_aed = convert_and_quantize_aed(sale_amount, sale.currency, sale_rate, tenant_id=getattr(sale, "tenant_id", None))
+            if expected_aed is not None:
                 fx_diff = (amount_aed - expected_aed).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
                 if abs(fx_diff) > Decimal("0.01"):
                     try:

@@ -296,10 +296,10 @@ class TestSupplierFxGainLoss:
         post = self._run(self._payment(rate="3.5"), purchase)
         post.assert_not_called()
 
-    def test_no_fx_when_currency_differs(self):
-        purchase = MagicMock(currency="EUR", exchange_rate=Decimal("3.0"))
+    def test_fx_when_currency_differs(self):
+        purchase = MagicMock(currency="EUR", exchange_rate=Decimal("3.0"), amount=Decimal("100"))
         post = self._run(self._payment(rate="3.5"), purchase)
-        post.assert_not_called()
+        post.assert_called_once()
 
     def test_no_fx_below_threshold(self):
         purchase = MagicMock(currency="USD", exchange_rate=Decimal("3.0"))

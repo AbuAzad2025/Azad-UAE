@@ -389,7 +389,7 @@ class ExchangeRateService:
                         "ok": True,
                         "from": from_currency,
                         "to": to_currency,
-                        "rate": float(rate.quantize(Decimal("0.000001"))),
+                        "rate": str(rate.quantize(Decimal("0.000001"))),
                         "source": "document_fixed",
                         "rate_mode": "frozen",
                         "note": "Rate is already frozen inside the saved document. Never auto-update.",
@@ -411,7 +411,7 @@ class ExchangeRateService:
                         "ok": True,
                         "from": from_currency,
                         "to": to_currency,
-                        "rate": float(rate.quantize(Decimal("0.000001"))),
+                        "rate": str(rate.quantize(Decimal("0.000001"))),
                         "source": "user_manual",
                         "rate_mode": "editable",
                         "note": "User-provided rate. Caller MUST store in document on save and then treat as frozen.",
@@ -425,7 +425,7 @@ class ExchangeRateService:
                 "ok": True,
                 "from": from_currency,
                 "to": to_currency,
-                "rate": 1.0,
+                "rate": "1.000000",
                 "source": "parity",
                 "rate_mode": "editable",
                 "note": "Same currency. Caller MUST store 1.0 in document on save and then treat as frozen.",
@@ -487,8 +487,9 @@ class ExchangeRateService:
         to_currency: str,
         tenant_id: int | None = None,
         effective_date: str | None = None,
-    ) -> float | None:
-        """Lookup manager's manual rate in exchange_rate_records for today (or given date)."""
+    ) -> str | None:
+        """Lookup manager's manual rate in exchange_rate_records for today (or given date).
+        Returns a Decimal-safe string representation (e.g. "3.672500") or None."""
         try:
             from models import ExchangeRateRecord
             from datetime import date
@@ -506,7 +507,7 @@ class ExchangeRateService:
                 .first()
             )
             if record and record.rate:
-                return float(record.rate)
+                return str(Decimal(str(record.rate)).quantize(Decimal("0.000001")))
         except Exception:
             logger.debug(
                 "Failed to fetch manual exchange rate from DB for %s -> %s",
@@ -521,23 +522,23 @@ class ExchangeRateService:
         from_currency: str,
         to_currency: str,
         tenant_id: int | None = None,
-    ) -> float | None:
-        """Fetch online rate, auto-save to exchange_rate_records, return the rate."""
+    ) -> str | None:
+        """Fetch online rate, auto-save to exchange_rate_records, return the rate as a Decimal-safe string."""
         try:
             from services.currency_service import CurrencyService
 
             rate_decimal = CurrencyService.get_exchange_rate(from_currency, to_currency, user_rate=None)
             if rate_decimal and rate_decimal > Decimal("0"):
-                rate_float = float(rate_decimal.quantize(Decimal("0.000001")))
+                rate_str = str(rate_decimal.quantize(Decimal("0.000001")))
                 # Auto-save to exchange_rate_records as 'api_primary' for today
                 ExchangeRateService._save_rate_record(
                     from_currency=from_currency,
                     to_currency=to_currency,
-                    rate=rate_float,
+                    rate=rate_str,
                     source="api_primary",
                     tenant_id=tenant_id,
                 )
-                return rate_float
+                return rate_str
         except Exception:
             logger.warning(
                 "Failed to fetch and store online exchange rate for %s -> %s",
@@ -552,8 +553,9 @@ class ExchangeRateService:
         from_currency: str,
         to_currency: str,
         tenant_id: int | None = None,
-    ) -> float | None:
-        """Get the most recent exchange_rate_record regardless of date or source."""
+    ) -> str | None:
+        """Get the most recent exchange_rate_record regardless of date or source.
+        Returns a Decimal-safe string or None."""
         try:
             from models import ExchangeRateRecord
 
@@ -570,7 +572,7 @@ class ExchangeRateService:
                 .first()
             )
             if record and record.rate:
-                return float(record.rate)
+                return str(Decimal(str(record.rate)).quantize(Decimal("0.000001")))
         except Exception:
             logger.debug(
                 "Failed to get last known exchange rate for %s -> %s",
@@ -597,10 +599,11 @@ class ExchangeRateService:
         from_currency: str,
         to_currency: str,
         tenant_id: int | None = None,
-    ) -> float | None:
+    ) -> str | None:
         """Get the most recent exchange_rate_record regardless of date or source.
 
         Delegates to the public get_latest_rate implementation.
+        Returns a Decimal-safe string or None.
         """
         return ExchangeRateService.get_latest_rate(from_currency, to_currency, tenant_id)
 
