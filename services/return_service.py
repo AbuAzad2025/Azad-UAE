@@ -71,7 +71,18 @@ class ReturnService:
 
         is_seller = getattr(user, "is_seller", None)
         if callable(is_seller) and is_seller() and int(sale.seller_id) != int(user.id):
-            raise ValueError("Seller cannot return another seller sale.")
+            # POS Phase 4 — holders of the pos_return permission (register RMA)
+            # may process returns for any seller's sale within their scope.
+            # Fail-closed ``is True`` checks: dynamic mock attributes must NOT
+            # silently grant the privilege.
+            from models.enums import PermissionEnum
+
+            has_permission = getattr(user, "has_permission", None)
+            privileged = (getattr(user, "is_owner", None) is True) or (
+                callable(has_permission) and has_permission(PermissionEnum.POS_RETURN) is True
+            )
+            if not privileged:
+                raise ValueError("Seller cannot return another seller sale.")
 
     @staticmethod
     def _serials_from_line_data(line_data):
@@ -138,6 +149,14 @@ class ReturnService:
 
             total_gross_return = Decimal("0")
             total_net_return = Decimal("0")
+            # Phase 4 — proportional promotional-discount reversal. The sale
+            # posted promo discounts as Dr CAMPAIGN_DISCOUNT_EXPENSE against
+            # full revenue; returns must credit that expense back in the same
+            # proportion so GL parity with the original invoice is exact.
+            total_promo_reversal = Decimal("0")
+            promo_raw = sale.__dict__.get("promotion_discount_amount")
+            sale_promo_total = Decimal(str(promo_raw)) if promo_raw else Decimal("0")
+            sale_subtotal_for_promo = Decimal(str(sale.subtotal or 0))
             revenue_lines = []
             cost_lines = []
             lines_added = 0
@@ -237,6 +256,12 @@ class ReturnService:
                         Decimal("0.001"), rounding=ROUND_HALF_UP
                     )
                     net_line_return += shipping_share
+
+                if sale_subtotal_for_promo > 0 and sale_promo_total > 0:
+                    promo_share = (line_total / sale_subtotal_for_promo * sale_promo_total).quantize(
+                        Decimal("0.001"), rounding=ROUND_HALF_UP
+                    )
+                    total_promo_reversal += promo_share
 
                 if net_line_return < Decimal("0"):
                     net_line_return = Decimal("0")
@@ -401,10 +426,18 @@ class ReturnService:
                 tax_rate = Decimal("0")
 
             auto_net_return_amount = total_net_return.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
-            auto_tax_amount = (auto_net_return_amount * (tax_rate / Decimal("100"))).quantize(
+            # The customer only ever paid the net AFTER the promotional
+            # discount; the tax at sale time was computed on that same base.
+            # So the refund and its tax reversal exclude the promo share,
+            # which is reversed separately against CAMPAIGN_DISCOUNT_EXPENSE.
+            promo_reversal_amount = min(total_promo_reversal, auto_net_return_amount).quantize(
                 Decimal("0.001"), rounding=ROUND_HALF_UP
             )
-            auto_gross_return_amount = auto_net_return_amount + auto_tax_amount
+            customer_net_return_amount = auto_net_return_amount - promo_reversal_amount
+            auto_tax_amount = (customer_net_return_amount * (tax_rate / Decimal("100"))).quantize(
+                Decimal("0.001"), rounding=ROUND_HALF_UP
+            )
+            auto_gross_return_amount = customer_net_return_amount + auto_tax_amount
 
             final_refund_amount = manual_refund_amount if manual_refund_amount is not None else auto_gross_return_amount
             if manual_refund_amount is not None:
@@ -464,6 +497,25 @@ class ReturnService:
                         "debit": tax_amount,
                         "credit": 0,
                         "description": f"Sales Return Tax Reversal {sale.sale_number}",
+                    }
+                )
+
+            # Phase 4 — reverse the promotional discount proportionally. Only
+            # on the automatic path: a manual refund override is an operator
+            # decision that absorbs any promo adjustment by definition.
+            if promo_reversal_amount > 0 and manual_refund_amount is None:
+                revenue_lines.append(
+                    {
+                        "account": GLService.get_account_code_for_concept(
+                            "CAMPAIGN_DISCOUNT_EXPENSE",
+                            branch_id=product_return.branch_id,
+                            tenant_id=tenant_id,
+                            fallback_key="campaign_discounts",
+                        ),
+                        "concept_code": "CAMPAIGN_DISCOUNT_REVERSAL",
+                        "debit": 0,
+                        "credit": promo_reversal_amount,
+                        "description": f"Promo Discount Reversal {sale.sale_number}",
                     }
                 )
 

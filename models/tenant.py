@@ -81,6 +81,13 @@ class Tenant(db.Model):
     enable_cheques = db.Column(db.Boolean, default=True)
     enable_expenses = db.Column(db.Boolean, default=True)
     enable_store = db.Column(db.Boolean, default=False)
+    # POS Phase 4 — SaaS sub-feature flags. NULL means "inherit from the
+    # subscription plan" (pro/enterprise tiers enable them, basic does not);
+    # an explicit True/False is a per-tenant override (utils/pos_features.py).
+    enable_pos_promotions = db.Column(db.Boolean, nullable=True)
+    enable_pos_multi_tender = db.Column(db.Boolean, nullable=True)
+    enable_pos_returns = db.Column(db.Boolean, nullable=True)
+    enable_pos_shifts = db.Column(db.Boolean, nullable=True)
     allow_data_export = db.Column(db.Boolean, default=True)
     allow_custom_integrations = db.Column(db.Boolean, default=False)
     enable_auto_backup = db.Column(db.Boolean, default=True)

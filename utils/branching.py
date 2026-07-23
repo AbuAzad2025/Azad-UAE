@@ -254,6 +254,37 @@ def get_branch_stock_map(product_ids=None, warehouse_ids=None):
     return {product_id: qty or Decimal("0") for product_id, qty in query.group_by(StockMovement.product_id).all()}
 
 
+def get_warehouse_stock_map(product_ids=None, warehouse_ids=None):
+    """Per-warehouse on-hand breakdown — single grouped aggregate query.
+
+    Returns ``{(product_id, warehouse_id): qty}`` (Decimal). Cross-branch
+    visibility counterpart to :func:`get_branch_stock_map`, which collapses
+    all warehouses into one number per product.
+    """
+    from models import StockMovement
+
+    warehouse_ids = list(warehouse_ids or [])
+    if not warehouse_ids:
+        return {}
+
+    query = db.session.query(
+        StockMovement.product_id,
+        StockMovement.warehouse_id,
+        func.coalesce(func.sum(StockMovement.quantity), 0).label("qty"),
+    ).filter(StockMovement.warehouse_id.in_(warehouse_ids))
+
+    if product_ids:
+        query = query.filter(StockMovement.product_id.in_(product_ids))
+
+    return {
+        (product_id, warehouse_id): qty or Decimal("0")
+        for product_id, warehouse_id, qty in query.group_by(
+            StockMovement.product_id,
+            StockMovement.warehouse_id,
+        ).all()
+    }
+
+
 def get_product_stock(product_id, *, warehouse_id=None, warehouse_ids=None, user=None):
     if warehouse_id is not None:
         warehouse_ids = [warehouse_id]

@@ -98,6 +98,15 @@ class PermissionEnum(str, Enum):
     PRINTING_SETTINGS = "printing.settings"
     VIEW_KDS = "view_kds"
     OVERRIDE_SALE_PRICE = "override_sale_price"
+    # Phase 3 — POS security & manager overrides
+    POS_VOID_LINE = "pos_void_line"
+    POS_DISCOUNT_OVERRIDE = "pos_discount_override"
+    POS_NO_SALE_DRAWER = "pos_no_sale_drawer"
+    POS_PAY_IN_OUT = "pos_pay_in_out"
+    POS_AUTHORIZE_OVERRIDE = "pos_authorize_override"
+    POS_VIEW_EXPECTED = "pos_view_expected"
+    # Phase 4 — smart returns (RMA) at the register
+    POS_RETURN = "pos_return"
 
     @classmethod
     def from_code(cls, code: str):

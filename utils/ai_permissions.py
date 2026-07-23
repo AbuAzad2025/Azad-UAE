@@ -59,8 +59,8 @@ def user_has_ai_permission(action_type: str, user=None) -> bool:
         return True
 
     base_perm, ai_perm = _AI_PERM_MAP.get(action_type, ("", ""))
-    has_ai = ai_perm and user.has_permission(ai_perm)
-    has_base = base_perm and user.has_permission(base_perm)
+    has_ai = bool(ai_perm) and bool(user.has_permission(ai_perm))
+    has_base = bool(base_perm) and bool(user.has_permission(base_perm))
     return has_ai or has_base
 
 

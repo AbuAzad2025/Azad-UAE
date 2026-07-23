@@ -34,6 +34,7 @@ class GLRef:
     PARTNER_DISTRIBUTION = "PartnerDistribution"
     PARTNER_TRANSACTION = "PartnerTransaction"
     POS_CASH_DIFFERENCE = "PosCashDifference"
+    POS_CASH_MOVEMENT = "PosCashMovement"
     FX_GAIN_LOSS = "FxGainLoss"
 
 
@@ -59,6 +60,7 @@ LEGACY_REF_MAP: dict[str, str] = {
     "Product Update": GLRef.PRODUCT_UPDATE,
     "Cheque": GLRef.CHEQUE_ISSUE,
     "pos_cash_difference": GLRef.POS_CASH_DIFFERENCE,
+    "pos_cash_movement": GLRef.POS_CASH_MOVEMENT,
     "fx_gain_loss": GLRef.FX_GAIN_LOSS,
 }
 

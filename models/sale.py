@@ -38,6 +38,10 @@ class Sale(db.Model):
 
     subtotal = db.Column(db.Numeric(15, 3), default=0)
     discount_amount = db.Column(db.Numeric(15, 3), default=0)
+    # Auto-applied promotional discount (Phase 1 promotion engine).
+    # Recorded distinctly from the manual discount_amount so GL can post it
+    # to CAMPAIGN_DISCOUNT_EXPENSE instead of SALES_DISCOUNT.
+    promotion_discount_amount = db.Column(db.Numeric(15, 3), default=0)
     shipping_cost = db.Column(db.Numeric(15, 3), default=0)
     tax_rate = db.Column(db.Numeric(5, 2), default=0)
     tax_amount = db.Column(db.Numeric(15, 3), default=0)
@@ -138,6 +142,9 @@ class Sale(db.Model):
 
         # Ensure all amounts are Decimal
         discount = Decimal(str(self.discount_amount)) if self.discount_amount else Decimal("0")
+        promo_discount = (
+            Decimal(str(self.promotion_discount_amount)) if self.promotion_discount_amount else Decimal("0")
+        )
         shipping = Decimal(str(self.shipping_cost)) if self.shipping_cost else Decimal("0")
         tax_rate_decimal = Decimal(str(self.tax_rate)) if self.tax_rate else Decimal("0")
         exchange_rate_decimal = Decimal(str(self.exchange_rate)) if self.exchange_rate else Decimal("1")
@@ -145,7 +152,7 @@ class Sale(db.Model):
         # Calculate tax based on pricing method (inclusive vs exclusive VAT)
         if self.prices_include_vat:
             # الأسعار تشمل الضريبة: نفصل الضريبة من الإجمالي
-            gross = self.subtotal - discount + shipping
+            gross = self.subtotal - discount - promo_discount + shipping
             if tax_rate_decimal > 0:
                 taxable_amount = (gross / (Decimal("1") + (tax_rate_decimal / Decimal("100")))).quantize(
                     Decimal("0.01"), rounding=ROUND_HALF_UP
@@ -157,7 +164,7 @@ class Sale(db.Model):
             self.total_amount = gross.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         else:
             # الأسعار لا تشمل الضريبة: نضيف الضريبة فوق الصافي
-            taxable_amount = self.subtotal - discount + shipping
+            taxable_amount = self.subtotal - discount - promo_discount + shipping
             self.tax_amount = (taxable_amount * (tax_rate_decimal / Decimal("100"))).quantize(
                 Decimal("0.01"), rounding=ROUND_HALF_UP
             )

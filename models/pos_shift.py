@@ -42,6 +42,12 @@ class PosShift(db.Model):
     total_sales = db.Column(db.Numeric(15, 3), default=Decimal("0"))
     total_cash_sales = db.Column(db.Numeric(15, 3), default=Decimal("0"))
     total_card_sales = db.Column(db.Numeric(15, 3), default=Decimal("0"))
+    # Phase 3 — blind-close reconciliation inputs (base currency).
+    total_change_given = db.Column(db.Numeric(15, 3), default=Decimal("0"))
+    # Phase 4 — cash refunds paid out of the drawer for POS returns.
+    total_cash_refunds = db.Column(db.Numeric(15, 3), default=Decimal("0"))
+    total_pay_ins = db.Column(db.Numeric(15, 3), default=Decimal("0"))
+    total_pay_outs = db.Column(db.Numeric(15, 3), default=Decimal("0"))
 
     status = db.Column(db.String(20), default="open", nullable=False, index=True)
     notes = db.Column(db.Text)
@@ -57,9 +63,19 @@ class PosShift(db.Model):
     SHIFT_RECONCILED = "reconciled"
     SHIFT_CLOSED = "closed"
 
+    def compute_expected_cash(self) -> Decimal:
+        """Expected drawer = starting + cash tendered − change − cash refunds + pay-ins − pay-outs."""
+        starting = Decimal(str(self.starting_cash or 0))
+        cash_sales = Decimal(str(self.total_cash_sales or 0))
+        change = Decimal(str(self.total_change_given or 0))
+        cash_refunds = Decimal(str(self.total_cash_refunds or 0))
+        pay_ins = Decimal(str(self.total_pay_ins or 0))
+        pay_outs = Decimal(str(self.total_pay_outs or 0))
+        return starting + cash_sales - change - cash_refunds + pay_ins - pay_outs
+
     def reconcile(self, actual_cash: Decimal, notes: str | None = None):
         self.actual_cash_counted = Decimal(str(actual_cash))
-        self.system_sales_expected = Decimal(str(self.starting_cash or 0)) + Decimal(str(self.total_cash_sales or 0))
+        self.system_sales_expected = self.compute_expected_cash()
         self.discrepancy = self.actual_cash_counted - self.system_sales_expected
         self.status = self.SHIFT_RECONCILED
         if notes:
@@ -79,8 +95,11 @@ class PosShift(db.Model):
             end = end.replace(tzinfo=timezone.utc)
         return int((end - start).total_seconds() / 60)
 
-    def to_dict(self):
-        return {
+    def to_dict(self, include_sensitive: bool = True):
+        """Serialize the shift. Blind-close: expected/actual/discrepancy and
+        tender totals are hidden from roles without expected-balance visibility
+        (``include_sensitive=False``)."""
+        data = {
             "id": self.id,
             "shift_number": self.shift_number,
             "session_id": self.session_id,
@@ -88,11 +107,23 @@ class PosShift(db.Model):
             "opened_at": self.opened_at.isoformat() if self.opened_at else None,
             "closed_at": self.closed_at.isoformat() if self.closed_at else None,
             "starting_cash": float(self.starting_cash or 0),
-            "system_sales_expected": float(self.system_sales_expected or 0),
-            "actual_cash_counted": (float(self.actual_cash_counted) if self.actual_cash_counted is not None else None),
-            "discrepancy": (float(self.discrepancy) if self.discrepancy is not None else None),
-            "total_sales": float(self.total_sales or 0),
-            "total_cash_sales": float(self.total_cash_sales or 0),
-            "total_card_sales": float(self.total_card_sales or 0),
             "duration_minutes": self.duration_minutes,
         }
+        if include_sensitive:
+            data.update(
+                {
+                    "system_sales_expected": float(self.system_sales_expected or 0),
+                    "actual_cash_counted": (
+                        float(self.actual_cash_counted) if self.actual_cash_counted is not None else None
+                    ),
+                    "discrepancy": (float(self.discrepancy) if self.discrepancy is not None else None),
+                    "total_sales": float(self.total_sales or 0),
+                    "total_cash_sales": float(self.total_cash_sales or 0),
+                    "total_card_sales": float(self.total_card_sales or 0),
+                    "total_change_given": float(self.total_change_given or 0),
+                    "total_cash_refunds": float(self.total_cash_refunds or 0),
+                    "total_pay_ins": float(self.total_pay_ins or 0),
+                    "total_pay_outs": float(self.total_pay_outs or 0),
+                }
+            )
+        return data

@@ -200,6 +200,14 @@ def _ensure_functional_roles():
                 "manage_ledger",
                 "manage_payroll",
                 "view_kds",
+                "override_sale_price",
+                "pos_void_line",
+                "pos_discount_override",
+                "pos_no_sale_drawer",
+                "pos_pay_in_out",
+                "pos_authorize_override",
+                "pos_view_expected",
+                "pos_return",
             ]
             manager_role.permissions = get_perms(*manager_codes)
 
@@ -231,6 +239,14 @@ def _ensure_functional_roles():
                 "manage_ledger",
                 "manage_payroll",
                 "view_kds",
+                "override_sale_price",
+                "pos_void_line",
+                "pos_discount_override",
+                "pos_no_sale_drawer",
+                "pos_pay_in_out",
+                "pos_authorize_override",
+                "pos_view_expected",
+                "pos_return",
             ]
             branch_mgr_role.permissions = get_perms(*branch_mgr_codes)
 
@@ -243,6 +259,7 @@ def _ensure_functional_roles():
                 "view_ledger",
                 "manage_ledger",
                 "manage_payroll",
+                "pos_view_expected",
             ]
             acc_role.permissions = get_perms(*acc_codes)
 
@@ -360,6 +377,13 @@ def _ensure_permissions():
             "manage_users": "admin",
             "manage_backups": "admin",
             "manage_payroll": "admin",
+            "override_sale_price": "pos",
+            "pos_void_line": "pos",
+            "pos_discount_override": "pos",
+            "pos_no_sale_drawer": "pos",
+            "pos_pay_in_out": "pos",
+            "pos_authorize_override": "pos",
+            "pos_view_expected": "pos",
         }
         permissions_data = [
             {

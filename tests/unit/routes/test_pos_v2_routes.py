@@ -61,10 +61,15 @@ def _mock_session():
     s.total_sales = Decimal("0")
     s.total_cash_sales = Decimal("0")
     s.total_card_sales = Decimal("0")
+    s.total_change_given = Decimal("0")
+    s.total_pay_ins = Decimal("0")
+    s.total_pay_outs = Decimal("0")
     s.status = "open"
     s.tenant_id = 1
     s.branch_id = 2
     s.user_id = 42
+    s.terminal_id = None
+    s.paused_at = None
     s.notes = ""
     return s
 
@@ -164,6 +169,12 @@ def _pos_api_patches(**kwargs):
             )
             stack.enter_context(
                 patch(
+                    "routes.pos.get_paused_session",
+                    return_value=kwargs.get("paused_session", None),
+                )
+            )
+            stack.enter_context(
+                patch(
                     "routes.pos.create_pos_session",
                     return_value=kwargs.get("new_session", _mock_session()),
                 )
@@ -215,6 +226,16 @@ def _pos_api_patches(**kwargs):
                             tenant_id=1,
                             total_amount=Decimal("50"),
                         ),
+                    ),
+                )
+            )
+            # Tier-aware pricing is exercised against the real DB in service
+            # tests; at the route boundary keep the legacy baseline semantics.
+            stack.enter_context(
+                patch(
+                    "routes.pos.PricingService.get_price",
+                    side_effect=lambda product, customer_type="regular", qty=1: product.get_price_for_customer(
+                        customer_type
                     ),
                 )
             )

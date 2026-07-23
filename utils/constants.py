@@ -129,6 +129,14 @@ PERMISSION_CODES = [
     "printing.print",
     "printing.settings",
     "view_kds",
+    "override_sale_price",
+    "pos_void_line",
+    "pos_discount_override",
+    "pos_no_sale_drawer",
+    "pos_pay_in_out",
+    "pos_authorize_override",
+    "pos_view_expected",
+    "pos_return",
 ]
 
 # --- Unified Enums (canonical values only) ---
@@ -207,4 +215,12 @@ PERMISSIONS = {
     "printing.print": {"ar": "طباعة المستندات", "en": "Print Documents"},
     "printing.settings": {"ar": "إعدادات الطباعة", "en": "Print Settings"},
     "view_kds": {"ar": "عرض شاشة المطبخ (KDS)", "en": "View Kitchen Display"},
+    "override_sale_price": {"ar": "تجاوز سعر البيع", "en": "Override Sale Price"},
+    "pos_void_line": {"ar": "إلغاء صنف في نقطة البيع", "en": "POS Void Line"},
+    "pos_discount_override": {"ar": "تجاوز حدود الخصم في نقطة البيع", "en": "POS Discount Override"},
+    "pos_no_sale_drawer": {"ar": "فتح درج النقد بدون بيع", "en": "POS No-Sale Drawer Open"},
+    "pos_pay_in_out": {"ar": "إيداع/سحب نقد من الدرج", "en": "POS Cash Pay-in / Pay-out"},
+    "pos_authorize_override": {"ar": "تفويض تجاوزات نقطة البيع (مشرف)", "en": "POS Authorize Overrides (Supervisor)"},
+    "pos_view_expected": {"ar": "عرض الرصيد المتوقع لجلسات نقطة البيع", "en": "POS View Expected Balance"},
+    "pos_return": {"ar": "معالجة المرتجعات في نقطة البيع", "en": "POS Process Returns"},
 }

@@ -9,6 +9,7 @@ from services.gl_posting import post_or_fail
 from utils.gl_reference_types import GLRef
 from services.commission_gl_service import post_sale_commissions
 from services.gl_service import GLService
+from services.promotion_service import PromotionService
 from utils.branching import ensure_warehouse_access
 from utils.currency_utils import resolve_default_currency, get_system_default_currency, convert_and_quantize_aed
 from utils.field_validators import (
@@ -45,11 +46,13 @@ class SaleService:
         tax_rate=0,
         notes=None,
         payment_data=None,
+        payments_data=None,
         source="internal",
         sale_status=None,
         checkout_payment_method=None,
         defer_fulfillment=False,
         sales_rep_id=None,
+        promotion_evaluation=None,
     ):
         """
         Create a new sale with proper validations and decimal precision
@@ -356,10 +359,27 @@ class SaleService:
                 # ---------------------------------
 
             sale.subtotal = subtotal
+
+            # Phase 1 promotion engine: record auto-applied promotional
+            # discounts distinctly from the manual discount_amount.
+            if promotion_evaluation:
+                promo_total = PromotionService.record_applied_promotions(sale, promotion_evaluation)
+                if promo_total < Decimal("0") or promo_total > sale.subtotal:
+                    raise ValueError("قيمة الخصم الترويجي غير صالحة")
+
             sale.calculate_totals()
 
             # Handle payment if provided
-            if payment_data:
+            prepared_payments = None
+            if payments_data:
+                # Phase 2 split tenders — each chunk converted exactly via
+                # convert_and_quantize_aed; overpayment pooled and booked once.
+                prepared_payments = SaleService.prepare_split_payments(payments_data, tenant_id=tenant_id)
+                paid_amount_aed = sum((p["amount_aed"] for p in prepared_payments), Decimal("0"))
+                if paid_amount_aed <= Decimal("0"):
+                    raise ValueError("مجموع الدفعات يجب أن يكون أكبر من صفر")
+                sale.paid_amount_aed = paid_amount_aed
+            elif payment_data:
                 paid_amount = Decimal(str(payment_data.get("amount", 0)))
                 payment_currency = payment_data.get("currency", get_system_default_currency())
                 payment_exchange_rate = payment_data.get("exchange_rate", 1.0)
@@ -411,7 +431,12 @@ class SaleService:
                 current_app.logger.info(f"Sale created (deferred): {sale.sale_number}")
                 return sale
 
-            SaleService.fulfill_sale(sale, payment_data=payment_data, paid_amount_aed=paid_amount_aed)
+            SaleService.fulfill_sale(
+                sale,
+                payment_data=payment_data,
+                paid_amount_aed=paid_amount_aed,
+                payments_data=prepared_payments,
+            )
 
             try:
                 db.session.flush()
@@ -428,7 +453,7 @@ class SaleService:
             raise
 
     @staticmethod
-    def fulfill_sale(sale, payment_data=None, paid_amount_aed=None):
+    def fulfill_sale(sale, payment_data=None, paid_amount_aed=None, payments_data=None):
         """
         Deduct stock, post GL, commissions, and customer balances for an existing sale.
         Used at POS checkout and when confirming deferred online store orders.
@@ -453,7 +478,12 @@ class SaleService:
         StockService.process_sale_lines(sale, warehouse_id)
 
         paid_aed = Decimal(str(paid_amount_aed)) if paid_amount_aed is not None else Decimal("0")
-        if payment_data and payment_data.get("amount", 0) > 0:
+        if payments_data:
+            prepared = payments_data
+            if "amount_aed" not in prepared[0]:
+                prepared = SaleService.prepare_split_payments(prepared, tenant_id=tenant_id)
+            SaleService._create_split_payments(sale, prepared)
+        elif payment_data and payment_data.get("amount", 0) > 0:
             paid_amount = Decimal(str(payment_data.get("amount", 0)))
             payment_exchange_rate = payment_data.get("exchange_rate", 1.0)
             payment_exchange_decimal = Decimal(str(payment_exchange_rate)) if payment_exchange_rate else Decimal("1")
@@ -552,24 +582,32 @@ class SaleService:
 
         ar_account = GLService.get_customer_credit_account(customer, branch_id=sale.branch_id, tenant_id=tenant_id)
 
+        # Promotional discount (Phase 1) — recorded distinctly from the
+        # manual discount_amount and posted to CAMPAIGN_DISCOUNT_EXPENSE.
+        promo_raw = sale.__dict__.get("promotion_discount_amount")
+        promotion_discount = Decimal(str(promo_raw)) if promo_raw else Decimal("0")
+
         # When prices_include_vat=True, revenue/shipping/discount must be VAT-exclusive for GL balance
         if sale.prices_include_vat:
             tax_rate = Decimal(str(sale.tax_rate)) if sale.tax_rate else Decimal("0")
             if tax_rate > 0:
                 divisor = Decimal("1") + (tax_rate / Decimal("100"))
                 discount_debit = (sale.discount_amount / divisor).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                promo_debit = (promotion_discount / divisor).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
                 shipping_credit = (sale.shipping_cost / divisor).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-                revenue_credit = (sale.taxable_amount - shipping_credit + discount_debit).quantize(
+                revenue_credit = (sale.taxable_amount - shipping_credit + discount_debit + promo_debit).quantize(
                     Decimal("0.01"), rounding=ROUND_HALF_UP
                 )
             else:
                 revenue_credit = sale.subtotal
                 shipping_credit = sale.shipping_cost
                 discount_debit = sale.discount_amount
+                promo_debit = promotion_discount
         else:
             revenue_credit = sale.subtotal
             shipping_credit = sale.shipping_cost
             discount_debit = sale.discount_amount
+            promo_debit = promotion_discount
 
         gl_lines = [
             {
@@ -618,6 +656,21 @@ class SaleService:
                     "concept_code": "SALES_DISCOUNT",
                     "debit": discount_debit,
                     "description": "خصومات ممنوحة",
+                }
+            )
+
+        if promo_debit > Decimal("0"):
+            gl_lines.append(
+                {
+                    "account": GLService.get_account_code_for_concept(
+                        "CAMPAIGN_DISCOUNT_EXPENSE",
+                        branch_id=sale.branch_id,
+                        tenant_id=tenant_id,
+                        fallback_key="campaign_discounts",
+                    ),
+                    "concept_code": "CAMPAIGN_DISCOUNT_EXPENSE",
+                    "debit": promo_debit,
+                    "description": "خصومات الحملات الترويجية",
                 }
             )
 
@@ -705,6 +758,127 @@ class SaleService:
             ).first()
             is not None
         )
+
+    @staticmethod
+    def prepare_split_payments(payments_data, tenant_id=None):
+        """Validate split-tender chunks and attach exact base-currency amounts.
+
+        Each chunk keeps its own currency/rate; ``amount_aed`` is computed via
+        ``convert_and_quantize_aed`` (0.001 ROUND_HALF_UP) — the single source
+        of truth for conversion. Returns a new list of prepared chunk dicts.
+        """
+        if not payments_data:
+            raise ValueError("قائمة الدفعات فارغة")
+        prepared = []
+        for chunk in payments_data:
+            if not isinstance(chunk, dict):
+                raise ValueError("بيانات الدفعة غير صالحة")
+            amount = Decimal(str(chunk.get("amount") or "0"))
+            if amount <= Decimal("0"):
+                raise ValueError("مبلغ الدفعة يجب أن يكون أكبر من صفر")
+            method = validate_payment_method(chunk.get("payment_method") or chunk.get("method"))
+            currency = validate_currency_code(chunk.get("currency") or get_system_default_currency())
+            rate = Decimal(str(chunk.get("exchange_rate") or "1"))
+            if rate <= Decimal("0"):
+                raise ValueError("سعر الصرف غير صالح")
+            amount_aed = convert_and_quantize_aed(amount, currency, rate, tenant_id=tenant_id)
+            prepared.append(
+                {
+                    "amount": amount,
+                    "payment_method": method,
+                    "currency": currency,
+                    "exchange_rate": rate,
+                    "amount_aed": amount_aed,
+                    "reference_number": chunk.get("reference_number"),
+                    "cheque_number": chunk.get("cheque_number"),
+                    "cheque_date": chunk.get("cheque_date"),
+                    "bank_name": chunk.get("bank_name"),
+                    "notes": chunk.get("notes"),
+                }
+            )
+        return prepared
+
+    @staticmethod
+    def _create_split_payments(sale, prepared_payments):
+        """Book each prepared tender chunk as its own Payment row + GL posting.
+
+        Chunks are applied against the invoice total in order; any aggregate
+        excess is pooled and booked ONCE as a customer prepayment (existing
+        overpayment behavior), denominated in the last tender's currency.
+        """
+        total_paid_aed = sum((p["amount_aed"] for p in prepared_payments), Decimal("0"))
+        if total_paid_aed <= Decimal("0"):
+            raise ValueError("مجموع الدفعات يجب أن يكون أكبر من صفر")
+
+        remaining_aed = Decimal(str(sale.amount_aed or 0))
+        excess_aed = Decimal("0")
+        last_chunk = None
+        for chunk in prepared_payments:
+            last_chunk = chunk
+            chunk_aed = chunk["amount_aed"]
+            applied_aed = min(chunk_aed, max(remaining_aed, Decimal("0")))
+            if applied_aed > Decimal("0"):
+                if applied_aed == chunk_aed:
+                    applied_amount = chunk["amount"]
+                else:
+                    applied_amount = (applied_aed / chunk["exchange_rate"]).quantize(
+                        Decimal("0.001"), rounding=ROUND_HALF_UP
+                    )
+                SaleService.create_payment_for_sale(
+                    sale=sale,
+                    amount=applied_amount,
+                    payment_method=chunk["payment_method"],
+                    currency=chunk["currency"],
+                    exchange_rate=chunk["exchange_rate"],
+                    reference_number=chunk.get("reference_number"),
+                    cheque_number=chunk.get("cheque_number"),
+                    cheque_date=chunk.get("cheque_date"),
+                    bank_name=chunk.get("bank_name"),
+                    notes=chunk.get("notes"),
+                )
+            excess_aed += chunk_aed - applied_aed
+            remaining_aed -= chunk_aed
+
+        if excess_aed > Decimal("0"):
+            SaleService._book_overpayment_prepayment(sale, excess_aed, last_chunk)
+
+    @staticmethod
+    def _book_overpayment_prepayment(sale, excess_aed, chunk):
+        """Single aggregate prepayment for split-tender overpayment."""
+        overpayment_amount = (excess_aed / chunk["exchange_rate"]).quantize(
+            Decimal("0.001"), rounding=ROUND_HALF_UP
+        )
+        payment_note = f"\n[دفع زائد] مبلغ {excess_aed} AED سُجّل كرصيد للزبون"
+        sale.notes = (sale.notes or "") + payment_note
+
+        from models import Payment
+        from utils.helpers import generate_number
+
+        prepayment = Payment(
+            tenant_id=getattr(sale, "tenant_id", None),
+            payment_number=generate_number(
+                "PRE",
+                Payment,
+                "payment_number",
+                branch_id=sale.branch_id,
+                tenant_id=getattr(sale, "tenant_id", None),
+            ),
+            payment_type="prepayment",
+            direction="incoming",
+            customer_id=sale.customer_id,
+            amount=overpayment_amount,
+            currency=chunk["currency"],
+            exchange_rate=chunk["exchange_rate"],
+            amount_aed=excess_aed,
+            payment_method=chunk["payment_method"],
+            payment_confirmed=(chunk["payment_method"] != "cheque"),
+            notes=f"دفع زائد من فاتورة {sale.sale_number}",
+            user_id=sale.seller_id,
+            branch_id=sale.branch_id,
+        )
+        db.session.add(prepayment)
+        db.session.flush()
+        sale.customer.apply_receipt(Decimal(str(excess_aed or 0)))
 
     @staticmethod
     def create_payment_for_sale(

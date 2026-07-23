@@ -27,9 +27,25 @@ class Campaign(db.Model):
     usage_limit = db.Column(db.Integer)
     usage_count = db.Column(db.Integer, default=0)
     coupon_code = db.Column(db.String(50), index=True)
+
+    # Phase 1 — POS promotion engine: campaigns with applies_to_pos=True are
+    # evaluated automatically at the register (no coupon required).
+    # campaign_type drives the rule kind: bundle / tiered / combo / bogo,
+    # with legacy percentage / fixed treated as tiered-style cart rules.
+    # rule_config carries the rule-type-specific knobs (see PromotionService).
+    applies_to_pos = db.Column(db.Boolean, default=False, index=True)
+    branch_id = db.Column(
+        db.Integer,
+        db.ForeignKey("branches.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+    rule_config = db.Column(db.JSON, default=dict)
+
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
+    branch = db.relationship("Branch", foreign_keys=[branch_id])
 
     def __repr__(self):
         return f"<Campaign {self.name} ({self.campaign_type})>"

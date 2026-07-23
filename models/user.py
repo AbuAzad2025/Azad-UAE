@@ -109,6 +109,9 @@ class User(UserMixin, db.Model):
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
     email_verified = db.Column(db.Boolean, default=False)
 
+    # Phase 3 — hashed supervisor PIN for POS manager overrides.
+    supervisor_pin_hash = db.Column(db.String(255), nullable=True)
+
     # Login tracking
     last_login = db.Column(db.DateTime)
     last_seen = db.Column(db.DateTime)
@@ -176,6 +179,16 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         """Verify password"""
         return check_password_hash(self.password_hash, password)
+
+    def set_supervisor_pin(self, pin):
+        """Hash and set the POS supervisor override PIN (same pbkdf2 scheme as passwords)."""
+        self.supervisor_pin_hash = generate_password_hash(str(pin), method="pbkdf2:sha256:260000", salt_length=16)
+
+    def check_supervisor_pin(self, pin) -> bool:
+        """Constant-time verify against the stored supervisor PIN hash."""
+        if not self.supervisor_pin_hash or pin is None:
+            return False
+        return check_password_hash(self.supervisor_pin_hash, str(pin))
 
     def is_super_admin(self):
         return self.role and self.role.slug == RoleEnum.SUPER_ADMIN.value

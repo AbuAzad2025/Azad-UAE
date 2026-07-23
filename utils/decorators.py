@@ -7,6 +7,7 @@ from extensions import db
 from models.enums import RoleEnum, PermissionEnum
 from utils.branching import branch_scope_id_for, report_branch_scope_id_for
 from utils.auth_helpers import is_admin_surface_user, is_global_owner_user
+from utils.pos_features import POS_SUBFEATURES, pos_feature_enabled
 
 
 def branch_scope_id():
@@ -265,6 +266,12 @@ _FEATURE_COLUMNS = frozenset(
         "cheques",
         "expenses",
         "store",
+        # POS Phase 4 — SaaS sub-feature flags (nullable: NULL inherits the
+        # plan-level default via utils/pos_features).
+        "pos_promotions",
+        "pos_multi_tender",
+        "pos_returns",
+        "pos_shifts",
     }
 )
 
@@ -295,7 +302,11 @@ def require_subscription_feature(feature_name: str):
 
             col = f"enable_{feature_name}"
             if col.replace("enable_", "") in _FEATURE_COLUMNS:
-                if not getattr(tenant, col, True):
+                value = getattr(tenant, col, True)
+                if value is None and feature_name in POS_SUBFEATURES:
+                    # Nullable POS sub-feature: NULL inherits the plan default.
+                    value = pos_feature_enabled(tenant, feature_name)
+                if not value:
                     abort(403, description=f'ميزة "{feature_name}" غير مفعلة لهذا الحساب')
                 return f(*args, **kwargs)
 
