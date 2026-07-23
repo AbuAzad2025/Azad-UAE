@@ -37,7 +37,7 @@ class TestCreateUserValidation:
             patch("ai_knowledge.action_dispatcher._audit"),
             patch("ai_knowledge.action_dispatcher._log_ai_error"),
         ):
-            result = action_dispatcher.dispatch("create_user", {"username": "", "password": ""})
+            result = action_dispatcher.dispatch("create_user", {"username": "", "password": "", "confirmed": True})
             assert result.success is False
             assert "اسم المستخدم" in result.message or "كلمة المرور" in result.message
 
@@ -59,7 +59,7 @@ class TestCreateUserValidation:
             patch("ai_knowledge.action_dispatcher._audit"),
             patch("ai_knowledge.action_dispatcher._log_ai_error"),
         ):
-            result = action_dispatcher.dispatch("create_user", {"username": "ali", "password": ""})
+            result = action_dispatcher.dispatch("create_user", {"username": "ali", "password": "", "confirmed": True})
             assert result.success is False
 
 

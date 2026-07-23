@@ -204,11 +204,11 @@ class TestActionDispatcherWave6:
             patch("ai_knowledge.action_dispatcher._has_permission", return_value=True),
         ):
             for action, args in (
-                ("create_customer", {"name": "Ali"}),
-                ("create_product", {"name": "Bolt"}),
-                ("add_expense", {"description": "x", "amount": 10}),
-                ("create_supplier", {"name": "Sup"}),
-                ("create_user", {"username": "u", "password": "p"}),
+                ("create_customer", {"name": "Ali", "confirmed": True}),
+                ("create_product", {"name": "Bolt", "confirmed": True}),
+                ("add_expense", {"description": "x", "amount": 10, "confirmed": True}),
+                ("create_supplier", {"name": "Sup", "confirmed": True}),
+                ("create_user", {"username": "u", "password": "p", "confirmed": True}),
             ):
                 r = action_dispatcher.dispatch(action, args)
                 assert r.success is False
@@ -235,6 +235,7 @@ class TestActionDispatcherWave6:
                     "customer_name": "A",
                     "product_name": "P",
                     "unit_price": 25,
+                    "confirmed": True,
                 },
             )
             assert r.success is True
@@ -245,14 +246,15 @@ class TestActionDispatcherWave6:
                     {
                         "customer_name": "A",
                         "amount": 50,
+                        "confirmed": True,
                     },
                 ).success
                 is False
             )
             ex.create_employee.return_value = {"success": False, "message": "fail"}
-            assert action_dispatcher.dispatch("create_employee", {"name": "E"}).success is False
+            assert action_dispatcher.dispatch("create_employee", {"name": "E", "confirmed": True}).success is False
             ex.create_employee.side_effect = RuntimeError("x")
-            assert action_dispatcher.dispatch("create_employee", {"name": "E"}).success is False
+            assert action_dispatcher.dispatch("create_employee", {"name": "E", "confirmed": True}).success is False
             ex.create_purchase.return_value = {
                 "success": True,
                 "message": "ok",
@@ -264,6 +266,7 @@ class TestActionDispatcherWave6:
                     {
                         "supplier_name": "S",
                         "product_name": "P",
+                        "confirmed": True,
                     },
                 ).success
                 is True
@@ -275,6 +278,7 @@ class TestActionDispatcherWave6:
                     {
                         "supplier_name": "S",
                         "product_name": "P",
+                        "confirmed": True,
                     },
                 ).success
                 is False
@@ -288,7 +292,7 @@ class TestActionDispatcherWave6:
         ):
             Supplier.return_value = MagicMock(id=1)
             sess.flush.side_effect = RuntimeError("fail")
-            assert action_dispatcher.dispatch("create_supplier", {"name": "S"}).success is False
+            assert action_dispatcher.dispatch("create_supplier", {"name": "S", "confirmed": True}).success is False
         with (
             patch("ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1),
             patch("ai_knowledge.action_dispatcher._has_permission", return_value=True),
@@ -306,6 +310,7 @@ class TestActionDispatcherWave6:
                     {
                         "username": "u",
                         "password": "p",
+                        "confirmed": True,
                     },
                 ).success
                 is False

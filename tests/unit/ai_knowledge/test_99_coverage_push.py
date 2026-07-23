@@ -677,6 +677,7 @@ class TestActionDispatcherHandlers:
                         "customer_name": "Ali",
                         "product_name": "Bolt",
                         "quantity": 2,
+                        "confirmed": True,
                     },
                 ).success
                 is True
@@ -692,6 +693,7 @@ class TestActionDispatcherHandlers:
                         "customer_name": "Ali",
                         "product_name": "Bolt",
                         "quantity": 1,
+                        "confirmed": True,
                     },
                 ).success
                 is False
@@ -706,9 +708,17 @@ class TestActionDispatcherHandlers:
                 "payment_id": 1,
             }
             assert (
-                action_dispatcher.dispatch("receive_payment", {"customer_name": "Ali", "amount": 100}).success is True
+                action_dispatcher.dispatch(
+                    "receive_payment", {"customer_name": "Ali", "amount": 100, "confirmed": True}
+                ).success
+                is True
             )
-            assert action_dispatcher.dispatch("add_expense", {"description": "fuel", "amount": 50}).success is True
+            assert (
+                action_dispatcher.dispatch(
+                    "add_expense", {"description": "fuel", "amount": 50, "confirmed": True}
+                ).success
+                is True
+            )
 
     def test_supplier_reports_employee(self, permitted, mock_ai_user):
         from ai_knowledge.action_dispatcher import action_dispatcher
@@ -726,7 +736,7 @@ class TestActionDispatcherHandlers:
             patch("ai_knowledge.action_dispatcher.db.session") as session,
         ):
             Supplier.return_value = MagicMock(id=1)
-            assert action_dispatcher.dispatch("create_supplier", {"name": "Sup"}).success is True
+            assert action_dispatcher.dispatch("create_supplier", {"name": "Sup", "confirmed": True}).success is True
             session.query.return_value.filter.return_value.scalar.return_value = Decimal("1000")
             Sale.query.filter_by.return_value.count.return_value = 5
             assert action_dispatcher.dispatch("sales_summary", {}).success is True
@@ -737,7 +747,12 @@ class TestActionDispatcherHandlers:
                 "message": "ok",
                 "id": 2,
             }
-            assert action_dispatcher.dispatch("create_employee", {"name": "Emp", "salary": 3000}).success is True
+            assert (
+                action_dispatcher.dispatch(
+                    "create_employee", {"name": "Emp", "salary": 3000, "confirmed": True}
+                ).success
+                is True
+            )
             Ex.return_value.create_purchase.return_value = {
                 "success": True,
                 "message": "ok",
@@ -750,6 +765,7 @@ class TestActionDispatcherHandlers:
                         "supplier_name": "S",
                         "product_name": "P",
                         "quantity": 1,
+                        "confirmed": True,
                     },
                 ).success
                 is True
@@ -789,6 +805,7 @@ class TestActionDispatcherHandlers:
                         "username": "u1",
                         "password": "secret",
                         "role": "seller",
+                        "confirmed": True,
                     },
                 ).success
                 is True

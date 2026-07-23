@@ -622,6 +622,7 @@ class TestActionDispatcherWave5:
                         "customer_name": "Ali",
                         "product_name": "Bolt",
                         "quantity": 1,
+                        "confirmed": True,
                     },
                 ).success
                 is True
@@ -633,6 +634,7 @@ class TestActionDispatcherWave5:
                     {
                         "customer_name": "Ali",
                         "product_name": "Bolt",
+                        "confirmed": True,
                     },
                 ).success
                 is False
@@ -644,6 +646,7 @@ class TestActionDispatcherWave5:
                     {
                         "customer_name": "Ali",
                         "product_name": "Bolt",
+                        "confirmed": True,
                     },
                 ).success
                 is False
@@ -682,6 +685,7 @@ class TestActionDispatcherWave5:
                     {
                         "customer_name": "Ali",
                         "amount": 100,
+                        "confirmed": True,
                     },
                 ).success
                 is True
@@ -693,6 +697,7 @@ class TestActionDispatcherWave5:
                     {
                         "customer_name": "Ali",
                         "amount": 100,
+                        "confirmed": True,
                     },
                 ).success
                 is False
@@ -710,6 +715,7 @@ class TestActionDispatcherWave5:
                     {
                         "description": "rent",
                         "amount": 500,
+                        "confirmed": True,
                     },
                 ).success
                 is True
@@ -721,6 +727,7 @@ class TestActionDispatcherWave5:
                     {
                         "description": "rent",
                         "amount": 500,
+                        "confirmed": True,
                     },
                 ).success
                 is False
@@ -731,7 +738,7 @@ class TestActionDispatcherWave5:
             patch("ai_knowledge.action_dispatcher.db") as db,
             patch("models.Supplier"),
         ):
-            assert action_dispatcher.dispatch("create_supplier", {"name": "Supp"}).success is True
+            assert action_dispatcher.dispatch("create_supplier", {"name": "Supp", "confirmed": True}).success is True
 
 
 class TestAnalyticsWave5:

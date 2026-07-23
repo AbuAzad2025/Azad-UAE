@@ -1323,6 +1323,7 @@ class TestActionDispatcherWave4:
         with (
             patch("ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=1),
             patch("ai_knowledge.action_dispatcher._is_owner", return_value=False),
+            patch("ai_knowledge.action_dispatcher._has_permission", return_value=False),
             permitted[2],
             permitted[3],
         ):

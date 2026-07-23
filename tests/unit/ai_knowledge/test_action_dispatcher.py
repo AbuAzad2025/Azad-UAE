@@ -175,7 +175,7 @@ class TestDispatch:
             patch("ai_knowledge.action_dispatcher._audit"),
         ):
             Customer.return_value = customer
-            result = action_dispatcher.dispatch("create_customer", {"name": "Acme"})
+            result = action_dispatcher.dispatch("create_customer", {"name": "Acme", "confirmed": True})
             assert result.success is True
 
     def test_list_customers_search_escaped(self, mock_ai_user):

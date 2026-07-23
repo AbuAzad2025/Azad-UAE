@@ -1113,10 +1113,15 @@ class TestActionDispatcherWave3:
             patch("models.Product") as Product,
         ):
             Product.return_value = MagicMock(id=5)
-            assert action_dispatcher.dispatch("create_product", {"name": "Bolt", "selling_price": 10}).success is True
+            assert (
+                action_dispatcher.dispatch(
+                    "create_product", {"name": "Bolt", "selling_price": 10, "confirmed": True}
+                ).success
+                is True
+            )
             session.rollback()
             session.add.side_effect = RuntimeError("db")
-            assert action_dispatcher.dispatch("create_product", {"name": "X"}).success is False
+            assert action_dispatcher.dispatch("create_product", {"name": "X", "confirmed": True}).success is False
 
     def test_check_stock_paths(self, permitted, mock_ai_user):
         from ai_knowledge.action_dispatcher import action_dispatcher
