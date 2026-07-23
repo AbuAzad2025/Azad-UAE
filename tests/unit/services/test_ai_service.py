@@ -663,11 +663,14 @@ class TestExecuteAiAction:
         assert AIService._execute_ai_action("plain text", 1) is None
 
     def test_create_customer_success(self, mocker):
-        user = SimpleNamespace(is_authenticated=True)
+        user = SimpleNamespace(is_authenticated=True, is_owner=True)
         mocker.patch("flask_login.current_user", user)
-        ex = MagicMock()
-        ex.create_customer.return_value = {"success": True, "message": "عميل"}
-        mocker.patch("services.ai_executor.AIExecutor", return_value=ex)
+        mocker.patch(
+            "ai_knowledge.action_dispatcher.ActionDispatcher.dispatch",
+            return_value=SimpleNamespace(
+                success=True, message="عميل", needs_permission="", needs_confirmation=False
+            ),
+        )
         out = AIService._execute_ai_action(
             self._groq_json("create_customer", {"name": "Ali", "phone": "05"}),
             1,
@@ -677,15 +680,12 @@ class TestExecuteAiAction:
     def test_all_action_types(self, mocker):
         user = SimpleNamespace(is_authenticated=False)
         mocker.patch("flask_login.current_user", user)
-        ex = MagicMock()
-        ex.create_customer.return_value = {"success": True, "message": "ok"}
-        ex.create_product.return_value = {"success": True, "message": "ok"}
-        ex.create_sale.return_value = {"success": True, "message": "ok"}
-        ex.receive_payment.return_value = {"success": True, "message": "ok"}
-        ex.add_expense.return_value = {"success": True, "message": "ok"}
-        ex.create_supplier.return_value = {"success": True, "message": "ok"}
-        ex.create_employee.return_value = {"success": True, "message": "ok"}
-        mocker.patch("services.ai_executor.AIExecutor", return_value=ex)
+        mocker.patch(
+            "ai_knowledge.action_dispatcher.ActionDispatcher.dispatch",
+            return_value=SimpleNamespace(
+                success=True, message="ok", needs_permission="", needs_confirmation=False
+            ),
+        )
         actions = [
             ("create_customer", {"الاسم": "x", "الهاتف": "1"}),
             ("create_product", {"الاسم": "p", "سعر": 10, "الكمية": 2}),
@@ -704,9 +704,12 @@ class TestExecuteAiAction:
 
     def test_action_failure_message(self, mocker):
         mocker.patch("flask_login.current_user", SimpleNamespace(is_authenticated=False))
-        ex = MagicMock()
-        ex.create_customer.return_value = {"success": False, "message": "فشل"}
-        mocker.patch("services.ai_executor.AIExecutor", return_value=ex)
+        mocker.patch(
+            "ai_knowledge.action_dispatcher.ActionDispatcher.dispatch",
+            return_value=SimpleNamespace(
+                success=False, message="فشل", needs_permission="", needs_confirmation=False
+            ),
+        )
         out = AIService._execute_ai_action(
             self._groq_json("create_customer", {"name": "x"}),
             1,
@@ -1400,7 +1403,10 @@ class TestCoverageGaps:
 
     def test_execute_action_logs_error(self, mocker):
         mocker.patch("flask_login.current_user", SimpleNamespace(is_authenticated=False))
-        mocker.patch("services.ai_executor.AIExecutor", side_effect=RuntimeError("boom"))
+        mocker.patch(
+            "ai_knowledge.action_dispatcher.ActionDispatcher.dispatch",
+            side_effect=RuntimeError("boom"),
+        )
         mocker.patch("services.logging_core.LoggingCore.log_error")
         out = AIService._execute_ai_action('{"action": "create_customer", "data": {"name": "x"}}', 1)
         assert "خطأ" in out
@@ -1547,9 +1553,12 @@ class TestCoverageGaps:
 
     def test_action_unsuccessful_result(self, mocker):
         mocker.patch("flask_login.current_user", SimpleNamespace(is_authenticated=False))
-        ex = MagicMock()
-        ex.create_product.return_value = {"success": False, "message": "no"}
-        mocker.patch("services.ai_executor.AIExecutor", return_value=ex)
+        mocker.patch(
+            "ai_knowledge.action_dispatcher.ActionDispatcher.dispatch",
+            return_value=SimpleNamespace(
+                success=False, message="no", needs_permission="", needs_confirmation=False
+            ),
+        )
         out = AIService._execute_ai_action(
             json.dumps({"action": "create_product", "data": {"name": "p"}}),
             1,
@@ -1575,13 +1584,24 @@ class TestCoverageGaps:
 
     def test_execute_unknown_action_returns_none(self, mocker):
         mocker.patch("flask_login.current_user", SimpleNamespace(is_authenticated=False))
-        ex = MagicMock()
-        mocker.patch("services.ai_executor.AIExecutor", return_value=ex)
-        assert AIService._execute_ai_action('{"action": "unknown", "data": {}}', 1) is None
+        mocker.patch(
+            "ai_knowledge.action_dispatcher.ActionDispatcher.dispatch",
+            return_value=SimpleNamespace(
+                success=False,
+                message="العملية غير معروفة",
+                needs_permission="",
+                needs_confirmation=False,
+            ),
+        )
+        result = AIService._execute_ai_action('{"action": "unknown", "data": {}}', 1)
+        assert "غير معروفة" in result
 
     def test_execute_logging_core_failure(self, mocker):
         mocker.patch("flask_login.current_user", SimpleNamespace(is_authenticated=False))
-        mocker.patch("services.ai_executor.AIExecutor", side_effect=RuntimeError("x"))
+        mocker.patch(
+            "ai_knowledge.action_dispatcher.ActionDispatcher.dispatch",
+            side_effect=RuntimeError("x"),
+        )
         mocker.patch("services.logging_core.LoggingCore.log_error", side_effect=RuntimeError())
         assert "خطأ" in AIService._execute_ai_action('{"action": "create_customer", "data": {}}', 1)
 

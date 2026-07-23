@@ -98,13 +98,15 @@ def _log_ai_error(
         from models import ErrorAuditLog
 
         log = ErrorAuditLog(
-            error_type=error_type,
-            error_message=str(message)[:500],
-            endpoint=endpoint,
+            category="AI",
+            message=str(message)[:500],
+            source=endpoint,
             user_id=getattr(current_user, "id", None),
             request_data=request_data or {},
-            traceback="",
-            timestamp=datetime.now(timezone.utc),
+            stack_trace="",
+            level="WARNING",
+            fingerprint="",
+            occurrence_count=1,
         )
         db.session.add(log)
         db.session.flush()
