@@ -667,9 +667,7 @@ class TestExecuteAiAction:
         mocker.patch("flask_login.current_user", user)
         mocker.patch(
             "ai_knowledge.action_dispatcher.ActionDispatcher.dispatch",
-            return_value=SimpleNamespace(
-                success=True, message="عميل", needs_permission="", needs_confirmation=False
-            ),
+            return_value=SimpleNamespace(success=True, message="عميل", needs_permission="", needs_confirmation=False),
         )
         out = AIService._execute_ai_action(
             self._groq_json("create_customer", {"name": "Ali", "phone": "05"}),
@@ -682,9 +680,7 @@ class TestExecuteAiAction:
         mocker.patch("flask_login.current_user", user)
         mocker.patch(
             "ai_knowledge.action_dispatcher.ActionDispatcher.dispatch",
-            return_value=SimpleNamespace(
-                success=True, message="ok", needs_permission="", needs_confirmation=False
-            ),
+            return_value=SimpleNamespace(success=True, message="ok", needs_permission="", needs_confirmation=False),
         )
         actions = [
             ("create_customer", {"الاسم": "x", "الهاتف": "1"}),
@@ -706,9 +702,7 @@ class TestExecuteAiAction:
         mocker.patch("flask_login.current_user", SimpleNamespace(is_authenticated=False))
         mocker.patch(
             "ai_knowledge.action_dispatcher.ActionDispatcher.dispatch",
-            return_value=SimpleNamespace(
-                success=False, message="فشل", needs_permission="", needs_confirmation=False
-            ),
+            return_value=SimpleNamespace(success=False, message="فشل", needs_permission="", needs_confirmation=False),
         )
         out = AIService._execute_ai_action(
             self._groq_json("create_customer", {"name": "x"}),
@@ -1555,9 +1549,7 @@ class TestCoverageGaps:
         mocker.patch("flask_login.current_user", SimpleNamespace(is_authenticated=False))
         mocker.patch(
             "ai_knowledge.action_dispatcher.ActionDispatcher.dispatch",
-            return_value=SimpleNamespace(
-                success=False, message="no", needs_permission="", needs_confirmation=False
-            ),
+            return_value=SimpleNamespace(success=False, message="no", needs_permission="", needs_confirmation=False),
         )
         out = AIService._execute_ai_action(
             json.dumps({"action": "create_product", "data": {"name": "p"}}),
