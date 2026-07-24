@@ -15,8 +15,8 @@
 """
 
 import logging
-from typing import Any, Dict, Optional
 from datetime import datetime, timedelta
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -102,9 +102,9 @@ class IntelligentAssistant:
     def process(
         self,
         message: str,
-        user_id: Optional[int] = None,
-        context: Optional[dict] = None,
-    ) -> Dict:
+        user_id: int | None = None,
+        context: dict | None = None,
+    ) -> dict:
         """
         معالجة ذكية كاملة للرسالة
 
@@ -161,7 +161,7 @@ class IntelligentAssistant:
                 "method": "intelligent_ai",  # ليس pattern matching!
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, RuntimeError) as e:
             logger.error(f"Intelligent processing failed: {e}")
             return {
                 "success": False,
@@ -169,7 +169,7 @@ class IntelligentAssistant:
                 "method": "error",
             }
 
-    def _understand_message(self, message: str, user_id: int, context: dict) -> Dict:
+    def _understand_message(self, message: str, user_id: int, context: dict) -> dict:
         """فهم الرسالة بذكاء"""
         try:
             # استخدام semantic matcher للنية الأساسية
@@ -209,12 +209,12 @@ class IntelligentAssistant:
                 "neural_features": neural_understanding,
             }
 
-        except Exception as e:
+        except (ValueError, TypeError, RuntimeError) as e:
             logger.error(f"Understanding failed: {e}")
             return {"success": False, "error": str(e)}
 
     @staticmethod
-    def _extract_entities(message: str) -> Dict:
+    def _extract_entities(message: str) -> dict:
         """استخراج الكيانات من الرسالة"""
         import re
 
@@ -249,7 +249,7 @@ class IntelligentAssistant:
 
         return entities
 
-    def _collect_real_data(self, intent: str, entities: Dict, _user_id: int) -> Dict:
+    def _collect_real_data(self, intent: str, entities: dict, _user_id: int) -> dict:
         """جمع البيانات الحقيقية من النظام"""
         try:
             from models import Sale, Customer, Product
@@ -346,11 +346,11 @@ class IntelligentAssistant:
 
             return data
 
-        except Exception as e:
+        except (ValueError, TypeError, RuntimeError) as e:
             logger.error(f"Data collection failed: {e}")
             return {}
 
-    def _analyze_and_reason(self, intent: str, data: Dict, _context: Dict) -> Dict:
+    def _analyze_and_reason(self, intent: str, data: dict, _context: dict) -> dict:
         """التحليل والاستنتاج المنطقي"""
         try:
             analysis: dict[str, Any] = {
@@ -427,12 +427,12 @@ class IntelligentAssistant:
 
             return analysis
 
-        except Exception as e:
+        except (ValueError, TypeError, RuntimeError) as e:
             logger.error(f"Analysis failed: {e}")
             return {"insights": [], "warnings": [], "recommendations": []}
 
     @staticmethod
-    def _generate_dynamic_response(intent: str, analysis: Dict, _entities: Dict, data: Dict) -> str:
+    def _generate_dynamic_response(intent: str, analysis: dict, _entities: dict, data: dict) -> str:
         """توليد رد ديناميكي - ليس مسبق الحفظ"""
         try:
             # بناء الرد بناءً على البيانات الحقيقية
@@ -544,7 +544,7 @@ class IntelligentAssistant:
 
             return "\n".join(response_parts)
 
-        except Exception as e:
+        except (ValueError, TypeError, RuntimeError) as e:
             logger.error(f"Response generation failed: {e}")
             return "عذراً، حدث خطأ في توليد الرد"
 
@@ -574,11 +574,11 @@ class IntelligentAssistant:
                 tenant_id=tenant_id,
             )
 
-        except Exception as e:
+        except (ValueError, TypeError, RuntimeError) as e:
             logger.error(f"Learning failed: {e}")
 
     @staticmethod
-    def _generate_help_response(_message: str) -> Dict:
+    def _generate_help_response(_message: str) -> dict:
         """رد المساعدة عند عدم الفهم"""
         return {
             "success": True,
@@ -600,7 +600,7 @@ intelligent_assistant = IntelligentAssistant()
 
 
 # دالة مساعدة
-def intelligent_response(message: str, user_id: Optional[int] = None, context: Optional[dict] = None) -> str:
+def intelligent_response(message: str, user_id: int | None = None, context: dict | None = None) -> str:
     """الحصول على رد ذكي"""
     result = intelligent_assistant.process(message, user_id, context)
     return result.get("response", "عذراً، حدث خطأ")

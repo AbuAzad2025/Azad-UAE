@@ -587,7 +587,7 @@ class ActionDispatcher:
                 lines = (
                     db.session.query(SaleLine).join(Sale).filter(Sale.tenant_id == tid, Sale.status == "active").all()
                 )
-                cost = Decimal("0")
+                cost = Decimal(0)
                 for line in lines:
                     product = Product.query.get(line.product_id)
                     if product and product.cost_price:
@@ -694,7 +694,7 @@ class ActionDispatcher:
             if not username or not password:
                 return ActionResult(False, "يرجى إدخال اسم المستخدم وكلمة المرور")
             try:
-                from models import User, Role
+                from models import Role, User
                 from werkzeug.security import generate_password_hash
 
                 tid, guard = _tenant_guard()
