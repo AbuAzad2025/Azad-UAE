@@ -1,122 +1,123 @@
-# Service Level Agreement (SLA) — AZAD Intelligent Systems
+# Service Level Agreement (SLA) — اتفاقية مستوى الخدمة
 
-## 1. Service Commitment
+## 1. Service Commitment | التزام الخدمة
 
-AZAD Intelligent Systems commits to the following service levels for the Azadexa ERP SaaS platform.
+**EN:** AZAD Intelligent Systems commits to the following service levels for the Azadexa ERP SaaS platform.
+**AR:** تلتزم شركة أزاد للأنظمة الذكية بمستويات الخدمة التالية لمنصة أزادكسا ERP SaaS.
 
-| Metric | Target | Measurement Period |
-|--------|--------|---------------------|
-| Uptime | 99.9% | Calendar month |
-| API availability | 99.95% | Calendar month |
-| Data durability | 99.99% | Annual |
+| Metric (EN) | المقياس (AR) | Target | الهدف | Measurement Period | فترة القياس |
+|-------------|-------------|--------|-------|-------------------|-------------|
+| Uptime | مدة التشغيل | 99.9% | 99.9% | Calendar month | الشهر التقويمي |
+| API availability | توفر API | 99.95% | 99.95% | Calendar month | الشهر التقويمي |
+| Data durability | متانة البيانات | 99.99% | 99.99% | Annual | السنوي |
 
-Uptime is calculated as: `(Total minutes in month - Downtime minutes) / Total minutes in month * 100`.
+**EN:** Uptime is calculated as: `(Total minutes in month - Downtime minutes) / Total minutes in month * 100`. Excluded from downtime: scheduled maintenance windows (announced 72 hours in advance), force majeure, third-party service failures outside AZAD's control, customer-caused issues.
 
-Excluded from downtime:
-- Scheduled maintenance windows (announced 72 hours in advance).
-- Force majeure (natural disasters, internet backbone failures, acts of war).
-- Third-party service failures outside AZAD's control (payment gateways, SMS providers).
-- Customer-caused issues (misconfiguration, network restrictions on Customer side).
+**AR:** يتم حساب مدة التشغيل كـ: `(إجمالي الدقائق في الشهر - دقائق التوقف) / إجمالي الدقائق في الشهر * 100`. مستثنى من التوقف: نوافذ الصيانة المجدولة (مُعلنة مسبقاً بـ 72 ساعة)، القوة القاهرة، إخفاقات خدمات طرف ثالث خارجة عن سيطرة أزاد، المشاكل الناتجة عن العميل.
 
-## 2. Scheduled Maintenance
+## 2. Scheduled Maintenance | الصيانة المجدولة
 
-| Type | Frequency | Notice | Duration |
-|------|-----------|--------|----------|
-| Routine | Weekly | 72 hours | Up to 2 hours |
-| Major release | Quarterly | 7 days | Up to 4 hours |
-| Emergency patch | As needed | 4 hours | Up to 1 hour |
+| Type (EN) | النوع (AR) | Frequency | التكرار | Notice | الإشعار | Duration | المدة |
+|-----------|-----------|-----------|---------|--------|---------|----------|-------|
+| Routine | روتينية | Weekly | أسبوعية | 72 hours | 72 ساعة | Up to 2 hours | حتى ساعتان |
+| Major release | إصدار رئيسي | Quarterly | ربع سنوية | 7 days | 7 أيام | Up to 4 hours | حتى 4 ساعات |
+| Emergency patch | تصحيح طارئ | As needed | حسب الحاجة | 4 hours | 4 ساعات | Up to 1 hour | حتى ساعة |
 
-All maintenance is conducted during the low-usage window: 02:00–06:00 GST (UTC+4).
+**EN:** All maintenance is conducted during the low-usage window: 02:00–06:00 GST (UTC+4).
+**AR:** تُجرى جميع أعمال الصيانة خلال نافذة الاستخدام المنخفض: 02:00–06:00 توقيت دبي (UTC+4).
 
-## 3. Support Response Times
+## 3. Support Response Times | أوقات استجابة الدعم
 
-| Severity | Definition | Initial Response | Resolution Target | Communication Channel |
-|----------|------------|------------------|-------------------|----------------------|
-| P1 — Critical | Service completely unavailable; data loss risk | 15 minutes | 4 hours | Phone + Email + WhatsApp |
-| P2 — High | Major feature unusable; significant business impact | 1 hour | 8 hours | Email + WhatsApp |
-| P3 — Medium | Partial feature degradation; workaround exists | 4 hours | 48 hours | Email + Ticket |
-| P4 — Low | Cosmetic issue; question; enhancement request | 24 hours | 7 days | Ticket |
+| Severity (EN) | الخطورة (AR) | Definition | التعريف | Initial Response | الاستجابة الأولى | Resolution Target | هدف الحل | Communication Channel | قناة التواصل |
+|-----------------|-------------|------------|---------|-----------------|------------------|-------------------|----------|----------------------|-------------|
+| P1 — Critical | P1 — حرج | Service completely unavailable; data loss risk | الخدمة غير متوفرة تماماً؛ خطر فقدان البيانات | 15 minutes | 15 دقيقة | 4 hours | 4 ساعات | Phone + Email + WhatsApp | هاتف + بريد + واتساب |
+| P2 — High | P2 — عالي | Major feature unusable; significant business impact | ميزة رئيسية غير قابلة للاستخدام؛ تأثير تجاري كبير | 1 hour | ساعة | 8 hours | 8 ساعات | Email + WhatsApp | بريد + واتساب |
+| P3 — Medium | P3 — متوسط | Partial feature degradation; workaround exists | تدهور جزئي في الميزة؛ يوجد حل بديل | 4 hours | 4 ساعات | 48 hours | 48 ساعة | Email + Ticket | بريد + تذكرة |
+| P4 — Low | P4 — منخفض | Cosmetic issue; question; enhancement request | مشكلة شكلية؛ سؤال؛ طلب تحسين | 24 hours | 24 ساعة | 7 days | 7 أيام | Ticket | تذكرة |
 
-Response time is measured from the moment AZAD acknowledges the ticket.
+**EN:** Response time is measured from the moment AZAD acknowledges the ticket.
+**AR:** يتم قياس وقت الاستجابة من لحظة إقرار أزاد بالتذكرة.
 
-## 4. Support Hours
+## 4. Support Hours | ساعات الدعم
 
-| Channel | Hours | Days |
-|---------|-------|------|
-| Phone / WhatsApp | 08:00–20:00 GST | Sunday–Thursday |
-| Email / Ticket | 24/7 | All days |
+| Channel (EN) | القناة (AR) | Hours | الساعات | Days | الأيام |
+|--------------|------------|-------|---------|------|--------|
+| Phone / WhatsApp | الهاتف / واتساب | 08:00–20:00 GST | 08:00–20:00 توقيت دبي | Sunday–Thursday | الأحد–الخميس |
+| Email / Ticket | البريد / التذكرة | 24/7 | 24/7 | All days | جميع الأيام |
 
-P1 issues receive 24/7 response regardless of channel.
+**EN:** P1 issues receive 24/7 response regardless of channel.
+**AR:** تحصل مشكلات P1 على استجابة 24/7 بغض النظر عن القناة.
 
-## 5. Service Credits
+## 5. Service Credits | أرصدة الخدمة
 
-If AZAD fails to meet the monthly uptime target, the Customer is entitled to service credits applied to the next billing cycle:
+**EN:** If AZAD fails to meet the monthly uptime target, the Customer is entitled to service credits applied to the next billing cycle.
+**AR:** إذا فشلت أزاد في تحقيق هدف مدة التشغيل الشهرية، يحق للعميل الحصول على أرصدة خدمة تُطبق على دورة الفوترة التالية.
 
-| Uptime Miss | Credit |
-|-------------|--------|
-| < 99.9% but ≥ 99.0% | 5% of monthly fee |
-| < 99.0% but ≥ 95.0% | 15% of monthly fee |
-| < 95.0% | 50% of monthly fee |
+| Uptime Miss (EN) | التقصير في التشغيل | Credit | الرصيد |
+|-------------------|---------------------|--------|--------|
+| < 99.9% but ≥ 99.0% | < 99.9% لكن ≥ 99.0% | 5% of monthly fee | 5% من الرسوم الشهرية |
+| < 99.0% but ≥ 95.0% | < 99.0% لكن ≥ 95.0% | 15% of monthly fee | 15% من الرسوم الشهرية |
+| < 95.0% | < 95.0% | 50% of monthly fee | 50% من الرسوم الشهرية |
 
-Credits are the sole and exclusive remedy for SLA failures. Credits do not exceed 100% of one monthly fee.
+**EN:** Credits are the sole and exclusive remedy for SLA failures. Credits do not exceed 100% of one monthly fee. To claim credits, the Customer must submit a request within 15 days of the missed month with documented evidence.
+**AR:** الأرصدة هي العلاج الوحيد والحصري لإخفاقات SLA. لا تتجاوز الأرصدا 100% من رسوم شهر واحد. للمطالبة بالأرصدة، يجب على العميل تقديم طلب خلال 15 يوماً من الشهر المُخفق مع دليل موثق.
 
-To claim credits, the Customer must submit a request within 15 days of the missed month with documented evidence.
+## 6. Data Backup and Recovery | النسخ الاحتياطي والاستعادة
 
-## 6. Data Backup and Recovery
+| Backup Type (EN) | نوع النسخ | Frequency | التكرار | Retention | الاحتفاظ | RPO | RPO | RTO | RTO |
+|------------------|-----------|-----------|---------|-----------|----------|-----|-----|-----|-----|
+| Database snapshot | لقطة قاعدة البيانات | Daily | يومي | 30 days | 30 يوماً | 24 hours | 24 ساعة | 4 hours | 4 ساعات |
+| Incremental WAL | WAL التزايدي | Continuous | مستمر | 7 days | 7 أيام | Near-zero | شبه صفر | 2 hours | ساعتان |
+| Full scoped export | تصدير نطاقي كامل | Weekly | أسبوعي | 90 days | 90 يوماً | 7 days | 7 أيام | 8 hours | 8 ساعات |
+| Off-site archive | أرشيف خارج الموقع | Monthly | شهري | 1 year | سنة | 30 days | 30 يوماً | 24 hours | 24 ساعة |
 
-| Backup Type | Frequency | Retention | RPO | RTO |
-|-------------|-----------|-----------|-----|-----|
-| Database snapshot | Daily | 30 days | 24 hours | 4 hours |
-| Incremental WAL | Continuous | 7 days | Near-zero | 2 hours |
-| Full scoped export | Weekly | 90 days | 7 days | 8 hours |
-| Off-site archive | Monthly | 1 year | 30 days | 24 hours |
+**EN:** All backups are encrypted with AES-256 and stored in geographically separate locations.
+**AR:** جميع النسخ الاحتياطية مشفرة بـ AES-256 ومخزنة في مواقع جغرافية منفصلة.
 
-All backups are encrypted with AES-256 and stored in geographically separate locations.
+## 7. Security Incidents | الحوادث الأمنية
 
-## 7. Security Incidents
+| Incident Type (EN) | نوع الحدث | Notification Time | وقت الإشعار | Action | الإجراء |
+|----------------------|-----------|-------------------|-------------|--------|---------|
+| Confirmed data breach | اختراق بيانات مؤكد | Within 24 hours | خلال 24 ساعة | Email + phone to Customer admin | بريد + هاتف لمسؤول العميل |
+| Suspected breach | اختراق مشتبه | Within 4 hours | خلال 4 ساعات | Ticket + monitoring escalation | تذكرة + تصعيد المراقبة |
+| Platform-wide vulnerability | ثغرة على مستوى المنصة | Within 2 hours | خلال ساعتين | In-app banner + email to all admins | لافتة داخل التطبيق + بريد لجميع المسؤولين |
 
-| Incident Type | Notification Time | Action |
-|---------------|-------------------|--------|
-| Confirmed data breach | Within 24 hours | Email + phone to Customer admin |
-| Suspected breach | Within 4 hours | Ticket + monitoring escalation |
-| Platform-wide vulnerability | Within 2 hours | In-app banner + email to all admins |
+## 8. Performance Benchmarks | معايير الأداء
 
-## 8. Performance Benchmarks
+| Endpoint (EN) | نقطة النهاية | p95 Response Time | وقت الاستجابة p95 |
+|--------------|-------------|-------------------|-------------------|
+| Dashboard load | تحميل لوحة التحكم | < 800 ms | < 800 مللي ثانية |
+| Sale creation | إنشاء مبيعة | < 1.5 s | < 1.5 ثانية |
+| POS checkout | الدفع في نقاط البيع | < 2 s | < 2 ثانية |
+| Report generation | إنشاء التقرير | < 5 s | < 5 ثوانٍ |
+| API response (stock sync) | استجابة API (مزامنة المخزون) | < 500 ms | < 500 مللي ثانية |
+| AI chat response | استجابة محادثة AI | < 3 s | < 3 ثوانٍ |
 
-| Endpoint | p95 Response Time |
-|----------|-------------------|
-| Dashboard load | < 800 ms |
-| Sale creation | < 1.5 s |
-| POS checkout | < 2 s |
-| Report generation | < 5 s |
-| API response (stock sync) | < 500 ms |
-| AI chat response | < 3 s |
+## 9. Escalation Path | مسار التصعيد
 
-## 9. Escalation Path
+| Level (EN) | المستوى (AR) | Role | الدور | Contact | التواصل |
+|------------|-------------|------|-------|---------|---------|
+| L1 | L1 | Support Engineer | مهندس دعم | support@azadsystems.com | support@azadsystems.com |
+| L2 | L2 | Senior Engineer | مهندس أول | senior@azadsystems.com | senior@azadsystems.com |
+| L3 | L3 | CTO / Product Lead | CTO / رئيس المنتج | cto@azadsystems.com | cto@azadsystems.com |
+| Executive | تنفيذي | CEO | CEO | rafideen.ahmadghannam@gmail.com | rafideen.ahmadghannam@gmail.com |
 
-| Level | Role | Contact |
-|-------|------|---------|
-| L1 | Support Engineer | support@azadsystems.com |
-| L2 | Senior Engineer | senior@azadsystems.com |
-| L3 | CTO / Product Lead | cto@azadsystems.com |
-| Executive | CEO | rafideen.ahmadghannam@gmail.com |
+**EN:** Escalation from L1 to L2 occurs automatically if a P1 or P2 ticket is unresolved within 50% of the target resolution time.
+**AR:** يحدث التصعيد من L1 إلى L2 تلقائياً إذا لم تُحل تذكرة P1 أو P2 خلال 50% من وقت الحل المستهدف.
 
-Escalation from L1 to L2 occurs automatically if a P1 or P2 ticket is unresolved within 50% of the target resolution time.
+## 10. SLA Exclusions | استثناءات SLA
 
-## 10. SLA Exclusions
+**EN:** The SLA does not apply to: Beta, trial, or demo Tenants; features marked as "Experimental" or "Beta" in the UI; performance degradation caused by Customer actions (e.g., importing 1M rows in one batch); failures of Customer-managed integrations (custom webhooks, external APIs).
 
-The SLA does not apply to:
-- Beta, trial, or demo Tenants.
-- Features marked as "Experimental" or "Beta" in the UI.
-- Performance degradation caused by Customer actions (e.g., importing 1M rows in one batch).
-- Failures of Customer-managed integrations (custom webhooks, external APIs).
+**AR:** لا تنطبق SLA على: المستأجرين التجريبيين أو التجريبيين أو العرض التوضيحيين؛ الميزات المُعلّمة بـ "تجريبي" أو "Beta" في واجهة المستخدم؛ تدهور الأداء الناتج عن إجراءات العميل (مثل استيراد مليون صف في دفعة واحدة)；إخفاقات التكاملات المُدارة من العميل (webhooks مخصصة، APIs خارجية).
 
-## 11. Review and Changes
+## 11. Review and Changes | المراجعة والتغييرات
 
-This SLA is reviewed quarterly. Changes are communicated 30 days in advance.
+**EN:** This SLA is reviewed quarterly. Changes are communicated 30 days in advance.
+**AR:** تُراجع SLA ربع سنوياً. يتم التواصل عن التغييرات مسبقاً بـ 30 يوماً.
 
-## 12. Contact
+## 12. Contact | التواصل
 
-AZAD Intelligent Systems
+AZAD Intelligent Systems | شركة أزاد للأنظمة الذكية
 Email: rafideen.ahmadghannam@gmail.com
 Phone: +972 56 215 0193

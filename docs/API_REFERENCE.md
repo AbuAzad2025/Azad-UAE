@@ -1,49 +1,52 @@
-# API Reference — Azadexa ERP
+# API Reference | مرجع API
 
-## 1. Base URL
+## 1. Base URL | عنوان الأساس
 
-| Environment | URL |
-|-------------|-----|
-| Production | `https://<tenant-slug>.azadsystems.com` |
-| API root | `https://<tenant-slug>.azadsystems.com/api/v2` |
+| Environment | البيئة | URL |
+|-------------|--------|-----|
+| Production | الإنتاج | `https://<tenant-slug>.azadsystems.com` |
+| API root | جذر API | `https://<tenant-slug>.azadsystems.com/api/v2` |
 
-## 2. Authentication
+## 2. Authentication | الاستيثاق
 
-### 2.1 API Key (External Systems)
+### 2.1 API Key (External Systems) | مفتاح API (الأنظمة الخارجية)
 
-External POS systems and integrations authenticate via API key.
+**EN:** External POS systems and integrations authenticate via API key.
+**AR:** تُوثّق أنظمة POS الخارجية والتكاملات عبر مفتاح API.
 
-| Header | Value |
-|--------|-------|
-| `X-API-Key` | `{key}` |
-| `X-API-Secret` | `{secret}` |
+| Header | الرأس | Value | القيمة |
+|--------|-------|-------|--------|
+| `X-API-Key` | `X-API-Key` | `{key}` | `{المفتاح}` |
+| `X-API-Secret` | `X-API-Secret` | `{secret}` | `{السر}` |
 
-The key is scoped to a `tenant_id`. The `@api_key_required` decorator sets `g.active_tenant_id`, enabling automatic ORM tenant scoping.
+**EN:** The key is scoped to a `tenant_id`. The `@api_key_required` decorator sets `g.active_tenant_id`, enabling automatic ORM tenant scoping.
+**AR:** المفتاح مُحدّد النطاق لـ `tenant_id`. يضبط الديكور `@api_key_required` `g.active_tenant_id`، مما يُفعّل نطاق ORM التلقائي للمستأجر.
 
-### 2.2 Session (Internal Users)
+### 2.2 Session (Internal Users) | الجلسة (المستخدمون الداخليون)
 
-Authenticated users use session cookies (Flask-Login + CSRF).
+**EN:** Authenticated users use session cookies (Flask-Login + CSRF).
+**AR:** يستخدم المستخدمون المُوثّقون كوكيز الجلسة (Flask-Login + CSRF).
 
-| Header | Value |
-|--------|-------|
-| `Cookie` | `session={value}` |
+| Header | الرأس | Value | القيمة |
+|--------|-------|-------|--------|
+| `Cookie` | `Cookie` | `session={value}` | `session={القيمة}` |
 
-## 3. External POS Stock Sync
+## 3. External POS Stock Sync | مزامنة مخزون POS الخارجي
 
-### 3.1 Submit Sync Batch
+### 3.1 Submit Sync Batch | إرسال دفعة المزامنة
 
 ```
 POST /api/v2/stock/sync
 ```
 
-**Headers:**
+**Headers | الرؤوس:**
 ```
 Content-Type: application/json
 X-API-Key: {key}
 X-API-Secret: {secret}
 ```
 
-**Body:**
+**Body | الجسم:**
 ```json
 {
   "batch_id": "pos-2026-07-24-001",
@@ -60,7 +63,7 @@ X-API-Secret: {secret}
 }
 ```
 
-**Response 202 Accepted:**
+**Response 202 Accepted | استجابة 202 مقبول:**
 ```json
 {
   "batch_id": "pos-2026-07-24-001",
@@ -70,27 +73,27 @@ X-API-Secret: {secret}
 }
 ```
 
-**Response 400 Bad Request:**
+**Response 400 Bad Request | استجابة 400 طلب سيء:**
 ```json
 {
   "error": "Invalid SKU: SKU-12345 not found in tenant scope"
 }
 ```
 
-**Response 401 Unauthorized:**
+**Response 401 Unauthorized | استجابة 401 غير مصرّح:**
 ```json
 {
   "error": "Invalid or expired API key"
 }
 ```
 
-### 3.2 Check Sync Status
+### 3.2 Check Sync Status | التحقق من حالة المزامنة
 
 ```
 GET /api/v2/stock/sync/status/{batch_id}
 ```
 
-**Response 200:**
+**Response 200 | استجابة 200:**
 ```json
 {
   "batch_id": "pos-2026-07-24-001",
@@ -104,76 +107,47 @@ GET /api/v2/stock/sync/status/{batch_id}
 }
 ```
 
-**Response 404:**
+**Response 404 | استجابة 404:**
 ```json
 {
   "error": "Batch not found"
 }
 ```
 
-### 3.3 Idempotency
+### 3.3 Idempotency | تكرارية الطلب
 
-The `batch_id` is idempotent. Re-submitting the same `batch_id` with identical payload returns the cached result without reprocessing.
+**EN:** The `batch_id` is idempotent. Re-submitting the same `batch_id` with identical payload returns the cached result without reprocessing.
+**AR:** `batch_id` هو إيدمبوتنت (تكراري). إعادة إرسال نفس `batch_id` مع حمولة مطابقة تُرجع النتيجة المخبأة دون إعادة المعالجة.
 
-## 4. Core API Endpoints
+## 4. Core API Endpoints | نقاط نهاية API الأساسية
 
-### 4.1 Products
+| Endpoint (EN) | نقطة النهاية | Methods | الطرق |
+|---------------|-------------|---------|-------|
+| Products | المنتجات | `GET /api/products`, `GET /api/products/{id}/info`, `GET /api/products/barcode/{code}`, `GET /api/warehouses/{wid}/products` | `GET` |
+| Sales | المبيعات | `POST /api/sales`, `GET /api/sales/{id}` | `POST`, `GET` |
+| Customers | العملاء | `GET /api/customers`, `GET /api/customers/{id}/balance`, `GET /api/customers/{id}/sales` | `GET` |
+| Exchange Rates | أسعار الصرف | `GET /api/exchange-rates/display?base=AED`, `GET /api/currency-rate/{from}/{to}` | `GET` |
+| Health & System | الصحة والنظام | `GET /health`, `GET /version` | `GET` |
 
-```
-GET /api/products
-GET /api/products/{id}/info
-GET /api/products/barcode/{code}
-GET /api/warehouses/{wid}/products
-```
+## 5. Webhooks | Webhooks
 
-### 4.2 Sales
+### 5.1 Events | الأحداث
 
-```
-POST /api/sales
-GET /api/sales/{id}
-```
+| Event (EN) | الحدث (AR) | Payload | الحمولة | Trigger | المُشغّل |
+|------------|-----------|---------|---------|---------|---------|
+| `sale.created` | `sale.created` | Sale object | كائن المبيعة | New sale finalized | المبيعة الجديدة المُنهية |
+| `payment.received` | `payment.received` | Payment object | كائن الدفع | Payment recorded | الدفع المُسجّل |
+| `stock.moved` | `stock.moved` | Movement object | كائن الحركة | Stock movement created | حركة المخزون المُنشأة |
+| `cheque.bounced` | `cheque.bounced` | Cheque object | كائن الشيك | Cheque bounce processed | معالجة رد الشيك |
+| `invoice.issued` | `invoice.issued` | Invoice object | كائن الفاتورة | Invoice printed/emailed | الفاتورة المطبوعة/المُرسلة |
 
-### 4.3 Customers
-
-```
-GET /api/customers
-GET /api/customers/{id}/balance
-GET /api/customers/{id}/sales
-```
-
-### 4.4 Exchange Rates
-
-```
-GET /api/exchange-rates/display?base=AED
-GET /api/currency-rate/{from}/{to}
-```
-
-### 4.5 Health & System
-
-```
-GET /health
-GET /version
-```
-
-## 5. Webhooks
-
-### 5.1 Events
-
-| Event | Payload | Trigger |
-|-------|---------|---------|
-| `sale.created` | Sale object | New sale finalized |
-| `payment.received` | Payment object | Payment recorded |
-| `stock.moved` | Movement object | Stock movement created |
-| `cheque.bounced` | Cheque object | Cheque bounce processed |
-| `invoice.issued` | Invoice object | Invoice printed/emailed |
-
-### 5.2 Subscription
+### 5.2 Subscription | الاشتراك
 
 ```
 POST /api/webhooks/subscribe
 ```
 
-**Body:**
+**Body | الجسم:**
 ```json
 {
   "url": "https://partner.com/webhook",
@@ -182,55 +156,68 @@ POST /api/webhooks/subscribe
 }
 ```
 
-### 5.3 Signature Verification
+### 5.3 Signature Verification | التحقق من التوقيع
 
-Payloads are signed with HMAC-SHA256:
-
+**EN:** Payloads are signed with HMAC-SHA256:
 ```
 X-Webhook-Signature: t={timestamp},v1={signature}
 ```
 
-Verify using the shared secret:
+**AR:** تُوقّع الحمولات بـ HMAC-SHA256:
+```
+X-Webhook-Signature: t={الطابع الزمني},v1={التوقيع}
+```
 
+**EN:** Verify using the shared secret:
 ```python
 import hmac, hashlib
-
 expected = hmac.new(secret.encode(), payload.encode(), hashlib.sha256).hexdigest()
 ```
 
-## 6. Rate Limiting
+**AR:** تحقق باستخدام السر المشترك:
+```python
+import hmac, hashlib
+expected = hmac.new(secret.encode(), payload.encode(), hashlib.sha256).hexdigest()
+```
 
-| Plan | Requests / Minute | Burst |
-|------|-------------------|-------|
-| Starter | 60 | 10 |
-| Professional | 300 | 30 |
-| Enterprise | 2,000 | 200 |
+## 6. Rate Limiting | تحديد المعدل
 
-Rate limit headers:
+| Plan (EN) | الباقة (AR) | Requests / Minute | الطلبات/الدقيقة | Burst | الانفجار |
+|-----------|-------------|-------------------|-------------------|-------|----------|
+| Starter | البداية | 60 | 60 | 10 | 10 |
+| Professional | الاحترافية | 300 | 300 | 30 | 30 |
+| Enterprise | المؤسسات | 2,000 | 2,000 | 200 | 200 |
 
+**EN:** Rate limit headers:
 ```
 X-RateLimit-Limit: 300
 X-RateLimit-Remaining: 245
 X-RateLimit-Reset: 1721823600
 ```
 
-## 7. Error Codes
+**AR:** رؤوس تحديد المعدل:
+```
+X-RateLimit-Limit: 300
+X-RateLimit-Remaining: 245
+X-RateLimit-Reset: 1721823600
+```
 
-| Code | Meaning | Resolution |
-|------|---------|------------|
-| 400 | Bad Request | Check request body and validation rules |
-| 401 | Unauthorized | Verify API key or session |
-| 403 | Forbidden | Insufficient permissions |
-| 404 | Not Found | Resource does not exist in tenant scope |
-| 409 | Conflict | Idempotency key already used |
-| 422 | Unprocessable Entity | Business rule violation (e.g., negative stock) |
-| 429 | Too Many Requests | Wait and retry |
-| 500 | Internal Server Error | Contact support with request ID |
+## 7. Error Codes | رموز الخطأ
 
-## 8. Pagination
+| Code | الرمز | Meaning (EN) | المعنى | Resolution | الحل |
+|------|-------|--------------|--------|------------|------|
+| 400 | 400 | Bad Request | طلب سيء | Check request body and validation rules | تحقق من جسم الطلب وقواعد التحقق |
+| 401 | 401 | Unauthorized | غير مصرّح | Verify API key or session | تحقق من مفتاح API أو الجلسة |
+| 403 | 403 | Forbidden | ممنوع | Insufficient permissions | أذونات غير كافية |
+| 404 | 404 | Not Found | غير موجود | Resource does not exist in tenant scope | المورد غير موجود في نطاق المستأجر |
+| 409 | 409 | Conflict | تعارض | Idempotency key already used | مفتاح الإيدمبوتنسي مستخدم بالفعل |
+| 422 | 422 | Unprocessable Entity | كيان غير قابل للمعالجة | Business rule violation (e.g., negative stock) | انتهاك قاعدة الأعمال (مثل مخزون سالب) |
+| 429 | 429 | Too Many Requests | طلبات كثيرة جداً | Wait and retry | انتظر وأعد المحاولة |
+| 500 | 500 | Internal Server Error | خطأ خادم داخلي | Contact support with request ID | اتصل بالدعم مع معرف الطلب |
 
-List endpoints return paginated results:
+## 8. Pagination | الترقيم
 
+**EN:** List endpoints return paginated results:
 ```json
 {
   "data": [...],
@@ -243,26 +230,45 @@ List endpoints return paginated results:
 }
 ```
 
-Query parameters: `?page=1&per_page=50`
+**AR:** تُرجع نقاط النهاية القائمة نتائج مُرقّمة:
+```json
+{
+  "data": [...],
+  "meta": {
+    "page": 1,
+    "per_page": 20,
+    "total": 147,
+    "total_pages": 8
+  }
+}
+```
 
-## 9. OpenAPI Documentation
+**EN:** Query parameters: `?page=1&per_page=50`
+**AR:** معاملات الاستعلام: `?page=1&per_page=50`
 
-Interactive docs available at:
+## 9. OpenAPI Documentation | مستندات OpenAPI
 
+**EN:** Interactive docs available at:
 ```
 /openapi.json
 /redoc
 ```
 
-## 10. SDKs and Libraries
+**AR:** المستندات التفاعلية متاحة على:
+```
+/openapi.json
+/redoc
+```
 
-| Language | Status | Repository |
-|----------|--------|------------|
-| Python | Available | `pip install azadexa-sdk` |
-| JavaScript | Roadmap Q4 2026 | — |
-| PHP | Roadmap Q1 2027 | — |
+## 10. SDKs and Libraries | SDKs والمكتبات
 
-## 11. Support
+| Language | اللغة | Status | الحالة | Repository | المستودع |
+|----------|--------|--------|--------|------------|----------|
+| Python | بايثون | Available | متاح | `pip install azadexa-sdk` | `pip install azadexa-sdk` |
+| JavaScript | جافاسكريبت | Roadmap Q4 2026 | خارطة الطريق Q4 2026 | — | — |
+| PHP | PHP | Roadmap Q1 2027 | خارطة الطريق Q1 2027 | — | — |
 
-API support: api-support@azadsystems.com
-Emergency: +972 56 215 0193
+## 11. Support | الدعم
+
+**EN:** API support: api-support@azadsystems.com | Emergency: +972 56 215 0193
+**AR:** دعم API: api-support@azadsystems.com | طارئ: +972 56 215 0193

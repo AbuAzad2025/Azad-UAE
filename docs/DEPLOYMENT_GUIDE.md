@@ -1,45 +1,45 @@
-# Deployment Guide — Azadexa ERP
+# Deployment Guide | دليل النشر
 
-## 1. Infrastructure Requirements
+## 1. Infrastructure Requirements | متطلبات البنية التحتية
 
-| Component | Minimum | Recommended |
-|-----------|---------|-------------|
-| Application server | 2 vCPU, 4 GB RAM | 4 vCPU, 8 GB RAM |
-| Database server | 2 vCPU, 4 GB RAM, SSD | 4 vCPU, 16 GB RAM, NVMe SSD |
-| Redis server | 1 vCPU, 2 GB RAM | 2 vCPU, 4 GB RAM |
-| Storage | 50 GB | 200 GB |
-| Network | 100 Mbps | 1 Gbps |
-| OS | Ubuntu 22.04 LTS | Ubuntu 24.04 LTS |
+| Component (EN) | المكوّن (AR) | Minimum | الحد الأدنى | Recommended | الموصى به |
+|-----------------|-------------|---------|------------|-------------|-----------|
+| Application server | خادم التطبيق | 2 vCPU, 4 GB RAM | 2 vCPU، 4 جيجابايت رام | 4 vCPU, 8 GB RAM | 4 vCPU، 8 جيجابايت رام |
+| Database server | خادم قاعدة البيانات | 2 vCPU, 4 GB RAM, SSD | 2 vCPU، 4 جيجابايت رام، SSD | 4 vCPU, 16 GB RAM, NVMe SSD | 4 vCPU، 16 جيجابايت رام، NVMe SSD |
+| Redis server | خادم Redis | 1 vCPU, 2 GB RAM | 1 vCPU، 2 جيجابايت رام | 2 vCPU, 4 GB RAM | 2 vCPU، 4 جيجابايت رام |
+| Storage | التخزين | 50 GB | 50 جيجابايت | 200 GB | 200 جيجابايت |
+| Network | الشبكة | 100 Mbps | 100 ميغابت/ثانية | 1 Gbps | 1 جيجابت/ثانية |
+| OS | نظام التشغيل | Ubuntu 22.04 LTS | Ubuntu 22.04 LTS | Ubuntu 24.04 LTS | Ubuntu 24.04 LTS |
 
-## 2. Software Prerequisites
+## 2. Software Prerequisites | المتطلبات البرمجية
 
-| Software | Version | Installation |
-|----------|---------|--------------|
-| Python | 3.11 | `apt install python3.11 python3.11-venv` |
-| PostgreSQL | 15 | `apt install postgresql-15` |
-| Redis | 7+ | `apt install redis-server` |
-| Nginx | 1.24+ | `apt install nginx` |
-| Node.js | 18+ | For asset building only |
+| Software (EN) | البرمجية | Version | الإصدار | Installation | التثبيت |
+|---------------|----------|---------|---------|--------------|---------|
+| Python | بايثون | 3.11 | 3.11 | `apt install python3.11 python3.11-venv` | `apt install python3.11 python3.11-venv` |
+| PostgreSQL | PostgreSQL | 15 | 15 | `apt install postgresql-15` | `apt install postgresql-15` |
+| Redis | Redis | 7+ | 7+ | `apt install redis-server` | `apt install redis-server` |
+| Nginx | Nginx | 1.24+ | 1.24+ | `apt install nginx` | `apt install nginx` |
+| Node.js | Node.js | 18+ | 18+ | For asset building only | لبناء الأصول فقط |
 
-## 3. Environment Variables
+## 3. Environment Variables | متغيرات البيئة
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `SECRET_KEY` | Yes | Flask secret key (64+ random chars) |
-| `SQLALCHEMY_DATABASE_URI` | Yes | PostgreSQL connection string |
-| `CELERY_BROKER_URL` | Yes | Redis URL for Celery |
-| `CELERY_RESULT_BACKEND` | Yes | Redis URL for results |
-| `CARD_ENCRYPTION_KEY` | Yes | 32-byte base64 key for card vault |
-| `OWNER_PASSWORD` | Yes | Owner panel password (hashed) |
-| `MAIL_SERVER` | No | SMTP server for transactional email |
-| `MAIL_USERNAME` | No | SMTP username |
-| `MAIL_PASSWORD` | No | SMTP password |
-| `GOOGLE_SITE_VERIFICATION` | No | Google Search Console token |
-| `SENTRY_DSN` | No | Error tracking (roadmap) |
+| Variable (EN) | المتغير | Required | مطلوب | Description | الوصف |
+|---------------|---------|----------|-------|-------------|-------|
+| `SECRET_KEY` | `SECRET_KEY` | Yes | نعم | Flask secret key (64+ random chars) | مفتاح سر Flask (64+ حرف عشوائي) |
+| `SQLALCHEMY_DATABASE_URI` | `SQLALCHEMY_DATABASE_URI` | Yes | نعم | PostgreSQL connection string | سلسلة الاتصال PostgreSQL |
+| `CELERY_BROKER_URL` | `CELERY_BROKER_URL` | Yes | نعم | Redis URL for Celery | URL Redis لـ Celery |
+| `CELERY_RESULT_BACKEND` | `CELERY_RESULT_BACKEND` | Yes | نعم | Redis URL for results | URL Redis للنتائج |
+| `CARD_ENCRYPTION_KEY` | `CARD_ENCRYPTION_KEY` | Yes | نعم | 32-byte base64 key for card vault | مفتاح base64 32 بايت لخزينة البطاقة |
+| `OWNER_PASSWORD` | `OWNER_PASSWORD` | Yes | نعم | Owner panel password (hashed) | كلمة مرور لوحة المالك (مُجزأة) |
+| `MAIL_SERVER` | `MAIL_SERVER` | No | لا | SMTP server for transactional email | خادم SMTP للبريد المعاملاتي |
+| `MAIL_USERNAME` | `MAIL_USERNAME` | No | لا | SMTP username | اسم مستخدم SMTP |
+| `MAIL_PASSWORD` | `MAIL_PASSWORD` | No | لا | SMTP password | كلمة مرور SMTP |
+| `GOOGLE_SITE_VERIFICATION` | `GOOGLE_SITE_VERIFICATION` | No | لا | Google Search Console token | رمز Google Search Console |
+| `SENTRY_DSN` | `SENTRY_DSN` | No | لا | Error tracking (roadmap) | تتبع الأخطاء (خارطة الطريق) |
 
-## 4. Installation Steps
+## 4. Installation Steps | خطوات التثبيت
 
-### 4.1 Clone and Setup
+### 4.1 Clone and Setup | الاستنساخ والإعداد
 
 ```bash
 git clone https://github.com/AbuAzad2025/Azad-UAE.git
@@ -49,42 +49,42 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4.2 Database
+### 4.2 Database | قاعدة البيانات
 
 ```bash
 sudo -u postgres createdb azadexa
 flask db upgrade
 ```
 
-### 4.3 Redis
+### 4.3 Redis | Redis
 
 ```bash
 sudo systemctl enable redis
 sudo systemctl start redis
 ```
 
-### 4.4 Assets
+### 4.4 Assets | الأصول
 
 ```bash
 flask build-assets
 ```
 
-### 4.5 First Run
+### 4.5 First Run | التشغيل الأول
 
 ```bash
 export FLASK_APP=app.py
 flask run --host=0.0.0.0 --port=5000
 ```
 
-## 5. Production Configuration
+## 5. Production Configuration | إعداد الإنتاج
 
-### 5.1 Gunicorn
+### 5.1 Gunicorn | Gunicorn
 
 ```bash
 gunicorn -w 4 -b 127.0.0.1:5000 wsgi:app
 ```
 
-### 5.2 Nginx
+### 5.2 Nginx | Nginx
 
 ```nginx
 server {
@@ -116,22 +116,22 @@ server {
 }
 ```
 
-### 5.3 Celery
+### 5.3 Celery | Celery
 
 ```bash
 celery -A app.celery worker --loglevel=info --concurrency=4
 celery -A app.celery beat --loglevel=info
 ```
 
-Use `systemd` services for auto-start.
+**EN:** Use `systemd` services for auto-start.
+**AR:** استخدم خدمات `systemd` للتشغيل التلقائي.
 
-### 5.4 SSL/TLS
+### 5.4 SSL/TLS | SSL/TLS
 
-- Let's Encrypt for TLS 1.3.
-- Auto-renewal via `certbot renew`.
-- HSTS header enabled.
+**EN:** Let's Encrypt for TLS 1.3. Auto-renewal via `certbot renew`. HSTS header enabled.
+**AR:** Let's Encrypt لـ TLS 1.3. التجديد التلقائي عبر `certbot renew`. رأس HSTS مُفعّل.
 
-## 6. Docker (Optional)
+## 6. Docker (Optional) | Docker (اختياري)
 
 ```dockerfile
 FROM python:3.11-slim
@@ -169,35 +169,36 @@ services:
       - db
 ```
 
-## 7. Monitoring
+## 7. Monitoring | المراقبة
 
-| Tool | Purpose | Status |
-|------|---------|--------|
-| `routes/owner/monitoring.py` | Built-in health dashboard | Active |
-| Prometheus + Grafana | Metrics and dashboards | Roadmap Q4 2026 |
-| Sentry | Error tracking | Roadmap Q4 2026 |
-| UptimeRobot | External uptime monitoring | Recommended |
+| Tool (EN) | الأداة (AR) | Purpose | الغرض | Status | الحالة |
+|-----------|-------------|---------|-------|--------|--------|
+| `routes/owner/monitoring.py` | `routes/owner/monitoring.py` | Built-in health dashboard | لوحة الصحة المدمجة | Active | نشط |
+| Prometheus + Grafana | Prometheus + Grafana | Metrics and dashboards | المقاييس واللوحات | Roadmap Q4 2026 | خارطة الطريق Q4 2026 |
+| Sentry | Sentry | Error tracking | تتبع الأخطاء | Roadmap Q4 2026 | خارطة الطريق Q4 2026 |
+| UptimeRobot | UptimeRobot | External uptime monitoring | مراقبة التشغيل الخارجية | Recommended | موصى به |
 
-## 8. Scaling
+## 8. Scaling | التوسع
 
-| Scale Type | Trigger | Action |
-|------------|---------|--------|
-| Vertical | CPU > 80% for 5 min | Increase instance size |
-| Horizontal | Requests > 500/sec | Add Gunicorn workers or load balancer |
-| Database | Connections > 80% | Connection pooling (PgBouncer) |
-| Cache | Hit rate < 70% | Increase Redis memory or shard |
+| Scale Type (EN) | نوع التوسع | Trigger | المُشغّل | Action | الإجراء |
+|-----------------|-----------|---------|---------|--------|---------|
+| Vertical | رأسي | CPU > 80% for 5 min | CPU > 80% لـ 5 دقائق | Increase instance size | زيادة حجم المثيل |
+| Horizontal | أفقي | Requests > 500/sec | الطلبات > 500/ثانية | Add Gunicorn workers or load balancer | إضافة عمال Gunicorn أو موازن الحمل |
+| Database | قاعدة البيانات | Connections > 80% | الاتصالات > 80% | Connection pooling (PgBouncer) | تجميع الاتصالات (PgBouncer) |
+| Cache | التخزين المؤقت | Hit rate < 70% | معدل الإصابة < 70% | Increase Redis memory or shard | زيادة ذاكرة Redis أو تقسيمها |
 
-## 9. Backup and Recovery
+## 9. Backup and Recovery | النسخ الاحتياطي والاستعادة
 
-| Backup | Frequency | Command |
-|--------|-----------|---------|
-| Full DB | Daily | `pg_dump azadexa | gzip > backup.sql.gz` |
-| WAL archive | Continuous | PostgreSQL archive_mode |
-| Scoped export | Weekly | `flask backup` |
+| Backup (EN) | النسخ (AR) | Frequency | التكرار | Command | الأمر |
+|-------------|-----------|-----------|---------|---------|-------|
+| Full DB | DB كامل | Daily | يومي | `pg_dump azadexa | gzip > backup.sql.gz` | `pg_dump azadexa | gzip > backup.sql.gz` |
+| WAL archive | أرشيف WAL | Continuous | مستمر | PostgreSQL archive_mode | PostgreSQL archive_mode |
+| Scoped export | تصدير نطاقي | Weekly | أسبوعي | `flask backup` | `flask backup` |
 
-Recovery RPO: 24 hours. RTO: 4 hours.
+**EN:** Recovery RPO: 24 hours. RTO: 4 hours.
+**AR:** RPO الاستعادة: 24 ساعة. RTO: 4 ساعات.
 
-## 10. Support
+## 10. Support | الدعم
 
-DevOps support: devops@azadsystems.com
-Emergency: +972 56 215 0193
+**EN:** DevOps support: devops@azadsystems.com | Emergency: +972 56 215 0193
+**AR:** دعم DevOps: devops@azadsystems.com | طارئ: +972 56 215 0193
