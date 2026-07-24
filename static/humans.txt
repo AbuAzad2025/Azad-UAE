@@ -1,0 +1,13 @@
+/* TEAM */
+Developer: Eng. Ahmad Ghannam
+Company: AZAD Intelligent Systems / شركة أزاد للأنظمة الذكية
+Product: Azadexa ERP
+Contact: rafideen.ahmadghannam@gmail.com
+Phone: 0562150193 / +972562150193
+Location: Palestine — Ramallah
+
+/* SITE */
+Language: Arabic / English
+Standards: HTML5, CSS3, ES2022
+Components: Flask, SQLAlchemy, PostgreSQL, Redis, Celery
+Last update: 2026

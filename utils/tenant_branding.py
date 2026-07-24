@@ -17,7 +17,9 @@ from utils.static_asset_paths import AZAD_LOGO, AZAD_FAVICON
 from utils.cache_decorators import cached_query
 
 _WINDOWS_ABS = re.compile(r"^[A-Za-z]:[\\/]")
-_POWERED_BY = "Powered by Azad Intelligent Systems"
+_POWERED_BY = "Powered by AZAD Intelligent Systems"
+_COPYRIGHT_AR = "شركة أزاد للأنظمة الذكية"
+_COPYRIGHT_EN = "AZAD Intelligent Systems"
 
 
 def normalize_static_rel(path: str | None) -> str:
@@ -126,6 +128,8 @@ def resolve_tenant_branding(tenant_id: int | None = None) -> dict[str, Any]:
         "city": (tenant.city if tenant else None) or "",
         "developer_logo_url": AZAD_LOGO,
         "powered_by_text": _POWERED_BY,
+        "copyright_ar": _COPYRIGHT_AR,
+        "copyright_en": _COPYRIGHT_EN,
     }
 
 

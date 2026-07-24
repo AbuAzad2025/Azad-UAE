@@ -1,7 +1,7 @@
 {
-	"name": "AZAD ERP - نظام الإدارة",
-	"short_name": "AZAD ERP",
-	"description": "نظام إدارة شامل للمبيعات والمشتريات والمخزون والتقارير",
+	"name": "Azadexa ERP — AZAD Intelligent Systems",
+	"short_name": "Azadexa",
+	"description": "نظام AZADEXA ERP المتكامل: محاسبة، مخزون، مبيعات، مشتريات، نقاط بيع، موارد بشرية، رواتب، CRM، مشاريع، متجر إلكتروني، ذكاء اصطناعي",
 	"start_url": "/",
 	"display": "standalone",
 	"background_color": "#ffffff",

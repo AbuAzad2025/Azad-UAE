@@ -1,55 +1,60 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  
+
   <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
   <meta name="theme-color" content="#667eea">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  
-  
-  <meta name="description" content="{% block meta_description %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('System_2') }} {{ t('متكامل') }} {{ t('for Management') }} {{ t('Warehouses') }} {{ t('والمبيعات') }} {{ t('والمشتريات') }}{% endblock %}">
-  <meta name="keywords" content="{% block meta_keywords %}{{ t('System_2') }} {{ t('Management') }} {{ t('Warehouses،') }} {{ t('برنامج') }} {{ t('محاسبة،') }} {{ t('فواتير') }} {{ t('إلكترونية،') }} {{ t('Management') }} {{ t('المبيعات،') }} {{ t('Management') }} {{ t('Inventory') }}{% endblock %}">
-  <meta name="author" content="{{ developer_name_ar or config.DEVELOPER_NAME_AR }}">
+
+  <meta name="description" content="{% block meta_description %}{{ tenant_name_ar or company_name_ar or 'Azadexa ERP' }} — {{ t('نظام محاسبي متكامل للمبيعات والمشتريات والمخزون ونقاط البيع والموارد البشرية والمشاريع') }}{% endblock %}">
+  <meta name="keywords" content="{% block meta_keywords %}ERP, نظام محاسبة, برنامج مخزون, مبيعات, مشتريات, فواتير, نقاط بيع, POS, CRM, موارد بشرية, رواتب, متجر إلكتروني, تقارير مالية, الإمارات, دبي, أبوظبي{% endblock %}">
+  <meta name="author" content="{{ developer_name_ar or config.DEVELOPER_NAME_AR or 'شركة أزاد للأنظمة الذكية' }}">
+  <meta name="copyright" content="{{ config.COMPANY_NAME_AR or 'شركة أزاد للأنظمة الذكية' }} © {{ now().year }}">
   <meta name="robots" content="{% block robots %}index, follow{% endblock %}">
   <meta name="language" content="{{ current_language }}">
-  
-  
+  <meta name="revisit-after" content="7 days">
+  <meta name="generator" content="Azadexa ERP — AZAD Intelligent Systems">
+
+{% if config.GOOGLE_SITE_VERIFICATION %}
+  <meta name="google-site-verification" content="{{ config.GOOGLE_SITE_VERIFICATION }}">
+{% endif %}
+
   <meta property="og:type" content="{% block og_type %}website{% endblock %}">
   <meta property="og:url" content="{{ request.url }}">
-  <meta property="og:title" content="{% block og_title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}{% endblock %}">
-  <meta property="og:description" content="{% block og_description %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('System_2') }} {{ t('متكامل') }} {{ t('for Management') }} {{ t('Warehouses') }} {{ t('والمبيعات') }} {{ t('والمشتريات') }}{% endblock %}">
+  <meta property="og:title" content="{% block og_title %}{{ tenant_name_ar or company_name_ar or 'Azadexa ERP' }}{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}{{ tenant_name_ar or company_name_ar or 'Azadexa ERP' }} — {{ t('نظام محاسبي متكامل للمبيعات والمشتريات والمخزون ونقاط البيع والموارد البشرية والمشاريع') }}{% endblock %}">
   {% set _logo_path = tenant_logo_url or developer_logo or 'assets/brand/azad/logos/logo.png' %}
   {% set _logo_external = _logo_path if _logo_path.startswith('http') else url_for('static', filename=_logo_path, _external=True) %}
   {% set _logo_internal = _logo_path if _logo_path.startswith('http') else url_for('static', filename=_logo_path) %}
   <meta property="og:image" content="{{ _logo_external }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
   <meta property="og:locale" content="{{ 'ar_AE' if current_language == 'ar' else 'en_US' }}">
-  <meta property="og:site_name" content="{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}">
-  
-  
+  <meta property="og:site_name" content="{{ tenant_name_ar or company_name_ar or 'Azadexa ERP' }}">
+
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="{{ request.url }}">
-  <meta name="twitter:title" content="{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}">
-  <meta name="twitter:description" content="{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('System_2') }} {{ t('متكامل') }} {{ t('for Management') }} {{ t('Warehouses') }} {{ t('والمبيعات') }} {{ t('والمشتريات') }}">
+  <meta name="twitter:title" content="{{ tenant_name_ar or company_name_ar or 'Azadexa ERP' }}">
+  <meta name="twitter:description" content="{{ tenant_name_ar or company_name_ar or 'Azadexa ERP' }} — {{ t('نظام محاسبي متكامل للمبيعات والمشتريات والمخزون ونقاط البيع والموارد البشرية والمشاريع') }}">
   <meta name="twitter:image" content="{{ _logo_external }}">
-  
-  
+
   <link rel="canonical" href="{{ request.url }}">
-  
-  
+  <link rel="alternate" hreflang="ar" href="{{ request.url }}">
+  <link rel="alternate" hreflang="en" href="{{ request.url }}">
+  <link rel="alternate" hreflang="x-default" href="{{ request.url }}">
+
   {% set _favicon_path = tenant_favicon_url or 'assets/brand/azad/favicons/favicon.png' %}
   <link rel="icon" href="{{ _favicon_path if _favicon_path.startswith('http') else url_for('static', filename=_favicon_path) }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/brand/azad/icons/icon-192.png') }}">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  
-  
+
   <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/bootstrap/css/bootstrap.min.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/css/adminlte.min.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme-pro.css') }}">
-  
-  
+
   <link rel="stylesheet" href="{{ url_for('static', filename='fonts/tajawal/tajawal.css') }}" media="print" data-action="media-all">
   <noscript><link rel="stylesheet" href="{{ url_for('static', filename='fonts/tajawal/tajawal.css') }}"></noscript>
   <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}" media="print" data-action="media-all">
@@ -67,17 +72,16 @@
   }
   </script>
   {% block extra_css %}{% endblock %}
-  
-  
+
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "{{ developer_name_ar or developer_name or 'شركة أزاد للأنظمة الذكية' }}",
-    "alternateName": "{{ developer_name or 'Azad Smart Systems' }}",
+    "alternateName": "{{ developer_name or 'AZAD Intelligent Systems' }}",
     "url": "{{ request.url_root }}",
     "logo": "{{ _logo_external }}",
-    "description": "{{ t('System_2') }} {{ t('متكامل') }} {{ t('for Management') }} {{ t('Warehouses') }} {{ t('والمبيعات') }} {{ t('والمشتريات') }} مع {{ t('AI_2') }} {{ t('Artificial_2') }} {{ t('متقدم') }}",
+    "description": "{{ t('نظام محاسبي متكامل للمبيعات والمشتريات والمخزون ونقاط البيع والموارد البشرية والمشاريع') }} مع {{ t('ذكاء اصطناعي') }}",
     "address": {
       "@type": "PostalAddress",
       "addressCountry": "AE",
@@ -88,7 +92,8 @@
       "contactType": "customer service",
       "availableLanguage": ["Arabic", "English"]
     },
-    "sameAs": []
+    "sameAs": [
+      "{{ config.COMPANY_WEBSITE or 'https://azadsystems.com' }}"
+    ]
   }
   </script>
-  

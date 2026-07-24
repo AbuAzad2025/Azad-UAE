@@ -219,7 +219,7 @@ class Config:
 
     CURRENCY_API_TIMEOUT = _int("CURRENCY_API_TIMEOUT", 5)
 
-    COMPANY_NAME = os.environ.get("COMPANY_NAME", "Azad Smart Systems")
+    COMPANY_NAME = os.environ.get("COMPANY_NAME", "AZAD Intelligent Systems")
     COMPANY_NAME_AR = os.environ.get("COMPANY_NAME_AR", "شركة أزاد للأنظمة الذكية")
     COMPANY_ADDRESS = os.environ.get("COMPANY_ADDRESS", "فلسطين - رام الله | Palestine - Ramallah")
     COMPANY_ADDRESS_EN = os.environ.get("COMPANY_ADDRESS_EN")
@@ -241,14 +241,15 @@ class Config:
     COMPANY_LOGO = os.environ.get("COMPANY_LOGO", "assets/brand/azad/logos/logo.png")
 
     DEVELOPER_NAME_AR = os.environ.get("DEVELOPER_NAME_AR", "شركة أزاد للأنظمة الذكية")
-    DEVELOPER_NAME = os.environ.get("DEVELOPER_NAME", "Azad Smart Systems")
-    _dev_credit = "تطوير وبرمجة: م. أحمد غنام | Developed by Eng. Ahmad Ghannam - Azad Systems"
+    DEVELOPER_NAME = os.environ.get("DEVELOPER_NAME", "AZAD Intelligent Systems")
+    _dev_credit = "تطوير وبرمجة: م. أحمد غنام | Developed by Eng. Ahmad Ghannam — AZAD Intelligent Systems"
     DEVELOPER_CREDIT = os.environ.get("DEVELOPER_CREDIT", _dev_credit)
     DEVELOPER_WEBSITE = os.environ.get("DEVELOPER_WEBSITE", "https://azadsystems.com")
     DEVELOPER_PHONE = os.environ.get("DEVELOPER_PHONE", "+971500000000")
     DEVELOPER_EMAIL = os.environ.get("DEVELOPER_EMAIL", "dev@example.com")
     DEVELOPER_WHATSAPP = os.environ.get("DEVELOPER_WHATSAPP", "+972562150193")
     DEVELOPER_LOGO = os.environ.get("DEVELOPER_LOGO", "assets/brand/azad/logos/logo.png")
+    GOOGLE_SITE_VERIFICATION = os.environ.get("GOOGLE_SITE_VERIFICATION", "")
     APP_VERSION = os.environ.get("APP_VERSION", "2.0.0")
     BABEL_DEFAULT_TIMEZONE = os.environ.get("BABEL_DEFAULT_TIMEZONE", "Asia/Hebron")
     LANGUAGES = {"ar": "العربية", "en": "English"}

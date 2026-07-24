@@ -95,6 +95,8 @@ pytest>=9.1.0
 pytest-cov>=7.1.0
 pytest-flask>=1.3.0
 pytest-mock>=3.14
+# Surfaces test failures as GitHub Actions check annotations (CI-only, no-op locally)
+pytest-github-actions-annotate-failures>=0.4.2
 bandit>=1.9.4
 tinycss2>=1.5.1
 

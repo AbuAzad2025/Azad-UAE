@@ -185,43 +185,49 @@ def sitemap():
 
     base_url = request.url_root.rstrip("/")
 
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     static_pages = [
         {
             "loc": f"{base_url}/",
             "priority": "1.0",
             "changefreq": "daily",
-            "lastmod": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-            "keywords": gettext("نظام إدارة مستودعات، برنامج محاسبة الإمارات"),
+            "lastmod": today,
         },
         {
             "loc": f"{base_url}/pricing",
             "priority": "0.95",
             "changefreq": "weekly",
-            "keywords": gettext("أسعار برنامج المستودعات، باقات محاسبة"),
+            "lastmod": today,
         },
         {
             "loc": f"{base_url}/features",
             "priority": "0.95",
             "changefreq": "weekly",
-            "keywords": gettext("مميزات نظام المستودعات، خصائص البرنامج"),
+            "lastmod": today,
         },
         {
             "loc": f"{base_url}/contact",
             "priority": "0.90",
             "changefreq": "monthly",
-            "keywords": gettext("اتصل بنا، دبي، الإمارات"),
+            "lastmod": today,
         },
         {
             "loc": f"{base_url}/user-guide",
             "priority": "0.85",
             "changefreq": "monthly",
-            "keywords": gettext("دليل المستخدم، شرح البرنامج"),
+            "lastmod": today,
         },
         {
             "loc": f"{base_url}/auth/login",
             "priority": "0.80",
             "changefreq": "monthly",
-            "keywords": gettext("تسجيل دخول"),
+            "lastmod": today,
+        },
+        {
+            "loc": f"{base_url}/robots.txt",
+            "priority": "0.50",
+            "changefreq": "monthly",
+            "lastmod": today,
         },
     ]
 
@@ -250,8 +256,9 @@ def robots():
     """
     base_url = request.url_root.rstrip("/")
 
-    robots_content = f"""# شركة أزاد للأنظمة الذكية
-# Azad Smart Systems - Robots.txt
+    robots_content = f"""# AZAD Intelligent Systems — شركة أزاد للأنظمة الذكية
+# https://azadsystems.com
+# Product: Azadexa ERP
 
 User-agent: *
 Allow: /
@@ -266,16 +273,64 @@ Disallow: /dashboard
 Disallow: /auth/
 Disallow: /api/
 Disallow: /admin/
+Disallow: /ai/
+Disallow: /payments/
+Disallow: /sales/
+Disallow: /purchases/
+Disallow: /products/
+Disallow: /warehouse/
+Disallow: /ledger/
+Disallow: /cheques/
+Disallow: /expenses/
+Disallow: /reports/
+Disallow: /hr/
+Disallow: /payroll/
+Disallow: /projects/
+Disallow: /tickets/
+Disallow: /crm/
+Disallow: /customers/
+Disallow: /suppliers/
+Disallow: /users/
+Disallow: /branches/
+Disallow: /store/
 
 Disallow: /instance/
 Disallow: /logs/
 Disallow: /migrations/
+Disallow: /scripts/
+Disallow: /tests/
+Disallow: /utils/
+Disallow: /services/
+Disallow: /models/
 
+Host: {base_url}
 Sitemap: {base_url}/sitemap.xml
 
 Crawl-delay: 1
 """
     return Response(robots_content, mimetype="text/plain")
+
+
+@public_bp.route("/humans.txt")
+def humans():
+    """humans.txt for transparency and team credits."""
+    from flask import Response
+
+    humans_content = """/* TEAM */
+Developer: Eng. Ahmad Ghannam
+Company: AZAD Intelligent Systems / شركة أزاد للأنظمة الذكية
+Product: Azadexa ERP
+Contact: rafideen.ahmadghannam@gmail.com
+Phone: 0562150193 / +972562150193
+Location: Palestine — Ramallah
+
+/* SITE */
+Language: Arabic / English
+Standards: HTML5, CSS3, ES2022
+Components: Flask, SQLAlchemy, PostgreSQL, Redis, Celery
+Last update: 2026
+"""
+    return Response(humans_content, mimetype="text/plain")
 
 
 @public_bp.route("/verify/<token>")
