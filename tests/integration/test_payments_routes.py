@@ -103,7 +103,7 @@ class TestPaymentsVoucher:
 
         assert resp.status_code in (200, 302), f"Unexpected status {resp.status_code}"
 
-        customer_after = Customer.query.get(customer.id)
+        customer_after = db_session.get(Customer, customer.id)
         # customer.balance tracks credit: receipt adds to it
         assert customer_after.balance == Decimal("700"), f"balance={customer_after.balance}"
 
@@ -205,7 +205,7 @@ class TestPaymentsVoucher:
 
         assert resp.status_code in (200, 302), f"Unexpected status {resp.status_code}"
 
-        supplier_after = Supplier.query.get(supplier.id)
+        supplier_after = db_session.get(Supplier, supplier.id)
         assert supplier_after.total_paid_aed >= Decimal("400"), f"paid={supplier_after.total_paid_aed}"
 
         gl_entries = GLJournalEntry.query.filter(

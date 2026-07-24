@@ -1388,7 +1388,7 @@ class TestPayrollIsolation:
         # Verify accrual GL entry was posted
         txn = PayrollTransaction.query.filter_by(employee_id=emp.id, month=2, year=2026).first()
         assert txn.gl_entry_id is not None
-        gl_entry = GLJournalEntry.query.get(txn.gl_entry_id)
+        gl_entry = db_session.get(GLJournalEntry, txn.gl_entry_id)
         assert gl_entry is not None
         assert gl_entry.tenant_id == t.id
         # Verify GL lines balance (debit = credit)

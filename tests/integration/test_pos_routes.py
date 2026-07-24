@@ -225,7 +225,7 @@ class TestPOSSession:
 
         from models import Sale, Payment
 
-        sale = Sale.query.get(sale_id)
+        sale = db_session.get(Sale, sale_id)
         assert sale is not None
         assert sale.total_amount == 75
         assert sale.warehouse_id == wh.id
@@ -824,7 +824,7 @@ class TestPOSSession:
 
         from models import Sale
 
-        sale = Sale.query.get(data["sale_id"])
+        sale = db_session.get(Sale, data["sale_id"])
         assert sale is not None
         assert sale.total_amount == 100
         assert sale.customer_id == customer.id
@@ -984,6 +984,6 @@ class TestPOSSession:
 
         from models import Customer
 
-        customer = Customer.query.get(data["id"])
+        customer = db_session.get(Customer, data["id"])
         assert customer is not None
         assert customer.tenant_id == tenant.id

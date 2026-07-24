@@ -203,7 +203,7 @@ class TestPurchaseDeleteAtomicity:
         assert PurchaseLine.query.count() == line_count_before, "PurchaseLines were deleted despite GL failure"
 
         if sample_purchase.supplier:
-            refreshed_supplier = Supplier.query.get(sample_purchase.supplier.id)
+            refreshed_supplier = db.session.get(Supplier, sample_purchase.supplier.id)
             assert Decimal(str(refreshed_supplier.get_balance_base() or "0")) == supplier_balance_before, (
                 "Supplier balance was mutated despite rollback"
             )
@@ -326,7 +326,7 @@ class TestCrmAtomicity:
             )
 
         db.session.expire_all()
-        refreshed = CRMLead.query.get(lead_id)
+        refreshed = db.session.get(CRMLead, lead_id)
         assert refreshed.stage_id == stage_a_id, "Stage was moved despite flush failure"
 
 

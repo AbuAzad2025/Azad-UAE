@@ -708,7 +708,7 @@ class TestSuperAdminEndpoints:
 
         owner = self._make_global_owner(db_session)
         db_session.commit()
-        if Tenant.query.get(1):
+        if db_session.get(Tenant, 1):
             with app.test_client() as client:
                 client.post(
                     "/auth/login",

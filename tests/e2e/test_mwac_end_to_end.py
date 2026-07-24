@@ -56,8 +56,8 @@ def main():
                 print("FAIL: No ProductWarehouseCost record found. Run seed_opening_wac.py first.")
                 return 1
 
-            product = Product.query.get(pwc.product_id)
-            warehouse = Warehouse.query.get(pwc.warehouse_id)
+            product = db.session.get(Product, pwc.product_id)
+            warehouse = db.session.get(Warehouse, pwc.warehouse_id)
             print(f"Product: {product.name} (id={product.id})")
             print(f"Warehouse: {warehouse.name} (id={warehouse.id})")
             print(f"Initial PWC: qty={pwc.total_quantity} avg_cost={pwc.average_cost} value={pwc.total_value}")

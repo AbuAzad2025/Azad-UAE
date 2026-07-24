@@ -228,7 +228,7 @@ class TestReturnsApiCreate:
         assert "return_number" in data
         assert float(data["refund_amount"]) == 200.0
 
-        product_return = ProductReturn.query.get(data["return_id"])
+        product_return = db_session.get(ProductReturn, data["return_id"])
         assert product_return is not None
 
         return_lines = ProductReturnLine.query.filter_by(return_id=product_return.id).all()
@@ -255,7 +255,7 @@ class TestReturnsApiCreate:
         assert len(revenue_entries) >= 1
         assert len(cost_entries) >= 1
 
-        customer_after = Customer.query.get(ctx["customer"].id)
+        customer_after = db_session.get(Customer, ctx["customer"].id)
         assert customer_after is not None
         assert customer_after.balance is not None
 
@@ -295,7 +295,7 @@ class TestReturnsApiCreate:
         data = resp.get_json()
         assert data["success"] is True
 
-        product_return = ProductReturn.query.get(data["return_id"])
+        product_return = db_session.get(ProductReturn, data["return_id"])
         assert product_return is not None
 
         return_lines = ProductReturnLine.query.filter_by(return_id=product_return.id).all()

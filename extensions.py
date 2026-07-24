@@ -40,7 +40,59 @@ login_manager.session_protection = "strong"
 
 csrf = CSRFProtect()
 
-cache = Cache()
+
+class TenantAwareCache:
+    """Flask-Caching wrapper that prefixes every key with the active tenant id.
+
+    Prevents cross-tenant cache poisoning when multiple tenants share the same
+    cache backend (redis, simple, etc.).
+    """
+
+    def __init__(self, cache_instance):
+        self._cache = cache_instance
+
+    @staticmethod
+    def _tenant_key(key):
+        try:
+            from flask import g, has_request_context
+
+            if has_request_context():
+                tid = getattr(g, "active_tenant_id", None) or getattr(g, "tenant_id", None)
+                if tid is not None:
+                    return f"t:{tid}:{key}"
+        except Exception:
+            pass
+        return key
+
+    def get(self, key):
+        return self._cache.get(self._tenant_key(key))
+
+    def set(self, key, value, timeout=None):
+        return self._cache.set(self._tenant_key(key), value, timeout=timeout)
+
+    def delete(self, key):
+        return self._cache.delete(self._tenant_key(key))
+
+    def delete_many(self, *keys):
+        return self._cache.delete_many(*[self._tenant_key(k) for k in keys])
+
+    def get_many(self, *keys):
+        mapped = {self._tenant_key(k): k for k in keys}
+        results = self._cache.get_many(*mapped.keys())
+        return {mapped[k]: v for k, v in results.items()}
+
+    def set_many(self, mapping, timeout=None):
+        mapped = {self._tenant_key(k): v for k, v in mapping.items()}
+        return self._cache.set_many(mapped, timeout=timeout)
+
+    def init_app(self, app, config=None):
+        return self._cache.init_app(app, config=config)
+
+    def __getattr__(self, name):
+        return getattr(self._cache, name)
+
+
+cache = TenantAwareCache(Cache())
 
 mail = Mail()
 

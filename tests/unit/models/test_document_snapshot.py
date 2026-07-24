@@ -38,7 +38,7 @@ class TestDocumentSnapshotCreate:
         db_session.commit()
         db_session.expire_all()
 
-        refreshed = DocumentSnapshot.query.get(snap.id)
+        refreshed = db_session.get(DocumentSnapshot, snap.id)
         assert refreshed.snapshot_data == payload
         assert refreshed.branding_snapshot == {"logo": "default.png"}
         assert refreshed.snapshot_reason == "finalize"

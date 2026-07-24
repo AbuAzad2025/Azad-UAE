@@ -128,7 +128,7 @@ class TestPosTableOrder:
         db_session.commit()
         db_session.expire_all()
 
-        refreshed = type(order).query.get(order.id)
+        refreshed = db_session.get(type(order), order.id)
         assert refreshed.guest_count == 4
         assert refreshed.is_split is True
         assert refreshed.split_group == "G-1"

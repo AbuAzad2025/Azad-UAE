@@ -486,7 +486,7 @@ class TestCustomerDelete:
         assert resp.status_code == 200
 
         db_session.expire_all()
-        deleted = Customer.query.get(customer.id)
+        deleted = db_session.get(Customer, customer.id)
         assert deleted is not None, "BUG: Customer hard-deleted despite having sales"
         assert deleted.is_active is False, "Customer should be inactive after soft-delete"
 
@@ -550,7 +550,7 @@ class TestCustomerDelete:
         assert resp.status_code == 200
 
         db_session.expire_all()
-        deleted = Customer.query.get(customer.id)
+        deleted = db_session.get(Customer, customer.id)
         assert deleted is None, "BUG: Customer should have been hard-deleted (no links)"
 
 

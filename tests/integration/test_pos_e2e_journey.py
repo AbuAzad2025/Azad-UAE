@@ -210,7 +210,7 @@ class TestPosE2EJourney:
             tenders = data.get("tenders") or []
             assert [t["method"] for t in tenders] == ["cash", "card"]
 
-            sale = Sale.query.get(data["sale_id"])
+            sale = db.session.get(Sale, data["sale_id"])
             assert sale.total_amount == Decimal("90.000")
             payments = Payment.query.filter_by(sale_id=sale.id).order_by(Payment.id).all()
             assert len(payments) == 2

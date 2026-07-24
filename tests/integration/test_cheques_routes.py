@@ -341,7 +341,7 @@ class TestChequesLifecycle:
                 follow_redirects=False,
             )
         assert resp.status_code in (200, 302)
-        cheque = Cheque.query.get(cheque_id)
+        cheque = db_session.get(Cheque, cheque_id)
         assert cheque.status == "deposited"
 
         with client:
@@ -353,7 +353,7 @@ class TestChequesLifecycle:
                 follow_redirects=False,
             )
         assert resp.status_code in (200, 302)
-        cheque = Cheque.query.get(cheque_id)
+        cheque = db_session.get(Cheque, cheque_id)
         assert cheque.status == "cleared"
 
         gl_entries = (
@@ -480,7 +480,7 @@ class TestChequesLifecycle:
                 follow_redirects=False,
             )
         assert resp.status_code in (200, 302)
-        cheque = Cheque.query.get(cheque.id)
+        cheque = db_session.get(Cheque, cheque.id)
         assert cheque.status == "bounced"
         assert "Insufficient funds" in (cheque.bounce_reason or "")
 
@@ -733,7 +733,7 @@ class TestChequesViewEdit:
                 follow_redirects=False,
             )
         assert resp.status_code in (200, 302)
-        cheque = Cheque.query.get(cheque.id)
+        cheque = db_session.get(Cheque, cheque.id)
         assert cheque.bank_name == "New Bank"
         assert cheque.amount == Decimal("2000.00")
         assert cheque.drawer_name == "New Drawer"
@@ -819,7 +819,7 @@ class TestChequesDelete:
             )
         assert resp.status_code in (200, 302)
 
-        cheque = Cheque.query.get(cheque.id)
+        cheque = db_session.get(Cheque, cheque.id)
         assert cheque is not None, "Cheque should still exist (soft-deleted)"
         assert cheque.is_active is False, "Cheque should be soft-deleted"
         assert "testing" in (cheque.archive_reason or "")

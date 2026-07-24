@@ -85,6 +85,6 @@ class TestPosKdsOrderLifecycle:
         db_session.commit()
         db_session.expire_all()
 
-        refreshed = type(kds_order).query.get(kds_order.id)
+        refreshed = db_session.get(type(kds_order), kds_order.id)
         assert refreshed.status == "done"
         assert refreshed.completed_at is not None

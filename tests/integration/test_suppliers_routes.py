@@ -711,7 +711,7 @@ class TestSupplierDelete:
         assert resp.status_code == 200
 
         db_session.expire_all()
-        deleted = Supplier.query.get(supplier.id)
+        deleted = db_session.get(Supplier, supplier.id)
         assert deleted is not None, "Supplier hard-deleted despite having purchases"
         assert deleted.is_active is False, "Supplier should be inactive after soft-delete"
 
@@ -772,7 +772,7 @@ class TestSupplierDelete:
         assert resp.status_code == 200
 
         db_session.expire_all()
-        deleted = Supplier.query.get(supplier.id)
+        deleted = db_session.get(Supplier, supplier.id)
         assert deleted is None, "Supplier should have been hard-deleted (no links)"
 
 

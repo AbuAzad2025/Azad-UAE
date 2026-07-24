@@ -90,5 +90,5 @@ class TestShopReviewRelationships:
         db_session.commit()
         db_session.expire_all()
 
-        refreshed = type(review).query.get(review.id)
+        refreshed = db_session.get(type(review), review.id)
         assert refreshed.is_approved is True
