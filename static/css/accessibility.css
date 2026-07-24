@@ -110,7 +110,7 @@ body:not(.keep-theme) .content-wrapper {
 	color: var(--color-text-strong);
 	border: 2px solid var(--color-primary);
 	border-radius: 4px;
-	z-index: 9999;
+	z-index: 1080;
 	text-align: center;
 	font-weight: 600;
 }

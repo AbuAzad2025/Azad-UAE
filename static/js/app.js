@@ -299,7 +299,7 @@
 					pageLength: pageLen,
 					responsive: true,
 					autoWidth: false,
-					language: { url: "/static/datatables/Arabic.json" },
+					language: getCurrentLanguage() === "ar" ? { url: "/static/datatables/Arabic.json" } : undefined,
 					order,
 					columnDefs: noSortIdx.length ? [{ orderable: false, targets: noSortIdx }] : [],
 				});
@@ -316,7 +316,7 @@
 				$el.data("dp-initialized", 1).datepicker({
 					format: "yyyy-mm-dd",
 					autoclose: true,
-					language: "ar",
+					language: getCurrentLanguage(),
 					orientation: "auto right",
 					todayHighlight: true,
 				});
@@ -335,10 +335,10 @@
 				$el.data("s2-initialized", 1);
 				const parent = $el.closest(".modal");
 				$el.select2({
-					dir: "rtl",
+					dir: getCurrentLanguage() === "ar" ? "rtl" : "ltr",
 					width: "100%",
-					language: "ar",
-					placeholder: $el.attr("placeholder") || "اختر...",
+					language: getCurrentLanguage(),
+					placeholder: $el.attr("placeholder") || (getCurrentLanguage() === "ar" ? "اختر..." : "Select..."),
 					allowClear:
 						String($el.data("allow-clear") || "").toLowerCase() === "true" ||
 						$el.data("allowClear") === 1,
@@ -366,10 +366,10 @@
 				const minLen = +$el.data("min-length") || 0;
 
 				$el.select2({
-					dir: "rtl",
+					dir: getCurrentLanguage() === "ar" ? "rtl" : "ltr",
 					width: "100%",
-					language: "ar",
-					placeholder: $el.attr("placeholder") || "اختر...",
+					language: getCurrentLanguage(),
+					placeholder: $el.attr("placeholder") || (getCurrentLanguage() === "ar" ? "اختر..." : "Select..."),
 					allowClear:
 						String($el.data("allow-clear") || "").toLowerCase() === "true" ||
 						$el.data("allowClear") === 1,

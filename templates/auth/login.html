@@ -137,8 +137,8 @@
         modeInput.value = mode;
         if (modeHint) {
           modeHint.textContent = mode === 'developer'
-            ? 'دخول المنصة (مالك/مطور)'
-            : 'دخول مستخدمي الشركات';
+            ? '{{ _('دخول المنصة (مالك/مطور)') }}'
+            : '{{ _('دخول مستخدمي الشركات') }}';
         }
         tabs.forEach((tab) => {
           const active = tab.getAttribute('data-access-mode') === mode;

@@ -86,9 +86,7 @@ $(document).ready(() => {
 				[10, 25, 50, 100],
 				[10, 25, 50, 100],
 			],
-			language: {
-				url: "/static/datatables/Arabic.json",
-			},
+			language: getCurrentLanguage() === "ar" ? { url: "/static/datatables/Arabic.json" } : undefined,
 			dom:
 				'<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
 				'<"row"<"col-sm-12"tr>>' +

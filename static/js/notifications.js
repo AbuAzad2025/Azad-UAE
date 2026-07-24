@@ -280,20 +280,24 @@ class NotificationManager {
 		return toast;
 	}
 
-	success(message, title = "Success") {
-		return this.show({ type: "success", title, message });
+	success(message, title) {
+		const defaultTitle = (typeof getCurrentLanguage === "function" && getCurrentLanguage() === "ar") ? "نجاح" : "Success";
+		return this.show({ type: "success", title: title || defaultTitle, message });
 	}
 
-	error(message, title = "Error") {
-		return this.show({ type: "error", title, message, duration: 20000 });
+	error(message, title) {
+		const defaultTitle = (typeof getCurrentLanguage === "function" && getCurrentLanguage() === "ar") ? "خطأ" : "Error";
+		return this.show({ type: "error", title: title || defaultTitle, message, duration: 20000 });
 	}
 
-	warning(message, title = "Warning") {
-		return this.show({ type: "warning", title, message });
+	warning(message, title) {
+		const defaultTitle = (typeof getCurrentLanguage === "function" && getCurrentLanguage() === "ar") ? "تحذير" : "Warning";
+		return this.show({ type: "warning", title: title || defaultTitle, message });
 	}
 
-	info(message, title = "معلومة") {
-		return this.show({ type: "info", title, message });
+	info(message, title) {
+		const defaultTitle = (typeof getCurrentLanguage === "function" && getCurrentLanguage() === "ar") ? "معلومة" : "Info";
+		return this.show({ type: "info", title: title || defaultTitle, message });
 	}
 }
 

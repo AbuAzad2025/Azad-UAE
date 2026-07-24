@@ -47,10 +47,10 @@ function initializeSelect2() {
 			if ($(this).data("select2")) return;
 			$(this).select2({
 				theme: "bootstrap4",
-				language: "ar",
-				dir: "rtl",
+				language: getCurrentLanguage(),
+				dir: getCurrentLanguage() === "ar" ? "rtl" : "ltr",
 				width: "100%",
-				placeholder: "اختر...",
+				placeholder: getCurrentLanguage() === "ar" ? "اختر..." : "Select...",
 			});
 		});
 }
@@ -63,14 +63,15 @@ function initializeDataTables() {
 	$(".datatable").each(function () {
 		if ($.fn.DataTable.isDataTable(this)) return;
 		$(this).DataTable({
-			language: {
-				url: "/static/datatables/Arabic.json",
-			},
+			language: getCurrentLanguage() === "ar" ? { url: "/static/datatables/Arabic.json" } : undefined,
 			responsive: true,
 			pageLength: 25,
-			lengthMenu: [
+			lengthMenu: getCurrentLanguage() === "ar" ? [
 				[10, 25, 50, 100, -1],
 				[10, 25, 50, 100, "الكل"],
+			] : [
+				[10, 25, 50, 100, -1],
+				[10, 25, 50, 100, "All"],
 			],
 			dom: "Bfrtip",
 			buttons: [

@@ -2141,7 +2141,7 @@ textarea.form-control {
 }
 
 .erp-avatar-gradient {
-	background: linear-gradient(135deg, #667eea, #764ba2);
+	background: linear-gradient(135deg, var(--az-primary), var(--az-gold));
 }
 
 .erp-user-avatar-gradient {
@@ -2858,28 +2858,13 @@ body.view-mobile .main-header .navbar-nav .nav-link[data-widget="pushmenu"] {
 
 
 
-@media (max-width: 768px) {
-	.sale-line-row > div {
-		margin-bottom: 0.5rem;
-	}
-
-	.btn-sale {
-		width: 100%;
-		margin-bottom: 0.5rem;
-	}
-
-	.summary-card {
-		margin-top: 1rem;
-	}
-}
-
 /* --- Merged from sales-create.css --- */
 .product-line {
 	background: #f8f9fa;
 	padding: 15px;
 	margin-bottom: 10px;
 	border-radius: 8px;
-	border-inline-end: 4px solid #667eea;
+	border-inline-end: 4px solid var(--az-primary);
 	transition: all 0.3s;
 }
 
@@ -2888,7 +2873,7 @@ body.view-mobile .main-header .navbar-nav .nav-link[data-widget="pushmenu"] {
 }
 
 .total-box {
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	background: linear-gradient(135deg, var(--az-primary) 0%, var(--az-gold) 100%);
 	color: #fff;
 	padding: 25px;
 	border-radius: 12px;
