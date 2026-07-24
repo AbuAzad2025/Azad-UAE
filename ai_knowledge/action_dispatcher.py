@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 import re
 from collections.abc import Callable
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any
 
@@ -495,7 +495,7 @@ class ActionDispatcher:
                     amount=amount,
                     currency="AED",
                     amount_aed=amount,
-                    expense_date=datetime.now(datetime.UTC),
+                    expense_date=datetime.now(timezone.utc),
                     payment_method=args.get("method", "cash"),
                     category_id=args.get("category_id"),
                     branch_id=args.get("branch_id"),
