@@ -246,9 +246,13 @@ class TestRequirePermissionOrOverride:
         db_session.flush()
         assert PosOverrideService.require_permission_or_override(user=supervisor, action="pay_out") is None
 
-    def test_without_permission_and_token_denied(self, db_session, sample_user):
+    def test_without_permission_and_token_denied(self, db_session, sample_tenant):
+        # Fresh zero-permission role: super_admin may hold ALL permissions when
+        # startup seeding ran (ensure_system_integrity), so sample_user's access
+        # is environment-dependent and unfit for the denial path.
+        cashier = _make_supervisor(db_session, sample_tenant, with_permission=False)
         with pytest.raises(PosOverrideError, match="تفويض"):
-            PosOverrideService.require_permission_or_override(user=sample_user, action="pay_out")
+            PosOverrideService.require_permission_or_override(user=cashier, action="pay_out")
 
     def test_ttl_constant_is_sixty_seconds(self):
         assert OVERRIDE_TOKEN_TTL_SECONDS == 60
