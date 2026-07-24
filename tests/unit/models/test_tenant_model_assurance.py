@@ -250,3 +250,39 @@ class TestTenantModel:
         t.subscription_end = datetime.now(timezone.utc) + timedelta(days=3)
         assert t.is_subscription_active() is True
         assert 0 < t.get_remaining_days() <= 7
+
+
+class TestNaiveSubscriptionEnd:
+    """PostgreSQL ``DateTime`` (without tz) returns naive datetimes after a
+    round-trip, while provisioning writes aware ones. Read paths must treat
+    naive values as UTC instead of raising TypeError (owner dashboard 500)."""
+
+    def test_is_subscription_active_with_naive_end(self):
+        from models.tenant import Tenant
+
+        t = Tenant()
+        t.subscription_end = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=10)
+        assert t.is_subscription_active() is True
+
+    def test_is_subscription_active_with_naive_expired_end(self):
+        from models.tenant import Tenant
+
+        t = Tenant()
+        t.subscription_end = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=1)
+        assert t.is_subscription_active() is False
+
+    def test_get_remaining_days_with_naive_end(self):
+        from models.tenant import Tenant
+
+        t = Tenant()
+        t.subscription_end = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=10)
+        assert 9 <= t.get_remaining_days() <= 10
+
+    def test_extend_subscription_with_naive_base(self):
+        from models.tenant import Tenant
+
+        t = Tenant()
+        t.subscription_end = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=10)
+        t.extend_subscription(5)
+        assert t.subscription_end.tzinfo is not None
+        assert t.get_remaining_days() >= 14

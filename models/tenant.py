@@ -224,15 +224,21 @@ class Tenant(db.Model):
     def is_subscription_active(self):
         if self.is_lifetime:
             return True
-        if self.subscription_end:
-            return datetime.now(timezone.utc) < self.subscription_end
+        end = self.subscription_end
+        if end:
+            if end.tzinfo is None:
+                end = end.replace(tzinfo=timezone.utc)
+            return datetime.now(timezone.utc) < end
         return True
 
     def get_remaining_days(self):
         if self.is_lifetime:
             return 9999
-        if self.subscription_end:
-            delta = self.subscription_end - datetime.now(timezone.utc)
+        end = self.subscription_end
+        if end:
+            if end.tzinfo is None:
+                end = end.replace(tzinfo=timezone.utc)
+            delta = end - datetime.now(timezone.utc)
             return max(0, delta.days)
         return 9999
 
@@ -256,8 +262,11 @@ class Tenant(db.Model):
         base = self.subscription_end
         if not isinstance(base, datetime):
             base = now
-        elif base < now:
-            base = now
+        else:
+            if base.tzinfo is None:
+                base = base.replace(tzinfo=timezone.utc)
+            if base < now:
+                base = now
         self.subscription_end = base + timedelta(days=days)
         self.updated_at = now
         return self

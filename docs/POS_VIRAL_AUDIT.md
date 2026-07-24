@@ -100,9 +100,9 @@ No new promotion engine, cart service, override service, idempotency ledger, RMA
 - 8 raw `.query` sites converted to `tenant_query` (PosShift `_get_active_shift`, KDS orders/status, floors list/tables, table create/status/assign). Entity-derived filters inside SSE streams (`shift.tenant_id`, `session.tenant_id` at pos.py:1817/1834/2475/2492) kept manual deliberately — documented as verified-scoped.
 - Test harness: `_pos_api_patches` tenant_query patch is now a per-model dispatcher (`tenant_query_models={...}` + PosShift default open shift); KDS/floor/table tests adapted to the new boundary.
 
-### Documented exceptions (protected zones — owner decision required, untouched)
-- `gl_service.py:72,81` — `pos_cash_difference` shares fallback account 6500 with generic expenses. Dedicated POS_CASH_DIFFERENCE account deferred: AGENTS.md marks GL posting logic do-not-touch.
-- `models/package.py:23,112` — `Float` columns in donation/package payment path. Decimal migration deferred: AGENTS.md marks payment-vault/donation ownership do-not-touch.
+### Documented exceptions — RESOLVED ✅ (owner approved 2026-07-24, see Wave F)
+- ~~`gl_service.py:72,81` — `pos_cash_difference` shares fallback account 6500~~ → dedicated `POS_CASH_DIFFERENCE` → account **6550** (Wave F).
+- ~~`models/package.py:23,112` — `Float` columns in donation/package payment path~~ → `Numeric(14, 3)` + migration `g8c4b2d91e10` (Wave F).
 
 ### Wave C — Missing backend features ✅ (2026-07-24, 463 tests green)
 - **Scale barcodes**: `parse_scale_barcode` (GS1 prefix-20, EAN-13 checksum, grams→kg Decimal-exact) in `utils/pos_helpers.py`; integrated into `lookup_pos_product_exact` (item-code/SKU/template match after exact-miss); `/api/product` enriches payload with `is_scale_item` + `scale_weight_kg`. 8 new tests.
@@ -127,3 +127,9 @@ No new promotion engine, cart service, override service, idempotency ledger, RMA
   - `test_checkout_idempotency_replay_returns_same_sale` — identical payload + `Idempotency-Key` twice → same `sale_id`, exactly one Sale row, stock deducted exactly once (50 → 47).
   - `test_evaluate_endpoint_matches_checkout_discount` — register's live `/api/promotions/evaluate` preview equals checkout reality (5.0 == 5.0).
   - `test_concurrent_checkouts_never_oversell` (marked `slow`, runs in CI) — 4 threads × qty 3 against stock 10 on the same session via separate test clients: exactly 3 succeed, 1 availability-rejected, final stock == 1, no deadlock (join-timeout guard), no negative balance.
+
+### Wave F — Documented exceptions resolved (owner-approved protected zones) ✅ (2026-07-24, 344 consumer tests green)
+- **Dedicated POS cash-difference account**: new registry template `6550 POS Cash Difference / فروقات صندوق نقاط البيع` (expense, parent 6000) + `POS_CASH_DIFFERENCE → 6550` concept mapping (`core_sales`); `gl_service` concept fallback `pos_cash_difference` 6500 → 6550; `_constants` legacy_code synchronized. `GLTreeBuilder.build` (invoked through `ensure_core_accounts` on posting paths) creates 6550 per tenant automatically — no backfill migration needed.
+- **Package money Float → Numeric(14,3)**: `Package.price` and `PackagePurchase.amount_paid`; `to_dict` keeps returning `float(...)` for API compatibility. `routes/payment_vault.py` compares/creates with `Decimal(str(...))` (invalid amount → 400 Arabic message). Migration `g8c4b2d91e10` (down_revision `f7b3a1c82e09`) with `postgresql_using='ROUND("col"::numeric, 3)'` + downgrade.
+- **Tests**: `TestPosCashDifferenceDedicatedAccount` (5) + `TestPackageMoneyColumnsNumeric` (3) appended to `test_gl_tree_builder_assurance.py`; migration-head expectation updated in `test_pos_phase3_models.py`; consumer batches re-run green (saas/webhook/owner_admin/payment-vault chunks 1-4/analytics).
+- **Bonus root fix (production 500)**: `models/tenant.py` naive-`subscription_end` crash — the column is naive `DateTime` while provisioning writes aware datetimes; after a PG round-trip `is_subscription_active`/`get_remaining_days`/`extend_subscription` raised `TypeError` (owner dashboard 500). Read/compare paths now normalize naive → UTC per the established `pos_session`/`pos_override_token` pattern; 4 regression tests in `TestNaiveSubscriptionEnd`. This also eliminates the pre-existing saas→owner_admin test-order flakiness at its root.
