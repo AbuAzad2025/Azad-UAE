@@ -65,7 +65,7 @@
 	--content-bg: var(--color-surface);
 	--content-text: var(--color-text-strong);
 	--content-text-muted: var(--color-text-muted);
-	--card-header-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	--card-header-bg: linear-gradient(135deg, #1a5fb4 0%, #1557a0 100%);
 	--card-header-text: #ffffff;
 	--footer-bg: #eef2f8;
 	--footer-text: var(--color-text-regular);
@@ -997,7 +997,7 @@ body.dark-mode {
 	--color-text-soft: #a3aed0;
 	--color-input-bg: #111a2d;
 	--sidebar-bg: linear-gradient(180deg, #0b1220 0%, #0f172a 100%);
-	--card-header-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	--card-header-bg: linear-gradient(135deg, #1a5fb4 0%, #1557a0 100%);
 	--footer-bg: #111a2d;
 	--footer-text: #e2e8f0;
 }
