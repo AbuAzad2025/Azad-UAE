@@ -573,3 +573,20 @@
 
 	/* purgecss end ignore */
 }
+
+/* purgecss start ignore */
+.pos-upsell-bar {
+	margin-top: 6px;
+	font-size: 0.85rem;
+}
+
+.pos-upsell-item {
+	background: #fff8e1;
+	border: 1px solid #ffe082;
+	border-radius: 6px;
+	color: #6d4c00;
+	padding: 4px 8px;
+	margin-bottom: 4px;
+}
+
+/* purgecss end ignore */

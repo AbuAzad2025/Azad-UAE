@@ -14,6 +14,7 @@ from models import (
     ProductCostHistory,
 )
 from models.warehouse import ProductWarehouseStock
+from services.stock_batch_service import StockBatchService
 from utils.branching import get_accessible_warehouse_ids, get_branch_stock_map
 from utils.gl_reference_types import GLRef
 
@@ -603,13 +604,22 @@ class StockService:
             if pwc and pwc.total_quantity > 0:
                 # Normal positive-stock case
                 avg_cost = Decimal(str(pwc.average_cost)) if pwc.average_cost is not None else Decimal("0")
-                cogs = (avg_cost * qty).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+                movement_cost = avg_cost.quantize(Decimal("0.0001"))
+                if tenant_id and warehouse_id and StockBatchService.batches_enabled():
+                    consumed_qty, consumed_value = StockBatchService.consume_fefo(
+                        product_id=line.product_id,
+                        warehouse_id=warehouse_id,
+                        quantity=qty,
+                        tenant_id=tenant_id,
+                    )
+                    if consumed_qty > 0:
+                        remainder_value = avg_cost * (qty - consumed_qty)
+                        movement_cost = ((consumed_value + remainder_value) / qty).quantize(Decimal("0.0001"))
+                cogs = (movement_cost * qty).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
                 old_qty = Decimal(str(pwc.total_quantity)) if pwc.total_quantity is not None else Decimal("0")
                 old_value = Decimal(str(pwc.total_value)) if pwc.total_value is not None else Decimal("0")
                 old_avg = avg_cost
-                new_qty, new_value, new_avg = StockService._mwac_calc(
-                    old_qty, old_value, -qty, avg_cost.quantize(Decimal("0.0001"))
-                )
+                new_qty, new_value, new_avg = StockService._mwac_calc(old_qty, old_value, -qty, movement_cost)
                 pwc.total_quantity = new_qty
                 pwc.total_value = new_value
                 pwc.average_cost = new_avg.quantize(Decimal("0.0001"))
@@ -628,7 +638,7 @@ class StockService:
                     new_total_quantity=new_qty,
                     old_total_value=old_value,
                     new_total_value=new_value,
-                    movement_unit_cost=avg_cost.quantize(Decimal("0.0001")),
+                    movement_unit_cost=movement_cost,
                 )
                 db.session.add(pch)
             elif allow_negative:
@@ -973,6 +983,17 @@ class StockService:
         )
         db.session.add(pch)
 
+        if StockBatchService.batches_enabled():
+            StockBatchService.record_receipt(
+                tenant_id=tenant_id,
+                product_id=product_id,
+                warehouse_id=warehouse_id,
+                quantity=received_qty,
+                unit_cost=unit_cost_aed,
+                reference_type=reference_type,
+                reference_id=reference_id,
+            )
+
     @staticmethod
     def reverse_sale(sale):
         """إلغاء بيع - إرجاع للمستودع الأصلي مع عكس MWAC"""
@@ -1061,6 +1082,16 @@ class StockService:
                         ),
                     )
                     db.session.add(pch)
+
+                    if StockBatchService.batches_enabled():
+                        StockBatchService.restore_on_reversal(
+                            tenant_id=tenant_id,
+                            product_id=line.product_id,
+                            warehouse_id=warehouse_id,
+                            quantity=qty,
+                            unit_cost=(original_cogs / qty) if qty > 0 else Decimal("0"),
+                            reference_id=sale.id,
+                        )
 
     @staticmethod
     def reverse_purchase(purchase):

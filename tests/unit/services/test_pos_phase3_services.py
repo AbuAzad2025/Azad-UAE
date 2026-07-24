@@ -24,8 +24,10 @@ from utils.pos_helpers import close_pos_session
 from utils.pos_security import (
     OVERRIDE_TOKEN_TTL_SECONDS,
     can_view_pos_expected,
+    issue_customer_display_token,
     issue_pos_session_token,
     sign_override_token,
+    verify_customer_display_token,
     verify_override_token_signature,
     verify_pos_session_token,
 )
@@ -68,6 +70,24 @@ class TestSessionToken:
         with app.app_context():
             assert verify_pos_session_token(self._session(), None) is False
             assert verify_pos_session_token(self._session(terminal_id=None), "abc") is False
+
+
+class TestCustomerDisplayToken:
+    def test_roundtrip(self, app):
+        with app.app_context():
+            token = issue_customer_display_token(11, 1)
+            assert verify_customer_display_token(11, 1, token) is True
+
+    def test_wrong_session_or_tenant_rejected(self, app):
+        with app.app_context():
+            token = issue_customer_display_token(11, 1)
+            assert verify_customer_display_token(12, 1, token) is False
+            assert verify_customer_display_token(11, 2, token) is False
+
+    def test_missing_token_rejected(self, app):
+        with app.app_context():
+            assert verify_customer_display_token(11, 1, None) is False
+            assert verify_customer_display_token(11, 1, "") is False
 
 
 # ─── Supervisor PIN on User ───
@@ -393,6 +413,14 @@ class TestClosePosSessionPhase3:
             side_effect=["6500"],
         )
         create_je = mocker.patch("services.gl_service.GLService.create_journal_entry")
+        mocker.patch(
+            "services.advanced_journal_manager.AdvancedJournalEntryManager.validate_entry",
+            return_value=MagicMock(validation_errors=None),
+        )
+        mocker.patch(
+            "services.advanced_journal_manager.AdvancedJournalEntryManager.post_entry",
+            return_value=MagicMock(),
+        )
         close_pos_session(session, Decimal("92.500"))
         lines = create_je.call_args.kwargs["lines"]
         assert sum(line["debit"] for line in lines) == sum(line["credit"] for line in lines) == Decimal("7.500")
@@ -501,3 +529,88 @@ class TestCashMovements:
         assert len(listed) == 1
         assert listed[0].session_id == session.id
         assert listed[0].movement_type == "pay_in"
+
+
+# ─── Insert-only fraud signal log ───
+
+
+class TestPosFraudSignal:
+    def test_signal_chains_and_verifies(self, db_session, sample_tenant, sample_user):
+        from utils.pos_security import log_pos_fraud_signal, verify_pos_fraud_chain
+
+        first = log_pos_fraud_signal(
+            "void_line",
+            user_id=sample_user.id,
+            tenant_id=sample_tenant.id,
+            details={"cart_id": 1},
+        )
+        second = log_pos_fraud_signal(
+            "drawer_open",
+            user_id=sample_user.id,
+            tenant_id=sample_tenant.id,
+            details={"reason": "change"},
+        )
+        db_session.flush()
+        assert first.prev_hash == ""
+        assert second.prev_hash == first.entry_hash
+        assert len(first.entry_hash) == 64
+        assert verify_pos_fraud_chain(sample_tenant.id) is True
+
+    def test_tamper_breaks_chain(self, db_session, sample_tenant, sample_user):
+        from utils.pos_security import log_pos_fraud_signal, verify_pos_fraud_chain
+
+        row = log_pos_fraud_signal("void_line", user_id=sample_user.id, tenant_id=sample_tenant.id)
+        db_session.flush()
+        row.details = '{"tampered": true}'
+        db_session.flush()
+        assert verify_pos_fraud_chain(sample_tenant.id) is False
+
+    def test_repeat_aggregation_escalates_severity(self, db_session, sample_tenant, sample_user):
+        from utils.pos_security import log_pos_fraud_signal
+
+        log_pos_fraud_signal("drawer_open", user_id=sample_user.id, tenant_id=sample_tenant.id)
+        log_pos_fraud_signal("drawer_open", user_id=sample_user.id, tenant_id=sample_tenant.id)
+        third = log_pos_fraud_signal("drawer_open", user_id=sample_user.id, tenant_id=sample_tenant.id)
+        assert third.repeat_count == 3
+        assert third.severity == "high"
+
+    def test_distinct_events_do_not_aggregate(self, db_session, sample_tenant, sample_user):
+        from utils.pos_security import log_pos_fraud_signal
+
+        log_pos_fraud_signal("drawer_open", user_id=sample_user.id, tenant_id=sample_tenant.id)
+        other = log_pos_fraud_signal("void_line", user_id=sample_user.id, tenant_id=sample_tenant.id)
+        assert other.repeat_count == 1
+        assert other.severity == "medium"
+
+    def test_no_tenant_context_returns_none(self, mocker):
+        from utils import pos_security
+
+        mocker.patch("utils.tenanting.get_active_tenant_id", return_value=None)
+        assert pos_security.log_pos_fraud_signal("void_line", user_id=1) is None
+
+    def test_chain_isolated_per_tenant(self, db_session, sample_tenant, sample_user):
+        import uuid
+
+        from models import Tenant
+        from utils.pos_security import log_pos_fraud_signal, verify_pos_fraud_chain
+
+        unique = str(uuid.uuid4())[:8]
+        other_tenant = Tenant(
+            name=f"Other Company {unique}",
+            name_ar="شركة أخرى",
+            slug=f"other-company-{unique}",
+            email=f"other-{unique}@example.com",
+            phone_1="0500000001",
+            country="AE",
+            subscription_plan="basic",
+            default_currency="AED",
+            base_currency="AED",
+        )
+        db_session.add(other_tenant)
+        db_session.flush()
+
+        log_pos_fraud_signal("void_line", user_id=sample_user.id, tenant_id=sample_tenant.id)
+        foreign = log_pos_fraud_signal("void_line", user_id=sample_user.id, tenant_id=other_tenant.id)
+        assert foreign.prev_hash == ""
+        assert verify_pos_fraud_chain(sample_tenant.id) is True
+        assert verify_pos_fraud_chain(other_tenant.id) is True

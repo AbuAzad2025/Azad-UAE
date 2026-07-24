@@ -35,9 +35,10 @@
   const params = new URLSearchParams(window.location.search);
   const sessionId = params.get('session_id');
   const tenantId = params.get('tenant_id');
-  if (!sessionId || !tenantId) { document.getElementById('cdOrderNumber').textContent = '{{ t("Invalid Link") }}'; return; }
+  const token = params.get('token');
+  if (!sessionId || !tenantId || !token) { document.getElementById('cdOrderNumber').textContent = '{{ t("Invalid Link") }}'; return; }
 
-  const es = new EventSource('/pos/api/customer-display/'+sessionId+'/stream?tenant_id='+encodeURIComponent(tenantId));
+  const es = new EventSource('/pos/api/customer-display/'+sessionId+'/stream?tenant_id='+encodeURIComponent(tenantId)+'&token='+encodeURIComponent(token));
   es.onmessage = (e) => {
     try {
       const d = JSON.parse(e.data);

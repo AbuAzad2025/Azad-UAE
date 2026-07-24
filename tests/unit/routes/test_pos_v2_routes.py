@@ -100,6 +100,7 @@ def _pos_enabled_patches(**kwargs):
         stack.enter_context(patch("routes.pos.db.session", session_mock))
         stack.enter_context(patch("routes.pos.render_template", return_value="ok"))
         stack.enter_context(patch("routes.pos.LoggingCore.log_audit"))
+        stack.enter_context(patch("routes.pos.log_pos_fraud_signal"))
         stack.enter_context(patch("extensions.limiter.limit", return_value=lambda f: f))
         # Mock PosShift.query so _get_active_shift() and checkout work
         pos_shift_q = MagicMock()
@@ -126,12 +127,21 @@ def _pos_api_patches(**kwargs):
                     side_effect=kwargs.get("tenant_get", lambda m, i: _mock_product(i)),
                 )
             )
-            stack.enter_context(
-                patch(
-                    "routes.pos.tenant_query",
-                    return_value=_chain_query(all=kwargs.get("customers", [])),
+            tenant_query_models = kwargs.get("tenant_query_models", {})
+            default_shift = kwargs.get("shift", MagicMock(status="open"))
+
+            def _tenant_query_side_effect(model, *args, **kw):
+                key = getattr(model, "__name__", None)
+                if key in tenant_query_models:
+                    return tenant_query_models[key]
+                if key == "PosShift":
+                    return _chain_query(first=default_shift)
+                return _chain_query(
+                    all=kwargs.get("customers", []),
+                    first=kwargs.get("tenant_query_first"),
                 )
-            )
+
+            stack.enter_context(patch("routes.pos.tenant_query", side_effect=_tenant_query_side_effect))
             stack.enter_context(
                 patch(
                     "routes.pos.search_pos_products",
@@ -362,6 +372,16 @@ class TestPosCatalogApi:
         ):
             resp = pos_client.get("/pos/api/product?code=BC1")
         assert resp.get_json().get("warning") == "لا يوجد مخزون في المستودع المحدد."
+
+    def test_product_lookup_scale_barcode_enriches_payload(self, pos_client):
+        product = _mock_product()
+        product.barcode = "12345"
+        with _pos_api_patches(lookup_result=(product, {1: 5})):
+            resp = pos_client.get("/pos/api/product?code=2012345067899")
+        data = resp.get_json()
+        assert data["success"] is True
+        assert data["is_scale_item"] is True
+        assert data["scale_weight_kg"] == pytest.approx(6.789)
 
     def test_customers(self, pos_client):
         customer = MagicMock()
@@ -761,6 +781,12 @@ class TestPosHardware:
             resp = pos_client.post("/pos/api/hardware/open-drawer", json={})
         assert resp.status_code == 200
 
+    def test_open_drawer_denied_without_permission(self, pos_client, bypass_permission_auth):
+        bypass_permission_auth.has_permission.return_value = False
+        with _pos_api_patches():
+            resp = pos_client.post("/pos/api/hardware/open-drawer", json={})
+        assert resp.status_code == 403
+
     def test_open_drawer_generic_error(self, pos_client):
         with (
             _pos_api_patches(),
@@ -834,22 +860,18 @@ class TestPosKds:
     def test_kds_update_status(self, pos_client):
         order = MagicMock(id=1)
         with (
-            _pos_api_patches(),
-            patch("models.PosKdsOrder.query") as q,
+            _pos_api_patches(tenant_query_models={"PosKdsOrder": _chain_query(first=order)}),
             patch("routes.pos._notify_kds"),
         ):
-            q.filter_by.return_value.first.return_value = order
             resp = pos_client.post("/pos/api/kds/orders/1/status", json={"status": "ready"})
         assert resp.get_json()["success"] is True
 
     def test_kds_update_status_served_sets_completed_at(self, pos_client):
         order = MagicMock(id=1)
         with (
-            _pos_api_patches(),
-            patch("models.PosKdsOrder.query") as q,
+            _pos_api_patches(tenant_query_models={"PosKdsOrder": _chain_query(first=order)}),
             patch("routes.pos._notify_kds"),
         ):
-            q.filter_by.return_value.first.return_value = order
             resp = pos_client.post("/pos/api/kds/orders/1/status", json={"status": "served"})
         assert resp.get_json()["success"] is True
         assert order.completed_at is not None
@@ -924,8 +946,7 @@ class TestPosKds:
 
     def test_kds_update_invalid_status(self, pos_client):
         order = MagicMock(id=1)
-        with _pos_api_patches(), patch("models.PosKdsOrder.query") as q:
-            q.filter_by.return_value.first.return_value = order
+        with _pos_api_patches(tenant_query_models={"PosKdsOrder": _chain_query(first=order)}):
             resp = pos_client.post("/pos/api/kds/orders/1/status", json={"status": "bogus"})
         assert resp.status_code == 400
 
@@ -962,13 +983,12 @@ class TestPosFloors:
             shape="rectangle",
             status="free",
         )
-        with (
-            _pos_api_patches(),
-            patch("models.PosFloor.query") as fq,
-            patch("models.PosTable.query") as tq,
+        with _pos_api_patches(
+            tenant_query_models={
+                "PosFloor": _chain_query(first=floor),
+                "PosTable": _chain_query(all=[table]),
+            }
         ):
-            fq.filter_by.return_value.first.return_value = floor
-            tq.filter_by.return_value.order_by.return_value.all.return_value = [table]
             resp = pos_client.get("/pos/api/floors/1/tables")
         assert resp.status_code == 200
 
@@ -982,11 +1002,9 @@ class TestPosFloors:
         floor = MagicMock(id=1)
         table = MagicMock(id=4)
         with (
-            _pos_api_patches(),
-            patch("models.PosFloor.query") as fq,
+            _pos_api_patches(tenant_query_models={"PosFloor": _chain_query(first=floor)}),
             patch("models.PosTable", return_value=table),
         ):
-            fq.filter_by.return_value.first.return_value = floor
             resp = pos_client.post("/pos/api/tables/create", json={"floor_id": 1, "label": "T2"})
         assert resp.get_json()["success"] is True
 
@@ -1003,8 +1021,7 @@ class TestPosFloors:
 
     def test_table_status_update(self, pos_client):
         table = MagicMock(id=5)
-        with _pos_api_patches(), patch("models.PosTable.query") as tq:
-            tq.filter_by.return_value.first.return_value = table
+        with _pos_api_patches(tenant_query_models={"PosTable": _chain_query(first=table)}):
             resp = pos_client.post("/pos/api/tables/5/status", json={"status": "occupied"})
         assert resp.get_json()["success"] is True
 
@@ -1016,21 +1033,28 @@ class TestPosFloors:
 
     def test_table_status_invalid(self, pos_client):
         table = MagicMock(id=5)
-        with _pos_api_patches(), patch("models.PosTable.query") as tq:
-            tq.filter_by.return_value.first.return_value = table
+        with _pos_api_patches(tenant_query_models={"PosTable": _chain_query(first=table)}):
             resp = pos_client.post("/pos/api/tables/5/status", json={"status": "bogus"})
         assert resp.status_code == 400
 
     def test_table_assign(self, pos_client):
         table = MagicMock(id=6)
+        sale = MagicMock(id=100)
         with (
-            _pos_api_patches(),
-            patch("models.PosTable.query") as tq,
+            _pos_api_patches(
+                tenant_query_first=sale,
+                tenant_query_models={"PosTable": _chain_query(first=table)},
+            ),
             patch("models.PosTableOrder", return_value=MagicMock()),
         ):
-            tq.filter_by.return_value.first.return_value = table
             resp = pos_client.post("/pos/api/tables/6/assign", json={"sale_id": 100})
         assert resp.get_json()["success"] is True
+
+    def test_table_assign_rejects_foreign_sale(self, pos_client):
+        table = MagicMock(id=6)
+        with _pos_api_patches(tenant_query_models={"PosTable": _chain_query(first=table)}):
+            resp = pos_client.post("/pos/api/tables/6/assign", json={"sale_id": 999})
+        assert resp.status_code == 404
 
     def test_table_assign_not_found(self, pos_client):
         with _pos_api_patches(), patch("models.PosTable.query") as tq:
@@ -1040,35 +1064,63 @@ class TestPosFloors:
 
     def test_table_assign_missing_sale_id(self, pos_client):
         table = MagicMock(id=6)
-        with _pos_api_patches(), patch("models.PosTable.query") as tq:
-            tq.filter_by.return_value.first.return_value = table
+        with _pos_api_patches(tenant_query_models={"PosTable": _chain_query(first=table)}):
             resp = pos_client.post("/pos/api/tables/6/assign", json={})
         assert resp.status_code == 400
 
 
 class TestPosCustomerDisplay:
     @staticmethod
-    def _tenant_request(tenant_id=1):
+    @contextmanager
+    def _tenant_request(tenant_id=1, token_valid=True):
         req = MagicMock()
-        req.args.get = lambda key, **kwargs: tenant_id if key == "tenant_id" else kwargs.get("default")
-        return patch("routes.pos.request", req)
+        req.args.get = lambda key, *args, **kwargs: (
+            tenant_id
+            if key == "tenant_id"
+            else ("tok" if key == "token" else kwargs.get("default", args[0] if args else None))
+        )
+        with (
+            patch("routes.pos.request", req),
+            patch("routes.pos.verify_customer_display_token", return_value=token_valid),
+        ):
+            yield
 
-    def test_customer_display_page(self, pos_client):
+    def test_customer_display_page_requires_token(self, pos_client):
         with _pos_enabled_patches():
             resp = pos_client.get("/pos/customer-display")
+        assert resp.status_code == 403
+
+    def test_customer_display_page_valid_token(self, pos_client):
+        with (
+            _pos_enabled_patches(),
+            patch("routes.pos.verify_customer_display_token", return_value=True),
+        ):
+            resp = pos_client.get("/pos/customer-display?session_id=1&tenant_id=1&token=tok")
         assert resp.status_code == 200
+
+    def test_customer_display_page_bad_token(self, pos_client):
+        with (
+            _pos_enabled_patches(),
+            patch("routes.pos.verify_customer_display_token", return_value=False),
+        ):
+            resp = pos_client.get("/pos/customer-display?session_id=1&tenant_id=1&token=bad")
+        assert resp.status_code == 403
 
     def test_customer_display_stream_missing_tenant(self):
         from routes.pos import customer_display_stream
 
         req = MagicMock()
-        req.args.get = lambda key, **kwargs: None
+        req.args.get = lambda key, *args, **kwargs: "tok" if key == "token" else None
         with patch("routes.pos.request", req):
-            gen, headers = customer_display_stream(1)
-        assert headers["Content-Type"] == "text/event-stream"
-        assert '"closed"' in next(gen)
-        with pytest.raises(StopIteration):
-            next(gen)
+            resp, status = customer_display_stream(1)
+        assert status == 403
+
+    def test_customer_display_stream_rejects_bad_token(self):
+        from routes.pos import customer_display_stream
+
+        with self._tenant_request(1, token_valid=False):
+            resp, status = customer_display_stream(1)
+        assert status == 403
 
     def test_customer_display_stream_closed(self):
         from routes.pos import customer_display_stream

@@ -180,4 +180,4 @@ class TestAlembicSingleHead:
             if down:
                 down_revisions.add(down.group(1))
         heads = [rev for rev in revisions if rev not in down_revisions]
-        assert heads == ["d4a2b8c91e07"]
+        assert heads == ["f7b3a1c82e09"]

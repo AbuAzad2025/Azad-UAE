@@ -48,6 +48,7 @@ from .budget import Budget, BudgetLine
 from .cost_center import CostCenter
 from .profit_center import ProfitCenter
 from .product_warehouse_cost import ProductWarehouseCost
+from .stock_batch import StockBatch
 from .product_cost_history import ProductCostHistory
 from .exchange_rate_record import ExchangeRateRecord
 from .cash_box import CashBox
@@ -77,6 +78,7 @@ from .partner_transaction import PartnerTransaction
 from .pos_cart import PosCart
 from .pos_cash_movement import PosCashMovement
 from .pos_floor import PosFloor, PosTable, PosTableOrder
+from .pos_fraud_log import PosFraudSignal
 from .pos_kds_order import PosKdsOrder
 from .pos_order_type import PosOrderType, ensure_default_pos_order_types
 from .pos_override_token import PosOverrideToken
@@ -112,6 +114,7 @@ __all__ = [
     "ProductSerial",
     "Warehouse",
     "StockMovement",
+    "StockBatch",
     "ProductWarehouseStock",
     "Branch",
     "Sale",
@@ -204,6 +207,7 @@ __all__ = [
     "Shipment",
     "JournalEntryAudit",
     "PosFloor",
+    "PosFraudSignal",
     "PosTable",
     "PosTableOrder",
     "PosCart",

@@ -54,6 +54,7 @@ from utils.pos_helpers import (
     get_pos_walkin_customer,
     lookup_pos_product_exact,
     merge_checkout_lines,
+    parse_scale_barcode,
     payment_amount_base,
     require_active_session,
     safe_decimal,
@@ -63,8 +64,11 @@ from utils.pos_helpers import (
 from utils.pos_security import (
     OVERRIDE_TOKEN_TTL_SECONDS,
     can_view_pos_expected,
+    issue_customer_display_token,
     issue_pos_session_token,
+    log_pos_fraud_signal,
     sign_override_token,
+    verify_customer_display_token,
     verify_pos_session_token,
 )
 from utils.pos_features import pos_feature_enabled
@@ -621,6 +625,10 @@ def api_product_lookup():
 
     payload = serialize_pos_product(product, stock_map, warehouse_id=warehouse_id)
     payload["success"] = True
+    scale_info = parse_scale_barcode(code)
+    if scale_info and scale_info["weight_kg"] > 0:
+        payload["is_scale_item"] = True
+        payload["scale_weight_kg"] = float(scale_info["weight_kg"])
     if not product.is_active:
         payload["warning"] = gettext("المنتج غير نشط.")
     elif payload.get("is_out_of_stock"):
@@ -1384,6 +1392,13 @@ def api_session_current():
         "status": session.status,
         "terminal_id": session.terminal_id,
     }
+    tid = get_active_tenant_id(current_user)
+    payload["customer_display_url"] = url_for(
+        "pos.customer_display",
+        session_id=session.id,
+        tenant_id=tid,
+        token=issue_customer_display_token(session.id, tid),
+    )
     if _can_view_expected():
         payload.update(
             {
@@ -1410,7 +1425,7 @@ def api_session_open():
             415,
         )
     payload = request.get_json(silent=True) or {}
-    opening_balance = Decimal(payload.get("opening_balance", 0) or 0)
+    opening_balance = safe_decimal(payload.get("opening_balance"))
     notes = (payload.get("notes") or "").strip() or None
     terminal_id = (payload.get("terminal_id") or "").strip() or None
 
@@ -1625,8 +1640,8 @@ def _get_active_shift(user=None) -> PosShift | None:
     if not session:
         return None
     return (
-        PosShift.query.filter(
-            PosShift.tenant_id == int(tid),
+        tenant_query(PosShift)
+        .filter(
             PosShift.session_id == session.id,
             PosShift.user_id == current_user.id,
             PosShift.status == PosShift.SHIFT_OPEN,
@@ -1976,6 +1991,13 @@ def api_drawer_open():
                 },
                 severity="high",
             )
+            log_pos_fraud_signal(
+                "drawer_open",
+                user_id=current_user.id,
+                session_id=session.id,
+                branch_id=session.branch_id,
+                details={"reason": reason, "supervisor_user_id": supervisor_id},
+            )
     except PosOverrideError as exc:
         return jsonify({"success": False, "error": str(exc)}), 403
 
@@ -2156,6 +2178,17 @@ def api_cart_void_line(cart_id):
                     "supervisor_user_id": supervisor_id,
                 },
                 severity="high",
+            )
+            log_pos_fraud_signal(
+                "void_line",
+                user_id=current_user.id,
+                session_id=session.id,
+                branch_id=session.branch_id,
+                details={
+                    "cart_id": cart.id,
+                    "product_id": product_id,
+                    "supervisor_user_id": supervisor_id,
+                },
             )
     except PosOverrideError as exc:
         return jsonify({"success": False, "error": str(exc)}), 403
@@ -2388,8 +2421,7 @@ def kds_stream():
 def kds_orders():
     from models import PosKdsOrder
 
-    tid = get_active_tenant_id(current_user)
-    orders = PosKdsOrder.query.filter_by(tenant_id=tid).order_by(PosKdsOrder.created_at.desc()).limit(50).all()
+    orders = tenant_query(PosKdsOrder).order_by(PosKdsOrder.created_at.desc()).limit(50).all()
     return jsonify(
         [
             {
@@ -2412,7 +2444,7 @@ def kds_update_status(order_id):
     from datetime import datetime, timezone
 
     tid = get_active_tenant_id(current_user)
-    order = PosKdsOrder.query.filter_by(id=order_id, tenant_id=tid).first()
+    order = tenant_query(PosKdsOrder).filter_by(id=order_id).first()
     if not order:
         return jsonify({"error": gettext("الطلب غير موجود")}), 404
     payload = request.get_json(silent=True) or {}
@@ -2446,6 +2478,9 @@ def kds_dashboard():
 @pos_bp.route("/api/customer-display/<int:session_id>/stream")
 def customer_display_stream(session_id):
     display_tenant_id = request.args.get("tenant_id", type=int)
+    display_token = request.args.get("token", "")
+    if not display_tenant_id or not verify_customer_display_token(session_id, display_tenant_id, display_token):
+        return jsonify({"error": gettext("رابط شاشة العرض غير صالح.")}), 403
 
     def stream():
         last_status = None
@@ -2503,6 +2538,11 @@ def customer_display_stream(session_id):
 
 @pos_bp.route("/customer-display")
 def customer_display():
+    session_id = request.args.get("session_id", type=int)
+    tenant_id = request.args.get("tenant_id", type=int)
+    token = request.args.get("token", "")
+    if not session_id or not tenant_id or not verify_customer_display_token(session_id, tenant_id, token):
+        abort(403)
     return render_template("pos/customer_display.html")
 
 
@@ -2548,7 +2588,54 @@ def hardware_print_receipt():
 @login_required
 @permission_required("manage_sales")
 def hardware_open_drawer():
-    """فتح درج النقود"""
+    """فتح درج النقود عبر وكيل الأجهزة — نفس بوابة التفويض والتدقيق في api_drawer_open."""
+    payload = request.get_json(silent=True) or {}
+    session = get_active_session(current_user)
+    if not session:
+        if get_paused_session(current_user):
+            return _paused_session_error_response()
+        return (
+            jsonify({"success": False, "error": gettext("لا توجد جلسة كاشير مفتوحة.")}),
+            403,
+        )
+    token_error = _require_session_token(session, payload)
+    if token_error:
+        return token_error
+
+    try:
+        with atomic_transaction("pos_hardware_drawer_open"):
+            supervisor_id = PosOverrideService.require_permission_or_override(
+                user=current_user,
+                action="no_sale_drawer",
+                override_token=payload.get("override_token"),
+            )
+            LoggingCore.log_audit(
+                "pos_no_sale_drawer",
+                "pos",
+                session.id,
+                {
+                    "session_id": session.id,
+                    "reason": (payload.get("reason") or "").strip(),
+                    "cashier_user_id": current_user.id,
+                    "supervisor_user_id": supervisor_id,
+                    "channel": "hardware_agent",
+                },
+                severity="high",
+            )
+            log_pos_fraud_signal(
+                "drawer_open",
+                user_id=current_user.id,
+                session_id=session.id,
+                branch_id=session.branch_id,
+                details={
+                    "reason": (payload.get("reason") or "").strip(),
+                    "supervisor_user_id": supervisor_id,
+                    "channel": "hardware_agent",
+                },
+            )
+    except PosOverrideError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 403
+
     try:
         body = request.get_data()
         resp = requests.post(
@@ -2591,8 +2678,7 @@ def hardware_status():
 def api_floors():
     from models import PosFloor
 
-    tid = get_active_tenant_id(current_user)
-    floors = PosFloor.query.filter_by(tenant_id=tid).order_by(PosFloor.sort_order).all()
+    floors = tenant_query(PosFloor).order_by(PosFloor.sort_order).all()
     return jsonify(
         [
             {
@@ -2630,11 +2716,10 @@ def api_floor_create():
 def api_floor_tables(floor_id):
     from models import PosFloor, PosTable
 
-    tid = get_active_tenant_id(current_user)
-    floor = PosFloor.query.filter_by(id=floor_id, tenant_id=tid).first()
+    floor = tenant_query(PosFloor).filter_by(id=floor_id).first()
     if not floor:
         return jsonify({"error": gettext("الطابق غير موجود")}), 404
-    tables = PosTable.query.filter_by(floor_id=floor_id, is_active=True).order_by(PosTable.sort_order).all()
+    tables = tenant_query(PosTable).filter_by(floor_id=floor_id, is_active=True).order_by(PosTable.sort_order).all()
     return jsonify(
         [
             {
@@ -2663,7 +2748,7 @@ def api_table_create():
     if not floor_id or not label:
         return jsonify({"error": gettext("الطابق والتسمية مطلوبان")}), 400
     tid = get_active_tenant_id(current_user)
-    floor = PosFloor.query.filter_by(id=floor_id, tenant_id=tid).first()
+    floor = tenant_query(PosFloor).filter_by(id=floor_id).first()
     if not floor:
         return jsonify({"error": gettext("الطابق غير موجود")}), 404
     table = PosTable(
@@ -2686,8 +2771,7 @@ def api_table_create():
 def api_table_update_status(table_id):
     from models import PosTable
 
-    tid = get_active_tenant_id(current_user)
-    table = PosTable.query.filter_by(id=table_id, tenant_id=tid).first()
+    table = tenant_query(PosTable).filter_by(id=table_id).first()
     if not table:
         return jsonify({"error": gettext("الطاولة غير موجودة")}), 404
     payload = request.get_json(silent=True) or {}
@@ -2706,18 +2790,22 @@ def api_table_assign(table_id):
     from models import PosTable, PosTableOrder
 
     tid = get_active_tenant_id(current_user)
-    table = PosTable.query.filter_by(id=table_id, tenant_id=tid).first()
+    table = tenant_query(PosTable).filter_by(id=table_id).first()
     if not table:
         return jsonify({"error": gettext("الطاولة غير موجودة")}), 404
     payload = request.get_json(silent=True) or {}
     sale_id = payload.get("sale_id")
     if not sale_id:
         return jsonify({"error": gettext("رقم الفاتورة مطلوب")}), 400
-    table.status = "occupied"
+    from models import Sale
+
+    sale = tenant_query(Sale).filter(Sale.id == sale_id).first()
+    if sale is None:
+        return jsonify({"error": gettext("الفاتورة غير موجودة")}), 404
     torder = PosTableOrder(
         tenant_id=tid,
         table_id=table_id,
-        sale_id=sale_id,
+        sale_id=sale.id,
         guest_count=payload.get("guest_count", 1),
     )
     with atomic_transaction("pos_table_assign"):

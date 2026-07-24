@@ -14,6 +14,7 @@ from utils.pos_helpers import (
     get_pos_walkin_customer,
     lookup_pos_product_exact,
     merge_checkout_lines,
+    parse_scale_barcode,
     require_active_session,
     search_pos_products,
     serialize_pos_product,
@@ -338,6 +339,14 @@ class TestClosePosSession:
             side_effect=["1110", "6995"],
         )
         create_je = mocker.patch("services.gl_service.GLService.create_journal_entry")
+        mocker.patch(
+            "services.advanced_journal_manager.AdvancedJournalEntryManager.validate_entry",
+            return_value=MagicMock(validation_errors=None),
+        )
+        mocker.patch(
+            "services.advanced_journal_manager.AdvancedJournalEntryManager.post_entry",
+            return_value=MagicMock(),
+        )
         close_pos_session(session, Decimal("95"))
         create_je.assert_called_once()
 
@@ -363,6 +372,14 @@ class TestClosePosSession:
             side_effect=["1110", "6995"],
         )
         create_je = mocker.patch("services.gl_service.GLService.create_journal_entry")
+        mocker.patch(
+            "services.advanced_journal_manager.AdvancedJournalEntryManager.validate_entry",
+            return_value=MagicMock(validation_errors=None),
+        )
+        mocker.patch(
+            "services.advanced_journal_manager.AdvancedJournalEntryManager.post_entry",
+            return_value=MagicMock(),
+        )
         close_pos_session(session, Decimal("108"))
         create_je.assert_called_once()
 
@@ -388,5 +405,77 @@ class TestClosePosSession:
             side_effect=["1110-B", "6995"],
         )
         create_je = mocker.patch("services.gl_service.GLService.create_journal_entry")
+        mocker.patch(
+            "services.advanced_journal_manager.AdvancedJournalEntryManager.validate_entry",
+            return_value=MagicMock(validation_errors=None),
+        )
+        mocker.patch(
+            "services.advanced_journal_manager.AdvancedJournalEntryManager.post_entry",
+            return_value=MagicMock(),
+        )
         close_pos_session(session, Decimal("98"))
         create_je.assert_called_once()
+
+
+class _ScaleLookupQuery:
+    """Two-step query: exact-code lookup misses, item-code lookup hits."""
+
+    def __init__(self, product):
+        self._product = product
+        self._first_calls = 0
+
+    def filter(self, *args, **kwargs):
+        return self
+
+    def first(self):
+        self._first_calls += 1
+        return self._product if self._first_calls > 1 else None
+
+
+class TestScaleBarcode:
+    def test_parse_valid_weight_barcode(self):
+        info = parse_scale_barcode("2012345067899")
+        assert info["item_code"] == "12345"
+        assert info["weight_grams"] == Decimal("6789")
+        assert info["weight_kg"] == Decimal("6.789")
+
+    def test_parse_zero_weight_valid(self):
+        info = parse_scale_barcode("2012345000001")
+        assert info["item_code"] == "12345"
+        assert info["weight_kg"] == Decimal("0.000")
+
+    def test_parse_rejects_bad_checksum(self):
+        assert parse_scale_barcode("2012345067890") is None
+
+    def test_parse_rejects_non_scale_prefix(self):
+        assert parse_scale_barcode("2212345067899") is None
+
+    def test_parse_rejects_short_and_non_digit(self):
+        assert parse_scale_barcode("2012345") is None
+        assert parse_scale_barcode("20123450678AB") is None
+        assert parse_scale_barcode("") is None
+        assert parse_scale_barcode(None) is None
+
+    def test_scale_barcode_resolves_product(self, mocker):
+        product = _product()
+        product.barcode = "12345"
+        base = _ScaleLookupQuery(product)
+        mocker.patch(
+            "utils.pos_helpers.StockService.get_visible_products_query",
+            return_value=base,
+        )
+        mocker.patch("utils.pos_helpers._warehouse_ids_for_stock", return_value=[1])
+        mocker.patch("utils.pos_helpers.get_branch_stock_map", return_value={1: Decimal("3")})
+        found, stock = lookup_pos_product_exact("2012345067899")
+        assert found.id == product.id
+        assert stock[1] == Decimal("3")
+
+    def test_scale_barcode_unknown_item_returns_none(self, mocker):
+        base = _FakeProductQuery(first=None)
+        mocker.patch(
+            "utils.pos_helpers.StockService.get_visible_products_query",
+            return_value=base,
+        )
+        found, stock = lookup_pos_product_exact("2012345067899")
+        assert found is None
+        assert stock == {}

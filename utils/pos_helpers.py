@@ -29,6 +29,33 @@ def safe_decimal(value, default: Decimal = Decimal("0")) -> Decimal:
         return default
 
 
+# ─── Scale (weight-embedded) barcodes — GS1 variable-measure, prefix 20 ───
+
+SCALE_BARCODE_PREFIX = "20"
+
+
+def parse_scale_barcode(code) -> dict | None:
+    """Parse a 13-digit weight-embedded scale barcode (prefix ``20``).
+
+    Layout: ``20`` + 5-digit item code + 5-digit weight in grams + EAN-13
+    check digit. Returns ``{"item_code", "weight_grams", "weight_kg"}`` or
+    ``None`` when the code is not a structurally valid scale barcode.
+    """
+    raw = str(code or "").strip()
+    if len(raw) != 13 or not raw.isdigit() or not raw.startswith(SCALE_BARCODE_PREFIX):
+        return None
+    body = [int(d) for d in raw[:12]]
+    checksum = (10 - (sum(body[::2]) + 3 * sum(body[1::2])) % 10) % 10
+    if checksum != int(raw[12]):
+        return None
+    grams = Decimal(raw[7:12])
+    return {
+        "item_code": raw[2:7],
+        "weight_grams": grams,
+        "weight_kg": (grams / Decimal("1000")).quantize(_AED_QUANTUM, rounding=ROUND_HALF_UP),
+    }
+
+
 def payment_amount_base(payment, tenant_id: int | None = None) -> Decimal:
     """Exact base-currency amount of a sale payment row.
 
@@ -183,6 +210,17 @@ def lookup_pos_product_exact(
             db.func.lower(Product.sku) == code.lower(),
         )
     ).first()
+    if not product:
+        scale = parse_scale_barcode(code)
+        if scale:
+            item = scale["item_code"].lower()
+            product = base.filter(
+                db.or_(
+                    db.func.lower(Product.barcode) == item,
+                    db.func.lower(Product.sku) == item,
+                    db.func.lower(Product.barcode) == f"{SCALE_BARCODE_PREFIX}{item}",
+                )
+            ).first()
     if not product:
         return None, {}
 
@@ -353,12 +391,14 @@ def _accumulate_close_totals(session: PosSession, sales_in_session: list) -> tup
 
 def _post_session_difference_gl(session: PosSession, closing_cash: Decimal):
     """Balanced Cash Over/Short journal for a closed session (session-level only)."""
-    from services.gl_service import GLService
+    from services.gl_posting import post_or_fail
     from utils.gl_reference_types import GLRef
 
     tenant_id = session.tenant_id
     diff_aed = safe_decimal(session.difference)
     cash_acct_code = resolve_pos_cash_account_code(tenant_id, session.branch_id)
+    from services.gl_service import GLService
+
     diff_acct_code = GLService.get_account_code_for_concept(
         "POS_CASH_DIFFERENCE",
         tenant_id=tenant_id,
@@ -406,15 +446,15 @@ def _post_session_difference_gl(session: PosSession, closing_cash: Decimal):
                 "description": f"تسوية فائض كاشير POS — جلسة {session.session_number}",
             }
         )
-    GLService.create_journal_entry(
-        tenant_id=tenant_id,
-        branch_id=session.branch_id,
+    post_or_fail(
+        lines,
+        description=f"تسوية جلسة POS {session.session_number} — رصيد مغلق: {closing_cash} | متوقع: {session.expected_balance} | فرق: {diff_aed}",
         reference_type=GLRef.POS_CASH_DIFFERENCE,
         reference_id=session.id,
         date=session.closed_at,
-        description=f"تسوية جلسة POS {session.session_number} — رصيد مغلق: {closing_cash} | متوقع: {session.expected_balance} | فرق: {diff_aed}",
-        lines=lines,
+        branch_id=session.branch_id,
         user_id=session.user_id,
+        tenant_id=tenant_id,
     )
 
 

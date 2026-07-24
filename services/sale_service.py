@@ -25,11 +25,16 @@ from utils.tax_settings import normalize_tax_rate, should_post_vat_gl
 
 class SaleService:
     @staticmethod
-    def _commission_base_aed(profit_margin, exchange_rate):
+    def _commission_base_aed(profit_margin, exchange_rate, currency=None, tenant_id=None):
         if profit_margin <= Decimal("0"):
             return Decimal("0")
         try:
-            return (profit_margin * exchange_rate).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+            return convert_and_quantize_aed(
+                profit_margin,
+                currency or get_system_default_currency(),
+                exchange_rate,
+                tenant_id=tenant_id,
+            )
         except Exception:
             return profit_margin
 
@@ -290,7 +295,12 @@ class SaleService:
                 cost_basis = (unit_cost * qty_dec).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
                 profit_margin = (revenue_excl_vat - cost_basis).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
-                base_amount = SaleService._commission_base_aed(profit_margin, exchange_rate)
+                base_amount = SaleService._commission_base_aed(
+                    profit_margin,
+                    exchange_rate,
+                    currency=getattr(sale, "currency", None),
+                    tenant_id=tenant_id,
+                )
 
                 for ps in getattr(product, "partner_shares", []) or []:
                     partner_customer_id = getattr(ps, "partner_customer_id", None)
@@ -388,8 +398,11 @@ class SaleService:
                 payment_exchange_decimal = (
                     Decimal(str(payment_exchange_rate)) if payment_exchange_rate else Decimal("1")
                 )
-                paid_amount_aed = (paid_amount * payment_exchange_decimal).quantize(
-                    Decimal("0.001"), rounding=ROUND_HALF_UP
+                paid_amount_aed = convert_and_quantize_aed(
+                    paid_amount,
+                    payment_currency,
+                    payment_exchange_decimal,
+                    tenant_id=getattr(sale, "tenant_id", None),
                 )
 
                 # Validate payment amount (in AED)
@@ -464,7 +477,6 @@ class SaleService:
 
         warehouse_id = sale.warehouse_id
         tenant_id = getattr(sale, "tenant_id", None)
-        Decimal(str(sale.exchange_rate or 1))
 
         if SaleService.has_inventory_posted(sale):
             raise ValueError("تم تنفيذ المخزون لهذه الفاتورة مسبقاً")
@@ -485,9 +497,12 @@ class SaleService:
             SaleService._create_split_payments(sale, prepared)
         elif payment_data and payment_data.get("amount", 0) > 0:
             paid_amount = Decimal(str(payment_data.get("amount", 0)))
+            payment_currency = payment_data.get("currency", get_system_default_currency())
             payment_exchange_rate = payment_data.get("exchange_rate", 1.0)
             payment_exchange_decimal = Decimal(str(payment_exchange_rate)) if payment_exchange_rate else Decimal("1")
-            paid_aed = (paid_amount * payment_exchange_decimal).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+            paid_aed = convert_and_quantize_aed(
+                paid_amount, payment_currency, payment_exchange_decimal, tenant_id=tenant_id
+            )
             if paid_aed < Decimal("0"):
                 raise ValueError("مبلغ الدفع لا يمكن أن يكون سالب")
 
@@ -750,14 +765,15 @@ class SaleService:
     def has_inventory_posted(sale):
         from models.warehouse import StockMovement
 
-        return (
-            StockMovement.query.filter_by(
-                reference_type=GLRef.SALE,
-                reference_id=sale.id,
-                movement_type="sale",
-            ).first()
-            is not None
+        query = StockMovement.query.filter_by(
+            reference_type=GLRef.SALE,
+            reference_id=sale.id,
+            movement_type="sale",
         )
+        tenant_id = getattr(sale, "tenant_id", None)
+        if tenant_id is not None:
+            query = query.filter(StockMovement.tenant_id == tenant_id)
+        return query.first() is not None
 
     @staticmethod
     def prepare_split_payments(payments_data, tenant_id=None):

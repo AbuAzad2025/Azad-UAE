@@ -6,6 +6,14 @@
 		lastProductResults: [],
 		barcodeScanner: null,
 	};
+	// One idempotency key per cart lifecycle — bumped on every cart mutation
+	// and after each successful checkout, so retries/SW replays of the SAME
+	// cart dedupe server-side while a changed cart always posts fresh.
+	const newCartKey = () =>
+		window.crypto && crypto.randomUUID
+			? crypto.randomUUID()
+			: `k-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+	state.idemKey = newCartKey();
 	const qs = (s, r = document) => r.querySelector(s);
 	const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
 	const fmt = (n) => Number(n || 0).toFixed(2);
@@ -205,6 +213,57 @@
 			prices_include_vat: pricesIncludeVatMeta,
 		};
 	};
+	// Upsell prompts: live evaluation while composing the cart, plus a recap
+	// inside the done modal after checkout (server returns upsell_prompts).
+	let upsellTimer = null;
+	const renderUpsellMessages = (container, prompts) => {
+		if (!container) return;
+		container.innerHTML = "";
+		const list = Array.isArray(prompts) ? prompts : [];
+		list.forEach((p) => {
+			const div = document.createElement("div");
+			div.className = "pos-upsell-item";
+			div.textContent = p?.message || "";
+			container.appendChild(div);
+		});
+		container.classList.toggle("d-none", list.length === 0);
+	};
+	const evaluateUpsell = async () => {
+		const bar = qs("#upsellBar");
+		if (!state.cart.length) {
+			renderUpsellMessages(bar, []);
+			return;
+		}
+		try {
+			const r = await fetch("/pos/api/promotions/evaluate", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Accept: "application/json",
+					"X-CSRFToken": csrf,
+				},
+				credentials: "same-origin",
+				body: JSON.stringify({
+					customer_id: state.customer?.id || null,
+					lines: state.cart.map((it) => ({
+						product_id: it.id,
+						quantity: it.qty,
+						unit_price: it.price,
+						discount_percent: it.discountPercent,
+					})),
+				}),
+			});
+			const j = await r.json().catch(() => ({}));
+			renderUpsellMessages(bar, r.ok && j.success ? j.upsell_prompts : []);
+		} catch (_) {
+			renderUpsellMessages(bar, []);
+		}
+	};
+	const scheduleUpsellEval = () => {
+		clearTimeout(upsellTimer);
+		upsellTimer = setTimeout(() => void evaluateUpsell(), 400);
+	};
+
 	const renderCart = async () => {
 		const body = qs("#cartBody");
 		body.innerHTML = "";
@@ -214,6 +273,7 @@
 			body.innerHTML =
 				'<tr id="cartEmptyRow"><td colspan="6" class="text-center text-muted py-4">السلة فارغة</td></tr>';
 			await recalc();
+			scheduleUpsellEval();
 			return;
 		}
 		const sym = currencySymbolFor(selectedCurrency());
@@ -244,6 +304,7 @@
 			body.appendChild(tr);
 		});
 		await recalc();
+		scheduleUpsellEval();
 	};
 
 	qs("#cartBody").addEventListener("click", (e) => {
@@ -256,17 +317,18 @@
 		if (act === "dec") state.cart[idx].qty = Math.max(0.001, Number(state.cart[idx].qty) - 1);
 		void renderCart();
 	});
-	const addToCart = async (p) => {
+	const addToCart = async (p, qty = 1) => {
+		state.idemKey = newCartKey();
 		const existing = state.cart.find((x) => x.id === p.id);
 		if (existing) {
-			existing.qty = Number(existing.qty) + 1;
+			existing.qty = Number(existing.qty) + qty;
 		} else {
 			state.cart.push({
 				id: p.id,
 				name: p.name,
 				sku: p.sku || "",
 				barcode: p.barcode || "",
-				qty: 1,
+				qty: qty,
 				basePrice: toNum(p.price),
 				price: priceForCurrency(toNum(p.price)),
 				discountPercent: 0,
@@ -320,7 +382,7 @@
 				});
 				box.appendChild(a);
 			});
-			box.classList.toggle("d-none", res.length === 0);
+			box.classList.toggle("d-none", res.data.length === 0);
 		}, 180);
 	});
 	qs("#clearCustomer").addEventListener("click", () => {
@@ -451,6 +513,7 @@
 					: state.cart[idx].price;
 		}
 		if (k === "disc") state.cart[idx].discountPercent = Math.max(0, Math.min(100, toNum(t.value)));
+		state.idemKey = newCartKey();
 		void renderCart();
 	});
 	qs("#cartBody").addEventListener("click", (e) => {
@@ -459,6 +522,7 @@
 		const idx = Number(btn.getAttribute("data-i"));
 		if (!Number.isFinite(idx)) return;
 		state.cart.splice(idx, 1);
+		state.idemKey = newCartKey();
 		void renderCart();
 	});
 	qsa("#taxRate,#shippingCost,#discountAmount").forEach((el) => {
@@ -468,6 +532,188 @@
 	qs("#currency").addEventListener("change", loadRateForCurrency);
 	qs("#exchangeRate").addEventListener("input", updateCartPrices);
 	qs("#exchangeRate").addEventListener("change", updateCartPrices);
+	// Supervisor override: exchange a PIN for a single-use override token and
+	// retry guarded requests (discount override / no-sale drawer open).
+	let pinResolver = null;
+	const settlePin = (token) => {
+		if (pinResolver) {
+			pinResolver(token);
+			pinResolver = null;
+		}
+	};
+	const requestOverrideToken = (action) =>
+		new Promise((resolve) => {
+			const modalEl = qs("#posPinModal");
+			if (!modalEl) {
+				resolve(null);
+				return;
+			}
+			pinResolver = resolve;
+			modalEl.dataset.action = action;
+			qs("#posPinInput").value = "";
+			qs("#posPinError").classList.add("d-none");
+			$("#posPinModal").modal("show");
+			setTimeout(() => qs("#posPinInput").focus(), 300);
+		});
+	const confirmPin = async () => {
+		const err = qs("#posPinError");
+		const action = qs("#posPinModal").dataset.action || "";
+		const pin = qs("#posPinInput").value.trim();
+		try {
+			const r = await fetch("/pos/api/authorize-override", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Accept: "application/json",
+					"X-CSRFToken": csrf,
+				},
+				credentials: "same-origin",
+				body: JSON.stringify({ pin, action }),
+			});
+			const j = await r.json().catch(() => ({}));
+			if (r.ok && j.success && j.override_token) {
+				$("#posPinModal").modal("hide");
+				settlePin(j.override_token);
+				return;
+			}
+			err.textContent = j.error || "تعذر التفويض";
+			err.classList.remove("d-none");
+		} catch (_) {
+			err.textContent = "فشل الاتصال بالخادم";
+			err.classList.remove("d-none");
+		}
+	};
+	const postWithOverride = async (url, body, action) => {
+		const send = async (token) => {
+			const payload = token ? { ...body, override_token: token } : body;
+			const r = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Accept: "application/json",
+					"X-CSRFToken": csrf,
+				},
+				credentials: "same-origin",
+				body: JSON.stringify(payload),
+			});
+			const j = await r.json().catch(() => ({}));
+			return { r, j };
+		};
+		const first = await send(null);
+		if (first.r.status !== 403) return first;
+		const token = await requestOverrideToken(action);
+		if (!token) return first;
+		return send(token);
+	};
+	const needsOverride = (r, j) =>
+		r.status === 403 && typeof j.error === "string" && j.error.includes("تفويض");
+
+	qs("#posPinConfirm")?.addEventListener("click", () => void confirmPin());
+	qs("#posPinInput")?.addEventListener("keydown", (e) => {
+		if (e.key === "Enter") {
+			e.preventDefault();
+			void confirmPin();
+		}
+	});
+	$("#posPinModal").on("hidden.bs.modal", () => settlePin(null));
+	qs("#drawerOpenBtn")?.addEventListener("click", async () => {
+		try {
+			const { r, j } = await postWithOverride(
+				"/pos/api/drawer/open",
+				{ reason: "فتح يدوي من الشاشة" },
+				"no_sale_drawer",
+			);
+			if (r.ok && j.success) {
+				showAlert("تم فتح الدرج", "success");
+			} else {
+				showAlert(j.error || "تعذر فتح الدرج", "warning");
+			}
+		} catch (_) {
+			showAlert("فشل الاتصال بالخادم", "warning");
+		}
+	});
+
+	// Split tender: multiple payment chunks in one checkout (server `payments`).
+	const SPLIT_METHODS = [
+		["cash", "نقدي"],
+		["card", "بطاقة"],
+		["bank_transfer", "تحويل بنكي"],
+		["e_wallet", "محفظة إلكترونية"],
+		["cheque", "شيك"],
+	];
+	const splitEnabled = () => qs("#splitTenderToggle")?.checked === true;
+	const splitSumRefresh = () => {
+		let sum = 0;
+		qsa("#splitTenderRows .split-amount").forEach((inp) => {
+			sum += toNum(inp.value) || 0;
+		});
+		const el = qs("#splitTenderSum");
+		if (el) el.textContent = fmt(sum);
+	};
+	const addSplitRow = (amount, method) => {
+		const rows = qs("#splitTenderRows");
+		if (!rows) return;
+		const row = document.createElement("div");
+		row.className = "split-row d-flex align-items-center mb-1";
+		const amountInp = document.createElement("input");
+		amountInp.type = "number";
+		amountInp.step = "0.01";
+		amountInp.min = "0";
+		amountInp.className = "form-control form-control-sm split-amount mr-1";
+		amountInp.value = amount || "";
+		const methodSel = document.createElement("select");
+		methodSel.className = "form-control form-control-sm split-method mr-1";
+		SPLIT_METHODS.forEach(([val, label]) => {
+			const opt = document.createElement("option");
+			opt.value = val;
+			opt.textContent = label;
+			methodSel.appendChild(opt);
+		});
+		methodSel.value = method || "cash";
+		const removeBtn = document.createElement("button");
+		removeBtn.type = "button";
+		removeBtn.className = "btn btn-sm btn-outline-danger split-remove";
+		removeBtn.textContent = "×";
+		removeBtn.addEventListener("click", () => {
+			row.remove();
+			splitSumRefresh();
+		});
+		amountInp.addEventListener("input", splitSumRefresh);
+		row.appendChild(amountInp);
+		row.appendChild(methodSel);
+		row.appendChild(removeBtn);
+		rows.appendChild(row);
+		splitSumRefresh();
+	};
+	const readSplitPayments = () => {
+		const rows = qsa("#splitTenderRows .split-row");
+		if (!rows.length) {
+			showAlert("أضف دفعة واحدة على الأقل أو أوقف الدفع المتعدد", "warning");
+			return null;
+		}
+		const cur = qs("#currency").value;
+		const rate = toNum(qs("#exchangeRate").value) || 1;
+		const chunks = [];
+		for (const row of rows) {
+			const amount = toNum(row.querySelector(".split-amount")?.value) || 0;
+			const method = row.querySelector(".split-method")?.value || "";
+			if (amount <= 0 || !method) {
+				showAlert("كل دفعة تحتاج مبلغاً أكبر من صفر وطريقة دفع", "warning");
+				return null;
+			}
+			chunks.push({ amount, payment_method: method, currency: cur, exchange_rate: rate });
+		}
+		return chunks;
+	};
+	qs("#splitTenderToggle")?.addEventListener("change", (e) => {
+		const box = qs("#splitTenderBox");
+		box?.classList.toggle("d-none", !e.target.checked);
+		if (e.target.checked && !qsa("#splitTenderRows .split-row").length) {
+			addSplitRow(qs("#kpiTotal")?.textContent || "", qs("#paymentMethod")?.value || "cash");
+		}
+	});
+	qs("#splitTenderAdd")?.addEventListener("click", () => addSplitRow("", "cash"));
+
 	let checkoutBusy = false;
 	const checkout = async (autoPrint) => {
 		if (checkoutBusy) return;
@@ -481,6 +727,7 @@
 		}
 		const _totals = await recalc();
 		const payload = {
+			idempotency_key: state.idemKey,
 			customer_id: state.customer.id,
 			quick_customer: !!state.customer.is_walkin,
 			warehouse_id: qs("#warehouseId").value || null,
@@ -503,28 +750,46 @@
 				discount_percent: it.discountPercent,
 			})),
 		};
+		if (splitEnabled()) {
+			const chunks = readSplitPayments();
+			if (!chunks) return;
+			payload.payments = chunks;
+		}
 		checkoutBusy = true;
 		qs("#checkoutBtn").disabled = true;
 		qs("#checkoutBtn").classList.add("loading");
 		qs("#checkoutPrintBtn").disabled = true;
 		qs("#checkoutPrintBtn").classList.add("loading");
 		try {
-			const r = await fetch("/pos/api/checkout", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					Accept: "application/json",
-					"X-CSRFToken": csrf,
-				},
-				credentials: "same-origin",
-				body: JSON.stringify(payload),
-			});
-			const j = await r.json().catch(() => ({}));
+			const sendCheckout = (token) => {
+				const body = token ? { ...payload, override_token: token } : payload;
+				return fetch("/pos/api/checkout", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						Accept: "application/json",
+						"X-CSRFToken": csrf,
+						"Idempotency-Key": state.idemKey,
+					},
+					credentials: "same-origin",
+					body: JSON.stringify(body),
+				});
+			};
+			let r = await sendCheckout(null);
+			let j = await r.json().catch(() => ({}));
+			if (needsOverride(r, j)) {
+				const token = await requestOverrideToken("discount_override");
+				if (token) {
+					r = await sendCheckout(token);
+					j = await r.json().catch(() => ({}));
+				}
+			}
 			if (!r.ok || !j.success) {
 				showError(j.error || `HTTP ${r.status}`);
 				return;
 			}
 			qs("#doneSaleNumber").textContent = j.sale_number;
+			renderUpsellMessages(qs("#doneUpsellList"), j.upsell_prompts);
 			qs("#doneViewBtn").href = j.view_url;
 			qs("#donePrintBtn").href = j.print_url;
 			$("#posDoneModal").modal("show");
@@ -532,8 +797,14 @@
 				window.open(j.print_url, "_blank", "noopener");
 			}
 			state.cart = [];
+			state.idemKey = newCartKey();
 			await renderCart();
 			qs("#paidAmount").value = 0;
+			const splitToggle = qs("#splitTenderToggle");
+			if (splitToggle) splitToggle.checked = false;
+			qs("#splitTenderBox")?.classList.add("d-none");
+			const splitRows = qs("#splitTenderRows");
+			if (splitRows) splitRows.innerHTML = "";
 			qs("#paymentMethod").value = "";
 			qs("#referenceNumber").value = "";
 			if (qs("#orderNote")) qs("#orderNote").value = "";
@@ -604,7 +875,7 @@
 					showAlert(p.warning || "المنتج غير نشط.", "warning");
 					return;
 				}
-				await addToCart(p);
+				await addToCart(p, p.scale_weight_kg || 1);
 				qs("#productSearch").value = "";
 				qs("#productResults").classList.add("d-none");
 				showAlert(`تمت إضافة ${p.name}`, "success");
@@ -835,6 +1106,7 @@
 				const last = list.pop();
 				localStorage.setItem(HOLD_KEY, JSON.stringify(list));
 				state.cart = last.cart || [];
+				state.idemKey = newCartKey();
 				state.customer = last.customer || null;
 				selectedTable = last.table || null;
 				if (qs("#orderNote")) qs("#orderNote").value = last.note || "";
@@ -852,6 +1124,7 @@
 			});
 			localStorage.setItem(HOLD_KEY, JSON.stringify(list));
 			state.cart = [];
+			state.idemKey = newCartKey();
 			await renderCart();
 			if (qs("#orderNote")) qs("#orderNote").value = "";
 			showAlert(`تم تعليق الفاتورة (${heldCount()} معلّقة)`, "success");
@@ -927,10 +1200,13 @@
 			const j = await r.json();
 			if (j.success && j.session) {
 				qs("#closeOpening").textContent = fmt(j.session.opening_balance);
-				qs("#closeCashSales").textContent = fmt(j.session.total_cash_sales);
-				qs("#closeExpected").textContent = fmt(
-					(j.session.opening_balance || 0) + (j.session.total_cash_sales || 0),
-				);
+				const canViewSensitive =
+					j.session.total_cash_sales !== undefined && j.session.expected_balance !== undefined;
+				qs("#closeExpectedBlock").classList.toggle("d-none", !canViewSensitive);
+				if (canViewSensitive) {
+					qs("#closeCashSales").textContent = fmt(j.session.total_cash_sales);
+					qs("#closeExpected").textContent = fmt(j.session.expected_balance);
+				}
 			}
 		} catch (err) {
 			showModalAlert(

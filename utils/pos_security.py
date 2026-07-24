@@ -71,6 +71,19 @@ def verify_pos_session_token(session, token) -> bool:
     return hmac.compare_digest(expected, str(token))
 
 
+def issue_customer_display_token(session_id: int, tenant_id: int) -> str:
+    """HMAC token authorizing the public customer-display page/stream."""
+    return _hmac_hex(f"pos-display:{int(session_id)}:{int(tenant_id)}")
+
+
+def verify_customer_display_token(session_id: int, tenant_id: int, token) -> bool:
+    """Constant-time verification of a customer-display link token."""
+    if not token:
+        return False
+    expected = issue_customer_display_token(session_id, tenant_id)
+    return hmac.compare_digest(expected, str(token))
+
+
 def new_override_nonce() -> str:
     return secrets.token_hex(16)
 
@@ -103,3 +116,111 @@ def can_view_pos_expected(user) -> bool:
     role = getattr(user, "role", None)
     slug = getattr(role, "slug", None)
     return slug in _EXPECTED_VISIBLE_ROLES
+
+
+# ─── Insert-only fraud signal log (hash-chained per tenant) ───
+
+POS_FRAUD_REPEAT_WINDOW_MINUTES = 60
+POS_FRAUD_REPEAT_THRESHOLD = 3
+
+_FRAUD_TS_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
+
+
+def _fraud_canonical(row, prev_hash: str) -> str:
+    return "|".join(
+        [
+            prev_hash,
+            str(int(row.tenant_id)),
+            str(row.user_id or ""),
+            str(row.session_id or ""),
+            str(row.event_type),
+            str(row.severity),
+            str(row.repeat_count),
+            row.details or "{}",
+            row.created_at.strftime(_FRAUD_TS_FORMAT),
+        ]
+    )
+
+
+def log_pos_fraud_signal(
+    event_type: str,
+    *,
+    user_id=None,
+    session_id=None,
+    branch_id=None,
+    details=None,
+    severity: str = "medium",
+    tenant_id=None,
+):
+    """Append one insert-only fraud signal with per-tenant hash chaining.
+
+    Repeat aggregation: the same ``(event_type, user_id)`` recurring within
+    ``POS_FRAUD_REPEAT_WINDOW_MINUTES`` increments ``repeat_count``; reaching
+    ``POS_FRAUD_REPEAT_THRESHOLD`` escalates severity to ``high``. Never
+    raises on missing tenant context (returns ``None`` instead).
+    """
+    import json
+    from datetime import datetime, timedelta, timezone
+
+    from extensions import db
+    from models import PosFraudSignal
+    from utils.tenanting import get_active_tenant_id
+
+    tid = tenant_id or get_active_tenant_id()
+    if tid is None:
+        return None
+    try:
+        tid = int(tid)
+    except (TypeError, ValueError):
+        return None
+    # Naive UTC wall time — the exact value hashed is the value stored.
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    window_start = now - timedelta(minutes=POS_FRAUD_REPEAT_WINDOW_MINUTES)
+    repeat_count = (
+        PosFraudSignal.query.filter(
+            PosFraudSignal.tenant_id == int(tid),
+            PosFraudSignal.event_type == event_type,
+            PosFraudSignal.user_id == user_id,
+            PosFraudSignal.created_at >= window_start,
+        ).count()
+        + 1
+    )
+    if repeat_count >= POS_FRAUD_REPEAT_THRESHOLD:
+        severity = "high"
+    prev = PosFraudSignal.query.filter(PosFraudSignal.tenant_id == int(tid)).order_by(PosFraudSignal.id.desc()).first()
+    prev_hash = prev.entry_hash if prev else ""
+    details_json = json.dumps(details or {}, ensure_ascii=False, sort_keys=True, default=str)
+    row = PosFraudSignal(
+        tenant_id=int(tid),
+        branch_id=branch_id,
+        user_id=user_id,
+        session_id=session_id,
+        event_type=event_type,
+        severity=severity,
+        repeat_count=repeat_count,
+        details=details_json,
+        prev_hash=prev_hash,
+        created_at=now,
+    )
+    row.entry_hash = hashlib.sha256(_fraud_canonical(row, prev_hash).encode("utf-8")).hexdigest()
+    db.session.add(row)
+    db.session.flush()
+    return row
+
+
+def verify_pos_fraud_chain(tenant_id: int) -> bool:
+    """Recompute the per-tenant hash chain; ``False`` on any tamper or gap."""
+    from models import PosFraudSignal
+
+    rows = (
+        PosFraudSignal.query.filter(PosFraudSignal.tenant_id == int(tenant_id)).order_by(PosFraudSignal.id.asc()).all()
+    )
+    prev_hash = ""
+    for row in rows:
+        if row.prev_hash != prev_hash:
+            return False
+        expected = hashlib.sha256(_fraud_canonical(row, prev_hash).encode("utf-8")).hexdigest()
+        if row.entry_hash != expected:
+            return False
+        prev_hash = row.entry_hash
+    return True

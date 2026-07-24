@@ -238,6 +238,9 @@ def create_app(config_class=Config) -> Flask:
             response.headers["X-Request-Id"] = g.request_id
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        if request.path == "/static/pos-sw.js":
+            response.headers["Service-Worker-Allowed"] = "/pos/"
+            response.headers["Cache-Control"] = "no-cache"
         if not app.debug and app.config.get("APP_ENV", "").lower() == "production":
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         csp = (

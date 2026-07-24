@@ -3,9 +3,12 @@ const POS_QUEUE_DB = "pos-offline-queue";
 const POS_QUEUE_STORE = "checkout-queue";
 
 const ASSETS_TO_CACHE = [
-	"/static/css/pos.css",
-	"/static/js/pos/index.js",
+	"/static/css/pos-theme.css",
+	"/static/css/pos_v2.css",
 	"/static/js/barcode-scanner.js",
+	"/static/js/pos/pos-config.js",
+	"/static/js/pos/index.js",
+	"/static/js/pos/grid.js",
 	"/static/js/pos/offline.js",
 ];
 
