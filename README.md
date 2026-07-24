@@ -1,160 +1,155 @@
-# Azadexa
+# Azadexa — Intelligent ERP, Accounting & Commerce Platform
 
 ![CI](https://github.com/AbuAzad2025/Azad-UAE/actions/workflows/ci.yml/badge.svg)
 
-**Azadexa** / **أزاديكسا** is an intelligent **multi-tenant ERP, accounting, inventory, and commerce platform** by **AZAD Intelligent Systems**.
-
-This repository represents a real business operating system. It is not a single online store, a demo Flask app, or a generic accounting template. The codebase includes tenant ERP operations, branch-aware workflows, inventory, general ledger accounting, tenant storefronts, public platform-owner flows, payment vault, monitoring, APIs, AI surfaces, and owner administration.
-
-> **Proprietary software.** This repository is public for project tracking and continuity, but it does not grant any public license to copy, reuse, modify, redistribute, host, or commercialize the code. See [`LICENSE`](LICENSE).
+**Azadexa** (أزاديكسا) is a multi-tenant ERP, accounting, inventory, and commerce platform built for SMEs in the UAE and GCC by **AZAD Intelligent Systems**.
 
 ---
 
-## العربية
+## Overview
 
-**أزاديكسا** منصة ERP وتجـارة ومحاسبة ومخزون ذكية متعددة المستأجرين.
+Azadexa is a complete business operating system — not a template, not a demo. It manages the full lifecycle of a company: sales, purchases, inventory, accounting, HR, payroll, e-commerce, and payments — all in one platform with real-time dashboards and multi-currency support.
 
-المنصة تدير:
-
-- الشركات/المستأجرين والفروع والمستخدمين والصلاحيات.
-- المبيعات، نقاط البيع، المرتجعات، العملاء، والمدفوعات.
-- المشتريات، الموردين، الشيكات، المصاريف، والصناديق.
-- المنتجات، التصنيفات، المستودعات، الحركات، السيريالات، تكلفة المخزون، ومتوسط التكلفة.
-- دفتر الأستاذ العام، القيود اليومية، شجرة الحسابات، الفترات، التسويات، الموازنات، الأصول، ومراكز التكلفة والربح.
-- متجر خاص لكل مستأجر مرتبط بمستودع أونلاين خاص به.
-- صفحات عامة للاندنج، التبرعات، وشراء الحزم كجزء من نطاق مالك المنصة.
-- خزنة دفع وعمليات حساسة خاصة بمالك المنصة.
-- تكاملات وتقارير ومراقبة وواجهات API وGraphQL وAI عند تفعيلها.
-
-القاعدة الأساسية: **كل مستأجر له بياناته وعملياته ومتجره ومحاسبته، بينما صفحات اللاندنج والتبرعات وشراء الحزم وخزنة الدفع العامة هي نطاق مالك المنصة.**
+Each tenant (company) operates in full isolation with its own chart of accounts, warehouses, users, roles, and storefront. The platform owner manages subscriptions, billing, and public-facing flows separately.
 
 ---
 
-## Product Identity
+## Core Capabilities
 
-| Item | Value |
-|------|-------|
-| Product | Azadexa / أزاديكسا |
-| Company | AZAD Intelligent Systems |
-| System type | Multi-Tenant ERP SaaS / Commerce and Accounting Platform |
-| Repository | `AbuAzad2025/Azad-UAE` |
-| License | Proprietary / All Rights Reserved |
+| Module | What It Does |
+|--------|-------------|
+| **Sales & POS** | Touch-optimized point of sale, split tender, returns, promotions engine, parked carts, manager overrides, e-invoicing with QR |
+| **Purchases** | Supplier management, purchase orders, landed cost, returns, GL posting |
+| **Inventory** | Multi-warehouse, barcode/QR scanning, batch & serial tracking, expiry alerts, MWAC/WAC costing, stock transfers |
+| **Double-Entry Accounting** | Full GL with dynamic account mapping, journal entries, trial balance, balance sheet, income statement, cost centers, budgets, fixed asset depreciation |
+| **Payments & Treasury** | Payment receipts, cheque lifecycle, bank reconciliation, cash flow analysis, FX revaluation |
+| **HR & Payroll** | Employee profiles, attendance, leave management, payroll processing, loans & overtime |
+| **E-Commerce** | Tenant-specific storefront with cart, checkout, coupons, loyalty, reviews, wishlist, stock alerts |
+| **CRM** | Lead pipeline, campaign management, email marketing |
+| **Projects** | Project tracking, timesheets, resource allocation |
+| **Integrations** | REST API, GraphQL, WhatsApp, webhooks, OpenAPI documentation |
+| **Analytics** | Real-time dashboards, custom reports, data export (Excel/PDF) |
+| **Multi-Currency** | Live exchange rates, currency conversion, FX revaluation |
+| **Bilingual** | Full Arabic/English support with RTL layout |
 
-Recommended positioning:
+---
 
-```text
-Azadexa — Intelligent ERP, Accounting & Commerce Platform
+## Platform Architecture
+
+```
+┌─────────────────────────────────────────────────┐
+│                AZADEXA PLATFORM                  │
+├──────────────┬──────────────┬───────────────────┤
+│   Tenant A   │   Tenant B   │   Platform Owner   │
+│  ─────────   │  ─────────   │   ──────────────   │
+│  Sales       │  Sales       │   Subscriptions    │
+│  Inventory   │  Inventory   │   Billing          │
+│  Accounting  │  Accounting  │   Payment Vault    │
+│  POS         │  POS         │   Public Pages     │
+│  Store       │  Store       │   Donations        │
+│  HR/Payroll  │  HR/Payroll  │   Analytics        │
+└──────────────┴──────────────┴───────────────────┘
 ```
 
----
-
-## System Surfaces
-
-The codebase registers a broad set of modules: sales, POS, returns, customers, suppliers, purchases, products, warehouse, unified inventory, branches, payments, checks, expenses, ledger, advanced ledger, admin ledger, payroll, reports, treasury, tenant store, public shop, payment vault, monitoring, analytics API, API docs, GraphQL, gamification, AI, users, tenants, language, WhatsApp, public pages, and owner control.
-
-See [`docs/SYSTEM_MODULES.md`](docs/SYSTEM_MODULES.md) for the code-derived module map.
+- **Multi-tenant isolation** at the ORM level — no cross-tenant data leakage
+- **Branch-aware workflows** — each tenant can operate multiple branches
+- **Role-based access control** — granular permissions per module
+- **Automated backups** with scoped restore
 
 ---
 
-## Core Domains
+## Who It's For
 
-| Domain | What it covers |
-|-------|---------------|
-| Tenant ERP | tenant-specific sales, purchases, customers, suppliers, branches, users, roles, permissions |
-| Inventory | products, warehouses, stock movements, warehouse stock, serials, warranty, cost history, MWAC/WAC support |
-| Accounting | GL accounts, journal entries, journal lines, periods, mappings, budgets, assets, reconciliation, cost/profit centers |
-| Payments | tenant payments/receipts, cheques, pending confirmations, rejected cheque reversal behavior |
-| Commerce | tenant store settings, public catalog, checkout, coupons, variants, loyalty, reviews, saved accounts, stock alerts |
-| Platform owner | owner panel, package purchases, public donation/payment flows, payment vault, platform-level controls |
-| Integrations | WhatsApp, APIs, GraphQL, analytics, monitoring, AI fallback/features |
+| Industry | Use Case |
+|----------|----------|
+| Auto Parts | Multi-warehouse stock, serial tracking, supplier management |
+| Retail & Supermarket | POS, barcode scanning, inventory, e-invoicing |
+| Restaurants | Touch POS, kitchen display, order management |
+| Enterprise | Multi-branch, HR/payroll, advanced accounting |
+| Workshops | Project tracking, parts inventory, invoicing |
 
 ---
 
-## Tenant Model
+## Pricing
 
-Azadexa is multi-tenant by design.
+| Plan | Price | Users | Includes |
+|------|-------|-------|----------|
+| **Starter** | $29/mo | Up to 3 | Sales, purchases, inventory, e-invoices, basic reports |
+| **Professional** | $79/mo | Up to 10 | All Starter + GL, POS, online store, AI features, advanced reports |
+| **Enterprise** | $249/mo | Unlimited | All features + HR/payroll, AI insights, daily backups, 24/7 support |
 
-- Normal company users are locked to their own `tenant_id`.
-- Platform owner users can switch active tenant context.
-- Tenant-owned models are protected through ORM scoping and explicit tenant helpers.
-- Storefront routes resolve tenant context from the store slug/domain and must explicitly filter by that tenant.
-- User management is specially scoped because `User` is exempt from automatic ORM scoping for Flask-Login loading.
+Add-on modules: POS (+$10), Online Store (+$10), HR & Payroll (+$10), AI Assistant (+$15), Multi-Branch (+$10), Restaurant (+$12).
 
-See [`docs/SECURITY_AND_TENANCY.md`](docs/SECURITY_AND_TENANCY.md).
-
----
-
-## Accounting and Inventory Model
-
-Financial and stock operations are first-class system behavior.
-
-- Sales calculate subtotals, discounts, tax, currency/base amount, confirmed payments, pending checks, returns, and balance due.
-- Purchases support supplier linkage, warehouse/branch context, landed-cost components, and base-currency amounts.
-- GL posting is mandatory for financial documents that require accounting impact.
-- Stock movements update per-warehouse stock and legacy product stock while preserving movement history.
-- MWAC/WAC cost tracking uses warehouse-level cost and cost history where enabled.
-- Returns and reversals must be traceable, not silent deletes.
-
-See [`docs/ACCOUNTING_AND_INVENTORY_RULES.md`](docs/ACCOUNTING_AND_INVENTORY_RULES.md).
+All plans include: GL, inventory, invoices, multi-currency, cheque management, reports, and fixed assets.
 
 ---
 
-## Store and Platform Payment Boundaries
+## Technology Stack
 
-Azadexa has two different commerce/payment meanings:
-
-1. **Tenant store commerce** — each tenant can have a tenant-specific public store, tied to its own online warehouse and tenant products.
-2. **Platform-owner public flows** — landing pages, donations, package purchases, and platform payment vault belong to AZAD/platform-owner scope.
-
-These must not be mixed. Tenant store orders are tenant operations; public donations and package purchases are platform-owner revenue flows unless an explicit business rule says otherwise.
+| Component | Technology |
+|-----------|-----------|
+| Backend | Python 3.14, Flask 3.1, SQLAlchemy 2.0 |
+| Database | PostgreSQL (with connection pooling) |
+| Caching | Redis |
+| Task Queue | Celery |
+| Real-time | WebSocket (SocketIO) |
+| API | REST + GraphQL + OpenAPI |
+| PDF/Print | WeasyPrint |
+| Payments | NOWPayments (crypto), Stripe, encrypted card vault |
+| Testing | 10,000+ unit tests, integration & E2E suites |
+| Security | CSRF, rate limiting, CSP headers, tenant ORM isolation |
 
 ---
 
 ## Documentation
 
 | Document | Purpose |
-|---------|--------|
-| [`docs/README.md`](docs/README.md) | Documentation index |
-| [`docs/AZADEXA_BRAND.md`](docs/AZADEXA_BRAND.md) | Product name, positioning, Arabic/English brand rules |
-| [`docs/SYSTEM_MODULES.md`](docs/SYSTEM_MODULES.md) | Code-derived module and model map |
-| [`docs/PROJECT_OVERVIEW.md`](docs/PROJECT_OVERVIEW.md) | Business and system overview |
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System architecture, tenant model, service boundaries |
-| [`docs/SECURITY_AND_TENANCY.md`](docs/SECURITY_AND_TENANCY.md) | Tenant isolation, owner-only flows, public/store/payment boundaries |
-| [`docs/ACCOUNTING_AND_INVENTORY_RULES.md`](docs/ACCOUNTING_AND_INVENTORY_RULES.md) | Ledger, payment, stock, returns, MWAC, and balance rules |
-| [`docs/OPERATIONS_RUNBOOK.md`](docs/OPERATIONS_RUNBOOK.md) | Internal operating model and incident thinking, not deployment instructions |
-| [`AGENTS.md`](AGENTS.md) | Rules for AI coding assistants and internal automation |
+|----------|---------|
+| [`docs/architecture.md`](docs/architecture.md) | System design, tenant model, security compliance |
+| [`docs/user-guide.md`](docs/user-guide.md) | Module workflows for tenant users |
+| [`docs/api.md`](docs/api.md) | REST & GraphQL integration specifications |
+| [`SECURITY.md`](SECURITY.md) | Security policies and vulnerability disclosure |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Development standards and contribution guidelines |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Product roadmap and upcoming features |
 
 ---
 
-## Development Guardrails
+## License
 
-Before changing code, identify the scope:
+**Proprietary software** — All Rights Reserved.
 
-```text
-tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / public
-```
-
-Do not casually change:
-
-- tenant filters;
-- owner-only guards;
-- payment vault boundaries;
-- customer/supplier balance logic;
-- GL debit/credit posting;
-- stock movement and warehouse cost logic;
-- tenant store slug/domain resolution;
-- public donation/package payment ownership.
-
-Read [`AGENTS.md`](AGENTS.md) before using AI coding assistants on this repository.
+This repository is public for project tracking and continuity. It does not grant any public license to copy, reuse, modify, redistribute, host, or commercialize the code. See [`LICENSE`](LICENSE).
 
 ---
 
-## Ownership
+## Funding & Sponsorship
 
-**Product:** Azadexa / أزاديكسا  
-**Company:** AZAD Intelligent Systems  
-**Owner:** Eng. Ahmad Ghannam  
-**Contact:** rafideen.ahmadghannam@gmail.com — 0562150193 / +972562150193  
-**License model:** Proprietary / All Rights Reserved
+AZAD Intelligent Systems accepts direct sponsorship and investment through the following verified channels:
+
+| Channel | Details |
+|---------|---------|
+| **GitHub Sponsors** | [Sponsor AbuAzad2025](https://github.com/sponsors/AbuAzad2025) |
+| **WhatsApp** | [Message Us](https://wa.me/972562150193) |
+| **Email** | [rafideen.ahmadghannam@gmail.com](mailto:rafideen.ahmadghannam@gmail.com?subject=GitHub%20Repository%20Sponsorship%20%26%20IBAN) |
+
+### Direct Bank Transfer (IBAN)
+
+For enterprise sponsors and institutional investors preferring direct wire transfers:
+
+- **IBAN:** `PS54 TNBC 0204 0037 4080 0320 0000 0`
+- **Account Name:** AZAD Intelligent Systems
+- **Contact for Confirmation:** [rafideen.ahmadghannam@gmail.com](mailto:rafideen.ahmadghannam@gmail.com) | WhatsApp: `+972 56 215 0193`
+
+---
+
+## Contact
+
+**AZAD Intelligent Systems** | شركة أزاد للأنظمة الذكية
+
+| Channel | Contact Info |
+|---|---|
+| Direct Email | rafideen.ahmadghannam@gmail.com |
+| Phone / WhatsApp | +972 56 215 0193 |
+| WhatsApp Direct | [Message Us](https://wa.me/972562150193) |
 
 © 2026 AZAD Intelligent Systems — All Rights Reserved.

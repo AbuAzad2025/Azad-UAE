@@ -1,11 +1,22 @@
-# AGENTS.md — Rules for AI Coding Assistants
+# AZAD Engineering Guidelines
 
-## Before You Start
+Internal development standards for the Azadexa codebase. All engineers contributing to this repository must follow these conventions.
 
-1. Read [`docs/GRIMOIRE.md`](docs/GRIMOIRE.md) — the non-negotiable rules for this codebase.
-2. Identify the scope of your change: `tenant-scoped` / `branch-scoped` / `tenant-store-scoped` / `platform-owner-scoped` / `public`.
+> Full engineering standards are defined in [`docs/GRIMOIRE.md`](docs/GRIMOIRE.md).
 
-## Critical Rules (Summary)
+---
+
+## Change Scope Classification
+
+Every change must be classified before implementation:
+
+```text
+tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / public
+```
+
+---
+
+## Critical Rules
 
 ### Transaction Safety
 - Every DB write MUST use `atomic_transaction` from `utils/db_safety.py`.
@@ -30,18 +41,27 @@
 - `@permission_required('code')` for fine-grained access.
 - `@owner_required` for owner panel routes.
 
+---
+
 ## Code Style
+
 - Python: follow existing patterns. No `# type: ignore`, `# noqa`, or commented-out code.
 - CSS: use `/* purgecss start/end ignore */` for vendor/dynamic selectors.
 - HTML: use explicit `{% if %}` blocks for enumerated attributes (`dir`, `lang`).
 - JavaScript: prefer `const`/`let`, no `var`.
 
+---
+
 ## Testing
+
 - Tests in `tests/unit/routes/`, `tests/unit/services/`, `tests/unit/utils/`, `tests/unit/models/`.
 - Mock at the route boundary, not inside services.
 - Every new route needs a test file.
 
-## What NOT to Change
+---
+
+## Protected Systems — Do NOT Modify Casually
+
 - Tenant filters and owner-only guards.
 - Payment vault boundaries.
 - Customer/supplier balance logic.
@@ -49,6 +69,9 @@
 - Stock movement and warehouse cost logic.
 - Public donation/package payment ownership.
 
+---
+
 ## Git Workflow
-- Owner works **directly on `main`** — no feature branches, no PR ceremony.
-- Commit in logical, reviewable units (conventional-commit style) and push to `origin/main`.
+
+- Commits follow conventional-commit style.
+- Commit in logical, reviewable units and push to `origin/main`.
