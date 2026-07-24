@@ -8,9 +8,9 @@ from __future__ import annotations
 
 import logging
 import re
-from datetime import datetime, timezone
-from decimal import Decimal
 from collections.abc import Callable
+from datetime import datetime
+from decimal import Decimal
 from typing import Any
 
 from flask_login import current_user
@@ -369,7 +369,7 @@ class ActionDispatcher:
                     "stock_check",
                     "manage_warehouse",
                 )
-            except Exception as e:
+            except (ValueError, TypeError, RuntimeError) as e:
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
         # ===== SALES / INVOICES =====
@@ -411,7 +411,7 @@ class ActionDispatcher:
                         "manage_sales",
                     )
                 return ActionResult(False, result.get("message", "حدث خطأ"))
-            except Exception as e:
+            except (ValueError, TypeError, RuntimeError) as e:
                 _log_ai_error("sale_create_error", str(e), request_data=args)
                 return ActionResult(False, f"خطأ في إنشاء الفاتورة: {str(e)[:100]}")
 
@@ -440,7 +440,7 @@ class ActionDispatcher:
                     "sale_list",
                     "manage_sales",
                 )
-            except Exception as e:
+            except (ValueError, TypeError, RuntimeError) as e:
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
         # ===== PAYMENTS =====
@@ -474,7 +474,7 @@ class ActionDispatcher:
                         "manage_payments",
                     )
                 return ActionResult(False, result.get("message", "حدث خطأ"))
-            except Exception as e:
+            except (ValueError, TypeError, RuntimeError) as e:
                 _log_ai_error("payment_error", str(e), request_data=args)
                 return ActionResult(False, f"خطأ في استلام الدفعة: {str(e)[:100]}")
 
@@ -495,7 +495,7 @@ class ActionDispatcher:
                     amount=amount,
                     currency="AED",
                     amount_aed=amount,
-                    expense_date=datetime.now(timezone.utc),
+                    expense_date=datetime.now(datetime.UTC),
                     payment_method=args.get("method", "cash"),
                     category_id=args.get("category_id"),
                     branch_id=args.get("branch_id"),
@@ -515,7 +515,7 @@ class ActionDispatcher:
                     "expense_add",
                     "manage_expenses",
                 )
-            except Exception as e:
+            except (ValueError, TypeError, RuntimeError) as e:
                 _log_ai_error("expense_error", str(e), request_data=args)
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
@@ -548,7 +548,7 @@ class ActionDispatcher:
                     "supplier_create",
                     "manage_suppliers",
                 )
-            except Exception as e:
+            except (ValueError, TypeError, RuntimeError) as e:
                 _log_ai_error("supplier_error", str(e), request_data=args)
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
@@ -571,12 +571,12 @@ class ActionDispatcher:
                     "sales_summary",
                     "view_reports",
                 )
-            except Exception as e:
+            except (ValueError, TypeError, RuntimeError) as e:
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
         def _profit_summary(_args: dict) -> ActionResult:
             try:
-                from models import Sale, SaleLine, Product
+                from models import Product, Sale, SaleLine
 
                 tid = _get_active_tenant_id()
                 sales = (
@@ -606,7 +606,7 @@ class ActionDispatcher:
                     "profit_summary",
                     "view_reports",
                 )
-            except Exception as e:
+            except (ValueError, TypeError, RuntimeError) as e:
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
         # ===== EMPLOYEES =====
@@ -635,7 +635,7 @@ class ActionDispatcher:
                         "manage_employees",
                     )
                 return ActionResult(False, result.get("message", "حدث خطأ"))
-            except Exception as e:
+            except (ValueError, TypeError, RuntimeError) as e:
                 _log_ai_error("employee_create_error", str(e), request_data=args)
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
@@ -680,7 +680,7 @@ class ActionDispatcher:
                         "manage_purchases",
                     )
                 return ActionResult(False, result.get("message", "حدث خطأ"))
-            except Exception as e:
+            except (ValueError, TypeError, RuntimeError) as e:
                 _log_ai_error("purchase_create_error", str(e), request_data=args)
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
@@ -720,7 +720,7 @@ class ActionDispatcher:
                     "user_create",
                     "manage_users",
                 )
-            except Exception as e:
+            except (ValueError, TypeError, RuntimeError) as e:
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
         # Register all actions — destructive mutations require explicit confirmation
@@ -786,7 +786,7 @@ class ActionDispatcher:
         # Execute
         try:
             return action["handler"](args or {})
-        except Exception as e:
+        except (ValueError, TypeError, RuntimeError) as e:
             _log_ai_error(
                 "action_dispatch_error",
                 str(e),
