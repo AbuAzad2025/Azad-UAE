@@ -425,6 +425,16 @@ function confirmMaintenance(form, requiredWord) {
     return false;
   }
 
+  // Inject hidden confirm field so the backend can validate request.form.get("confirm")
+  let hidden = form.querySelector('input[name="confirm"]');
+  if (!hidden) {
+    hidden = document.createElement('input');
+    hidden.type = 'hidden';
+    hidden.name = 'confirm';
+    form.appendChild(hidden);
+  }
+  hidden.value = requiredWord;
+
   const btn = form.querySelector('button[type="submit"]');
   if (btn) {
     btn.disabled = true;

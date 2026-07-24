@@ -24,16 +24,6 @@
     <section class="content">
         <div class="container-fluid">
             <div class="row">
-                <div class="col-sm-6">
-                    <h1 class="m-0">{{ _('خزنة البطاقات') }}</h1>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="content">
-        <div class="container-fluid">
-            <div class="row">
                 <div class="col-md-3">
                     <div class="info-box">
                         <span class="info-box-icon bg-primary"><i class="fas fa-credit-card"></i></span>
@@ -118,8 +108,7 @@
                                         {% endfor %}
                                     </tbody>
                                 </table>
-    </section>
-                            
+                            </div>
                             {% if pagination %}
                             {% set endpoint = 'owner.cards_vault' %}
                             {% include 'partials/flask_pagination.html' %}
