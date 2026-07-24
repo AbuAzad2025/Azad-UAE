@@ -156,12 +156,7 @@ class PosCartService:
         The row is locked (``with_for_update``) and the status transition is
         checked under the lock, so two terminals cannot resume the same cart.
         """
-        cart = (
-            PosCartService._own_cart_query(user)
-            .filter(PosCart.id == int(cart_id))
-            .with_for_update()
-            .first()
-        )
+        cart = PosCartService._own_cart_query(user).filter(PosCart.id == int(cart_id)).with_for_update().first()
         if cart is None:
             raise LookupError("السلة غير موجودة.")
         if cart.status != PosCart.STATUS_PARKED:

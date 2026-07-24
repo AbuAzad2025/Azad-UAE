@@ -105,11 +105,7 @@ class PosOverrideService:
         parts = str(token_str or "").split(".")
         if len(parts) != 3 or not parts[0].isdigit():
             raise PosOverrideError("رمز التفويض غير صالح.")
-        token_row = (
-            tenant_query(PosOverrideToken, user=user)
-            .filter(PosOverrideToken.id == int(parts[0]))
-            .first()
-        )
+        token_row = tenant_query(PosOverrideToken, user=user).filter(PosOverrideToken.id == int(parts[0])).first()
         if token_row is None or token_row.nonce != parts[1]:
             raise PosOverrideError("رمز التفويض غير صالح.")
         if token_row.action != action or token_row.cashier_user_id != user.id:

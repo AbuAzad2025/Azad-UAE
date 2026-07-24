@@ -208,9 +208,7 @@ class PosRmaService:
         elif barcode:
             code = barcode.strip()
             product = (
-                tenant_query(Product, user=user)
-                .filter(db.or_(Product.barcode == code, Product.sku == code))
-                .first()
+                tenant_query(Product, user=user).filter(db.or_(Product.barcode == code, Product.sku == code)).first()
             )
         if product is None:
             return None

@@ -16,14 +16,18 @@ from tests.unit.routes.test_pos_v2_routes import (
 
 
 def _evaluation(total="5.000", rules=None, prompts=None):
-    rules = rules if rules is not None else [
-        {
-            "campaign_id": 7,
-            "name": "Bundle Deal",
-            "campaign_type": "bundle",
-            "discount_amount": Decimal(total),
-        }
-    ]
+    rules = (
+        rules
+        if rules is not None
+        else [
+            {
+                "campaign_id": 7,
+                "name": "Bundle Deal",
+                "campaign_type": "bundle",
+                "discount_amount": Decimal(total),
+            }
+        ]
+    )
     return {
         "lines": [
             {
@@ -174,9 +178,7 @@ class TestCheckoutPromotionIntegration:
             patch("routes.pos.PromotionService.evaluate_cart", return_value=evaluation),
             patch("routes.pos.SaleService.create_sale") as create_sale,
         ):
-            create_sale.return_value = MagicMock(
-                id=100, sale_number="S-100", tenant_id=1, total_amount=Decimal("45")
-            )
+            create_sale.return_value = MagicMock(id=100, sale_number="S-100", tenant_id=1, total_amount=Decimal("45"))
             resp = pos_client.post("/pos/api/checkout", json=self._checkout_payload())
         data = resp.get_json()
         assert data["success"] is True
@@ -190,9 +192,7 @@ class TestCheckoutPromotionIntegration:
             _pos_api_patches(),
             patch("routes.pos.SaleService.create_sale") as create_sale,
         ):
-            create_sale.return_value = MagicMock(
-                id=100, sale_number="S-100", tenant_id=1, total_amount=Decimal("50")
-            )
+            create_sale.return_value = MagicMock(id=100, sale_number="S-100", tenant_id=1, total_amount=Decimal("50"))
             resp = pos_client.post("/pos/api/checkout", json=self._checkout_payload())
         assert resp.get_json()["success"] is True
         lines_data = create_sale.call_args.kwargs["lines_data"]
@@ -205,9 +205,7 @@ class TestCheckoutPromotionIntegration:
             patch("routes.pos.PromotionService.evaluate_cart", side_effect=RuntimeError("boom")),
             patch("routes.pos.SaleService.create_sale") as create_sale,
         ):
-            create_sale.return_value = MagicMock(
-                id=100, sale_number="S-100", tenant_id=1, total_amount=Decimal("50")
-            )
+            create_sale.return_value = MagicMock(id=100, sale_number="S-100", tenant_id=1, total_amount=Decimal("50"))
             resp = pos_client.post("/pos/api/checkout", json=self._checkout_payload())
         data = resp.get_json()
         assert data["success"] is True

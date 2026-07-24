@@ -15,7 +15,6 @@ from services.idempotency_service import (
     IdempotencyInFlightError,
 )
 from tests.unit.routes.test_pos_v2_routes import (
-    _mock_session,
     _pos_api_patches,
 )
 
@@ -352,12 +351,8 @@ class TestCheckoutIdempotency:
             patch("routes.pos.hash_request_payload", return_value="h"),
             patch("routes.pos.SaleService.create_sale", return_value=_checkout_sale_mock()) as create_sale,
         ):
-            first = pos_client.post(
-                "/pos/api/checkout", json=self._PAYLOAD, headers={"Idempotency-Key": "abc"}
-            )
-            second = pos_client.post(
-                "/pos/api/checkout", json=self._PAYLOAD, headers={"Idempotency-Key": "abc"}
-            )
+            first = pos_client.post("/pos/api/checkout", json=self._PAYLOAD, headers={"Idempotency-Key": "abc"})
+            second = pos_client.post("/pos/api/checkout", json=self._PAYLOAD, headers={"Idempotency-Key": "abc"})
         assert first.status_code == 200
         assert second.status_code == 200
         assert second.get_json()["idempotent_replay"] is True
@@ -387,9 +382,7 @@ class TestCheckoutIdempotency:
             ),
             patch("routes.pos.hash_request_payload", return_value="h"),
         ):
-            resp = pos_client.post(
-                "/pos/api/checkout", json=self._PAYLOAD, headers={"Idempotency-Key": "abc"}
-            )
+            resp = pos_client.post("/pos/api/checkout", json=self._PAYLOAD, headers={"Idempotency-Key": "abc"})
         assert resp.status_code == 409
 
     def test_hash_mismatch_422(self, pos_client):
@@ -401,9 +394,7 @@ class TestCheckoutIdempotency:
             ),
             patch("routes.pos.hash_request_payload", return_value="h"),
         ):
-            resp = pos_client.post(
-                "/pos/api/checkout", json=self._PAYLOAD, headers={"Idempotency-Key": "abc"}
-            )
+            resp = pos_client.post("/pos/api/checkout", json=self._PAYLOAD, headers={"Idempotency-Key": "abc"})
         assert resp.status_code == 422
 
     def test_body_key_accepted(self, pos_client):
@@ -414,9 +405,7 @@ class TestCheckoutIdempotency:
             patch("routes.pos.IdempotencyService.complete"),
             patch("routes.pos.hash_request_payload", return_value="h"),
         ):
-            resp = pos_client.post(
-                "/pos/api/checkout", json={**self._PAYLOAD, "idempotency_key": "body-key"}
-            )
+            resp = pos_client.post("/pos/api/checkout", json={**self._PAYLOAD, "idempotency_key": "body-key"})
         assert resp.status_code == 200
         assert begin.call_args.kwargs["key"] == "body-key"
 
@@ -441,12 +430,8 @@ class TestReturnsIdempotency:
                 return_value=(_product_return_mock(), None),
             ) as create,
         ):
-            first = pos_client.post(
-                "/pos/api/returns", json=self._PAYLOAD, headers={"Idempotency-Key": "r1"}
-            )
-            second = pos_client.post(
-                "/pos/api/returns", json=self._PAYLOAD, headers={"Idempotency-Key": "r1"}
-            )
+            first = pos_client.post("/pos/api/returns", json=self._PAYLOAD, headers={"Idempotency-Key": "r1"})
+            second = pos_client.post("/pos/api/returns", json=self._PAYLOAD, headers={"Idempotency-Key": "r1"})
         assert first.status_code == 201
         assert second.status_code == 201
         assert second.get_json()["idempotent_replay"] is True

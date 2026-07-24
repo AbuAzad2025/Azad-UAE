@@ -69,9 +69,7 @@ def _run_fulfill(sale):
         stock.calculate_sale_cogs_and_deduct.return_value = Decimal("0")
         gl.get_customer_credit_account.return_value = "1130"
         gl.get_customer_credit_concept.return_value = "AR"
-        gl.get_account_code_for_concept.side_effect = lambda concept, **kw: _ACCOUNT_BY_CONCEPT.get(
-            concept, "4000"
-        )
+        gl.get_account_code_for_concept.side_effect = lambda concept, **kw: _ACCOUNT_BY_CONCEPT.get(concept, "4000")
         SaleService.fulfill_sale(sale)
         return post
 

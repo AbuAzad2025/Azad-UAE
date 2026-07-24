@@ -8,7 +8,6 @@ from decimal import Decimal
 
 import pytest
 
-from extensions import db
 from models.campaign import Campaign, SaleCampaign
 from services.promotion_service import PromotionService
 
@@ -526,14 +525,10 @@ class TestValidityAndIsolation:
             rule_config={"bundle_size": 2, "bundle_price": "15"},
             branch_id=sample_branch.id,
         )
-        hit = PromotionService.evaluate_cart(
-            cart((1, 2, "10")), tenant_id=sample_tenant.id, branch_id=sample_branch.id
-        )
+        hit = PromotionService.evaluate_cart(cart((1, 2, "10")), tenant_id=sample_tenant.id, branch_id=sample_branch.id)
         assert hit["total_discount"] == Decimal("5.000")
 
-        miss = PromotionService.evaluate_cart(
-            cart((1, 2, "10")), tenant_id=sample_tenant.id, branch_id=other_branch.id
-        )
+        miss = PromotionService.evaluate_cart(cart((1, 2, "10")), tenant_id=sample_tenant.id, branch_id=other_branch.id)
         assert miss["total_discount"] == Decimal("0.000")
 
         global_only = PromotionService.evaluate_cart(cart((1, 2, "10")), tenant_id=sample_tenant.id)
@@ -588,11 +583,7 @@ class TestRecordAppliedPromotions:
         assert total == Decimal("5.000")
         assert sample_sale.promotion_discount_amount == Decimal("5.000")
 
-        rows = (
-            db_session.query(SaleCampaign)
-            .filter_by(sale_id=sample_sale.id, tenant_id=sample_tenant.id)
-            .all()
-        )
+        rows = db_session.query(SaleCampaign).filter_by(sale_id=sample_sale.id, tenant_id=sample_tenant.id).all()
         assert len(rows) == 1
         assert rows[0].discount_amount == Decimal("5.000")
 

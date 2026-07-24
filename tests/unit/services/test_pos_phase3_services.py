@@ -178,9 +178,7 @@ class TestConsumeOverrideToken:
 
     def test_valid_token_consumed_once(self, db_session, sample_tenant, sample_user):
         token_row, token, supervisor = self._issue(db_session, sample_tenant, sample_user)
-        supervisor_id = PosOverrideService.consume_override_token(
-            token_str=token, action="pay_out", user=sample_user
-        )
+        supervisor_id = PosOverrideService.consume_override_token(token_str=token, action="pay_out", user=sample_user)
         assert supervisor_id == supervisor.id
         assert token_row.used_at is not None
         # Single-use: second consumption rejected.
@@ -229,9 +227,7 @@ class TestConsumeOverrideToken:
         other_tenant_supervisor.tenant_id = other_tenant.id
         db_session.flush()
         with pytest.raises(PosOverrideError):
-            PosOverrideService.consume_override_token(
-                token_str=token, action="pay_out", user=other_tenant_supervisor
-            )
+            PosOverrideService.consume_override_token(token_str=token, action="pay_out", user=other_tenant_supervisor)
 
 
 class TestRequirePermissionOrOverride:
@@ -341,9 +337,7 @@ class TestClosePosSessionPhase3:
         # Net payment rows (50) + change handed back (50) = gross tender 100.
         assert session.total_cash_sales == Decimal("100")
 
-    def test_full_formula_with_real_session(
-        self, db_session, sample_tenant, sample_branch, sample_user, mocker
-    ):
+    def test_full_formula_with_real_session(self, db_session, sample_tenant, sample_branch, sample_user, mocker):
         """expected = opening + tender − change + pay-ins − pay-outs (Decimal-exact)."""
         session = PosSession(
             tenant_id=sample_tenant.id,
@@ -456,9 +450,7 @@ class TestCashMovements:
         assert changes["cashier_user_id"] == sample_user.id
         assert changes["supervisor_user_id"] == supervisor.id
 
-    def test_pay_in_posts_reverse_gl(
-        self, db_session, sample_tenant, sample_branch, sample_user, sample_gl_accounts
-    ):
+    def test_pay_in_posts_reverse_gl(self, db_session, sample_tenant, sample_branch, sample_user, sample_gl_accounts):
         from models import GLJournalLine
 
         session = _open_session(db_session, sample_tenant, sample_branch, sample_user)

@@ -86,9 +86,7 @@ class IdempotencyService:
 
         if existing is not None:
             if existing.request_hash != request_hash:
-                raise IdempotencyHashMismatchError(
-                    "Idempotency key was already used with a different payload."
-                )
+                raise IdempotencyHashMismatchError("Idempotency key was already used with a different payload.")
             if existing.status == IdempotencyKey.STATUS_COMPLETED:
                 stored = None
                 if existing.response_body:

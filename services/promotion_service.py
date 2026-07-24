@@ -237,8 +237,10 @@ class PromotionService:
         except (TypeError, ValueError):
             size = 0
         raw_price = cfg.get("bundle_price")
-        bundle_price = Decimal(str(raw_price)) if raw_price is not None else Decimal(
-            str(getattr(campaign, "discount_value", 0) or 0)
+        bundle_price = (
+            Decimal(str(raw_price))
+            if raw_price is not None
+            else Decimal(str(getattr(campaign, "discount_value", 0) or 0))
         )
         if size <= 1 or bundle_price < 0:
             return None

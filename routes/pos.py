@@ -296,9 +296,7 @@ def _idempotent_begin(endpoint: str, payload, key):
     ``(body, status)`` response, or ``error`` as a ready ``(response, code)``.
     """
     tid = get_active_tenant_id(current_user)
-    request_hash = hash_request_payload(
-        {k: v for k, v in (payload or {}).items() if k != "idempotency_key"}
-    )
+    request_hash = hash_request_payload({k: v for k, v in (payload or {}).items() if k != "idempotency_key"})
     try:
         record, stored = IdempotencyService.begin(
             tenant_id=int(tid or 0),
@@ -308,14 +306,22 @@ def _idempotent_begin(endpoint: str, payload, key):
             request_hash=request_hash,
         )
     except IdempotencyInFlightError:
-        return None, None, (
-            jsonify({"success": False, "error": gettext("طلب مكرر قيد المعالجة حالياً. أعد المحاولة بعد لحظات.")}),
-            409,
+        return (
+            None,
+            None,
+            (
+                jsonify({"success": False, "error": gettext("طلب مكرر قيد المعالجة حالياً. أعد المحاولة بعد لحظات.")}),
+                409,
+            ),
         )
     except IdempotencyHashMismatchError:
-        return None, None, (
-            jsonify({"success": False, "error": gettext("مفتاح عدم التكرار استُخدم مع بيانات مختلفة.")}),
-            422,
+        return (
+            None,
+            None,
+            (
+                jsonify({"success": False, "error": gettext("مفتاح عدم التكرار استُخدم مع بيانات مختلفة.")}),
+                422,
+            ),
         )
     if stored is not None:
         body, status = stored
@@ -958,9 +964,7 @@ def api_checkout():
             # it, so only a committed sale completes the key.
             idem_record = None
             if idempotency_key:
-                idem_record, idem_stored, idem_error = _idempotent_begin(
-                    "pos.checkout", payload, idempotency_key
-                )
+                idem_record, idem_stored, idem_error = _idempotent_begin("pos.checkout", payload, idempotency_key)
                 if idem_error:
                     return idem_error
                 if idem_stored is not None:
@@ -1192,10 +1196,7 @@ def api_promotions_evaluate():
     tid = get_active_tenant_id(current_user)
     product_ids = [int(r["product_id"]) for r in merged]
     products = {
-        p.id: p
-        for p in db.session.query(Product)
-        .filter(Product.id.in_(product_ids), Product.tenant_id == tid)
-        .all()
+        p.id: p for p in db.session.query(Product).filter(Product.id.in_(product_ids), Product.tenant_id == tid).all()
     }
 
     cart = []
@@ -1439,9 +1440,7 @@ def api_session_open():
             # of erroring on a duplicate key, 409 on an in-flight duplicate.
             idem_record = None
             if idempotency_key:
-                idem_record, idem_stored, idem_error = _idempotent_begin(
-                    "pos.session_open", payload, idempotency_key
-                )
+                idem_record, idem_stored, idem_error = _idempotent_begin("pos.session_open", payload, idempotency_key)
                 if idem_error:
                     return idem_error
                 if idem_stored is not None:
@@ -1570,9 +1569,7 @@ def api_session_close():
         with atomic_transaction("pos_session_close"):
             idem_record = None
             if idempotency_key:
-                idem_record, idem_stored, idem_error = _idempotent_begin(
-                    "pos.session_close", payload, idempotency_key
-                )
+                idem_record, idem_stored, idem_error = _idempotent_begin("pos.session_close", payload, idempotency_key)
                 if idem_error:
                     return idem_error
                 if idem_stored is not None:
@@ -2267,9 +2264,7 @@ def api_pos_return_create():
         with atomic_transaction("pos_return_create"):
             idem_record = None
             if idempotency_key:
-                idem_record, idem_stored, idem_error = _idempotent_begin(
-                    "pos.return", payload, idempotency_key
-                )
+                idem_record, idem_stored, idem_error = _idempotent_begin("pos.return", payload, idempotency_key)
                 if idem_error:
                     return idem_error
                 if idem_stored is not None:
@@ -2307,9 +2302,7 @@ def api_pos_return_create():
                 "currency": product_return.currency,
                 "exchange_rate": float(product_return.exchange_rate or 1),
                 "amount_base": float(product_return.amount_aed or 0),
-                "refund_payment_number": (
-                    refund_payment.payment_number if refund_payment is not None else None
-                ),
+                "refund_payment_number": (refund_payment.payment_number if refund_payment is not None else None),
             }
             if idem_record is not None:
                 IdempotencyService.complete(idem_record, response, 201)

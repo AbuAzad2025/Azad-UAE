@@ -265,8 +265,8 @@ class TestCreatePosReturn:
         # GL: Dr customer credit 100 / Cr cash 100 at the ORIGINAL rate.
         gl_kwargs = post_mock.call_args.kwargs
         legs = post_mock.call_args.args[0]
-        debit_total = sum(Decimal(str(l.get("debit", 0))) for l in legs)
-        credit_total = sum(Decimal(str(l.get("credit", 0))) for l in legs)
+        debit_total = sum(Decimal(str(leg.get("debit", 0))) for leg in legs)
+        credit_total = sum(Decimal(str(leg.get("credit", 0))) for leg in legs)
         assert debit_total == credit_total == Decimal("100.000")
         assert legs[0]["account"] == "1130"
         assert legs[1]["account"] == "1111"

@@ -6,7 +6,6 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from extensions import db
 from models import IdempotencyKey
 from services.idempotency_service import (
     IDEMPOTENCY_TTL,

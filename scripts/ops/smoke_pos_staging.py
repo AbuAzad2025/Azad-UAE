@@ -71,7 +71,7 @@ def main() -> int:
     body = resp.get_json(silent=True) or {}
     check(
         "fast-cash options",
-        resp.status_code == 200 and body.get("success") and len(body.get("options", [])) >= 2,
+        bool(resp.status_code == 200 and body.get("success") and len(body.get("options", [])) >= 2),
         json.dumps(body.get("options", [])[:3]),
     )
 
@@ -119,6 +119,8 @@ def main() -> int:
 
     with app.app_context():
         tenant = db.session.get(Tenant, tenant_id)
+        if tenant is None:
+            raise SystemExit(f"staging tenant id={tenant_id} not found")
         basic_plan = tenant.subscription_plan
 
     resp = client.post("/pos/api/promotions/evaluate", json={"lines": []})
@@ -132,6 +134,8 @@ def main() -> int:
 
     with app.app_context():
         tenant = db.session.get(Tenant, tenant_id)
+        if tenant is None:
+            raise SystemExit(f"staging tenant id={tenant_id} not found")
         tenant.subscription_plan = "pro"
         db.session.commit()
         print("staging tenant upgraded to plan=pro for feature smoke")
@@ -173,9 +177,7 @@ def main() -> int:
             ],
         }
         checkout_payload = {k: v for k, v in checkout_payload.items() if v is not None}
-        resp = client.post(
-            "/pos/api/checkout", json=checkout_payload, headers={"Idempotency-Key": idem_key}
-        )
+        resp = client.post("/pos/api/checkout", json=checkout_payload, headers={"Idempotency-Key": idem_key})
         first = resp.get_json(silent=True) or {}
         sale_number = (first.get("sale") or {}).get("sale_number") or first.get("sale_number")
         check(
@@ -184,9 +186,7 @@ def main() -> int:
             f"sale={sale_number} status={resp.status_code} err={first.get('error')}",
         )
 
-        resp = client.post(
-            "/pos/api/checkout", json=checkout_payload, headers={"Idempotency-Key": idem_key}
-        )
+        resp = client.post("/pos/api/checkout", json=checkout_payload, headers={"Idempotency-Key": idem_key})
         replay = resp.get_json(silent=True) or {}
         replay_sale = (replay.get("sale") or {}).get("sale_number") or replay.get("sale_number")
         check(

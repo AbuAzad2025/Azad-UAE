@@ -6,7 +6,6 @@ blind-close response gating. Mocked at the route boundary per convention.
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 import pytest

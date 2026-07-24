@@ -845,9 +845,7 @@ class SaleService:
     @staticmethod
     def _book_overpayment_prepayment(sale, excess_aed, chunk):
         """Single aggregate prepayment for split-tender overpayment."""
-        overpayment_amount = (excess_aed / chunk["exchange_rate"]).quantize(
-            Decimal("0.001"), rounding=ROUND_HALF_UP
-        )
+        overpayment_amount = (excess_aed / chunk["exchange_rate"]).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         payment_note = f"\n[دفع زائد] مبلغ {excess_aed} AED سُجّل كرصيد للزبون"
         sale.notes = (sale.notes or "") + payment_note
 

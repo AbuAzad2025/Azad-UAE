@@ -69,11 +69,13 @@ class TestPromoReversal:
 
         assert Decimal(str(result.refund_amount)) == Decimal("90.000")
         revenue_lines = _gl_calls(post_mock)[0]
-        promo_leg = [l for l in revenue_lines if l["concept_code"] == "CAMPAIGN_DISCOUNT_REVERSAL"]
+        promo_leg = [gl_line for gl_line in revenue_lines if gl_line["concept_code"] == "CAMPAIGN_DISCOUNT_REVERSAL"]
         assert len(promo_leg) == 1
         assert promo_leg[0]["credit"] == Decimal("10.000")
-        revenue_leg = [l for l in revenue_lines if l["concept_code"] == "SALES_RETURNS"][0]
-        customer_leg = [l for l in revenue_lines if l.get("credit") and l["concept_code"] == "AR"][0]
+        revenue_leg = [gl_line for gl_line in revenue_lines if gl_line["concept_code"] == "SALES_RETURNS"][0]
+        customer_leg = [
+            gl_line for gl_line in revenue_lines if gl_line.get("credit") and gl_line["concept_code"] == "AR"
+        ][0]
         # GL parity: Dr revenue(100) == Cr customer(90) + Cr promo reversal(10)
         assert revenue_leg["debit"] == Decimal("100.000")
         assert customer_leg["credit"] == Decimal("90.000")
@@ -99,12 +101,12 @@ class TestPromoReversal:
         # promo share = 60/100 * 10 = 6; customer net = 60 - 6 = 54; tax 5% = 2.7
         assert Decimal(str(result.refund_amount)) == Decimal("56.700")
         revenue_lines = _gl_calls(post_mock)[0]
-        promo_leg = [l for l in revenue_lines if l["concept_code"] == "CAMPAIGN_DISCOUNT_REVERSAL"][0]
+        promo_leg = [gl_line for gl_line in revenue_lines if gl_line["concept_code"] == "CAMPAIGN_DISCOUNT_REVERSAL"][0]
         assert promo_leg["credit"] == Decimal("6.000")
-        tax_leg = [l for l in revenue_lines if l["concept_code"] == "VAT_OUTPUT"][0]
+        tax_leg = [gl_line for gl_line in revenue_lines if gl_line["concept_code"] == "VAT_OUTPUT"][0]
         assert tax_leg["debit"] == Decimal("2.700")
-        debit_total = sum(Decimal(str(l.get("debit", 0) or 0)) for l in revenue_lines)
-        credit_total = sum(Decimal(str(l.get("credit", 0) or 0)) for l in revenue_lines)
+        debit_total = sum(Decimal(str(gl_line.get("debit", 0) or 0)) for gl_line in revenue_lines)
+        credit_total = sum(Decimal(str(gl_line.get("credit", 0) or 0)) for gl_line in revenue_lines)
         assert debit_total == credit_total
 
     def test_no_promo_behaves_as_before(self, app, mocker):
@@ -124,7 +126,7 @@ class TestPromoReversal:
 
         assert Decimal(str(result.refund_amount)) == Decimal("100.000")
         revenue_lines = _gl_calls(post_mock)[0]
-        assert all(l["concept_code"] != "CAMPAIGN_DISCOUNT_REVERSAL" for l in revenue_lines)
+        assert all(gl_line["concept_code"] != "CAMPAIGN_DISCOUNT_REVERSAL" for gl_line in revenue_lines)
 
 
 class TestOriginalExchangeRate:
@@ -138,9 +140,9 @@ class TestOriginalExchangeRate:
         _, post_mock = _patch_common(mocker, sale, [line], product)
         mocker.patch(
             "utils.currency_utils.convert_and_quantize_aed",
-            side_effect=lambda amount, currency, rate, **kw: (
-                Decimal(str(amount)) * Decimal(str(rate))
-            ).quantize(Decimal("0.001")),
+            side_effect=lambda amount, currency, rate, **kw: (Decimal(str(amount)) * Decimal(str(rate))).quantize(
+                Decimal("0.001")
+            ),
         )
         from services.return_service import ReturnService
 

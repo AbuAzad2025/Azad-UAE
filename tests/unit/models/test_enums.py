@@ -106,7 +106,7 @@ class TestRoleEnumScopeHelpers:
 class TestPermissionEnumMembership:
     def test_member_count_and_values_are_unique(self):
         values = [p.value for p in PermissionEnum]
-        assert len(PermissionEnum) == 29
+        assert len(PermissionEnum) == 36
         assert len(set(values)) == len(values)
 
     def test_members_are_str_instances(self):
