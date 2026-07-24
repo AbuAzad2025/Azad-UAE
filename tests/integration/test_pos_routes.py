@@ -101,6 +101,7 @@ class TestPOSSession:
             name_ar=f"PSC {tid}",
             slug=f"psc-{tid}",
             default_currency="AED",
+            subscription_plan="pro",
         )
         db_session.add(tenant)
         db_session.flush()
@@ -256,6 +257,7 @@ class TestPOSSession:
             name_ar=f"PCL {tid}",
             slug=f"pcl-{tid}",
             default_currency="AED",
+            subscription_plan="pro",
         )
         db_session.add(tenant)
         db_session.flush()
@@ -276,6 +278,17 @@ class TestPOSSession:
             db_session.add(perm)
             db_session.flush()
         role.permissions.append(perm)
+        perm_expected = Permission.query.filter_by(code="pos_view_expected").first()
+        if not perm_expected:
+            perm_expected = Permission(
+                code="pos_view_expected",
+                name="pos_view_expected",
+                name_ar="pos_view_expected",
+                category="pos",
+            )
+            db_session.add(perm_expected)
+            db_session.flush()
+        role.permissions.append(perm_expected)
         db_session.add(role)
         db_session.flush()
 
@@ -399,6 +412,7 @@ class TestPOSSession:
             name_ar=f"POV {tid}",
             slug=f"pov-{tid}",
             default_currency="AED",
+            subscription_plan="pro",
         )
         db_session.add(tenant)
         db_session.flush()
@@ -419,6 +433,17 @@ class TestPOSSession:
             db_session.add(perm)
             db_session.flush()
         role.permissions.append(perm)
+        perm_expected = Permission.query.filter_by(code="pos_view_expected").first()
+        if not perm_expected:
+            perm_expected = Permission(
+                code="pos_view_expected",
+                name="pos_view_expected",
+                name_ar="pos_view_expected",
+                category="pos",
+            )
+            db_session.add(perm_expected)
+            db_session.flush()
+        role.permissions.append(perm_expected)
         db_session.add(role)
         db_session.flush()
 
