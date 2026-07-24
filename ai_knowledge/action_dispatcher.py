@@ -10,7 +10,8 @@ import logging
 import re
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from flask_login import current_user
 from sqlalchemy import func
@@ -65,7 +66,7 @@ def _has_permission(perm_code: str) -> bool:
     try:
         if hasattr(current_user, "has_permission") and current_user.is_authenticated:
             return current_user.has_permission(perm_code)
-    except Exception as exc:
+    except (AttributeError, TypeError) as exc:
         logger.debug("Permission check failed: %s", exc)
     return False
 
@@ -74,7 +75,7 @@ def _is_owner() -> bool:
     """Check if current user is owner."""
     try:
         return getattr(current_user, "is_owner", False) or _has_permission("admin")
-    except Exception as exc:
+    except (AttributeError, TypeError) as exc:
         logger.debug("Owner check failed: %s", exc)
         return False
 
@@ -83,7 +84,7 @@ def _audit(action: str, entity: str, entity_id: int | None = None, details: dict
     """Log an audit entry."""
     try:
         LoggingCore.log_audit(action=action, table_name=entity, record_id=entity_id, changes=details or {})
-    except Exception as exc:
+    except (AttributeError, TypeError) as exc:
         logger.warning("Audit log failed for %s/%s: %s", action, entity, exc)
 
 
@@ -110,7 +111,7 @@ def _log_ai_error(
         )
         db.session.add(log)
         db.session.flush()
-    except Exception as exc:
+    except (ImportError, AttributeError, TypeError, RuntimeError) as exc:
         logger.warning("AI error log failed (%s): %s", error_type, exc)
 
 
@@ -205,7 +206,7 @@ class ActionDispatcher:
                     "customer_create",
                     "manage_customers",
                 )
-            except Exception as e:
+            except (ValueError, TypeError, RuntimeError) as e:
                 _log_ai_error("customer_create_error", str(e), request_data=args)
                 return ActionResult(False, f"خطأ في إنشاء العميل: {str(e)[:100]}")
 
@@ -236,7 +237,7 @@ class ActionDispatcher:
                     "customer_list",
                     "manage_customers",
                 )
-            except Exception as e:
+            except (AttributeError, TypeError, RuntimeError) as e:
                 return ActionResult(False, f"خطأ في جلب العملاء: {str(e)[:100]}")
 
         def _get_customer_balance(args: dict) -> ActionResult:
@@ -264,7 +265,7 @@ class ActionDispatcher:
                     "customer_balance",
                     "manage_customers",
                 )
-            except Exception as e:
+            except (AttributeError, TypeError, RuntimeError) as e:
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
         # ===== PRODUCTS =====
@@ -300,7 +301,7 @@ class ActionDispatcher:
                     "product_create",
                     "manage_products",
                 )
-            except Exception as e:
+            except (ValueError, TypeError, RuntimeError) as e:
                 _log_ai_error("product_create_error", str(e), request_data=args)
                 return ActionResult(False, f"خطأ في إنشاء المنتج: {str(e)[:100]}")
 
@@ -332,7 +333,7 @@ class ActionDispatcher:
                     "product_list",
                     "manage_products",
                 )
-            except Exception as e:
+            except (AttributeError, TypeError, RuntimeError) as e:
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
         def _check_stock(_args: dict) -> ActionResult:
