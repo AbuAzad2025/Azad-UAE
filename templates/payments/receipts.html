@@ -215,7 +215,7 @@
 
     <div class="table-responsive">
 
-      <table id="receiptsTable" class="table table-bordered table-striped" data-lang-url="{{ url_for('static', filename='datatables/Arabic.json') }}">
+      <table id="receiptsTable" class="table table-bordered table-striped" data-lang-url="{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}">
 
       <thead>
 

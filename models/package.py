@@ -20,7 +20,7 @@ class Package(db.Model):
     name_en = db.Column(db.String(100), nullable=False)  # اسم الباقة بالإنجليزية
     slug = db.Column(db.String(50), unique=True, nullable=False)  # للرابط
     icon = db.Column(db.String(50), default="📦")  # أيقونة الباقة
-    price = db.Column(db.Float, nullable=False)  # السعر بالدولار
+    price = db.Column(db.Numeric(14, 3), nullable=False)  # السعر بالدولار
     currency = db.Column(db.String(10), default="USD")
 
     # وصف الباقة
@@ -67,7 +67,7 @@ class Package(db.Model):
             "name_en": self.name_en,
             "slug": self.slug,
             "icon": self.icon,
-            "price": self.price,
+            "price": float(self.price) if self.price is not None else None,
             "currency": self.currency,
             "description_ar": self.description_ar,
             "description_en": self.description_en,
@@ -109,7 +109,7 @@ class PackagePurchase(db.Model):
     # بيانات الدفع
     payment_method = db.Column(db.String(50), nullable=False)  # crypto, card, paypal, bank
     payment_status = db.Column(db.String(50), default="pending")  # pending, completed, failed, refunded
-    amount_paid = db.Column(db.Float, nullable=False)
+    amount_paid = db.Column(db.Numeric(14, 3), nullable=False)
     currency = db.Column(db.String(10), default="USD")
 
     # معلومات إضافية للدفع
@@ -150,7 +150,7 @@ class PackagePurchase(db.Model):
             "company_name": self.company_name,
             "payment_method": self.payment_method,
             "payment_status": self.payment_status,
-            "amount_paid": self.amount_paid,
+            "amount_paid": float(self.amount_paid) if self.amount_paid is not None else None,
             "currency": self.currency,
             "transaction_id": self.transaction_id,
             "activation_status": self.activation_status,

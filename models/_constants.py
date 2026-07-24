@@ -475,7 +475,7 @@ GL_CONCEPT_REGISTRY: dict[str, dict[str, Any]] = {
     },
     GL_CONCEPT_POS_CASH_DIFFERENCE: {
         "meaning": "POS Cash Difference",
-        "legacy_code": None,
+        "legacy_code": "6550",
         "required": False,
         "normal_balance": "debit",
         "resolution_mode": RESOLUTION_MODE_MAPPING,

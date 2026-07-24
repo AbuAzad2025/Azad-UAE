@@ -478,6 +478,16 @@ def grid():
     return render_template("pos/grid.html", **_pos_register_context())
 
 
+@pos_bp.route("/held-carts")
+@login_required
+@permission_required("manage_sales")
+def held_carts():
+    """Dedicated page for viewing and managing parked (held) carts."""
+    session = get_active_session(current_user)
+    carts = PosCartService.list_carts(user=current_user, session=session, limit=50)
+    return render_template("pos/held_carts.html", carts=[c.to_summary_dict() for c in carts])
+
+
 @pos_bp.route("/api/order-types")
 @login_required
 @permission_required("manage_sales")

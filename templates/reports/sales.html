@@ -153,7 +153,7 @@ $(document).ready(() => {
     table = $tableEl.DataTable();
   } else {
     table = $tableEl.DataTable({
-      language: { url: "{{ url_for('static', filename='datatables/Arabic.json') }}" },
+      language: { url: "{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}" },
       order: [[2, 'desc']],
       pageLength: 25,
       dom: 'Bfrtip',

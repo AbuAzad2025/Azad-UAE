@@ -10,7 +10,7 @@
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/brand/azad/icons/icon-192.png') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/azad-login.css') }}">
 </head>
@@ -173,7 +173,7 @@
         const submitOriginalHtml = submitBtn.innerHTML;
         form.addEventListener('submit', () => {
           submitBtn.classList.add('is-loading');
-          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> جاري التحقق...';
+          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> {{ t("Checking") }}...';
           setTimeout(() => {
             submitBtn.classList.remove('is-loading');
             submitBtn.innerHTML = submitOriginalHtml;

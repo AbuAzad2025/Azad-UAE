@@ -8,6 +8,7 @@
   <h1 class="h5 mb-0"><i class="fas fa-th fa-fw mr-2"></i>{{ t('POS Terminal') }} — {{ t('Grid View') }}</h1>
   <div>
     <a href="{{ url_for('pos.index') }}" class="btn btn-outline-info btn-sm"><i class="fas fa-list mr-1"></i>{{ t('POS Terminal') }}</a>
+    <a href="{{ url_for('pos.held_carts') }}" class="btn btn-outline-warning btn-sm"><i class="fas fa-clipboard-list mr-1"></i>{{ _('السلال') }}</a>
     <a href="{{ url_for('sales.index') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-file-invoice mr-1"></i>{{ t('Sales') }}</a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary btn-sm"><i class="fas fa-home mr-1"></i>{{ t('Main_2') }}</a>
   </div>

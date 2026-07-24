@@ -26,6 +26,8 @@
               <td>{{ c.open_count }}</td>
               <td><a href="{{ url_for('email_marketing.campaign_detail', campaign_id=c.id) }}" class="btn btn-sm btn-info" aria-label="{{ t('Campaign') }} {{ t('Statistics') }}"><i class="fas fa-chart-bar"></i></a></td>
             </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-center text-muted">{{ t('No_Data') }}</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -43,6 +45,8 @@
               <td>{{ l.description or '-' }}</td>
               <td>{{ l.subscribers|selectattr('status', 'eq', 'subscribed')|list|length }}</td>
             </tr>
+            {% else %}
+            <tr><td colspan="3" class="text-center text-muted">{{ t('No_Data') }}</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -60,6 +64,8 @@
               <td>{{ t.subject }}</td>
               <td>{{ t.from_email or '-' }}</td>
             </tr>
+            {% else %}
+            <tr><td colspan="3" class="text-center text-muted">{{ t('No_Data') }}</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -97,5 +103,5 @@
 </div>
 {% endblock %}
 {% block extra_js %}
-<script>$(document).ready(()=> {if($.fn.DataTable&&!$.fn.DataTable.isDataTable('#campaignsTable')){$('#campaignsTable').DataTable({language:{url:"{{ url_for('static', filename='datatables/Arabic.json') }}"},pageLength:25})}});</script>
+<script>$(document).ready(()=> {if($.fn.DataTable&&!$.fn.DataTable.isDataTable('#campaignsTable')){$('#campaignsTable').DataTable({language:{url:"{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}"},pageLength:25})}});</script>
 {% endblock %}

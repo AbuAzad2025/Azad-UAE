@@ -37,6 +37,7 @@
     <div class="pos-topbar-actions">
       <button id="posTablesBtn" type="button" class="pos-icon-btn d-none" title="{{ _('إدارة الطاولات') }}"><i class="fas fa-chair"></i></button>
       <button id="posHoldBtn" type="button" class="pos-icon-btn d-none" title="{{ _('تعليق الفاتورة') }}"><i class="fas fa-pause"></i></button>
+      <a href="{{ url_for('pos.held_carts') }}" class="pos-icon-btn" title="{{ _('السلال المعلّقة') }}"><i class="fas fa-clipboard-list"></i></a>
       <a href="{{ url_for('pos.grid') }}" class="pos-icon-btn" title="{{ _('عرض الشبكة') }}"><i class="fas fa-th"></i></a>
       <a href="{{ url_for('sales.index') }}" class="pos-icon-btn" title="{{ t('Sales') }}"><i class="fas fa-file-invoice"></i></a>
       <a href="{{ url_for('main.dashboard') }}" class="pos-icon-btn" title="{{ t('Main_2') }}"><i class="fas fa-home"></i></a>

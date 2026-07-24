@@ -3,7 +3,7 @@
    ============================================================ */
 
 * {
-	font-family: Cairo, sans-serif;
+	font-family: var(--az-font);
 }
 
 body {

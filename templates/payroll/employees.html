@@ -22,7 +22,7 @@
 <script>
   (() => {
     const tableSelector = '#employeesTable';
-    const languageUrl = "{{ url_for('static', filename='datatables/Arabic.json') }}";
+    const languageUrl = "{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}";
 
     function initEmployeesTable() {
       const $table = $(tableSelector);

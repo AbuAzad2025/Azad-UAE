@@ -197,7 +197,7 @@
 
         <div class="row">
           <div class="col-md-6">
-            <form class="needs-validation" action="{{ url_for('owner.fix_cost_centers') }}" method="POST"
+            <form class="needs-validation" action="{{ url_for('owner.maintenance_fix_cost_centers') }}" method="POST"
                   data-action="confirm-maintenance" data-key="FIX_COST_CENTERS">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
               <button type="submit" class="btn btn-warning btn-block btn-lg" id="btn-fix-cost-centers">
@@ -211,7 +211,7 @@
             </form>
           </div>
           <div class="col-md-6">
-            <form class="needs-validation" action="{{ url_for('owner.rebuild_gl_tree') }}" method="POST"
+            <form class="needs-validation" action="{{ url_for('owner.maintenance_rebuild_gl_tree') }}" method="POST"
                   data-action="confirm-maintenance" data-key="REBUILD_GL_TREE">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
               <div class="custom-control custom-checkbox mb-2">

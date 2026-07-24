@@ -13,7 +13,7 @@
 /* Three-column layout */
 .pos-categories {
 	background: #f8fafc;
-	border-right: 1px solid #e2e8f0;
+	border-inline-end: 1px solid #e2e8f0;
 	min-height: calc(100vh - 220px);
 	overflow-y: auto;
 }
@@ -129,7 +129,7 @@
 /* Cart panel */
 .pos-cart-panel {
 	background: #fff;
-	border-left: 1px solid #e2e8f0;
+	border-inline-start: 1px solid #e2e8f0;
 	min-height: calc(100vh - 220px);
 	display: flex;
 	flex-direction: column;
@@ -203,7 +203,7 @@
 	font-weight: 700;
 	font-size: 0.9rem;
 	min-width: 60px;
-	text-align: right;
+	text-align: end;
 }
 
 .pos-cart-item .item-remove {
@@ -460,7 +460,7 @@
 @media (max-width: 991px) {
 	.pos-categories {
 		min-height: auto;
-		border-right: none;
+		border-inline-end: none;
 		border-bottom: 1px solid #e2e8f0;
 	}
 
@@ -482,7 +482,7 @@
 	}
 
 	.pos-cart-panel {
-		border-left: none;
+		border-inline-start: none;
 		border-top: 1px solid #e2e8f0;
 	}
 

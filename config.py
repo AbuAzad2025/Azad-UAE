@@ -251,7 +251,8 @@ class Config:
     DEVELOPER_LOGO = os.environ.get("DEVELOPER_LOGO", "assets/brand/azad/logos/logo.png")
     GOOGLE_SITE_VERIFICATION = os.environ.get("GOOGLE_SITE_VERIFICATION", "")
     APP_VERSION = os.environ.get("APP_VERSION", "2.0.0")
-    BABEL_DEFAULT_TIMEZONE = os.environ.get("BABEL_DEFAULT_TIMEZONE", "Asia/Hebron")
+    BABEL_DEFAULT_TIMEZONE = os.environ.get("BABEL_DEFAULT_TIMEZONE", "Asia/Dubai")
+    BABEL_DEFAULT_LOCALE = os.environ.get("BABEL_DEFAULT_LOCALE", "ar")
     LANGUAGES = {"ar": "العربية", "en": "English"}
 
     OWNER_USERNAME = os.environ.get("OWNER_USERNAME", "owner")

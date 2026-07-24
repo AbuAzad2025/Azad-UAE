@@ -75,7 +75,7 @@
         <tr>
           <td>
             {% if row.logo_url %}
-            <img src="{{ row.logo_url if row.logo_url.startswith('http') else url_for('static', filename=row.logo_url.replace('/static/','').lstrip('/')) }}" alt="" class="owner-tenant-logo">
+            <img src="{{ row.logo_url if row.logo_url.startswith('http') else url_for('static', filename=row.logo_url.replace('/static/','').lstrip('/')) }}" alt="{{ row.tenant.name_ar or row.tenant.name }}" class="owner-tenant-logo">
             {% else %}
             <span class="text-muted">—</span>
             {% endif %}

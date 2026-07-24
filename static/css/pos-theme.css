@@ -23,7 +23,7 @@
 	background: var(--pos-bg);
 	color: var(--pos-text);
 	font-family:
-		Cairo,
+
 		system-ui,
 		-apple-system,
 		"Segoe UI",
@@ -266,7 +266,7 @@
 /* product results dropdown (search) — visibility controlled by Bootstrap .d-none */
 .pos-product-results {
 	position: absolute;
-	z-index: 40;
+	z-index: 100;
 	top: calc(100% + 6px);
 	left: 0;
 	right: 0;
@@ -320,7 +320,7 @@
 /* customer results dropdown — visibility controlled by Bootstrap .d-none */
 .pos-cust-results {
 	position: absolute;
-	z-index: 40;
+	z-index: 100;
 	top: calc(100% + 6px);
 	left: 0;
 	right: 0;
@@ -339,8 +339,8 @@
 	cursor: pointer;
 	background: transparent;
 	color: var(--pos-text);
-	border-left: 0;
-	border-right: 0;
+	border-inline-start: 0;
+	border-inline-end: 0;
 	border-top: 0;
 }
 
@@ -617,7 +617,7 @@
 }
 
 .pos-cart-item .ci-remove {
-	margin-right: auto;
+	margin-inline-end: auto;
 	background: transparent;
 	border: 0;
 	color: var(--pos-muted);
@@ -644,7 +644,7 @@
 
 .pos-calc-display {
 	width: 100%;
-	text-align: left;
+	text-align: start;
 	background: var(--pos-bg);
 	border: 1px solid var(--pos-border);
 	border-radius: 10px;
@@ -1119,10 +1119,10 @@ body:has(.pos-app) {
 }
 
 .pos-upsell-item {
-	background: #fff8e1;
-	border: 1px solid #ffe082;
+	background: var(--pos-surface-2);
+	border: 1px solid var(--pos-border);
 	border-radius: 6px;
-	color: #6d4c00;
+	color: var(--pos-text);
 	padding: 4px 8px;
 	margin-bottom: 4px;
 }

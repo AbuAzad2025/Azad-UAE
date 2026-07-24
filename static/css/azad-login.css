@@ -18,7 +18,7 @@
 	--glass-deeper: rgba(3, 12, 26, 0.82);
 	--danger: #ff5c73;
 	--success: #4ade80;
-	--font-family: "Cairo", "Tajawal", "Segoe UI", system-ui, sans-serif;
+	--font-family: var(--az-font);
 }
 
 *,
@@ -34,7 +34,6 @@ body.azad-login-page {
 	font-family: var(--font-family), sans-serif;
 	color: var(--text-primary);
 	background: var(--navy-950);
-	direction: rtl;
 	-webkit-font-smoothing: antialiased;
 	text-rendering: optimizeLegibility;
 }

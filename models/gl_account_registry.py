@@ -340,6 +340,7 @@ BASE_ACCOUNTS = [
         "6000",
     ),
     GLAccountTemplate("6500", "Miscellaneous Expenses", "مصروفات متنوعة", "expense", 1, False, "6000"),
+    GLAccountTemplate("6550", "POS Cash Difference", "فروقات صندوق نقاط البيع", "expense", 1, False, "6000"),
     GLAccountTemplate("6600", "FX Losses", "خسائر صرف العملات", "expense", 1, False, "6000"),
     GLAccountTemplate(
         "6190",
@@ -873,6 +874,7 @@ GL_MODULE_DEFINITIONS = {
             GLConceptMappingTemplate("SALES_DISCOUNT", "6130", "core_sales"),
             GLConceptMappingTemplate("SALES_COMMISSION", "6120", "core_sales"),
             GLConceptMappingTemplate("TIER_DISCOUNT", "4100", "core_sales"),
+            GLConceptMappingTemplate("POS_CASH_DIFFERENCE", "6550", "core_sales"),
             GLConceptMappingTemplate("AR", "1130", "core_sales"),
         ],
     ),

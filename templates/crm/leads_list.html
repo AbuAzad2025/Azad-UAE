@@ -38,6 +38,8 @@
                 <a href="{{ url_for('crm.edit_lead', lead_id=lead.id) }}" class="btn btn-sm btn-warning" title="{{ t('Edit') }}"><i class="fas fa-edit"></i></a>
               </td>
             </tr>
+            {% else %}
+            <tr><td colspan="8" class="text-center text-muted">{{ t('No_Data') }}</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -51,7 +53,7 @@
 $(document).ready(()=> {
   if($.fn.DataTable && !$.fn.DataTable.isDataTable('#leadsTable')){
     $('#leadsTable').DataTable({
-      language:{url:"{{ url_for('static', filename='datatables/Arabic.json') }}"},
+      language:{url:"{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}"},
       pageLength:25,
     });
   }

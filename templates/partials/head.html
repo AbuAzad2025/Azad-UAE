@@ -39,8 +39,7 @@
   <meta name="twitter:image" content="{{ _logo_external }}">
 
   <link rel="canonical" href="{{ request.url }}">
-  <link rel="alternate" hreflang="ar" href="{{ request.url }}">
-  <link rel="alternate" hreflang="en" href="{{ request.url }}">
+  <link rel="alternate" hreflang="{{ current_language or 'ar' }}" href="{{ request.url }}">
   <link rel="alternate" hreflang="x-default" href="{{ request.url }}">
 
   {% set _favicon_path = tenant_favicon_url or 'assets/brand/azad/favicons/favicon.png' %}

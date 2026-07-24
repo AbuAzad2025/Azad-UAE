@@ -280,15 +280,15 @@ class NotificationManager {
 		return toast;
 	}
 
-	success(message, title = "نجح!") {
+	success(message, title = "Success") {
 		return this.show({ type: "success", title, message });
 	}
 
-	error(message, title = "خطأ!") {
+	error(message, title = "Error") {
 		return this.show({ type: "error", title, message, duration: 20000 });
 	}
 
-	warning(message, title = "تحذير!") {
+	warning(message, title = "Warning") {
 		return this.show({ type: "warning", title, message });
 	}
 

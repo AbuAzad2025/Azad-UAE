@@ -358,7 +358,7 @@
 // Initialize DataTable for recent sales
 $(document).ready(() => {% if stats.recent_sales and stats.recent_sales|length > 0 %}
   $('#recentSalesTable').DataTable({
-    language: { url: '{{ url_for("static", filename="datatables/Arabic.json") }}' },
+    language: { url: '{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}' },
     pageLength: 10,
     order: [[2, 'desc']],
     dom: 'frtip',
@@ -372,7 +372,7 @@ $(document).ready(() => {% if stats.recent_sales and stats.recent_sales|length >
   $('#supervisorOverrideForm').on('submit', (e) => {
     e.preventDefault();
     const btn = $('#overrideSubmitBtn');
-    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> جاري التحقق...');
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> {{ t("Checking") }}...');
     $('#overrideResult').addClass('d-none');
     $.ajax({
       url: '{{ url_for("owner.api_supervisor_override") }}',
@@ -387,22 +387,22 @@ $(document).ready(() => {% if stats.recent_sales and stats.recent_sales|length >
     }).done((res) => {
       if (res.success) {
         $('#overrideResult').removeClass('d-none alert-danger').addClass('alert-success').html(
-          '<i class="fas fa-check-circle"></i> تم التفويض بنجاح بواسطة ' + res.supervisor_username
+          '<i class="fas fa-check-circle"></i> {{ t("Authorization Successful") }} (' + res.supervisor_username + ')'
         );
         setTimeout(() => { $('#supervisorOverrideModal').modal('hide'); }, 1500);
       } else {
         $('#overrideResult').removeClass('d-none alert-success').addClass('alert-danger').html(
-          '<i class="fas fa-times-circle"></i> ' + (res.error || 'فشل التفويض')
+          '<i class="fas fa-times-circle"></i> ' + (res.error || '{{ t("Authorization Failed") }}')
         );
       }
     }).fail((xhr) => {
-      let msg = 'خطأ في الاتصال';
+      let msg = '{{ t("Connection Error") }}';
       try { msg = xhr.responseJSON.error || msg; } catch(e) {}
       $('#overrideResult').removeClass('d-none alert-success').addClass('alert-danger').html(
         '<i class="fas fa-times-circle"></i> ' + msg
       );
     }).always(() => {
-      btn.prop('disabled', false).html('<i class="fas fa-check"></i> تأكيد التفويض');
+      btn.prop('disabled', false).html('<i class="fas fa-check"></i> {{ t("Confirm Authorization") }}');
     });
   });
 });

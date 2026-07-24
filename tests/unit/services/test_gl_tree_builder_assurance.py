@@ -482,3 +482,69 @@ class TestValidateTree:
             assert result["valid"] is False
             assert result["issues"]
             assert result["extra_accounts"]
+
+
+class TestPosCashDifferenceDedicatedAccount:
+    """POS_CASH_DIFFERENCE posts to its own expense account 6550 — never the
+    shared misc_expense 6500 — across fallback, registry, and provisioning."""
+
+    def test_fallback_code_is_dedicated(self):
+        from services.gl_service import GL_ACCOUNTS
+
+        assert GL_ACCOUNTS["pos_cash_difference"] == "6550"
+        assert GL_ACCOUNTS["misc_expense"] == "6500"
+
+    def test_registry_template_exists_as_expense(self):
+        tmpl = next(t for t in BASE_ACCOUNTS if t.code == "6550")
+        assert tmpl.type == "expense"
+        assert tmpl.parent_code == "6000"
+        assert tmpl.is_header is False
+
+    def test_concept_registry_points_to_6550(self):
+        from models._constants import GL_CONCEPT_POS_CASH_DIFFERENCE, GL_CONCEPT_REGISTRY
+
+        meta = GL_CONCEPT_REGISTRY[GL_CONCEPT_POS_CASH_DIFFERENCE]
+        assert meta["legacy_code"] == "6550"
+        assert meta["normal_balance"] == "debit"
+
+    def test_core_sales_module_maps_concept(self):
+        from models.gl_account_registry import GL_MODULE_DEFINITIONS
+
+        mappings = GL_MODULE_DEFINITIONS["core_sales"].mappings
+        hit = next(m for m in mappings if m.concept_code == "POS_CASH_DIFFERENCE")
+        assert hit.account_code == "6550"
+
+    def test_build_creates_6550_for_tenant(self, app, db_session, sample_tenant):
+        with app.app_context():
+            GLTreeBuilder.build(sample_tenant.id, commit=True)
+            acc = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="6550").first()
+            assert acc is not None
+            assert acc.type == "expense"
+            assert acc.is_active is True
+
+
+class TestPackageMoneyColumnsNumeric:
+    """Package money columns must be exact Numeric — never Float."""
+
+    def test_price_column_is_numeric(self):
+        from models.package import Package
+
+        col = Package.__table__.c.price
+        assert isinstance(col.type, db.Numeric)
+        assert col.type.scale == 3
+
+    def test_amount_paid_column_is_numeric(self):
+        from models.package import PackagePurchase
+
+        col = PackagePurchase.__table__.c.amount_paid
+        assert isinstance(col.type, db.Numeric)
+        assert col.type.scale == 3
+
+    def test_to_dict_serializes_as_float_for_api(self, app, db_session):
+        from models.package import Package
+
+        slug = uuid.uuid4().hex[:8]
+        pkg = Package(name_ar="باقة", name_en="Pack", slug=f"num-{slug}", price="49.990")
+        db_session.add(pkg)
+        db_session.flush()
+        assert pkg.to_dict()["price"] == 49.99

@@ -307,7 +307,7 @@ $(document).ready(() => {
   } else {
     table = $tableEl.DataTable({
       language: {
-        url: '{{ url_for("static", filename="datatables/Arabic.json") }}'
+        url: '{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}'
       },
       order: [[0, 'asc']],
       pageLength: 25,

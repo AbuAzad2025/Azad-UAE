@@ -211,16 +211,15 @@ def format_currency(amount, currency=None, lang="ar"):
 
 def timeago(date):
     """Calculate time ago string"""
+    from flask_babel import gettext as _
+
     if not date:
         return ""
 
     try:
         now = datetime.now(timezone.utc)
         if date.tzinfo is None:
-            # Assume naive datetime is UTC or handle accordingly
-            # For simplicity, let's assume it's system local time, but comparing with UTC is tricky.
-            # Let's try to make it aware or just use now() naive if date is naive.
-            if date.year < 1970:  # Handle invalid dates
+            if date.year < 1970:
                 return ""
             date = date.replace(tzinfo=timezone.utc)
 
@@ -228,13 +227,16 @@ def timeago(date):
         seconds = diff.total_seconds()
 
         if seconds < 60:
-            return "منذ لحظات"
+            return _("Just now")
         elif seconds < 3600:
-            return f"منذ {int(seconds // 60)} دقيقة"
+            minutes = int(seconds // 60)
+            return _("%(minutes)d minutes ago", minutes=minutes)
         elif seconds < 86400:
-            return f"منذ {int(seconds // 3600)} ساعة"
+            hours = int(seconds // 3600)
+            return _("%(hours)d hours ago", hours=hours)
         elif seconds < 604800:
-            return f"منذ {int(seconds // 86400)} يوم"
+            days = int(seconds // 86400)
+            return _("%(days)d days ago", days=days)
         else:
             return date.strftime("%Y-%m-%d")
 

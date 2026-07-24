@@ -1,0 +1,104 @@
+{% extends 'layouts/base_pos.html' %}
+
+{% block title %}{{ t('Point Of Sale') }} — {{ t('السلال المعلّقة') }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pos-theme.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="pos-app">
+  <div class="pos-topbar">
+    <div class="pos-brand">
+      <div class="pos-flag" aria-hidden="true"></div>
+      <div class="pos-logo">AZAD <span>POS</span></div>
+    </div>
+    <div class="pos-topbar-center">
+      <h5 class="m-0">{{ t('السلال المعلّقة') }}</h5>
+    </div>
+    <div class="pos-topbar-actions">
+      <a href="{{ url_for('pos.index') }}" class="pos-icon-btn" title="{{ t('Back') }}"><i class="fas fa-arrow-{{ 'right' if is_rtl else 'left' }}"></i></a>
+      <a href="{{ url_for('pos.grid') }}" class="pos-icon-btn" title="{{ _('عرض الشبكة') }}"><i class="fas fa-th"></i></a>
+      <a href="{{ url_for('main.dashboard') }}" class="pos-icon-btn" title="{{ t('Main_2') }}"><i class="fas fa-home"></i></a>
+    </div>
+  </div>
+
+  <div class="pos-grid" style="padding: 1rem;">
+    <div class="card w-100">
+      <div class="card-header">
+        <h3 class="card-title">{{ t('السلال المعلّقة') }}</h3>
+      </div>
+      <div class="card-body">
+        {% if carts %}
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>{{ t('Label') }}</th>
+                <th>{{ t('Items') }}</th>
+                <th>{{ t('Total') }}</th>
+                <th>{{ t('Parked At') }}</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cart in carts %}
+              <tr>
+                <td>{{ cart.id }}</td>
+                <td>{{ cart.label or '-' }}</td>
+                <td>{{ cart.item_count }}</td>
+                <td>{{ '%.2f'|format(cart.total_estimate) }} {{ cart.currency }}</td>
+                <td>{{ cart.parked_at[:16] if cart.parked_at else '-' }}</td>
+                <td>
+                  <a href="{{ url_for('pos.index') }}?resume_cart={{ cart.id }}" class="btn btn-sm btn-success">
+                    <i class="fas fa-play"></i> {{ t('Resume') }}
+                  </a>
+                  <button type="button" class="btn btn-sm btn-danger" data-delete-cart="{{ cart.id }}">
+                    <i class="fas fa-trash"></i> {{ t('Delete') }}
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-5">
+          <i class="fas fa-pause-circle fa-3x mb-3"></i>
+          <h5>{{ t('No_Data') }}</h5>
+          <p>{{ _('لا توجد سلال معلّقة حالياً') }}</p>
+          <a href="{{ url_for('pos.index') }}" class="btn btn-primary">{{ t('Back') }}</a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('[data-delete-cart]').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const cartId = btn.dataset.deleteCart;
+    if (!confirm('{{ t('Delete') }} {{ t('Confirm_2') }}?')) return;
+    try {
+      const resp = await fetch(`{{ url_for('pos.index') }}api/carts/${cartId}`, {
+        method: 'DELETE',
+        headers: { 'X-CSRFToken': '{{ csrf_token() }}' }
+      });
+      const data = await resp.json();
+      if (data.success) {
+        btn.closest('tr').remove();
+        if (!document.querySelector('tbody tr')) location.reload();
+      } else {
+        alert(data.error || '{{ t('Error') }}');
+      }
+    } catch (e) {
+      alert('{{ t('Error') }}');
+    }
+  });
+});
+</script>
+{% endblock %}

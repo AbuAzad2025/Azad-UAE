@@ -1,7 +1,6 @@
 /* Product create/edit form — clean layout */
 .product-create-page {
-	direction: rtl;
-	text-align: right;
+	text-align: start;
 }
 
 /* purgecss start ignore */

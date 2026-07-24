@@ -20,7 +20,7 @@
 <script>
   (() => {
     const tableSelector = '#returnsTable';
-    const languageUrl = "{{ url_for('static', filename='datatables/Arabic.json') }}";
+    const languageUrl = "{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}";
 
     function initReturnsTable() {
       const $table = $(tableSelector);

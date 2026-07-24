@@ -191,7 +191,7 @@
 <script>
 $(document).ready(() => {
   $('#lowStockTable').DataTable({
-    language: { url: "{{ url_for('static', filename='datatables/Arabic.json') }}" },
+    language: { url: "{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}" },
     pageLength: 50,
     order: [[5, 'asc']],  // Sort by percentage (most urgent first)
     responsive: true,

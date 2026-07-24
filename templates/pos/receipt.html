@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Receipt #{{ sale.sale_number }}</title>
+    <title>{{ t('Receipt') }} #{{ sale.sale_number }}</title>
     <style>
         @page { size: 80mm; margin: 0; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -95,7 +95,7 @@
             {% endif %}
 
             {% if sale.tax_amount and sale.tax_amount > 0 %}
-            <span>{{ t('VAT') }} (5%)</span>
+            <span>{{ t('VAT') }} ({{ sale.tax_rate or 0 }}%)</span>
             <span>{{ format_currency(sale.tax_amount, sale.currency) }}</span>
             {% endif %}
 

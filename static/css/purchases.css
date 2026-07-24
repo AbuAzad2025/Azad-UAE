@@ -45,8 +45,8 @@
 	.select2-selection--single
 	.select2-selection__rendered {
 	width: 100%;
-	padding-left: 0 !important;
-	padding-right: 0 !important;
+	padding-inline-start: 0 !important;
+	padding-inline-end: 0 !important;
 	line-height: 1.5 !important;
 	text-align: center;
 	font-size: 1rem;
@@ -72,12 +72,12 @@
 
 /* purgecss end ignore */
 .purchase-create-form textarea.form-control {
-	text-align: right;
+	text-align: end;
 	line-height: 1.6;
 }
 
 .purchase-create-form textarea.form-control::placeholder {
-	text-align: right;
+	text-align: end;
 }
 
 .purchase-header-actions {
@@ -147,5 +147,5 @@
 }
 
 .purchase-header-actions .purchase-header-link + .purchase-header-link {
-	margin-left: 0.65rem;
+	margin-inline-start: 0.65rem;
 }

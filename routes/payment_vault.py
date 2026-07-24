@@ -6,6 +6,7 @@ Payment Vault Routes - مسارات الخزينة السرية
 from flask_babel import gettext
 
 from datetime import datetime, timezone
+from decimal import Decimal, InvalidOperation
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import current_user
 from extensions import db, limiter, csrf
@@ -681,7 +682,7 @@ def edit_package(package_id):
             package.name_en = request.form.get("name_en", package.name_en).strip()
             package.description_ar = request.form.get("description_ar", package.description_ar or "").strip()
             package.description_en = request.form.get("description_en", package.description_en or "").strip()
-            package.price = _as_float(request.form.get("price"), package.price)
+            package.price = Decimal(str(_as_float(request.form.get("price"), package.price)))
             package.max_users = _as_int(request.form.get("max_users"), package.max_users or 1)
             package.max_branches = _as_int(request.form.get("max_branches"), package.max_branches or 1)
             package.support_duration_months = _as_int(
@@ -1067,7 +1068,11 @@ def api_create_purchase():
         if not package or not package.is_active:
             return jsonify({"success": False, "error": gettext("الباقة غير متاحة")}), 404
 
-        if float(data["amount_paid"]) < package.price:
+        try:
+            amount_paid_value = Decimal(str(data["amount_paid"]))
+        except (InvalidOperation, TypeError, ValueError):
+            return jsonify({"success": False, "error": gettext("المبلغ المدفوع غير صالح")}), 400
+        if amount_paid_value < Decimal(str(package.price or 0)):
             return (
                 jsonify(
                     {
@@ -1086,7 +1091,7 @@ def api_create_purchase():
             company_name=company_name,
             payment_method=data["payment_method"],
             payment_status="pending",
-            amount_paid=float(data["amount_paid"]),
+            amount_paid=amount_paid_value,
             currency=data.get("currency", "USD"),
             transaction_id=sanitize(data.get("transaction_id", ""), 100),
             payment_details=data.get("payment_details"),

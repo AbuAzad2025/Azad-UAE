@@ -180,7 +180,7 @@
 <script>
 $(document).ready((() => {
   $('#outOfStockTable').DataTable({
-    language: { url: "{{ url_for('static', filename='datatables/Arabic.json') }}" },
+    language: { url: "{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}" },
     pageLength: 50,
     responsive: true,
     dom: 'Bfrtip',

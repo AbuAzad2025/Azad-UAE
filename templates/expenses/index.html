@@ -122,7 +122,7 @@ document.addEventListener('change', (e) => {
 (() => {
   const tableSelector = '#expensesTable';
   const printButtonSelector = '#printExpensesBtn';
-  const languageUrl = "{{ url_for('static', filename='datatables/Arabic.json') }}";
+  const languageUrl = "{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}";
 
   function initExpensesPrint() {
     const $table = $(tableSelector);

@@ -3,7 +3,6 @@
 {% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('فئات') }} {{ t('Products') }}{% endblock %}
 
 {% block content %}
-<div class="content-wrapper">
     <div class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
@@ -71,7 +70,6 @@
             </div>
         </div>
     </section>
-</div>
 
 {% include 'products/_category_modal.html' %}
 {% endblock %}

@@ -217,7 +217,7 @@ $(document).ready(() => {
   }
 
   const table = $('#movementsTable').DataTable({
-    language: { url: "{{ url_for('static', filename='datatables/Arabic.json') }}" },
+    language: { url: "{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}" },
     pageLength: 50,
     order: [[0, 'desc']],
     responsive: true,
