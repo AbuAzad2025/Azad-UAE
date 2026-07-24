@@ -72,7 +72,7 @@
 
 7.1 `# type: ignore`, `# noqa`, and commented-out code are forbidden.
 
-7.2 Duplicated helpers are forbidden. One function, one purpose, one location.
+7.2 Duplicated helpers are forbidden. One function, one purpose, one location. If a similar helper already exists, refactor and extend it. Do not reinvent from scratch.
 
 7.3 Functions exceeding 80 lines MUST be refactored by extracting helpers.
 
