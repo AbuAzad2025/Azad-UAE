@@ -42,10 +42,12 @@ from utils.decorators import permission_required
 from utils.db_safety import atomic_transaction
 from utils.helpers import generate_number
 import queue as _queue
+import time
 import os as _os
 import requests
 from utils.pos_helpers import (
     POS_QA_MARKER,
+    build_cfd_order_payload,
     compute_fast_cash_options,
     create_pos_session,
     close_pos_session,
@@ -76,6 +78,7 @@ from sqlalchemy.exc import IntegrityError
 from utils.structured_logging import log_mutation
 from services.logging_core import LoggingCore
 from utils.tenanting import tenant_get, tenant_query, get_active_tenant_id
+from utils import sse_backplane
 from utils.currency_utils import context_aware_default_currency, convert_and_quantize_aed
 
 pos_bp = Blueprint("pos", __name__, url_prefix="/pos")
@@ -1165,6 +1168,8 @@ def api_checkout():
             },
             tenant_id=sale.tenant_id,
         )
+
+    _publish_cfd_refresh(sale.tenant_id, session.id)
 
     return jsonify(response)
 
@@ -2384,6 +2389,7 @@ def api_stock_lookup():
 
 _HARDWARE_AGENT_URL = _os.environ.get("POS_HARDWARE_AGENT_URL", "http://127.0.0.1:8567")
 _KDS_SUBSCRIBERS: list[tuple[int | None, _queue.Queue]] = []
+_CFD_SUBSCRIBERS: list[tuple[int, int, _queue.Queue]] = []
 
 
 def _notify_kds(data, tenant_id: int | None = None):
@@ -2400,6 +2406,28 @@ def _notify_kds(data, tenant_id: int | None = None):
     for entry in stale:
         if entry in _KDS_SUBSCRIBERS:
             _KDS_SUBSCRIBERS.remove(entry)
+    if target_tid is not None:
+        sse_backplane.publish(f"pos:kds:{target_tid}", {"type": "refresh", "tenant_id": target_tid, "ts": time.time()})
+
+
+def _publish_cfd_refresh(tenant_id: int, session_id: int) -> None:
+    """Nudge customer-display streams (this worker + peers via Redis) to
+    rebuild the authoritative payload from the DB."""
+    if not tenant_id or not session_id:
+        return
+    payload = {"type": "refresh", "tenant_id": tenant_id, "session_id": session_id, "ts": time.time()}
+    stale: list[tuple[int, int, _queue.Queue]] = []
+    for sub_tid, sub_sid, q in _CFD_SUBSCRIBERS[:]:
+        if sub_tid != tenant_id or sub_sid != session_id:
+            continue
+        try:
+            q.put_nowait(payload)
+        except Exception:
+            stale.append((sub_tid, sub_sid, q))
+    for entry in stale:
+        if entry in _CFD_SUBSCRIBERS:
+            _CFD_SUBSCRIBERS.remove(entry)
+    sse_backplane.publish(f"pos:cfd:{tenant_id}:{session_id}", payload)
 
 
 @pos_bp.route("/api/kds/stream")
@@ -2475,6 +2503,8 @@ def kds_update_status(order_id):
         },
         tenant_id=tid,
     )
+    if order.sale is not None and order.sale.pos_session_id:
+        _publish_cfd_refresh(tid, order.sale.pos_session_id)
     return jsonify({"success": True})
 
 
@@ -2492,56 +2522,61 @@ def customer_display_stream(session_id):
     if not display_tenant_id or not verify_customer_display_token(session_id, display_tenant_id, display_token):
         return jsonify({"error": gettext("رابط شاشة العرض غير صالح.")}), 403
 
-    def stream():
-        last_status = None
-        while True:
-            if not display_tenant_id:
-                yield f"data: {json.dumps({'type': 'closed'})}\n\n"
-                break
-            session = db.session.get(PosSession, session_id)
-            if not session or session.tenant_id != display_tenant_id:
-                yield f"data: {json.dumps({'type': 'closed'})}\n\n"
-                break
-            from models import Sale
+    def _current_payload():
+        session = db.session.get(PosSession, session_id)
+        if not session or session.tenant_id != display_tenant_id:
+            return {"type": "closed"}
+        from models import PosKdsOrder, Sale
 
-            sales = (
-                Sale.query.filter(
-                    Sale.tenant_id == session.tenant_id,
-                    Sale.pos_session_id == session_id,
-                )
-                .order_by(Sale.id.desc())
-                .limit(5)
-                .all()
+        sales = (
+            Sale.query.filter(
+                Sale.tenant_id == session.tenant_id,
+                Sale.pos_session_id == session_id,
             )
-            if not sales:
-                yield f"data: {json.dumps({'type': 'waiting'})}\n\n"
-                import time
+            .order_by(Sale.id.desc())
+            .limit(5)
+            .all()
+        )
+        if not sales:
+            return {"type": "waiting"}
+        latest = sales[0]
+        kds_order = PosKdsOrder.query.filter_by(
+            sale_id=latest.id,
+            tenant_id=session.tenant_id,
+        ).first()
+        return build_cfd_order_payload(latest, kds_order.status if kds_order else "confirmed")
 
-                time.sleep(3)
-                continue
-            latest = sales[0]
-            from models import PosKdsOrder
-
-            kds_order = PosKdsOrder.query.filter_by(
-                sale_id=latest.id,
-                tenant_id=session.tenant_id,
-            ).first()
-            status = kds_order.status if kds_order else "confirmed"
-            if status != last_status:
-                last_status = status
-                items = []
-                for line in latest.lines:
-                    items.append(
-                        {
-                            "name": line.product.name_ar or line.product.name,
-                            "quantity": float(line.quantity),
-                            "total": float(line.line_total or 0),
-                        }
-                    )
-                yield f"data: {json.dumps({'type': 'order_update', 'order_number': latest.sale_number, 'items': items, 'total': float(latest.total_amount or 0), 'status': status})}\n\n"
-            import time
-
-            time.sleep(3)
+    def stream():
+        q = _queue.Queue()
+        subscriber = (display_tenant_id, session_id, q)
+        _CFD_SUBSCRIBERS.append(subscriber)
+        channel = f"pos:cfd:{display_tenant_id}:{session_id}"
+        unsubscribe = sse_backplane.subscribe(channel, q)
+        last_sent = None
+        try:
+            while True:
+                payload = _current_payload()
+                if payload.get("type") == "closed":
+                    yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+                    break
+                encoded = json.dumps(payload, ensure_ascii=False)
+                if encoded != last_sent:
+                    last_sent = encoded
+                    yield f"data: {encoded}\n\n"
+                # Push-responsive wait: drain refresh messages (in-process or
+                # Redis backplane) every 0.1s, full DB re-poll every ~3s.
+                for _ in range(30):
+                    try:
+                        while True:
+                            q.get_nowait()
+                    except _queue.Empty:
+                        pass
+                    time.sleep(0.1)
+        finally:
+            if subscriber in _CFD_SUBSCRIBERS:
+                _CFD_SUBSCRIBERS.remove(subscriber)
+            if unsubscribe:
+                unsubscribe()
 
     return stream(), {"Content-Type": "text/event-stream", "Cache-Control": "no-cache"}
 

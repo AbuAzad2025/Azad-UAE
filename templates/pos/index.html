@@ -64,6 +64,7 @@
           <label for="productSearch" class="sr-only">{{ t('Scan Barcode Or Type Name Code') }}</label>
           <input id="productSearch" class="barcode-input" placeholder="{{ t('Scan Barcode Or Type Name Code') }} (Ctrl+K)">
           <span class="kbd">Ctrl K</span>
+          <button id="cameraScanBtn" type="button" class="search-clear" title="{{ t('Scan With Camera') }}" data-scan-hint="{{ t('Point The Camera At The Barcode') }}">📷</button>
           <button id="clearProductSearch" class="search-clear" title="{{ t('Clear') }}">✕</button>
           <div id="productResults" class="pos-product-results d-none"></div>
         </div>
@@ -390,6 +391,7 @@
 <meta name="pos-prices-include-vat" content="{{ 'true' if prices_include_vat else 'false' }}">
 <meta name="pos-config" content="{{ pos_config | tojson | safe }}">
 <script src="{{ url_for('static', filename='js/pos/pos-config.js') }}"></script>
+<script src="{{ url_for('static', filename='js/pos/cfd-broadcast.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pos/index.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pos/offline.js') }}"></script>
 {% endblock %}

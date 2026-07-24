@@ -9,11 +9,24 @@
   <div id="cdItems" class="row justify-content-center mb-4 d-none">
     <div class="col-md-6">
       <table class="table table-dark table-borderless text-right">
-        <thead><tr><th>{{ t('Description') }}</th><th>{{ t('Qty') }}</th><th>{{ t('Amount') }}</th></tr></thead>
+        <thead><tr><th>{{ t('Description') }}</th><th>{{ t('Qty') }}</th><th>{{ t('Price') }}</th><th>{{ t('Discount') }}</th><th>{{ t('Amount') }}</th></tr></thead>
         <tbody id="cdItemsBody"></tbody>
       </table>
       <hr class="border-light">
+      <table class="table table-dark table-borderless text-right h5">
+        <tbody>
+          <tr><td>{{ t('Subtotal') }}</td><td id="cdSubtotal" class="text-left"></td></tr>
+          <tr id="cdDiscountRow" class="d-none"><td>{{ t('Discount') }}</td><td id="cdDiscount" class="text-left"></td></tr>
+          <tr id="cdPromoRow" class="d-none"><td>{{ t('Promotion') }}</td><td id="cdPromo" class="text-left"></td></tr>
+          <tr id="cdTaxRow" class="d-none"><td id="cdTaxLabel">{{ t('VAT') }}</td><td id="cdTax" class="text-left"></td></tr>
+          <tr id="cdZeroRow" class="d-none"><td>{{ t('Zero Rated') }}</td><td id="cdZero" class="text-left"></td></tr>
+          <tr id="cdExemptRow" class="d-none"><td>{{ t('Exempt') }}</td><td id="cdExempt" class="text-left"></td></tr>
+        </tbody>
+      </table>
       <h3 id="cdTotal" class="text-left"></h3>
+      <div id="cdTender" class="d-none h5 text-left">
+        <span id="cdPaid"></span> — <span id="cdChange" class="text-success"></span>
+      </div>
     </div>
   </div>
   <div id="cdProgress" class="d-none">
@@ -38,28 +51,94 @@
   const token = params.get('token');
   if (!sessionId || !tenantId || !token) { document.getElementById('cdOrderNumber').textContent = '{{ t("Invalid Link") }}'; return; }
 
-  const es = new EventSource('/pos/api/customer-display/'+sessionId+'/stream?tenant_id='+encodeURIComponent(tenantId)+'&token='+encodeURIComponent(token));
-  es.onmessage = (e) => {
-    try {
-      const d = JSON.parse(e.data);
-      if (d.type === 'order_update') updateDisplay(d);
-    } catch(ex) {}
-  };
-  es.onerror = () => { es.close(); setTimeout(()=> {window.location.reload()}, 5000); };
+  const $ = (id) => document.getElementById(id);
+  const fmt = (v) => (Number(v) || 0).toFixed(3).replace(/\.?0+$/, '') || '0';
+  const money = (v) => (Number(v) || 0).toFixed(2);
 
-  function updateDisplay(d) {
-    document.getElementById('cdStatus').classList.remove('d-none');
-    document.getElementById('cdOrderNumber').textContent = '{{ t("Invoice") }} #' + (d.order_number||'');
-    document.getElementById('cdItems').classList.remove('d-none');
-    const tbody = document.getElementById('cdItemsBody');
-    tbody.innerHTML = (d.items||[]).map(i => '<tr><td>'+i.name+'</td><td>'+i.quantity+'</td><td>'+i.total+'</td></tr>').join('');
-    document.getElementById('cdTotal').textContent = '{{ t("Grand Total") }}: ' + (d.total||'0.00');
-    document.getElementById('cdProgress').classList.remove('d-none');
-    const pct = {pending:'25%',preparing:'50%',ready:'75%',served:'100%'}[d.status]||'0%';
-    const label = {pending:'{{ t("Pending") }}',preparing:'{{ t("Preparing") }}',ready:'{{ t("Ready") }}',served:'{{ t("Served") }}'}[d.status]||'';
-    document.getElementById('cdProgressBar').style.width = pct;
-    document.getElementById('cdProgressLabel').textContent = label;
+  const cell = (text) => { const td = document.createElement('td'); td.textContent = text; return td; };
+  const showRow = (id, on) => $(id).classList.toggle('d-none', !on);
+
+  function render(d) {
+    if (d.type === 'waiting') {
+      $('cdStatus').classList.remove('d-none');
+      $('cdItems').classList.add('d-none');
+      $('cdProgress').classList.add('d-none');
+      $('cdOrderNumber').textContent = '{{ t("Waiting for Order") }}...';
+      return;
+    }
+    if (d.type !== 'order_update') return;
+    const live = d.status === 'cart' || d.live === true;
+    $('cdStatus').classList.remove('d-none');
+    $('cdOrderNumber').textContent = d.order_number
+      ? '{{ t("Invoice") }} #' + d.order_number
+      : '{{ t("In Progress") }}...';
+    $('cdItems').classList.remove('d-none');
+    const tbody = $('cdItemsBody');
+    tbody.textContent = '';
+    (d.items || []).forEach((i) => {
+      const tr = document.createElement('tr');
+      tr.append(
+        cell(i.name || '—'),
+        cell(fmt(i.quantity)),
+        cell(money(i.unit_price || 0)),
+        cell(Number(i.discount_amount) > 0 ? money(i.discount_amount) : '—'),
+        cell(money(i.total)),
+      );
+      tbody.appendChild(tr);
+    });
+    $('cdSubtotal').textContent = money(d.subtotal);
+    showRow('cdDiscountRow', Number(d.discount_amount) > 0);
+    $('cdDiscount').textContent = money(d.discount_amount);
+    showRow('cdPromoRow', Number(d.promotion_discount_amount) > 0);
+    $('cdPromo').textContent = money(d.promotion_discount_amount);
+    const tb = d.tax_breakdown || {};
+    const std = tb.standard || { base: 0, rate: 0, tax: 0 };
+    showRow('cdTaxRow', Number(std.tax) > 0 || Number(std.rate) > 0);
+    $('cdTaxLabel').textContent = '{{ t("VAT") }} (' + (Number(std.rate) || 0) + '%)';
+    $('cdTax').textContent = money(std.tax);
+    showRow('cdZeroRow', Number(tb.zero_rated?.base) > 0);
+    $('cdZero').textContent = money(tb.zero_rated?.base);
+    showRow('cdExemptRow', Number(tb.exempt?.base) > 0);
+    $('cdExempt').textContent = money(tb.exempt?.base);
+    $('cdTotal').textContent = '{{ t("Grand Total") }}: ' + money(d.total);
+    const paid = Number(d.paid_amount) || 0;
+    showRow('cdTender', paid > 0);
+    $('cdPaid').textContent = '{{ t("Paid") }}: ' + money(paid);
+    $('cdChange').textContent = '{{ t("Change") }}: ' + money(d.change_due);
+    $('cdProgress').classList.remove('d-none');
+    const pct = live ? '15%' : ({pending:'25%',preparing:'50%',ready:'75%',served:'100%'}[d.status] || '0%');
+    const label = live ? '{{ t("In Progress") }}' : ({pending:'{{ t("Pending") }}',preparing:'{{ t("Preparing") }}',ready:'{{ t("Ready") }}',served:'{{ t("Served") }}'}[d.status] || '');
+    $('cdProgressBar').style.width = pct;
+    $('cdProgressLabel').textContent = label;
   }
+
+  /* BroadcastChannel fallback — live cart from the register when SSE is down */
+  let bc = null;
+  try {
+    bc = new BroadcastChannel('pos-cfd');
+    bc.onmessage = (e) => {
+      const d = e.data;
+      if (d && String(d.session_id) === String(sessionId)) render(d);
+    };
+  } catch (ex) { bc = null; }
+
+  /* SSE authoritative stream with reconnect backoff */
+  let es = null;
+  let retryMs = 1000;
+  const connect = () => {
+    es = new EventSource('/pos/api/customer-display/'+sessionId+'/stream?tenant_id='+encodeURIComponent(tenantId)+'&token='+encodeURIComponent(token));
+    es.onmessage = (e) => {
+      retryMs = 1000;
+      try { render(JSON.parse(e.data)); } catch(ex) {}
+    };
+    es.onerror = () => {
+      es.close();
+      /* BroadcastChannel keeps the display alive; retry SSE with backoff */
+      setTimeout(connect, retryMs);
+      retryMs = Math.min(retryMs * 2, 30000);
+    };
+  };
+  connect();
 })();
 </script>
 {% endblock %}

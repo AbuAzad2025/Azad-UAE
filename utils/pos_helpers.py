@@ -532,3 +532,69 @@ def compute_fast_cash_options(total, currency: str | None = None, max_options: i
         if len(options) >= max_options:
             break
     return options
+
+
+# ─── Customer-facing display (CFD) payload ───
+
+
+def build_cfd_order_payload(sale, kds_status: str | None = None) -> dict:
+    """Build the enriched customer-display payload for a completed sale.
+
+    Includes per-line discounts, manual vs promotion discount split, and an
+    exact VAT breakdown. Product rows carry no per-line VAT class in the
+    schema, so the standard bucket holds the sale's taxable base when the sale
+    is rated, otherwise the full base is reported as zero-rated; the exempt
+    bucket is emitted explicitly (0) to keep the contract stable.
+    """
+    items = []
+    for line in sale.lines:
+        qty = safe_decimal(line.quantity)
+        price = safe_decimal(line.unit_price)
+        disc_pct = safe_decimal(line.discount_percent)
+        line_total = safe_decimal(line.line_total)
+        gross = (qty * price).quantize(_AED_QUANTUM, rounding=ROUND_HALF_UP)
+        product = getattr(line, "product", None)
+        name = "—"
+        if product is not None:
+            name = (product.name_ar or product.name or "—").strip() or "—"
+        items.append(
+            {
+                "name": name,
+                "quantity": float(qty),
+                "unit_price": float(price),
+                "discount_percent": float(disc_pct),
+                "discount_amount": float(gross - line_total),
+                "total": float(line_total),
+            }
+        )
+
+    tax_rate = safe_decimal(sale.tax_rate)
+    taxable = safe_decimal(sale.taxable_amount)
+    tax_amount = safe_decimal(sale.tax_amount)
+    if tax_rate > 0:
+        standard = {"base": float(taxable), "rate": float(tax_rate), "tax": float(tax_amount)}
+        zero_base = 0.0
+    else:
+        standard = {"base": 0.0, "rate": 0.0, "tax": 0.0}
+        zero_base = float(taxable)
+
+    total = safe_decimal(sale.total_amount)
+    paid = safe_decimal(sale.paid_amount)
+    return {
+        "type": "order_update",
+        "order_number": sale.sale_number,
+        "items": items,
+        "subtotal": float(safe_decimal(sale.subtotal)),
+        "discount_amount": float(safe_decimal(sale.discount_amount)),
+        "promotion_discount_amount": float(safe_decimal(sale.promotion_discount_amount)),
+        "taxable_amount": float(taxable),
+        "tax_breakdown": {
+            "standard": standard,
+            "zero_rated": {"base": zero_base, "tax": 0.0},
+            "exempt": {"base": 0.0, "tax": 0.0},
+        },
+        "total": float(total),
+        "paid_amount": float(paid),
+        "change_due": float(max(Decimal("0"), paid - total)),
+        "status": kds_status or "confirmed",
+    }

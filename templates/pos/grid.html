@@ -43,6 +43,7 @@
       <div class="pos-search-bar">
         <label for="productSearch" class="sr-only">{{ _('ابحث بالباركود أو اسم المنتج') }}</label>
         <input id="productSearch" class="barcode-input" placeholder="{{ _('ابحث بالباركود أو اسم المنتج') }}">
+        <button id="cameraScanBtn" type="button" class="btn btn-outline-secondary btn-sm" title="{{ _('المسح بالكاميرا') }}" data-scan-hint="{{ _('وجّه الكاميرا نحو الباركود') }}">📷</button>
         <div id="productLoading" class="small text-info d-none mt-1"><i class="fas fa-spinner fa-spin"></i> {{ _('جاري البحث') }}</div>
       </div>
       <div id="productGrid" class="pos-product-grid"></div>
@@ -253,6 +254,7 @@ document.addEventListener('click', (e) => {
 <meta name="pos-base-currency" content="{{ tenant_default_currency }}">
 <meta name="pos-currency-symbol" content="{{ currency_symbol }}">
 <meta name="pos-prices-include-vat" content="{{ 'true' if prices_include_vat else 'false' }}">
+<script src="{{ url_for('static', filename='js/pos/cfd-broadcast.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pos/grid.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pos/offline.js') }}"></script>
 {% endblock %}

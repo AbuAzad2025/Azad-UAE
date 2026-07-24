@@ -191,7 +191,7 @@
 					qs("#kpiDiscount").textContent = fmt(data.discount);
 					qs("#kpiTotal").textContent = fmt(data.total);
 					qs("#kpiCurrency").textContent = currencySymbolFor(selectedCurrency());
-					return {
+					const exactTotals = {
 						subtotal: data.subtotal,
 						tax: data.tax_amount,
 						shipping,
@@ -200,10 +200,12 @@
 						total: data.total,
 						prices_include_vat: data.prices_include_vat,
 					};
+					if (window.cfdBroadcast) cfdBroadcast.sendCart(state.cart, exactTotals);
+					return exactTotals;
 				}
 			} catch (_) {}
 		}
-		return {
+		const quickTotals = {
 			subtotal,
 			tax: quickTax,
 			shipping,
@@ -212,6 +214,8 @@
 			total: quickTotal,
 			prices_include_vat: pricesIncludeVatMeta,
 		};
+		if (window.cfdBroadcast) cfdBroadcast.sendCart(state.cart, quickTotals);
+		return quickTotals;
 	};
 	// Upsell prompts: live evaluation while composing the cart, plus a recap
 	// inside the done modal after checkout (server returns upsell_prompts).
@@ -862,27 +866,33 @@
 	customerHint();
 	void renderCart();
 	qs("#productSearch").focus();
-	state.barcodeScanner = new BarcodeScanner({
-		onScan: async (code) => {
-			if (!code?.trim()) return;
-			const res = await fetchJson(
-				`/pos/api/product?code=${encodeURIComponent(code.trim())}${warehouseParam()}`,
-			);
-			if (!res.ok) return;
-			const p = res.data;
-			if (p?.id) {
-				if (p.is_inactive) {
-					showAlert(p.warning || "المنتج غير نشط.", "warning");
-					return;
-				}
-				await addToCart(p, p.scale_weight_kg || 1);
-				qs("#productSearch").value = "";
-				qs("#productResults").classList.add("d-none");
-				showAlert(`تمت إضافة ${p.name}`, "success");
+	const handleScannedCode = async (code) => {
+		if (!code?.trim()) return;
+		const res = await fetchJson(
+			`/pos/api/product?code=${encodeURIComponent(code.trim())}${warehouseParam()}`,
+		);
+		if (!res.ok) return;
+		const p = res.data;
+		if (p?.id) {
+			if (p.is_inactive) {
+				showAlert(p.warning || "المنتج غير نشط.", "warning");
+				return;
 			}
-		},
-	});
+			await addToCart(p, p.scale_weight_kg || 1);
+			qs("#productSearch").value = "";
+			qs("#productResults").classList.add("d-none");
+			showAlert(`تمت إضافة ${p.name}`, "success");
+		}
+	};
+	state.barcodeScanner = new BarcodeScanner({ onScan: handleScannedCode });
 	state.barcodeScanner.start();
+	if (window.setupCameraScanUI) {
+		setupCameraScanUI({
+			button: qs("#cameraScanBtn"),
+			onScan: (code) => void handleScannedCode(code),
+			onError: (msg) => showAlert(msg, "warning"),
+		});
+	}
 
 	/* ---------- Calculator (edits #paidAmount) ---------- */
 	const paidEl = qs("#paidAmount");
@@ -1141,6 +1151,7 @@
 			const required = qs("#posSessionRequired");
 			if (j.success && j.session) {
 				const s = j.session;
+				if (window.cfdBroadcast) cfdBroadcast.setSession(s.id);
 				bar.classList.remove("d-none");
 				required.classList.add("d-none");
 				qs("#sessionNumber").textContent = s.number;
@@ -1149,6 +1160,7 @@
 				qs("#sessionTime").textContent = `مفتوحة منذ ${s.duration_minutes} دقيقة`;
 				qs("#closeOpening").textContent = fmt(s.opening_balance);
 			} else {
+				if (window.cfdBroadcast) cfdBroadcast.setSession(null);
 				bar.classList.add("d-none");
 				required.classList.remove("d-none");
 			}

@@ -161,7 +161,7 @@
 					qs("#kpiDiscount").textContent = fmt(data.discount);
 					qs("#kpiTotal").textContent = fmt(data.total);
 					qs("#kpiCurrency").textContent = currencySymbolFor(selectedCurrency());
-					return {
+					const exactTotals = {
 						subtotal: data.subtotal,
 						tax: data.tax_amount,
 						shipping,
@@ -171,10 +171,12 @@
 						total: data.total,
 						prices_include_vat: data.prices_include_vat,
 					};
+					if (window.cfdBroadcast) cfdBroadcast.sendCart(state.cart, exactTotals);
+					return exactTotals;
 				}
 			} catch (_) {}
 		}
-		return {
+		const quickTotals = {
 			subtotal,
 			tax: quickTax,
 			shipping,
@@ -184,6 +186,8 @@
 			total: quickTotal,
 			prices_include_vat: pricesIncludeVatMeta,
 		};
+		if (window.cfdBroadcast) cfdBroadcast.sendCart(state.cart, quickTotals);
+		return quickTotals;
 	};
 
 	// Upsell prompts: live evaluation while composing the cart, plus a recap
@@ -426,6 +430,7 @@
 			.then((r) => r.json())
 			.then((d) => {
 				if (d.success && d.session) {
+					if (window.cfdBroadcast) cfdBroadcast.setSession(d.session.id);
 					qs("#posSessionBar").classList.remove("d-none");
 					qs("#posSessionRequired").classList.add("d-none");
 					qs("#sessionNumber").textContent = d.session.number;
@@ -885,24 +890,32 @@
 		});
 
 		if (window.BarcodeScanner) {
+			const handleScannedCode = (code) => {
+				qs("#productSearch").value = code;
+				fetch(`/pos/api/product?code=${encodeURIComponent(code)}`)
+					.then((r) => r.json())
+					.then((d) => {
+						if (d.success !== false) {
+							void addToCart(d, d.scale_weight_kg || 1);
+							qs("#productSearch").value = "";
+						} else {
+							showAlert(d.error || "المنتج غير موجود");
+						}
+					})
+					.catch(() => {});
+			};
 			state.barcodeScanner = new BarcodeScanner({
-				onScan: (code) => {
-					qs("#productSearch").value = code;
-					fetch(`/pos/api/product?code=${encodeURIComponent(code)}`)
-						.then((r) => r.json())
-						.then((d) => {
-							if (d.success !== false) {
-								void addToCart(d, d.scale_weight_kg || 1);
-								qs("#productSearch").value = "";
-							} else {
-								showAlert(d.error || "المنتج غير موجود");
-							}
-						})
-						.catch(() => {});
-				},
+				onScan: handleScannedCode,
 				minLength: 3,
 			});
 			state.barcodeScanner.start();
+			if (window.setupCameraScanUI) {
+				setupCameraScanUI({
+					button: qs("#cameraScanBtn"),
+					onScan: handleScannedCode,
+					onError: (msg) => showAlert(msg, "warning"),
+				});
+			}
 		}
 
 		document.addEventListener("keydown", (e) => {
