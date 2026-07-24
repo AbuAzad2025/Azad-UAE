@@ -267,7 +267,11 @@ jobs:
           # Full requirements are REQUIRED here: mypy needs real flask types
           # (e.g. abort() -> NoReturn) for correct narrowing — a slim install
           # degrades every unresolved import to Any and produces false errors.
-          pip install -r requirements.txt ruff mypy pip-audit yamllint jinja2
+          # ruff is PINNED: 0.16 expanded the default rule set (BLE001/UP017/
+          # I001/FURB157...) which fires codebase-wide. Pin to the 0.15 line
+          # whose defaults match this codebase's compliance baseline, same as
+          # the pinned @biomejs/biome below.
+          pip install -r requirements.txt ruff==0.15.22 mypy pip-audit yamllint jinja2
 
       - name: Install Node lint tools
         run: |

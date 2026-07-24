@@ -360,6 +360,7 @@ class TestPosSessionModel:
             opening_balance_cash=Decimal("100"),
             total_cash_sales=Decimal("50"),
             opened_at=opened,
+            status=PosSession.STATUS_OPEN,
         )
         session.close(Decimal("150"), notes="shift end")
         assert session.status == "closed"

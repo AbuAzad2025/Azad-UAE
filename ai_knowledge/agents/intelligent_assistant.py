@@ -161,7 +161,7 @@ class IntelligentAssistant:
                 "method": "intelligent_ai",  # ليس pattern matching!
             }
 
-        except (ValueError, TypeError, RuntimeError) as e:
+        except Exception as e:
             logger.error(f"Intelligent processing failed: {e}")
             return {
                 "success": False,
@@ -209,7 +209,7 @@ class IntelligentAssistant:
                 "neural_features": neural_understanding,
             }
 
-        except (ValueError, TypeError, RuntimeError) as e:
+        except Exception as e:
             logger.error(f"Understanding failed: {e}")
             return {"success": False, "error": str(e)}
 
@@ -346,7 +346,7 @@ class IntelligentAssistant:
 
             return data
 
-        except (ValueError, TypeError, RuntimeError) as e:
+        except Exception as e:
             logger.error(f"Data collection failed: {e}")
             return {}
 
@@ -427,7 +427,7 @@ class IntelligentAssistant:
 
             return analysis
 
-        except (ValueError, TypeError, RuntimeError) as e:
+        except Exception as e:
             logger.error(f"Analysis failed: {e}")
             return {"insights": [], "warnings": [], "recommendations": []}
 
@@ -544,7 +544,7 @@ class IntelligentAssistant:
 
             return "\n".join(response_parts)
 
-        except (ValueError, TypeError, RuntimeError) as e:
+        except Exception as e:
             logger.error(f"Response generation failed: {e}")
             return "عذراً، حدث خطأ في توليد الرد"
 
@@ -574,7 +574,7 @@ class IntelligentAssistant:
                 tenant_id=tenant_id,
             )
 
-        except (ValueError, TypeError, RuntimeError) as e:
+        except Exception as e:
             logger.error(f"Learning failed: {e}")
 
     @staticmethod

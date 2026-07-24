@@ -66,7 +66,7 @@ def _has_permission(perm_code: str) -> bool:
     try:
         if hasattr(current_user, "has_permission") and current_user.is_authenticated:
             return current_user.has_permission(perm_code)
-    except (AttributeError, TypeError) as exc:
+    except Exception as exc:
         logger.debug("Permission check failed: %s", exc)
     return False
 
@@ -75,7 +75,7 @@ def _is_owner() -> bool:
     """Check if current user is owner."""
     try:
         return getattr(current_user, "is_owner", False) or _has_permission("admin")
-    except (AttributeError, TypeError) as exc:
+    except Exception as exc:
         logger.debug("Owner check failed: %s", exc)
         return False
 
@@ -84,7 +84,7 @@ def _audit(action: str, entity: str, entity_id: int | None = None, details: dict
     """Log an audit entry."""
     try:
         LoggingCore.log_audit(action=action, table_name=entity, record_id=entity_id, changes=details or {})
-    except (AttributeError, TypeError) as exc:
+    except Exception as exc:
         logger.warning("Audit log failed for %s/%s: %s", action, entity, exc)
 
 
@@ -111,7 +111,7 @@ def _log_ai_error(
         )
         db.session.add(log)
         db.session.flush()
-    except (ImportError, AttributeError, TypeError, RuntimeError) as exc:
+    except Exception as exc:
         logger.warning("AI error log failed (%s): %s", error_type, exc)
 
 
@@ -206,7 +206,7 @@ class ActionDispatcher:
                     "customer_create",
                     "manage_customers",
                 )
-            except (ValueError, TypeError, RuntimeError) as e:
+            except Exception as e:
                 _log_ai_error("customer_create_error", str(e), request_data=args)
                 return ActionResult(False, f"خطأ في إنشاء العميل: {str(e)[:100]}")
 
@@ -237,7 +237,7 @@ class ActionDispatcher:
                     "customer_list",
                     "manage_customers",
                 )
-            except (AttributeError, TypeError, RuntimeError) as e:
+            except Exception as e:
                 return ActionResult(False, f"خطأ في جلب العملاء: {str(e)[:100]}")
 
         def _get_customer_balance(args: dict) -> ActionResult:
@@ -265,7 +265,7 @@ class ActionDispatcher:
                     "customer_balance",
                     "manage_customers",
                 )
-            except (AttributeError, TypeError, RuntimeError) as e:
+            except Exception as e:
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
         # ===== PRODUCTS =====
@@ -301,7 +301,7 @@ class ActionDispatcher:
                     "product_create",
                     "manage_products",
                 )
-            except (ValueError, TypeError, RuntimeError) as e:
+            except Exception as e:
                 _log_ai_error("product_create_error", str(e), request_data=args)
                 return ActionResult(False, f"خطأ في إنشاء المنتج: {str(e)[:100]}")
 
@@ -333,7 +333,7 @@ class ActionDispatcher:
                     "product_list",
                     "manage_products",
                 )
-            except (AttributeError, TypeError, RuntimeError) as e:
+            except Exception as e:
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
         def _check_stock(_args: dict) -> ActionResult:
@@ -369,7 +369,7 @@ class ActionDispatcher:
                     "stock_check",
                     "manage_warehouse",
                 )
-            except (ValueError, TypeError, RuntimeError) as e:
+            except Exception as e:
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
         # ===== SALES / INVOICES =====
@@ -411,7 +411,7 @@ class ActionDispatcher:
                         "manage_sales",
                     )
                 return ActionResult(False, result.get("message", "حدث خطأ"))
-            except (ValueError, TypeError, RuntimeError) as e:
+            except Exception as e:
                 _log_ai_error("sale_create_error", str(e), request_data=args)
                 return ActionResult(False, f"خطأ في إنشاء الفاتورة: {str(e)[:100]}")
 
@@ -440,7 +440,7 @@ class ActionDispatcher:
                     "sale_list",
                     "manage_sales",
                 )
-            except (ValueError, TypeError, RuntimeError) as e:
+            except Exception as e:
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
         # ===== PAYMENTS =====
@@ -474,7 +474,7 @@ class ActionDispatcher:
                         "manage_payments",
                     )
                 return ActionResult(False, result.get("message", "حدث خطأ"))
-            except (ValueError, TypeError, RuntimeError) as e:
+            except Exception as e:
                 _log_ai_error("payment_error", str(e), request_data=args)
                 return ActionResult(False, f"خطأ في استلام الدفعة: {str(e)[:100]}")
 
@@ -515,7 +515,7 @@ class ActionDispatcher:
                     "expense_add",
                     "manage_expenses",
                 )
-            except (ValueError, TypeError, RuntimeError) as e:
+            except Exception as e:
                 _log_ai_error("expense_error", str(e), request_data=args)
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
@@ -548,7 +548,7 @@ class ActionDispatcher:
                     "supplier_create",
                     "manage_suppliers",
                 )
-            except (ValueError, TypeError, RuntimeError) as e:
+            except Exception as e:
                 _log_ai_error("supplier_error", str(e), request_data=args)
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
@@ -571,7 +571,7 @@ class ActionDispatcher:
                     "sales_summary",
                     "view_reports",
                 )
-            except (ValueError, TypeError, RuntimeError) as e:
+            except Exception as e:
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
         def _profit_summary(_args: dict) -> ActionResult:
@@ -606,7 +606,7 @@ class ActionDispatcher:
                     "profit_summary",
                     "view_reports",
                 )
-            except (ValueError, TypeError, RuntimeError) as e:
+            except Exception as e:
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
         # ===== EMPLOYEES =====
@@ -635,7 +635,7 @@ class ActionDispatcher:
                         "manage_employees",
                     )
                 return ActionResult(False, result.get("message", "حدث خطأ"))
-            except (ValueError, TypeError, RuntimeError) as e:
+            except Exception as e:
                 _log_ai_error("employee_create_error", str(e), request_data=args)
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
@@ -680,7 +680,7 @@ class ActionDispatcher:
                         "manage_purchases",
                     )
                 return ActionResult(False, result.get("message", "حدث خطأ"))
-            except (ValueError, TypeError, RuntimeError) as e:
+            except Exception as e:
                 _log_ai_error("purchase_create_error", str(e), request_data=args)
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
@@ -720,7 +720,7 @@ class ActionDispatcher:
                     "user_create",
                     "manage_users",
                 )
-            except (ValueError, TypeError, RuntimeError) as e:
+            except Exception as e:
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
         # Register all actions — destructive mutations require explicit confirmation
@@ -786,7 +786,7 @@ class ActionDispatcher:
         # Execute
         try:
             return action["handler"](args or {})
-        except (ValueError, TypeError, RuntimeError) as e:
+        except Exception as e:
             _log_ai_error(
                 "action_dispatch_error",
                 str(e),
