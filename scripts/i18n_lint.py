@@ -8,11 +8,43 @@ Detects:
 
 Exit code 0 = clean, 1 = violations found.
 """
+
 import ast
 import re
 import sys
 
-EXCLUDED_MIXED = {"POS", "QR", "VAT", "ERP", "CRM", "URL", "API", "ID", "PDF", "CSV", "SMS", "UAE", "TRN", "A4", "A5", "COD", "PG", "DB", "AI", "EBILAEAD", "JSON", "TXT", "SQL", "HTML", "CSS", "JS", "PWA", "IBAN", "SWIFT", "VAT"}
+EXCLUDED_MIXED = {
+    "POS",
+    "QR",
+    "VAT",
+    "ERP",
+    "CRM",
+    "URL",
+    "API",
+    "ID",
+    "PDF",
+    "CSV",
+    "SMS",
+    "UAE",
+    "TRN",
+    "A4",
+    "A5",
+    "COD",
+    "PG",
+    "DB",
+    "AI",
+    "EBILAEAD",
+    "JSON",
+    "TXT",
+    "SQL",
+    "HTML",
+    "CSS",
+    "JS",
+    "PWA",
+    "IBAN",
+    "SWIFT",
+    "VAT",
+}
 
 
 def main() -> int:
@@ -45,6 +77,7 @@ def main() -> int:
 
     # 3. Duplicates
     from collections import Counter
+
     dups = [k for k, c in Counter(keys).items() if c > 1]
     if dups:
         print(f"FAIL: {len(dups)} duplicate keys:")
