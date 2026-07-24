@@ -229,6 +229,7 @@ class TestSaleServiceHelpers:
 
         sale = MagicMock()
         sale.id = 2
+        sale.tenant_id = None
         with patch("models.warehouse.StockMovement") as mock_sm:
             mock_sm.query.filter_by.return_value.first.return_value = None
             assert SaleService.has_inventory_posted(sale) is False

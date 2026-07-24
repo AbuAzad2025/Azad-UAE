@@ -406,7 +406,7 @@ class SaleService:
                 )
 
                 # Validate payment amount (in AED)
-                if paid_amount_aed < Decimal("0"):
+                if payment_exchange_decimal <= Decimal("0") or paid_amount_aed < Decimal("0"):
                     raise ValueError("مبلغ الدفع لا يمكن أن يكون سالب")
 
                 sale.paid_amount = paid_amount  # في عملة الفاتورة
@@ -503,7 +503,7 @@ class SaleService:
             paid_aed = convert_and_quantize_aed(
                 paid_amount, payment_currency, payment_exchange_decimal, tenant_id=tenant_id
             )
-            if paid_aed < Decimal("0"):
+            if payment_exchange_decimal <= Decimal("0") or paid_aed < Decimal("0"):
                 raise ValueError("مبلغ الدفع لا يمكن أن يكون سالب")
 
             sale.paid_amount = paid_amount

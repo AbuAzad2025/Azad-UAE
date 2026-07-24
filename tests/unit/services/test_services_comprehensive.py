@@ -506,7 +506,7 @@ class TestSaleService:
         with app.app_context():
             with patch("models.warehouse.StockMovement") as mock_sm:
                 mock_sm.query.filter_by.return_value.first.return_value = None
-                sale = MagicMock(id=99999)
+                sale = MagicMock(id=99999, tenant_id=None)
                 assert SaleService.has_inventory_posted(sale) is False
 
     def test_has_inventory_posted_with_records(self, app):
