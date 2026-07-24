@@ -18,7 +18,5 @@ function getCurrentLanguage() {
 
 // Retain legacy global for any rare inline scripts that may reference it,
 // but map it to a no-op passthrough so keys render as-is.
-window.t = function (key) {
-	return key;
-};
+window.t = (key) => key;
 window.getCurrentLanguage = getCurrentLanguage;

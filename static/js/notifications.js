@@ -281,22 +281,30 @@ class NotificationManager {
 	}
 
 	success(message, title) {
-		const defaultTitle = (typeof getCurrentLanguage === "function" && getCurrentLanguage() === "ar") ? "نجاح" : "Success";
+		const defaultTitle =
+			typeof getCurrentLanguage === "function" && getCurrentLanguage() === "ar"
+				? "نجاح"
+				: "Success";
 		return this.show({ type: "success", title: title || defaultTitle, message });
 	}
 
 	error(message, title) {
-		const defaultTitle = (typeof getCurrentLanguage === "function" && getCurrentLanguage() === "ar") ? "خطأ" : "Error";
+		const defaultTitle =
+			typeof getCurrentLanguage === "function" && getCurrentLanguage() === "ar" ? "خطأ" : "Error";
 		return this.show({ type: "error", title: title || defaultTitle, message, duration: 20000 });
 	}
 
 	warning(message, title) {
-		const defaultTitle = (typeof getCurrentLanguage === "function" && getCurrentLanguage() === "ar") ? "تحذير" : "Warning";
+		const defaultTitle =
+			typeof getCurrentLanguage === "function" && getCurrentLanguage() === "ar"
+				? "تحذير"
+				: "Warning";
 		return this.show({ type: "warning", title: title || defaultTitle, message });
 	}
 
 	info(message, title) {
-		const defaultTitle = (typeof getCurrentLanguage === "function" && getCurrentLanguage() === "ar") ? "معلومة" : "Info";
+		const defaultTitle =
+			typeof getCurrentLanguage === "function" && getCurrentLanguage() === "ar" ? "معلومة" : "Info";
 		return this.show({ type: "info", title: title || defaultTitle, message });
 	}
 }

@@ -299,7 +299,8 @@
 					pageLength: pageLen,
 					responsive: true,
 					autoWidth: false,
-					language: getCurrentLanguage() === "ar" ? { url: "/static/datatables/Arabic.json" } : undefined,
+					language:
+						getCurrentLanguage() === "ar" ? { url: "/static/datatables/Arabic.json" } : undefined,
 					order,
 					columnDefs: noSortIdx.length ? [{ orderable: false, targets: noSortIdx }] : [],
 				});
@@ -338,7 +339,8 @@
 					dir: getCurrentLanguage() === "ar" ? "rtl" : "ltr",
 					width: "100%",
 					language: getCurrentLanguage(),
-					placeholder: $el.attr("placeholder") || (getCurrentLanguage() === "ar" ? "اختر..." : "Select..."),
+					placeholder:
+						$el.attr("placeholder") || (getCurrentLanguage() === "ar" ? "اختر..." : "Select..."),
 					allowClear:
 						String($el.data("allow-clear") || "").toLowerCase() === "true" ||
 						$el.data("allowClear") === 1,
@@ -369,7 +371,8 @@
 					dir: getCurrentLanguage() === "ar" ? "rtl" : "ltr",
 					width: "100%",
 					language: getCurrentLanguage(),
-					placeholder: $el.attr("placeholder") || (getCurrentLanguage() === "ar" ? "اختر..." : "Select..."),
+					placeholder:
+						$el.attr("placeholder") || (getCurrentLanguage() === "ar" ? "اختر..." : "Select..."),
 					allowClear:
 						String($el.data("allow-clear") || "").toLowerCase() === "true" ||
 						$el.data("allowClear") === 1,

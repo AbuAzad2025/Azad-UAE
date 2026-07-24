@@ -210,8 +210,13 @@ def format_currency(amount, currency=None, lang="ar"):
 
 
 def timeago(date):
-    """Calculate time ago string"""
-    from flask_babel import gettext as _
+    """Calculate time ago string.
+
+    Uses the project translation helper (``utils.i18n.t``) instead of
+    flask_babel.gettext so it resolves Arabic correctly even without an
+    active request context (CLI scripts, background jobs, unit tests).
+    """
+    from utils.i18n import t
 
     if not date:
         return ""
@@ -227,16 +232,16 @@ def timeago(date):
         seconds = diff.total_seconds()
 
         if seconds < 60:
-            return _("Just now")
+            return t("Just now")
         elif seconds < 3600:
             minutes = int(seconds // 60)
-            return _("%(minutes)d minutes ago", minutes=minutes)
+            return t("{n} minutes ago", n=minutes)
         elif seconds < 86400:
             hours = int(seconds // 3600)
-            return _("%(hours)d hours ago", hours=hours)
+            return t("{n} hours ago", n=hours)
         elif seconds < 604800:
             days = int(seconds // 86400)
-            return _("%(days)d days ago", days=days)
+            return t("{n} days ago", n=days)
         else:
             return date.strftime("%Y-%m-%d")
 

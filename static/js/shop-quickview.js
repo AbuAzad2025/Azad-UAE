@@ -13,7 +13,10 @@
 		fetch(`/s/${slug}/quick-view/${productId}`, {
 			headers: { "X-Requested-With": "XMLHttpRequest" },
 		})
-			.then((r) => { if (!r.ok) throw new Error(r.statusText); return r.text(); })
+			.then((r) => {
+				if (!r.ok) throw new Error(r.statusText);
+				return r.text();
+			})
 			.then((html) => {
 				body.innerHTML = html;
 				const minusBtns = body.querySelectorAll("[data-qty-minus]");
@@ -49,7 +52,8 @@
 				});
 			})
 			.catch(() => {
-				body.innerHTML = '<div class="ps-modal-error"><i class="fas fa-exclamation-circle"></i> Error</div>';
+				body.innerHTML =
+					'<div class="ps-modal-error"><i class="fas fa-exclamation-circle"></i> Error</div>';
 			});
 	}
 	function closeModal() {

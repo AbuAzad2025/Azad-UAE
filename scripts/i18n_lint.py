@@ -12,6 +12,7 @@ Exit code 0 = clean, 1 = violations found.
 import ast
 import re
 import sys
+from pathlib import Path
 
 EXCLUDED_MIXED = {
     "POS",
@@ -48,8 +49,10 @@ EXCLUDED_MIXED = {
 
 
 def main() -> int:
-    sys.stdout.reconfigure(encoding="utf-8")
-    path = r"D:\Data\karaj\UAE\Azad-UAE\utils\i18n.py"
+    reconfigure = getattr(sys.stdout, "reconfigure", None)
+    if callable(reconfigure):
+        reconfigure(encoding="utf-8")
+    path = str(Path(__file__).resolve().parent.parent / "utils" / "i18n.py")
     with open(path, "r", encoding="utf-8") as f:
         source = f.read()
 
@@ -62,7 +65,7 @@ def main() -> int:
     print("AST parse: OK")
 
     # 2. Extract TRANSLATIONS keys (top-level only)
-    keys = []
+    keys: list[str] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Assign):
             for target in node.targets:
@@ -78,11 +81,11 @@ def main() -> int:
     # 3. Duplicates
     from collections import Counter
 
-    dups = [k for k, c in Counter(keys).items() if c > 1]
+    dups = [key for key, c in Counter(keys).items() if c > 1]
     if dups:
         print(f"FAIL: {len(dups)} duplicate keys:")
-        for k in dups:
-            print(f"  {k}")
+        for dup in dups:
+            print(f"  {dup}")
         return 1
     print("Duplicates: None")
 
@@ -90,17 +93,17 @@ def main() -> int:
     arabic_re = re.compile(r"[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]")
     latin_re = re.compile(r"[A-Za-z]")
     mixed = []
-    for k in keys:
-        tokens = re.findall(r"[A-Za-z0-9_\u0600-\u06FF]+", k)
+    for key in keys:
+        tokens = re.findall(r"[A-Za-z0-9_\u0600-\u06FF]+", key)
         for tok in tokens:
             if arabic_re.search(tok) and latin_re.search(tok):
                 if tok.upper() not in EXCLUDED_MIXED and not any(tok.upper().startswith(x) for x in EXCLUDED_MIXED):
-                    mixed.append(k)
+                    mixed.append(key)
                     break
     if mixed:
         print(f"FAIL: {len(mixed)} mixed-script keys:")
-        for k in mixed:
-            print(f"  {k}")
+        for mkey in mixed:
+            print(f"  {mkey}")
         return 1
     print("Mixed-script keys: None")
 
@@ -127,8 +130,8 @@ def main() -> int:
                                 bad_values.append((key, val))
     if bad_values:
         print(f"FAIL: {len(bad_values)} values with _digits:")
-        for k, v in bad_values[:20]:
-            print(f"  {k} => {v}")
+        for bad_key, bad_val in bad_values[:20]:
+            print(f"  {bad_key} => {bad_val}")
         return 1
     print("Values with _digits: None")
 
