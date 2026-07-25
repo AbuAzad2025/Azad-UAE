@@ -1431,9 +1431,7 @@ class StockService:
         )
         if tenant_id is not None:
             history = history.filter(StockMovement.tenant_id == tenant_id)
-        history = history.filter(
-            tuple_(StockMovement.product_id, StockMovement.warehouse_id).in_(pairs)
-        ).subquery()
+        history = history.filter(tuple_(StockMovement.product_id, StockMovement.warehouse_id).in_(pairs)).subquery()
 
         rows = (
             db.session.query(history.c.id, history.c.quantity, history.c.after_qty)
