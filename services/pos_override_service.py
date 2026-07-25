@@ -27,6 +27,7 @@ from utils.pos_security import (
     verify_override_token_signature,
 )
 from utils.tenanting import get_active_tenant_id, scoped_user_query, tenant_query
+from utils.logger import log_security
 
 
 class PosOverrideError(Exception):
@@ -71,6 +72,14 @@ class PosOverrideService:
                 session_id,
                 {"action": action, "cashier_user_id": cashier.id},
                 severity="medium",
+            )
+            log_security(
+                "POS supervisor override PIN rejected",
+                tenant_id=int(tenant_id),
+                event="pos_override_pin_denied",
+                action=action,
+                cashier_user_id=cashier.id,
+                session_id=session_id,
             )
             raise PosOverrideError("الرمز السري غير صالح أو ليس لدى المشرف صلاحية التفويض.")
 

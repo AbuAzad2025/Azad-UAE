@@ -14,6 +14,7 @@ from flask_login import current_user
 import logging
 
 from extensions import db
+from utils.logger import log_security
 
 logger = logging.getLogger(__name__)
 
@@ -127,6 +128,14 @@ def assert_tenant_record(record, *, user=None, or_404: bool = True) -> bool:
         return False
 
     if int(rec_tid or 0) != int(tid or 0):
+        log_security(
+            "Cross-tenant record access blocked",
+            tenant_id=int(tid or 0),
+            event="cross_tenant_attempt",
+            record_type=type(record).__name__,
+            record_id=getattr(record, "id", None),
+            record_tenant_id=int(rec_tid or 0),
+        )
         if or_404:
             abort(404)
         return False
@@ -210,6 +219,13 @@ def set_active_tenant(tenant_id, user=None):
         except (TypeError, ValueError):
             raise ValueError("Normal users must have a valid integer tenant_id")
         if tenant_id != user_tenant_id:
+            log_security(
+                "Cross-tenant switch attempt blocked",
+                tenant_id=user_tenant_id,
+                event="cross_tenant_attempt",
+                attempted_tenant_id=tenant_id,
+                user_id=getattr(user, "id", None),
+            )
             raise ValueError("Normal users can only set their own tenant_id")
 
     # Validate tenant exists and is active

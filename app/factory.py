@@ -323,6 +323,43 @@ def create_app(config_class=Config) -> Flask:
     else:
         app.logger.info("CLI commands not available - skipping")
 
+    # Structured JSON telemetry: bridge request values into contextvars so
+    # events emitted anywhere (views, services, background threads) carry
+    # tenant/user/request context. Registered LAST among before_request hooks
+    # so g.request_id / g.active_tenant_id are already stamped above.
+    from utils.logger import bind_context as _telemetry_bind
+    from utils.logger import clear_context as _telemetry_clear
+    from utils.logger import init_telemetry as _init_telemetry
+
+    _init_telemetry(app)
+
+    @app.before_request
+    def _telemetry_bind_request_context():
+        from flask_login import current_user as _cu
+
+        _telemetry_bind(
+            tenant_id=getattr(g, "active_tenant_id", None),
+            user_id=_cu.id if getattr(_cu, "is_authenticated", False) else None,
+            request_id=getattr(g, "request_id", None),
+            ip=request.headers.get("X-Forwarded-For", request.remote_addr),
+            endpoint=request.endpoint,
+            method=request.method,
+            request_start=time.monotonic(),
+            duration_ms=None,
+        )
+
+    @app.after_request
+    def _telemetry_stamp_duration(response):
+        # Do NOT log every request — only finalize duration for events.
+        _start = getattr(g, "request_start_time", None)
+        if _start:
+            _telemetry_bind(duration_ms=round((time.time() - float(_start)) * 1000, 2))
+        return response
+
+    @app.teardown_request
+    def _telemetry_clear_request_context(exc):
+        _telemetry_clear()
+
     app.logger.info("[OK] Application initialized successfully")
 
     return app

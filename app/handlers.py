@@ -1,11 +1,12 @@
 """Error handlers for AZADEXA ERP."""
 
-from flask import jsonify, render_template, request, flash, redirect, url_for
+from flask import jsonify, render_template, request, flash, redirect, url_for, g
 from flask_login import current_user
 from flask_wtf.csrf import CSRFError
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.exceptions import HTTPException
 from services.logging_core import LoggingCore
+from utils.logger import log_exception
 
 
 def _wants_json_error_response():
@@ -45,6 +46,13 @@ def register_error_handlers(app):
             message=str(exc) or "Internal Server Error",
             source="app.errorhandler.500",
             exception=exc,
+        )
+        log_exception(
+            str(exc) or "Internal Server Error",
+            exception=exc,
+            level="ERROR",
+            tenant_id=getattr(g, "active_tenant_id", None),
+            source="app.errorhandler.500",
         )
         if app.config.get("DEBUG"):
             raise exc
@@ -128,6 +136,13 @@ def register_error_handlers(app):
             category=category,
             source=source,
             exception=exc,
+        )
+        log_exception(
+            str(exc) or f"{type(exc).__name__} (no message)",
+            exception=exc,
+            level="CRITICAL",
+            tenant_id=getattr(g, "active_tenant_id", None),
+            source=source,
         )
         if app.config.get("DEBUG"):
             raise exc

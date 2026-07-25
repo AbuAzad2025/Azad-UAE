@@ -12,6 +12,7 @@ from flask import (
     url_for,
     flash,
     abort,
+    g,
 )
 from flask_login import current_user, login_required
 from extensions import db
@@ -41,6 +42,7 @@ from utils.branching import (
 from utils.decorators import permission_required
 from utils.db_safety import atomic_transaction
 from utils.helpers import generate_number
+from utils.logger import log_hardware, log_security
 import queue as _queue
 import time
 import os as _os
@@ -2171,6 +2173,14 @@ def api_drawer_open():
                 details={"reason": reason, "supervisor_user_id": supervisor_id},
             )
     except PosOverrideError as exc:
+        log_security(
+            f"Drawer open denied: {exc}",
+            tenant_id=session.tenant_id,
+            event="drawer_open_denied",
+            session_id=session.id,
+            cashier_user_id=current_user.id,
+            channel="json",
+        )
         return jsonify({"success": False, "error": str(exc)}), 403
 
     # Best-effort hardware kick — a drawer hardware failure must not undo the
@@ -2180,6 +2190,13 @@ def api_drawer_open():
         response = requests.post(f"{_HARDWARE_AGENT_URL}/drawer/open", json={"session_id": session.id}, timeout=2)
         drawer_kicked = response.status_code < 400
     except Exception:
+        log_hardware(
+            "POS drawer hardware agent unreachable on drawer kick",
+            tenant_id=session.tenant_id,
+            event="hardware_agent_unreachable",
+            agent_operation="drawer/open",
+            session_id=session.id,
+        )
         current_app.logger.warning("POS drawer hardware agent unreachable", exc_info=True)
 
     return jsonify({"success": True, "drawer_kicked": drawer_kicked})
@@ -2800,6 +2817,12 @@ def hardware_print_receipt():
         result = resp.json()
         return jsonify(result), resp.status_code
     except requests.RequestException:
+        log_hardware(
+            "POS hardware agent unreachable on print-receipt",
+            tenant_id=getattr(g, "active_tenant_id", None),
+            event="hardware_agent_unreachable",
+            agent_operation="print-receipt",
+        )
         return (
             jsonify({"error": gettext("وكيل الأجهزة غير متصل. تأكد من تشغيل pos_hardware_agent.py")}),
             503,
@@ -2858,6 +2881,14 @@ def hardware_open_drawer():
                 },
             )
     except PosOverrideError as exc:
+        log_security(
+            f"Drawer open denied via hardware agent: {exc}",
+            tenant_id=session.tenant_id,
+            event="drawer_open_denied",
+            session_id=session.id,
+            cashier_user_id=current_user.id,
+            channel="hardware_agent",
+        )
         return jsonify({"success": False, "error": str(exc)}), 403
 
     try:
@@ -2872,6 +2903,13 @@ def hardware_open_drawer():
         result = resp.json()
         return jsonify(result), resp.status_code
     except requests.RequestException:
+        log_hardware(
+            "POS hardware agent unreachable on open-drawer",
+            tenant_id=session.tenant_id,
+            event="hardware_agent_unreachable",
+            agent_operation="open-drawer",
+            session_id=session.id,
+        )
         return jsonify({"error": gettext("وكيل الأجهزة غير متصل")}), 503
     except Exception as e:
         return jsonify({"error": str(e)}), 500

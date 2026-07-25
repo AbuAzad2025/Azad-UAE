@@ -17,6 +17,7 @@ from models.warehouse import ProductWarehouseStock
 from services.stock_batch_service import StockBatchService
 from utils.branching import get_accessible_warehouse_ids, get_branch_stock_map
 from utils.gl_reference_types import GLRef
+from utils.logger import log_financial
 
 logger = logging.getLogger(__name__)
 
@@ -358,6 +359,16 @@ class StockService:
             if pws:
                 new_qty_pws = pws.quantity + qty
                 if new_qty_pws < 0 and not warehouse.allow_negative_inventory:
+                    log_financial(
+                        f"Negative stock blocked (warehouse level) for product #{product_id}",
+                        tenant_id=tenant_id,
+                        event="negative_stock_blocked",
+                        scope="warehouse",
+                        product_id=product_id,
+                        warehouse_id=warehouse.id,
+                        available=str(pws.quantity),
+                        requested=str(abs(qty)),
+                    )
                     raise ValueError(
                         f'❌ المخزون غير كافٍ في المستودع للمنتج "{product.name}"!\n'
                         f"📦 المتوفر في المستودع: {pws.quantity} | المطلوب: {abs(qty)}\n"
@@ -367,6 +378,16 @@ class StockService:
                 pws.updated_at = datetime.now(timezone.utc)
             else:
                 if qty < 0 and not warehouse.allow_negative_inventory:
+                    log_financial(
+                        f"Negative stock blocked (warehouse level, no stock row) for product #{product_id}",
+                        tenant_id=tenant_id,
+                        event="negative_stock_blocked",
+                        scope="warehouse",
+                        product_id=product_id,
+                        warehouse_id=warehouse.id,
+                        available="0",
+                        requested=str(abs(qty)),
+                    )
                     raise ValueError(
                         f'❌ المخزون غير كافٍ في المستودع للمنتج "{product.name}"!\n'
                         f"📦 المتوفر في المستودع: 0 | المطلوب: {abs(qty)}\n"
@@ -386,6 +407,16 @@ class StockService:
             StockService._sync_current_stock(product)
 
             if product.current_stock < 0 and not warehouse.allow_negative_inventory:
+                log_financial(
+                    f"Negative stock blocked (product level) for product #{product_id}",
+                    tenant_id=tenant_id,
+                    event="negative_stock_blocked",
+                    scope="product",
+                    product_id=product_id,
+                    warehouse_id=warehouse.id,
+                    available=str(product.current_stock),
+                    requested=str(quantity),
+                )
                 raise ValueError(
                     f'❌ المخزون غير كافٍ للمنتج "{product.name}"!\n📦 المتوفر: {product.current_stock} | المطلوب: {quantity}\n💡 قلل الكمية أو اطلب مخزون جديد من المورد.'
                 )

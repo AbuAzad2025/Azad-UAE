@@ -21,6 +21,7 @@ from services.gl_account_resolver import (
 )
 from services.gl_tree_builder import GLTreeBuilder
 from utils.currency_utils import resolve_tenant_base_currency
+from utils.logger import log_financial
 
 logger = logging.getLogger(__name__)
 
@@ -500,6 +501,16 @@ class GLService:
         if abs(total_debit - total_credit) > Decimal("0.001"):
             from services.gl_posting import UnbalancedJournalEntryError
 
+            log_financial(
+                f"Unbalanced journal entry blocked: debit={total_debit} credit={total_credit}",
+                tenant_id=tenant_id,
+                event="gl_unbalanced_entry",
+                entry_number=entry_number,
+                total_debit=str(total_debit),
+                total_credit=str(total_credit),
+                reference_type=reference_type,
+                reference_id=reference_id,
+            )
             raise UnbalancedJournalEntryError(f"القيد غير متوازن: مدين={total_debit} دائن={total_credit}")
 
         return entry
