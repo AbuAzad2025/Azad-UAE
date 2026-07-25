@@ -5,6 +5,8 @@ from extensions import db
 class AuditLog(db.Model):
     __tablename__ = "audit_logs"
 
+    __table_args__ = (db.Index("idx_audit_logs_tenant_created", "tenant_id", "created_at"),)
+
     id = db.Column(db.Integer, primary_key=True)
 
     # Tenant isolation

@@ -9,6 +9,7 @@ class Customer(db.Model):
     __table_args__ = (
         db.Index("idx_customer_active_type", "is_active", "customer_type"),
         db.Index("idx_customer_balance", "balance"),
+        db.Index("idx_customers_tenant_name", "tenant_id", "name"),
     )
 
     id = db.Column(db.Integer, primary_key=True)

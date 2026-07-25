@@ -72,6 +72,7 @@ class Product(db.Model):
     __table_args__ = (
         db.Index("idx_product_active_stock", "is_active", "current_stock"),
         db.Index("idx_product_category_active", "category_id", "is_active"),
+        db.Index("idx_products_tenant_active_name", "tenant_id", "is_active", "name"),
         Index(
             "uq_products_tenant_sku",
             "tenant_id",

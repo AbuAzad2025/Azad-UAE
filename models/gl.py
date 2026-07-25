@@ -8,7 +8,10 @@ from utils.gl_services import gl_next_entry_number
 
 class GLAccount(db.Model):
     __tablename__ = "gl_accounts"
-    __table_args__ = (db.UniqueConstraint("tenant_id", "code", name="uq_gl_accounts_tenant_code"),)
+    __table_args__ = (
+        db.UniqueConstraint("tenant_id", "code", name="uq_gl_accounts_tenant_code"),
+        db.Index("idx_gl_accounts_tenant_active_code", "tenant_id", "is_active", "code"),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -174,7 +177,10 @@ class GLAccount(db.Model):
 
 class GLJournalEntry(db.Model):
     __tablename__ = "gl_journal_entries"
-    __table_args__ = (db.UniqueConstraint("tenant_id", "entry_number", name="uq_gl_journal_entries_tenant_number"),)
+    __table_args__ = (
+        db.UniqueConstraint("tenant_id", "entry_number", name="uq_gl_journal_entries_tenant_number"),
+        db.Index("idx_gl_entries_tenant_date", "tenant_id", "entry_date"),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -345,6 +351,11 @@ class GLPeriod(db.Model):
 
 class GLJournalLine(db.Model):
     __tablename__ = "gl_journal_lines"
+
+    __table_args__ = (
+        db.Index("idx_gl_lines_tenant_entry", "tenant_id", "entry_id"),
+        db.Index("idx_gl_lines_tenant_account", "tenant_id", "account_id"),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(

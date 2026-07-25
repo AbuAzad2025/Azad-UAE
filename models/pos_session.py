@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from decimal import Decimal, ROUND_HALF_UP
+from sqlalchemy import text
 from extensions import db
 
 _AED_QUANTUM = Decimal("0.001")
@@ -12,6 +13,13 @@ class PosSession(db.Model):
         db.UniqueConstraint("tenant_id", "session_number", name="uq_pos_sessions_tenant_session_number"),
         db.Index("idx_pos_session_branch_status", "branch_id", "status"),
         db.Index("idx_pos_session_user_status", "user_id", "status"),
+        # Partial (PG): hot "current open session for this branch" lookup.
+        db.Index(
+            "idx_pos_sessions_tenant_open",
+            "tenant_id",
+            "branch_id",
+            postgresql_where=text("status = 'open'"),
+        ),
     )
 
     STATUS_OPEN = "open"
