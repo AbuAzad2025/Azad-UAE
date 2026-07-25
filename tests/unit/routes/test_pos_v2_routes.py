@@ -1232,9 +1232,12 @@ class TestPosCustomerDisplay:
 
 class TestPosTerminal:
     def test_status_unconfigured(self, pos_client):
-        with _pos_enabled_patches(), patch(
-            "services.pos_terminal_service.terminal_status",
-            return_value={"provider": "stripe_terminal", "configured": False},
+        with (
+            _pos_enabled_patches(),
+            patch(
+                "services.pos_terminal_service.terminal_status",
+                return_value={"provider": "stripe_terminal", "configured": False},
+            ),
         ):
             resp = pos_client.get("/pos/api/terminal/status")
         assert resp.status_code == 200
@@ -1243,9 +1246,12 @@ class TestPosTerminal:
         assert data["configured"] is False
 
     def test_connection_token_success(self, pos_client):
-        with _pos_enabled_patches(), patch(
-            "services.pos_terminal_service.create_connection_token",
-            return_value="pst_tok_1",
+        with (
+            _pos_enabled_patches(),
+            patch(
+                "services.pos_terminal_service.create_connection_token",
+                return_value="pst_tok_1",
+            ),
         ):
             resp = pos_client.post("/pos/api/terminal/connection_token")
         assert resp.status_code == 200
@@ -1254,9 +1260,12 @@ class TestPosTerminal:
     def test_connection_token_provider_failure(self, pos_client):
         from services.pos_terminal_service import PosTerminalError
 
-        with _pos_enabled_patches(), patch(
-            "services.pos_terminal_service.create_connection_token",
-            side_effect=PosTerminalError("غير مهيأ"),
+        with (
+            _pos_enabled_patches(),
+            patch(
+                "services.pos_terminal_service.create_connection_token",
+                side_effect=PosTerminalError("غير مهيأ"),
+            ),
         ):
             resp = pos_client.post("/pos/api/terminal/connection_token")
         assert resp.status_code == 503
@@ -1266,9 +1275,7 @@ class TestPosTerminal:
         captured = {}
 
         def fake_intent(amount, *, currency, tenant_id, sale_reference):
-            captured.update(
-                {"amount": amount, "currency": currency, "tenant_id": tenant_id}
-            )
+            captured.update({"amount": amount, "currency": currency, "tenant_id": tenant_id})
             return {
                 "id": "pi_1",
                 "client_secret": "sec",
@@ -1277,9 +1284,12 @@ class TestPosTerminal:
                 "status": "requires_payment_method",
             }
 
-        with _pos_enabled_patches(), patch(
-            "services.pos_terminal_service.create_terminal_payment_intent",
-            side_effect=fake_intent,
+        with (
+            _pos_enabled_patches(),
+            patch(
+                "services.pos_terminal_service.create_terminal_payment_intent",
+                side_effect=fake_intent,
+            ),
         ):
             resp = pos_client.post(
                 "/pos/api/terminal/payment_intent",
@@ -1294,16 +1304,40 @@ class TestPosTerminal:
     def test_payment_intent_provider_failure(self, pos_client):
         from services.pos_terminal_service import PosTerminalError
 
-        with _pos_enabled_patches(), patch(
-            "services.pos_terminal_service.create_terminal_payment_intent",
-            side_effect=PosTerminalError("تعذر الوصول"),
+        with (
+            _pos_enabled_patches(),
+            patch(
+                "services.pos_terminal_service.create_terminal_payment_intent",
+                side_effect=PosTerminalError("تعذر الوصول"),
+            ),
         ):
-            resp = pos_client.post(
-                "/pos/api/terminal/payment_intent", json={"amount": "10"}
-            )
+            resp = pos_client.post("/pos/api/terminal/payment_intent", json={"amount": "10"})
         assert resp.status_code == 503
 
     def test_terminal_requires_login(self, pos_client):
         with _pos_enabled_patches(), unauthenticated_client(pos_client):
             resp = pos_client.get("/pos/api/terminal/status")
+        assert resp.status_code == 401
+
+
+class TestPosCatalogSnapshot:
+    def test_snapshot_returns_products(self, pos_client):
+        with (
+            _pos_api_patches(),
+            patch(
+                "routes.pos.snapshot_pos_products",
+                return_value=([_mock_product()], {}),
+            ),
+        ):
+            resp = pos_client.get("/pos/api/catalog/snapshot")
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data["success"] is True
+        assert data["count"] == 1
+        assert data["products"][0]["id"] == 1
+        assert data["products"][0]["name"] == "Item"
+
+    def test_snapshot_requires_login(self, pos_client):
+        with _pos_enabled_patches(), unauthenticated_client(pos_client):
+            resp = pos_client.get("/pos/api/catalog/snapshot")
         assert resp.status_code == 401

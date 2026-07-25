@@ -7,6 +7,12 @@ const ASSETS_TO_CACHE = [
 	"/static/css/pos_v2.css",
 	"/static/js/barcode-scanner.js",
 	"/static/js/pos/pos-config.js",
+	"/static/js/pos/cfd-broadcast.js",
+	"/static/js/pos/scale-serial.js",
+	"/static/js/pos/offline-catalog.js",
+	"/static/js/pos/terminal.js",
+	"/static/js/pos/escpos-printer.js",
+	"/static/js/pos/print-tickets.js",
 	"/static/js/pos/index.js",
 	"/static/js/pos/grid.js",
 	"/static/js/pos/offline.js",
@@ -39,7 +45,7 @@ self.addEventListener("fetch", (event) => {
 	const { request } = event;
 	const url = new URL(request.url);
 
-	if (request.method === "POST" && url.pathname.includes("/pos/api/checkout")) {
+	if (request.method === "POST" && isQueueablePost(url.pathname)) {
 		event.respondWith(networkFirstWithQueue(request));
 		return;
 	}
@@ -53,6 +59,17 @@ self.addEventListener("fetch", (event) => {
 		event.respondWith(networkFirst(request));
 	}
 });
+
+// Financial mutations that must survive connectivity loss: checkout sales,
+// returns/refunds, line voids, and cash pay-in/out movements.
+function isQueueablePost(pathname) {
+	return (
+		pathname === "/pos/api/checkout" ||
+		pathname === "/pos/api/returns" ||
+		pathname === "/pos/api/cash-movements" ||
+		(pathname.startsWith("/pos/api/carts/") && pathname.endsWith("/void-line"))
+	);
+}
 
 function isStaticAsset(request) {
 	const url = new URL(request.url);
@@ -151,26 +168,67 @@ async function retryQueue() {
 		};
 	});
 
+	const now = Date.now();
 	for (const item of items) {
+		if (item.nextAttemptAt && item.nextAttemptAt > now) continue;
 		try {
 			const res = await fetch(item.url, {
 				method: "POST",
 				headers: item.headers,
 				body: item.body,
 			});
-			if (res.ok) {
-				const delTx = db.transaction(POS_QUEUE_STORE, "readwrite");
-				delTx.objectStore(POS_QUEUE_STORE).delete(item.id);
-				await new Promise((r) => {
-					delTx.oncomplete = r;
-				});
+			if (
+				res.ok ||
+				(res.status >= 400 && res.status < 500 && res.status !== 408 && res.status !== 429)
+			) {
+				// Delivered, or permanently rejected (4xx): drop from the queue.
+				// A 4xx will never succeed on retry and would poison the queue.
+				await deleteQueued(db, item.id);
+			} else {
+				// 5xx / 408 / 429: transient — back off exponentially.
+				await scheduleRetry(db, item, now);
 			}
 		} catch {
+			// Still offline: stop here and wait for the next online/sync event.
 			break;
 		}
 	}
 }
 
+const RETRY_BASE_MS = 15000;
+const RETRY_MAX_MS = 15 * 60 * 1000;
+const RETRY_MAX_ATTEMPTS = 8;
+
+async function scheduleRetry(db, item, now) {
+	const attempts = (item.attempts || 0) + 1;
+	if (attempts > RETRY_MAX_ATTEMPTS) {
+		await deleteQueued(db, item.id);
+		return;
+	}
+	const delay = Math.min(RETRY_BASE_MS * 2 ** (attempts - 1), RETRY_MAX_MS);
+	const updTx = db.transaction(POS_QUEUE_STORE, "readwrite");
+	updTx.objectStore(POS_QUEUE_STORE).put({
+		...item,
+		attempts,
+		nextAttemptAt: now + delay,
+	});
+	await new Promise((r) => {
+		updTx.oncomplete = r;
+	});
+}
+
+async function deleteQueued(db, id) {
+	const delTx = db.transaction(POS_QUEUE_STORE, "readwrite");
+	delTx.objectStore(POS_QUEUE_STORE).delete(id);
+	await new Promise((r) => {
+		delTx.oncomplete = r;
+	});
+}
+
 self.addEventListener("message", (event) => {
 	if (event.data === "retry-queue") void retryQueue();
+});
+
+self.addEventListener("sync", (event) => {
+	if (event.tag === "pos-queue-retry") event.waitUntil(retryQueue());
 });

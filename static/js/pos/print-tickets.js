@@ -65,4 +65,35 @@ async function printSaleTickets(saleId) {
 	return summary;
 }
 
+/**
+ * Best-effort local receipt for a sale that was queued offline by the
+ * service worker. Builds the ESC/POS content from the live cart and posts
+ * it straight to the hardware agent's default printer. Never throws.
+ */
+async function printQueuedCartReceipt(cart, totals, payload = {}) {
+	try {
+		const lines = [
+			{ text: payload.sale_reference || "OFFLINE", align: "center", bold: true, double: true },
+			{ separator: true },
+		];
+		for (const it of cart || []) {
+			lines.push({ text: `${it.qty} x ${it.name}`, align: "left" });
+			lines.push({ text: `   ${Number(it.price * it.qty).toFixed(3)}`, align: "right" });
+		}
+		lines.push({ separator: true });
+		if (totals?.total != null) {
+			lines.push({ text: `TOTAL ${Number(totals.total).toFixed(3)}`, align: "center", bold: true });
+		}
+		const res = await fetch(`${_AGENT_URL}/print-receipt`, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ content: { lines, cut: true, open_drawer: true } }),
+		});
+		return res.ok;
+	} catch {
+		return false;
+	}
+}
+
 window.printSaleTickets = printSaleTickets;
+window.printQueuedCartReceipt = printQueuedCartReceipt;

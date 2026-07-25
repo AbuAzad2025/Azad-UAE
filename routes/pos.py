@@ -63,6 +63,7 @@ from utils.pos_helpers import (
     safe_decimal,
     search_pos_products,
     serialize_pos_product,
+    snapshot_pos_products,
 )
 from utils.pos_security import (
     OVERRIDE_TOKEN_TTL_SECONDS,
@@ -715,6 +716,17 @@ def api_products():
     )
     results = [serialize_pos_product(p, stock_map, warehouse_id=warehouse_id) for p in products]
     return jsonify(results)
+
+
+@pos_bp.route("/api/catalog/snapshot")
+@login_required
+@permission_required("manage_sales")
+def api_catalog_snapshot():
+    """Active-product snapshot for offline catalog hydration (IndexedDB)."""
+    warehouse_id = request.args.get("warehouse_id", type=int)
+    products, stock_map = snapshot_pos_products(user=current_user, warehouse_id=warehouse_id)
+    results = [serialize_pos_product(p, stock_map, warehouse_id=warehouse_id) for p in products]
+    return jsonify({"success": True, "count": len(results), "products": results})
 
 
 @pos_bp.route("/api/product")

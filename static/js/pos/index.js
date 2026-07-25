@@ -721,6 +721,21 @@
 	qs("#splitTenderAdd")?.addEventListener("click", () => addSplitRow("", "cash"));
 
 	let checkoutBusy = false;
+	const resetAfterSale = async () => {
+		state.cart = [];
+		state.idemKey = newCartKey();
+		await renderCart();
+		qs("#paidAmount").value = 0;
+		const splitToggle = qs("#splitTenderToggle");
+		if (splitToggle) splitToggle.checked = false;
+		qs("#splitTenderBox")?.classList.add("d-none");
+		const splitRows = qs("#splitTenderRows");
+		if (splitRows) splitRows.innerHTML = "";
+		qs("#paymentMethod").value = "";
+		qs("#referenceNumber").value = "";
+		if (qs("#orderNote")) qs("#orderNote").value = "";
+		if (typeof syncPay === "function") syncPay();
+	};
 	const checkout = async (autoPrint) => {
 		if (checkoutBusy) return;
 		if (!state.customer) {
@@ -790,6 +805,13 @@
 					j = await r.json().catch(() => ({}));
 				}
 			}
+			if (r.status === 202 && j.queued) {
+				// SW queued the sale offline — treat as accepted, not an error.
+				showAlert(j.message || "تم حفظ الفاتورة محلياً وستُرسل تلقائياً عند عودة الاتصال.", "warning");
+				void printQueuedCartReceipt(state.cart, state.lastTotals, payload);
+				await resetAfterSale();
+				return;
+			}
 			if (!r.ok || !j.success) {
 				showError(j.error || `HTTP ${r.status}`);
 				return;
@@ -805,19 +827,7 @@
 			if (autoPrint) {
 				window.open(j.print_url, "_blank", "noopener");
 			}
-			state.cart = [];
-			state.idemKey = newCartKey();
-			await renderCart();
-			qs("#paidAmount").value = 0;
-			const splitToggle = qs("#splitTenderToggle");
-			if (splitToggle) splitToggle.checked = false;
-			qs("#splitTenderBox")?.classList.add("d-none");
-			const splitRows = qs("#splitTenderRows");
-			if (splitRows) splitRows.innerHTML = "";
-			qs("#paymentMethod").value = "";
-			qs("#referenceNumber").value = "";
-			if (qs("#orderNote")) qs("#orderNote").value = "";
-			if (typeof syncPay === "function") syncPay();
+			await resetAfterSale();
 			if (selectedTable && j.sale_id) {
 				try {
 					await fetch(`/pos/api/tables/${selectedTable.id}/assign`, {
@@ -873,11 +883,18 @@
 	qs("#productSearch").focus();
 	const handleScannedCode = async (code) => {
 		if (!code?.trim()) return;
-		const res = await fetchJson(
-			`/pos/api/product?code=${encodeURIComponent(code.trim())}${warehouseParam()}`,
-		);
-		if (!res.ok) return;
-		const p = res.data;
+		let p = null;
+		try {
+			const res = await fetchJson(
+				`/pos/api/product?code=${encodeURIComponent(code.trim())}${warehouseParam()}`,
+			);
+			if (res.ok) p = res.data;
+		} catch (_) {
+			// network down — fall through to the offline catalog snapshot
+		}
+		if (!p && window.posOfflineCatalog) {
+			p = await posOfflineCatalog.lookupLocalProduct(code.trim());
+		}
 		if (p?.id) {
 			if (p.is_inactive) {
 				showAlert(p.warning || "المنتج غير نشط.", "warning");
@@ -914,6 +931,12 @@
 			scale: state.posScale,
 			connectedTitle: scaleBtn?.dataset.scaleOnTitle,
 		});
+	}
+	if (window.posOfflineCatalog) {
+		const hydrate = () =>
+			void posOfflineCatalog.hydrateCatalog({ warehouseParam: warehouseParam() });
+		hydrate();
+		window.addEventListener("online", hydrate);
 	}
 
 	/* ---------- Calculator (edits #paidAmount) ---------- */

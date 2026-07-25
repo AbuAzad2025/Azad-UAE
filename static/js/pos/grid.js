@@ -697,6 +697,22 @@
 					d = await r.json().catch(() => ({}));
 				}
 			}
+			if (r.status === 202 && d.queued) {
+				// SW queued the sale offline — accepted locally, not an error.
+				showAlert(d.message || "تم حفظ الفاتورة محلياً وستُرسل تلقائياً عند عودة الاتصال.", "warning");
+				if (window.printQueuedCartReceipt) {
+					void printQueuedCartReceipt(state.cart, state.lastTotals, body);
+				}
+				state.cart = [];
+				state.idemKey = newCartKey();
+				await renderCart();
+				const splitToggle = qs("#splitTenderToggle");
+				if (splitToggle) splitToggle.checked = false;
+				qs("#splitTenderBox")?.classList.add("d-none");
+				const splitRows = qs("#splitTenderRows");
+				if (splitRows) splitRows.innerHTML = "";
+				return;
+			}
 			if (d.success) {
 				qs("#doneSaleNumber").textContent = d.sale_number;
 				renderUpsellMessages(qs("#doneUpsellList"), d.upsell_prompts);
@@ -890,21 +906,26 @@
 		});
 
 		if (window.BarcodeScanner) {
-			const handleScannedCode = (code) => {
+			const handleScannedCode = async (code) => {
 				qs("#productSearch").value = code;
-				fetch(`/pos/api/product?code=${encodeURIComponent(code)}`)
-					.then((r) => r.json())
-					.then((d) => {
-						if (d.success !== false) {
-							const liveKg = Number(state.scaleWeightKg) || 0;
-							const qty = d.is_weight_product && liveKg > 0 ? liveKg : d.scale_weight_kg || 1;
-							void addToCart(d, qty);
-							qs("#productSearch").value = "";
-						} else {
-							showAlert(d.error || "المنتج غير موجود");
-						}
-					})
-					.catch(() => {});
+				let d = null;
+				try {
+					const r = await fetch(`/pos/api/product?code=${encodeURIComponent(code)}`);
+					d = await r.json();
+				} catch (_) {
+					// network down — fall through to the offline catalog snapshot
+				}
+				if ((!d || d.success === false) && window.posOfflineCatalog) {
+					d = await posOfflineCatalog.lookupLocalProduct(code);
+				}
+				if (d && d.success !== false) {
+					const liveKg = Number(state.scaleWeightKg) || 0;
+					const qty = d.is_weight_product && liveKg > 0 ? liveKg : d.scale_weight_kg || 1;
+					void addToCart(d, qty);
+					qs("#productSearch").value = "";
+				} else {
+					showAlert(d?.error || "المنتج غير موجود");
+				}
 			};
 			state.barcodeScanner = new BarcodeScanner({
 				onScan: handleScannedCode,

@@ -41,6 +41,9 @@
 	function retryQueue() {
 		if (swRegistration?.active) {
 			swRegistration.active.postMessage("retry-queue");
+			if (swRegistration.sync) {
+				swRegistration.sync.register("pos-queue-retry").catch(() => {});
+			}
 		}
 	}
 

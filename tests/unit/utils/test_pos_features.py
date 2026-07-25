@@ -87,3 +87,42 @@ class TestDecoratorWiring:
         session.get.return_value = _tenant("pro")
         with app.test_request_context():
             assert handler() == "ok"
+
+
+class TestSerializeWeightFlag:
+    def test_weight_units_flagged(self):
+        from types import SimpleNamespace
+
+        from utils.pos_helpers import serialize_pos_product
+
+        for unit in ("kg", "Kilogram", "كجم", "كيلو"):
+            p = SimpleNamespace(
+                id=1,
+                name="Flour",
+                name_ar=None,
+                sku="F1",
+                barcode="B1",
+                regular_price=5,
+                current_stock=10,
+                is_active=True,
+                unit=unit,
+            )
+            assert serialize_pos_product(p, {})["is_weight_product"] is True
+
+    def test_piece_units_not_flagged(self):
+        from types import SimpleNamespace
+
+        from utils.pos_helpers import serialize_pos_product
+
+        p = SimpleNamespace(
+            id=1,
+            name="Mug",
+            name_ar=None,
+            sku="M1",
+            barcode="B2",
+            regular_price=5,
+            current_stock=10,
+            is_active=True,
+            unit="pcs",
+        )
+        assert serialize_pos_product(p, {})["is_weight_product"] is False

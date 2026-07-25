@@ -148,6 +148,17 @@ def _product_search_filters(query, q: str):
     )
 
 
+def snapshot_pos_products(*, user=None, warehouse_id: int | None = None, limit: int = 5000):
+    """Full active-product snapshot for the register's offline catalog."""
+    base = StockService.get_visible_products_query(user).filter(Product.is_active).order_by(Product.id)
+    products = base.limit(max(1, min(int(limit or 5000), 10000))).all()
+    wh_ids = _warehouse_ids_for_stock(warehouse_id, user)
+    stock_map = (
+        get_branch_stock_map(product_ids=[p.id for p in products], warehouse_ids=wh_ids) if wh_ids and products else {}
+    )
+    return products, stock_map
+
+
 def search_pos_products(
     q: str,
     *,
