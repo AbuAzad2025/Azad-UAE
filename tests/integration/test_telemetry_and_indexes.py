@@ -103,10 +103,27 @@ def pg_engine(app):
         yield db.engine
 
 
-def _explain_plan(conn, sql, params):
+def _explain_plan(conn, sql, params, tables=()):
+    """EXPLAIN with deterministic planner statistics.
+
+    Test tables are empty (create_all), which leaves plan choice to
+    version-specific planner heuristics. Faking realistic cardinality makes
+    the tenant-leading index the optimal plan on every supported PG version.
+    The pg_class update stays inside the caller's transaction and rolls back
+    with it, so no state leaks to other tests.
+    """
     conn.execute(sa_text("SET enable_seqscan = off"))
-    rows = conn.execute(sa_text(f"EXPLAIN {sql}"), params).fetchall()
-    conn.execute(sa_text("SET enable_seqscan = on"))
+    try:
+        for table in tables:
+            conn.execute(
+                sa_text(
+                    "UPDATE pg_class SET reltuples = 20000, relpages = 400 WHERE relname = :table AND relkind = 'r'"
+                ),
+                {"table": table},
+            )
+        rows = conn.execute(sa_text(f"EXPLAIN {sql}"), params).fetchall()
+    finally:
+        conn.execute(sa_text("SET enable_seqscan = on"))
     return "\n".join(row[0] for row in rows)
 
 
@@ -308,6 +325,7 @@ class TestIndexUsagePg:
                 conn,
                 "SELECT id FROM sales WHERE tenant_id = :t ORDER BY sale_date DESC LIMIT 20",
                 {"t": 1},
+                tables=("sales",),
             )
         assert "idx_sales_tenant_date" in plan
 
@@ -318,6 +336,7 @@ class TestIndexUsagePg:
                 conn,
                 "SELECT id FROM products WHERE tenant_id = :t AND lower(sku) = :sku",
                 {"t": 1, "sku": "sku-000123"},
+                tables=("products",),
             )
         assert "idx_products_tenant_lower_sku" in plan
 
@@ -328,6 +347,7 @@ class TestIndexUsagePg:
                 conn,
                 "SELECT id FROM gl_journal_entries WHERE tenant_id = :t ORDER BY entry_date DESC LIMIT 50",
                 {"t": 1},
+                tables=("gl_journal_entries",),
             )
         assert "idx_gl_entries_tenant_date" in plan
 
