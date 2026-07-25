@@ -8,13 +8,13 @@
   </div>
   <div>
     <div class="btn-group">
-      <a href="{{ url_for('warehouse.movements') }}" class="btn btn-info btn-lg">
+      <a href="{{ url_for('warehouse.movements') }}" class="btn btn-info">
         <i class="fas fa-exchange-alt mr-2"></i>{{ t('حركات') }} {{ t('Inventory') }}
       </a>
-      <a href="{{ url_for('warehouse.low_stock') }}" class="btn btn-warning btn-lg">
+      <a href="{{ url_for('warehouse.low_stock') }}" class="btn btn-warning">
         <i class="fas fa-exclamation-triangle mr-2"></i>{{ t('Inventory_2') }} {{ t('Low_2') }}
       </a>
-      <a href="{{ url_for('warehouse.out_of_stock') }}" class="btn btn-danger btn-lg">
+      <a href="{{ url_for('warehouse.out_of_stock') }}" class="btn btn-danger">
         <i class="fas fa-ban mr-2"></i>{{ t('نفاد') }} {{ t('Inventory') }}
       </a>
     </div>
@@ -322,7 +322,7 @@ $(document).ready(() => {
   const table = $('#warehouseTable').DataTable({
     language: { url: "{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}" },
     pageLength: 50,
-    order: [[2, 'asc']],  // Sort by stock (low first)
+    order: [[3, 'asc']],  // Sort by stock (low first)
     responsive: true,
     dom: 'Bfrtip',
     buttons: [
