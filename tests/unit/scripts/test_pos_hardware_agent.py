@@ -121,7 +121,7 @@ class _StubHandler:
         self.rfile = io.BytesIO(raw)
         self.headers = {"Content-Length": str(len(raw))}
         self.wfile = io.BytesIO()
-        self.responses = []
+        self.responses: list[tuple[int, dict]] = []
         self.path = "/print-receipt"
 
     def _send_json(self, status: int, payload: dict) -> None:
