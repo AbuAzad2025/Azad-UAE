@@ -108,8 +108,6 @@ window._DATATABLES_LANG_URL = "{{ url_for("static", filename=("datatables/Arabic
 
             <th><i class="fas fa-hashtag mr-2"></i>{{ t('Invoice Number') }}</th>
 
-            <th><i class="fas fa-building mr-2"></i>{{ t('Company') }}</th>
-
             <th><i class="fas fa-user mr-2"></i>{{ t('Customer_2') }}</th>
 
             <th><i class="far fa-calendar mr-2"></i>{{ t('Date') }}</th>
@@ -145,12 +143,6 @@ window._DATATABLES_LANG_URL = "{{ url_for("static", filename=("datatables/Arabic
                 {{ sale.sale_number }}
 
               </a>
-
-            </td>
-
-            <td>
-
-              <span class="badge badge-light border">{{ tenant_name_ar or company_name_ar or '-' }}</span>
 
             </td>
 

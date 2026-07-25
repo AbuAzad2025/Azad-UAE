@@ -20,20 +20,19 @@ $(document).ready(() => {
 			// noinspection JSUnusedGlobalSymbols
 			footerCallback: function () {
 				const api = this.api();
+				const firstNumber = (html) => {
+					const m = String(html).match(/[\d,]*\.?\d+/);
+					const val = m ? parseFloat(m[0].replace(/,/g, "")) : 0;
+					return Number.isNaN(val) ? 0 : val;
+				};
 				const total = api
 					.column(3, { page: "current" })
 					.data()
-					.reduce((a, b) => {
-						const val = parseFloat(b.replace(/[^\d.-]/g, ""));
-						return a + (Number.isNaN(val) ? 0 : val);
-					}, 0);
+					.reduce((a, b) => a + firstNumber(b), 0);
 				const paid = api
 					.column(4, { page: "current" })
 					.data()
-					.reduce((a, b) => {
-						const val = parseFloat((b.match(/[\d.]+/) || [0])[0]);
-						return a + (Number.isNaN(val) ? 0 : val);
-					}, 0);
+					.reduce((a, b) => a + firstNumber(b), 0);
 				UI.toast(`إجمالي الصفحة: ${total.toFixed(2)} | مدفوع: ${paid.toFixed(2)}`, "info", 2000);
 			},
 		});
@@ -52,21 +51,21 @@ $(document).ready(() => {
 	$("#filterPaid")
 		.off("click.smartPrint")
 		.on("click.smartPrint", function () {
-			table.column(6).search("مدفوع").draw();
+			table.column(8).search("مدفوع").draw();
 			$(".btn-group .btn").removeClass("active");
 			$(this).addClass("active");
 		});
 	$("#filterPartial")
 		.off("click.smartPrint")
 		.on("click.smartPrint", function () {
-			table.column(6).search("جزئي").draw();
+			table.column(8).search("جزئي").draw();
 			$(".btn-group .btn").removeClass("active");
 			$(this).addClass("active");
 		});
 	$("#filterUnpaid")
 		.off("click.smartPrint")
 		.on("click.smartPrint", function () {
-			table.column(6).search("آجل").draw();
+			table.column(8).search("آجل").draw();
 			$(".btn-group .btn").removeClass("active");
 			$(this).addClass("active");
 		});

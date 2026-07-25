@@ -1,4 +1,4 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 
 {% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Invoice') }} {{ t('Sales_2') }} #{{ sale.sale_number }}{% endblock %}
 
@@ -20,25 +20,25 @@
 
   <div>
 
-    <a href="{{ url_for('sales.print_invoice', id=sale.id) }}" class="btn btn-secondary btn-lg" target="_blank" rel="noopener noreferrer">
+    <a href="{{ url_for('sales.print_invoice', id=sale.id) }}" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">
 
       <i class="fas fa-print mr-2"></i>{{ t('Print') }}
 
     </a>
 
-    <button type="button" class="btn btn-warning btn-lg" data-toggle="modal" data-target="#returnModal">
+    <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#returnModal">
 
       <i class="fas fa-undo mr-2"></i>{{ t('Return') }}
 
     </button>
 
-    <a href="{{ url_for('sales.index') }}" class="btn btn-info btn-lg">
+    <a href="{{ url_for('sales.index') }}" class="btn btn-info">
 
       <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للقائمة') }}
 
     </a>
 
-    <button type="button" class="btn btn-danger btn-lg" 
+    <button type="button" class="btn btn-danger" 
 
             data-delete-item="{{sale.id}}" data-item-type="sales" data-item-name="{{sale.sale_number|tojson}}">
 
@@ -46,7 +46,7 @@
 
     </button>
 
-    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary btn-lg">
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
 
       <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
 

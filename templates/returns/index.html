@@ -38,7 +38,7 @@
         info: false,
         responsive: true,
         autoWidth: false,
-        order: [[3, 'desc']],
+        order: [[4, 'desc']],
         columnDefs: [
           { orderable: false, targets: -1 },
           { searchable: false, targets: -1 }
@@ -90,7 +90,6 @@
         <thead>
           <tr>
             <th>{{ t('رقم') }} {{ t('Return_3') }}</th>
-            <th>{{ t('Company') }}</th>
             <th>{{ t('Branch') }}</th>
             <th>{{ t('Invoice') }} {{ t('Sale_2') }}</th>
             <th>{{ t('Customer') }}</th>
@@ -104,7 +103,6 @@
           {% for r in returns %}
           <tr>
             <td><strong>{{ r.return_number }}</strong></td>
-            <td><span class="badge badge-light border">{{ tenant_name_ar or company_name_ar or '-' }}</span></td>
             <td>
               {% if r.sale and r.sale.branch %}
                 <span class="badge badge-light border">{{ r.sale.branch.name }}{% if r.sale.branch.code %} ({{ r.sale.branch.code }}){% endif %}</span>
@@ -139,7 +137,7 @@
           </tr>
           {% else %}
           <tr>
-            <td colspan="9" class="text-center text-muted">لا {{ t('توجد') }} {{ t('مرتجعات') }}</td>
+            <td colspan="8" class="text-center text-muted">لا {{ t('توجد') }} {{ t('مرتجعات') }}</td>
           </tr>
           {% endfor %}
         </tbody>

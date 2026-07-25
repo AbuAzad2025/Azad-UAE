@@ -72,8 +72,6 @@
 
           <th>{{ t('رقم') }} {{ t('Invoice_2') }}</th>
 
-          <th>{{ t('Company') }}</th>
-
           <th>{{ t('Branch') }}</th>
 
           <th>{{ t('Date') }}</th>
@@ -99,8 +97,6 @@
         <tr>
 
           <td><strong>{{ sale.sale_number }}</strong></td>
-
-          <td><span class="badge badge-light border">{{ tenant_name_ar or company_name_ar or '-' }}</span></td>
 
           <td>
 
@@ -201,7 +197,7 @@ $(document).ready(() => {
 
     language: { url: "{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}" },
 
-    order: [[5, 'desc']],
+    order: [[6, 'desc']],
 
     pageLength: 25
 
