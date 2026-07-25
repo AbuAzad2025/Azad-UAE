@@ -69,7 +69,7 @@ class TestBuildPrintTickets:
         t = tickets[0]
         assert t["role"] == "customer"
         assert t["content"]["open_drawer"] is True
-        texts = [l.get("text", "") for l in t["content"]["lines"]]
+        texts = [line.get("text", "") for line in t["content"]["lines"]]
         assert any("S-1" in x for x in texts)
         assert any("2 x Tea" in x for x in texts)
         assert any("TOTAL 20" in x for x in texts)
@@ -85,7 +85,7 @@ class TestBuildPrintTickets:
         kitchen = _printer(role="kitchen", cats=[1], name="K1")
         tickets = build_print_tickets(sale, [kitchen])
         assert len(tickets) == 1
-        texts = [l.get("text", "") for l in tickets[0]["content"]["lines"]]
+        texts = [line.get("text", "") for line in tickets[0]["content"]["lines"]]
         assert any("Burger" in x for x in texts)
         assert not any("Mug" in x for x in texts)
 
@@ -105,14 +105,14 @@ class TestBuildPrintTickets:
         kitchen = _printer(role="kitchen", cats=None)
         tickets = build_print_tickets(sale, [kitchen])
         assert len(tickets) == 1
-        texts = [l.get("text", "") for l in tickets[0]["content"]["lines"]]
+        texts = [line.get("text", "") for line in tickets[0]["content"]["lines"]]
         assert any("Burger" in x for x in texts)
         assert any("Mug" in x for x in texts)
 
     def test_quantity_trimmed(self):
         sale = _sale([_line("Tea", "1.000", "3.000")])
         tickets = build_print_tickets(sale, [_printer(role="customer")])
-        texts = [l.get("text", "") for l in tickets[0]["content"]["lines"]]
+        texts = [line.get("text", "") for line in tickets[0]["content"]["lines"]]
         assert any(x.startswith("1 x Tea") for x in texts)
 
     def test_mixed_roles(self):

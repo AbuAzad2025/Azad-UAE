@@ -2,43 +2,34 @@
 
 Covers provider configuration detection, exact minor-unit conversion,
 Stripe request shaping (auth header, form body, metadata), and safe error
-mapping. All network calls are mocked at the urllib boundary.
+mapping. All network calls are mocked at the requests boundary.
 """
 
 from __future__ import annotations
 
-import io
-import json
-import urllib.error
 from decimal import Decimal
 
 import pytest
+import requests
 
 from services import pos_terminal_service as pts
 
 
-class _FakeResponse:
-    def __init__(self, payload: dict):
-        self._body = json.dumps(payload).encode("utf-8")
-
-    def read(self):
-        return self._body
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        return False
-
-
-def _capture_urlopen(monkeypatch, payload: dict):
+def _capture_post(monkeypatch, payload: dict):
     calls = []
 
-    def fake_urlopen(req, timeout=None):
-        calls.append({"req": req, "timeout": timeout})
-        return _FakeResponse(payload)
+    class _Resp:
+        def raise_for_status(self):
+            return None
 
-    monkeypatch.setattr(pts.urllib.request, "urlopen", fake_urlopen)
+        def json(self):
+            return payload
+
+    def fake_post(url, *, data, headers, timeout):
+        calls.append({"url": url, "data": data, "headers": headers, "timeout": timeout})
+        return _Resp()
+
+    monkeypatch.setattr(pts.requests, "post", fake_post)
     return calls
 
 
@@ -86,13 +77,13 @@ class TestMinorUnits:
 class TestConnectionToken:
     def test_request_shape_and_secret(self, monkeypatch):
         monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_abc")
-        calls = _capture_urlopen(monkeypatch, {"secret": "pst_secret_1"})
+        calls = _capture_post(monkeypatch, {"secret": "pst_secret_1"})
         secret = pts.create_connection_token()
         assert secret == "pst_secret_1"
-        req = calls[0]["req"]
-        assert req.full_url == "https://api.stripe.com/v1/terminal/connection_tokens"
-        assert req.headers["Authorization"] == "Bearer sk_test_abc"
-        assert calls[0]["timeout"] == 10
+        call = calls[0]
+        assert call["url"] == "https://api.stripe.com/v1/terminal/connection_tokens"
+        assert call["headers"]["Authorization"] == "Bearer sk_test_abc"
+        assert call["timeout"] == 10
 
     def test_unconfigured_raises_safe_error(self, monkeypatch):
         monkeypatch.delenv("STRIPE_SECRET_KEY", raising=False)
@@ -101,7 +92,7 @@ class TestConnectionToken:
 
     def test_incomplete_payload_raises(self, monkeypatch):
         monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_abc")
-        _capture_urlopen(monkeypatch, {})
+        _capture_post(monkeypatch, {})
         with pytest.raises(pts.PosTerminalError):
             pts.create_connection_token()
 
@@ -109,7 +100,7 @@ class TestConnectionToken:
 class TestPaymentIntent:
     def test_request_body_and_response(self, monkeypatch):
         monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_abc")
-        calls = _capture_urlopen(
+        calls = _capture_post(
             monkeypatch,
             {"id": "pi_1", "client_secret": "pi_1_secret_x", "status": "requires_payment_method"},
         )
@@ -120,23 +111,25 @@ class TestPaymentIntent:
         assert intent["client_secret"] == "pi_1_secret_x"
         assert intent["amount_minor"] == 2550
         assert intent["currency"] == "aed"
-        req = calls[0]["req"]
-        assert req.full_url == "https://api.stripe.com/v1/payment_intents"
-        body = req.data.decode("utf-8")
-        assert "amount=2550" in body
-        assert "currency=aed" in body
-        assert "capture_method=automatic" in body
-        assert "card_present" in body
-        assert "metadata%5Btenant_id%5D=7" in body
-        assert "sale_reference" in body
+        call = calls[0]
+        assert call["url"] == "https://api.stripe.com/v1/payment_intents"
+        data = call["data"]
+        assert data["amount"] == "2550"
+        assert data["currency"] == "aed"
+        assert data["capture_method"] == "automatic"
+        assert data["payment_method_types[]"] == "card_present"
+        assert data["metadata[tenant_id]"] == "7"
+        assert data["metadata[sale_reference]"] == "POS-2026-0001"
 
     def test_http_error_maps_to_safe_message(self, monkeypatch):
         monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_abc")
 
-        def fake_urlopen(req, timeout=None):
-            raise urllib.error.HTTPError(req.full_url, 402, "Payment Required", {}, io.BytesIO(b"{}"))
+        def fake_post(url, *, data, headers, timeout):
+            response = requests.Response()
+            response.status_code = 402
+            raise requests.HTTPError(response=response)
 
-        monkeypatch.setattr(pts.urllib.request, "urlopen", fake_urlopen)
+        monkeypatch.setattr(pts.requests, "post", fake_post)
         with pytest.raises(pts.PosTerminalError) as excinfo:
             pts.create_terminal_payment_intent("10")
         assert "402" not in str(excinfo.value)
@@ -144,17 +137,17 @@ class TestPaymentIntent:
     def test_transport_error_maps_to_safe_message(self, monkeypatch):
         monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_abc")
 
-        def fake_urlopen(req, timeout=None):
-            raise urllib.error.URLError("connection refused")
+        def fake_post(url, *, data, headers, timeout):
+            raise requests.ConnectionError("connection refused")
 
-        monkeypatch.setattr(pts.urllib.request, "urlopen", fake_urlopen)
+        monkeypatch.setattr(pts.requests, "post", fake_post)
         with pytest.raises(pts.PosTerminalError) as excinfo:
             pts.create_terminal_payment_intent("10")
         assert "refused" not in str(excinfo.value)
 
     def test_invalid_amount_rejected_before_network(self, monkeypatch):
         monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_abc")
-        calls = _capture_urlopen(monkeypatch, {"id": "pi_1", "client_secret": "s"})
+        calls = _capture_post(monkeypatch, {"id": "pi_1", "client_secret": "s"})
         with pytest.raises(pts.PosTerminalError):
             pts.create_terminal_payment_intent("0")
         assert calls == []

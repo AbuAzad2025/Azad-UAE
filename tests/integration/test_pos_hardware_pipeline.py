@@ -138,27 +138,23 @@ class TestSaleToAgentBytes:
 class TestTerminalConsistency:
     def test_minor_units_match_quantized_total(self, monkeypatch):
         monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_x")
-
-        class _Resp:
-            def read(self):
-                return json.dumps({"id": "pi_1", "client_secret": "s", "status": "ok"}).encode()
-
-            def __enter__(self):
-                return self
-
-            def __exit__(self, *a):
-                return False
-
         captured = {}
 
-        def fake_urlopen(req, timeout=None):
-            captured["body"] = req.data.decode()
+        class _Resp:
+            def raise_for_status(self):
+                return None
+
+            def json(self):
+                return {"id": "pi_1", "client_secret": "s", "status": "ok"}
+
+        def fake_post(url, *, data, headers, timeout):
+            captured["data"] = data
             return _Resp()
 
-        monkeypatch.setattr(pts.urllib.request, "urlopen", fake_urlopen)
+        monkeypatch.setattr(pts.requests, "post", fake_post)
         intent = pts.create_terminal_payment_intent("25.500", currency="AED", tenant_id=3)
         assert intent["amount_minor"] == 2550
-        assert "metadata%5Btenant_id%5D=3" in captured["body"]
+        assert captured["data"]["metadata[tenant_id]"] == "3"
 
 
 @pytest.mark.skipif(not shutil.which("node"), reason="node runtime unavailable")

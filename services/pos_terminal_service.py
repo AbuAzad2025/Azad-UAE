@@ -10,19 +10,17 @@ When no provider is configured (missing API keys) the service reports
 this module never touches the payment vault or the GL; settlement posting
 stays on the proven manual path until a provider confirms the charge.
 
-All network calls use stdlib urllib with a hard timeout so a hung provider
-can never wedge the checkout UI thread.
+All network calls carry a hard timeout so a hung provider can never wedge
+the checkout UI thread.
 """
 
 from __future__ import annotations
 
-import json
 import logging
 import os
-import urllib.error
-import urllib.parse
-import urllib.request
 from decimal import ROUND_HALF_UP, Decimal
+
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -64,23 +62,21 @@ def _stripe_post(path: str, params: dict) -> dict:
     key = _stripe_secret_key()
     if not key:
         raise PosTerminalError("الدفع الطرفي غير مهيأ لهذه الشركة.")
-    body = urllib.parse.urlencode(params, doseq=True).encode("utf-8")
-    req = urllib.request.Request(
-        f"{_STRIPE_API_BASE}{path}",
-        data=body,
-        headers={
-            "Authorization": f"Bearer {key}",
-            "Content-Type": "application/x-www-form-urlencoded",
-        },
-        method="POST",
-    )
     try:
-        with urllib.request.urlopen(req, timeout=_PROVIDER_TIMEOUT_SECONDS) as resp:
-            return json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:
-        logger.warning("Stripe Terminal HTTP %s on %s", exc.code, path)
+        resp = requests.post(
+            f"{_STRIPE_API_BASE}{path}",
+            data=params,
+            headers={"Authorization": f"Bearer {key}"},
+            timeout=_PROVIDER_TIMEOUT_SECONDS,
+        )
+        resp.raise_for_status()
+        return resp.json()
+    except requests.HTTPError as exc:
+        logger.warning(
+            "Stripe Terminal HTTP %s on %s", exc.response.status_code if exc.response is not None else "?", path
+        )
         raise PosTerminalError("رفض مزود الدفع العملية. حاول مرة أخرى أو استخدم الدفع اليدوي.") from exc
-    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+    except (requests.RequestException, ValueError) as exc:
         logger.warning("Stripe Terminal transport failure on %s: %s", path, type(exc).__name__)
         raise PosTerminalError("تعذر الوصول إلى مزود الدفع. تحقق من الاتصال أو استخدم الدفع اليدوي.") from exc
 
