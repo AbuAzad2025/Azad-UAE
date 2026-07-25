@@ -1384,3 +1384,66 @@ class StockService:
             "errors": errors,
             "total_pws": len(existing) + created,
         }
+
+    @staticmethod
+    def get_movement_running_balances(movements, tenant_id=None):
+        """Compute display-only running before/after quantities for a page of movements.
+
+        ``StockMovement.quantity`` is signed (see ``reconcile_stock``), so the
+        running balance of a ``(product_id, warehouse_id)`` pair is the
+        cumulative ``SUM(quantity)`` ordered by ``(created_at ASC, id ASC)``.
+        The window spans the pair's FULL tenant history — not just the given
+        page — and the result is then narrowed to the page movement ids.
+
+        Args:
+            movements: page of ``StockMovement`` rows (any order, any subset).
+            tenant_id: optional tenant filter for hard isolation.
+
+        Returns:
+            ``{movement_id: (before_qty, after_qty)}`` with ``Decimal`` values,
+            where ``before_qty = after_qty - movement.quantity``.
+
+        Read-only helper: performs a single set-based SELECT; no writes, no
+        schema changes, no cost/GL side effects.
+        """
+        from sqlalchemy import func, tuple_
+
+        items = [m for m in (movements or []) if m is not None]
+        if not items:
+            return {}
+
+        pairs = {(m.product_id, m.warehouse_id) for m in items}
+        page_ids = [m.id for m in items]
+
+        after_qty_col = (
+            func.sum(StockMovement.quantity)
+            .over(
+                partition_by=(StockMovement.product_id, StockMovement.warehouse_id),
+                order_by=(StockMovement.created_at.asc(), StockMovement.id.asc()),
+            )
+            .label("after_qty")
+        )
+
+        history = db.session.query(
+            StockMovement.id.label("id"),
+            StockMovement.quantity.label("quantity"),
+            after_qty_col,
+        )
+        if tenant_id is not None:
+            history = history.filter(StockMovement.tenant_id == tenant_id)
+        history = history.filter(
+            tuple_(StockMovement.product_id, StockMovement.warehouse_id).in_(pairs)
+        ).subquery()
+
+        rows = (
+            db.session.query(history.c.id, history.c.quantity, history.c.after_qty)
+            .filter(history.c.id.in_(page_ids))
+            .all()
+        )
+
+        balances = {}
+        for row in rows:
+            after_qty = Decimal(str(row.after_qty or 0))
+            qty = Decimal(str(row.quantity or 0))
+            balances[row.id] = (after_qty - qty, after_qty)
+        return balances

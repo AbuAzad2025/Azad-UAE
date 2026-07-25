@@ -161,19 +161,27 @@
               {% endif %}
             </td>
             <td>
-              <strong class="{% if movement.movement_type in ['purchase', 'return', 'adjustment'] %}text-success{% else %}text-danger{% endif %}">
-                {% if movement.movement_type in ['purchase', 'return', 'adjustment'] %}+{% else %}-{% endif %}{{ movement.quantity }}
-              </strong>
+              {% if movement.quantity > 0 %}
+              <strong class="text-success">+{{ movement.quantity }}</strong>
+              {% elif movement.quantity < 0 %}
+              <strong class="text-danger">{{ movement.quantity }}</strong>
+              {% else %}
+              <span class="text-muted">{{ movement.quantity }}</span>
+              {% endif %}
             </td>
             <td>
               <span class="badge badge-info">
-                {{ movement.product.current_stock|default(0) }}
+                {{ movement.before_qty if movement.before_qty is not none else '-' }}
               </span>
             </td>
             <td>
-              <span class="badge {% if movement.product.current_stock <= 0 %}badge-danger{% elif movement.product.current_stock <= movement.product.min_stock_alert %}badge-warning{% else %}badge-success{% endif %}">
-                {{ movement.product.current_stock|default(0) }}
+              {% if movement.after_qty is not none %}
+              <span class="badge {% if movement.after_qty <= 0 %}badge-danger{% elif movement.after_qty <= (movement.product.min_stock_alert or 0) %}badge-warning{% else %}badge-success{% endif %}">
+                {{ movement.after_qty }}
               </span>
+              {% else %}
+              <span class="text-muted">-</span>
+              {% endif %}
             </td>
             <td>
               {% if movement.reference %}

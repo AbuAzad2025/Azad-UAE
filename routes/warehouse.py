@@ -181,6 +181,15 @@ def movements():
         page=current_page, per_page=items_per_page, error_out=False
     )
 
+    running_balances = StockService.get_movement_running_balances(pagination.items, tid)
+    for movement in pagination.items:
+        before_after = running_balances.get(movement.id)
+        if before_after is None:
+            movement.before_qty = None
+            movement.after_qty = None
+        else:
+            movement.before_qty, movement.after_qty = before_after
+
     warehouses = tenant_query(Warehouse).filter_by(is_active=True).order_by(Warehouse.name).all()
     if branch_id is not None:
         warehouses = [w for w in warehouses if w.branch_id == branch_id]
