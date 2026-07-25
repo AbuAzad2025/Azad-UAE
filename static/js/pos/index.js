@@ -799,6 +799,9 @@
 			qs("#doneViewBtn").href = j.view_url;
 			qs("#donePrintBtn").href = j.print_url;
 			$("#posDoneModal").modal("show");
+			if (j.sale_id && window.printSaleTickets) {
+				void printSaleTickets(j.sale_id);
+			}
 			if (autoPrint) {
 				window.open(j.print_url, "_blank", "noopener");
 			}

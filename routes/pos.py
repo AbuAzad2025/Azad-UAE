@@ -15,7 +15,7 @@ from flask import (
 )
 from flask_login import current_user, login_required
 from extensions import db
-from models import Customer, PosSession, Product, PosOrderType
+from models import Customer, PosSession, Product, PosOrderType, PosPrinter
 from models.enums import PermissionEnum
 from models.pos_shift import PosShift
 from models.system_settings import SystemSettings
@@ -48,6 +48,7 @@ import requests
 from utils.pos_helpers import (
     POS_QA_MARKER,
     build_cfd_order_payload,
+    build_print_tickets,
     compute_fast_cash_options,
     create_pos_session,
     close_pos_session,
@@ -585,6 +586,104 @@ def order_type_settings():
 
     types = PosOrderType.for_tenant(tid, active_only=False)
     return render_template("pos/order_types.html", types=types)
+
+
+def _parse_category_ids(raw: str) -> list[int]:
+    """Comma-separated category ids from the printers form."""
+    ids = []
+    for chunk in (raw or "").replace(";", ",").split(","):
+        chunk = chunk.strip()
+        if not chunk:
+            continue
+        try:
+            ids.append(int(chunk))
+        except ValueError:
+            raise ValueError(gettext("معرّفات الفئات يجب أن تكون أرقاماً مفصولة بفواصل."))
+    return ids
+
+
+@pos_bp.route("/settings/printers", methods=["GET", "POST"])
+@login_required
+@permission_required("manage_sales")
+def printer_settings():
+    """Per-company POS printer registry (roles + connections + routing)."""
+    tid = get_active_tenant_id(current_user)
+    if not tid:
+        flash(gettext("لا يوجد فرع/شركة نشطة."), "warning")
+        return redirect(url_for("main.dashboard"))
+
+    if request.method == "POST":
+        action = request.form.get("action") or ""
+        try:
+            with atomic_transaction("pos_printer_settings"):
+                if action == "create":
+                    name = (request.form.get("name") or "").strip()
+                    if not name:
+                        raise ValueError(gettext("يرجى إدخال اسم الطابعة."))
+                    role = (request.form.get("role") or "customer").strip()
+                    if role not in PosPrinter.ROLES:
+                        raise ValueError(gettext("دور الطابعة غير معروف."))
+                    conn = (request.form.get("connection_type") or "agent_network").strip()
+                    if conn not in PosPrinter.CONNECTION_TYPES:
+                        raise ValueError(gettext("نوع الاتصال غير معروف."))
+                    db.session.add(
+                        PosPrinter(
+                            tenant_id=tid,
+                            name=name,
+                            role=role,
+                            connection_type=conn,
+                            host=(request.form.get("host") or "").strip() or None,
+                            port=int(request.form.get("port") or 0) or None,
+                            serial_port=(request.form.get("serial_port") or "").strip() or None,
+                            baud_rate=int(request.form.get("baud_rate") or 0) or None,
+                            encoding=(request.form.get("encoding") or "cp864").strip() or "cp864",
+                            category_ids=_parse_category_ids(request.form.get("category_ids")),
+                            is_active=request.form.get("is_active") == "on",
+                            sort_order=int(request.form.get("sort_order") or 0),
+                        )
+                    )
+                    flash(gettext("تمت إضافة الطابعة."), "success")
+                elif action == "edit":
+                    printer = db.session.get(PosPrinter, int(request.form.get("printer_id") or 0))
+                    if not printer or printer.tenant_id != tid:
+                        raise ValueError(gettext("الطابعة غير موجودة."))
+                    printer.name = (request.form.get("name") or "").strip() or printer.name
+                    printer.host = (request.form.get("host") or "").strip() or None
+                    printer.port = int(request.form.get("port") or 0) or None
+                    printer.serial_port = (request.form.get("serial_port") or "").strip() or None
+                    printer.baud_rate = int(request.form.get("baud_rate") or 0) or None
+                    printer.encoding = (request.form.get("encoding") or "cp864").strip() or "cp864"
+                    printer.category_ids = _parse_category_ids(request.form.get("category_ids"))
+                    printer.is_active = request.form.get("is_active") == "on"
+                    printer.sort_order = int(request.form.get("sort_order") or 0)
+                    flash(gettext("تم تحديث الطابعة."), "success")
+                elif action == "toggle":
+                    printer = db.session.get(PosPrinter, int(request.form.get("printer_id") or 0))
+                    if not printer or printer.tenant_id != tid:
+                        raise ValueError(gettext("الطابعة غير موجودة."))
+                    printer.is_active = not printer.is_active
+                    flash(gettext("تم تحديث حالة الطابعة."), "success")
+                elif action == "delete":
+                    printer = db.session.get(PosPrinter, int(request.form.get("printer_id") or 0))
+                    if not printer or printer.tenant_id != tid:
+                        raise ValueError(gettext("الطابعة غير موجودة."))
+                    db.session.delete(printer)
+                    flash(gettext("تم حذف الطابعة."), "success")
+                else:
+                    raise ValueError(gettext("إجراء غير معروف."))
+        except ValueError as exc:
+            flash(str(exc), "warning")
+        except Exception as exc:
+            flash(gettext(f"خطأ: {exc}"), "danger")
+        return redirect(url_for("pos.printer_settings"))
+
+    printers = PosPrinter.for_tenant(tid, active_only=False)
+    return render_template(
+        "pos/printers.html",
+        printers=printers,
+        roles=PosPrinter.ROLES,
+        connection_types=PosPrinter.CONNECTION_TYPES,
+    )
 
 
 @pos_bp.route("/api/categories")
@@ -2648,6 +2747,28 @@ def thermal_receipt(sale_id):
         abort(404)
     customer = sale.customer
     return render_template("pos/receipt.html", sale=sale, customer=customer)
+
+
+@pos_bp.route("/api/sale/<int:sale_id>/print-tickets")
+@login_required
+@permission_required(PermissionEnum.MANAGE_SALES)
+def api_sale_print_tickets(sale_id):
+    """Per-printer ESC/POS ticket payloads for split printing.
+
+    The register posts each ticket to its target: agent_* printers go to
+    the localhost hardware agent, webusb/webserial are printed directly
+    from the browser via static/js/pos/escpos-printer.js.
+    """
+    from models import PosPrinter, Sale
+
+    sale = tenant_get(Sale, sale_id)
+    if not sale:
+        return jsonify({"success": False, "error": gettext("الفاتورة غير موجودة.")}), 404
+    printers = PosPrinter.for_tenant(sale.tenant_id)
+    if not printers:
+        return jsonify({"success": True, "tickets": []})
+    tickets = build_print_tickets(sale, printers)
+    return jsonify({"success": True, "tickets": tickets})
 
 
 @pos_bp.route("/api/hardware/print-receipt", methods=["POST"])

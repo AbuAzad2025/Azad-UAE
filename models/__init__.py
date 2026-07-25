@@ -82,6 +82,7 @@ from .pos_fraud_log import PosFraudSignal
 from .pos_kds_order import PosKdsOrder
 from .pos_order_type import PosOrderType, ensure_default_pos_order_types
 from .pos_override_token import PosOverrideToken
+from .pos_printer import PosPrinter
 from .pos_session import PosSession
 from .pos_shift import PosShift
 from .document_sequence import DocumentSequence
@@ -214,6 +215,7 @@ __all__ = [
     "PosCashMovement",
     "PosKdsOrder",
     "PosOrderType",
+    "PosPrinter",
     "PosOverrideToken",
     "ensure_default_pos_order_types",
     "PosSession",

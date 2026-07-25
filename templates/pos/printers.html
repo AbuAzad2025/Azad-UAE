@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ _('طابعات نقطة البيع') }} - POS{% endblock %}
+
+{% block page_title %}
+<h1 class="mb-0"><i class="fas fa-print mr-2"></i>{{ _('طابعات نقطة البيع') }}</h1>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="card mb-4">
+    <div class="card-header">{{ _('إضافة طابعة جديدة') }}</div>
+    <div class="card-body">
+      <form method="post" class="form-row align-items-end">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="create">
+        <div class="form-group col-md-2">
+          <label for="pr_name">{{ _('اسم الطابعة') }}</label>
+          <input class="form-control" id="pr_name" name="name" required>
+        </div>
+        <div class="form-group col-md-2">
+          <label for="pr_role">{{ _('الدور') }}</label>
+          <select class="form-control" id="pr_role" name="role">
+            {% for r in roles %}<option value="{{ r }}">{{ r }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group col-md-2">
+          <label for="pr_conn">{{ _('نوع الاتصال') }}</label>
+          <select class="form-control" id="pr_conn" name="connection_type">
+            {% for c in connection_types %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group col-md-2">
+          <label for="pr_host">{{ _('المضيف (IP)') }}</label>
+          <input class="form-control" id="pr_host" name="host" placeholder="192.168.1.50">
+        </div>
+        <div class="form-group col-md-1">
+          <label for="pr_port">{{ _('المنفذ') }}</label>
+          <input class="form-control" id="pr_port" type="number" name="port" placeholder="9100">
+        </div>
+        <div class="form-group col-md-1">
+          <label for="pr_serial">{{ _('منفذ تسلسلي') }}</label>
+          <input class="form-control" id="pr_serial" name="serial_port" placeholder="COM3">
+        </div>
+        <div class="form-group col-md-2">
+          <label for="pr_cats">{{ _('الفئات') }}</label>
+          <input class="form-control" id="pr_cats" name="category_ids" placeholder="{{ _('فارغ = الكل') }}">
+        </div>
+        <div class="form-group col-md-2 d-flex">
+          <div class="form-check mr-3">
+            <input class="form-check-input" type="checkbox" name="is_active" id="pr_active" checked>
+            <label class="form-check-label" for="pr_active">{{ _('نشط') }}</label>
+          </div>
+          <div class="form-group mb-0">
+            <label for="pr_sort">{{ _('الترتيب') }}</label>
+            <input class="form-control" id="pr_sort" type="number" name="sort_order" value="100">
+          </div>
+        </div>
+        <div class="form-group col-md-12">
+          <button type="submit" class="btn btn-primary">{{ _('إضافة') }}</button>
+          <a href="{{ url_for('pos.index') }}" class="btn btn-secondary">{{ _('العودة للـ POS') }}</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">{{ _('الطابعات الحالية') }}</div>
+    <div class="card-body p-0">
+      <table class="table mb-0">
+        <thead>
+          <tr>
+            <th>{{ _('الاسم') }}</th><th>{{ _('الدور') }}</th><th>{{ _('الاتصال') }}</th><th>{{ _('الفئات') }}</th><th>{{ _('الترتيب') }}</th><th>{{ _('نشط') }}</th><th>{{ _('إجراءات') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in printers %}
+          <tr>
+            <td>{{ p.name }}</td>
+            <td><span class="badge badge-info">{{ p.role }}</span></td>
+            <td>
+              <code>{{ p.connection_type }}</code>
+              {% if p.host %}<div class="small text-muted">{{ p.host }}{% if p.port %}:{{ p.port }}{% endif %}</div>{% endif %}
+              {% if p.serial_port %}<div class="small text-muted">{{ p.serial_port }}</div>{% endif %}
+            </td>
+            <td>{% if p.categories %}<code>{{ p.categories|join(', ') }}</code>{% else %}<span class="text-muted">{{ _('الكل') }}</span>{% endif %}</td>
+            <td>{{ p.sort_order }}</td>
+            <td>{% if p.is_active %}<span class="badge badge-success">{{ _('نعم') }}</span>{% else %}<span class="badge badge-secondary">{{ _('لا') }}</span>{% endif %}</td>
+            <td>
+              <form method="post" class="form-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="printer_id" value="{{ p.id }}">
+                <button type="submit" name="action" value="toggle" class="btn btn-sm btn-outline-secondary mr-1">{{ _('تبديل النشط') }}</button>
+                <button type="submit" name="action" value="delete" class="btn btn-sm btn-outline-danger" data-action="confirm-submit" data-confirm-message="{{ _('حذف الطابعة؟') }}">{{ _('حذف') }}</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" class="text-center text-muted">{{ _('لا توجد طابعات مهيأة.') }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action="confirm-submit"]');
+  if (!el) return;
+  if (!confirm(el.dataset.confirmMessage)) e.preventDefault();
+});
+</script>
+{% endblock %}

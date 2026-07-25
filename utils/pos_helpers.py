@@ -601,3 +601,86 @@ def build_cfd_order_payload(sale, kds_status: str | None = None) -> dict:
         "change_due": float(max(Decimal("0"), paid - total)),
         "status": kds_status or "confirmed",
     }
+
+
+def build_print_tickets(sale, printers) -> list[dict]:
+    """Split a sale into per-printer ESC/POS content payloads.
+
+    ``printers`` is an iterable of PosPrinter rows (any role). Returns a
+    list of tickets::
+
+        {"role": "customer"|"kitchen"|"warehouse",
+         "printer_name": str,
+         "connection_type": str,
+         "printer": <hardware-agent printer payload>,
+         "content": {"lines": [...], "cut": True}}
+
+    Customer-role printers always receive the full receipt. Kitchen and
+    warehouse printers receive only the sale lines whose product category
+    passes ``printer.covers_category`` (empty category list = all lines).
+    Printers with no matching lines are skipped.
+    """
+
+    def _money(value) -> str:
+        return f"{safe_decimal(value):.3f}".rstrip("0").rstrip(".") or "0"
+
+    def _qty(value) -> str:
+        return _money(value)
+
+    def _line_name(line) -> str:
+        product = getattr(line, "product", None)
+        if product is not None:
+            return product.name_ar or product.name or f"#{line.product_id}"
+        return f"#{line.product_id}"
+
+    header = [
+        {"text": sale.sale_number or "", "align": "center", "bold": True, "double": True},
+        {"separator": True},
+    ]
+    full_lines = list(header)
+    for line in sale.lines or []:
+        name = _line_name(line)
+        full_lines.append({"text": f"{_qty(line.quantity)} x {name}", "align": "left"})
+        full_lines.append(
+            {
+                "text": f"   {_money(line.line_total)}",
+                "align": "right",
+            }
+        )
+    full_lines.append({"separator": True})
+    full_lines.append({"text": f"TOTAL {_money(sale.total_amount)}", "align": "center", "bold": True})
+
+    tickets = []
+    for printer in printers or []:
+        role = getattr(printer, "role", "customer")
+        if role == "customer":
+            content = {"lines": list(full_lines), "cut": True, "open_drawer": True}
+        else:
+            role_lines = list(header)
+            matched = 0
+            for line in sale.lines or []:
+                product = getattr(line, "product", None)
+                category_id = getattr(product, "category_id", None)
+                if not printer.covers_category(category_id):
+                    continue
+                matched += 1
+                role_lines.append(
+                    {
+                        "text": f"{_qty(line.quantity)} x {_line_name(line)}",
+                        "align": "left",
+                        "bold": True,
+                    }
+                )
+            if matched == 0:
+                continue
+            content = {"lines": role_lines, "cut": True}
+        tickets.append(
+            {
+                "role": role,
+                "printer_name": printer.name,
+                "connection_type": printer.connection_type,
+                "printer": printer.agent_printer_payload(),
+                "content": content,
+            }
+        )
+    return tickets
