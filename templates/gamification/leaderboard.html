@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ t('Dashboard_2') }} {{ t('المتصدرين') }} - {{ app_name }}{% endblock %}
+{% block title %}{{ t('Dashboard_2') }} {{ t('المتصدرين') }} - {{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}{% endblock %}
 
 {% block content %}
 <div class="content-header">

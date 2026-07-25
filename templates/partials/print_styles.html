@@ -1,7 +1,11 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/print-base.css') }}">
 <style>
 @page {
+  {% if settings is defined and settings %}
   size: {{ settings.paper_size or 'A4' }} {{ settings.orientation or 'portrait' }};
+  {% else %}
+  size: A4 portrait;
+  {% endif %}
   margin: 5mm;
   orphans: 3;
   widows: 3;

@@ -762,17 +762,44 @@ def reports():
         "total_transactions": len(all_transactions),
     }
 
-    from datetime import datetime, timedelta
+    now = datetime.now()
+    month_keys = []
+    for i in range(5, -1, -1):
+        m = now.month - i
+        y = now.year
+        while m <= 0:
+            m += 12
+            y -= 1
+        month_keys.append((y, m))
+
+    from sqlalchemy import extract, func
+
+    start_of_window = datetime(month_keys[0][0], month_keys[0][1], 1)
+    year_col = extract("year", Donation.created_at)
+    month_col = extract("month", Donation.created_at)
+    monthly_rows = (
+        db.session.query(
+            year_col.label("y"),
+            month_col.label("m"),
+            Donation.transaction_type,
+            func.sum(Donation.amount_usd).label("total"),
+        )
+        .filter(Donation.tenant_id == tid, Donation.created_at >= start_of_window)
+        .group_by(year_col, month_col, Donation.transaction_type)
+        .all()
+    )
+
+    monthly_totals = {}
+    for row in monthly_rows:
+        monthly_totals[(int(row.y), int(row.m), row.transaction_type)] = float(row.total or 0)
 
     monthly_labels = []
     monthly_purchases_data = []
     monthly_donations_data = []
-
-    for i in range(6):
-        month = datetime.now() - timedelta(days=30 * i)
-        monthly_labels.insert(0, month.strftime("%b"))
-        monthly_purchases_data.insert(0, 0)
-        monthly_donations_data.insert(0, 0)
+    for y, m in month_keys:
+        monthly_labels.append(datetime(y, m, 1).strftime("%b"))
+        monthly_purchases_data.append(round(monthly_totals.get((y, m, "purchase"), 0.0), 2))
+        monthly_donations_data.append(round(monthly_totals.get((y, m, "donation"), 0.0), 2))
 
     package_stats = [
         Donation.query.filter_by(tenant_id=tid, transaction_type="purchase", package="basic").count(),

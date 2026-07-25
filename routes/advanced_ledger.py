@@ -83,6 +83,8 @@ def professional_printing():
         total_credit=total_credit,
         date_from=date.today() - timedelta(days=30),
         date_to=date.today(),
+        date=date,
+        datetime=datetime,
         print_branding=print_branding,
         settings=settings,
     )
@@ -315,6 +317,7 @@ def add_advanced_expense():
         "ledger/advanced/add_advanced_expense.html",
         categories=categories,
         suppliers=suppliers,
+        today=date.today(),
     )
 
 
@@ -546,8 +549,8 @@ def cheque_accounting_summary_api(cheque_id):
 def professional_reports():
     """تقارير مالية احترافية مع رسوم بيانية"""
     trends = AdvancedFinancialAnalytics.get_trend_analysis(months=12)
-    AdvancedFinancialAnalytics.get_expense_breakdown()
-    AdvancedFinancialAnalytics.get_revenue_breakdown()
+    expense_breakdown = AdvancedFinancialAnalytics.get_expense_breakdown()
+    ratios = AdvancedFinancialAnalytics.get_financial_ratios()
 
     total_revenue = sum(item["revenue"] for item in trends)
     total_expenses = sum(item["expenses"] for item in trends)
@@ -558,6 +561,40 @@ def professional_reports():
     revenue_data = [item["revenue"] for item in trends]
     expense_data = [item["expenses"] for item in trends]
     profit_data = [item["profit"] for item in trends]
+    margin_data = [item["margin"] for item in trends]
+
+    # Expense distribution: top slices by amount; remainder bucket is appended
+    # in the template (keeps the "أخرى" label inside t()).
+    expense_items = [item for item in expense_breakdown.get("items", []) if item["amount"] > 0]
+    top_expense_items = expense_items[:5]
+    expense_chart_labels = [item["account_name"] for item in top_expense_items]
+    expense_chart_data = [round(item["amount"], 2) for item in top_expense_items]
+    expense_chart_remainder = round(sum(item["amount"] for item in expense_items[5:]), 2)
+
+    # Quarterly revenue series from the 12-month trend window + window growth.
+    quarterly_revenue = [round(sum(revenue_data[i : i + 3]), 2) for i in range(0, len(revenue_data) - 2, 3)]
+    revenue_growth = None
+    if len(quarterly_revenue) >= 2 and quarterly_revenue[0] != 0:
+        revenue_growth = round((quarterly_revenue[-1] - quarterly_revenue[0]) / abs(quarterly_revenue[0]) * 100, 1)
+
+    liquidity = ratios.get("liquidity", {})
+    current_ratio = round(float(liquidity.get("current_ratio", 0)), 2)
+    quick_ratio = round(float(liquidity.get("quick_ratio", 0)), 2)
+    net_margin = round(float(ratios.get("profitability", {}).get("net_profit_margin", 0)), 1)
+    net_margin_clamped = min(max(net_margin, 0.0), 100.0)
+
+    def _mom_delta(series):
+        if len(series) < 2:
+            return None
+        prev, current = series[-2], series[-1]
+        if prev == 0:
+            return None
+        return round((current - prev) / abs(prev) * 100, 1)
+
+    revenue_delta = _mom_delta(revenue_data)
+    expense_delta = _mom_delta(expense_data)
+    profit_delta = _mom_delta(profit_data)
+    margin_delta = _mom_delta(margin_data)
 
     return render_template(
         "ledger/advanced/professional_reports.html",
@@ -570,6 +607,19 @@ def professional_reports():
         revenue_data=revenue_data,
         expense_data=expense_data,
         profit_data=profit_data,
+        expense_chart_labels=expense_chart_labels,
+        expense_chart_data=expense_chart_data,
+        expense_chart_remainder=expense_chart_remainder,
+        quarterly_revenue=quarterly_revenue,
+        revenue_growth=revenue_growth,
+        current_ratio=current_ratio,
+        quick_ratio=quick_ratio,
+        net_margin=net_margin,
+        net_margin_clamped=net_margin_clamped,
+        revenue_delta=revenue_delta,
+        expense_delta=expense_delta,
+        profit_delta=profit_delta,
+        margin_delta=margin_delta,
         date_from=date.today() - timedelta(days=365),
         date_to=date.today(),
     )

@@ -230,7 +230,10 @@ def salary_slip(**kwargs):
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is not None and transaction.branch_id != scoped_branch_id:
         return render_template("errors/403.html"), 403
-    return render_template("payroll/slip.html", slip=transaction)
+    from models.invoice_settings import InvoiceSettings
+
+    tenant, settings, company = InvoiceSettings.company_print_context(transaction.tenant_id or tid)
+    return render_template("payroll/slip.html", slip=transaction, settings=settings, company=company, tenant=tenant)
 
 
 @payroll_bp.route("/statement/<int:id>")

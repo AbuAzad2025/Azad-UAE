@@ -325,7 +325,13 @@ class TestPayrollProcess:
 
 class TestPayrollSlipAndStatement:
     def test_salary_slip(self, payroll_client):
-        with _payroll_patches():
+        with (
+            _payroll_patches(),
+            patch(
+                "models.invoice_settings.InvoiceSettings.company_print_context",
+                return_value=(MagicMock(name="tenant"), MagicMock(name="settings"), {"name_ar": "Co"}),
+            ),
+        ):
             resp = payroll_client.get("/payroll/slip/10")
         assert resp.status_code == 200
 

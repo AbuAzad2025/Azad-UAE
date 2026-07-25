@@ -170,13 +170,13 @@ document.addEventListener('click', (e) => {
 
 function unlockVault() {
   if (confirm('هل أنت {{ t('متأكد') }} من {{ t('فتح') }} {{ t('المحفظة_2') }}')) {
-    window.location.href = '{{ url_for("payment_vault.unlock") }}';
+    window.location.href = '{{ url_for("payment_vault.unlock_vault") }}';
   }
 }
 
 function lockVault() {
   if (confirm('هل أنت {{ t('متأكد') }} من {{ t('قفل') }} {{ t('المحفظة_2') }}')) {
-    window.location.href = '{{ url_for("payment_vault.lock") }}';
+    window.location.href = '{{ url_for("payment_vault.lock_vault") }}';
   }
 }
 </script>

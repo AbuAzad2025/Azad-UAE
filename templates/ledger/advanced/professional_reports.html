@@ -178,28 +178,36 @@
       <div class="stat-box ic-1">
         <p>{{ t('Total_2') }} {{ t('Revenue') }}</p>
         <h3>{{ format_currency(total_revenue) }}</h3>
-        <p><i class="fas fa-arrow-up trend-up"></i> +15.3% من {{ t('Month') }} {{ t('الماضي') }}</p>
+        {% if revenue_delta is not none %}
+        <p><i class="fas fa-arrow-{{ 'up' if revenue_delta >= 0 else 'down' }} {{ 'trend-up' if revenue_delta >= 0 else 'trend-down' }}"></i> {{ '+' if revenue_delta >= 0 else '-' }}{{ "{:.1f}".format(abs(revenue_delta)) }}% {{ t('من') }} {{ t('Month') }} {{ t('الماضي') }}</p>
+        {% endif %}
       </div>
     </div>
     <div class="col-md-3">
       <div class="stat-box ic-2">
         <p>{{ t('Total_2') }} {{ t('Expenses') }}</p>
         <h3>{{ format_currency(total_expenses) }}</h3>
-        <p><i class="fas fa-arrow-down trend-up"></i> -5.2% من {{ t('Month') }} {{ t('الماضي') }}</p>
+        {% if expense_delta is not none %}
+        <p><i class="fas fa-arrow-{{ 'up' if expense_delta >= 0 else 'down' }} {{ 'trend-up' if expense_delta >= 0 else 'trend-down' }}"></i> {{ '+' if expense_delta >= 0 else '-' }}{{ "{:.1f}".format(abs(expense_delta)) }}% {{ t('من') }} {{ t('Month') }} {{ t('الماضي') }}</p>
+        {% endif %}
       </div>
     </div>
     <div class="col-md-3">
       <div class="stat-box ic-3">
         <p>{{ t('Net') }} {{ t('Profit') }}</p>
         <h3>{{ format_currency(net_profit) }}</h3>
-        <p><i class="fas fa-arrow-up trend-up"></i> +23.7% من {{ t('Month') }} {{ t('الماضي') }}</p>
+        {% if profit_delta is not none %}
+        <p><i class="fas fa-arrow-{{ 'up' if profit_delta >= 0 else 'down' }} {{ 'trend-up' if profit_delta >= 0 else 'trend-down' }}"></i> {{ '+' if profit_delta >= 0 else '-' }}{{ "{:.1f}".format(abs(profit_delta)) }}% {{ t('من') }} {{ t('Month') }} {{ t('الماضي') }}</p>
+        {% endif %}
       </div>
     </div>
     <div class="col-md-3">
       <div class="stat-box ic-4">
         <p>{{ t('Margin') }} {{ t('Profit') }}</p>
         <h3>{{ "{:.1f}".format(profit_margin) }}%</h3>
-        <p><i class="fas fa-arrow-up trend-up"></i> +2.1% من {{ t('Month') }} {{ t('الماضي') }}</p>
+        {% if margin_delta is not none %}
+        <p><i class="fas fa-arrow-{{ 'up' if margin_delta >= 0 else 'down' }} {{ 'trend-up' if margin_delta >= 0 else 'trend-down' }}"></i> {{ '+' if margin_delta >= 0 else '-' }}{{ "{:.1f}".format(abs(margin_delta)) }}% {{ t('من') }} {{ t('Month') }} {{ t('الماضي') }}</p>
+        {% endif %}
       </div>
     </div>
   </div>
@@ -258,7 +266,14 @@
       <div class="report-card">
         <h4><i class="fas fa-chart-pie mr-2"></i>{{ t('توزيع') }} {{ t('Expenses') }} {{ t('حسب') }} {{ t('الفئة') }}</h4>
         <div class="chart-container">
+          {% if expense_chart_data %}
           <canvas id="expenseDistributionChart"></canvas>
+          {% else %}
+          <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
+            <i class="fas fa-chart-pie fa-3x mb-3"></i>
+            <p>{{ t('لا توجد') }} {{ t('Data_2') }}</p>
+          </div>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -336,7 +351,14 @@
           <canvas id="growthRateChart"></canvas>
         </div>
         <div class="text-center mt-3">
-          <h3 class="trend-up">+18.5%</h3>
+          {% if revenue_growth is not none %}
+          <h3 class="{{ 'trend-up' if revenue_growth >= 0 else 'trend-down' }}">
+            <i class="fas fa-arrow-{{ 'up' if revenue_growth >= 0 else 'down' }}"></i>
+            {{ '+' if revenue_growth >= 0 else '-' }}{{ "{:.1f}".format(abs(revenue_growth)) }}%
+          </h3>
+          {% else %}
+          <h3 class="text-muted">—</h3>
+          {% endif %}
           <p>{{ t('نمو') }} {{ t('Excellent') }} {{ t('مقارنة') }} {{ t('بالعام') }} {{ t('الماضي') }}</p>
         </div>
       </div>
@@ -349,7 +371,7 @@
           <canvas id="liquidityChart"></canvas>
         </div>
         <div class="text-center mt-3">
-          <h3 class="trend-up">2.3</h3>
+          <h3 class="{{ 'trend-up' if current_ratio >= 1 else 'trend-down' }}">{{ "{:.2f}".format(current_ratio) }}</h3>
           <p>{{ t('سيولة') }} {{ t('جيدة') }} {{ t('وصحية') }}</p>
         </div>
       </div>
@@ -357,13 +379,13 @@
     
     <div class="col-md-4">
       <div class="report-card">
-        <h5><i class="fas fa-percentage mr-2"></i>{{ t('العائد') }} على {{ t('الاستثمار') }}</h5>
+        <h5><i class="fas fa-percentage mr-2"></i>{{ t('Net') }} {{ t('Margin') }} {{ t('Profit') }}</h5>
         <div class="chart-container ic-8">
-          <canvas id="roiChart"></canvas>
+          <canvas id="netMarginChart"></canvas>
         </div>
         <div class="text-center mt-3">
-          <h3 class="trend-up">25.7%</h3>
-          <p>{{ t('عائد') }} {{ t('Excellent') }} على {{ t('الاستثمار') }}</p>
+          <h3 class="{{ 'trend-up' if net_margin >= 0 else 'trend-down' }}">{{ '+' if net_margin > 0 }}{{ "{:.1f}".format(net_margin) }}%</h3>
+          <p>{{ t('Margin') }} {{ t('Profit') }} {{ t('من') }} {{ t('Revenue') }}</p>
         </div>
       </div>
     </div>
@@ -425,35 +447,44 @@ const revenueExpenseChart = new Chart(revenueExpenseCtx, {
 });
 
 // {{ t('رسم') }} {{ t('بياني') }} {{ t('دائري') }} {{ t('لتوزيع') }} {{ t('Expenses') }}
-const expenseDistributionCtx = document.getElementById('expenseDistributionChart').getContext('2d');
-const expenseDistributionChart = new Chart(expenseDistributionCtx, {
-  type: 'doughnut',
-  data: {
-    labels: ['{{ t('رواتب') }}', '{{ t('إيجارات') }}', '{{ t('مواد') }}', '{{ t('كهرباء') }}', '{{ t('Maintenance') }}', '{{ t('أخرى') }}'],
-    datasets: [{
-      data: [35, 20, 18, 12, 10, 5],
-      backgroundColor: [
-        '#667eea',
-        '#f5576c',
-        '#4facfe',
-        '#43e97b',
-        '#fa709a',
-        '#feca57'
-      ],
-      borderWidth: 2,
-      borderColor: '#fff'
-    }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'bottom'
+const expenseDistributionEl = document.getElementById('expenseDistributionChart');
+if (expenseDistributionEl) {
+  const expenseLabels = {{ expense_chart_labels|tojson }};
+  const expenseAmounts = {{ expense_chart_data|tojson }};
+  {% if expense_chart_remainder > 0 %}
+  expenseLabels.push('{{ t('أخرى') }}');
+  expenseAmounts.push({{ expense_chart_remainder }});
+  {% endif %}
+  const expenseDistributionCtx = expenseDistributionEl.getContext('2d');
+  const expenseDistributionChart = new Chart(expenseDistributionCtx, {
+    type: 'doughnut',
+    data: {
+      labels: expenseLabels,
+      datasets: [{
+        data: expenseAmounts,
+        backgroundColor: [
+          '#667eea',
+          '#f5576c',
+          '#4facfe',
+          '#43e97b',
+          '#fa709a',
+          '#feca57'
+        ],
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        }
       }
     }
-  }
-});
+  });
+}
 
 // {{ t('رسم') }} {{ t('بياني') }} {{ t('خطي') }} {{ t('للأرباح') }}
 const profitTrendCtx = document.getElementById('profitTrendChart').getContext('2d');
@@ -493,13 +524,14 @@ const profitTrendChart = new Chart(profitTrendCtx, {
 });
 
 // {{ t('رسوم') }} {{ t('بيانية') }} {{ t('صغيرة') }} {{ t('للتحليلات') }}
+const quarterlyRevenue = {{ quarterly_revenue|tojson }};
 const growthRateCtx = document.getElementById('growthRateChart').getContext('2d');
 new Chart(growthRateCtx, {
   type: 'line',
   data: {
     labels: ['Q1', 'Q2', 'Q3', 'Q4'],
     datasets: [{
-      data: [12, 15, 18, 22],
+      data: quarterlyRevenue,
       borderColor: '#43e97b',
       backgroundColor: 'rgba(67, 233, 123, 0.1)',
       fill: true,
@@ -520,7 +552,7 @@ new Chart(liquidityCtx, {
   data: {
     labels: ['{{ t('الحالي') }}', '{{ t('Quick_4') }}'],
     datasets: [{
-      data: [2.3, 1.8],
+      data: {{ [current_ratio, quick_ratio]|tojson }},
       backgroundColor: ['#4facfe', '#00f2fe']
     }]
   },
@@ -532,12 +564,12 @@ new Chart(liquidityCtx, {
   }
 });
 
-const roiCtx = document.getElementById('roiChart').getContext('2d');
-new Chart(roiCtx, {
+const netMarginCtx = document.getElementById('netMarginChart').getContext('2d');
+new Chart(netMarginCtx, {
   type: 'doughnut',
   data: {
     datasets: [{
-      data: [25.7, 74.3],
+      data: {{ [net_margin_clamped, 100 - net_margin_clamped]|tojson }},
       backgroundColor: ['#667eea', '#e0e0e0'],
       borderWidth: 0
     }]

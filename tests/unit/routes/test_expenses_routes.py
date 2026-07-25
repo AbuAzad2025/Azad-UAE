@@ -351,30 +351,25 @@ class TestExpensesViewScope:
         assert resp.status_code == 404
 
     def test_print_branch_forbidden(self, expenses_client):
-        with (
-            _expense_patches(expense=_mock_expense(branch_id=9), branch_scope=1),
-            patch("routes.expenses.current_app") as app,
-        ):
-            app.config = {
-                "COMPANY_NAME_AR": "Co",
-                "COMPANY_ADDRESS": "Addr",
-                "COMPANY_PHONE": "123",
-            }
+        with _expense_patches(expense=_mock_expense(branch_id=9), branch_scope=1):
             resp = expenses_client.get("/expenses/1/print")
         assert resp.status_code == 403
 
     def test_print_success(self, expenses_client):
+        company = {"name_ar": "Co", "address": "Addr", "phone": "123"}
         with (
-            _expense_patches(expense=_mock_expense()),
-            patch("flask.current_app") as app,
+            _expense_patches(expense=_mock_expense()) as mocks,
+            patch(
+                "models.invoice_settings.InvoiceSettings.company_print_context",
+                return_value=(MagicMock(name="tenant"), MagicMock(name="settings"), company),
+            ),
         ):
-            app.config.get.side_effect = lambda k: {
-                "COMPANY_NAME_AR": "Co",
-                "COMPANY_ADDRESS": "Addr",
-                "COMPANY_PHONE": "123",
-            }.get(k)
             resp = expenses_client.get("/expenses/1/print")
         assert resp.status_code == 200
+        _, kwargs = mocks["render"].call_args
+        assert kwargs["company"] is company
+        assert "settings" in kwargs
+        assert "tenant" in kwargs
 
 
 class TestExpensesEdit:

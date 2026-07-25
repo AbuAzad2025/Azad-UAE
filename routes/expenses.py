@@ -295,14 +295,11 @@ def print_expense(**kwargs):
     expense = tenant_get_or_404(Expense, record_id)
     if not _expense_in_scope(expense):
         return render_template("errors/403.html"), 403
-    from flask import current_app
+    from models.invoice_settings import InvoiceSettings
 
-    company = {
-        "name_ar": current_app.config.get("COMPANY_NAME_AR"),
-        "address": current_app.config.get("COMPANY_ADDRESS"),
-        "phone": current_app.config.get("COMPANY_PHONE"),
-    }
-    return render_template("expenses/print.html", expense=expense, company=company)
+    tid = getattr(expense, "tenant_id", None)
+    tenant, settings, company = InvoiceSettings.company_print_context(tid)
+    return render_template("expenses/print.html", expense=expense, company=company, settings=settings, tenant=tenant)
 
 
 @expenses_bp.route("/<int:id>/edit", methods=["GET", "POST"])

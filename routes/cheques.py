@@ -36,7 +36,7 @@ from utils.branching import should_show_all_branch_columns
 from services.logging_core import LoggingCore
 from utils.helpers import generate_number
 from utils.currency_utils import resolve_default_currency, get_system_default_currency
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
 
 cheques_bp = Blueprint("cheques", __name__, url_prefix="/cheques")
@@ -258,6 +258,7 @@ def create():
                     customers=customers,
                     suppliers=suppliers,
                     exchange_rates=exchange_rates,
+                    today=date.today(),
                 )
             amount = Decimal(str(request.form.get("amount")))
             try:
@@ -300,6 +301,7 @@ def create():
                     customers=customers,
                     suppliers=suppliers,
                     exchange_rates=exchange_rates,
+                    today=date.today(),
                 )
             if supplier_id and not _scoped_suppliers_query().filter(Supplier.id == supplier_id).first():
                 flash(gettext("⚠️ المورد المحدد خارج نطاق الفرع الحالي."), "warning")
@@ -311,6 +313,7 @@ def create():
                     customers=customers,
                     suppliers=suppliers,
                     exchange_rates=exchange_rates,
+                    today=date.today(),
                 )
 
             cheque = Cheque(
@@ -374,6 +377,7 @@ def create():
         customers=customers,
         suppliers=suppliers,
         exchange_rates=exchange_rates,
+        today=date.today(),
     )
 
 
@@ -398,11 +402,21 @@ def view(**kwargs):
         tenant_default_currency = tenant.get_base_currency if tenant else ""
     is_foreign_currency = bool(cheque.currency != tenant_default_currency)
 
+    suggested_rate = None
+    if is_foreign_currency:
+        base_currency = tenant.get_base_currency() if tenant else ""
+        suggested_rate = ExchangeRateService.get_latest_rate(
+            cheque.currency,
+            base_currency or "AED",
+            tenant_id=getattr(cheque, "tenant_id", None),
+        )
+
     return render_template(
         "cheques/view.html",
         cheque=cheque,
         today=today,
         is_foreign_currency=is_foreign_currency,
+        suggested_rate=suggested_rate,
     )
 
 

@@ -68,13 +68,13 @@ def _advanced_ledger_patches(**kwargs):
         stack.enter_context(
             patch(
                 "routes.advanced_ledger.AdvancedFinancialAnalytics.get_trend_analysis",
-                return_value=[{"month": "Jan", "revenue": 100, "expenses": 40, "profit": 60}],
+                return_value=[{"month": "Jan", "revenue": 100, "expenses": 40, "profit": 60, "margin": 60.0}],
             )
         )
         stack.enter_context(
             patch(
                 "routes.advanced_ledger.AdvancedFinancialAnalytics.get_expense_breakdown",
-                return_value=[],
+                return_value={"items": [], "total": 0},
             )
         )
         stack.enter_context(

@@ -12,7 +12,14 @@ email_marketing_bp = Blueprint("email_marketing", __name__, url_prefix="/marketi
 @permission_required("marketing.manage")
 def campaigns():
     campaign_list = EmailMarketingService.list_campaigns(current_user)
-    return render_template("marketing/campaign_list.html", campaigns=campaign_list)
+    list_data = EmailMarketingService.list_lists(current_user)
+    template_data = EmailMarketingService.list_templates(current_user)
+    return render_template(
+        "marketing/campaign_list.html",
+        campaigns=campaign_list,
+        lists=list_data,
+        templates=template_data,
+    )
 
 
 @email_marketing_bp.route("/campaigns/create", methods=["GET", "POST"])
