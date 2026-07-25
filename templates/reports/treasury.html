@@ -136,7 +136,7 @@
         <div class="card-header">
           <h3 class="card-title"><i class="fas fa-arrow-down mr-2"></i> {{ t('Cheques') }} {{ t('الواردة') }} ({{ report.cheques.incoming.total_count }})</h3>
           <div class="card-tools">
-            <span class="badge badge-light">{{ format_currency(report.cheques.incoming.total_amount, 'AED') }}</span>
+            <span class="badge badge-light">{{ format_currency(report.cheques.incoming.total_amount) }}</span>
           </div>
         </div>
         <div class="card-body p-0">
@@ -167,7 +167,7 @@
         <div class="card-header">
           <h3 class="card-title"><i class="fas fa-arrow-up mr-2"></i> {{ t('Cheques') }} {{ t('الصادرة') }} ({{ report.cheques.outgoing.total_count }})</h3>
           <div class="card-tools">
-            <span class="badge badge-light">{{ format_currency(report.cheques.outgoing.total_amount, 'AED') }}</span>
+            <span class="badge badge-light">{{ format_currency(report.cheques.outgoing.total_amount) }}</span>
           </div>
         </div>
         <div class="card-body p-0">

@@ -357,20 +357,20 @@
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-action]');
   if (!el) return;
-  if (el.dataset.action === 'update-tenant-setting') updateTenantSetting(el.dataset.key, $(el.dataset.source).val());
+  if (el.dataset.action === 'update-tenant-setting') updateTenantSetting(el.dataset.key, $(el.dataset.source).val(), el);
 });
 
 document.addEventListener('change', (e) => {
   const el = e.target.closest('[data-action]');
   if (!el) return;
   const action = el.dataset.action;
-  if (action === 'update-tenant-setting-checked') updateTenantSetting(el.dataset.key, el.checked);
+  if (action === 'update-tenant-setting-checked') updateTenantSetting(el.dataset.key, el.checked, el);
   else if (action === 'toggle-warehouse-negative') toggleWarehouseNegative();
 });
 
-function updateTenantSetting(field, value) {
+function updateTenantSetting(field, value, targetEl) {
 
-  const targetEl = event && event.target ? $(event.target) : $('button:first');
+  const btn = $(targetEl);
 
   btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
 

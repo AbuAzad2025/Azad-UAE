@@ -244,7 +244,7 @@
 {% block extra_js %}
 {% include 'partials/select2_assets.html' %}
 <script>
-const TENANT_BASE_CURRENCY = {{ tenant_default_currency|tojson }} || 'AED';
+const TENANT_BASE_CURRENCY = {{ tenant_default_currency|tojson }} || 'ILS';
 
 $(() => {
   $('[data-toggle="tooltip"]').tooltip({

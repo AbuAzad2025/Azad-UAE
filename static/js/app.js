@@ -531,7 +531,7 @@
 			)
 			.serialize();
 		localStorage.setItem(`form_${$form.attr("id")}`, formData);
-		showNotification("تم الحفظ", "تم حفظ البيانات تلقائياً", "success");
+		showNotification("تم الحفظ محلياً", "تم حفظ البيانات تلقائياً على هذا الجهاز فقط", "success");
 	}
 
 	function debounce(func, wait) {
@@ -554,14 +554,14 @@
 
 		const socket = io();
 
-		// إشعارات المستخدم
+		// إشعارات المستخدم (server sends {message, type} — no title field)
 		socket.on("notification", (data) => {
-			showNotification(data.title, data.message, data.type);
+			showNotification(data.message, "", data.type);
 		});
 
 		// إشعارات عامة
 		socket.on("broadcast_notification", (data) => {
-			showNotification(data.title, data.message, data.type);
+			showNotification(data.message, "", data.type);
 		});
 
 		// تنبيهات النظام
@@ -569,8 +569,8 @@
 			showSystemAlert(data.message, data.severity);
 		});
 
-		// اتصال المستخدم بالغرفة
-		socket.emit("join_user_room");
+		// اتصال المستخدم بالغرفة (server listens for subscribe_notifications)
+		socket.emit("subscribe_notifications", {});
 	}
 
 	function showNotification(title, message, type = "info") {

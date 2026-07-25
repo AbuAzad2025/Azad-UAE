@@ -11,6 +11,12 @@
 
 const _TERMINAL_SDK_URL = "https://js.stripe.com/terminal/v1/";
 const _READER_STORAGE_KEY = "pos.terminal.reader_id";
+// Stripe charges default to the tenant's base currency (POS templates expose it
+// via meta), never a hardcoded code.
+const _DEFAULT_CURRENCY =
+	document.querySelector('meta[name="pos-base-currency"]')?.getAttribute("content") ||
+	window._FX_FALLBACK_BASE ||
+	"ILS";
 let _sdkPromise = null;
 
 function _loadTerminalSdk() {
@@ -94,7 +100,7 @@ class PosTerminal {
 	 * PaymentIntent id on approval; throws an Arabic user-safe Error
 	 * otherwise (caller falls back to the manual card flow).
 	 */
-	async pushPayment({ amount, currency = "AED", saleReference = "" }) {
+	async pushPayment({ amount, currency = _DEFAULT_CURRENCY, saleReference = "" }) {
 		const intent = await _postJson(`${this.baseUrl}/pos/api/terminal/payment_intent`, {
 			amount: String(amount),
 			currency,
@@ -135,7 +141,7 @@ async function setupTerminalButton({ button, getAmount, getCurrency, onApproved,
 		try {
 			const result = await terminal.pushPayment({
 				amount,
-				currency: getCurrency?.() || "AED",
+				currency: getCurrency?.() || _DEFAULT_CURRENCY,
 			});
 			onApproved?.(result);
 		} catch (err) {

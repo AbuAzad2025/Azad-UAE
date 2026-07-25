@@ -205,13 +205,13 @@ function reverseEntry(entryId) {
         'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
       }
     })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
+    .then(response => {
+      // The route commits the reversal then redirects (HTML) — OK means done.
+      if (response.ok) {
         location.reload();
-      } else {
-        alert("{{ t('Failed to reverse entry:') }} " + data.message);
+        return;
       }
+      alert("{{ t('Failed to reverse entry:') }} HTTP " + response.status);
     })
     .catch(() => {      alert("{{ t('Error occurred while reversing entry') }}");
     });

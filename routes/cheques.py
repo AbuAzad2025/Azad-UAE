@@ -404,10 +404,9 @@ def view(**kwargs):
 
     suggested_rate = None
     if is_foreign_currency:
-        base_currency = tenant.get_base_currency() if tenant else ""
         suggested_rate = ExchangeRateService.get_latest_rate(
             cheque.currency,
-            base_currency or "AED",
+            tenant_default_currency or "AED",
             tenant_id=getattr(cheque, "tenant_id", None),
         )
 

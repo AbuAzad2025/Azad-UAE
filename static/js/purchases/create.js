@@ -2,8 +2,18 @@
 
 /* global SmartSelectors */
 
-const TENANT_BASE_CURRENCY = window._FX_FALLBACK_BASE || "AED";
-const TENANT_CURRENCY_SYMBOL = window._CURRENCY_SYMBOL || "د.إ";
+const TENANT_BASE_CURRENCY = window._FX_FALLBACK_BASE || "ILS";
+const TENANT_CURRENCY_SYMBOL = window._CURRENCY_SYMBOL || "₪";
+const PURCHASE_LABELS = window._PURCHASE_LABELS || {};
+
+// Toastr is not bundled in this project — fall back to a blocking alert.
+function notify(kind, message) {
+	if (window.toastr && typeof window.toastr[kind] === "function") {
+		window.toastr[kind](message);
+	} else {
+		window.alert(message);
+	}
+}
 /* purchaseLineIndex scoped per file to avoid cross-page collision with sales */
 const _purchaseLineIndex = 0;
 
@@ -67,7 +77,7 @@ function addLine() {
 
                  class="form-control line-quantity" data-line="${purchaseLineIndex}"
 
-                 placeholder="{{ t('Quantity') }}" value="1" step="0.01" min="0.01" required>
+                 placeholder="${PURCHASE_LABELS.quantity || "الكمية"}" value="1" step="0.01" min="0.01" required>
 
         </div>
 
@@ -129,7 +139,7 @@ function addLine() {
 
           <button type="button" class="btn btn-danger btn-block" 
 
-                  onclick="removeLine(${purchaseLineIndex})" title="{{ t('Delete') }}">
+                  onclick="removeLine(${purchaseLineIndex})" title="${PURCHASE_LABELS.delete || "حذف"}">
 
             <i class="fas fa-trash"></i>
 
@@ -327,6 +337,9 @@ function _removeLine(index) {
 
 	void calculateTotals();
 }
+
+// Exposed for the inline onclick attribute in the generated line markup.
+window.removeLine = _removeLine;
 
 // =====================================
 
@@ -573,12 +586,12 @@ $currency.on("change", function () {
 
 					updateLineCosts();
 				} else {
-					toastr.warning("يرجى إدخال سعر الصرف يدوياً");
+					notify("warning", "يرجى إدخال سعر الصرف يدوياً");
 				}
 			},
 
 			error: () => {
-				toastr.warning("يرجى إدخال سعر الصرف يدوياً");
+				notify("warning", "يرجى إدخال سعر الصرف يدوياً");
 			},
 		});
 	} else {
@@ -609,7 +622,7 @@ $("#supplier_id").on("change", function () {
 		// عرض معلومات المورد
 
 		if (selectedData.is_verified) {
-			toastr.success(`✅ مورد موثوق: ${selectedData.name}`);
+			notify("success", `✅ مورد موثوق: ${selectedData.name}`);
 		}
 	}
 });
@@ -668,7 +681,7 @@ $(document).ready(() => {
 		if (lineCount === 0) {
 			e.preventDefault();
 
-			toastr.error("يجب إضافة منتج واحد على الأقل");
+			notify("error", "يجب إضافة منتج واحد على الأقل");
 
 			return false;
 		}
@@ -678,7 +691,7 @@ $(document).ready(() => {
 		if (!$("#supplier_id").val()) {
 			e.preventDefault();
 
-			toastr.error("يجب اختيار المورد");
+			notify("error", "يجب اختيار المورد");
 
 			return false;
 		}

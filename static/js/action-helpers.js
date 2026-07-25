@@ -30,10 +30,16 @@
 		})
 			.then((resp) => {
 				if (!resp.ok) {
-					return resp
-						.json()
-						.then((j) => Promise.reject(j?.message || j?.error || "فشلت عملية الأرشفة"))
-						.catch(() => Promise.reject("فشلت عملية الأرشفة"));
+					// Archive endpoints redirect+flash on success and may return HTML
+					// error pages — only parse a body when it is actually JSON.
+					const contentType = resp.headers.get("content-type") || "";
+					if (contentType.indexOf("application/json") !== -1) {
+						return resp
+							.json()
+							.then((j) => Promise.reject(j?.message || j?.error || "فشلت عملية الأرشفة"))
+							.catch(() => Promise.reject("فشلت عملية الأرشفة"));
+					}
+					return Promise.reject(`فشلت عملية الأرشفة (HTTP ${resp.status})`);
 				}
 				window.location.reload();
 			})

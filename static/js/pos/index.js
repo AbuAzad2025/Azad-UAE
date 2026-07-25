@@ -113,8 +113,7 @@
 		ILS: "₪",
 		JOD: "د.أ",
 		EUR: "€",
-		AED:
-			document.querySelector('meta[name="pos-currency-symbol"]')?.getAttribute("content") || "د.إ",
+		AED: "د.إ",
 		SAR: "ر.س",
 		EGP: "ج.م",
 		GBP: "£",
@@ -123,6 +122,11 @@
 		OMR: "ر.ع",
 		BHD: "د.ب",
 	};
+	// The tenant base currency row shows the tenant-configured symbol, not a hardcoded one.
+	const tenantPosSymbol = document
+		.querySelector('meta[name="pos-currency-symbol"]')
+		?.getAttribute("content");
+	if (baseCurrency && tenantPosSymbol) CURRENCY_SYMBOLS[baseCurrency] = tenantPosSymbol;
 	const currencySymbolFor = (code) => CURRENCY_SYMBOLS[code] || code;
 	const loadOrderTypes = async () => {
 		const sel = qs("#orderType");
@@ -342,9 +346,9 @@
 		}
 		await renderCart();
 	};
-	const warehouseParam = () => {
+	const warehouseParam = (sep = "&") => {
 		const w = qs("#warehouseId").value;
-		return w ? `&warehouse_id=${encodeURIComponent(w)}` : "";
+		return w ? `${sep}warehouse_id=${encodeURIComponent(w)}` : "";
 	};
 	const fetchJson = async (url) => {
 		const r = await fetch(url, {
@@ -813,7 +817,7 @@
 				return;
 			}
 			if (!r.ok || !j.success) {
-				showError(j.error || `HTTP ${r.status}`);
+				showAlert(j.error || `HTTP ${r.status}`);
 				return;
 			}
 			qs("#doneSaleNumber").textContent = j.sale_number;
@@ -934,7 +938,7 @@
 	}
 	if (window.posOfflineCatalog) {
 		const hydrate = () =>
-			void posOfflineCatalog.hydrateCatalog({ warehouseParam: warehouseParam() });
+			void posOfflineCatalog.hydrateCatalog({ warehouseParam: warehouseParam("?") });
 		hydrate();
 		window.addEventListener("online", hydrate);
 	}

@@ -259,15 +259,17 @@ function updatePartyList() {
   }
 }
 
+const TENANT_BASE_CURRENCY = {{ tenant_default_currency|tojson }} || 'ILS';
+
 async function loadVoucherRate() {
-  const currency = $('#currency').val() || 'AED';
+  const currency = $('#currency').val() || TENANT_BASE_CURRENCY;
   $('#amount_currency_label').text(currency);
-  if (currency === 'AED') {
+  if (currency === TENANT_BASE_CURRENCY) {
     $('#exchange_rate').val('1.000000');
     return;
   }
   try {
-    const response = await fetch('{{ url_for("api.currency_rate", from_currency="X", to_currency="AED") }}'.replace('X', encodeURIComponent(currency)));
+    const response = await fetch('{{ url_for("api.currency_rate", from_currency="X", to_currency="Y") }}'.replace('X', encodeURIComponent(currency)).replace('Y', TENANT_BASE_CURRENCY));
     const data = await response.json();
     if (data.success && data.rate) {
       $('#exchange_rate').val(Number(data.rate).toFixed(6));

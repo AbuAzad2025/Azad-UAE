@@ -213,7 +213,7 @@
 {% endif %}
 
 <script>
-const baseCurrency = '{{ tenant_default_currency or 'AED' }}';
+const baseCurrency = '{{ tenant_default_currency or 'ILS' }}';
 const pieCtx = document.getElementById('agingPieChart').getContext('2d');
 new Chart(pieCtx, {
     type: 'doughnut',

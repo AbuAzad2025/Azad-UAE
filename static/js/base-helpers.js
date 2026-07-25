@@ -1,3 +1,77 @@
+/**
+ * Minimal global `azad` UI helper.
+ * Page scripts (e.g. the enhanced sales form) call azad.* — toastr is not
+ * bundled in this project, so notifications render as small self-contained
+ * toasts and the loader is a simple spinner overlay.
+ */
+(() => {
+	let loadingCount = 0;
+
+	function loadingOverlay() {
+		let el = document.getElementById("azadLoadingOverlay");
+		if (!el) {
+			el = document.createElement("div");
+			el.id = "azadLoadingOverlay";
+			el.style.cssText =
+				"position:fixed;inset:0;z-index:20000;background:rgba(255,255,255,0.65);display:flex;align-items:center;justify-content:center;";
+			el.innerHTML =
+				'<div class="spinner-border text-primary" role="status" style="width:3rem;height:3rem;"><span class="sr-only">Loading...</span></div>';
+			document.body.appendChild(el);
+		}
+		return el;
+	}
+
+	function azadToast(message, type) {
+		if (window.toastr && typeof window.toastr[type] === "function") {
+			window.toastr[type](message);
+			return;
+		}
+		const colors = { success: "#28a745", error: "#dc3545", warning: "#D4AF37", info: "#17a2b8" };
+		const el = document.createElement("div");
+		el.textContent = message;
+		el.style.cssText =
+			"position:fixed;bottom:24px;right:24px;z-index:20001;background:" +
+			(colors[type] || colors.info) +
+			";color:#fff;padding:12px 20px;border-radius:8px;font-weight:600;font-size:0.9rem;box-shadow:0 4px 16px rgba(0,0,0,0.25);max-width:380px;direction:rtl;opacity:0;transition:opacity .3s;";
+		document.body.appendChild(el);
+		requestAnimationFrame(() => {
+			el.style.opacity = "1";
+		});
+		setTimeout(() => {
+			el.style.opacity = "0";
+			setTimeout(() => el.remove(), 400);
+		}, 5000);
+	}
+
+	window.azad = {
+		showLoading() {
+			loadingCount += 1;
+			loadingOverlay().style.display = "flex";
+		},
+		hideLoading() {
+			loadingCount = Math.max(0, loadingCount - 1);
+			if (loadingCount === 0) loadingOverlay().style.display = "none";
+		},
+		formatNumber(value) {
+			const n = Number(value);
+			if (!Number.isFinite(n)) return "0.00";
+			return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+		},
+		showError(msg) {
+			azadToast(msg, "error");
+		},
+		showSuccess(msg) {
+			azadToast(msg, "success");
+		},
+		showWarning(msg) {
+			azadToast(msg, "warning");
+		},
+		showInfo(msg) {
+			azadToast(msg, "info");
+		},
+	};
+})();
+
 $(() => {
 	try {
 		const csrfToken = $('meta[name="csrf-token"]').attr("content");
@@ -132,10 +206,15 @@ function populateFxDisplay(data) {
 		ILS: { ar: "شيقل إسرائيلي", sym: "₪" },
 		JOD: { ar: "دينار أردني", sym: "JD" },
 		EUR: { ar: "يورو", sym: "€" },
-		AED: { ar: window._CURRENCY_NAME_AR, sym: window._CURRENCY_SYMBOL },
+		AED: { ar: "درهم إماراتي", sym: "د.إ" },
 		SAR: { ar: "ريال سعودي", sym: "ر.س" },
 		EGP: { ar: "جنيه مصري", sym: "ج.م" },
 		GBP: { ar: "جنيه إسترليني", sym: "£" },
+	};
+	// The tenant's own base currency row shows the tenant-configured name/symbol.
+	labels[window._FX_FALLBACK_BASE || "USD"] = {
+		ar: window._CURRENCY_NAME_AR,
+		sym: window._CURRENCY_SYMBOL,
 	};
 	const tbody = document.getElementById("fx-rates-body");
 	if (!tbody) return;
@@ -152,7 +231,11 @@ function populateFxDisplay(data) {
 	const badge = document.getElementById("fx-source-badge");
 	if (badge) {
 		badge.style.display = "inline-block";
-		if (stale || source === "fallback_static") {
+		if (source === "fallback_static") {
+			// Hardcoded estimates shown only when the live API is unreachable.
+			badge.className = "badge badge-warning ml-1";
+			badge.textContent = "سعر تقديري";
+		} else if (stale) {
 			badge.className = "badge badge-warning ml-1";
 			badge.textContent = "آخر سعر محفوظ";
 		} else {

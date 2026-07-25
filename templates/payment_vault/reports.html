@@ -255,12 +255,25 @@
     $(document).on('click', '[data-action="export-report"]', exportReport);
 
     function exportReport() {
-        const _reportLabel = "{{ t('Report') }}";
-        Swal.fire({
-            icon: 'info',
-            title: "{{ t('Export') }} " + _reportLabel,
-            text: "{{ t('سيتم') }} {{ t('Download') }} " + _reportLabel + " {{ t('كملف') }} Excel",
-            confirmButtonText: "{{ t('حسناً') }}"
+        // Wire to the real CSV endpoints, honoring the report_type filter.
+        const type = ($('select[name="report_type"]').val() || 'all');
+        const urls = [];
+        if (type === 'donations') {
+            urls.push('{{ url_for("payment_vault.export_donations") }}');
+        } else if (type === 'purchases') {
+            urls.push('{{ url_for("payment_vault.export_purchases") }}');
+        } else {
+            urls.push('{{ url_for("payment_vault.export_purchases") }}');
+            urls.push('{{ url_for("payment_vault.export_donations") }}');
+        }
+        urls.forEach((u, i) => {
+            setTimeout(() => {
+                const a = document.createElement('a');
+                a.href = u;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            }, i * 400);
         });
     }
 </script>

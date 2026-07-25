@@ -285,7 +285,7 @@ $(document).ready(() => {
 
     const id = $(this).data('id');
 
-    const endpoint = type === 'receipt' ? '{{ url_for("payments.receipts") }}/' : '{{ url_for("payments.index") }}/';
+    const endpoint = type === 'receipt' ? '{{ url_for("payments.receipts") }}/' : '{{ url_for("payments.restore_payment", id=0) }}'.replace('/0/restore', '/');
 
     const url = endpoint + id + '/restore';
 
@@ -311,9 +311,9 @@ $(document).ready(() => {
 
       },
 
-      error: () => {
+      error: (xhr) => {
 
-        location.reload();
+        alert('{{ t('فشل استعادة السند') }}' + (xhr && xhr.status ? ' (HTTP ' + xhr.status + ')' : ''));
 
       }
 

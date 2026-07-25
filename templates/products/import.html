@@ -140,16 +140,12 @@ $('.custom-file-input').on('change', function() {
 });
 
 $('#importForm').on('submit', () => {
-    $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>{{ t('جاري') }} {{ t('Upload_2') }}...');
+    $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>{{ t('جاري') }} {{ t('الاستيراد') }}...');
     $('#progressArea').removeClass('d-none');
 
-    // Simulate progress for UX (Real progress requires WebSocket/SSE)
-    let width = 0;
-    const interval = setInterval(() => {
-        width += 5;
-        if (width > 90) clearInterval(interval);
-        $('#progressBar').css('width', width + '%').text(width + '%');
-    }, 200);
+    // Honest indeterminate state: the form POSTs normally and real progress
+    // would require WebSocket/SSE — no fake percentage.
+    $('#progressBar').css('width', '100%').text('{{ t('جاري') }} {{ t('الاستيراد') }}...');
 });
 
 // Grid Functionality

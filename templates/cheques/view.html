@@ -526,7 +526,7 @@ if (isForeignCurrency) {
 function fetchCurrentExchangeRate() {
   // {{ t('جلب') }} {{ t('Price_2') }} {{ t('Exchange') }} {{ t('الحالي') }} من API
   $.ajax({
-    url: '{{ url_for("api.currency_rate", from_currency="X", to_currency="Y") }}'.replace('X', '{{ cheque.currency }}').replace('Y', '{{ tenant_default_currency or "AED" }}'),
+    url: '{{ url_for("api.currency_rate", from_currency="X", to_currency="Y") }}'.replace('X', '{{ cheque.currency }}').replace('Y', '{{ tenant_default_currency or "ILS" }}'),
     method: 'GET',
     success: (data) => {
       if (data.rate) {

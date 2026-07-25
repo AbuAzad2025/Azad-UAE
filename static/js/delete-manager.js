@@ -213,7 +213,11 @@
 	// =====================================
 	window.deleteMultiple = (itemIds, itemType, redirectUrl) => {
 		if (!itemIds || itemIds.length === 0) {
-			toastr.warning("⚠️ يجب اختيار عنصر واحد على الأقل");
+			if (window.toastr) {
+				toastr.warning("⚠️ يجب اختيار عنصر واحد على الأقل");
+			} else {
+				window.alert("⚠️ يجب اختيار عنصر واحد على الأقل");
+			}
 			return;
 		}
 
@@ -293,7 +297,9 @@
 			if (result.isConfirmed) {
 				$(rowElement).fadeOut(300, function () {
 					$(this).remove();
-					toastr.success("✅ تم الحذف");
+					if (window.toastr) {
+						toastr.success("✅ تم الحذف");
+					}
 				});
 			}
 		});

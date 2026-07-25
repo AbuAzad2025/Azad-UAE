@@ -9,7 +9,8 @@ self.addEventListener("fetch", (event) => {
 	event.respondWith(
 		caches
 			.match(event.request)
-			.then((response) => response || fetch(event.request).catch(() => caches.match("/s/offline"))),
+			// No dedicated offline route exists — fall back to the cached app root.
+			.then((response) => response || fetch(event.request).catch(() => caches.match("/"))),
 	);
 });
 

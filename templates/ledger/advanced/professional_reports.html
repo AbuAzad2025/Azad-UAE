@@ -439,7 +439,7 @@ const revenueExpenseChart = new Chart(revenueExpenseCtx, {
       y: {
         beginAtZero: true,
         ticks: {
-          callback: (value) => value.toLocaleString() + ' د.إ'
+          callback: (value) => value.toLocaleString() + ' {{ tenant_currency_symbol }}'
         }
       }
     }
@@ -516,7 +516,7 @@ const profitTrendChart = new Chart(profitTrendCtx, {
       y: {
         beginAtZero: true,
         ticks: {
-          callback: (value) => value.toLocaleString() + ' د.إ'
+          callback: (value) => value.toLocaleString() + ' {{ tenant_currency_symbol }}'
         }
       }
     }
@@ -586,11 +586,30 @@ $(document).on('click', '[data-action="export-pdf"]', exportPDF);
 $(document).on('click', '[data-action="export-excel"]', exportExcel);
 
 function exportPDF() {
-  alert('{{ t('سيتم') }} {{ t('Export') }} {{ t('Report') }} {{ t('كملف') }} PDF');
+  window.print();
 }
 
 function exportExcel() {
-  alert('{{ t('سيتم') }} {{ t('Export') }} {{ t('Report') }} {{ t('كملف') }} Excel');
+  // Client-side CSV export of the on-page report table (UTF-8 BOM so Excel
+  // renders Arabic headers correctly).
+  const table = document.querySelector('.financial-table');
+  if (!table) return;
+  const rows = [];
+  table.querySelectorAll('tr').forEach((tr) => {
+    const cells = Array.from(tr.querySelectorAll('th, td')).map((c) =>
+      '"' + c.textContent.trim().replace(/\s+/g, ' ').replace(/"/g, '""') + '"'
+    );
+    if (cells.length) rows.push(cells.join(','));
+  });
+  if (!rows.length) return;
+  const blob = new Blob(['\ufeff' + rows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'professional-report.csv';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(a.href);
 }
 </script>
 {% endblock %}

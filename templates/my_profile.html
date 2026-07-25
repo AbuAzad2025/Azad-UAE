@@ -66,7 +66,7 @@
             <div class="card-body text-center">
               <h3 class="mb-1">{{ stats.today_sales_count }}</h3>
               <small>{{ t('Sales_2') }} {{ t('Today') }}</small>
-              <div class="fw-bold mt-1">{{ "%.2f"|format(stats.today_sales_amount) }} {{ tenant.default_currency or 'AED' }}</div>
+              <div class="fw-bold mt-1">{{ "%.2f"|format(stats.today_sales_amount) }} {{ tenant.default_currency or 'ILS' }}</div>
             </div>
           </div>
         </div>
@@ -75,7 +75,7 @@
             <div class="card-body text-center">
               <h3 class="mb-1">{{ stats.month_sales_count }}</h3>
               <small>{{ t('Sales_2') }} {{ t('Month') }}</small>
-              <div class="fw-bold mt-1">{{ "%.2f"|format(stats.month_sales_amount) }} {{ tenant.default_currency or 'AED' }}</div>
+              <div class="fw-bold mt-1">{{ "%.2f"|format(stats.month_sales_amount) }} {{ tenant.default_currency or 'ILS' }}</div>
             </div>
           </div>
         </div>
@@ -84,7 +84,7 @@
             <div class="card-body text-center">
               <h3 class="mb-1">{{ stats.total_sales_count }}</h3>
               <small>{{ t('Total_2') }} {{ t('Sales') }}</small>
-              <div class="fw-bold mt-1">{{ "%.2f"|format(stats.total_sales_amount) }} {{ tenant.default_currency or 'AED' }}</div>
+              <div class="fw-bold mt-1">{{ "%.2f"|format(stats.total_sales_amount) }} {{ tenant.default_currency or 'ILS' }}</div>
             </div>
           </div>
         </div>

@@ -61,7 +61,10 @@ function _normalize(product) {
  */
 async function hydrateCatalog({ warehouseParam = "" } = {}) {
 	try {
-		const res = await fetch(`/pos/api/catalog/snapshot${warehouseParam}`, {
+		// Callers may pass the param with either separator — the snapshot URL
+		// has no query string of its own, so it must begin with '?'.
+		const wp = warehouseParam ? warehouseParam.replace(/^&/, "?") : "";
+		const res = await fetch(`/pos/api/catalog/snapshot${wp}`, {
 			credentials: "same-origin",
 		});
 		const data = await res.json().catch(() => ({}));

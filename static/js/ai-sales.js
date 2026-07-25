@@ -102,7 +102,7 @@ $(document).ready(() => {
 				const analysisHtml = `
                     <div class="alert alert-${riskClass} mt-3">
                         <h5><i class="fas fa-chart-line"></i> تحليل العميل</h5>
-                        <p><strong>الرصيد الحالي:</strong> ${analysis.current_balance.toFixed(2)} درهم</p>
+                        <p><strong>الرصيد الحالي:</strong> ${analysis.current_balance.toFixed(2)} ${window._CURRENCY_SYMBOL || "₪"}</p>
                         <p><strong>متوسط تأخير الدفع:</strong> ${analysis.avg_payment_delay_days} يوم</p>
                         <p><strong>التوصية:</strong> ${esc(analysis.recommendation)}</p>
                     </div>
@@ -116,7 +116,7 @@ $(document).ready(() => {
 
 	// اقتراح سعر الصرف
 	function suggestExchangeRate(currency) {
-		if (currency === "AED") {
+		if (currency === (window._FX_FALLBACK_BASE || "ILS")) {
 			const $exchangeRate = $("#exchange_rate");
 			$exchangeRate.val("1.00");
 			return;
@@ -155,7 +155,7 @@ $(document).ready(() => {
                         <div class="alert alert-success alert-sm mt-2">
                             <strong>💰 سعر السوق العالمي:</strong><br>
                             <span class="badge badge-primary">${result.average_price_usd} USD</span>
-                            <span class="badge badge-info">${result.suggested_price_aed.toFixed(2)} AED</span><br>
+                            <span class="badge badge-info">${result.suggested_price_aed.toFixed(2)} ${window._FX_FALLBACK_BASE || "ILS"}</span><br>
                             <small>${esc(result.notes || "")}</small>
                             ${result.markets ? `<br><small>الأسواق: ${result.markets.map(esc).join(", ")}</small>` : ""}
                             <button type="button" class="btn btn-xs btn-success mt-1" onclick="applyMarketPrice(${lineIndex}, ${result.suggested_price_aed})">
@@ -164,6 +164,11 @@ $(document).ready(() => {
                         </div>
                     `;
 					$(`#market_info_${lineIndex}`).html(marketInfo);
+				} else if (result.message) {
+					// Backend is honest about the feature state (e.g. قيد التطوير) — surface it as-is.
+					$(`#market_info_${lineIndex}`).html(
+						`<div class="alert alert-info alert-sm mt-2"><i class="fas fa-info-circle"></i> ${esc(result.message)}</div>`,
+					);
 				}
 			},
 			error: () => {},
@@ -198,6 +203,11 @@ $(document).ready(() => {
 					vehiclesHtml += "</div>";
 
 					$("#compatible_vehicles").html(vehiclesHtml);
+				} else if (result.message) {
+					// Backend is honest about the feature state (e.g. قيد التطوير) — surface it as-is.
+					$("#compatible_vehicles").html(
+						`<div class="alert alert-info mt-2"><i class="fas fa-info-circle"></i> ${esc(result.message)}</div>`,
+					);
 				} else if (result.raw_response) {
 					$("#compatible_vehicles").html(
 						`<div class="alert alert-info mt-2">${esc(result.raw_response)}</div>`,
@@ -256,7 +266,7 @@ $(document).ready(() => {
 	const $currency = $("#currency");
 	if ($currency.length) {
 		const initialCurrency = $currency.val();
-		if (initialCurrency && initialCurrency !== "AED") {
+		if (initialCurrency && initialCurrency !== (window._FX_FALLBACK_BASE || "ILS")) {
 			suggestExchangeRate(initialCurrency);
 		}
 	}
@@ -277,3 +287,7 @@ function _applyMarketPrice(lineIndex, price) {
 	$unitPrice.trigger("change");
 	$(`#market_info_${lineIndex}`).fadeOut();
 }
+
+// Expose the handlers referenced by inline onclick attributes in generated badges.
+window.applyRecommendedPrice = _applyRecommendedPrice;
+window.applyMarketPrice = _applyMarketPrice;

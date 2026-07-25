@@ -41,6 +41,23 @@
 		}).then((r) => r.json());
 	}
 
+	// Cart endpoints read request.form server-side — post urlencoded fields.
+	function apiPostForm(path, data) {
+		const params = new URLSearchParams();
+		Object.keys(data || {}).forEach((k) => {
+			params.append(k, data[k]);
+		});
+		return fetch(`/s/${SLUG}${path}`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+				"X-Requested-With": "XMLHttpRequest",
+				"X-CSRFToken": CSRF_TOKEN,
+			},
+			body: params.toString(),
+		}).then((r) => r.json());
+	}
+
 	function apiGet(path) {
 		return fetch(`/s/${SLUG}${path}`, {
 			headers: { "X-Requested-With": "XMLHttpRequest" },
@@ -49,7 +66,7 @@
 
 	let addToCart = (productId, quantity) => {
 		quantity = quantity || 1;
-		return apiPost("/cart/add", {
+		return apiPostForm("/cart/add", {
 			product_id: productId,
 			quantity: quantity,
 		}).then((data) => {
@@ -64,7 +81,7 @@
 	};
 
 	function removeFromCart(productId) {
-		return apiPost(`/cart/remove/${productId}`, {}).then((data) => {
+		return apiPostForm(`/cart/remove/${productId}`, {}).then((data) => {
 			if (data.success) {
 				updateCartBadge(data.cart_count);
 				showToast("Removed from cart", "success");
@@ -76,7 +93,7 @@
 	}
 
 	function updateCart(updates) {
-		return apiPost("/cart/update", updates).then((data) => {
+		return apiPostForm("/cart/update", updates).then((data) => {
 			if (data.success) {
 				updateCartBadge(data.cart_count);
 			}
@@ -166,13 +183,10 @@
 					data[k] = v;
 				});
 				updateCart(data).then((res) => {
-					if (res.success && res.totals) {
+					if (res.success && res.subtotal !== undefined) {
 						const totalEl = document.querySelector(".ps-summary-row.total span:last-child");
-						if (totalEl && res.totals.subtotal) {
-							totalEl.textContent =
-								parseFloat(res.totals.subtotal).toFixed(2) +
-								" " +
-								(res.totals.currency || window._CURRENCY_SYMBOL || "AED");
+						if (totalEl) {
+							totalEl.textContent = `${parseFloat(res.subtotal).toFixed(2)} ${window._CURRENCY_SYMBOL || "₪"}`;
 						}
 					}
 				});

@@ -36,8 +36,7 @@
 		ILS: "₪",
 		JOD: "د.أ",
 		EUR: "€",
-		AED:
-			document.querySelector('meta[name="pos-currency-symbol"]')?.getAttribute("content") || "د.إ",
+		AED: "د.إ",
 		SAR: "ر.س",
 		EGP: "ج.م",
 		GBP: "£",
@@ -46,6 +45,11 @@
 		OMR: "ر.ع",
 		BHD: "د.ب",
 	};
+	// The tenant base currency row shows the tenant-configured symbol, not a hardcoded one.
+	const tenantPosSymbol = document
+		.querySelector('meta[name="pos-currency-symbol"]')
+		?.getAttribute("content");
+	if (baseCurrency && tenantPosSymbol) CURRENCY_SYMBOLS[baseCurrency] = tenantPosSymbol;
 	const currencySymbolFor = (code) => CURRENCY_SYMBOLS[code] || code;
 	const esc = (s) => {
 		if (s == null) return "";

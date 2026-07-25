@@ -513,6 +513,7 @@
   window._PRICES_INCLUDE_VAT = {{ 'true' if prices_include_vat else 'false' }};
   window._API_SEARCH_URL = {% if current_user.has_permission('view_reports') %}'{{ url_for('api.api_search') }}'{% else %}null{% endif %};
   window._PURCHASE_CALC_URL = '{{ url_for("purchases.api_calculate_purchase_totals") }}';
+  window._PURCHASE_LABELS = {{ {'quantity': t('Quantity'), 'delete': t('Delete')} | tojson }};
 </script>
 <script src="{{ url_for('static', filename='js/purchases/create.js') }}"></script>
 {% endblock %}

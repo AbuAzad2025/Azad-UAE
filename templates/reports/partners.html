@@ -434,7 +434,7 @@
             
             detailsContainer.html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">{{ t('جاري') }} {{ t('Download') }} {{ t('Report') }} {{ t('التفصيلي') }}...</p></div>');
             
-            $.get(`{{ url_for("reports.entity_report_fragment", type="X", id=0) }}`.replace('X', type).replace('0', id), (html) => {
+            $.get(`{{ url_for("reports.entity_report_fragment", entity_type="X", id=0) }}`.replace('X', type).replace('0', id), (html) => {
                 detailsContainer.html(html);
             }).fail((err) => {
                 console.error(err);

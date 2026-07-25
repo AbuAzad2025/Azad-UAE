@@ -168,7 +168,7 @@
 			const balance = parseFloat(item.balance || 0);
 			const balanceText =
 				balance !== 0
-					? ` (${balance > 0 ? "+" : ""}${balance.toFixed(2)} ${window._CURRENCY_SYMBOL || "AED"})`
+					? ` (${balance > 0 ? "+" : ""}${balance.toFixed(2)} ${window._CURRENCY_SYMBOL || "₪"})`
 					: "";
 
 			return $(`
@@ -197,7 +197,7 @@
 			const balance = parseFloat(item.balance || 0);
 			const balanceText =
 				balance !== 0
-					? ` (${balance > 0 ? "+" : ""}${balance.toFixed(2)} ${window._CURRENCY_SYMBOL || "AED"})`
+					? ` (${balance > 0 ? "+" : ""}${balance.toFixed(2)} ${window._CURRENCY_SYMBOL || "₪"})`
 					: "";
 
 			return $(`
@@ -236,7 +236,7 @@
           </div>
           <div class="text-end">
             <small class="${stockClass}">${stockText}</small>
-            <br><small class="text-muted">${parseFloat(item.price || 0).toFixed(2)} ${window._CURRENCY_SYMBOL || "AED"}</small>
+            <br><small class="text-muted">${parseFloat(item.price || 0).toFixed(2)} ${window._CURRENCY_SYMBOL || "₪"}</small>
           </div>
         </div>
       `);

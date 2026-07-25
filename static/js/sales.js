@@ -315,7 +315,7 @@
 				return;
 			}
 			const data = await fetchProductInfo(pid, wid);
-			const avail = Number.isFinite(+data.available) ? +data.available : null;
+			const avail = Number.isFinite(+data.stock) ? +data.stock : null;
 			badge.textContent = avail === null ? "" : `متاح: ${avail}`;
 		}
 
