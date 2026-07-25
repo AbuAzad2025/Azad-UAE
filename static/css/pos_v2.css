@@ -339,16 +339,21 @@
 
 /* Search bar */
 .pos-search-bar {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.5rem;
 	padding: 0.5rem 1rem;
 	border-bottom: 1px solid #e2e8f0;
 	background: #fff;
 }
 
 .pos-search-bar input {
+	flex: 1;
+	min-width: 180px;
 	border-radius: 10px;
 	border: 1px solid #cbd5e1;
 	padding: 0.6rem 1rem;
-	width: 100%;
 	font-size: 1rem;
 }
 
@@ -498,6 +503,9 @@
 }
 
 .pos-settings-toggle {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
 	padding: 0.5rem 1rem;
 	cursor: pointer;
 	font-size: 0.85rem;
@@ -510,6 +518,14 @@
 
 .pos-settings-toggle:hover {
 	background: #f1f5f9;
+}
+
+.pos-settings-toggle .pos-chevron {
+	transition: transform 0.2s ease;
+}
+
+.pos-settings-toggle.open .pos-chevron {
+	transform: rotate(180deg);
 }
 
 .pos-settings-body {
@@ -573,5 +589,40 @@
 
 	/* purgecss end ignore */
 }
+
+/* Hardware tool buttons (camera scan / scale) */
+.pos-tool-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 42px;
+	height: 42px;
+	border-radius: 10px;
+	border: 1px solid #cbd5e1;
+	background: #fff;
+	color: #64748b;
+	transition: all 0.15s;
+}
+
+.pos-tool-btn:hover,
+.pos-tool-btn:focus {
+	border-color: #10b981;
+	color: #10b981;
+}
+
+/* purgecss start ignore */
+.pos-tool-btn.pos-scale-live {
+	border-color: #10b981;
+	background: #ecfdf5;
+	color: #059669;
+}
+
+.pos-tool-btn.pos-scale-live::after {
+	content: " " attr(data-live-weight) "kg";
+	font-size: 0.7rem;
+	margin-inline-start: 4px;
+}
+
+/* purgecss end ignore */
 
 

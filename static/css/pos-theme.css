@@ -257,6 +257,11 @@
 	vertical-align: middle;
 }
 
+.pos-search .search-tool:hover,
+.pos-search .search-tool:focus {
+	color: var(--pos-accent);
+}
+
 /* customer quick chips */
 
 /* purgecss start ignore */

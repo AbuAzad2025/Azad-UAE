@@ -63,9 +63,8 @@
         <div class="pos-search">
           <label for="productSearch" class="sr-only">{{ t('Scan Barcode Or Type Name Code') }}</label>
           <input id="productSearch" class="barcode-input" placeholder="{{ t('Scan Barcode Or Type Name Code') }} (Ctrl+K)">
-          <span class="kbd">Ctrl K</span>
-          <button id="cameraScanBtn" type="button" class="search-clear" title="{{ t('Scan With Camera') }}" data-scan-hint="{{ t('Point The Camera At The Barcode') }}">📷</button>
-          <button id="scaleConnectBtn" type="button" class="search-clear" title="{{ t('Connect Scale') }}" data-scale-on-title="{{ t('Disconnect Scale') }}">⚖️</button>
+          <button id="cameraScanBtn" type="button" class="search-clear search-tool" title="{{ t('Scan With Camera') }}" data-scan-hint="{{ t('Point The Camera At The Barcode') }}"><i class="fas fa-camera"></i></button>
+          <button id="scaleConnectBtn" type="button" class="search-clear search-tool" title="{{ t('Connect Scale') }}" data-scale-on-title="{{ t('Disconnect Scale') }}"><i class="fas fa-weight-hanging"></i></button>
           <button id="clearProductSearch" class="search-clear" title="{{ t('Clear') }}">✕</button>
           <div id="productResults" class="pos-product-results d-none"></div>
         </div>
@@ -190,7 +189,7 @@
           <div class="pm" data-method="bank_transfer">تحويل</div>
           <div class="pm" data-method="e_wallet">محفظة</div>
         </div>
-        <button id="pushTerminalBtn" type="button" class="btn btn-outline-primary btn-sm d-none mt-1" title="{{ t('Push Card Payment To Terminal') }}">💳 {{ t('Push To Terminal') }}</button>
+        <button id="pushTerminalBtn" type="button" class="btn btn-outline-primary btn-sm d-none mt-1" title="{{ t('Push Card Payment To Terminal') }}"><i class="fas fa-credit-card mr-1"></i>{{ t('Push To Terminal') }}</button>
         <select id="paymentMethod" class="d-none" aria-label="{{ t('Payment Method') }}">
           <option value="">{{ t('No Payment Now Credit') }}</option>
           <option value="cash">{{ t('Cash_4') }}</option>
