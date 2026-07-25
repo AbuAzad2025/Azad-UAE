@@ -17,6 +17,7 @@ from utils.branching import (
     get_branch_stock_map,
 )
 from utils.decorators import branch_scope_id, permission_required
+from utils.logger import log_event
 from utils.tenanting import get_active_tenant_id
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
@@ -31,6 +32,12 @@ _DEV_TRUSTED_ORIGINS = frozenset(
         "http://127.0.0.1:55014",
     }
 )
+
+_TELEMETRY_BATCH_MAX_EVENTS = 50
+_TELEMETRY_PAYLOAD_MAX_BYTES = 50 * 1024
+_TELEMETRY_MAX_BREADCRUMBS = 20
+_FRONTEND_TELEMETRY_CATEGORIES = frozenset({"SOFTWARE_EXCEPTION", "HARDWARE_WARN"})
+_FRONTEND_TELEMETRY_LEVELS = frozenset({"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"})
 
 
 def _is_production_env() -> bool:
@@ -704,6 +711,93 @@ def log_client_error():
         extra=extra,
     )
     return "", 204
+
+
+def _sanitize_breadcrumbs(raw) -> list[dict]:
+    """Keep only dict breadcrumbs; cap count, key count and string length."""
+    crumbs: list[dict] = []
+    if not isinstance(raw, list):
+        return crumbs
+    for crumb in raw[:_TELEMETRY_MAX_BREADCRUMBS]:
+        if not isinstance(crumb, dict):
+            continue
+        clean: dict = {}
+        for key, value in crumb.items():
+            clean[str(key)[:40]] = str(value)[:300] if isinstance(value, str) else value
+            if len(clean) >= 12:
+                break
+        crumbs.append(clean)
+    return crumbs
+
+
+@api_bp.route("/v1/telemetry/logs", methods=["POST"])
+@csrf.exempt
+@limiter.limit("60 per minute")
+def ingest_telemetry_logs():
+    """Batch ingest of frontend telemetry events into the JSONL sink (utils/logger).
+
+    Contract: ``{"events": [{"category", "message", "level?", "url?", "stack?",
+    "breadcrumbs?", "client_ts?", "extra?"}]}`` — up to 50 events / 50 KB.
+
+    Defenses mirror ``log_client_error``: origin allowlist, rate limit, payload
+    cap, and server-side tenant/user resolution. Client-supplied categories are
+    restricted to SOFTWARE_EXCEPTION / HARDWARE_WARN — security and financial
+    categories are server-only and are stripped (mapped to SOFTWARE_EXCEPTION).
+    Bad client data yields 400/413, never 500.
+    """
+    origin_error = _validate_public_telemetry_origin()
+    if origin_error:
+        return origin_error
+
+    if request.content_length and request.content_length > _TELEMETRY_PAYLOAD_MAX_BYTES:
+        return "", 413
+
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"success": False, "error": "malformed payload"}), 400
+    events = data.get("events")
+    if not isinstance(events, list) or not events:
+        return jsonify({"success": False, "error": "events must be a non-empty list"}), 400
+    if len(events) > _TELEMETRY_BATCH_MAX_EVENTS:
+        return jsonify({"success": False, "error": "batch too large (max 50)"}), 400
+
+    tenant_id = get_active_tenant_id(current_user)
+    user_id = getattr(current_user, "id", None) if getattr(current_user, "is_authenticated", False) else None
+
+    accepted = 0
+    for raw_event in events:
+        if not isinstance(raw_event, dict):
+            continue
+        try:
+            message = str(raw_event.get("message") or "").strip()[:2000]
+            if not message:
+                continue
+            category = str(raw_event.get("category") or "").strip().upper()
+            if category not in _FRONTEND_TELEMETRY_CATEGORIES:
+                category = "SOFTWARE_EXCEPTION"
+            level = str(raw_event.get("level") or "").strip().upper()
+            if level not in _FRONTEND_TELEMETRY_LEVELS:
+                level = "WARNING" if category == "HARDWARE_WARN" else "ERROR"
+            client_extra = raw_event.get("extra") if isinstance(raw_event.get("extra"), dict) else {}
+            log_event(
+                category,
+                message,
+                level=level,
+                tenant_id=tenant_id,
+                user_id=user_id,
+                source="frontend",
+                url=str(raw_event.get("url") or "")[:500],
+                stack=(str(raw_event.get("stack"))[:4000] if raw_event.get("stack") else None),
+                breadcrumbs=_sanitize_breadcrumbs(raw_event.get("breadcrumbs")),
+                client_ts=str(raw_event.get("client_ts") or "")[:80],
+                client_extra=client_extra,
+            )
+            accepted += 1
+        except Exception:
+            # One poisoned event must not kill the batch — never 500 on client data.
+            continue
+
+    return jsonify({"success": True, "accepted": accepted}), 202
 
 
 @api_bp.route("/industry-fields")

@@ -65,6 +65,7 @@
     <script src="{{ url_for('static', filename='adminlte/plugins/jquery/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename='adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ url_for('static', filename='adminlte/js/adminlte.min.js') }}"></script>
+    <script defer src="{{ url_for('static', filename='js/telemetry.js') }}"></script>
     <script>
         window.APP_ENUMS = {{ app_enums | tojson | safe }};
         window.CURRENT_USER_PERMISSIONS = {{ current_user_permissions | tojson | safe }};
