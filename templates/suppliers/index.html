@@ -7,7 +7,7 @@
     <p class="text-muted">{{ t('قاعدة') }} {{ t('Data_2') }} {{ t('شاملة') }} {{ t('لجميع') }} {{ t('Suppliers') }} {{ t('والشركات') }}</p>
   </div>
   <div>
-    <a href="{{ url_for('suppliers.create') }}" class="btn btn-success btn-lg">
+    <a href="{{ url_for('suppliers.create') }}" class="btn btn-success">
       <i class="fas fa-plus-circle mr-2"></i>{{ t('Supplier_2') }} {{ t('New') }}
     </a>
   </div>
@@ -177,7 +177,6 @@
         <thead class="ic-1">
           <tr>
             <th><i class="fas fa-building mr-2"></i>{{ t('Supplier') }}</th>
-            <th><i class="fas fa-building mr-2"></i>{{ t('Company') }}</th>
             <th><i class="fas fa-tag mr-2"></i>{{ t('النوع') }}</th>
             <th><i class="fas fa-star mr-2"></i>{{ t('التقييم') }}</th>
             <th><i class="fas fa-phone mr-2"></i>{{ t('Phone') }}</th>
@@ -207,9 +206,6 @@
                   {% endif %}
                 </div>
               </div>
-            </td>
-            <td>
-              <span class="badge badge-light border">{{ tenant_name_ar or company_name_ar or '-' }}</span>
             </td>
             <td>
               <span class="badge badge-info">
@@ -271,7 +267,7 @@
           </tr>
           {% else %}
           <tr>
-            <td colspan="99" class="text-center text-muted py-5">
+            <td colspan="9" class="text-center text-muted py-5">
               <i class="fas fa-inbox fa-3x mb-3 d-block text-muted opacity-50"></i>
               {{ t('لا توجد') }} {{ t('موردين') }}
             </td>
@@ -326,6 +322,19 @@ $(document).on('click', '[data-filter]', function() {
   filterSuppliers($(this).data('filter'));
 });
 
+let supplierRowFilter = null;
+
+function clearSupplierRowFilter() {
+  if (!supplierRowFilter) {
+    return;
+  }
+  const idx = $.fn.dataTable.ext.search.indexOf(supplierRowFilter);
+  if (idx !== -1) {
+    $.fn.dataTable.ext.search.splice(idx, 1);
+  }
+  supplierRowFilter = null;
+}
+
 function filterSuppliers(type) {
   const $tableEl = $('#suppliersTable');
   const table = $.fn.DataTable.isDataTable($tableEl) ? $tableEl.DataTable() : null;
@@ -333,13 +342,24 @@ function filterSuppliers(type) {
     return;
   }
 
-  if (type === 'all') {
-    table.search('').columns().search('').draw();
-  } else if (type === 'verified') {
-    table.column(0).search('✓').draw();
-  } else {
-    table.column(1).search(type).draw();
+  clearSupplierRowFilter();
+  table.search('').columns().search('');
+
+  if (type !== 'all') {
+    supplierRowFilter = (settings, data, dataIndex) => {
+      if (settings.nTable.id !== 'suppliersTable') {
+        return true;
+      }
+      const row = table.row(dataIndex).node();
+      if (type === 'verified') {
+        return $(row).attr('data-verified') === 'True';
+      }
+      return $(row).attr('data-type') === type;
+    };
+    $.fn.dataTable.ext.search.push(supplierRowFilter);
   }
+
+  table.draw();
 }
 </script>
 {% endblock %}

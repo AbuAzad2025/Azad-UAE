@@ -8,7 +8,7 @@
   </div>
   <div>
     <div class="btn-group mr-2">
-      <button type="button" class="btn btn-outline-success btn-lg dropdown-toggle" data-bs-toggle="dropdown">
+      <button type="button" class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown">
         <i class="fas fa-download mr-2"></i>{{ t('Export') }}
       </button>
       <div class="dropdown-menu dropdown-menu-end">
@@ -16,7 +16,7 @@
         <a class="dropdown-item" href="{{ url_for('customers.export', format='xlsx', search=request.args.get('search'), type=request.args.get('type')) }}">Excel</a>
       </div>
     </div>
-    <a href="{{ url_for('customers.create') }}" class="btn btn-primary btn-lg">
+    <a href="{{ url_for('customers.create') }}" class="btn btn-primary">
       <i class="fas fa-user-plus mr-2"></i>{{ t('Customer_3') }} {{ t('New') }}
     </a>
   </div>
@@ -97,7 +97,6 @@
         <thead class="ic-1">
           <tr>
             <th><i class="fas fa-user mr-2"></i>{{ t('Name') }}</th>
-            <th><i class="fas fa-building mr-2"></i>{{ t('Company') }}</th>
             <th><i class="fas fa-tag mr-2"></i>{{ t('النوع') }}</th>
             <th><i class="fas fa-star mr-2"></i>{{ t('التصنيف') }}</th>
             <th><i class="fas fa-phone mr-2"></i>{{ t('Phone') }}</th>
@@ -121,9 +120,6 @@
                   {% endif %}
                 </div>
               </div>
-            </td>
-            <td>
-              <span class="badge badge-light border">{{ tenant_name_ar or company_name_ar or '-' }}</span>
             </td>
             <td>
               {% if customer.customer_type == 'regular' %}
@@ -204,7 +200,7 @@
           </tr>
           {% else %}
           <tr>
-            <td colspan="99" class="text-center text-muted py-5">
+            <td colspan="7" class="text-center text-muted py-5">
               <i class="fas fa-inbox fa-3x mb-3 d-block text-muted opacity-50"></i>
               {{ t('لا توجد') }} {{ t('عملاء') }}
             </td>
@@ -298,7 +294,7 @@ $(document).ready(() => {
   });
 
   $('#filterOverdue').on('click', function() {
-    table.column(4).search('^[1-9]', true, false).draw();
+    table.column(4).search('^-', true, false).draw();
     $('.btn-group .btn').removeClass('active');
     $(this).addClass('active');
   });
