@@ -896,7 +896,9 @@
 					.then((r) => r.json())
 					.then((d) => {
 						if (d.success !== false) {
-							void addToCart(d, d.scale_weight_kg || 1);
+							const liveKg = Number(state.scaleWeightKg) || 0;
+							const qty = d.is_weight_product && liveKg > 0 ? liveKg : d.scale_weight_kg || 1;
+							void addToCart(d, qty);
 							qs("#productSearch").value = "";
 						} else {
 							showAlert(d.error || "المنتج غير موجود");
@@ -914,6 +916,21 @@
 					button: qs("#cameraScanBtn"),
 					onScan: handleScannedCode,
 					onError: (msg) => showAlert(msg, "warning"),
+				});
+			}
+			if (window.PosScaleSerial && window.setupPosScaleUI) {
+				const scaleBtn = qs("#scaleConnectBtn");
+				state.posScale = new PosScaleSerial({
+					onStableWeight: (kg) => {
+						state.scaleWeightKg = kg;
+						if (scaleBtn) scaleBtn.dataset.liveWeight = kg.toFixed(3);
+					},
+					onError: (msg) => showAlert(msg, "warning"),
+				});
+				setupPosScaleUI({
+					button: scaleBtn,
+					scale: state.posScale,
+					connectedTitle: scaleBtn?.dataset.scaleOnTitle,
 				});
 			}
 		}

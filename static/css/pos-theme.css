@@ -247,6 +247,16 @@
 	color: var(--pos-danger);
 }
 
+.pos-search .search-clear.pos-scale-live {
+	color: var(--pos-accent);
+}
+
+.pos-search .search-clear.pos-scale-live::after {
+	content: " " attr(data-live-weight) "kg";
+	font-size: 10px;
+	vertical-align: middle;
+}
+
 /* customer quick chips */
 
 /* purgecss start ignore */

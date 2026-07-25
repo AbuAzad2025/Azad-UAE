@@ -201,6 +201,7 @@
 						prices_include_vat: data.prices_include_vat,
 					};
 					if (window.cfdBroadcast) cfdBroadcast.sendCart(state.cart, exactTotals);
+					state.lastTotals = exactTotals;
 					return exactTotals;
 				}
 			} catch (_) {}
@@ -215,6 +216,7 @@
 			prices_include_vat: pricesIncludeVatMeta,
 		};
 		if (window.cfdBroadcast) cfdBroadcast.sendCart(state.cart, quickTotals);
+		state.lastTotals = quickTotals;
 		return quickTotals;
 	};
 	// Upsell prompts: live evaluation while composing the cart, plus a recap
@@ -878,7 +880,9 @@
 				showAlert(p.warning || "المنتج غير نشط.", "warning");
 				return;
 			}
-			await addToCart(p, p.scale_weight_kg || 1);
+			const liveKg = Number(state.scaleWeightKg) || 0;
+			const qty = p.is_weight_product && liveKg > 0 ? liveKg : p.scale_weight_kg || 1;
+			await addToCart(p, qty);
 			qs("#productSearch").value = "";
 			qs("#productResults").classList.add("d-none");
 			showAlert(`تمت إضافة ${p.name}`, "success");
@@ -891,6 +895,21 @@
 			button: qs("#cameraScanBtn"),
 			onScan: (code) => void handleScannedCode(code),
 			onError: (msg) => showAlert(msg, "warning"),
+		});
+	}
+	if (window.PosScaleSerial && window.setupPosScaleUI) {
+		const scaleBtn = qs("#scaleConnectBtn");
+		state.posScale = new PosScaleSerial({
+			onStableWeight: (kg) => {
+				state.scaleWeightKg = kg;
+				if (scaleBtn) scaleBtn.dataset.liveWeight = kg.toFixed(3);
+			},
+			onError: (msg) => showAlert(msg, "warning"),
+		});
+		setupPosScaleUI({
+			button: scaleBtn,
+			scale: state.posScale,
+			connectedTitle: scaleBtn?.dataset.scaleOnTitle,
 		});
 	}
 
@@ -942,6 +961,20 @@
 	});
 	if (paySel) paySel.addEventListener("change", syncPay);
 	syncPay();
+
+	/* ---------- Push-to-terminal card payment ---------- */
+	if (window.setupTerminalButton) {
+		void setupTerminalButton({
+			button: qs("#pushTerminalBtn"),
+			getAmount: () => state.lastTotals?.total || 0,
+			getCurrency: () => selectedCurrency(),
+			onApproved: (result) => {
+				if (paidEl && state.lastTotals) paidEl.value = String(state.lastTotals.total);
+				showAlert(`تمت الموافقة على الدفع بالبطاقة (${result.intentId})`, "success");
+			},
+			onError: (msg) => showAlert(msg, "warning"),
+		});
+	}
 
 	/* ---------- Categories + product grid ---------- */
 	const loadCategories = async () => {

@@ -1228,3 +1228,82 @@ class TestPosCustomerDisplay:
             second = json.loads(next(gen).split("data: ", 1)[1])
             assert second["type"] == "closed"
             sleep.assert_called()
+
+
+class TestPosTerminal:
+    def test_status_unconfigured(self, pos_client):
+        with _pos_enabled_patches(), patch(
+            "services.pos_terminal_service.terminal_status",
+            return_value={"provider": "stripe_terminal", "configured": False},
+        ):
+            resp = pos_client.get("/pos/api/terminal/status")
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data["success"] is True
+        assert data["configured"] is False
+
+    def test_connection_token_success(self, pos_client):
+        with _pos_enabled_patches(), patch(
+            "services.pos_terminal_service.create_connection_token",
+            return_value="pst_tok_1",
+        ):
+            resp = pos_client.post("/pos/api/terminal/connection_token")
+        assert resp.status_code == 200
+        assert resp.get_json()["secret"] == "pst_tok_1"
+
+    def test_connection_token_provider_failure(self, pos_client):
+        from services.pos_terminal_service import PosTerminalError
+
+        with _pos_enabled_patches(), patch(
+            "services.pos_terminal_service.create_connection_token",
+            side_effect=PosTerminalError("غير مهيأ"),
+        ):
+            resp = pos_client.post("/pos/api/terminal/connection_token")
+        assert resp.status_code == 503
+        assert resp.get_json()["success"] is False
+
+    def test_payment_intent_success(self, pos_client):
+        captured = {}
+
+        def fake_intent(amount, *, currency, tenant_id, sale_reference):
+            captured.update(
+                {"amount": amount, "currency": currency, "tenant_id": tenant_id}
+            )
+            return {
+                "id": "pi_1",
+                "client_secret": "sec",
+                "amount_minor": 1000,
+                "currency": "aed",
+                "status": "requires_payment_method",
+            }
+
+        with _pos_enabled_patches(), patch(
+            "services.pos_terminal_service.create_terminal_payment_intent",
+            side_effect=fake_intent,
+        ):
+            resp = pos_client.post(
+                "/pos/api/terminal/payment_intent",
+                json={"amount": "10", "currency": "AED"},
+            )
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data["id"] == "pi_1"
+        assert captured["tenant_id"] == 1
+        assert captured["amount"] == "10"
+
+    def test_payment_intent_provider_failure(self, pos_client):
+        from services.pos_terminal_service import PosTerminalError
+
+        with _pos_enabled_patches(), patch(
+            "services.pos_terminal_service.create_terminal_payment_intent",
+            side_effect=PosTerminalError("تعذر الوصول"),
+        ):
+            resp = pos_client.post(
+                "/pos/api/terminal/payment_intent", json={"amount": "10"}
+            )
+        assert resp.status_code == 503
+
+    def test_terminal_requires_login(self, pos_client):
+        with _pos_enabled_patches(), unauthenticated_client(pos_client):
+            resp = pos_client.get("/pos/api/terminal/status")
+        assert resp.status_code == 401

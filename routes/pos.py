@@ -1269,6 +1269,52 @@ def api_carts_list():
     return jsonify({"success": True, "carts": [c.to_summary_dict() for c in carts]})
 
 
+@pos_bp.route("/api/terminal/status")
+@login_required
+@permission_required(PermissionEnum.MANAGE_SALES)
+def api_terminal_status():
+    """Report whether a push-to-terminal provider is configured."""
+    from services import pos_terminal_service
+
+    return jsonify({"success": True, **pos_terminal_service.terminal_status()})
+
+
+@pos_bp.route("/api/terminal/connection_token", methods=["POST"])
+@login_required
+@permission_required(PermissionEnum.MANAGE_SALES)
+def api_terminal_connection_token():
+    """Mint a short-lived token for the register's browser→reader link."""
+    from services import pos_terminal_service
+
+    try:
+        secret = pos_terminal_service.create_connection_token()
+    except pos_terminal_service.PosTerminalError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 503
+    return jsonify({"success": True, "secret": secret})
+
+
+@pos_bp.route("/api/terminal/payment_intent", methods=["POST"])
+@login_required
+@permission_required(PermissionEnum.MANAGE_SALES)
+def api_terminal_payment_intent():
+    """Create a card_present PaymentIntent for reader collection."""
+    from services import pos_terminal_service
+
+    payload = request.get_json(silent=True) or {}
+    amount = payload.get("amount")
+    currency = (payload.get("currency") or "AED").strip() or "AED"
+    try:
+        intent = pos_terminal_service.create_terminal_payment_intent(
+            amount,
+            currency=currency,
+            tenant_id=get_active_tenant_id(current_user),
+            sale_reference=payload.get("sale_reference"),
+        )
+    except pos_terminal_service.PosTerminalError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 503
+    return jsonify({"success": True, **intent})
+
+
 @pos_bp.route("/api/carts/park", methods=["POST"])
 @login_required
 @permission_required(PermissionEnum.MANAGE_SALES)

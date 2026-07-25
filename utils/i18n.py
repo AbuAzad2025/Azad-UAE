@@ -2342,6 +2342,15 @@ TRANSLATIONS = {
     "Promotion": {"ar": "عرض ترويجي", "en": "Promotion"},
     "Zero Rated": {"ar": "صفرية الضريبة", "en": "Zero Rated"},
     "Exempt": {"ar": "معفاة من الضريبة", "en": "Exempt"},
+    "Connect Scale": {"ar": "توصيل الميزان", "en": "Connect Scale"},
+    "Disconnect Scale": {"ar": "فصل الميزان", "en": "Disconnect Scale"},
+    "Push To Terminal": {"ar": "إرسال إلى الجهاز", "en": "Push to Terminal"},
+    "Push Card Payment To Terminal": {
+        "ar": "إرسال الدفع بالبطاقة إلى جهاز الدفع",
+        "en": "Push card payment to the payment terminal",
+    },
+    "توصيل الميزان": {"ar": "توصيل الميزان", "en": "Connect Scale"},
+    "فصل الميزان": {"ar": "فصل الميزان", "en": "Disconnect Scale"},
     "POS Disabled Tenant": {
         "ar": "نقطة البيع غير مفعلة لهذه الشركة. يرجى التواصل مع المسؤول لتفعيلها.",
         "en": "POS is disabled for this company. Contact your administrator to enable it.",

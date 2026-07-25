@@ -33,6 +33,8 @@ def safe_decimal(value, default: Decimal = Decimal("0")) -> Decimal:
 
 SCALE_BARCODE_PREFIX = "20"
 
+_WEIGHT_UNITS = frozenset({"kg", "kilogram", "kilograms", "kilo", "كجم", "كغ", "كيلو", "كيلوغرام"})
+
 
 def parse_scale_barcode(code) -> dict | None:
     """Parse a 13-digit weight-embedded scale barcode (prefix ``20``).
@@ -248,6 +250,7 @@ def serialize_pos_product(product: Product, stock_map: dict, *, warehouse_id: in
         "is_active": product.is_active,
         "is_inactive": inactive,
         "is_out_of_stock": no_stock,
+        "is_weight_product": (product.unit or "").strip().lower() in _WEIGHT_UNITS,
         "warehouse_id": warehouse_id,
         "text": label,
     }
