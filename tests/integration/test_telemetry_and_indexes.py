@@ -10,6 +10,10 @@ Covers:
     (test schema comes from db.create_all(), so the migration's own index
     definitions are applied idempotently before asserting)
   * scripts/audit_indexes.py main() sanity (exits 0; clean skip on non-PG)
+
+Plan assertions are version-stable across PG 15-18: table cardinality is
+faked transactionally via pg_class instead of relying on empty-table
+planner heuristics.
 """
 
 from __future__ import annotations
