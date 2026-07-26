@@ -103,16 +103,18 @@ def register_error_handlers(app):
             exception=exc,
         )
         if _wants_json_error_response():
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "error": exc.name,
-                        "status": exc.code,
-                    }
-                ),
-                exc.code,
+            body = jsonify(
+                {
+                    "success": False,
+                    "error": exc.name,
+                    "status": exc.code,
+                }
             )
+            # RFC 7231 section 6.5.5: a 405 response must advertise allowed methods
+            valid_methods = getattr(exc, "valid_methods", None)
+            if valid_methods:
+                body.headers["Allow"] = ", ".join(valid_methods)
+            return body, exc.code
         return exc
 
     @app.errorhandler(Exception)

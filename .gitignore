@@ -179,3 +179,4 @@ load_tests/
 .openclaw/
 
 nul
+.schemathesis/

@@ -12,6 +12,7 @@ from flask import (
     url_for,
     flash,
     abort,
+    jsonify,
     send_from_directory,
 )
 
@@ -79,6 +80,13 @@ def create_app(config_class=Config) -> Flask:
     def _handle_unauthorized():
         if request.path.startswith("/owner/"):
             abort(404)
+        if request.path.startswith("/api/"):
+            return jsonify(
+                {
+                    "error": "authentication_required",
+                    "message": "Authentication is required to access this API endpoint",
+                }
+            ), 401
         flash("الرجاء تسجيل الدخول للوصول لهذه الصفحة", "warning")
         return redirect(url_for("auth.login"))
 

@@ -86,6 +86,9 @@ class TenantAwareCache:
         return self._cache.set_many(mapped, timeout=timeout)
 
     def init_app(self, app, config=None):
+        cache_type = (config or app.config).get("CACHE_TYPE")
+        if cache_type in (None, "", "null") and not app.config.get("APP_ENV", "").lower() == "production":
+            app.config.setdefault("CACHE_NO_NULL_WARNING", True)
         return self._cache.init_app(app, config=config)
 
     def __getattr__(self, name):

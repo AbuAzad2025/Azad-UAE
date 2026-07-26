@@ -95,8 +95,10 @@ def foreign_sale(db_session):
 
 
 class TestAccessContract:
-    def test_anonymous_redirected_to_login(self, client):
-        assert client.get("/api/v2/sales").status_code == 302
+    def test_anonymous_gets_401_json(self, client):
+        resp = client.get("/api/v2/sales")
+        assert resp.status_code == 401
+        assert resp.get_json()["error"] == "authentication_required"
 
     def test_sales_requires_manage_sales(self, no_perm_client):
         assert no_perm_client.get("/api/v2/sales").status_code == 403

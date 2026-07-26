@@ -166,6 +166,8 @@ class Config:
         CACHE_TYPE = "redis"
     else:
         CACHE_TYPE = "null"
+    # Null cache outside production is intentional (tests/dev boots); production keeps the warning
+    CACHE_NO_NULL_WARNING = CACHE_TYPE == "null" and APP_ENV.lower() != "production"
     CACHE_REDIS_URL = os.environ.get("CACHE_REDIS_URL", REDIS_URL)
     CACHE_DEFAULT_TIMEOUT = _int("CACHE_DEFAULT_TIMEOUT", 300)
     CACHE_KEY_PREFIX = "azad"
@@ -407,6 +409,7 @@ class TestConfig(Config):
     WTF_CSRF_ENABLED = False
     RATELIMIT_ENABLED = False
     CACHE_TYPE = "null"
+    CACHE_NO_NULL_WARNING = True  # Null cache is intentional in tests; stay quiet
     MAIL_SUPPRESS_SEND = True
     SESSION_COOKIE_SECURE = False
     REMEMBER_COOKIE_SECURE = False

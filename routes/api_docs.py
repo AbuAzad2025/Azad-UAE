@@ -62,6 +62,7 @@ OPENAPI_SPEC = {
             "get": {
                 "tags": ["General"],
                 "summary": "Check API health",
+                "security": [],
                 "responses": {"200": {"description": "API is running"}},
             }
         },
@@ -69,6 +70,7 @@ OPENAPI_SPEC = {
             "get": {
                 "tags": ["General"],
                 "summary": "Get API version",
+                "security": [],
                 "responses": {"200": {"description": "Version information"}},
             }
         },
@@ -118,7 +120,11 @@ OPENAPI_SPEC = {
                                 }
                             }
                         },
-                    }
+                    },
+                    "401": {
+                        "description": "Not authenticated",
+                        "content": {"application/json": {"schema": {"type": "object"}}},
+                    },
                 },
             }
         },
@@ -126,7 +132,13 @@ OPENAPI_SPEC = {
             "get": {
                 "tags": ["Products"],
                 "summary": "List products",
-                "responses": {"200": {"description": "List of products"}},
+                "responses": {
+                    "200": {"description": "List of products"},
+                    "401": {
+                        "description": "Not authenticated",
+                        "content": {"application/json": {"schema": {"type": "object"}}},
+                    },
+                },
             }
         },
         "/products/{id}/info": {
@@ -141,14 +153,27 @@ OPENAPI_SPEC = {
                         "schema": {"type": "integer"},
                     }
                 ],
-                "responses": {"200": {"description": "Product details"}},
+                "responses": {
+                    "200": {"description": "Product details"},
+                    "401": {
+                        "description": "Not authenticated",
+                        "content": {"application/json": {"schema": {"type": "object"}}},
+                    },
+                    "404": {"description": "Product not found or invalid ID"},
+                },
             }
         },
         "/warehouses": {
             "get": {
                 "tags": ["Warehouses"],
                 "summary": "List accessible warehouses",
-                "responses": {"200": {"description": "List of warehouses"}},
+                "responses": {
+                    "200": {"description": "List of warehouses"},
+                    "401": {
+                        "description": "Not authenticated",
+                        "content": {"application/json": {"schema": {"type": "object"}}},
+                    },
+                },
             }
         },
     },

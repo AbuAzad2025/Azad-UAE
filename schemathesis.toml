@@ -1,0 +1,6 @@
+# Schemathesis v4 configuration (used by the api-fuzz CI job).
+# v4 removed --hypothesis-deadline/--base-url CLI flags; both live here now.
+# request-timeout (seconds) replaces the old 3000ms hypothesis deadline.
+request-timeout = 3
+# The app strips spec.servers unless docs are public; point schemathesis at the API prefix.
+base-url = "http://localhost:5000/api"
