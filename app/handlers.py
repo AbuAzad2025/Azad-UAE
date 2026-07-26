@@ -53,6 +53,9 @@ def register_error_handlers(app):
             level="ERROR",
             tenant_id=getattr(g, "active_tenant_id", None),
             source="app.errorhandler.500",
+            # LoggingCore.log_error above already persists the DB row — the
+            # telemetry bridge would double-persist the same real event.
+            _bridge=False,
         )
         if app.config.get("DEBUG"):
             raise exc
@@ -143,6 +146,9 @@ def register_error_handlers(app):
             level="CRITICAL",
             tenant_id=getattr(g, "active_tenant_id", None),
             source=source,
+            # LoggingCore.log_error above already persists the DB row — the
+            # telemetry bridge would double-persist the same real event.
+            _bridge=False,
         )
         if app.config.get("DEBUG"):
             raise exc

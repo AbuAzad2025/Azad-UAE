@@ -22,12 +22,28 @@ import json
 import logging
 from datetime import datetime, timezone
 from decimal import Decimal
+from types import SimpleNamespace
+from uuid import uuid4
 
 import pytest
 from sqlalchemy import text as sa_text
 
 from extensions import db
-from utils.logger import TELEMETRY_LOGGER_NAME, _TelemetryEventFormatter, clear_context, log_event
+from services.logging_core import LoggingCore
+from utils.db_safety import atomic_transaction
+from utils.logger import (
+    TELEMETRY_LOGGER_NAME,
+    _TelemetryEventFormatter,
+    clear_context,
+    enable_error_log_bridge,
+    log_event,
+    log_financial,
+    log_security,
+)
+
+# Captured at collection time — before conftest's app fixture replaces
+# LoggingCore.log_error with its session-wide no-op stub.
+_REAL_LOG_ERROR = LoggingCore.log_error
 
 _MIGRATION_MODULE = "migrations.versions.i6c2e91a3d47_add_tenant_leading_indexes"
 
@@ -365,3 +381,221 @@ class TestAuditCliSanity:
         assert rc == 0
         captured = capsys.readouterr()
         assert "index audit" in captured.out.lower()
+
+
+@pytest.fixture()
+def telemetry_db_bridge(mocker):
+    """Restore the real LoggingCore.log_error AND opt into the DB bridge.
+
+    conftest's session app fixture no-ops LoggingCore.log_error for the whole
+    run; the bridge tests need the genuine persister (raw engine connection)
+    plus the explicit pytest opt-in switch.
+    """
+    mocker.patch.object(LoggingCore, "log_error", _REAL_LOG_ERROR)
+    with enable_error_log_bridge():
+        yield
+
+
+@pytest.fixture()
+def committed_tenant(app):
+    """A tenant row committed through its own raw engine connection.
+
+    error_audit_logs.tenant_id is a real FK, and the bridge writes via
+    LoggingCore's separate connection — which cannot see rows that live only
+    inside db_session's uncommitted savepoint. Bridge DB tests therefore
+    reference a truly committed tenant instead.
+    """
+    from models import Tenant
+    from sqlalchemy.orm import Session
+
+    unique = uuid4().hex[:8]
+    with app.app_context():
+        with db.engine.begin() as conn:
+            with Session(bind=conn) as orm:
+                tenant = Tenant(
+                    name=f"Bridge Co {unique}",
+                    name_ar="شركة الجسر",
+                    slug=f"bridge-{unique}",
+                    email=f"bridge-{unique}@example.com",
+                    phone_1="0500000000",
+                    country="AE",
+                    subscription_plan="basic",
+                    default_currency="AED",
+                    base_currency="AED",
+                    is_active=True,
+                    is_suspended=False,
+                    enable_tax=True,
+                )
+                orm.add(tenant)
+                orm.flush()
+                tenant_id = tenant.id
+    yield SimpleNamespace(id=tenant_id)
+    with app.app_context():
+        with db.engine.begin() as conn:
+            conn.execute(sa_text("DELETE FROM error_audit_logs WHERE tenant_id = :t"), {"t": tenant_id})
+            conn.execute(sa_text("DELETE FROM tenants WHERE id = :t"), {"t": tenant_id})
+
+
+def _error_rows(app, token):
+    """Fetch error_audit_logs rows whose message carries the unique token."""
+    with app.app_context():
+        with db.engine.connect() as conn:
+            rows = (
+                conn.execute(
+                    sa_text(
+                        "SELECT category, level, source, tenant_id, user_id, request_id,"
+                        " url, stack_trace, request_data FROM error_audit_logs"
+                        " WHERE message LIKE :pat ORDER BY id"
+                    ),
+                    {"pat": f"%{token}%"},
+                )
+                .mappings()
+                .all()
+            )
+    result = []
+    for row in rows:
+        entry = dict(row)
+        data = entry.get("request_data")
+        if isinstance(data, str):
+            data = json.loads(data)
+        entry["request_data"] = data
+        result.append(entry)
+    return result
+
+
+class TestErrorLogBridgeDb:
+    """End-to-end: telemetry events persist into the DB-backed error log."""
+
+    def test_security_and_financial_rows_persisted_outside_request(self, app, committed_tenant, telemetry_db_bridge):
+        sec_token, fin_token = uuid4().hex[:10], uuid4().hex[:10]
+        with app.app_context():
+            log_security(
+                f"{sec_token} cross-tenant probe",
+                tenant_id=committed_tenant.id,
+                event="cross_tenant_attempt",
+                record_tenant_id=committed_tenant.id + 1,
+            )
+            log_financial(
+                f"{fin_token} unbalanced probe",
+                tenant_id=committed_tenant.id,
+                event="gl_unbalanced_entry",
+            )
+
+        sec_rows = _error_rows(app, sec_token)
+        assert len(sec_rows) == 1
+        sec = sec_rows[0]
+        assert sec["category"] == "SECURITY_ALERT"
+        assert sec["level"] == "ERROR"  # category default, not the JSONL WARNING
+        assert sec["source"] == "backend"
+        assert sec["tenant_id"] == committed_tenant.id
+        assert sec["request_data"]["event"] == "cross_tenant_attempt"
+        assert sec["request_data"]["telemetry_category"] == "SECURITY_ALERT"
+
+        fin_rows = _error_rows(app, fin_token)
+        assert len(fin_rows) == 1
+        fin = fin_rows[0]
+        assert fin["category"] == "CRITICAL_FINANCIAL"
+        assert fin["level"] == "CRITICAL"
+        assert fin["tenant_id"] == committed_tenant.id
+        assert fin["request_data"]["event"] == "gl_unbalanced_entry"
+
+    def test_frontend_ingest_persists_software_exception(self, app, client, telemetry_db_bridge):
+        token = uuid4().hex[:10]
+        payload = {
+            "events": [
+                {
+                    "category": "SOFTWARE_EXCEPTION",
+                    "message": f"{token} js crash",
+                    "level": "ERROR",
+                    "url": "http://localhost:5000/sales",
+                    "stack": f"TypeError: {token}\n    at render (app.js:10)",
+                }
+            ]
+        }
+        resp = client.post("/api/v1/telemetry/logs", json=payload, headers=_ORIGIN_HEADER)
+        assert resp.status_code == 202
+
+        rows = _error_rows(app, token)
+        assert len(rows) == 1
+        row = rows[0]
+        assert row["category"] == "SOFTWARE_EXCEPTION"
+        assert row["level"] == "ERROR"
+        assert row["source"] == "frontend"
+        assert token in (row["stack_trace"] or "")
+        assert row["url"].endswith("/sales")
+        # Anonymous ingest: tenant/user genuinely unknown → NULL columns.
+        assert row["tenant_id"] is None
+        assert row["user_id"] is None
+
+    def test_500_path_persists_exactly_one_row(self, app, auth_client, mocker, telemetry_db_bridge):
+        """handlers.py emits LoggingCore.log_error directly beside log_exception;
+        the telemetry call carries _bridge=False so the real event lands exactly
+        once in error_audit_logs (no double-persist)."""
+        persist = mocker.patch.object(LoggingCore, "_persist_error", return_value=1)
+        from models.user import User
+
+        real_has_permission = User.has_permission
+        armed = {"exploded": False}
+        token = uuid4().hex[:10]
+
+        def _explosive_has_permission(self, permission_code):
+            if permission_code == "view_reports" and not armed["exploded"]:
+                armed["exploded"] = True
+                raise RuntimeError(f"{token} bridge dedup probe")
+            return real_has_permission(self, permission_code)
+
+        mocker.patch.object(User, "has_permission", _explosive_has_permission)
+
+        resp = auth_client.get("/api/products/low-stock")
+        assert resp.status_code == 500
+
+        assert persist.call_count == 1
+        kwargs = persist.call_args.kwargs
+        assert kwargs["category"] == "BACKEND"
+        assert kwargs["source"] == "app.errorhandler.generic"
+        assert kwargs["exc_type"] == "RuntimeError"
+        assert token in kwargs["message"]
+
+    def test_bridge_row_survives_business_rollback(self, app, db_session, committed_tenant, telemetry_db_bridge):
+        """Design contract proof: a CRITICAL_FINANCIAL emitted mid-transaction
+        (the gl_service/stock_service pattern) persists even though the
+        surrounding business transaction rolls back — while the bridge itself
+        never commits business data."""
+        from models import Tenant
+
+        token = uuid4().hex[:10]
+        marker_slug = f"rollback-{token}"
+
+        with pytest.raises(RuntimeError, match="rollback probe"):
+            with atomic_transaction("telemetry_bridge_rollback_probe"):
+                marker = Tenant(
+                    name=f"Rollback Marker {token}",
+                    name_ar="علامة الرجوع",
+                    slug=marker_slug,
+                    email=f"rollback-{token}@example.com",
+                    phone_1="0500000000",
+                    country="AE",
+                    subscription_plan="basic",
+                    default_currency="AED",
+                    base_currency="AED",
+                )
+                db_session.add(marker)
+                db_session.flush()
+                log_financial(
+                    f"{token} mid-transaction anomaly",
+                    tenant_id=committed_tenant.id,
+                    event="rollback_probe",
+                )
+                raise RuntimeError("rollback probe")
+
+        # Business write rolled back with the transaction.
+        assert db_session.query(Tenant).filter_by(slug=marker_slug).count() == 0
+
+        # The error row — written via LoggingCore's own connection — survives.
+        rows = _error_rows(app, token)
+        assert len(rows) == 1
+        row = rows[0]
+        assert row["category"] == "CRITICAL_FINANCIAL"
+        assert row["level"] == "CRITICAL"
+        assert row["tenant_id"] == committed_tenant.id
+        assert row["request_data"]["event"] == "rollback_probe"

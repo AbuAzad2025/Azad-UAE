@@ -727,12 +727,29 @@ class LoggingCore:
         source: str = "unknown",
         exception: BaseException | None = None,
         extra: dict[str, Any] | None = None,
+        stack_trace: str | None = None,
+        url: str | None = None,
+        method: str | None = None,
+        user_agent: str | None = None,
+        ip_address: str | None = None,
+        tenant_id: int | None = None,
+        user_id: int | None = None,
+        request_id: str | None = None,
     ) -> int | None:
-        """Persist error to database + file log."""
+        """Persist error to database + file log.
+
+        The explicit context kwargs (``tenant_id``/``user_id``/``request_id``
+        and friends) win over whatever the request context would resolve —
+        callers outside a request, or reporting on behalf of another tenant,
+        pass them first-class. ``stack_trace`` fills the column when no live
+        exception object exists (e.g. a forwarded frontend JS stack).
+        """
         exc_type = type(exception).__name__ if exception else None
         trace = None
         if exception:
             trace = "".join(traceback.format_exception(type(exception), exception, exception.__traceback__))
+        if not trace and stack_trace:
+            trace = stack_trace[:_MAX_TRACE_LEN]
 
         row_id = cls._persist_error(
             message=message,
@@ -741,6 +758,13 @@ class LoggingCore:
             source=source,
             exc_type=exc_type,
             stack_trace=trace,
+            url=url,
+            method=method,
+            user_agent=user_agent,
+            ip_address=ip_address,
+            tenant_id=tenant_id,
+            user_id=user_id,
+            request_id=request_id,
             extra=extra,
         )
         try:
@@ -795,20 +819,25 @@ class LoggingCore:
         method: str | None = None,
         user_agent: str | None = None,
         ip_address: str | None = None,
+        tenant_id: int | None = None,
+        user_id: int | None = None,
+        request_id: str | None = None,
         stack_trace: str | None = None,
         extra: dict[str, Any] | None = None,
     ) -> int | None:
         from extensions import db
         from flask import request
 
-        # Request context
+        # Request context — explicit params WIN over context resolution so
+        # callers outside a request (or reporting for another tenant) keep
+        # their own first-class values in the row.
         ctx = _get_request_context()
         _url = url or ctx["url"]
         _method = method or ctx["method"]
         _ua = user_agent or ctx["ua"]
         _ip = ip_address or ctx["ip"]
-        _user_id = ctx["user_id"]
-        _tenant_id = ctx["tenant_id"]
+        _user_id = user_id if user_id is not None else ctx["user_id"]
+        _tenant_id = tenant_id if tenant_id is not None else ctx["tenant_id"]
 
         environment = "production"
         app_version = ""
@@ -819,7 +848,7 @@ class LoggingCore:
             logger.debug("Failed to read app config for error context", exc_info=True)
 
         # Request ID
-        request_id = _get_request_id()
+        request_id = request_id or _get_request_id()
 
         # Sanitize request data
         request_data = None

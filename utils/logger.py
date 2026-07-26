@@ -13,12 +13,17 @@ Design contract:
     running, only a ``NullHandler`` is attached. The module logger never
     propagates to the root logger, and starts with a NullHandler even before
     :func:`init_telemetry` runs.
+  * Unified error stream: every event is also bridged into the DB-backed
+    ErrorAuditLog via LoggingCore (owner page /owner/error-audit-logs) unless
+    the caller passes ``_bridge=False`` — see the bridge section below for
+    the safety contract. Under pytest the bridge is opt-in only.
   * Never mutates business logic, never swallows business exceptions, never
     changes control flow — it only emits.
 """
 
 from __future__ import annotations
 
+import contextlib
 import contextvars
 import json
 import logging
@@ -134,6 +139,110 @@ def _get_logger() -> logging.Logger:
 _get_logger().addHandler(logging.NullHandler())
 
 
+# ── Unified DB error-log bridge ──────────────────────────────────
+# Every telemetry event ALSO persists into the DB-backed ErrorAuditLog via
+# LoggingCore, so anomalies (frontend JS crashes, unbalanced GL, cross-tenant
+# attempts, hardware agent failures) surface on the owner page
+# /owner/error-audit-logs under their own categories, with fingerprint dedup.
+#
+# Safety contract (verified against services/logging_core.py):
+#   * LoggingCore._persist_error writes through its own raw
+#     ``db.engine.connect()`` + ``conn.commit()`` and NEVER touches
+#     ``db.session`` — so bridging mid-transaction is safe: the error row
+#     survives a business rollback, and the bridge can never flush or commit
+#     pending business data.
+#   * The bridge never raises into business flow (try/except) and never
+#     recurses (``_in_bridge`` guard).
+#   * Under pytest the bridge stays OFF unless a test opts in explicitly via
+#     :func:`enable_error_log_bridge` — mirroring the NullHandler testing
+#     guard, so suite runs never write error-log rows by accident.
+
+_in_bridge: contextvars.ContextVar = contextvars.ContextVar("telemetry_in_bridge", default=False)
+_bridge_opt_in: contextvars.ContextVar = contextvars.ContextVar("telemetry_bridge_opt_in", default=False)
+
+# Default DB level per anomaly category. An explicitly passed level (threaded
+# through ``_bridge_level`` by the helpers) always wins over this table.
+_BRIDGE_LEVEL_BY_CATEGORY = {
+    CATEGORY_CRITICAL_FINANCIAL: "CRITICAL",
+    CATEGORY_SECURITY_ALERT: "ERROR",
+    CATEGORY_HARDWARE_WARN: "WARNING",
+}
+
+
+@contextlib.contextmanager
+def enable_error_log_bridge():
+    """Opt the current context into the DB error-log bridge (test-only switch).
+
+    Production bridges by default; under pytest the bridge is silent unless
+    the emitting section is wrapped in this context manager.
+    """
+    token = _bridge_opt_in.set(True)
+    try:
+        yield
+    finally:
+        _bridge_opt_in.reset(token)
+
+
+def _bridge_allowed() -> bool:
+    if not os.environ.get("PYTEST_CURRENT_TEST"):
+        return True
+    return _bridge_opt_in.get()
+
+
+def _bridge_to_error_log(category, message, *, event_level, bridge_level, exception, explicit, extras):
+    """Forward one telemetry event into LoggingCore.log_error. Never raises.
+
+    Mapping: category passes through as-is (owner page shows the telemetry
+    categories distinctly); level falls back to the category table when the
+    emitter did not pass an explicit level; ``source``/``stack``/``url`` come
+    from extras (frontend events arrive with ``source="frontend"``); context
+    ids resolve explicit-first so emitters running outside requests — or for
+    another tenant — still win over whatever the request context would say.
+    """
+    if _in_bridge.get() or not _bridge_allowed():
+        return
+    token = _in_bridge.set(True)
+    try:
+        from services.logging_core import LoggingCore
+
+        payload = dict(extras)
+        source = str(payload.pop("source", None) or "backend")
+        stack = payload.pop("stack", None)
+        url = payload.pop("url", None)
+
+        def _resolve_id(field):
+            value = explicit.get(field)
+            return value if value is not None else _ctx[field].get()
+
+        LoggingCore.log_error(
+            message,
+            category=category,
+            level=bridge_level or _BRIDGE_LEVEL_BY_CATEGORY.get(category) or event_level,
+            source=source,
+            exception=exception,
+            stack_trace=stack,
+            url=url,
+            method=_resolve_id("method"),
+            ip_address=_resolve_id("ip"),
+            tenant_id=_resolve_id("tenant_id"),
+            user_id=_resolve_id("user_id"),
+            request_id=_resolve_id("request_id"),
+            extra={
+                "telemetry_category": category,
+                "tenant_id": _resolve_id("tenant_id"),
+                "user_id": _resolve_id("user_id"),
+                "request_id": _resolve_id("request_id"),
+                "endpoint": _resolve_id("endpoint"),
+                **payload,
+            },
+        )
+    except Exception:
+        # Observability must never break control flow — not even its own bridge.
+        pass
+    finally:
+        _in_bridge.reset(token)
+
+
 def init_telemetry(app) -> logging.Logger:
     """Attach the JSONL sink (+ stdout in development) to the telemetry logger.
 
@@ -170,13 +279,25 @@ def init_telemetry(app) -> logging.Logger:
 
 
 def log_event(
-    category: str, message: str, *, level: str | int = "INFO", tenant_id=None, user_id=None, **extras
+    category: str,
+    message: str,
+    *,
+    level: str | int = "INFO",
+    tenant_id=None,
+    user_id=None,
+    _bridge: bool = True,
+    _bridge_level: str | None = None,
+    **extras,
 ) -> None:
     """Emit one structured telemetry event. Never raises into business flow.
 
     ``tenant_id``/``user_id`` are explicit-first: pass them at the call site;
     unset values fall back to the bound context (directive invariant: every
     event carries tenant_id, ``None`` only when genuinely unknown).
+
+    ``_bridge=False`` skips the DB error-log forward — used where the caller
+    already persists the same event through LoggingCore itself (e.g. the 500
+    handlers) so exactly one error_audit_logs row exists per real event.
     """
     if isinstance(level, str):
         level_no = _levels.get(level.upper(), logging.INFO)
@@ -192,10 +313,27 @@ def log_event(
     except Exception:
         # Observability must never break control flow.
         pass
+    if _bridge:
+        event_level = level if isinstance(level, str) else logging.getLevelName(level_no)
+        _bridge_to_error_log(
+            category,
+            message,
+            event_level=event_level,
+            bridge_level=_bridge_level,
+            exception=None,
+            explicit=explicit,
+            extras=extras,
+        )
 
 
 def log_exception(
-    message: str, exception: BaseException | None = None, *, level: str = "ERROR", tenant_id=None, **extras
+    message: str,
+    exception: BaseException | None = None,
+    *,
+    level: str = "ERROR",
+    tenant_id=None,
+    _bridge: bool = True,
+    **extras,
 ) -> None:
     """Emit a SOFTWARE_EXCEPTION event with stack info."""
     if isinstance(level, str):
@@ -209,18 +347,49 @@ def log_exception(
         _get_logger().log(level_no, message, exc_info=exc_info, extra={"telemetry_event": payload})
     except Exception:
         pass
+    if _bridge:
+        _bridge_to_error_log(
+            CATEGORY_SOFTWARE_EXCEPTION,
+            message,
+            event_level=level,
+            bridge_level=level,
+            exception=exception,
+            explicit=explicit,
+            extras=extras,
+        )
 
 
-def log_financial(message: str, *, level: str = "CRITICAL", tenant_id=None, **extras) -> None:
+def log_financial(message: str, *, level: str | None = None, tenant_id=None, **extras) -> None:
     """Emit a CRITICAL_FINANCIAL anomaly (unbalanced GL, negative stock...)."""
-    log_event(CATEGORY_CRITICAL_FINANCIAL, message, level=level, tenant_id=tenant_id, **extras)
+    log_event(
+        CATEGORY_CRITICAL_FINANCIAL,
+        message,
+        level=level or "CRITICAL",
+        tenant_id=tenant_id,
+        _bridge_level=level,
+        **extras,
+    )
 
 
-def log_security(message: str, *, level: str = "WARNING", tenant_id=None, **extras) -> None:
+def log_security(message: str, *, level: str | None = None, tenant_id=None, **extras) -> None:
     """Emit a SECURITY_ALERT anomaly (override denial, cross-tenant attempt...)."""
-    log_event(CATEGORY_SECURITY_ALERT, message, level=level, tenant_id=tenant_id, **extras)
+    log_event(
+        CATEGORY_SECURITY_ALERT,
+        message,
+        level=level or "WARNING",
+        tenant_id=tenant_id,
+        _bridge_level=level,
+        **extras,
+    )
 
 
-def log_hardware(message: str, *, level: str = "WARNING", tenant_id=None, **extras) -> None:
+def log_hardware(message: str, *, level: str | None = None, tenant_id=None, **extras) -> None:
     """Emit a HARDWARE_WARN anomaly (printer/drawer/scale agent failures)."""
-    log_event(CATEGORY_HARDWARE_WARN, message, level=level, tenant_id=tenant_id, **extras)
+    log_event(
+        CATEGORY_HARDWARE_WARN,
+        message,
+        level=level or "WARNING",
+        tenant_id=tenant_id,
+        _bridge_level=level,
+        **extras,
+    )
