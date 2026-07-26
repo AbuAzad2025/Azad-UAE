@@ -453,8 +453,8 @@ jobs:
           # Schemathesis v4: base-url + request-timeout live in scripts/schemathesis.toml (CLI flags removed).
           # ignored_auth: no session-auth context is configured for the fuzzer (covered by tenant-isolation
           # tests); negative_data_rejection: intentionally tolerant read endpoints 200 on junk input.
-          schemathesis run http://localhost:5000/api-docs/openapi.json \
-            --config-file scripts/schemathesis.toml \
+          # --config-file is a top-level CLI option and must precede the `run` subcommand.
+          schemathesis --config-file scripts/schemathesis.toml run http://localhost:5000/api-docs/openapi.json \
             --max-failures 1 \
             --exclude-checks ignored_auth,negative_data_rejection
 
