@@ -450,10 +450,11 @@ jobs:
             sleep 1
           done
           # Fuzz public + documented API endpoints — spec served at /api-docs/openapi.json
-          # Schemathesis v4: base-url + request-timeout live in schemathesis.toml (CLI flags removed).
+          # Schemathesis v4: base-url + request-timeout live in scripts/schemathesis.toml (CLI flags removed).
           # ignored_auth: no session-auth context is configured for the fuzzer (covered by tenant-isolation
           # tests); negative_data_rejection: intentionally tolerant read endpoints 200 on junk input.
           schemathesis run http://localhost:5000/api-docs/openapi.json \
+            --config-file scripts/schemathesis.toml \
             --max-failures 1 \
             --exclude-checks ignored_auth,negative_data_rejection
 
