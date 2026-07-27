@@ -639,3 +639,79 @@ class TestVaultExports:
         )
         resp = vault_owner_client.get("/payment-vault/export/report-pdf")
         assert resp.status_code == 200
+
+
+class TestPackageFormParsing:
+    """Unit tests for _package_limits_flags_from_form — 9 limits + 8 flags."""
+
+    def _form(self, data):
+        from werkzeug.datastructures import ImmutableMultiDict
+
+        return ImmutableMultiDict(data)
+
+    def test_parses_all_limits_and_flags(self):
+        from models.package import TENANT_FLAG_COLUMNS, TENANT_LIMIT_COLUMNS
+        from routes.payment_vault import _package_limits_flags_from_form
+
+        form = self._form(
+            {
+                "max_users": "5",
+                "max_sales_per_month": "-1",
+                "max_storage_mb": "2048",
+                "enable_payroll": "on",
+                "enable_ai": "on",
+            }
+        )
+        data = _package_limits_flags_from_form(form)
+        assert set(data) == set(TENANT_LIMIT_COLUMNS) | set(TENANT_FLAG_COLUMNS)
+        assert data["max_users"] == 5
+        assert data["max_sales_per_month"] == -1  # unlimited sentinel preserved
+        assert data["max_storage_mb"] == 2048
+        assert data["enable_payroll"] is True
+        assert data["enable_ai"] is True
+        assert data["enable_store"] is False  # unchecked checkbox absent
+        assert data["max_products"] is None  # blank on create → unlimited
+
+    def test_edit_blank_keeps_current_value(self):
+        from routes.payment_vault import _package_limits_flags_from_form
+
+        current = MagicMock(max_users=7, max_branches=3, max_products=500)
+        data = _package_limits_flags_from_form(self._form({}), current=current)
+        assert data["max_users"] == 7
+        assert data["max_branches"] == 3
+        assert data["max_products"] == 500
+
+    def test_invalid_int_falls_back(self):
+        from routes.payment_vault import _package_limits_flags_from_form
+
+        current = MagicMock(max_users=9)
+        data = _package_limits_flags_from_form(self._form({"max_users": "abc"}), current=current)
+        assert data["max_users"] == 9
+
+    def test_create_route_applies_new_fields(self, vault_owner_client, mock_unlocked_vault, mocker, mock_db):
+        captured = {}
+
+        class _Pkg:
+            def __init__(self, **kwargs):
+                captured.update(kwargs)
+
+        mocker.patch("routes.payment_vault.Package", _Pkg)
+        mocker.patch("routes.payment_vault.Package.query", create=True).filter_by.return_value.first.return_value = None
+        mocker.patch("routes.payment_vault.LoggingCore.log_audit")
+        resp = vault_owner_client.post(
+            "/payment-vault/package/create",
+            data={
+                "name_ar": "باقة",
+                "name_en": "Pack",
+                "price": "99",
+                "max_products": "750",
+                "max_sales_per_month": "-1",
+                "enable_payroll": "on",
+            },
+            follow_redirects=False,
+        )
+        assert resp.status_code == 302
+        assert captured["max_products"] == 750
+        assert captured["max_sales_per_month"] == -1
+        assert captured["enable_payroll"] is True
+        assert captured["enable_ai"] is False

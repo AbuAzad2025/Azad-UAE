@@ -62,38 +62,91 @@
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label for="input_max_users">{{ t('Count') }} {{ t('Users') }}</label>
-                                <input type="number" name="max_users" class="form-control" 
-                                       value="{{ package.max_users or 1 }}" id="input_max_users" aria-label="max users">
+                                <label for="input_support_duration_months">{{ t('Duration') }} {{ t('الدعم') }} ({{ t('شهور') }})</label>
+                                <input type="number" name="support_duration_months" class="form-control"
+                                       value="{{ package.support_duration_months }}" id="input_support_duration_months" aria-label="support duration months">
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label for="input_max_branches">{{ t('Count') }} {{ t('Branches') }}</label>
-                                <input type="number" name="max_branches" class="form-control" 
-                                       value="{{ package.max_branches or 1 }}" id="input_max_branches" aria-label="max branches">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="input_support_duration_months">{{ t('Duration') }} {{ t('الدعم') }} ({{ t('شهور') }})</label>
-                                <input type="number" name="support_duration_months" class="form-control" 
-                                       value="{{ package.support_duration_months }}" id="input_support_duration_months" aria-label="support duration months">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
                                 <label for="input_badge_text">نص {{ t('الشارة') }} (Badge)</label>
-                                <input type="text" name="badge_text" class="form-control" 
-                                       value="{{ package.badge_text or '' }}" 
+                                <input type="text" name="badge_text" class="form-control"
+                                       value="{{ package.badge_text or '' }}"
                                        placeholder="{{ t('مثال') }}: {{ t('الأكثر') }} {{ t('شعبية') }}" id="input_badge_text">
                             </div>
                         </div>
                     </div>
-                    
+
+                    <hr>
+                    <h6 class="text-primary"><i class="fas fa-sliders-h"></i> {{ t('الحدود الأساسية') }}</h6>
+                    <p class="text-muted small mb-2"><i class="fas fa-info-circle"></i> {{ t('أدخل') }} <code>-1</code> = {{ t('غير محدود') }} ∞</p>
+                    <div class="row">
+                        {% for col, label in [
+                            ('max_users', t('Count') ~ ' ' ~ t('Users')),
+                            ('max_branches', t('Count') ~ ' ' ~ t('Branches')),
+                            ('max_warehouses', t('المستودعات')),
+                            ('max_products', t('المنتجات')),
+                            ('max_customers', t('العملاء')),
+                            ('max_suppliers', t('الموردون')),
+                            ('max_storage_mb', t('التخزين') ~ ' (MB)')
+                        ] %}
+                        <div class="col-md-3 col-sm-6">
+                            <div class="form-group">
+                                <label for="edit_{{ col }}">{{ label }}</label>
+                                <input type="number" name="{{ col }}" class="form-control" min="-1"
+                                       value="{{ package[col] if package[col] is not none else '' }}"
+                                       placeholder="-1" title="-1 = {{ t('غير محدود') }}"
+                                       id="edit_{{ col }}" aria-label="{{ col }}">
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <hr>
+                    <h6 class="text-primary"><i class="fas fa-calendar-alt"></i> {{ t('الحصص الشهرية') }}</h6>
+                    <p class="text-muted small mb-2"><i class="fas fa-info-circle"></i> {{ t('أدخل') }} <code>-1</code> = {{ t('غير محدود') }} ∞</p>
+                    <div class="row">
+                        {% for col, label in [
+                            ('max_invoices_per_month', t('الفواتير') ~ ' / ' ~ t('شهر')),
+                            ('max_sales_per_month', t('المبيعات') ~ ' / ' ~ t('شهر'))
+                        ] %}
+                        <div class="col-md-3 col-sm-6">
+                            <div class="form-group">
+                                <label for="edit_{{ col }}">{{ label }}</label>
+                                <input type="number" name="{{ col }}" class="form-control" min="-1"
+                                       value="{{ package[col] if package[col] is not none else '' }}"
+                                       placeholder="-1" title="-1 = {{ t('غير محدود') }}"
+                                       id="edit_{{ col }}" aria-label="{{ col }}">
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <hr>
+                    <h6 class="text-primary"><i class="fas fa-key"></i> {{ t('صلاحيات الميزات') }}</h6>
+                    <div class="row">
+                        {% for col, label, icon in [
+                            ('enable_payroll', t('الرواتب'), 'fa-money-check-alt'),
+                            ('enable_expenses', t('المصروفات'), 'fa-receipt'),
+                            ('enable_cheques', t('الشيكات'), 'fa-money-check'),
+                            ('enable_reports', t('التقارير'), 'fa-chart-line'),
+                            ('enable_ai', t('الذكاء الاصطناعي'), 'fa-robot'),
+                            ('enable_store', t('المتجر الإلكتروني'), 'fa-store'),
+                            ('enable_gl', t('دفتر الأستاذ'), 'fa-book'),
+                            ('enable_api', 'API', 'fa-plug')
+                        ] %}
+                        <div class="col-md-3 col-sm-6 mb-2">
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="edit_{{ col }}"
+                                       name="{{ col }}" {% if package[col] %}checked{% endif %} aria-label="{{ col }}">
+                                <label class="custom-control-label" for="edit_{{ col }}">
+                                    <i class="fas {{ icon }} text-secondary"></i> {{ label }}
+                                </label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
                     <div class="form-group">
                         <label>{{ t('الميزات') }} (كل {{ t('ميزة') }} في {{ t('سطر') }})</label>
                         <textarea name="features" class="form-control" rows="8" aria-label="features">{% if package.features %}{{ package.features|join('\n') }}{% endif %}</textarea>

@@ -18,6 +18,7 @@ from models import (
     Package,
     PackagePurchase,
 )
+from models.package import TENANT_FLAG_COLUMNS, TENANT_LIMIT_COLUMNS
 from services.nowpayments_service import NOWPaymentsService
 from services.logging_core import LoggingCore
 from utils.decorators import owner_only
@@ -566,6 +567,33 @@ def packages_management():
     return render_template("payment_vault/packages.html", packages=packages, package_stats=package_stats)
 
 
+def _package_form_int(value, default=None):
+    """Parse an integer package form field; blank/invalid → default. ``-1`` = unlimited."""
+    try:
+        s = str(value).strip()
+        if not s:
+            return default
+        return int(s)
+    except (TypeError, ValueError):
+        return default
+
+
+def _package_limits_flags_from_form(form, current=None):
+    """Extract the 9 quantitative limits + 8 feature flags from a package form.
+
+    On edit, ``current`` (the existing Package) supplies per-field fallbacks so
+    a blank input keeps the stored value; on create, blanks fall back to None
+    (unlimited where the column is nullable).
+    """
+    data = {}
+    for col in TENANT_LIMIT_COLUMNS:
+        fallback = getattr(current, col, None) if current is not None else None
+        data[col] = _package_form_int(form.get(col), fallback)
+    for col in TENANT_FLAG_COLUMNS:
+        data[col] = form.get(col) == "on"
+    return data
+
+
 @payment_vault_bp.route("/package/create", methods=["POST"])
 @owner_only
 def create_package():
@@ -607,6 +635,12 @@ def create_package():
             return redirect(url_for("payment_vault.packages_management"))
 
         features_text = (request.form.get("features") or "").strip()
+        limits_flags = _package_limits_flags_from_form(request.form)
+        # Preserve the historical create-form defaults (1/1) when left blank.
+        if limits_flags["max_users"] is None:
+            limits_flags["max_users"] = 1
+        if limits_flags["max_branches"] is None:
+            limits_flags["max_branches"] = 1
         package = Package(
             name_ar=name_ar,
             name_en=name_en,
@@ -621,8 +655,7 @@ def create_package():
             badge_text=(request.form.get("badge_text") or "").strip() or None,
             sort_order=_as_int(request.form.get("sort_order"), 0),
             support_duration_months=_as_int(request.form.get("support_duration_months"), 3),
-            max_users=_as_int(request.form.get("max_users"), 1),
-            max_branches=_as_int(request.form.get("max_branches"), 1),
+            **limits_flags,
         )
 
         with atomic_transaction("package_creation"):
@@ -683,8 +716,8 @@ def edit_package(package_id):
             package.description_ar = request.form.get("description_ar", package.description_ar or "").strip()
             package.description_en = request.form.get("description_en", package.description_en or "").strip()
             package.price = Decimal(str(_as_float(request.form.get("price"), package.price)))
-            package.max_users = _as_int(request.form.get("max_users"), package.max_users or 1)
-            package.max_branches = _as_int(request.form.get("max_branches"), package.max_branches or 1)
+            for col, value in _package_limits_flags_from_form(request.form, current=package).items():
+                setattr(package, col, value)
             package.support_duration_months = _as_int(
                 request.form.get("support_duration_months"),
                 package.support_duration_months,

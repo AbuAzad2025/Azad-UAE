@@ -153,18 +153,6 @@
             <div class="row">
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label for="input_max_users">{{ t('Count') }} {{ t('Users') }}</label>
-                        <input type="number" class="form-control" name="max_users" value="1" min="1" id="input_max_users" aria-label="max users">
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label for="input_max_branches">{{ t('Count') }} {{ t('Branches') }}</label>
-                        <input type="number" class="form-control" name="max_branches" value="1" min="1" id="input_max_branches" aria-label="max branches">
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="form-group">
                         <label for="input_support_duration_months">{{ t('Duration') }} {{ t('الدعم') }} {{ t('بالشهور') }}</label>
                         <input type="number" class="form-control" name="support_duration_months" value="3" min="0" id="input_support_duration_months" aria-label="support duration months">
                     </div>
@@ -183,6 +171,71 @@
                         <label class="form-check-label" for="is_featured_new">{{ t('مميزة') }}</label>
                     </div>
                 </div>
+            </div>
+
+            <h6 class="text-primary mt-2"><i class="fas fa-sliders-h"></i> {{ t('الحدود الأساسية') }}</h6>
+            <p class="text-muted small mb-2"><i class="fas fa-info-circle"></i> {{ t('أدخل') }} <code>-1</code> = {{ t('غير محدود') }} ∞</p>
+            <div class="row">
+                {% for col, label, default in [
+                    ('max_users', t('Count') ~ ' ' ~ t('Users'), '1'),
+                    ('max_branches', t('Count') ~ ' ' ~ t('Branches'), '1'),
+                    ('max_warehouses', t('المستودعات'), ''),
+                    ('max_products', t('المنتجات'), ''),
+                    ('max_customers', t('العملاء'), ''),
+                    ('max_suppliers', t('الموردون'), ''),
+                    ('max_storage_mb', t('التخزين') ~ ' (MB)', '')
+                ] %}
+                <div class="col-md-3 col-sm-6">
+                    <div class="form-group">
+                        <label for="new_{{ col }}">{{ label }}</label>
+                        <input type="number" class="form-control" name="{{ col }}" min="-1"
+                               value="{{ default }}" placeholder="-1" title="-1 = {{ t('غير محدود') }}"
+                               id="new_{{ col }}" aria-label="{{ col }}">
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <h6 class="text-primary mt-2"><i class="fas fa-calendar-alt"></i> {{ t('الحصص الشهرية') }}</h6>
+            <p class="text-muted small mb-2"><i class="fas fa-info-circle"></i> {{ t('أدخل') }} <code>-1</code> = {{ t('غير محدود') }} ∞</p>
+            <div class="row">
+                {% for col, label in [
+                    ('max_invoices_per_month', t('الفواتير') ~ ' / ' ~ t('شهر')),
+                    ('max_sales_per_month', t('المبيعات') ~ ' / ' ~ t('شهر'))
+                ] %}
+                <div class="col-md-3 col-sm-6">
+                    <div class="form-group">
+                        <label for="new_{{ col }}">{{ label }}</label>
+                        <input type="number" class="form-control" name="{{ col }}" min="-1"
+                               value="" placeholder="-1" title="-1 = {{ t('غير محدود') }}"
+                               id="new_{{ col }}" aria-label="{{ col }}">
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <h6 class="text-primary mt-2"><i class="fas fa-key"></i> {{ t('صلاحيات الميزات') }}</h6>
+            <div class="row mb-2">
+                {% for col, label, icon, default_on in [
+                    ('enable_payroll', t('الرواتب'), 'fa-money-check-alt', false),
+                    ('enable_expenses', t('المصروفات'), 'fa-receipt', true),
+                    ('enable_cheques', t('الشيكات'), 'fa-money-check', true),
+                    ('enable_reports', t('التقارير'), 'fa-chart-line', true),
+                    ('enable_ai', t('الذكاء الاصطناعي'), 'fa-robot', false),
+                    ('enable_store', t('المتجر الإلكتروني'), 'fa-store', false),
+                    ('enable_gl', t('دفتر الأستاذ'), 'fa-book', true),
+                    ('enable_api', 'API', 'fa-plug', false)
+                ] %}
+                <div class="col-md-3 col-sm-6 mb-2">
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" id="new_{{ col }}"
+                               name="{{ col }}" {% if default_on %}checked{% endif %} aria-label="{{ col }}">
+                        <label class="custom-control-label" for="new_{{ col }}">
+                            <i class="fas {{ icon }} text-secondary"></i> {{ label }}
+                        </label>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
             <div class="form-group">
                 <label for="input_features">{{ t('الميزات') }}</label>
@@ -219,9 +272,21 @@
                     </ul>
                     
                     <div class="ic-2">
-                        <div><i class="fas fa-users"></i> {{ t('Users') }}: {{ package.max_users or '∞' }}</div>
-                        <div><i class="fas fa-building"></i> {{ t('Branches') }}: {{ package.max_branches or '∞' }}</div>
+                        <div><i class="fas fa-users"></i> {{ t('Users') }}: {{ package.max_users if package.max_users is not none and package.max_users > 0 else '∞' }}</div>
+                        <div><i class="fas fa-building"></i> {{ t('Branches') }}: {{ package.max_branches if package.max_branches is not none and package.max_branches > 0 else '∞' }}</div>
+                        <div><i class="fas fa-box"></i> {{ t('المنتجات') }}: {{ package.max_products if package.max_products is not none and package.max_products > 0 else '∞' }}</div>
+                        <div><i class="fas fa-calendar-alt"></i> {{ t('المبيعات') }}/{{ t('شهر') }}: {{ package.max_sales_per_month if package.max_sales_per_month is not none and package.max_sales_per_month > 0 else '∞' }}</div>
                         <div><i class="fas fa-headset"></i> {{ t('الدعم') }}: {{ package.support_duration_months }} {{ t('شهر') }}</div>
+                        <div class="mt-1">
+                            {% for flag, label in [
+                                ('enable_payroll', t('الرواتب')),
+                                ('enable_ai', t('الذكاء الاصطناعي')),
+                                ('enable_store', t('المتجر الإلكتروني')),
+                                ('enable_api', 'API')
+                            ] %}
+                                {% if package[flag] %}<span class="badge badge-success">{{ label }}</span>{% endif %}
+                            {% endfor %}
+                        </div>
                     </div>
                     
                     <div class="package-actions">
