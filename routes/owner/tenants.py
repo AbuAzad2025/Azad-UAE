@@ -343,6 +343,22 @@ def tenant_edit(tenant_id):
 
     if request.method == "POST":
         try:
+
+            def _form_int(name, current):
+                try:
+                    raw = str(request.form.get(name, "")).strip()
+                    return int(raw) if raw else current
+                except (TypeError, ValueError):
+                    return current
+
+            def _tristate(name, current):
+                raw = request.form.get(name, "")
+                if raw == "1":
+                    return True
+                if raw == "0":
+                    return False
+                return current
+
             with atomic_transaction("tenant_edit"):
                 tenant.name = request.form.get("name_ar", tenant.name).strip()
                 tenant.name_ar = request.form.get("name_ar", tenant.name_ar).strip()
@@ -357,29 +373,37 @@ def tenant_edit(tenant_id):
                     request.form.get("default_currency", tenant.default_currency).strip()
                     or get_system_default_currency()
                 )
-                tenant.max_users = int(request.form.get("max_users", tenant.max_users or 5))
-                tenant.max_products = int(request.form.get("max_products", tenant.max_products or 1000))
-                tenant.max_customers = int(request.form.get("max_customers", tenant.max_customers or 500))
-                tenant.max_suppliers = int(request.form.get("max_suppliers", tenant.max_suppliers or 200))
-                tenant.max_branches = int(request.form.get("max_branches", tenant.max_branches or 3))
-                tenant.max_warehouses = int(request.form.get("max_warehouses", tenant.max_warehouses or 2))
-                tenant.max_invoices_per_month = int(
-                    request.form.get("max_invoices_per_month", tenant.max_invoices_per_month or 1000)
+                tenant.max_users = _form_int("max_users", tenant.max_users or 5)
+                tenant.max_products = _form_int("max_products", tenant.max_products or 1000)
+                tenant.max_customers = _form_int("max_customers", tenant.max_customers or 500)
+                tenant.max_suppliers = _form_int("max_suppliers", tenant.max_suppliers or 200)
+                tenant.max_branches = _form_int("max_branches", tenant.max_branches or 3)
+                tenant.max_warehouses = _form_int("max_warehouses", tenant.max_warehouses or 2)
+                tenant.max_storage_mb = _form_int("max_storage_mb", tenant.max_storage_mb or 1024)
+                tenant.max_invoices_per_month = _form_int(
+                    "max_invoices_per_month", tenant.max_invoices_per_month or 1000
                 )
-                tenant.max_sales_per_month = int(
-                    request.form.get("max_sales_per_month", tenant.max_sales_per_month or 5000)
-                )
-                tenant.data_retention_days = int(
-                    request.form.get("data_retention_days", tenant.data_retention_days or 365)
-                )
+                tenant.max_sales_per_month = _form_int("max_sales_per_month", tenant.max_sales_per_month or 5000)
+                tenant.data_retention_days = _form_int("data_retention_days", tenant.data_retention_days or 365)
                 tenant.enable_pos = request.form.get("enable_pos") == "on"
                 tenant.enable_payroll = request.form.get("enable_payroll") == "on"
                 tenant.enable_cheques = request.form.get("enable_cheques") == "on"
                 tenant.enable_expenses = request.form.get("enable_expenses") == "on"
+                tenant.enable_reports = request.form.get("enable_reports") == "on"
+                tenant.enable_ai = request.form.get("enable_ai") == "on"
                 tenant.enable_store = request.form.get("enable_store") == "on"
+                tenant.enable_gl = request.form.get("enable_gl") == "on"
+                tenant.enable_api = request.form.get("enable_api") == "on"
+                tenant.enable_multi_warehouse = request.form.get("enable_multi_warehouse") == "on"
+                tenant.enable_multi_currency = request.form.get("enable_multi_currency") == "on"
+                tenant.enable_auto_backup = request.form.get("enable_auto_backup") == "on"
                 tenant.allow_data_export = request.form.get("allow_data_export") == "on"
                 tenant.allow_custom_integrations = request.form.get("allow_custom_integrations") == "on"
                 tenant.prices_include_vat = request.form.get("prices_include_vat") == "on"
+                tenant.enable_pos_promotions = _tristate("enable_pos_promotions", tenant.enable_pos_promotions)
+                tenant.enable_pos_multi_tender = _tristate("enable_pos_multi_tender", tenant.enable_pos_multi_tender)
+                tenant.enable_pos_returns = _tristate("enable_pos_returns", tenant.enable_pos_returns)
+                tenant.enable_pos_shifts = _tristate("enable_pos_shifts", tenant.enable_pos_shifts)
                 tenant.updated_at = datetime.now(timezone.utc)
             _invalidate_owner_changes()
             _audit_owner_db_action("tenant_edit", {"tenant_id": tenant_id})
