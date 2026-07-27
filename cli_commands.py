@@ -673,7 +673,7 @@ def _do_seed_demo(_app):
     seller = User.query.filter_by(tenant_id=tid, username="demo_admin").first()
     from services.sale_service import SaleService
 
-    products_for_sale = Product.query.filter_by(tenant_id=tid).limit(6).all()
+    products_for_sale = Product.query.filter_by(tenant_id=tid).order_by(Product.id).limit(6).all()
     # (customer, product, total, payment_method, paid_amount)
     sale_specs = [
         (customers[0], products_for_sale[0], 1500, "cash", 1500),
