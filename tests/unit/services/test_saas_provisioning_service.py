@@ -30,10 +30,16 @@ def sample_package(db_session):
         is_active=True,
         max_users=7,
         max_branches=4,
+        max_products=321,
+        max_sales_per_month=654,
         has_ai=True,
         has_pos=True,
         has_customization=True,
         has_advanced_reports=True,
+        has_whatsapp=True,
+        enable_ai=True,
+        enable_store=True,
+        enable_payroll=True,
     )
     db_session.add(package)
     db_session.commit()
@@ -108,9 +114,12 @@ class TestActivatePurchasedPackageFeatures:
         tenant = db_session.get(type(sample_tenant), sample_tenant.id)
         assert tenant.max_users == 7
         assert tenant.max_branches == 4
+        assert tenant.max_products == 321
+        assert tenant.max_sales_per_month == 654
         assert tenant.enable_ai is True
         assert tenant.enable_pos is True
         assert tenant.enable_store is True
+        assert tenant.enable_payroll is True
         assert tenant.allow_custom_integrations is True
         assert tenant.enable_reports is True
 
@@ -134,6 +143,47 @@ class TestActivatePurchasedPackageFeatures:
         assert result["package_slug"] == sample_package.slug
         assert result["subscription_start"] is not None
         assert result["subscription_end"] is not None
+        snapshot = result["package_snapshot"]
+        assert snapshot["has_whatsapp"] is True
+        assert snapshot["has_training"] is False
+        assert snapshot["has_priority_support"] is False
+
+
+class TestApplyPlanWithTemplate:
+    def test_plan_change_applies_package_template(self, db_session, sample_tenant, sample_package):
+        applied = SaaSProvisioningService.apply_plan_with_template(sample_tenant, sample_package.slug, "annual", False)
+        assert applied is True
+        tenant = db_session.get(type(sample_tenant), sample_tenant.id)
+        assert tenant.subscription_plan == sample_package.slug
+        assert tenant.subscription_plan_duration == "annual"
+        assert tenant.max_users == 7
+        assert tenant.max_sales_per_month == 654
+        assert tenant.enable_payroll is True
+
+    def test_same_plan_reselect_preserves_manual_overrides(self, db_session, sample_tenant, sample_package):
+        sample_tenant.subscription_plan = sample_package.slug
+        sample_tenant.max_users = 99
+        db_session.commit()
+        applied = SaaSProvisioningService.apply_plan_with_template(sample_tenant, sample_package.slug, "monthly", None)
+        assert applied is False
+        tenant = db_session.get(type(sample_tenant), sample_tenant.id)
+        assert tenant.max_users == 99
+        assert tenant.subscription_plan_duration == "monthly"
+
+    def test_unknown_plan_slug_updates_labels_only(self, db_session, sample_tenant):
+        applied = SaaSProvisioningService.apply_plan_with_template(sample_tenant, "no-such-plan", None, None)
+        assert applied is False
+        tenant = db_session.get(type(sample_tenant), sample_tenant.id)
+        assert tenant.subscription_plan == "no-such-plan"
+
+    def test_none_plan_leaves_everything(self, db_session, sample_tenant):
+        before = sample_tenant.subscription_plan
+        applied = SaaSProvisioningService.apply_plan_with_template(sample_tenant, None, "annual", True)
+        assert applied is False
+        tenant = db_session.get(type(sample_tenant), sample_tenant.id)
+        assert tenant.subscription_plan == before
+        assert tenant.subscription_plan_duration == "annual"
+        assert tenant.is_trial is True
 
 
 class TestDemoTenant:

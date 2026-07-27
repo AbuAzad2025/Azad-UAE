@@ -698,6 +698,10 @@ def _owner_route_patches(mock_db=None, **overrides):
             ),
         ),
         (
+            "routes.owner.tenants.SaaSProvisioningService",
+            patch("routes.owner.tenants.SaaSProvisioningService"),
+        ),
+        (
             "services.store_payment_method_service.StorePaymentMethodService.ensure_defaults",
             patch("services.store_payment_method_service.StorePaymentMethodService.ensure_defaults"),
         ),

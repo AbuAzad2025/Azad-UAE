@@ -10,11 +10,36 @@ def _utc_now():
     return datetime.now(timezone.utc)
 
 
+# Limit columns copied from a package onto the tenant on activation / plan sync.
+TENANT_LIMIT_COLUMNS = (
+    "max_users",
+    "max_branches",
+    "max_products",
+    "max_customers",
+    "max_suppliers",
+    "max_warehouses",
+    "max_storage_mb",
+    "max_invoices_per_month",
+    "max_sales_per_month",
+)
+
+# Feature-flag columns shared by Package and Tenant (same name on both).
+TENANT_FLAG_COLUMNS = (
+    "enable_payroll",
+    "enable_expenses",
+    "enable_cheques",
+    "enable_reports",
+    "enable_ai",
+    "enable_store",
+    "enable_gl",
+    "enable_api",
+)
+
+
 class Package(db.Model):
     """Package model for system subscription packages"""
 
     __tablename__ = "packages"
-
     id = db.Column(db.Integer, primary_key=True)
     name_ar = db.Column(db.String(100), nullable=False)  # اسم الباقة بالعربية
     name_en = db.Column(db.String(100), nullable=False)  # اسم الباقة بالإنجليزية
@@ -76,6 +101,27 @@ class Package(db.Model):
 
     def __repr__(self):
         return f"<Package {self.name_ar}>"
+
+    def apply_to_tenant(self, tenant):
+        """Copy this package's limits + feature flags onto a tenant.
+
+        Pure ORM — the caller wraps in an atomic transaction. ``None`` package
+        limits/flags keep the tenant's current value (manual overrides survive
+        when the package leaves a dimension unconfigured).
+        """
+        for col in TENANT_LIMIT_COLUMNS:
+            value = getattr(self, col, None)
+            if value is not None:
+                setattr(tenant, col, value)
+        for col in TENANT_FLAG_COLUMNS:
+            value = getattr(self, col, None)
+            if value is not None:
+                setattr(tenant, col, bool(value))
+        tenant.enable_pos = bool(self.has_pos)
+        tenant.allow_custom_integrations = bool(self.has_customization)
+        if self.has_advanced_reports:
+            tenant.enable_reports = True
+        return tenant
 
     def to_dict(self):
         """Convert package to dictionary"""

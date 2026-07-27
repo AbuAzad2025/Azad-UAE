@@ -18,6 +18,7 @@ from routes.owner import (
     set_tenant_ai_level,
 )
 from services.logging_core import LoggingCore
+from services.saas_provisioning_service import SaaSProvisioningService
 import logging
 from datetime import datetime, timezone
 from routes.owner import owner_bp
@@ -494,7 +495,7 @@ def tenant_extend_subscription(tenant_id):
             elif days != 0:
                 tenant.extend_subscription(days)
             if plan or duration or is_trial is not None:
-                tenant.apply_subscription_plan(plan, duration, is_trial)
+                SaaSProvisioningService.apply_plan_with_template(tenant, plan, duration, is_trial)
         _invalidate_owner_changes()
         _audit_owner_db_action(
             "tenant_extend_subscription",
@@ -545,7 +546,7 @@ def api_tenant_extend_subscription(tenant_id):
             elif days != 0:
                 tenant.extend_subscription(days)
             if plan or duration or is_trial is not None:
-                tenant.apply_subscription_plan(plan, duration, is_trial)
+                SaaSProvisioningService.apply_plan_with_template(tenant, plan, duration, is_trial)
         _invalidate_owner_changes()
         _audit_owner_db_action(
             "api_tenant_extend_subscription",

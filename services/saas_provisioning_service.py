@@ -197,20 +197,7 @@ class SaaSProvisioningService:
         tenant.subscription_end = subscription_end
         tenant.is_trial = is_trial
 
-        if package.max_users is not None:
-            tenant.max_users = package.max_users
-        if package.max_branches is not None:
-            tenant.max_branches = package.max_branches
-
-        tenant.enable_ai = package.has_ai
-        tenant.enable_pos = package.has_pos
-        tenant.enable_store = bool(package.has_pos)
-        tenant.allow_custom_integrations = package.has_customization
-
-        if package.has_advanced_reports:
-            tenant.enable_reports = True
-        if package.has_priority_support:
-            pass
+        package.apply_to_tenant(tenant)
 
         with atomic_transaction("saas_provisioning_activate"):
             db.session.flush()
@@ -233,7 +220,40 @@ class SaaSProvisioningService:
             "is_trial": tenant.is_trial,
             "subscription_start": (tenant.subscription_start.isoformat() if tenant.subscription_start else None),
             "subscription_end": (tenant.subscription_end.isoformat() if tenant.subscription_end else None),
+            "package_snapshot": {
+                "tier_level": package.tier_level,
+                "has_whatsapp": bool(package.has_whatsapp),
+                "has_training": bool(package.has_training),
+                "has_priority_support": bool(package.has_priority_support),
+            },
         }
+
+    @staticmethod
+    def apply_plan_with_template(
+        tenant,
+        plan: str | None,
+        duration: str | None = None,
+        is_trial: bool | None = None,
+    ) -> bool:
+        """Update plan labels; when the plan slug changes to a known active
+        Package, apply that package's limits/flags template onto the tenant.
+
+        Manual overrides survive a re-select of the *same* plan (no slug
+        change → no template re-application). Caller wraps in an atomic
+        transaction. Returns True when a package template was applied.
+        """
+        from models.package import Package
+
+        plan_changed = plan is not None and plan != tenant.subscription_plan
+        tenant.apply_subscription_plan(plan, duration, is_trial)
+        if not plan_changed:
+            return False
+        package = Package.query.filter_by(slug=plan, is_active=True).first()
+        if package is None:
+            return False
+        package.apply_to_tenant(tenant)
+        logger.info("Tenant %s plan changed to %s — package template applied", tenant.id, plan)
+        return True
 
     @staticmethod
     def activate_demo_tenant(tenant_id: int) -> dict:
