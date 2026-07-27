@@ -8,10 +8,10 @@
   </div>
   <div>
     <div class="btn-group mr-2">
-      <button type="button" class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown">
+      <button type="button" class="btn btn-outline-success dropdown-toggle" data-toggle="dropdown">
         <i class="fas fa-download mr-2"></i>{{ t('Export') }}
       </button>
-      <div class="dropdown-menu dropdown-menu-end">
+      <div class="dropdown-menu dropdown-menu-right">
         <a class="dropdown-item" href="{{ url_for('customers.export', format='csv', search=request.args.get('search'), type=request.args.get('type')) }}">CSV</a>
         <a class="dropdown-item" href="{{ url_for('customers.export', format='xlsx', search=request.args.get('search'), type=request.args.get('type')) }}">Excel</a>
       </div>
@@ -36,9 +36,22 @@
 }
 
     /* D6: externalized inline styles */
-    .ic-1 { background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white; }
-    .ic-2 { background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); }
-    .ic-3 { color: #ffffff !important; }
+    .customers-table-header { background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white; }
+    .avatar-gradient { background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); }
+    .btn-icon-white { color: #ffffff !important; }
+
+    .avatar-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 1.2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
   </style>
 {% endblock %}
 
@@ -67,7 +80,7 @@
         </button>
       </div>
     </div>
-    <form class="needs-validation mt-3" method="get">
+    <form class="needs-validation mt-3" method="get" novalidate>
       <div class="form-row">
         <div class="col-md-5 mb-2">
           <label for="customer_search" class="sr-only">{{ t('Search') }}</label>
@@ -94,7 +107,7 @@
   <div class="card-body">
     <div class="table-responsive">
       <table id="customersTable" class="table table-hover">
-        <thead class="ic-1">
+        <thead class="customers-table-header">
           <tr>
             <th><i class="fas fa-user mr-2"></i>{{ t('Name') }}</th>
             <th><i class="fas fa-tag mr-2"></i>{{ t('النوع') }}</th>
@@ -110,7 +123,7 @@
           <tr class="fade-in" data-type="{{ customer.customer_type }}" data-classification="{{ customer.customer_classification }}">
             <td>
               <div class="d-flex align-items-center">
-                <div class="avatar-circle mr-2 ic-2">
+                <div class="avatar-circle mr-2 avatar-gradient">
                   {{ customer.name[0] }}
                 </div>
                 <div>
@@ -181,8 +194,8 @@
                         title="{{ t('Delete') }}">
                   <i class="fas fa-trash"></i>
                 </button>
-                <a href="{{ url_for('customers.statement', id=customer.id) }}" class="btn btn-success ic-3" title="{{ t('كشف') }} {{ t('Account') }}">
-                  <i class="fas fa-file-invoice ic-3"></i>
+                <a href="{{ url_for('customers.statement', id=customer.id) }}" class="btn btn-success btn-icon-white" title="{{ t('كشف') }} {{ t('Account') }}">
+                  <i class="fas fa-file-invoice btn-icon-white"></i>
                 </a>
                 {% if current_user.has_permission('manage_payments') %}
                 <a href="{{ url_for('payments.create_voucher', party_type='customer', party_id=customer.id) }}"
@@ -191,8 +204,8 @@
                 </a>
                 {% endif %}
                 {% if current_user.has_permission('manage_sales') %}
-                <a href="{{ url_for('sales.create', customer_id=customer.id) }}" class="btn btn-success ic-3" title="{{ t('Sale') }}">
-                  <i class="fas fa-shopping-cart ic-3"></i>
+                <a href="{{ url_for('sales.create', customer_id=customer.id) }}" class="btn btn-success btn-icon-white" title="{{ t('Sale') }}">
+                  <i class="fas fa-shopping-cart btn-icon-white"></i>
                 </a>
                 {% endif %}
               </div>
@@ -213,21 +226,6 @@
     {% include 'partials/flask_pagination.html' %}
   </div>
 </div>
-
-<style>
-.avatar-circle {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 700;
-  font-size: 1.2rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
-</style>
 {% endblock %}
 
 {% block extra_js %}
@@ -235,7 +233,7 @@
 <script>
 $(document).ready(() => {
   const table = $('#customersTable').DataTable({
-    language: { url: "{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}" },
+    language: { url: {{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json"))|tojson }} },
     pageLength: 25,
     order: [[4, 'desc']],  // Sort by balance
     responsive: true,
@@ -282,13 +280,13 @@ $(document).ready(() => {
   });
 
   $('#filterMerchant').on('click', function() {
-    table.search('{{ t('تاجر') }}').draw();
+    table.search({{ t('تاجر')|tojson }}).draw();
     $('.btn-group .btn').removeClass('active');
     $(this).addClass('active');
   });
 
   $('#filterRegular').on('click', function() {
-    table.search('{{ t('عادي') }}').draw();
+    table.search({{ t('عادي')|tojson }}).draw();
     $('.btn-group .btn').removeClass('active');
     $(this).addClass('active');
   });

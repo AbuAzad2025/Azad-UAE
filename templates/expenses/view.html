@@ -1,255 +1,132 @@
 {% extends "base.html" %}
 
-
-
 {% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Details') }} {{ t('Expense_2') }}{% endblock %}
 
-
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+    <h1 class="mb-0"><i class="fas fa-file-invoice mr-2"></i>{{ t('View') }} {{ t('Expense_2') }}</h1>
+    <div>
+        <a href="{{ url_for('expenses.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left mr-2"></i>{{ t('العودة') }} {{ t('للقائمة') }}
+        </a>
+        <a href="{{ url_for('expenses.edit', id=expense.id) }}" class="btn btn-primary">
+            <i class="fas fa-edit mr-2"></i>{{ t('Edit') }}
+        </a>
+        <a href="{{ url_for('expenses.print_expense', id=expense.id) }}" target="_blank" rel="noopener noreferrer" class="btn btn-info">
+            <i class="fas fa-print mr-2"></i>{{ t('Print') }}
+        </a>
+    </div>
+</div>
+{% endblock %}
 
 {% block content %}
-
-    <div class="content-header">
-
-        <div class="container-fluid">
-
-            <div class="row mb-2">
-
-                <div class="col-sm-6">
-
-                    <h1 class="m-0">{{ t('View') }} {{ t('Expense_2') }}</h1>
-
-                </div>
-
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">{{ t('Details') }} {{ t('Expense_2') }}</h3>
             </div>
-
+            <div class="card-body">
+                <div class="table-responsive"><table class="table table-bordered">
+                    <tr>
+                        <th>{{ t('رقم') }} {{ t('Expense_2') }}</th>
+                        <td>{{ expense.expense_number }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ t('Date') }}</th>
+                        <td>{{ expense.expense_date.strftime('%Y-%m-%d') if expense.expense_date else '-' }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ t('الفئة') }}</th>
+                        <td>{{ expense.category.name if expense.category else _('غير محدد') }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ t('Description') }}</th>
+                        <td>{{ expense.description }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ t('Description') }} {{ t('In Arabic') }}</th>
+                        <td>{{ expense.description_ar or '' }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ t('Amount') }}</th>
+                        <td>{{ format_currency(expense.amount, expense.currency) }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ t('Amount') }} بـ{{ tenant_currency_name_ar or _('درهم إماراتي') }}</th>
+                        <td>{{ format_currency(expense.base_amount or expense.amount_aed) }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ t('طريقة') }} {{ t('Payment_2') }}</th>
+                        <td>{{ expense.payment_method }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ t('Name_2') }} {{ t('Supplier') }}</th>
+                        <td>{{ expense.supplier_name or '' }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ t('Reference Number') }}</th>
+                        <td>{{ expense.reference_number or '' }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ t('رقم') }} {{ t('Cheque') }}</th>
+                        <td>{{ expense.cheque_number or '' }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ t('History') }} {{ t('Cheque') }}</th>
+                        <td>{{ expense.cheque_date.strftime('%Y-%m-%d') if expense.cheque_date else '' }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ t('Name_2') }} {{ t('Bank') }}</th>
+                        <td>{{ expense.bank_name or '' }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ t('Notes') }}</th>
+                        <td>{{ expense.notes or '' }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ t('User') }}</th>
+                        <td>{{ expense.user.username if expense.user else _('غير محدد') }}</td>
+                    </tr>
+                </table></div>
+            </div>
         </div>
-
     </div>
 
-
-
-    <section class="content">
-
-        <div class="container-fluid">
-
-            <div class="row">
-
-                <div class="col-md-8">
-
-                    <div class="card">
-
-                        <div class="card-header">
-
-                            <h3 class="card-title">{{ t('Details') }} {{ t('Expense_2') }}</h3>
-
-                        </div>
-
-                        <div class="card-body">
-
-                            <div class="table-responsive"><table class="table table-bordered">
-
-                                <tr>
-
-                                    <th>{{ t('رقم') }} {{ t('Expense_2') }}</th>
-
-                                    <td>{{ expense.expense_number }}</td>
-
-                                </tr>
-
-                                <tr>
-
-                                    <th>{{ t('Date') }}</th>
-
-                                    <td>{{ expense.expense_date.strftime('%Y-%m-%d') }}</td>
-
-                                </tr>
-
-                                <tr>
-
-                                    <th>{{ t('الفئة') }}</th>
-
-                                    <td>{{ expense.category.name if expense.category else 'غير محدد' }}</td>
-
-                                </tr>
-
-                                <tr>
-
-                                    <th>{{ t('Description') }}</th>
-
-                                    <td>{{ expense.description }}</td>
-
-                                </tr>
-
-                                <tr>
-
-                                    <th>{{ t('Description') }} {{ t('In Arabic') }}</th>
-
-                                    <td>{{ expense.description_ar or '' }}</td>
-
-                                </tr>
-
-                                <tr>
-
-                                    <th>{{ t('Amount') }}</th>
-
-                                    <td>{{ "%.2f"|format(expense.amount) }} {{ expense.currency }}</td>
-
-                                </tr>
-
-                                <tr>
-
-                                    <th>{{ t('Amount') }} بـ{{ tenant_currency_name_ar or "درهم إماراتي" }}</th>
-
-                                    <td>{{ "%.2f"|format(expense.base_amount or expense.amount_aed) }} {{ tenant_currency_symbol }}</td>
-
-                                </tr>
-
-                                <tr>
-
-                                    <th>{{ t('طريقة') }} {{ t('Payment_2') }}</th>
-
-                                    <td>{{ expense.payment_method }}</td>
-
-                                </tr>
-
-                                <tr>
-
-                                    <th>{{ t('Name_2') }} {{ t('Supplier') }}</th>
-
-                                    <td>{{ expense.supplier_name or '' }}</td>
-
-                                </tr>
-
-                                <tr>
-
-                                    <th>{{ t('Reference Number') }}</th>
-
-                                    <td>{{ expense.reference_number or '' }}</td>
-
-                                </tr>
-
-                                <tr>
-
-                                    <th>{{ t('رقم') }} {{ t('Cheque') }}</th>
-
-                                    <td>{{ expense.cheque_number or '' }}</td>
-
-                                </tr>
-
-                                <tr>
-
-                                    <th>{{ t('History') }} {{ t('Cheque') }}</th>
-
-                                    <td>{{ expense.cheque_date.strftime('%Y-%m-%d') if expense.cheque_date else '' }}</td>
-
-                                </tr>
-
-                                <tr>
-
-                                    <th>{{ t('Name_2') }} {{ t('Bank') }}</th>
-
-                                    <td>{{ expense.bank_name or '' }}</td>
-
-                                </tr>
-
-                                <tr>
-
-                                    <th>{{ t('Notes') }}</th>
-
-                                    <td>{{ expense.notes or '' }}</td>
-
-                                </tr>
-
-                                <tr>
-
-                                    <th>{{ t('User') }}</th>
-
-                                    <td>{{ expense.user.username if expense.user else 'غير محدد' }}</td>
-
-                                </tr>
-
-                            </table></div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-                
-
-                <div class="col-md-4">
-
-                    <div class="card">
-
-                        <div class="card-header">
-
-                            <h3 class="card-title">{{ t('الإجراءات') }}</h3>
-
-                        </div>
-
-                        <div class="card-body">
-
-                            <div class="btn-group-vertical w-100">
-
-                                <a href="{{ url_for('expenses.index') }}" class="btn btn-secondary mb-2">
-
-                                    <i class="fas fa-arrow-left"></i> {{ t('العودة') }} {{ t('للقائمة') }}
-
-                                </a>
-
-                                <a href="{{ url_for('expenses.edit', id=expense.id) }}" class="btn btn-primary mb-2">
-
-                                    <i class="fas fa-edit"></i> {{ t('Edit') }} {{ t('Expense_2') }}
-
-                                </a>
-
-                                <a href="{{ url_for('expenses.print_expense', id=expense.id) }}"
-
-                                   target="_blank" rel="noopener noreferrer"
-
-                                   class="btn btn-info mb-2">
-
-                                    <i class="fas fa-print"></i> {{ t('Print') }}
-
-                                </a>
-
-                                <a href="{{ url_for('printing.print_document_pdf', doc_type='expense', id=expense.id) }}"
-
-                                   target="_blank" rel="noopener noreferrer"
-
-                                   class="btn btn-danger mb-2">
-
-                                    <i class="fas fa-file-pdf"></i> PDF
-
-                                </a>
-
-                                <form class="needs-validation w-100" action="{{ url_for('expenses.delete', id=expense.id) }}" method="POST" data-action="confirm-submit" data-confirm-message="هل أنت {{ t('متأكد') }} من {{ t('Delete') }} هذا {{ t('Expense_4') }}">
-
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-
-                                    <button type="submit" class="btn btn-danger mb-2 w-100">
-
-                                        <i class="fas fa-trash"></i> {{ t('Delete') }} {{ t('Expense_2') }}
-
-                                    </button>
-
-                                </form>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">{{ t('الإجراءات') }}</h3>
             </div>
-
+            <div class="card-body">
+                <div class="btn-group-vertical w-100">
+                    <a href="{{ url_for('expenses.index') }}" class="btn btn-secondary mb-2">
+                        <i class="fas fa-arrow-left"></i> {{ t('العودة') }} {{ t('للقائمة') }}
+                    </a>
+                    <a href="{{ url_for('expenses.edit', id=expense.id) }}" class="btn btn-primary mb-2">
+                        <i class="fas fa-edit"></i> {{ t('Edit') }} {{ t('Expense_2') }}
+                    </a>
+                    <a href="{{ url_for('expenses.print_expense', id=expense.id) }}"
+                       target="_blank" rel="noopener noreferrer"
+                       class="btn btn-info mb-2">
+                        <i class="fas fa-print"></i> {{ t('Print') }}
+                    </a>
+                    <a href="{{ url_for('printing.print_document_pdf', doc_type='expense', id=expense.id) }}"
+                       target="_blank" rel="noopener noreferrer"
+                       class="btn btn-danger mb-2">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </a>
+                    <form class="needs-validation w-100" action="{{ url_for('expenses.delete', id=expense.id) }}" method="POST" data-action="confirm-submit" data-confirm-message={{ t('هل أنت متأكد من حذف هذا المصروف؟')|tojson }} novalidate>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+                        <button type="submit" class="btn btn-danger mb-2 w-100">
+                            <i class="fas fa-trash"></i> {{ t('Delete') }} {{ t('Expense_2') }}
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
-
-    </section>
-
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -261,4 +138,3 @@ document.addEventListener('submit', (e) => {
 });
 </script>
 {% endblock %}
-

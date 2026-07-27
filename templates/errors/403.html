@@ -2,13 +2,17 @@
 
 {% block title %}403 - {{ t('Access Denied') }}{% endblock %}
 
+{% block page_title %}
+<h1 class="mb-0"><i class="fas fa-ban text-danger"></i> {{ t('Access Denied') }}</h1>
+{% endblock %}
+
 {% block content %}
 <div class="container">
   <div class="row justify-content-center mt-5">
     <div class="col-md-6">
-      <div class="card shadow">
+      <div class="card shadow" role="alert" aria-live="assertive">
         <div class="card-body text-center p-5">
-          <h1 class="display-4 text-danger mb-3">403</h1>
+          <h1 class="display-4 text-danger mb-3" aria-label="Error 403">403</h1>
           <h3 class="mb-4">{{ t('Access Denied') }}</h3>
           <p class="text-muted mb-4">
             {{ t('You do not have permission to access this page') }}
@@ -27,4 +31,3 @@
   </div>
 </div>
 {% endblock %}
-

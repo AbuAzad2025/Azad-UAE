@@ -10,7 +10,7 @@
       <i class="fas fa-user mr-2"></i>{{ t('Details') }} {{ t('Customer') }}
     </a>
     <a href="{{ url_for('customers.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للقائمة') }}
+      <i class="fas fa-arrow-left mr-2"></i>{{ t('العودة') }} {{ t('للقائمة') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
       <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
@@ -291,29 +291,29 @@ table.statement-table thead th {
       <i class="fas fa-print mr-2"></i>{{ t('Print') }}
     </button>
     <a href="{{ url_for('customers.view', id=customer.id) }}" class="btn btn-info">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }}
+      <i class="fas fa-arrow-left mr-2"></i>{{ t('العودة') }}
     </a>
   </div>
-  <form class="needs-validation form-inline no-print" method="get">
+  <form class="needs-validation form-inline no-print" method="get" novalidate>
     <div class="form-group mx-1 mb-2">
-      <label for="date_from" class="sr-only">من {{ t('History') }}</label>
-      <input type="date" id="date_from" name="date_from" class="form-control form-control-sm" value="{{ active_filters.date_from }}" aria-label="من {{ t('History') }}">
+      <label for="date_from" class="sr-only">{{ t('من التاريخ') }}</label>
+      <input type="date" id="date_from" name="date_from" class="form-control form-control-sm" value="{{ active_filters.date_from }}" aria-label="{{ t('من التاريخ') }}">
     </div>
     <div class="form-group mx-1 mb-2">
-      <label for="date_to" class="sr-only">إلى {{ t('History') }}</label>
-      <input type="date" id="date_to" name="date_to" class="form-control form-control-sm" value="{{ active_filters.date_to }}" aria-label="إلى {{ t('History') }}">
+      <label for="date_to" class="sr-only">{{ t('إلى التاريخ') }}</label>
+      <input type="date" id="date_to" name="date_to" class="form-control form-control-sm" value="{{ active_filters.date_to }}" aria-label="{{ t('إلى التاريخ') }}">
     </div>
     <div class="form-group mx-1 mb-2">
       <label for="transaction_type" class="sr-only">{{ t('نوع') }} {{ t('Movement') }}</label>
       <select id="transaction_type" name="transaction_type" class="form-control form-control-sm" aria-label="transaction type">
-        <option value="all" {% if active_filters.transaction_type == 'all' %}selected{% endif %}>كل {{ t('Movements') }}</option>
-        <option value="sale" {% if active_filters.transaction_type == 'sale' %}selected{% endif %}>{{ t('Invoices') }} فقط</option>
-        <option value="payment" {% if active_filters.transaction_type == 'payment' %}selected{% endif %}>{{ t('الدفعات') }} فقط</option>
+        <option value="all" {% if active_filters.transaction_type == 'all' %}selected{% endif %}>{{ t('كل الحركات') }}</option>
+        <option value="sale" {% if active_filters.transaction_type == 'sale' %}selected{% endif %}>{{ t('فواتير فقط') }}</option>
+        <option value="payment" {% if active_filters.transaction_type == 'payment' %}selected{% endif %}>{{ t('الدفعات فقط') }}</option>
       </select>
     </div>
     <div class="form-group mx-1 mb-2">
       <button type="submit" class="btn btn-primary">{{ t('Apply') }}</button>
-      <a href="{{ url_for('customers.statement', id=customer.id) }}" class="btn btn-light ml-1">{{ t('إعادة') }} {{ t('تعيين') }}</a>
+      <a href="{{ url_for('customers.statement', id=customer.id) }}" class="btn btn-light ml-1">{{ t('إعادة تعيين') }}</a>
     </div>
   </form>
 </div>
@@ -339,8 +339,8 @@ table.statement-table thead th {
                   <h5 class="mb-1 font-weight-bold">{{ t('كشف') }} {{ t('Account') }} - {{ customer.name }}</h5>
                   <div class="text-muted small">
                     {{ t('Period_2') }}:
-                    {% if active_filters.date_from %}من {{ active_filters.date_from }}{% else %}من {{ t('Start') }}{% endif %}
-                    {% if active_filters.date_to %} إلى {{ active_filters.date_to }}{% endif %}
+                    {% if active_filters.date_from %}{{ t('من التاريخ') }} {{ active_filters.date_from }}{% else %}{{ t('من التاريخ') }} {{ t('Start') }}{% endif %}
+                    {% if active_filters.date_to %} {{ t('إلى التاريخ') }} {{ active_filters.date_to }}{% endif %}
                     |
                     {{ t('نوع') }} {{ t('Movement') }}:
                     {% if active_filters.transaction_type == 'sale' %}
@@ -428,7 +428,7 @@ table.statement-table thead th {
                     {% elif trans.status == 'partial' %}
                       <span class="badge badge-warning status-badge">{{ t('Paid_2') }} {{ t('Partial') }}</span>
                     {% else %}
-                      <span class="badge badge-danger status-badge">غير {{ t('Paid_2') }}</span>
+                      <span class="badge badge-danger status-badge">{{ t('غير مدفوع') }}</span>
                     {% endif %}
                   {% else %}
                     <span class="badge badge-info status-badge">{{ trans.status }}</span>
@@ -438,7 +438,7 @@ table.statement-table thead th {
                   {% if trans.type == 'sale' %}
                     <button class="btn btn-link p-0 toggle-details collapsed" type="button"
                             data-toggle="collapse" data-target="#{{ detail_id }}"
-                            aria-expanded="false" aria-controls="{{ detail_id }}" title="Chevron Down">
+                            aria-expanded="false" aria-controls="{{ detail_id }}" title="{{ t('تفاصيل') }}">
                       <i class="fas fa-chevron-down"></i>
                     </button>
                   {% else %}
@@ -564,12 +564,12 @@ table.statement-table thead th {
             {% endfor %}
           {% else %}
             <tr>
-              <td colspan="8" class="text-center text-muted py-4">لا {{ t('توجد') }} {{ t('معاملات') }} {{ t('for View') }}.</td>
+              <td colspan="8" class="text-center text-muted py-4">{{ t('لا توجد معاملات للعرض') }}</td>
             </tr>
           {% endif %}
 
           <tr class="final-balance-row">
-            <td colspan="5" class="text-center">{{ t('Balance') }} {{ t('النهائي') }} حتى {{ t('History') }} {{ t('Report') }}</td>
+            <td colspan="5" class="text-center">{{ t('الرصيد النهائي حتى تاريخ التقرير') }}</td>
             <td colspan="3" class="text-right amount-cell">
               {{ format_currency(final_balance|default(0)) }}
             </td>

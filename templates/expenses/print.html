@@ -54,14 +54,14 @@
       <div class="company-name">{{ settings.company_name_ar or tenant_name_ar or company_name_ar }}</div>
       <div class="company-info">
         <div>{{ settings.address_ar or tenant_address or '' }}</div>
-        <div>📞 {{ settings.phone_1 or tenant_phone or '' }} {% if settings.email %} | 📧 {{ settings.email }}{% endif %}</div>
+        <div><i class="fas fa-phone"></i> {{ settings.phone_1 or tenant_phone or '' }} {% if settings.email %} | <i class="fas fa-envelope"></i> {{ settings.email }}{% endif %}</div>
         {% if settings and settings.tax_number %}<div>{{ t('الرقم') }} {{ t('الضريبي') }}: {{ settings.tax_number }}</div>{% endif %}
-        {% if expense.branch %}<div>🏢 {{ t('Branch') }}: {{ expense.branch.name }}</div>{% endif %}
+        {% if expense.branch %}<div><i class="fas fa-building"></i> {{ t('Branch') }}: {{ expense.branch.name }}</div>{% endif %}
       </div>
     </div>
 
     <div class="doc-title">
-      <h2>💰 {{ t('Voucher_2') }} {{ t('Expense_3') }}</h2>
+      <h2><i class="fas fa-money-bill-wave"></i> {{ t('Voucher_2') }} {{ t('Expense_3') }}</h2>
       <div class="invoice-number" style="font-size:9px;color:#666;margin-top:4px;">
         {{ t('رقم') }} {{ t('Voucher') }}: <strong>{{ expense.expense_number }}</strong> |
         {{ t('Date') }}: <strong>{{ expense.expense_date.strftime('%Y-%m-%d') if expense.expense_date else '' }}</strong>
@@ -71,15 +71,15 @@
     <div class="content">
       <div class="info-grid">
         <div class="info-box">
-          <h3>📋 {{ t('Details') }} {{ t('Expense_2') }}</h3>
-          <p><strong>{{ t('الفئة') }}:</strong> {{ expense.category.name if expense.category else 'غير محدد' }}</p>
+          <h3><i class="fas fa-clipboard-list"></i> {{ t('Details') }} {{ t('Expense_2') }}</h3>
+          <p><strong>{{ t('الفئة') }}:</strong> {{ expense.category.name if expense.category else _('غير محدد') }}</p>
           <p><strong>{{ t('Description') }}:</strong> {{ expense.description }}</p>
           {% if expense.description_ar %}<p><strong>{{ t('Description') }} {{ t('In Arabic') }}:</strong> {{ expense.description_ar }}</p>{% endif %}
           <p><strong>{{ t('Name_2') }} {{ t('Supplier') }}/{{ t('الجهة') }}:</strong> {{ expense.supplier_name or '-' }}</p>
         </div>
         <div class="info-box">
-          <h3>💳 {{ t('Amounts') }}</h3>
-          <p><strong>{{ t('Amount') }}:</strong> {{ "{:,.2f}".format(expense.amount) }} {{ expense.currency }}</p>
+          <h3><i class="fas fa-credit-card"></i> {{ t('Amounts') }}</h3>
+          <p><strong>{{ t('Amount') }}:</strong> {{ format_currency(expense.amount, expense.currency) }}</p>
           <p><strong>{{ t('Price_2') }} {{ t('Exchange') }}:</strong> {{ "{:,.6f}".format(expense.exchange_rate) }}</p>
           <p><strong>{{ t('Amount') }} بـ{{ tenant_currency_name_ar or tenant_default_currency }}:</strong> <strong style="color:{{ settings.header_color if settings else '#e74c3c' }};">{{ format_currency(expense.base_amount or expense.amount_aed) }}</strong></p>
           <p><strong>{{ t('طريقة') }} {{ t('Payment_2') }}:</strong> {{ expense.payment_method or '-' }}</p>
@@ -88,12 +88,12 @@
 
       <div class="info-grid">
         <div class="info-box">
-          <h3>🔖 {{ t('Info_2') }} {{ t('Additional') }}</h3>
+          <h3><i class="fas fa-tag"></i> {{ t('Info_2') }} {{ t('Additional') }}</h3>
           <p><strong>{{ t('رقم') }} {{ t('المرجع') }}:</strong> {{ expense.reference_number or '-' }}</p>
           <p><strong>{{ t('رقم') }} {{ t('Cheque') }}:</strong> {{ expense.cheque_number or '-' }}</p>
         </div>
         <div class="info-box">
-          <h3>🏦 {{ t('Details') }} {{ t('Bank') }}</h3>
+          <h3><i class="fas fa-university"></i> {{ t('Details') }} {{ t('Bank') }}</h3>
           <p><strong>{{ t('Name_2') }} {{ t('Bank') }}:</strong> {{ expense.bank_name or '-' }}</p>
           <p><strong>{{ t('History') }} {{ t('Cheque') }}:</strong> {{ expense.cheque_date.strftime('%Y-%m-%d') if expense.cheque_date else '-' }}</p>
         </div>
@@ -108,7 +108,7 @@
 
       {% if expense.notes %}
       <div style="margin-top:10px;padding:8px;background:#fff3cd;border-radius:4px;border-right:2px solid #ffc107;">
-        <p style="font-size:9px;color:#856404;margin:0;">💬 {{ t('Notes') }}: {{ expense.notes }}</p>
+        <p style="font-size:9px;color:#856404;margin:0;"><i class="fas fa-comment"></i> {{ t('Notes') }}: {{ expense.notes }}</p>
       </div>
       {% endif %}
 

@@ -2,82 +2,80 @@
 
 {% block title %}{{ t('Company_2') }} {{ t('أزاد') }} {{ t('للأنظمة') }} {{ t('الذكية') }} - {{ t('فئات') }} {{ t('Expenses') }}{% endblock %}
 
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+    <h1 class="mb-0"><i class="fas fa-folder-open mr-2"></i>{{ t('فئات') }} {{ t('Expenses') }}</h1>
+    <div>
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addCategoryModal">
+            <i class="fas fa-plus"></i> {{ t('Add') }} {{ t('فئة') }} {{ t('New_3') }}
+        </button>
+        <a href="{{ url_for('expenses.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left mr-2"></i>{{ t('العودة') }} {{ t('Expenses_3') }}
+        </a>
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
+        </a>
+    </div>
+</div>
+{% endblock %}
+
 {% block content %}
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0">{{ t('فئات') }} {{ t('Expenses') }}</h1>
-                </div>
-                <div class="col-sm-6">
-                    <div class="float-right">
-                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addCategoryModal">
-                            <i class="fas fa-plus"></i> {{ t('Add') }} {{ t('فئة') }} {{ t('New_3') }}
-                        </button>
-                        <a href="{{ url_for('expenses.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('Expenses_3') }}
-                        </a>
-                        <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
-                        </a>
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">{{ t('فئات') }} {{ t('Expenses') }}</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>{{ t('Name') }}</th>
+                                        <th>{{ t('Name') }} {{ t('In Arabic') }}</th>
+                                        <th>{{ t('Code_2') }} {{ t('Account') }} {{ t('Accounting_4') }}</th>
+                                        <th>{{ t('Status') }}</th>
+                                        <th>{{ t('الإجراءات') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for category in categories %}
+                                    <tr>
+                                        <td>{{ category.name }}</td>
+                                        <td>{{ category.name_ar or '' }}</td>
+                                        <td>{{ category.gl_account_code or '' }}</td>
+                                        <td>
+                                            {% if category.is_active %}
+                                                <span class="badge badge-success">{{ t('Active') }}</span>
+                                            {% else %}
+                                                <span class="badge badge-danger">{{ t('Inactive') }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-primary" disabled title="{{ t('Coming Soon') }}">
+                                                <i class="fas fa-edit"></i> {{ t('Edit') }}
+                                            </button>
+                                            <button type="button" class="btn btn-danger" disabled title="{{ t('Coming Soon') }}">
+                                                <i class="fas fa-trash"></i> {{ t('Delete') }}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">{{ t('لا توجد فئات') }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <section class="content">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">{{ t('فئات') }} {{ t('Expenses') }}</h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>{{ t('Name') }}</th>
-                                            <th>{{ t('Name') }} {{ t('In Arabic') }}</th>
-                                            <th>{{ t('Code_2') }} {{ t('Account') }} {{ t('Accounting_4') }}</th>
-                                            <th>{{ t('Status') }}</th>
-                                            <th>{{ t('الإجراءات') }}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for category in categories %}
-                                        <tr>
-                                            <td>{{ category.name }}</td>
-                                            <td>{{ category.name_ar or '' }}</td>
-                                            <td>{{ category.gl_account_code or '' }}</td>
-                                            <td>
-                                                {% if category.is_active %}
-                                                    <span class="badge badge-success">{{ t('Active') }}</span>
-                                                {% else %}
-                                                    <span class="badge badge-danger">{{ t('Inactive') }}</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                <button type="button" class="btn btn-primary">
-                                                    <i class="fas fa-edit"></i> {{ t('Edit') }}
-                                                </button>
-                                                <button type="button" class="btn btn-danger">
-                                                    <i class="fas fa-trash"></i> {{ t('Delete') }}
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+</section>
 
 
 <div class="modal fade" id="addCategoryModal" tabindex="-1" role="dialog">
@@ -89,7 +87,7 @@
                     <span>&times;</span>
                 </button>
             </div>
-            <form class="needs-validation" method="POST" action="{{ url_for('expenses.create_category') }}">
+            <form class="needs-validation" method="POST" action="{{ url_for('expenses.create_category') }}" novalidate>
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                 <div class="modal-body">
                     <div class="form-group">

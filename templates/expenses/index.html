@@ -26,7 +26,7 @@
 {% block content %}
 <div class="card mb-3">
     <div class="card-body py-2">
-        <form class="needs-validation form-inline" method="get">
+        <form class="needs-validation form-inline" method="get" novalidate>
             <label class="mr-2" for="category">{{ t('التصنيف') }}:</label>
             <select name="category" class="form-control mr-2" data-action="submit-form" id="category">
                 <option value="">-- {{ t('All') }} --</option>
@@ -37,7 +37,7 @@
                 {% endfor %}
             </select>
             {% if request.args.get('category') %}
-            <a href="{{ url_for('expenses.index') }}" class="btn btn-outline-secondary">{{ t('إزالة') }} {{ t('Filter_3') }}</a>
+            <a href="{{ url_for('expenses.index') }}" class="btn btn-outline-secondary">{{ t('إزالة الفلتر') }}</a>
             {% endif %}
         </form>
     </div>
@@ -69,7 +69,7 @@
                         <td>{{ format_currency(expense.amount) }}</td>
                         <td>{{ expense.currency }}</td>
                         <td>{{ format_currency(expense.amount_aed) }}</td>
-                        <td>{{ expense.expense_date.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ expense.expense_date.strftime('%Y-%m-%d') if expense.expense_date else '-' }}</td>
                         <td><span class="badge badge-info">{{ expense.payment_method }}</span></td>
                         <td>
                             {% if expense.branch %}
@@ -120,12 +120,12 @@ document.addEventListener('change', (e) => {
 (() => {
   const tableSelector = '#expensesTable';
   const printButtonSelector = '#printExpensesBtn';
-  const languageUrl = "{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}";
+  const languageUrl = {{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json"))|tojson }};
 
   function initExpensesPrint() {
     const $table = $(tableSelector);
     const options = {
-      title: '{{ t('Log') }} {{ t('Expenses') }}',
+      title: {{ (t('Log') + ' ' + t('Expenses'))|tojson }},
       headerColor: '#0d6efd'
     };
 

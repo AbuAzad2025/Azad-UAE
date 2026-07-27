@@ -1,11 +1,13 @@
 {% extends 'base.html' %}
 {% block title %}{{ t('طلبات') }} {{ t('الإجازات') }}{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="mb-0"><i class="fas fa-calendar-alt mr-2"></i>{{ t('طلبات الإجازات') }}</h1>
+  <a href="{{ url_for('hr.request_leave') }}" class="btn btn-success"><i class="fas fa-plus mr-2"></i>{{ t('طلب إجازة') }}</a>
+</div>
+{% endblock %}
 {% block content %}
 <div class="container-fluid">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4><i class="fas fa-calendar-alt"></i> {{ t('طلبات') }} {{ t('الإجازات') }}</h4>
-    <a href="{{ url_for('hr.request_leave') }}" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> {{ t('طلب') }} {{ t('إجازة') }}</a>
-  </div>
   <div class="card">
     <div class="card-body">
       <form class="form-inline mb-3" method="GET">
@@ -28,7 +30,7 @@
       <div class="table-responsive">
         <table class="table table-bordered" id="leavesTable">
           <thead><tr>
-            <th>{{ t('User') }}</th><th>{{ t('النوع') }}</th><th>{{ _('من') }}</th><th>{{ _('إلى') }}</th><th>{{ t('Duration_2') }}</th><th>{{ t('Status') }}</th><th></th>
+            <th>{{ t('User') }}</th><th>{{ t('النوع') }}</th><th>{{ t('من') }}</th><th>{{ t('إلى') }}</th><th>{{ t('Duration_2') }}</th><th>{{ t('Status') }}</th><th></th>
           </tr></thead>
           <tbody>
             {% for l in leaves %}
@@ -38,7 +40,7 @@
               <td>{{ l.date_from }}</td>
               <td>{{ l.date_to }}</td>
               <td>{{ l.duration }} {{ t('يوم') }}</td>
-              <td><span class="badge badge-{{ 'success' if l.state == 'approved' else ('danger' if l.state == 'refused' else 'warning') }}">{{ l.state }}</span></td>
+              <td><span class="badge badge-{{ 'success' if l.state == 'approved' else ('danger' if l.state == 'refused' else 'warning') }}">{{ t(l.state) }}</span></td>
               <td>
                 {% if l.state == 'draft' %}
                 <form method="POST" action="{{ url_for('hr.approve_leave', leave_id=l.id) }}" style="display:inline">
@@ -52,6 +54,8 @@
                 {% endif %}
               </td>
             </tr>
+            {% else %}
+            <tr><td colspan="7" class="text-center text-muted py-4">{{ t('لا توجد طلبات إجازات') }}</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -61,5 +65,5 @@
 </div>
 {% endblock %}
 {% block extra_js %}
-<script>$(document).ready(()=> {if($.fn.DataTable&&!$.fn.DataTable.isDataTable('#leavesTable')){$('#leavesTable').DataTable({language:{url:"{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}"},pageLength:25})}});</script>
+<script>$(document).ready(()=> {if($.fn.DataTable&&!$.fn.DataTable.isDataTable('#leavesTable')){$('#leavesTable').DataTable({language:{url:{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json"))|tojson }}},pageLength:25})}});</script>
 {% endblock %}

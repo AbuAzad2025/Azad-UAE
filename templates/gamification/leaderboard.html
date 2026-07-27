@@ -2,17 +2,19 @@
 
 {% block title %}{{ t('Dashboard_2') }} {{ t('المتصدرين') }} - {{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}{% endblock %}
 
-{% block content %}
+{% block page_title %}
 <div class="content-header">
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1 class="m-0">🏆 {{ t('Dashboard_2') }} {{ t('المتصدرين') }}</h1>
+                <h1 class="m-0"><i class="fas fa-trophy text-warning mr-2"></i>{{ t('Dashboard_2') }} {{ t('المتصدرين') }}</h1>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block content %}
 <section class="content">
     <div class="container-fluid">
         <div class="row">
@@ -35,15 +37,27 @@
                                 {% for user in leaderboard %}
                                 <tr class="{% if user.rank <= 3 %}font-weight-bold{% endif %}">
                                     <td>
-                                        {% if user.rank == 1 %}🥇
-                                        {% elif user.rank == 2 %}🥈
-                                        {% elif user.rank == 3 %}🥉
+                                        {% if user.rank == 1 %}<span role="img" aria-label="{{ t('المركز الأول') }}">🥇</span>
+                                        {% elif user.rank == 2 %}<span role="img" aria-label="{{ t('المركز الثاني') }}">🥈</span>
+                                        {% elif user.rank == 3 %}<span role="img" aria-label="{{ t('المركز الثالث') }}">🥉</span>
                                         {% else %}{{ user.rank }}
                                         {% endif %}
                                     </td>
                                     <td>{{ user.full_name }}</td>
                                     <td><span class="badge badge-primary">{{ user.points }}</span></td>
-                                    <td>{{ user.badge.icon }} {{ user.badge.name_ar }}</td>
+                                    <td>
+                                        {% if user.badge.icon %}
+                                            <i class="{{ user.badge.icon }}"></i>
+                                        {% endif %}
+                                        {{ user.badge.name_ar }}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">
+                                        <i class="fas fa-inbox fa-2x mb-2 d-block text-muted opacity-50"></i>
+                                        {{ t('لا يوجد متصدرون حالياً') }}
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -59,6 +73,7 @@
                     </div>
                     <div class="card-body">
                         <div class="list-group">
+                            <!-- Static thresholds -->
                             <div class="list-group-item">
                                 <h5>🌱 {{ t('مستوى') }} {{ t('أساسي') }}</h5>
                                 <small>0 {{ t('نقطة') }}</small>
@@ -91,4 +106,3 @@
     </div>
 </section>
 {% endblock %}
-

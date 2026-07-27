@@ -1,5 +1,8 @@
 {% extends 'base.html' %}
 {% block title %}{{ t('الحضور') }} {{ t('والانصراف') }}{% endblock %}
+{% block page_title %}
+<h1 class="mb-0"><i class="fas fa-clock mr-2"></i>{{ t('الحضور والانصراف') }}</h1>
+{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <ul class="nav nav-tabs mb-3">
@@ -46,8 +49,10 @@
               <td>{{ r.check_in.strftime('%Y-%m-%d %H:%M') if r.check_in }}</td>
               <td>{{ r.check_out.strftime('%Y-%m-%d %H:%M') if r.check_out else '-' }}</td>
               <td>{{ r.work_hours or '-' }}</td>
-              <td><span class="badge badge-{{ 'success' if r.state == 'validated' else 'secondary' }}">{{ r.state }}</span></td>
+              <td><span class="badge badge-{{ 'success' if r.state == 'validated' else 'secondary' }}">{{ t(r.state) }}</span></td>
             </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-center text-muted py-4">{{ t('لا توجد سجلات حضور') }}</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -65,6 +70,8 @@
               <td>{{ d.manager.name if d.manager else '-' }}</td>
               <td><span style="display:inline-block;width:20px;height:20px;background:{{ d.color }};border-radius:4px"></span></td>
             </tr>
+            {% else %}
+            <tr><td colspan="3" class="text-center text-muted py-4">{{ t('لا توجد أقسام') }}</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -75,11 +82,11 @@
 <div class="modal fade" id="deptModal">
   <div class="modal-dialog"><div class="modal-content">
     <div class="modal-header"><h5>{{ t('قسم') }} {{ t('New') }}</h5></div>
-    <form method="POST" action="{{ url_for('hr.create_department') }}">
+    <form method="POST" class="needs-validation" action="{{ url_for('hr.create_department') }}" novalidate>
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="modal-body">
-      <div class="form-group"><label for="dept_name">{{ t('Name') }}</label><input id="dept_name" name="name" class="form-control" required></div>
-      <div class="form-group"><label for="dept_name_ar">{{ t('Name') }} ({{ t('Arabic') }})</label><input id="dept_name_ar" name="name_ar" class="form-control"></div>
+      <div class="form-group"><label for="dept_name">{{ t('Name') }}</label><input id="dept_name" name="name" class="form-control" required minlength="2" maxlength="100"></div>
+      <div class="form-group"><label for="dept_name_ar">{{ t('Name') }} ({{ t('Arabic') }})</label><input id="dept_name_ar" name="name_ar" class="form-control" maxlength="100"></div>
     </div>
     <div class="modal-footer"><button type="submit" class="btn btn-success">{{ t('Save') }}</button></div>
     </form>
@@ -87,5 +94,5 @@
 </div>
 {% endblock %}
 {% block extra_js %}
-<script>$(document).ready(()=> {if($.fn.DataTable&&!$.fn.DataTable.isDataTable('#attendanceTable')){$('#attendanceTable').DataTable({language:{url:"{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}"},pageLength:25})}});</script>
+<script>$(document).ready(()=> {if($.fn.DataTable&&!$.fn.DataTable.isDataTable('#attendanceTable')){$('#attendanceTable').DataTable({language:{url:{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json"))|tojson }}},pageLength:25})}});</script>
 {% endblock %}

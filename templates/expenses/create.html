@@ -7,7 +7,7 @@
   </div>
   <div>
     <a href="{{ url_for('expenses.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('Expenses_3') }}
+      <i class="fas fa-arrow-left mr-2"></i>{{ t('العودة') }} {{ t('Expenses_3') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
       <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
@@ -80,7 +80,7 @@
 
 {% block content %}
 <div class="card">
-  <form class="needs-validation expense-create-form" method="POST" action="{{ url_for('expenses.create') }}">
+  <form class="needs-validation expense-create-form" method="POST" action="{{ url_for('expenses.create') }}" novalidate>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
     
     <div class="card-body">
@@ -131,12 +131,12 @@
 
         <div class="col-md-4">
           <div class="form-group">
-            <label>
+            <label for="currency">
               <i class="fas fa-dollar-sign text-warning"></i> {{ t('Currency') }}
-              {% set dc = company_default_currency or system_default_currency or 'AED' %}
-              {% from 'macros/currency_options.html' import currency_select %}
-              {{ currency_select(name='currency', id='currency', default_code=dc) }}
             </label>
+            {% set dc = company_default_currency or system_default_currency or 'AED' %}
+            {% from 'macros/currency_options.html' import currency_select %}
+            {{ currency_select(name='currency', id='currency', default_code=dc) }}
           </div>
         </div>
 
@@ -183,7 +183,7 @@
         <label for="expense_notes">
           <i class="fas fa-sticky-note text-secondary"></i> {{ t('Notes') }}
         </label>
-        <textarea name="notes" id="expense_notes" class="form-control" rows="3" placeholder="أي {{ t('Notes') }}..." maxlength="500"></textarea>
+        <textarea name="notes" id="expense_notes" class="form-control" rows="3" placeholder="{{ t('أي ملاحظات...') }}" maxlength="500"></textarea>
       </div>
     </div>
 
@@ -211,7 +211,7 @@
         </button>
       </div>
       <div class="modal-body">
-        <form id="addExpenseCategoryForm" method="POST" action="">
+        <form id="addExpenseCategoryForm" class="needs-validation" method="POST" action="{{ url_for('expenses.create_category') }}" novalidate>
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <div class="form-group">
             <label for="expense_category_name">
@@ -252,7 +252,6 @@ $(() => {
     trigger: 'hover'
   });
   
-  // {{ t('Update') }} {{ t('Price_2') }} {{ t('Exchange') }} عند {{ t('Change') }} {{ t('Currency') }}
   $('#currency').on('change', function() {
     const currency = $(this).val();
     
@@ -262,48 +261,45 @@ $(() => {
     }
     
     $.ajax({
-      url: '{{ url_for("api.currency_rate", from_currency="X", to_currency="Y") }}'.replace('X', currency).replace('Y', '{{ tenant_default_currency or "AED" }}'),
+      url: {{ url_for("api.currency_rate", from_currency="__FROM__", to_currency="__TO__")|tojson }}.replace('__FROM__', currency).replace('__TO__', {{ (tenant_default_currency or 'AED')|tojson }}),
       method: 'GET',
       success: (data) => {
         if (data && data.rate) {
           $('#exchange_rate').val(parseFloat(data.rate).toFixed(6));
         } else if (window.toastr) {
-          toastr.warning('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('Exchange،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
+          toastr.warning({{ (t('تعذر') + ' ' + t('جلب') + ' ' + t('Price_2') + ' ' + t('Exchange،') + ' ' + t('يرجى') + ' ' + t('إدخال') + ' ' + t('Value') + ' ' + t('Manually') + '.')|tojson }});
         } else {
-          alert('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('Exchange،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
+          alert({{ (t('تعذر') + ' ' + t('جلب') + ' ' + t('Price_2') + ' ' + t('Exchange،') + ' ' + t('يرجى') + ' ' + t('إدخال') + ' ' + t('Value') + ' ' + t('Manually') + '.')|tojson }});
         }
       },
       error: () => {
         if (window.toastr) {
-          toastr.warning('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('Exchange،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
+          toastr.warning({{ (t('تعذر') + ' ' + t('جلب') + ' ' + t('Price_2') + ' ' + t('Exchange،') + ' ' + t('يرجى') + ' ' + t('إدخال') + ' ' + t('Value') + ' ' + t('Manually') + '.')|tojson }});
         } else {
-          alert('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('Exchange،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
+          alert({{ (t('تعذر') + ' ' + t('جلب') + ' ' + t('Price_2') + ' ' + t('Exchange،') + ' ' + t('يرجى') + ' ' + t('إدخال') + ' ' + t('Value') + ' ' + t('Manually') + '.')|tojson }});
         }
       }
     });
   }).trigger('change');
 });
 
-// {{ t('Management') }} {{ t('حقول') }} {{ t('Payment_2') }} {{ t('الديناميكية') }}
 if (window.PaymentFieldsManager) {
   PaymentFieldsManager.initSelector('#payment_method', '#paymentFieldsContainer');
 }
 
-// {{ t('Save') }} {{ t('فئة') }} {{ t('Expenses') }} {{ t('New_4') }}
 $('#saveExpenseCategoryBtn').on('click', () => {
   const name = $('#expense_category_name').val().trim();
   const name_ar = $('#expense_category_name_ar').val().trim();
   
   if (!name) {
-    alert('{{ t('الرجاء') }} {{ t('إدخال') }} {{ t('Name_2') }} {{ t('الفئة') }} {{ t('In English_2') }}');
+    alert({{ (t('الرجاء') + ' ' + t('إدخال') + ' ' + t('Name_2') + ' ' + t('الفئة') + ' ' + t('In English_2'))|tojson }});
     return;
   }
   
-  // {{ t('الحصول') }} على CSRF token
   const csrfToken = $('input[name="csrf_token"]').val();
   
   $.ajax({
-    url: "{{ url_for('expenses.create_category') }}",
+    url: {{ url_for('expenses.create_category')|tojson }},
     method: 'POST',
     contentType: 'application/json',
     headers: {
@@ -315,31 +311,28 @@ $('#saveExpenseCategoryBtn').on('click', () => {
     }),
     success: (response) => {
       if (response.success) {
-        // {{ t('Add') }} {{ t('الفئة') }} {{ t('New_4') }} {{ t('للقائمة') }}
         const displayName = response.category.name_ar ? 
           response.category.name_ar + ' - ' + response.category.name : 
           response.category.name;
         const newOption = new Option(displayName, response.category.id, true, true);
         $('#expense_category').append(newOption).trigger('change');
         
-        // {{ t('Close') }} {{ t('النافذة') }} {{ t('وتنظيف') }} {{ t('الحقول') }}
         $('#addExpenseCategoryModal').modal('hide');
         $('#expense_category_name').val('');
         $('#expense_category_name_ar').val('');
         
-        // {{ t('رسالة') }} {{ t('نجاح') }}
         if (typeof UI !== 'undefined') {
-          UI.success('تم {{ t('Add') }} {{ t('الفئة') }} {{ t('بنجاح') }}!');
+          UI.success({{ t('تم إضافة الفئة بنجاح!')|tojson }});
         } else {
-          alert('تم {{ t('Add') }} {{ t('الفئة') }} {{ t('بنجاح') }}!');
+          alert({{ t('تم إضافة الفئة بنجاح!')|tojson }});
         }
       } else {
-        alert('{{ t('Error') }}: ' + (response.error || '{{ t('فشل') }} {{ t('Add') }} {{ t('الفئة') }}'));
+        alert({{ t('Error')|tojson }} + ': ' + (response.error || {{ t('فشل في إضافة الفئة')|tojson }}));
       }
     },
     error: (xhr) => {
-      const error = xhr.responseJSON?.error || '{{ t('حدث') }} {{ t('Error') }} {{ t('أثناء') }} {{ t('Save_2') }}';
-      alert('{{ t('Error') }}: ' + error);
+      const error = xhr.responseJSON?.error || {{ t('حدث خطأ أثناء الحفظ')|tojson }};
+      alert({{ t('Error')|tojson }} + ': ' + error);
     }
   });
 });

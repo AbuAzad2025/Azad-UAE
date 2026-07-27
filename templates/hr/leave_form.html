@@ -1,32 +1,35 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('طلب') }} {{ t('إجازة') }}{% endblock %}
+{% block title %}{{ t('طلب إجازة') }}{% endblock %}
+{% block page_title %}
+<h1 class="mb-0"><i class="fas fa-calendar-plus mr-2"></i>{{ t('طلب إجازة') }}</h1>
+{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="card">
-    <div class="card-header"><h5><i class="fas fa-calendar-plus"></i> {{ t('طلب') }} {{ t('إجازة') }}</h5></div>
     <div class="card-body">
-      <form method="POST">
+      <form method="POST" class="needs-validation" action="{{ url_for('hr.request_leave') }}" novalidate>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="row">
           <div class="col-md-6">
             <div class="form-group"><label for="leave_type_id">{{ t('نوع') }} {{ t('الإجازة') }} <span class="text-danger">*</span></label>
               <select name="leave_type_id" id="leave_type_id" class="form-control" required>
+                <option value="">{{ t('None') }}</option>
                 {% for lt in leave_types %}
                 <option value="{{ lt.id }}">{{ lt.name_ar or lt.name }}</option>
                 {% endfor %}
               </select></div>
           </div>
           <div class="col-md-3">
-            <div class="form-group"><label for="date_from">من {{ t('History') }}</label>
+            <div class="form-group"><label for="date_from">{{ t('من التاريخ') }}</label>
               <input id="date_from" name="date_from" type="date" class="form-control" required></div>
           </div>
           <div class="col-md-3">
-            <div class="form-group"><label for="date_to">إلى {{ t('History') }}</label>
+            <div class="form-group"><label for="date_to">{{ t('إلى التاريخ') }}</label>
               <input id="date_to" name="date_to" type="date" class="form-control" required></div>
           </div>
           <div class="col-12">
             <div class="form-group"><label for="reason">{{ t('السبب') }}</label>
-              <textarea id="reason" name="reason" class="form-control" rows="3"></textarea></div>
+              <textarea id="reason" name="reason" class="form-control" rows="3" maxlength="500"></textarea></div>
           </div>
         </div>
         <button type="submit" class="btn btn-success"><i class="fas fa-paper-plane"></i> {{ t('Submit') }} {{ t('الطلب') }}</button>

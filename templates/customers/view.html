@@ -7,7 +7,7 @@
   </div>
   <div>
     <a href="{{ url_for('customers.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للقائمة') }}
+      <i class="fas fa-arrow-left mr-2"></i>{{ t('العودة') }} {{ t('للقائمة') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
       <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
@@ -111,11 +111,13 @@
               {% if current_user.has_permission('manage_sales') %}
               <td><a href="{{ url_for('sales.view', id=sale.id) }}">{{ sale.sale_number }}</a></td>
               {% endif %}
-              <td>{{ sale.sale_date.strftime('%Y-%m-%d') }}</td>
+              <td>{{ sale.sale_date.strftime('%Y-%m-%d') if sale.sale_date else '-' }}</td>
               <td>{{ format_currency(sale.total_amount, sale.currency) }}</td>
               <td>{{ format_currency(sale.paid_amount) }}</td>
               <td class="text-danger">{{ format_currency(sale.balance_due) }}</td>
             </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center text-muted">{{ t('لا توجد مبيعات سابقة') }}</td></tr>
             {% endfor %}
           </tbody>
         </table></div>
