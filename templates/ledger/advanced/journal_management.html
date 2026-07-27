@@ -22,25 +22,25 @@
             <td>{{ entry.entry_number }}</td>
             <td>{{ entry.entry_date.strftime('%Y-%m-%d') }}</td>
             <td>{{ entry.description }}</td>
-            <td class="text-success">{{ entry.total_debit }}</td>
-            <td class="text-danger">{{ entry.total_credit }}</td>
+            <td class="text-success">{{ format_currency(entry.total_debit, tenant_default_currency) }}</td>
+            <td class="text-danger">{{ format_currency(entry.total_credit, tenant_default_currency) }}</td>
             <td>
-              {% if entry.total_debit == entry.total_credit %}
+              {% if (entry.total_debit - entry.total_credit)|abs < 0.01 %}
               <span class="badge badge-success">{{ t('متوازن') }}</span>
               {% else %}
-              <span class="badge badge-danger">غير {{ t('متوازن') }}</span>
+              <span class="badge badge-danger">{{ t('Unbalanced') }}</span>
               {% endif %}
             </td>
             <td>
               <a href="{{ url_for('admin_ledger.view_journal', id=entry.id) }}" class="btn btn-info" title="{{ t('View') }}"><i class="fas fa-eye"></i></a>
               <form class="needs-validation d-inline" method="post" action="{{ url_for('advanced_ledger.reverse_journal_entry', entry_id=entry.id) }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="{{ t('CSRF_Token') }}">
                 <button type="submit" class="btn btn-warning" data-action="confirm-submit" data-confirm-message="{{ t('عكس') }} هذا {{ t('القيد_2') }}" title="{{ t('تراجع') }}"><i class="fas fa-undo"></i></button>
               </form>
             </td>
           </tr>
           {% else %}
-          <tr><td colspan="7" class="text-center">لا {{ t('توجد') }} {{ t('قيود') }}</td></tr>
+          <tr><td colspan="7" class="text-center py-4"><i class="fas fa-book fa-2x text-muted mb-2"></i><br>{{ t('No_items_found') }} {{ t('قيود') }}</td></tr>
           {% endfor %}
         </tbody>
       </table></div>

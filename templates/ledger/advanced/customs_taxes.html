@@ -37,12 +37,12 @@
                 <td>{{ tax.name_ar }}</td>
                 <td>{{ tax.rate }}%</td>
                 <td>{{ tax.tax_type }}</td>
-                <td>{{ tax.gl_account.code if tax.gl_account else '-' }}</td>
+                  <td>{{ tax.gl_account.code if tax.gl_account else t('None') }}</td>
                 <td>
                   {% if tax.is_active %}
                     <span class="badge badge-success">{{ t('Active') }}</span>
                   {% else %}
-                    <span class="badge badge-secondary">غير {{ t('Active') }}</span>
+                    <span class="badge badge-secondary">{{ t('Inactive') }}</span>
                   {% endif %}
                 </td>
                 <td>
@@ -53,7 +53,7 @@
               </tr>
               {% else %}
               <tr>
-                <td colspan="7" class="text-center">لا {{ t('توجد') }} {{ t('ضرائب') }} {{ t('مسجلة') }}</td>
+                <td colspan="7" class="text-center py-4"><i class="fas fa-file-invoice-dollar fa-2x text-muted mb-2"></i><br>{{ t('No_items_found') }} {{ t('ضرائب') }}</td>
               </tr>
               {% endfor %}
             </tbody>

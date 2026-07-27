@@ -32,8 +32,8 @@
                 <span class="badge badge-secondary">{{ t('General_2') }}</span>
               {% endif %}
             </td>
-            <td>{{ expense.category.name_ar if expense.category else '-' }}</td>
-            <td>{{ expense.amount }} {{ tenant_default_currency or 'AED' }}</td>
+            <td>{{ expense.category.name_ar if expense.category else t('None') }}</td>
+            <td>{{ format_currency(expense.amount, tenant_default_currency) }}</td>
             <td>{{ expense.description }}</td>
             <td>
                 {% if expense.is_reversed %}
@@ -44,7 +44,7 @@
             </td>
           </tr>
           {% else %}
-          <tr><td colspan="6" class="text-center">لا {{ t('توجد') }} {{ t('Expenses_2') }}</td></tr>
+          <tr><td colspan="6" class="text-center py-4"><i class="fas fa-inbox fa-2x text-muted mb-2"></i><br>{{ t('No_items_found') }} {{ t('Expenses_2') }}</td></tr>
           {% endfor %}
         </tbody>
       </table></div>

@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('Reports_3') }} {{ t('مالية') }} {{ t('احترافية') }} - Professional Financial Reports{% endblock %}
+{% block title %}{{ t('Reports_3') }} {{ t('مالية') }} {{ t('احترافية') }}{% endblock %}
 
 {% block styles %}
 <style>
-/* {{ t('تصميم') }} {{ t('احترافي') }} {{ t('Reports_2') }} {{ t('Finance') }} */
+/* TODO: Rename .ic-* classes to descriptive names (e.g., .stat-gradient-primary) */
 .report-dashboard {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 30px;
@@ -158,7 +158,7 @@
       </div>
       <div class="col-md-4 text-right">
         <div class="export-buttons">
-          <button class="btn btn-light export-btn" data-action="export-pdf">
+          <button class="btn btn-light export-btn" data-action="print-report">
             <i class="fas fa-file-pdf mr-1"></i>PDF
           </button>
           <button class="btn btn-light export-btn" data-action="export-excel">
@@ -225,7 +225,7 @@
       </div>
       <div class="form-group mr-3">
         <label class="mr-2">{{ t('نوع') }} {{ t('Report') }}:</label>
-        <select name="report_type" class="form-control" aria-label="report type">
+        <select name="report_type" class="form-control" aria-label="{{ t('Report_Type') }}">
           <option value="all">{{ t('جميع') }} {{ t('Reports') }}</option>
           <option value="revenue">{{ t('Revenue') }}</option>
           <option value="expenses">{{ t('Expenses') }}</option>
@@ -271,7 +271,7 @@
           {% else %}
           <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
             <i class="fas fa-chart-pie fa-3x mb-3"></i>
-            <p>{{ t('لا توجد') }} {{ t('Data_2') }}</p>
+            <p>{{ t('No_items_found') }} {{ t('Data_2') }}</p>
           </div>
           {% endif %}
         </div>
@@ -582,7 +582,7 @@ new Chart(netMarginCtx, {
   }
 });
 
-$(document).on('click', '[data-action="export-pdf"]', exportPDF);
+$(document).on('click', '[data-action="print-report"]', exportPDF);
 $(document).on('click', '[data-action="export-excel"]', exportExcel);
 
 function exportPDF() {

@@ -15,20 +15,20 @@
         <div class="card-body">
           {% set form_data = form_data if form_data is defined else request.form %}
           <form class="needs-validation" method="post" action="">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="{{ t('CSRF_Token') }}">
             
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="input_name">{{ t('Name') }} (EN) *</label>
-                  <input type="text" name="name" class="form-control" required value="{{ form_data.get('name', '') }}" id="input_name" aria-label="name" minlength="2" maxlength="100">
+                  <input type="text" name="name" class="form-control" required value="{{ form_data.get('name', '') }}" id="input_name" aria-label="{{ t('Name') }}" minlength="2" maxlength="100">
                 </div>
               </div>
               
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="input_name_ar">{{ t('Name') }} (AR) *</label>
-                  <input type="text" name="name_ar" class="form-control" required value="{{ form_data.get('name_ar', '') }}" id="input_name_ar" aria-label="name ar" minlength="2" maxlength="100">
+                  <input type="text" name="name_ar" class="form-control" required value="{{ form_data.get('name_ar', '') }}" id="input_name_ar" aria-label="{{ t('Name_AR') }}" minlength="2" maxlength="100">
                 </div>
               </div>
             </div>
@@ -37,7 +37,7 @@
               <div class="col-md-4">
                 <div class="form-group">
                   <label for="input_rate">{{ t('Rate_2') }} % *</label>
-                  <input type="number" name="rate" class="form-control" step="0.01" required value="{{ form_data.get('rate', '') }}" id="input_rate" aria-label="rate">
+                  <input type="number" name="rate" class="form-control" step="0.01" required value="{{ form_data.get('rate', '') }}" id="input_rate" aria-label="{{ t('Rate_2') }}">
                 </div>
               </div>
               
@@ -45,7 +45,7 @@
                 <div class="form-group">
                   <label>{{ t('نوع') }} {{ t('Account') }} *</label>
                   {% set selected_tax_type = form_data.get('tax_type', 'customs') %}
-                  <select name="tax_type" class="form-control" required aria-label="tax type">
+                  <select name="tax_type" class="form-control" required aria-label="{{ t('Tax_Type') }}">
                     <option value="customs" {% if selected_tax_type == 'customs' %}selected{% endif %}>{{ t('جمارك') }}</option>
                     <option value="vat" {% if selected_tax_type == 'vat' %}selected{% endif %}>{{ t('Tax_2') }} {{ t('Value') }} {{ t('المضافة') }}</option>
                     <option value="excise" {% if selected_tax_type == 'excise' %}selected{% endif %}>{{ t('Tax_2') }} {{ t('انتقائية') }}</option>
@@ -57,7 +57,7 @@
               <div class="col-md-4">
                 <div class="form-group">
                   <label>{{ t('Account') }} {{ t('Accounting_4') }} *</label>
-                  <select name="gl_account_id" class="form-control" required aria-label="gl account id">
+                  <select name="gl_account_id" class="form-control" required aria-label="{{ t('GL_Account') }}">
                     <option value="" {% if not form_data.get('gl_account_id') %}selected{% endif %}>{{ t('None') }}</option>
                     {% for account in accounts %}
                     <option value="{{ account.id }}" {% if form_data.get('gl_account_id') and form_data.get('gl_account_id')|int == account.id %}selected{% endif %}>
@@ -73,7 +73,7 @@
               <div class="col-md-4">
                 <div class="form-group">
                   <div class="form-check mt-4">
-                    <input type="checkbox" name="is_percentage" id="is_percentage" class="form-check-input" {% if form_data.get('is_percentage') %}checked{% endif %} aria-label="is percentage">
+                    <input type="checkbox" name="is_percentage" id="is_percentage" class="form-check-input" {% if form_data.get('is_percentage') %}checked{% endif %} aria-label="{{ t('Is_Percentage') }}">
                     <label class="form-check-label" for="is_percentage">{{ t('احتساب') }} {{ t('كنسبة') }} {{ t('مئوية') }}</label>
                   </div>
                 </div>
@@ -81,20 +81,20 @@
               <div class="col-md-4">
                 <div class="form-group">
                   <label for="input_effective_from">{{ t('Active_4') }} من *</label>
-                  <input type="date" name="effective_from" class="form-control" required value="{{ form_data.get('effective_from', '') }}" id="input_effective_from" aria-label="effective from">
+                  <input type="date" name="effective_from" class="form-control" required value="{{ form_data.get('effective_from', '') }}" id="input_effective_from" aria-label="{{ t('Effective_From') }}">
                 </div>
               </div>
               <div class="col-md-4">
                 <div class="form-group">
                   <label for="input_effective_to">{{ t('Active_4') }} إلى</label>
-                  <input type="date" name="effective_to" class="form-control" value="{{ form_data.get('effective_to', '') }}" id="input_effective_to" aria-label="effective to">
+                  <input type="date" name="effective_to" class="form-control" value="{{ form_data.get('effective_to', '') }}" id="input_effective_to" aria-label="{{ t('Effective_To') }}">
                 </div>
               </div>
             </div>
 
             <div class="form-group">
               <label>{{ t('Description') }}</label>
-              <textarea name="description" class="form-control" rows="3" aria-label="description" maxlength="500">{{ form_data.get('description', '') }}</textarea>
+              <textarea name="description" class="form-control" rows="3" aria-label="{{ t('Description_3') }}" maxlength="500">{{ form_data.get('description', '') }}</textarea>
             </div>
 
             <div class="form-group">

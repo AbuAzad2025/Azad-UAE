@@ -18,7 +18,7 @@
         </div>
         <div class="col-md-3">
           <div class="small-box bg-success">
-            <div class="inner"><h3>{{ stats.cleared_cheques }}</h3><p>تم {{ t('Exchange') }}</p></div>
+            <div class="inner"><h3>{{ stats.cleared_cheques }}</h3><p>{{ t('Cleared') }}</p></div>
           </div>
         </div>
         <div class="col-md-3">
@@ -36,13 +36,13 @@
           {% for cheque in recent_cheques %}
           <tr>
             <td>{{ cheque.cheque_number }}</td>
-            <td>{{ cheque.amount_aed }} {{ tenant_default_currency or 'AED' }}</td>
+            <td>{{ format_currency(cheque.amount_aed, tenant_default_currency) }}</td>
             <td>{{ cheque.due_date.strftime('%Y-%m-%d') }}</td>
             <td><span class="badge badge-{{ 'success' if cheque.status == 'cleared' else 'warning' }}">{{ cheque.status }}</span></td>
-            <td>{{ cheque.gl_entry_number or '-' }}</td>
+            <td>{{ cheque.gl_entry_number or t('None') }}</td>
           </tr>
           {% else %}
-          <tr><td colspan="5" class="text-center">لا {{ t('توجد') }} {{ t('Cheques_2') }}</td></tr>
+          <tr><td colspan="5" class="text-center py-4"><i class="fas fa-money-check fa-2x text-muted mb-2"></i><br>{{ t('No_items_found') }} {{ t('Cheques_2') }}</td></tr>
           {% endfor %}
         </tbody>
       </table></div>

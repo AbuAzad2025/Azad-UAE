@@ -29,11 +29,11 @@
             <td>{{ event.created_at.strftime('%Y-%m-%d %H:%M:%S') if event.created_at else '-' }}</td>
             <td><span class="badge badge-primary">{{ event.event_type }}</span></td>
             <td>{{ event.description }}</td>
-            <td>{{ event.user.username if event.user else 'نظام' }}</td>
-            <td>{{ event.journal_entry_id or '-' }}</td>
+            <td>{{ event.user.username if event.user else t('System') }}</td>
+            <td>{{ event.journal_entry_id or t('None') }}</td>
           </tr>
           {% else %}
-          <tr><td colspan="5" class="text-center">لا {{ t('توجد') }} {{ t('أحداث') }}</td></tr>
+          <tr><td colspan="5" class="text-center py-4"><i class="fas fa-bell-slash fa-2x text-muted mb-2"></i><br>{{ t('No_items_found') }} {{ t('أحداث') }}</td></tr>
           {% endfor %}
         </tbody>
       </table></div>

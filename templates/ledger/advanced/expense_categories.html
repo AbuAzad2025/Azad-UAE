@@ -35,14 +35,14 @@
               <tr>
                 <td>{{ category.code }}</td>
                 <td>{{ category.name_ar }}</td>
-                <td>{{ category.parent.name_ar if category.parent else '-' }}</td>
-                <td>{{ category.gl_account.code if category.gl_account else '-' }}</td>
+                <td>{{ category.parent.name_ar if category.parent else t('None') }}</td>
+                <td>{{ category.gl_account.code if category.gl_account else t('None') }}</td>
                 <td>{{ category.children.count() }}</td>
                 <td>
                   {% if category.is_active %}
                     <span class="badge badge-success">{{ t('Active') }}</span>
                   {% else %}
-                    <span class="badge badge-secondary">غير {{ t('Active') }}</span>
+                    <span class="badge badge-secondary">{{ t('Inactive') }}</span>
                   {% endif %}
                 </td>
                 <td>
@@ -53,7 +53,7 @@
               </tr>
               {% else %}
               <tr>
-                <td colspan="7" class="text-center">لا {{ t('توجد') }} {{ t('فئات') }}</td>
+                <td colspan="7" class="text-center py-4"><i class="fas fa-folder-open fa-2x text-muted mb-2"></i><br>{{ t('No_items_found') }} {{ t('فئات') }}</td>
               </tr>
               {% endfor %}
             </tbody>
