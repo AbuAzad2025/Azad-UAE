@@ -6,7 +6,7 @@
 <div class="row mb-3">
   <div class="col-12">
     <a href="{{ url_for('admin_ledger.accounts_management') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }}
+      <i class="fas fa-arrow-left me-2"></i>{{ t('العودة') }}
     </a>
   </div>
 </div>
@@ -14,22 +14,20 @@
 <div class="card">
   <div class="card-header bg-gradient-success">
     <h3 class="card-title text-white">
-      <i class="fas fa-plus-circle mr-2"></i>{{ t('Add') }} {{ t('Account') }} {{ t('Accounting_3') }} {{ t('New') }}
+      <i class="fas fa-plus-circle me-2"></i>{{ t('Add') }} {{ t('Account') }} {{ t('Accounting_3') }} {{ t('New') }}
     </h3>
   </div>
   <div class="card-body">
     {% set form_data = form_data if form_data is defined else request.form %}
-    <form class="needs-validation ledger-account-form" method="POST" action="{{ url_for('admin_ledger.add_account') }}">
+    <form class="needs-validation ledger-account-form" method="POST" action="{{ url_for('admin_ledger.add_account') }}" novalidate>
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
-            <label>{{ t('Code_2') }} {{ t('Account') }} <span class="text-danger">*</span></label>
-            <label>
-              <input type="text" name="code" class="form-control" required
-                     placeholder="{{ t('مثال') }}: 1110, 1130, 4100" maxlength="20"
-                     value="{{ form_data.get('code', '') }}">
-            </label>
+            <label for="code">{{ t('Code_2') }} {{ t('Account') }} <span class="text-danger">*</span></label>
+            <input type="text" name="code" id="code" class="form-control" required
+                   placeholder="{{ t('مثال') }}: 1110, 1130, 4100" maxlength="20"
+                   value="{{ form_data.get('code', '') }}">
             <small class="form-text text-muted">يجب أن يكون {{ t('فريداً') }} {{ t('وغير') }} {{ t('مكرر') }}</small>
           </div>
         </div>
@@ -52,12 +50,10 @@
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
-            <label>{{ t('Name_2') }} {{ t('Account') }} ({{ t('Arabic') }}) <span class="text-danger">*</span></label>
-            <label>
-              <input type="text" name="name_ar" class="form-control" required
-                     placeholder="{{ t('مثال') }}: {{ t('Fund') }} {{ t('Receivables_2') }} {{ t('Receivables') }}"
-                     value="{{ form_data.get('name_ar', '') }}" minlength="2" maxlength="100">
-            </label>
+            <label for="name_ar">{{ t('Name_2') }} {{ t('Account') }} ({{ t('Arabic') }}) <span class="text-danger">*</span></label>
+            <input type="text" name="name_ar" id="name_ar" class="form-control" required
+                   placeholder="{{ t('مثال') }}: {{ t('Fund') }} {{ t('Receivables_2') }} {{ t('Receivables') }}"
+                   value="{{ form_data.get('name_ar', '') }}" minlength="2" maxlength="100">
           </div>
         </div>
         <div class="col-md-6">
@@ -103,11 +99,9 @@
       <div class="row">
         <div class="col-md-12">
           <div class="form-group">
-            <label>{{ t('Description_2') }} {{ t('Account') }}</label>
-            <label>
-<textarea name="description" class="form-control" rows="3"
-          placeholder="{{ t('Description_2') }} {{ t('تفصيلي') }} {{ t('for Account') }} ({{ t('Optional') }})" maxlength="500">{{ form_data.get('description', '') }}</textarea>
-            </label>
+            <label for="description">{{ t('Description_2') }} {{ t('Account') }}</label>
+            <textarea name="description" id="description" class="form-control" rows="3"
+                      placeholder="{{ t('Description_2') }} {{ t('تفصيلي') }} {{ t('for Account') }} ({{ t('Optional') }})" maxlength="500">{{ form_data.get('description', '') }}</textarea>
           </div>
         </div>
       </div>
@@ -139,46 +133,38 @@
 
       <div id="bank_fields" class="row mt-4" style="display: none;">
         <div class="col-12">
-          <h5 class="mb-3"><i class="fas fa-university mr-2"></i>معلومات البنك</h5>
+          <h5 class="mb-3"><i class="fas fa-university me-2"></i>{{ _('معلومات البنك') }}</h5>
         </div>
         <div class="col-md-6">
           <div class="form-group">
-            <label>اسم البنك</label>
-            <label>
-              <input type="text" name="bank_name" class="form-control"
-                     placeholder="{{ _('مثال: بنك الإمارات دبي الوطني') }}"
-                     value="{{ form_data.get('bank_name', '') }}" maxlength="200">
-            </label>
+            <label for="bank_name">{{ _('اسم البنك') }}</label>
+            <input type="text" name="bank_name" id="bank_name" class="form-control"
+                   placeholder="{{ _('مثال: بنك الإمارات دبي الوطني') }}"
+                   value="{{ form_data.get('bank_name', '') }}" maxlength="200">
           </div>
         </div>
         <div class="col-md-6">
           <div class="form-group">
-            <label>رقم الحساب</label>
-            <label>
-              <input type="text" name="bank_account_number" class="form-control"
-                     placeholder="{{ _('مثال: 1234567890') }}"
-                     value="{{ form_data.get('bank_account_number', '') }}" maxlength="100">
-            </label>
+            <label for="bank_account_number">{{ _('رقم الحساب') }}</label>
+            <input type="text" name="bank_account_number" id="bank_account_number" class="form-control"
+                   placeholder="{{ _('مثال: 1234567890') }}"
+                   value="{{ form_data.get('bank_account_number', '') }}" maxlength="100">
           </div>
         </div>
         <div class="col-md-6">
           <div class="form-group">
-            <label>رقم IBAN</label>
-            <label>
-              <input type="text" name="bank_iban" class="form-control"
-                     placeholder="{{ _('مثال: AE123456789012345678901') }}"
-                     value="{{ form_data.get('bank_iban', '') }}" maxlength="50">
-            </label>
+            <label for="bank_iban">{{ _('رقم IBAN') }}</label>
+            <input type="text" name="bank_iban" id="bank_iban" class="form-control"
+                   placeholder="{{ _('مثال: AE123456789012345678901') }}"
+                   value="{{ form_data.get('bank_iban', '') }}" maxlength="50">
           </div>
         </div>
         <div class="col-md-6">
           <div class="form-group">
-            <label>كود SWIFT</label>
-            <label>
-              <input type="text" name="bank_swift_code" class="form-control"
-                     placeholder="{{ _('مثال: EBILAEAD') }}"
-                     value="{{ form_data.get('bank_swift_code', '') }}" maxlength="20">
-            </label>
+            <label for="bank_swift_code">{{ _('كود SWIFT') }}</label>
+            <input type="text" name="bank_swift_code" id="bank_swift_code" class="form-control"
+                   placeholder="{{ _('مثال: EBILAEAD') }}"
+                   value="{{ form_data.get('bank_swift_code', '') }}" maxlength="20">
           </div>
         </div>
       </div>
@@ -186,10 +172,10 @@
       <div class="row mt-4">
         <div class="col-12">
           <button type="submit" class="btn btn-success btn-lg">
-            <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Account') }}
+            <i class="fas fa-save me-2"></i>{{ t('Save') }} {{ t('Account') }}
           </button>
           <a href="{{ url_for('admin_ledger.accounts_management') }}" class="btn btn-secondary btn-lg">
-            <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}
+            <i class="fas fa-times me-2"></i>{{ t('Cancel') }}
           </a>
         </div>
       </div>
@@ -201,7 +187,7 @@
 <div class="card mt-4">
   <div class="card-header bg-gradient-info">
     <h5 class="card-title text-white mb-0">
-      <i class="fas fa-lightbulb mr-2"></i>{{ t('مساعدة') }} {{ t('Quick') }}
+      <i class="fas fa-lightbulb me-2"></i>{{ t('مساعدة') }} {{ t('Quick') }}
     </h5>
   </div>
   <div class="card-body">
@@ -209,11 +195,11 @@
       <div class="col-md-6">
         <h6>{{ t('أنواع') }} {{ t('Accounts') }}:</h6>
         <ul class="list-unstyled">
-          <li><span class="badge badge-success mr-2">{{ t('أصول') }}</span> ما {{ t('تملكه') }} {{ t('Company') }}</li>
-          <li><span class="badge badge-warning mr-2">{{ t('خصوم') }}</span> ما {{ t('تدين') }} به {{ t('Company') }}</li>
-          <li><span class="badge badge-info mr-2">{{ t('حقوق') }} {{ t('الملكية') }}</span> {{ t('رأس') }} {{ t('المال') }} {{ t('والأرباح') }}</li>
-          <li><span class="badge badge-primary mr-2">{{ t('Revenues') }}</span> {{ t('Income') }} {{ t('Company') }}</li>
-          <li><span class="badge badge-danger mr-2">{{ t('Expenses_2') }}</span> {{ t('تكاليف') }} {{ t('Company') }}</li>
+          <li><span class="badge badge-success me-2">{{ t('أصول') }}</span> ما {{ t('تملكه') }} {{ t('Company') }}</li>
+          <li><span class="badge badge-warning me-2">{{ t('خصوم') }}</span> ما {{ t('تدين') }} به {{ t('Company') }}</li>
+          <li><span class="badge badge-info me-2">{{ t('حقوق') }} {{ t('الملكية') }}</span> {{ t('رأس') }} {{ t('المال') }} {{ t('والأرباح') }}</li>
+          <li><span class="badge badge-primary me-2">{{ t('Revenues') }}</span> {{ t('Income') }} {{ t('Company') }}</li>
+          <li><span class="badge badge-danger me-2">{{ t('Expenses_2') }}</span> {{ t('تكاليف') }} {{ t('Company') }}</li>
         </ul>
       </div>
       <div class="col-md-6">
@@ -276,6 +262,9 @@
     padding: 0.75rem 1rem;
   }
 </style>
+{% endblock %}
+
+{% block scripts %}
 <script>
 $(document).ready(() => {
   function toggleBankFields() {

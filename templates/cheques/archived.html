@@ -44,15 +44,15 @@
                     <span class="badge badge-warning">{{ t('Expense') }}</span>
                   {% endif %}
                 </td>
-                <td>{{ cheque.amount }} {{ cheque.currency }}</td>
+                <td>{{ format_currency(cheque.amount, cheque.currency) }}</td>
                 <td>{{ cheque.bank_name }}</td>
-                <td>{{ cheque.due_date.strftime('%Y-%m-%d') }}</td>
+                <td>{{ cheque.due_date.strftime('%Y-%m-%d') if cheque.due_date else '-' }}</td>
                 <td>
                   <span class="badge badge-secondary">{{ cheque.status }}</span>
                 </td>
                 <td>{{ cheque.archived_at.strftime('%Y-%m-%d %H:%M') if cheque.archived_at else '-' }}</td>
                 <td>
-                  <form class="needs-validation d-inline" method="post" action="{{ url_for('cheques.restore', id=cheque.id) }}">
+                  <form class="needs-validation d-inline" method="post" action="{{ url_for('cheques.restore', id=cheque.id) }}" novalidate>
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                     <button type="submit" class="btn btn-success" data-action="confirm-submit" data-confirm-message="{{ t('Restore') }} هذا {{ t('Cheque_2') }}">
                       <i class="fas fa-undo"></i> {{ t('Restore') }}
@@ -62,7 +62,7 @@
               </tr>
               {% else %}
               <tr>
-                <td colspan="8" class="text-center">لا {{ t('توجد') }} {{ t('Cheques_2') }} {{ t('Archived_2') }}</td>
+                <td colspan="8" class="text-center">{{ t('لا توجد شيكات مؤرشفة') }}</td>
               </tr>
               {% endfor %}
             </tbody>

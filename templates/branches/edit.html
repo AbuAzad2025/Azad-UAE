@@ -7,7 +7,7 @@
       <h3><i class="fas fa-edit"></i> {{ t('Edit') }} {{ t('Branch') }}: {{ branch.name }}</h3>
     </div>
     <div class="card-body">
-      <form class="needs-validation" method="post">
+      <form class="needs-validation" method="post" novalidate>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="row">
           <div class="col-md-6">
@@ -19,14 +19,15 @@
           <div class="col-md-6">
             <div class="form-group">
               <label for="input_code">{{ t('Code') }} *</label>
-              <input type="text" name="code" class="form-control" value="{{ branch.code }}" required disabled id="input_code" aria-label="code">
+              <input type="text" class="form-control" value="{{ branch.code }}" disabled id="input_code" aria-label="code">
+              <input type="hidden" name="code" value="{{ branch.code }}">
             </div>
           </div>
         </div>
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
-              <label for="input_city">{{ t('Receivables') }}</label>
+              <label for="input_city">{{ t('City') }}</label>
               <input type="text" name="city" class="form-control" value="{{ branch.city }}" id="input_city" aria-label="city">
             </div>
           </div>
@@ -40,7 +41,7 @@
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
-              <label for="prices_include_vat">طريقة احتساب الضريبة في {{ t('Branch') }}</label>
+              <label for="prices_include_vat">{{ _('طريقة احتساب الضريبة في') }} {{ t('Branch') }}</label>
               <select name="prices_include_vat" class="form-control" id="prices_include_vat" aria-label="prices include vat">
                 <option value="" {% if branch.prices_include_vat is none %}selected{% endif %}>{{ _('الافتراضي (حسب الشركة)') }}</option>
                 <option value="on" {% if branch.prices_include_vat is true %}selected{% endif %}>{{ _('الأسعار شاملة الضريبة') }}</option>
@@ -56,10 +57,15 @@
         </div>
         <div class="form-group form-check">
           <input type="checkbox" name="is_main" class="form-check-input" id="isMain" {% if branch.is_main %}checked{% endif %} aria-label="is main">
-          <label class="form-check-label" for="isMain">هذا هو {{ t('Branch') }} {{ t('Main') }}</label>
+          <label class="form-check-label" for="isMain">{{ _('هذا هو') }} {{ t('Branch') }} {{ t('Main') }}</label>
         </div>
         <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> {{ t('Save') }}</button>
         <a href="{{ url_for('branches.index') }}" class="btn btn-secondary"><i class="fas fa-times"></i> {{ t('Cancel') }}</a>
+      </form>
+      <hr>
+      <form method="post" action="{{ url_for('branches.delete', id=branch.id) }}" data-action="confirm-submit" data-confirm-message="{{ _('هل أنت متأكد من حذف هذا الفرع؟') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+        <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> {{ t('Delete') }} {{ t('Branch') }}</button>
       </form>
     </div>
   </div>

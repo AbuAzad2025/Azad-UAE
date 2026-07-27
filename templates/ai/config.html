@@ -34,7 +34,7 @@
 
       </div>
 
-      <form class="needs-validation api-key-form" id="groqForm" method="POST" action="">
+      <form class="needs-validation novalidate api-key-form" id="groqForm" method="POST" action="{{ url_for('ai.config') }}">
 
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
@@ -68,15 +68,11 @@
 
                      placeholder="gsk_...">
 
-              <div class="input-group-append">
+              <button type="button" class="btn btn-outline-secondary toggle-key" data-target="groq_key" title="{{ t('View') }}">
 
-                <button type="button" class="btn btn-outline-secondary toggle-key" data-target="groq_key" title="{{ t('View') }}">
+                <i class="fas fa-eye"></i>
 
-                  <i class="fas fa-eye"></i>
-
-                </button>
-
-              </div>
+              </button>
 
             </div>
 
@@ -124,7 +120,7 @@
 
       </div>
 
-      <form id="otherForm" method="POST" class="api-key-form" action="">
+      <form id="otherForm" method="POST" class="api-key-form needs-validation novalidate" action="{{ url_for('ai.config') }}">
 
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
@@ -168,15 +164,11 @@
 
                      placeholder="{{ _('sk-... أو AIza...') }}">
 
-              <div class="input-group-append">
+              <button type="button" class="btn btn-outline-secondary toggle-key" data-target="other_key" title="{{ t('View') }}">
 
-                <button type="button" class="btn btn-outline-secondary toggle-key" data-target="other_key" title="{{ t('View') }}">
+                <i class="fas fa-eye"></i>
 
-                  <i class="fas fa-eye"></i>
-
-                </button>
-
-              </div>
+              </button>
 
             </div>
 
@@ -378,7 +370,7 @@
 
     background-repeat: no-repeat;
 
-    background-position: left 0.8rem center;
+    background-position: right 0.8rem center;
 
     background-size: 12px;
 
@@ -406,7 +398,7 @@
 
 $(document).ready(() => {
 
-  // {{ t('Show') }}/{{ t('Hide') }} {{ t('المفتاح') }}
+  // Key toggle
 
   $('.toggle-key').click(function() {
 
@@ -436,7 +428,7 @@ $(document).ready(() => {
 
 
 
-  // {{ t('Save') }} {{ t('النماذج') }}
+  // Save forms
 
   $('.api-key-form').on('submit', function(e) {
 
@@ -452,9 +444,9 @@ $(document).ready(() => {
 
 
 
-    // {{ t('تعطيل') }} {{ t('الزر') }}
+    // Disable button
 
-    submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> {{ t('جاري') }} {{ t('Save_2') }}...');
+    submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> ' + {{ t('جاري')|tojson }} + ' ' + {{ t('Save_2')|tojson }} + '...');
 
 
 
@@ -482,13 +474,11 @@ $(document).ready(() => {
 
             icon: 'success',
 
-            title: 'تم {{ t('Save_2') }}! ✅',
+            title: 'تم ' + {{ t('Save_2')|tojson }} + '! ✅',
 
-            html: `<p>${response.message}</p>
+            text: response.message + '\n' + {{ t('Permission')|tojson }} + ': ' + response.expires_in,
 
-                   <p class="text-muted"><small>{{ t('Permission') }}: ${response.expires_in}</small></p>`,
-
-            confirmButtonText: '{{ t('تمام') }}',
+            confirmButtonText: {{ t('تمام')|tojson }},
 
             timer: 3000
 
@@ -504,7 +494,7 @@ $(document).ready(() => {
 
             icon: 'error',
 
-            title: '{{ t('Error') }}',
+            title: {{ t('Error')|tojson }},
 
             text: response.message
 
@@ -524,9 +514,9 @@ $(document).ready(() => {
 
           icon: 'error',
 
-          title: '{{ t('Error') }} في {{ t('Save_2') }}',
+          title: {{ t('Error')|tojson }} + ' ' + {{ t('في')|tojson }} + ' ' + {{ t('Save_2')|tojson }},
 
-          text: '{{ t('تأكد') }} من {{ t('صلاحيتك') }} {{ t('وحاول') }} {{ t('مرة') }} {{ t('أخرى') }}'
+          text: {{ t('تأكد')|tojson }} + ' ' + {{ t('من')|tojson }} + ' ' + {{ t('صلاحيتك')|tojson }} + ' ' + {{ t('وحاول')|tojson }} + ' ' + {{ t('مرة')|tojson }} + ' ' + {{ t('أخرى')|tojson }}
 
         });
 

@@ -10,14 +10,14 @@
 <div class="row mb-3">
   <div class="col-12">
     <a href="{{ url_for('admin_ledger.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للوحة') }} {{ t('Control') }}
+      <i class="fas fa-arrow-left me-2"></i>{{ t('العودة') }} {{ t('للوحة') }} {{ t('Control') }}
     </a>
     <a href="{{ url_for('admin_ledger.add_account') }}" class="btn btn-success">
-      <i class="fas fa-plus mr-2"></i>{{ t('Add') }} {{ t('Account') }} {{ t('New') }}
+      <i class="fas fa-plus me-2"></i>{{ t('Add') }} {{ t('Account') }} {{ t('New') }}
     </a>
     {% if current_user.has_permission('view_ledger') %}
     <a href="{{ url_for('ledger.accounts_tree') }}" class="btn btn-info">
-      <i class="fas fa-sitemap mr-2"></i>{{ t('شجرة') }} {{ t('Accounts') }}
+      <i class="fas fa-sitemap me-2"></i>{{ t('شجرة') }} {{ t('Accounts') }}
     </a>
     {% endif %}
   </div>
@@ -26,7 +26,7 @@
 <div class="card">
   <div class="card-header bg-gradient-primary">
     <h3 class="card-title text-white">
-      <i class="fas fa-chart-line mr-2"></i>{{ t('جميع') }} {{ t('Accounts') }} {{ t('Accounting') }}
+      <i class="fas fa-chart-line me-2"></i>{{ t('جميع') }} {{ t('Accounts') }} {{ t('Accounting') }}
     </h3>
   </div>
   <div class="card-body p-0">
@@ -54,7 +54,7 @@
             <td>
               <strong>{{ account.full_name }}</strong>
               {% if account.description %}
-                <br><small class="text-muted">{{ account.description[:50] }}{% if account.description|length > 50 %}...{% endif %}</small>
+                <br><small class="text-muted">{{ account.description|truncate(50) }}</small>
               {% endif %}
             </td>
             <td>
@@ -125,13 +125,13 @@
       <div class="modal-body">
         <p>هل أنت {{ t('متأكد') }} من {{ t('Delete') }} {{ t('Account') }} <strong id="accountName"></strong>؟</p>
         <div class="alert alert-warning">
-          <i class="fas fa-exclamation-triangle mr-2"></i>
+          <i class="fas fa-exclamation-triangle me-2"></i>
           <strong>{{ t('Warning') }}:</strong> لا يمكن {{ t('Delete') }} {{ t('Account') }} إذا كان {{ t('مرتبطاً') }} {{ t('بقيود') }} {{ t('Accounting_2') }} أو {{ t('Accounts_2') }} {{ t('فرعية') }}.
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ t('Cancel') }}</button>
-        <form class="needs-validation d-inline" method="POST" id="deleteForm" action="">
+        <form class="needs-validation d-inline" method="POST" id="deleteForm" action="" novalidate>
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <button type="submit" class="btn btn-danger">{{ t('Delete') }}</button>
         </form>
@@ -145,7 +145,7 @@
 <script>
 function deleteAccount(accountId, accountName) {
   document.getElementById('accountName').textContent = accountName;
-  document.getElementById('deleteForm').action = "{{ url_for('admin_ledger.delete_account', id=0) }}".replace('0', accountId);
+  document.getElementById('deleteForm').action = "{{ url_for('admin_ledger.delete_account', id='__ID__') }}".replace('__ID__', accountId);
   $('#deleteModal').modal('show');
 }
 $(document).ready(() => {

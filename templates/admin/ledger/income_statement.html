@@ -6,10 +6,10 @@
 <div class="row mb-3 no-print">
   <div class="col-12">
     <a href="{{ url_for('ledger.admin_reports') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('Back to Reports') }}
+      <i class="fas fa-arrow-left me-2"></i>{{ t('Back to Reports') }}
     </a>
     <button class="btn btn-success" data-action="window-print">
-      <i class="fas fa-print mr-2"></i>{{ t('Print') }}
+      <i class="fas fa-print me-2"></i>{{ t('Print') }}
     </button>
   </div>
 </div>
@@ -18,11 +18,11 @@
 <div class="card mb-4 no-print">
   <div class="card-header bg-gradient-primary">
     <h5 class="card-title text-white mb-0">
-      <i class="fas fa-filter mr-2"></i>{{ t('Filter Date') }}
+      <i class="fas fa-filter me-2"></i>{{ t('Filter Date') }}
     </h5>
   </div>
   <div class="card-body">
-    <form class="needs-validation row" method="GET" action="">
+    <form class="needs-validation row" method="GET" action="" novalidate>
       <div class="col-md-4">
         <div class="form-group">
           <label for="input_date_from">{{ t('From Date') }}:</label>
@@ -39,7 +39,7 @@
         <div class="form-group">
           <label aria-hidden="true">&nbsp;</label>
           <button type="submit" class="btn btn-primary btn-block">
-            <i class="fas fa-search mr-2"></i>{{ t('Update Report') }}
+            <i class="fas fa-search me-2"></i>{{ t('Update Report') }}
           </button>
         </div>
       </div>
@@ -51,7 +51,7 @@
 <div class="card">
   <div class="card-header bg-gradient-success">
     <h3 class="card-title text-white">
-      <i class="fas fa-chart-line mr-2"></i>{{ t('Income Statement') }}
+      <i class="fas fa-chart-line me-2"></i>{{ t('Income Statement') }}
     </h3>
     <div class="card-tools">
       <small class="text-white">
@@ -73,7 +73,7 @@
           
           <tr class="bg-success text-white">
             <th colspan="3" class="text-center">
-              <i class="fas fa-arrow-up mr-2"></i>{{ t('Revenue') }}
+              <i class="fas fa-arrow-up me-2"></i>{{ t('Revenue') }}
             </th>
           </tr>
           {% for revenue in revenues %}
@@ -94,7 +94,7 @@
           
           <tr class="bg-danger text-white">
             <th colspan="3" class="text-center">
-              <i class="fas fa-arrow-down mr-2"></i>{{ t('Expenses') }}
+              <i class="fas fa-arrow-down me-2"></i>{{ t('Expenses') }}
             </th>
           </tr>
           {% for expense in expenses %}
@@ -115,7 +115,7 @@
           
           <tr class="bg-primary text-white">
             <th colspan="2" class="text-center">
-              <i class="fas fa-calculator mr-2"></i>{{ t('Net Income') }}
+              <i class="fas fa-calculator me-2"></i>{{ t('Net Income') }}
             </th>
             <th class="text-center">
               {% if net_income > 0 %}
@@ -140,7 +140,7 @@
       <div class="card-body">
         <div class="d-flex justify-content-between">
           <div>
-            <h4 class="mb-0">{{ "{:,.0f}".format(revenues_total) }}</h4>
+            <h4 class="mb-0">{{ format_currency(revenues_total) }}</h4>
             <p class="mb-0">{{ t('Total Revenue') }}</p>
           </div>
           <div class="align-self-center">
@@ -156,7 +156,7 @@
       <div class="card-body">
         <div class="d-flex justify-content-between">
           <div>
-            <h4 class="mb-0">{{ "{:,.0f}".format(expenses_total) }}</h4>
+            <h4 class="mb-0">{{ format_currency(expenses_total) }}</h4>
             <p class="mb-0">{{ t('Total Expenses') }}</p>
           </div>
           <div class="align-self-center">
@@ -172,7 +172,7 @@
     {% set income_icon = 'chart-line' %}
   {% elif net_income < 0 %}
     {% set income_color = 'danger' %}
-    {% set income_icon = 'chart-line-down' %}
+    {% set income_icon = 'arrow-trend-down' %}
   {% else %}
     {% set income_color = 'secondary' %}
     {% set income_icon = 'minus' %}
@@ -182,7 +182,7 @@
       <div class="card-body">
         <div class="d-flex justify-content-between">
           <div>
-            <h4 class="mb-0">{{ "{:,.0f}".format(net_income) }}</h4>
+            <h4 class="mb-0">{{ format_currency(net_income) }}</h4>
             <p class="mb-0">{{ t('Net Income') }}</p>
           </div>
           <div class="align-self-center">
@@ -200,7 +200,7 @@
     <div class="card">
       <div class="card-header bg-gradient-info">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-percentage mr-2"></i>{{ t('Performance Ratios') }}
+          <i class="fas fa-percentage me-2"></i>{{ t('Performance Ratios') }}
         </h5>
       </div>
       <div class="card-body">
@@ -251,7 +251,7 @@
 <div class="card mt-4">
   <div class="card-header bg-gradient-warning">
     <h5 class="card-title text-white mb-0">
-      <i class="fas fa-info-circle mr-2"></i>{{ t('Notes') }}
+      <i class="fas fa-info-circle me-2"></i>{{ t('Notes') }}
     </h5>
   </div>
   <div class="card-body">

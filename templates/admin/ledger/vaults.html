@@ -6,10 +6,10 @@
 <div class="row mb-3">
   <div class="col-12">
     <a href="{{ url_for('ledger.admin_dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للوحة') }} {{ t('Control') }}
+      <i class="fas fa-arrow-left me-2"></i>{{ t('العودة') }} {{ t('للوحة') }} {{ t('Control') }}
     </a>
     {% if current_user.is_owner %}<a href="{{ url_for('payment_vault.dashboard') }}" class="btn btn-primary">
-      <i class="fas fa-vault mr-2"></i>{{ t('Management') }} {{ t('المحافظ') }}
+      <i class="fas fa-vault me-2"></i>{{ t('Management') }} {{ t('المحافظ') }}
     </a>{% endif %}
   </div>
 </div>
@@ -17,7 +17,7 @@
 <div class="card">
   <div class="card-header bg-gradient-primary">
     <h3 class="card-title text-white">
-      <i class="fas fa-vault mr-2"></i>{{ t('جميع') }} {{ t('المحافظ') }} {{ t('والصناديق') }}
+      <i class="fas fa-vault me-2"></i>{{ t('جميع') }} {{ t('المحافظ') }} {{ t('والصناديق') }}
     </h3>
   </div>
   <div class="card-body p-0">
@@ -34,6 +34,7 @@
           </tr>
         </thead>
         <tbody>
+          {% if vaults %}
           {% for vault in vaults %}
           <tr>
             <td>
@@ -65,7 +66,7 @@
                 {{ vault.failed_attempts }}
               </span>
             </td>
-            <td>{{ vault.created_at.strftime('%Y-%m-%d') }}</td>
+            <td>{{ vault.created_at.strftime('%Y-%m-%d') if vault.created_at else '-' }}</td>
             <td>
               <div class="btn-group btn-group-sm">
                 {% if current_user.is_owner %}<a href="{{ url_for('payment_vault.dashboard') }}" class="btn btn-outline-primary" title="{{ t('View') }} {{ t('الخزينة') }}">
@@ -84,6 +85,14 @@
             </td>
           </tr>
           {% endfor %}
+          {% else %}
+          <tr>
+            <td colspan="6" class="text-center text-muted py-4">
+              <i class="fas fa-vault fa-2x mb-2 d-block"></i>
+              {{ t('لا توجد') }} {{ t('المحافظ') }} {{ t('الصناديق') }}
+            </td>
+          </tr>
+          {% endif %}
         </tbody>
       </table>
     </div>
@@ -170,13 +179,25 @@ document.addEventListener('click', (e) => {
 
 function unlockVault() {
   if (confirm('هل أنت {{ t('متأكد') }} من {{ t('فتح') }} {{ t('المحفظة_2') }}')) {
-    window.location.href = '{{ url_for("payment_vault.unlock_vault") }}';
+    fetch('{{ url_for("payment_vault.unlock_vault") }}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+      }
+    }).then(r => { if (r.ok) location.reload(); else alert('Error'); });
   }
 }
 
 function lockVault() {
   if (confirm('هل أنت {{ t('متأكد') }} من {{ t('قفل') }} {{ t('المحفظة_2') }}')) {
-    window.location.href = '{{ url_for("payment_vault.lock_vault") }}';
+    fetch('{{ url_for("payment_vault.lock_vault") }}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+      }
+    }).then(r => { if (r.ok) location.reload(); else alert('Error'); });
   }
 }
 </script>

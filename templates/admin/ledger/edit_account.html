@@ -13,7 +13,7 @@
           </h3>
         </div>
         <div class="card-body">
-          <form class="needs-validation ledger-account-form" method="post" action="{{ url_for('admin_ledger.edit_account', id=account.id) }}">
+          <form class="needs-validation ledger-account-form" method="post" action="{{ url_for('admin_ledger.edit_account', id=account.id) }}" novalidate>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             
             <div class="row">
@@ -81,9 +81,71 @@
               </div>
             </div>
 
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-check">
+                  <input type="hidden" name="is_active" value="off" aria-label="is active">
+                  <input type="checkbox" name="is_active" class="form-check-input" id="is_active" value="on"
+                         {% if account.is_active %}checked{% endif %} aria-label="is active">
+                  <label class="form-check-label" for="is_active">
+                    {{ t('Account') }} {{ t('Active') }}
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="input_currency">{{ t('Currency') }}</label>
+                  <select name="currency" class="form-control" id="input_currency" aria-label="{{ t('Currency') }}">
+                    <option value="AED" {% if account.currency == 'AED' %}selected{% endif %}>{{ t('Dirham') }} {{ t('إماراتي') }} (AED)</option>
+                    <option value="USD" {% if account.currency == 'USD' %}selected{% endif %}>{{ t('Dollar') }} {{ t('أمريكي') }} (USD)</option>
+                    <option value="EUR" {% if account.currency == 'EUR' %}selected{% endif %}>{{ t('Euro') }} (EUR)</option>
+                    <option value="SAR" {% if account.currency == 'SAR' %}selected{% endif %}>{{ t('Riyal') }} {{ t('سعودي') }} (SAR)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
             <div class="form-group">
               <label>{{ t('Description') }}</label>
               <textarea name="description" class="form-control" rows="3" aria-label="description" maxlength="500">{{ account.description or '' }}</textarea>
+            </div>
+
+            <div id="bank_fields" class="row mt-4" style="display: none;">
+              <div class="col-12">
+                <h5 class="mb-3"><i class="fas fa-university me-2"></i>معلومات البنك</h5>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>اسم البنك</label>
+                  <input type="text" name="bank_name" class="form-control"
+                         placeholder="{{ _('مثال: بنك الإمارات دبي الوطني') }}"
+                         value="{{ account.bank_name or '' }}" maxlength="200">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>رقم الحساب</label>
+                  <input type="text" name="bank_account_number" class="form-control"
+                         placeholder="{{ _('مثال: 1234567890') }}"
+                         value="{{ account.bank_account_number or '' }}" maxlength="100">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>رقم IBAN</label>
+                  <input type="text" name="bank_iban" class="form-control"
+                         placeholder="{{ _('مثال: AE123456789012345678901') }}"
+                         value="{{ account.bank_iban or '' }}" maxlength="50">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>كود SWIFT</label>
+                  <input type="text" name="bank_swift_code" class="form-control"
+                         placeholder="{{ _('مثال: EBILAEAD') }}"
+                         value="{{ account.bank_swift_code or '' }}" maxlength="20">
+                </div>
+              </div>
             </div>
 
             <div class="form-group">
@@ -149,3 +211,19 @@
 </style>
 {% endblock %}
 
+{% block scripts %}
+<script>
+$(document).ready(() => {
+  function toggleBankFields() {
+    const accountType = $('select[name="type"]').val();
+    if (accountType === 'asset') {
+      $('#bank_fields').show();
+    } else {
+      $('#bank_fields').hide();
+    }
+  }
+  $('select[name="type"]').on('change', toggleBankFields);
+  toggleBankFields();
+});
+</script>
+{% endblock %}

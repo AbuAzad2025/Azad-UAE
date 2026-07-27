@@ -3,17 +3,17 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-edit mr-2"></i>{{ t('Edit') }} {{ t('Cheque_3') }} - {{ cheque.cheque_number }}</h1>
+    <h1 class="mb-0"><i class="fas fa-edit me-2"></i>{{ t('Edit') }} {{ t('Cheque_3') }} - {{ cheque.cheque_number }}</h1>
   </div>
   <div>
     <a href="{{ url_for('cheques.view', id=cheque.id) }}" class="btn btn-info">
-      <i class="fas fa-eye mr-2"></i>{{ t('View') }}
+      <i class="fas fa-eye me-2"></i>{{ t('View') }}
     </a>
     <a href="{{ url_for('cheques.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للقائمة') }}
+      <i class="fas fa-arrow-left me-2"></i>{{ t('العودة') }} {{ t('للقائمة') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
+      <i class="fas fa-home me-2"></i>{{ t('Main_2') }}
     </a>
   </div>
 </div>
@@ -23,11 +23,11 @@
 <div class="card">
   <div class="card-header bg-warning">
     <h3 class="card-title text-white">
-      <i class="fas fa-money-check mr-2"></i>{{ t('Edit') }} {{ t('Info_2') }} {{ t('Cheque') }}
+      <i class="fas fa-money-check me-2"></i>{{ t('Edit') }} {{ t('Info_2') }} {{ t('Cheque') }}
     </h3>
   </div>
   <div class="card-body">
-    <form class="needs-validation" method="POST" action="{{ url_for('cheques.edit', id=cheque.id) }}" id="chequeForm">
+    <form class="needs-validation" method="POST" action="{{ url_for('cheques.edit', id=cheque.id) }}" id="chequeForm" novalidate>
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       
       
@@ -36,8 +36,8 @@
           <div class="form-group">
             <label><i class="fas fa-exchange-alt"></i> {{ t('نوع') }} {{ t('Cheque') }}: <span class="text-danger">*</span></label>
             <select name="cheque_type" id="cheque_type" class="form-control" required aria-label="cheque type">
-              <option value="incoming" {% if cheque.cheque_type == 'incoming' %}selected{% endif %}>{{ t('Income_3') }} (من {{ t('عميل') }})</option>
-              <option value="outgoing" {% if cheque.cheque_type == 'outgoing' %}selected{% endif %}>{{ t('Expense') }} ({{ t('لمورد') }})</option>
+              <option value="incoming" {% if cheque.cheque_type == 'incoming' %}selected{% endif %}>{{ t('شيك وارد (من عميل)') }}</option>
+              <option value="outgoing" {% if cheque.cheque_type == 'outgoing' %}selected{% endif %}>{{ t('شيك صادر (لمورد)') }}</option>
             </select>
           </div>
         </div>
@@ -115,7 +115,7 @@
           <div class="form-group">
             <label><i class="far fa-calendar"></i> {{ t('History') }} {{ t('الإصدار') }}: <span class="text-danger">*</span></label>
             <input type="date" name="issue_date" class="form-control" 
-                   value="{{ cheque.issue_date.strftime('%Y-%m-%d') }}" required aria-label="issue date">
+                   value="{{ cheque.issue_date.strftime('%Y-%m-%d') if cheque.issue_date else '' }}" required aria-label="issue date">
           </div>
         </div>
         
@@ -123,7 +123,7 @@
           <div class="form-group">
             <label><i class="far fa-calendar-check"></i> {{ t('History') }} {{ t('Due') }}: <span class="text-danger">*</span></label>
             <input type="date" name="due_date" class="form-control" 
-                   value="{{ cheque.due_date.strftime('%Y-%m-%d') }}" required aria-label="due date">
+                   value="{{ cheque.due_date.strftime('%Y-%m-%d') if cheque.due_date else '' }}" required aria-label="due date">
           </div>
         </div>
       </div>
@@ -131,7 +131,7 @@
       
       <div id="incomingFields" class="{% if cheque.cheque_type == 'incoming' %}d-block{% else %}d-none{% endif %}">
         <div class="alert alert-success">
-          <i class="fas fa-arrow-down mr-2"></i><strong>{{ t('Cheque_3') }} {{ t('Income_3') }}</strong> - من {{ t('عميل') }}
+          <i class="fas fa-arrow-down me-2"></i><strong>{{ t('شيك وارد (من عميل)') }}</strong>
         </div>
         
         <div class="row">
@@ -167,7 +167,7 @@
 
       <div id="outgoingFields" class="{% if cheque.cheque_type == 'outgoing' %}d-block{% else %}d-none{% endif %}">
         <div class="alert alert-danger">
-          <i class="fas fa-arrow-up mr-2"></i><strong>{{ t('Cheque_3') }} {{ t('Expense') }}</strong> - {{ t('لمورد') }} أو {{ t('مستفيد') }}
+          <i class="fas fa-arrow-up me-2"></i><strong>{{ t('شيك صادر (لمورد أو مستفيد)') }}</strong>
         </div>
         
         <div class="row">
@@ -204,10 +204,10 @@
       
       <div class="form-group">
         <button type="submit" class="btn btn-success">
-          <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Changes') }}
+          <i class="fas fa-save me-2"></i>{{ t('Save') }} {{ t('Changes') }}
         </button>
         <a href="{{ url_for('cheques.view', id=cheque.id) }}" class="btn btn-secondary">
-          <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}
+          <i class="fas fa-times me-2"></i>{{ t('Cancel') }}
         </a>
       </div>
     </form>
@@ -235,7 +235,7 @@ $('#cheque_type').change(function() {
 $('.customer-select, .supplier-select').select2({
   theme: 'bootstrap4',
   language: 'ar',
-  placeholder: '{{ t('اختر') }}...',
+  placeholder: {{ t('اختر')|tojson }} + '...',
   allowClear: true
 });
 </script>

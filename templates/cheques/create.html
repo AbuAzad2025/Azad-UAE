@@ -3,14 +3,14 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-plus-circle mr-2"></i>{{ t('Add') }} {{ t('Cheque_3') }} {{ t('New') }}</h1>
+    <h1 class="mb-0"><i class="fas fa-plus-circle me-2"></i>{{ t('Add') }} {{ t('Cheque_3') }} {{ t('New') }}</h1>
   </div>
   <div>
     <a href="{{ url_for('cheques.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('Cheques_3') }}
+      <i class="fas fa-arrow-left me-2"></i>{{ t('العودة') }} {{ t('Cheques_3') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
+      <i class="fas fa-home me-2"></i>{{ t('Main_2') }}
     </a>
   </div>
 </div>
@@ -77,7 +77,6 @@
 }
 
     /* D6: externalized inline styles */
-    .ic-1 { display: none; }
   </style>
 {% endblock %}
 
@@ -85,11 +84,11 @@
 <div class="card">
   <div class="card-header bg-primary">
     <h3 class="card-title text-white">
-      <i class="fas fa-money-check mr-2"></i>{{ t('Info_2') }} {{ t('Cheque') }}
+      <i class="fas fa-money-check me-2"></i>{{ t('Info_2') }} {{ t('Cheque') }}
     </h3>
   </div>
   <div class="card-body">
-    <form class="needs-validation cheque-create-form" method="POST" action="{{ url_for('cheques.create') }}" id="chequeForm">
+    <form class="needs-validation cheque-create-form" method="POST" novalidate action="{{ url_for('cheques.create') }}" id="chequeForm">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       
       
@@ -99,8 +98,8 @@
             <label for="cheque_type"><i class="fas fa-exchange-alt"></i> {{ t('نوع') }} {{ t('Cheque') }}: <span class="text-danger">*</span></label>
             <select name="cheque_type" id="cheque_type" class="form-control" required>
               <option value="">{{ t('None') }}</option>
-              <option value="incoming">{{ t('Income_3') }} (من {{ t('عميل') }})</option>
-              <option value="outgoing">{{ t('Expense') }} ({{ t('لمورد') }})</option>
+              <option value="incoming">{{ t('شيك وارد (من عميل)') }}</option>
+              <option value="outgoing">{{ t('شيك صادر (لمورد)') }}</option>
             </select>
           </div>
         </div>
@@ -192,7 +191,7 @@
       </div>
 
       
-      <div id="incomingFields" class="ic-1">
+      <div id="incomingFields" class="d-none">
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
@@ -222,7 +221,7 @@
         </div>
       </div>
 
-      <div id="outgoingFields" class="ic-1">
+      <div id="outgoingFields" class="d-none">
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
@@ -250,16 +249,16 @@
       <div class="form-group">
         <label for="notes"><i class="fas fa-sticky-note"></i> {{ t('Notes') }}:</label>
         <textarea name="notes" id="notes" class="form-control" rows="3"
-                  placeholder="أي {{ t('Notes') }} {{ t('Additional') }}..." maxlength="500"></textarea>
+                  placeholder="{{ t('أي ملاحظات إضافية...') }}" maxlength="500"></textarea>
       </div>
 
       
       <div class="form-group">
         <button type="submit" class="btn btn-success">
-          <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Cheque') }}
+          <i class="fas fa-save me-2"></i>{{ t('Save') }} {{ t('Cheque') }}
         </button>
         <a href="{{ url_for('cheques.index') }}" class="btn btn-secondary">
-          <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}
+          <i class="fas fa-times me-2"></i>{{ t('Cancel') }}
         </a>
       </div>
     </form>
@@ -294,11 +293,11 @@ $(() => {
     $('.customer-select, .supplier-select').select2({
       theme: 'bootstrap4',
       language: 'ar',
-      placeholder: '{{ t('اختر') }}...',
+      placeholder: {{ t('اختر')|tojson }} + '...',
       allowClear: true
     });
   } else {
-    console.warn('Select2 لم يتم {{ t('Download File') }} {{ t('سيتم') }} {{ t('استخدام') }} {{ t('Menu') }} {{ t('العادية') }}.');
+    console.warn('Select2 ' + {{ t('لم يتم تحميله. سيتم استخدام القائمة العادية.')|tojson }});
   }
   
   // {{ t('Update') }} {{ t('Price_2') }} {{ t('Exchange') }} {{ t('ديناميكياً') }}
@@ -311,22 +310,22 @@ $(() => {
     }
     
     $.ajax({
-      url: '{{ url_for("api.currency_rate", from_currency="X", to_currency="Y") }}'.replace('X', currency).replace('Y', TENANT_BASE_CURRENCY),
+      url: {{ url_for("api.currency_rate", from_currency="__FROM__", to_currency="__TO__")|tojson }}.replace('__FROM__', currency).replace('__TO__', TENANT_BASE_CURRENCY),
       method: 'GET',
       success: (data) => {
         if (data && data.rate) {
           $('input[name="exchange_rate"]').val(parseFloat(data.rate).toFixed(6));
         } else if (window.toastr) {
-          toastr.warning('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('Exchange،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
+          toastr.warning({{ t('تعذر جلب سعر الصرف، يرجى إدخال القيمة يدوياً.')|tojson }});
         } else {
-          alert('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('Exchange،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
+          alert({{ t('تعذر جلب سعر الصرف، يرجى إدخال القيمة يدوياً.')|tojson }});
         }
       },
       error: () => {
         if (window.toastr) {
-          toastr.warning('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('Exchange،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
+          toastr.warning({{ t('تعذر جلب سعر الصرف، يرجى إدخال القيمة يدوياً.')|tojson }});
         } else {
-          alert('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('Exchange،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
+          alert({{ t('تعذر جلب سعر الصرف، يرجى إدخال القيمة يدوياً.')|tojson }});
         }
       }
     });

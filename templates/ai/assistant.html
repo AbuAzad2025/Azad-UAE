@@ -5,24 +5,24 @@
 <div class="d-flex justify-content-between align-items-center">
   <div>
     <h1 class="mb-0">
-      <i class="fas fa-robot ml-2"></i>{{ t('Assistant') }} {{ t('Smart') }}
+      <i class="fas fa-robot ms-2"></i>{{ t('Assistant') }} {{ t('Smart') }}
     </h1>
     <p class="text-muted">{{ t('تحليلات') }} {{ t('وتقارير') }} {{ t('واستعلامات') }} {{ t('ذكية') }}</p>
   </div>
   <div class="d-flex align-items-center">
-    <div class="btn-group ml-3" role="group">
+    <div class="btn-group ms-3" role="group">
       <button type="button" class="btn btn-secondary" id="ai-mode-local" data-action="switch-ai-mode" data-mode="local">
-        <i class="fas fa-microchip ml-1"></i> {{ t('Local') }}
+        <i class="fas fa-microchip ms-1"></i> {{ t('Local') }}
       </button>
       <button type="button" class="btn btn-info" id="ai-mode-groq" data-action="switch-ai-mode" data-mode="groq">
-        <i class="fas fa-cloud ml-1"></i> Groq
+        <i class="fas fa-cloud ms-1"></i> Groq
       </button>
     </div>
     <span class="badge {% if ai_enabled %}badge-success{% else %}badge-primary{% endif %} py-2 px-3" id="ai-status-badge">
       {% if ai_enabled %}
-        <i class="fas fa-brain ml-1"></i>AI {{ t('كامل') }}
+        <i class="fas fa-brain ms-1"></i>AI {{ t('كامل') }}
       {% else %}
-        <i class="fas fa-microchip ml-1"></i>AI {{ t('Local') }}
+        <i class="fas fa-microchip ms-1"></i>AI {{ t('Local') }}
       {% endif %}
     </span>
   </div>
@@ -49,7 +49,7 @@
 }
 .bot-message {
   background: #e3f2fd;
-  border-right: 4px solid #2196F3;
+  border-inline-start: 4px solid #2196F3;
   padding: 15px;
   border-radius: 12px;
   margin: 10px 0;
@@ -57,7 +57,7 @@
 }
 .user-message {
   background: #e8f5e9;
-  border-left: 4px solid #4CAF50;
+  border-inline-end: 4px solid #4CAF50;
   padding: 15px;
   border-radius: 12px;
   margin: 10px 0;
@@ -88,6 +88,7 @@
   width: 50px; height: 50px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
+.erp-avatar-gradient { background: linear-gradient(135deg, #667eea, #764ba2); }
 .modal-overlay {
   display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background: rgba(0,0,0,0.5); z-index: 9999;
@@ -103,7 +104,7 @@
 {% block content %}
 {% if ai_disable_reason %}
 <div class="alert alert-warning">
-  <h5 class="mb-2"><i class="fas fa-ban ml-2"></i>{{ t('Assistant') }} {{ t('Smart') }} غير {{ t('مفعّل') }}</h5>
+  <h5 class="mb-2"><i class="fas fa-ban ms-2"></i>{{ t('Assistant') }} {{ t('Smart') }} غير {{ t('مفعّل') }}</h5>
   {% if ai_disable_reason == 'global_disabled' %}
     <p class="mb-0">تم {{ t('تعطيل') }} AI من {{ t('Settings_2') }} {{ t('Platform') }} {{ t('General') }}.</p>
   {% elif ai_disable_reason == 'tenant_disabled' %}
@@ -161,7 +162,7 @@
   <div class="chat-messages" id="chatBox">
     <div class="bot-message">
       <div class="d-flex align-items-start">
-        <div class="ml-3">
+        <div class="me-3">
 <div class="avatar-circle erp-avatar-gradient">
             <i class="fas fa-robot text-white fa-2x"></i>
           </div>
@@ -206,13 +207,18 @@
           🏝️
         </button>
       </div>
+      <div class="btn-group btn-group-sm">
+        <button type="button" class="btn btn-outline-success" data-action="show-excel-uploader" title="{{ t('Upload') }} Excel">
+          <i class="fas fa-file-excel"></i>
+        </button>
+      </div>
     </div>
 
     <div class="input-group">
       <input type="text" id="userMessage" class="form-control" placeholder="{{ t('اكتب') }} {{ t('سؤالك') }} أو {{ t('أمراً') }}..." autocomplete="off" aria-label="{{ t('Message') }} {{ t('Input') }}">
       <div class="input-group-append">
-        <button class="btn btn-primary" id="sendBtn">
-          <i class="fas fa-paper-plane ml-1"></i>{{ t('Submit') }}
+        <button type="button" class="btn btn-primary" id="sendBtn">
+          <i class="fas fa-paper-plane ms-1"></i>{{ t('Submit') }}
         </button>
       </div>
     </div>
@@ -222,16 +228,16 @@
 
 <div id="excelUploaderModal" class="modal-overlay">
   <div class="modal-box">
-    <h4 class="text-primary mb-3"><i class="fas fa-file-excel ml-2"></i>{{ t('Upload') }} {{ t('ملف') }} Excel</h4>
-    <form id="excelUploadForm" method="POST" enctype="multipart/form-data">
+    <h4 class="text-primary mb-3"><i class="fas fa-file-excel ms-2"></i>{{ t('Upload') }} {{ t('ملف') }} Excel</h4>
+    <form id="excelUploadForm" method="POST" enctype="multipart/form-data" action="{{ url_for('ai.upload_excel') }}" novalidate>
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="form-group">
         <label for="excelFile">{{ t('اختر') }} {{ t('ملف') }} (.xlsx, .xls)</label>
-        <input type="file" id="excelFile" accept=".xlsx,.xls" class="form-control" required>
+        <input type="file" id="excelFile" name="file" accept=".xlsx,.xls" class="form-control" required>
       </div>
       <div class="form-group">
         <label for="warehouseSelect">{{ t('Warehouse') }}</label>
-        <select id="warehouseSelect" class="form-control">
+        <select id="warehouseSelect" name="warehouse_id" class="form-control">
           {% for warehouse in warehouses %}
           <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>
           {% endfor %}
@@ -240,7 +246,7 @@
       <div class="d-flex justify-content-between">
         <button type="button" class="btn btn-secondary" data-action="hide-excel-uploader">{{ t('Cancel') }}</button>
         <button type="submit" class="btn btn-success" id="uploadExcelBtn">
-          <i class="fas fa-upload ml-1"></i>{{ t('Upload') }} {{ t('ومعالجة') }}
+          <i class="fas fa-upload ms-1"></i>{{ t('Upload') }} {{ t('ومعالجة') }}
         </button>
       </div>
       <div id="uploadProgress" class="mt-3 d-none">
@@ -265,6 +271,7 @@
     else if (action === 'get-summary') getSummary();
     else if (action === 'toggle-beginners-mode') toggleBeginnersMode();
     else if (action === 'hide-excel-uploader') hideExcelUploader();
+    else if (action === 'show-excel-uploader') $('#excelUploaderModal').css('display', 'flex');
     else if (action === 'switch-ai-mode') switchAIMode(el.dataset.mode);
     else if (action === 'set-dialect') setDialect(el.dataset.dialect);
   });
@@ -275,38 +282,102 @@
 
   function addMessage(sender, text, isBot) {
   chatHistory.push({role: isBot ? 'bot' : 'user', content: text, timestamp: new Date()});
-    const cls = isBot ? 'bot-message' : 'user-message';
-    const avatar = isBot
-      ? '<div class="avatar-circle" style="background:linear-gradient(135deg,#667eea,#764ba2)"><i class="fas fa-robot text-white fa-2x"></i></div>'
-      : '<div class="avatar-circle" style="background:linear-gradient(135deg,#007A3D,#1B4D89)"><i class="fas fa-user text-white fa-2x"></i></div>';
-    const name = isBot ? '{{ t("Assistant") }} {{ t("Smart") }}' : '{{ current_user.username }}' || 'أنت';
-    const align = isBot ? 'ml-3' : 'mr-3';
-    $('#chatBox').append(
-    '<div class="' + cls + '"><div class="d-flex align-items-start">' +
-    (isBot ? avatar : '') +
-    '<div class="' + align + '"><strong class="' + (isBot ? 'text-primary' : 'text-success') + '">' + name + '</strong>' +
-    '<div style="white-space:pre-wrap">' + text + '</div></div>' +
-    (!isBot ? avatar : '') + '</div></div>'
-  );
+  const msgDiv = document.createElement('div');
+  msgDiv.className = isBot ? 'bot-message' : 'user-message';
+
+  const flexDiv = document.createElement('div');
+  flexDiv.className = 'd-flex align-items-start';
+
+  if (isBot) {
+    const avatarWrap = document.createElement('div');
+    avatarWrap.className = 'me-3';
+    const avatarDiv = document.createElement('div');
+    avatarDiv.className = 'avatar-circle';
+    avatarDiv.style.cssText = 'background:linear-gradient(135deg,#667eea,#764ba2)';
+    const icon = document.createElement('i');
+    icon.className = 'fas fa-robot text-white fa-2x';
+    avatarDiv.appendChild(icon);
+    avatarWrap.appendChild(avatarDiv);
+    flexDiv.appendChild(avatarWrap);
+  }
+
+  const contentWrap = document.createElement('div');
+  contentWrap.className = isBot ? 'me-3' : 'ms-3';
+
+  const nameStrong = document.createElement('strong');
+  nameStrong.className = isBot ? 'text-primary' : 'text-success';
+  const userName = {{ current_user.username|default('أنت')|tojson }};
+  nameStrong.textContent = isBot ? {{ t("Assistant")|tojson }} + ' ' + {{ t("Smart")|tojson }} : userName;
+  contentWrap.appendChild(nameStrong);
+
+  const textDiv = document.createElement('div');
+  textDiv.style.whiteSpace = 'pre-wrap';
+  textDiv.textContent = text;
+  contentWrap.appendChild(textDiv);
+
+  flexDiv.appendChild(contentWrap);
+
+  if (!isBot) {
+    const avatarWrap = document.createElement('div');
+    avatarWrap.className = 'ms-3';
+    const avatarDiv = document.createElement('div');
+    avatarDiv.className = 'avatar-circle';
+    avatarDiv.style.cssText = 'background:linear-gradient(135deg,#007A3D,#1B4D89)';
+    const icon = document.createElement('i');
+    icon.className = 'fas fa-user text-white fa-2x';
+    avatarDiv.appendChild(icon);
+    avatarWrap.appendChild(avatarDiv);
+    flexDiv.appendChild(avatarWrap);
+  }
+
+  msgDiv.appendChild(flexDiv);
+  document.getElementById('chatBox').appendChild(msgDiv);
   setTimeout(() => { const $cb = $('#chatBox'); $cb.scrollTop($cb[0].scrollHeight); }, 100);
 }
 
 function showTyping() {
-  const $chatBox = $('#chatBox');
-  $chatBox.append(
-    '<div class="bot-message" id="typing-indicator"><div class="d-flex align-items-center">' +
-    '<div class="ml-3"><div class="avatar-circle" style="background:linear-gradient(135deg,#667eea,#764ba2)"><i class="fas fa-robot text-white fa-2x"></i></div></div>' +
-    '<div><strong>{{ t('Assistant') }} {{ t('يفكر') }}</strong><div class="typing-indicator mt-2"><span></span><span></span><span></span></div></div>' +
-    '</div></div>'
-  );
-  $chatBox.scrollTop($chatBox[0].scrollHeight);
+  hideTyping();
+  const msgDiv = document.createElement('div');
+  msgDiv.className = 'bot-message';
+  msgDiv.id = 'typing-indicator';
+
+  const flexDiv = document.createElement('div');
+  flexDiv.className = 'd-flex align-items-center';
+
+  const avatarWrap = document.createElement('div');
+  avatarWrap.className = 'me-3';
+  const avatarDiv = document.createElement('div');
+  avatarDiv.className = 'avatar-circle';
+  avatarDiv.style.cssText = 'background:linear-gradient(135deg,#667eea,#764ba2)';
+  const icon = document.createElement('i');
+  icon.className = 'fas fa-robot text-white fa-2x';
+  avatarDiv.appendChild(icon);
+  avatarWrap.appendChild(avatarDiv);
+  flexDiv.appendChild(avatarWrap);
+
+  const contentDiv = document.createElement('div');
+  const strong = document.createElement('strong');
+  strong.textContent = {{ t('Assistant')|tojson }} + ' ' + {{ t('يفكر')|tojson }};
+  contentDiv.appendChild(strong);
+
+  const typingDiv = document.createElement('div');
+  typingDiv.className = 'typing-indicator mt-2';
+  for (let i = 0; i < 3; i++) {
+    typingDiv.appendChild(document.createElement('span'));
+  }
+  contentDiv.appendChild(typingDiv);
+  flexDiv.appendChild(contentDiv);
+
+  msgDiv.appendChild(flexDiv);
+  document.getElementById('chatBox').appendChild(msgDiv);
+  document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
 }
 
 function hideTyping() { $('#typing-indicator').remove(); }
 
 $(document).ready(() => {
   $('#sendBtn').on('click', sendMessage);
-  $('#userMessage').keypress((e) => { if (e.which === 13) { e.preventDefault(); sendMessage(); } });
+  $('#userMessage').on('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } });
   $('#userMessage').focus();
 });
 
@@ -330,38 +401,38 @@ function sendMessage() {
       context: { dialect: currentDialect, beginners_mode: beginnersMode }
     }),
     success: (r) => { hideTyping(); addMessage('bot', r.response, true); $sendBtn.prop('disabled', false); $userMessage.focus(); },
-    error: () => { hideTyping(); addMessage('bot', '❌ {{ t("عذراً،") }} {{ t("حدث") }} {{ t("Error") }}. {{ t("حاول") }} {{ t("مرة") }} {{ t("أخرى") }}.', true); $sendBtn.prop('disabled', false); }
+    error: () => { hideTyping(); addMessage('bot', '❌ ' + {{ t("عذراً،")|tojson }} + ' ' + {{ t("حدث")|tojson }} + ' ' + {{ t("Error")|tojson }} + '. ' + {{ t("حاول")|tojson }} + ' ' + {{ t(" مرة")|tojson }} + ' ' + {{ t(" أخرى")|tojson }} + '.', true); $sendBtn.prop('disabled', false); }
   });
 }
 
 window.clearChat = () => {
-  if (!confirm('{{ t("مسح") }} {{ t("المحادثة_2") }}')) return;
+  if (!confirm({{ t("مسح")|tojson }} + ' ' + {{ t("المحادثة_2")|tojson }})) return;
   $('#chatBox').empty(); chatHistory = [];
-  addMessage('bot', 'تم {{ t("مسح") }} {{ t("المحادثة_2") }}! {{ t("كيف") }} {{ t("يمكنني") }} {{ t("مساعدتك") }}', true);
+  addMessage('bot', 'تم ' + {{ t("مسح")|tojson }} + ' ' + {{ t("المحادثة_2")|tojson }} + '! ' + {{ t("كيف")|tojson }} + ' ' + {{ t("يمكنني")|tojson }} + ' ' + {{ t("مساعدتك")|tojson }}, true);
 };
 
 window.getSummary = () => {
-  if (chatHistory.length === 0) { addMessage('bot', '📝 لا {{ t('توجد') }} {{ t('محادثة') }} بعد.', true); return; }
+  if (chatHistory.length === 0) { addMessage('bot', '📝 لا ' + {{ t('توجد')|tojson }} + ' ' + {{ t('محادثة')|tojson }} + ' بعد.', true); return; }
   const q = chatHistory.filter((m) => m.role === 'user').length;
-  addMessage('bot', '📊 **{{ t('Summary') }} {{ t('المحادثة_2') }}:**\n\n• {{ t('الأسئلة') }}: ' + q + '\n• {{ t('الردود') }}: ' + chatHistory.filter((m) => m.role === 'bot').length, true);
+  addMessage('bot', '📊 **' + {{ t('Summary')|tojson }} + ' ' + {{ t('المحادثة_2')|tojson }} + ':**\n\n• ' + {{ t('الأسئلة')|tojson }} + ': ' + q + '\n• ' + {{ t('الردود')|tojson }} + ': ' + chatHistory.filter((m) => m.role === 'bot').length, true);
 };
 
 window.toggleBeginnersMode = () => {
   beginnersMode = !beginnersMode;
   const btn = $('#beginnersBtn');
   btn.toggleClass('btn-success btn-outline-success');
-  addMessage('bot', beginnersMode ? '👨‍🎓 {{ t('وضع') }} {{ t('المبتدئين') }} {{ t('مفعّل') }}! {{ t('سأشرح') }} {{ t('بالتفصيل') }}.' : '⚡ {{ t('وضع') }} {{ t('المحترفين') }} {{ t('مفعّل') }}! {{ t('ردود') }} {{ t('مباشرة') }}.', true);
+  addMessage('bot', beginnersMode ? '👨‍🎓 ' + {{ t('وضع')|tojson }} + ' ' + {{ t('المبتدئين')|tojson }} + ' ' + {{ t('مفعّل')|tojson }} + '! ' + {{ t('سأشرح')|tojson }} + ' ' + {{ t('بالتفصيل')|tojson }} + '.' : '⚡ ' + {{ t('وضع')|tojson }} + ' ' + {{ t('المحترفين')|tojson }} + ' ' + {{ t('مفعّل')|tojson }} + '! ' + {{ t('ردود')|tojson }} + ' ' + {{ t('مباشرة')|tojson }} + '.', true);
 };
 
 window.setDialect = (d) => {
   currentDialect = d;
   $('.btn-group .btn').removeClass('active');
   $('#' + d + 'Btn').addClass('active');
-  const _dialectLabel = "{{ t('اللهجة') }}";
+  const _dialectLabel = {{ t('اللهجة')|tojson }};
   const msgs = {
-    formal: '📖 {{ t('Language') }}: {{ t('فصحى') }}',
-    palestinian: '🇵🇸 ' + _dialectLabel + ': {{ t('Palestinian') }}',
-    gulf: '🏝️ ' + _dialectLabel + ': {{ t('Gulf') }}'
+    formal: '📖 ' + {{ t('Language')|tojson }} + ': ' + {{ t('فصحى')|tojson }},
+    palestinian: '🇵🇸 ' + _dialectLabel + ': ' + {{ t('Palestinian')|tojson }},
+    gulf: '🏝️ ' + _dialectLabel + ': ' + {{ t('Gulf')|tojson }}
   };
   addMessage('bot', msgs[d], true);
 };
@@ -376,11 +447,11 @@ window.switchAIMode = (mode) => {
   if (mode === 'local') {
     $('#ai-mode-local').css({background:'#495057', boxShadow:'0 0 15px rgba(73,80,87,0.8)', transform:'scale(1.05)'});
     $('#ai-mode-groq').css({background:'#20c997', boxShadow:'none', opacity:'0.5', transform:'scale(1)'});
-    $('#ai-status-badge').removeClass('badge-success').addClass('badge-secondary').html('<i class="fas fa-microchip ml-1"></i>{{ t('Local') }}');
+    $('#ai-status-badge').removeClass('badge-success').addClass('badge-secondary').html('<i class="fas fa-microchip ms-1"></i>' + {{ t('Local')|tojson }});
   } else {
     $('#ai-mode-groq').css({background:'#17a2b8', boxShadow:'0 0 15px rgba(23,162,184,0.8)', transform:'scale(1.05)'});
     $('#ai-mode-local').css({background:'#6c757d', boxShadow:'none', opacity:'0.5', transform:'scale(1)'});
-    $('#ai-status-badge').removeClass('badge-secondary').addClass('badge-info').html('<i class="fas fa-cloud ml-1"></i>Groq');
+    $('#ai-status-badge').removeClass('badge-secondary').addClass('badge-info').html('<i class="fas fa-cloud ms-1"></i>Groq');
   }
 };
 
@@ -399,7 +470,7 @@ $excelUploadForm.on('submit', (e) => {
   e.preventDefault();
   const $excelFile = $('#excelFile');
   const file = $excelFile[0];
-  if (!file.files || !file.files[0]) { alert('{{ t("اختر") }} {{ t("ملفاً") }}'); return; }
+  if (!file.files || !file.files[0]) { alert({{ t("اختر")|tojson }} + ' ' + {{ t("ملفاً")|tojson }}); return; }
   const fd = new FormData();
   fd.append('file', file.files[0]);
   fd.append('warehouse_id', $('#warehouseSelect').val());
@@ -424,7 +495,7 @@ $excelUploadForm.on('submit', (e) => {
       $uploadBtn.prop('disabled', false);
     },
     error: (x) => {
-      addMessage('bot', '❌ ' + (x.responseJSON ? x.responseJSON.error : '{{ t("Error") }}'), true);
+      addMessage('bot', '❌ ' + (x.responseJSON ? x.responseJSON.error : {{ t("Error")|tojson }}), true);
       $uploadBtn.prop('disabled', false);
       $progress.hide();
     }

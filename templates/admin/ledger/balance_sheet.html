@@ -6,10 +6,10 @@
 <div class="row mb-3 no-print">
   <div class="col-12">
     <a href="{{ url_for('ledger.admin_reports') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('Back to Reports') }}
+      <i class="fas fa-arrow-left me-2"></i>{{ t('Back to Reports') }}
     </a>
     <button class="btn btn-success" data-action="window-print">
-      <i class="fas fa-print mr-2"></i>{{ t('Print') }}
+      <i class="fas fa-print me-2"></i>{{ t('Print') }}
     </button>
   </div>
 </div>
@@ -18,11 +18,11 @@
 <div class="card mb-4 no-print">
   <div class="card-header bg-gradient-primary">
     <h5 class="card-title text-white mb-0">
-      <i class="fas fa-filter mr-2"></i>{{ t('Filter Date') }}
+      <i class="fas fa-filter me-2"></i>{{ t('Filter Date') }}
     </h5>
   </div>
   <div class="card-body">
-    <form class="needs-validation row" method="GET" action="">
+    <form class="needs-validation row" method="GET" action="" novalidate>
       <div class="col-md-6">
         <div class="form-group">
           <label for="input_as_of_date">{{ t('اعتباراً') }} من {{ t('History') }}:</label>
@@ -33,7 +33,7 @@
         <div class="form-group">
           <label aria-hidden="true">&nbsp;</label>
           <button type="submit" class="btn btn-primary btn-block">
-            <i class="fas fa-search mr-2"></i>{{ t('Update Report') }}
+            <i class="fas fa-search me-2"></i>{{ t('Update Report') }}
           </button>
         </div>
       </div>
@@ -48,7 +48,7 @@
     <div class="card">
       <div class="card-header bg-gradient-success">
         <h3 class="card-title text-white">
-          <i class="fas fa-chart-line mr-2"></i>{{ t('Assets') }}
+          <i class="fas fa-chart-line me-2"></i>{{ t('Assets') }}
         </h3>
       </div>
       <div class="card-body p-0">
@@ -64,13 +64,11 @@
             <tbody>
               {% for asset in assets %}
               {% set balance = asset.get_balance(as_of_date=as_of_date) %}
-              {% if balance > 0 %}
               <tr>
                 <td><strong>{{ asset.code }}</strong></td>
                 <td>{{ asset.full_name }}</td>
                 <td class="text-center text-success">{{ format_currency(balance) }}</td>
               </tr>
-              {% endif %}
               {% endfor %}
             </tbody>
             <tfoot class="bg-light">
@@ -90,7 +88,7 @@
     <div class="card">
       <div class="card-header bg-gradient-danger">
         <h3 class="card-title text-white">
-          <i class="fas fa-chart-bar mr-2"></i>{{ t('Assets and Liabilities') }}
+          <i class="fas fa-chart-bar me-2"></i>{{ t('Liabilities and Equity') }}
         </h3>
       </div>
       <div class="card-body p-0">
@@ -107,25 +105,21 @@
               
               {% for liability in liabilities %}
               {% set balance = liability.get_balance(as_of_date=as_of_date) %}
-              {% if balance < 0 %}
               <tr>
                 <td><strong>{{ liability.code }}</strong></td>
                 <td>{{ liability.full_name }}</td>
                 <td class="text-center text-danger">{{ format_currency(abs(balance)) }}</td>
               </tr>
-              {% endif %}
               {% endfor %}
               
               
               {% for equity_item in equity %}
               {% set balance = equity_item.get_balance(as_of_date=as_of_date) %}
-              {% if balance < 0 %}
               <tr>
                 <td><strong>{{ equity_item.code }}</strong></td>
                 <td>{{ equity_item.full_name }}</td>
                 <td class="text-center text-info">{{ format_currency(abs(balance)) }}</td>
               </tr>
-              {% endif %}
               {% endfor %}
             </tbody>
             <tfoot class="bg-light">
@@ -138,7 +132,7 @@
                 <th class="text-center text-info">{{ format_currency(equity_total) }}</th>
               </tr>
               <tr>
-                <th colspan="2" class="text-center">{{ t('Total Liabilities') }}</th>
+                <th colspan="2" class="text-center">{{ t('Total Liabilities and Equity') }}</th>
                 <th class="text-center text-primary">{{ format_currency(liabilities_total + equity_total) }}</th>
               </tr>
             </tfoot>
@@ -155,7 +149,7 @@
     <div class="card">
       <div class="card-header bg-gradient-warning">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-balance-scale mr-2"></i>{{ t('Summary Balance') }}
+          <i class="fas fa-balance-scale me-2"></i>{{ t('Summary Balance') }}
         </h5>
       </div>
       <div class="card-body">
@@ -169,7 +163,7 @@
           <div class="col-md-4">
             <div class="text-center">
               <h4 class="text-primary">{{ format_currency(liabilities_total + equity_total) }}</h4>
-              <p class="mb-0">{{ t('Total Liabilities') }}</p>
+              <p class="mb-0">{{ t('Total Liabilities and Equity') }}</p>
             </div>
           </div>
           <div class="col-md-4">
@@ -194,7 +188,7 @@
 <div class="card mt-4">
   <div class="card-header bg-gradient-info">
     <h5 class="card-title text-white mb-0">
-      <i class="fas fa-info-circle mr-2"></i>{{ t('Notes') }}
+      <i class="fas fa-info-circle me-2"></i>{{ t('Notes') }}
     </h5>
   </div>
   <div class="card-body">
@@ -208,5 +202,5 @@
   </div>
 </div>
 </div>
-{% block extra_css %}<style>@media print{@page{size:A4 landscape;margin:10mm}}</style>{% endblock %}
 {% endblock %}
+{% block extra_css %}<style>@media print{@page{size:A4 landscape;margin:10mm}}</style>{% endblock %}

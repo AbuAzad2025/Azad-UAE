@@ -6,11 +6,11 @@
 <div class="row mb-3">
   <div class="col-12">
     <a href="{{ url_for('ledger.admin_dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('Back to Dashboard') }}
+      <i class="fas fa-arrow-left me-2"></i>{{ t('Back to Dashboard') }}
     </a>
     {% if current_user.has_permission('manage_ledger') %}
     <a href="{{ url_for('ledger.manual_entry') }}" class="btn btn-success">
-      <i class="fas fa-plus mr-2"></i>{{ t('New Manual Entry') }}
+      <i class="fas fa-plus me-2"></i>{{ t('New Manual Entry') }}
     </a>
     {% endif %}
   </div>
@@ -19,7 +19,7 @@
 <div class="card">
   <div class="card-header bg-gradient-primary">
     <h3 class="card-title text-white">
-      <i class="fas fa-book mr-2"></i>{{ t('All Accounting Journals') }}
+      <i class="fas fa-book me-2"></i>{{ t('All Accounting Journals') }}
     </h3>
   </div>
   <div class="card-body p-0">
@@ -37,6 +37,7 @@
           </tr>
         </thead>
         <tbody>
+          {% if entries.items %}
           {% for entry in entries.items %}
           <tr>
             <td>
@@ -49,7 +50,7 @@
               {% endif %}
             </td>
             <td>{{ entry.entry_date.strftime('%Y-%m-%d') }}</td>
-            <td>{{ entry.description[:50] }}{% if entry.description|length > 50 %}...{% endif %}</td>
+            <td>{{ entry.description|truncate(50) }}</td>
             <td>
               {% if entry.entry_type == 'auto' %}
                 {% set type_badge = 'success' %}
@@ -89,6 +90,14 @@
             </td>
           </tr>
           {% endfor %}
+          {% else %}
+          <tr>
+            <td colspan="7" class="text-center text-muted py-4">
+              <i class="fas fa-book-open fa-2x mb-2"></i>
+              <p>{{ _('لا توجد قيود.') }}</p>
+            </td>
+          </tr>
+          {% endif %}
         </tbody>
       </table>
     </div>
@@ -143,6 +152,7 @@
       <div class="card-body">
         <div class="d-flex justify-content-between">
           <div>
+            <!-- TODO: move to backend-provided posted_count -->
             <h4 class="mb-0">{{ entries.items|selectattr('is_posted', 'equalto', True)|list|length }}</h4>
             <p class="mb-0">{{ t('Posted Entries') }}</p>
           </div>
@@ -159,6 +169,7 @@
       <div class="card-body">
         <div class="d-flex justify-content-between">
           <div>
+            <!-- TODO: move to backend-provided draft_count -->
             <h4 class="mb-0">{{ entries.items|selectattr('is_posted', 'equalto', False)|list|length }}</h4>
             <p class="mb-0">{{ t('Drafts') }}</p>
           </div>
@@ -175,6 +186,7 @@
       <div class="card-body">
         <div class="d-flex justify-content-between">
           <div>
+            <!-- TODO: move to backend-provided reversed_count -->
             <h4 class="mb-0">{{ entries.items|selectattr('is_reversed', 'equalto', True)|list|length }}</h4>
             <p class="mb-0">{{ t('Reversed Entries') }}</p>
           </div>

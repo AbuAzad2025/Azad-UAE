@@ -6,10 +6,10 @@
 <div class="row mb-3 no-print">
   <div class="col-12">
     <a href="{{ url_for('ledger.admin_reports') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('Back to Reports') }}
+      <i class="fas fa-arrow-left me-2"></i>{{ t('Back to Reports') }}
     </a>
     <button class="btn btn-success" data-action="window-print">
-      <i class="fas fa-print mr-2"></i>{{ t('Print') }}
+      <i class="fas fa-print me-2"></i>{{ t('Print') }}
     </button>
   </div>
 </div>
@@ -18,11 +18,11 @@
 <div class="card mb-4 no-print">
   <div class="card-header bg-gradient-primary">
     <h5 class="card-title text-white mb-0">
-      <i class="fas fa-filter mr-2"></i>{{ t('Filter Date') }}
+      <i class="fas fa-filter me-2"></i>{{ t('Filter Date') }}
     </h5>
   </div>
   <div class="card-body">
-    <form class="needs-validation row" method="GET" action="">
+    <form class="needs-validation row" method="GET" action="" novalidate>
       <div class="col-md-4">
         <div class="form-group">
           <label for="input_date_from">من {{ t('History') }}:</label>
@@ -39,7 +39,7 @@
         <div class="form-group">
           <label aria-hidden="true">&nbsp;</label>
           <button type="submit" class="btn btn-primary btn-block">
-            <i class="fas fa-search mr-2"></i>{{ t('Update Report') }}
+            <i class="fas fa-search me-2"></i>{{ t('Update Report') }}
           </button>
         </div>
       </div>
@@ -51,7 +51,7 @@
 <div class="card">
   <div class="card-header bg-gradient-success">
     <h3 class="card-title text-white">
-      <i class="fas fa-balance-scale mr-2"></i>{{ t('Trial Balance') }}
+      <i class="fas fa-balance-scale me-2"></i>{{ t('Trial Balance') }}
     </h3>
     <div class="card-tools">
       <small class="text-white">
@@ -71,6 +71,7 @@
           </tr>
         </thead>
         <tbody>
+          {% if trial_balance_data %}
           {% for item in trial_balance_data %}
           <tr>
             <td><strong>{{ item.account.code }}</strong></td>
@@ -91,6 +92,14 @@
             </td>
           </tr>
           {% endfor %}
+          {% else %}
+          <tr>
+            <td colspan="4" class="text-center text-muted py-4">
+              <i class="fas fa-balance-scale fa-2x mb-2"></i>
+              <p>{{ _('لا توجد بيانات.') }}</p>
+            </td>
+          </tr>
+          {% endif %}
         </tbody>
         <tfoot class="bg-light">
           <tr>
@@ -115,6 +124,6 @@
   </div>
 </div>
 </div>
+{% endblock %}
 
 {% block extra_css %}<style>@media print{@page{size:A4 landscape;margin:10mm}}</style>{% endblock %}
-{% endblock %}

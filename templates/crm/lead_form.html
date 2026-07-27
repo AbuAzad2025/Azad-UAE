@@ -1,54 +1,56 @@
 {% extends 'base.html' %}
-{% block title %}{% if lead %}{{ t('Edit') }} {{ t('عميل') }} {{ t('Expected_2') }}{% else %}{{ t('Add') }} {{ t('عميل') }} {{ t('Expected_2') }}{% endif %}{% endblock %}
+{% block title %}{% if lead %}{{ t('Edit Expected Customer') }}{% else %}{{ t('Add Expected Customer') }}{% endif %}{% endblock %}
+{% block page_title %}{% if lead %}{{ t('Edit Expected Customer') }}{% else %}{{ t('Add Expected Customer') }}{% endif %}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="card">
     <div class="card-header">
-      <h5><i class="fas fa-{% if lead %}edit{% else %}plus{% endif %}"></i> {% if lead %}{{ t('Edit') }} {{ t('عميل') }} {{ t('Expected_2') }}{% else %}{{ t('Add') }} {{ t('عميل') }} {{ t('Expected_2') }}{% endif %}</h5>
+      <h5><i class="fas fa-{% if lead %}edit{% else %}plus{% endif %}"></i> {% if lead %}{{ t('Edit Expected Customer') }}{% else %}{{ t('Add Expected Customer') }}{% endif %}</h5>
     </div>
     <div class="card-body">
-      <form method="POST">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        {% if view and lead %}
-        <div class="row">
-          <div class="col-md-6">
-            <div class="form-group"><label>{{ t('Name') }}</label><p class="form-control-static">{{ lead.name }}</p></div>
-          </div>
-          <div class="col-md-6">
-            <div class="form-group"><label>{{ t('Email_2') }}</label><p class="form-control-static">{{ lead.email or '-' }}</p></div>
-          </div>
-          <div class="col-md-6">
-            <div class="form-group"><label>{{ t('Phone') }}</label><p class="form-control-static">{{ lead.phone or '-' }}</p></div>
-          </div>
-          <div class="col-md-6">
-            <div class="form-group"><label>{{ t('Company') }}</label><p class="form-control-static">{{ lead.company or '-' }}</p></div>
-          </div>
-          <div class="col-md-6">
-            <div class="form-group"><label>{{ t('Revenue_2') }} {{ t('Expected') }}</label><p class="form-control-static">{{ lead.expected_revenue|format_currency }}</p></div>
-          </div>
-          <div class="col-md-6">
-            <div class="form-group"><label>{{ t('Status') }}</label><p class="form-control-static">{{ lead.status }}</p></div>
-          </div>
+      {% if view and lead %}
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group"><label>{{ t('Name') }}</label><input type="text" class="form-control-plaintext" readonly value="{{ lead.name }}"></div>
         </div>
-        <a href="{{ url_for('crm.edit_lead', lead_id=lead.id) }}" class="btn btn-primary">{{ t('Edit') }}</a>
-        <a href="{{ url_for('crm.leads_list') }}" class="btn btn-secondary">{{ t('عودة') }}</a>
-        {% else %}
+        <div class="col-md-6">
+          <div class="form-group"><label>{{ t('Email_2') }}</label><input type="text" class="form-control-plaintext" readonly value="{{ lead.email or '-' }}"></div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group"><label>{{ t('Phone') }}</label><input type="text" class="form-control-plaintext" readonly value="{{ lead.phone or '-' }}"></div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group"><label>{{ t('Company') }}</label><input type="text" class="form-control-plaintext" readonly value="{{ lead.company or '-' }}"></div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group"><label>{{ t('Revenue_2') }} {{ t('Expected') }}</label><input type="text" class="form-control-plaintext" readonly value="{{ lead.expected_revenue|format_currency }}"></div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group"><label>{{ t('Status') }}</label><input type="text" class="form-control-plaintext" readonly value="{{ t(lead.status) }}"></div>
+        </div>
+      </div>
+      <a href="{{ url_for('crm.edit_lead', lead_id=lead.id) }}" class="btn btn-primary">{{ t('Edit') }}</a>
+      <button type="button" class="btn btn-danger" data-delete-item="{{ lead.id }}" data-item-type="leads" data-item-name="{{ lead.name|tojson }}">{{ t('Delete') }}</button>
+      <a href="{{ url_for('crm.leads_list') }}" class="btn btn-secondary">{{ t('عودة') }}</a>
+      {% else %}
+      <form method="POST" class="needs-validation" action="{{ url_for('crm.create_lead') if not lead else url_for('crm.edit_lead', lead_id=lead.id) }}" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="row">
           <div class="col-md-6">
             <div class="form-group"><label for="lead_name">{{ t('Name') }} <span class="text-danger">*</span></label>
-              <input name="name" class="form-control" value="{{ lead.name if lead else '' }}" required id="lead_name"></div>
+              <input name="name" class="form-control" value="{{ lead.name if lead else '' }}" required id="lead_name" minlength="2" maxlength="100"></div>
           </div>
           <div class="col-md-6">
             <div class="form-group"><label for="lead_email">{{ t('Email_2') }}</label>
-              <input name="email" type="email" class="form-control" value="{{ lead.email if lead else '' }}" id="lead_email"></div>
+              <input name="email" type="email" class="form-control" value="{{ lead.email if lead else '' }}" id="lead_email" maxlength="255"></div>
           </div>
           <div class="col-md-6">
             <div class="form-group"><label for="lead_phone">{{ t('Phone') }}</label>
-              <input name="phone" class="form-control" value="{{ lead.phone if lead else '' }}" id="lead_phone"></div>
+              <input name="phone" class="form-control" value="{{ lead.phone if lead else '' }}" id="lead_phone" maxlength="20" pattern="^\+?[0-9\s\-]{8,20}$"></div>
           </div>
           <div class="col-md-6">
             <div class="form-group"><label for="lead_company">{{ t('Company') }}</label>
-              <input name="company" class="form-control" value="{{ lead.company if lead else '' }}" id="lead_company"></div>
+              <input name="company" class="form-control" value="{{ lead.company if lead else '' }}" id="lead_company" maxlength="100"></div>
           </div>
           <div class="col-md-6">
             <div class="form-group"><label for="lead_stage_id">{{ t('المرحلة') }}</label>
@@ -63,8 +65,8 @@
             <div class="form-group"><label for="lead_team_id">{{ t('فريق') }} {{ t('Sales') }}</label>
               <select name="team_id" class="form-control" id="lead_team_id">
                 <option value="">{{ t('اختر') }}</option>
-                {% for t in teams %}
-                <option value="{{ t.id }}" {% if lead and lead.team_id == t.id %}selected{% endif %}>{{ t.name_ar or t.name }}</option>
+                {% for team in teams %}
+                <option value="{{ team.id }}" {% if lead and lead.team_id == team.id %}selected{% endif %}>{{ team.name_ar or team.name }}</option>
                 {% endfor %}
               </select></div>
           </div>
@@ -78,7 +80,7 @@
               </select></div>
           </div>
           <div class="col-md-6">
-            <div class="form-group"><label for="lead_customer_id">{{ t('Customer') }} (إن {{ t('وجد') }})</label>
+            <div class="form-group"><label for="lead_customer_id">{{ t('Customer (if exists)') }}</label>
               <select name="customer_id" class="form-control" id="lead_customer_id">
                 <option value="">{{ t('اختر') }}</option>
                 {% for c in customers %}
@@ -88,7 +90,7 @@
           </div>
           <div class="col-md-6">
             <div class="form-group"><label for="lead_expected_revenue">{{ t('Revenue_2') }} {{ t('Expected') }}</label>
-              <input name="expected_revenue" type="number" step="0.01" class="form-control" value="{{ lead.expected_revenue if lead else '0' }}" id="lead_expected_revenue"></div>
+              <input name="expected_revenue" type="number" step="0.01" min="0" class="form-control" value="{{ lead.expected_revenue if lead else '0' }}" id="lead_expected_revenue"></div>
           </div>
           <div class="col-md-6">
             <div class="form-group"><label for="lead_priority">{{ t('الأولوية') }}</label>
@@ -111,13 +113,13 @@
           </div>
           <div class="col-12">
             <div class="form-group"><label for="lead_description">{{ t('Notes') }}</label>
-              <textarea name="description" class="form-control" rows="3" id="lead_description">{{ lead.description if lead else '' }}</textarea></div>
+              <textarea name="description" class="form-control" rows="3" id="lead_description" maxlength="1000">{{ lead.description if lead else '' }}</textarea></div>
           </div>
         </div>
         <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> {{ t('Save') }}</button>
         <a href="{{ url_for('crm.leads_list') }}" class="btn btn-secondary">{{ t('Cancel') }}</a>
-        {% endif %}
       </form>
+      {% endif %}
     </div>
   </div>
 </div>

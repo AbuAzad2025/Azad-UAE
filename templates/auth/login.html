@@ -32,7 +32,7 @@
         <img
           src="{{ url_for('static', filename='assets/brand/azad/logos/logo-gold.png') }}"
           alt="{{ _('شعار شركة ازاد') }}"
-          width="400" height="auto"
+          width="400" height="120"
           loading="eager" decoding="async"
         >
       </div>
@@ -53,7 +53,7 @@
     <main class="azad-login-card-wrap">
       <div class="azad-login-card">
         <h2 class="azad-login-card__title">{{ _('تسجيل الدخول') }}</h2>
-        <p class="azad-login-card__sub" id="loginModeHint">{{ _('دخول مستخدمي الشركات') }}</p>
+        <p class="azad-login-card__sub" id="loginModeHint" aria-live="polite">{{ _('دخول مستخدمي الشركات') }}</p>
 
         <div class="azad-login-tabs" role="tablist" aria-label="{{ _('نوع الدخول') }}">
           <button type="button" class="azad-login-tab is-active" data-access-mode="users" role="tab" aria-selected="true" aria-controls="azadLoginForm">
@@ -73,26 +73,29 @@
           {% endif %}
         {% endwith %}
 
-        <form method="POST" action="{{ url_for('auth.login') }}" id="azadLoginForm" class="azad-login-form" autocomplete="on">
+        <form method="POST" action="{{ url_for('auth.login') }}" id="azadLoginForm" class="azad-login-form" autocomplete="on" aria-describedby="loginModeHint">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="hidden" name="access_mode" id="access_mode" value="{{ access_mode or 'users' }}">
 
           <div class="azad-login-field">
-            <label for="username">اسم المستخدم</label>
+            <label for="username">{{ _('اسم المستخدم') }}</label>
             <div class="azad-login-input-wrap">
               <span class="azad-login-input-wrap__icon" aria-hidden="true"><i class="fas fa-user"></i></span>
               <input type="text" id="username" name="username" class="azad-ltr"
                 value="{{ username_value or '' }}" placeholder="{{ _('اسم المستخدم') }}"
-                required autofocus autocomplete="username" minlength="2" maxlength="100">
+                required autofocus autocomplete="username" minlength="2" maxlength="100"
+                autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="text"
+                pattern="[\w_.@-]+">
             </div>
           </div>
 
           <div class="azad-login-field">
-            <label for="password">كلمة المرور</label>
+            <label for="password">{{ _('كلمة المرور') }}</label>
             <div class="azad-login-input-wrap">
               <span class="azad-login-input-wrap__icon" aria-hidden="true"><i class="fas fa-lock"></i></span>
               <input type="password" id="password" name="password"
-                placeholder="••••••••" required autocomplete="current-password" minlength="6">
+                placeholder="••••••••" required autocomplete="current-password" minlength="6"
+                autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="128">
               <button type="button" class="azad-login-toggle-pass" id="togglePassword" aria-label="{{ _('إظهار أو إخفاء كلمة المرور') }}" title="{{ _('عرض') }}">
                 <i class="fas fa-eye"></i>
               </button>
@@ -102,16 +105,16 @@
           <div class="azad-login-row">
             <label class="azad-login-remember">
               <input type="checkbox" name="remember_me" id="remember" value="1" {% if remember_checked %}checked{% endif %}>
-              <span>تذكرني</span>
+              <span>{{ _('تذكرني') }}</span>
             </label>
             <a class="azad-login-forgot" href="{{ url_for('auth.support') }}">
-              <i class="fas fa-key" aria-hidden="true"></i> نسيت كلمة المرور؟
+              <i class="fas fa-key" aria-hidden="true"></i> {{ _('نسيت كلمة المرور؟') }}
             </a>
           </div>
 
           <button type="submit" class="azad-login-submit" id="loginSubmitBtn">
             <i class="fas fa-shield-halved" aria-hidden="true"></i>
-            دخول آمن
+            {{ _('دخول آمن') }}
           </button>
         </form>
       </div>
@@ -119,7 +122,7 @@
   </div>
 
   <footer class="azad-login-footer">
-    Developed by <span>شركة ازاد للأنظمة الذكية</span> &mdash; ERP &bull; Automation &bull; Smart Systems
+    {{ _('Developed by') }} <span>{{ _('شركة ازاد للأنظمة الذكية') }}</span> &mdash; ERP &bull; Automation &bull; Smart Systems
   </footer>
 
   <script>
@@ -172,9 +175,12 @@
       if (form && submitBtn) {
         const submitOriginalHtml = submitBtn.innerHTML;
         form.addEventListener('submit', () => {
+          form.setAttribute('aria-busy', 'true');
           submitBtn.classList.add('is-loading');
-          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> {{ t("Checking") }}...';
+          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> ' + {{ t("Checking")|tojson }} + '...';
+          /* Fallback reset after 15s if navigation is slow/blocked */
           setTimeout(() => {
+            form.setAttribute('aria-busy', 'false');
             submitBtn.classList.remove('is-loading');
             submitBtn.innerHTML = submitOriginalHtml;
           }, 15000);

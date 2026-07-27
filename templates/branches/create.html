@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('Add') }} {{ t('Branch_2') }}{% endblock %}
+{% block title %}{{ t('Add') }} {{ t('Branch') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="card">
     <div class="card-header">
-      <h3><i class="fas fa-plus"></i> {{ t('Add') }} {{ t('Branch_2') }} {{ t('New') }}</h3>
+      <h3><i class="fas fa-plus"></i> {{ t('Add') }} {{ t('Branch') }} {{ t('New') }}</h3>
     </div>
     <div class="card-body">
-      <form class="needs-validation" method="post">
+      <form class="needs-validation" method="post" novalidate>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="row">
           <div class="col-md-6">
@@ -19,14 +19,14 @@
           <div class="col-md-6">
             <div class="form-group">
               <label for="input_code">{{ t('Code') }} ({{ t('مثال') }}: HQ, HEB) *</label>
-              <input type="text" name="code" class="form-control" required id="input_code" aria-label="code">
+              <input type="text" name="code" class="form-control" required id="input_code" aria-label="code" maxlength="10" pattern="[A-Za-z0-9]+">
             </div>
           </div>
         </div>
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
-              <label for="input_city">{{ t('Receivables') }}</label>
+              <label for="input_city">{{ t('City') }}</label>
               <input type="text" name="city" class="form-control" id="input_city" aria-label="city">
             </div>
           </div>
@@ -37,13 +37,26 @@
             </div>
           </div>
         </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="prices_include_vat">{{ _('طريقة احتساب الضريبة في') }} {{ t('Branch') }}</label>
+              <select name="prices_include_vat" class="form-control" id="prices_include_vat" aria-label="prices include vat">
+                <option value="" selected>{{ _('الافتراضي (حسب الشركة)') }}</option>
+                <option value="on">{{ _('الأسعار شاملة الضريبة') }}</option>
+                <option value="off">{{ _('الأسعار غير شاملة الضريبة') }}</option>
+              </select>
+              <small class="text-muted">{{ _('إذا اخترت "الافتراضي"، سيتم استخدام إعداد الشركة.') }}</small>
+            </div>
+          </div>
+        </div>
         <div class="form-group">
           <label for="branch_address">{{ t('Address') }}</label>
           <textarea name="address" class="form-control" id="branch_address" maxlength="255"></textarea>
         </div>
         <div class="form-group form-check">
           <input type="checkbox" name="is_main" class="form-check-input" id="isMain" aria-label="is main">
-          <label class="form-check-label" for="isMain">هذا هو {{ t('Branch') }} {{ t('Main') }}</label>
+          <label class="form-check-label" for="isMain">{{ _('هذا هو') }} {{ t('Branch') }} {{ t('Main') }}</label>
         </div>
         <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> {{ t('Save') }}</button>
         <a href="{{ url_for('branches.index') }}" class="btn btn-secondary"><i class="fas fa-times"></i> {{ t('Cancel') }}</a>
