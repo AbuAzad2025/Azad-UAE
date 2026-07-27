@@ -24,7 +24,7 @@
     </noscript>
 
     <div class="pos-flash-wrap">
-        {# SECURITY: Do NOT use |safe on flash messages. Autoescape must remain active. #}
+        {# SECURITY: never disable autoescaping on flash messages. #}
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
@@ -45,9 +45,11 @@
     <script src="{{ url_for('static', filename='adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ url_for('static', filename='adminlte/js/adminlte.min.js') }}"></script>
     <script defer src="{{ url_for('static', filename='js/telemetry.js') }}"></script>
+    <script type="application/json" id="app-enums-data">{{ app_enums|tojson }}</script>
+    <script type="application/json" id="user-permissions-data">{{ current_user_permissions|tojson }}</script>
     <script>
-        window.APP_ENUMS = {{ app_enums | tojson | safe }} || {};
-        window.CURRENT_USER_PERMISSIONS = {{ current_user_permissions | tojson | safe }} || [];
+        window.APP_ENUMS = JSON.parse(document.getElementById('app-enums-data').textContent || '{}');
+        window.CURRENT_USER_PERMISSIONS = JSON.parse(document.getElementById('user-permissions-data').textContent || '[]');
     </script>
     <script src="{{ url_for('static', filename='js/pos-permissions.js') }}"></script>
     {% block extra_js %}{% endblock %}
