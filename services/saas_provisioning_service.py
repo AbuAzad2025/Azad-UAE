@@ -12,6 +12,146 @@ from utils.db_safety import atomic_transaction
 
 logger = logging.getLogger(__name__)
 
+# ── Standard commercial package tiers (single source of truth) ──
+# -1 means "unlimited". Ids/slugs are stable; seed_packages() is idempotent.
+DEFAULT_PACKAGES: tuple[dict, ...] = (
+    {
+        "slug": "basic",
+        "name_ar": "الباقة الأساسية",
+        "name_en": "Basic",
+        "icon": "📦",
+        "price": "29.000",
+        "description_ar": "بداية مثالية للمنشآت الصغيرة — نقاط بيع وفواتير وتقارير أساسية.",
+        "description_en": "Starter tier for small businesses — core POS, invoicing and basic reports.",
+        "features": ["نقاط بيع أساسية", "فواتير", "تقارير أساسية"],
+        "tier_level": 10,
+        "max_users": 2,
+        "max_branches": 1,
+        "max_warehouses": 1,
+        "max_products": 500,
+        "max_customers": 300,
+        "max_suppliers": 100,
+        "max_storage_mb": 512,
+        "max_invoices_per_month": 100,
+        "max_sales_per_month": 300,
+        "has_pos": True,
+        "has_ai": False,
+        "has_advanced_reports": False,
+        "has_customization": False,
+        "enable_payroll": False,
+        "enable_expenses": True,
+        "enable_cheques": True,
+        "enable_reports": True,
+        "enable_ai": False,
+        "enable_store": False,
+        "enable_gl": True,
+        "enable_api": False,
+        "sort_order": 10,
+    },
+    {
+        "slug": "pro",
+        "name_ar": "الباقة الاحترافية",
+        "name_en": "Pro",
+        "icon": "🚀",
+        "price": "79.000",
+        "description_ar": "للمنشآت المتوسطة — رواتب وتقارير متقدمة وسعة أوسع.",
+        "description_en": "For growing SMEs — payroll, advanced reports and wider capacity.",
+        "features": ["كل ميزات الأساسية", "رواتب", "تقارير متقدمة", "POS متقدم"],
+        "is_featured": True,
+        "badge_text": "الأكثر شعبية",
+        "tier_level": 20,
+        "max_users": 10,
+        "max_branches": 3,
+        "max_warehouses": 3,
+        "max_products": 5000,
+        "max_customers": 3000,
+        "max_suppliers": 1000,
+        "max_storage_mb": 5120,
+        "max_invoices_per_month": 1000,
+        "max_sales_per_month": 3000,
+        "has_pos": True,
+        "has_ai": False,
+        "has_advanced_reports": True,
+        "has_customization": False,
+        "enable_payroll": True,
+        "enable_expenses": True,
+        "enable_cheques": True,
+        "enable_reports": True,
+        "enable_ai": False,
+        "enable_store": False,
+        "enable_gl": True,
+        "enable_api": False,
+        "sort_order": 20,
+    },
+    {
+        "slug": "enterprise",
+        "name_ar": "باقة المؤسسات",
+        "name_en": "Enterprise",
+        "icon": "👑",
+        "price": "199.000",
+        "description_ar": "بلا حدود — كل الميزات والذكاء الاصطناعي والمتجر والتكاملات.",
+        "description_en": "Unlimited — every feature including AI, store and integrations.",
+        "features": ["كل الميزات", "ذكاء اصطناعي", "متجر إلكتروني", "API", "دعم أولوية"],
+        "tier_level": 30,
+        "max_users": -1,
+        "max_branches": -1,
+        "max_warehouses": -1,
+        "max_products": -1,
+        "max_customers": -1,
+        "max_suppliers": -1,
+        "max_storage_mb": -1,
+        "max_invoices_per_month": -1,
+        "max_sales_per_month": -1,
+        "has_pos": True,
+        "has_ai": True,
+        "has_whatsapp": True,
+        "has_advanced_reports": True,
+        "has_customization": True,
+        "has_training": True,
+        "has_priority_support": True,
+        "enable_payroll": True,
+        "enable_expenses": True,
+        "enable_cheques": True,
+        "enable_reports": True,
+        "enable_ai": True,
+        "enable_store": True,
+        "enable_gl": True,
+        "enable_api": True,
+        "sort_order": 30,
+    },
+)
+
+
+def seed_packages() -> dict:
+    """Idempotently upsert the standard commercial package tiers by slug.
+
+    Returns {"created": [...], "updated": [...]} slug lists.
+    """
+    from models.package import Package
+
+    created, updated = [], []
+    with atomic_transaction("seed_packages"):
+        for spec in DEFAULT_PACKAGES:
+            pkg = Package.query.filter_by(slug=spec["slug"]).first()
+            if pkg is None:
+                pkg = Package(slug=spec["slug"])
+                db.session.add(pkg)
+                created.append(spec["slug"])
+            else:
+                updated.append(spec["slug"])
+            for key, value in spec.items():
+                if key == "slug":
+                    continue
+                if key == "price":
+                    from decimal import Decimal
+
+                    value = Decimal(str(value))
+                setattr(pkg, key, value)
+            pkg.is_active = True
+        db.session.flush()
+    logger.info("seed_packages: created=%s updated=%s", created, updated)
+    return {"created": created, "updated": updated}
+
 
 class SaaSProvisioningError(Exception):
     """Raised when provisioning a purchased package fails."""

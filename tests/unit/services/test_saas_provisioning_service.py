@@ -166,3 +166,66 @@ class TestDemoTenant:
         assert SaaSProvisioningService.is_demo_tenant(sample_tenant) is False
         demo_like = type("T", (), {"is_trial": True, "subscription_plan": "demo"})()
         assert SaaSProvisioningService.is_demo_tenant(demo_like) is True
+
+
+class TestSeedPackages:
+    def test_creates_three_standard_tiers(self, db_session):
+        from models.package import Package
+        from services.saas_provisioning_service import DEFAULT_PACKAGES, seed_packages
+
+        result = seed_packages()
+        assert sorted(result["created"] + result["updated"]) == ["basic", "enterprise", "pro"]
+        assert len(DEFAULT_PACKAGES) == 3
+        for slug, expected_tier in (("basic", 10), ("pro", 20), ("enterprise", 30)):
+            pkg = Package.query.filter_by(slug=slug).first()
+            assert pkg is not None and pkg.is_active is True
+            assert pkg.tier_level == expected_tier
+
+    def test_idempotent_second_run_updates(self, db_session):
+        from services.saas_provisioning_service import seed_packages
+
+        seed_packages()
+        result = seed_packages()
+        assert result["created"] == []
+        assert sorted(result["updated"]) == ["basic", "enterprise", "pro"]
+
+    def test_enterprise_unlimited_minus_one(self, db_session):
+        from models.package import Package
+        from services.saas_provisioning_service import seed_packages
+
+        seed_packages()
+        pkg = Package.query.filter_by(slug="enterprise").first()
+        for col in (
+            "max_users",
+            "max_branches",
+            "max_products",
+            "max_customers",
+            "max_suppliers",
+            "max_warehouses",
+            "max_storage_mb",
+            "max_invoices_per_month",
+            "max_sales_per_month",
+        ):
+            assert getattr(pkg, col) == -1, col
+        for flag in (
+            "enable_payroll",
+            "enable_expenses",
+            "enable_cheques",
+            "enable_reports",
+            "enable_ai",
+            "enable_store",
+            "enable_gl",
+            "enable_api",
+        ):
+            assert getattr(pkg, flag) is True, flag
+
+    def test_plan_meets_uses_db_tier_levels(self, db_session):
+        from services.saas_provisioning_service import seed_packages
+        from utils.pos_features import plan_meets
+
+        seed_packages()
+        assert plan_meets("basic", "pro") is False
+        assert plan_meets("pro", "pro") is True
+        assert plan_meets("enterprise", "pro") is True
+        assert plan_meets(None, "basic") is True
+        assert plan_meets(None, "enterprise") is False

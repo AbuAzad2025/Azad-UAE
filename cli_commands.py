@@ -914,10 +914,21 @@ def register_sanitize_command(app):
         click.echo("Done.")
 
 
+def register_seed_packages_command(app):
+    @app.cli.command("seed-packages")
+    def seed_packages_cmd():
+        """Upsert the standard commercial package tiers (basic/pro/enterprise) — idempotent."""
+        from services.saas_provisioning_service import seed_packages
+
+        result = seed_packages()
+        click.echo(f"Packages seeded. created={result['created']} updated={result['updated']}")
+
+
 def register_cli_commands(app):
     register_build_assets_command(app)
     register_stock_commands(app)
     register_backup_commands(app)
     register_reset_platform_db_command(app)
     register_seed_demo_command(app)
+    register_seed_packages_command(app)
     register_sanitize_command(app)

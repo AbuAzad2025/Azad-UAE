@@ -43,8 +43,16 @@ class Package(db.Model):
     support_duration_months = db.Column(db.Integer, default=3)
 
     # الصلاحيات والحدود
-    max_users = db.Column(db.Integer)  # عدد المستخدمين
-    max_branches = db.Column(db.Integer)  # عدد الفروع
+    tier_level = db.Column(db.Integer, default=10)  # basic=10, pro=20, enterprise=30
+    max_users = db.Column(db.Integer)  # عدد المستخدمين (-1 = غير محدود)
+    max_branches = db.Column(db.Integer)  # عدد الفروع (-1 = غير محدود)
+    max_products = db.Column(db.Integer)
+    max_customers = db.Column(db.Integer)
+    max_suppliers = db.Column(db.Integer)
+    max_warehouses = db.Column(db.Integer)
+    max_storage_mb = db.Column(db.Integer)
+    max_invoices_per_month = db.Column(db.Integer)
+    max_sales_per_month = db.Column(db.Integer)
     has_ai = db.Column(db.Boolean, default=False)  # ذكاء اصطناعي
     has_whatsapp = db.Column(db.Boolean, default=False)  # تكامل واتساب
     has_pos = db.Column(db.Boolean, default=False)  # نقاط البيع
@@ -52,6 +60,16 @@ class Package(db.Model):
     has_customization = db.Column(db.Boolean, default=False)  # تخصيص
     has_training = db.Column(db.Boolean, default=False)  # تدريب
     has_priority_support = db.Column(db.Boolean, default=False)  # دعم أولوية
+
+    # Feature flags copied to the tenant on activation
+    enable_payroll = db.Column(db.Boolean, default=False)
+    enable_expenses = db.Column(db.Boolean, default=True)
+    enable_cheques = db.Column(db.Boolean, default=True)
+    enable_reports = db.Column(db.Boolean, default=True)
+    enable_ai = db.Column(db.Boolean, default=False)
+    enable_store = db.Column(db.Boolean, default=False)
+    enable_gl = db.Column(db.Boolean, default=True)
+    enable_api = db.Column(db.Boolean, default=False)
 
     created_at = db.Column(db.DateTime, default=_utc_now, index=True)
     updated_at = db.Column(db.DateTime, default=_utc_now, onupdate=_utc_now)
@@ -80,6 +98,14 @@ class Package(db.Model):
             "support_duration_months": self.support_duration_months,
             "max_users": self.max_users,
             "max_branches": self.max_branches,
+            "max_products": self.max_products,
+            "max_customers": self.max_customers,
+            "max_suppliers": self.max_suppliers,
+            "max_warehouses": self.max_warehouses,
+            "max_storage_mb": self.max_storage_mb,
+            "max_invoices_per_month": self.max_invoices_per_month,
+            "max_sales_per_month": self.max_sales_per_month,
+            "tier_level": self.tier_level,
             "has_ai": self.has_ai,
             "has_whatsapp": self.has_whatsapp,
             "has_pos": self.has_pos,
@@ -87,6 +113,14 @@ class Package(db.Model):
             "has_customization": self.has_customization,
             "has_training": self.has_training,
             "has_priority_support": self.has_priority_support,
+            "enable_payroll": self.enable_payroll,
+            "enable_expenses": self.enable_expenses,
+            "enable_cheques": self.enable_cheques,
+            "enable_reports": self.enable_reports,
+            "enable_ai": self.enable_ai,
+            "enable_store": self.enable_store,
+            "enable_gl": self.enable_gl,
+            "enable_api": self.enable_api,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

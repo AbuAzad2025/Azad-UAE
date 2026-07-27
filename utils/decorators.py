@@ -7,7 +7,7 @@ from extensions import db
 from models.enums import RoleEnum, PermissionEnum
 from utils.branching import branch_scope_id_for, report_branch_scope_id_for
 from utils.auth_helpers import is_admin_surface_user, is_global_owner_user
-from utils.pos_features import POS_SUBFEATURES, pos_feature_enabled
+from utils.pos_features import POS_SUBFEATURES, plan_meets, pos_feature_enabled
 
 
 def branch_scope_id():
@@ -275,9 +275,6 @@ _FEATURE_COLUMNS = frozenset(
     }
 )
 
-# Plan hierarchy (higher = more features).
-_PLAN_LEVELS = {"basic": 10, "pro": 20, "enterprise": 30}
-
 
 def require_subscription_feature(feature_name: str):
     """Gate a route by tenant feature flag or subscription plan.
@@ -310,10 +307,8 @@ def require_subscription_feature(feature_name: str):
                     abort(403, description=f'ميزة "{feature_name}" غير مفعلة لهذا الحساب')
                 return f(*args, **kwargs)
 
-            if feature_name in _PLAN_LEVELS:
-                required = _PLAN_LEVELS[feature_name]
-                current_plan = _PLAN_LEVELS.get(tenant.subscription_plan or "basic", 0)
-                if current_plan < required:
+            if feature_name in ("pro", "enterprise"):
+                if not plan_meets(tenant.subscription_plan, feature_name):
                     abort(403, description=f"هذه الميزة تتطلب خطة {feature_name}")
                 return f(*args, **kwargs)
 
