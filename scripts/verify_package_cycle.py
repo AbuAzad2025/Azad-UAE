@@ -34,7 +34,9 @@ with app.app_context():
     print(f"[1] seed_packages → created={result['created']} updated={result['updated']}")
     for slug in ("basic", "pro", "enterprise"):
         pkg = Package.query.filter_by(slug=slug).first()
-        print(f"    {slug}: tier={pkg.tier_level} users={pkg.max_users} sales/mo={pkg.max_sales_per_month} payroll={pkg.enable_payroll} ai={pkg.enable_ai}")
+        print(
+            f"    {slug}: tier={pkg.tier_level} users={pkg.max_users} sales/mo={pkg.max_sales_per_month} payroll={pkg.enable_payroll} ai={pkg.enable_ai}"
+        )
 
     tenant = Tenant.query.filter_by(slug="demo").first() or Tenant.query.first()
     original = {col: getattr(tenant, col) for col in SNAPSHOT_COLS}
@@ -73,7 +75,9 @@ with app.app_context():
         db.session.flush()
         basic = Package.query.filter_by(slug="basic").first()
         print("[5] downgrade → basic:")
-        print(f"    {'PASS' if tenant.max_users == basic.max_users else 'FAIL'}  max_users={tenant.max_users} (basic={basic.max_users})")
+        print(
+            f"    {'PASS' if tenant.max_users == basic.max_users else 'FAIL'}  max_users={tenant.max_users} (basic={basic.max_users})"
+        )
         print(f"    {'PASS' if tenant.enable_payroll is False else 'FAIL'}  payroll locked")
         print(f"    {'PASS' if tenant.max_sales_per_month == 300 else 'FAIL'}  sales/mo={tenant.max_sales_per_month}")
 
@@ -84,7 +88,9 @@ with app.app_context():
         usage = {row["key"]: row for row in get_tenant_usage_summary(tenant)}
         print("[6] derived views on basic:")
         print(f"    {'PASS' if not plan_meets('basic', 'pro') else 'FAIL'}  plan_meets(basic, pro) is False (DB tier)")
-        print(f"    INFO usage users: {usage['users']['current']}/{usage['users']['limit']} warn={usage['users']['warn']}")
+        print(
+            f"    INFO usage users: {usage['users']['current']}/{usage['users']['limit']} warn={usage['users']['warn']}"
+        )
         print(f"    INFO usage sales/mo: {usage['sales_per_month']['current']}/{usage['sales_per_month']['limit']}")
 
         failed = [name for name, ok in checks if not ok]
