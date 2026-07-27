@@ -222,6 +222,18 @@ def dashboard():
         stats["can_apply_discount"] = current_user.can_apply_discount()
         stats["can_edit_price"] = current_user.can_edit_price()
 
+        usage_summary = []
+        try:
+            from models import Tenant
+            from utils.tenant_limits import get_tenant_usage_summary
+
+            if tid:
+                usage_summary = get_tenant_usage_summary(db.session.get(Tenant, int(tid)))
+        except Exception as e:
+            current_app.logger.error(f"Failed to build tenant usage summary: {e}")
+        stats["usage_summary"] = usage_summary
+        stats["usage_warnings"] = [row for row in usage_summary if row["warn"]]
+
         return render_template("dashboard.html", stats=stats)
 
     except Exception:

@@ -203,3 +203,45 @@ class TestTenantLimits:
         tenant = MagicMock(id=1, max_sales_per_month=0)
         with patch("utils.tenant_limits._active_tenant", return_value=tenant):
             check_monthly_limit("sales", model=MagicMock(), date_field="sale_date")
+
+
+class TestTenantUsageSummary:
+    def test_none_tenant_returns_empty(self):
+        from utils.tenant_limits import get_tenant_usage_summary
+
+        assert get_tenant_usage_summary(None) == []
+
+    def test_summary_rows_and_unlimited(self, db_session, sample_tenant):
+        from utils.tenant_limits import get_tenant_usage_summary
+
+        sample_tenant.max_users = 10
+        sample_tenant.max_products = -1  # unlimited
+        db_session.commit()
+
+        rows = {row["key"]: row for row in get_tenant_usage_summary(sample_tenant)}
+        assert set(rows) == {"users", "branches", "warehouses", "products", "customers", "suppliers", "sales_per_month"}
+        assert rows["users"]["limit"] == 10
+        assert rows["users"]["unlimited"] is False
+        assert rows["products"]["unlimited"] is True
+        assert rows["products"]["limit"] is None
+        assert rows["products"]["percent"] == 0
+
+    def test_warn_at_80_percent(self, db_session, sample_tenant, sample_user):
+        from utils.tenant_limits import get_tenant_usage_warnings
+
+        # sample_tenant already has sample_user attached → 1 active user.
+        sample_tenant.max_users = 1  # 100% usage
+        sample_tenant.max_branches = None
+        sample_tenant.max_warehouses = None
+        sample_tenant.max_products = None
+        sample_tenant.max_customers = None
+        sample_tenant.max_suppliers = None
+        sample_tenant.max_sales_per_month = None
+        db_session.commit()
+
+        warnings = get_tenant_usage_warnings(sample_tenant)
+        keys = {row["key"] for row in warnings}
+        assert "users" in keys
+        users_row = next(row for row in warnings if row["key"] == "users")
+        assert users_row["percent"] == 100
+        assert users_row["warn"] is True

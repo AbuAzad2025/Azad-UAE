@@ -151,6 +151,108 @@ def check_feature_enabled(feature_flag: str) -> bool:
     return getattr(tenant, feature_flag, True)
 
 
+# ── Usage summary (dashboard widget + 80% warning banner) ─────────────
+
+USAGE_WARN_THRESHOLD = 80  # percent
+
+
+def _count_model(model, tid, extra_filter=None):
+    q = db.session.query(model).filter(model.tenant_id == tid)
+    if extra_filter:
+        q = extra_filter(q)
+    return q.count()
+
+
+def _monthly_count(model, tid, date_field, extra_filter=None):
+    q = db.session.query(model).filter(
+        model.tenant_id == tid,
+        getattr(model, date_field) >= _month_start(),
+    )
+    if extra_filter:
+        q = extra_filter(q)
+    return q.count()
+
+
+def get_tenant_usage_summary(tenant) -> list[dict]:
+    """Current usage vs plan limits for the dashboard quota widget.
+
+    Each row: {key, label_ar, current, limit, percent, warn, unlimited}.
+    ``limit`` of None or <= 0 means unlimited/not-configured.
+    """
+    if tenant is None:
+        return []
+
+    from models import Branch, Customer, Product, Sale, Supplier, User, Warehouse
+
+    tid = tenant.id
+
+    def _limit(attr):
+        value = getattr(tenant, attr, None)
+        return value if isinstance(value, int) and value > 0 else None
+
+    specs = [
+        (
+            "users",
+            "المستخدمون",
+            _limit("max_users"),
+            lambda: _count_model(User, tid, lambda q: q.filter_by(is_active=True)),
+        ),
+        ("branches", "الفروع", _limit("max_branches"), lambda: _count_model(Branch, tid)),
+        (
+            "warehouses",
+            "المستودعات",
+            _limit("max_warehouses"),
+            lambda: _count_model(Warehouse, tid),
+        ),
+        (
+            "products",
+            "المنتجات",
+            _limit("max_products"),
+            lambda: _count_model(Product, tid, lambda q: q.filter_by(is_active=True)),
+        ),
+        (
+            "customers",
+            "العملاء",
+            _limit("max_customers"),
+            lambda: _count_model(Customer, tid, lambda q: q.filter_by(is_active=True)),
+        ),
+        (
+            "suppliers",
+            "الموردون",
+            _limit("max_suppliers"),
+            lambda: _count_model(Supplier, tid, lambda q: q.filter_by(is_active=True)),
+        ),
+        (
+            "sales_per_month",
+            "مبيعات الشهر",
+            _limit("max_sales_per_month"),
+            lambda: _monthly_count(Sale, tid, "sale_date", lambda q: q.filter_by(status="confirmed")),
+        ),
+    ]
+
+    rows = []
+    for key, label, limit, counter in specs:
+        current = counter()
+        percent = round(current * 100 / limit) if limit else 0
+        rows.append(
+            {
+                "key": key,
+                "label_ar": label,
+                "current": current,
+                "limit": limit,
+                "unlimited": limit is None,
+                "percent": min(percent, 100),
+                "warn": limit is not None and percent >= USAGE_WARN_THRESHOLD,
+            }
+        )
+    return rows
+
+
+def get_tenant_usage_warnings(tenant) -> list[dict]:
+    """Usage rows at or above the 80% warning threshold (for the banner)."""
+    return [row for row in get_tenant_usage_summary(tenant) if row["warn"]]
+
+
 def enforce_feature(feature_flag: str, feature_name_ar: str) -> None:
     """Raise if feature is disabled for this tenant."""
     tenant = _active_tenant()
