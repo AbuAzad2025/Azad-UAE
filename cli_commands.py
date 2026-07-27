@@ -336,6 +336,9 @@ def _do_seed_demo(_app):
         slug="demo",
         business_type="general",
         is_active=True,
+        # Demo baseline — the seeded demo company gets headroom above the
+        # platform default (5) so the full demo dataset fits.
+        max_users=15,
     )
     # Application-level industry enforcement (no DB schema change).
     validate_tenant_industry(demo_tenant.business_type, demo_tenant.industry)

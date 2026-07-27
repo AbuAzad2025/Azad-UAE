@@ -15,6 +15,7 @@ from models import Sale, Customer, Product, InvoiceSettings
 from services.sale_service import SaleService
 from services.stock_service import StockService
 from utils.decorators import permission_required, enforce_resource_limit
+from utils.tenant_limits import TenantLimitError
 from utils.branching import (
     ensure_warehouse_access,
     get_accessible_warehouses,
@@ -242,6 +243,9 @@ def create():
                 gettext(f"⚠️ {str(e)}\n💡 تحقق من الكميات المتوفرة في المخزون."),
                 "danger",
             )
+        except TenantLimitError as e:
+            current_app.logger.info(f"Tenant limit blocked sale creation: {e}")
+            flash(str(e), "warning")
         except Exception as e:
             from utils.error_messages import ErrorMessages
 

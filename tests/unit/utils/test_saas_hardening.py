@@ -225,3 +225,36 @@ class TestDynamicResourceLimits:
 
                 with pytest.raises(Forbidden):
                     _dummy()
+
+
+class TestSaleServiceMonthlyLimitEnforcement:
+    """Service-level quota gate — create_sale itself refuses over-limit tenants,
+    so every sale path (web, POS checkout, API) is covered, not just routes."""
+
+    def test_create_sale_blocked_at_sales_monthly_limit(self, app, db_session, sample_tenant, sample_user):
+        from unittest.mock import MagicMock
+        from services.sale_service import SaleService
+        from utils.tenant_limits import TenantLimitError
+
+        customer = MagicMock()
+        customer.is_active = True
+        seller = MagicMock()
+        seller.is_active = True
+        seller.tenant_id = sample_tenant.id
+        seller.branch_id = None
+
+        with app.test_request_context():
+            with (
+                patch("utils.tenant_limits._active_tenant", return_value=sample_tenant),
+                patch(
+                    "utils.tenant_limits.check_sales_monthly_limit",
+                    side_effect=TenantLimitError("sales_per_month", 1, 1),
+                ),
+            ):
+                with pytest.raises(TenantLimitError):
+                    SaleService.create_sale(
+                        customer=customer,
+                        seller=seller,
+                        lines_data=[{"product_id": 1, "quantity": 1}],
+                        currency="AED",
+                    )

@@ -190,6 +190,9 @@ def _base_auth_patches(mock_user, is_global_owner=True, is_admin_surface=True):
         patch("utils.tenanting.get_active_tenant_id", return_value=1),
         patch("utils.security_helpers.enforce_owner_ip_if_needed"),
         patch("services.logging_core.LoggingCore.log_audit"),
+        # Route-boundary mocks can't back a real Tenant lookup; feature gating
+        # itself is covered DB-backed in tests/unit/utils/test_feature_guards.py.
+        patch("utils.feature_guards._feature_denial", return_value=None),
     ]
 
 

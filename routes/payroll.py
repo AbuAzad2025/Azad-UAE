@@ -9,8 +9,10 @@ from utils.decorators import branch_scope_id, permission_required
 from utils.branching import should_show_all_branch_columns
 from utils.tenanting import get_active_tenant_id
 from utils.db_safety import atomic_transaction
+from utils.feature_guards import install_feature_gate
 
 payroll_bp = Blueprint("payroll", __name__, url_prefix="/payroll")
+install_feature_gate(payroll_bp, "payroll")
 
 
 def _assert_employee_scope(employee, scoped_branch_id, tid):

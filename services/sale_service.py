@@ -95,6 +95,13 @@ class SaleService:
         if shipping_decimal < Decimal("0"):
             raise ValueError("تكلفة الشحن لا يمكن أن تكون سالبة")
 
+        # SaaS quota — a confirmed sale consumes both monthly quotas. No-op
+        # outside a tenant/request context (owner/platform flows).
+        from utils.tenant_limits import check_invoices_monthly_limit, check_sales_monthly_limit
+
+        check_sales_monthly_limit()
+        check_invoices_monthly_limit()
+
         # تحديد المستودع بطريقة ذكية مع عزل التينانت
         from models import Warehouse
 

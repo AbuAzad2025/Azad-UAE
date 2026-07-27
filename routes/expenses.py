@@ -33,7 +33,10 @@ from utils.gl_reference_types import GLRef
 from decimal import Decimal
 from datetime import datetime
 
+from utils.feature_guards import install_feature_gate
+
 expenses_bp = Blueprint("expenses", __name__, url_prefix="/expenses")
+install_feature_gate(expenses_bp, "expenses")
 
 
 def _expense_in_scope(expense):

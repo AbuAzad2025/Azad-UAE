@@ -43,6 +43,7 @@ from utils.decorators import permission_required
 from utils.db_safety import atomic_transaction
 from utils.helpers import generate_number
 from utils.logger import log_hardware, log_security
+from utils.tenant_limits import TenantLimitError
 import queue as _queue
 import time
 import os as _os
@@ -1242,6 +1243,8 @@ def api_checkout():
                 IdempotencyService.complete(idem_record, response, 200)
     except PosOverrideError as exc:
         return jsonify({"success": False, "error": str(exc)}), 403
+    except TenantLimitError as exc:
+        return jsonify({"success": False, "error": str(exc), "code": "PLAN_LIMIT"}), 403
     except ValueError as exc:
         return jsonify({"success": False, "error": str(exc)}), 400
     except IntegrityError:

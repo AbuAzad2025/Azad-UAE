@@ -39,7 +39,10 @@ from utils.currency_utils import resolve_default_currency, get_system_default_cu
 from datetime import datetime, date
 from decimal import Decimal
 
+from utils.feature_guards import install_feature_gate
+
 cheques_bp = Blueprint("cheques", __name__, url_prefix="/cheques")
+install_feature_gate(cheques_bp, "cheques")
 
 
 def _scoped_cheques_query():

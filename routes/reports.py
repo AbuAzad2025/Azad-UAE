@@ -24,8 +24,10 @@ from utils.tenanting import (
     tenant_get_or_404,
 )
 from utils.cache_decorators import cached_query
+from utils.feature_guards import install_feature_gate
 
 reports_bp = Blueprint("reports", __name__, url_prefix="/reports")
+install_feature_gate(reports_bp, "reports")
 
 
 @reports_bp.before_request

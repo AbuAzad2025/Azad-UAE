@@ -28,8 +28,10 @@ from utils.helpers import save_uploaded_file
 from utils.tenanting import get_active_tenant_id
 from utils.branching import get_branch_stock_map
 from utils.db_safety import atomic_transaction
+from utils.feature_guards import install_feature_gate
 
 store_bp = Blueprint("store", __name__, url_prefix="/store")
+install_feature_gate(store_bp, "store")
 
 
 def _tenant_id():
