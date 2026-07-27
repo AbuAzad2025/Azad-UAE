@@ -106,7 +106,7 @@
 
 
 
-      <small class="text-muted">{{ t('يُرحّل') }} {{ t('استهلاك') }} {{ t('Assets') }} {{ t('Active_2') }} {{ t('للشركة') }} {{ t('الحالية') }} فقط — لا {{ t('يُكرّر') }} {{ t('Month') }} إذا {{ t('رُحّل') }} {{ t('مسبقاً') }}.</small>
+      <small class="text-muted">{{ t('Depreciation runs for fixed assets of the current company only — will not repeat a month if already posted.') }}</small>
 
 
 
@@ -138,7 +138,7 @@
 
 
 
-      <tr><td>{{ p.year }}</td><td>{{ p.month }}</td><td>{{ 'مقفلة' if p.is_closed else 'مفتوحة' }}</td></tr>
+      <tr><td>{{ p.year }}</td><td>{{ p.month }}</td><td>{{ t('Closed') if p.is_closed else t('Open') }}</td></tr>
 
 
 
@@ -146,7 +146,7 @@
 
 
 
-      <tr><td colspan="3">لا {{ t('توجد') }} {{ t('فترات') }} {{ t('مسجلة') }} بعد.</td></tr>
+      <tr><td colspan="3">{{ t('No periods recorded yet.') }}</td></tr>
 
 
 

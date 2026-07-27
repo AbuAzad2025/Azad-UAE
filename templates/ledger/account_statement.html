@@ -6,7 +6,7 @@
 <div class="row mb-3 no-print">
   <div class="col-12">
     <a href="{{ url_for('ledger.accounts_tree') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }}
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('Back') }}
     </a>
     <button class="btn btn-primary" data-action="window-print">
       <i class="fas fa-print mr-2"></i>{{ t('Print') }}
@@ -92,7 +92,7 @@
 
             {% for trans in statement.transactions %}
             <tr>
-              <td>{{ trans.date.strftime('%Y-%m-%d') }}</td>
+              <td>{{ trans.date.strftime('%Y-%m-%d') if trans.date else '-' }}</td>
               <td>
                 <a href="{{ url_for('ledger.view_entry', entry_id=trans.entry_number.split('-')[1]) }}" class="badge badge-primary">
                   {{ trans.entry_number }}
@@ -135,7 +135,7 @@
       {% if not statement.transactions %}
       <div class="alert alert-info text-center">
         <i class="fas fa-info-circle mr-2"></i>
-        لا {{ t('توجد') }} {{ t('حركات') }} على هذا {{ t('Account') }} في {{ t('Period_2') }} {{ t('المحددة') }}
+        {{ t('No transactions for this account in the selected period') }}
       </div>
       {% endif %}
     </div>

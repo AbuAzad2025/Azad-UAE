@@ -6,7 +6,7 @@
 <div class="row mb-3 no-print">
   <div class="col-12">
     <a href="{{ url_for('ledger.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }}
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('Back') }}
     </a>
     <button class="btn btn-primary" data-action="window-print">
       <i class="fas fa-print mr-2"></i>{{ t('Print') }}
@@ -14,7 +14,7 @@
     <a href="{{ url_for('ledger.aging_analysis') }}?type={{ 'payables' if analysis_type == 'receivables' else 'receivables' }}&as_of_date={{ as_of_date }}" 
        class="btn btn-info">
       <i class="fas fa-exchange-alt mr-2"></i>
-      {{ 'الذمم الدائنة' if analysis_type == 'receivables' else 'الذمم المدينة' }}
+      {{ t('Payable Accounts') if analysis_type == 'receivables' else t('Receivable Accounts') }}
     </a>
   </div>
 </div>
@@ -37,7 +37,7 @@
   <div class="erp-report-header">
     <h2>{{ title }}</h2>
     <div class="erp-report-meta">
-      حتى {{ t('History') }}: {{ as_of_date }}
+      {{ t('As of') }}: {{ as_of_date }}
       {% if company_name_ar %} | {{ company_name_ar }}{% endif %}
     </div>
   </div>
@@ -208,7 +208,7 @@
 {% if (analysis_type == 'receivables' and not report.customers) or (analysis_type == 'payables' and not report.suppliers) %}
 <div class="alert alert-info text-center mt-3">
   <i class="fas fa-info-circle mr-2"></i>
-  لا {{ t('توجد') }} {{ t('ذمم') }} {{ 'مدينة' if analysis_type == 'receivables' else 'دائنة' }} {{ t('حالياً') }}
+  {{ t('No') }} {{ t('receivable') if analysis_type == 'receivables' else t('payable') }} {{ t('accounts currently') }}
 </div>
 {% endif %}
 
@@ -221,11 +221,11 @@ new Chart(pieCtx, {
         labels: ["0-30 {{ t('يوم') }}", "31-60 {{ t('يوم') }}", "61-90 {{ t('يوم') }}", "91-120 {{ t('يوم') }}", "+120 {{ t('يوم') }}"],
         datasets: [{
             data: [
-                JSON.parse('{{ report.totals['0-30'] }}'),
-                JSON.parse('{{ report.totals['31-60'] }}'),
-                JSON.parse('{{ report.totals['61-90'] }}'),
-                JSON.parse('{{ report.totals['91-120'] }}'),
-                JSON.parse('{{ report.totals['over_120'] }}')
+                {{ report.totals['0-30']|tojson }},
+                {{ report.totals['31-60']|tojson }},
+                {{ report.totals['61-90']|tojson }},
+                {{ report.totals['91-120']|tojson }},
+                {{ report.totals['over_120']|tojson }}
             ],
             backgroundColor: [
                 'rgba(40, 167, 69, 0.7)',
@@ -247,7 +247,7 @@ new Chart(pieCtx, {
             tooltip: {
                 callbacks: {
                     label: (context) => {
-                        const total = JSON.parse('{{ report.totals['total'] }}');
+                        const total = {{ report.totals['total']|tojson }};
                         const value = context.parsed;
                         const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
                         return context.label + ': ' + new Intl.NumberFormat('ar-AE').format(value) + ' ' + baseCurrency + ' (' + percentage + '%)';

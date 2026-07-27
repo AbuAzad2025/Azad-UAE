@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('List') }} {{ t('التدفقات') }} {{ t('Cash') }} - Cash Flow Statement{% endblock %}
-{% block page_title %}{{ t('List') }} {{ t('التدفقات') }} {{ t('Cash') }}{% endblock %}
+{% block title %}{{ t('Cash Flow Statement') }}{% endblock %}
+{% block page_title %}{{ t('Cash Flow Statement') }}{% endblock %}
 
 {% block content %}
 <div class="row mb-3 no-print">
   <div class="col-12">
     <a href="{{ url_for('ledger.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }}
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('Back') }}
     </a>
     <button class="btn btn-primary" data-action="window-print">
       <i class="fas fa-print mr-2"></i>{{ t('Print') }}
@@ -18,10 +18,10 @@
 <div class="card mb-3 no-print">
   <div class="card-body">
     <form class="needs-validation form-inline" method="get" action="">
-      <label class="ml-2 mr-2" for="input_date_from">من {{ t('History') }}:</label>
+      <label class="ml-2 mr-2" for="input_date_from">{{ t('From') }}:</label>
       <input type="date" name="date_from" class="form-control mr-3" value="{{ date_from }}" required id="input_date_from" aria-label="من {{ t('History') }}">
       
-      <label class="ml-2 mr-2" for="input_date_to">إلى {{ t('History') }}:</label>
+      <label class="ml-2 mr-2" for="input_date_to">{{ t('To') }}:</label>
       <input type="date" name="date_to" class="form-control mr-3" value="{{ date_to }}" required id="input_date_to" aria-label="إلى {{ t('History') }}">
       
       <button type="submit" class="btn btn-primary">
@@ -33,9 +33,9 @@
 
 <div class="erp-report-print">
   <div class="erp-report-header">
-    <h2>{{ t('List') }} {{ t('التدفقات') }} {{ t('Cash') }}</h2>
+    <h2>{{ t('Cash Flow Statement') }}</h2>
     <div class="erp-report-meta">
-      من {{ report.period_start.strftime('%d/%m/%Y') }} إلى {{ report.period_end.strftime('%d/%m/%Y') }}
+      {{ t('From') }} {{ report.period_start.strftime('%d/%m/%Y') if report.period_start else '-' }} {{ t('To') }} {{ report.period_end.strftime('%d/%m/%Y') if report.period_end else '-' }}
       {% if company_name_ar %} | {{ company_name_ar }}{% endif %}
     </div>
   </div>
@@ -181,10 +181,10 @@ new Chart(ctx, {
         datasets: [{
             label: "{{ t('التدفق') }} {{ t('Cash_3') }} ({{ tenant_currency_symbol }})",
             data: [
-                JSON.parse('{{ report.operating_activities.net_cash_from_operating }}'),
-                JSON.parse('{{ report.investing_activities.net_cash_from_investing }}'),
-                JSON.parse('{{ report.financing_activities.net_cash_from_financing }}'),
-                JSON.parse('{{ report.net_change_in_cash }}')
+                {{ report.operating_activities.net_cash_from_operating|tojson }},
+                {{ report.investing_activities.net_cash_from_investing|tojson }},
+                {{ report.financing_activities.net_cash_from_financing|tojson }},
+                {{ report.net_change_in_cash|tojson }}
             ],
             backgroundColor: [
                 'rgba(40, 167, 69, 0.7)',   // {{ t('أخضر') }}

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Balance_2') }} {{ t('Review') }}{% endblock %}
-{% block page_title %}{{ t('Balance_2') }} {{ t('Review') }} - Trial Balance{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or t('Accounting System') }} - {{ t('Trial Balance') }}{% endblock %}
+{% block page_title %}{{ t('Trial Balance') }}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/financial-ui.css') }}">

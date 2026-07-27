@@ -1,0 +1,250 @@
+/* {{ t('تصميم') }} {{ t('Gulf_2') }} {{ t('فاخر') }} {{ t('Printing_2') }} */
+@media print {
+  body {
+    font-family: 'Arial', 'Tahoma', sans-serif;
+    direction: rtl;
+    margin: 0;
+    padding: 20px;
+    background: white !important;
+    color: black !important;
+  }
+  
+  .print-header {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    padding: 30px;
+    margin-bottom: 30px;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  }
+  
+  .company-logo {
+    width: 120px;
+    height: 120px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    color: #1e3c72;
+    margin: 0 auto 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  }
+  
+  .company-name {
+    font-size: 32px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  }
+  
+  .company-details {
+    font-size: 16px;
+    text-align: center;
+    opacity: 0.9;
+  }
+  
+  .report-title {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    margin: 30px 0;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  }
+  
+  .report-info {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+    border-right: 5px solid #1e3c72;
+  }
+  
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #e9ecef;
+  }
+  
+  .info-label {
+    font-weight: bold;
+    color: #1e3c72;
+    min-width: 150px;
+  }
+  
+  .info-value {
+    color: #495057;
+  }
+  
+  /* {{ t('جداول') }} {{ t('فاخرة') }} */
+  .luxury-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 30px 0;
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  }
+  
+  .luxury-table thead {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+  }
+  
+  .luxury-table th {
+    padding: 20px 15px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 16px;
+    border: none;
+    position: relative;
+  }
+  
+  .luxury-table th:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ffd700, #ffed4e);
+  }
+  
+  .luxury-table tbody tr {
+    transition: all 0.3s ease;
+  }
+  
+  .luxury-table tbody tr:nth-child(even) {
+    background: #f8f9fa;
+  }
+  
+  .luxury-table tbody tr:hover {
+    background: #e3f2fd;
+    transform: scale(1.01);
+  }
+  
+  .luxury-table td {
+    padding: 15px;
+    text-align: center;
+    border: none;
+    border-bottom: 1px solid #e9ecef;
+    font-size: 14px;
+  }
+  
+  .luxury-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+  
+  /* {{ t('ألوان') }} {{ t('Specific') }} {{ t('للأرقام') }} */
+  .amount-positive {
+    color: #28a745;
+    font-weight: bold;
+  }
+  
+  .amount-negative {
+    color: #dc3545;
+    font-weight: bold;
+  }
+  
+  .amount-zero {
+    color: #6c757d;
+  }
+  
+  /* {{ t('تذييل') }} {{ t('فاخر') }} */
+  .print-footer {
+    margin-top: 50px;
+    padding: 30px;
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    color: white;
+    border-radius: 15px;
+    text-align: center;
+  }
+  
+  .footer-signatures {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 30px;
+  }
+  
+  .signature-box {
+    text-align: center;
+    min-width: 200px;
+  }
+  
+  .signature-line {
+    border-bottom: 2px solid white;
+    margin: 20px 0 10px;
+    height: 40px;
+  }
+  
+  /* {{ t('Hide') }} {{ t('العناصر') }} غير {{ t('المرغوبة') }} */
+  .no-print {
+    display: none !important;
+  }
+  
+  .luxury-table {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    box-shadow: none !important;
+  }
+
+  table { width: 100% !important; table-layout: auto; }
+  thead { display: table-header-group; }
+  tfoot { display: table-footer-group; }
+  tr { page-break-inside: avoid; break-inside: avoid; }
+
+  /* {{ t('تحسين') }} {{ t('الخطوط') }} */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
+/* {{ t('تصميم') }} {{ t('الشاشة') }} */
+.print-controls {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  border-radius: 15px;
+  margin-bottom: 30px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.print-btn {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 25px;
+  font-weight: bold;
+  margin: 5px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.print-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+
+.preview-area {
+  background: white;
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  margin-bottom: 30px;
+}
+
+    /* D6: externalized inline styles */
+    .ic-1 { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; font-weight: bold; }
+    .ic-2 { margin-top: 30px; border-radius: 15px; border-right: 5px solid #17a2b8; }
+    .ic-3 { margin-top: 30px; font-size: 12px; opacity: 0.8; }

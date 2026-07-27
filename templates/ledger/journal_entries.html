@@ -25,7 +25,7 @@
                             <form class="needs-validation form-inline mb-3" method="get">
                                 <label class="mr-2">{{ t('Branch') }}:</label>
                                 <select name="branch_id" class="form-control mr-2 erp-min-w-160" data-action="submit-form" aria-label="{{ t('اختر') }} {{ t('Branch') }}">
-                                    <option value="">كل {{ t('Branches') }}</option>
+                                    <option value="">{{ t('All Branches') }}</option>
                                     {% for b in branches or [] %}
                                     <option value="{{ b.id }}" {{ 'selected' if selected_branch == b.id else '' }}>{{ b.name }} ({{ b.code }})</option>
                                     {% endfor %}
@@ -49,7 +49,7 @@
                                         {% for entry in entries %}
                                         <tr>
                                             <td>{{ entry.entry_number }}</td>
-                                            <td>{{ entry.entry_date.strftime('%Y-%m-%d') }}</td>
+                                            <td>{{ entry.entry_date.strftime('%Y-%m-%d') if entry.entry_date else '-' }}</td>
                                             <td>{{ entry.description }}</td>
                                             <td>
                                                 {% if entry.reference_type and entry.reference_id %}
@@ -58,9 +58,9 @@
                                                     -
                                                 {% endif %}
                                             </td>
-                                            <td>{{ entry.currency or 'AED' }}</td>
+                                            <td>{{ entry.currency or tenant_default_currency }}</td>
                                             <td>{{ "%.4f"|format(entry.exchange_rate) if entry.exchange_rate else '1.0000' }}</td>
-                                            <td>{{ entry.user.username if entry.user else 'نظام' }}</td>
+                                            <td>{{ entry.user.username if entry.user else t('System') }}</td>
                                             <td>
                                                 <a href="{{ url_for('ledger.view_entry', entry_id=entry.id) }}" class="btn btn-info">
                                                     <i class="fas fa-eye"></i> {{ t('View') }} {{ t('Details_2') }}

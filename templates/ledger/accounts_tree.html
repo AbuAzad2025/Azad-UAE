@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('شجرة') }} {{ t('Accounts') }} - Chart of Accounts{% endblock %}
+{% block title %}{{ t('Chart of Accounts') }}{% endblock %}
 {% block page_title %}{{ t('شجرة') }} {{ t('Accounts') }}{% endblock %}
 
 {% block content %}
 <div class="row mb-3">
   <div class="col-12">
     <a href="{{ url_for('ledger.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }}
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('Back') }}
     </a>
     {% if current_user.has_permission('manage_ledger') %}
     <a href="{{ url_for('ledger.manual_entry') }}" class="btn btn-success">
@@ -19,14 +19,14 @@
 <div class="card">
   <div class="card-header bg-gradient-primary">
     <h3 class="card-title text-white">
-      <i class="fas fa-sitemap mr-2"></i>{{ t('شجرة') }} {{ t('Accounts') }} {{ t('المتكاملة') }}
+      <i class="fas fa-sitemap mr-2"></i>      {{ t('Chart of Accounts') }}
     </h3>
   </div>
   <div class="card-body">
     {% if not accounts_tree %}
     <div class="alert alert-info mb-0">
       <i class="fas fa-info-circle mr-2"></i>
-      {{ _('لا توجد حسابات لعرضها. أنشئ مستأجراً من لوحة المالك ثم اختر الشركة النشطة.') }}
+      {{ t('لا توجد حسابات لعرضها. أنشئ مستأجراً من لوحة المالك ثم اختر الشركة النشطة.') }}
     </div>
     {% else %}
     <div class="row">
@@ -90,18 +90,9 @@
     {% endif %}
   </div>
 </div>
+{% endblock %}
 
-<style>
-.card-body ul {
-  margin-bottom: 0;
-}
-.list-unstyled li {
-  padding: 5px 0;
-  border-bottom: 1px dotted #dee2e6;
-}
-.list-unstyled li:last-child {
-  border-bottom: none;
-}
-</style>
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/accounts-tree.css') }}">
 {% endblock %}
 

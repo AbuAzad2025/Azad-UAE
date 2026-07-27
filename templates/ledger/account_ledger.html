@@ -19,7 +19,7 @@
     <button data-action="window-print" class="btn btn-secondary ml-2">
       <i class="fas fa-print mr-2"></i>{{ t('Print') }}
     </button>
-    <a href="{{ url_for('ledger.index') }}" class="btn btn-info ml-2">{{ t('العودة') }}</a>
+    <a href="{{ url_for('ledger.index') }}" class="btn btn-info ml-2">{{ t('Back') }}</a>
   </div>
 </div>
 
@@ -49,7 +49,7 @@
         <tbody>
           {% for transaction in transactions %}
           <tr>
-            <td>{{ transaction.date.strftime('%Y-%m-%d') }}</td>
+            <td>{{ transaction.date.strftime('%Y-%m-%d') if transaction.date else '-' }}</td>
             <td>{{ transaction.entry_number }}</td>
             <td>{{ transaction.description }}</td>
             <td>

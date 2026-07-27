@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 
-{% block title %}Budget vs Actual - {{ t('Budget') }} vs {{ t('Actual') }}{% endblock %}
+{% block title %}{{ t('Budget vs Actual') }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0">{{ t('Report_2') }} {{ t('Budget') }} {{ t('مقابل') }} {{ t('Actual') }}</h1>
         <div>
-            <a href="{{ url_for('ledger.index') }}" class="btn btn-secondary">{{ t('العودة') }} {{ t('لدفتر') }} {{ t('الأستاذ') }}</a>
+            <a href="{{ url_for('ledger.index') }}" class="btn btn-secondary">{{ t('Back to Ledger') }}</a>
         </div>
     </div>
 
@@ -18,7 +18,7 @@
                 <div class="col-md-4">
                     <label for="branch_id" class="form-label">{{ t('Branch') }}</label>
                     <select name="branch_id" id="branch_id" class="form-select" data-action="submit-form">
-                        <option value="">{{ t('جميع') }} {{ t('Branches') }}</option>
+                        <option value="">{{ t('All Branches') }}</option>
                         {% for branch in branches %}
                         <option value="{{ branch.id }}" {% if branch.id == selected_branch %}selected{% endif %}>
                             {{ branch.name }} ({{ branch.code }})
@@ -93,8 +93,8 @@
         <div class="card">
             <div class="card-body text-center py-5">
                 <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
-                <h4 class="text-muted">لا {{ t('توجد') }} {{ t('موازنات') }} {{ t('Active_3') }}</h4>
-                <p class="text-muted">قم {{ t('بإنشاء') }} {{ t('Budget_2') }} من {{ t('List') }} {{ t('Reports') }} أو {{ t('Management_2') }} {{ t('للمقارنة') }} مع {{ t('الأرقام') }} {{ t('Actual_2') }}.</p>
+                <h4 class="text-muted">{{ t('No active budgets') }}</h4>
+                <p class="text-muted">{{ t('Create a budget from the Reports or Budget Management page to compare with actual figures.') }}</p>
                 <a href="{{ url_for('owner.reports') }}" class="btn btn-primary">{{ t('Management') }} {{ t('Budgets') }}</a>
             </div>
         </div>

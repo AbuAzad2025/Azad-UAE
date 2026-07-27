@@ -1,0 +1,129 @@
+  .manual-entry-form .form-control,
+  .manual-entry-form textarea.form-control,
+  .manual-entry-form select.form-control {
+    min-height: 56px;
+    height: auto !important;
+    padding: 0.95rem 1.35rem;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    text-align: center;
+  }
+
+  .manual-entry-form .form-control::placeholder {
+    text-align: center;
+    color: #64748b;
+    opacity: 0.85;
+  }
+
+  .manual-entry-form textarea.form-control {
+    text-align: right;
+  }
+
+  .manual-entry-form textarea.form-control::placeholder {
+    text-align: right;
+  }
+
+  .manual-entry-form select.form-control {
+    text-align-last: center;
+    padding-inline-start: 2.2rem;
+    padding-inline-end: 2.2rem;
+    -webkit-appearance: none;appearance: none;
+    
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23647894' d='M6 8a1 1 0 0 1-.707-.293l-5-5a1 1 0 0 1 1.414-1.414L6 5.586 10.293 1.293a1 1 0 0 1 1.414 1.414l-5 5A1 1 0 0 1 6 8'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 0.8rem center;
+    background-size: 12px;
+  }
+
+  .manual-entry-form select.form-control option {
+    text-align: center;
+    padding: 0.75rem 1rem;
+  }
+
+/* purgecss start ignore */
+#quickSummaryCard, #quickTemplatesCard {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-width: 2px !important;
+  animation: fadeIn 0.5s ease-in;
+}
+
+#quickSummaryCard .card-header,
+#quickTemplatesCard .card-header {
+  font-weight: bold;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+}
+/* purgecss end ignore */
+
+/* purgecss start ignore */
+#quickSummaryBody,
+#quickTemplatesBody {
+  display: block !important;
+  padding: 1.5rem;
+  background: #f8f9fa;
+}
+/* purgecss end ignore */
+
+#quickSummaryBody ol li,
+#quickTemplatesBody .row {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* {{ t('تنسيق') }} {{ t('الأزرار') }} */
+#quickTemplatesBody .btn {
+  font-weight: bold;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#quickTemplatesBody .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* {{ t('تنسيق') }} {{ t('Accounts') }} */
+.account-select {
+  font-size: 0.9rem;
+}
+
+#balanceStatus {
+  font-weight: bold;
+}
+
+.table input, .table select {
+  border-radius: 0.25rem;
+}
+
+/* {{ t('رسوم') }} {{ t('متحركة') }} */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* {{ t('منع') }} {{ t('الاختفاء') }} */
+.card-body {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+    /* D6: externalized inline styles */
+    .ic-1 { position: relative; }
+    .ic-2 { padding: 2px 8px; }

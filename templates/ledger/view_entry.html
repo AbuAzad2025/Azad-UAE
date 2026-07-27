@@ -6,7 +6,7 @@
 <div class="row mb-3 no-print">
   <div class="col-12">
     <a href="{{ url_for('ledger.journal_entries') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للقيود') }}
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('Back to Entries') }}
     </a>
     <button class="btn btn-primary" data-action="window-print">
       <i class="fas fa-print mr-2"></i>{{ t('Print') }}
@@ -28,7 +28,7 @@
     </h3>
     <div class="card-tools">
       {% if entry.is_reversed %}
-      <span class="badge badge-danger"><i class="fas fa-ban mr-1"></i>تم {{ t('عكسه') }}</span>
+      <span class="badge badge-danger"><i class="fas fa-ban mr-1"></i>{{ t('Reversed') }}</span>
       {% endif %}
       {% if entry.entry_type == 'reversing' %}
       <span class="badge badge-warning"><i class="fas fa-undo mr-1"></i>{{ t('قيد') }} {{ t('عكسي') }}</span>
@@ -44,7 +44,7 @@
       </div>
       <div class="col-md-3">
         <strong>{{ t('Date') }}:</strong>
-        <p>{{ entry.entry_date.strftime('%Y-%m-%d %H:%M') }}</p>
+        <p>{{ entry.entry_date.strftime('%Y-%m-%d %H:%M') if entry.entry_date else '-' }}</p>
       </div>
       <div class="col-md-3">
         <strong>{{ t('النوع') }}:</strong>
@@ -60,7 +60,7 @@
           {% if entry.is_balanced() %}
           <span class="badge badge-success"><i class="fas fa-check-circle mr-1"></i>{{ t('متوازن') }}</span>
           {% else %}
-          <span class="badge badge-danger"><i class="fas fa-exclamation-triangle mr-1"></i>غير {{ t('متوازن') }}</span>
+          <span class="badge badge-danger"><i class="fas fa-exclamation-triangle mr-1"></i>{{ t('Unbalanced') }}</span>
           {% endif %}
         </p>
       </div>
@@ -91,7 +91,7 @@
     {% if entry.reversed_entry_id %}
     <div class="alert alert-info">
       <i class="fas fa-info-circle mr-2"></i>
-      هذا {{ t('القيد') }} هو {{ t('عكس') }} {{ t('للقيد') }} {{ t('رقم') }}: 
+      {{ t('This entry reverses entry') }} #:
       <a href="{{ url_for('ledger.view_entry', entry_id=entry.reversed_entry_id) }}">
         JE-{{ entry.reversed_entry_id }}
       </a>
@@ -178,7 +178,7 @@
       <div class="col-md-6 text-left">
         <small class="text-muted">
           <i class="fas fa-clock mr-1"></i>
-          {{ t('History') }} {{ t('Create_2') }}: {{ entry.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+          {{ t('History') }} {{ t('Create_2') }}: {{ entry.created_at.strftime('%Y-%m-%d %H:%M:%S') if entry.created_at else '-' }}
         </small>
       </div>
     </div>
