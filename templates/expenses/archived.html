@@ -77,10 +77,10 @@ $(document).ready(() => {
     e.stopPropagation();
     
     const id = $(this).data('id');
-    const csrfToken = $('meta[name="csrf-token"]').attr('content');
+    const csrfToken = $('meta[name=csrf-token]').attr('content');
     
     $.ajax({
-      url: {{ url_for("expenses.restore", id="__ID__")|tojson }}.replace('__ID__', id),
+      url: '/expenses/' + id + '/restore',
       type: 'POST',
       headers: {
         'X-CSRFToken': csrfToken
