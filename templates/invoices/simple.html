@@ -14,7 +14,6 @@
       display: block;
       min-height: auto;
     }
-    @page { margin: 2mm; }
     .invoice {
       max-width: 100%;
     }
@@ -55,8 +54,8 @@
     th { background: #f0f0f0; font-weight: bold; }
     .totals {
       margin-top: 8px;
-      text-align: left;
-      margin-left: auto;
+      text-align: end;
+      margin-inline-start: auto;
       width: 250px;
     }
     .total-line {
@@ -73,6 +72,32 @@
       padding: 8px 0;
       margin-top: 5px;
     }
+    .payments-section {
+      margin-top: 10px;
+      padding: 8px;
+      border: 1px dashed #999;
+      font-size: 8px;
+    }
+    .payments-section h4 { font-size: 9px; margin-bottom: 5px; }
+    .payment-item {
+      padding: 4px 0;
+      border-bottom: 1px dashed #eee;
+    }
+    .payment-item:last-child { border-bottom: none; }
+    .cheque-box {
+      background: #fffacd;
+      padding: 4px 6px;
+      border: 1px solid #daa520;
+      border-radius: 3px;
+      margin-top: 4px;
+      font-size: 8px;
+    }
+    .notes-section {
+      margin-top: 10px;
+      padding: 5px;
+      border: 1px dashed #999;
+      font-size: 8px;
+    }
     .footer {
       margin-top: 20px;
       padding-top: 15px;
@@ -87,6 +112,13 @@
       margin: 10px 0;
       font-size: 9px;
     }
+    .social-links {
+      margin-top: 8px;
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+    .social-links a { font-size: 8px; color: inherit; text-decoration: none; }
     .signature {
       display: flex;
       justify-content: space-around;
@@ -140,7 +172,7 @@
       </div>
       {% if print_branch or sale.branch %}
       {% set header_branch = print_branch or sale.branch %}
-      <div class="branch-name">{{ t('Branch_2') }}: {{ header_branch.name }}{% if header_branch.code %} ({{ header_branch.code }}){% endif %}</div>
+      <div class="branch-name">{{ t('Branch') }}: {{ header_branch.name }}{% if header_branch.code %} ({{ header_branch.code }}){% endif %}</div>
       {% if header_branch.address %}
       <div class="company-info">📍 {{ t('Address_2') }} {{ t('Branch') }}: {{ header_branch.address }}</div>
       {% endif %}
@@ -154,7 +186,7 @@
     
     <div class="info-row">
       <div><strong>{{ t('رقم') }} {{ t('Invoice_2') }}:</strong> {{ sale.sale_number }}</div>
-      <div><strong>{{ t('Date') }}:</strong> {{ sale.sale_date.strftime('%Y-%m-%d') }}</div>
+      <div><strong>{{ t('Date') }}:</strong> {{ sale.sale_date.strftime('%Y-%m-%d') if sale.sale_date else '-' }}</div>
     </div>
     <div class="info-row">
       <div><strong>{{ t('Customer') }}:</strong> {{ sale.customer.name if sale.customer else '-' }}</div>
@@ -177,7 +209,7 @@
         <tr>
           <td>{{ loop.index }}</td>
           <td>{{ line.product.name if line.product else '-' }}</td>
-          <td>{{ format_currency(line.quantity) }}</td>
+          <td>{{ "{:,.3f}".format(line.quantity) }}</td>
           <td>{{ format_currency(line.unit_price, sale.currency) }}</td>
           <td><strong>{{ format_currency(line.line_total, sale.currency) }}</strong></td>
         </tr>
@@ -191,6 +223,18 @@
         <span>{{ t('Total') }}:</span>
         <strong>{{ format_currency(sale.subtotal, sale.currency) }}</strong>
       </div>
+      {% if sale.discount_amount and sale.discount_amount > 0 %}
+      <div class="total-line">
+        <span>{{ t('Discount') }}:</span>
+        <strong>- {{ format_currency(sale.discount_amount, sale.currency) }}</strong>
+      </div>
+      {% endif %}
+      {% if sale.shipping_cost and sale.shipping_cost > 0 %}
+      <div class="total-line">
+        <span>{{ t('Shipping') }}:</span>
+        <strong>{{ format_currency(sale.shipping_cost, sale.currency) }}</strong>
+      </div>
+      {% endif %}
       {% if sale.tax_amount > 0 %}
       <div class="total-line">
         <span>{{ t('Tax') }} ({{ sale.tax_rate }}%):</span>
@@ -204,6 +248,32 @@
       {% include 'partials/print_unified_amount_qr.html' %}
     </div>
 
+    {% if sale.payments %}
+    <div class="payments-section">
+      <h4>💰 {{ t('الدفعات') }}</h4>
+      {% for payment in sale.payments %}
+      <div class="payment-item">
+        <div><strong>{{ payment.payment_number }}</strong> | {{ payment.payment_date.strftime('%Y-%m-%d') if payment.payment_date else '-' }} | {{ format_currency(payment.amount_aed, tenant_default_currency) }}</div>
+        <div>
+          {{ t('طريقة') }} {{ t('Payment_2') }}:
+          {% if payment.payment_method == 'cash' %}{{ t('Cash_2') }}
+          {% elif payment.payment_method == 'card' %}{{ t('Card') }}
+          {% elif payment.payment_method == 'bank_transfer' %}{{ t('Transfer') }}
+          {% elif payment.payment_method == 'cheque' %}{{ t('Cheque_3') }}
+          {% else %}{{ t('محفظة') }}{% endif %}
+        </div>
+        {% if payment.payment_method == 'cheque' and payment.cheque_number %}
+        <div class="cheque-box">
+          <strong>📝 {{ t('رقم') }} {{ t('Cheque') }}:</strong> {{ payment.cheque_number }} |
+          <strong>📅 {{ t('استحقاق') }}:</strong> {{ payment.cheque_date.strftime('%Y-%m-%d') if payment.cheque_date else '-' }} |
+          <strong>🏦 {{ t('Bank') }}:</strong> {{ payment.bank_name or '-' }}
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
     
     <div class="footer">
       
@@ -211,7 +281,9 @@
       <div class="bank-info">
         <strong>{{ t('Info_2') }} {{ t('Transfer_2') }}:</strong><br>
         {% if settings.bank_name and settings.bank_name != 'None' %}{{ t('Bank') }}: {{ settings.bank_name }} • {% endif %}
+        {% if settings.bank_account_number %}{{ t('رقم') }} {{ t('Account') }}: {{ settings.bank_account_number }}<br>{% endif %}
         {% if settings.iban and settings.iban != 'None' %}IBAN: {{ settings.iban }}{% endif %}
+        {% if settings.swift_code and settings.swift_code != 'None' %}<br>SWIFT: {{ settings.swift_code }}{% endif %}
       </div>
       {% endif %}
       
@@ -232,6 +304,14 @@
       {% endif %}
       
       <div class="ic-9">{{ t('شكراً') }} {{ t('لتعاملكم') }} {{ t('معنا') }}</div>
+      
+      {% if settings and (settings.facebook_url or settings.instagram_url or settings.whatsapp_number) %}
+      <div class="social-links">
+        {% if settings.facebook_url %}<a href="{{ settings.facebook_url }}">📘 Facebook</a>{% endif %}
+        {% if settings.instagram_url %}<a href="{{ settings.instagram_url }}">📷 Instagram</a>{% endif %}
+        {% if settings.whatsapp_number %}<a href="https://wa.me/{{ settings.whatsapp_number }}">💬 WhatsApp</a>{% endif %}
+      </div>
+      {% endif %}
     </div>
 
     
@@ -261,4 +341,3 @@
 {% include 'partials/print_handlers.html' %}
 </body>
 </html>
-

@@ -30,7 +30,7 @@
       width: var(--page-width);
       height: var(--page-height);
       border-radius: 0;
-      overflow: auto;
+      overflow: visible;
       box-shadow: 0 0 20px rgba(0,0,0,0.3);
       position: relative;
     }
@@ -62,7 +62,7 @@
       background: #f8f9fa;
       padding: 10px 12px;
       border-radius: 6px;
-      border-right: 3px solid var(--accent-color);
+      border-inline-end: 3px solid var(--accent-color);
     }
     .info-box h3 { color: var(--header-color); margin-bottom: 8px; font-size: 9px; }
     .info-box p { margin: 4px 0; color: #555; font-size: 8px; }
@@ -78,7 +78,7 @@
     tbody tr:hover { background: #f8f9fa; }
     .total-section {
       margin-top: 12px;
-      text-align: left;
+      text-align: end;
       background: #f8f9fa;
       padding: 12px 15px;
       border-radius: 6px;
@@ -87,6 +87,15 @@
       border-top: 2px solid var(--header-color);
       color: var(--header-color);
     }
+    .notes-section {
+      margin-top: 12px;
+      padding: 10px 12px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      border-inline-end: 3px solid var(--accent-color);
+      font-size: 8px;
+    }
+    .notes-section h4 { color: var(--header-color); margin-bottom: 5px; font-size: 9px; }
     .footer {
       background: #f8f9fa;
       padding: 12px 15px;
@@ -94,6 +103,15 @@
       border-top: 2px solid var(--accent-color);
     }
     .qr-code { margin: 10px 0; }
+    .signature-section {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px dashed var(--accent-color);
+    }
+    .signature-box { text-align: center; width: 150px; }
+    .signature-line { border-top: 1px solid #333; margin-top: 40px; padding-top: 5px; font-size: 8px; }
 
     /* D6: externalized inline styles */
     .ic-1 { color: #28a745; }
@@ -103,6 +121,19 @@
     .ic-5 { padding: 4px; }
     .ic-6 { padding: 4px; font-weight: bold; color: #28a745; }
     .ic-7 { padding: 4px; font-size: 8px; }
+    .ic-8 { font-size: 8px; }
+    .ic-9 { font-size: 8px; }
+    .ic-10 { margin-top: 10px; padding: 10px; border: 1px solid var(--accent-color); border-radius: 6px; background: #f8f9fa; }
+    .ic-11 { font-weight: 700; font-size: 8px; margin-bottom: 5px; color: var(--header-color); }
+    .ic-12 { font-size: 8px; }
+    .ic-13 { font-size: 8px; color: #666; margin-top: 8px; text-align: center; border-top: 1px dashed #ccc; padding-top: 5px; }
+    .ic-14 { display: flex; gap: 15px; justify-content: center; margin-top: 8px; }
+    .ic-15 { color: #1877f2; text-decoration: none; font-size: 8px; }
+    .ic-16 { color: #e4405f; text-decoration: none; font-size: 8px; }
+    .ic-17 { color: #25d366; text-decoration: none; font-size: 8px; }
+    .ic-18 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.02; z-index: -1; pointer-events: none; }
+    .ic-19 { width: 100%; }
+    .ic-20 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 100px; color: rgba(0,0,0,0.02); font-weight: bold; z-index: -1; }
 </style>
 </head>
 <body class="invoice-print modern-invoice">
@@ -131,13 +162,17 @@
       <div class="info-grid">
         <div class="info-box">
           <h3>🏢 {{ t('Data_2') }} {{ t('Customer_2') }}</h3>
+          {% if sale.customer %}
           <p><strong>{{ t('Name') }}:</strong> {{ sale.customer.name }}</p>
-          <p><strong>{{ t('Phone') }}:</strong> {{ sale.customer.phone }}</p>
-          <p><strong>{{ t('Address') }}:</strong> {{ sale.customer.address }}</p>
+          <p><strong>{{ t('Phone') }}:</strong> {{ sale.customer.phone or '-' }}</p>
+          <p><strong>{{ t('Address') }}:</strong> {{ sale.customer.address or '-' }}</p>
+          {% else %}
+          <p>-</p>
+          {% endif %}
         </div>
         <div class="info-box">
           <h3>📅 {{ t('Data_2') }} {{ t('Invoice_2') }}</h3>
-          <p><strong>{{ t('Date') }}:</strong> {{ sale.sale_date.strftime('%Y-%m-%d') }}</p>
+          <p><strong>{{ t('Date') }}:</strong> {{ sale.sale_date.strftime('%Y-%m-%d') if sale.sale_date else '-' }}</p>
           <p><strong>{{ t('Status') }}:</strong> <span class="ic-1">{{ t('Completed_2') }}</span></p>
           <p><strong>{{ t('User') }}:</strong> {{ print_user_name or (sale.seller.full_name if sale.seller else '-') }}</p>
         </div>
@@ -171,6 +206,18 @@
           <span>{{ t('Total_3') }} {{ t('Sub') }}:</span>
           <strong>{{ format_currency(sale.subtotal, sale.currency) }}</strong>
         </div>
+        {% if sale.discount_amount and sale.discount_amount > 0 %}
+        <div class="total-row">
+          <span>{{ t('Discount') }}:</span>
+          <strong class="ic-1">- {{ format_currency(sale.discount_amount, sale.currency) }}</strong>
+        </div>
+        {% endif %}
+        {% if sale.shipping_cost and sale.shipping_cost > 0 %}
+        <div class="total-row">
+          <span>{{ t('Shipping') }}:</span>
+          <strong>{{ format_currency(sale.shipping_cost, sale.currency) }}</strong>
+        </div>
+        {% endif %}
         {% if sale.tax_amount > 0 %}
         <div class="total-row">
           <span>{{ t('Tax') }} ({{ sale.tax_rate }}%):</span>
@@ -183,7 +230,13 @@
         </div>
       </div>
 
-      
+      {% if sale.notes %}
+      <div class="notes-section">
+        <h4>📝 {{ t('Notes') }}</h4>
+        <p>{{ sale.notes }}</p>
+      </div>
+      {% endif %}
+
       {% if sale.payments %}
       <div class="ic-2">
         <h4 class="erp-invoice-h3 erp-invoice-accent-color">💰 {{ t('الدفعات') }}</h4>
@@ -201,8 +254,8 @@
             {% for payment in sale.payments %}
             <tr>
               <td class="ic-5">{{ payment.payment_number }}</td>
-              <td class="ic-5">{{ payment.payment_date.strftime('%Y-%m-%d') }}</td>
-              <td class="ic-6">{{ format_currency(payment.base_amount, sale.currency) }}</td>
+              <td class="ic-5">{{ payment.payment_date.strftime('%Y-%m-%d') if payment.payment_date else '-' }}</td>
+              <td class="ic-6">{{ format_currency(payment.amount_aed, tenant_default_currency) }}</td>
               <td class="ic-5">
                 {% if payment.payment_method == 'cash' %}{{ t('Cash_2') }}
                 {% elif payment.payment_method == 'card' %}{{ t('Card') }}
@@ -229,6 +282,17 @@
       {% endif %}
 
       {% include 'partials/print_unified_amount_qr.html' %}
+
+      <div class="signature-section">
+        <div class="signature-box">
+          <div>{{ t('توقيع') }} {{ t('البائع') }}</div>
+          <div class="signature-line"></div>
+        </div>
+        <div class="signature-box">
+          <div>{{ t('توقيع') }} {{ t('Customer') }}</div>
+          <div class="signature-line"></div>
+        </div>
+      </div>
     </div>
 
     <div class="footer">
@@ -314,4 +378,3 @@
 {% include 'partials/print_handlers.html' %}
 </body>
 </html>
-

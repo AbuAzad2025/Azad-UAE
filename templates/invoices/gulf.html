@@ -21,16 +21,16 @@
     .invoice {
       {% if settings.paper_size == 'A5' %}
         --page-width: 100%;
-        --page-max-height: {{ '200mm' if settings.orientation == 'portrait' else '138mm' }};
+        --page-height: {{ '200mm' if settings.orientation == 'portrait' else '138mm' }};
       {% elif settings.paper_size == 'Letter' %}
         --page-width: 100%;
-        --page-max-height: {{ '269mm' if settings.orientation == 'portrait' else '206mm' }};
+        --page-height: {{ '269mm' if settings.orientation == 'portrait' else '206mm' }};
       {% else %}
         --page-width: 100%;
-        --page-max-height: {{ '287mm' if settings.orientation == 'portrait' else '200mm' }};
+        --page-height: {{ '287mm' if settings.orientation == 'portrait' else '200mm' }};
       {% endif %}
       width: var(--page-width);
-      max-height: var(--page-max-height);
+      height: var(--page-height);
       border: 1px solid var(--header-color);
       border-radius: 5px;
       overflow: visible;
@@ -92,8 +92,8 @@
       border-radius: 8px;
       padding: 8px;
       width: 400px;
-      margin-right: 0;
-      margin-left: auto;
+      margin-inline-end: 0;
+      margin-inline-start: auto;
     }
     .total-row { border-bottom: 1px dashed #dee2e6; }
     .total-row.final {
@@ -162,11 +162,35 @@
     .ic-5 { width: 13%; }
     .ic-6 { width: 14%; }
     .ic-7 { width: 15%; }
+    .ic-8 { text-align: start; }
+    .ic-9 { color: #dc3545; }
+    .ic-10 { font-size: 8px; }
+    .ic-11 { background: white; }
+    .ic-12 { display: flex; justify-content: space-between; align-items: center; }
+    .ic-13 { margin: 0 4px; color: #999; }
+    .ic-14 { text-align: end; font-weight: 700; }
+    .ic-15 { font-size: 8px; }
+    .ic-16 { display: flex; justify-content: space-between; gap: 8px; }
+    .ic-17 { font-size: 8px; }
+    .ic-18 { margin-top: 8px; padding: 6px; border: 1px solid var(--accent-color); border-radius: 5px; background: #f8f9fa; }
+    .ic-19 { margin: 4px 0; font-size: 8px; }
+    .ic-20 { font-size: 8px; }
+    .ic-21 { margin-top: 12px; padding: 8px; border: 1px solid rgba(255,255,255,0.3); border-radius: 5px; }
+    .ic-22 { font-weight: 700; font-size: 8px; margin-bottom: 5px; }
+    .ic-23 { font-size: 8px; }
+    .ic-24 { margin-top: 8px; font-size: 7px; }
+    .ic-25 { margin-top: 6px; }
+    .ic-26 { font-size: 7px; font-style: italic; }
+    .ic-27 { display: flex; gap: 12px; justify-content: center; margin-top: 6px; }
+    .ic-28 { color: white; text-decoration: none; font-size: 8px; }
+    .ic-29 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.02; z-index: -1; pointer-events: none; }
+    .ic-30 { width: 100%; }
+    .ic-31 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 100px; color: rgba(0,0,0,0.02); font-weight: bold; z-index: -1; pointer-events: none; }
   </style>
 </head>
 <body class="invoice-print gulf-invoice">
   <div class="no-print ic-1">
-    <button data-action="window-print" class="erp-gradient-btn" style="background: linear-gradient(135deg, {{ settings.header_color or '#c9a961' }} 0%, {{ settings.accent_color or '#8b7355' }} 100%);">
+    <button data-action="window-print" class="erp-gradient-btn gulf-print-btn">
       🖨️ {{ t('Print') }} {{ t('Invoice_2') }}
     </button>
   </div>
@@ -197,14 +221,18 @@
       <div class="info-boxes">
         <div class="info-box">
           <h3>🏢 {{ t('Data_2') }} {{ t('Customer') }}</h3>
+          {% if sale.customer %}
           <p><strong>{{ t('Name') }}:</strong> {{ sale.customer.name }}</p>
           {% if sale.customer.phone %}<p><strong>{{ t('Phone') }}:</strong> {{ sale.customer.phone }}</p>{% endif %}
           {% if sale.customer.email %}<p><strong>{{ t('Email_2') }}:</strong> {{ sale.customer.email }}</p>{% endif %}
+          {% else %}
+          <p>-</p>
+          {% endif %}
         </div>
         <div class="info-box">
           <h3>📅 {{ t('Data_2') }} {{ t('Invoice_2') }}</h3>
-          <p><strong>{{ t('Date') }}:</strong> {{ sale.sale_date.strftime('%Y-%m-%d') }}</p>
-          <p><strong>{{ t('Time_2') }}:</strong> {{ sale.sale_date.strftime('%H:%M') }}</p>
+          <p><strong>{{ t('Date') }}:</strong> {{ sale.sale_date.strftime('%Y-%m-%d') if sale.sale_date else '-' }}</p>
+          <p><strong>{{ t('Time_2') }}:</strong> {{ sale.sale_date.strftime('%H:%M') if sale.sale_date else '-' }}</p>
           <p><strong>{{ t('User') }}:</strong> {{ print_user_name or (sale.seller.full_name if sale.seller else '-') }}</p>
         </div>
       </div>
@@ -225,7 +253,7 @@
           <tr>
             <td>{{ loop.index }}</td>
             <td class="ic-8"><strong>{{ line.product.name if line.product else '-' }}</strong></td>
-            <td>{{ line.quantity }}</td>
+            <td>{{ "{:,.3f}".format(line.quantity) }}</td>
             <td>{{ format_currency(line.unit_price, sale.currency) }}</td>
             <td>{{ line.discount_percent if line.discount_percent else '-' }}</td>
             <td><strong>{{ format_currency(line.line_total, sale.currency) }}</strong></td>
@@ -239,13 +267,13 @@
           <span>{{ t('Total') }} {{ t('Sub') }}:</span>
           <strong>{{ format_currency(sale.subtotal, sale.currency) }}</strong>
         </div>
-        {% if sale.discount_amount > 0 %}
+        {% if sale.discount_amount and sale.discount_amount > 0 %}
         <div class="total-row">
           <span>{{ t('Discount') }}:</span>
           <strong class="ic-9">- {{ format_currency(sale.discount_amount, sale.currency) }}</strong>
         </div>
         {% endif %}
-        {% if sale.shipping_cost > 0 %}
+        {% if sale.shipping_cost and sale.shipping_cost > 0 %}
         <div class="total-row">
           <span>{{ t('Shipping') }}:</span>
           <strong>{{ format_currency(sale.shipping_cost, sale.currency) }}</strong>
@@ -273,9 +301,9 @@
           <div class="payment-row ic-11">
             <div class="ic-12">
               <div>
-                <strong style="color: {{ settings.header_color or '#c9a961' }};">{{ payment.payment_number }}</strong>
+                <strong style="color: var(--header-color);">{{ payment.payment_number }}</strong>
                 <span class="ic-13">|</span>
-                {{ payment.payment_date.strftime('%Y-%m-%d') }}
+                {{ payment.payment_date.strftime('%Y-%m-%d') if payment.payment_date else '-' }}
               </div>
               <div class="ic-14">
                 {{ format_currency(payment.amount_aed, tenant_default_currency) }}
@@ -293,15 +321,15 @@
             <div class="cheque-details">
               <div class="ic-16">
                 <div>
-                  <div class="erp-invoice-pay-detail" style="color: {{ settings.header_color or '#c9a961' }};">📝 {{ t('رقم') }} {{ t('Cheque') }}</div>
+                  <div class="erp-invoice-pay-detail" style="color: var(--header-color);">📝 {{ t('رقم') }} {{ t('Cheque') }}</div>
                   <div class="ic-17">{{ payment.cheque_number }}</div>
                 </div>
                 <div>
-                  <div class="erp-invoice-pay-detail" style="color: {{ settings.header_color or '#c9a961' }};">📅 {{ t('History') }} {{ t('Due') }}</div>
+                  <div class="erp-invoice-pay-detail" style="color: var(--header-color);">📅 {{ t('History') }} {{ t('Due') }}</div>
                   <div class="ic-17">{{ payment.cheque_date.strftime('%Y-%m-%d') if payment.cheque_date else '-' }}</div>
                 </div>
                 <div>
-                  <div class="erp-invoice-pay-detail" style="color: {{ settings.header_color or '#c9a961' }};">🏦 {{ t('Bank') }}</div>
+                  <div class="erp-invoice-pay-detail" style="color: var(--header-color);">🏦 {{ t('Bank') }}</div>
                   <div class="ic-17">{{ payment.bank_name or '-' }}</div>
                 </div>
               </div>
@@ -315,7 +343,7 @@
 
       {% if sale.notes %}
       <div class="ic-18">
-        <strong class="erp-invoice-pay-detail" style="color: {{ settings.header_color or '#c9a961' }};">📝 {{ t('Notes') }}:</strong>
+        <strong class="erp-invoice-pay-detail" style="color: var(--header-color);">📝 {{ t('Notes') }}:</strong>
         <p class="ic-19">{{ sale.notes }}</p>
       </div>
       {% endif %}
