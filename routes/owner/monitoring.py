@@ -353,7 +353,7 @@ def error_audit_logs():
     user_map = {}
     if user_ids:
         for u in User.query.filter(User.id.in_(user_ids)).all():
-            user_map[u.id] = u.display_name or u.username or f"User #{u.id}"
+            user_map[u.id] = u.get_display_name() or u.username or f"User #{u.id}"
 
     error_log_data = {}
     for log in items:
