@@ -2,56 +2,35 @@
 <html lang="{{ current_language or 'ar' }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Azad POS — Point of Sale System">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    {# TODO: Add <link rel="manifest"> when static/manifest.json is created #}
     <title>{% block title %}POS — {{ tenant_name_ar or company_name_ar or 'Azad' }}{% endblock %}</title>
     {% include 'partials/head.html' %}
-    <style>
-        body.pos-layout {
-            background: var(--pos-bg, #0a0a0a);
-            overflow: hidden;
-            height: 100vh;
-            margin: 0;
-            padding: 0;
-        }
-        body.pos-layout .pos-fullscreen {
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-/* purgecss start ignore */
-        body.pos-layout .wrapper,
-        body.pos-layout .content-wrapper,
-        body.pos-layout .main-sidebar,
-        body.pos-layout .main-footer,
-        body.pos-layout .main-header,
-        body.pos-layout .erp-mobile-nav {
-            display: none !important;
-        }
-        /* purgecss end ignore */
-        body.pos-layout .pos-fullscreen {
-            display: flex !important;
-        }
-        .pos-flash-wrap {
-            position: fixed;
-            top: 12px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9999;
-            width: 90%;
-            max-width: 480px;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pos-layout.css') }}">
     {% block extra_css %}{% endblock %}
 </head>
 <body class="pos-layout">
+    <noscript>
+        <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:#0a0a0a; color:#fff; display:flex; align-items:center; justify-content:center; z-index:99999;">
+            <div style="text-align:center; padding:20px;">
+                <h1 style="font-size:24px; margin-bottom:16px;">{{ t('JavaScript Required') }}</h1>
+                <p style="font-size:16px; opacity:0.8;">{{ t('POS requires JavaScript to function') }}</p>
+            </div>
+        </div>
+    </noscript>
+
     <div class="pos-flash-wrap">
+        {# SECURITY: Do NOT use |safe on flash messages. Autoescape must remain active. #}
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
             <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show shadow">
                 {{ message }}
-                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <button type="button" class="close" data-dismiss="alert" aria-label="{{ t('Close') }}">&times;</button>
             </div>
             {% endfor %}
         {% endif %}
@@ -67,10 +46,10 @@
     <script src="{{ url_for('static', filename='adminlte/js/adminlte.min.js') }}"></script>
     <script defer src="{{ url_for('static', filename='js/telemetry.js') }}"></script>
     <script>
-        window.APP_ENUMS = {{ app_enums | tojson | safe }};
-        window.CURRENT_USER_PERMISSIONS = {{ current_user_permissions | tojson | safe }};
-        window.hasPermission = (code) => (window.CURRENT_USER_PERMISSIONS || []).indexOf(code) !== -1;
+        window.APP_ENUMS = {{ app_enums | tojson | safe }} || {};
+        window.CURRENT_USER_PERMISSIONS = {{ current_user_permissions | tojson | safe }} || [];
     </script>
+    <script src="{{ url_for('static', filename='js/pos-permissions.js') }}"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>
