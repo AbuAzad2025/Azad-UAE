@@ -61,37 +61,76 @@
               <label class="form-label fw-semibold">{{ t('Address') }}</label>
               <textarea name="address_ar" class="form-control" rows="2" aria-label="address ar" maxlength="255"></textarea>
             </div>
+          </div>
+
+          <hr class="my-4">
+          <h5 class="fw-semibold text-primary mb-3"><i class="bi bi-box-seam me-2"></i>{{ _('الاشتراك والباقة') }}</h5>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="input_package_id">{{ _('الباقة') }}</label>
+              <select name="package_id" class="form-select" id="input_package_id" aria-label="package">
+                <option value="">{{ _('بدون باقة (إعداد يدوي)') }}</option>
+                {% for pkg in packages %}
+                <option value="{{ pkg.id }}">{{ pkg.icon }} {{ pkg.name_ar }} — ${{ pkg.price }}</option>
+                {% endfor %}
+              </select>
+              <small class="text-muted">{{ _('اختيار باقة يطبق قالب حدودها وميزاتها تلقائياً') }}</small>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="input_subscription_plan_duration">{{ _('مدة الاشتراك') }}</label>
+              <select name="subscription_plan_duration" class="form-select" id="input_subscription_plan_duration" aria-label="subscription duration">
+                <option value="monthly">{{ _('شهري') }}</option>
+                <option value="annual">{{ _('سنوي') }}</option>
+                <option value="trial">{{ _('تجريبي (7 أيام)') }}</option>
+                <option value="lifetime">{{ _('مدى الحياة') }}</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="input_subscription_end">{{ _('تاريخ انتهاء مخصص') }}</label>
+              <input type="date" name="subscription_end" class="form-control" id="input_subscription_end" aria-label="subscription end">
+              <small class="text-muted">{{ _('اختياري — يتجاوز تاريخ الباقة') }}</small>
+            </div>
+          </div>
+
+          <hr class="my-4">
+          <h5 class="fw-semibold text-primary mb-1"><i class="bi bi-speedometer2 me-2"></i>{{ _('الحدود والحصص') }}</h5>
+          <p class="text-muted small mb-3"><i class="bi bi-info-circle me-1"></i>{{ _('أدخل') }} <code>-1</code> = {{ _('غير محدود') }} ∞</p>
+          <div class="row g-3">
             <div class="col-md-4">
               <label class="form-label fw-semibold" for="input_max_users">{{ _('حد المستخدمين') }}</label>
-              <input type="number" name="max_users" class="form-control" value="5" min="1" id="input_max_users" aria-label="max users">
+              <input type="number" name="max_users" class="form-control" value="5" min="-1" id="input_max_users" aria-label="max users">
             </div>
             <div class="col-md-4">
               <label class="form-label fw-semibold" for="input_max_products">{{ _('حد المنتجات') }}</label>
-              <input type="number" name="max_products" class="form-control" value="1000" min="1" id="input_max_products" aria-label="max products">
+              <input type="number" name="max_products" class="form-control" value="1000" min="-1" id="input_max_products" aria-label="max products">
             </div>
             <div class="col-md-4">
               <label class="form-label fw-semibold" for="input_max_customers">{{ _('حد العملاء') }}</label>
-              <input type="number" name="max_customers" class="form-control" value="500" min="1" id="input_max_customers" aria-label="max customers">
+              <input type="number" name="max_customers" class="form-control" value="500" min="-1" id="input_max_customers" aria-label="max customers">
             </div>
             <div class="col-md-4">
               <label class="form-label fw-semibold" for="input_max_suppliers">{{ _('حد الموردين') }}</label>
-              <input type="number" name="max_suppliers" class="form-control" value="200" min="1" id="input_max_suppliers" aria-label="max suppliers">
+              <input type="number" name="max_suppliers" class="form-control" value="200" min="-1" id="input_max_suppliers" aria-label="max suppliers">
             </div>
             <div class="col-md-4">
               <label class="form-label fw-semibold" for="input_max_branches">{{ _('حد الفروع') }}</label>
-              <input type="number" name="max_branches" class="form-control" value="3" min="1" id="input_max_branches" aria-label="max branches">
+              <input type="number" name="max_branches" class="form-control" value="3" min="-1" id="input_max_branches" aria-label="max branches">
             </div>
             <div class="col-md-4">
               <label class="form-label fw-semibold" for="input_max_warehouses">{{ _('حد المستودعات') }}</label>
-              <input type="number" name="max_warehouses" class="form-control" value="2" min="1" id="input_max_warehouses" aria-label="max warehouses">
+              <input type="number" name="max_warehouses" class="form-control" value="2" min="-1" id="input_max_warehouses" aria-label="max warehouses">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="input_max_storage_mb">{{ _('حد التخزين (MB)') }}</label>
+              <input type="number" name="max_storage_mb" class="form-control" value="1024" min="-1" id="input_max_storage_mb" aria-label="max storage mb">
             </div>
             <div class="col-md-4">
               <label class="form-label fw-semibold" for="input_max_invoices_per_month">{{ _('حد الفواتير/شهر') }}</label>
-              <input type="number" name="max_invoices_per_month" class="form-control" value="1000" min="1" id="input_max_invoices_per_month" aria-label="max invoices per month">
+              <input type="number" name="max_invoices_per_month" class="form-control" value="1000" min="-1" id="input_max_invoices_per_month" aria-label="max invoices per month">
             </div>
             <div class="col-md-4">
               <label class="form-label fw-semibold" for="input_max_sales_per_month">{{ _('حد المبيعات/شهر') }}</label>
-              <input type="number" name="max_sales_per_month" class="form-control" value="5000" min="1" id="input_max_sales_per_month" aria-label="max sales per month">
+              <input type="number" name="max_sales_per_month" class="form-control" value="5000" min="-1" id="input_max_sales_per_month" aria-label="max sales per month">
             </div>
             <div class="col-md-4">
               <label class="form-label fw-semibold" for="input_data_retention_days">{{ _('حفظ البيانات (يوم)') }}</label>
@@ -128,8 +167,50 @@
             </div>
             <div class="col-md-3">
               <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" name="enable_reports" id="enable_reports" checked aria-label="enable reports">
+                <label class="custom-control-label" for="enable_reports">{{ t('Reports') }}</label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" name="enable_ai" id="enable_ai" aria-label="enable ai">
+                <label class="custom-control-label" for="enable_ai">{{ t('الذكاء الاصطناعي') }}</label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" name="enable_store" id="enable_store" aria-label="enable store">
                 <label class="custom-control-label" for="enable_store">{{ _('المتجر الإلكتروني') }}</label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" name="enable_gl" id="enable_gl" checked aria-label="enable gl">
+                <label class="custom-control-label" for="enable_gl">{{ _('دفتر الأستاذ') }}</label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" name="enable_api" id="enable_api" aria-label="enable api">
+                <label class="custom-control-label" for="enable_api">API</label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" name="enable_multi_warehouse" id="enable_multi_warehouse" checked aria-label="enable multi warehouse">
+                <label class="custom-control-label" for="enable_multi_warehouse">{{ _('تعدد المستودعات') }}</label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" name="enable_multi_currency" id="enable_multi_currency" checked aria-label="enable multi currency">
+                <label class="custom-control-label" for="enable_multi_currency">{{ _('تعدد العملات') }}</label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" name="enable_auto_backup" id="enable_auto_backup" checked aria-label="enable auto backup">
+                <label class="custom-control-label" for="enable_auto_backup">{{ _('النسخ التلقائي') }}</label>
               </div>
             </div>
             <div class="col-md-3">
@@ -144,6 +225,27 @@
                 <label class="custom-control-label" for="allow_custom_integrations">{{ _('تكاملات مخصصة') }}</label>
               </div>
             </div>
+          </div>
+
+          <hr class="my-4">
+          <h5 class="fw-semibold text-primary mb-1"><i class="bi bi-shop me-2"></i>{{ _('ميزات POS المتقدمة') }}</h5>
+          <p class="text-muted small mb-3"><i class="bi bi-info-circle me-1"></i>{{ _('«وراثة الباقة» تعني اتباع مستوى الباقة (احترافية فأعلى)') }}</p>
+          <div class="row g-3">
+            {% for name, label in [
+              ('enable_pos_promotions', t('العروض والخصومات')),
+              ('enable_pos_multi_tender', t('الدفع المتعدد')),
+              ('enable_pos_returns', t('مرتجعات POS')),
+              ('enable_pos_shifts', t('الورديات'))
+            ] %}
+            <div class="col-md-3">
+              <label class="form-label fw-semibold" for="input_{{ name }}">{{ label }}</label>
+              <select name="{{ name }}" class="form-select" id="input_{{ name }}" aria-label="{{ name }}">
+                <option value="" selected>{{ _('وراثة الباقة') }}</option>
+                <option value="1">{{ _('مفعّل') }}</option>
+                <option value="0">{{ _('معطّل') }}</option>
+              </select>
+            </div>
+            {% endfor %}
           </div>
         </div>
         <div class="card-footer d-flex justify-content-between">

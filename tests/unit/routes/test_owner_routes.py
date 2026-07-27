@@ -702,6 +702,10 @@ def _owner_route_patches(mock_db=None, **overrides):
             patch("routes.owner.tenants.SaaSProvisioningService"),
         ),
         (
+            "models.package.Package",
+            patch("models.package.Package", _model_class(all=[])),
+        ),
+        (
             "services.store_payment_method_service.StorePaymentMethodService.ensure_defaults",
             patch("services.store_payment_method_service.StorePaymentMethodService.ensure_defaults"),
         ),

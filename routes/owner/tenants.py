@@ -160,6 +160,10 @@ def tenants_list():
 @owner_required
 def tenant_create():
     """Create a new tenant from the owner panel."""
+    from models.package import Package
+
+    packages = Package.query.filter_by(is_active=True).order_by(Package.sort_order.asc(), Package.id.asc()).all()
+
     if request.method == "POST":
         try:
             name_ar = request.form.get("name_ar", "").strip()
@@ -175,6 +179,22 @@ def tenant_create():
             if Tenant.query.filter_by(slug=slug).first():
                 flash(gettext("الـ Slug مستخدم مسبقاً."), "danger")
                 return redirect(url_for("owner.tenant_create"))
+
+            def _form_int(name, default):
+                try:
+                    raw = str(request.form.get(name, "")).strip()
+                    return int(raw) if raw else default
+                except (TypeError, ValueError):
+                    return default
+
+            def _tristate(name):
+                raw = request.form.get(name, "")
+                if raw == "1":
+                    return True
+                if raw == "0":
+                    return False
+                return None
+
             tenant = Tenant(
                 name=name_ar,
                 name_ar=name_ar,
@@ -186,22 +206,34 @@ def tenant_create():
                 email=request.form.get("email", "").strip() or None,
                 address_ar=request.form.get("address_ar", "").strip() or None,
                 default_currency=default_currency,
-                max_users=int(request.form.get("max_users", 5)),
-                max_products=int(request.form.get("max_products", 1000)),
-                max_customers=int(request.form.get("max_customers", 500)),
-                max_suppliers=int(request.form.get("max_suppliers", 200)),
-                max_branches=int(request.form.get("max_branches", 3)),
-                max_warehouses=int(request.form.get("max_warehouses", 2)),
-                max_invoices_per_month=int(request.form.get("max_invoices_per_month", 1000)),
-                max_sales_per_month=int(request.form.get("max_sales_per_month", 5000)),
-                data_retention_days=int(request.form.get("data_retention_days", 365)),
+                max_users=_form_int("max_users", 5),
+                max_products=_form_int("max_products", 1000),
+                max_customers=_form_int("max_customers", 500),
+                max_suppliers=_form_int("max_suppliers", 200),
+                max_branches=_form_int("max_branches", 3),
+                max_warehouses=_form_int("max_warehouses", 2),
+                max_storage_mb=_form_int("max_storage_mb", 1024),
+                max_invoices_per_month=_form_int("max_invoices_per_month", 1000),
+                max_sales_per_month=_form_int("max_sales_per_month", 5000),
+                data_retention_days=_form_int("data_retention_days", 365),
                 enable_pos=request.form.get("enable_pos") == "on",
                 enable_payroll=request.form.get("enable_payroll") == "on",
                 enable_cheques=request.form.get("enable_cheques") == "on",
                 enable_expenses=request.form.get("enable_expenses") == "on",
+                enable_reports=request.form.get("enable_reports") == "on",
+                enable_ai=request.form.get("enable_ai") == "on",
                 enable_store=request.form.get("enable_store") == "on",
+                enable_gl=request.form.get("enable_gl") == "on",
+                enable_api=request.form.get("enable_api") == "on",
+                enable_multi_warehouse=request.form.get("enable_multi_warehouse") == "on",
+                enable_multi_currency=request.form.get("enable_multi_currency") == "on",
+                enable_auto_backup=request.form.get("enable_auto_backup") == "on",
                 allow_data_export=request.form.get("allow_data_export") == "on",
                 allow_custom_integrations=request.form.get("allow_custom_integrations") == "on",
+                enable_pos_promotions=_tristate("enable_pos_promotions"),
+                enable_pos_multi_tender=_tristate("enable_pos_multi_tender"),
+                enable_pos_returns=_tristate("enable_pos_returns"),
+                enable_pos_shifts=_tristate("enable_pos_shifts"),
                 is_active=True,
                 is_suspended=False,
             )
@@ -220,13 +252,33 @@ def tenant_create():
                 # other required mappings) are persisted immediately, preventing
                 # failures when products are later created with opening balances.
                 GLService.ensure_gl_mappings(tenant_id=tenant.id)
+
+            # Optional subscription scenario: activate a purchased package
+            # (applies the plan label, duration window, and the package's
+            # limits/flags template on top of the form values).
+            package_id_raw = str(request.form.get("package_id", "")).strip()
+            if package_id_raw:
+                duration = request.form.get("subscription_plan_duration", "monthly").strip() or "monthly"
+                if duration not in ("monthly", "annual", "trial", "lifetime"):
+                    duration = "monthly"
+                SaaSProvisioningService.activate_purchased_package(
+                    tenant_id=tenant.id,
+                    package_id=int(package_id_raw),
+                    duration_type=duration,
+                )
+                explicit_end = (request.form.get("subscription_end") or "").strip()
+                if explicit_end:
+                    with atomic_transaction("tenant_create_subscription_end"):
+                        tenant.set_subscription_end(explicit_end)
+                        db.session.flush()
+
             _invalidate_owner_changes()
             _audit_owner_db_action("tenant_create", {"tenant_id": tenant.id, "slug": slug})
             flash(gettext(f'تم إنشاء التينانت "{tenant.name_ar}" بنجاح.'), "success")
             return redirect(url_for("owner.tenants_list"))
         except Exception as e:
             flash(gettext(f"خطأ في إنشاء التينانت: {str(e)}"), "danger")
-    return render_template("owner/tenant_create.html")
+    return render_template("owner/tenant_create.html", packages=packages)
 
 
 @owner_bp.route("/tenants/<int:tenant_id>/suspend", methods=["POST"])
