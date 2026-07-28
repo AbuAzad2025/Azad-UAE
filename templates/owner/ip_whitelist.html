@@ -1,22 +1,22 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('Management') }}IPs{% endblock %}
+{% block title %}{{ t('IP_Management') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="mb-3">
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right"></i> {{ _('رجوع للوحة المالك') }}
+      <i class="fas fa-arrow-right"></i> {{ t('Back_To_Owner_Dashboard') }}
     </a>
     <a href="{{ url_for('owner.security_alerts') }}" class="btn btn-danger">
-      <i class="fas fa-shield-alt"></i> {{ _('التنبيهات') }}
+      <i class="fas fa-shield-alt"></i> {{ t('Alerts') }}
     </a>
     <a href="{{ url_for('owner.api_keys') }}" class="btn btn-info">
       <i class="fas fa-key"></i> API Keys
     </a>
   </div>
-  
+
   <div class="card">
     <div class="card-header">
-      <h3><i class="fas fa-network-wired"></i> {{ _('القائمة البيضاء للـ IPs') }}</h3>
+      <h3><i class="fas fa-network-wired"></i> {{ t('IP_Whitelist') }}</h3>
     </div>
     <div class="card-body">
       <form class="needs-validation mb-4" method="post" action="">
@@ -31,39 +31,39 @@
           <div class="col-md-5">
             <div class="form-group">
               <label for="input_description">{{ t('Description') }}</label>
-              <input type="text" name="description" class="form-control" placeholder="{{ _('وصف') }}" id="input_description" maxlength="500">
+              <input type="text" name="description" class="form-control" placeholder="{{ t('Description') }}" id="input_description" maxlength="500">
             </div>
           </div>
           <div class="col-md-2">
             <div class="form-group">
               <label aria-hidden="true">&nbsp;</label>
               <button type="submit" class="btn btn-success btn-block">
-                <i class="fas fa-plus"></i> {{ _('إضافة') }}
+                <i class="fas fa-plus"></i> {{ t('Add') }}
               </button>
             </div>
           </div>
         </div>
       </form>
-      
+
       <div class="table-responsive"><table class="table table-bordered table-striped">
         <thead>
           <tr>
             <th style="width: 35%">IP Address</th>
             <th style="width: 50%">{{ t('Description') }}</th>
-            <th style="width: 15%">{{ t('إجراء') }}</th>
+            <th style="width: 15%">{{ t('Action') }}</th>
           </tr>
         </thead>
         <tbody>
-          {% if whitelist %}
+          {% if whitelist|default([]) %}
             {% for item in whitelist %}
             <tr>
-              <td><code>{{ item.ip }}</code></td>
-              <td>{{ item.description }}</td>
+              <td><code>{{ item.ip|default('') }}</code></td>
+              <td>{{ item.description|default('') }}</td>
               <td>
-                <form method="post" action="{{ url_for('owner.delete_ip_whitelist', index=loop.index0) }}" class="d-inline" data-action="confirm-submit" data-confirm-message="{{ _('هل أنت متأكد من حذف هذا IP؟') }}">
+                <form method="post" action="{{ url_for('owner.delete_ip_whitelist', index=loop.index0) }}" class="d-inline" data-action="confirm-submit" data-confirm-message="{{ t('Confirm_Delete_This_IP') }}">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                   <button type="submit" class="btn btn-danger">
-                    <i class="fas fa-trash"></i> {{ _('حذف') }}
+                    <i class="fas fa-trash"></i> {{ t('Delete') }}
                   </button>
                 </form>
               </td>
@@ -72,7 +72,7 @@
           {% else %}
             <tr>
               <td colspan="3" class="text-center text-muted">
-                <i class="fas fa-info-circle"></i> {{ _('لا توجد IPs في القائمة البيضاء') }}
+                <i class="fas fa-info-circle"></i> {{ t('No_IPs_In_Whitelist') }}
               </td>
             </tr>
           {% endif %}

@@ -1,20 +1,20 @@
-?{% extends 'base.html' %}
-{% block title %}????? ???????{% endblock %}
+{% extends 'base.html' %}
+{% block title %}{{ t('Currency_Settings') }}{% endblock %}
 {% block content %}
 <div class="content-header">
   <div class="container-fluid">
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
-        <h1 class="m-0"><i class="fas fa-dollar-sign text-success"></i> ????? ???????</h1>
+        <h1 class="m-0"><i class="fas fa-dollar-sign text-success"></i> {{ t('Currency_Settings') }}</h1>
       </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
-          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2" aria-label="?????? ????? ??????">
-            <i class="fas fa-arrow-right mr-1"></i> ?????? ????? ??????
+          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
+            <i class="fas fa-arrow-right mr-1"></i> {{ t('Back_To_Owner_Dashboard') }}
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
-            <li class="breadcrumb-item active">????? ???????</li>
+            <li class="breadcrumb-item active">{{ t('Currency_Settings') }}</li>
           </ol>
         </div>
       </div>
@@ -22,14 +22,14 @@
     <div class="row">
       <div class="col-12">
         <div class="btn-group quick-nav" role="group">
-          <a href="{{ url_for('owner.currency_settings') }}" class="btn btn-success" aria-label="???????">
-            <i class="fas fa-dollar-sign"></i> ???????
+          <a href="{{ url_for('owner.currency_settings') }}" class="btn btn-success">
+            <i class="fas fa-dollar-sign"></i> {{ t('Currencies') }}
           </a>
-          <a href="{{ url_for('owner.exchange_rates') }}" class="btn btn-outline-info" aria-label="????? ?????">
-            <i class="fas fa-exchange-alt"></i> ????? ?????
+          <a href="{{ url_for('owner.exchange_rates') }}" class="btn btn-outline-info">
+            <i class="fas fa-exchange-alt"></i> {{ t('Exchange_Rates') }}
           </a>
-          <a href="{{ url_for('owner.tax_settings') }}" class="btn btn-outline-success" aria-label="???????">
-            <i class="fas fa-percent"></i> ???????
+          <a href="{{ url_for('owner.tax_settings') }}" class="btn btn-outline-success">
+            <i class="fas fa-percent"></i> {{ t('Tax') }}
           </a>
         </div>
       </div>
@@ -41,20 +41,20 @@
   <div class="container-fluid">
     <div class="card">
       <div class="card-header bg-success text-white">
-        <h3 class="card-title"><i class="fas fa-coins mr-2"></i> ??????? ??????? ????????</h3>
+        <h3 class="card-title"><i class="fas fa-coins mr-2"></i> {{ t('Default_Currency_Settings') }}</h3>
       </div>
       <div class="card-body">
         <form class="needs-validation currency-settings-form mb-4" method="POST" action="{{ url_for('owner.currency_settings') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
           <div class="form-group">
-            <label>{{ t('Default_Currency') }}</label>
-            <select name="default_currency" class="form-control" aria-label="default currency">
-              <option value="AED" {{ 'selected' if settings.default_currency == 'AED' }}>AED - ???? ???????</option>
-              <option value="USD" {{ 'selected' if settings.default_currency == 'USD' }}>USD - ????? ??????</option>
-              <option value="EUR" {{ 'selected' if settings.default_currency == 'EUR' }}>EUR - {{ t('Euro') }}</option>
-              <option value="SAR" {{ 'selected' if settings.default_currency == 'SAR' }}>SAR - ???? ?????</option>
-              <option value="ILS" {{ 'selected' if settings.default_currency == 'ILS' }}>ILS - ???? ????????</option>
+            <label for="input_default_currency">{{ t('Default_Currency') }}</label>
+            <select name="default_currency" id="input_default_currency" class="form-control" aria-label="default currency">
+              <option value="AED" {{ 'selected' if (settings.default_currency|default('AED')) == 'AED' }}>AED - {{ t('AED_UAE_Dirham') }}</option>
+              <option value="USD" {{ 'selected' if (settings.default_currency|default('AED')) == 'USD' }}>USD - {{ t('USD_US_Dollar') }}</option>
+              <option value="EUR" {{ 'selected' if (settings.default_currency|default('AED')) == 'EUR' }}>EUR - {{ t('Euro') }}</option>
+              <option value="SAR" {{ 'selected' if (settings.default_currency|default('AED')) == 'SAR' }}>SAR - {{ t('SAR_Saudi_Riyal') }}</option>
+              <option value="ILS" {{ 'selected' if (settings.default_currency|default('AED')) == 'ILS' }}>ILS - {{ t('ILS_Israeli_Shekel') }}</option>
             </select>
           </div>
 
@@ -64,36 +64,38 @@
                      class="custom-control-input"
                      id="auto_update"
                      name="auto_update_rates"
-                     {% if settings.auto_update_rates %}checked{% endif %} aria-label="auto update rates">
+                     {% if settings.auto_update_rates|default(false) %}checked{% endif %} aria-label="auto update rates">
               <label class="custom-control-label" for="auto_update">
-                ????? ?????? ?????? ?????
+                {{ t('Auto_Update_Exchange_Rates') }}
               </label>
             </div>
             <small class="form-text text-muted mt-2">
-              ? ??? ??????? ????? ?????? ???? ????? ????? ?? ?????? ??????? ????????.
+              {{ t('Auto_Update_Exchange_Rates_Help') }}
             </small>
           </div>
 
-          <button type="submit" class="btn btn-success" aria-label="??? ??????? ???????">
-            <i class="fas fa-save mr-1"></i> ??? ?????????
+          <button type="submit" class="btn btn-success">
+            <i class="fas fa-save mr-1"></i> {{ t('Save_Settings') }}
           </button>
         </form>
 
-        <h5 class="mt-4 mb-3"><i class="fas fa-chart-line text-success"></i> ????? ????? ???????</h5>
+        <h5 class="mt-4 mb-3"><i class="fas fa-chart-line text-success"></i> {{ t('Exchange_Rates') }}</h5>
         <div class="table-responsive">
           <table class="table table-bordered table-hover">
             <thead class="thead-light">
               <tr>
                 <th>{{ t('Currency') }}</th>
-                <th>????? ????? {{ tenant_currency_symbol }}</th>
+                <th>{{ t('Rate_Against') }} {{ tenant_currency_symbol|default('AED') }}</th>
               </tr>
             </thead>
             <tbody>
-              {% for currency, rate in rates.items() %}
+              {% for currency, rate in (rates|default({})).items() %}
               <tr>
                 <td><strong>{{ currency }}</strong></td>
                 <td>{{ rate }}</td>
               </tr>
+              {% else %}
+              <tr><td colspan="2" class="text-center text-muted">{{ t('No_Rates_Available') }}</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -102,5 +104,4 @@
     </div>
   </div>
 </section>
-
 {% endblock %}

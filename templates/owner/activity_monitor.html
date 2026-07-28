@@ -1,52 +1,52 @@
 {% extends 'base.html' %}
-{% block title %}مراقبة النشاط{% endblock %}
+{% block title %}{{ t('Activity_Monitor') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="mb-3">
-    <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary" aria-label="{{ _('العودة للوحة المالك') }}">
-      <i class="fas fa-arrow-right"></i> {{ _('رجوع للوحة المالك') }}
+    <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right"></i> {{ t('Back_To_Owner_Dashboard') }}
     </a>
-    <a href="{{ url_for('owner.system_health') }}" class="btn btn-success" aria-label="{{ _('صحة النظام') }}">
-      <i class="fas fa-heartbeat"></i> {{ _('صحة النظام') }}
+    <a href="{{ url_for('owner.system_health') }}" class="btn btn-success">
+      <i class="fas fa-heartbeat"></i> {{ t('System_Health') }}
     </a>
-    <a href="{{ url_for('owner.error_audit_logs') }}" class="btn btn-danger" aria-label="{{ _('سجلات الأخطاء') }}">
-      <i class="fas fa-bug"></i> {{ _('الأخطاء') }}
+    <a href="{{ url_for('owner.error_audit_logs') }}" class="btn btn-danger">
+      <i class="fas fa-bug"></i> {{ t('Errors') }}
     </a>
-    <a href="{{ url_for('owner.login_history') }}" class="btn btn-primary" aria-label="{{ _('سجل الدخول') }}">
-      <i class="fas fa-history"></i> {{ _('سجل الدخول') }}
+    <a href="{{ url_for('owner.login_history') }}" class="btn btn-primary">
+      <i class="fas fa-history"></i> {{ t('Login_History') }}
     </a>
   </div>
-  
+
   <div class="row">
     <div class="col-md-4">
       <div class="small-box bg-success">
         <div class="inner">
-          <h3>{{ stats.active_now }}</h3>
-          <p>{{ _('مستخدمون نشطون الآن') }}</p>
+          <h3>{{ stats.active_now|default(0) }}</h3>
+          <p>{{ t('Active_Users_Now') }}</p>
         </div>
         <div class="icon">
           <i class="fas fa-users"></i>
         </div>
       </div>
     </div>
-    
+
     <div class="col-md-4">
       <div class="small-box bg-info">
         <div class="inner">
-          <h3>{{ stats.today_sales }}</h3>
-          <p>{{ _('مبيعات اليوم') }}</p>
+          <h3>{{ stats.today_sales|default(0) }}</h3>
+          <p>{{ t('Today_Sales') }}</p>
         </div>
         <div class="icon">
           <i class="fas fa-shopping-cart"></i>
         </div>
       </div>
     </div>
-    
+
     <div class="col-md-4">
       <div class="small-box bg-warning">
         <div class="inner">
-          <h3>{{ stats.recent_actions }}</h3>
-          <p>{{ _('إجراءات أخيرة') }}</p>
+          <h3>{{ stats.recent_actions|default(0) }}</h3>
+          <p>{{ t('Recent_Actions') }}</p>
         </div>
         <div class="icon">
           <i class="fas fa-clipboard-list"></i>
@@ -54,58 +54,62 @@
       </div>
     </div>
   </div>
-  
+
   <div class="row">
     <div class="col-md-6">
       <div class="card">
         <div class="card-header">
-          <h3 class="card-title">{{ _('مستخدمون نشطون') }}</h3>
+          <h3 class="card-title">{{ t('Active_Users') }}</h3>
         </div>
         <div class="card-body">
           <div class="table-responsive"><table class="table table-sm table-hover">
             <thead>
               <tr>
-                <th>{{ _('المستخدم') }}</th>
-                <th>{{ _('آخر ظهور') }}</th>
+                <th>{{ t('User') }}</th>
+                <th>{{ t('Last_Seen') }}</th>
               </tr>
             </thead>
             <tbody>
-              {% for user in active_users %}
+              {% for user in active_users|default([]) %}
               <tr>
                 <td>
                   <i class="fas fa-circle text-success"></i>
-                  {{ user.full_name }}
+                  {{ user.full_name|default('') }}
                 </td>
                 <td>{{ user.last_seen.strftime('%H:%M') if user.last_seen else '-' }}</td>
               </tr>
+              {% else %}
+              <tr><td colspan="2" class="text-center text-muted">{{ t('No_Active_Users') }}</td></tr>
               {% endfor %}
             </tbody>
           </table></div>
         </div>
       </div>
     </div>
-    
+
     <div class="col-md-6">
       <div class="card">
         <div class="card-header">
-          <h3 class="card-title">{{ _('آخر الإجراءات') }}</h3>
+          <h3 class="card-title">{{ t('Recent_Actions') }}</h3>
         </div>
         <div class="card-body erp-scroll-400">
           <div class="table-responsive"><table class="table table-sm">
             <thead>
               <tr>
-                <th>{{ _('الإجراء') }}</th>
-                <th>{{ _('المستخدم') }}</th>
-                <th>{{ _('الوقت') }}</th>
+                <th>{{ t('Action') }}</th>
+                <th>{{ t('User') }}</th>
+                <th>{{ t('Time') }}</th>
               </tr>
             </thead>
             <tbody>
-              {% for audit in recent_audits %}
+              {% for audit in recent_audits|default([]) %}
               <tr>
-                <td><span class="badge badge-primary">{{ audit.action }}</span></td>
+                <td><span class="badge badge-primary">{{ audit.action|default('') }}</span></td>
                 <td>{{ audit.user.username if audit.user else 'System' }}</td>
                 <td>{{ audit.created_at.strftime('%H:%M') if audit.created_at else '-' }}</td>
               </tr>
+              {% else %}
+              <tr><td colspan="3" class="text-center text-muted">{{ t('No_Audit_Logs') }}</td></tr>
               {% endfor %}
             </tbody>
           </table></div>

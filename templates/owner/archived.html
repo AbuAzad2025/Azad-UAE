@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - السجلات المؤرشفة{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or t('Accounting_System') }} - {{ t('Archived_Records') }}{% endblock %}
 
 {% block content %}
     <div class="content-header">
@@ -11,10 +11,10 @@
                 </div>
                 <div class="col-sm-6">
                     <div class="float-left">
-                        <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary" aria-label="{{ _('لوحة المالك') }}">
+                        <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
                             <i class="fas fa-arrow-right mr-2"></i>{{ t('Owner_Dashboard') }}</a>
-                        <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary" aria-label="{{ _('الصفحة الرئيسية') }}">
-                            <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}</a>
+                        <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-home mr-2"></i>{{ t('Home') }}</a>
                     </div>
                 </div>
             </div>
@@ -34,28 +34,30 @@
                                 <table class="table table-bordered table-striped">
                                     <thead>
                                         <tr>
-                                            <th>{{ _('تاريخ الأرشفة') }}</th>
+                                            <th>{{ t('Archive_Date') }}</th>
                                             <th>{{ t('Table') }}</th>
-                                            <th>{{ t('المعرف') }}</th>
+                                            <th>{{ t('Identifier') }}</th>
                                             <th>{{ t('User') }}</th>
-                                            <th>{{ t('السبب') }}</th>
+                                            <th>{{ t('Reason') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for record in records %}
+                                        {% for record in records|default([]) %}
                                         <tr>
-                                            <td>{{ record.archived_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                                            <td>{{ record.table_name }}</td>
-                                            <td>{{ record.record_id }}</td>
-                                            <td>{{ record.archived_by.username if record.archived_by else 'غير محدد' }}</td>
-                                            <td>{{ record.reason or '' }}</td>
+                                            <td>{{ record.archived_at.strftime('%Y-%m-%d %H:%M') if record.archived_at else t('Not_Specified') }}</td>
+                                            <td>{{ record.table_name|default('') }}</td>
+                                            <td>{{ record.record_id|default('') }}</td>
+                                            <td>{{ record.archived_by.username if record.archived_by else t('Not_Specified') }}</td>
+                                            <td>{{ record.reason|default('') }}</td>
                                         </tr>
+                                        {% else %}
+                                        <tr><td colspan="5" class="text-center text-muted">{{ t('No_Records') }}</td></tr>
                                         {% endfor %}
                                     </tbody>
                                 </table>
                             </div>
-                            
-                            {% if pagination %}
+
+                            {% if pagination|default(None) %}
                             {% set endpoint = 'owner.archived' %}
                             {% include 'partials/flask_pagination.html' %}
                             {% endif %}

@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}شركة أزاد للأنظمة الذكية - وحدة التحكم SQL المتقدمة{% endblock %}
+{% block title %}{{ t('Azad_Smart_Systems') }} - {{ t('Advanced_SQL_Console') }}{% endblock %}
 
 {% block content %}
     <div class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1 class="m-0">{{ _('وحدة التحكم SQL') }}</h1>
+                    <h1 class="m-0">{{ t('SQL_Console') }}</h1>
                 </div>
             </div>
         </div>
@@ -19,18 +19,18 @@
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">{{ _('تنفيذ استعلامات SQL') }}</h3>
+                            <h3 class="card-title">{{ t('Execute_SQL_Queries') }}</h3>
                         </div>
                         <div class="card-body">
                             <form class="needs-validation" method="POST" action="">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                                 <div class="form-group">
-                                    <label for="sql_query">{{ _('استعلام SQL:') }}</label>
-                                    <textarea class="form-control" id="sql_query" name="sql_query" rows="10" 
-                                              placeholder="{{ _('أدخل استعلام SQL هنا...') }}">{{ request.form.get('sql_query', '') }}</textarea>
+                                    <label for="sql_query">{{ t('SQL_Query') }}</label>
+                                    <textarea class="form-control" id="sql_query" name="sql_query" rows="10"
+                                              placeholder="{{ t('Enter_SQL_Query_Here') }}">{{ request.form.get('sql_query', '') }}</textarea>
                                 </div>
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-play"></i> {{ _('تنفيذ الاستعلام') }}
+                                    <i class="fas fa-play"></i> {{ t('Execute_Query') }}
                                 </button>
                             </form>
                         </div>
@@ -38,28 +38,28 @@
                 </div>
             </div>
 
-            {% if error %}
+            {% if error|default(None) %}
             <div class="row">
                 <div class="col-12">
                     <div class="alert alert-danger">
-                        <h5><i class="icon fas fa-ban"></i> {{ _('خطأ!') }}</h5>
+                        <h5><i class="icon fas fa-ban"></i> {{ t('Error') }}</h5>
                         {{ error }}
                     </div>
                 </div>
             </div>
             {% endif %}
 
-            {% if result %}
+            {% if result|default(None) %}
             <div class="row">
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">{{ _('نتائج الاستعلام') }}</h3>
+                            <h3 class="card-title">{{ t('Query_Results') }}</h3>
                         </div>
                         <div class="card-body">
-                            {% if result.message %}
+                            {% if result.message|default('') %}
                                 <div class="alert alert-success">
-                                    <h5><i class="icon fas fa-check"></i> {{ _('نجح!') }}</h5>
+                                    <h5><i class="icon fas fa-check"></i> {{ t('Success') }}</h5>
                                     {{ result.message }}
                                 </div>
                             {% else %}
@@ -67,13 +67,13 @@
                                     <table class="table table-bordered table-striped">
                                         <thead>
                                             <tr>
-                                                {% for column in result.columns %}
+                                                {% for column in result.columns|default([]) %}
                                                 <th>{{ column }}</th>
                                                 {% endfor %}
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {% for row in result.rows %}
+                                            {% for row in result.rows|default([]) %}
                                             <tr>
                                                 {% for cell in row %}
                                                 <td>{{ cell }}</td>
@@ -83,7 +83,7 @@
                                         </tbody>
                                     </table>
                                 </div>
-                                <p><strong>{{ _('عدد النتائج:') }}</strong> {{ result.count }}</p>
+                                <p><strong>{{ t('Result_Count') }}</strong> {{ result.count|default(0) }}</p>
                             {% endif %}
                         </div>
                     </div>

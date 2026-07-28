@@ -1,16 +1,16 @@
 {% extends 'base.html' %}
-{% block title %}طرق دفع المتاجر{% endblock %}
+{% block title %}{{ t('Store_Payment_Methods') }}{% endblock %}
 
 {% block content %}
 <div class="content-header">
   <div class="container-fluid">
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
-        <h1 class="m-0"><i class="fas fa-credit-card mr-2"></i>{{ _('طرق دفع المتاجر الإلكترونية') }}</h1>
-        <p class="text-muted small mb-0">{{ _('تُطبَّق على كل متاجر التينانتس فوراً — تشغيل / إيقاف / تعديل') }}</p>
+        <h1 class="m-0"><i class="fas fa-credit-card mr-2"></i>{{ t('Ecommerce_Store_Payment_Methods') }}</h1>
+        <p class="text-muted small mb-0">{{ t('Applies_To_All_Tenant_Stores') }}</p>
       </div>
       <div class="col-sm-6 text-left">
-        <a href="{{ url_for('owner.store_payment_method_create') }}" class="btn btn-success"><i class="fas fa-plus mr-1"></i>{{ _('إضافة طريقة') }}</a>
+        <a href="{{ url_for('owner.store_payment_method_create') }}" class="btn btn-success"><i class="fas fa-plus mr-1"></i>{{ t('Add_Method') }}</a>
         <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary">{{ t('Back') }}</a>
       </div>
     </div>
@@ -21,7 +21,7 @@
   <div class="container-fluid">
     <div class="alert alert-info">
       <i class="fas fa-info-circle mr-1"></i>
-      {{ _('العميل يرى في صفحة الدفع فقط الطرق') }} <strong>{{ _('المفعّلة') }}</strong> {{ _('هنا. الطرق الأساسية (COD، تحويل، بطاقة، محفظة) لا تُحذف — يمكن إيقافها.') }}
+      {{ t('Customer_Sees_Only_Active') }} <strong>{{ t('Enabled') }}</strong> {{ t('Basic_Methods_Cannot_Be_Deleted') }}
     </div>
 
     <div class="card">
@@ -29,45 +29,45 @@
         <table class="table table-hover mb-0">
           <thead>
             <tr>
-              <th>{{ t('الترتيب') }}</th>
-              <th>{{ t('Code_4') }}</th>
+              <th>{{ t('Sort_Order') }}</th>
+              <th>{{ t('Code') }}</th>
               <th>{{ t('Name') }}</th>
-              <th>{{ t('النوع') }}</th>
+              <th>{{ t('Type') }}</th>
               <th>{{ t('Status') }}</th>
               <th class="text-left">{{ t('Actions') }}</th>
             </tr>
           </thead>
           <tbody>
-            {% for m in methods %}
+            {% for m in methods|default([]) %}
             <tr>
-              <td>{{ m.sort_order }}</td>
-              <td><code>{{ m.code }}</code></td>
+              <td>{{ m.sort_order|default(0) }}</td>
+              <td><code>{{ m.code|default('') }}</code></td>
               <td>
-                <i class="{{ m.icon }} mr-1 text-muted"></i>
-                {{ m.name_ar }}<br><small class="text-muted">{{ m.name_en }}</small>
+                <i class="{{ m.icon|default('') }} mr-1 text-muted"></i>
+                {{ m.name_ar|default('') }}<br><small class="text-muted">{{ m.name_en|default('') }}</small>
               </td>
-              <td>{% if m.is_builtin %}<span class="badge badge-secondary">{{ t('أساسية') }}</span>{% else %}<span class="badge badge-primary">{{ t('مخصصة') }}</span>{% endif %}</td>
+              <td>{% if m.is_builtin|default(false) %}<span class="badge badge-secondary">{{ t('Builtin') }}</span>{% else %}<span class="badge badge-primary">{{ t('Custom') }}</span>{% endif %}</td>
               <td>
-                <form class="needs-validation d-inline" method="post" action="{{ url_for('owner.store_payment_method_toggle', method_id=m.id) }}">
+                <form class="needs-validation d-inline" method="post" action="{{ url_for('owner.store_payment_method_toggle', method_id=m.id|default(0)) }}">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                  <input type="hidden" name="is_enabled" value="{{ '0' if m.is_enabled else '1' }}" aria-label="is enabled">
-                  <button type="submit" class="btn btn-{{ 'success' if m.is_enabled else 'outline-secondary' }}">
-                    {% if m.is_enabled %}<i class="fas fa-check-circle"></i> مفعّلة{% else %}<i class="fas fa-pause-circle"></i> متوقفة{% endif %}
+                  <input type="hidden" name="is_enabled" value="{{ '0' if m.is_enabled|default(false) else '1' }}" aria-label="is enabled">
+                  <button type="submit" class="btn btn-{{ 'success' if m.is_enabled|default(false) else 'outline-secondary' }}">
+                    {% if m.is_enabled|default(false) %}<i class="fas fa-check-circle"></i> {{ t('Enabled') }}{% else %}<i class="fas fa-pause-circle"></i> {{ t('Stopped') }}{% endif %}
                   </button>
                 </form>
               </td>
               <td class="text-left">
-                <a href="{{ url_for('owner.store_payment_method_edit', method_id=m.id) }}" class="btn btn-outline-primary" title="{{ _('تعديل') }}" aria-label="{{ _('تعديل') }}"><i class="fas fa-edit"></i></a>
-                {% if not m.is_builtin %}
-                <form method="post" action="{{ url_for('owner.store_payment_method_delete', method_id=m.id) }}" class="d-inline" data-action="confirm-submit" data-confirm-message="{{ _('حذف طريقة الدفع؟') }}">
+                <a href="{{ url_for('owner.store_payment_method_edit', method_id=m.id|default(0)) }}" class="btn btn-outline-primary" title="{{ t('Edit') }}"><i class="fas fa-edit"></i></a>
+                {% if not m.is_builtin|default(false) %}
+                <form method="post" action="{{ url_for('owner.store_payment_method_delete', method_id=m.id|default(0)) }}" class="d-inline" data-action="confirm-submit" data-confirm-message="{{ t('Delete_Payment_Method_Confirm') }}">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                  <button type="submit" class="btn btn-outline-danger" title="{{ _('حذف') }}" aria-label="{{ _('حذف') }}"><i class="fas fa-trash"></i></button>
+                  <button type="submit" class="btn btn-outline-danger" title="{{ t('Delete') }}"><i class="fas fa-trash"></i></button>
                 </form>
                 {% endif %}
               </td>
             </tr>
             {% else %}
-            <tr><td colspan="6" class="text-center text-muted py-4">{{ _('لا طرق دفع — سيتم إنشاء الافتراضية تلقائياً') }}</td></tr>
+            <tr><td colspan="6" class="text-center text-muted py-4">{{ t('No_Methods_Default_Will_Be_Created') }}</td></tr>
             {% endfor %}
           </tbody>
         </table>

@@ -1,24 +1,24 @@
 {% extends 'base.html' %}
-{% block title %}إعدادات الضرائب — {{ tenant.name_ar or tenant.name }}{% endblock %}
+{% block title %}{{ t('Tax_Settings') }} — {{ tenant.name_ar|default('') or tenant.name|default('') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="mb-3">
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right"></i> {{ _('رجوع للوحة المالك') }}
+      <i class="fas fa-arrow-right"></i> {{ t('Back_To_Owner_Dashboard') }}
     </a>
     <a href="{{ url_for('owner.currency_settings') }}" class="btn btn-info">
-      <i class="fas fa-dollar-sign"></i> {{ _('العملات') }}
+      <i class="fas fa-dollar-sign"></i> {{ t('Currencies') }}
     </a>
   </div>
 
   <div class="alert alert-info">
     <i class="fas fa-info-circle"></i>
-    {{ _('إعدادات الضريبة') }} <strong>{{ _('لكل شركة على حدة') }}</strong>{{ _('. إذا كانت شركتك لا تتعامل بالضريبة، أوقف التفعيل أدناه — لن تُحسب ضريبة في المبيعات/المشتريات ولن تظهر تقارير VAT.') }}
+    {{ t('Tax_Settings') }} <strong>{{ t('Per_Company') }}</strong>{{ t('If_Company_Does_Not_Use_Tax') }}
   </div>
 
   <div class="card">
     <div class="card-header">
-      <h3><i class="fas fa-percent"></i> إعدادات الضرائب — {{ tenant.name_ar or tenant.name }}</h3>
+      <h3><i class="fas fa-percent"></i> {{ t('Tax_Settings') }} — {{ tenant.name_ar|default('') or tenant.name|default('') }}</h3>
     </div>
     <div class="card-body">
       <form class="needs-validation" method="post" action="">
@@ -30,56 +30,56 @@
                    class="custom-control-input"
                    id="enable_tax"
                    name="enable_tax"
-                   {% if tenant.enable_tax %}checked{% endif %} aria-label="enable tax">
+                   {% if tenant.enable_tax|default(false) %}checked{% endif %} aria-label="enable tax">
             <label class="custom-control-label" for="enable_tax">
-              {{ _('تفعيل الضريبة / VAT لهذه الشركة') }}
+              {{ t('Enable_Tax_VAT_For_Company') }}
             </label>
           </div>
-          <small class="text-muted">{{ _('عند الإيقاف: معدل الضريبة = 0 في كل الفواتير.') }}</small>
+          <small class="text-muted">{{ t('When_Disabled_Tax_Rate_Zero') }}</small>
         </div>
 
         <div id="tax-fields">
           <div class="form-group">
-            <label>{{ _('دولة الضريبة') }}</label>
+            <label for="vat_country">{{ t('Tax_Country') }}</label>
             <select name="vat_country" class="form-control" id="vat_country" aria-label="vat country">
-              {% for code, label in vat_countries.items() %}
-              <option value="{{ code }}" {% if (tenant.vat_country or 'AE') == code %}selected{% endif %}>{{ label }}</option>
+              {% for code, label in (vat_countries|default({})).items() %}
+              <option value="{{ code }}" {% if (tenant.vat_country|default('AE')) == code %}selected{% endif %}>{{ label }}</option>
               {% endfor %}
             </select>
           </div>
 
           <div class="form-group">
-            <label>{{ _('معدل الضريبة الافتراضي (%%)') }}</label>
+            <label for="default_tax_rate">{{ t('Default_Tax_Rate_Percent') }}</label>
             <input type="number"
                    name="default_tax_rate"
                    id="default_tax_rate"
                    class="form-control"
-                   value="{{ tenant.default_tax_rate or 0 }}"
+                   value="{{ tenant.default_tax_rate|default(0) }}"
                    step="0.01"
                    min="0"
                    max="100" aria-label="default tax rate">
           </div>
 
           <div class="form-group">
-            <label for="input_vat_number">{{ _('رقم التسجيل الضريبي (VAT / TRN)') }}</label>
+            <label for="input_vat_number">{{ t('VAT_TRN_Number') }}</label>
             <input type="text"
                    name="vat_number"
                    class="form-control"
-                   value="{{ tenant.vat_number or '' }}"
+                   value="{{ tenant.vat_number|default('') }}"
                    placeholder="123456789012345" id="input_vat_number" maxlength="20">
           </div>
 
           <div class="form-group">
-            <label for="input_tax_number">{{ _('الرقم الضريبي العام') }}</label>
+            <label for="input_tax_number">{{ t('General_Tax_Number') }}</label>
             <input type="text"
                    name="tax_number"
                    class="form-control"
-                   value="{{ tenant.tax_number or '' }}" id="input_tax_number" aria-label="tax number" maxlength="20">
+                   value="{{ tenant.tax_number|default('') }}" id="input_tax_number" aria-label="tax number" maxlength="20">
           </div>
         </div>
 
         <button type="submit" class="btn btn-success btn-lg">
-          <i class="fas fa-save"></i> {{ _('حفظ') }}
+          <i class="fas fa-save"></i> {{ t('Save') }}
         </button>
       </form>
     </div>

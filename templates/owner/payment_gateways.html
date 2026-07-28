@@ -1,101 +1,101 @@
 {% extends 'base.html' %}
-{% block title %}بوابات الدفع{% endblock %}
+{% block title %}{{ t('Payment_Gateways') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="mb-3">
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right"></i> {{ _('رجوع للوحة المالك') }}
+      <i class="fas fa-arrow-right"></i> {{ t('Back_To_Owner_Dashboard') }}
     </a>
     <a href="{{ url_for('owner.currency_settings') }}" class="btn btn-info">
-      <i class="fas fa-dollar-sign"></i> {{ _('العملات') }}
+      <i class="fas fa-dollar-sign"></i> {{ t('Currencies') }}
     </a>
   </div>
-  
+
   <div class="card">
     <div class="card-header">
-      <h3><i class="fas fa-credit-card"></i> {{ _('إعدادات بوابات الدفع') }}</h3>
+      <h3><i class="fas fa-credit-card"></i> {{ t('Payment_Gateway_Settings') }}</h3>
     </div>
     <div class="card-body">
       <div class="alert alert-warning">
         <i class="fas fa-lock"></i>
-        <strong>{{ t('Warning') }}</strong> {{ _('هذه المعلومات حساسة وسرية. تأكد من حفظها بشكل آمن.') }}
+        <strong>{{ t('Warning') }}</strong> {{ t('Sensitive_Info_Secure_Storage') }}
       </div>
-      
+
       <form class="needs-validation" method="post" action="">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-        
+
         <h5 class="mb-3"><i class="fab fa-stripe"></i> Stripe</h5>
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
               <label for="input_stripe_publishable_key">Publishable Key</label>
-              <input type="text" 
-                     name="stripe_publishable_key" 
-                     class="form-control" 
-                     value="{{ vault.stripe_publishable_key or '' }}"
+              <input type="text"
+                     name="stripe_publishable_key"
+                     class="form-control"
+                     value="{{ vault.stripe_publishable_key|default('') }}"
                      placeholder="pk_live_..." id="input_stripe_publishable_key">
-              <small class="text-muted">{{ _('المفتاح العام للواجهة الأمامية') }}</small>
+              <small class="text-muted">{{ t('Public_Key_For_Frontend') }}</small>
             </div>
           </div>
           <div class="col-md-6">
             <div class="form-group">
               <label for="input_stripe_secret_key">Secret Key</label>
-              <input type="password" 
-                     name="stripe_secret_key" 
-                     class="form-control" 
-                     value="{{ vault.stripe_secret_key or '' }}"
+              <input type="password"
+                     name="stripe_secret_key"
+                     class="form-control"
+                     value="{{ vault.stripe_secret_key|default('') }}"
                      placeholder="sk_live_..." id="input_stripe_secret_key">
-              <small class="text-muted">{{ _('المفتاح السري (لا تشاركه أبداً)') }}</small>
+              <small class="text-muted">{{ t('Secret_Key_Never_Share') }}</small>
             </div>
           </div>
         </div>
-        
+
         <hr class="my-4">
-        
+
         <h5 class="mb-3"><i class="fab fa-paypal"></i> PayPal</h5>
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
               <label for="input_paypal_client_id">Client ID</label>
-              <input type="text" 
-                     name="paypal_client_id" 
-                     class="form-control" 
-                     value="{{ vault.paypal_client_id or '' }}"
+              <input type="text"
+                     name="paypal_client_id"
+                     class="form-control"
+                     value="{{ vault.paypal_client_id|default('') }}"
                      placeholder="AYSq3R..." id="input_paypal_client_id">
             </div>
           </div>
           <div class="col-md-6">
             <div class="form-group">
               <label for="input_paypal_client_secret">Client Secret</label>
-              <input type="password" 
-                     name="paypal_client_secret" 
-                     class="form-control" 
-                     value="{{ vault.paypal_client_secret or '' }}"
+              <input type="password"
+                     name="paypal_client_secret"
+                     class="form-control"
+                     value="{{ vault.paypal_client_secret|default('') }}"
                      placeholder="EH..." id="input_paypal_client_secret">
             </div>
           </div>
         </div>
-        
+
         <hr class="my-4">
-        
+
         <h5 class="mb-3"><i class="fab fa-bitcoin"></i> NOWPayments (Crypto)</h5>
         <div class="row">
           <div class="col-md-12">
             <div class="form-group">
               <label for="input_nowpayments_api_key">API Key</label>
-              <input type="password" 
-                     name="nowpayments_api_key" 
-                     class="form-control" 
-                     value="{{ vault.nowpayments_api_key or '' }}"
+              <input type="password"
+                     name="nowpayments_api_key"
+                     class="form-control"
+                     value="{{ vault.nowpayments_api_key|default('') }}"
                      placeholder="NP_API_..." id="input_nowpayments_api_key">
-              <small class="text-muted">{{ _('مفتاح API للدفع بالعملات المشفرة') }}</small>
+              <small class="text-muted">{{ t('API_Key_For_Crypto_Payments') }}</small>
             </div>
           </div>
         </div>
-        
+
         <div class="mt-4">
           <button type="submit" class="btn btn-success btn-lg">
-            <i class="fas fa-save"></i> {{ _('حفظ جميع الإعدادات') }}
+            <i class="fas fa-save"></i> {{ t('Save_All_Settings') }}
           </button>
         </div>
       </form>
