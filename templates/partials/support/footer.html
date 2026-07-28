@@ -3,18 +3,18 @@
             <div class="row">
                 <div class="col-md-4 text-center mb-4">
                     <i class="fas fa-shield-alt sp-footer-column-icon"></i>
-                    <h5 class="sp-footer-column-title">{{ t('أمان') }} {{ t('مضمون') }}</h5>
-                    <p class="sp-footer-column-text">{{ t('جميع') }} {{ t('المعاملات') }} {{ t('محمية') }} {{ t('بتشفير') }} SSL 256-bit</p>
+                    <h5 class="sp-footer-column-title">{{ t('Footer_Security_Guaranteed') }}</h5>
+                    <p class="sp-footer-column-text">{{ t('Footer_Security_Desc') }}</p>
                 </div>
                 <div class="col-md-4 text-center mb-4">
                     <i class="fas fa-headset sp-footer-column-icon"></i>
-                    <h5 class="sp-footer-column-title">{{ t('دعم') }} {{ t('فني') }} 24/7</h5>
-                    <p class="sp-footer-column-text">{{ t('فريق') }} {{ t('الدعم') }} {{ t('جاهز') }} {{ t('لمساعدتك') }} في أي {{ t('Time') }}</p>
+                    <h5 class="sp-footer-column-title">{{ t('Footer_Support_24_7') }}</h5>
+                    <p class="sp-footer-column-text">{{ t('Footer_Support_Desc') }}</p>
                 </div>
                 <div class="col-md-4 text-center mb-4">
                     <i class="fas fa-rocket sp-footer-column-icon"></i>
-                    <h5 class="sp-footer-column-title">{{ t('تحديثات') }} {{ t('مستمرة') }}</h5>
-                    <p class="sp-footer-column-text">{{ t('نضيف') }} {{ t('ميزات') }} {{ t('New_3') }} {{ t('باستمرار') }}</p>
+                    <h5 class="sp-footer-column-title">{{ t('Footer_Continuous_Updates') }}</h5>
+                    <p class="sp-footer-column-text">{{ t('Footer_Updates_Desc') }}</p>
                 </div>
             </div>
 
@@ -35,11 +35,11 @@
 
                 <p class="sp-footer-text">
                     <i class="fas fa-heart sp-footer-heart"></i>
-                    {{ t('صُنع') }} {{ t('بحب') }} من {{ t('فريق') }} {{ developer_name_ar or developer_name or 'Azad Systems' }}
+                    {{ t('Footer_Made_With_Love') }} {{ developer_name_ar or developer_name or 'Azad Systems' }}
                 </p>
 
                 <p class="sp-footer-copyright">
-                    © 2025 {{ developer_name_ar or developer_name or 'Azad Systems' }}. {{ t('جميع') }} {{ t('الحقوق') }} {{ t('محفوظة') }}.
+                    © {{ now.year if now else '2026' }} {{ developer_name_ar or developer_name or 'Azad Systems' }}. {{ t('Footer_Copyright') }}
                 </p>
             </div>
         </div>

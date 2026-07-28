@@ -6,7 +6,7 @@
 <script>
 window.spConfig = {
   whatsappLink: "{{ developer_whatsapp_link }}",
-  whatsappDisplay: "{{ developer_whatsapp or config.DEVELOPER_WHATSAPP or '+972562150193' }}",
+  whatsappDisplay: "{{ developer_whatsapp or config.DEVELOPER_WHATSAPP }}",
   email: "{{ developer_email or config.DEVELOPER_EMAIL }}",
   brand: "{{ developer_name_ar or developer_name or 'Azad Systems' }}",
   csrf: "{{ csrf_token() }}"
