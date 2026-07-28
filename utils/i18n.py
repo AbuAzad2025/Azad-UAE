@@ -91,8 +91,7 @@ TRANSLATIONS = {
     "Deleted Successfully": {"ar": "تم الحذف بنجاح", "en": "Deleted Successfully"},
     "Updated Successfully": {"ar": "تم التحديث بنجاح", "en": "Updated Successfully"},
     "Are you sure?": {"ar": "هل أنت متأكد؟", "en": "Are you sure?"},
-    "This action cannot be undone": {
-    },
+    "This action cannot be undone": {},
     "Add": {"ar": "إضافة", "en": "Add"},
     "New": {"ar": "جديد", "en": "New"},
     "Details": {"ar": "تفاصيل", "en": "Details"},
@@ -135,21 +134,15 @@ TRANSLATIONS = {
     "Features": {"ar": "المميزات", "en": "Features"},
     "Products Management": {"ar": "إدارة المنتجات", "en": "Products Management"},
     "Sales Management": {"ar": "إدارة المبيعات", "en": "Sales Management"},
-    "Complete inventory for all products and parts": {
-    },
+    "Complete inventory for all products and parts": {},
     "Buy Now": {"ar": "اشترِ الآن", "en": "Buy Now"},
     "Free Trial": {"ar": "تجربة مجانية", "en": "Free Trial"},
     "Support Project": {"ar": "ادعم المشروع", "en": "Support Project"},
-    "View All Plans and Pricing": {
-    },
-    "Best inventory and sales management system in UAE 2025": {
-    },
-    "Complete accounting software | E-invoices | Inventory | Advanced AI": {
-    },
-    "Professional solutions for auto parts and retail in UAE": {
-    },
-    "Why choose Azad system for warehouses in UAE?": {
-    },
+    "View All Plans and Pricing": {},
+    "Best inventory and sales management system in UAE 2025": {},
+    "Complete accounting software | E-invoices | Inventory | Advanced AI": {},
+    "Professional solutions for auto parts and retail in UAE": {},
+    "Why choose Azad system for warehouses in UAE?": {},
     "AI": {"ar": "الذكاء", "en": "AI"},
     "AI_2": {"ar": "ذكاء", "en": "AI_2"},
     "Account": {"ar": "الحساب", "en": "Account"},
@@ -2035,10 +2028,8 @@ TRANSLATIONS = {
     "يُنشأ": {"ar": "يُنشأ", "en": "يُنشأ"},
     "يُنصح": {"ar": "يُنصح", "en": "يُنصح"},
     "Point Of Sale": {"ar": "نقطة البيع", "en": "Point Of Sale"},
-    "Fast Cashier Screen": {
-    },
-    "Must Open Cashier Session": {
-    },
+    "Fast Cashier Screen": {},
+    "Must Open Cashier Session": {},
     "Clear": {"ar": "مسح", "en": "Clear"},
     "Cart Empty": {"ar": "السلة فارغة", "en": "Cart is empty"},
     "Exchange Rate": {"ar": "سعر الصرف", "en": "Exchange Rate"},
@@ -2055,8 +2046,7 @@ TRANSLATIONS = {
     "Customer Display": {"ar": "شاشة العميل", "en": "Customer Display"},
     "Invalid Link": {"ar": "رابط غير صالح", "en": "Invalid link"},
     "Waiting For Order": {"ar": "بانتظار الطلب...", "en": "Waiting for order..."},
-    "Thank You For Your Visit": {
-    },
+    "Thank You For Your Visit": {},
     "KDS Screen": {"ar": "شاشة المطبخ KDS", "en": "KDS Screen"},
     "No Orders": {"ar": "لا توجد طلبات", "en": "No orders"},
     "Load Failed": {"ar": "فشل التحميل", "en": "Load failed"},
@@ -2068,30 +2058,21 @@ TRANSLATIONS = {
     "Served": {"ar": "تم التقديم", "en": "Served"},
     "Prepare": {"ar": "تجهيز", "en": "Prepare"},
     "Cancel Order": {"ar": "إلغاء", "en": "Cancel"},
-    "Search By Name Or Phone": {
-    },
+    "Search By Name Or Phone": {},
     "Quick Cash Customer": {"ar": "عميل نقدي سريع", "en": "Quick cash customer"},
-    "No Customer Selected Hint": {
-    },
-    "Scan Barcode Or Type Name Code": {
-    },
-    "Keyboard Shortcuts": {
-    },
-    "No Payment Now Credit": {
-    },
+    "No Customer Selected Hint": {},
+    "Scan Barcode Or Type Name Code": {},
+    "Keyboard Shortcuts": {},
+    "No Payment Now Credit": {},
     "Paid Amount": {"ar": "المبلغ المدفوع", "en": "Paid Amount"},
     "Reference Number": {"ar": "رقم المرجع", "en": "Reference Number"},
     "Grid View": {"ar": "عرض الشبكة", "en": "Grid View"},
-    "Back To Classic": {
-    },
-    "Press Product To Add": {
-    },
+    "Back To Classic": {},
+    "Press Product To Add": {},
     "All Categories": {"ar": "الكل", "en": "All"},
     "POS Disabled": {"ar": "POS غير مفعل", "en": "POS Disabled"},
-    "POS Disabled System": {
-    },
-    "POS Disabled Company": {
-    },
+    "POS Disabled System": {},
+    "POS Disabled Company": {},
     "Or": {"ar": "أو", "en": "Or"},
     "Open": {"ar": "فتح", "en": "Open"},
     "Cashier Session": {"ar": "جلسة كاشير", "en": "Cashier Session"},
@@ -2250,19 +2231,15 @@ TRANSLATIONS = {
     "Only": {"ar": "فقط", "en": "Only"},
     "Owner_Dashboard": {"ar": "لوحة المالك", "en": "Owner_Dashboard"},
     "Record_Count": {"ar": "عدد السجلات", "en": "Record_Count"},
-    "Secure_Card_Storage": {
-    },
-    "Shows_In_Invoices_Login": {
-    },
+    "Secure_Card_Storage": {},
+    "Shows_In_Invoices_Login": {},
     "System_Error_Log": {"ar": "سجل أخطاء النظام", "en": "System_Error_Log"},
     "System_Owner": {"ar": "مالك النظام", "en": "System_Owner"},
     "System_Settings_2": {"ar": "إعدادات النظام", "en": "System_Settings_2"},
     "Tax_Settings": {"ar": "إعدادات الضرائب", "en": "Tax_Settings"},
-    "Tenant_Info_Description": {
-    },
+    "Tenant_Info_Description": {},
     "Usage_Count": {"ar": "عدد الاستخدام", "en": "Usage_Count"},
-    "Users_Permissions_Branches": {
-    },
+    "Users_Permissions_Branches": {},
     "View_All": {"ar": "عرض الكل", "en": "View_All"},
     "Table": {"ar": "الجدول", "en": "Table"},
     "City": {"ar": "المدينة", "en": "City"},
@@ -2277,8 +2254,7 @@ TRANSLATIONS = {
     "Reconcile Shift": {"ar": "تسوية الوردية", "en": "Reconcile Shift"},
     "Close Shift": {"ar": "إغلاق الوردية", "en": "Close Shift"},
     "Starting Cash": {"ar": "رصيد الافتتاح (نقدي)", "en": "Starting Cash"},
-    "Actual Cash Counted": {
-    },
+    "Actual Cash Counted": {},
     "System Expected": {"ar": "الرصيد المتوقع", "en": "System Expected"},
     "Cash Discrepancy": {"ar": "فرق الدرج", "en": "Cash Discrepancy"},
     "Total Card Sales": {"ar": "إجمالي مبيعات البطاقة", "en": "Total Card Sales"},
@@ -2297,19 +2273,15 @@ TRANSLATIONS = {
     "Connect Scale": {"ar": "توصيل الميزان", "en": "Connect Scale"},
     "Disconnect Scale": {"ar": "فصل الميزان", "en": "Disconnect Scale"},
     "Push To Terminal": {"ar": "إرسال إلى الجهاز", "en": "Push to Terminal"},
-    "Push Card Payment To Terminal": {
-    },
+    "Push Card Payment To Terminal": {},
     "توصيل الميزان": {"ar": "توصيل الميزان", "en": "Connect Scale"},
     "فصل الميزان": {"ar": "فصل الميزان", "en": "Disconnect Scale"},
-    "POS Disabled Tenant": {
-    },
+    "POS Disabled Tenant": {},
     "Manage Tables": {"ar": "إدارة الطاولات", "en": "Manage Tables"},
     "Hold Invoice": {"ar": "تعليق الفاتورة", "en": "Hold Invoice"},
-    "Select Category": {
-    },
+    "Select Category": {},
     "Open Cashier Session": {"ar": "فتح جلسة كاشير", "en": "Open Cashier Session"},
-    "Close Cashier Session": {
-    },
+    "Close Cashier Session": {},
     "Order Types": {"ar": "أنواع الطلبات", "en": "Order Types"},
     "Back to POS": {"ar": "العودة للـ POS", "en": "Back to POS"},
     "Print Receipt": {"ar": "طباعة الإيصال", "en": "Print Receipt"},
@@ -2366,8 +2338,7 @@ TRANSLATIONS = {
     "Back to Reports": {"ar": "العودة للتقارير", "en": "Back to Reports"},
     "Back to Dashboard": {"ar": "العودة للوحة التحكم", "en": "Back to Dashboard"},
     "Type Account": {"ar": "نوع الحساب", "en": "Type Account"},
-    "Cannot Change Account Code": {
-    },
+    "Cannot Change Account Code": {},
     "Protected Account": {"ar": "حساب محمي", "en": "Protected Account"},
     "New Account": {"ar": "حساب جديد", "en": "New Account"},
     "Account Tree View": {"ar": "عرض شجرة الحسابات", "en": "Account Tree View"},
@@ -2401,23 +2372,17 @@ TRANSLATIONS = {
     "Need Restock": {"ar": "تحتاج إعادة تموين", "en": "Need Restock"},
     "Full Movement Log": {"ar": "سجل كامل للحركات", "en": "Full Movement Log"},
     "Entry and Exit": {"ar": "الدخول والخروج", "en": "Entry and Exit"},
-    "Partner Sales Details": {
-    },
+    "Partner Sales Details": {},
     "Partner Share Due": {"ar": "حصة الشريك المستحقة", "en": "Partner Share Due"},
     "No Shared Sales": {"ar": "لا توجد مبيعات مشتركة", "en": "No Shared Sales"},
-    "Merchant Financial Summary": {
-    },
-    "Supplier Accounts Summary": {
-    },
+    "Merchant Financial Summary": {},
+    "Supplier Accounts Summary": {},
     "Total Purchases": {"ar": "إجمالي المشتريات", "en": "Total Purchases"},
     "Paid To Supplier": {"ar": "المدفوع للمورد", "en": "Paid To Supplier"},
     "Supplier Refunds": {"ar": "مرتجعات المورد", "en": "Supplier Refunds"},
-    "Balance Due to Supplier": {
-    },
-    "Thank You For Your Business": {
-    },
-    "Note After Deposit": {
-    },
+    "Balance Due to Supplier": {},
+    "Thank You For Your Business": {},
+    "Note After Deposit": {},
     "Create Backup": {"ar": "إنشاء نسخة احتياطية", "en": "Create Backup"},
     "Instant Backup": {"ar": "نسخة احتياطية فورية", "en": "Instant Backup"},
     "From Database": {"ar": "من قاعدة البيانات", "en": "From Database"},
@@ -2426,76 +2391,52 @@ TRANSLATIONS = {
     "Smart Analytics": {"ar": "تحليلات ذكية", "en": "Smart Analytics"},
     "Smart Reports": {"ar": "تقارير ذكية", "en": "Smart Reports"},
     "Smart Queries": {"ar": "استعلامات ذكية", "en": "Smart Queries"},
-    "Outgoing Cheques Management": {
-    },
-    "Incoming Cheques Management": {
-    },
+    "Outgoing Cheques Management": {},
+    "Incoming Cheques Management": {},
     "Returned Cheque": {"ar": "شيك مرتجع", "en": "Returned Cheque"},
     "Expense Entry": {"ar": "مصروف", "en": "Expense Entry"},
     "Profitability": {"ar": "الربحية", "en": "Profitability"},
     "Monthly Revenue": {"ar": "الإيرادات الشهرية", "en": "Monthly Revenue"},
-    "Revenue and Expenses Chart": {
-    },
+    "Revenue and Expenses Chart": {},
     "Employee Details": {"ar": "تفاصيل الموظف", "en": "Employee Details"},
     "Email Campaigns": {"ar": "حملات البريد الإلكتروني", "en": "Email Campaigns"},
     "Secure Vault": {"ar": "وحدة محمية بكلمة مرور منفصلة", "en": "Secure Vault"},
-    "For All Payment Operations": {
-    },
+    "For All Payment Operations": {},
     "Saved Portfolio": {"ar": "محفظة", "en": "Saved Portfolio"},
     "Search.placeholder": {"ar": "ابحث", "en": "Search"},
     "Alert Accounting": {"ar": "تنبيه محاسبي", "en": "Accounting Alert"},
-    "Accounting Data Confirmation": {
-    },
+    "Accounting Data Confirmation": {},
     "Error occurred": {"ar": "حدث خطأ", "en": "An error occurred"},
     "Try Again Later": {"ar": "حاول مرة أخرى", "en": "Try Again Later"},
-    "Beginner Mode Enabled": {
-    },
+    "Beginner Mode Enabled": {},
     "Will Explain in Detail": {"ar": "سأشرح بالتفصيل", "en": "Will Explain in Detail"},
-    "Failed to Fetch Exchange Price": {
-    },
-    "Enter Value Manually": {
-    },
-    "No Warehouses Registered": {
-    },
-    "Add New Warehouse": {
-    },
-    "Page Not Found": {
-    },
-    "Server Error": {
-    },
-    "Access Denied": {
-    },
-    "Confirm Delete Receipt": {
-    },
-    "Receipt Delete Warning": {
-    },
-    "Confirm Delete Invoice": {
-    },
-    "Invoice Delete Warning": {
-    },
+    "Failed to Fetch Exchange Price": {},
+    "Enter Value Manually": {},
+    "No Warehouses Registered": {},
+    "Add New Warehouse": {},
+    "Page Not Found": {},
+    "Server Error": {},
+    "Access Denied": {},
+    "Confirm Delete Receipt": {},
+    "Receipt Delete Warning": {},
+    "Confirm Delete Invoice": {},
+    "Invoice Delete Warning": {},
     "Delete This Cheque": {"ar": "حذف هذا الشيك", "en": "Delete This Cheque"},
-    "Confirm Delete Cheque": {
-    },
-    "Cheque Delete Warning": {
-    },
-    "Manage and Track Cheques": {
-    },
+    "Confirm Delete Cheque": {},
+    "Cheque Delete Warning": {},
+    "Manage and Track Cheques": {},
     "Outgoing Cheques": {"ar": "الشيكات الصادرة", "en": "Outgoing Cheques"},
     "Incoming Cheques": {"ar": "الشيكات الواردة", "en": "Incoming Cheques"},
     "and Cheques": {"ar": "وشيكات", "en": "and Cheques"},
-    "Cheques from Suppliers": {
-    },
-    "Cheques from Customers": {
-    },
+    "Cheques from Suppliers": {},
+    "Cheques from Customers": {},
     "for Exchange": {"ar": "للصرف", "en": "for Exchange"},
     "Accounting System": {"ar": "نظام محاسبي", "en": "Accounting System"},
     "Integrated System": {"ar": "متكامل", "en": "Integrated System"},
     "For Management": {"ar": "لإدارة", "en": "For Management"},
     "Warehouses Management": {"ar": "إدارة المستودعات", "en": "Warehouses Management"},
-    "Products and Inventory": {
-    },
-    "Suppliers and Partners": {
-    },
+    "Products and Inventory": {},
+    "Suppliers and Partners": {},
     "Sales and Purchases": {"ar": "المبيعات والمشتريات", "en": "Sales and Purchases"},
     "and Sales": {"ar": "والمبيعات", "en": "and Sales"},
     "and Purchases": {"ar": "والمشتريات", "en": "and Purchases"},
@@ -2528,30 +2469,22 @@ TRANSLATIONS = {
     "Amount Credit": {"ar": "المبلغ الدائن", "en": "Amount Credit"},
     "Total Debit": {"ar": "إجمالي المدين", "en": "Total Debit"},
     "Total Credit": {"ar": "إجمالي الدائن", "en": "Total Credit"},
-    "Balance must be zero": {
-    },
-    "Debits and Credits must match": {
-    },
+    "Balance must be zero": {},
+    "Debits and Credits must match": {},
     "Attachments": {"ar": "المرفقات", "en": "Attachments"},
     "Attachment": {"ar": "مرفق", "en": "Attachment"},
     "Upload File": {"ar": "رفع ملف", "en": "Upload File"},
     "Remove Attachment": {"ar": "إزالة المرفق", "en": "Remove Attachment"},
     "No Attachments": {"ar": "لا توجد مرفقات", "en": "No Attachments"},
-    "Account Tree Description": {
-    },
+    "Account Tree Description": {},
     "Back to Accounts": {"ar": "العودة للحسابات", "en": "Back to Accounts"},
     "View Account Statement": {"ar": "عرض كشف الحساب", "en": "View Account Statement"},
     "Cannot Delete": {"ar": "لا يمكن الحذف", "en": "Cannot Delete"},
-    "Linked Entries Warning": {
-    },
-    "Has Sub-accounts Warning": {
-    },
-    "Net Cash from Operating": {
-    },
-    "Net Cash from Investing": {
-    },
-    "Net Cash from Financing": {
-    },
+    "Linked Entries Warning": {},
+    "Has Sub-accounts Warning": {},
+    "Net Cash from Operating": {},
+    "Net Cash from Investing": {},
+    "Net Cash from Financing": {},
     "Net Change in Cash": {"ar": "صافي التغير في النقد", "en": "Net Change in Cash"},
     "Cash at Start": {"ar": "النقد في بداية الفترة", "en": "Cash at Start"},
     "Cash at End": {"ar": "النقد في نهاية الفترة", "en": "Cash at End"},
@@ -2559,8 +2492,7 @@ TRANSLATIONS = {
     "Investing Activities": {"ar": "الأنشطة الاستثمارية", "en": "Investing Activities"},
     "Financing Activities": {"ar": "الأنشطة التمويلية", "en": "Financing Activities"},
     "No Data Available": {"ar": "لا توجد بيانات", "en": "No Data Available"},
-    "No Data for Period": {
-    },
+    "No Data for Period": {},
     "Days Range": {"ar": "نطاق الأيام", "en": "Days Range"},
     "0-30 Days": {"ar": "0-30 يوم", "en": "0-30 Days"},
     "31-60 Days": {"ar": "31-60 يوم", "en": "31-60 Days"},
@@ -2713,8 +2645,7 @@ TRANSLATIONS = {
     "Toast Settings": {"ar": "إعدادات الإشعارات المنبثقة", "en": "Toast Settings"},
     "Loading Settings": {"ar": "إعدادات التحميل", "en": "Loading Settings"},
     "Error Page Settings": {"ar": "إعدادات صفحة الخطأ", "en": "Error Page Settings"},
-    "Success Page Settings": {
-    },
+    "Success Page Settings": {},
     "Not Found Page": {"ar": "صفحة غير موجودة", "en": "Not Found Page"},
     "Error Page": {"ar": "صفحة خطأ", "en": "Error Page"},
     "Access Denied Page": {"ar": "صفحة الوصول مرفوض", "en": "Access Denied Page"},
@@ -2738,8 +2669,7 @@ TRANSLATIONS = {
     "No Users": {"ar": "لا يوجد مستخدمين", "en": "No Users"},
     "No Reports": {"ar": "لا توجد تقارير", "en": "No Reports"},
     "No Settings": {"ar": "لا توجد إعدادات", "en": "No Settings"},
-    "No Actions Available": {
-    },
+    "No Actions Available": {},
     "Add New": {"ar": "إضافة جديد", "en": "Add New"},
     "Edit Existing": {"ar": "تعديل موجود", "en": "Edit Existing"},
     "Delete Selected": {"ar": "حذف المحدد", "en": "Delete Selected"},
@@ -2921,8 +2851,7 @@ TRANSLATIONS = {
     "Attribute Error": {"ar": "خطأ في السمة", "en": "Attribute Error"},
     "Name Error": {"ar": "خطأ في الاسم", "en": "Name Error"},
     "Import Error": {"ar": "خطأ في الاستيراد", "en": "Import Error"},
-    "Unbound Local Error": {
-    },
+    "Unbound Local Error": {},
     "Stop Iteration": {"ar": "توقف التكرار", "en": "Stop Iteration"},
     "Recursion Error": {"ar": "خطأ في العودية", "en": "Recursion Error"},
     "Memory Limit": {"ar": "حد الذاكرة", "en": "Memory Limit"},
@@ -2951,21 +2880,14 @@ TRANSLATIONS = {
     "Surface Area Limit": {"ar": "حد المساحة السطحية", "en": "Surface Area Limit"},
     "Volume Surface Limit": {"ar": "حد حجم السطح", "en": "Volume Surface Limit"},
     "Total Surface Limit": {"ar": "حد المساحة الإجمالية", "en": "Total Surface Limit"},
-    "Lateral Surface Limit": {
-    },
+    "Lateral Surface Limit": {},
     "Cross Section Limit": {"ar": "حد المقطع العرضي", "en": "Cross Section Limit"},
-    "Longitudinal Section Limit": {
-    },
-    "Horizontal Section Limit": {
-    },
-    "Vertical Section Limit": {
-    },
-    "Diagonal Section Limit": {
-    },
-    "Parallel Section Limit": {
-    },
-    "Perpendicular Section Limit": {
-    },
+    "Longitudinal Section Limit": {},
+    "Horizontal Section Limit": {},
+    "Vertical Section Limit": {},
+    "Diagonal Section Limit": {},
+    "Parallel Section Limit": {},
+    "Perpendicular Section Limit": {},
     "Oblique Section Limit": {"ar": "حد المقطع المائل", "en": "Oblique Section Limit"},
     "Tangent Section Limit": {"ar": "حد المقطع المماس", "en": "Tangent Section Limit"},
     "Normal Section Limit": {"ar": "حد المقطع العمودي", "en": "Normal Section Limit"},
@@ -2975,37 +2897,24 @@ TRANSLATIONS = {
     "Segment Section Limit": {"ar": "حد المقطع القطعي", "en": "Segment Section Limit"},
     "Sector Section Limit": {"ar": "حد المقطع المخروطي", "en": "Sector Section Limit"},
     "Annulus Section Limit": {"ar": "حد المقطع الحلقي", "en": "Annulus Section Limit"},
-    "Ellipse Section Limit": {
-    },
-    "Hyperbola Section Limit": {
-    },
-    "Parabola Section Limit": {
-    },
+    "Ellipse Section Limit": {},
+    "Hyperbola Section Limit": {},
+    "Parabola Section Limit": {},
     "Spiral Section Limit": {"ar": "حد المقطع الحلزوني", "en": "Spiral Section Limit"},
     "Helix Section Limit": {"ar": "حد المقطع الحلزوني", "en": "Helix Section Limit"},
-    "Catenary Section Limit": {
-    },
-    "Trochoid Section Limit": {
-    },
+    "Catenary Section Limit": {},
+    "Trochoid Section Limit": {},
     "Cycloid Section Limit": {"ar": "حد المقطع الدوري", "en": "Cycloid Section Limit"},
-    "Epicycloid Section Limit": {
-    },
-    "Hypocycloid Section Limit": {
-    },
-    "Cardioid Section Limit": {
-    },
-    "Limacon Section Limit": {
-    },
+    "Epicycloid Section Limit": {},
+    "Hypocycloid Section Limit": {},
+    "Cardioid Section Limit": {},
+    "Limacon Section Limit": {},
     "Rose Section Limit": {"ar": "حد المقطع الوردي", "en": "Rose Section Limit"},
-    "Lemniscate Section Limit": {
-    },
+    "Lemniscate Section Limit": {},
     "Cissoid Section Limit": {"ar": "حد المقطع السيروي", "en": "Cissoid Section Limit"},
-    "Conchoid Section Limit": {
-    },
-    "Strophoid Section Limit": {
-    },
-    "Trisectrix Section Limit": {
-    },
+    "Conchoid Section Limit": {},
+    "Strophoid Section Limit": {},
+    "Trisectrix Section Limit": {},
     "Agnesi Section Limit": {"ar": "حد المقطع الأغنيسي", "en": "Agnesi Section Limit"},
     "Witch Section Limit": {"ar": "حد المقطع السحري", "en": "Witch Section Limit"},
     "Folium Section Limit": {"ar": "حد المقطع الورقي", "en": "Folium Section Limit"},
@@ -3023,26 +2932,17 @@ TRANSLATIONS = {
     "To Date": {"ar": "إلى تاريخ", "en": "To Date"},
     "From": {"ar": "من", "en": "From"},
     "To": {"ar": "إلى", "en": "To"},
-    "Income statement shows financial performance during a specific period": {
-    },
-    "Revenue appears as positive values (credit)": {
-    },
-    "Expenses appear as negative values (debit)": {
-    },
-    "Net Income = Revenue - Expenses": {
-    },
-    "Positive net income means profit, negative means loss": {
-    },
+    "Income statement shows financial performance during a specific period": {},
+    "Revenue appears as positive values (credit)": {},
+    "Expenses appear as negative values (debit)": {},
+    "Net Income = Revenue - Expenses": {},
+    "Positive net income means profit, negative means loss": {},
     "Performance Ratios": {"ar": "نسب الأداء", "en": "Performance Ratios"},
-    "Expense Ratio to Revenue": {
-    },
-    "Revenue to Expenses Ratio": {
-    },
-    "Journals Management": {
-    },
+    "Expense Ratio to Revenue": {},
+    "Revenue to Expenses Ratio": {},
+    "Journals Management": {},
     "New Manual Entry": {"ar": "قيد يدوي جديد", "en": "New Manual Entry"},
-    "All Accounting Journals": {
-    },
+    "All Accounting Journals": {},
     "Type": {"ar": "النوع", "en": "Type"},
     "View Entry": {"ar": "عرض القيد", "en": "View Entry"},
     "Reverse Entry": {"ar": "عكس القيد", "en": "Reverse Entry"},
@@ -3055,12 +2955,9 @@ TRANSLATIONS = {
     "Reversed Entries": {"ar": "قيود معكوسة", "en": "Reversed Entries"},
     "Previous": {"ar": "السابق", "en": "Previous"},
     "Next": {"ar": "التالي", "en": "Next"},
-    "Are you sure you want to reverse this entry? This action cannot be undone.": {
-    },
-    "Failed to reverse entry:": {
-    },
-    "Error occurred while reversing entry": {
-    },
+    "Are you sure you want to reverse this entry? This action cannot be undone.": {},
+    "Failed to reverse entry:": {},
+    "Error occurred while reversing entry": {},
     "Hello": {"ar": "مرحباً", "en": "Hello"},
     "I want": {"ar": "أريد", "en": "I want"},
     "Source Code": {"ar": "المصدري", "en": "Source Code"},
@@ -3083,38 +2980,25 @@ TRANSLATIONS = {
     "current package": {"ar": "الباقة الحالية", "en": "current package"},
     "not yet specified": {"ar": "غير محددة بعد", "en": "not yet specified"},
     "reference number": {"ar": "رقم المرجع", "en": "reference number"},
-    "Purchase System Request": {
-    },
-    "Purchase Code or Customization Request": {
-    },
-    "Donation or Sponsorship Inquiry": {
-    },
-    "Help Completing Payment": {
-    },
-    "Refund or Payment Status Inquiry": {
-    },
+    "Purchase System Request": {},
+    "Purchase Code or Customization Request": {},
+    "Donation or Sponsorship Inquiry": {},
+    "Help Completing Payment": {},
+    "Refund or Payment Status Inquiry": {},
     "Contact Information": {"ar": "بيانات التواصل", "en": "Contact Information"},
     "WhatsApp": {"ar": "واتساب", "en": "WhatsApp"},
     "Current Status": {"ar": "الحالة الحالية", "en": "Current Status"},
-    "On success you will receive clear details or direct payment address": {
-    },
-    "On manual review you can follow up immediately with Azad": {
-    },
-    "For any refund or reconciliation use WhatsApp or official email": {
-    },
-    "Official contact with Azad": {
-    },
+    "On success you will receive clear details or direct payment address": {},
+    "On manual review you can follow up immediately with Azad": {},
+    "For any refund or reconciliation use WhatsApp or official email": {},
+    "Official contact with Azad": {},
     "Open Azad WhatsApp": {"ar": "فتح واتساب أزاد", "en": "Open Azad WhatsApp"},
     "Send Email": {"ar": "إرسال بريد", "en": "Send Email"},
-    "Minimum donation amount is": {
-    },
+    "Minimum donation amount is": {},
     "Minimum donation": {"ar": "الحد الأدنى للتبرع", "en": "Minimum donation"},
-    "Creating payment address...": {
-    },
-    "Please select a package first": {
-    },
-    "Selected plan not recognized": {
-    },
+    "Creating payment address...": {},
+    "Please select a package first": {},
+    "Selected plan not recognized": {},
     "Plan Purchase Details": {"ar": "بيانات شراء الخطة", "en": "Plan Purchase Details"},
     "Donation Details": {"ar": "بيانات التبرع", "en": "Donation Details"},
     "Created": {"ar": "تم إنشاء", "en": "Created"},
@@ -3124,95 +3008,59 @@ TRANSLATIONS = {
     "Payment Address": {"ar": "عنوان الدفع", "en": "Payment Address"},
     "Copy Address": {"ar": "نسخ العنوان", "en": "Copy Address"},
     "Open Payment Page": {"ar": "فتح صفحة الدفع", "en": "Open Payment Page"},
-    "Send the amount to the address above and the status will be confirmed automatically": {
-    },
-    "Waiting for your transfer to payment address": {
-    },
+    "Send the amount to the address above and the status will be confirmed automatically": {},
+    "Waiting for your transfer to payment address": {},
     "Done, I will pay now": {"ar": "تم، سأدفع الآن", "en": "Done, I will pay now"},
     "Azad WhatsApp": {"ar": "واتساب أزاد", "en": "Azad WhatsApp"},
     "Email us": {"ar": "راسلنا بريد", "en": "Email us"},
-    "Order saved successfully": {
-    },
-    "Order registered pending follow-up or confirmation": {
-    },
-    "Could not create order": {
-    },
-    "Error occurred while creating the order": {
-    },
-    "You can retry or complete the process directly with Azad Company": {
-    },
-    "Could not connect to server": {
-    },
+    "Order saved successfully": {},
+    "Order registered pending follow-up or confirmation": {},
+    "Could not create order": {},
+    "Error occurred while creating the order": {},
+    "You can retry or complete the process directly with Azad Company": {},
+    "Could not connect to server": {},
     "We could not create": {"ar": "لم نتمكن من إنشاء", "en": "We could not create"},
     "Purchase order": {"ar": "طلب شراء", "en": "Purchase order"},
     "Donation order": {"ar": "طلب تبرع", "en": "Donation order"},
     "now": {"ar": "الآن", "en": "now"},
-    "You can follow up directly with Azad via WhatsApp or email for the same amount": {
-    },
+    "You can follow up directly with Azad via WhatsApp or email for the same amount": {},
     "Copied!": {"ar": "تم النسخ!", "en": "Copied!"},
-    "Address copied to clipboard": {
-    },
+    "Address copied to clipboard": {},
     "Email address": {"ar": "بريد إلكتروني", "en": "Email address"},
     "Mobile Number": {"ar": "رقم الجوال", "en": "Mobile Number"},
     "Company Name": {"ar": "اسم الشركة", "en": "Company Name"},
     "Payment via PayPal": {"ar": "الدفع عبر PayPal", "en": "Payment via PayPal"},
-    "Transfer is automatically sent to Bitcoin": {
-    },
+    "Transfer is automatically sent to Bitcoin": {},
     "Copy": {"ar": "نسخ", "en": "Copy"},
-    "Your order has been saved successfully": {
-    },
-    "Pending payment completion or contact": {
-    },
+    "Your order has been saved successfully": {},
+    "Pending payment completion or contact": {},
     "Follow up Payment": {"ar": "متابعة الدفع", "en": "Follow up Payment"},
     "Order saved": {"ar": "تم حفظ الطلب", "en": "Order saved"},
-    "Pending coordination with Azad team": {
-    },
-    "You can now choose WhatsApp or email to complete payment or inquire": {
-    },
-    "Could not complete PayPal order": {
-    },
-    "Could not save PayPal order currently": {
-    },
-    "You can follow up directly with Azad via WhatsApp or email": {
-    },
-    "Connection failed during PayPal": {
-    },
-    "Could not connect to server while preparing the order": {
-    },
-    "Use WhatsApp or email to complete the purchase or donation with the same details": {
-    },
-    "Please select a package": {
-    },
-    "Could not prepare card order": {
-    },
-    "Could not save card order currently": {
-    },
-    "You can complete the process directly with Azad via WhatsApp or email": {
-    },
-    "Connection failed during payment": {
-    },
-    "Could not reach server while processing the order": {
-    },
-    "Don't worry, you can follow up directly with Azad Company": {
-    },
-    "Payment address created!": {
-    },
+    "Pending coordination with Azad team": {},
+    "You can now choose WhatsApp or email to complete payment or inquire": {},
+    "Could not complete PayPal order": {},
+    "Could not save PayPal order currently": {},
+    "You can follow up directly with Azad via WhatsApp or email": {},
+    "Connection failed during PayPal": {},
+    "Could not connect to server while preparing the order": {},
+    "Use WhatsApp or email to complete the purchase or donation with the same details": {},
+    "Please select a package": {},
+    "Could not prepare card order": {},
+    "Could not save card order currently": {},
+    "You can complete the process directly with Azad via WhatsApp or email": {},
+    "Connection failed during payment": {},
+    "Could not reach server while processing the order": {},
+    "Don't worry, you can follow up directly with Azad Company": {},
+    "Payment address created!": {},
     "Saved Address": {"ar": "العنوان المحفوظ", "en": "Saved Address"},
-    "Order registered pending confirmation or manual follow-up": {
-    },
-    "You can follow up directly with Azad Company via WhatsApp or email": {
-    },
+    "Order registered pending confirmation or manual follow-up": {},
+    "You can follow up directly with Azad Company via WhatsApp or email": {},
     "Continue": {"ar": "متابعة", "en": "Continue"},
-    "Name and email required to purchase plan": {
-    },
-    "Short message (optional)": {
-    },
-    "Company name or additional note (optional)": {
-    },
-    "Send the specified amount to the address above": {
-    },
-    "Pending payment completion or follow-up with Azad": {
-    },
+    "Name and email required to purchase plan": {},
+    "Short message (optional)": {},
+    "Company name or additional note (optional)": {},
+    "Send the specified amount to the address above": {},
+    "Pending payment completion or follow-up with Azad": {},
     "Procurement": {"ar": "المشتриات", "en": "Procurement"},
     "Skip to main content": {"ar": "تخطي إلى المحتوى الرئيسي", "en": "Skip to main content"},
     # ── Sidebar / Navbar / Partials consolidated labels ──
@@ -3232,12 +3080,9 @@ TRANSLATIONS = {
     "Document_Number": {"ar": "رقم المستند", "en": "Document Number"},
     "Default_Watermark": {"ar": "أنظمة أزاد الذكية", "en": "Azad Intelligent Systems"},
     "App_Name": {"ar": "نظام أزادكسا ERP", "en": "Azadexa ERP"},
-    "App_Description": {
-    },
-    "Default_Meta_Description": {
-    },
-    "Default_Meta_Keywords": {
-    },
+    "App_Description": {},
+    "Default_Meta_Description": {},
+    "Default_Meta_Keywords": {},
     "Default_Author": {"ar": "شركة أزاد للأنظمة الذكية", "en": "AZAD Intelligent Systems"},
     "Default_Copyright": {"ar": "شركة أزاد للأنظمة الذكية", "en": "AZAD Intelligent Systems"},
     "Default_Region": {"ar": "الإمارات", "en": "UAE"},
@@ -3337,97 +3182,72 @@ TRANSLATIONS = {
     "Sale_Price": {"ar": "سعر البيع", "en": "Sale Price"},
     # ── Upgrade banner ──
     "Plan_Upgrade": {"ar": "ترقية الباقة", "en": "Plan Upgrade"},
-    "Plan_Limit_Warning": {
-    },
+    "Plan_Limit_Warning": {},
     "Contact_Developer_For_Upgrade": {"ar": "تواصل مع المطور للترقية", "en": "Contact Developer to Upgrade"},
     # ── Print banner ──
     # ── SEO FAQ ──
     "FAQ_Q1": {"ar": "ما هو نظام أزادكسا ERP؟", "en": "What is Azadexa ERP?"},
-    "FAQ_A1": {
-    },
+    "FAQ_A1": {},
     "FAQ_Q2": {"ar": "هل النظام مناسب للتجارة والتجزئة؟", "en": "Is it suitable for retail and wholesale businesses?"},
-    "FAQ_A2": {
-    },
+    "FAQ_A2": {},
     "FAQ_Q3": {"ar": "كم تكلفة نظام أزادكسا ERP؟", "en": "How much does Azadexa cost?"},
-    "FAQ_A3": {
-    },
-    "FAQ_Q4": {
-    },
-    "FAQ_A4": {
-    },
+    "FAQ_A3": {},
+    "FAQ_Q4": {},
+    "FAQ_A4": {},
     "FAQ_Q5": {"ar": "ما هي مميزات الذكاء الاصطناعي في النظام؟", "en": "What AI features are included?"},
-    "FAQ_A5": {
-    },
+    "FAQ_A5": {},
     "FAQ_Q6": {"ar": "هل يمكن إدارة فروع ومستودعات متعددة؟", "en": "Can I manage multiple branches and warehouses?"},
-    "FAQ_A6": {
-    },
+    "FAQ_A6": {},
     "FAQ_Q7": {"ar": "كيف أبدأ باستخدام أزادكسا؟", "en": "How do I get started?"},
-    "FAQ_A7": {
-    },
+    "FAQ_A7": {},
     "FAQ_Q8": {"ar": "هل النظام آمن ويحمي بياناتي؟", "en": "Is my data secure?"},
-    "FAQ_A8": {
-    },
+    "FAQ_A8": {},
     # ── Support page: Hero ──
     "Support_Page_Title": {"ar": "ادعم المشروع - أزاد للأنظمة", "en": "Support the Project - Azad Systems"},
     "Default_Brand": {"ar": "أزاد للأنظمة", "en": "Azad Systems"},
-    "Hero_Kicker": {
-    },
+    "Hero_Kicker": {},
     "Hero_Title": {"ar": "نظام إدارة المتجر المتكامل", "en": "Comprehensive Store Management System"},
-    "Hero_Subtitle": {
-    },
+    "Hero_Subtitle": {},
     "Why_Choose_System": {"ar": "لماذا تختار النظام", "en": "Why Choose Our System"},
     "Feature_Product_Management": {"ar": "إدارة شاملة للمنتجات", "en": "Comprehensive product management"},
     "Feature_Customer_System": {"ar": "نظام عملاء متقدم", "en": "Advanced customer system"},
     "Feature_Detailed_Reports": {"ar": "تقارير مفصلة", "en": "Detailed reports"},
     "Feature_Arabic_Interface": {"ar": "واجهة عربية احترافية", "en": "Professional Arabic interface"},
-    "Hero_CTA_Title": {
-    },
-    "Hero_CTA_Description": {
-    },
+    "Hero_CTA_Title": {},
+    "Hero_CTA_Description": {},
     "Hero_Card_Buy_System": {"ar": "شراء النظام", "en": "Purchase System"},
-    "Hero_Card_Buy_System_Desc": {
-    },
+    "Hero_Card_Buy_System_Desc": {},
     "Hero_Card_Buy_Code": {"ar": "شراء الكود أو التخصيص", "en": "Purchase Code or Customization"},
-    "Hero_Card_Buy_Code_Desc": {
-    },
+    "Hero_Card_Buy_Code_Desc": {},
     "Hero_Card_Donate": {"ar": "تبرع أو رعاية التطوير", "en": "Donation or Sponsorship"},
-    "Hero_Card_Donate_Desc": {
-    },
+    "Hero_Card_Donate_Desc": {},
     "Hero_Btn_WhatsApp": {"ar": "واتساب", "en": "WhatsApp"},
     "Hero_Btn_Email": {"ar": "بريد", "en": "Email"},
     "Hero_Btn_WhatsApp_Code": {"ar": "واتساب الكود", "en": "WhatsApp Code"},
     "Hero_Btn_Contact_Us": {"ar": "راسلنا", "en": "Contact Us"},
     "Hero_Btn_Donation_WhatsApp": {"ar": "واتساب التبرع", "en": "Donation WhatsApp"},
     "Hero_Btn_Donation_Email": {"ar": "بريد التبرع", "en": "Donation Email"},
-    "Hero_Tab_Label": {
-    },
+    "Hero_Tab_Label": {},
     "Tab_Purchase_System": {"ar": "شراء النظام", "en": "Purchase System"},
     "Tab_Purchase_Subtitle": {"ar": "احصل على النظام كاملاً", "en": "Get the complete system"},
     "Tab_Support_Project": {"ar": "دعم المشروع", "en": "Support the Project"},
     "Tab_Support_Subtitle": {"ar": "ساهم في التطوير", "en": "Contribute to development"},
     # ── Support page: Donation ──
     "Donation_Title": {"ar": "ساهم في تطوير المشروع", "en": "Contribute to Project Development"},
-    "Donation_Description": {
-    },
+    "Donation_Description": {},
     "Benefit_New_Features": {"ar": "تطوير ميزات جديدة", "en": "Develop new features"},
     "Benefit_Bug_Fixes": {"ar": "إصلاح الأخطاء", "en": "Fix bugs"},
     "Benefit_Support_Improvement": {"ar": "تحسين الدعم الفني", "en": "Improve technical support"},
-    "Donation_Status_Title": {
-    },
-    "Donation_Status_Text": {
-    },
+    "Donation_Status_Title": {},
+    "Donation_Status_Text": {},
     "Status_Success_Title": {"ar": "نجاح", "en": "Success"},
-    "Status_Success_Description": {
-    },
+    "Status_Success_Description": {},
     "Status_Review_Title": {"ar": "قيد المراجعة", "en": "Under Review"},
-    "Status_Review_Description": {
-    },
+    "Status_Review_Description": {},
     "Status_Failed_Title": {"ar": "فشل", "en": "Failed"},
-    "Status_Failed_Description": {
-    },
+    "Status_Failed_Description": {},
     "Status_Refund_Title": {"ar": "استرداد أو تسوية", "en": "Refund or Reconciliation"},
-    "Status_Refund_Description": {
-    },
+    "Status_Refund_Description": {},
     "Payment_Crypto": {"ar": "العملات الرقمية", "en": "Cryptocurrencies"},
     "Payment_Card": {"ar": "البطاقات المصرفية", "en": "Bank Cards"},
     "Payment_Bank_Transfer": {"ar": "تحويل بنكي", "en": "Bank Transfer"},
@@ -3437,10 +3257,8 @@ TRANSLATIONS = {
     "Desc_Bank": {"ar": "تحويل مباشر للمبالغ الكبيرة", "en": "Direct transfer for large amounts"},
     # ── Support page: Forms ──
     "Crypto_Payment_Header": {"ar": "الدفع بالعملات الرقمية", "en": "Payment with Cryptocurrencies"},
-    "Crypto_Payment_Subheader": {
-    },
-    "Crypto_Security_Alert": {
-    },
+    "Crypto_Payment_Subheader": {},
+    "Crypto_Security_Alert": {},
     "Amount_Label": {"ar": "اختر المبلغ (بالدولار)", "en": "Choose Amount (USD)"},
     "Amount_Thank_You": {"ar": "شكراً", "en": "Thank you"},
     "Amount_Awesome": {"ar": "رائع", "en": "Awesome"},
@@ -3448,8 +3266,7 @@ TRANSLATIONS = {
     "Amount_Amazing": {"ar": "رهيب", "en": "Amazing"},
     "Amount_Generous": {"ar": "سخي", "en": "Generous"},
     "Amount_VIP": {"ar": "VIP", "en": "VIP"},
-    "Custom_Amount_Placeholder": {
-    },
+    "Custom_Amount_Placeholder": {},
     "Crypto_Type_Label": {"ar": "اختر العملة الرقمية", "en": "Choose Cryptocurrency"},
     "Crypto_BTC_Desc": {"ar": "الأكثر أماناً وشهرة", "en": "Most secure and popular"},
     "Crypto_ETH_Desc": {"ar": "سريع وموثوق", "en": "Fast and reliable"},
@@ -3458,71 +3275,53 @@ TRANSLATIONS = {
     "Crypto_BNB_Desc": {"ar": "رسوم منخفضة", "en": "Low fees"},
     "Generate_Payment_Address": {"ar": "إنشاء عنوان الدفع الآن", "en": "Create Payment Address Now"},
     "Crypto_Payment_Info": {"ar": "معلومات الدفع", "en": "Payment Information"},
-    "Crypto_Info_Privacy": {
-    },
+    "Crypto_Info_Privacy": {},
     "Crypto_Info_Instant": {"ar": "فوري: تأكيد خلال 10-30 دقيقة", "en": "Instant: confirmation within 10-30 minutes"},
-    "Crypto_Info_Secure": {
-    },
+    "Crypto_Info_Secure": {},
     "Copy_Button": {"ar": "نسخ", "en": "Copy"},
-    "Crypto_Send_Instruction": {
-    },
+    "Crypto_Send_Instruction": {},
     "SSL_Encrypted": {"ar": "تشفير SSL", "en": "SSL Encrypted"},
     "Anonymous": {"ar": "مجهول", "en": "Anonymous"},
     "Instant": {"ar": "فوري", "en": "Instant"},
     "Card_Payment_Header": {"ar": "الدفع بالبطاقات المصرفية", "en": "Payment with Bank Cards"},
-    "Card_Payment_Subheader": {
-    },
-    "Card_Security_Alert": {
-    },
-    "Card_Payment_Body": {
-    },
+    "Card_Payment_Subheader": {},
+    "Card_Security_Alert": {},
+    "Card_Payment_Body": {},
     "Card_Contact_WhatsApp": {"ar": "تواصل عبر WhatsApp", "en": "Contact via WhatsApp"},
     "Card_Contact_Email": {"ar": "راسلنا بالبريد", "en": "Email us"},
     "PayPal_Payment_Header": {"ar": "الدفع عبر PayPal", "en": "Payment via PayPal"},
-    "PayPal_Payment_Subheader": {
-    },
-    "PayPal_Security_Alert": {
-    },
+    "PayPal_Payment_Subheader": {},
+    "PayPal_Security_Alert": {},
     "PayPal_Continue": {"ar": "متابعة مع PayPal", "en": "Continue with PayPal"},
-    "PayPal_Redirect": {
-    },
+    "PayPal_Redirect": {},
     "Bank_Payment_Header": {"ar": "تحويل بنكي مباشر", "en": "Direct Bank Transfer"},
-    "Bank_Payment_Subheader": {
-    },
-    "Bank_Payment_Alert": {
-    },
+    "Bank_Payment_Subheader": {},
+    "Bank_Payment_Alert": {},
     "Bank_Request_Details": {"ar": "طلب تفاصيل الحساب عبر البريد", "en": "Request account details via email"},
     "Bank_Or_Contact": {"ar": "أو تواصل معنا مباشرة", "en": "Or contact us directly"},
     "Bank_Buy_Code_WhatsApp": {"ar": "شراء الكود عبر واتساب", "en": "Purchase Code via WhatsApp"},
     "Bank_Buy_Code_Email": {"ar": "شراء الكود عبر البريد", "en": "Purchase Code via Email"},
-    "Bank_Large_Amount_Note": {
-    },
+    "Bank_Large_Amount_Note": {},
     # ── Support page: Purchase ──
     "Step_Select_Plan": {"ar": "اختر الباقة", "en": "Select Plan"},
     "Step_Payment_Method": {"ar": "طريقة الدفع", "en": "Payment Method"},
     "Step_Complete_Payment": {"ar": "إتمام الدفع", "en": "Complete Payment"},
     "Purchase_Select_Plan": {"ar": "اختر الباقة المناسبة لك", "en": "Choose the plan that suits you"},
-    "No_Packages_Available": {
-    },
-    "Purchase_Direct_Contact": {
-    },
-    "Purchase_Direct_Description": {
-    },
+    "No_Packages_Available": {},
+    "Purchase_Direct_Contact": {},
+    "Purchase_Direct_Description": {},
     "Purchase_Buy_System_WhatsApp": {"ar": "شراء النظام عبر واتساب", "en": "Purchase System via WhatsApp"},
     "Purchase_Buy_Code_WhatsApp": {"ar": "شراء الكود عبر واتساب", "en": "Purchase Source Code via WhatsApp"},
     "Purchase_Buy_System_Email": {"ar": "شراء النظام عبر البريد", "en": "Purchase System via Email"},
     "Purchase_Buy_Code_Email": {"ar": "شراء الكود عبر البريد", "en": "Purchase Source Code via Email"},
     "Purchase_Payment_Header": {"ar": "اختر طريقة الدفع المناسبة", "en": "Choose the appropriate payment method"},
-    "Purchase_Payment_Subheader": {
-    },
+    "Purchase_Payment_Subheader": {},
     # ── Support page: Footer ──
     "Footer_Security_Guaranteed": {"ar": "أمان مضمون", "en": "Guaranteed Security"},
     "Footer_Support_24_7": {"ar": "دعم فني 24/7", "en": "Technical Support 24/7"},
     "Footer_Continuous_Updates": {"ar": "تحديثات مستمرة", "en": "Continuous Updates"},
-    "Footer_Security_Desc": {
-    },
-    "Footer_Support_Desc": {
-    },
+    "Footer_Security_Desc": {},
+    "Footer_Support_Desc": {},
     "Footer_Updates_Desc": {"ar": "نضيف ميزات جديدة باستمرار", "en": "We constantly add new features"},
     "Footer_Made_With_Love": {"ar": "صُنع بحب من فريق", "en": "Made with love by"},
     "Footer_Copyright": {"ar": "جميع الحقوق محفوظة.", "en": "All rights reserved."},
@@ -3536,19 +3335,14 @@ TRANSLATIONS = {
     "Tax_Register_Number": {"ar": "رقم التسجيل الضريبي", "en": "Tax Register Number"},
     "Commercial_Register_Short": {"ar": "س.ت:", "en": "CR:"},
     "Tax_Register_Short": {"ar": "ض.ر:", "en": "TRN:"},
-    "Default_Payment_Terms": {
-    },
-    "Default_Invoice_Terms": {
-    },
+    "Default_Payment_Terms": {},
+    "Default_Invoice_Terms": {},
     "Default_Invoice_Footer": {"ar": "شكراً لثقتكم", "en": "Thank you for your trust"},
     "Default_Address": {"ar": "العنوان", "en": "Address"},
     # Cash flow statement
-    "Cash_Flow_Operating": {
-    },
-    "Cash_Flow_Investing": {
-    },
-    "Cash_Flow_Financing": {
-    },
+    "Cash_Flow_Operating": {},
+    "Cash_Flow_Investing": {},
+    "Cash_Flow_Financing": {},
     "Net_Cash_Operating": {"ar": "صافي النقد من الأنشطة التشغيلية:", "en": "Net Cash from Operating Activities:"},
     "Net_Cash_Investing": {"ar": "صافي النقد من الأنشطة الاستثمارية:", "en": "Net Cash from Investing Activities:"},
     "Net_Cash_Financing": {"ar": "صافي النقد من الأنشطة التمويلية:", "en": "Net Cash from Financing Activities:"},
@@ -3558,27 +3352,21 @@ TRANSLATIONS = {
     "Chart_Analysis": {"ar": "التحليل البياني", "en": "Chart Analysis"},
     "Cash_Flow_Chart_Label": {"ar": "التدفق النقدي", "en": "Cash Flow"},
     # Manual entry
-    "Entry_Unbalanced": {
-    },
+    "Entry_Unbalanced": {},
     "Entry_Balanced": {"ar": "القيد متوازن", "en": "Entry is balanced"},
     "Entry_Balanced_Save": {"ar": "القيد متوازن - يمكنك الحفظ الآن", "en": "Entry is balanced - you can save now"},
-    "Confirm_Reset": {
-    },
+    "Confirm_Reset": {},
     "Debit": {"ar": "مدين", "en": "Debit"},
     "Add_Line": {"ar": "إضافة سطر", "en": "Add Line"},
     "Reset_Form": {"ar": "إعادة تعيين", "en": "Reset Form"},
     "Delete_Line": {"ar": "حذف السطر", "en": "Delete Line"},
     # Professional printing
-    "Report_Prepared_According": {
-    },
+    "Report_Prepared_According": {},
     "All_Amounts_In": {"ar": "جميع المبالغ بالعملة:", "en": "All amounts in:"},
-    "Certified_Report": {
-    },
+    "Certified_Report": {},
     "Data_Certificate": {"ar": "شهادة صحة البيانات", "en": "Data Validity Certificate"},
-    "Data_Confirmed": {
-    },
-    "Generated_By": {
-    },
+    "Data_Confirmed": {},
+    "Generated_By": {},
     "jsPDF_Not_Available": {"ar": "مكتبة jsPDF غير متوفرة", "en": "jsPDF library not available"},
     "Balance_Check": {"ar": "فحص التوازن", "en": "Balance Check"},
     "Debit_Must_Equal_Credit": {"ar": "المدين يجب أن يساوي الدائن", "en": "Debit must equal Credit"},
@@ -3588,8 +3376,7 @@ TRANSLATIONS = {
     "Entry_Balanced_Msg": {"ar": "القيد متوازن ✅", "en": "Entry is balanced ✅"},
     "Entry_Unbalanced_Msg": {"ar": "القيد غير متوازن ❌", "en": "Entry is not balanced ❌"},
     # View entry
-    "Reverse_Confirm": {
-    },
+    "Reverse_Confirm": {},
     "Reverse_Reason": {"ar": "سبب العكس", "en": "Reversal reason"},
     # Account ledger
     "Account_Ledger_Title": {"ar": "دفتر الحساب", "en": "Account Ledger"},
@@ -3645,7 +3432,10 @@ TRANSLATIONS = {
     "Used_Disk_Space": {"ar": "المساحة المستخدمة من القرص", "en": "Used Disk Space"},
     "No_Data_Available": {"ar": "لا توجد بيانات", "en": "No data available"},
     "Backup_Management": {"ar": "إدارة النسخ الاحتياطية", "en": "Backup Management"},
-    "Backup_Management_Data_Protection": {"ar": "حماية البيانات - إدارة النسخ الاحتياطية", "en": "Backup Management - Data Protection"},
+    "Backup_Management_Data_Protection": {
+        "ar": "حماية البيانات - إدارة النسخ الاحتياطية",
+        "en": "Backup Management - Data Protection",
+    },
     "Backup_Status": {"ar": "حالة النسخ الاحتياطي", "en": "Backup Status"},
     "Storage_Path_Colon": {"ar": "مسار التخزين:", "en": "Storage Path:"},
     "Schedule_Colon": {"ar": "الجدول الزمني:", "en": "Schedule:"},
@@ -3669,7 +3459,10 @@ TRANSLATIONS = {
     "Backup_Actions": {"ar": "إجراءات النسخ الاحتياطي", "en": "Backup Actions"},
     "Full_System_Backup": {"ar": "نسخة احتياطية كاملة للنظام", "en": "Full System Backup"},
     "Description_Optional": {"ar": "وصف (اختياري)", "en": "Description (Optional)"},
-    "Desc_System_Backup": {"ar": "إنشاء نسخة احتياطية كاملة لجميع قواعد البيانات والملفات", "en": "Creates a full backup of all databases and upload files"},
+    "Desc_System_Backup": {
+        "ar": "إنشاء نسخة احتياطية كاملة لجميع قواعد البيانات والملفات",
+        "en": "Creates a full backup of all databases and upload files",
+    },
     "Scoped_Backup": {"ar": "نسخة احتياطية محددة النطاق", "en": "Scoped Backup"},
     "Select_Branch": {"ar": "اختيار الفرع", "en": "Select Branch"},
     "Select_Store": {"ar": "اختيار المتجر", "en": "Select Store"},
@@ -3683,10 +3476,16 @@ TRANSLATIONS = {
     "Verify_Success": {"ar": "تم التحقق بنجاح", "en": "Verify Success"},
     "Verify_Failed": {"ar": "فشل التحقق", "en": "Verify Failed"},
     "Verify_Running": {"ar": "جاري التحقق", "en": "Verify Running"},
-    "Verify_Backup_Checking": {"ar": "يتم الآن التحقق من سلامة النسخة الاحتياطية...", "en": "Checking backup integrity..."},
+    "Verify_Backup_Checking": {
+        "ar": "يتم الآن التحقق من سلامة النسخة الاحتياطية...",
+        "en": "Checking backup integrity...",
+    },
     "Verify_Success_Message": {"ar": "النسخة الاحتياطية سليمة", "en": "Backup is intact"},
     "Verify_Failed_Message": {"ar": "النسخة الاحتياطية تالفة أو غير مكتملة", "en": "Backup is corrupted or incomplete"},
-    "Verify_Error_Message": {"ar": "حدث خطأ أثناء التحقق من النسخة الاحتياطية", "en": "An error occurred while verifying the backup"},
+    "Verify_Error_Message": {
+        "ar": "حدث خطأ أثناء التحقق من النسخة الاحتياطية",
+        "en": "An error occurred while verifying the backup",
+    },
     "Confirm_Delete": {"ar": "تأكيد الحذف", "en": "Confirm Delete"},
     "Server_Connection_Error": {"ar": "خطأ في الاتصال بالخادم", "en": "Server Connection Error"},
     "Size_Colon": {"ar": "الحجم:", "en": "Size:"},
@@ -3708,7 +3507,10 @@ TRANSLATIONS = {
     "Target_PostgreSQL_URL": {"ar": "رابط قاعدة بيانات PostgreSQL الهدف", "en": "Target PostgreSQL URL"},
     "Type_To_Confirm": {"ar": "اكتب لتأكيد", "en": "Type To Confirm"},
     "Execute_On_Target": {"ar": "تنفيذ على الهدف", "en": "Execute On Target"},
-    "Do_Not_Use_Current_DATABASE_URL": {"ar": "لا تستخدم رابط قاعدة البيانات الحالي", "en": "Do Not Use Current DATABASE_URL"},
+    "Do_Not_Use_Current_DATABASE_URL": {
+        "ar": "لا تستخدم رابط قاعدة البيانات الحالي",
+        "en": "Do Not Use Current DATABASE_URL",
+    },
     "Use_Test_New_DB_Only": {"ar": "استخدم قاعدة بيانات اختبار جديدة فقط", "en": "Use Test New DB Only"},
     "User_Profile": {"ar": "الملف الشخصي", "en": "User Profile"},
     "Registration_Date": {"ar": "تاريخ التسجيل", "en": "Registration Date"},
@@ -3728,9 +3530,15 @@ TRANSLATIONS = {
     "Add_User": {"ar": "إضافة مستخدم", "en": "Add User"},
     "Roles_And_Permissions": {"ar": "الأدوار والصلاحيات", "en": "Roles and Permissions"},
     "Example_Username": {"ar": "مثال: ahmad_manager", "en": "Example: ahmad_manager"},
-    "Username_Hint": {"ar": "حروف إنجليزية وأرقام و_ فقط (3-20 حرف)", "en": "English letters, numbers and underscore only (3-20 chars)"},
+    "Username_Hint": {
+        "ar": "حروف إنجليزية وأرقام و_ فقط (3-20 حرف)",
+        "en": "English letters, numbers and underscore only (3-20 chars)",
+    },
     "Example_Full_Name": {"ar": "أحمد محمود", "en": "Example Full Name"},
-    "Characters_Upper_Digit_Special": {"ar": "أحرف، حرف كبير، رقم، رمز خاص", "en": "chars, uppercase, digit, special char"},
+    "Characters_Upper_Digit_Special": {
+        "ar": "أحرف، حرف كبير، رقم، رمز خاص",
+        "en": "chars, uppercase, digit, special char",
+    },
     "Min_10_Characters": {"ar": "10 أحرف على الأقل", "en": "At least 10 characters"},
     "Uppercase_Letter": {"ar": "حرف كبير (A-Z)", "en": "Uppercase letter (A-Z)"},
     "Lowercase_Letter": {"ar": "حرف صغير (a-z)", "en": "Lowercase letter (a-z)"},
@@ -3741,8 +3549,14 @@ TRANSLATIONS = {
     "Job_Role": {"ar": "الدور الوظيفي", "en": "Job Role"},
     "Company_Tenant": {"ar": "الشركة (Tenant)", "en": "Company (Tenant)"},
     "Select_Company": {"ar": "-- اختر الشركة --", "en": "-- Select Company --"},
-    "Platform_Users_No_Tenant_Hint": {"ar": "مستخدمي المنصة (owner/developer) فقط بدون tenant", "en": "Platform users (owner/developer) only without tenant"},
-    "Branch_Required_Hint": {"ar": "إجباري لكل مستخدم غير المالك وغير المطور/السوبر أدمن", "en": "Required for non-owner, non-developer/super admin users"},
+    "Platform_Users_No_Tenant_Hint": {
+        "ar": "مستخدمي المنصة (owner/developer) فقط بدون tenant",
+        "en": "Platform users (owner/developer) only without tenant",
+    },
+    "Branch_Required_Hint": {
+        "ar": "إجباري لكل مستخدم غير المالك وغير المطور/السوبر أدمن",
+        "en": "Required for non-owner, non-developer/super admin users",
+    },
     "Select_Role_To_View_Permissions": {"ar": "اختر الدور لعرض الصلاحيات", "en": "Select role to view permissions"},
     "Full_Permissions_Warning": {"ar": "صلاحيات كاملة - استخدم بحذر!", "en": "Full permissions - use with caution!"},
     "Activate_Account": {"ar": "تفعيل الحساب", "en": "Activate Account"},
@@ -3760,12 +3574,21 @@ TRANSLATIONS = {
     "Password_Strong": {"ar": "قوي", "en": "Strong"},
     "Password_Very_Strong": {"ar": "قوي جداً", "en": "Very Strong"},
     "Password_Mismatch_Error": {"ar": "⚠️ كلمات المرور غير متطابقة", "en": "Passwords do not match"},
-    "Password_Mismatch_Hint": {"ar": "تأكد من كتابة نفس كلمة المرور في كلا الحقلين", "en": "Make sure to enter the same password in both fields"},
+    "Password_Mismatch_Hint": {
+        "ar": "تأكد من كتابة نفس كلمة المرور في كلا الحقلين",
+        "en": "Make sure to enter the same password in both fields",
+    },
     "Password_Weak_Warning": {"ar": "كلمة المرور ضعيفة", "en": "Password is weak"},
-    "Password_Weak_Hint": {"ar": "استخدم 10+ أحرف مع حروف كبيرة وصغيرة وأرقام ورموز خاصة", "en": "Use 10+ characters with uppercase, lowercase, digits and special chars"},
+    "Password_Weak_Hint": {
+        "ar": "استخدم 10+ أحرف مع حروف كبيرة وصغيرة وأرقام ورموز خاصة",
+        "en": "Use 10+ characters with uppercase, lowercase, digits and special chars",
+    },
     "Proceed_Anyway": {"ar": "متابعة بأي حال", "en": "Proceed Anyway"},
     "Improve_Password": {"ar": "تحسين كلمة المرور", "en": "Improve Password"},
-    "Branch_Required_Alert": {"ar": "يجب اختيار فرع لهذا المستخدم قبل الحفظ", "en": "You must select a branch for this user before saving"},
+    "Branch_Required_Alert": {
+        "ar": "يجب اختيار فرع لهذا المستخدم قبل الحفظ",
+        "en": "You must select a branch for this user before saving",
+    },
     "Total_Recorded_Errors": {"ar": "إجمالي الأخطاء المسجلة", "en": "Total Recorded Errors"},
     "Unresolved_Errors": {"ar": "أخطاء غير محلولة", "en": "Unresolved Errors"},
     "Critical_Errors": {"ar": "أخطاء Critical", "en": "Critical Errors"},
@@ -3796,7 +3619,10 @@ TRANSLATIONS = {
     "Reset_Filter": {"ar": "إعادة تعيين التصفية", "en": "Reset Filter"},
     "Viewing_Range": {"ar": "عرض", "en": "Viewing"},
     "Export_Records": {"ar": "تصدير السجلات", "en": "Export Records"},
-    "Export_Confirm_Text": {"ar": "هل تريد تصدير السجلات إلى ملف CSV؟", "en": "Do you want to export the records to CSV?"},
+    "Export_Confirm_Text": {
+        "ar": "هل تريد تصدير السجلات إلى ملف CSV؟",
+        "en": "Do you want to export the records to CSV?",
+    },
     "Yes_Export": {"ar": "نعم، صدّر", "en": "Yes, Export"},
     "Exporting": {"ar": "جاري التصدير...", "en": "Exporting..."},
     "Preparing_File": {"ar": "يتم تجهيز الملف", "en": "Preparing file"},
@@ -3810,7 +3636,10 @@ TRANSLATIONS = {
     "Default_Currency_Required": {"ar": "العملة الافتراضية *", "en": "Default Currency *"},
     "Subscription_And_Plan": {"ar": "الاشتراك والباقة", "en": "Subscription and Plan"},
     "No_Plan_Manual_Setup": {"ar": "بدون باقة (إعداد يدوي)", "en": "No Plan (Manual Setup)"},
-    "Plan_Selection_Applies_Limits": {"ar": "اختيار باقة يطبق قالب حدودها وميزاتها تلقائياً", "en": "Selecting a plan applies its limits and features automatically"},
+    "Plan_Selection_Applies_Limits": {
+        "ar": "اختيار باقة يطبق قالب حدودها وميزاتها تلقائياً",
+        "en": "Selecting a plan applies its limits and features automatically",
+    },
     "Subscription_Duration": {"ar": "مدة الاشتراك", "en": "Subscription Duration"},
     "Trial_7_Days": {"ar": "تجريبي (7 أيام)", "en": "Trial (7 Days)"},
     "Lifetime": {"ar": "مدى الحياة", "en": "Lifetime"},
@@ -3833,19 +3662,34 @@ TRANSLATIONS = {
     "Data_Export": {"ar": "تصدير البيانات", "en": "Data Export"},
     "Custom_Integrations": {"ar": "تكاملات مخصصة", "en": "Custom Integrations"},
     "Advanced_POS_Features": {"ar": "ميزات POS المتقدمة", "en": "Advanced POS Features"},
-    "Plan_Inheritance_Meaning": {"ar": "وراثة الباقة تعني اتباع مستوى الباقة", "en": "Plan inheritance means following the plan level"},
+    "Plan_Inheritance_Meaning": {
+        "ar": "وراثة الباقة تعني اتباع مستوى الباقة",
+        "en": "Plan inheritance means following the plan level",
+    },
     "Promotions_And_Discounts": {"ar": "العروض والخصومات", "en": "Promotions and Discounts"},
     "Multi_Tender": {"ar": "الدفع المتعدد", "en": "Multi Tender"},
     "POS_Returns": {"ar": "مرتجعات POS", "en": "POS Returns"},
     "Plan_Inheritance": {"ar": "وراثة الباقة", "en": "Plan Inheritance"},
     "Create_Tenant": {"ar": "إنشاء التينانت", "en": "Create Tenant"},
-    "Arabic_Name_And_Slug_Required": {"ar": "الاسم العربي والـ Slug إلزاميان", "en": "Arabic name and Slug are required"},
-    "Slug_Unique_No_Spaces": {"ar": "الـ Slug يجب أن يكون فريداً ولا يحتوي على مسافات", "en": "Slug must be unique and contain no spaces"},
-    "After_Creation_Edit_Limits": {"ar": "بعد الإنشاء يمكنك تعديل الحدود والمميزات لاحقاً", "en": "After creation you can edit limits and features later"},
+    "Arabic_Name_And_Slug_Required": {
+        "ar": "الاسم العربي والـ Slug إلزاميان",
+        "en": "Arabic name and Slug are required",
+    },
+    "Slug_Unique_No_Spaces": {
+        "ar": "الـ Slug يجب أن يكون فريداً ولا يحتوي على مسافات",
+        "en": "Slug must be unique and contain no spaces",
+    },
+    "After_Creation_Edit_Limits": {
+        "ar": "بعد الإنشاء يمكنك تعديل الحدود والمميزات لاحقاً",
+        "en": "After creation you can edit limits and features later",
+    },
     "Tenant_Settings_Activity": {"ar": "إعدادات التينانت (النشاط)", "en": "Tenant Settings (Activity)"},
     "Brand_Colors": {"ar": "ألوان الهوية", "en": "Brand Colors"},
     "Quick_Links": {"ar": "روابط سريعة", "en": "Quick Links"},
-    "Tenant_Settings_Activity_Client": {"ar": "إعدادات التينانت (النشاط/العميل)", "en": "Tenant Settings (Activity/Client)"},
+    "Tenant_Settings_Activity_Client": {
+        "ar": "إعدادات التينانت (النشاط/العميل)",
+        "en": "Tenant Settings (Activity/Client)",
+    },
     "Code_Slug": {"ar": "الكود (Slug)", "en": "Code (Slug)"},
     "Slug_Format_Hint": {"ar": "حروف صغيرة وأرقام وشرطة فقط", "en": "Lowercase letters, numbers and hyphens only"},
     "Contact_Information": {"ar": "معلومات الاتصال", "en": "Contact Information"},
@@ -3858,7 +3702,10 @@ TRANSLATIONS = {
     "License_Number": {"ar": "رقم الترخيص", "en": "License Number"},
     "Primary_Color": {"ar": "اللون الأساسي", "en": "Primary Color"},
     "Secondary_Color": {"ar": "اللون الثانوي", "en": "Secondary Color"},
-    "Logo_Change_Hint": {"ar": "لتغيير الشعار، استخدم إعدادات ترويسات الفواتير", "en": "To change the logo, use the invoice header settings"},
+    "Logo_Change_Hint": {
+        "ar": "لتغيير الشعار، استخدم إعدادات ترويسات الفواتير",
+        "en": "To change the logo, use the invoice header settings",
+    },
     "Save_Information": {"ar": "حفظ المعلومات", "en": "Save Information"},
     "Saudi_Arabia": {"ar": "السعودية", "en": "Saudi Arabia"},
     "Jordan": {"ar": "الأردن", "en": "Jordan"},
@@ -3868,7 +3715,10 @@ TRANSLATIONS = {
     "Barcode_Scanner": {"ar": "قارئ الباركود", "en": "Barcode Scanner"},
     "Discounts": {"ar": "الخصومات", "en": "Discounts"},
     "Ecommerce_Stores_Toggle": {"ar": "المتاجر الإلكترونية (تشغيل/إيقاف)", "en": "Ecommerce Stores (Enable/Disable)"},
-    "Ecommerce_Stop_Hint": {"ar": "عند الإيقاف، تتوقف جميع واجهات المتاجر العامة", "en": "When disabled, all public storefronts will stop immediately"},
+    "Ecommerce_Stop_Hint": {
+        "ar": "عند الإيقاف، تتوقف جميع واجهات المتاجر العامة",
+        "en": "When disabled, all public storefronts will stop immediately",
+    },
     "Manage_Payment_Methods": {"ar": "إدارة طرق الدفع", "en": "Manage Payment Methods"},
     "Default_Language": {"ar": "اللغة الافتراضية", "en": "Default Language"},
     "Timezone": {"ar": "المنطقة الزمنية", "en": "Timezone"},
@@ -3889,7 +3739,10 @@ TRANSLATIONS = {
     "Preview_Invoice": {"ar": "معاينة فاتورة", "en": "Preview Invoice"},
     "Quick_Actions": {"ar": "إجراءات سريعة", "en": "Quick Actions"},
     "Company_Backup_Count": {"ar": "نسخ احتياطية لهذه الشركة", "en": "Backups for this company"},
-    "Cannot_Create_System_Backup_Here": {"ar": "لا يمكن إنشاء نسخة نظام كاملة من هنا", "en": "Cannot create a full system backup from here"},
+    "Cannot_Create_System_Backup_Here": {
+        "ar": "لا يمكن إنشاء نسخة نظام كاملة من هنا",
+        "en": "Cannot create a full system backup from here",
+    },
     "Filtered_View_Current_Branch": {"ar": "عرض مفلتر على فرعك الحالي", "en": "Filtered view on your current branch"},
     "Quick_Settings": {"ar": "إعدادات سريعة", "en": "Quick Settings"},
     "Tax_Rate_VAT": {"ar": "نسبة الضريبة (VAT)", "en": "Tax Rate (VAT)"},
@@ -3911,10 +3764,16 @@ TRANSLATIONS = {
     "Basic_Information": {"ar": "المعلومات الأساسية", "en": "Basic Information"},
     "Full_Name": {"ar": "الاسم الكامل", "en": "Full Name"},
     "Change_Password": {"ar": "تغيير كلمة المرور", "en": "Change Password"},
-    "Leave_Blank_To_Keep_Current": {"ar": "اتركه فارغاً إذا كنت لا تريد تغيير كلمة المرور", "en": "Leave blank to keep current password"},
+    "Leave_Blank_To_Keep_Current": {
+        "ar": "اتركه فارغاً إذا كنت لا تريد تغيير كلمة المرور",
+        "en": "Leave blank to keep current password",
+    },
     "New_Password": {"ar": "كلمة المرور الجديدة", "en": "New Password"},
     "Confirm_New_Password": {"ar": "تأكيد كلمة المرور الجديدة", "en": "Confirm New Password"},
-    "Branch_Required_For_Role": {"ar": "مطلوب اختيار فرع للمستخدمين غير المالك", "en": "Branch selection is required for non-owner users"},
+    "Branch_Required_For_Role": {
+        "ar": "مطلوب اختيار فرع للمستخدمين غير المالك",
+        "en": "Branch selection is required for non-owner users",
+    },
     "Branch_Not_Required": {"ar": "غير مطلوب للمستخدمين المالك", "en": "Not required for owner users"},
     "Only_Owner_Access": {"ar": "فقط المالك يمكنه الوصول لهذا!", "en": "Only the owner can access this!"},
     "Information": {"ar": "معلومات", "en": "Information"},
@@ -3927,7 +3786,10 @@ TRANSLATIONS = {
     "Passwords_Do_Not_Match": {"ar": "كلمة المرور الجديدة غير متطابقة!", "en": "Passwords do not match!"},
     "Please_Select_Branch": {"ar": "يرجى اختيار فرع قبل الحفظ.", "en": "Please select a branch before saving."},
     "Warning_Exclamation": {"ar": "تحذير!", "en": "Warning!"},
-    "This_Will_Give_Full_System_Access": {"ar": "هذا سيمنح المستخدم صلاحية الوصول الكامل للنظام!", "en": "This will give full system access to this user!"},
+    "This_Will_Give_Full_System_Access": {
+        "ar": "هذا سيمنح المستخدم صلاحية الوصول الكامل للنظام!",
+        "en": "This will give full system access to this user!",
+    },
     "Are_You_Sure": {"ar": "هل أنت متأكد؟", "en": "Are you sure?"},
     "Scheduled_Backups": {"ar": "النسخ الاحتياطي المجدول", "en": "Scheduled Backups"},
     "Space_MB": {"ar": "MB مساحة", "en": "Space (MB)"},
@@ -3942,7 +3804,10 @@ TRANSLATIONS = {
     "Frequency": {"ar": "التكرار", "en": "Frequency"},
     "Daily_Recommended": {"ar": "يومياً (موصى به)", "en": "Daily (Recommended)"},
     "Preferred_Time": {"ar": "الوقت المفضل", "en": "Preferred Time"},
-    "Recommended_Off_Peak_Hours": {"ar": "يُنصح باختيار وقت قليل الاستخدام (مثل 2:00 صباحاً)", "en": "Choose an off-peak time (e.g. 2:00 AM)"},
+    "Recommended_Off_Peak_Hours": {
+        "ar": "يُنصح باختيار وقت قليل الاستخدام (مثل 2:00 صباحاً)",
+        "en": "Choose an off-peak time (e.g. 2:00 AM)",
+    },
     "Saved_Copies_Count": {"ar": "عدد النسخ المحفوظة", "en": "Saved Copies Count"},
     "Min_3_Max_50": {"ar": "الحد الأدنى: 3 | الحد الأقصى: 50", "en": "Minimum: 3 | Maximum: 50"},
     "Enable_Auto_Backup": {"ar": "تفعيل النسخ الاحتياطي التلقائي", "en": "Enable Auto Backup"},
@@ -3952,7 +3817,10 @@ TRANSLATIONS = {
     "Date_Time": {"ar": "التاريخ والوقت", "en": "Date & Time"},
     "Size": {"ar": "الحجم", "en": "Size"},
     "No_Auto_Backups_Yet": {"ar": "لا توجد نسخ تلقائية بعد", "en": "No Auto Backups Yet"},
-    "First_Backup_On_Schedule": {"ar": "سيتم إنشاء أول نسخة في الموعد المحدد", "en": "First backup will be created on schedule"},
+    "First_Backup_On_Schedule": {
+        "ar": "سيتم إنشاء أول نسخة في الموعد المحدد",
+        "en": "First backup will be created on schedule",
+    },
     "Show_All": {"ar": "عرض الكل", "en": "Show All"},
     "Security_Info": {"ar": "معلومات الأمان", "en": "Security Info"},
     "Protection": {"ar": "الحماية", "en": "Protection"},
@@ -3960,11 +3828,20 @@ TRANSLATIONS = {
     "Compression": {"ar": "الضغط", "en": "Compression"},
     "GZIP_Save_60": {"ar": "GZIP - توفير 60%", "en": "GZIP - Save 60%"},
     "Owner_Only": {"ar": "للمالك فقط", "en": "Owner Only"},
-    "Backup_SHA256_Protected": {"ar": "النسخ الاحتياطية محمية بـ SHA256 checksum", "en": "Backups are protected with SHA256 checksum"},
+    "Backup_SHA256_Protected": {
+        "ar": "النسخ الاحتياطية محمية بـ SHA256 checksum",
+        "en": "Backups are protected with SHA256 checksum",
+    },
     "Auto_Compression_Saves_60": {"ar": "ضغط تلقائي يوفر 60% من المساحة", "en": "Auto compression saves 60% space"},
     "Auto_Delete_Old_Backups": {"ar": "حذف تلقائي للنسخ القديمة", "en": "Auto delete old backups"},
-    "Restore_Requires_Owner_Password": {"ar": "الاستعادة تتطلب كلمة مرور المالك", "en": "Restore requires owner password"},
-    "Auto_Backup_Before_Restore": {"ar": "نسخة احتياطية تلقائية قبل كل استعادة", "en": "Auto backup before every restore"},
+    "Restore_Requires_Owner_Password": {
+        "ar": "الاستعادة تتطلب كلمة مرور المالك",
+        "en": "Restore requires owner password",
+    },
+    "Auto_Backup_Before_Restore": {
+        "ar": "نسخة احتياطية تلقائية قبل كل استعادة",
+        "en": "Auto backup before every restore",
+    },
     "Financial_Overview": {"ar": "النظرة المالية", "en": "Financial Overview"},
     "Platform_Mode": {"ar": "وضع المنصة", "en": "Platform Mode"},
     "View_Specific_Company": {"ar": "عرض شركة محددة", "en": "View Specific Company"},
@@ -3991,7 +3868,10 @@ TRANSLATIONS = {
     "Edit_Table": {"ar": "تعديل جدول", "en": "Edit Table"},
     "Edit_Table_Label": {"ar": "تعديل مرئي", "en": "Visual Edit"},
     "Visual_Edit": {"ar": "تعديل مرئي", "en": "Visual Edit"},
-    "Edit_Data_Directly_Warning": {"ar": "يمكنك تعديل البيانات مباشرة. التعديلات ستحفظ في قاعدة البيانات فوراً!", "en": "You can edit data directly. Changes will be saved to the database immediately!"},
+    "Edit_Data_Directly_Warning": {
+        "ar": "يمكنك تعديل البيانات مباشرة. التعديلات ستحفظ في قاعدة البيانات فوراً!",
+        "en": "You can edit data directly. Changes will be saved to the database immediately!",
+    },
     "Edit_Method": {"ar": "طريقة التعديل", "en": "Edit Method"},
     "Press": {"ar": "اضغط", "en": "Press"},
     "On_The_Required_Row": {"ar": "على السطر المطلوب", "en": "on the required row"},
@@ -4010,10 +3890,16 @@ TRANSLATIONS = {
     "Failed_To_Save": {"ar": "فشل الحفظ", "en": "Failed to Save"},
     "Roles_Permissions_Title": {"ar": "الأدوار والصلاحيات", "en": "Roles & Permissions"},
     "Users_Management": {"ar": "إدارة المستخدمين", "en": "Users Management"},
-    "Roles_Description": {"ar": "يتحكم النظام بـ 4 أدوار رئيسية بصلاحيات محددة لضمان الأمان.", "en": "The system manages 4 main roles with specific permissions for security."},
+    "Roles_Description": {
+        "ar": "يتحكم النظام بـ 4 أدوار رئيسية بصلاحيات محددة لضمان الأمان.",
+        "en": "The system manages 4 main roles with specific permissions for security.",
+    },
     "No_Description": {"ar": "لا يوجد وصف", "en": "No Description"},
     "Associated_Permissions": {"ar": "الصلاحيات المرتبطة", "en": "Associated Permissions"},
-    "No_Permissions_For_Role": {"ar": "لا توجد صلاحيات مرتبطة بهذا الدور.", "en": "No permissions associated with this role."},
+    "No_Permissions_For_Role": {
+        "ar": "لا توجد صلاحيات مرتبطة بهذا الدور.",
+        "en": "No permissions associated with this role.",
+    },
     "Total_Roles": {"ar": "إجمالي الأدوار", "en": "Total Roles"},
     "Total_Permissions": {"ar": "إجمالي الصلاحيات", "en": "Total Permissions"},
     "Permission_Categories": {"ar": "فئات الصلاحيات", "en": "Permission Categories"},
@@ -4023,7 +3909,10 @@ TRANSLATIONS = {
     "No_Permissions_Registered": {"ar": "لا توجد صلاحيات مسجلة.", "en": "No Permissions Registered."},
     "Security_Standards": {"ar": "معايير الأمان", "en": "Security Standards"},
     "Allowed_Rules": {"ar": "ما يُسمح به:", "en": "Allowed Rules:"},
-    "Rule_User_Sees_Own_Data": {"ar": "كل مستخدم يرى بياناته فقط (ما لم يكن مديراً)", "en": "Each user sees only their own data (unless manager)"},
+    "Rule_User_Sees_Own_Data": {
+        "ar": "كل مستخدم يرى بياناته فقط (ما لم يكن مديراً)",
+        "en": "Each user sees only their own data (unless manager)",
+    },
     "Rule_Seller_No_Cost_Price": {"ar": "البائع لا يرى أسعار التكلفة", "en": "Seller cannot see cost prices"},
     "Rule_Seller_No_Invoice_Profit": {"ar": "البائع لا يرى أرباح الفواتير", "en": "Seller cannot see invoice profits"},
     "Rule_Manager_Limited_Reports": {"ar": "المدير يرى تقارير محدودة", "en": "Manager sees limited reports"},
@@ -4032,7 +3921,10 @@ TRANSLATIONS = {
     "Rule_Seller_Cannot_Delete": {"ar": "البائع لا يمكنه حذف أو إلغاء", "en": "Seller cannot delete or cancel"},
     "Rule_Seller_Cannot_Edit_Prices": {"ar": "البائع لا يمكنه تعديل الأسعار", "en": "Seller cannot edit prices"},
     "Rule_Manager_Cannot_Manage_Users": {"ar": "المدير لا يمكنه إدارة المستخدمين", "en": "Manager cannot manage users"},
-    "Rule_Super_Admin_No_Owner_Mode": {"ar": "Super Admin لا يمكنه الوصول لـ Owner Mode", "en": "Super Admin cannot access Owner Mode"},
+    "Rule_Super_Admin_No_Owner_Mode": {
+        "ar": "Super Admin لا يمكنه الوصول لـ Owner Mode",
+        "en": "Super Admin cannot access Owner Mode",
+    },
     "Rule_No_One_Can_Delete_Owner": {"ar": "لا أحد يمكنه حذف بيانات Owner", "en": "No one can delete Owner data"},
     "Usage_Guidelines": {"ar": "إرشادات الاستخدام", "en": "Usage Guidelines"},
     "Important_Tips": {"ar": "نصائح مهمة:", "en": "Important Tips:"},
@@ -4041,9 +3933,18 @@ TRANSLATIONS = {
     "Tip_Manager": {"ar": "استخدم Manager لمدراء الأقسام", "en": "Use Manager for department managers"},
     "Tip_Seller": {"ar": "استخدم Seller للبائعين العاديين", "en": "Use Seller for regular salespeople"},
     "Tip_Review_Permissions": {"ar": "راجع الصلاحيات دورياً", "en": "Review permissions periodically"},
-    "Tip_Change_Default_Passwords": {"ar": "غيّر كلمات المرور الافتراضية فوراً", "en": "Change default passwords immediately"},
-    "Tip_Disable_Not_Delete": {"ar": "عطّل المستخدمين غير النشطين بدلاً من حذفهم", "en": "Disable inactive users instead of deleting them"},
-    "All_Actions_Logged": {"ar": "النظام يسجل كل العمليات في سجل التدقيق!", "en": "All actions are logged in the audit trail!"},
+    "Tip_Change_Default_Passwords": {
+        "ar": "غيّر كلمات المرور الافتراضية فوراً",
+        "en": "Change default passwords immediately",
+    },
+    "Tip_Disable_Not_Delete": {
+        "ar": "عطّل المستخدمين غير النشطين بدلاً من حذفهم",
+        "en": "Disable inactive users instead of deleting them",
+    },
+    "All_Actions_Logged": {
+        "ar": "النظام يسجل كل العمليات في سجل التدقيق!",
+        "en": "All actions are logged in the audit trail!",
+    },
     "Remember": {"ar": "تذكر:", "en": "Remember:"},
     "Tenants_Management": {"ar": "إدارة الشركات (التينانتس)", "en": "Tenants Management"},
     "Slug": {"ar": "الـ Slug", "en": "Slug"},
@@ -4055,16 +3956,37 @@ TRANSLATIONS = {
     "Confirm_Activate_Tenant": {"ar": "تأكيد تفعيل التينانت؟", "en": "Confirm tenant activation?"},
     "Suspend": {"ar": "تعليق", "en": "Suspend"},
     "Suspend_Tenant": {"ar": "تعليق تينانت", "en": "Suspend Tenant"},
-    "Are_You_Sure_Suspend_Tenant": {"ar": "هل أنت متأكد من تعليق تينانت", "en": "Are you sure you want to suspend tenant"},
-    "Suspend_Tenant_Warning": {"ar": "سيتم إيقاف جميع المستخدمين والعمليات لهذه الشركة.", "en": "All users and operations for this company will be stopped."},
-    "Suspension_Reason_Label": {"ar": "سبب التعليق (سيظهر للمستخدمين)", "en": "Suspension Reason (will appear to users)"},
-    "Suspension_Reason_Placeholder": {"ar": "مثال: تأخر الدفع، صيانة النظام، انتهاك شروط الاستخدام...", "en": "Example: Late payment, system maintenance, terms violation..."},
-    "Suspension_Reason_Help": {"ar": "هذا النص سيظهر للمستخدمين عند محاولتهم الدخول.", "en": "This text will appear to users when they try to log in."},
+    "Are_You_Sure_Suspend_Tenant": {
+        "ar": "هل أنت متأكد من تعليق تينانت",
+        "en": "Are you sure you want to suspend tenant",
+    },
+    "Suspend_Tenant_Warning": {
+        "ar": "سيتم إيقاف جميع المستخدمين والعمليات لهذه الشركة.",
+        "en": "All users and operations for this company will be stopped.",
+    },
+    "Suspension_Reason_Label": {
+        "ar": "سبب التعليق (سيظهر للمستخدمين)",
+        "en": "Suspension Reason (will appear to users)",
+    },
+    "Suspension_Reason_Placeholder": {
+        "ar": "مثال: تأخر الدفع، صيانة النظام، انتهاك شروط الاستخدام...",
+        "en": "Example: Late payment, system maintenance, terms violation...",
+    },
+    "Suspension_Reason_Help": {
+        "ar": "هذا النص سيظهر للمستخدمين عند محاولتهم الدخول.",
+        "en": "This text will appear to users when they try to log in.",
+    },
     "Delete_Tenant": {"ar": "حذف تينانت", "en": "Delete Tenant"},
     "Are_You_Sure_Delete_Tenant": {"ar": "هل أنت متأكد من حذف", "en": "Are you sure you want to delete"},
-    "Delete_Tenant_Warning": {"ar": "سيتم تعطيل التينانت. لن يتم حذف البيانات فعلياً، لكنها ستصبح غير متاحة.", "en": "The tenant will be disabled. Data will not be deleted but will become inaccessible."},
+    "Delete_Tenant_Warning": {
+        "ar": "سيتم تعطيل التينانت. لن يتم حذف البيانات فعلياً، لكنها ستصبح غير متاحة.",
+        "en": "The tenant will be disabled. Data will not be deleted but will become inaccessible.",
+    },
     "Reports_Statistics": {"ar": "التقارير والإحصائيات", "en": "Reports & Statistics"},
-    "Comprehensive_System_Performance_Overview": {"ar": "نظرة شاملة على أداء النظام", "en": "Comprehensive System Performance Overview"},
+    "Comprehensive_System_Performance_Overview": {
+        "ar": "نظرة شاملة على أداء النظام",
+        "en": "Comprehensive System Performance Overview",
+    },
     "Total_Companies": {"ar": "إجمالي الشركات", "en": "Total Companies"},
     "Active_Companies": {"ar": "شركات نشطة", "en": "Active Companies"},
     "New_Subscriptions_Month": {"ar": "اشتراكات جديدة (الشهر)", "en": "New Subscriptions (Month)"},
@@ -4073,7 +3995,10 @@ TRANSLATIONS = {
     "Expired_Subscriptions": {"ar": "اشتراكات منتهية", "en": "Expired Subscriptions"},
     "Secret_Vault": {"ar": "الخزينة السرية", "en": "Secret Vault"},
     "Secret_Vault_Status": {"ar": "حالة الخزينة السرية", "en": "Secret Vault Status"},
-    "Payment_Vault_Platform_Status": {"ar": "حالة أمان الدفع (بنية المنصة)", "en": "Payment Vault Security (Platform Level)"},
+    "Payment_Vault_Platform_Status": {
+        "ar": "حالة أمان الدفع (بنية المنصة)",
+        "en": "Payment Vault Security (Platform Level)",
+    },
     "Tenant_Growth": {"ar": "نمو المستأجرين", "en": "Tenant Growth"},
     "This_Week": {"ar": "هذا الأسبوع", "en": "This Week"},
     "Plan_Distribution": {"ar": "توزيع الباقات", "en": "Plan Distribution"},
@@ -4100,8 +4025,10 @@ TRANSLATIONS = {
     "Branding_Invoices": {"ar": "العلامة التجارية والفواتير", "en": "Branding & Invoices"},
     "Warnings": {"ar": "تحذيرات", "en": "Warnings"},
     "Company_Name": {"ar": "اسم الشركة", "en": "Company Name"},
-    "Keep_Last_Count_Message": {"ar": "يحتفظ تلقائياً بآخر {keep_count} نسخ ويحذف الأقدم", "en": "Automatically keeps the last {keep_count} backups and deletes the oldest"},
-
+    "Keep_Last_Count_Message": {
+        "ar": "يحتفظ تلقائياً بآخر {keep_count} نسخ ويحذف الأقدم",
+        "en": "Automatically keeps the last {keep_count} backups and deletes the oldest",
+    },
     "Account_Name": {"ar": "اسم الحساب", "en": "Account Name"},
     "Action": {"ar": "إجراء", "en": "Action"},
     "Active_Users_Now": {"ar": "المستخدمين النشطين حالياً", "en": "Active Users Now"},
@@ -4111,15 +4038,30 @@ TRANSLATIONS = {
     "Arabic_Name": {"ar": "الاسم بالعربية", "en": "Arabic Name"},
     "Available_To_Customers": {"ar": "متاح للزبائن", "en": "Available To Customers"},
     "Bank_Name": {"ar": "اسم البنك", "en": "Bank Name"},
-    "Better_Concurrent_Connections_Support": {"ar": "دعم اتصالات متزامنة أفضل", "en": "Better Concurrent Connections Support"},
-    "Better_Performance_For_Large_Systems": {"ar": "أداء أفضل للأنظمة الكبيرة", "en": "Better Performance For Large Systems"},
+    "Better_Concurrent_Connections_Support": {
+        "ar": "دعم اتصالات متزامنة أفضل",
+        "en": "Better Concurrent Connections Support",
+    },
+    "Better_Performance_For_Large_Systems": {
+        "ar": "أداء أفضل للأنظمة الكبيرة",
+        "en": "Better Performance For Large Systems",
+    },
     "Card_Actions": {"ar": "إجراءات البطاقة", "en": "Card Actions"},
     "Card_Information": {"ar": "معلومات البطاقة", "en": "Card Information"},
     "Card_Number": {"ar": "رقم البطاقة", "en": "Card Number"},
     "Cardholder_Name": {"ar": "اسم حامل البطاقة", "en": "Cardholder Name"},
-    "Cleanup_Days_Help": {"ar": "القيمة الدنيا 30 يوم والقيمة القصوى 365 يوم", "en": "Minimum 30 days, maximum 365 days"},
-    "Cleanup_Type_Help": {"ar": "اختر نوع البيانات المراد حذفها. تأكد من وجود نسخة احتياطية قبل الحذف", "en": "Select the type of data to delete. Ensure a backup exists before deletion"},
-    "Confirm_Data_Cleanup": {"ar": "تأكيد حذف البيانات! هذا الإجراء لا يمكن التراجع عنه", "en": "Confirm data cleanup! This action cannot be undone"},
+    "Cleanup_Days_Help": {
+        "ar": "القيمة الدنيا 30 يوم والقيمة القصوى 365 يوم",
+        "en": "Minimum 30 days, maximum 365 days",
+    },
+    "Cleanup_Type_Help": {
+        "ar": "اختر نوع البيانات المراد حذفها. تأكد من وجود نسخة احتياطية قبل الحذف",
+        "en": "Select the type of data to delete. Ensure a backup exists before deletion",
+    },
+    "Confirm_Data_Cleanup": {
+        "ar": "تأكيد حذف البيانات! هذا الإجراء لا يمكن التراجع عنه",
+        "en": "Confirm data cleanup! This action cannot be undone",
+    },
     "Contact_And_Support": {"ar": "جهة الاتصال والدعم", "en": "Contact And Support"},
     "Conversion_Info": {"ar": "معلومات التحويل", "en": "Conversion Info"},
     "Conversion_May_Take_Minutes": {"ar": "التحويل قد يستغرق دقائق", "en": "Conversion May Take Minutes"},
@@ -4140,16 +4082,28 @@ TRANSLATIONS = {
     "Developed_By_Footer_Text": {"ar": "طور بواسطة", "en": "Developed By"},
     "Developer_Company": {"ar": "شركة المطور", "en": "Developer Company"},
     "Developer_Company_Settings": {"ar": "إعدادات شركة المطور", "en": "Developer Company Settings"},
-    "Developer_Company_Settings_Support_Contact": {"ar": "جهة الاتصال والدعم لشركة المطور", "en": "Developer Company Settings - Support Contact"},
+    "Developer_Company_Settings_Support_Contact": {
+        "ar": "جهة الاتصال والدعم لشركة المطور",
+        "en": "Developer Company Settings - Support Contact",
+    },
     "Disable_Card": {"ar": "تعطيل البطاقة", "en": "Disable Card"},
-    "Disable_Store_From_Platform_Confirm": {"ar": "تأكيد تعطيل المتجر من المنصة", "en": "Disable store from platform. Are you sure?"},
-    "Do_Not_Close_Browser_During_Conversion": {"ar": "لا تغلق المتصفح أثناء التحويل", "en": "Do Not Close Browser During Conversion"},
+    "Disable_Store_From_Platform_Confirm": {
+        "ar": "تأكيد تعطيل المتجر من المنصة",
+        "en": "Disable store from platform. Are you sure?",
+    },
+    "Do_Not_Close_Browser_During_Conversion": {
+        "ar": "لا تغلق المتصفح أثناء التحويل",
+        "en": "Do Not Close Browser During Conversion",
+    },
     "Edit_Card": {"ar": "تعديل البطاقة", "en": "Edit Card"},
     "Effective_Date": {"ar": "تاريخ السريان", "en": "Effective Date"},
     "Enable_SMS_Messaging": {"ar": "تفعيل الرسائل النصية", "en": "Enable SMS Messaging"},
     "Enabled_For_Stores": {"ar": "مفعل للمتاجر", "en": "Enabled For Stores"},
     "English_Name_Required": {"ar": "الاسم بالإنجليزية مطلوب", "en": "English Name Required"},
-    "Ensure_Backup_Before_Conversion": {"ar": "تأكد من عمل نسخة احتياطية قبل التحويل", "en": "Ensure A Backup Before Conversion"},
+    "Ensure_Backup_Before_Conversion": {
+        "ar": "تأكد من عمل نسخة احتياطية قبل التحويل",
+        "en": "Ensure A Backup Before Conversion",
+    },
     "Enter_Here_And_Click_Start": {"ar": "أدخل هنا واضغط بدء", "en": "Enter Here And Click Start"},
     "Example": {"ar": "مثال", "en": "Example"},
     "Example_3_6725": {"ar": "مثال: 3.6725", "en": "Example: 3.6725"},
@@ -4170,7 +4124,10 @@ TRANSLATIONS = {
     "Live_Monitoring": {"ar": "المراقبة المباشرة", "en": "Live Monitoring"},
     "Local_SMS": {"ar": "رسائل نصية محلية", "en": "Local SMS"},
     "Lock_Disable": {"ar": "قفل / تعطيل", "en": "Lock / Disable"},
-    "Lowercase_English_Internal_Use": {"ar": "أحرف إنجليزية صغيرة للاستخدام الداخلي", "en": "Lowercase English - Internal Use"},
+    "Lowercase_English_Internal_Use": {
+        "ar": "أحرف إنجليزية صغيرة للاستخدام الداخلي",
+        "en": "Lowercase English - Internal Use",
+    },
     "Memory": {"ar": "الذاكرة", "en": "Memory"},
     "Name_And_Tagline": {"ar": "الاسم والشعار", "en": "Name And Tagline"},
     "Never_Used": {"ar": "لم يستخدم أبداً", "en": "Never Used"},
@@ -4187,10 +4144,19 @@ TRANSLATIONS = {
     "OS_Version": {"ar": "إصدار نظام التشغيل", "en": "OS Version"},
     "Performance": {"ar": "الأداء", "en": "Performance"},
     "Platform_Lock": {"ar": "قفل المنصة", "en": "Platform Lock"},
-    "Platform_Owner_Can_Disable_Store": {"ar": "صاحب المنصة يمكنه تعطيل المتجر", "en": "Platform Owner Can Disable Store"},
+    "Platform_Owner_Can_Disable_Store": {
+        "ar": "صاحب المنصة يمكنه تعطيل المتجر",
+        "en": "Platform Owner Can Disable Store",
+    },
     "Platform_Owner_Can_Lock_Store": {"ar": "صاحب المنصة يمكنه قفل المتجر", "en": "Platform Owner Can Lock Store"},
-    "PostgreSQL_Recommended_For_Production": {"ar": "PostgreSQL (موصى به للإنتاج)", "en": "PostgreSQL (Recommended For Production)"},
-    "Professional_Database_Conversion": {"ar": "تحويل احترافي لقاعدة البيانات", "en": "Professional Database Conversion"},
+    "PostgreSQL_Recommended_For_Production": {
+        "ar": "PostgreSQL (موصى به للإنتاج)",
+        "en": "PostgreSQL (Recommended For Production)",
+    },
+    "Professional_Database_Conversion": {
+        "ar": "تحويل احترافي لقاعدة البيانات",
+        "en": "Professional Database Conversion",
+    },
     "Rate_History": {"ar": "سجل الأسعار", "en": "Rate History"},
     "Recommended_For_Production": {"ar": "موصى به للإنتاج", "en": "Recommended For Production"},
     "Records_Older_Than_Days": {"ar": "السجلات الأقدم من (أيام)", "en": "Records Older Than (Days)"},
@@ -4198,22 +4164,37 @@ TRANSLATIONS = {
     "Save_Rate": {"ar": "حفظ السعر", "en": "Save Rate"},
     "Select_Data_Type": {"ar": "اختيار نوع البيانات", "en": "Select Data Type"},
     "Sender_Name": {"ar": "اسم المرسل", "en": "Sender Name"},
-    "Sender_Name_Help": {"ar": "11 حرف كحد أقصى - اسم المرسل الظاهر للمستلم", "en": "Max 11 characters - Sender name shown to recipient"},
+    "Sender_Name_Help": {
+        "ar": "11 حرف كحد أقصى - اسم المرسل الظاهر للمستلم",
+        "en": "Max 11 characters - Sender name shown to recipient",
+    },
     "Sensitive_Info_Handle_Carefully": {"ar": "معلومات حساسة - تعامل بحذر", "en": "Sensitive Info - Handle Carefully"},
     "Service": {"ar": "الخدمة", "en": "Service"},
-    "Service_Help": {"ar": "اختر الخدمة التي يستخدمها هذا المفتاح للوصول", "en": "Select the service this key will access"},
+    "Service_Help": {
+        "ar": "اختر الخدمة التي يستخدمها هذا المفتاح للوصول",
+        "en": "Select the service this key will access",
+    },
     "SMS_API_Key_Help": {"ar": "اتركه فارغاً للاحتفاظ بالمفتاح الحالي", "en": "Leave blank to keep the current key"},
     "SMS_Broadcast_Settings": {"ar": "إعدادات البث للرسائل النصية", "en": "SMS Broadcast Settings"},
-    "SMS_Enable_Help": {"ar": "عند التفعيل، سيتم إرسال رسائل نصية للعملاء عند إتمام العمليات", "en": "When enabled, SMS will be sent to customers upon completing operations"},
+    "SMS_Enable_Help": {
+        "ar": "عند التفعيل، سيتم إرسال رسائل نصية للعملاء عند إتمام العمليات",
+        "en": "When enabled, SMS will be sent to customers upon completing operations",
+    },
     "SMS_Provider": {"ar": "مزود خدمة الرسائل", "en": "SMS Provider"},
-    "SMS_Provider_Help": {"ar": "اختر مزود الخدمة المناسب. تأكد من صحة بيانات API للاتصال", "en": "Choose the appropriate provider. Verify API credentials for connection"},
+    "SMS_Provider_Help": {
+        "ar": "اختر مزود الخدمة المناسب. تأكد من صحة بيانات API للاتصال",
+        "en": "Choose the appropriate provider. Verify API credentials for connection",
+    },
     "SMS_Service_Settings": {"ar": "إعدادات خدمة الرسائل النصية", "en": "SMS Service Settings"},
     "SMS_Settings": {"ar": "إعدادات الرسائل النصية", "en": "SMS Settings"},
     "Sort_Order": {"ar": "ترتيب الفرز", "en": "Sort Order"},
     "Source": {"ar": "المصدر", "en": "Source"},
     "Start_Conversion": {"ar": "بدء التحويل", "en": "Start Conversion"},
     "Steps": {"ar": "الخطوات", "en": "Steps"},
-    "Stores_Stopped_At_Platform_Level": {"ar": "المتاجر موقفة على مستوى المنصة", "en": "Stores Stopped At Platform Level"},
+    "Stores_Stopped_At_Platform_Level": {
+        "ar": "المتاجر موقفة على مستوى المنصة",
+        "en": "Stores Stopped At Platform Level",
+    },
     "System_Info": {"ar": "معلومات النظام", "en": "System Info"},
     "System_Logs": {"ar": "سجلات النظام", "en": "System Logs"},
     "Target_Database": {"ar": "قاعدة البيانات الهدف", "en": "Target Database"},
@@ -4221,32 +4202,55 @@ TRANSLATIONS = {
     "Tenant": {"ar": "المستأجر", "en": "Tenant"},
     "Tenant_Status": {"ar": "حالة المستأجر", "en": "Tenant Status"},
     "Tenant_Stores": {"ar": "متاجر المستأجرين", "en": "Tenant Stores"},
-    "Tenant_Stores_Platform_Control": {"ar": "التحكم في متاجر المستأجرين من المنصة", "en": "Tenant Stores Platform Control"},
+    "Tenant_Stores_Platform_Control": {
+        "ar": "التحكم في متاجر المستأجرين من المنصة",
+        "en": "Tenant Stores Platform Control",
+    },
     "To_Currency": {"ar": "إلى العملة", "en": "To Currency"},
     "Unlock": {"ar": "فتح", "en": "Unlock"},
     "View_Card": {"ar": "عرض البطاقة", "en": "View Card"},
     "Wait_Until_Complete": {"ar": "انتظر حتى الاكتمال", "en": "Wait Until Complete"},
-    "Wallet_Providers_Extra_Instructions": {"ar": "تعليمات إضافية لموفري المحفظة", "en": "Wallet Providers Extra Instructions"},
-    "WhatsApp_Full_Number_With_Country_Code": {"ar": "رقم واتساب كامل مع مفتاح الدولة", "en": "WhatsApp Full Number With Country Code"},
+    "Wallet_Providers_Extra_Instructions": {
+        "ar": "تعليمات إضافية لموفري المحفظة",
+        "en": "Wallet Providers Extra Instructions",
+    },
+    "WhatsApp_Full_Number_With_Country_Code": {
+        "ar": "رقم واتساب كامل مع مفتاح الدولة",
+        "en": "WhatsApp Full Number With Country Code",
+    },
     "Why": {"ar": "لماذا", "en": "Why"},
-
     "Activity_Monitor": {"ar": "مراقبة النشاط", "en": "Activity Monitor"},
     "Add_Method": {"ar": "إضافة طريقة", "en": "Add Method"},
     "Advanced_SQL_Console": {"ar": "وحدة التحكم SQL المتقدمة", "en": "Advanced SQL Console"},
-    "AI_Assistant_Control_For_Tenants": {"ar": "التحكم بالمساعد الذكي للتينانتس", "en": "AI Assistant Control For Tenants"},
+    "AI_Assistant_Control_For_Tenants": {
+        "ar": "التحكم بالمساعد الذكي للتينانتس",
+        "en": "AI Assistant Control For Tenants",
+    },
     "AI_For_Tenants": {"ar": "AI للتينانتس", "en": "AI For Tenants"},
     "API_Key_For_Crypto_Payments": {"ar": "مفتاح API للدفع بالعملات المشفرة", "en": "API Key For Crypto Payments"},
-    "Applies_To_All_Tenant_Stores": {"ar": "تُطبَّق على كل متاجر التينانتس فوراً — تشغيل / إيقاف / تعديل", "en": "Applies to all tenant stores immediately — enable / disable / edit"},
+    "Applies_To_All_Tenant_Stores": {
+        "ar": "تُطبَّق على كل متاجر التينانتس فوراً — تشغيل / إيقاف / تعديل",
+        "en": "Applies to all tenant stores immediately — enable / disable / edit",
+    },
     "Archive_Date": {"ar": "تاريخ الأرشفة", "en": "Archive Date"},
     "Auto_Update_Exchange_Rates": {"ar": "تحديث تلقائي لأسعار الصرف", "en": "Auto Update Exchange Rates"},
-    "Auto_Update_Exchange_Rates_Help": {"ar": "عند التفعيل سيتم تحديث أسعار الصرف تلقائياً من مزود خارجي موثوق", "en": "When enabled, exchange rates will be updated automatically from a trusted external provider"},
+    "Auto_Update_Exchange_Rates_Help": {
+        "ar": "عند التفعيل سيتم تحديث أسعار الصرف تلقائياً من مزود خارجي موثوق",
+        "en": "When enabled, exchange rates will be updated automatically from a trusted external provider",
+    },
     "Azad_Smart_Systems": {"ar": "شركة أزاد للأنظمة الذكية", "en": "Azad Smart Systems"},
-    "Basic_Methods_Cannot_Be_Deleted": {"ar": "هنا. الطرق الأساسية (COD، تحويل، بطاقة، محفظة) لا تُحذف — يمكن إيقافها.", "en": "Basic methods (COD, transfer, card, wallet) cannot be deleted — they can be disabled."},
+    "Basic_Methods_Cannot_Be_Deleted": {
+        "ar": "هنا. الطرق الأساسية (COD، تحويل، بطاقة، محفظة) لا تُحذف — يمكن إيقافها.",
+        "en": "Basic methods (COD, transfer, card, wallet) cannot be deleted — they can be disabled.",
+    },
     "Builtin": {"ar": "أساسية", "en": "Builtin"},
     "Confirm_Delete_This_IP": {"ar": "هل أنت متأكد من حذف هذا IP؟", "en": "Are you sure you want to delete this IP?"},
     "Currencies": {"ar": "العملات", "en": "Currencies"},
     "Currency_Settings": {"ar": "إعدادات العملات", "en": "Currency Settings"},
-    "Customer_Sees_Only_Active": {"ar": "العميل يرى في صفحة الدفع فقط الطرق", "en": "Customer sees only active methods on the payment page"},
+    "Customer_Sees_Only_Active": {
+        "ar": "العميل يرى في صفحة الدفع فقط الطرق",
+        "en": "Customer sees only active methods on the payment page",
+    },
     "Default_Currency_Settings": {"ar": "إعدادات العملة الافتراضية", "en": "Default Currency Settings"},
     "Default_Tax_Rate_Percent": {"ar": "معدل الضريبة الافتراضي (%)", "en": "Default Tax Rate (%)"},
     "Delete_Payment_Method_Confirm": {"ar": "حذف طريقة الدفع؟", "en": "Delete Payment Method?"},
@@ -4260,9 +4264,15 @@ TRANSLATIONS = {
     "Execute_Query": {"ar": "تنفيذ الاستعلام", "en": "Execute Query"},
     "Execute_SQL_Queries": {"ar": "تنفيذ استعلامات SQL", "en": "Execute SQL Queries"},
     "General_Tax_Number": {"ar": "الرقم الضريبي العام", "en": "General Tax Number"},
-    "If_Company_Does_Not_Use_Tax": {"ar": ". إذا كانت شركتك لا تتعامل بالضريبة، أوقف التفعيل أدناه — لن تُحسب ضريبة في المبيعات/المشتريات ولن تظهر تقارير VAT.", "en": "If your company does not deal with tax, disable the toggle below — tax will not be calculated in sales/purchases and VAT reports will not appear."},
+    "If_Company_Does_Not_Use_Tax": {
+        "ar": ". إذا كانت شركتك لا تتعامل بالضريبة، أوقف التفعيل أدناه — لن تُحسب ضريبة في المبيعات/المشتريات ولن تظهر تقارير VAT.",
+        "en": "If your company does not deal with tax, disable the toggle below — tax will not be calculated in sales/purchases and VAT reports will not appear.",
+    },
     "ILS_Israeli_Shekel": {"ar": "شيكل إسرائيلي", "en": "ILS Israeli Shekel"},
-    "Invoice_Email_Placeholder": {"ar": "مرحباً {customer_name}، تم إصدار فاتورة رقم {sale_number} بمبلغ {total_amount}", "en": "Hello {customer_name}, invoice {sale_number} for {total_amount} has been issued"},
+    "Invoice_Email_Placeholder": {
+        "ar": "مرحباً {customer_name}، تم إصدار فاتورة رقم {sale_number} بمبلغ {total_amount}",
+        "en": "Hello {customer_name}, invoice {sale_number} for {total_amount} has been issued",
+    },
     "Invoice_Email_Template": {"ar": "قالب البريد للفواتير", "en": "Invoice Email Template"},
     "IP_Management": {"ar": "إدارة IP", "en": "IP Management"},
     "IP_Whitelist": {"ar": "القائمة البيضاء للـ IPs", "en": "IP Whitelist"},
@@ -4272,24 +4282,36 @@ TRANSLATIONS = {
     "No_Active_Users": {"ar": "لا يوجد مستخدمون نشطون", "en": "No Active Users"},
     "No_Audit_Logs": {"ar": "لا توجد سجلات مراجعة", "en": "No Audit Logs"},
     "No_IPs_In_Whitelist": {"ar": "لا توجد IPs في القائمة البيضاء", "en": "No IPs In Whitelist"},
-    "No_Methods_Default_Will_Be_Created": {"ar": "لا طرق دفع — سيتم إنشاء الافتراضية تلقائياً", "en": "No payment methods — defaults will be created automatically"},
+    "No_Methods_Default_Will_Be_Created": {
+        "ar": "لا طرق دفع — سيتم إنشاء الافتراضية تلقائياً",
+        "en": "No payment methods — defaults will be created automatically",
+    },
     "No_Rates_Available": {"ar": "لا توجد أسعار متاحة", "en": "No Rates Available"},
     "Notification_Templates": {"ar": "قوالب الإشعارات", "en": "Notification Templates"},
     "Payment_Gateway_Settings": {"ar": "إعدادات بوابات الدفع", "en": "Payment Gateway Settings"},
     "Payment_Gateways": {"ar": "بوابات الدفع", "en": "Payment Gateways"},
-    "Payment_SMS_Placeholder": {"ar": "شكراً لدفعك {amount}. رقم الإيصال: {receipt_number}", "en": "Thank you for your payment of {amount}. Receipt: {receipt_number}"},
+    "Payment_SMS_Placeholder": {
+        "ar": "شكراً لدفعك {amount}. رقم الإيصال: {receipt_number}",
+        "en": "Thank you for your payment of {amount}. Receipt: {receipt_number}",
+    },
     "Payment_SMS_Template": {"ar": "قالب الرسائل النصية للدفعات", "en": "Payment SMS Template"},
     "Per_Company": {"ar": "لكل شركة على حدة", "en": "Per Company"},
     "Public_Key_For_Frontend": {"ar": "المفتاح العام للواجهة الأمامية", "en": "Public Key For Frontend"},
     "Query_Results": {"ar": "نتائج الاستعلام", "en": "Query Results"},
     "Rate_Against": {"ar": "السعر مقابل", "en": "Rate Against"},
     "Recent_Actions": {"ar": "آخر الإجراءات", "en": "Recent Actions"},
-    "Reminder_WhatsApp_Placeholder": {"ar": "عزيزنا {customer_name}، لديك مبلغ مستحق: {balance}. نرجو المراجعة.", "en": "Dear {customer_name}, you have an outstanding balance of {balance}. Please review."},
+    "Reminder_WhatsApp_Placeholder": {
+        "ar": "عزيزنا {customer_name}، لديك مبلغ مستحق: {balance}. نرجو المراجعة.",
+        "en": "Dear {customer_name}, you have an outstanding balance of {balance}. Please review.",
+    },
     "Result_Count": {"ar": "عدد النتائج", "en": "Result Count"},
     "Save_All_Settings": {"ar": "حفظ جميع الإعدادات", "en": "Save All Settings"},
     "Save_All_Templates": {"ar": "حفظ جميع القوالب", "en": "Save All Templates"},
     "Secret_Key_Never_Share": {"ar": "المفتاح السري (لا تشاركه أبداً)", "en": "Secret Key (Never Share)"},
-    "Sensitive_Info_Secure_Storage": {"ar": "هذه المعلومات حساسة وسرية. تأكد من حفظها بشكل آمن.", "en": "This information is sensitive and confidential. Ensure secure storage."},
+    "Sensitive_Info_Secure_Storage": {
+        "ar": "هذه المعلومات حساسة وسرية. تأكد من حفظها بشكل آمن.",
+        "en": "This information is sensitive and confidential. Ensure secure storage.",
+    },
     "SMS": {"ar": "الرسائل النصية", "en": "SMS"},
     "SQL_Console": {"ar": "وحدة التحكم SQL", "en": "SQL Console"},
     "SQL_Query": {"ar": "استعلام SQL", "en": "SQL Query"},
@@ -4297,11 +4319,16 @@ TRANSLATIONS = {
     "Tax_Country": {"ar": "دولة الضريبة", "en": "Tax Country"},
     "Tip": {"ar": "نصيحة", "en": "Tip"},
     "Today_Sales": {"ar": "مبيعات اليوم", "en": "Today Sales"},
-    "Use_Variables_Above_For_Dynamic": {"ar": "استخدم المتغيرات المذكورة أعلاه لجعل الرسائل ديناميكية. سيتم استبدالها تلقائياً عند الإرسال.", "en": "Use the variables above to make messages dynamic. They will be replaced automatically when sending."},
+    "Use_Variables_Above_For_Dynamic": {
+        "ar": "استخدم المتغيرات المذكورة أعلاه لجعل الرسائل ديناميكية. سيتم استبدالها تلقائياً عند الإرسال.",
+        "en": "Use the variables above to make messages dynamic. They will be replaced automatically when sending.",
+    },
     "VAT_TRN_Number": {"ar": "رقم التسجيل الضريبي (VAT / TRN)", "en": "VAT / TRN Number"},
     "WhatsApp_Reminder_Template": {"ar": "قالب واتساب للتذكير", "en": "WhatsApp Reminder Template"},
-    "When_Disabled_Tax_Rate_Zero": {"ar": "عند الإيقاف: معدل الضريبة = 0 في كل الفواتير.", "en": "When disabled: tax rate = 0 in all invoices."},
-
+    "When_Disabled_Tax_Rate_Zero": {
+        "ar": "عند الإيقاف: معدل الضريبة = 0 في كل الفواتير.",
+        "en": "When disabled: tax rate = 0 in all invoices.",
+    },
     "Activity": {"ar": "النشاط", "en": "Activity"},
     "Advanced_Financial_Dashboard": {"ar": "لوحة مالية متقدمة", "en": "Advanced Financial Dashboard"},
     "Advanced_System_Settings": {"ar": "إعدادات النظام المتقدمة", "en": "Advanced System Settings"},
@@ -4336,7 +4363,10 @@ TRANSLATIONS = {
     "Of": {"ar": "من", "en": "Of"},
     "Phone_Number": {"ar": "رقم الهاتف", "en": "Phone Number"},
     "Profit_Margin": {"ar": "هامش الربح", "en": "Profit Margin"},
-    "Protected_Tables_Hidden": {"ar": "جداول محمية (أسماء وعدد السجلات مخفية)", "en": "Protected Tables (Names and record counts hidden)"},
+    "Protected_Tables_Hidden": {
+        "ar": "جداول محمية (أسماء وعدد السجلات مخفية)",
+        "en": "Protected Tables (Names and record counts hidden)",
+    },
     "Security_Alerts": {"ar": "التنبيهات الأمنية", "en": "Security Alerts"},
     "Severity": {"ar": "الخطورة", "en": "Severity"},
     "Successful_Logins": {"ar": "تسجيلات دخول ناجحة", "en": "Successful Logins"},

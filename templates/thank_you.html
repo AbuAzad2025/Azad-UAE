@@ -3,28 +3,14 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ t('شكراً') }} لك - Thank You</title>
-    
-    
+    <title>{{ _('شكراً لك') }} - Thank You</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='assets/brand/azad/favicons/favicon.png') }}">
-    
-    
     <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}">
-    
-    
     <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/bootstrap/css/bootstrap.min.css') }}">
-    
-    
-
-    
     <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='fonts/tajawal/tajawal.css') }}">
-
     <style>
-        * {
-            font-family: 'Tajawal', system-ui, sans-serif;
-        }
-        
+        * { font-family: 'Tajawal', system-ui, sans-serif; }
         body {
             background: linear-gradient(135deg, #1a5fb4 0%, #1557a0 100%);
             min-height: 100vh;
@@ -33,7 +19,6 @@
             justify-content: center;
             padding: 20px;
         }
-        
         .thank-you-container {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
@@ -45,7 +30,6 @@
             position: relative;
             overflow: hidden;
         }
-        
         .thank-you-container::before {
             content: '';
             position: absolute;
@@ -56,30 +40,15 @@
             background: radial-gradient(circle, rgba(40,167,69,0.1) 0%, transparent 70%);
             animation: pulse 4s ease-in-out infinite;
         }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-        
-        .thank-you-content {
-            position: relative;
-            z-index: 1;
-        }
-        
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        .thank-you-content { position: relative; z-index: 1; }
         .success-icon {
             font-size: 5rem;
             color: #28a745;
             margin-bottom: 30px;
             animation: bounce 2s ease-in-out infinite;
         }
-        
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-20px); }
-            60% { transform: translateY(-10px); }
-        }
-        
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-20px); } 60% { transform: translateY(-10px); } }
         .thank-you-title {
             font-size: 2.5rem;
             font-weight: 900;
@@ -88,13 +57,7 @@
             -webkit-text-fill-color: transparent;
             margin-bottom: 20px;
         }
-        
-        .thank-you-subtitle {
-            font-size: 1.2rem;
-            color: #555;
-            margin-bottom: 30px;
-        }
-        
+        .thank-you-subtitle { font-size: 1.2rem; color: #555; margin-bottom: 30px; }
         .payment-info {
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             border-radius: 15px;
@@ -102,7 +65,6 @@
             margin: 30px 0;
             border: 2px solid #28a745;
         }
-        
         .payment-id {
             background: rgba(40,167,69,0.1);
             padding: 15px;
@@ -113,7 +75,6 @@
             color: #28a745;
             margin: 15px 0;
         }
-        
         .status-badge {
             display: inline-block;
             padding: 10px 20px;
@@ -121,22 +82,9 @@
             font-weight: 700;
             margin: 10px 5px;
         }
-        
-        .status-pending {
-            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
-            color: white;
-        }
-        
-        .status-completed {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            color: white;
-        }
-        
-        .status-failed {
-            background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
-            color: white;
-        }
-        
+        .status-pending { background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%); color: white; }
+        .status-completed { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; }
+        .status-failed { background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%); color: white; }
         .btn-home {
             background: linear-gradient(135deg, #1a5fb4 0%, #1557a0 100%);
             border: none;
@@ -152,19 +100,13 @@
             display: inline-block;
             margin: 20px 10px;
         }
-        
         .btn-home:hover {
             transform: translateY(-3px);
             box-shadow: 0 8px 20px rgba(0,0,0,0.3);
             color: white;
             text-decoration: none;
         }
-        
-        .features-list {
-            text-align: right;
-            margin: 30px 0;
-        }
-        
+        .features-list { text-align: right; margin: 30px 0; }
         .feature-item {
             padding: 15px;
             margin: 10px 0;
@@ -172,12 +114,7 @@
             border-radius: 10px;
             border-right: 4px solid #28a745;
         }
-        
-        .feature-item i {
-            margin-left: 10px;
-            color: #28a745;
-        }
-        
+        .feature-item i { margin-left: 10px; color: #28a745; }
         .countdown {
             background: linear-gradient(135deg, #1a5fb4 0%, #1557a0 100%);
             color: white;
@@ -185,12 +122,7 @@
             border-radius: 15px;
             margin: 20px 0;
         }
-        
-        .countdown-number {
-            font-size: 2rem;
-            font-weight: 900;
-            color: #ffc107;
-        }
+        .countdown-number { font-size: 2rem; font-weight: 900; color: #ffc107; }
     </style>
 </head>
 <body>
@@ -205,90 +137,80 @@
                     <i class="fas fa-clock"></i>
                 {% endif %}
             </div>
-            
             <h1 class="thank-you-title">
                 {% if status == 'completed' %}
-                    {{ t('شكراً') }} لك! 🎉
+                    {{ _('شكراً لك!') }} 🎉
                 {% elif status == 'failed' %}
-                    {{ t('فشل') }} {{ t('Payment_2') }}
+                    {{ _('فشل الدفع') }}
                 {% else %}
-                    {{ t('جاري') }} {{ t('Processing') }}...
+                    {{ _('جاري المعالجة...') }}
                 {% endif %}
             </h1>
-            
             <p class="thank-you-subtitle">
                 {% if status == 'completed' %}
-                    تم {{ t('استلام') }} {{ t('تبرعك') }} {{ t('بنجاح') }} {{ t('وسيتم') }} {{ t('استخدامه') }} {{ t('لتطوير') }} {{ t('System') }}
+                    {{ _('تم استلام تبرعك بنجاح وسيتم استخدامه لتطوير النظام') }}
                 {% elif status == 'failed' %}
-                    {{ t('حدث') }} {{ t('Error') }} في {{ t('Processing_2') }} {{ t('Payment_2،') }} {{ t('يُرجى') }} {{ t('المحاولة') }} {{ t('مرة') }} {{ t('أخرى') }}
+                    {{ _('حدث خطأ في معالجة الدفع، يُرجى المحاولة مرة أخرى') }}
                 {% else %}
-                    {{ t('ننتظر') }} {{ t('Confirm') }} {{ t('Payment_2،') }} {{ t('سيتم') }} {{ t('إشعارك') }} عند {{ t('اكتمال') }} {{ t('العملية') }}
+                    {{ _('ننتظر تأكيد الدفع، سيتم إشعارك عند اكتمال العملية') }}
                 {% endif %}
             </p>
-            
             {% if payment_id %}
             <div class="payment-info">
-                <h4><i class="fas fa-receipt mr-2"></i>{{ t('Info_2') }} {{ t('Payment_2') }}</h4>
+                <h4><i class="fas fa-receipt mr-2"></i>{{ _('معلومات الدفع') }}</h4>
                 <div class="payment-id">
                     <i class="fas fa-hashtag mr-2"></i>
-                    {{ t('معرف') }} {{ t('Payment') }}: {{ payment_id }}
+                    {{ _('معرف الدفع:') }} {{ payment_id }}
                 </div>
-                
                 <div class="status-badge status-{{ status }}">
                     {% if status == 'completed' %}
-                        <i class="fas fa-check mr-2"></i>{{ t('Completed') }}
+                        <i class="fas fa-check mr-2"></i>{{ _('مكتمل') }}
                     {% elif status == 'failed' %}
-                        <i class="fas fa-times mr-2"></i>{{ t('فشل') }}
+                        <i class="fas fa-times mr-2"></i>{{ _('فشل') }}
                     {% else %}
-                        <i class="fas fa-clock mr-2"></i>في {{ t('Waiting') }}
+                        <i class="fas fa-clock mr-2"></i>{{ _('في الانتظار') }}
                     {% endif %}
                 </div>
             </div>
             {% endif %}
-            
             {% if status == 'pending' %}
             <div class="countdown">
-                <h4><i class="fas fa-hourglass-half mr-2"></i>{{ t('Time_2') }} {{ t('Expected') }} {{ t('for Confirm') }}</h4>
-                <div class="countdown-number">10-30 {{ t('دقيقة') }}</div>
-                <p>{{ t('سيتم') }} {{ t('Update') }} {{ t('Status') }} {{ t('تلقائياً') }} عند {{ t('وصول') }} {{ t('Payment') }}</p>
+                <h4><i class="fas fa-hourglass-half mr-2"></i>{{ _('الوقت المتوقع للتأكيد') }}</h4>
+                <div class="countdown-number">{{ _('10-30 دقيقة') }}</div>
+                <p>{{ _('سيتم تحديث الحالة تلقائياً عند وصول الدفع') }}</p>
             </div>
             {% endif %}
-            
             <div class="features-list">
                 <div class="feature-item">
                     <i class="fas fa-shield-alt"></i>
-                    <strong>{{ t('أمان') }} {{ t('كامل') }}:</strong> {{ t('جميع') }} {{ t('المعاملات') }} {{ t('محمية') }} {{ t('بتشفير') }} {{ t('متقدم') }}
+                    <strong>{{ _('أمان كامل:') }}</strong> {{ _('جميع المعاملات محمية بتشفير متقدم') }}
                 </div>
                 <div class="feature-item">
                     <i class="fas fa-heart"></i>
-                    <strong>{{ t('تأثير') }} {{ t('إيجابي') }}:</strong> {{ t('تبرعك') }} {{ t('يساعد') }} في {{ t('تطوير') }} {{ t('System') }}
+                    <strong>{{ _('تأثير إيجابي:') }}</strong> {{ _('تبرعك يساعد في تطوير النظام') }}
                 </div>
                 <div class="feature-item">
                     <i class="fas fa-bolt"></i>
-                    <strong>{{ t('فوري') }}:</strong> {{ t('سيتم') }} {{ t('استخدام') }} {{ t('التبرع') }} {{ t('فوراً') }} في {{ t('التطوير') }}
+                    <strong>{{ _('فوري:') }}</strong> {{ _('سيتم استخدام التبرع فوراً في التطوير') }}
                 </div>
             </div>
-            
             <div class="mt-4">
                 <a href="{{ url_for('auth.support') }}?tab=donation" class="btn-home">
                     <i class="fas fa-arrow-right mr-2"></i>
-                    {{ t('تبرع') }} {{ t('مرة') }} {{ t('أخرى') }}
+                    {{ _('تبرع مرة أخرى') }}
                 </a>
                 <a href="{{ url_for('auth.login') }}" class="btn-home">
                     <i class="fas fa-sign-in-alt mr-2"></i>
-                    {{ t('تسجيل') }} {{ t('الدخول') }}
+                    {{ _('تسجيل الدخول') }}
                 </a>
             </div>
         </div>
     </div>
-
-    
     <script src="{{ url_for('static', filename='adminlte/plugins/jquery/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename='adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ url_for('static', filename='adminlte/plugins/sweetalert2/sweetalert2.all.min.js') }}"></script>
-    
     <script>
-        // {{ t('Update') }} {{ t('Status_2') }} {{ t('Payment_2') }} كل 30 {{ t('ثانية') }} إذا كانت في {{ t('Waiting') }}
+        // Poll payment status every 30 seconds if pending
         const shouldPollPayment = {{ should_poll_payment | tojson }};
         if (shouldPollPayment) {
         function checkPaymentStatus() {
@@ -298,10 +220,8 @@
                     if (!data.success || !data.data) {
                         return;
                     }
-
                     const paymentStatus = data.data.payment_status;
                     const url = new URL(window.location.href);
-
                     if (paymentStatus === 'finished') {
                         url.searchParams.set('status', 'completed');
                         window.location.href = url.toString();
@@ -311,11 +231,10 @@
                     }
                 })
                 .catch(() => {
-                    // {{ t('Error') }} في {{ t('التحقق') }} من {{ t('Status_2') }} {{ t('Payment_2') }}
+                    // Error verifying payment status
                 });
         }
-        
-        // {{ t('التحقق') }} من {{ t('Status') }} كل 30 {{ t('ثانية') }}
+        // Check status every 30 seconds
         setInterval(checkPaymentStatus, 30000);
         }
     </script>

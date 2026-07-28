@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
-{% block title %}Super Admin · Landlord Panel{% endblock %}
-{% block page_title %}👑 Super Admin — Tenant Directory & Billing Override{% endblock %}
+{% block title %}{{ _('لوحة المالك الرئيسية') }}{% endblock %}
+{% block page_title %}{{ _('دليل المستأجرين والتحكم بالاشتراكات') }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -28,6 +28,10 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 1.3rem; color: #fff;
 }
+.sa-stat-icon-purple { background: #6c5ce7; }
+.sa-stat-icon-green { background: #00b894; }
+.sa-stat-icon-red { background: #e17055; }
+.sa-stat-icon-yellow { background: #fdcb6e; }
 .sa-stat-value { font-size: 1.6rem; font-weight: 800; line-height: 1; }
 .sa-stat-label { font-size: 0.78rem; color: #6c757d; margin-top: 2px; }
 
@@ -119,6 +123,28 @@
     font-size: 0.85rem;
 }
 .sa-summary-box strong { color: #d4a017; }
+
+.sa-company-name { font-weight: 600; }
+.sa-slug-text { font-size: 0.72rem; color: #adb5bd; }
+.sa-email-text { font-size: 0.8rem; color: #6c757d; }
+.sa-plan-name { font-weight: 600; }
+.sa-plan-duration { font-size: 0.7rem; color: #adb5bd; }
+.sa-expiry-cell { font-size: 0.8rem; }
+.sa-remaining-crit { font-size: 0.7rem; color: #dc3545; }
+.sa-remaining-warn { font-size: 0.7rem; color: #ffc107; }
+.sa-empty-val { color: #adb5bd; }
+.sa-icon-users { font-size: 0.7rem; color: #6c5ce7; }
+.sa-icon-branches { font-size: 0.7rem; color: #00b894; }
+.sa-usage-row { margin-top: 4px; }
+
+.sa-modal-content { border-radius: 16px; border: none; }
+.sa-modal-header { border-bottom: 1px solid #f1f3f5; }
+.sa-modal-title { font-weight: 700; }
+.sa-modal-icon { color: #d4a017; }
+.sa-modal-body { padding: 24px; }
+.sa-form-label { font-weight: 600; font-size: 0.85rem; }
+.sa-modal-footer { border-top: 1px solid #f1f3f5; }
+.sa-btn-gold { background: linear-gradient(135deg, #d4a017, #b8941e); border: none; font-weight: 600; }
 </style>
 {% endblock %}
 
@@ -126,82 +152,90 @@
 
 <div class="sa-stats-grid">
     <div class="sa-stat-card">
-        <div class="sa-stat-icon" style="background:#6c5ce7;"><i class="fas fa-building"></i></div>
-        <div><div class="sa-stat-value">{{ stats.total }}</div><div class="sa-stat-label">Total Tenants</div></div>
+        <div class="sa-stat-icon sa-stat-icon-purple"><i class="fas fa-building"></i></div>
+        <div><div class="sa-stat-value">{{ stats.total }}</div><div class="sa-stat-label">{{ _('إجمالي المستأجرين') }}</div></div>
     </div>
     <div class="sa-stat-card">
-        <div class="sa-stat-icon" style="background:#00b894;"><i class="fas fa-check-circle"></i></div>
-        <div><div class="sa-stat-value">{{ stats.active }}</div><div class="sa-stat-label">Active</div></div>
+        <div class="sa-stat-icon sa-stat-icon-green"><i class="fas fa-check-circle"></i></div>
+        <div><div class="sa-stat-value">{{ stats.active }}</div><div class="sa-stat-label">{{ _('نشط') }}</div></div>
     </div>
     <div class="sa-stat-card">
-        <div class="sa-stat-icon" style="background:#e17055;"><i class="fas fa-pause-circle"></i></div>
-        <div><div class="sa-stat-value">{{ stats.suspended }}</div><div class="sa-stat-label">Suspended</div></div>
+        <div class="sa-stat-icon sa-stat-icon-red"><i class="fas fa-pause-circle"></i></div>
+        <div><div class="sa-stat-value">{{ stats.suspended }}</div><div class="sa-stat-label">{{ _('موقوف') }}</div></div>
     </div>
     <div class="sa-stat-card">
-        <div class="sa-stat-icon" style="background:#fdcb6e;"><i class="fas fa-clock"></i></div>
-        <div><div class="sa-stat-value">{{ stats.trial }}</div><div class="sa-stat-label">On Trial</div></div>
+        <div class="sa-stat-icon sa-stat-icon-yellow"><i class="fas fa-clock"></i></div>
+        <div><div class="sa-stat-value">{{ stats.trial }}</div><div class="sa-stat-label">{{ _('في الفترة التجريبية') }}</div></div>
     </div>
 </div>
 
-<div class="sa-table-wrap">
+<div class="table-responsive sa-table-wrap">
     <table class="sa-table">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Company</th>
-                <th>Owner Email</th>
-                <th>Plan</th>
-                <th>Expiry</th>
-                <th>Usage</th>
-                <th>Status</th>
+                <th>{{ _('المعرف') }}</th>
+                <th>{{ _('الشركة') }}</th>
+                <th>{{ _('بريد المالك') }}</th>
+                <th>{{ _('الباقة') }}</th>
+                <th>{{ _('الانتهاء') }}</th>
+                <th>{{ _('الاستخدام') }}</th>
+                <th>{{ _('الحالة') }}</th>
                 <th></th>
             </tr>
         </thead>
         <tbody>
-            {% for row in tenant_rows %}
-            {% set t = row.tenant %}
-            {% set user_pct = (row.users_used * 100 / t.max_users) if t.max_users else 0 %}
-            {% set branch_pct = (row.branches_used * 100 / t.max_branches) if t.max_branches else 0 %}
-            <tr class="{% if t.is_suspended %}sa-row-suspended{% endif %}">
-                <td><strong>#{{ t.id }}</strong></td>
-                <td>
-                    <div style="font-weight:600;">{{ t.name_ar or t.name }}</div>
-                    <div style="font-size:0.72rem;color:#adb5bd;">{{ t.slug }}</div>
+            {% if not tenant_rows %}
+            <tr>
+                <td colspan="8" class="text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <p>{{ _('لا يوجد مستأجرين') }}</p>
                 </td>
-                <td style="font-size:0.8rem;color:#6c757d;">{{ row.owner_email }}</td>
+            </tr>
+            {% endif %}
+            {% for row in tenant_rows %}
+            {% set tenant = row.tenant %}
+            {% set user_pct = (row.users_used * 100 / tenant.max_users) if tenant.max_users else 0 %}
+            {% set branch_pct = (row.branches_used * 100 / tenant.max_branches) if tenant.max_branches else 0 %}
+            <tr class="{% if tenant.is_suspended %}sa-row-suspended{% endif %}">
+                <td><strong>#{{ tenant.id }}</strong></td>
                 <td>
-                    <span style="font-weight:600;">{{ t.subscription_plan|upper }}</span>
-                    {% if t.subscription_plan_duration %}
-                    <div style="font-size:0.7rem;color:#adb5bd;">{{ t.subscription_plan_duration }}</div>
+                    <div class="sa-company-name">{{ tenant.name_ar or tenant.name }}</div>
+                    <div class="sa-slug-text">{{ tenant.slug }}</div>
+                </td>
+                <td class="sa-email-text">{{ row.owner_email }}</td>
+                <td>
+                    <span class="sa-plan-name">{{ tenant.subscription_plan|upper }}</span>
+                    {% if tenant.subscription_plan_duration %}
+                    <div class="sa-plan-duration">{{ tenant.subscription_plan_duration }}</div>
                     {% endif %}
                 </td>
-                <td style="font-size:0.8rem;">
-                    {% if t.is_lifetime %}
-                        <span class="sa-badge sa-badge-lifetime">∞ Lifetime</span>
-                    {% elif t.subscription_end %}
-                        {{ t.subscription_end.strftime('%Y-%m-%d') }}
-                        {% set remaining = t.get_remaining_days() %}
+                <td class="sa-expiry-cell">
+                    {% if tenant.is_lifetime %}
+                        <span class="sa-badge sa-badge-lifetime">{{ _('مدى الحياة') }}</span>
+                    {% elif tenant.subscription_end %}
+                        {{ tenant.subscription_end.strftime('%Y-%m-%d') }}
+                        {% set remaining = tenant.get_remaining_days() %}
                         {% if remaining <= 7 %}
-                        <div style="font-size:0.7rem;color:#dc3545;">{{ remaining }}d left</div>
+                        <div class="sa-remaining-crit">{{ _('متبقي %(remaining)s يوم', remaining=remaining) }}</div>
                         {% elif remaining <= 30 %}
-                        <div style="font-size:0.7rem;color:#ffc107;">{{ remaining }}d left</div>
+                        <div class="sa-remaining-warn">{{ _('متبقي %(remaining)s يوم', remaining=remaining) }}</div>
                         {% endif %}
                     {% else %}
-                        <span style="color:#adb5bd;">—</span>
+                        <span class="sa-empty-val">—</span>
                     {% endif %}
                 </td>
                 <td>
                     <div class="sa-usage-text">
-                        <i class="fas fa-users" style="font-size:0.7rem;color:#6c5ce7;"></i>
-                        {{ row.users_used }}/{{ t.max_users or '∞' }}
+                        <i class="fas fa-users sa-icon-users"></i>
+                        {{ row.users_used }}/{{ tenant.max_users or '∞' }}
                         <span class="sa-usage-bar">
                             <span class="sa-usage-fill {% if user_pct >= 90 %}sa-usage-crit{% elif user_pct >= 75 %}sa-usage-warn{% else %}sa-usage-ok{% endif %}"
                                   style="width:{{ user_pct if user_pct <= 100 else 100 }}%;"></span>
                         </span>
                     </div>
-                    <div class="sa-usage-text" style="margin-top:4px;">
-                        <i class="fas fa-code-branch" style="font-size:0.7rem;color:#00b894;"></i>
-                        {{ row.branches_used }}/{{ t.max_branches or '∞' }}
+                    <div class="sa-usage-text sa-usage-row">
+                        <i class="fas fa-code-branch sa-icon-branches"></i>
+                        {{ row.branches_used }}/{{ tenant.max_branches or '∞' }}
                         <span class="sa-usage-bar">
                             <span class="sa-usage-fill {% if branch_pct >= 90 %}sa-usage-crit{% elif branch_pct >= 75 %}sa-usage-warn{% else %}sa-usage-ok{% endif %}"
                                   style="width:{{ branch_pct if branch_pct <= 100 else 100 }}%;"></span>
@@ -209,22 +243,22 @@
                     </div>
                 </td>
                 <td>
-                    {% if t.is_suspended %}
-                        <span class="sa-badge sa-badge-suspended"><i class="fas fa-ban"></i> Suspended</span>
-                    {% elif t.is_trial %}
-                        <span class="sa-badge sa-badge-trial"><i class="fas fa-clock"></i> Trial</span>
-                    {% elif t.is_active %}
-                        <span class="sa-badge sa-badge-active"><i class="fas fa-check"></i> Active</span>
+                    {% if tenant.is_suspended %}
+                        <span class="sa-badge sa-badge-suspended"><i class="fas fa-ban"></i> {{ _('موقوف') }}</span>
+                    {% elif tenant.is_trial %}
+                        <span class="sa-badge sa-badge-trial"><i class="fas fa-clock"></i> {{ _('تجريبي') }}</span>
+                    {% elif tenant.is_active %}
+                        <span class="sa-badge sa-badge-active"><i class="fas fa-check"></i> {{ _('نشط') }}</span>
                     {% else %}
-                        <span class="sa-badge sa-badge-suspended">Inactive</span>
+                        <span class="sa-badge sa-badge-suspended">{{ _('غير نشط') }}</span>
                     {% endif %}
                 </td>
                 <td>
                     <button class="sa-btn-activate" data-toggle="modal" data-target="#activateModal"
-                            data-tenant-id="{{ t.id }}"
-                            data-tenant-name="{{ t.name_ar or t.name }}"
-                            data-current-plan="{{ t.subscription_plan }}">
-                        <i class="fas fa-bolt"></i> Override
+                            data-tenant-id="{{ tenant.id }}"
+                            data-tenant-name="{{ tenant.name_ar or tenant.name }}"
+                            data-current-plan="{{ tenant.subscription_plan }}">
+                        <i class="fas fa-bolt"></i> {{ _('تجاوز') }}
                     </button>
                 </td>
             </tr>
@@ -235,46 +269,46 @@
 
 <div class="modal fade sa-modal" id="activateModal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content" style="border-radius:16px;border:none;">
-            <div class="modal-header" style="border-bottom:1px solid #f1f3f5;">
-                <h5 class="modal-title" style="font-weight:700;">
-                    <i class="fas fa-bolt" style="color:#d4a017;"></i> Manual Subscription Override
+        <div class="modal-content sa-modal-content">
+            <div class="modal-header sa-modal-header">
+                <h5 class="modal-title sa-modal-title">
+                    <i class="fas fa-bolt sa-modal-icon"></i> {{ _('تجاوز الاشتراك يدوياً') }}
                 </h5>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <form method="POST" action="{{ url_for('owner_admin.activate_subscription') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                <div class="modal-body" style="padding:24px;">
+                <div class="modal-body sa-modal-body">
                     <div class="sa-summary-box" id="modalSummary">
-                        Tenant: <strong id="modalTenantName">—</strong>
+                        {{ _('المستأجر:') }} <strong id="modalTenantName">—</strong>
                     </div>
                     <input type="hidden" name="tenant_id" id="modalTenantId">
 
                     <div class="form-group">
-                        <label for="package_id" style="font-weight:600;font-size:0.85rem;">Package</label>
+                        <label for="package_id" class="sa-form-label">{{ _('الباقة') }}</label>
                         <select name="package_id" id="package_id" class="form-control" required>
                             {% for pkg in packages %}
                             <option value="{{ pkg.id }}">
-                                {{ pkg.icon }} {{ pkg.name_en }} — ${{ pkg.price }}/{{ pkg.currency }}
+                                {{ pkg.icon|safe }} {{ pkg.name_en }} — {{ pkg.price }} {{ pkg.currency_symbol or pkg.currency }}
                             </option>
                             {% endfor %}
                         </select>
                     </div>
 
                     <div class="form-group" style="margin-bottom:0;">
-                        <label for="duration_type" style="font-weight:600;font-size:0.85rem;">Duration</label>
+                        <label for="duration_type" class="sa-form-label">{{ _('المدة') }}</label>
                         <select name="duration_type" id="duration_type" class="form-control" required>
-                            <option value="monthly">Monthly (30 days)</option>
-                            <option value="yearly">Yearly (365 days)</option>
-                            <option value="lifetime">Lifetime (no expiry)</option>
-                            <option value="trial">Trial (7 days)</option>
+                            <option value="monthly">{{ _('شهري (30 يوم)') }}</option>
+                            <option value="yearly">{{ _('سنوي (365 يوم)') }}</option>
+                            <option value="lifetime">{{ _('مدى الحياة (بدون انتهاء)') }}</option>
+                            <option value="trial">{{ _('تجريبي (7 أيام)') }}</option>
                         </select>
                     </div>
                 </div>
-                <div class="modal-footer" style="border-top:1px solid #f1f3f5;">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary" style="background:linear-gradient(135deg,#d4a017,#b8941e);border:none;font-weight:600;">
-                        <i class="fas fa-check"></i> Activate Subscription
+                <div class="modal-footer sa-modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ _('إلغاء') }}</button>
+                    <button type="submit" class="btn btn-primary sa-btn-gold">
+                        <i class="fas fa-check"></i> {{ _('تفعيل الاشتراك') }}
                     </button>
                 </div>
             </form>
