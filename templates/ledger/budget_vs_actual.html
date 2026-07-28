@@ -36,7 +36,7 @@
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <div>
                     <h5 class="mb-0">{{ budget_data.budget.name_ar }} ({{ budget_data.budget.budget_number }})</h5>
-                    <small>{{ budget_data.budget.fiscal_year }} - {{ budget_data.budget.period_type_ar }} | {{ budget_data.budget.period_start }} إلى {{ budget_data.budget.period_end }}</small>
+                    <small>{{ budget_data.budget.fiscal_year }} - {{ budget_data.budget.period_type_ar }} | {{ t('Budget_Period', start=budget_data.budget.period_start, end=budget_data.budget.period_end) }}</small>
                 </div>
                 <div class="text-end">
                     <span class="badge bg-light text-dark me-2">{{ t('Total_2') }} {{ t('المخطط') }}: {{ budget_data.total_budgeted|format_currency }}</span>

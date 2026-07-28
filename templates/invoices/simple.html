@@ -164,9 +164,9 @@
     
     <div class="header">
       {% include 'partials/print_tenant_logo.html' %}
-      <div class="company-name">{{ (settings.company_name_ar if settings and settings.company_name_ar else none) or tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}</div>
+      <div class="company-name">{{ (settings.company_name_ar if settings and settings.company_name_ar else none) or tenant_name_ar or company_name_ar or t('Accounting_System') }}</div>
       <div class="company-info">
-        {{ settings.address_ar if settings and settings.address_ar else 'العنوان' }}<br>
+        {{ settings.address_ar if settings and settings.address_ar else t('Default_Address') }}<br>
         📞 {{ settings.phone_1 if settings and settings.phone_1 else '---' }}
         {% if settings and settings.email %} • 📧 {{ settings.email }}{% endif %}
       </div>
@@ -179,7 +179,7 @@
       {% endif %}
     </div>
 
-    {% set doc_title = '🧾 فاتورة' %}
+    {% set doc_title = t('Sales_Invoice') %}
     {% set doc_number = sale.sale_number %}
     {% include 'partials/print_unified_banner.html' %}
 
@@ -290,9 +290,9 @@
       
       {% if settings and (settings.tax_number or settings.commercial_register) %}
       <div class="ic-7">
-        {% if settings.tax_number %}ض.ر: {{ settings.tax_number }}{% endif %}
+        {% if settings.tax_number %}{{ t('Tax_Register_Short') }}: {{ settings.tax_number }}{% endif %}
         {% if settings.tax_number and settings.commercial_register %} • {% endif %}
-        {% if settings.commercial_register and settings.commercial_register != 'None' %}س.ت: {{ settings.commercial_register }}{% endif %}
+        {% if settings.commercial_register and settings.commercial_register != 'None' %}{{ t('Commercial_Register_Short') }}: {{ settings.commercial_register }}{% endif %}
       </div>
       {% endif %}
       

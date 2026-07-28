@@ -1,7 +1,7 @@
 {% if pagination and pagination.pages > 1 %}
 {% set qs = request.args.to_dict() %}
 {% if qs.pop('page', None) %}{% endif %}
-<nav class="d-print-none mt-3" aria-label="Pagination">
+<nav class="d-print-none mt-3">
   <ul class="pagination justify-content-center mb-1">{%- if pagination.has_prev %}
     <li class="page-item">
       <a class="page-link" href="{{ url_for(endpoint, page=pagination.prev_num, **qs) }}">{{ t('Previous') }}</a>

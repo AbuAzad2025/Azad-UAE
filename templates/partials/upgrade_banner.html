@@ -19,8 +19,8 @@
 </div>
 <script>
 (() => {
-  const usage = {{ tenant_usage | tojson | safe }};
-  const sub = {{ tenant_subscription | tojson | safe }};
+  const usage = {{ tenant_usage | tojson }};
+  const sub = {{ tenant_subscription | tojson }};
   let maxed = false;
   let html = '';
   for (const key in usage) {

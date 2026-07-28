@@ -24,7 +24,7 @@
   <div class="card-header bg-success text-white">
     <h5 class="mb-0">
       <i class="fas fa-magic mr-2"></i>{{ t('Quick Templates') }}
-      <button type="button" class="btn btn-light float-left ic-2" data-action="toggle-card" data-card="quickTemplates" title="طي/{{ t('توسيع') }}">
+      <button type="button" class="btn btn-light float-left ic-2" data-action="toggle-card" data-card="quickTemplates" title="Toggle">
         <i class="fas fa-minus"></i>
       </button>
     </h5>
@@ -83,7 +83,7 @@
         </div>
         <div class="col-md-3">
           <div class="form-group">
-            <label>{{ t('Branch') }} ({{ t('عزل') }} {{ t('Accounting_3') }})</label>
+            <label>{{ t('Branch') }} ({{ t('Branch') }})</label>
             <select name="branch_id" class="form-control" aria-label="{{ t('اختر') }} {{ t('Branch') }}">
               <option value="">— {{ t('Optional') }} —</option>
               {% for b in branches or [] %}
@@ -99,7 +99,7 @@
           <div class="form-group">
             <label for="entry_notes">{{ t('Notes') }} ({{ t('Optional') }})</label>
             <textarea name="notes" id="entry_notes" class="form-control" rows="2" 
-                      placeholder="أي {{ t('Notes') }} {{ t('Additional') }}..." maxlength="500"></textarea>
+                      placeholder="{{ t('Notes') }}..." maxlength="500"></textarea>
           </div>
         </div>
       </div>
@@ -122,11 +122,11 @@
                   <th style="width: 30%">{{ t('Description') }}</th>
                   <th style="width: 15%" class="text-center">
                     <i class="fas fa-arrow-down text-success mr-1"></i>
-                    <strong class="text-success">{{ t('مدين') }}</strong>
+                    <strong class="text-success">{{ t('Debit') }}</strong>
                   </th>
                   <th style="width: 15%" class="text-center">
                     <i class="fas fa-arrow-up text-danger mr-1"></i>
-                    <strong class="text-danger">{{ t('دائن') }}</strong>
+                    <strong class="text-danger">{{ t('Credit') }}</strong>
                   </th>
                   <th style="width: 5%"></th>
                 </tr>
@@ -145,7 +145,7 @@
                   </th>
                 </tr>
                 <tr id="balanceRow">
-                  <th colspan="3" class="text-left">{{ t('الفرق') }}:</th>
+                  <th colspan="3" class="text-left">{{ t('Difference') }}:</th>
                   <th colspan="2" class="text-center" id="balanceCell">
                     <span id="difference" class="badge badge-secondary">0.00</span>
                   </th>
@@ -163,15 +163,15 @@
             <i class="fas fa-save mr-2"></i>{{ t('Save Entry') }}
           </button>
           <button type="button" class="btn btn-primary" data-action="add-line">
-            <i class="fas fa-plus mr-2"></i>{{ t('Add') }} {{ t('سطر') }}
+            <i class="fas fa-plus mr-2"></i>{{ t('Add_Line') }}
           </button>
           <button type="button" class="btn btn-secondary" data-action="reset-form">
-            <i class="fas fa-redo mr-2"></i>{{ t('إعادة') }} {{ t('تعيين') }}
+            <i class="fas fa-redo mr-2"></i>{{ t('Reset_Form') }}
           </button>
           <div class="float-left">
             <div id="balanceStatus" class="alert alert-warning d-inline-block mb-0 py-2">
               <i class="fas fa-exclamation-triangle mr-2"></i>
-              {{ t('القيد') }} غير {{ t('متوازن') }}! {{ t('المدين') }} يجب أن {{ t('يساوي') }} {{ t('الدائن') }}
+{{ t('Entry_Unbalanced') }}
             </div>
           </div>
         </div>
@@ -191,7 +191,7 @@ document.addEventListener('click', (e) => {
   else if (action === 'reset-form') resetForm();
 });
 
-// {{ t('List') }} {{ t('Accounts') }} (من Backend)
+// Account list (from backend)
 const accounts = {{ accounts_json | tojson }}.map(function (a) {
   return Object.assign({}, a, {
     full_name: a.code + ' - ' + (a.name_ar || a.name_en)
@@ -200,7 +200,7 @@ const accounts = {{ accounts_json | tojson }}.map(function (a) {
 
 let lineCounter = 0;
 
-// {{ t('Add') }} {{ t('سطر') }} {{ t('New') }}
+// Add new line
 function addLine() {
   const tbody = document.getElementById('linesTableBody');
   const row = document.createElement('tr');
@@ -226,7 +226,7 @@ function addLine() {
             step="0.01" min="0" value="0" oninput="handleCreditChange(this)" onchange="handleCreditChange(this)" onkeyup="calculateJournalTotals()" aria-label="line ${lineCounter} credit">
   </td>
   <td>
-    <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteLine(this)" title="{{ t('Delete') }} {{ t('السطر') }}">
+    <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteLine(this)" title="{{ t('Delete_Line') }}">
       <i class="fas fa-trash"></i>
     </button>
   </td>
@@ -236,7 +236,7 @@ function addLine() {
   document.getElementById('lineCountHidden').value = lineCounter;
 }
 
-// عند {{ t('Change') }} {{ t('المدين،') }} {{ t('صفّر') }} {{ t('الدائن') }}
+// On debit change, zero the credit
 function handleDebitChange(input) {
   const value = parseFloat(input.value) || 0;
   if (value > 0) {
@@ -247,7 +247,7 @@ function handleDebitChange(input) {
   calculateJournalTotals();
 }
 
-// عند {{ t('Change') }} {{ t('الدائن،') }} {{ t('صفّر') }} {{ t('المدين') }}
+// On credit change, zero the debit
 function handleCreditChange(input) {
   const value = parseFloat(input.value) || 0;
   if (value > 0) {
@@ -258,7 +258,7 @@ function handleCreditChange(input) {
   calculateJournalTotals();
 }
 
-// {{ t('Account') }} {{ t('Totals') }} {{ t('والتوازن') }} {{ t('للقيد') }} {{ t('Manual_2') }} - CLIENT SIDE
+// Calculate totals and balance - CLIENT SIDE
 function calculateJournalTotals() {
   const debitInputs = document.querySelectorAll('.debit-input');
   const creditInputs = document.querySelectorAll('.credit-input');
@@ -287,22 +287,22 @@ function calculateJournalTotals() {
   differenceSpan.textContent = difference.toFixed(2);
   
   if (difference < 0.01 && totalDebit > 0 && totalCredit > 0) {
-    // {{ t('متوازن') }} ✅
+    // Balanced ✅
     differenceSpan.className = 'badge badge-success';
-    differenceSpan.innerHTML = '<i class="fas fa-check mr-1"></i> {{ t('متوازن') }}';
+    differenceSpan.innerHTML = '<i class="fas fa-check mr-1"></i> {{ t('Entry_Balanced') }}';
     if (balanceStatus) {
       balanceStatus.className = 'alert alert-success d-inline-block mb-0 py-2';
-      balanceStatus.innerHTML = '<i class="fas fa-check-circle mr-2"></i>{{ t('القيد') }} {{ t('متوازن') }} - {{ t('يمكنك') }} {{ t('Save_2') }} {{ t('الآن_2') }}';
+      balanceStatus.innerHTML = '<i class="fas fa-check-circle mr-2"></i>{{ t('Entry_Balanced_Save') }}';
     }
     submitBtn.disabled = false;
     submitBtn.removeAttribute('disabled');
     submitBtn.className = 'btn btn-success btn-lg';
   } else {
-    // غير {{ t('متوازن') }} ❌
+    // Not balanced ❌
     differenceSpan.className = 'badge badge-danger';
     if (balanceStatus) {
       balanceStatus.className = 'alert alert-warning d-inline-block mb-0 py-2';
-      balanceStatus.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>{{ t('القيد') }} غير {{ t('متوازن') }}! {{ t('المدين') }} يجب أن {{ t('يساوي') }} {{ t('الدائن') }}';
+      balanceStatus.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>{{ t('Entry_Unbalanced') }}';
     }
     submitBtn.disabled = true;
     submitBtn.setAttribute('disabled', 'disabled');
@@ -310,60 +310,60 @@ function calculateJournalTotals() {
   }
 }
 
-// {{ t('إعادة') }} {{ t('تعيين') }} {{ t('النموذج_2') }}
+// Reset form
 function resetForm() {
-  if (confirm('هل أنت {{ t('متأكد') }} من {{ t('إعادة') }} {{ t('تعيين') }} {{ t('النموذج_2') }} {{ t('سيتم') }} {{ t('مسح') }} {{ t('جميع') }} {{ t('Data') }}.')) {
+  if (confirm('{{ t('Confirm_Reset') }}')) {
     document.getElementById('journalEntryForm').reset();
     document.getElementById('linesTableBody').innerHTML = '';
     lineCounter = 0;
-    // {{ t('Add') }} {{ t('سطرين') }} {{ t('افتراضيين') }}
+    // Add two default lines
     addLine();
     addLine();
     calculateJournalTotals();
   }
 }
 
-// {{ t('قوالب') }} {{ t('Quick') }}
+// Quick templates
 function loadTemplate(templateType) {
-  // {{ t('مسح') }} {{ t('السطور') }} {{ t('الحالية') }}
+  // Clear current rows
   document.getElementById('linesTableBody').innerHTML = '';
   lineCounter = 0;
   
-  // {{ t('تعيين') }} {{ t('Description') }}
+  // Set description
   const descriptionInput = document.querySelector('input[name="description"]');
   
   switch(templateType) {
     case 'cash_sale':
       descriptionInput.value = '{{ t('مبيعة') }} {{ t('Cash_4') }}';
-      addLineWithData('1110', '{{ t('صندوق') }}', 1000, 0); // {{ t('مدين') }} - {{ t('Fund') }} {{ t('يزيد') }}
-      addLineWithData('4100', '{{ t('Revenues') }} {{ t('Sales') }}', 0, 1000); // {{ t('دائن') }} - {{ t('Revenue') }}
+      addLineWithData('1110', '{{ t('صندوق') }}', 1000, 0); // debit - Fund increases
+      addLineWithData('4100', '{{ t('Revenues') }} {{ t('Sales') }}', 0, 1000); // credit - Revenue
       break;
       
     case 'credit_sale':
       descriptionInput.value = '{{ t('مبيعة') }} {{ t('Credit_2') }}';
-      addLineWithData('1130', '{{ t('Receivables_2') }} {{ t('Receivables') }}', 1000, 0); // {{ t('مدين') }} - {{ t('Receivables_2') }} {{ t('تزيد') }}
-      addLineWithData('4100', '{{ t('Revenues') }} {{ t('Sales') }}', 0, 1000); // {{ t('دائن') }} - {{ t('Revenue') }}
+      addLineWithData('1130', '{{ t('Receivables_2') }} {{ t('Receivables') }}', 1000, 0); // debit - Receivables increases
+      addLineWithData('4100', '{{ t('Revenues') }} {{ t('Sales') }}', 0, 1000); // credit - Revenue
       break;
       
     case 'expense':
       descriptionInput.value = '{{ t('Expense_3') }}';
-      addLineWithData('6100', '{{ t('Expense_3') }} {{ t('رواتب') }}', 500, 0); // {{ t('مدين') }} - {{ t('Expense_2') }} {{ t('يزيد') }}
-      addLineWithData('1110', '{{ t('صندوق') }}', 0, 500); // {{ t('دائن') }} - {{ t('Fund') }} {{ t('ينقص') }}
+      addLineWithData('6100', '{{ t('Expense_3') }} {{ t('رواتب') }}', 500, 0); // debit - Expense increases
+      addLineWithData('1110', '{{ t('صندوق') }}', 0, 500); // credit - Fund decreases
       break;
       
     case 'adjustment':
       descriptionInput.value = '{{ t('قيد') }} {{ t('Reconciliation') }}';
-      addLineWithData('1110', '{{ t('صندوق') }}', 200, 0); // {{ t('مدين') }} - {{ t('Fund') }} {{ t('يزيد') }}
-      addLineWithData('1130', '{{ t('Receivables_2') }} {{ t('Receivables') }}', 0, 200); // {{ t('دائن') }} - {{ t('Receivables_2') }} {{ t('تنقص') }}
+      addLineWithData('1110', '{{ t('صندوق') }}', 200, 0); // debit - Fund increases
+      addLineWithData('1130', '{{ t('Receivables_2') }} {{ t('Receivables') }}', 0, 200); // credit - Receivables decreases
       break;
   }
   
-  // {{ t('Account') }} {{ t('Totals') }} {{ t('فوراً') }} + {{ t('Reserve_3') }}
+  // Calculate totals immediately + safety
   calculateJournalTotals();
   setTimeout(() => calculateJournalTotals(), 100);
 }
 
-// {{ t('Add') }} {{ t('سطر') }} مع {{ t('Data_2') }} {{ t('محددة') }}
+// Add line with preset data
 function addLineWithData(accountCode, accountName, debit, credit) {
   const tbody = document.getElementById('linesTableBody');
   const row = document.createElement('tr');
@@ -391,7 +391,7 @@ function addLineWithData(accountCode, accountName, debit, credit) {
   `;
   tbody.appendChild(row);
   
-  // {{ t('تعيين') }} {{ t('القيم') }} بعد {{ t('Add') }} {{ t('الصف') }} {{ t('للـ') }} DOM ({{ t('Important') }} {{ t('جداً') }}!)
+  // Set values after adding row to DOM (very important!)
   const debitInput = row.querySelector('.debit-input');
   const creditInput = row.querySelector('.credit-input');
   if (debitInput) debitInput.value = debit;
@@ -401,7 +401,7 @@ function addLineWithData(accountCode, accountName, debit, credit) {
   document.getElementById('lineCountHidden').value = lineCounter;
 }
 
-// {{ t('دالة') }} {{ t('لإظهار') }}/{{ t('Hide') }} {{ t('البطاقات') }}
+// Toggle card visibility
 function toggleCard(cardName) {
   const body = document.getElementById(cardName + 'Body');
   const icon = document.getElementById(cardName + 'Icon');
@@ -419,15 +419,15 @@ function toggleCard(cardName) {
   }
 }
 
-// {{ t('Delete') }} {{ t('سطر') }} من {{ t('القيد') }}
+// Delete line from entry
 function deleteLine(button) {
   const row = button.closest('tr');
   if (row) {
     row.remove();
-    // {{ t('إعادة') }} {{ t('ترقيم') }} {{ t('الأسطر') }}
+    // Re-number lines
     document.querySelectorAll('#linesTableBody tr').forEach((r, idx) => {
       r.cells[0].textContent = String(idx + 1);
-      // {{ t('Update') }} name attributes
+      // Update name attributes
       const selects = r.querySelectorAll('select, input');
       selects.forEach(el => {
         if (el.name) {
@@ -443,17 +443,17 @@ function deleteLine(button) {
   }
 }
 
-// عند {{ t('Download') }} {{ t('الصفحة') }}
+// On page load
 document.addEventListener('DOMContentLoaded', () => {
-  // {{ t('تعيين') }} {{ t('Date') }} {{ t('الحالي') }}
+  // Set current date
   document.querySelector('input[name="entry_date"]').value = new Date().toISOString().split('T')[0];
   
-  // {{ t('Add') }} {{ t('سطرين') }} {{ t('افتراضيين') }}
+  // Add two default lines
   addLine();
   addLine();
   calculateJournalTotals();
   
-  // {{ t('التأكد') }} من أن {{ t('البطاقات') }} {{ t('مرئية') }} (مع {{ t('وجود') }} {{ t('التحقق') }})
+  // Ensure cards are visible (with safety check)
   const quickTemplatesBody = document.getElementById('quickTemplatesBody');
   if (quickTemplatesBody) {
     quickTemplatesBody.style.display = 'block';

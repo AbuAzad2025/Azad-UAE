@@ -198,12 +198,12 @@
   <div class="invoice">
     <div class="header">
       {% include 'partials/print_tenant_logo.html' %}
-      <div class="company-name">{{ (settings.company_name_ar if settings and settings.company_name_ar else none) or tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}</div>
+      <div class="company-name">{{ (settings.company_name_ar if settings and settings.company_name_ar else none) or tenant_name_ar or company_name_ar or t('Accounting_System') }}</div>
       <div class="company-info">
         <div>{{ (settings.address_ar if settings and settings.address_ar else none) or tenant_address or company_address }}</div>
         <div>📞 {{ (settings.phone_1 if settings and settings.phone_1 else none) or tenant_phone or company_phone }} {% if settings and settings.phone_2 and settings.phone_2 != 'None' %}| {{ settings.phone_2 }}{% endif %}</div>
         <div>📧 {{ (settings.email if settings and settings.email else none) or tenant_email or company_email }} {% if settings and settings.website and settings.website != 'None' %}| 🌐 {{ settings.website }}{% endif %}</div>
-        {% if settings and settings.tax_number and settings.tax_number != 'None' %}<div class="ic-2">{{ t('الرقم') }} {{ t('الضريبي') }}: {{ settings.tax_number }}</div>{% endif %}
+        {% if settings and settings.tax_number and settings.tax_number != 'None' %}<div class="ic-2">{{ t('Tax_Register_Number') }}: {{ settings.tax_number }}</div>{% endif %}
         {% if print_branch %}
         <div>🏢 {{ t('Branch') }}: {{ print_branch.name }}{% if print_branch.code %} ({{ print_branch.code }}){% endif %}</div>
         {% if print_branch.address %}
@@ -213,7 +213,7 @@
       </div>
     </div>
 
-    {% set doc_title = '🧾 فـاتـورة بـيـع' %}
+    {% set doc_title = t('Sales_Invoice') %}
     {% set doc_number = sale.sale_number %}
     {% include 'partials/print_unified_banner.html' %}
 
@@ -361,7 +361,7 @@
     </div>
 
     <div class="footer">
-      <div class="ic-20">{{ settings.payment_terms_ar if settings and settings.payment_terms_ar else 'نرجو الالتزام بمواعيد الدفع المحددة' }}</div>
+      <div class="ic-20">{{ settings.payment_terms_ar if settings and settings.payment_terms_ar else t('Default_Invoice_Terms') }}</div>
       
       
       {% if settings and ((settings.bank_name and settings.bank_name != 'None') or (settings.iban and settings.iban != 'None') or (settings.swift_code and settings.swift_code != 'None')) %}

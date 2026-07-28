@@ -118,7 +118,7 @@
           <td>{{ format_currency(total_credit) }}</td>
           <td>
             {% set difference = total_debit - total_credit %}
-            {% if difference == 0 %}
+            {% if (difference | abs) < 0.01 %}
               <span class="badge badge-success">{{ t('متوازن') }}</span>
             {% else %}
               {{ format_currency(difference) }}
@@ -132,17 +132,17 @@
     <div class="alert alert-info ic-2">
       <h5><i class="fas fa-info-circle mr-2"></i>{{ t('Notes') }} {{ t('Task') }}:</h5>
       <ul class="mb-0">
-        <li>تم {{ t('إعداد') }} هذا {{ t('Report') }} {{ t('وفقاً') }} {{ t('للمعايير') }} {{ t('Accounting') }} {{ t('الدولية') }}</li>
-        <li>{{ t('جميع') }} {{ t('Amounts') }} بـ{{ tenant_currency_name_ar or "درهم إماراتي" }}</li>
-        <li>{{ t('Report') }} {{ t('معتمد') }} من {{ t('System') }} {{ t('Accounting_4') }} {{ t('المتقدم') }}</li>
+        <li>{{ t('Report_Prepared_According') }}</li>
+        <li>{{ t('All_Amounts_In') }} {{ tenant_currency_name_ar or tenant_currency_name or "AED" }}</li>
+        <li>{{ t('Certified_Report') }}</li>
         <li>{{ t('History') }} {{ t('Printing') }}: {{ datetime.now().strftime('%Y-%m-%d %H:%M') if datetime else '-' }}</li>
       </ul>
     </div>
 
     
     <div class="print-footer">
-      <h5><i class="fas fa-certificate mr-2"></i>{{ t('شهادة') }} {{ t('Health') }} {{ t('Data') }}</h5>
-      <p>{{ t('نؤكد') }} أن {{ t('Data') }} {{ t('الواردة') }} في هذا {{ t('Report') }} {{ t('صحيحة') }} {{ t('ومطابقة') }} {{ t('للسجلات') }} {{ t('Accounting') }}</p>
+      <h5><i class="fas fa-certificate mr-2"></i>{{ t('Data_Certificate') }}</h5>
+      <p>{{ t('Data_Confirmed') }}</p>
       
       <div class="footer-signatures">
         <div class="signature-box">
@@ -164,7 +164,7 @@
       
       <div class="ic-3">
         <p>© 2025 {{ t('Company_2') }} {{ t('الإمارات') }} {{ t('للمرائب') }} - {{ t('جميع') }} {{ t('الحقوق') }} {{ t('محفوظة') }}</p>
-        <p>تم {{ t('Create') }} هذا {{ t('Report') }} {{ t('بواسطة') }} {{ t('System') }} {{ t('Accounting_4') }} {{ t('المتقدم') }}</p>
+        <p>{{ t('Generated_By') }}</p>
       </div>
     </div>
   </div>
@@ -211,7 +211,7 @@ function printPDF() {
     // {{ t('Save') }} {{ t('File') }}
     doc.save('trial_balance_' + new Date().toISOString().split('T')[0] + '.pdf');
   } else {
-    alert('{{ t('مكتبة') }} jsPDF غير {{ t('متوفرة') }}');
+    alert('{{ t('jsPDF_Not_Available') }}');
   }
 }
 

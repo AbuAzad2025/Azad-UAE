@@ -24,7 +24,7 @@
   <div class="card-body">
     <form class="needs-validation form-inline" method="get" action="">
       <input type="hidden" name="type" value="{{ analysis_type }}" aria-label="type">
-      <label class="ml-2 mr-2" for="input_as_of_date">حتى {{ t('History') }}:</label>
+      <label class="ml-2 mr-2" for="input_as_of_date">{{ t('As_of_Date') }}</label>
       <input type="date" name="as_of_date" class="form-control mr-3" value="{{ as_of_date }}" required id="input_as_of_date" aria-label="as of date">
       <button type="submit" class="btn btn-primary">
         <i class="fas fa-filter mr-2"></i>{{ t('View') }}
@@ -118,7 +118,7 @@
         <table class="table table-bordered table-striped mb-0">
           <thead class="bg-light">
             <tr>
-              <th style="width: 20%">{{ 'العميل' if analysis_type == 'receivables' else 'المورد' }}</th>
+              <th style="width: 20%">{{ t('Customer_Header') if analysis_type == 'receivables' else t('Supplier_Header') }}</th>
               <th style="width: 13%" class="text-center">0-30 {{ t('يوم') }}</th>
               <th style="width: 13%" class="text-center">31-60 {{ t('يوم') }}</th>
               <th style="width: 13%" class="text-center">61-90 {{ t('يوم') }}</th>
