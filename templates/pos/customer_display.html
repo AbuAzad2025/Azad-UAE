@@ -1,26 +1,26 @@
 {% extends 'layouts/base_pos.html' %}
-{% block title %}{{ t('Customer Display') }}{% endblock %}
+{% block title %}{{ _('شاشة العميل') }}{% endblock %}
 {% block content %}
 <div class="container text-center text-white py-5" style="min-height:100vh">
   <div id="cdStatus" class="mb-4">
     <div class="display-1 mb-3"><i class="fas fa-spinner fa-pulse"></i></div>
-    <h2 id="cdOrderNumber" class="mb-3">{{ t('Waiting for Order') }}...</h2>
+    <h2 id="cdOrderNumber" class="mb-3">{{ _('بانتظار الطلب') }}...</h2>
   </div>
   <div id="cdItems" class="row justify-content-center mb-4 d-none">
     <div class="col-md-6">
       <table class="table table-dark table-borderless text-right">
-        <thead><tr><th>{{ t('Description') }}</th><th>{{ t('Qty') }}</th><th>{{ t('Price') }}</th><th>{{ t('Discount') }}</th><th>{{ t('Amount') }}</th></tr></thead>
+        <thead><tr><th>{{ _('الوصف') }}</th><th>{{ _('الكمية') }}</th><th>{{ _('السعر') }}</th><th>{{ _('الخصم') }}</th><th>{{ _('المبلغ') }}</th></tr></thead>
         <tbody id="cdItemsBody"></tbody>
       </table>
       <hr class="border-light">
       <table class="table table-dark table-borderless text-right h5">
         <tbody>
-          <tr><td>{{ t('Subtotal') }}</td><td id="cdSubtotal" class="text-left"></td></tr>
-          <tr id="cdDiscountRow" class="d-none"><td>{{ t('Discount') }}</td><td id="cdDiscount" class="text-left"></td></tr>
-          <tr id="cdPromoRow" class="d-none"><td>{{ t('Promotion') }}</td><td id="cdPromo" class="text-left"></td></tr>
-          <tr id="cdTaxRow" class="d-none"><td id="cdTaxLabel">{{ t('VAT') }}</td><td id="cdTax" class="text-left"></td></tr>
-          <tr id="cdZeroRow" class="d-none"><td>{{ t('Zero Rated') }}</td><td id="cdZero" class="text-left"></td></tr>
-          <tr id="cdExemptRow" class="d-none"><td>{{ t('Exempt') }}</td><td id="cdExempt" class="text-left"></td></tr>
+          <tr><td>{{ _('المجموع') }}</td><td id="cdSubtotal" class="text-left"></td></tr>
+          <tr id="cdDiscountRow" class="d-none"><td>{{ _('الخصم') }}</td><td id="cdDiscount" class="text-left"></td></tr>
+          <tr id="cdPromoRow" class="d-none"><td>{{ _('العرض') }}</td><td id="cdPromo" class="text-left"></td></tr>
+          <tr id="cdTaxRow" class="d-none"><td id="cdTaxLabel">{{ _('ضريبة القيمة المضافة') }}</td><td id="cdTax" class="text-left"></td></tr>
+          <tr id="cdZeroRow" class="d-none"><td>{{ _('معفى من الضريبة') }}</td><td id="cdZero" class="text-left"></td></tr>
+          <tr id="cdExemptRow" class="d-none"><td>{{ _('غير خاضع') }}</td><td id="cdExempt" class="text-left"></td></tr>
         </tbody>
       </table>
       <h3 id="cdTotal" class="text-left"></h3>
@@ -35,11 +35,11 @@
         <div class="progress" style="height:30px">
           <div id="cdProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width:0"></div>
         </div>
-        <p id="cdProgressLabel" class="mt-2 h4">{{ t('Pending') }}</p>
+        <p id="cdProgressLabel" class="mt-2 h4">{{ _('معلق') }}</p>
       </div>
     </div>
   </div>
-  <p class="text-muted small mt-5">{{ t('Thank You') }}</p>
+  <p class="text-muted small mt-5">{{ _('شكراً لك') }}</p>
 </div>
 {% endblock %}
 {% block extra_js %}
@@ -49,7 +49,7 @@
   const sessionId = params.get('session_id');
   const tenantId = params.get('tenant_id');
   const token = params.get('token');
-  if (!sessionId || !tenantId || !token) { document.getElementById('cdOrderNumber').textContent = '{{ t("Invalid Link") }}'; return; }
+  if (!sessionId || !tenantId || !token) { document.getElementById('cdOrderNumber').textContent = '{{ _('رابط غير صالح') }}'; return; }
 
   const $ = (id) => document.getElementById(id);
   const fmt = (v) => (Number(v) || 0).toFixed(3).replace(/\.?0+$/, '') || '0';
@@ -63,15 +63,15 @@
       $('cdStatus').classList.remove('d-none');
       $('cdItems').classList.add('d-none');
       $('cdProgress').classList.add('d-none');
-      $('cdOrderNumber').textContent = '{{ t("Waiting for Order") }}...';
+      $('cdOrderNumber').textContent = '{{ _('بانتظار الطلب') }}...';
       return;
     }
     if (d.type !== 'order_update') return;
     const live = d.status === 'cart' || d.live === true;
     $('cdStatus').classList.remove('d-none');
     $('cdOrderNumber').textContent = d.order_number
-      ? '{{ t("Invoice") }} #' + d.order_number
-      : '{{ t("In Progress") }}...';
+      ? '{{ _('فاتورة') }} #' + d.order_number
+      : '{{ _('قيد التنفيذ') }}...';
     $('cdItems').classList.remove('d-none');
     const tbody = $('cdItemsBody');
     tbody.textContent = '';
@@ -94,25 +94,24 @@
     const tb = d.tax_breakdown || {};
     const std = tb.standard || { base: 0, rate: 0, tax: 0 };
     showRow('cdTaxRow', Number(std.tax) > 0 || Number(std.rate) > 0);
-    $('cdTaxLabel').textContent = '{{ t("VAT") }} (' + (Number(std.rate) || 0) + '%)';
+    $('cdTaxLabel').textContent = `{{ _('ضريبة القيمة المضافة') }} (${Number(std.rate) || 0}%)`;
     $('cdTax').textContent = money(std.tax);
     showRow('cdZeroRow', Number(tb.zero_rated?.base) > 0);
     $('cdZero').textContent = money(tb.zero_rated?.base);
     showRow('cdExemptRow', Number(tb.exempt?.base) > 0);
     $('cdExempt').textContent = money(tb.exempt?.base);
-    $('cdTotal').textContent = '{{ t("Grand Total") }}: ' + money(d.total);
+    $('cdTotal').textContent = `{{ _('الإجمالي الكلي:') }} ${money(d.total)}`;
     const paid = Number(d.paid_amount) || 0;
     showRow('cdTender', paid > 0);
-    $('cdPaid').textContent = '{{ t("Paid") }}: ' + money(paid);
-    $('cdChange').textContent = '{{ t("Change") }}: ' + money(d.change_due);
+    $('cdPaid').textContent = `{{ _('المدفوع:') }} ${money(paid)}`;
+    $('cdChange').textContent = `{{ _('الباقي:') }} ${money(d.change_due)}`;
     $('cdProgress').classList.remove('d-none');
     const pct = live ? '15%' : ({pending:'25%',preparing:'50%',ready:'75%',served:'100%'}[d.status] || '0%');
-    const label = live ? '{{ t("In Progress") }}' : ({pending:'{{ t("Pending") }}',preparing:'{{ t("Preparing") }}',ready:'{{ t("Ready") }}',served:'{{ t("Served") }}'}[d.status] || '');
+    const label = live ? '{{ _('قيد التنفيذ') }}' : ({pending:'{{ _('معلق') }}',preparing:'{{ _('قيد التحضير') }}',ready:'{{ _('جاهز') }}',served:'{{ _('تم التقديم') }}'}[d.status] || '');
     $('cdProgressBar').style.width = pct;
     $('cdProgressLabel').textContent = label;
   }
 
-  /* BroadcastChannel fallback — live cart from the register when SSE is down */
   let bc = null;
   try {
     bc = new BroadcastChannel('pos-cfd');
@@ -122,7 +121,6 @@
     };
   } catch (ex) { bc = null; }
 
-  /* SSE authoritative stream with reconnect backoff */
   let es = null;
   let retryMs = 1000;
   const connect = () => {
@@ -133,7 +131,6 @@
     };
     es.onerror = () => {
       es.close();
-      /* BroadcastChannel keeps the display alive; retry SSE with backoff */
       setTimeout(connect, retryMs);
       retryMs = Math.min(retryMs * 2, 30000);
     };

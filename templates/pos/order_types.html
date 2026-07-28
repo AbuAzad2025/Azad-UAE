@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 
-{% block title %}أنواع الطلبات - POS{% endblock %}
+{% block title %}{{ _('أنواع الطلبات') }}{% endblock %}
 
 {% block page_title %}
-<h1 class="mb-0"><i class="fas fa-list-alt mr-2"></i>{{ _('أنواع الطلبات في نقطة البيع') }}</h1>
+<h1 class="mb-0"><i class="fas fa-list-alt mr-2"></i>{{ _('أنواع الطلبات') }}</h1>
 {% endblock %}
 
 {% block content %}
@@ -15,7 +15,7 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="create">
         <div class="form-group col-md-2">
-          <label for="ot_code">{{ _('الرمز (code)') }}</label>
+          <label for="ot_code">{{ _('الرمز') }}</label>
           <input class="form-control" id="ot_code" name="code" required placeholder="{{ _('مثال: in_store') }}">
         </div>
         <div class="form-group col-md-3">
@@ -24,7 +24,7 @@
         </div>
         <div class="form-group col-md-3">
           <label for="ot_name_en">{{ _('الاسم (إنجليزي)') }}</label>
-          <input class="form-control" id="ot_name_en" name="name_en" placeholder="e.g. In-store">
+          <input class="form-control" id="ot_name_en" name="name_en" placeholder="{{ _('مثال: In-store') }}">
         </div>
         <div class="form-group col-md-2">
           <label for="ot_sort_order">{{ _('الترتيب') }}</label>
@@ -76,7 +76,7 @@
                 <input type="hidden" name="ot_id" value="{{ ot.id }}">
                 <button type="submit" name="action" value="set_default" class="btn btn-sm btn-outline-primary mr-1">{{ _('افتراضي') }}</button>
                 <button type="submit" name="action" value="toggle" class="btn btn-sm btn-outline-secondary mr-1">{{ _('تبديل النشط') }}</button>
-                <button type="submit" name="action" value="delete" class="btn btn-sm btn-outline-danger" data-action="confirm-submit" data-confirm-message="حذف النوع؟">{{ _('حذف') }}</button>
+                <button type="submit" name="action" value="delete" class="btn btn-sm btn-outline-danger" data-action="confirm-submit" data-confirm-message="{{ _('حذف النوع؟') }}">{{ _('حذف') }}</button>
               </form>
             </td>
           </tr>

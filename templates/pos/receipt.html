@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ t('Receipt') }} #{{ sale.sale_number }}</title>
+    <title>{{ _('إيصال') }} #{{ sale.sale_number }}</title>
     <style>
         @page { size: 80mm; margin: 0; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -50,16 +50,16 @@
     </div>
     <div class="receipt print-container-pos">
         <div class="r-header">
-            <h1>{{ tenant_name_ar or company_name_ar or 'Azad' }}</h1>
+            <h1>{{ tenant_name_ar or company_name_ar or _('Azad Systems') }}</h1>
             {% if tenant_phone %}<div class="r-meta">{{ tenant_phone }}</div>{% endif %}
             {% if tenant_address %}<div class="r-meta">{{ tenant_address }}</div>{% endif %}
             <div class="r-meta">{{ sale.sale_number }}</div>
         </div>
 
         <div class="r-grid">
-            <span class="r-label">{{ t('Date') }}:</span><span>{{ sale.sale_date.strftime('%Y-%m-%d %H:%M') if sale.sale_date else '' }}</span>
-            <span class="r-label">{{ t('Cashier') }}:</span><span>{{ current_user.full_name or current_user.username }}</span>
-            <span class="r-label">{{ t('Customer') }}:</span><span>{{ customer.name if customer else t('Walk-in') }}</span>
+            <span class="r-label">{{ _('التاريخ') }}:</span><span>{{ sale.sale_date.strftime('%Y-%m-%d %H:%M') if sale.sale_date else '' }}</span>
+            <span class="r-label">{{ _('الكاشير') }}:</span><span>{{ current_user.full_name or current_user.username }}</span>
+            <span class="r-label">{{ _('العميل') }}:</span><span>{{ customer.name if customer else _('عميل نقدي') }}</span>
         </div>
 
         <div class="r-divider"></div>
@@ -67,9 +67,9 @@
         <table class="r-items">
             <thead>
                 <tr>
-                    <th>{{ t('Item') }}</th>
-                    <th class="r-qty">{{ t('Qty') }}</th>
-                    <th class="r-amt">{{ t('Amount') }}</th>
+                    <th>{{ _('الصنف') }}</th>
+                    <th class="r-qty">{{ _('الكمية') }}</th>
+                    <th class="r-amt">{{ _('المبلغ') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -86,29 +86,29 @@
         <div class="r-divider"></div>
 
         <div class="r-totals">
-            <span>{{ t('Subtotal') }}</span>
+            <span>{{ _('المجموع') }}</span>
             <span>{{ format_currency(sale.subtotal, sale.currency) }}</span>
 
             {% if sale.discount_amount and sale.discount_amount > 0 %}
-            <span>{{ t('Discount') }}</span>
+            <span>{{ _('الخصم') }}</span>
             <span>-{{ format_currency(sale.discount_amount, sale.currency) }}</span>
             {% endif %}
 
             {% if sale.tax_amount and sale.tax_amount > 0 %}
-            <span>{{ t('VAT') }} ({{ sale.tax_rate or 0 }}%)</span>
+            <span>{{ _('ضريبة القيمة المضافة') }} ({{ sale.tax_rate or 0 }}%)</span>
             <span>{{ format_currency(sale.tax_amount, sale.currency) }}</span>
             {% endif %}
 
-            <span class="r-grand">{{ t('Total') }}</span>
+            <span class="r-grand">{{ _('الإجمالي') }}</span>
             <span class="r-grand">{{ format_currency(sale.total_amount, sale.currency) }}</span>
 
             {% if sale.paid_amount and sale.paid_amount > 0 %}
-            <span>{{ t('Paid') }}</span>
+            <span>{{ _('المدفوع') }}</span>
             <span>{{ format_currency(sale.paid_amount, sale.currency) }}</span>
             {% endif %}
 
             {% if sale.balance_due and sale.balance_due > 0 %}
-            <span>{{ t('Balance Due') }}</span>
+            <span>{{ _('المتبقي') }}</span>
             <span>{{ format_currency(sale.balance_due, sale.currency) }}</span>
             {% endif %}
         </div>
@@ -116,8 +116,8 @@
         <div class="r-divider"></div>
 
         <div class="r-footer">
-            {{ t('Thank You') }}
-            <br>{{ tenant_name_ar or company_name_ar or 'Azad' }}
+            {{ _('شكراً لك') }}
+            <br>{{ tenant_name_ar or company_name_ar or _('Azad Systems') }}
             {% if developer_whatsapp %}<br>WhatsApp: {{ developer_whatsapp }}{% endif %}
         </div>
     </div>

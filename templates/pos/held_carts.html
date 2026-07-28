@@ -1,6 +1,6 @@
 {% extends 'layouts/base_pos.html' %}
 
-{% block title %}{{ t('Point Of Sale') }} — {{ t('السلال المعلّقة') }}{% endblock %}
+{% block title %}{{ _('نقطة البيع') }} — {{ _('السلال المعلّقة') }}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/pos-theme.css') }}">
@@ -14,19 +14,19 @@
       <div class="pos-logo">AZAD <span>POS</span></div>
     </div>
     <div class="pos-topbar-center">
-      <h5 class="m-0">{{ t('السلال المعلّقة') }}</h5>
+      <h5 class="m-0">{{ _('السلال المعلّقة') }}</h5>
     </div>
     <div class="pos-topbar-actions">
-      <a href="{{ url_for('pos.index') }}" class="pos-icon-btn" title="{{ t('Back') }}"><i class="fas fa-arrow-{{ 'right' if is_rtl else 'left' }}"></i></a>
+      <a href="{{ url_for('pos.index') }}" class="pos-icon-btn" title="{{ _('رجوع') }}"><i class="fas fa-arrow-{{ 'right' if is_rtl else 'left' }}"></i></a>
       <a href="{{ url_for('pos.grid') }}" class="pos-icon-btn" title="{{ _('عرض الشبكة') }}"><i class="fas fa-th"></i></a>
-      <a href="{{ url_for('main.dashboard') }}" class="pos-icon-btn" title="{{ t('Main_2') }}"><i class="fas fa-home"></i></a>
+      <a href="{{ url_for('main.dashboard') }}" class="pos-icon-btn" title="{{ _('الرئيسية') }}"><i class="fas fa-home"></i></a>
     </div>
   </div>
 
   <div class="pos-grid" style="padding: 1rem;">
     <div class="card w-100">
       <div class="card-header">
-        <h3 class="card-title">{{ t('السلال المعلّقة') }}</h3>
+        <h3 class="card-title">{{ _('السلال المعلّقة') }}</h3>
       </div>
       <div class="card-body">
         {% if carts %}
@@ -35,10 +35,10 @@
             <thead>
               <tr>
                 <th>#</th>
-                <th>{{ t('Label') }}</th>
-                <th>{{ t('Items') }}</th>
-                <th>{{ t('Total') }}</th>
-                <th>{{ t('Parked At') }}</th>
+                <th>{{ _('التسمية') }}</th>
+                <th>{{ _('الأصناف') }}</th>
+                <th>{{ _('الإجمالي') }}</th>
+                <th>{{ _('وقت التعليق') }}</th>
                 <th></th>
               </tr>
             </thead>
@@ -52,10 +52,10 @@
                 <td>{{ cart.parked_at[:16] if cart.parked_at else '-' }}</td>
                 <td>
                   <a href="{{ url_for('pos.index') }}?resume_cart={{ cart.id }}" class="btn btn-sm btn-success">
-                    <i class="fas fa-play"></i> {{ t('Resume') }}
+                    <i class="fas fa-play"></i> {{ _('استئناف') }}
                   </a>
                   <button type="button" class="btn btn-sm btn-danger" data-delete-cart="{{ cart.id }}">
-                    <i class="fas fa-trash"></i> {{ t('Delete') }}
+                    <i class="fas fa-trash"></i> {{ _('حذف') }}
                   </button>
                 </td>
               </tr>
@@ -66,9 +66,9 @@
         {% else %}
         <div class="text-center text-muted py-5">
           <i class="fas fa-pause-circle fa-3x mb-3"></i>
-          <h5>{{ t('No_Data') }}</h5>
+          <h5>{{ _('لا توجد بيانات') }}</h5>
           <p>{{ _('لا توجد سلال معلّقة حالياً') }}</p>
-          <a href="{{ url_for('pos.index') }}" class="btn btn-primary">{{ t('Back') }}</a>
+          <a href="{{ url_for('pos.index') }}" class="btn btn-primary">{{ _('رجوع') }}</a>
         </div>
         {% endif %}
       </div>
@@ -82,7 +82,7 @@
 document.querySelectorAll('[data-delete-cart]').forEach(btn => {
   btn.addEventListener('click', async () => {
     const cartId = btn.dataset.deleteCart;
-    if (!confirm('{{ t('Delete') }} {{ t('Confirm_2') }}?')) return;
+    if (!confirm('{{ _('تأكيد') }}؟')) return;
     try {
       const resp = await fetch(`{{ url_for('pos.index') }}api/carts/${cartId}`, {
         method: 'DELETE',
@@ -93,10 +93,10 @@ document.querySelectorAll('[data-delete-cart]').forEach(btn => {
         btn.closest('tr').remove();
         if (!document.querySelector('tbody tr')) location.reload();
       } else {
-        alert(data.error || '{{ t('Error') }}');
+        alert(data.error || '{{ _('خطأ') }}');
       }
     } catch (e) {
-      alert('{{ t('Error') }}');
+      alert('{{ _('خطأ') }}');
     }
   });
 });
