@@ -1,31 +1,32 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ t('توزيعات') }} {{ t('Profits') }}{% endblock %}
+{% block title %}{{ _('توزيعات الأرباح') }}{% endblock %}
 
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
-  <h1 class="text-gradient mb-0"><i class="fas fa-chart-bar me-2"></i>{{ t('توزيعات') }} {{ t('Profits') }}</h1>
+  <h1 class="text-gradient mb-0"><i class="fas fa-chart-bar me-2"></i>{{ _('توزيعات الأرباح') }}</h1>
   {% if current_user.has_permission('manage_users') %}
-  <a href="{{ url_for('partners.distribute') }}" class="btn btn-success"><i class="fas fa-plus mr-1"></i> {{ t('توزيع') }} {{ t('New') }}</a>
+  <a href="{{ url_for('partners.distribute') }}" class="btn btn-success"><i class="fas fa-plus mr-1"></i> {{ _('توزيع جديد') }}</a>
   {% endif %}
 </div>
 {% endblock %}
 
+{% block extra_css %}
 <style>
-    /* D6: externalized inline styles */
-    .ic-1 { display:inline; }
+    .inline-form { display:inline; }
 </style>
+{% endblock %}
 
 {% block content %}
 <div class="card">
   <div class="card-header">
     <div class="d-flex justify-content-between align-items-center">
-      <h3 class="card-title mb-0">{{ t('List') }} {{ t('Distributions') }}</h3>
+      <h3 class="card-title mb-0">{{ _('قائمة التوزيعات') }}</h3>
       <div class="btn-group btn-group-sm">
-        <a href="{{ url_for('partners.distributions') }}" class="btn btn-outline-secondary {% if not request.args.get('status') %}active{% endif %}">{{ t('All') }}</a>
-        <a href="{{ url_for('partners.distributions', status='draft') }}" class="btn btn-outline-secondary {% if request.args.get('status') == 'draft' %}active{% endif %}">{{ t('مسودة') }}</a>
-        <a href="{{ url_for('partners.distributions', status='approved') }}" class="btn btn-outline-secondary {% if request.args.get('status') == 'approved' %}active{% endif %}">{{ t('معتمد') }}</a>
-        <a href="{{ url_for('partners.distributions', status='paid') }}" class="btn btn-outline-secondary {% if request.args.get('status') == 'paid' %}active{% endif %}">{{ t('Paid_2') }}</a>
+        <a href="{{ url_for('partners.distributions') }}" class="btn btn-outline-secondary {% if not request.args.get('status') %}active{% endif %}">{{ _('الكل') }}</a>
+        <a href="{{ url_for('partners.distributions', status='draft') }}" class="btn btn-outline-secondary {% if request.args.get('status') == 'draft' %}active{% endif %}">{{ _('مسودة') }}</a>
+        <a href="{{ url_for('partners.distributions', status='approved') }}" class="btn btn-outline-secondary {% if request.args.get('status') == 'approved' %}active{% endif %}">{{ _('معتمد') }}</a>
+        <a href="{{ url_for('partners.distributions', status='paid') }}" class="btn btn-outline-secondary {% if request.args.get('status') == 'paid' %}active{% endif %}">{{ _('مدفوع') }}</a>
       </div>
     </div>
   </div>
@@ -34,12 +35,12 @@
       <table class="table table-hover mb-0">
         <thead>
           <tr>
-            <th>{{ t('Period_2') }}</th>
-            <th>{{ t('Partner_2') }}</th>
-            <th class="text-center">{{ t('Profit') }} {{ t('Net_2') }}</th>
-            <th class="text-center">{{ t('النصيب') }}</th>
-            <th class="text-center">{{ t('Status') }}</th>
-            <th class="text-center">{{ t('Actions') }}</th>
+            <th>{{ _('الفترة') }}</th>
+            <th>{{ _('الشريك') }}</th>
+            <th class="text-center">{{ _('صافي الربح') }}</th>
+            <th class="text-center">{{ _('النصيب') }}</th>
+            <th class="text-center">{{ _('الحالة') }}</th>
+            <th class="text-center">{{ _('الإجراءات') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -53,25 +54,25 @@
               <span class="badge bg-{{ {'draft':'secondary','approved':'info','paid':'success','cancelled':'danger'}[d.status] }}">{{ d.status_label }}</span>
             </td>
             <td class="text-center">
-              {% if d.status == 'draft' %}
-              {% if current_user.has_permission('manage_users') %}
-              <form class="needs-validation ic-1" method="POST" action="{{ url_for('partners.approve_distribution', dist_id=d.id) }}">
-              {% endif %}
+              {% if d.status == 'draft' and current_user.has_permission('manage_users') %}
+              <form class="needs-validation inline-form" method="POST" action="{{ url_for('partners.approve_distribution', dist_id=d.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                <button type="submit" class="btn btn-info" title="{{ t('اعتماد') }}"><i class="fas fa-check"></i></button>
+                <button type="submit" class="btn btn-info" title="{{ _('اعتماد') }}"><i class="fas fa-check"></i></button>
+              </form>
+              {% elif d.status == 'draft' %}
+              <span class="text-muted">{{ _('بانتظار الاعتماد') }}</span>
+              {% elif d.status == 'approved' and current_user.has_permission('manage_payments') %}
+              <form method="POST" action="{{ url_for('partners.pay_distribution', dist_id=d.id) }}" class="inline-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+                <button type="submit" class="btn btn-success" title="{{ _('تسجيل الدفع') }}"><i class="fas fa-money-bill-wave"></i></button>
               </form>
               {% elif d.status == 'approved' %}
-              {% if current_user.has_permission('manage_payments') %}
-              <form method="POST" action="{{ url_for('partners.pay_distribution', dist_id=d.id) }}" class="ic-1">
-              {% endif %}
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                <button type="submit" class="btn btn-success" title="{{ t('تسجيل') }} {{ t('Payment') }}"><i class="fas fa-money-bill-wave"></i></button>
-              </form>
+              <span class="text-muted">{{ _('بانتظار الدفع') }}</span>
               {% endif %}
             </td>
           </tr>
           {% else %}
-          <tr><td colspan="6" class="text-center text-muted py-4">لا {{ t('توجد') }} {{ t('توزيعات') }}.</td></tr>
+          <tr><td colspan="6" class="text-center text-muted py-4">{{ _('لا توجد توزيعات.') }}</td></tr>
           {% endfor %}
         </tbody>
       </table>
