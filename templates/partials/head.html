@@ -6,14 +6,14 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-  <meta name="description" content="{% block meta_description %}{{ tenant_name_ar or company_name_ar or 'Azadexa ERP' }} — {{ t('نظام محاسبي متكامل للمبيعات والمشتريات والمخزون ونقاط البيع والموارد البشرية والمشاريع') }}{% endblock %}">
-  <meta name="keywords" content="{% block meta_keywords %}ERP, نظام محاسبة, برنامج مخزون, مبيعات, مشتريات, فواتير, نقاط بيع, POS, CRM, موارد بشرية, رواتب, متجر إلكتروني, تقارير مالية, الإمارات, دبي, أبوظبي{% endblock %}">
-  <meta name="author" content="{{ developer_name_ar or config.DEVELOPER_NAME_AR or 'شركة أزاد للأنظمة الذكية' }}">
-  <meta name="copyright" content="{{ config.COMPANY_NAME_AR or 'شركة أزاد للأنظمة الذكية' }} © {{ now().year }}">
+  <meta name="description" content="{% block meta_description %}{{ tenant_meta_description or t('Default_Meta_Description') }}{% endblock %}">
+  <meta name="keywords" content="{% block meta_keywords %}{{ tenant_meta_keywords or t('Default_Meta_Keywords') }}{% endblock %}">
+  <meta name="author" content="{{ developer_name_ar or t('Default_Author') }}">
+  <meta name="copyright" content="{{ config.COMPANY_NAME_AR or t('Default_Copyright') }} © {{ now().year }}">
   <meta name="robots" content="{% block robots %}index, follow{% endblock %}">
   <meta name="language" content="{{ current_language }}">
   <meta name="revisit-after" content="7 days">
-  <meta name="generator" content="Azadexa ERP — AZAD Intelligent Systems">
+  <meta name="generator" content="{{ t('App_Name') }}">
 
 {% if config.GOOGLE_SITE_VERIFICATION %}
   <meta name="google-site-verification" content="{{ config.GOOGLE_SITE_VERIFICATION }}">
@@ -21,8 +21,8 @@
 
   <meta property="og:type" content="{% block og_type %}website{% endblock %}">
   <meta property="og:url" content="{{ request.url }}">
-  <meta property="og:title" content="{% block og_title %}{{ tenant_name_ar or company_name_ar or 'Azadexa ERP' }}{% endblock %}">
-  <meta property="og:description" content="{% block og_description %}{{ tenant_name_ar or company_name_ar or 'Azadexa ERP' }} — {{ t('نظام محاسبي متكامل للمبيعات والمشتريات والمخزون ونقاط البيع والموارد البشرية والمشاريع') }}{% endblock %}">
+  <meta property="og:title" content="{% block og_title %}{{ tenant_name_ar or company_name_ar or t('App_Name') }}{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}{{ tenant_name_ar or company_name_ar or t('App_Name') }} — {{ t('App_Description') }}{% endblock %}">
   {% set _logo_path = tenant_logo_url or developer_logo or 'assets/brand/azad/logos/logo.png' %}
   {% set _logo_external = _logo_path if _logo_path.startswith('http') else url_for('static', filename=_logo_path, _external=True) %}
   {% set _logo_internal = _logo_path if _logo_path.startswith('http') else url_for('static', filename=_logo_path) %}
@@ -30,12 +30,12 @@
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:locale" content="{{ 'ar_AE' if current_language == 'ar' else 'en_US' }}">
-  <meta property="og:site_name" content="{{ tenant_name_ar or company_name_ar or 'Azadexa ERP' }}">
+  <meta property="og:site_name" content="{{ tenant_name_ar or company_name_ar or t('App_Name') }}">
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="{{ request.url }}">
-  <meta name="twitter:title" content="{{ tenant_name_ar or company_name_ar or 'Azadexa ERP' }}">
-  <meta name="twitter:description" content="{{ tenant_name_ar or company_name_ar or 'Azadexa ERP' }} — {{ t('نظام محاسبي متكامل للمبيعات والمشتريات والمخزون ونقاط البيع والموارد البشرية والمشاريع') }}">
+  <meta name="twitter:title" content="{{ tenant_name_ar or company_name_ar or t('App_Name') }}">
+  <meta name="twitter:description" content="{{ tenant_name_ar or company_name_ar or t('App_Name') }} — {{ t('App_Description') }}">
   <meta name="twitter:image" content="{{ _logo_external }}">
 
   <link rel="canonical" href="{{ request.url }}">
@@ -76,15 +76,15 @@
   {
     "@context": "https://schema.org",
     "@type": "Organization",
-    "name": "{{ developer_name_ar or developer_name or 'شركة أزاد للأنظمة الذكية' }}",
-    "alternateName": "{{ developer_name or 'AZAD Intelligent Systems' }}",
+    "name": "{{ developer_name_ar or developer_name or t('Default_Developer_Name') }}",
+    "alternateName": "{{ developer_name or t('Default_Developer_Name') }}",
     "url": "{{ request.url_root }}",
     "logo": "{{ _logo_external }}",
-    "description": "{{ t('نظام محاسبي متكامل للمبيعات والمشتريات والمخزون ونقاط البيع والموارد البشرية والمشاريع') }} مع {{ t('ذكاء اصطناعي') }}",
+    "description": "{{ t('App_Description') }}",
     "address": {
       "@type": "PostalAddress",
       "addressCountry": "AE",
-      "addressRegion": "Dubai"
+      "addressRegion": "{{ tenant_region or t('Default_Region') }}"
     },
     "contactPoint": {
       "@type": "ContactPoint",

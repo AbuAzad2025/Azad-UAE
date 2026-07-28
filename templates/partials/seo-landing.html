@@ -2,7 +2,7 @@
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
-      "name": "{{ 'Azadexa ERP' if current_language == 'en' else 'نظام أزادكسا ERP' }}",
+      "name": "{{ t('App_Name') }}",
       "applicationCategory": "BusinessApplication",
       "operatingSystem": "Web, Cloud, SaaS",
       "offers": {
@@ -10,15 +10,9 @@
         "priceCurrency": "{{ tenant_default_currency or 'AED' }}",
         "availability": "https://schema.org/InStock"
       },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.9",
-        "reviewCount": "150",
-        "bestRating": "5"
-      },
       "provider": {
         "@type": "Organization",
-        "name": "{{ 'AZAD Intelligent Systems' if current_language == 'en' else 'شركة أزاد للأنظمة الذكية' }}",
+        "name": "{{ developer_name or t('Default_Developer_Name') }}",
         "url": "{{ request.url_root }}"
       }
     }
@@ -31,66 +25,66 @@
       "mainEntity": [
         {
           "@type": "Question",
-          "name": "{{ 'What is Azadexa ERP?' if current_language == 'en' else 'ما هو نظام أزادكسا ERP؟' }}",
+          "name": "{{ t('FAQ_Q1') }}",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "{{ 'Azadexa is a comprehensive ERP system for accounting, inventory, sales, purchases, POS, HR, payroll, CRM, projects, e-commerce, and AI-powered analytics. Built for businesses in the UAE and globally.' if current_language == 'en' else 'أزادكسا ERP هو نظام شامل للمحاسبة والمخزون والمبيعات والمشتريات ونقاط البيع والموارد البشرية والرواتب وإدارة العملاء والمشاريع والمتجر الإلكتروني والتحليلات المدعومة بالذكاء الاصطناعي. مصمم للشركات في الإمارات والعالم.' }}"
+            "text": "{{ t('FAQ_A1') }}"
           }
         },
         {
           "@type": "Question",
-          "name": "{{ 'Is it suitable for retail and wholesale businesses?' if current_language == 'en' else 'هل النظام مناسب للتجارة والتجزئة؟' }}",
+          "name": "{{ t('FAQ_Q2') }}",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "{{ 'Yes. Azadexa supports multi-branch retail, wholesale, auto parts, supermarkets, and restaurants with full POS, inventory tracking, and multi-currency support.' if current_language == 'en' else 'نعم بالتأكيد! أزادكسا يدعم التجارة والتجزئة بفروع متعددة، قطع غيار السيارات، السوبرماركت، والمطاعم مع نقاط بيع كاملة وتتبع مخزون ودعم متعدد العملات.' }}"
+            "text": "{{ t('FAQ_A2') }}"
           }
         },
         {
           "@type": "Question",
-          "name": "{{ 'How much does Azadexa cost?' if current_language == 'en' else 'كم تكلفة نظام أزادكسا ERP؟' }}",
+          "name": "{{ t('FAQ_Q3') }}",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "{{ 'We offer flexible SaaS plans based on your team size and feature needs. Contact us for a custom quote with free onboarding and training.' if current_language == 'en' else 'نوفر باقات SaaS مرنة حسب حجم فريقك والميزات المطلوبة. تواصل معنا للحصول على عرض سعر مخصص مع onboarding مجاني وتدريب.' }}"
+            "text": "{{ t('FAQ_A3') }}"
           }
         },
         {
           "@type": "Question",
-          "name": "{{ 'Does it support e-invoices and VAT in the UAE?' if current_language == 'en' else 'هل يدعم النظام الفواتير الإلكترونية وضريبة القيمة المضافة في الإمارات؟' }}",
+          "name": "{{ t('FAQ_Q4') }}",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "{{ 'Yes. Azadexa generates professional e-invoices with VAT, QR codes, multiple print sizes (A4/A5/Thermal), and PDF export. Fully compliant with UAE regulations.' if current_language == 'en' else 'نعم! أزادكسا ينتج فواتير إلكترونية احترافية مع ضريبة القيمة المضافة وQR Code وأحجام طباعة متعددة وتصدير PDF. متوافق بالكامل مع لوائح الإمارات.' }}"
+            "text": "{{ t('FAQ_A4') }}"
           }
         },
         {
           "@type": "Question",
-          "name": "{{ 'What AI features are included?' if current_language == 'en' else 'ما هي مميزات الذكاء الاصطناعي في النظام؟' }}",
+          "name": "{{ t('FAQ_Q5') }}",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "{{ 'AI-powered insights include pricing recommendations, sales forecasting, customer behavior analysis, demand prediction, and an intelligent chat assistant trained on your business data.' if current_language == 'en' else 'الذكاء الاصطناعي يوفر: توصيات أسعار ذكية، التنبؤ بالمبيعات، تحليل سلوك العملاء، التنبؤ بالطلب، ومساعد محادثة ذكي يتعلم من بيانات عملك.' }}"
+            "text": "{{ t('FAQ_A5') }}"
           }
         },
         {
           "@type": "Question",
-          "name": "{{ 'Can I manage multiple branches and warehouses?' if current_language == 'en' else 'هل يمكن إدارة فروع ومستودعات متعددة؟' }}",
+          "name": "{{ t('FAQ_Q6') }}",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "{{ 'Yes. Azadexa supports multi-branch, multi-warehouse operations with centralized reporting, stock transfers, branch-level permissions, and consolidated financial statements.' if current_language == 'en' else 'نعم! أزادكسا يدعم عمليات متعددة الفروع والمستودعات مع تقارير مركزية، نقل المخزون، صلاحيات مستوى الفرع، وقوائم مالية موحدة.' }}"
+            "text": "{{ t('FAQ_A6') }}"
           }
         },
         {
           "@type": "Question",
-          "name": "{{ 'How do I get started?' if current_language == 'en' else 'كيف أبدأ باستخدام أزادكسا؟' }}",
+          "name": "{{ t('FAQ_Q7') }}",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "{{ 'Three simple steps: (1) Book a free demo, (2) choose your plan, (3) start immediately. We provide training, data migration, and 24/7 support.' if current_language == 'en' else 'ثلاث خطوات بسيطة: (1) احجز عرضاً توضيحياً مجانياً، (2) اختر باقتك، (3) ابدأ فوراً! نوفر تدريباً، ترحيل بيانات، ودعم 24/7.' }}"
+            "text": "{{ t('FAQ_A7') }}"
           }
         },
         {
           "@type": "Question",
-          "name": "{{ 'Is my data secure?' if current_language == 'en' else 'هل النظام آمن ويحمي بياناتي؟' }}",
+          "name": "{{ t('FAQ_Q8') }}",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "{{ 'Security is our top priority: SSL encryption, daily automated backups, tenant isolation, role-based access control, audit logs, and PCI-compliant card vault. Fully aligned with UAE data protection laws.' if current_language == 'en' else 'الأمان أولويتنا: تشفير SSL، نسخ احتياطي يومي تلقائي، عزل المستأجرين، تحكم بالوصول المعتمد على الأدوار، سجلات تدقيق، وخزينة بطاقات متوافقة مع PCI. متوافق بالكامل مع قوانين حماية البيانات في الإمارات.' }}"
+            "text": "{{ t('FAQ_A8') }}"
           }
         }
       ]

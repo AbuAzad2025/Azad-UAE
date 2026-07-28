@@ -1,14 +1,14 @@
-<div id="upgrade-banner" class="row" style="display:none;">
+<div id="upgrade-banner" class="row d-none">
   <div class="col-12">
     <div class="alert alert-warning alert-dismissible fade show erp-flash erp-flash-warning" role="alert">
       <div class="d-flex align-items-center">
         <div class="erp-flash-icon"><i class="fas fa-rocket"></i></div>
         <div class="erp-flash-body flex-grow-1">
-          <strong>{{ t('ترقية الباقة') }}</strong>
+          <strong>{{ t('Plan_Upgrade') }}</strong>
           <span class="mx-2">&mdash;</span>
-          <span>{{ t('وصلت أو تقتربت من الحد المسموح في باقتك الحالية') }}</span>
+          <span>{{ t('Plan_Limit_Warning') }}</span>
           <a href="#" class="btn btn-sm btn-warning ml-3" data-action="open-upgrade-link" data-url="{{ wa_upgrade_link }}">
-            <i class="fab fa-whatsapp ml-1"></i>{{ t('تواصل مع المطور للترقية') }}
+            <i class="fab fa-whatsapp ml-1"></i>{{ t('Contact_Developer_For_Upgrade') }}
           </a>
         </div>
         <button type="button" class="close" data-dismiss="alert" data-action="dismiss-alert">&times;</button>
@@ -33,7 +33,7 @@
   }
   if (maxed && sub.plan !== 'enterprise') {
     document.getElementById('upgrade-meter-container').innerHTML = html;
-    document.getElementById('upgrade-banner').style.display = '';
+    document.getElementById('upgrade-banner').classList.remove('d-none');
   }
 })();
 if (!window.__upgradeBannerDelegationBound) {

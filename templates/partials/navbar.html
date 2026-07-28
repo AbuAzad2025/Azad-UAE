@@ -1,6 +1,6 @@
 <nav class="main-header navbar navbar-expand navbar-white navbar-light erp-navbar">
     <div class="erp-navbar-brand-zone">
-      <a class="erp-navbar-pushmenu" data-widget="pushmenu" href="#" role="button" title="{{ t('تبديل') }} {{ t('Menu') }} {{ t('Sidebar') }}">
+      <a class="erp-navbar-pushmenu" data-widget="pushmenu" href="#" role="button" title="{{ t('Toggle_Sidebar_Position') }}">
         <i class="fas fa-bars"></i>
       </a>
       <a href="{{ url_for('main.dashboard') }}" class="erp-navbar-brand-link">
@@ -51,49 +51,49 @@
       {% endif %}
     </div>
     <div class="erp-navbar-actions-zone">
-      <button class="btn btn-outline-light erp-navbar-tool-btn" type="button" data-action="toggle-sidebar-direction" title="{{ t('تبديل') }} {{ t('موقع') }} {{ t('Menu') }}">
+      <button class="btn btn-outline-light erp-navbar-tool-btn" type="button" data-action="toggle-sidebar-direction" title="{{ t('Toggle_Sidebar_Position') }}">
         <i class="fas fa-exchange-alt"></i>
       </button>
       <div class="dropdown erp-navbar-tool-dropdown d-none d-md-block">
-        <button class="btn btn-outline-light erp-navbar-tool-btn" type="button" data-toggle="dropdown" aria-expanded="false" title="{{ t('Tools') }} {{ t('System') }}">
+        <button class="btn btn-outline-light erp-navbar-tool-btn" type="button" data-toggle="dropdown" aria-expanded="false" title="{{ t('System_Tools') }}">
           <i class="fas fa-tools"></i>
           <span class="d-none d-lg-inline">{{ t('Tools') }}</span>
         </button>
         <div class="dropdown-menu dropdown-menu-right">
-          <span class="dropdown-item dropdown-header">{{ t('Tools') }} {{ t('System') }}</span>
+          <span class="dropdown-item dropdown-header">{{ t('System_Tools') }}</span>
           <div class="dropdown-divider"></div>
           <a class="dropdown-item" href="#" data-toggle="modal" data-target="#fxModal">
-            <i class="fas fa-coins text-warning me-2"></i>{{ t('أسعار') }} {{ t('Exchange') }}
+            <i class="fas fa-coins text-warning me-2"></i>{{ t('Exchange_Rates') }}
           </a>
           <a class="dropdown-item" href="#" data-toggle="modal" data-target="#navbarCalculatorModal">
-            <i class="fas fa-calculator text-info me-2"></i>{{ t('الآلة') }} {{ t('الحاسبة') }}
+            <i class="fas fa-calculator text-info me-2"></i>{{ t('Calculator') }}
           </a>
           <a class="dropdown-item" href="#" data-action="toggle-sidebar-direction">
-            <i class="fas fa-exchange-alt text-success me-2"></i>{{ t('موقع') }} {{ t('Menu') }}
+            <i class="fas fa-exchange-alt text-success me-2"></i>{{ t('Menu_Position') }}
           </a>
           {% if current_user.is_authenticated and ai_nav_visible and current_user.has_permission('view_reports') %}
           <a class="dropdown-item" href="{{ url_for('ai.assistant_page') }}">
-            <i class="fas fa-robot text-primary me-2"></i>{{ t('Assistant') }} {{ t('Smart') }}
+            <i class="fas fa-robot text-primary me-2"></i>{{ t('AI_Assistant') }}
           </a>
           {% endif %}
           <div class="dropdown-divider"></div>
           <a class="dropdown-item" href="#" data-ui-action="toggle-viewmode">
-            <i class="fas fa-desktop text-secondary me-2"></i><span data-ui-role="viewmode-label">{{ t('تلقائي') }}</span>
+            <i class="fas fa-desktop text-secondary me-2"></i><span data-ui-role="viewmode-label">{{ t('Auto_Mode') }}</span>
           </a>
           {% if is_global_scope_user %}
           <div class="dropdown-divider"></div>
-          <span class="dropdown-item dropdown-header">{{ t('Company') }} / {{ t('Branch') }}</span>
+          <span class="dropdown-item dropdown-header">{{ t('Company_Slash_Branch') }}</span>
           {% if active_branch %}
           <span class="dropdown-item text-muted small">
             <i class="fas fa-code-branch me-2"></i>{{ t('Branch') }}: {{ active_branch.name }}
           </span>
           {% else %}
           <span class="dropdown-item text-muted small">
-            <i class="fas fa-sitemap me-2"></i>كل {{ t('Branches') }}
+            <i class="fas fa-sitemap me-2"></i>{{ t('All_Branches') }}
           </span>
           {% endif %}
           <a class="dropdown-item" href="{{ url_for('tenants.switch', tenant_id=0) }}">
-            <i class="fas fa-building me-2"></i>{{ t('تبديل') }} {{ t('Company') }}
+            <i class="fas fa-building me-2"></i>{{ t('Switch_Company') }}
           </a>
           {% endif %}
         </div>
@@ -108,23 +108,23 @@
             <i class="fas fa-check me-2 {% if session.get('language', 'ar') != 'ar' %}opacity-0{% endif %}"></i>{{ t('Arabic_2') }}
           </a>
           <a href="{{ url_for('language.set_language', lang='en', next=request.full_path) }}" class="dropdown-item {% if session.get('language') == 'en' %}active{% endif %}">
-            <i class="fas fa-check me-2 {% if session.get('language') != 'en' %}opacity-0{% endif %}"></i>English
+            <i class="fas fa-check me-2 {% if session.get('language') != 'en' %}opacity-0{% endif %}"></i>{{ t('English') }}
           </a>
         </div>
       </div>
-      <button type="button" class="btn btn-outline-light erp-navbar-icon-btn" data-ui-action="toggle-mode" title="{{ t('Toggle') }} إلى {{ t('Mode') }} {{ t('Dark') }}" aria-label="{{ t('Toggle') }} إلى {{ t('Mode') }} {{ t('Dark') }}">
+      <button type="button" class="btn btn-outline-light erp-navbar-icon-btn" data-ui-action="toggle-mode" title="{{ t('Toggle_Dark_Mode') }}" aria-label="{{ t('Toggle_Dark_Mode') }}">
         <i class="fas fa-sun" data-ui-role="mode-icon"></i>
       </button>
-      <div class="erp-theme-switcher d-none d-md-flex" role="group" aria-label="{{ t('Select') }} {{ t('الثيم') }}">
-        <button type="button" class="erp-theme-option" data-value="palestinian" data-ui-action="set-variant" title="{{ t('الثيم') }} {{ t('Palestinian_3') }}">
+      <div class="erp-theme-switcher d-none d-md-flex" role="group" aria-label="{{ t('Select_Theme') }}">
+        <button type="button" class="erp-theme-option" data-value="palestinian" data-ui-action="set-variant" title="{{ t('Palestinian_Theme') }}">
           <span>{{ t('Palestinian_2') }}</span>
         </button>
-        <button type="button" class="erp-theme-option" data-value="gulf" data-ui-action="set-variant" title="{{ t('الثيم') }} {{ t('Gulf_3') }}">
+        <button type="button" class="erp-theme-option" data-value="gulf" data-ui-action="set-variant" title="{{ t('Gulf_Theme') }}">
           <span>{{ t('Gulf_2') }}</span>
         </button>
       </div>
       <div class="dropdown">
-        <button class="btn btn-outline-light erp-navbar-user-btn" type="button" data-toggle="dropdown" title="{{ t('File') }} {{ t('Personal') }}">
+        <button class="btn btn-outline-light erp-navbar-user-btn" type="button" data-toggle="dropdown" title="{{ t('Personal_File') }}">
           <span class="erp-user-avatar"><i class="far fa-user"></i></span>
           <span class="d-none d-lg-inline ml-2">{{ current_user.username }}</span>
         </button>
@@ -136,7 +136,7 @@
           </a>
           <div class="dropdown-divider"></div>
           <a href="{{ url_for('auth.logout') }}" class="dropdown-item">
-            <i class="fas fa-sign-out-alt me-2"></i>{{ t('تسجيل') }} {{ t('خروج') }}
+            <i class="fas fa-sign-out-alt me-2"></i>{{ t('Logout') }}
           </a>
         </div>
       </div>

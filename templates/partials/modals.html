@@ -2,7 +2,7 @@
     <div class="modal-dialog modal-dialog-centered erp-modal-fx" role="document">
       <div class="modal-content">
         <div class="modal-header bg-primary text-white py-2">
-          <h6 class="modal-title" id="fxModalLabel"><i class="fas fa-coins mr-2"></i>{{ t('أسعار') }} {{ t('Exchange') }} ({{ t('View') }} فقط)</h6>
+          <h6 class="modal-title" id="fxModalLabel"><i class="fas fa-coins mr-2"></i>{{ t('Exchange_Rates_View_Only') }}</h6>
           <button type="button" class="close text-white" data-dismiss="modal" aria-label="{{ t('Close') }}">
             <span aria-hidden="true">&times;</span>
           </button>
@@ -14,7 +14,7 @@
                 <tr>
                   <th class="text-right">{{ t('Currency') }}</th>
                   <th>{{ t('Value') }}</th>
-                  <th class="text-muted small">{{ t('مقابل') }} USD</th>
+                  <th class="text-muted small">{{ t('Against_USD') }} USD</th>
                 </tr>
               </thead>
               <tbody id="fx-rates-body">
@@ -24,7 +24,7 @@
           </div>
           <div class="p-2 bg-light border-top text-center">
             <small class="text-muted" id="fx-last-updated">
-              <i class="fas fa-sync-alt mr-1"></i>{{ t('اضغط') }} {{ t('للتحديث') }}
+              <i class="fas fa-sync-alt mr-1"></i>{{ t('Click_To_Refresh') }}
             </small>
             <span id="fx-source-badge" class="badge badge-secondary ml-1 erp-fx-source-hidden"></span>
           </div>
@@ -37,16 +37,16 @@
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="navbarCalculatorTitle"><i class="fas fa-calculator mr-2"></i>{{ t('الآلة') }} {{ t('الحاسبة') }}</h5>
+          <h5 class="modal-title" id="navbarCalculatorTitle"><i class="fas fa-calculator mr-2"></i>{{ t('Calculator') }}</h5>
           <button type="button" class="close ml-0 mr-auto" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
         <div class="modal-body">
           <ul class="nav nav-pills mb-3" id="calcTabs" role="tablist">
-            <li class="nav-item"><a class="nav-link active" id="tab-classic" data-toggle="pill" href="#calc-classic" role="tab">{{ t('كلاسيكية') }}</a></li>
-            <li class="nav-item"><a class="nav-link" id="tab-financial" data-toggle="pill" href="#calc-financial" role="tab">{{ t('مالية') }}</a></li>
-            <li class="nav-item"><a class="nav-link" id="tab-scientific" data-toggle="pill" href="#calc-scientific" role="tab">{{ t('علمية') }}</a></li>
+            <li class="nav-item"><a class="nav-link active" id="tab-classic" data-toggle="pill" href="#calc-classic" role="tab">{{ t('Classic') }}</a></li>
+            <li class="nav-item"><a class="nav-link" id="tab-financial" data-toggle="pill" href="#calc-financial" role="tab">{{ t('Financial') }}</a></li>
+            <li class="nav-item"><a class="nav-link" id="tab-scientific" data-toggle="pill" href="#calc-scientific" role="tab">{{ t('Scientific') }}</a></li>
           </ul>
           <div class="tab-content">
             <div class="tab-pane fade show active" id="calc-classic" role="tabpanel">
@@ -56,23 +56,23 @@
             <div class="tab-pane fade" id="calc-financial" role="tabpanel">
               <div class="row">
                 <div class="col-md-6 mb-2">
-                  <h6>{{ t('قسط') }} {{ t('التمويل') }} {{ t('Monthly_2') }}</h6>
-                  <label for="loanPrincipal" class="sr-only">{{ t('Value_2') }} {{ t('القرض') }}</label>
-                  <input class="form-control mb-2" id="loanPrincipal" type="number" placeholder="{{ t('Value_2') }} {{ t('القرض') }}">
-                  <label for="loanRate" class="sr-only">{{ t('الفائدة') }} {{ t('السنوية') }} %</label>
-                  <input class="form-control mb-2" id="loanRate" type="number" step="0.01" placeholder="{{ t('الفائدة') }} {{ t('السنوية') }} %">
-                  <label for="loanMonths" class="sr-only">{{ t('Count') }} {{ t('الأشهر') }}</label>
-                  <input class="form-control mb-2" id="loanMonths" type="number" placeholder="{{ t('Count') }} {{ t('الأشهر') }}">
-                  <button type="button" class="btn btn-primary" id="btnLoanCalc">{{ t('احسب') }}</button>
+                  <h6>{{ t('Monthly_Installment') }}</h6>
+                  <label for="loanPrincipal" class="sr-only">{{ t('Loan_Amount') }}</label>
+                  <input class="form-control mb-2" id="loanPrincipal" type="number" placeholder="{{ t('Loan_Amount') }}">
+                  <label for="loanRate" class="sr-only">{{ t('Annual_Interest_Rate') }} %</label>
+                  <input class="form-control mb-2" id="loanRate" type="number" step="0.01" placeholder="{{ t('Annual_Interest_Rate') }} %">
+                  <label for="loanMonths" class="sr-only">{{ t('Number_Of_Months') }}</label>
+                  <input class="form-control mb-2" id="loanMonths" type="number" placeholder="{{ t('Number_Of_Months') }}">
+                  <button type="button" class="btn btn-primary" id="btnLoanCalc">{{ t('Calculate') }}</button>
                   <div class="small text-muted mt-2" id="loanResult">--</div>
                 </div>
                 <div class="col-md-6 mb-2">
-                  <h6>{{ t('Profit') }} {{ t('والهامش') }}</h6>
+                  <h6>{{ t('Profit_And_Margin') }}</h6>
                   <label for="costValue" class="sr-only">{{ t('Cost') }}</label>
                   <input class="form-control mb-2" id="costValue" type="number" step="0.01" placeholder="{{ t('Cost') }}">
                   <label for="sellValue" class="sr-only">{{ t('Price_2') }} {{ t('Sale_2') }}</label>
-                  <input class="form-control mb-2" id="sellValue" type="number" step="0.01" placeholder="{{ t('Price_2') }} {{ t('Sale_2') }}">
-                  <button type="button" class="btn btn-success" id="btnMarginCalc">{{ t('احسب') }}</button>
+                  <input class="form-control mb-2" id="sellValue" type="number" step="0.01" placeholder="{{ t('Sale_Price') }}">
+                  <button type="button" class="btn btn-success" id="btnMarginCalc">{{ t('Calculate') }}</button>
                   <div class="small text-muted mt-2" id="marginResult">--</div>
                 </div>
               </div>
