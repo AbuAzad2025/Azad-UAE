@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - أدوات قاعدة البيانات{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or t('Accounting_System') }} - {{ t('Database_Tools') }}{% endblock %}
 
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-database mr-2"></i>{{ _('أدوات قاعدة البيانات المتقدمة') }}</h1>
+    <h1 class="mb-0"><i class="fas fa-database mr-2"></i>{{ t('Advanced_Database_Tools') }}</h1>
   </div>
   <div>
     {% if current_user.is_owner or (current_user.role and current_user.role.slug == 'developer') %}
@@ -16,7 +16,7 @@
         <i class="fas fa-arrow-right mr-2"></i>{{ t('Dashboard') }}</a>
     {% endif %}
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}</a>
+      <i class="fas fa-home mr-2"></i>{{ t('Home') }}</a>
   </div>
 </div>
 {% endblock %}
@@ -26,17 +26,17 @@
   <div class="col-md-12">
     <div class="card card-danger">
       <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-exclamation-triangle"></i> {{ _('منطقة خطرة - Owner فقط') }}</h3>
+        <h3 class="card-title"><i class="fas fa-exclamation-triangle"></i> {{ t('Danger_Zone_Owner_Only') }}</h3>
       </div>
       <div class="card-body">
         <div class="alert alert-danger">
           <i class="fas fa-skull-crossbones"></i>
-          <strong>{{ t('Warning') }}</strong> {{ _('هذه الأدوات قوية جداً. استخدمها بحذر شديد!') }}
+          <strong>{{ t('Warning') }}</strong> {{ t('Tools_Are_Very_Powerful') }}
         </div>
         {% if restricted_tables %}
         <div class="alert alert-info">
           <i class="fas fa-shield-alt"></i>
-          <strong>{{ t('حماية') }}</strong> {{ restricted_tables }} جدول حساس مخفي (مثل المستخدمين والصلاحيات والخزائن).
+          <strong>{{ t('Protection') }}</strong> {{ restricted_tables }} {{ t('Sensitive_Tables_Hidden') }}
         </div>
         {% endif %}
 
@@ -45,10 +45,10 @@
             <div class="small-box bg-info">
               <div class="inner">
                 <h3>{{ tables|length }}</h3>
-                <p>{{ _('عدد الجداول') }}</p>
+                <p>{{ t('Table_Count') }}</p>
               </div>
               <div class="icon">
-                <i class="fas fa-table"></i>
+                <i class="fas fa-table" aria-label="{{ t('Tables') }}"></i>
               </div>
             </div>
           </div>
@@ -56,10 +56,10 @@
             <div class="small-box bg-success">
               <div class="inner">
                 <h3>{{ tables|sum(attribute='rows_count')|default(0) }}</h3>
-                <p>{{ _('إجمالي السجلات') }}</p>
+                <p>{{ t('Total_Records') }}</p>
               </div>
               <div class="icon">
-                <i class="fas fa-database"></i>
+                <i class="fas fa-database" aria-label="{{ t('Total_Records') }}"></i>
               </div>
             </div>
           </div>
@@ -67,24 +67,24 @@
             <div class="small-box bg-warning">
               <div class="inner">
                 <h3>PostgreSQL</h3>
-                <p>{{ _('نوع قاعدة البيانات') }}</p>
+                <p>{{ t('Database_Type') }}</p>
               </div>
               <div class="icon">
-                <i class="fas fa-hdd"></i>
+                <i class="fas fa-hdd" aria-label="{{ t('Database_Type') }}"></i>
               </div>
             </div>
           </div>
         </div>
 
-        <h4 class="mt-4">{{ _('الجداول') }}</h4>
+        <h4 class="mt-4">{{ t('Tables') }}</h4>
         <div class="table-responsive">
           <table class="table table-striped table-hover">
             <thead>
               <tr>
-                <th>{{ _('اسم الجدول') }}</th>
+                <th>{{ t('Table_Name') }}</th>
                 <th>{{ t('Description') }}</th>
                 <th>{{ t('Record_Count') }}</th>
-                <th>{{ t('الإجراءات') }}</th>
+                <th>{{ t('Actions') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -94,45 +94,45 @@
                 <td>
                   <small class="text-muted">
                     {% if table.name == 'sales' %}
-                      📊 فواتير المبيعات - العمليات التجارية الرئيسية
+                      {{ t('Tbl_Sales') }}
                     {% elif table.name == 'customers' %}
-                      👥 بيانات العملاء - معلومات الزبائن والاتصال
+                      {{ t('Tbl_Customers') }}
                     {% elif table.name == 'products' %}
-                      📦 المنتجات - قطع الغيار والخدمات
+                      {{ t('Tbl_Products') }}
                     {% elif table.name == 'users' %}
-                      🔐 المستخدمين - حسابات الدخول للنظام
+                      {{ t('Tbl_Users') }}
                     {% elif table.name == 'payments' %}
-                      💰 المدفوعات - سندات القبض والدفع
+                      {{ t('Tbl_Payments') }}
                     {% elif table.name == 'purchases' %}
-                      🛒 المشتريات - فواتير الشراء من الموردين
+                      {{ t('Tbl_Purchases') }}
                     {% elif table.name == 'suppliers' %}
-                      🏪 الموردين - بيانات الموردين والتواصل
+                      {{ t('Tbl_Suppliers') }}
                     {% elif table.name == 'expenses' %}
-                      💸 المصروفات - النفقات والتكاليف
+                      {{ t('Tbl_Expenses') }}
                     {% elif table.name == 'cheques' %}
-                      📝 الشيكات - إدارة الشيكات الواردة والصادرة
+                      {{ t('Tbl_Cheques') }}
                     {% elif table.name == 'gl_accounts' %}
-                      📗 حسابات الأستاذ - الحسابات المحاسبية
+                      {{ t('Tbl_GL_Accounts') }}
                     {% elif table.name == 'gl_entries' %}
-                      📘 القيود المحاسبية - العمليات المالية
+                      {{ t('Tbl_GL_Entries') }}
                     {% elif table.name == 'currencies' %}
-                      💱 العملات - أنواع العملات المستخدمة
+                      {{ t('Tbl_Currencies') }}
                     {% elif table.name == 'exchange_rates' %}
-                      📈 أسعار الصرف - تحويل العملات
+                      {{ t('Tbl_Exchange_Rates') }}
                     {% elif table.name == 'invoice_settings' %}
-                      🎨 إعدادات الفواتير - قوالب وترويسات
+                      {{ t('Tbl_Invoice_Settings') }}
                     {% elif table.name == 'system_settings' %}
-                      ⚙️ إعدادات النظام - التكوين العام
+                      {{ t('Tbl_System_Settings') }}
                     {% elif table.name == 'audit_logs' %}
-                      📋 سجل التدقيق - مراقبة العمليات
+                      {{ t('Tbl_Audit_Logs') }}
                     {% elif table.name == 'product_categories' %}
-                      📑 تصنيفات المنتجات - تنظيم القطع
+                      {{ t('Tbl_Product_Categories') }}
                     {% elif table.name == 'warehouses' %}
-                      🏭 المستودعات - مواقع التخزين
+                      {{ t('Tbl_Warehouses') }}
                     {% elif table.name == 'archived_records' %}
-                      📁 السجلات المؤرشفة - بيانات محفوظة
+                      {{ t('Tbl_Archived_Records') }}
                     {% else %}
-                      📄 جدول بيانات
+                      {{ t('Tbl_Generic') }}
                     {% endif %}
                   </small>
                 </td>
@@ -140,26 +140,26 @@
                 <td>
                   <a href="{{ url_for('owner.browse_table', table_name=table.name) }}" 
                      class="btn btn-browse" 
-                     title="{{ _('عرض البيانات فقط - آمن') }}">
-                    <i class="fas fa-eye"></i> {{ _('تصفح') }}
+                     title="{{ t('View_Data_Only_Safe') }}">
+                    <i class="fas fa-eye"></i> {{ t('Browse') }}
                   </a>
                   {% if table.name not in ['alembic_version'] %}
                   <a href="{{ url_for('owner.edit_table_data', table_name=table.name) }}" 
                      class="btn btn-edit"
-                     title="{{ _('تعديل مرئي سهل - متوسط الخطورة') }}">
-                    <i class="fas fa-edit"></i> {{ _('تعديل مرئي') }}
+                     title="{{ t('Visual_Edit_Medium_Risk') }}">
+                    <i class="fas fa-edit"></i> {{ t('Visual_Edit') }}
                   </a>
                   <a href="{{ url_for('owner.sql_console') }}" 
                      class="btn btn-sql"
-                     title="{{ _('تعديل متقدم بـ SQL - خطير!') }}">
+                     title="{{ t('Advanced_SQL_Dangerous') }}">
                     <i class="fas fa-code"></i> SQL
                   </a>
                   {% endif %}
                   {% if table.name not in ['users', 'alembic_version', 'system_settings'] %}
                   <button class="btn btn-danger"
                           data-action="truncate-table" data-table-name="{{ table.name }}"
-                          title="{{ _('حذف كل البيانات - خطير جداً!') }}">
-                    <i class="fas fa-trash"></i> {{ _('مسح الكل') }}
+                          title="{{ t('Delete_All_Data_Very_Dangerous') }}">
+                    <i class="fas fa-trash"></i> {{ t('Truncate_All') }}
                   </button>
                   {% endif %}
                 </td>
@@ -182,13 +182,13 @@
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
               <input type="hidden" name="format" value="json" aria-label="format">
               <button type="submit" class="btn btn-success btn-block btn-lg">
-                <i class="fas fa-file-export"></i> {{ _('تصدير JSON') }}
+                <i class="fas fa-file-export"></i> {{ t('Export_JSON') }}
               </button>
             </form>
           </div>
           <div class="col-md-4">
             <a href="{{ url_for('owner.convert_database') }}" class="btn btn-warning btn-block btn-lg">
-              <i class="fas fa-exchange-alt"></i> {{ _('تحويل Database') }}
+              <i class="fas fa-exchange-alt"></i> {{ t('Convert_Database') }}
             </a>
           </div>
         </div>
@@ -201,12 +201,12 @@
                   data-action="confirm-maintenance" data-key="FIX_COST_CENTERS">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
               <button type="submit" class="btn btn-warning btn-block btn-lg" id="btn-fix-cost-centers">
-                <i class="fas fa-wrench mr-2"></i> {{ _('إصلاح فهارس مراكز التكلفة') }}
+                <i class="fas fa-wrench mr-2"></i> {{ t('Fix_Cost_Center_Indexes') }}
               </button>
               <small class="form-text text-muted d-block mt-2 text-center">
-                <strong>{{ _('⚠ لا رجعة فيها') }}</strong> {{ _('— يزيل الفهرس القديم') }} <code>ix_cost_centers_code</code>
-                {{ _('وينظف السجلات ذات') }} <code>tenant_id = NULL</code>.
-                <br>{{ _('يتطلب كتابة:') }} <kbd>FIX_COST_CENTERS</kbd>
+                <strong>{{ t('Irreversible') }}</strong> {{ t('Desc_Removes_Old_Index') }} <code>ix_cost_centers_code</code>
+                {{ t('Desc_Cleans_Null_Tenant') }} <code>tenant_id = NULL</code>.
+                <br>{{ t('Requires_Typing') }} <kbd>FIX_COST_CENTERS</kbd>
               </small>
             </form>
           </div>
@@ -217,15 +217,15 @@
               <div class="custom-control custom-checkbox mb-2">
                 <input type="checkbox" class="custom-control-input" id="cleanup_extra" name="cleanup_extra">
                 <label class="custom-control-label text-danger small" for="cleanup_extra">
-                  <i class="fas fa-exclamation-triangle"></i> {{ _('تعطيل الحسابات الإضافية (خارج الشجرة الأساسية)') }}
+                  <i class="fas fa-exclamation-triangle"></i> {{ t('Disable_Extra_Accounts') }}
                 </label>
               </div>
               <button type="submit" class="btn btn-info btn-block btn-lg" id="btn-rebuild-gl-tree">
-                <i class="fas fa-sync-alt mr-2"></i> {{ _('إعادة بناء شجرة الحسابات (GL)') }}
+                <i class="fas fa-sync-alt mr-2"></i> {{ t('Rebuild_GL_Tree') }}
               </button>
               <small class="form-text text-muted d-block mt-2 text-center">
-                {{ _('يعيد بناء شجرة الحسابات المحاسبية لجميع المستأجرين باستخدام') }} <code>GLTreeBuilder</code>.
-                <br>{{ _('يتطلب كتابة:') }} <kbd>REBUILD_GL_TREE</kbd>
+                {{ t('Desc_Rebuilds_GL_Tree') }} <code>GLTreeBuilder</code>.
+                <br>{{ t('Requires_Typing') }} <kbd>REBUILD_GL_TREE</kbd>
               </small>
             </form>
           </div>
@@ -241,15 +241,15 @@
               <div class="custom-control custom-checkbox mb-2">
                 <input type="checkbox" class="custom-control-input" id="maint_dry_run" name="dry_run">
                 <label class="custom-control-label text-muted small" for="maint_dry_run">
-                  {{ _('🔍 تجربة جافة (فحص فقط)') }}
+                  {{ t('Dry_Run_Only') }}
                 </label>
               </div>
               <button type="submit" class="btn btn-secondary btn-block btn-lg">
-                <i class="fas fa-user-shield mr-2"></i> {{ _('صيانة المستأجر الافتراضي (Patch + Backup)') }}
+                <i class="fas fa-user-shield mr-2"></i> {{ t('Default_Tenant_Maintenance') }}
               </button>
               <small class="form-text text-muted d-block mt-2 text-center">
-                {{ _('يصحح أعمدة NOT NULL المفقودة ويعيد إنشاء النسخة الاحتياطية.') }}
-                <br>{{ _('يتطلب كتابة:') }} <kbd>RUN_DEFAULT_TENANT_MAINTENANCE</kbd>
+                {{ t('Desc_Default_Tenant_Maintenance') }}
+                <br>{{ t('Requires_Typing') }} <kbd>RUN_DEFAULT_TENANT_MAINTENANCE</kbd>
               </small>
             </form>
           </div>
@@ -260,15 +260,15 @@
               <div class="custom-control custom-checkbox mb-2">
                 <input type="checkbox" class="custom-control-input" id="cleanup_dry_run" name="dry_run">
                 <label class="custom-control-label text-muted small" for="cleanup_dry_run">
-                  {{ _('🔍 تجربة جافة (فحص فقط)') }}
+                  {{ t('Dry_Run_Only') }}
                 </label>
               </div>
               <button type="submit" class="btn btn-danger btn-block btn-lg">
-                <i class="fas fa-trash-alt mr-2"></i> {{ _('تنظيف قواعد البيانات الاختبارية') }}
+                <i class="fas fa-trash-alt mr-2"></i> {{ t('Cleanup_Test_Databases') }}
               </button>
               <small class="form-text text-muted d-block mt-2 text-center">
-                {{ _('يحذف قواعد البيانات القديمة: azadexa_test, azad_uae_test, azad_diag_*, إلخ.') }}
-                <br>{{ _('يتطلب كتابة:') }} <kbd>CLEANUP_TEST_DBS</kbd>
+                {{ t('Desc_Cleanup_Test_DBs') }}
+                <br>{{ t('Requires_Typing') }} <kbd>CLEANUP_TEST_DBS</kbd>
               </small>
             </form>
           </div>
@@ -279,21 +279,21 @@
               <div class="custom-control custom-checkbox mb-2">
                 <input type="checkbox" class="custom-control-input" id="fix_dry_run" name="dry_run">
                 <label class="custom-control-label text-muted small" for="fix_dry_run">
-                  {{ _('🔍 تجربة جافة') }}
+                  {{ t('Dry_Run_Only') }}
                 </label>
               </div>
               <div class="custom-control custom-checkbox mb-2">
                 <input type="checkbox" class="custom-control-input" id="fix_no_backup" name="no_backup">
                 <label class="custom-control-label text-muted small" for="fix_no_backup">
-                  {{ _('⛔ تخطي تجديد النسخة الاحتياطية') }}
+                  {{ t('Skip_Backup_Regeneration') }}
                 </label>
               </div>
               <button type="submit" class="btn btn-dark btn-block btn-lg">
-                <i class="fas fa-database mr-2"></i> {{ _('تصحيح المستأجر الافتراضي فقط') }}
+                <i class="fas fa-database mr-2"></i> {{ t('Fix_Default_Tenant_Only') }}
               </button>
               <small class="form-text text-muted d-block mt-2 text-center">
-                {{ _('يصحح أعمدة NOT NULL فقط (بدون backup افتراضيًا).') }}
-                <br>{{ _('يتطلب كتابة:') }} <kbd>FIX_DEFAULT_TENANT</kbd>
+                {{ t('Desc_Fix_Default_Tenant') }}
+                <br>{{ t('Requires_Typing') }} <kbd>FIX_DEFAULT_TENANT</kbd>
               </small>
             </form>
           </div>
@@ -309,15 +309,15 @@
               <div class="custom-control custom-checkbox mb-2">
                 <input type="checkbox" class="custom-control-input" id="backup_dry_run" name="dry_run">
                 <label class="custom-control-label text-muted small" for="backup_dry_run">
-                  {{ _('🔍 تجربة جافة') }}
+                  {{ t('Dry_Run_Only') }}
                 </label>
               </div>
               <button type="submit" class="btn btn-success btn-block btn-lg">
-                <i class="fas fa-sync-alt mr-2"></i> {{ _('تجديد نسخة المستأجر الافتراضي الاحتياطية') }}
+                <i class="fas fa-sync-alt mr-2"></i> {{ t('Regenerate_Default_Tenant_Backup') }}
               </button>
               <small class="form-text text-muted d-block mt-2 text-center">
-                {{ _('يعيد إنشاء النسخة الاحتياطية scoped للمستأجر الافتراضي.') }}
-                <br>{{ _('يتطلب كتابة:') }} <kbd>REGENERATE_DEFAULT_BACKUP</kbd>
+                {{ t('Desc_Regenerate_Default_Backup') }}
+                <br>{{ t('Requires_Typing') }} <kbd>REGENERATE_DEFAULT_BACKUP</kbd>
               </small>
             </form>
           </div>
@@ -327,9 +327,9 @@
           <div class="col-12">
             <div class="card">
               <div class="card-header d-flex justify-content-between">
-                <h5 class="mb-0"><i class="fas fa-history mr-2"></i>{{ _('سجل عمليات الصيانة الأخيرة') }}</h5>
+                <h5 class="mb-0"><i class="fas fa-history mr-2"></i>{{ t('Recent_Maintenance_Log') }}</h5>
                 <button class="btn btn-sm btn-outline-secondary" data-action="refresh-audit-log">
-                  <i class="fas fa-sync-alt"></i> {{ _('تحديث') }}
+                  <i class="fas fa-sync-alt"></i> {{ t('Refresh') }}
                 </button>
               </div>
               <div class="card-body p-0">
@@ -337,10 +337,10 @@
                   <table class="table table-hover mb-0" id="audit-log-table">
                     <thead class="thead-light">
                       <tr>
-                        <th>{{ _('الوقت') }}</th>
-                        <th>{{ _('العملية') }}</th>
-                        <th>{{ _('النتيجة') }}</th>
-                        <th>{{ _('التفاصيل') }}</th>
+                        <th>{{ t('Time') }}</th>
+                        <th>{{ t('Operation') }}</th>
+                        <th>{{ t('Result') }}</th>
+                        <th>{{ t('Details') }}</th>
                       </tr>
                     </thead>
                     <tbody></tbody>
@@ -365,6 +365,16 @@
 {% block extra_js %}
 <script src="{{ url_for('static', filename='adminlte/plugins/sweetalert2/sweetalert2.all.min.js') }}"></script>
 <script>
+const i18n = {{ {
+  'confirm_delete': t('Confirm_Delete'),
+  'yes_delete': t('Yes_Delete_All'),
+  'cancel': t('Cancel'),
+  'warning': t('Warning'),
+  'danger_zone': t('Danger_Zone'),
+  'processing': t('Processing'),
+  'no_records': t('No_Records')
+}|tojson }};
+
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-action]');
   if (!el) return;
@@ -381,12 +391,12 @@ document.addEventListener('submit', (e) => {
 
 function truncateTable(tableName) {
   Swal.fire({
-    title: 'تحذير خطير!',
+    title: i18n.warning + '!',
     html: `
-      <p>أنت على وشك مسح <strong>{{ t('جميع') }}</strong> البيانات من جدول:</p>
+      <p>{{ t('Truncate_Confirm_Prefix') }} <strong>{{ t('All') }}</strong> {{ t('Truncate_Confirm_Mid') }}</p>
       <h3 class="ic-3">${tableName}</h3>
-      <p>هذا الإجراء <strong>لا يمكن التراجع عنه!</strong></p>
-      <p>{{ t('اكتب') }}<code>YES_DELETE_ALL</code> للتأكيد:</p>
+      <p>{{ t('Truncate_Confirm_Irreversible') }}</p>
+      <p>{{ t('Type') }} <code>YES_DELETE_ALL</code> {{ t('To_Confirm') }}</p>
     `,
     input: 'text',
     inputPlaceholder: 'YES_DELETE_ALL',
@@ -394,11 +404,11 @@ function truncateTable(tableName) {
     showCancelButton: true,
     confirmButtonColor: '#d33',
     cancelButtonColor: '#3085d6',
-    confirmButtonText: 'نعم، احذف الكل!',
-    cancelButtonText: 'إلغاء',
+    confirmButtonText: i18n.yes_delete,
+    cancelButtonText: i18n.cancel,
     preConfirm: (value) => {
       if (value !== 'YES_DELETE_ALL') {
-        Swal.showValidationMessage('يجب كتابة YES_DELETE_ALL بالضبط');
+        Swal.showValidationMessage('{{ t('Must_Type_YES_DELETE_ALL') }}');
       }
       return value;
     }
@@ -413,19 +423,18 @@ function truncateTable(tableName) {
 
 function confirmMaintenance(form, requiredWord) {
   const userInput = prompt(
-    '⚠️ عملية صيانة خطيرة لا يمكن التراجع عنها!\n\n' +
-    'للتأكيد، اكتب بالضبط: ' + requiredWord + '\n\n' +
-    '(الحالة مهمة - يجب أن تكون حروف كبيرة)'
+    '{{ t('Maintenance_Confirm_Prompt') }}\n\n' +
+    '{{ t('To_Confirm_Type') }}: ' + requiredWord + '\n\n' +
+    '{{ t('Case_Sensitive') }}'
   );
 
   if (userInput !== requiredWord) {
     if (userInput !== null) {
-      alert('❌ تأكيد غير صحيح. يجب كتابة الكلمة بالضبط كما هي موضحة.');
+      alert('{{ t('Invalid_Confirmation') }}');
     }
     return false;
   }
 
-  // Inject hidden confirm field so the backend can validate request.form.get("confirm")
   let hidden = form.querySelector('input[name="confirm"]');
   if (!hidden) {
     hidden = document.createElement('input');
@@ -438,7 +447,7 @@ function confirmMaintenance(form, requiredWord) {
   const btn = form.querySelector('button[type="submit"]');
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> جاري التنفيذ...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> {{ t('Processing') }}...';
   }
 
   document.getElementById('maintenance-audit-log').style.display = 'block';
@@ -466,12 +475,12 @@ function renderAuditLog(logs) {
       <td><code>${log.action}</code></td>
       <td>
         <span class="badge badge-${log.success ? 'success' : 'danger'}">
-          ${log.success ? '✅ نجح' : '❌ فشل'}
+          ${log.success ? '{{ t('Success') }}' : '{{ t('Failed') }}'}
         </span>
       </td>
       <td><small>${log.details || '-'}</small></td>
     </tr>
-  `).join('') || '<tr><td colspan="4" class="text-center text-muted">لا توجد عمليات صيانة مسجلة</td></tr>';
+  `).join('') || '<tr><td colspan="4" class="text-center text-muted">' + i18n.no_records + '</td></tr>';
 }
 
 let auditLogInterval;
@@ -490,4 +499,3 @@ const observer = new MutationObserver(() => {
 observer.observe(auditLogSection, { attributes: true, attributeFilter: ['style'] });
 </script>
 {% endblock %}
-

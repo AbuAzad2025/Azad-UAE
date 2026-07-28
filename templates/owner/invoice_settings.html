@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}شركة أزاد للأنظمة الذكية - إعدادات الفواتير والترويسات المتقدمة{% endblock %}
+{% block title %}{{ t('Azad_Smart_Systems') }} - {{ t('Invoice_Settings_Advanced') }}{% endblock %}
 
 {% block content %}
 <div class="content-header">
@@ -9,18 +9,18 @@
       <div class="col-sm-6">
         <h1 class="m-0">
           <i class="fas fa-file-invoice text-warning"></i> 
-          {{ _('إعدادات الفواتير والترويسات') }}
+          {{ t('Invoice_Settings_Headers') }}
         </h1>
       </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
           <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
-            <i class="fas fa-arrow-right mr-1"></i> {{ _('الرجوع للوحة المالك') }}
+            <i class="fas fa-arrow-right mr-1"></i> {{ t('Back_To_Owner_Dashboard') }}
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Dashboard') }}</a></li>
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">Owner</a></li>
-            <li class="breadcrumb-item active">{{ t('Invoice_Settings_2') }}</li>
+            <li class="breadcrumb-item active">{{ t('Invoice_Settings_Advanced') }}</li>
           </ol>
         </div>
       </div>
@@ -40,24 +40,24 @@
           
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title"><i class="fas fa-building"></i> {{ _('معلومات الشركة') }}</h3>
+              <h3 class="card-title"><i class="fas fa-building"></i> {{ t('Company_Information') }}</h3>
             </div>
             <div class="card-body">
               <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i> <strong>{{ t('Alert_2') }}</strong> {{ _('هذه المعلومات ستظهر في رأس الفواتير وسندات القبض') }}
+                <i class="fas fa-info-circle"></i> <strong>{{ t('Info') }}</strong> {{ t('Desc_Invoice_Header_Info') }}
               </div>
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="company_name_ar">
-                      <i class="fas fa-building text-primary"></i> {{ _('اسم الشركة (عربي)') }} 
+                      <i class="fas fa-building text-primary"></i> {{ t('Company_Name_Arabic') }} 
                       <span class="text-danger">*</span>
                     </label>
                     <input type="text" class="form-control" name="company_name_ar" id="company_name_ar" 
-                           value="{{ settings.company_name_ar }}" required
-                           placeholder="{{ _('مثال: شركة أزاد للأنظمة الذكية') }}" minlength="2" maxlength="100">
+                           value="{{ settings.company_name_ar|default('') }}" required
+                           placeholder="{{ t('Example_Co_Name_Ar') }}" minlength="2" maxlength="100">
                     <small class="form-text text-muted">
-                      {{ _('📝 سيظهر في رأس الفاتورة - الاسم الرسمي بالعربية') }}
+                      {{ t('Desc_Company_Name_Ar') }}
                     </small>
                   </div>
                 </div>
@@ -68,10 +68,10 @@
                       <span class="text-danger">*</span>
                     </label>
                     <input type="text" class="form-control" name="company_name_en" id="company_name_en" 
-                           value="{{ settings.company_name_en }}" required
+                           value="{{ settings.company_name_en|default('') }}" required
                            placeholder="e.g: Azad Smart Systems" minlength="2" maxlength="100">
                     <small class="form-text text-muted">
-                      📝 Company official name in English
+                      Company official name in English
                     </small>
                   </div>
                 </div>
@@ -81,12 +81,12 @@
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="address_ar">
-                      <i class="fas fa-map-marker-alt text-success"></i> {{ _('العنوان (عربي)') }}
+                      <i class="fas fa-map-marker-alt text-success"></i> {{ t('Address_Arabic') }}
                     </label>
                     <textarea class="form-control" name="address_ar" id="address_ar" rows="2" 
-                              placeholder="{{ _('مثال: أبو ظبي - الإمارات العربية المتحدة') }}" maxlength="255">{{ settings.address_ar }}</textarea>
+                              placeholder="{{ t('Example_Address_Ar') }}" maxlength="255">{{ settings.address_ar|default('') }}</textarea>
                     <small class="form-text text-muted">
-                      {{ _('📍 عنوان الشركة الكامل بالعربية') }}
+                      {{ t('Desc_Address_Ar') }}
                     </small>
                   </div>
                 </div>
@@ -96,9 +96,9 @@
                       <i class="fas fa-map-marker-alt text-success"></i> Address (English)
                     </label>
                     <textarea class="form-control" name="address_en" id="address_en" rows="2"
-                              placeholder="e.g: Abu Dhabi - UAE" maxlength="255">{{ settings.address_en }}</textarea>
+                              placeholder="e.g: Abu Dhabi - UAE" maxlength="255">{{ settings.address_en|default('') }}</textarea>
                     <small class="form-text text-muted">
-                      📍 Complete company address in English
+                      Complete company address in English
                     </small>
                   </div>
                 </div>
@@ -107,44 +107,44 @@
               <div class="row">
                 <div class="col-md-3">
                   <div class="form-group">
-                    <label for="phone_1"><i class="fas fa-phone text-info"></i> {{ _('هاتف 1') }}</label>
+                    <label for="phone_1"><i class="fas fa-phone text-info"></i> {{ t('Phone_1') }}</label>
                     <input type="text" class="form-control" name="phone_1" id="phone_1"
-                           value="{{ settings.phone_1 }}"
+                           value="{{ settings.phone_1|default('') }}"
                            placeholder="+971501234567" pattern="^\+?[0-9\s\-]{8,20}$">
                     <small class="form-text text-muted">
-                      {{ _('📞 رقم التواصل الرئيسي') }}
+                      {{ t('Desc_Main_Phone') }}
                     </small>
                   </div>
                 </div>
                 <div class="col-md-3">
                   <div class="form-group">
-                    <label for="phone_2"><i class="fas fa-phone text-info"></i> {{ _('هاتف 2') }}</label>
+                    <label for="phone_2"><i class="fas fa-phone text-info"></i> {{ t('Phone_2') }}</label>
                     <input type="text" class="form-control" name="phone_2" id="phone_2"
-                           value="{{ settings.phone_2 }}"
+                           value="{{ settings.phone_2|default('') }}"
                            placeholder="+971501234568" pattern="^\+?[0-9\s\-]{8,20}$">
                     <small class="form-text text-muted">
-                      {{ _('📞 رقم احتياطي (اختياري)') }}
+                      {{ t('Desc_Backup_Phone') }}
                     </small>
                   </div>
                 </div>
                 <div class="col-md-3">
                   <div class="form-group">
-                    <label for="email"><i class="fas fa-envelope text-warning"></i> {{ _('البريد') }}</label>
+                    <label for="email"><i class="fas fa-envelope text-warning"></i> {{ t('Email') }}</label>
                     <input type="email" class="form-control" name="email" id="email"
-                           value="{{ settings.email }}"
+                           value="{{ settings.email|default('') }}"
                            placeholder="info@company.com">
                     <small class="form-text text-muted">
-                      📧 {{ t('Email') }}</small>
+                      {{ t('Email') }}</small>
                   </div>
                 </div>
                 <div class="col-md-3">
                   <div class="form-group">
-                    <label for="website"><i class="fas fa-globe text-primary"></i> {{ _('الموقع') }}</label>
+                    <label for="website"><i class="fas fa-globe text-primary"></i> {{ t('Website') }}</label>
                     <input type="text" class="form-control" name="website" id="website"
-                           value="{{ settings.website }}" 
+                           value="{{ settings.website|default('') }}" 
                            placeholder="www.company.com">
                     <small class="form-text text-muted">
-                      {{ _('🌐 موقع الشركة الإلكتروني') }}
+                      {{ t('Desc_Website') }}
                     </small>
                   </div>
                 </div>
@@ -155,48 +155,48 @@
           
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title"><i class="fas fa-certificate"></i> {{ _('المعلومات التجارية') }}</h3>
+              <h3 class="card-title"><i class="fas fa-certificate"></i> {{ t('Business_Information') }}</h3>
             </div>
             <div class="card-body">
               <div class="alert alert-warning">
-                <i class="fas fa-exclamation-triangle"></i> <strong>{{ t('Important') }}</strong> {{ _('هذه المعلومات مطلوبة للفواتير الضريبية الرسمية') }}
+                <i class="fas fa-exclamation-triangle"></i> <strong>{{ t('Important') }}</strong> {{ t('Desc_Tax_Invoice_Required') }}
               </div>
               <div class="row">
                 <div class="col-md-4">
                   <div class="form-group">
                     <label for="tax_number">
-                      <i class="fas fa-receipt text-danger"></i> {{ _('الرقم الضريبي (TRN)') }}
+                      <i class="fas fa-receipt text-danger"></i> {{ t('Tax_Number_TRN') }}
                     </label>
                     <input type="text" class="form-control" name="tax_number" id="tax_number"
-                           value="{{ settings.tax_number }}" placeholder="TRN-123456789" maxlength="20">
+                           value="{{ settings.tax_number|default('') }}" placeholder="TRN-123456789" maxlength="20">
                     <small class="form-text text-muted">
-                      {{ _('📄 رقم التسجيل الضريبي - Tax Registration Number') }}
+                      {{ t('Desc_Tax_Registration_Number') }}
                     </small>
                   </div>
                 </div>
                 <div class="col-md-4">
                   <div class="form-group">
                     <label for="commercial_register">
-                      <i class="fas fa-file-alt text-info"></i> {{ _('السجل التجاري') }}
+                      <i class="fas fa-file-alt text-info"></i> {{ t('Commercial_Register') }}
                     </label>
                     <input type="text" class="form-control" name="commercial_register" id="commercial_register"
-                           value="{{ settings.commercial_register }}"
-                           placeholder="{{ _('رقم السجل التجاري') }}">
+                           value="{{ settings.commercial_register|default('') }}"
+                           placeholder="{{ t('CR_Number') }}">
                     <small class="form-text text-muted">
-                      {{ _('📋 رقم القيد في السجل التجاري') }}
+                      {{ t('Desc_Commercial_Register') }}
                     </small>
                   </div>
                 </div>
                 <div class="col-md-4">
                   <div class="form-group">
                     <label for="license_number">
-                      <i class="fas fa-id-card text-success"></i> {{ _('رقم الرخصة') }}
+                      <i class="fas fa-id-card text-success"></i> {{ t('License_Number') }}
                     </label>
                     <input type="text" class="form-control" name="license_number" id="license_number"
-                           value="{{ settings.license_number }}"
-                           placeholder="{{ _('رقم الرخصة التجارية') }}">
+                           value="{{ settings.license_number|default('') }}"
+                           placeholder="{{ t('License_Number') }}">
                     <small class="form-text text-muted">
-                      {{ _('🆔 رقم الرخصة التجارية') }}
+                      {{ t('Desc_License_Number') }}
                     </small>
                   </div>
                 </div>
@@ -207,36 +207,36 @@
           
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title"><i class="fas fa-university"></i> {{ _('المعلومات البنكية') }}</h3>
+              <h3 class="card-title"><i class="fas fa-university"></i> {{ t('Bank_Information') }}</h3>
             </div>
             <div class="card-body">
               <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i> <strong>{{ t('Note') }}</strong> {{ _('ستظهر هذه المعلومات في ذيل الفاتورة للتحويلات البنكية') }}
+                <i class="fas fa-check-circle"></i> <strong>{{ t('Note') }}</strong> {{ t('Desc_Bank_Info_Footer') }}
               </div>
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="bank_name">
-                      <i class="fas fa-university text-primary"></i> {{ _('اسم البنك') }}
+                      <i class="fas fa-university text-primary"></i> {{ t('Bank_Name') }}
                     </label>
                     <input type="text" class="form-control" name="bank_name" id="bank_name"
-                           value="{{ settings.bank_name }}"
-                           placeholder="{{ _('مثال: بنك الإمارات دبي الوطني') }}" minlength="2" maxlength="100">
+                           value="{{ settings.bank_name|default('') }}"
+                           placeholder="{{ t('Example_Bank_Name') }}" minlength="2" maxlength="100">
                     <small class="form-text text-muted">
-                      {{ _('🏦 البنك المستخدم لاستقبال التحويلات') }}
+                      {{ t('Desc_Bank_Name') }}
                     </small>
                   </div>
                 </div>
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="bank_account_number">
-                      <i class="fas fa-hashtag text-info"></i> {{ _('رقم الحساب') }}
+                      <i class="fas fa-hashtag text-info"></i> {{ t('Account_Number') }}
                     </label>
                     <input type="text" class="form-control" name="bank_account_number" id="bank_account_number"
-                           value="{{ settings.bank_account_number }}"
+                           value="{{ settings.bank_account_number|default('') }}"
                            placeholder="123456789" maxlength="34">
                     <small class="form-text text-muted">
-                      {{ _('🔢 رقم الحساب البنكي') }}
+                      {{ t('Desc_Bank_Account') }}
                     </small>
                   </div>
                 </div>
@@ -247,10 +247,10 @@
                     <label for="iban">
                       <i class="fas fa-credit-card text-success"></i> IBAN
                     </label>
-                    <input type="text" class="form-control" name="iban" id="iban" value="{{ settings.iban }}"
+                    <input type="text" class="form-control" name="iban" id="iban" value="{{ settings.iban|default('') }}"
                            placeholder="AE07 0331 2345 6789 0123 456" maxlength="34">
                     <small class="form-text text-muted">
-                      {{ _('💳 رقم الحساب البنكي الدولي - للتحويلات الدولية') }}
+                      {{ t('Desc_IBAN') }}
                     </small>
                   </div>
                 </div>
@@ -260,10 +260,10 @@
                       <i class="fas fa-code text-warning"></i> SWIFT Code
                     </label>
                     <input type="text" class="form-control" name="swift_code" id="swift_code"
-                           value="{{ settings.swift_code }}"
+                           value="{{ settings.swift_code|default('') }}"
                            placeholder="EBILAEAD">
                     <small class="form-text text-muted">
-                      {{ _('🌍 كود السويفت - للتحويلات الدولية') }}
+                      {{ t('Desc_SWIFT') }}
                     </small>
                   </div>
                 </div>
@@ -274,17 +274,17 @@
           
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title"><i class="fas fa-file-contract"></i> {{ _('الشروط والملاحظات') }}</h3>
+              <h3 class="card-title"><i class="fas fa-file-contract"></i> {{ t('Terms_And_Notes') }}</h3>
             </div>
             <div class="card-body">
               <div class="form-group">
                 <label for="payment_terms_ar">
-                  <i class="fas fa-handshake text-primary"></i> {{ _('شروط الدفع (عربي)') }}
+                  <i class="fas fa-handshake text-primary"></i> {{ t('Payment_Terms_Arabic') }}
                 </label>
                 <textarea class="form-control" name="payment_terms_ar" id="payment_terms_ar" rows="2" 
-                          placeholder="{{ _('مثال: الدفع نقداً أو بالتحويل البنكي خلال 7 أيام') }}">{{ settings.payment_terms_ar }}</textarea>
+                          placeholder="{{ t('Example_Payment_Terms') }}">{{ settings.payment_terms_ar|default('') }}</textarea>
                 <small class="form-text text-muted">
-                  {{ _('📜 شروط الدفع التي ستظهر في ذيل الفاتورة') }}
+                  {{ t('Desc_Payment_Terms') }}
                 </small>
               </div>
               <div class="form-group">
@@ -292,9 +292,9 @@
                   <i class="fas fa-handshake text-primary"></i> Payment Terms (English)
                 </label>
                 <textarea class="form-control" name="payment_terms_en" id="payment_terms_en" rows="2"
-                          placeholder="e.g: Payment by cash or bank transfer within 7 days">{{ settings.payment_terms_en }}</textarea>
+                          placeholder="e.g: Payment by cash or bank transfer within 7 days">{{ settings.payment_terms_en|default('') }}</textarea>
                 <small class="form-text text-muted">
-                  📜 Payment terms for English invoices
+                  Payment terms for English invoices
                 </small>
               </div>
               
@@ -302,22 +302,22 @@
               
               <div class="form-group">
                 <label for="default_invoice_note_ar">
-                  <i class="fas fa-sticky-note text-warning"></i> {{ _('ملاحظة افتراضية للفواتير (عربي)') }}
+                  <i class="fas fa-sticky-note text-warning"></i> {{ t('Default_Invoice_Note_Ar') }}
                 </label>
                 <textarea class="form-control" name="default_invoice_note_ar" id="default_invoice_note_ar" rows="2"
-                          placeholder="{{ _('مثال: شكراً لتعاملكم معنا - نتطلع لخدمتكم مستقبلاً') }}">{{ settings.default_invoice_note_ar }}</textarea>
+                          placeholder="{{ t('Example_Invoice_Note') }}">{{ settings.default_invoice_note_ar|default('') }}</textarea>
                 <small class="form-text text-muted">
-                  {{ _('💬 ملاحظة اختيارية ستظهر تلقائياً في كل فاتورة جديدة') }}
+                  {{ t('Desc_Default_Invoice_Note') }}
                 </small>
               </div>
               <div class="form-group">
                 <label for="default_receipt_note_ar">
-                  <i class="fas fa-sticky-note text-success"></i> {{ _('ملاحظة افتراضية لسندات القبض (عربي)') }}
+                  <i class="fas fa-sticky-note text-success"></i> {{ t('Default_Receipt_Note_Ar') }}
                 </label>
                 <textarea class="form-control" name="default_receipt_note_ar" id="default_receipt_note_ar" rows="2"
-                          placeholder="{{ _('مثال: تم استلام المبلغ بالكامل - شكراً لكم') }}">{{ settings.default_receipt_note_ar }}</textarea>
+                          placeholder="{{ t('Example_Receipt_Note') }}">{{ settings.default_receipt_note_ar|default('') }}</textarea>
                 <small class="form-text text-muted">
-                  {{ _('💬 ملاحظة اختيارية ستظهر تلقائياً في كل سند قبض جديد') }}
+                  {{ t('Desc_Default_Receipt_Note') }}
                 </small>
               </div>
             </div>
@@ -331,132 +331,132 @@
           
           <div class="card card-primary">
             <div class="card-header">
-              <h3 class="card-title"><i class="fas fa-palette"></i> {{ _('التصميم والمظهر') }}</h3>
+              <h3 class="card-title"><i class="fas fa-palette"></i> {{ t('Design_And_Appearance') }}</h3>
             </div>
             <div class="card-body">
               <div class="form-group">
                 <label>
-                  <i class="fas fa-file-invoice text-primary"></i> {{ _('القالب النشط') }}
+                  <i class="fas fa-file-invoice text-primary"></i> {{ t('Active_Template') }}
                 </label>
                 <select class="form-control" name="active_template" aria-label="active template">
-                  <option value="modern" {% if settings.active_template == 'modern' %}selected{% endif %}>{{ _('🎨 عصري (Modern) - ملون وحديث') }}</option>
-                  <option value="classic" {% if settings.active_template == 'classic' %}selected{% endif %}>📄 {{ t('كلاسيكي') }}Classic) - تقليدي بسيط</option>
-                  <option value="minimal" {% if settings.active_template == 'minimal' %}selected{% endif %}>✨ {{ t('بسيط') }}Minimal) - أنيق ونظيف</option>
-                  <option value="gulf" {% if settings.active_template == 'gulf' %}selected{% endif %}>⭐ {{ t('Gulf_2') }}Gulf) - بطابع خليجي</option>
-                  <option value="simple" {% if settings.active_template == 'simple' %}selected{% endif %}>{{ _('📝 مبسط (Simple) - أساسيات فقط') }}</option>
+                  <option value="modern" {% if settings.active_template|default('modern') == 'modern' %}selected{% endif %}>{{ t('Modern_Template_Option') }}</option>
+                  <option value="classic" {% if settings.active_template|default('modern') == 'classic' %}selected{% endif %}>{{ t('Classic_Template_Option') }}</option>
+                  <option value="minimal" {% if settings.active_template|default('modern') == 'minimal' %}selected{% endif %}>{{ t('Minimal_Template_Option') }}</option>
+                  <option value="gulf" {% if settings.active_template|default('modern') == 'gulf' %}selected{% endif %}>{{ t('Gulf_Template_Option') }}</option>
+                  <option value="simple" {% if settings.active_template|default('modern') == 'simple' %}selected{% endif %}>{{ t('Simple_Template_Option') }}</option>
                 </select>
                 <small class="form-text text-muted">
-                  {{ _('🎭 اختر شكل الفاتورة المفضل - يمكن معاينته من الأسفل') }}
+                  {{ t('Desc_Choose_Template') }}
                 </small>
               </div>
               
               <div class="form-group">
                 <label>
-                  <i class="fas fa-paint-brush"></i> {{ _('لون الترويسة') }}
+                  <i class="fas fa-paint-brush"></i> {{ t('Header_Color') }}
                 </label>
-                <input type="color" class="form-control ic-1" name="header_color" value="{{ settings.header_color or '#667eea' }}" aria-label="header color">
+                <input type="color" class="form-control ic-1" name="header_color" value="{{ settings.header_color|default('#667eea') }}" aria-label="header color">
                 <small class="form-text text-muted">
-                  {{ _('🎨 لون رأس الفاتورة والعناصر الرئيسية') }}
+                  {{ t('Desc_Header_Color') }}
                 </small>
               </div>
               
               <div class="form-group">
                 <label>
-                  <i class="fas fa-fill-drip"></i> {{ _('اللون الثانوي') }}
+                  <i class="fas fa-fill-drip"></i> {{ t('Accent_Color') }}
                 </label>
-                <input type="color" class="form-control ic-1" name="accent_color" value="{{ settings.accent_color or '#764ba2' }}" aria-label="accent color">
+                <input type="color" class="form-control ic-1" name="accent_color" value="{{ settings.accent_color|default('#764ba2') }}" aria-label="accent color">
                 <small class="form-text text-muted">
-                  {{ _('🎨 لون الأزرار والعناصر الثانوية') }}
+                  {{ t('Desc_Accent_Color') }}
                 </small>
               </div>
               
               <hr class="my-3">
-              <h6 class="text-muted"><i class="fas fa-sliders-h"></i> {{ _('خيارات إضافية') }}</h6>
+              <h6 class="text-muted"><i class="fas fa-sliders-h"></i> {{ t('Additional_Options') }}</h6>
               
               <div class="custom-control custom-checkbox mb-3">
                 <input type="checkbox" class="custom-control-input" id="show_logo" name="show_logo" 
-                       {% if settings.show_logo %}checked{% endif %} aria-label="show logo">
+                       {% if settings.show_logo|default(false) %}checked{% endif %} aria-label="show logo">
                 <label class="custom-control-label" for="show_logo">
-                  <i class="fas fa-image text-primary"></i> {{ _('إظهار الشعار') }}
+                  <i class="fas fa-image text-primary"></i> {{ t('Show_Logo') }}
                 </label>
                 <br>
-                <small class="text-muted ml-4">{{ _('عرض شعار الشركة في رأس الفاتورة') }}</small>
+                <small class="text-muted ml-4">{{ t('Desc_Show_Logo') }}</small>
               </div>
               
               <div class="form-group" id="logo-upload-group">
                 <label>
-                  <i class="fas fa-upload text-primary"></i> {{ _('رفع شعار الشركة') }}
+                  <i class="fas fa-upload text-primary"></i> {{ t('Upload_Logo') }}
                 </label>
                 <input type="file" class="form-control-file" name="company_logo" accept="image/png,image/jpeg,image/jpg,image/webp" aria-label="company logo">
                 <small class="form-text text-muted">
-                  {{ _('المقاس الموصى به: 400×160 بكسل. الصيغ: PNG, JPG, WEBP.') }}
+                  {{ t('Desc_Logo_Dimensions') }}
                 </small>
                 {% if settings and settings.logo_path %}
                 <div class="mt-2">
                   <img src="{{ url_for('static', filename=settings.logo_path) }}" alt="Current Logo" class="ic-2">
                   <br>
-                  <small class="text-success">{{ _('✅ الشعار الحالي') }}</small>
+                  <small class="text-success">{{ t('Current_Logo') }}</small>
                 </div>
                 {% endif %}
               </div>
               
               <div class="custom-control custom-checkbox mb-3">
                 <input type="checkbox" class="custom-control-input" id="enable_qr_code" name="enable_qr_code" 
-                       {% if settings.enable_qr_code %}checked{% endif %} aria-label="enable qr code">
+                       {% if settings.enable_qr_code|default(false) %}checked{% endif %} aria-label="enable qr code">
                 <label class="custom-control-label" for="enable_qr_code">
-                  <i class="fas fa-qrcode text-success"></i> {{ _('إظهار QR Code') }}
+                  <i class="fas fa-qrcode text-success"></i> {{ t('Show_QR_Code') }}
                 </label>
                 <br>
-                <small class="text-muted ml-4">{{ _('رمز QR للمسح السريع والدفع الإلكتروني') }}</small>
+                <small class="text-muted ml-4">{{ t('Desc_QR_Code') }}</small>
               </div>
               
               <div class="custom-control custom-checkbox mb-3">
                 <input type="checkbox" class="custom-control-input" id="show_barcode" name="show_barcode" 
-                       {% if settings.show_barcode %}checked{% endif %} aria-label="show barcode" maxlength="50">
+                       {% if settings.show_barcode|default(false) %}checked{% endif %} aria-label="show barcode" maxlength="50">
                 <label class="custom-control-label" for="show_barcode">
-                  <i class="fas fa-barcode text-info"></i> {{ _('إظهار Barcode') }}
+                  <i class="fas fa-barcode text-info"></i> {{ t('Show_Barcode') }}
                 </label>
                 <br>
-                <small class="text-muted ml-4">{{ _('باركود رقم الفاتورة للمسح والأرشفة') }}</small>
+                <small class="text-muted ml-4">{{ t('Desc_Barcode') }}</small>
               </div>
               
               <div class="custom-control custom-checkbox mb-3">
                 <input type="checkbox" class="custom-control-input" id="enable_watermark" name="enable_watermark" 
-                       {% if settings.enable_watermark %}checked{% endif %} aria-label="enable watermark">
+                       {% if settings.enable_watermark|default(false) %}checked{% endif %} aria-label="enable watermark">
                 <label class="custom-control-label" for="enable_watermark">
-                  <i class="fas fa-stamp text-warning"></i> {{ _('علامة مائية') }}
+                  <i class="fas fa-stamp text-warning"></i> {{ t('Watermark') }}
                 </label>
                 <br>
-                <small class="text-muted ml-4">{{ _('نص خلفي شفاف يظهر خلف الفاتورة (مثل: نسخة أصلية، مدفوعة، الخ)') }}</small>
+                <small class="text-muted ml-4">{{ t('Desc_Watermark') }}</small>
               </div>
               
-              <div class="form-group d{% if settings.enable_watermark %}-block{% else %}-none{% endif %}" id="watermark-text-group">
+              <div class="form-group d{% if settings.enable_watermark|default(false) %}-block{% else %}-none{% endif %}" id="watermark-text-group">
                 <label for="watermark_text">
-                  <i class="fas fa-font text-warning"></i> {{ _('نص العلامة المائية') }}
+                  <i class="fas fa-font text-warning"></i> {{ t('Watermark_Text') }}
                 </label>
                 <input type="text" class="form-control" name="watermark_text" id="watermark_text"
-                       value="{{ settings.watermark_text }}"
-                       placeholder="{{ _('مثال: نسخة أصلية / ORIGINAL COPY / PAID') }}">
+                       value="{{ settings.watermark_text|default('') }}"
+                       placeholder="{{ t('Example_Watermark_Text') }}">
                 <small class="form-text text-muted">
-                  {{ _('💧 النص الذي سيظهر بشكل شفاف خلف الفاتورة بزاوية 45 درجة') }}
+                  {{ t('Desc_Watermark_Text') }}
                 </small>
               </div>
               
-              <div class="form-group d{% if settings.enable_watermark %}-block{% else %}-none{% endif %}" id="watermark-image-group">
+              <div class="form-group d{% if settings.enable_watermark|default(false) %}-block{% else %}-none{% endif %}" id="watermark-image-group">
                 <label>
-                  <i class="fas fa-image text-warning"></i> {{ _('أو رفع صورة للعلامة المائية (اختياري)') }}
+                  <i class="fas fa-image text-warning"></i> {{ t('Or_Upload_Watermark_Image') }}
                 </label>
                 <input type="file" class="form-control-file" name="watermark_image" accept="image/png,image/jpeg,image/jpg" aria-label="watermark image">
                 <small class="form-text text-muted">
-                  🖼️ <strong>{{ t('Note') }}</strong> {{ _('الصورة ستظهر شفافة بنسبة 5%% في خلفية الفاتورة') }}<br>
-                  📐 <strong>{{ _('الأبعاد:') }}</strong> {{ _('300×300 بكسل (مربعة) أو 400×200 (مستطيلة)') }}<br>
-                  📄 <strong>{{ _('الصيغ:') }}</strong> {{ _('PNG شفاف للحصول على أفضل نتيجة') }}
+                  {{ t('Image_Will_Be_5_Percent_Transparent') }}<br>
+                  {{ t('Desc_Watermark_Dimensions') }}<br>
+                  {{ t('Desc_Watermark_Formats') }}
                 </small>
                 {% if settings and settings.watermark_image_path %}
                 <div class="mt-2">
                   <img src="{{ url_for('static', filename=settings.watermark_image_path) }}" alt="Watermark" class="ic-3">
                   <br>
-                  <small class="text-warning">{{ _('✅ صورة العلامة المائية الحالية') }}</small>
+                  <small class="text-warning">{{ t('Current_Watermark_Image') }}</small>
                 </div>
                 {% endif %}
               </div>
@@ -466,47 +466,47 @@
           
           <div class="card card-info">
             <div class="card-header">
-              <h3 class="card-title"><i class="fas fa-print"></i> {{ _('إعدادات الطباعة') }}</h3>
+              <h3 class="card-title"><i class="fas fa-print"></i> {{ t('Print_Settings') }}</h3>
             </div>
             <div class="card-body">
               <div class="form-group">
                 <label>
-                  <i class="fas fa-file-alt text-info"></i> {{ _('حجم الورق') }}
+                  <i class="fas fa-file-alt text-info"></i> {{ t('Paper_Size') }}
                 </label>
                 <select class="form-control" name="paper_size" aria-label="paper size">
-                  <option value="A4" {% if settings.paper_size == 'A4' %}selected{% endif %}>{{ _('📄 A4 (210 × 297 مم) - الأكثر شيوعاً') }}</option>
-                  <option value="A5" {% if settings.paper_size == 'A5' %}selected{% endif %}>{{ _('📃 A5 (148 × 210 مم) - نصف A4') }}</option>
-                  <option value="Letter" {% if settings.paper_size == 'Letter' %}selected{% endif %}>{{ _('📋 Letter (216 × 279 مم) - أمريكي') }}</option>
+                  <option value="A4" {% if settings.paper_size|default('A4') == 'A4' %}selected{% endif %}>{{ t('Paper_A4') }}</option>
+                  <option value="A5" {% if settings.paper_size|default('A4') == 'A5' %}selected{% endif %}>{{ t('Paper_A5') }}</option>
+                  <option value="Letter" {% if settings.paper_size|default('A4') == 'Letter' %}selected{% endif %}>{{ t('Paper_Letter') }}</option>
                 </select>
                 <small class="form-text text-muted">
-                  {{ _('📏 حجم الورقة المستخدمة في الطباعة') }}
+                  {{ t('Desc_Paper_Size') }}
                 </small>
               </div>
               
               <div class="form-group">
                 <label>
-                  <i class="fas fa-arrows-alt-h text-warning"></i> {{ _('الاتجاه') }}
+                  <i class="fas fa-arrows-alt-h text-warning"></i> {{ t('Orientation') }}
                 </label>
                 <select class="form-control" name="orientation" aria-label="orientation">
-                  <option value="portrait" {% if settings.orientation == 'portrait' %}selected{% endif %}>⬆️ {{ t('عمودي') }}Portrait) - {{ t('Default') }}</option>
-                  <option value="landscape" {% if settings.orientation == 'landscape' %}selected{% endif %}>↔️ {{ t('أفقي') }}Landscape) - عريض</option>
+                  <option value="portrait" {% if settings.orientation|default('portrait') == 'portrait' %}selected{% endif %}>{{ t('Portrait_Option') }}</option>
+                  <option value="landscape" {% if settings.orientation|default('portrait') == 'landscape' %}selected{% endif %}>{{ t('Landscape_Option') }}</option>
                 </select>
                 <small class="form-text text-muted">
-                  {{ _('🔄 اتجاه الورقة عند الطباعة') }}
+                  {{ t('Desc_Orientation') }}
                 </small>
               </div>
               
               <div class="form-group">
                 <label>
-                  <i class="fas fa-language text-primary"></i> {{ _('اللغة الافتراضية') }}
+                  <i class="fas fa-language text-primary"></i> {{ t('Default_Language') }}
                 </label>
                 <select class="form-control" name="default_language" aria-label="default language">
-                  <option value="ar" {% if settings.default_language == 'ar' %}selected{% endif %}>{{ _('🇦🇪 عربي - Arabic') }}</option>
-                  <option value="en" {% if settings.default_language == 'en' %}selected{% endif %}>🇬🇧 English - {{ t('English') }}</option>
-                  <option value="both" {% if settings.default_language == 'both' %}selected{% endif %}>{{ _('🌍 ثنائي اللغة - Bilingual') }}</option>
+                  <option value="ar" {% if settings.default_language|default('ar') == 'ar' %}selected{% endif %}>{{ t('Arabic_Language_Option') }}</option>
+                  <option value="en" {% if settings.default_language|default('ar') == 'en' %}selected{% endif %}>{{ t('English_Language_Option') }}</option>
+                  <option value="both" {% if settings.default_language|default('ar') == 'both' %}selected{% endif %}>{{ t('Bilingual_Language_Option') }}</option>
                 </select>
                 <small class="form-text text-muted">
-                  {{ _('🗣️ لغة عرض الفواتير الافتراضية') }}
+                  {{ t('Desc_Default_Language') }}
                 </small>
               </div>
             </div>
@@ -515,120 +515,39 @@
           
           <div class="card card-success">
             <div class="card-header">
-              <h3 class="card-title"><i class="fas fa-eye"></i> {{ _('معاينة قوالب الفواتير') }}</h3>
+              <h3 class="card-title"><i class="fas fa-eye"></i> {{ t('Preview_Templates') }}</h3>
             </div>
             <div class="card-body">
-              <div class="row">
-                <div class="col-12 mb-3">
-                  <div class="d-flex align-items-center justify-content-between bg-light p-2 rounded">
-                    <div>
-                      <i class="fas fa-file-invoice text-primary"></i> <strong>{{ _('عصري (Modern)') }}</strong>
-                      <br><small class="text-muted">{{ _('قالب عصري ملون') }}</small>
-                    </div>
-                    <div>
-                      <a href="{{ url_for('owner.preview_invoice', template='modern') }}" 
-                         target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary">
-                        <i class="fas fa-file-invoice"></i> {{ _('فاتورة') }}
-                      </a>
-                      <a href="{{ url_for('owner.preview_receipt', template='modern') }}" 
-                         target="_blank" rel="noopener noreferrer" class="btn btn-outline-success">
-                        <i class="fas fa-receipt"></i> {{ _('سند') }}
-                      </a>
-                      <button type="button" class="btn btn-primary" data-action="apply-template" data-template="modern">
-                        <i class="fas fa-check"></i> {{ _('تطبيق') }}
-                      </button>
-                    </div>
+              {% set templates_preview = [
+                ('modern', 'fas fa-file-invoice text-primary', 'Modern', 'Desc_Modern'),
+                ('classic', 'fas fa-file-alt text-secondary', 'Classic', 'Desc_Classic'),
+                ('minimal', 'fas fa-file text-info', 'Minimal', 'Desc_Minimal'),
+                ('gulf', 'fas fa-file-invoice-dollar text-warning', 'Gulf', 'Desc_Gulf'),
+                ('simple', 'fas fa-file text-success', 'Simple', 'Desc_Simple')
+              ] %}
+              {% for tmpl, icon, label, desc in templates_preview %}
+              <div class="col-12 mb-3">
+                <div class="d-flex align-items-center justify-content-between bg-light p-2 rounded {% if tmpl == 'simple' %}border border-success{% endif %}">
+                  <div>
+                    <i class="{{ icon }}"></i> <strong>{{ t(label) }}</strong>
+                    <br><small class="text-muted">{{ t(desc) }}</small>
                   </div>
-                </div>
-                
-                <div class="col-12 mb-3">
-                  <div class="d-flex align-items-center justify-content-between bg-light p-2 rounded">
-                    <div>
-                      <i class="fas fa-file-alt text-secondary"></i> <strong>{{ t('كلاسيكي') }}Classic)</strong>
-                      <br><small class="text-muted">{{ _('قالب تقليدي بسيط') }}</small>
-                    </div>
-                    <div>
-                      <a href="{{ url_for('owner.preview_invoice', template='classic') }}" 
-                         target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary">
-                        <i class="fas fa-file-invoice"></i> {{ _('فاتورة') }}
-                      </a>
-                      <a href="{{ url_for('owner.preview_receipt', template='classic') }}" 
-                         target="_blank" rel="noopener noreferrer" class="btn btn-outline-success">
-                        <i class="fas fa-receipt"></i> {{ _('سند') }}
-                      </a>
-                      <button type="button" class="btn btn-secondary" data-action="apply-template" data-template="classic">
-                        <i class="fas fa-check"></i> {{ _('تطبيق') }}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                
-                <div class="col-12 mb-3">
-                  <div class="d-flex align-items-center justify-content-between bg-light p-2 rounded">
-                    <div>
-                      <i class="fas fa-file text-info"></i> <strong>{{ t('بسيط') }}Minimal)</strong>
-                      <br><small class="text-muted">{{ _('قالب بسيط وأنيق') }}</small>
-                    </div>
-                    <div>
-                      <a href="{{ url_for('owner.preview_invoice', template='minimal') }}" 
-                         target="_blank" rel="noopener noreferrer" class="btn btn-outline-info">
-                        <i class="fas fa-file-invoice"></i> {{ _('فاتورة') }}
-                      </a>
-                      <a href="{{ url_for('owner.preview_receipt', template='minimal') }}" 
-                         target="_blank" rel="noopener noreferrer" class="btn btn-outline-success">
-                        <i class="fas fa-receipt"></i> {{ _('سند') }}
-                      </a>
-                      <button type="button" class="btn btn-info" data-action="apply-template" data-template="minimal">
-                        <i class="fas fa-check"></i> {{ _('تطبيق') }}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                
-                <div class="col-12 mb-3">
-                  <div class="d-flex align-items-center justify-content-between bg-light p-2 rounded">
-                    <div>
-                      <i class="fas fa-file-invoice-dollar text-warning"></i> <strong>{{ t('Gulf_2') }}Gulf)</strong>
-                      <br><small class="text-muted">{{ _('قالب بطابع خليجي') }}</small>
-                    </div>
-                    <div>
-                      <a href="{{ url_for('owner.preview_invoice', template='gulf') }}" 
-                         target="_blank" rel="noopener noreferrer" class="btn btn-outline-warning">
-                        <i class="fas fa-file-invoice"></i> {{ _('فاتورة') }}
-                      </a>
-                      <a href="{{ url_for('owner.preview_receipt', template='gulf') }}" 
-                         target="_blank" rel="noopener noreferrer" class="btn btn-outline-success">
-                        <i class="fas fa-receipt"></i> {{ _('سند') }}
-                      </a>
-                      <button type="button" class="btn btn-warning" data-action="apply-template" data-template="gulf">
-                        <i class="fas fa-check"></i> {{ _('تطبيق') }}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                
-                <div class="col-12 mb-3">
-                  <div class="d-flex align-items-center justify-content-between bg-light p-2 rounded border border-success">
-                    <div>
-                      <i class="fas fa-file text-success"></i> <strong>{{ _('مبسط (Simple)') }}</strong>
-                      <br><small class="text-muted">{{ _('أساسيات فقط - بدون زخرفة') }}</small>
-                    </div>
-                    <div>
-                      <a href="{{ url_for('owner.preview_invoice', template='simple') }}" 
-                         target="_blank" rel="noopener noreferrer" class="btn btn-outline-success">
-                        <i class="fas fa-file-invoice"></i> {{ _('فاتورة') }}
-                      </a>
-                      <a href="{{ url_for('owner.preview_receipt', template='simple') }}" 
-                         target="_blank" rel="noopener noreferrer" class="btn btn-outline-success">
-                        <i class="fas fa-receipt"></i> {{ _('سند') }}
-                      </a>
-                      <button type="button" class="btn btn-success" data-action="apply-template" data-template="simple">
-                        <i class="fas fa-check"></i> {{ _('تطبيق') }}
-                      </button>
-                    </div>
+                  <div>
+                    <a href="{{ url_for('owner.preview_invoice', template=tmpl) }}" 
+                       target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-xs">
+                      <i class="fas fa-file-invoice"></i> {{ t('Invoice') }}
+                    </a>
+                    <a href="{{ url_for('owner.preview_receipt', template=tmpl) }}" 
+                       target="_blank" rel="noopener noreferrer" class="btn btn-outline-success btn-xs">
+                      <i class="fas fa-receipt"></i> {{ t('Receipt') }}
+                    </a>
+                    <button type="button" class="btn btn-primary btn-xs" data-action="apply-template" data-template="{{ tmpl }}">
+                      <i class="fas fa-check"></i> {{ t('Apply') }}
+                    </button>
                   </div>
                 </div>
               </div>
+              {% endfor %}
             </div>
           </div>
 
@@ -638,12 +557,12 @@
         <div class="col-lg-4">
           <div class="card card-widget sticky-top ic-4">
             <div class="card-header bg-primary">
-              <h3 class="card-title"><i class="fas fa-desktop"></i> {{ _('معاينة حية') }}</h3>
+              <h3 class="card-title"><i class="fas fa-desktop"></i> {{ t('Live_Preview') }}</h3>
             </div>
             <div class="card-body text-center" id="live-preview">
               <div class="invoice-preview p-3 ic-5">
                 <div class="header ic-6">
-                  {% if settings.show_logo %}
+                  {% if settings.show_logo|default(false) %}
                   {% set _logo_path = tenant_document_logo(settings) %}
                   {% if _logo_path %}
                   {% if _logo_path.startswith('http') %}
@@ -654,20 +573,20 @@
                   {% endif %}
                   {% endif %}
                   <h4 class="ic-8">
-                    {{ settings.company_name_ar }}
+                    {{ settings.company_name_ar|default('') }}
                   </h4>
                   <p class="ic-9">
-                    {{ settings.address_ar or 'العنوان' }}
+                    {{ settings.address_ar|default('') or t('Address') }}
                   </p>
                   <p class="ic-10">
-                    <i class="fas fa-phone"></i> {{ settings.phone_1 or '---' }}
+                    <i class="fas fa-phone"></i> {{ settings.phone_1|default('') or '---' }}
                   </p>
                 </div>
                 
                 <div class="invoice-info ic-11">
-                  <p><strong>{{ t('Invoice Number') }}</strong> INV-2025-0001</p>
+                  <p><strong>{{ t('Invoice_Number') }}</strong> INV-2025-0001</p>
                   <p><strong>{{ t('Date') }}</strong> 2025-10-17</p>
-                  <p><strong>{{ t('Customer') }}</strong> عميل تجريبي</p>
+                  <p><strong>{{ t('Customer') }}</strong> {{ t('Test_Customer') }}</p>
                 </div>
                 
                 <div class="table-responsive"><table class="table table-sm table-bordered mt-3 ic-12">
@@ -680,20 +599,20 @@
                   </thead>
                   <tbody>
                     <tr>
-                      <td>منتج تجريبي</td>
+                      <td>{{ t('Test_Product') }}</td>
                       <td>2</td>
-                      <td>200 {{ tenant_currency_symbol }}</td>
+                      <td>200 {{ tenant_currency_symbol|default('AED') }}</td>
                     </tr>
                   </tbody>
                   <tfoot>
                     <tr>
                       <th colspan="2">{{ t('Total') }}</th>
-                      <th>200 {{ tenant_currency_symbol }}</th>
+                      <th>200 {{ tenant_currency_symbol|default('AED') }}</th>
                     </tr>
                   </tfoot>
                 </table></div>
                 
-                {% if settings.enable_qr_code %}
+                {% if settings.enable_qr_code|default(false) %}
                 <div class="qr-code mt-3">
                   <i class="fas fa-qrcode fa-3x text-muted"></i>
                   <p class="ic-14">QR Code</p>
@@ -701,7 +620,7 @@
                 {% endif %}
                 
                 <div class="footer mt-3 ic-15">
-                  {{ settings.footer_text_ar or 'شكراً لتعاملكم معنا' }}
+                  {{ settings.footer_text_ar|default('') or t('Thank_You_For_Your_Business') }}
                 </div>
               </div>
             </div>
@@ -716,13 +635,13 @@
           <div class="card">
             <div class="card-footer">
               <button type="submit" class="btn btn-primary btn-lg">
-                <i class="fas fa-save"></i> حفظ الإعدادات
+                <i class="fas fa-save"></i> {{ t('Save_Settings') }}
               </button>
               <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-                <i class="fas fa-times"></i> إلغاء
+                <i class="fas fa-times"></i> {{ t('Cancel') }}
               </a>
               <button type="button" class="btn btn-info float-left" data-action="reset-defaults">
-                <i class="fas fa-undo"></i> استعادة الافتراضي
+                <i class="fas fa-undo"></i> {{ t('Restore_Defaults') }}
               </button>
             </div>
           </div>
@@ -734,6 +653,19 @@
 </section>
 
 <script>
+const i18n = {{ {
+  'template_applied': t('Template_Applied'),
+  'save_settings_to_apply': t('Save_Settings_To_Apply'),
+  'restore_defaults_confirm': t('Restore_Defaults_Confirm'),
+  'defaults_restored': t('Defaults_Restored'),
+  'cancel': t('Cancel'),
+  'modern': t('Modern'),
+  'classic': t('Classic'),
+  'minimal': t('Minimal'),
+  'gulf': t('Gulf'),
+  'simple': t('Simple')
+}|tojson }};
+
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-action]');
   if (!el) return;
@@ -742,9 +674,7 @@ document.addEventListener('click', (e) => {
   else if (action === 'reset-defaults') resetToDefaults();
 });
 
-// Live preview update
 $(document).ready(() => {
-  // Update colors in real-time
   $('input[name="header_color"], input[name="accent_color"]').on('change', () => {
     const headerColor = $('input[name="header_color"]').val();
     const accentColor = $('input[name="accent_color"]').val();
@@ -753,22 +683,18 @@ $(document).ready(() => {
     document.documentElement.style.setProperty('--accent-color', accentColor);
   });
   
-  // Update company name
   $('input[name="company_name_ar"]').on('keyup', function() {
-    $('#live-preview h4').text($(this).val() || 'اسم الشركة');
+    $('#live-preview h4').text($(this).val() || '{{ t('Company_Name') }}');
   });
   
-  // Toggle logo
   $('input[name="show_logo"]').on('change', function() {
     $('#live-preview img').toggle($(this).is(':checked'));
   });
   
-  // Toggle QR
   $('input[name="enable_qr_code"]').on('change', function() {
     $('#live-preview .qr-code').toggle($(this).is(':checked'));
   });
   
-  // Toggle watermark fields
   $('input[name="enable_watermark"]').on('change', function() {
     const isChecked = $(this).is(':checked');
     $('#watermark-text-group').toggle(isChecked);
@@ -777,25 +703,14 @@ $(document).ready(() => {
 });
 
 function applyTemplate(templateName) {
-  // تحديث القالب النشط
   $('select[name="active_template"]').val(templateName);
   
-  // إظهار رسالة تأكيد
-  const templateNames = {
-    'modern': 'عصري',
-    'classic': 'كلاسيكي',
-    'minimal': 'بسيط',
-    'gulf': 'خليجي',
-    'simple': 'مبسط'
-  };
-  
   if (window.notify) {
-    notify.success(`تم اختيار القالب ${templateNames[templateName]}. اضغط "حفظ الإعدادات" لتطبيق التغيير.`);
+    notify.success(i18n.template_applied.replace('{template}', i18n[templateName]) + '. ' + i18n.save_settings_to_apply);
   } else {
-    alert(`تم اختيار القالب ${templateNames[templateName]}. اضغط "حفظ الإعدادات" لتطبيق التغيير.`);
+    alert(i18n.template_applied.replace('{template}', i18n[templateName]));
   }
   
-  // تمييز القالب المحدد
   $('select[name="active_template"]').css('background-color', '#d4edda').css('color', '#155724');
   setTimeout(() => {
     $('select[name="active_template"]').css('background-color', '').css('color', '');
@@ -803,18 +718,17 @@ function applyTemplate(templateName) {
 }
 
 function resetToDefaults() {
-  if (confirm('هل أنت متأكد من استعادة الإعدادات الافتراضية؟')) {
-    $('input[name="company_name_ar"]').val('شركة أزاد');
+  if (confirm(i18n.restore_defaults_confirm)) {
+    $('input[name="company_name_ar"]').val('{{ t('Azad_Company') }}');
     $('input[name="company_name_en"]').val('Azad Company');
     $('input[name="header_color"]').val('#667eea');
     $('input[name="accent_color"]').val('#764ba2');
     $('select[name="active_template"]').val('modern');
     if (window.notify) {
-      notify.success('تم استعادة الإعدادات الافتراضية');
+      notify.success(i18n.defaults_restored);
     }
   }
 }
 </script>
 
 {% endblock %}
-

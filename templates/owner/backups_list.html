@@ -1,21 +1,21 @@
 {% extends 'base.html' %}
 
-{% block title %}شركة أزاد للأنظمة الذكية - إدارة النسخ الاحتياطية وحماية البيانات{% endblock %}
+{% block title %}{{ t('Azad_Smart_Systems') }} - {{ t('Backup_Management_Data_Protection') }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-database mr-2"></i>{{ _('إدارة النسخ الاحتياطية') }}</h1>
+    <h1 class="mb-0"><i class="fas fa-database mr-2"></i>{{ t('Backup_Management') }}</h1>
     </div>
   <div>
     {% if current_user.is_owner or (current_user.role and current_user.role.slug == 'developer') %}
-      <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary" aria-label="{{ _('لوحة المالك') }}">
+      <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary" aria-label="{{ t('Owner_Dashboard') }}">
         <i class="fas fa-arrow-right mr-2"></i>{{ t('Owner_Dashboard') }}</a>
     {% else %}
-      <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary" aria-label="{{ _('لوحة التحكم') }}">
+      <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary" aria-label="{{ t('Dashboard') }}">
         <i class="fas fa-arrow-right mr-2"></i>{{ t('Dashboard') }}</a>
     {% endif %}
-    <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary" aria-label="{{ _('الصفحة الرئيسية') }}">
-      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}</a>
+    <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary" aria-label="{{ t('Home') }}">
+      <i class="fas fa-home mr-2"></i>{{ t('Home') }}</a>
   </div>
 </div>
 {% endblock %}
@@ -28,31 +28,31 @@
   <div class="col-md-12">
     <div class="card">
       <div class="card-header">
-        <h5 class="card-title mb-0"><i class="fas fa-shield-alt mr-2"></i>{{ _('حالة النسخ الاحتياطي') }}</h5>
+        <h5 class="card-title mb-0"><i class="fas fa-shield-alt mr-2"></i>{{ t('Backup_Status') }}</h5>
       </div>
       <div class="card-body">
         <div class="row">
           <div class="col-md-4 mb-2">
-            <div><strong><i class="fas fa-folder-open mr-1"></i>{{ _('مسار التخزين:') }}</strong></div>
+            <div><strong><i class="fas fa-folder-open mr-1"></i>{{ t('Storage_Path_Colon') }}</strong></div>
             <div class="text-muted ic-1">{{ backup_dir }}</div>
           </div>
           <div class="col-md-4 mb-2">
-            <div><strong><i class="fas fa-clock mr-1"></i>{{ _('الجدولة:') }}</strong></div>
+            <div><strong><i class="fas fa-clock mr-1"></i>{{ t('Schedule_Colon') }}</strong></div>
             <div class="text-muted">
               {% if schedule_settings and schedule_settings.enabled %}
-                {{ t('مفعلة') }}schedule_settings.frequency }} @ {{ schedule_settings.backup_time }}) | احتفاظ: {{ schedule_settings.keep_count }}
+                {{ t('Enabled') }} ({{ schedule_settings.frequency }} @ {{ schedule_settings.backup_time }}) | {{ t('Retention') }}: {{ schedule_settings.keep_count }}
               {% else %}
-                غير مفعلة
+                {{ t('Not_Enabled') }}
               {% endif %}
             </div>
           </div>
           <div class="col-md-4 mb-2">
-            <div><strong><i class="fas fa-history mr-1"></i>{{ _('آخر تشغيل:') }}</strong></div>
+            <div><strong><i class="fas fa-history mr-1"></i>{{ t('Last_Run_Colon') }}</strong></div>
             <div class="text-muted">
               {% if schedule_state and schedule_state.last_run_at %}
                 {{ schedule_state.last_run_at }}
               {% else %}
-                لا يوجد
+                {{ t('None') }}
               {% endif %}
             </div>
           </div>
@@ -60,16 +60,16 @@
 
         {% if schedule_state and schedule_state.last_error %}
           <div class="alert alert-danger mt-3 mb-0">
-            <div><strong><i class="fas fa-exclamation-triangle mr-1"></i>{{ _('آخر خطأ:') }}</strong></div>
+            <div><strong><i class="fas fa-exclamation-triangle mr-1"></i>{{ t('Last_Error_Colon') }}</strong></div>
             <div class="ic-2">{{ schedule_state.last_error }}</div>
             <div class="mt-2 text-muted">
-              {% if schedule_state.last_action %}<span>{{ t('العملية') }}schedule_state.last_action }}</span>{% endif %}
-              {% if schedule_state.last_filename %}<span>{% if schedule_state.last_action %} | {% endif %}{{ t('File') }}schedule_state.last_filename }}</span>{% endif %}
+              {% if schedule_state.last_action %}<span>{{ t('Operation') }}: {{ schedule_state.last_action }}</span>{% endif %}
+              {% if schedule_state.last_filename %}<span>{% if schedule_state.last_action %} | {% endif %}{{ t('File_Name') }}: {{ schedule_state.last_filename }}</span>{% endif %}
             </div>
           </div>
         {% elif schedule_state and schedule_state.last_success_at %}
           <div class="alert alert-success mt-3 mb-0">
-            <strong><i class="fas fa-check-circle mr-1"></i>{{ _('آخر نجاح:') }}</strong> {{ schedule_state.last_success_at }}
+            <strong><i class="fas fa-check-circle mr-1"></i>{{ t('Last_Success_Colon') }}</strong> {{ schedule_state.last_success_at }}
             {% if schedule_state.last_filename %}| <span class="text-muted">{{ schedule_state.last_filename }}</span>{% endif %}
           </div>
         {% endif %}
@@ -82,11 +82,11 @@
   <div class="col-lg-3 col-6">
     <div class="small-box bg-info">
       <div class="inner">
-        <h3>{{ stats.total_count }}</h3>
-        <p>{{ _('إجمالي النسخ') }}</p>
+        <h3>{{ stats.total_count|default(0) }}</h3>
+        <p>{{ t('Total_Backups') }}</p>
       </div>
       <div class="icon">
-        <i class="fas fa-archive"></i>
+        <i class="fas fa-archive" aria-label="{{ t('Total_Backups') }}"></i>
       </div>
     </div>
   </div>
@@ -94,11 +94,11 @@
   <div class="col-lg-3 col-6">
     <div class="small-box bg-success">
       <div class="inner">
-        <h3>{{ stats.manual_count }}</h3>
-        <p>{{ _('نسخ يدوية') }}</p>
+        <h3>{{ stats.manual_count|default(0) }}</h3>
+        <p>{{ t('Manual_Backups') }}</p>
       </div>
       <div class="icon">
-        <i class="fas fa-hand-pointer"></i>
+        <i class="fas fa-hand-pointer" aria-label="{{ t('Manual_Backups') }}"></i>
       </div>
     </div>
   </div>
@@ -106,11 +106,11 @@
   <div class="col-lg-3 col-6">
     <div class="small-box bg-primary">
       <div class="inner">
-        <h3>{{ stats.auto_count }}</h3>
-        <p>{{ _('نسخ تلقائية') }}</p>
+        <h3>{{ stats.auto_count|default(0) }}</h3>
+        <p>{{ t('Auto_Backups') }}</p>
       </div>
       <div class="icon">
-        <i class="fas fa-robot"></i>
+        <i class="fas fa-robot" aria-label="{{ t('Auto_Backups') }}"></i>
       </div>
     </div>
   </div>
@@ -118,11 +118,11 @@
   <div class="col-lg-3 col-6">
     <div class="small-box bg-warning">
       <div class="inner">
-        <h3>{{ stats.total_size_mb }}</h3>
-        <p>{{ _('MB إجمالي المساحة') }}</p>
+        <h3>{{ stats.total_size_mb|default(0) }}</h3>
+        <p>{{ t('Total_Size_MB') }}</p>
       </div>
       <div class="icon">
-        <i class="fas fa-hdd"></i>
+        <i class="fas fa-hdd" aria-label="{{ t('Total_Size_MB') }}"></i>
       </div>
     </div>
   </div>
@@ -133,19 +133,19 @@
     <div class="alert alert-info d-flex align-items-start ic-3">
       <i class="fas fa-lightbulb mr-3 ic-4"></i>
       <div>
-        <h5 class="mb-2"><i class="fas fa-question-circle mr-2"></i>{{ _('كيف تعمل النسخ الاحتياطية؟') }}</h5>
+        <h5 class="mb-2"><i class="fas fa-question-circle mr-2"></i>{{ t('How_Backups_Work') }}</h5>
         <ul class="mb-0 ic-5">
-          <li><strong>{{ _('مستويات النسخ:') }}</strong> System · Tenant · Branch · Store</li>
-          <li><strong>System:</strong> <code>azad_backup_system_*.tar.gz</code> — <code>pg_dump -Fc</code> {{ _('+ كل uploads') }}</li>
+          <li><strong>{{ t('Backup_Levels_Colon') }}</strong> System · Tenant · Branch · Store</li>
+          <li><strong>System:</strong> <code>azad_backup_system_*.tar.gz</code> — <code>pg_dump -Fc</code> {{ t('Plus_All_Uploads') }}</li>
           <li><strong>Scoped:</strong> <code>data/*.jsonl</code> + uploads + <code>checksums.sha256</code></li>
-          <li><strong>{{ _('لا يشمل:') }}</strong> {{ t('ملف') }}<code>.env</code> الحقيقي، أسرار، أو ذاكرة AI {{ t('التشغيلية') }}</li>
-          <li><strong>{{ _('الاستعادة:') }}</strong> {{ _('إلى قاعدة PostgreSQL') }} <strong>{{ t('New_3') }}</strong> {{ _('فقط — لا تستعد فوق DB الإنتاج الحية') }}</li>
-          <li><strong>{{ t('التحقق') }}</strong> checksums + <code>pg_restore --list</code> {{ _('على') }} <code>db.dump</code></li>
+          <li><strong>{{ t('Excludes_Colon') }}</strong> {{ t('Real_Env_File') }} <code>.env</code>, {{ t('Secrets') }}, {{ t('Or_AI_Runtime_Memory') }}</li>
+          <li><strong>{{ t('Restore_Colon') }}</strong> {{ t('To_New_PostgreSQL_DB_Only') }} <strong>{{ t('New') }}</strong> {{ t('Not_Over_Live_Production_DB') }}</li>
+          <li><strong>{{ t('Verify') }}</strong> checksums + <code>pg_restore --list</code> {{ t('On') }} <code>db.dump</code></li>
         </ul>
         {% if pg_tools %}
         <p class="mb-0 mt-2 small">
           <strong>pg_dump:</strong>
-          {% if pg_tools.available %}{{ t('Available_2') }}pg_tools.pg_dump_version or 'OK' }}){% else %}<span class="text-danger">{{ _('غير متاح — عيّن PG_DUMP_PATH') }}</span>{% endif %}
+          {% if pg_tools.available %}{{ t('Available') }} ({{ pg_tools.pg_dump_version or 'OK' }}){% else %}<span class="text-danger">{{ t('Not_Available_Set_PG_DUMP_PATH') }}</span>{% endif %}
         </p>
         {% endif %}
       </div>
@@ -158,7 +158,7 @@
     <div class="card shadow">
       <div class="card-header bg-primary">
         <h5 class="card-title mb-0">
-          <i class="fas fa-tools mr-2"></i>{{ _('إجراءات النسخ الاحتياطي') }}
+          <i class="fas fa-tools mr-2"></i>{{ t('Backup_Actions') }}
         </h5>
       </div>
       <div class="card-body">
@@ -169,18 +169,18 @@
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
               <label for="system_backup_desc" class="font-weight-bold mb-2">
                 <i class="fas fa-server text-danger mr-1"></i>
-                {{ _('نسخة نظام كاملة (System)') }}
+                {{ t('Full_System_Backup') }}
               </label>
               <label class="sr-only" for="system_backup_desc">{{ t('Description') }}</label>
               <div class="input-group">
-                <input type="text" name="description" id="system_backup_desc" placeholder="{{ _('وصف (اختياري)') }}" class="form-control" maxlength="500">
+                <input type="text" name="description" id="system_backup_desc" placeholder="{{ t('Description_Optional') }}" class="form-control" maxlength="500">
                 <div class="input-group-append">
-                  <button type="submit" class="btn btn-danger" aria-label="{{ _('إنشاء نسخة نظام كاملة') }}">
+                  <button type="submit" class="btn btn-danger" aria-label="{{ t('Create_Full_System_Backup') }}">
                     <i class="fas fa-database mr-1"></i> System backup
                   </button>
                 </div>
               </div>
-              <small class="form-text text-muted">{{ _('للمالك/المطوّر فقط — كل tenants وكل البيانات') }}</small>
+              <small class="form-text text-muted">{{ t('Desc_System_Backup') }}</small>
             </form>
           </div>
           {% endif %}
@@ -189,15 +189,15 @@
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
               <label for="backupScopeSelect" class="font-weight-bold mb-2">
                 <i class="fas fa-layer-group text-success mr-1"></i>
-                {{ _('نسخة محددة النطاق') }}
+                {{ t('Scoped_Backup') }}
               </label>
               <select name="scope" id="backupScopeSelect" class="form-control mb-2" required aria-label="scope">
-                <option value="tenant">Tenant — {{ t('Company_2') }}</option>
+                <option value="tenant">Tenant — {{ t('Company') }}</option>
                 {% if is_platform_owner or branches %}
-                <option value="branch">Branch — {{ t('Branch_2') }}</option>
+                <option value="branch">Branch — {{ t('Branch') }}</option>
                 {% endif %}
                 {% if is_platform_owner or stores %}
-                <option value="store">Store — {{ t('Store_2') }}</option>
+                <option value="store">Store — {{ t('Store') }}</option>
                 {% endif %}
               </select>
               {% if is_platform_owner and tenants %}
@@ -207,28 +207,28 @@
                 {% endfor %}
               </select>
               {% endif %}
-              <select name="branch_id" id="backupBranchSelect" class="form-control mb-2 ic-6" aria-label="{{ _('اختر الفرع') }}">
-                <option value="">{{ _('— اختر الفرع —') }}</option>
+              <select name="branch_id" id="backupBranchSelect" class="form-control mb-2 ic-6" aria-label="{{ t('Select Branch') }}">
+                <option value="">{{ t('Select_Branch') }}</option>
                 {% for b in branches %}
                 <option value="{{ b.id }}">{{ b.name }} ({{ b.code }})</option>
                 {% endfor %}
               </select>
               <select name="store_id" id="backupStoreSelect" class="form-control mb-2 ic-6" aria-label="store id">
-                <option value="">{{ _('— اختر المتجر —') }}</option>
+                <option value="">{{ t('Select_Store') }}</option>
                 {% for s in stores %}
                 <option value="{{ s.id }}">{{ s.store_slug }} (tenant {{ s.tenant_id }})</option>
                 {% endfor %}
               </select>
               <label class="sr-only" for="scoped_backup_desc">{{ t('Description') }}</label>
               <div class="input-group">
-                <input type="text" name="description" id="scoped_backup_desc" placeholder="{{ _('وصف (اختياري)') }}" class="form-control" maxlength="500">
+                <input type="text" name="description" id="scoped_backup_desc" placeholder="{{ t('Description_Optional') }}" class="form-control" maxlength="500">
                 <div class="input-group-append">
-                  <button type="submit" class="btn btn-success" aria-label="{{ _('إنشاء نسخة احتياطية محددة النطاق') }}">
-                    <i class="fas fa-download mr-1"></i> {{ _('إنشاء') }}
+                  <button type="submit" class="btn btn-success" aria-label="{{ t('Create_Scoped_Backup') }}">
+                    <i class="fas fa-download mr-1"></i> {{ t('Create') }}
                   </button>
                 </div>
               </div>
-              <small class="form-text text-muted">data/ JSONL + uploads — لا تستعد على DATABASE_URL {{ t('الحالية') }}</small>
+              <small class="form-text text-muted">data/ JSONL + uploads — {{ t('Not_On_DATABASE_URL') }} {{ t('Current') }}</small>
             </form>
           </div>
           
@@ -236,11 +236,11 @@
           <div class="col-md-6">
             <label class="font-weight-bold mb-2">
               <i class="fas fa-clock text-primary mr-1"></i>
-              {{ _('النسخ الاحتياطي المجدول التلقائي') }}
+              {{ t('Auto_Scheduled_Backup') }}
             </label>
             <div>
-              <a href="{{ url_for('owner.scheduled_backups') }}" class="btn btn-primary btn-block" aria-label="{{ _('إعدادات النسخ الاحتياطي المجدول') }}">
-                <i class="fas fa-cog mr-1"></i> {{ _('إعدادات الجدولة') }}
+              <a href="{{ url_for('owner.scheduled_backups') }}" class="btn btn-primary btn-block" aria-label="{{ t('Scheduled_Backup_Settings') }}">
+                <i class="fas fa-cog mr-1"></i> {{ t('Schedule_Settings') }}
               </a>
             </div>
             </div>
@@ -251,11 +251,11 @@
         
         <div class="text-center">
           <button class="btn btn-info" data-action="reload-page">
-            <i class="fas fa-sync mr-1"></i> {{ _('تحديث القائمة') }}
+            <i class="fas fa-sync mr-1"></i> {{ t('Refresh_List') }}
           </button>
           <small class="d-block text-muted mt-2">
             <i class="fas fa-clock mr-1"></i>
-            آخر تحديث: {{ now.strftime('%Y-%m-%d %H:%M:%S') }}
+            {{ t('Last_Updated_Colon') }} {{ now.strftime('%Y-%m-%d %H:%M:%S') if now else '-' }}
           </small>
         </div>
       </div>
@@ -271,9 +271,9 @@
         <div class="card-header">
           <h5 class="card-title mb-0">
             {% if backup.get('manual') %}
-            <i class="fas fa-hand-pointer text-success"></i> يدوية
+            <i class="fas fa-hand-pointer text-success"></i> {{ t('Manual') }}
             {% else %}
-            <i class="fas fa-robot text-info"></i> تلقائية
+            <i class="fas fa-robot text-info"></i> {{ t('Automatic') }}
             {% endif %}
           </h5>
         </div>
@@ -287,14 +287,14 @@
           
           <p class="mb-2">
             <i class="far fa-clock text-info"></i>
-            <strong>{{ t('Time_2') }}</strong> 
+            <strong>{{ t('Time') }}</strong> 
             {% set ts2 = backup.get('timestamp', '') %}{{ ts2[9:11] }}:{{ ts2[11:13] }}:{{ ts2[13:15] }}
           </p>
 
           
           <p class="mb-2">
             <i class="fas fa-hdd text-warning"></i>
-            <strong>الحجم:</strong> 
+            <strong>{{ t('Size_Colon') }}</strong> 
             <span class="badge badge-warning">{{ backup.get('size_mb', 0) }} MB</span>
           </p>
 
@@ -302,10 +302,10 @@
           <p class="mb-2">
             <i class="fas fa-info-circle text-secondary"></i>
             {% if backup.get('compressed') %}
-            <span class="badge badge-info"><i class="fas fa-compress"></i> مضغوط</span>
+            <span class="badge badge-info"><i class="fas fa-compress"></i> {{ t('Compressed') }}</span>
             {% endif %}
             {% if backup.get('encrypted') %}
-            <span class="badge badge-success"><i class="fas fa-lock"></i> مشفّر</span>
+            <span class="badge badge-success"><i class="fas fa-lock"></i> {{ t('Encrypted') }}</span>
             {% endif %}
           </p>
 
@@ -342,22 +342,22 @@
 
         <div class="card-footer">
           <a href="{{ url_for('owner.prepare_restore_backup', filename=backup.get('filename')) }}"
-             class="btn btn-warning" title="{{ _('تعليمات استعادة آمنة') }}" aria-label="{{ _('تعليمات استعادة النسخة الاحتياطية') }}">
-            <i class="fas fa-book mr-1"></i> تعليمات الاستعادة
+             class="btn btn-warning" title="{{ t('Safe_Restore_Instructions') }}" aria-label="{{ t('Backup_Restore_Instructions') }}">
+            <i class="fas fa-book mr-1"></i> {{ t('Restore_Instructions') }}
           </a>
           {% if is_platform_owner and (backup.get('backup_scope') == 'system' or backup.get('filename').startswith('azad_backup_system_') or 'system' in backup.get('filename')) %}
           <button type="button" class="btn btn-outline-warning"
                   data-action="open-target-restore" data-filename="{{ backup.get('filename') }}"
-                  title="{{ _('استعادة system إلى قاعدة جديدة فقط') }}" aria-label="{{ _('استعادة النسخة لقاعدة بيانات جديدة') }}">
-            <i class="fas fa-database mr-1"></i> استعادة لقاعدة جديدة
+                  title="{{ t('Restore_To_New_DB_Only') }}" aria-label="{{ t('Restore_To_New_Database') }}">
+            <i class="fas fa-database mr-1"></i> {{ t('Restore_To_New_DB') }}
           </button>
           {% endif %}
           
-          <form method="POST" action="{{ url_for('owner.delete_backup') }}" data-action="confirm-delete-backup" data-confirm-prefix="⚠️ هل أنت متأكد من حذف النسخة الاحتياطية؟\n\n📁 " data-filename="{{ backup.get('filename') }}" data-confirm-suffix="\n\n{% if not backup.get('manual') %}⚠️ تنبيه: هذه نسخة تلقائية.\n{% endif %}⚠️ لا يمكن التراجع عن هذا الإجراء!" class="ic-7">
+          <form method="POST" action="{{ url_for('owner.delete_backup') }}" data-action="confirm-delete-backup" data-confirm-prefix="{{ t('Confirm_Delete_Backup_Prefix')|e }}" data-filename="{{ backup.get('filename') }}" data-confirm-suffix="{{ t('Confirm_Delete_Backup_Suffix')|e }}" class="ic-7">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             <input type="hidden" name="filename" value="{{ backup.get('filename') }}" aria-label="filename" minlength="2" maxlength="100">
-            <button type="submit" class="btn btn-danger" title="{{ _('حذف النسخة نهائياً') }}" aria-label="{{ _('حذف النسخة الاحتياطية') }}">
-              <i class="fas fa-trash mr-1"></i> حذف
+            <button type="submit" class="btn btn-danger" title="{{ t('Delete_Backup_Permanently') }}" aria-label="{{ t('Delete_Backup') }}">
+              <i class="fas fa-trash mr-1"></i> {{ t('Delete') }}
             </button>
           </form>
 
@@ -365,17 +365,17 @@
           
           <a href="{{ url_for('owner.download_backup', filename=backup.get('filename')) }}" 
              class="btn btn-success"
-             title="{{ _('تحميل النسخة الاحتياطية') }}"
+             title="{{ t('Download_Backup') }}"
              download
-             aria-label="{{ _('تحميل النسخة الاحتياطية') }}">
-            <i class="fas fa-download mr-1"></i> تحميل
+             aria-label="{{ t('Download_Backup') }}">
+            <i class="fas fa-download mr-1"></i> {{ t('Download') }}
           </a>
           
           <button type="button" class="btn btn-info"
                   data-action="verify-backup" data-filename="{{ backup.get('filename') }}"
-                  title="{{ _('التحقق من سلامة النسخة') }}"
-                  aria-label="{{ _('التحقق من سلامة النسخة الاحتياطية') }}">
-            <i class="fas fa-check-circle mr-1"></i> تحقق
+                  title="{{ t('Verify_Backup_Integrity') }}"
+                  aria-label="{{ t('Verify_Backup_Integrity') }}">
+            <i class="fas fa-check-circle mr-1"></i> {{ t('Verify') }}
           </button>
         </div>
       </div>
@@ -387,12 +387,12 @@
     <div class="card">
       <div class="card-body text-center py-5">
         <i class="fas fa-inbox fa-5x text-muted mb-3"></i>
-        <h4>لا توجد نسخ احتياطية</h4>
-        <p class="text-muted">قم بإنشاء أول نسخة احتياطية الآن</p>
+        <h4>{{ t('No_Backups_Found') }}</h4>
+        <p class="text-muted">{{ t('Create_First_Backup') }}</p>
         <form method="POST" action="{{ url_for('owner.backup_now') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <button type="submit" class="btn btn-success btn-lg">
-            <i class="fas fa-plus-circle"></i> إنشاء نسخة احتياطية
+            <i class="fas fa-plus-circle"></i> {{ t('Create_Backup') }}
           </button>
         </form>
       </div>
@@ -406,7 +406,7 @@
   <div class="col-md-12">
     <div class="card card-outline card-success">
       <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-star"></i> آخر نسخة احتياطية</h3>
+        <h3 class="card-title"><i class="fas fa-star"></i> {{ t('Latest_Backup') }}</h3>
       </div>
       <div class="card-body">
         <div class="row">
@@ -415,17 +415,17 @@
             {% set latest_ts = stats.latest_backup.get('timestamp', '') %}{{ latest_ts[:8] }}
           </div>
           <div class="col-md-3">
-            <strong>الحجم:</strong><br>
+            <strong>{{ t('Size_Colon') }}</strong><br>
             {{ stats.latest_backup.get('size_mb') }} MB
           </div>
           <div class="col-md-3">
-            <strong>{{ t('النوع') }}</strong><br>
-            {% if stats.latest_backup.get('manual') %}يدوية{% else %}تلقائية{% endif %}
+            <strong>{{ t('Type') }}</strong><br>
+            {% if stats.latest_backup.get('manual') %}{{ t('Manual') }}{% else %}{{ t('Automatic') }}{% endif %}
           </div>
           <div class="col-md-3">
             <strong>{{ t('Status') }}</strong><br>
             <span class="badge badge-success">
-              <i class="fas fa-check-circle"></i> جاهزة
+              <i class="fas fa-check-circle"></i> {{ t('Ready') }}
             </span>
           </div>
         </div>
@@ -439,30 +439,30 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header bg-warning">
-        <h5 class="modal-title"><i class="fas fa-database"></i> استعادة لقاعدة جديدة</h5>
+        <h5 class="modal-title"><i class="fas fa-database"></i> {{ t('Restore_To_New_Database') }}</h5>
         <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
       </div>
       <form method="POST" id="targetRestoreForm" action="">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="modal-body">
           <div class="alert alert-danger">
-            ممنوع استخدام <code>DATABASE_URL</code> الحالية. استخدم قاعدة اختبار/جديدة فقط.
+            {{ t('Do_Not_Use_Current_DATABASE_URL') }} <code>DATABASE_URL</code>. {{ t('Use_Test_New_DB_Only') }}
           </div>
-          <p class="small text-muted">{{ t('File') }}<strong id="targetRestoreFilename"></strong></p>
+          <p class="small text-muted">{{ t('File_Name') }} <strong id="targetRestoreFilename"></strong></p>
           <div class="form-group">
-            <label for="input_target_database_url">رابط PostgreSQL للهدف (TARGET_TEST_DATABASE_URL)</label>
+            <label for="input_target_database_url">{{ t('Target_PostgreSQL_URL') }}</label>
             <input type="password" name="target_database_url" class="form-control" autocomplete="off"
                    placeholder="postgresql://user:pass@host:5432/new_db" required id="input_target_database_url">
           </div>
           <div class="form-group">
-            <label for="restore_confirm_input">اكتب للتأكيد: <code>RESTORE CONFIRM</code></label>
+            <label for="restore_confirm_input">{{ t('Type_To_Confirm') }} <code>RESTORE CONFIRM</code></label>
             <input type="text" name="restore_confirm" id="restore_confirm_input" class="form-control" required
                    placeholder="RESTORE CONFIRM">
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ t('Cancel') }}</button>
-          <button type="submit" class="btn btn-warning">تنفيذ على قاعدة الهدف</button>
+          <button type="submit" class="btn btn-warning">{{ t('Execute_On_Target') }}</button>
         </div>
       </form>
     </div>
@@ -472,6 +472,17 @@
 
 {% block extra_js %}
 <script>
+const i18n = {{ {
+  'verify_success': t('Verify_Success'),
+  'verify_failed': t('Verify_Failed'),
+  'verify_running': t('Verify_Running'),
+  'ok': t('OK'),
+  'error': t('Error'),
+  'server_error': t('Server_Connection_Error'),
+  'cancel': t('Cancel'),
+  'confirm_delete': t('Confirm_Delete')
+}|tojson }};
+
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-action]');
   if (!el) return;
@@ -519,11 +530,10 @@ function openTargetRestore(filename) {
   $('#targetRestoreModal').modal('show');
 }
 
-// التحقق من سلامة النسخة
 function verifyBackup(filename) {
   Swal.fire({
-    title: 'جاري التحقق...',
-    text: 'فحص سلامة النسخة الاحتياطية',
+    title: i18n.verify_running,
+    text: '{{ t('Verify_Backup_Checking') }}',
     icon: 'info',
     showConfirmButton: false,
     allowOutsideClick: false
@@ -552,29 +562,28 @@ function verifyBackup(filename) {
       }
       if (payload && payload.verified) {
         Swal.fire({
-          title: 'نجح التحقق!',
-          text: 'النسخة الاحتياطية سليمة وجاهزة للاستخدام',
+          title: i18n.verify_success,
+          text: '{{ t('Verify_Success_Message') }}',
           icon: 'success',
-          confirmButtonText: 'حسناً'
+          confirmButtonText: i18n.ok
         });
       } else {
         Swal.fire({
-          title: 'فشل التحقق!',
-          text: 'النسخة الاحتياطية تالفة أو غير صالحة',
+          title: i18n.verify_failed,
+          text: '{{ t('Verify_Failed_Message') }}',
           icon: 'error',
-          confirmButtonText: 'حسناً'
+          confirmButtonText: i18n.ok
         });
       }
     })
     .catch((err) => {
       Swal.fire({
-        title: 'خطأ!',
-        text: err && err.message ? err.message : 'تعذر التحقق من النسخة الاحتياطية',
+        title: i18n.error,
+        text: err && err.message ? err.message : '{{ t('Verify_Error_Message') }}',
         icon: 'error',
-        confirmButtonText: 'حسناً'
+        confirmButtonText: i18n.ok
       });
     });
 }
 </script>
 {% endblock %}
-
