@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 
-{% block title %}لوحة الشركة | {{ tenant.name_ar or tenant.name }}{% endblock %}
+{% block title %}{{ t('Company_Dashboard') }} | {{ tenant.name_ar or tenant.name }}{% endblock %}
 
-{% block page_title %}<i class="fas fa-building text-info"></i> لوحة مدير الشركة{% endblock %}
+{% block page_title %}<i class="fas fa-building text-info"></i> {{ t('Company_Manager_Dashboard') }}{% endblock %}
 
 {% block extra_css %}
 
@@ -16,11 +16,11 @@
 
   <i class="fas fa-info-circle"></i>
 
-  <strong>{{ tenant.name_ar or tenant.name }}</strong> {{ _('— عرض بيانات شركتك فقط. لا يظهر هنا نسخ النظام الكامل ولا شركات أخرى.') }}
+  <strong>{{ tenant.name_ar or tenant.name }}</strong> {{ t('Company_Data_Only_View') }}
 
 </div>
 
-{% if readiness_warnings %}
+{% if readiness_warnings|default([]) %}
 
 <div class="alert alert-warning">
 
@@ -42,9 +42,9 @@
 
       <div class="inner">
 
-        <h3>{{ "{:,.0f}".format(month_sales_amount) }}</h3>
+        <h3>{{ "{:,.0f}".format(month_sales_amount|default(0)) }}</h3>
 
-        <p>مبيعات الشهر ({{ tenant.get_base_currency }})</p>
+        <p>{{ t('Month_Sales') }} ({{ tenant.get_base_currency if tenant else 'AED' }})</p>
 
       </div>
 
@@ -58,9 +58,9 @@
 
       <div class="inner">
 
-        <h3>{{ month_sales_count }}</h3>
+        <h3>{{ month_sales_count|default(0) }}</h3>
 
-        <p>{{ _('فواتير الشهر') }}</p>
+        <p>{{ t('Month_Invoices') }}</p>
 
       </div>
 
@@ -74,9 +74,9 @@
 
       <div class="inner">
 
-        <h3>{{ products_count }}</h3>
+        <h3>{{ products_count|default(0) }}</h3>
 
-        <p>{{ _('منتجات نشطة') }}</p>
+        <p>{{ t('Active_Products') }}</p>
 
       </div>
 
@@ -90,9 +90,9 @@
 
       <div class="inner">
 
-        <h3>{{ users_count }}</h3>
+        <h3>{{ users_count|default(0) }}</h3>
 
-        <p>{{ _('مستخدمون') }}</p>
+        <p>{{ t('Users') }}</p>
 
       </div>
 
@@ -110,9 +110,9 @@
 
       <div class="inner">
 
-        <h3>{{ "{:,.0f}".format(month_cogs) }}</h3>
+        <h3>{{ "{:,.0f}".format(month_cogs|default(0)) }}</h3>
 
-        <p>تكلفة البضاعة المباعة ({{ tenant.get_base_currency }})</p>
+        <p>{{ t('COGS') }} ({{ tenant.get_base_currency if tenant else 'AED' }})</p>
 
       </div>
 
@@ -126,9 +126,9 @@
 
       <div class="inner">
 
-        <h3>{{ "{:,.0f}".format(month_commissions) }}</h3>
+        <h3>{{ "{:,.0f}".format(month_commissions|default(0)) }}</h3>
 
-        <p>العمولات الشهرية ({{ tenant.get_base_currency }})</p>
+        <p>{{ t('Monthly_Commissions') }} ({{ tenant.get_base_currency if tenant else 'AED' }})</p>
 
       </div>
 
@@ -142,9 +142,9 @@
 
       <div class="inner">
 
-        <h3>{{ "{:,.0f}".format(month_net_profit) }}</h3>
+        <h3>{{ "{:,.0f}".format(month_net_profit|default(0)) }}</h3>
 
-        <p>صافي الربح ({{ tenant.get_base_currency }})</p>
+        <p>{{ t('Net_Profit') }} ({{ tenant.get_base_currency if tenant else 'AED' }})</p>
 
       </div>
 
@@ -160,23 +160,23 @@
 
     <div class="card owner-panel-card">
 
-      <div class="card-header">{{ _('معاينة العلامة') }}</div>
+      <div class="card-header">{{ t('Brand_Preview') }}</div>
 
       <div class="card-body text-center">
 
-        {% if logo_url %}
+        {% if logo_url|default('') %}
 
         <img src="{{ logo_url if logo_url.startswith('http') else url_for('static', filename=logo_url.replace('/static/','').lstrip('/')) }}" alt="logo" class="img-fluid mb-2 erp-logo-md">
 
         {% endif %}
 
-        <p class="mb-1"><strong>{{ branding.company_name_ar }}</strong></p>
+        <p class="mb-1"><strong>{{ branding.company_name_ar|default('') }}</strong></p>
 
-        <p class="text-muted small">{{ branding.company_name_en }}</p>
+        <p class="text-muted small">{{ branding.company_name_en|default('') }}</p>
 
-        <a href="{{ url_for('owner.preview_invoice', template='modern') }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary">{{ _('معاينة فاتورة') }}</a>
+        <a href="{{ url_for('owner.preview_invoice', template='modern') }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary">{{ t('Preview_Invoice') }}</a>
 
-        <a href="{{ url_for('owner.invoice_settings') }}" class="btn btn-outline-secondary">{{ _('إعدادات الترويسة') }}</a>
+        <a href="{{ url_for('owner.invoice_settings') }}" class="btn btn-outline-secondary">{{ t('Invoice_Settings') }}</a>
 
       </div>
 
@@ -188,37 +188,37 @@
 
     <div class="card owner-panel-card">
 
-      <div class="card-header">{{ _('إجراءات سريعة') }}</div>
+      <div class="card-header">{{ t('Quick_Actions') }}</div>
 
       <div class="card-body">
 
         {% if current_user.has_permission('manage_users') %}
-        <a href="{{ url_for('users.index') }}" class="btn btn-outline-primary mb-1"><i class="fas fa-users"></i> {{ _('المستخدمون') }}</a>
+        <a href="{{ url_for('users.index') }}" class="btn btn-outline-primary mb-1"><i class="fas fa-users"></i> {{ t('Users') }}</a>
         {% endif %}
 
         {% if current_user.has_permission('manage_backups') %}
 
-        <a href="{{ url_for('owner.list_backups') }}" class="btn btn-outline-info mb-1"><i class="fas fa-database"></i> {{ _('نسخ الشركة') }}</a>
+        <a href="{{ url_for('owner.list_backups') }}" class="btn btn-outline-info mb-1"><i class="fas fa-database"></i> {{ t('Company_Backups') }}</a>
 
         {% endif %}
 
-        <a href="{{ url_for('owner.company_info') }}" class="btn btn-outline-success mb-1"><i class="fas fa-building"></i> {{ _('بيانات الشركة') }}</a>
+        <a href="{{ url_for('owner.company_info') }}" class="btn btn-outline-success mb-1"><i class="fas fa-building"></i> {{ t('Company_Data') }}</a>
 
-        <a href="{{ url_for('branches.index') }}" class="btn btn-outline-info mb-1"><i class="fas fa-sitemap"></i> الفروع ({{ branches_count }})</a>
+        <a href="{{ url_for('branches.index') }}" class="btn btn-outline-info mb-1"><i class="fas fa-sitemap"></i> {{ t('Branches') }} ({{ branches_count|default(0) }})</a>
 
         {% if current_user.has_permission('manage_store') %}
 
-        <a href="{{ url_for('store.admin_index') }}" class="btn btn-outline-warning mb-1"><i class="fas fa-store"></i> {{ _('المتجر') }}</a>
+        <a href="{{ url_for('store.admin_index') }}" class="btn btn-outline-warning mb-1"><i class="fas fa-store"></i> {{ t('Store') }}</a>
 
         {% endif %}
 
         {% if current_user.is_owner or (current_user.role and current_user.role.slug == 'super_admin') %}
 
-        <a href="{{ url_for('ledger.admin_dashboard') }}" class="btn btn-outline-dark mb-1"><i class="fas fa-book"></i> {{ _('دفتر الأستاذ') }}</a>
+        <a href="{{ url_for('ledger.admin_dashboard') }}" class="btn btn-outline-dark mb-1"><i class="fas fa-book"></i> {{ t('General_Ledger') }}</a>
 
         {% endif %}
 
-        <p class="text-muted small mt-2 mb-0">نسخ احتياطية لهذه الشركة: {{ tenant_backup_count }} — لا يمكن إنشاء نسخة نظام كاملة من هنا.</p>
+        <p class="text-muted small mt-2 mb-0">{{ t('Company_Backup_Count') }}: {{ tenant_backup_count|default(0) }} — {{ t('Cannot_Create_System_Backup_Here') }}</p>
 
       </div>
 
@@ -228,7 +228,7 @@
 
     <div class="alert alert-secondary mt-2 mb-0">
 
-      <i class="fas fa-code-branch"></i> عرض مفلتر على فرعك الحالي (#{{ scoped_branch_id }}).
+      <i class="fas fa-code-branch"></i> {{ t('Filtered_View_Current_Branch') }} (#{{ scoped_branch_id }}).
 
     </div>
 
@@ -246,7 +246,7 @@
 
       <div class="card-header">
 
-        <i class="fas fa-cog"></i> {{ _('إعدادات سريعة') }}
+        <i class="fas fa-cog"></i> {{ t('Quick_Settings') }}
 
       </div>
 
@@ -256,7 +256,7 @@
 
           <div class="col-md-3 mb-2">
 
-            <label for="taxRateInput" class="d-block small">{{ _('نسبة الضريبة (VAT)') }}</label>
+            <label for="taxRateInput" class="d-block small">{{ t('Tax_Rate_VAT') }}</label>
 
             <div class="input-group input-group-sm">
 
@@ -278,7 +278,7 @@
 
           <div class="col-md-3 mb-2">
 
-            <label class="d-block small">{{ _('الأسعار شاملة الضريبة') }}</label>
+            <label class="d-block small">{{ t('Prices_Include_VAT') }}</label>
 
             <div class="custom-control custom-switch">
 
@@ -290,7 +290,7 @@
 
               <label class="custom-control-label" for="pricesIncludeVatSwitch">
 
-                {% if tenant.prices_include_vat %}نعم{% else %}لا{% endif %}
+                {% if tenant.prices_include_vat %}{{ t('Yes') }}{% else %}{{ t('No') }}{% endif %}
 
               </label>
 
@@ -300,11 +300,11 @@
 
           <div class="col-md-3 mb-2">
 
-            <label for="logoUrlInput" class="d-block small">{{ _('رابط الشعار') }}</label>
+            <label for="logoUrlInput" class="d-block small">{{ t('Logo_URL') }}</label>
 
             <div class="input-group input-group-sm">
 
-              <input type="text" id="logoUrlInput" class="form-control" value="{{ tenant.logo_url or '' }}" placeholder="{{ _('URL الشعار') }}">
+              <input type="text" id="logoUrlInput" class="form-control" value="{{ tenant.logo_url or '' }}" placeholder="{{ t('Logo_URL_Placeholder') }}">
 
               <div class="input-group-append">
 
@@ -322,7 +322,7 @@
 
           <div class="col-md-3 mb-2">
 
-            <label class="d-block small">{{ _('البيع بالسالب للمستودعات') }}</label>
+            <label class="d-block small">{{ t('Warehouse_Negative_Sales') }}</label>
 
             <div class="custom-control custom-switch">
 
@@ -353,6 +353,16 @@
 {% block extra_js %}
 
 <script>
+const i18n = {{ {
+  'update_success': t('Update_Success'),
+  'update_failed': t('Update_Failed'),
+  'connection_error': t('Connection_Error'),
+  'error': t('Error'),
+  'negative_sales_enabled': t('Negative_Sales_Enabled'),
+  'negative_sales_disabled': t('Negative_Sales_Disabled'),
+  'yes': t('Yes'),
+  'no': t('No')
+}|tojson }};
 
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-action]');
@@ -394,7 +404,7 @@ function updateTenantSetting(field, value, targetEl) {
 
       $('#settingsResult').removeClass('d-none alert-danger').addClass('alert-success').html(
 
-        '<i class="fas fa-check-circle"></i> ' + (res.message || 'تم التحديث بنجاح')
+        '<i class="fas fa-check-circle"></i> ' + (res.message || i18n.update_success)
 
       );
 
@@ -402,7 +412,7 @@ function updateTenantSetting(field, value, targetEl) {
 
         const lbl = $('#pricesIncludeVatSwitch').next('label');
 
-        lbl.text($('#pricesIncludeVatSwitch').is(':checked') ? 'نعم' : 'لا');
+        lbl.text($('#pricesIncludeVatSwitch').is(':checked') ? i18n.yes : i18n.no);
 
       }
 
@@ -410,7 +420,7 @@ function updateTenantSetting(field, value, targetEl) {
 
       $('#settingsResult').removeClass('d-none alert-success').addClass('alert-danger').html(
 
-        '<i class="fas fa-times-circle"></i> ' + (res.error || 'فشل التحديث')
+        '<i class="fas fa-times-circle"></i> ' + (res.error || i18n.update_failed)
 
       );
 
@@ -418,7 +428,7 @@ function updateTenantSetting(field, value, targetEl) {
 
   }).fail((xhr) => {
 
-    let msg = 'خطأ في الاتصال';
+    let msg = i18n.connection_error;
 
     try { msg = xhr.responseJSON.error || msg; } catch(e) {}
 
@@ -448,7 +458,7 @@ function toggleWarehouseNegative() {
 
     contentType: 'application/json',
 
-    data: JSON.stringify({ warehouse_id: JSON.parse('{{ warehouses[0].id if warehouses else 0 }}') }),
+    data: JSON.stringify({ warehouse_id: JSON.parse('{{ warehouses[0].id if warehouses and warehouses|length > 0 else 0 }}') }),
 
     headers: { 'X-CSRFToken': '{{ csrf_token() }}' }
 
@@ -458,7 +468,7 @@ function toggleWarehouseNegative() {
 
       $('#settingsResult').removeClass('d-none alert-danger').addClass('alert-success').html(
 
-        '<i class="fas fa-check-circle"></i> البيع بالسالب: ' + (res.allow_negative_inventory ? 'مفعل' : 'معطل')
+        '<i class="fas fa-check-circle"></i> ' + (res.allow_negative_inventory ? i18n.negative_sales_enabled : i18n.negative_sales_disabled)
 
       );
 
@@ -468,11 +478,11 @@ function toggleWarehouseNegative() {
 
   }).fail((xhr) => {
 
-    let msg = 'خطأ';
+    let msg = i18n.error;
 
     try { msg = xhr.responseJSON.error || msg; } catch(e) {}
 
-    $('#settingsResult').removeClass('d-none alert-success').addClass('alert-danger').html(
+    $('#settingsResult').removeClass('d-none alert-danger').addClass('alert-danger').html(
 
       '<i class="fas fa-times-circle"></i> ' + msg
 
@@ -485,4 +495,3 @@ function toggleWarehouseNegative() {
 </script>
 
 {% endblock %}
-

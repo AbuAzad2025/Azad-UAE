@@ -1,23 +1,23 @@
 ﻿{% extends 'base.html' %}
 
-{% block title %}شركة أزاد للأنظمة الذكية - إضافة مستخدم جديد وإدارة الصلاحيات{% endblock %}
+{% block title %}{{ t('Azad_Smart_Systems') }} - {{ t('Add_New_User_And_Permissions') }}{% endblock %}
 
 {% block content %}
 <div class="content-header">
   <div class="container-fluid">
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
-        <h1 class="m-0">{{ _('➕ إضافة مستخدم جديد') }}</h1>
+        <h1 class="m-0">{{ t('Add_New_User') }}</h1>
       </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
-          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2" aria-label="{{ _('الرجوع للوحة المالك') }}">
-            <i class="fas fa-arrow-right mr-1"></i> {{ _('الرجوع للوحة المالك') }}
+          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2" aria-label="{{ t('Back_To_Owner_Dashboard') }}">
+            <i class="fas fa-arrow-right mr-1"></i> {{ t('Back_To_Owner_Dashboard') }}
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
             <li class="breadcrumb-item"><a href="{{ url_for('owner.users_list') }}">{{ t('Users') }}</a></li>
-            <li class="breadcrumb-item active">{{ _('إضافة مستخدم') }}</li>
+            <li class="breadcrumb-item active">{{ t('Add_User') }}</li>
           </ol>
         </div>
       </div>
@@ -27,14 +27,14 @@
 
 <div class="container-fluid mb-3">
   <div class="btn-group quick-nav" role="group">
-    <a href="{{ url_for('owner.users_list') }}" class="btn btn-primary" aria-label="{{ _('قائمة المستخدمين') }}">
-      <i class="fas fa-users"></i> {{ _('قائمة المستخدمين') }}
+    <a href="{{ url_for('owner.users_list') }}" class="btn btn-primary" aria-label="{{ t('Users_List') }}">
+      <i class="fas fa-users"></i> {{ t('Users_List') }}
     </a>
-    <a href="{{ url_for('owner.create_user') }}" class="btn btn-outline-primary active" aria-label="{{ _('إضافة مستخدم جديد') }}">
-      <i class="fas fa-user-plus"></i> {{ _('إضافة مستخدم') }}
+    <a href="{{ url_for('owner.create_user') }}" class="btn btn-outline-primary active" aria-label="{{ t('Add_New_User') }}">
+      <i class="fas fa-user-plus"></i> {{ t('Add_User') }}
     </a>
-    <a href="{{ url_for('owner.roles_permissions') }}" class="btn btn-outline-secondary" aria-label="{{ _('الأدوار والصلاحيات') }}">
-      <i class="fas fa-user-shield"></i> {{ _('الأدوار والصلاحيات') }}
+    <a href="{{ url_for('owner.roles_permissions') }}" class="btn btn-outline-secondary" aria-label="{{ t('Roles_And_Permissions') }}">
+      <i class="fas fa-user-shield"></i> {{ t('Roles_And_Permissions') }}
     </a>
   </div>
 </div>
@@ -50,32 +50,32 @@
         <div class="col-md-6">
           <div class="card">
             <div class="card-header bg-primary">
-              <h3 class="card-title text-white">📋 المعلومات الأساسية</h3>
+              <h3 class="card-title text-white"><i class="fas fa-info-circle"></i> {{ t('Basic_Information') }}</h3>
             </div>
             <div class="card-body">
               <div class="form-group">
-                <label for="input_username">{{ t('Username') }}* <small class="text-muted">(للدخول)</small></label>
+                <label for="input_username">{{ t('Username') }}* <small class="text-muted">({{ t('For_Login') }})</small></label>
                 <input type="text" name="username" id="input_username" class="form-control" required 
                        pattern="[a-zA-Z0-9_]{3,20}" 
-                       placeholder="{{ _('مثال: ahmad_manager') }}"
-                       value="{{ form_data.get('username', '') }}" minlength="2" maxlength="100">
-                <small class="text-muted">حروف إنجليزية وأرقام و_ فقط (3-20 حرف)</small>
+                       placeholder="{{ t('Example_Username') }}"
+                       value="{{ form_data.get('username', '')|default('') }}" minlength="2" maxlength="100">
+                <small class="text-muted">{{ t('Username_Hint') }}</small>
               </div>
               
               <div class="form-group">
                 <label for="input_full_name">{{ t('Full Name') }}</label>
-                <input type="text" name="full_name" class="form-control" placeholder="{{ _('أحمد محمود') }}"
-                       value="{{ form_data.get('full_name', '') }}" id="input_full_name" minlength="2" maxlength="100">
+                <input type="text" name="full_name" class="form-control" placeholder="{{ t('Example_Full_Name') }}"
+                       value="{{ form_data.get('full_name', '')|default('') }}" id="input_full_name" minlength="2" maxlength="100">
               </div>
               
               <div class="form-group">
                 <label for="input_email">{{ t('Email') }}</label>
                 <input type="email" name="email" class="form-control" placeholder="ahmad@example.com"
-                       value="{{ form_data.get('email', '') }}" id="input_email">
+                       value="{{ form_data.get('email', '')|default('') }}" id="input_email">
               </div>
               
               <div class="form-group">
-                <label for="password">{{ t('Password') }}* <small class="text-muted">(10+ أحرف، حرف كبير، رقم، رمز خاص)</small></label>
+                <label for="password">{{ t('Password') }}* <small class="text-muted">(10+ {{ t('Characters_Upper_Digit_Special') }})</small></label>
                 <input type="password" name="password" class="form-control" required minlength="10" 
                        placeholder="••••••••" id="password">
                 <div class="mt-2 ic-1" id="password-strength">
@@ -85,16 +85,16 @@
                   <small id="password-strength-text" class="text-muted"></small>
                 </div>
                 <div id="password-requirements" class="mt-2 ic-4">
-                  <div><i class="fas fa-circle text-muted" id="req-length"></i> <span id="req-length-text">10 أحرف على الأقل</span></div>
-                  <div><i class="fas fa-circle text-muted" id="req-upper"></i> حرف كبير (A-Z)</div>
-                  <div><i class="fas fa-circle text-muted" id="req-lower"></i> حرف صغير (a-z)</div>
-                  <div><i class="fas fa-circle text-muted" id="req-digit"></i> رقم (0-9)</div>
-                  <div><i class="fas fa-circle text-muted" id="req-special"></i> رمز خاص (!@#$...)</div>
+                  <div><i class="fas fa-circle text-muted" id="req-length"></i> <span id="req-length-text">{{ t('Min_10_Characters') }}</span></div>
+                  <div><i class="fas fa-circle text-muted" id="req-upper"></i> {{ t('Uppercase_Letter') }}</div>
+                  <div><i class="fas fa-circle text-muted" id="req-lower"></i> {{ t('Lowercase_Letter') }}</div>
+                  <div><i class="fas fa-circle text-muted" id="req-digit"></i> {{ t('Digit_0_9') }}</div>
+                  <div><i class="fas fa-circle text-muted" id="req-special"></i> {{ t('Special_Character') }}</div>
                 </div>
               </div>
               
               <div class="form-group">
-                <label for="confirm_password">تأكيد كلمة المرور *</label>
+                <label for="confirm_password">{{ t('Confirm_Password') }} *</label>
                 <input type="password" name="confirm_password" class="form-control" required minlength="10" 
                        placeholder="••••••••" id="confirm_password" data-equal-to="#password">
                 <small class="form-text" id="password-match-text"></small>
@@ -107,11 +107,11 @@
         <div class="col-md-6">
           <div class="card">
             <div class="card-header bg-success">
-              <h3 class="card-title text-white">🔐 الدور والصلاحيات</h3>
+              <h3 class="card-title text-white"><i class="fas fa-shield-alt"></i> {{ t('Role_And_Permissions') }}</h3>
             </div>
             <div class="card-body">
               <div class="form-group">
-                <label for="role_select">الدور الوظيفي *</label>
+                <label for="role_select">{{ t('Job_Role') }} *</label>
                 {% set selected_role = form_data.get('role_id') %}
                 <select name="role_id" class="form-control" required id="role_select" aria-label="role id">
                   <option value="" {% if not selected_role %}selected{% endif %}>{{ t('None') }}</option>
@@ -125,35 +125,35 @@
 
               {% if show_tenant_picker and tenants %}
               <div class="form-group">
-                <label for="tenant_select">الشركة (Tenant) *</label>
+                <label for="tenant_select">{{ t('Company_Tenant') }} *</label>
                 <select name="tenant_id" id="tenant_select" class="form-control" required aria-label="tenant id">
-                  <option value="">-- اختر الشركة --</option>
+                  <option value="">{{ t('Select_Company') }}</option>
                   {% for tenant in tenants %}
                   <option value="{{ tenant.id }}" {% if form_data.get('tenant_id')|string == tenant.id|string %}selected{% endif %}>
                     {{ tenant.name_ar or tenant.name }} ({{ tenant.slug }})
                   </option>
                   {% endfor %}
                 </select>
-                <small class="text-muted">مستخدمي المنصة (owner/developer) فقط بدون tenant — اختر دوراً مناسباً.</small>
+                <small class="text-muted">{{ t('Platform_Users_No_Tenant_Hint') }}</small>
               </div>
               {% endif %}
 
               <div class="form-group">
                 <label for="branch_id">{{ t('Branch') }}<span class="text-danger branch-required-indicator">*</span></label>
-                <select name="branch_id" id="branch_id" class="form-control" aria-label="{{ _('اختر الفرع') }}">
-                  <option value="">-- اختر الفرع --</option>
+                <select name="branch_id" id="branch_id" class="form-control" aria-label="{{ t('Select_Branch') }}">
+                  <option value="">{{ t('Select_Branch') }}</option>
                   {% for branch in branches %}
                   <option value="{{ branch.id }}" {% if form_data.get('branch_id')|int == branch.id %}selected{% endif %}>
                     {{ branch.name }} ({{ branch.code }})
                   </option>
                   {% endfor %}
                 </select>
-                <small class="text-muted" id="branch-help-text">إجباري لكل مستخدم غير المالك وغير المطور/السوبر أدمن.</small>
+                <small class="text-muted" id="branch-help-text">{{ t('Branch_Required_Hint') }}</small>
               </div>
               
               <div class="alert alert-info" id="role-description">
                 <i class="fas fa-info-circle"></i>
-                <strong>اختر الدور لعرض الصلاحيات</strong>
+                <strong>{{ t('Select_Role_To_View_Permissions') }}</strong>
               </div>
               
               <div class="form-group">
@@ -162,7 +162,7 @@
                          {% if form_data.get('is_owner') == 'on' %}checked{% endif %} aria-label="is owner">
                   <label class="custom-control-label" for="is_owner">
                     <i class="fas fa-crown text-warning"></i> <strong>{{ t('System_Owner') }}</strong>
-                    <br><small class="text-danger">⚠️ صلاحيات كاملة - استخدم بحذر!</small>
+                    <br><small class="text-danger">{{ t('Full_Permissions_Warning') }}</small>
                   </label>
                 </div>
               </div>
@@ -172,7 +172,7 @@
                   <input type="checkbox" class="custom-control-input" id="is_active" name="is_active"
                          {% if form_data.get('is_active', 'on') == 'on' %}checked{% endif %} aria-label="is active">
                   <label class="custom-control-label" for="is_active">
-                    <i class="fas fa-check-circle text-success"></i> تفعيل الحساب
+                    <i class="fas fa-check-circle text-success"></i> {{ t('Activate_Account') }}
                   </label>
                 </div>
               </div>
@@ -182,14 +182,14 @@
           
           <div class="card">
             <div class="card-header bg-warning">
-              <h3 class="card-title ic-5">💡 نصائح</h3>
+              <h3 class="card-title ic-5"><i class="fas fa-lightbulb"></i> {{ t('Tips') }}</h3>
             </div>
             <div class="card-body">
               <ul class="mb-0 ic-5">
-                <li><strong>Owner</strong>: كل الصلاحيات بدون قيود</li>
-                <li><strong>Super Admin</strong>: {{ t('Management') }}+ تقارير كاملة</li>
-                <li><strong>Manager</strong>: {{ t('Sales_2') }}+ {{ t('مشتريات') }}+ {{ t('Customers_5') }}</li>
-                <li><strong>Seller</strong>: مبيعات فقط</li>
+                <li><strong>Owner</strong>: {{ t('Full_Unrestricted_Permissions') }}</li>
+                <li><strong>Super Admin</strong>: {{ t('Management') }}+ {{ t('Full_Reports') }}</li>
+                <li><strong>Manager</strong>: {{ t('Sales_And_Purchases') }}+ {{ t('Customers_And_Products') }}</li>
+                <li><strong>Seller</strong>: {{ t('Sales_Only') }}</li>
               </ul>
             </div>
           </div>
@@ -199,10 +199,10 @@
       
       <div class="row">
         <div class="col-12">
-          <button type="submit" class="btn btn-primary btn-lg" aria-label="{{ _('حفظ المستخدم') }}">
-            <i class="fas fa-save mr-2"></i>حفظ المستخدم
+          <button type="submit" class="btn btn-primary btn-lg" aria-label="{{ t('Save_User') }}">
+            <i class="fas fa-save mr-2"></i>{{ t('Save_User') }}
           </button>
-          <a href="{{ url_for('owner.users_list') }}" class="btn btn-secondary btn-lg" aria-label="{{ _('إلغاء والعودة') }}">
+          <a href="{{ url_for('owner.users_list') }}" class="btn btn-secondary btn-lg" aria-label="{{ t('Cancel_And_Return') }}">
             <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}</a>
         </div>
       </div>
@@ -212,6 +212,45 @@
 </div>
 
 <script>
+const i18n = {{ {
+  'passwords_match': t('Passwords_Match'),
+  'passwords_mismatch': t('Passwords_Mismatch'),
+  'password_very_weak': t('Password_Very_Weak'),
+  'password_weak': t('Password_Weak'),
+  'password_medium': t('Password_Medium'),
+  'password_strong': t('Password_Strong'),
+  'password_very_strong': t('Password_Very_Strong'),
+  'password_mismatch_error': t('Password_Mismatch_Error'),
+  'password_mismatch_hint': t('Password_Mismatch_Hint'),
+  'password_weak_warning': t('Password_Weak_Warning'),
+  'password_weak_hint': t('Password_Weak_Hint'),
+  'proceed_anyway': t('Proceed_Anyway'),
+  'improve_password': t('Improve_Password'),
+  'ok': t('OK'),
+  'branch_required_alert': t('Branch_Required_Alert'),
+  'role_select_prompt': t('Select_Role_To_View_Permissions'),
+  'super_admin_title': t('Super_Admin_Title'),
+  'manager_title': t('Manager_Title'),
+  'seller_title': t('Seller_Title'),
+  'perm_manage_users': t('Permission_Manage_Users'),
+  'perm_manage_permissions': t('Permission_Manage_Permissions'),
+  'perm_view_all_reports': t('Permission_View_All_Reports'),
+  'perm_edit_settings_limited': t('Permission_Edit_Settings_Limited'),
+  'perm_no_owner_access': t('Permission_No_Owner_Access'),
+  'perm_manage_sales_purchases': t('Permission_Manage_Sales_Purchases'),
+  'perm_manage_customers_products': t('Permission_Manage_Customers_Products'),
+  'perm_view_reports': t('Permission_View_Reports'),
+  'perm_manage_inventory': t('Permission_Manage_Inventory'),
+  'perm_cannot_delete_users': t('Permission_Cannot_Delete_Users'),
+  'perm_create_sales_only': t('Permission_Create_Sales_Only'),
+  'perm_view_own_invoices': t('Permission_View_Own_Invoices'),
+  'perm_search_products_customers': t('Permission_Search_Products_Customers'),
+  'perm_cannot_delete_cancel': t('Permission_Cannot_Delete_Cancel'),
+  'perm_cannot_view_reports': t('Permission_Cannot_View_Reports'),
+  'branch_required': t('Branch_Required'),
+  'branch_optional': t('Branch_Optional')
+}|tojson }};
+
 // Password Strength Checker
 function checkPasswordStrength(password) {
   let score = 0;
@@ -260,19 +299,19 @@ function checkPasswordStrength(password) {
   
   if (score < 30) {
     bar.removeClass().addClass('progress-bar bg-danger');
-    text.text('ضعيف جداً').removeClass().addClass('text-danger');
+    text.text(i18n.password_very_weak).removeClass().addClass('text-danger');
   } else if (score < 50) {
     bar.removeClass().addClass('progress-bar bg-warning');
-    text.text('ضعيف').removeClass().addClass('text-warning');
+    text.text(i18n.password_weak).removeClass().addClass('text-warning');
   } else if (score < 70) {
     bar.removeClass().addClass('progress-bar bg-info');
-    text.text('متوسط').removeClass().addClass('text-info');
+    text.text(i18n.password_medium).removeClass().addClass('text-info');
   } else if (score < 90) {
     bar.removeClass().addClass('progress-bar bg-primary');
-    text.text('قوي').removeClass().addClass('text-primary');
+    text.text(i18n.password_strong).removeClass().addClass('text-primary');
   } else {
     bar.removeClass().addClass('progress-bar bg-success');
-    text.text('قوي جداً').removeClass().addClass('text-success');
+    text.text(i18n.password_very_strong).removeClass().addClass('text-success');
   }
   
   return score;
@@ -299,10 +338,10 @@ $(document).ready(() => {
     if (confirm.length > 0) {
       if (password === confirm) {
         $(this).removeClass('is-invalid').addClass('is-valid');
-        matchText.html('<i class="fas fa-check-circle text-success"></i> كلمات المرور متطابقة').removeClass().addClass('text-success');
+        matchText.html('<i class="fas fa-check-circle text-success"></i> ' + i18n.passwords_match).removeClass().addClass('text-success');
       } else {
         $(this).removeClass('is-valid').addClass('is-invalid');
-        matchText.html('<i class="fas fa-times-circle text-danger"></i> كلمات المرور غير متطابقة').removeClass().addClass('text-danger');
+        matchText.html('<i class="fas fa-times-circle text-danger"></i> ' + i18n.passwords_mismatch).removeClass().addClass('text-danger');
       }
     } else {
       $(this).removeClass('is-valid is-invalid');
@@ -310,38 +349,38 @@ $(document).ready(() => {
     }
   });
   
-  // وصف الأدوار
+  // Role permission descriptions
   const roleDescriptions = {
     '1': {
-      title: 'Super Admin - مدير عام',
+      title: i18n.super_admin_title,
       permissions: [
-        '✅ إدارة المستخدمين',
-        '✅ إدارة الصلاحيات',
-        '✅ عرض كل التقارير',
-        '✅ تعديل الإعدادات (محدود)',
-        '❌ الوصول للمالك فقط'
+        i18n.perm_manage_users,
+        i18n.perm_manage_permissions,
+        i18n.perm_view_all_reports,
+        i18n.perm_edit_settings_limited,
+        i18n.perm_no_owner_access
       ],
       color: 'danger'
     },
     '2': {
-      title: 'Manager - مدير',
+      title: i18n.manager_title,
       permissions: [
-        '✅ إدارة المبيعات والمشتريات',
-        '✅ إدارة الزبائن والمنتجات',
-        '✅ عرض التقارير',
-        '✅ إدارة المخزون',
-        '❌ لا يمكنه حذف المستخدمين'
+        i18n.perm_manage_sales_purchases,
+        i18n.perm_manage_customers_products,
+        i18n.perm_view_reports,
+        i18n.perm_manage_inventory,
+        i18n.perm_cannot_delete_users
       ],
       color: 'info'
     },
     '3': {
-      title: 'Seller - بائع',
+      title: i18n.seller_title,
       permissions: [
-        '✅ إنشاء فواتير بيع فقط',
-        '✅ عرض فواتيره فقط',
-        '✅ بحث عن منتجات وزبائن',
-        '❌ لا يمكنه الحذف أو الإلغاء',
-        '❌ لا يمكنه عرض التقارير'
+        i18n.perm_create_sales_only,
+        i18n.perm_view_own_invoices,
+        i18n.perm_search_products_customers,
+        i18n.perm_cannot_delete_cancel,
+        i18n.perm_cannot_view_reports
       ],
       color: 'secondary'
     }
@@ -353,15 +392,15 @@ $(document).ready(() => {
     
     if (roleId && roleDescriptions[roleId]) {
       const role = roleDescriptions[roleId];
-      let html = `<i class="fas fa-shield-alt"></i> <strong>${role.title}</strong><hr>`;
+      let html = '<i class="fas fa-shield-alt"></i> <strong>' + role.title + '</strong><hr>';
       html += '<ul class="mb-0">';
       role.permissions.forEach(perm => {
-        html += `<li>${perm}</li>`;
+        html += '<li>' + perm + '</li>';
       });
       html += '</ul>';
       descDiv.html(html).removeClass().addClass('alert alert-' + role.color);
     } else {
-      descDiv.html('<i class="fas fa-info-circle"></i> <strong>اختر الدور لعرض الصلاحيات</strong>')
+      descDiv.html('<i class="fas fa-info-circle"></i> <strong>' + i18n.role_select_prompt + '</strong>')
              .removeClass().addClass('alert alert-info');
     }
   });
@@ -376,15 +415,15 @@ $(document).ready(() => {
     $('#branch_id').prop('required', !!required);
     $('.branch-required-indicator').toggle(!!required);
     $('#branch-help-text').text(required
-      ? 'إجباري لكل مستخدم غير المالك وغير المطور/السوبر أدمن.'
-      : 'اختياري فقط للمستخدمين العالميين.'
+      ? i18n.branch_required
+      : i18n.branch_optional
     );
   }
 
   $('#role_select, #is_owner').on('change', syncBranchRequirement);
   syncBranchRequirement();
   
-  // التحقق من تطابق كلمة المرور
+  // Form validation on submit
   $('#userForm').on('submit', (e) => {
     const password = $('#password').val();
     const confirm = $('#confirm_password').val();
@@ -394,29 +433,29 @@ $(document).ready(() => {
       if (window.Swal) {
         Swal.fire({
           icon: 'error',
-          title: '⚠️ كلمات المرور غير متطابقة',
-          html: '<p>كلمة المرور في الحقلين مختلفة.</p><p class="text-muted">💡 تأكد من كتابة نفس كلمة المرور في كلا الحقلين.</p>',
-          confirmButtonText: 'حسناً'
+          title: i18n.password_mismatch_error,
+          html: '<p>' + i18n.passwords_mismatch + '</p><p class="text-muted">' + i18n.password_mismatch_hint + '</p>',
+          confirmButtonText: i18n.ok
         });
       } else {
-        alert('⚠️ كلمات المرور غير متطابقة!\n💡 تأكد من كتابة نفس كلمة المرور في كلا الحقلين.');
+        alert(i18n.password_mismatch_error + '\n' + i18n.password_mismatch_hint);
       }
       $('#confirm_password').focus();
       return false;
     }
     
-    // التحقق من قوة كلمة المرور
+    // Check password strength
     const score = checkPasswordStrength(password);
     if (score < 70) {
       e.preventDefault();
       if (window.Swal) {
         Swal.fire({
           icon: 'warning',
-          title: '🔒 كلمة المرور ضعيفة',
-          html: '<p>كلمة المرور الحالية ضعيفة.</p><p class="text-muted">💡 استخدم 10+ أحرف مع حروف كبيرة وصغيرة وأرقام ورموز خاصة.</p>',
+          title: i18n.password_weak_warning,
+          html: '<p>' + i18n.password_weak + '</p><p class="text-muted">' + i18n.password_weak_hint + '</p>',
           showCancelButton: true,
-          confirmButtonText: 'متابعة بأي حال',
-          cancelButtonText: 'تحسين كلمة المرور'
+          confirmButtonText: i18n.proceed_anyway,
+          cancelButtonText: i18n.improve_password
         }).then((result) => {
           if (result.isConfirmed) {
             $('#userForm').off('submit').submit();
@@ -425,7 +464,7 @@ $(document).ready(() => {
           }
         });
       } else {
-        const proceed = confirm('⚠️ كلمة المرور ضعيفة!\n\n💡 يُنصح باستخدام كلمة مرور أقوى.\n\nهل تريد المتابعة بأي حال؟');
+        const proceed = confirm(i18n.password_weak_warning + '\n\n' + i18n.password_weak_hint + '\n\n' + i18n.proceed_anyway);
         if (!proceed) {
           $('#password').focus();
           return false;
@@ -436,7 +475,7 @@ $(document).ready(() => {
 
     if (branchRequiredForSelectedRole() && !$('#branch_id').val()) {
       e.preventDefault();
-      alert('يجب اختيار فرع لهذا المستخدم قبل الحفظ.');
+      alert(i18n.branch_required_alert);
       $('#branch_id').focus();
       return false;
     }

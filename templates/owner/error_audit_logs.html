@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - سجل أخطاء النظام{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or t('Accounting_System') }} - {{ t('System_Error_Log') }}{% endblock %}
 
 {% block extra_css %}
 {{ super() }}
@@ -18,11 +18,11 @@
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
           <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
-            <i class="fas fa-arrow-right mr-1"></i> {{ _('الرجوع للوحة المالك') }}
+            <i class="fas fa-arrow-right mr-1"></i> {{ t('Back_To_Owner_Dashboard') }}
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
-            <li class="breadcrumb-item active">{{ _('سجل الأخطاء') }}</li>
+            <li class="breadcrumb-item active">{{ t('Error_Log') }}</li>
           </ol>
         </div>
       </div>
@@ -33,8 +33,8 @@
       <div class="col-md-3">
         <div class="small-box bg-info">
           <div class="inner">
-            <h3>{{ stats.total }}</h3>
-            <p>{{ _('إجمالي الأخطاء المسجلة') }}</p>
+            <h3>{{ stats.total|default(0) }}</h3>
+            <p>{{ t('Total_Recorded_Errors') }}</p>
           </div>
           <div class="icon"><i class="fas fa-list"></i></div>
         </div>
@@ -42,8 +42,8 @@
       <div class="col-md-3">
         <div class="small-box bg-warning">
           <div class="inner">
-            <h3>{{ stats.unresolved }}</h3>
-            <p>{{ _('أخطاء غير محلولة') }}</p>
+            <h3>{{ stats.unresolved|default(0) }}</h3>
+            <p>{{ t('Unresolved_Errors') }}</p>
           </div>
           <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
         </div>
@@ -51,8 +51,8 @@
       <div class="col-md-3">
         <div class="small-box bg-danger">
           <div class="inner">
-            <h3>{{ stats.critical }}</h3>
-            <p>{{ _('أخطاء Critical') }}</p>
+            <h3>{{ stats.critical|default(0) }}</h3>
+            <p>{{ t('Critical_Errors') }}</p>
           </div>
           <div class="icon"><i class="fas fa-skull-crossbones"></i></div>
         </div>
@@ -65,7 +65,7 @@
         <form class="needs-validation" method="get" action="{{ url_for('owner.error_audit_logs') }}">
           <div class="form-row align-items-end">
             <div class="form-group col-md-2 mb-2">
-              <label for="category" class="mb-1">{{ t('الفئة') }}</label>
+              <label for="category" class="mb-1">{{ t('Category') }}</label>
               <select name="category" id="category" class="form-control form-control-sm" aria-label="category">
                 <option value="">{{ t('All') }}</option>
                 {% for cat in categories %}
@@ -74,7 +74,7 @@
               </select>
             </div>
             <div class="form-group col-md-2 mb-2">
-              <label for="level" class="mb-1">{{ t('المستوى') }}</label>
+              <label for="level" class="mb-1">{{ t('Level') }}</label>
               <select name="level" id="level" class="form-control form-control-sm" aria-label="level">
                 <option value="">{{ t('All') }}</option>
                 {% for lvl in levels %}
@@ -83,7 +83,7 @@
               </select>
             </div>
             <div class="form-group col-md-2 mb-2">
-              <label for="source" class="mb-1">{{ t('المصدر') }}</label>
+              <label for="source" class="mb-1">{{ t('Source') }}</label>
               <select name="source" id="source" class="form-control form-control-sm" aria-label="source">
                 <option value="">{{ t('All') }}</option>
                 {% for src in sources %}
@@ -95,36 +95,36 @@
               <label for="resolved" class="mb-1">{{ t('Status') }}</label>
               <select name="resolved" id="resolved" class="form-control form-control-sm" aria-label="resolved">
                 <option value="" {% if selected_resolved == '' %}selected{% endif %}>{{ t('All') }}</option>
-                <option value="0" {% if selected_resolved == '0' %}selected{% endif %}>{{ _('غير محلول') }}</option>
-                <option value="1" {% if selected_resolved == '1' %}selected{% endif %}>{{ _('محلول') }}</option>
+                <option value="0" {% if selected_resolved == '0' %}selected{% endif %}>{{ t('Unresolved') }}</option>
+                <option value="1" {% if selected_resolved == '1' %}selected{% endif %}>{{ t('Resolved') }}</option>
               </select>
             </div>
             <div class="form-group col-md-2 mb-2">
-              <label for="from_date" class="mb-1">{{ _('من تاريخ') }}</label>
-              <input type="date" name="from_date" id="from_date" class="form-control form-control-sm" value="{{ from_date }}" aria-label="from_date">
+              <label for="from_date" class="mb-1">{{ t('From_Date') }}</label>
+              <input type="date" name="from_date" id="from_date" class="form-control form-control-sm" value="{{ from_date|default('') }}" aria-label="from_date">
             </div>
             <div class="form-group col-md-2 mb-2">
-              <label for="to_date" class="mb-1">{{ _('إلى تاريخ') }}</label>
-              <input type="date" name="to_date" id="to_date" class="form-control form-control-sm" value="{{ to_date }}" aria-label="to_date">
+              <label for="to_date" class="mb-1">{{ t('To_Date') }}</label>
+              <input type="date" name="to_date" id="to_date" class="form-control form-control-sm" value="{{ to_date|default('') }}" aria-label="to_date">
             </div>
           </div>
           <div class="form-row align-items-end">
             <div class="form-group col-md-4 mb-2">
-              <label for="search" class="mb-1">{{ _('بحث في الرسالة / النوع') }}</label>
-              <input type="text" name="search" id="search" class="form-control form-control-sm" placeholder="{{ _('كلمة بحث...') }}" value="{{ search }}" aria-label="search">
+              <label for="search" class="mb-1">{{ t('Search_In_Message_Type') }}</label>
+              <input type="text" name="search" id="search" class="form-control form-control-sm" placeholder="{{ t('Search_Keyword') }}" value="{{ search|default('') }}" aria-label="search">
             </div>
             <div class="form-group col-md-8 mb-2 d-flex align-items-end">
               <button type="submit" class="btn btn-primary mr-2">
-                <i class="fas fa-filter"></i> {{ _('تصفية') }}
+                <i class="fas fa-filter"></i> {{ t('Filter') }}
               </button>
               <a href="{{ url_for('owner.error_audit_logs') }}" class="btn btn-outline-secondary mr-2">
-                <i class="fas fa-times"></i> {{ _('إلغاء') }}
+                <i class="fas fa-times"></i> {{ t('Cancel') }}
               </a>
-              <a href="{{ url_for('owner.export_error_audit_logs', format='json', category=selected_category, level=selected_level, resolved=selected_resolved, source=selected_source, from_date=from_date, to_date=to_date, search=search) }}" class="btn btn-success mr-2">
-                <i class="fas fa-file-code"></i> {{ _('تصدير JSON') }}
+              <a href="{{ url_for('owner.export_error_audit_logs', format='json', category=selected_category|default(''), level=selected_level|default(''), resolved=selected_resolved|default(''), source=selected_source|default(''), from_date=from_date|default(''), to_date=to_date|default(''), search=search|default('')) }}" class="btn btn-success mr-2">
+                <i class="fas fa-file-code"></i> {{ t('Export_JSON') }}
               </a>
-              <a href="{{ url_for('owner.export_error_audit_logs', format='txt', category=selected_category, level=selected_level, resolved=selected_resolved, source=selected_source, from_date=from_date, to_date=to_date, search=search) }}" class="btn btn-outline-success">
-                <i class="fas fa-file-alt"></i> {{ _('تصدير TXT') }}
+              <a href="{{ url_for('owner.export_error_audit_logs', format='txt', category=selected_category|default(''), level=selected_level|default(''), resolved=selected_resolved|default(''), source=selected_source|default(''), from_date=from_date|default(''), to_date=to_date|default(''), search=search|default('')) }}" class="btn btn-outline-success">
+                <i class="fas fa-file-alt"></i> {{ t('Export_TXT') }}
               </a>
             </div>
           </div>
@@ -138,20 +138,20 @@
   <div class="container-fluid">
     <div class="card">
       <div class="card-header bg-dark">
-        <h3 class="card-title"><i class="fas fa-table mr-2"></i> {{ _('الأخطاء') }}</h3>
+        <h3 class="card-title"><i class="fas fa-table mr-2"></i> {{ t('Errors') }}</h3>
       </div>
       <div class="card-body p-0 table-responsive">
         <table class="table table-sm table-striped table-hover mb-0">
           <thead class="thead-light">
             <tr>
               <th class="ic-1">#</th>
-              <th class="ic-2">{{ t('المستوى') }}</th>
-              <th class="ic-3">{{ t('الفئة') }}</th>
-              <th>{{ t('الرسالة') }}</th>
-              <th class="ic-4">{{ t('التكرار') }}</th>
-              <th class="ic-3">{{ t('المصدر') }}</th>
+              <th class="ic-2">{{ t('Level') }}</th>
+              <th class="ic-3">{{ t('Category') }}</th>
+              <th>{{ t('Message') }}</th>
+              <th class="ic-4">{{ t('Occurrence_Count') }}</th>
+              <th class="ic-3">{{ t('Source') }}</th>
               <th class="ic-5">{{ t('User') }}</th>
-              <th class="ic-6">{{ _('آخر ظهور') }}</th>
+              <th class="ic-6">{{ t('Last_Seen') }}</th>
               <th class="ic-7">{{ t('Status') }}</th>
               <th class="ic-7"></th>
             </tr>
@@ -173,7 +173,7 @@
               </td>
               <td><span class="badge badge-light border">{{ log.category }}</span></td>
               <td>
-                <div class="small font-weight-bold">{{ log.message[:120] }}{% if log.message|length > 120 %}...{% endif %}</div>
+                <div class="small font-weight-bold">{{ log.message[:120] if log.message else '' }}{% if log.message and log.message|length > 120 %}...{% endif %}</div>
                 {% if log.exception_type %}
                 <div class="text-muted ic-8">{{ log.exception_type }}</div>
                 {% endif %}
@@ -182,9 +182,9 @@
                 {% endif %}
               </td>
               <td class="small text-center">
-                <span class="badge badge-light border">{{ log.occurrence_count or 1 }}</span>
+                <span class="badge badge-light border">{{ log.occurrence_count|default(1) }}</span>
               </td>
-              <td class="small">{{ log.source }}</td>
+              <td class="small">{{ log.source|default('') }}</td>
               <td class="small">
                 {% if log.user_id %}
                   {% set user_name = error_log_data.get(log.id|string, {}).get('user_name', '') %}
@@ -201,9 +201,9 @@
               <td class="small text-muted">{{ log.last_seen_at.strftime('%Y-%m-%d %H:%M') if log.last_seen_at else '-' }}</td>
               <td>
                 {% if log.is_resolved %}
-                <span class="badge badge-success"><i class="fas fa-check"></i> محلول</span>
+                <span class="badge badge-success"><i class="fas fa-check"></i> {{ t('Resolved') }}</span>
                 {% else %}
-                <span class="badge badge-danger"><i class="fas fa-times"></i> غير محلول</span>
+                <span class="badge badge-danger"><i class="fas fa-times"></i> {{ t('Unresolved') }}</span>
                 {% endif %}
               </td>
               <td>
@@ -211,12 +211,12 @@
                 <form method="post" action="{{ url_for('owner.resolve_error_log', log_id=log.id) }}" class="d-inline">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                   <input type="hidden" name="note" value="" aria-label="note">
-                  <button type="submit" class="btn btn-success btn-sm" title="{{ _('تحديد كمحلول') }}" aria-label="{{ _('تحديد كمحلول') }}">
+                  <button type="submit" class="btn btn-success btn-sm" title="{{ t('Mark_As_Resolved') }}" aria-label="{{ t('Mark_As_Resolved') }}">
                     <i class="fas fa-check"></i>
                   </button>
                 </form>
                 {% endif %}
-                <button class="btn btn-info btn-sm" data-toggle="modal" data-target="#errorDetailModal" data-error-id="{{ log.id }}" title="{{ _('تفاصيل') }}" aria-label="{{ _('تفاصيل') }}">
+                <button class="btn btn-info btn-sm" data-toggle="modal" data-target="#errorDetailModal" data-error-id="{{ log.id }}" title="{{ t('Details') }}" aria-label="{{ t('Details') }}">
                   <i class="fas fa-eye"></i>
                 </button>
               </td>
@@ -225,7 +225,7 @@
             <tr>
               <td colspan="10" class="text-center text-muted py-4">
                 <i class="fas fa-check-circle fa-2x text-success mb-2"></i><br>
-                لا توجد أخطاء مطابقة للتصفية.
+                {{ t('No_Matching_Errors') }}
               </td>
             </tr>
             {% endfor %}
@@ -237,15 +237,15 @@
         <nav>
           <ul class="pagination pagination-sm justify-content-center mb-0">{%- if pagination.has_prev %}
             <li class="page-item">
-              <a class="page-link" href="{{ url_for('owner.error_audit_logs', page=pagination.prev_num, category=selected_category, level=selected_level, resolved=selected_resolved, source=selected_source, from_date=from_date, to_date=to_date, search=search) }}">{{ t('السابق') }}</a>
+              <a class="page-link" href="{{ url_for('owner.error_audit_logs', page=pagination.prev_num, category=selected_category|default(''), level=selected_level|default(''), resolved=selected_resolved|default(''), source=selected_source|default(''), from_date=from_date|default(''), to_date=to_date|default(''), search=search|default('')) }}">{{ t('Previous') }}</a>
             </li>{%- endif -%}{%- for page_num in pagination.iter_pages() -%}{%- if page_num -%}{%- if page_num != pagination.page %}
                 <li class="page-item">
-                  <a class="page-link" href="{{ url_for('owner.error_audit_logs', page=page_num, category=selected_category, level=selected_level, resolved=selected_resolved, source=selected_source, from_date=from_date, to_date=to_date, search=search) }}">{{ page_num }}</a>
+                  <a class="page-link" href="{{ url_for('owner.error_audit_logs', page=page_num, category=selected_category|default(''), level=selected_level|default(''), resolved=selected_resolved|default(''), source=selected_source|default(''), from_date=from_date|default(''), to_date=to_date|default(''), search=search|default('')) }}">{{ page_num }}</a>
                 </li>{%- else %}
                 <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>{%- endif -%}{%- else %}
                 <li class="page-item disabled"><span class="page-link">...</span></li>{%- endif -%}{%- endfor -%}{%- if pagination.has_next %}
             <li class="page-item">
-              <a class="page-link" href="{{ url_for('owner.error_audit_logs', page=pagination.next_num, category=selected_category, level=selected_level, resolved=selected_resolved, source=selected_source, from_date=from_date, to_date=to_date, search=search) }}">{{ t('التالي') }}</a>
+              <a class="page-link" href="{{ url_for('owner.error_audit_logs', page=pagination.next_num, category=selected_category|default(''), level=selected_level|default(''), resolved=selected_resolved|default(''), source=selected_source|default(''), from_date=from_date|default(''), to_date=to_date|default(''), search=search|default('')) }}">{{ t('Next') }}</a>
             </li>{%- endif %}
           </ul>
         </nav>
@@ -260,7 +260,7 @@
   <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
     <div class="modal-content">
       <div class="modal-header bg-dark">
-        <h5 class="modal-title" id="errorDetailTitle">تفاصيل الخطأ</h5>
+        <h5 class="modal-title" id="errorDetailTitle">{{ t('Error_Details') }}</h5>
         <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -280,8 +280,27 @@
 {% block extra_js %}
 {{ super() }}
 <script>
+const i18n = {{ {
+  'error_details': t('Error_Details'),
+  'first_seen': t('First_Seen'),
+  'last_seen': t('Last_Seen'),
+  'environment': t('Environment'),
+  'url': t('URL'),
+  'method': t('Method'),
+  'tenant': t('Tenant'),
+  'exception_type': t('Exception_Type'),
+  'message': t('Message'),
+  'stack_trace': t('Stack_Trace'),
+  'request_data': t('Request_Data'),
+  'close': t('Close'),
+  'category': t('Category'),
+  'level': t('Level'),
+  'source': t('Source'),
+  'occurrence_count': t('Occurrence_Count')
+}|tojson }};
+
 (function() {
-  window.ERROR_LOG_DATA = {{ error_log_data | tojson }};
+  window.ERROR_LOG_DATA = {{ error_log_data|default({})|tojson }};
 
   let modalEl = document.getElementById('errorDetailModal');
   if (!modalEl || !window.jQuery || !window.jQuery.fn || !window.jQuery.fn.modal) {
@@ -303,31 +322,31 @@
 
   function buildDetailHtml(data) {
     let html = '<dl class="row small">' +
-      '<dt class="col-sm-3">{{ t('الفئة') }}</dt><dd class="col-sm-9">' + esc(data.category) + '</dd>' +
-      '<dt class="col-sm-3">{{ t('المستوى') }}</dt><dd class="col-sm-9">' + esc(data.level) + '</dd>' +
-      '<dt class="col-sm-3">{{ t('المصدر') }}</dt><dd class="col-sm-9">' + esc(data.source) + '</dd>' +
+      '<dt class="col-sm-3">' + i18n.category + '</dt><dd class="col-sm-9">' + esc(data.category) + '</dd>' +
+      '<dt class="col-sm-3">' + i18n.level + '</dt><dd class="col-sm-9">' + esc(data.level) + '</dd>' +
+      '<dt class="col-sm-3">' + i18n.source + '</dt><dd class="col-sm-9">' + esc(data.source) + '</dd>' +
       '<dt class="col-sm-3">Fingerprint</dt><dd class="col-sm-9"><code>' + esc((data.fingerprint || '').slice(0,16)) + '...</code></dd>' +
-      '<dt class="col-sm-3">{{ t('التكرار') }}</dt><dd class="col-sm-9">' + (data.occurrence_count || 1) + '</dd>' +
-      '<dt class="col-sm-3">أول ظهور</dt><dd class="col-sm-9">' + esc(data.first_seen_at || '-') + '</dd>' +
-      '<dt class="col-sm-3">آخر ظهور</dt><dd class="col-sm-9">' + esc(data.last_seen_at || '-') + '</dd>' +
+      '<dt class="col-sm-3">' + i18n.occurrence_count + '</dt><dd class="col-sm-9">' + (data.occurrence_count || 1) + '</dd>' +
+      '<dt class="col-sm-3">' + i18n.first_seen + '</dt><dd class="col-sm-9">' + esc(data.first_seen_at || '-') + '</dd>' +
+      '<dt class="col-sm-3">' + i18n.last_seen + '</dt><dd class="col-sm-9">' + esc(data.last_seen_at || '-') + '</dd>' +
       '<dt class="col-sm-3">Request ID</dt><dd class="col-sm-9"><code>' + esc(data.request_id || '-') + '</code></dd>' +
-      '<dt class="col-sm-3">البيئة</dt><dd class="col-sm-9">' + esc((data.environment || '-') + ' ' + (data.app_version || '')) + '</dd>' +
-      '<dt class="col-sm-3">{{ t('الرابط') }}</dt><dd class="col-sm-9">' + esc(data.url || '-') + '</dd>' +
-      '<dt class="col-sm-3">{{ t('الطريقة') }}</dt><dd class="col-sm-9">' + esc(data.method || '-') + '</dd>' +
+      '<dt class="col-sm-3">' + i18n.environment + '</dt><dd class="col-sm-9">' + esc((data.environment || '-') + ' ' + (data.app_version || '')) + '</dd>' +
+      '<dt class="col-sm-3">' + i18n.url + '</dt><dd class="col-sm-9">' + esc(data.url || '-') + '</dd>' +
+      '<dt class="col-sm-3">' + i18n.method + '</dt><dd class="col-sm-9">' + esc(data.method || '-') + '</dd>' +
       '<dt class="col-sm-3">IP</dt><dd class="col-sm-9">' + esc(data.ip_address || '-') + '</dd>' +
+      '<dt class="col-sm-3">' + i18n.tenant + '</dt><dd class="col-sm-9">' + (data.tenant_id || '-') + '</dd>' +
       '<dt class="col-sm-3">{{ t('User') }}</dt><dd class="col-sm-9">' + esc(data.user_name || data.user_id || '-') + '</dd>' +
-      '<dt class="col-sm-3">{{ t('التينانت') }}</dt><dd class="col-sm-9">' + (data.tenant_id || '-') + '</dd>' +
-      '</dl><hr><h6>{{ t('الرسالة') }}</h6>' +
+      '</dl><hr><h6>' + i18n.message + '</h6>' +
       '<pre class="bg-light p-2 small ic-10">' + esc(data.message) + '</pre>';
 
     if (data.exception_type) {
-      html += '<h6>نوع الاستثناء</h6><pre class="bg-light p-2 small">' + esc(data.exception_type) + '</pre>';
+      html += '<h6>' + i18n.exception_type + '</h6><pre class="bg-light p-2 small">' + esc(data.exception_type) + '</pre>';
     }
     if (data.stack_trace) {
-      html += '<h6>Stack Trace</h6><pre class="bg-light p-2 small ic-11">' + esc(data.stack_trace) + '</pre>';
+      html += '<h6>' + i18n.stack_trace + '</h6><pre class="bg-light p-2 small ic-11">' + esc(data.stack_trace) + '</pre>';
     }
     if (data.request_data) {
-      html += '<h6>Request Data (sanitized)</h6><pre class="bg-light p-2 small">' + esc(JSON.stringify(data.request_data, null, 2)) + '</pre>';
+      html += '<h6>' + i18n.request_data + '</h6><pre class="bg-light p-2 small">' + esc(JSON.stringify(data.request_data, null, 2)) + '</pre>';
     }
     return html;
   }
@@ -348,7 +367,7 @@
       const id = btn.getAttribute('data-error-id');
       const data = window.ERROR_LOG_DATA[id];
       if (!data) return;
-      document.getElementById('errorDetailTitle').textContent = 'تفاصيل الخطأ #' + data.id;
+      document.getElementById('errorDetailTitle').textContent = i18n.error_details + ' #' + data.id;
       document.getElementById('errorDetailBody').innerHTML = buildDetailHtml(data);
     } catch (err) {
       document.getElementById('errorDetailTitle').textContent = 'Error details';

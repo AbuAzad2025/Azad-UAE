@@ -1,18 +1,18 @@
 {% extends 'base.html' %}
 
-{% block title %}شركة أزاد للأنظمة الذكية - إعدادات النظام المتقدمة{% endblock %}
+{% block title %}{{ t('Azad_Smart_Systems') }} - {{ t('Advanced_System_Settings') }}{% endblock %}
 
 {% block content %}
 <div class="content-header">
   <div class="container-fluid">
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
-        <h1 class="m-0">{{ _('⚙️ إعدادات النظام') }}</h1>
+        <h1 class="m-0">{{ t('System_Settings') }}</h1>
       </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
-          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2" aria-label="{{ _('الرجوع للوحة المالك') }}">
-            <i class="fas fa-arrow-right mr-1"></i> {{ _('الرجوع للوحة المالك') }}
+          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2" aria-label="{{ t('Back_To_Owner_Dashboard') }}">
+            <i class="fas fa-arrow-right mr-1"></i> {{ t('Back_To_Owner_Dashboard') }}
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
@@ -32,7 +32,7 @@
       
       <div class="card">
         <div class="card-header bg-primary">
-          <h3 class="card-title text-white">{{ _('📦 الوحدات (Modules)') }}</h3>
+          <h3 class="card-title text-white">{{ t('Modules') }}</h3>
         </div>
         <div class="card-body">
           <div class="row">
@@ -40,7 +40,7 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_sales" name="enable_sales" {{ 'checked' if settings.enable_sales }} aria-label="enable sales">
                 <label class="custom-control-label" for="enable_sales">
-                  <i class="fas fa-shopping-cart text-success"></i> {{ _('المبيعات') }}
+                  <i class="fas fa-shopping-cart text-success"></i> {{ t('Sales') }}
                 </label>
               </div>
             </div>
@@ -48,7 +48,7 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_purchases" name="enable_purchases" {{ 'checked' if settings.enable_purchases }} aria-label="enable purchases">
                 <label class="custom-control-label" for="enable_purchases">
-                  <i class="fas fa-truck text-primary"></i> {{ _('المشتريات') }}
+                  <i class="fas fa-truck text-primary"></i> {{ t('Purchases') }}
                 </label>
               </div>
             </div>
@@ -56,7 +56,7 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_inventory" name="enable_inventory" {{ 'checked' if settings.enable_inventory }} aria-label="enable inventory">
                 <label class="custom-control-label" for="enable_inventory">
-                  <i class="fas fa-boxes text-warning"></i> {{ _('المخزون') }}
+                  <i class="fas fa-boxes text-warning"></i> {{ t('Inventory') }}
                 </label>
               </div>
             </div>
@@ -64,7 +64,7 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_customers" name="enable_customers" {{ 'checked' if settings.enable_customers }} aria-label="enable customers">
                 <label class="custom-control-label" for="enable_customers">
-                  <i class="fas fa-users text-info"></i> {{ _('الزبائن') }}
+                  <i class="fas fa-users text-info"></i> {{ t('Customers') }}
                 </label>
               </div>
             </div>
@@ -75,7 +75,7 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_expenses" name="enable_expenses" {{ 'checked' if settings.enable_expenses }} aria-label="enable expenses">
                 <label class="custom-control-label" for="enable_expenses">
-                  <i class="fas fa-money-bill-wave text-danger"></i> {{ _('المصروفات') }}
+                  <i class="fas fa-money-bill-wave text-danger"></i> {{ t('Expenses') }}
                 </label>
               </div>
             </div>
@@ -83,7 +83,7 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_gl" name="enable_gl" {{ 'checked' if settings.enable_gl }} aria-label="enable gl">
                 <label class="custom-control-label" for="enable_gl">
-                  <i class="fas fa-book text-secondary"></i> {{ _('دفتر الأستاذ') }}
+                  <i class="fas fa-book text-secondary"></i> {{ t('General_Ledger') }}
                 </label>
               </div>
             </div>
@@ -91,14 +91,14 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_reports" name="enable_reports" {{ 'checked' if settings.enable_reports }} aria-label="enable reports">
                 <label class="custom-control-label" for="enable_reports">
-                  <i class="fas fa-chart-line text-success"></i>{{ t('Reports_3') }}</label>
+                  <i class="fas fa-chart-line text-success"></i>{{ t('Reports') }}</label>
               </div>
             </div>
             <div class="col-md-3">
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_ai_assistant" name="enable_ai_assistant" {{ 'checked' if settings.enable_ai_assistant }} aria-label="enable ai assistant">
                 <label class="custom-control-label" for="enable_ai_assistant">
-                  <i class="fas fa-robot text-primary"></i> {{ _('المساعد الذكي') }}
+                  <i class="fas fa-robot text-primary"></i> {{ t('AI_Assistant') }}
                 </label>
               </div>
             </div>
@@ -109,7 +109,7 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_pos" name="enable_pos" {{ 'checked' if settings.enable_pos }} aria-label="enable pos">
                 <label class="custom-control-label" for="enable_pos">
-                  <i class="fas fa-cash-register text-success"></i> {{ _('نقطة البيع (POS)') }}
+                  <i class="fas fa-cash-register text-success"></i> {{ t('Point_Of_Sale_POS') }}
                 </label>
               </div>
             </div>
@@ -120,15 +120,15 @@
       
        <div class="card">
         <div class="card-header bg-success">
-          <h3 class="card-title text-white">{{ _('✨ المميزات (Features)') }}</h3>
+          <h3 class="card-title text-white">{{ t('Features') }}</h3>
         </div>
         <div class="card-body">
           <div class="row">
             <div class="col-md-4">
               <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" id="enable_barcode_scanner" name="enable_barcode_scanner" {{ 'checked' if settings.enable_barcode_scanner }} aria-label="enable barcode scanner" maxlength="50">
+                <input type="checkbox" class="custom-control-input" id="enable_barcode_scanner" name="enable_barcode_scanner" {{ 'checked' if settings.enable_barcode_scanner }} aria-label="enable barcode scanner">
                 <label class="custom-control-label" for="enable_barcode_scanner">
-                  <i class="fas fa-barcode"></i> {{ _('قارئ الباركود') }}
+                  <i class="fas fa-barcode"></i> {{ t('Barcode_Scanner') }}
                 </label>
               </div>
             </div>
@@ -136,7 +136,7 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_multi_warehouse" name="enable_multi_warehouse" {{ 'checked' if settings.enable_multi_warehouse }} aria-label="enable multi warehouse">
                 <label class="custom-control-label" for="enable_multi_warehouse">
-                  <i class="fas fa-warehouse"></i> {{ _('مستودعات متعددة') }}
+                  <i class="fas fa-warehouse"></i> {{ t('Multiple_Warehouses') }}
                 </label>
               </div>
             </div>
@@ -144,7 +144,7 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_multi_currency" name="enable_multi_currency" {{ 'checked' if settings.enable_multi_currency }} aria-label="enable multi currency">
                 <label class="custom-control-label" for="enable_multi_currency">
-                  <i class="fas fa-dollar-sign"></i> {{ _('عملات متعددة') }}
+                  <i class="fas fa-dollar-sign"></i> {{ t('Multiple_Currencies') }}
                 </label>
               </div>
             </div>
@@ -153,9 +153,9 @@
           <div class="row mt-3">
             <div class="col-md-4">
               <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" id="enable_discounts" name="enable_discounts" {{ 'checked' if settings.enable_discounts }} aria-label="enable discounts" min="0">
+                <input type="checkbox" class="custom-control-input" id="enable_discounts" name="enable_discounts" {{ 'checked' if settings.enable_discounts }} aria-label="enable discounts">
                 <label class="custom-control-label" for="enable_discounts">
-                  <i class="fas fa-percent"></i> {{ _('الخصومات') }}
+                  <i class="fas fa-percent"></i> {{ t('Discounts') }}
                 </label>
               </div>
             </div>
@@ -163,7 +163,7 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_returns" name="enable_returns" {{ 'checked' if settings.enable_returns }} aria-label="enable returns">
                 <label class="custom-control-label" for="enable_returns">
-                  <i class="fas fa-undo"></i> {{ _('المرتجعات') }}
+                  <i class="fas fa-undo"></i> {{ t('Returns') }}
                 </label>
               </div>
             </div>
@@ -174,10 +174,10 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_ecommerce" name="enable_ecommerce" {{ 'checked' if settings.enable_ecommerce }} aria-label="enable ecommerce">
                 <label class="custom-control-label font-weight-bold" for="enable_ecommerce">
-                  <i class="fas fa-store text-success"></i> {{ _('المتاجر الإلكترونية (تشغيل/إيقاف كل المتاجر بكبسة واحدة)') }}
+                  <i class="fas fa-store text-success"></i> {{ t('Ecommerce_Stores_Toggle') }}
                 </label>
-                <small class="form-text text-muted d-block mt-1">{{ _('عند الإيقاف، تتوقف جميع واجهات المتاجر العامة `/s/...` على مستوى المنصة فوراً.') }}</small>
-                <a href="{{ url_for('owner.store_payment_methods') }}" class="btn btn-outline-success mt-2" aria-label="{{ _('إدارة طرق الدفع') }}"><i class="fas fa-credit-card mr-1"></i> {{ _('إدارة طرق الدفع') }}</a>
+                <small class="form-text text-muted d-block mt-1">{{ t('Ecommerce_Stop_Hint') }}</small>
+                <a href="{{ url_for('owner.store_payment_methods') }}" class="btn btn-outline-success mt-2" aria-label="{{ t('Manage_Payment_Methods') }}"><i class="fas fa-credit-card mr-1"></i> {{ t('Manage_Payment_Methods') }}</a>
               </div>
             </div>
           </div>
@@ -187,7 +187,7 @@
       
        <div class="card">
         <div class="card-header bg-warning">
-          <h3 class="card-title text-white">{{ _('🔧 إعدادات عامة') }}</h3>
+          <h3 class="card-title text-white">{{ t('General_Settings') }}</h3>
         </div>
         <div class="card-body">
           <div class="row">
@@ -195,25 +195,25 @@
               <div class="form-group">
                 <label>{{ t('Default_Currency') }}</label>
                 <select name="default_currency" class="form-control" aria-label="default currency">
-                  <option value="AED" {{ 'selected' if settings.default_currency == 'AED' }}>{{ _('AED - درهم إماراتي') }}</option>
-                  <option value="USD" {{ 'selected' if settings.default_currency == 'USD' }}>{{ _('USD - دولار أمريكي') }}</option>
+                  <option value="AED" {{ 'selected' if settings.default_currency == 'AED' }}>{{ t('AED_UAE_Dirham') }}</option>
+                  <option value="USD" {{ 'selected' if settings.default_currency == 'USD' }}>{{ t('USD_US_Dollar') }}</option>
                   <option value="EUR" {{ 'selected' if settings.default_currency == 'EUR' }}>EUR - {{ t('Euro') }}</option>
-                  <option value="SAR" {{ 'selected' if settings.default_currency == 'SAR' }}>{{ _('SAR - ريال سعودي') }}</option>
+                  <option value="SAR" {{ 'selected' if settings.default_currency == 'SAR' }}>{{ t('SAR_Saudi_Riyal') }}</option>
                 </select>
               </div>
             </div>
             <div class="col-md-3">
               <div class="form-group">
-                <label>{{ _('اللغة الافتراضية') }}</label>
+                <label>{{ t('Default_Language') }}</label>
                 <select name="default_language" class="form-control" aria-label="default language">
-                  <option value="ar" {{ 'selected' if settings.default_language == 'ar' }}>{{ t('Arabic_2') }}</option>
+                  <option value="ar" {{ 'selected' if settings.default_language == 'ar' }}>{{ t('Arabic') }}</option>
                   <option value="en" {{ 'selected' if settings.default_language == 'en' }}>English</option>
                 </select>
               </div>
             </div>
             <div class="col-md-3">
               <div class="form-group">
-                <label>{{ _('المنطقة الزمنية') }}</label>
+                <label>{{ t('Timezone') }}</label>
                 <select name="timezone" class="form-control" aria-label="timezone">
                   <option value="Asia/Dubai" {{ 'selected' if settings.timezone == 'Asia/Dubai' }}>Asia/Dubai (GST +4)</option>
                   <option value="Asia/Riyadh" {{ 'selected' if settings.timezone == 'Asia/Riyadh' }}>Asia/Riyadh (AST +3)</option>
@@ -223,8 +223,8 @@
             </div>
             <div class="col-md-3">
               <div class="form-group">
-                <label for="input_items_per_page">{{ _('عناصر لكل صفحة') }}</label>
-                <input type="number" name="items_per_page" class="form-control" value="{{ settings.items_per_page or 25 }}" min="10" max="100" id="input_items_per_page" aria-label="items per page">
+                <label for="input_items_per_page">{{ t('Items_Per_Page') }}</label>
+                <input type="number" name="items_per_page" class="form-control" value="{{ settings.items_per_page|default(25) }}" min="10" max="100" id="input_items_per_page" aria-label="items per page">
               </div>
             </div>
           </div>
@@ -234,10 +234,10 @@
       
         <div class="row">
         <div class="col-12">
-          <button type="submit" class="btn btn-primary btn-lg" aria-label="{{ _('حفظ الإعدادات') }}">
-            <i class="fas fa-save mr-2"></i>{{ _('حفظ الإعدادات') }}
+          <button type="submit" class="btn btn-primary btn-lg" aria-label="{{ t('Save_Settings') }}">
+            <i class="fas fa-save mr-2"></i>{{ t('Save_Settings') }}
           </button>
-          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-lg" aria-label="{{ _('إلغاء والعودة') }}">
+          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-lg" aria-label="{{ t('Cancel_And_Return') }}">
             <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}</a>
         </div>
       </div>

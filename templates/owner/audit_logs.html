@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - سجل التدقيق{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or t('Accounting_System') }} - {{ t('Audit_Log') }}{% endblock %}
 
 {% block content %}
 <div class="content-header">
@@ -9,14 +9,14 @@
       <div class="col-sm-6">
         <h1 class="m-0">
           <i class="fas fa-shield-alt text-primary mr-2"></i>
-          {{ _('سجل التدقيق والمراقبة') }}
+          {{ t('Audit_And_Monitoring_Log') }}
           <span class="badge badge-info ml-2">Audit Trail</span>
         </h1>
         </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
-          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2" aria-label="{{ _('الرجوع للوحة المالك') }}">
-            <i class="fas fa-arrow-right mr-1"></i> {{ _('الرجوع للوحة المالك') }}
+          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2" aria-label="{{ t('Back_To_Owner_Dashboard') }}">
+            <i class="fas fa-arrow-right mr-1"></i> {{ t('Back_To_Owner_Dashboard') }}
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
@@ -28,13 +28,13 @@
     <div class="row">
       <div class="col-12">
         <div class="btn-group quick-nav" role="group">
-          <a href="{{ url_for('owner.audit_logs') }}" class="btn btn-primary" aria-label="{{ _('سجل التدقيق') }}">
+          <a href="{{ url_for('owner.audit_logs') }}" class="btn btn-primary" aria-label="{{ t('Audit_Log') }}">
             <i class="fas fa-shield-alt"></i>{{ t('Audit_Log') }}</a>
-          <a href="{{ url_for('owner.data_cleanup') }}" class="btn btn-outline-danger" aria-label="{{ _('تنظيف البيانات') }}">
-            <i class="fas fa-trash"></i> {{ _('تنظيف البيانات') }}
+          <a href="{{ url_for('owner.data_cleanup') }}" class="btn btn-outline-danger" aria-label="{{ t('Data_Cleanup') }}">
+            <i class="fas fa-trash"></i> {{ t('Data_Cleanup') }}
           </a>
-          <a href="{{ url_for('owner.verify_backups') }}" class="btn btn-outline-success" aria-label="{{ _('التحقق من النسخ الاحتياطية') }}">
-            <i class="fas fa-check-double"></i> {{ _('التحقق من النسخ') }}
+          <a href="{{ url_for('owner.verify_backups') }}" class="btn btn-outline-success" aria-label="{{ t('Verify_Backups') }}">
+            <i class="fas fa-check-double"></i> {{ t('Verify_Backups') }}
           </a>
         </div>
       </div>
@@ -49,8 +49,8 @@
       <div class="col-lg-3 col-6">
         <div class="small-box bg-info">
           <div class="inner">
-            <h3>{{ logs|length }}</h3>
-            <p>{{ _('عمليات في هذه الصفحة') }}</p>
+            <h3>{{ logs|default([])|length }}</h3>
+            <p>{{ t('Operations_On_This_Page') }}</p>
           </div>
           <div class="icon">
             <i class="fas fa-list"></i>
@@ -61,8 +61,8 @@
       <div class="col-lg-3 col-6">
         <div class="small-box bg-success">
           <div class="inner">
-            <h3>{{ logs|selectattr('action', 'equalto', 'create')|list|length }}</h3>
-            <p>{{ _('إضافة جديدة') }}</p>
+            <h3>{{ logs|default([])|selectattr('action', 'equalto', 'create')|list|length }}</h3>
+            <p>{{ t('New_Additions') }}</p>
           </div>
           <div class="icon">
             <i class="fas fa-plus-circle"></i>
@@ -73,8 +73,8 @@
       <div class="col-lg-3 col-6">
         <div class="small-box bg-warning">
           <div class="inner">
-            <h3>{{ logs|selectattr('action', 'equalto', 'update')|list|length }}</h3>
-            <p>{{ _('تعديلات') }}</p>
+            <h3>{{ logs|default([])|selectattr('action', 'equalto', 'update')|list|length }}</h3>
+            <p>{{ t('Modifications') }}</p>
           </div>
           <div class="icon">
             <i class="fas fa-edit"></i>
@@ -85,7 +85,7 @@
       <div class="col-lg-3 col-6">
         <div class="small-box bg-danger">
           <div class="inner">
-            <h3>{{ logs|selectattr('action', 'equalto', 'delete')|list|length }}</h3>
+            <h3>{{ logs|default([])|selectattr('action', 'equalto', 'delete')|list|length }}</h3>
             <p>{{ t('Delete') }}</p>
           </div>
           <div class="icon">
@@ -99,10 +99,10 @@
     <div class="card shadow-sm mb-3">
       <div class="card-header bg-primary">
         <h3 class="card-title">
-          <i class="fas fa-filter mr-2"></i>{{ _('تصفية السجلات') }}
+          <i class="fas fa-filter mr-2"></i>{{ t('Filter_Records') }}
         </h3>
         <div class="card-tools">
-          <button type="button" class="btn btn-tool" data-card-widget="collapse" title="{{ _('طي/توسيع') }}" aria-label="{{ _('طي/توسيع') }}">
+          <button type="button" class="btn btn-tool" data-card-widget="collapse" title="{{ t('Collapse_Expand') }}" aria-label="{{ t('Collapse_Expand') }}">
             <i class="fas fa-minus"></i>
           </button>
         </div>
@@ -112,28 +112,28 @@
           <div class="form-row">
             <div class="form-group col-md-4">
               <label>
-                <i class="fas fa-tasks text-primary mr-1"></i> {{ _('العملية') }}
+                <i class="fas fa-tasks text-primary mr-1"></i> {{ t('Operation') }}
               </label>
               <select name="action" class="form-control" aria-label="action">
                 <option value="">{{ t('None') }}</option>
                 <option value="create" {{ 'selected' if request.args.get('action') == 'create' }}>{{ t('Create') }}</option>
                 <option value="update" {{ 'selected' if request.args.get('action') == 'update' }}>{{ t('Edit') }}</option>
                 <option value="delete" {{ 'selected' if request.args.get('action') == 'delete' }}>{{ t('Delete') }}</option>
-                <option value="archive" {{ 'selected' if request.args.get('action') == 'archive' }}>{{ t('أرشفة') }}</option>
+                <option value="archive" {{ 'selected' if request.args.get('action') == 'archive' }}>{{ t('Archive') }}</option>
                 <option value="restore" {{ 'selected' if request.args.get('action') == 'restore' }}>{{ t('Restore') }}</option>
                 <option value="login" {{ 'selected' if request.args.get('action') == 'login' }}>{{ t('Sign In') }}</option>
-                <option value="logout" {{ 'selected' if request.args.get('action') == 'logout' }}>{{ t('خروج') }}</option>
+                <option value="logout" {{ 'selected' if request.args.get('action') == 'logout' }}>{{ t('Logout') }}</option>
               </select>
             </div>
 
             <div class="form-group col-md-4">
               <label>
-                <i class="fas fa-user text-success mr-1"></i> {{ _('المستخدم') }}
+                <i class="fas fa-user text-success mr-1"></i> {{ t('User') }}
               </label>
               {% set unique_users = [] %}
               <select name="user" class="form-control" aria-label="user">
                 <option value="">{{ t('None') }}</option>
-                {% for log in logs %}
+                {% for log in logs|default([]) %}
                   {% if log.user and log.user.id not in unique_users %}
                     {% set _ = unique_users.append(log.user.id) %}
                     <option value="{{ log.user.id }}" {{ 'selected' if request.args.get('user', type=int) == log.user.id }}>
@@ -145,10 +145,10 @@
             </div>
 
             <div class="form-group col-md-4 d-flex align-items-end">
-              <button type="submit" class="btn btn-primary mr-2" aria-label="{{ _('تطبيق التصفية') }}">
+              <button type="submit" class="btn btn-primary mr-2" aria-label="{{ t('Apply_Filter') }}">
                 <i class="fas fa-search mr-1"></i>{{ t('Apply') }}</button>
-              <a href="{{ url_for('owner.audit_logs') }}" class="btn btn-secondary" aria-label="{{ _('إعادة تعيين التصفية') }}">
-                <i class="fas fa-redo mr-1"></i>إعادة تعيين
+              <a href="{{ url_for('owner.audit_logs') }}" class="btn btn-secondary" aria-label="{{ t('Reset_Filter') }}">
+                <i class="fas fa-redo mr-1"></i>{{ t('Reset') }}
               </a>
             </div>
           </div>
@@ -160,10 +160,10 @@
     <div class="card shadow">
       <div class="card-header bg-dark">
         <h3 class="card-title">
-          <i class="fas fa-history mr-2"></i>سجل العمليات التفصيلي
+          <i class="fas fa-history mr-2"></i>{{ t('Detailed_Operations_Log') }}
         </h3>
         <div class="card-tools">
-          <button type="button" class="btn btn-success" data-action="export-logs" aria-label="{{ _('تصدير السجلات') }}">
+          <button type="button" class="btn btn-success" data-action="export-logs" aria-label="{{ t('Export_Records') }}">
             <i class="fas fa-download mr-1"></i>{{ t('Export') }}</button>
         </div>
       </div>
@@ -174,22 +174,22 @@
                                 <tr>
                                     <th style="width: 5%"><i class="fas fa-hashtag"></i></th>
                                     <th style="width: 15%">
-                                        <i class="fas fa-clock text-info"></i> التاريخ والوقت
+                                        <i class="fas fa-clock text-info"></i> {{ t('Date_And_Time') }}
                                     </th>
                                     <th style="width: 12%">
-                                        <i class="fas fa-user text-success"></i> المستخدم
+                                        <i class="fas fa-user text-success"></i> {{ t('User') }}
                                     </th>
                                     <th style="width: 10%">
-                                        <i class="fas fa-cog text-warning"></i> العملية
+                                        <i class="fas fa-cog text-warning"></i> {{ t('Operation') }}
                                     </th>
                                     <th style="width: 12%">
-                                        <i class="fas fa-cube text-primary"></i> النوع
+                                        <i class="fas fa-cube text-primary"></i> {{ t('Type') }}
                                     </th>
                                     <th style="width: 8%">
-                                        <i class="fas fa-tag"></i> المعرف
+                                        <i class="fas fa-tag"></i> {{ t('Identifier') }}
                                     </th>
                                     <th style="width: 25%">
-                                        <i class="fas fa-info-circle text-info"></i> التفاصيل
+                                        <i class="fas fa-info-circle text-info"></i> {{ t('Details') }}
                                     </th>
                                     <th style="width: 8%">
                                         <i class="fas fa-network-wired"></i> IP
@@ -197,18 +197,18 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for log in logs %}
+                                        {% for log in logs|default([]) %}
                                         <tr>
                                     <td class="text-center">
                                         <span class="badge badge-secondary">{{ loop.index }}</span>
                                     </td>
                                     <td>
                                         <i class="far fa-calendar mr-1"></i>
-                                        {{ log.created_at.strftime('%Y-%m-%d') }}
+                                        {{ log.created_at.strftime('%Y-%m-%d') if log.created_at }}
                                         <br>
                                         <small class="text-muted">
                                             <i class="far fa-clock mr-1"></i>
-                                            {{ log.created_at.strftime('%H:%M:%S') }}
+                                            {{ log.created_at.strftime('%H:%M:%S') if log.created_at }}
                                         </small>
                                     </td>
                                     <td>
@@ -220,9 +220,9 @@
                                                 <br>
                                                 <small class="text-muted">
                                                     {% if log.user.is_owner %}
-                                                    <span class="badge badge-danger">{{ t('مالك') }}</span>
+                                                    <span class="badge badge-danger">{{ t('Owner') }}</span>
                                                     {% elif log.user.is_admin %}
-                                                    <span class="badge badge-warning">{{ t('مدير') }}</span>
+                                                    <span class="badge badge-warning">{{ t('Manager') }}</span>
                                                     {% else %}
                                                     <span class="badge badge-info">{{ t('Employee') }}</span>
                                                     {% endif %}
@@ -231,7 +231,7 @@
                                         </div>
                                         {% else %}
                                         <span class="text-muted">
-                                            <i class="fas fa-user-slash mr-1"></i>غير محدد
+                                            <i class="fas fa-user-slash mr-1"></i>{{ t('Not_Specified') }}
                                         </span>
                                         {% endif %}
                                     </td>
@@ -247,7 +247,7 @@
                                             <i class="fas fa-trash-alt mr-1"></i>{{ t('Delete') }}</span>
                                         {% elif log.action == 'archive' %}
                                         <span class="badge badge-secondary badge-lg">
-                                            <i class="fas fa-archive mr-1"></i>{{ t('أرشفة') }}</span>
+                                            <i class="fas fa-archive mr-1"></i>{{ t('Archive') }}</span>
                                         {% elif log.action == 'restore' %}
                                         <span class="badge badge-info badge-lg">
                                             <i class="fas fa-undo mr-1"></i>{{ t('Restore') }}</span>
@@ -256,7 +256,7 @@
                                             <i class="fas fa-sign-in-alt mr-1"></i>{{ t('Sign In') }}</span>
                                         {% elif log.action == 'logout' %}
                                         <span class="badge badge-dark badge-lg">
-                                            <i class="fas fa-sign-out-alt mr-1"></i>{{ t('خروج') }}</span>
+                                            <i class="fas fa-sign-out-alt mr-1"></i>{{ t('Logout') }}</span>
                                         {% else %}
                                         <span class="badge badge-light badge-lg">
                                             <i class="fas fa-question mr-1"></i>{{ log.action }}
@@ -296,8 +296,8 @@
                                 <tr>
                                     <td colspan="8" class="text-center py-5">
                                         <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                                        <h5 class="text-muted">لا توجد سجلات</h5>
-                                        <p class="text-muted">لم يتم العثور على أي عمليات مطابقة</p>
+                                        <h5 class="text-muted">{{ t('No_Records') }}</h5>
+                                        <p class="text-muted">{{ t('No_Matching_Operations') }}</p>
                                     </td>
                                         </tr>
                                         {% endfor %}
@@ -309,9 +309,9 @@
       <div class="card-footer">
         <div class="d-flex justify-content-between align-items-center flex-wrap">
           <small class="text-muted mb-2 mb-sm-0">
-            {{ t('View') }}pagination.per_page * (pagination.page - 1) + 1 }}
+            {{ t('Viewing_Range') }}
             إلى {{ [pagination.per_page * pagination.page, pagination.total]|min }}
-            من أصل {{ pagination.total }} {{ t('عملية') }}</small>
+            من أصل {{ pagination.total }} {{ t('Operation') }}</small>
           {% set endpoint = 'owner.audit_logs' %}
           {% include 'partials/flask_pagination.html' %}
         </div>
@@ -323,6 +323,17 @@
 </section>
 
 <script>
+const i18n = {{ {
+  'export_confirm_title': t('Export_Records'),
+  'export_confirm_text': t('Export_Confirm_Text'),
+  'yes_export': t('Yes_Export'),
+  'cancel': t('Cancel'),
+  'exporting': t('Exporting'),
+  'preparing_file': t('Preparing_File'),
+  'done': t('Done'),
+  'export_success': t('Export_Success')
+}|tojson }};
+
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-action="export-logs"]');
   if (!el) return;
@@ -330,30 +341,27 @@ document.addEventListener('click', (e) => {
 });
 
 function exportLogs() {
-    // تصدير السجلات إلى CSV
     Swal.fire({
-        title: 'تصدير السجلات',
-        text: 'هل تريد تصدير السجلات إلى ملف CSV؟',
+        title: i18n.export_confirm_title,
+        text: i18n.export_confirm_text,
         icon: 'question',
         showCancelButton: true,
-        confirmButtonText: 'نعم، صدّر',
-        cancelButtonText: 'إلغاء',
+        confirmButtonText: i18n.yes_export,
+        cancelButtonText: i18n.cancel,
         confirmButtonColor: '#28a745'
     }).then((result) => {
         if (result.isConfirmed) {
-            // هنا يمكن إضافة الكود الفعلي للتصدير
             Swal.fire({
-                title: 'جاري التصدير...',
-                text: 'يتم تجهيز الملف',
+                title: i18n.exporting,
+                text: i18n.preparing_file,
                 icon: 'info',
                 showConfirmButton: false,
                 timer: 2000
             }).then(() => {
-                Swal.fire('تم!', 'تم تصدير السجلات بنجاح', 'success');
+                Swal.fire(i18n.done, i18n.export_success, 'success');
             });
         }
     });
 }
 </script>
 {% endblock %}
-

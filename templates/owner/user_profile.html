@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}شركة أزاد للأنظمة الذكية - الملف الشخصي {{ user.username }}{% endblock %}
+{% block title %}{{ t('Azad_Smart_Systems') }} - {{ t('User_Profile') }} {{ user.username }}{% endblock %}
 
 {% block content %}
 
@@ -12,7 +12,7 @@
 
       <div class="col-sm-6">
 
-        <h1 class="m-0">👤 الملف الشخصي: {{ user.username }}</h1>
+        <h1 class="m-0"><i class="fas fa-user"></i> {{ t('User_Profile') }}: {{ user.username }}</h1>
 
       </div>
 
@@ -40,11 +40,7 @@
 
   <div class="container-fluid">
 
-    
-
     <div class="row">
-
-      
 
       <div class="col-md-4">
 
@@ -84,11 +80,12 @@
 
               {% if user.is_owner %}
 
-                <span class="badge badge-danger badge-lg">{{ _('👑 مالك النظام') }}</span>
+                <span class="badge badge-danger badge-lg">{{ t('System_Owner') }}</span>
 
               {% elif user.role %}
 
                 {% if user.role.name == 'Super Admin' %}{% set role_badge = 'danger' %}{% elif user.role.name == 'Manager' %}{% set role_badge = 'info' %}{% else %}{% set role_badge = 'secondary' %}{% endif %}
+
                 <span class="badge badge-{{ role_badge }} badge-lg">
 
                   {{ user.role.name }}
@@ -111,7 +108,7 @@
 
               <li class="list-group-item">
 
-                <b><i class="fas fa-envelope mr-2"></i>{{ t('Email_2') }}</b>
+                <b><i class="fas fa-envelope mr-2"></i>{{ t('Email') }}</b>
 
                 <span class="float-left">{{ user.email or '-' }}</span>
 
@@ -129,7 +126,7 @@
 
                   {% else %}
 
-                    <span class="badge badge-danger">{{ t('معطل') }}</span>
+                    <span class="badge badge-danger">{{ t('Disabled') }}</span>
 
                   {% endif %}
 
@@ -139,15 +136,15 @@
 
               <li class="list-group-item">
 
-                <b><i class="fas fa-calendar-plus mr-2"></i>تاريخ التسجيل</b>
+                <b><i class="fas fa-calendar-plus mr-2"></i>{{ t('Registration_Date') }}</b>
 
-                <span class="float-left">{{ user.created_at.strftime('%Y-%m-%d') if user.created_at }}</span>
+                <span class="float-left">{{ user.created_at.strftime('%Y-%m-%d') if user.created_at else '-' }}</span>
 
               </li>
 
               <li class="list-group-item">
 
-                <b><i class="fas fa-sign-in-alt mr-2"></i>آخر دخول</b>
+                <b><i class="fas fa-sign-in-alt mr-2"></i>{{ t('Last_Login') }}</b>
 
                 <span class="float-left">
 
@@ -157,7 +154,7 @@
 
                   {% else %}
 
-                    <span class="text-muted">لم يسجل دخول</span>
+                    <span class="text-muted">{{ t('Never_Logged_In') }}</span>
 
                   {% endif %}
 
@@ -169,21 +166,19 @@
 
             <a href="{{ url_for('owner.edit_user', user_id=user.id) }}" class="btn btn-primary btn-block">
 
-              <i class="fas fa-edit"></i> <b>تعديل المستخدم</b>
+              <i class="fas fa-edit"></i> <b>{{ t('Edit_User') }}</b>
 
             </a>
 
-            
-
             {% if not user.is_owner and user.id != current_user.id %}
 
-            <form class="needs-validation" method="POST" action="{{ url_for('owner.delete_user', user_id=user.id) }}" data-action="confirm-submit" data-confirm-message="هل تريد تعطيل هذا المستخدم؟">
+            <form class="needs-validation" method="POST" action="{{ url_for('owner.delete_user', user_id=user.id) }}" data-action="confirm-submit" data-confirm-message="{{ t('Confirm_Disable_User_Message') }}">
 
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
               <button type="submit" class="btn btn-danger btn-block mt-2">
 
-                <i class="fas fa-ban"></i> <b>تعطيل المستخدم</b>
+                <i class="fas fa-ban"></i> <b>{{ t('Disable_User') }}</b>
 
               </button>
 
@@ -197,13 +192,7 @@
 
       </div>
 
-      
-
-      
-
       <div class="col-md-8">
-
-        
 
         <div class="row">
 
@@ -217,15 +206,13 @@
 
                 <span class="info-box-text">{{ t('Sales') }}</span>
 
-                <span class="info-box-number">{{ stats.sales_count }}</span>
+                <span class="info-box-number">{{ stats.sales_count|default(0) }}</span>
 
               </div>
 
             </div>
 
           </div>
-
-          
 
           <div class="col-md-3">
 
@@ -235,17 +222,15 @@
 
               <div class="info-box-content">
 
-                <span class="info-box-text">إجمالي المبيعات</span>
+                <span class="info-box-text">{{ t('Total_Sales') }}</span>
 
-                <span class="info-box-number">{{ '{:,.0f}'.format(stats.sales_total) }}</span>
+                <span class="info-box-number">{{ '{:,.0f}'.format(stats.sales_total|default(0)) }}</span>
 
               </div>
 
             </div>
 
           </div>
-
-          
 
           <div class="col-md-3">
 
@@ -257,15 +242,13 @@
 
                 <span class="info-box-text ic-3">{{ t('Payments') }}</span>
 
-                <span class="info-box-number ic-3">{{ stats.payments_count }}</span>
+                <span class="info-box-number ic-3">{{ stats.payments_count|default(0) }}</span>
 
               </div>
 
             </div>
 
           </div>
-
-          
 
           <div class="col-md-3">
 
@@ -277,7 +260,7 @@
 
                 <span class="info-box-text">{{ t('Audit_Log') }}</span>
 
-                <span class="info-box-number">{{ stats.audits_count }}</span>
+                <span class="info-box-number">{{ stats.audits_count|default(0) }}</span>
 
               </div>
 
@@ -287,17 +270,13 @@
 
         </div>
 
-        
-
-        
-
         <div class="card">
 
           <div class="card-header bg-primary">
 
             <h3 class="card-title text-white">
 
-              <i class="fas fa-shopping-cart mr-2"></i>آخر المبيعات (5)
+              <i class="fas fa-shopping-cart mr-2"></i>{{ t('Recent_Sales') }} (5)
 
             </h3>
 
@@ -313,7 +292,7 @@
 
                   <th>#</th>
 
-                  <th>{{ t('Customer_2') }}</th>
+                  <th>{{ t('Customer') }}</th>
 
                   <th>{{ t('Amount') }}</th>
 
@@ -332,16 +311,19 @@
                 <tr>
 
                   {% if current_user.has_permission('manage_sales') %}
+
                   <td><a href="{{ url_for('sales.view', id=sale.id) }}" target="_blank" rel="noopener noreferrer">#{{ sale.id }}</a></td>
+
                   {% endif %}
 
-                  <td>{{ sale.customer.name if sale.customer else 'زبون عام' }}</td>
+                  <td>{{ sale.customer.name if sale.customer else t('General_Customer') }}</td>
 
                   <td>{{ format_currency(sale.amount_aed, 'AED') }}</td>
 
                   <td>
 
                     {% if sale.status == 'confirmed' %}{% set sale_badge = 'success' %}{% elif sale.status == 'pending' %}{% set sale_badge = 'warning' %}{% else %}{% set sale_badge = 'danger' %}{% endif %}
+
                     <span class="badge badge-{{ sale_badge }}">
 
                       {{ sale.status }}
@@ -358,7 +340,7 @@
 
                 <tr>
 
-                  <td colspan="5" class="text-center text-muted">لا توجد مبيعات بعد</td>
+                  <td colspan="5" class="text-center text-muted">{{ t('No_Sales_Yet') }}</td>
 
                 </tr>
 
@@ -372,17 +354,13 @@
 
         </div>
 
-        
-
-        
-
         <div class="card">
 
           <div class="card-header bg-warning">
 
             <h3 class="card-title ic-3">
 
-              <i class="fas fa-clipboard-list mr-2"></i>آخر النشاطات (10)
+              <i class="fas fa-clipboard-list mr-2"></i>{{ t('Recent_Activities') }} (10)
 
             </h3>
 
@@ -398,11 +376,11 @@
 
                   <tr>
 
-                    <th>{{ t('النوع') }}</th>
+                    <th>{{ t('Type') }}</th>
 
-                    <th>{{ t('الإجراء') }}</th>
+                    <th>{{ t('Action') }}</th>
 
-                    <th>{{ t('Details_2') }}</th>
+                    <th>{{ t('Details') }}</th>
 
                     <th>{{ t('Date') }}</th>
 
@@ -419,6 +397,7 @@
                     <td>
 
                       {% if audit.action == 'create' %}{% set audit_badge = 'success' %}{% elif audit.action == 'update' %}{% set audit_badge = 'primary' %}{% else %}{% set audit_badge = 'danger' %}{% endif %}
+
                       <span class="badge badge-{{ audit_badge }}">
 
                         {{ audit.action }}
@@ -455,7 +434,7 @@
 
                   <tr>
 
-                    <td colspan="4" class="text-center text-muted">لا توجد نشاطات مسجلة</td>
+                    <td colspan="4" class="text-center text-muted">{{ t('No_Activities_Recorded') }}</td>
 
                   </tr>
 
@@ -475,8 +454,6 @@
 
     </div>
 
-    
-
   </div>
 
 </div>
@@ -484,12 +461,26 @@
 {% endblock %}
 
 {% block extra_js %}
+
 <script>
+
+const i18n = {{ {
+
+  'confirm_disable_message': t('Confirm_Disable_User_Message')
+
+}|tojson }};
+
 document.addEventListener('submit', (e) => {
+
   const el = e.target.closest('[data-action="confirm-submit"]');
+
   if (!el) return;
+
   if (!confirm(el.dataset.confirmMessage)) e.preventDefault();
+
 });
+
 </script>
+
 {% endblock %}
 
