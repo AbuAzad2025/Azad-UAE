@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}{{ t('Dashboard_2') }} {{ t('المراقبة') }} - {{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}{% endblock %}
+{% block title %}{{ t('Dashboard') }} {{ t('Monitoring') }} - {{ tenant_name_ar or company_name_ar or t('Accounting_System') }}{% endblock %}
 
 {% block content %}
 <div class="content-header">
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1 class="m-0">{{ t('Dashboard_2') }} {{ t('مراقبة') }} {{ t('System') }}</h1>
+                <h1 class="m-0">{{ t('System_Monitoring_Dashboard') }}</h1>
             </div>
         </div>
     </div>
@@ -20,54 +20,63 @@
                 <div class="small-box bg-info">
                     <div class="inner">
                         <h3>
-                            {% if health.database.healthy %}
+                            {% if health.database.healthy|default(false) %}
                                 <span class="badge badge-light text-success">Healthy</span>
                             {% else %}
                                 <span class="badge badge-light text-danger">Down</span>
                             {% endif %}
                         </h3>
-                        <p>{{ t('قاعدة') }} {{ t('Data') }}</p>
+                        <p>{{ t('Database_Status') }}</p>
                     </div>
                     <div class="icon">
-                        <i class="fas fa-database"></i>
+                        <i class="fas fa-database" aria-label="{{ t('Database') }}"></i>
                     </div>
                 </div>
             </div>
 
+            {% set disk_class = 'bg-danger' if health.disk.percent|default(0) > 85 else 'bg-warning' if health.disk.percent|default(0) > 70 else 'bg-success' %}
             <div class="col-lg-3 col-6">
-                <div class="small-box bg-success">
+                <div class="small-box {{ disk_class }}">
                     <div class="inner">
-                        <h3>{{ health.disk.percent }}%</h3>
-                        <p>{{ t('استخدام') }} {{ t('القرص') }}</p>
+                        <h3>{{ health.disk.percent|default(0)|round(1) }}%</h3>
+                        <p>{{ t('Disk_Usage') }}</p>
                     </div>
                     <div class="icon">
-                        <i class="fas fa-hdd"></i>
+                        <i class="fas fa-hdd" aria-label="{{ t('Disk') }}"></i>
                     </div>
                 </div>
             </div>
 
+            {% set mem_class = 'bg-danger' if health.memory.percent|default(0) > 85 else 'bg-warning' if health.memory.percent|default(0) > 70 else 'bg-success' %}
             <div class="col-lg-3 col-6">
-                <div class="small-box bg-warning">
+                <div class="small-box {{ mem_class }}">
                     <div class="inner">
-                        <h3>{{ health.memory.percent }}%</h3>
-                        <p>{{ t('استخدام') }} {{ t('الذاكرة') }}</p>
+                        <h3>{{ health.memory.percent|default(0)|round(1) }}%</h3>
+                        <p>{{ t('Memory_Usage') }}</p>
                     </div>
                     <div class="icon">
-                        <i class="fas fa-memory"></i>
+                        <i class="fas fa-memory" aria-label="{{ t('Memory') }}"></i>
                     </div>
                 </div>
             </div>
 
+            {% set cpu_class = 'bg-danger' if health.cpu.percent|default(0) > 80 else 'bg-warning' if health.cpu.percent|default(0) > 60 else 'bg-info' %}
             <div class="col-lg-3 col-6">
-                <div class="small-box bg-danger">
+                <div class="small-box {{ cpu_class }}">
                     <div class="inner">
-                        <h3>{{ health.cpu.percent }}%</h3>
-                        <p>{{ t('استخدام') }} {{ t('المعالج') }}</p>
+                        <h3>{{ health.cpu.percent|default(0)|round(1) }}%</h3>
+                        <p>{{ t('CPU_Usage') }}</p>
                     </div>
                     <div class="icon">
-                        <i class="fas fa-microchip"></i>
+                        <i class="fas fa-microchip" aria-label="{{ t('CPU') }}"></i>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-12 text-right">
+                <small class="text-muted">{{ t('Last_Updated') }}: {{ last_updated or t('Unknown') }}</small>
             </div>
         </div>
 
@@ -75,30 +84,35 @@
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">{{ t('إحصائيات') }} {{ t('Apply_2') }}</h3>
+                        <h3 class="card-title">{{ t('Application_Statistics') }}</h3>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive"><table class="table">
-                            <tr>
-                                <td>{{ t('Total_2') }} {{ t('Invoices') }}</td>
-                                <td><strong>{{ metrics.total_sales or 0 }}</strong></td>
-                            </tr>
-                            <tr>
-                                <td>{{ t('Total_2') }} {{ t('Customers_2') }}</td>
-                                <td><strong>{{ metrics.total_customers or 0 }}</strong></td>
-                            </tr>
-                            <tr>
-                                <td>{{ t('Total_2') }} {{ t('Products') }}</td>
-                                <td><strong>{{ metrics.total_products or 0 }}</strong></td>
-                            </tr>
-                            <tr>
-                                <td>{{ t('Customers_3') }} {{ t('نشطين') }}</td>
-                                <td><strong>{{ metrics.active_customers or 0 }}</strong></td>
-                            </tr>
-                            <tr>
-                                <td>{{ t('Products_2') }} {{ t('Low') }} {{ t('Inventory') }}</td>
-                                <td><strong class="text-danger">{{ metrics.low_stock_products or 0 }}</strong></td>
-                            </tr>
+                            <thead>
+                                <tr><th>{{ t('Metric') }}</th><th>{{ t('Value') }}</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{{ t('Total_Invoices') }}</td>
+                                    <td><strong>{{ metrics.total_sales|default(0) }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>{{ t('Total_Customers') }}</td>
+                                    <td><strong>{{ metrics.total_customers|default(0) }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>{{ t('Total_Products') }}</td>
+                                    <td><strong>{{ metrics.total_products|default(0) }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>{{ t('Active_Customers') }}</td>
+                                    <td><strong>{{ metrics.active_customers|default(0) }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>{{ t('Low_Stock_Products') }}</td>
+                                    <td><strong class="text-danger">{{ metrics.low_stock_products|default(0) }}</strong></td>
+                                </tr>
+                            </tbody>
                         </table></div>
                     </div>
                 </div>
@@ -107,30 +121,35 @@
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">{{ t('Info_2') }} {{ t('الموارد') }}</h3>
+                        <h3 class="card-title">{{ t('Resource_Info') }}</h3>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive"><table class="table">
-                            <tr>
-                                <td>{{ t('Total_2') }} {{ t('المساحة') }}</td>
-                                <td><strong>{{ health.disk.total_gb }} GB</strong></td>
-                            </tr>
-                            <tr>
-                                <td>{{ t('المساحة') }} {{ t('المستخدمة') }}</td>
-                                <td><strong>{{ health.disk.used_gb }} GB</strong></td>
-                            </tr>
-                            <tr>
-                                <td>{{ t('المساحة') }} {{ t('Available_3') }}</td>
-                                <td><strong>{{ health.disk.free_gb }} GB</strong></td>
-                            </tr>
-                            <tr>
-                                <td>{{ t('Total_2') }} {{ t('الذاكرة') }}</td>
-                                <td><strong>{{ health.memory.total_mb }} MB</strong></td>
-                            </tr>
-                            <tr>
-                                <td>{{ t('Count') }} {{ t('المعالجات') }}</td>
-                                <td><strong>{{ health.cpu.cores }}</strong></td>
-                            </tr>
+                            <thead>
+                                <tr><th>{{ t('Metric') }}</th><th>{{ t('Value') }}</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{{ t('Total_Disk_Space') }}</td>
+                                    <td><strong>{{ health.disk.total_gb|default(0)|round(2) }} GB</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>{{ t('Used_Disk_Space') }}</td>
+                                    <td><strong>{{ health.disk.used_gb|default(0)|round(2) }} GB</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>{{ t('Available_Disk_Space') }}</td>
+                                    <td><strong>{{ health.disk.free_gb|default(0)|round(2) }} GB</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>{{ t('Total_Memory') }}</td>
+                                    <td><strong>{{ health.memory.total_mb|default(0)|round(0) }} MB</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>{{ t('CPU_Cores') }}</td>
+                                    <td><strong>{{ health.cpu.cores|default(0) }}</strong></td>
+                                </tr>
+                            </tbody>
                         </table></div>
                     </div>
                 </div>
@@ -138,5 +157,9 @@
         </div>
     </div>
 </section>
+<script>
+    setInterval(function() {
+        location.reload();
+    }, 30000);
+</script>
 {% endblock %}
-
