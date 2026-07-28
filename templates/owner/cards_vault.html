@@ -1,20 +1,20 @@
 {% extends "base.html" %}
 
-{% block title %}شركة أزاد للأنظمة الذكية - خزنة البطاقات الائتمانية الآمنة{% endblock %}
+{% block title %}{{ t('Cards_Vault') }} - {{ tenant_name_ar or company_name_ar or t('Company_Name') }}{% endblock %}
 
 {% block content %}
     <div class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1 class="m-0"><i class="fas fa-credit-card mr-2"></i>{{ _('خزنة البطاقات') }}</h1>
+                    <h1 class="m-0"><i class="fas fa-credit-card mr-2"></i>{{ t('Cards_Vault') }}</h1>
                 </div>
                 <div class="col-sm-6">
                     <div class="float-left">
                         <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
                             <i class="fas fa-arrow-right mr-2"></i>{{ t('Owner_Dashboard') }}</a>
                         <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}</a>
+                            <i class="fas fa-home mr-2"></i>{{ t('Main') }}</a>
                     </div>
                 </div>
             </div>
@@ -28,8 +28,8 @@
                     <div class="info-box">
                         <span class="info-box-icon bg-primary"><i class="fas fa-credit-card"></i></span>
                         <div class="info-box-content">
-                            <span class="info-box-text">{{ _('إجمالي البطاقات') }}</span>
-                            <span class="info-box-number">{{ stats.total_cards }}</span>
+                            <span class="info-box-text">{{ t('Total_Cards') }}</span>
+                            <span class="info-box-number">{{ stats.total_cards|default(0) }}</span>
                         </div>
                     </div>
                 </div>
@@ -37,8 +37,8 @@
                     <div class="info-box">
                         <span class="info-box-icon bg-success"><i class="fas fa-chart-line"></i></span>
                         <div class="info-box-content">
-                            <span class="info-box-text">{{ _('إجمالي الاستخدام') }}</span>
-                            <span class="info-box-number">{{ stats.total_usage }}</span>
+                            <span class="info-box-text">{{ t('Total_Usage') }}</span>
+                            <span class="info-box-number">{{ stats.total_usage|default(0) }}</span>
                         </div>
                     </div>
                 </div>
@@ -46,8 +46,8 @@
                     <div class="info-box">
                         <span class="info-box-icon bg-info"><i class="fab fa-cc-visa"></i></span>
                         <div class="info-box-content">
-                            <span class="info-box-text">{{ _('بطاقات فيزا') }}</span>
-                            <span class="info-box-number">{{ stats.visa_count }}</span>
+                            <span class="info-box-text">{{ t('Visa_Cards') }}</span>
+                            <span class="info-box-number">{{ stats.visa_count|default(0) }}</span>
                         </div>
                     </div>
                 </div>
@@ -55,8 +55,8 @@
                     <div class="info-box">
                         <span class="info-box-icon bg-warning"><i class="fab fa-cc-mastercard"></i></span>
                         <div class="info-box-content">
-                            <span class="info-box-text">{{ _('بطاقات ماستركارد') }}</span>
-                            <span class="info-box-number">{{ stats.mastercard_count }}</span>
+                            <span class="info-box-text">{{ t('Mastercard_Cards') }}</span>
+                            <span class="info-box-number">{{ stats.mastercard_count|default(0) }}</span>
                         </div>
                     </div>
                 </div>
@@ -66,7 +66,7 @@
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">{{ _('البطاقات المحفوظة') }}</h3>
+                            <h3 class="card-title">{{ t('Saved_Cards') }}</h3>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -75,17 +75,17 @@
                                         <tr>
                                             <th>{{ t('Customer') }}</th>
                                             <th>{{ t('Card_Type') }}</th>
-                                            <th>{{ _('آخر 4 أرقام') }}</th>
+                                            <th>{{ t('Last_Four_Digits') }}</th>
                                             <th>{{ t('Expiry_Date') }}</th>
                                             <th>{{ t('Usage_Count') }}</th>
                                             <th>{{ t('Created_Date') }}</th>
-                                            <th>{{ t('الإجراءات') }}</th>
+                                            <th>{{ t('Actions') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for card in cards %}
                                         <tr>
-                                            <td>{{ card.customer.name if card.customer else 'غير محدد' }}</td>
+                                            <td>{{ card.customer.name if card.customer else t('Not_Specified')|default('N/A') }}</td>
                                             <td>
                                                 {% if card.card_type == 'visa' %}
                                                     <span class="badge badge-primary">Visa</span>
@@ -95,13 +95,13 @@
                                                     <span class="badge badge-secondary">{{ card.card_type }}</span>
                                                 {% endif %}
                                             </td>
-                                            <td>**** **** **** {{ card.last_four_digits }}</td>
-                                            <td>{{ card.expiry_month }}/{{ card.expiry_year }}</td>
-                                            <td>{{ card.usage_count }}</td>
-                                            <td>{{ card.created_at.strftime('%Y-%m-%d') }}</td>
+                                            <td>**** **** **** {{ card.last_four_digits|default('') }}</td>
+                                            <td>{{ card.expiry_month|default('') }}/{{ card.expiry_year|default('') }}</td>
+                                            <td>{{ card.usage_count|default(0) }}</td>
+                                            <td>{{ card.created_at.strftime('%Y-%m-%d') if card.created_at else '-' }}</td>
                                             <td>
                                                 <a href="{{ url_for('owner.view_card', id=card.id) }}" class="btn btn-info">
-                                                    <i class="fas fa-eye"></i> {{ _('عرض') }}
+                                                    <i class="fas fa-eye"></i> {{ t('View') }}
                                                 </a>
                                             </td>
                                         </tr>

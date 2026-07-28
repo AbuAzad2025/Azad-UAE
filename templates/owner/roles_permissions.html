@@ -1,22 +1,22 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - الأدوار والصلاحيات{% endblock %}
+{% block title %}{{ t('Roles_Permissions') }} - {{ tenant_name_ar or company_name_ar or t('Company_Name') }}{% endblock %}
 
 {% block content %}
 <div class="content-header">
   <div class="container-fluid">
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
-        <h1 class="m-0">{{ _('🔐 الأدوار والصلاحيات') }}</h1>
+        <h1 class="m-0">{{ t('Roles_Permissions') }}</h1>
       </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
           <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
-            <i class="fas fa-arrow-right mr-1"></i> {{ _('الرجوع للوحة المالك') }}
+            <i class="fas fa-arrow-right mr-1"></i> {{ t('Back_To_Owner_Dashboard') }}
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
-            <li class="breadcrumb-item active">{{ _('الأدوار والصلاحيات') }}</li>
+            <li class="breadcrumb-item active">{{ t('Roles_Permissions') }}</li>
           </ol>
         </div>
       </div>
@@ -27,10 +27,10 @@
 <div class="container-fluid mb-3">
   <div class="btn-group quick-nav" role="group">
     <a href="{{ url_for('owner.roles_permissions') }}" class="btn btn-primary">
-      <i class="fas fa-user-shield"></i> {{ _('الأدوار والصلاحيات') }}
+      <i class="fas fa-user-shield"></i> {{ t('Roles_Permissions') }}
     </a>
     <a href="{{ url_for('owner.users_list') }}" class="btn btn-outline-primary">
-      <i class="fas fa-users"></i> {{ _('إدارة المستخدمين') }}
+      <i class="fas fa-users"></i> {{ t('Users_Management') }}
     </a>
     <a href="{{ url_for('owner.audit_logs') }}" class="btn btn-outline-secondary">
       <i class="fas fa-history"></i>{{ t('Audit_Log') }}</a>
@@ -39,13 +39,11 @@
 
 <div class="content roles-permissions-page">
   <div class="container-fluid">
-    
-    
+
     <div class="alert alert-info">
-      <i class="fas fa-info-circle mr-2"></i>{{ _('يتحكم النظام بـ 4 أدوار رئيسية بصلاحيات محددة لضمان الأمان.') }}
+      <i class="fas fa-info-circle mr-2"></i>{{ t('Roles_Description') }}
     </div>
-    
-    
+
     <div class="row">
       {% for role in roles %}
       <div class="col-md-6 mb-4">
@@ -57,12 +55,12 @@
               <span class="text-muted small">({{ role.slug }})</span>
             </h3>
             <span class="badge badge-dark float-left">
-              <i class="fas fa-users"></i> {{ role_user_counts.get(role.id, 0) }} {{ t('User_2') }}</span>
+              <i class="fas fa-users"></i> {{ role_user_counts.get(role.id, 0) }} {{ t('Users') }}</span>
           </div>
           <div class="card-body">
-            <p class="text-muted">{{ role.description or 'لا يوجد وصف' }}</p>
-            
-            <h6 class="font-weight-bold mt-3">{{ _('الصلاحيات المرتبطة:') }}</h6>
+            <p class="text-muted">{{ role.description or t('No_Description') }}</p>
+
+            <h6 class="font-weight-bold mt-3">{{ t('Associated_Permissions') }}:</h6>
             {% if role.permissions %}
             <div class="row">
               {% for perm in role.permissions %}
@@ -75,21 +73,20 @@
               {% endfor %}
             </div>
             {% else %}
-            <div class="alert alert-warning small">{{ _('لا توجد صلاحيات مرتبطة بهذا الدور.') }}</div>
+            <div class="alert alert-warning small">{{ t('No_Permissions_For_Role') }}</div>
             {% endif %}
           </div>
         </div>
       </div>
       {% endfor %}
     </div>
-    
-    
+
     <div class="row mb-4">
       <div class="col-lg-3 col-md-6">
         <div class="small-box bg-info">
           <div class="inner">
             <h3>{{ roles|length }}</h3>
-            <p>{{ _('إجمالي الأدوار') }}</p>
+            <p>{{ t('Total_Roles') }}</p>
           </div>
           <div class="icon"><i class="fas fa-user-shield"></i></div>
         </div>
@@ -98,7 +95,7 @@
         <div class="small-box bg-success">
           <div class="inner">
             <h3>{{ permissions|length }}</h3>
-            <p>{{ _('إجمالي الصلاحيات') }}</p>
+            <p>{{ t('Total_Permissions') }}</p>
           </div>
           <div class="icon"><i class="fas fa-key"></i></div>
         </div>
@@ -107,7 +104,7 @@
         <div class="small-box bg-warning">
           <div class="inner">
             <h3>{{ perm_categories|length }}</h3>
-            <p>{{ _('فئات الصلاحيات') }}</p>
+            <p>{{ t('Permission_Categories') }}</p>
           </div>
           <div class="icon"><i class="fas fa-layer-group"></i></div>
         </div>
@@ -116,18 +113,17 @@
         <div class="small-box bg-primary">
           <div class="inner">
             <h3>{{ role_user_counts.values()|sum }}</h3>
-            <p>{{ _('إجمالي المستخدمين النشطين') }}</p>
+            <p>{{ t('Total_Active_Users') }}</p>
           </div>
           <div class="icon"><i class="fas fa-users"></i></div>
         </div>
       </div>
     </div>
-    
-    
+
     <div class="card">
       <div class="card-header bg-primary">
         <h3 class="card-title text-white">
-          <i class="fas fa-table mr-2"></i>{{ _('جدول الصلاحيات حسب الفئة') }}
+          <i class="fas fa-table mr-2"></i>{{ t('Permissions_By_Category') }}
         </h3>
       </div>
       <div class="card-body p-0">
@@ -135,7 +131,7 @@
           <table class="table table-hover table-striped">
             <thead class="bg-light">
               <tr>
-                <th class="ic-1">{{ _('الفئة / الصلاحية') }}</th>
+                <th class="ic-1">{{ t('Category_Permission') }}</th>
                 {% for role in roles %}
                 <th class="text-center small">{{ role.name_ar or role.name }}</th>
                 {% endfor %}
@@ -167,7 +163,7 @@
               {% endfor %}
               {% else %}
               <tr>
-                <td colspan="{{ roles|length + 1 }}" class="text-center text-muted py-3">{{ _('لا توجد صلاحيات مسجلة.') }}</td>
+                <td colspan="{{ roles|length + 1 }}" class="text-center text-muted py-3">{{ t('No_Permissions_Registered') }}</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -175,79 +171,75 @@
         </div>
       </div>
     </div>
-    
-    
+
     <div class="card card-warning">
       <div class="card-header">
         <h3 class="card-title ic-2">
-          <i class="fas fa-shield-alt mr-2"></i>{{ _('معايير الأمان') }}
+          <i class="fas fa-shield-alt mr-2"></i>{{ t('Security_Standards') }}
         </h3>
       </div>
       <div class="card-body ic-2">
         <div class="row">
           <div class="col-md-6">
-            <h5>{{ _('✅ ما يُسمح به:') }}</h5>
+            <h5>{{ t('Allowed_Rules') }}:</h5>
             <ul>
-              <li>{{ _('كل مستخدم يرى بياناته فقط (ما لم يكن مديراً)') }}</li>
-              <li>{{ _('البائع لا يرى أسعار التكلفة') }}</li>
-              <li>{{ _('البائع لا يرى أرباح الفواتير') }}</li>
-              <li>{{ _('المدير يرى تقارير محدودة') }}</li>
-              <li>{{ _('فقط Owner يرى البطاقات المحفوظة') }}</li>
+              <li>{{ t('Rule_User_Sees_Own_Data') }}</li>
+              <li>{{ t('Rule_Seller_No_Cost_Price') }}</li>
+              <li>{{ t('Rule_Seller_No_Invoice_Profit') }}</li>
+              <li>{{ t('Rule_Manager_Limited_Reports') }}</li>
+              <li>{{ t('Rule_Only_Owner_Sees_Cards') }}</li>
             </ul>
           </div>
           <div class="col-md-6">
-            <h5>{{ _('❌ ما لا يُسمح به:') }}</h5>
+            <h5>{{ t('Disallowed_Rules') }}:</h5>
             <ul>
-              <li>{{ _('البائع لا يمكنه حذف أو إلغاء') }}</li>
-              <li>{{ _('البائع لا يمكنه تعديل الأسعار') }}</li>
-              <li>{{ _('المدير لا يمكنه إدارة المستخدمين') }}</li>
-              <li>{{ _('Super Admin لا يمكنه الوصول لـ Owner Mode') }}</li>
-              <li>{{ _('لا أحد يمكنه حذف بيانات Owner') }}</li>
+              <li>{{ t('Rule_Seller_Cannot_Delete') }}</li>
+              <li>{{ t('Rule_Seller_Cannot_Edit_Prices') }}</li>
+              <li>{{ t('Rule_Manager_Cannot_Manage_Users') }}</li>
+              <li>{{ t('Rule_Super_Admin_No_Owner_Mode') }}</li>
+              <li>{{ t('Rule_No_One_Can_Delete_Owner') }}</li>
             </ul>
           </div>
         </div>
       </div>
     </div>
-    
-    
+
     <div class="card card-success">
       <div class="card-header">
         <h3 class="card-title text-white">
-          <i class="fas fa-lightbulb mr-2"></i>{{ _('إرشادات الاستخدام') }}
+          <i class="fas fa-lightbulb mr-2"></i>{{ t('Usage_Guidelines') }}
         </h3>
       </div>
       <div class="card-body">
-        <h5>{{ _('📝 نصائح مهمة:') }}</h5>
+        <h5>{{ t('Important_Tips') }}:</h5>
         <ol>
-          <li><strong>{{ _('لا تمنح Owner إلا لشخص واحد موثوق') }}</strong></li>
-          <li>{{ t('استخدم') }}Super Admin للمدير التنفيذي</li>
-          <li>{{ t('استخدم') }}Manager لمدراء الأقسام</li>
-          <li>{{ t('استخدم') }}Seller للبائعين العاديين</li>
-          <li>{{ _('راجع الصلاحيات دورياً') }}</li>
-          <li>{{ _('غيّر كلمات المرور الافتراضية فوراً') }}</li>
-          <li>{{ _('عطّل المستخدمين غير النشطين بدلاً من حذفهم') }}</li>
+          <li><strong>{{ t('Tip_Owner_One_Person') }}</strong></li>
+          <li>{{ t('Tip_Super_Admin') }}</li>
+          <li>{{ t('Tip_Manager') }}</li>
+          <li>{{ t('Tip_Seller') }}</li>
+          <li>{{ t('Tip_Review_Permissions') }}</li>
+          <li>{{ t('Tip_Change_Default_Passwords') }}</li>
+          <li>{{ t('Tip_Disable_Not_Delete') }}</li>
         </ol>
-        
+
         <div class="alert alert-warning mt-3 ic-2">
           <i class="fas fa-exclamation-triangle"></i>
-          <strong>{{ _('تذكر:') }}</strong> {{ _('النظام يسجل كل العمليات في سجل التدقيق!') }}
+          <strong>{{ t('Remember') }}:</strong> {{ t('All_Actions_Logged') }}
         </div>
       </div>
     </div>
-    
-    
+
     <div class="row">
       <div class="col-12">
         <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-lg">
-          <i class="fas fa-arrow-left mr-2"></i>{{ _('العودة للوحة المالك') }}
+          <i class="fas fa-arrow-left mr-2"></i>{{ t('Back_To_Owner_Dashboard') }}
         </a>
         <a href="{{ url_for('owner.users_list') }}" class="btn btn-primary btn-lg">
-          <i class="fas fa-users mr-2"></i>{{ _('إدارة المستخدمين') }}
+          <i class="fas fa-users mr-2"></i>{{ t('Users_Management') }}
         </a>
       </div>
-</div>
-     
+    </div>
+
   </div>
 </div>
 {% endblock %}
-

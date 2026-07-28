@@ -1,16 +1,16 @@
 {% extends 'base.html' %}
 
-{% block title %}شركة أزاد للأنظمة الذكية - النسخ الاحتياطي المجدول التلقائي{% endblock %}
-{% block page_title %}<i class="fas fa-clock"></i> النسخ الاحتياطي المجدول{% endblock %}
+{% block title %}{{ t('Scheduled_Backups') }} - {{ tenant_name_ar or company_name_ar or t('Company_Name') }}{% endblock %}
+{% block page_title %}<i class="fas fa-clock"></i> {{ t('Scheduled_Backups') }}{% endblock %}
 
 {% block content %}
 <div class="row">
-  
+
   <div class="col-lg-3 col-6">
     <div class="small-box bg-info">
       <div class="inner">
-        <h3>{{ stats.auto_count }}</h3>
-        <p>{{ _('نسخة تلقائية') }}</p>
+        <h3>{{ stats.auto_count|default(0) }}</h3>
+        <p>{{ t('Auto_Backup') }}</p>
       </div>
       <div class="icon">
         <i class="fas fa-robot"></i>
@@ -21,8 +21,8 @@
   <div class="col-lg-3 col-6">
     <div class="small-box bg-success">
       <div class="inner">
-        <h3>{{ stats.total_size_mb }}</h3>
-        <p>{{ _('MB مساحة') }}</p>
+        <h3>{{ stats.total_size_mb|default(0) }}</h3>
+        <p>{{ t('Space_MB') }}</p>
       </div>
       <div class="icon">
         <i class="fas fa-hdd"></i>
@@ -33,8 +33,8 @@
   <div class="col-lg-3 col-6">
     <div class="small-box bg-warning">
       <div class="inner">
-        <h3>{{ settings.keep_count }}</h3>
-        <p>{{ _('الحد الأقصى') }}</p>
+        <h3>{{ settings.keep_count|default(0) }}</h3>
+        <p>{{ t('Max_Limit') }}</p>
       </div>
       <div class="icon">
         <i class="fas fa-layer-group"></i>
@@ -46,7 +46,7 @@
     <div class="small-box {% if settings.enabled %}bg-success{% else %}bg-danger{% endif %}">
       <div class="inner">
         <h3>{% if settings.enabled %}<i class="fas fa-check"></i>{% else %}<i class="fas fa-times"></i>{% endif %}</h3>
-        <p>{% if settings.enabled %}مفعّل{% else %}معطّل{% endif %}</p>
+        <p>{% if settings.enabled %}{{ t('Enabled') }}{% else %}{{ t('Disabled') }}{% endif %}</p>
       </div>
       <div class="icon">
         <i class="fas fa-power-off"></i>
@@ -59,11 +59,11 @@
 <div class="row mb-3">
   <div class="col-md-12">
     <div class="alert alert-danger">
-      <strong><i class="fas fa-exclamation-triangle mr-1"></i>{{ _('آخر خطأ في النسخ التلقائي:') }}</strong>
+      <strong><i class="fas fa-exclamation-triangle mr-1"></i>{{ t('Last_Error_In_Auto_Backup') }}:</strong>
       <div class="mt-2 ic-1">{{ schedule_state.last_error }}</div>
       <div class="mt-2 text-muted">
-        {% if schedule_state.last_run_at %}<span>آخر تشغيل: {{ schedule_state.last_run_at }}</span>{% endif %}
-        {% if schedule_state.last_filename %}<span>{% if schedule_state.last_run_at %} | {% endif %}{{ t('File') }}schedule_state.last_filename }}</span>{% endif %}
+        {% if schedule_state.last_run_at %}<span>{{ t('Last_Run') }}: {{ schedule_state.last_run_at }}</span>{% endif %}
+        {% if schedule_state.last_filename %}<span>{% if schedule_state.last_run_at %} | {% endif %}{{ t('File') }}: {{ schedule_state.last_filename|default('-') }}</span>{% endif %}
       </div>
     </div>
   </div>
@@ -72,7 +72,7 @@
 <div class="row mb-3">
   <div class="col-md-12">
     <div class="alert alert-success">
-      <strong><i class="fas fa-check-circle mr-1"></i>{{ _('آخر نسخة تلقائية ناجحة:') }}</strong> {{ schedule_state.last_success_at }}
+      <strong><i class="fas fa-check-circle mr-1"></i>{{ t('Last_Successful_Auto_Backup') }}:</strong> {{ schedule_state.last_success_at }}
       {% if schedule_state.last_filename %}| <span class="text-muted">{{ schedule_state.last_filename }}</span>{% endif %}
     </div>
   </div>
@@ -80,58 +80,58 @@
 {% endif %}
 
 <div class="row">
-  
+
   <div class="col-md-6">
     <div class="card card-primary">
       <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-cog"></i> {{ _('إعدادات النسخ التلقائي') }}</h3>
+        <h3 class="card-title"><i class="fas fa-cog"></i> {{ t('Auto_Backup_Settings') }}</h3>
       </div>
       <div class="card-body">
         <div class="alert alert-info">
           <i class="fas fa-info-circle"></i>
-          <strong>{{ _('نظام ذكي:') }}</strong> يحتفظ تلقائياً بآخر {{ settings.keep_count }} نسخ ويحذف الأقدم
+          <strong>{{ t('Smart_System') }}:</strong> {{ t('Keep_Last_Count_Message', keep_count=settings.keep_count|default(7)) }}
         </div>
 
         <form class="needs-validation" method="POST" action="">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <div class="form-group">
-            <label><i class="fas fa-sync"></i> {{ _('التكرار:') }}</label>
+            <label><i class="fas fa-sync"></i> {{ t('Frequency') }}:</label>
             <select name="frequency" class="form-control" required aria-label="frequency">
               <option value="hourly" {% if settings.frequency == 'hourly' %}selected{% endif %}>{{ t('Every_Hour') }}</option>
-              <option value="daily" {% if settings.frequency == 'daily' %}selected{% endif %}>{{ _('يومياً (موصى به)') }}</option>
-              <option value="weekly" {% if settings.frequency == 'weekly' %}selected{% endif %}>{{ _('أسبوعياً') }}</option>
-              <option value="monthly" {% if settings.frequency == 'monthly' %}selected{% endif %}>{{ _('شهرياً') }}</option>
+              <option value="daily" {% if settings.frequency == 'daily' %}selected{% endif %}>{{ t('Daily_Recommended') }}</option>
+              <option value="weekly" {% if settings.frequency == 'weekly' %}selected{% endif %}>{{ t('Weekly') }}</option>
+              <option value="monthly" {% if settings.frequency == 'monthly' %}selected{% endif %}>{{ t('Monthly') }}</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label><i class="fas fa-clock"></i> {{ _('الوقت المفضل:') }}</label>
-            <input type="time" name="backup_time" class="form-control" 
-                   value="{{ settings.backup_time }}" required aria-label="backup time">
+            <label><i class="fas fa-clock"></i> {{ t('Preferred_Time') }}:</label>
+            <input type="time" name="backup_time" class="form-control"
+                   value="{{ settings.backup_time|default('02:00') }}" required aria-label="backup time">
             <small class="form-text text-muted">
-              {{ _('يُنصح باختيار وقت قليل الاستخدام (مثل 2:00 صباحاً)') }}
+              {{ t('Recommended_Off_Peak_Hours') }}
             </small>
           </div>
 
           <div class="form-group">
-            <label><i class="fas fa-layer-group"></i> {{ _('عدد النسخ المحفوظة:') }}</label>
-            <input type="number" name="keep_count" class="form-control" 
-                   value="{{ settings.keep_count }}" min="3" max="50" required aria-label="keep count">
+            <label><i class="fas fa-layer-group"></i> {{ t('Saved_Copies_Count') }}:</label>
+            <input type="number" name="keep_count" class="form-control"
+                   value="{{ settings.keep_count|default(7) }}" min="3" max="50" required aria-label="keep count">
             <small class="form-text text-muted">
-              {{ _('الحد الأدنى: 3 | الحد الأقصى: 50') }}
+              {{ t('Min_3_Max_50') }}
             </small>
           </div>
 
           <div class="custom-control custom-switch mb-3">
-            <input type="checkbox" class="custom-control-input" id="enableSchedule" 
+            <input type="checkbox" class="custom-control-input" id="enableSchedule"
                    name="enabled" {% if settings.enabled %}checked{% endif %} aria-label="enabled">
             <label class="custom-control-label" for="enableSchedule">
-              <strong>{{ _('تفعيل النسخ الاحتياطي التلقائي') }}</strong>
+              <strong>{{ t('Enable_Auto_Backup') }}</strong>
             </label>
           </div>
 
           <button type="submit" class="btn btn-primary btn-block">
-            <i class="fas fa-save"></i> {{ _('حفظ الإعدادات') }}
+            <i class="fas fa-save"></i> {{ t('Save_Settings') }}
           </button>
         </form>
 
@@ -141,23 +141,22 @@
           <form method="POST" action="{{ url_for('owner.backup_now') }}" class="ic-2">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             <button type="submit" class="btn btn-success">
-              <i class="fas fa-download"></i> {{ _('نسخة احتياطية الآن') }}
+              <i class="fas fa-download"></i> {{ t('Backup_Now') }}
             </button>
           </form>
-          
+
           <a href="{{ url_for('owner.list_backups') }}" class="btn btn-info">
-            <i class="fas fa-list"></i> {{ _('كل النسخ') }}
+            <i class="fas fa-list"></i> {{ t('All_Backups') }}
           </a>
         </div>
       </div>
     </div>
   </div>
 
-  
   <div class="col-md-6">
     <div class="card card-success">
       <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-history"></i> {{ _('آخر النسخ التلقائية') }}</h3>
+        <h3 class="card-title"><i class="fas fa-history"></i> {{ t('Latest_Auto_Backups') }}</h3>
       </div>
       <div class="card-body">
         {% if backups %}
@@ -165,8 +164,8 @@
           <table class="table table-sm table-hover">
             <thead>
               <tr>
-                <th>{{ _('التاريخ والوقت') }}</th>
-                <th>{{ _('الحجم') }}</th>
+                <th>{{ t('Date_Time') }}</th>
+                <th>{{ t('Size') }}</th>
                 <th><i class="fas fa-check-circle text-success"></i></th>
               </tr>
             </thead>
@@ -185,13 +184,13 @@
                 </td>
                 <td>
                   <span class="badge badge-info">
-                    {{ backup.size_mb }} MB
+                    {{ backup.size_mb|default(0) }} MB
                   </span>
                 </td>
                 <td>
-                  <i class="fas fa-check-circle text-success" title="{{ _('متاح') }}"></i>
+                  <i class="fas fa-check-circle text-success" title="{{ t('Available') }}"></i>
                   {% if backup.compressed %}
-                  <i class="fas fa-compress text-info" title="{{ _('مضغوط') }}"></i>
+                  <i class="fas fa-compress text-info" title="{{ t('Compressed') }}"></i>
                   {% endif %}
                 </td>
               </tr>
@@ -202,15 +201,15 @@
         {% else %}
         <div class="alert alert-warning text-center">
           <i class="fas fa-exclamation-triangle"></i>
-          <p class="mb-0">لا توجد نسخ تلقائية بعد</p>
-          <small>سيتم إنشاء أول نسخة في الموعد المحدد</small>
+          <p class="mb-0">{{ t('No_Auto_Backups_Yet') }}</p>
+          <small>{{ t('First_Backup_On_Schedule') }}</small>
         </div>
         {% endif %}
 
         {% if backups|length > 10 %}
         <div class="text-center mt-3">
           <a href="{{ url_for('owner.list_backups') }}" class="btn btn-outline-primary">
-            عرض الكل ({{ backups|length }})
+            {{ t('Show_All') }} ({{ backups|length }})
           </a>
         </div>
         {% endif %}
@@ -223,7 +222,7 @@
   <div class="col-md-12">
     <div class="card card-outline card-info">
       <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-shield-alt"></i> معلومات الأمان</h3>
+        <h3 class="card-title"><i class="fas fa-shield-alt"></i> {{ t('Security_Info') }}</h3>
       </div>
       <div class="card-body">
         <div class="row">
@@ -231,43 +230,42 @@
             <div class="info-box bg-success">
               <span class="info-box-icon"><i class="fas fa-lock"></i></span>
               <div class="info-box-content">
-                <span class="info-box-text">الحماية</span>
-                <span class="info-box-number">تشفير + Checksum</span>
+                <span class="info-box-text">{{ t('Protection') }}</span>
+                <span class="info-box-number">{{ t('Encryption_Checksum') }}</span>
               </div>
             </div>
           </div>
-          
+
           <div class="col-md-4">
             <div class="info-box bg-info">
               <span class="info-box-icon"><i class="fas fa-compress"></i></span>
               <div class="info-box-content">
-                <span class="info-box-text">الضغط</span>
-                <span class="info-box-number">GZIP - توفير 60%</span>
+                <span class="info-box-text">{{ t('Compression') }}</span>
+                <span class="info-box-number">{{ t('GZIP_Save_60') }}</span>
               </div>
             </div>
           </div>
-          
+
           <div class="col-md-4">
             <div class="info-box bg-warning">
               <span class="info-box-icon"><i class="fas fa-user-shield"></i></span>
               <div class="info-box-content">
-                <span class="info-box-text">الاستعادة</span>
-                <span class="info-box-number">للمالك فقط</span>
+                <span class="info-box-text">{{ t('Restore') }}</span>
+                <span class="info-box-number">{{ t('Owner_Only') }}</span>
               </div>
             </div>
           </div>
         </div>
 
         <ul class="list-unstyled mt-3">
-          <li><i class="fas fa-check text-success"></i> النسخ الاحتياطية محمية بـ SHA256 checksum</li>
-          <li><i class="fas fa-check text-success"></i> ضغط تلقائي يوفر 60% من المساحة</li>
-          <li><i class="fas fa-check text-success"></i> حذف تلقائي للنسخ القديمة</li>
-          <li><i class="fas fa-check text-success"></i> الاستعادة تتطلب كلمة مرور المالك</li>
-          <li><i class="fas fa-check text-success"></i> نسخة احتياطية تلقائية قبل كل استعادة</li>
+          <li><i class="fas fa-check text-success"></i> {{ t('Backup_SHA256_Protected') }}</li>
+          <li><i class="fas fa-check text-success"></i> {{ t('Auto_Compression_Saves_60') }}</li>
+          <li><i class="fas fa-check text-success"></i> {{ t('Auto_Delete_Old_Backups') }}</li>
+          <li><i class="fas fa-check text-success"></i> {{ t('Restore_Requires_Owner_Password') }}</li>
+          <li><i class="fas fa-check text-success"></i> {{ t('Auto_Backup_Before_Restore') }}</li>
         </ul>
       </div>
     </div>
   </div>
 </div>
 {% endblock %}
-

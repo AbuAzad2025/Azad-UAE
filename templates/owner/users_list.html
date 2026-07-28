@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - إدارة المستخدمين والصلاحيات{% endblock %}
+{% block title %}{{ t('Users_Management') }} - {{ tenant_name_ar or company_name_ar or t('Company_Name') }}{% endblock %}
 
 {% block extra_js %}
 {% include 'partials/datatables_assets.html' %}
@@ -10,7 +10,7 @@
   <div class="container-fluid">
     <div class="row mb-2">
       <div class="col-sm-6">
-        <h1 class="m-0">{{ _('👥 إدارة المستخدمين') }}</h1>
+        <h1 class="m-0">{{ t('Users_Management') }}</h1>
       </div>
       <div class="col-sm-6">
         <ol class="breadcrumb float-sm-left">
@@ -24,50 +24,49 @@
 
 <div class="content">
   <div class="container-fluid">
-    
-    
+
     <div class="row mb-4">
       <div class="col-lg-3 col-6">
         <div class="small-box bg-info">
           <div class="inner">
-            <h3>{{ stats.total }}</h3>
-            <p>{{ _('إجمالي المستخدمين') }}</p>
+            <h3>{{ stats.total|default(0) }}</h3>
+            <p>{{ t('Total_Users') }}</p>
           </div>
           <div class="icon">
             <i class="fas fa-users"></i>
           </div>
         </div>
       </div>
-      
+
       <div class="col-lg-3 col-6">
         <div class="small-box bg-success">
           <div class="inner">
-            <h3>{{ stats.active }}</h3>
-            <p>{{ _('المستخدمون النشطون') }}</p>
+            <h3>{{ stats.active|default(0) }}</h3>
+            <p>{{ t('Active_Users') }}</p>
           </div>
           <div class="icon">
             <i class="fas fa-user-check"></i>
           </div>
         </div>
       </div>
-      
+
       <div class="col-lg-3 col-6">
         <div class="small-box bg-warning">
           <div class="inner">
-            <h3 class="ic-1">{{ stats.admins + stats.managers }}</h3>
-            <p class="ic-1">{{ _('المدراء والإداريون') }}</p>
+            <h3 class="ic-1">{{ (stats.admins|default(0)) + (stats.managers|default(0)) }}</h3>
+            <p class="ic-1">{{ t('Managers_Admins') }}</p>
           </div>
           <div class="icon">
             <i class="fas fa-user-tie"></i>
           </div>
         </div>
       </div>
-      
+
       <div class="col-lg-3 col-6">
         <div class="small-box bg-danger">
           <div class="inner">
-            <h3>{{ stats.sellers }}</h3>
-            <p>{{ _('البائعون') }}</p>
+            <h3>{{ stats.sellers|default(0) }}</h3>
+            <p>{{ t('Sellers') }}</p>
           </div>
           <div class="icon">
             <i class="fas fa-user-tag"></i>
@@ -75,23 +74,21 @@
         </div>
       </div>
     </div>
-    
-    
+
     <div class="row mb-3">
       <div class="col-12">
-        <a href="{{ url_for('owner.create_user') }}" class="btn btn-primary btn-lg" aria-label="{{ _('إضافة مستخدم جديد') }}">
-          <i class="fas fa-user-plus mr-2"></i>{{ _('إضافة مستخدم جديد') }}
+        <a href="{{ url_for('owner.create_user') }}" class="btn btn-primary btn-lg" aria-label="{{ t('Add_New_User') }}">
+          <i class="fas fa-user-plus mr-2"></i>{{ t('Add_New_User') }}
         </a>
-        <button type="button" class="btn btn-info btn-lg" data-action="reset-table-search" aria-label="{{ _('تحديث القائمة') }}">
+        <button type="button" class="btn btn-info btn-lg" data-action="reset-table-search" aria-label="{{ t('Refresh_List') }}">
           <i class="fas fa-sync mr-2"></i>{{ t('Update') }}</button>
       </div>
     </div>
-    
-    
+
     <div class="card">
       <div class="card-header bg-primary">
         <h3 class="card-title text-white">
-          <i class="fas fa-users mr-2"></i>{{ _('قائمة المستخدمين') }}
+          <i class="fas fa-users mr-2"></i>{{ t('Users_List') }}
         </h3>
       </div>
       <div class="card-body">
@@ -99,15 +96,15 @@
           <thead>
             <tr>
               <th>#</th>
-              <th>{{ _('الصورة') }}</th>
+              <th>{{ t('Avatar') }}</th>
               <th>{{ t('Username') }}</th>
-              <th>{{ t('Full Name') }}</th>
+              <th>{{ t('Full_Name') }}</th>
               <th>{{ t('Email') }}</th>
               <th>{{ t('Role') }}</th>
               <th>{{ t('Branch') }}</th>
               <th>{{ t('Status') }}</th>
-              <th>{{ _('آخر دخول') }}</th>
-              <th>{{ t('الإجراءات') }}</th>
+              <th>{{ t('Last_Login') }}</th>
+              <th>{{ t('Actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -138,7 +135,7 @@
               <td>
                 <strong>{{ user.username }}</strong>
                 {% if user.is_owner %}
-                  <span class="badge badge-danger ml-2">{{ t('مالك') }}</span>
+                  <span class="badge badge-danger ml-2">{{ t('Owner') }}</span>
                 {% endif %}
               </td>
               <td>{{ user.full_name or '-' }}</td>
@@ -150,7 +147,7 @@
                     {{ user.role.name }}
                   </span>
                 {% else %}
-                  <span class="badge badge-secondary">{{ t('Not Specified') }}</span>
+                  <span class="badge badge-secondary">{{ t('Not_Specified') }}</span>
                 {% endif %}
               </td>
               <td>
@@ -160,20 +157,20 @@
                   </span>
                 {% elif user.is_owner or (user.role and user.role.slug in ['super_admin', 'developer']) %}
                   <span class="badge badge-success">
-                    كل الفروع
+                    {{ t('All_Branches') }}
                   </span>
                 {% else %}
-                  <span class="text-muted">غير محدد</span>
+                  <span class="text-muted">{{ t('Not_Specified') }}</span>
                 {% endif %}
               </td>
               <td>
                 {% if user.is_active %}
                   <span class="badge badge-success">
-                    <i class="fas fa-check"></i> نشط
+                    <i class="fas fa-check"></i> {{ t('Active') }}
                   </span>
                 {% else %}
                   <span class="badge badge-danger">
-                    <i class="fas fa-times"></i> معطل
+                    <i class="fas fa-times"></i> {{ t('Disabled') }}
                   </span>
                 {% endif %}
               </td>
@@ -181,21 +178,21 @@
                 {% if user.last_login %}
                   <small>{{ user.last_login.strftime('%Y-%m-%d %H:%M') }}</small>
                 {% else %}
-                  <span class="text-muted">لم يسجل دخول</span>
+                  <span class="text-muted">{{ t('Never_Logged_In') }}</span>
                 {% endif %}
               </td>
               <td>
                 <div class="btn-group btn-group-sm">
-                  <a href="{{ url_for('owner.user_profile', user_id=user.id) }}" class="btn btn-info" title="{{ _('الملف الشخصي') }}" aria-label="{{ _('الملف الشخصي') }}">
+                  <a href="{{ url_for('owner.user_profile', user_id=user.id) }}" class="btn btn-info" title="{{ t('Profile') }}" aria-label="{{ t('Profile') }}">
                     <i class="fas fa-eye"></i>
                   </a>
                   <a href="{{ url_for('owner.edit_user', user_id=user.id) }}" class="btn btn-primary" title="{{ t('Edit') }}" aria-label="{{ t('Edit') }}">
                     <i class="fas fa-edit"></i>
                   </a>
                   {% if not user.is_owner and user.id != current_user.id %}
-                  <form class="needs-validation ic-3" method="POST" action="{{ url_for('owner.delete_user', user_id=user.id) }}" data-action="confirm-submit" data-confirm-message="هل تريد تعطيل هذا المستخدم؟">
+                  <form class="needs-validation ic-3" method="POST" action="{{ url_for('owner.delete_user', user_id=user.id) }}" data-action="confirm-submit" data-confirm-message="{{ t('Confirm_Disable_User') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                    <button type="submit" class="btn btn-danger" title="{{ _('تعطيل') }}" aria-label="{{ _('تعطيل المستخدم') }}">
+                    <button type="submit" class="btn btn-danger" title="{{ t('Disable') }}" aria-label="{{ t('Disable_User') }}">
                       <i class="fas fa-ban"></i>
                     </button>
                   </form>
@@ -208,10 +205,15 @@
         </table></div>
       </div>
     </div>
-    
+
   </div>
 </div>
 
+<script>
+const i18n = {{ {
+  'Confirm_Disable_User': t('Confirm_Disable_User'),
+}|tojson }};
+</script>
 <script>
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-action="reset-table-search"]');

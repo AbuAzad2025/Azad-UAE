@@ -1,17 +1,17 @@
 {% extends "owner/base.html" %}
 
-{% block title %}إدارة التينانتس{% endblock %}
+{% block title %}{{ t('Tenants_Management') }} - {{ t('Company_Name') }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold"><i class="bi bi-building me-2"></i>{{ _('إدارة الشركات (التينانتس)') }}</h2>
+    <h2 class="fw-bold"><i class="bi bi-building me-2"></i>{{ t('Tenants_Management') }}</h2>
     <div>
       <a href="{{ url_for('owner.tenant_create') }}" class="btn btn-success me-2">
-        <i class="bi bi-plus-circle me-1"></i> {{ _('إنشاء تينانت جديد') }}
+        <i class="bi bi-plus-circle me-1"></i> {{ t('Create_New_Tenant') }}
       </a>
       <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i> {{ _('العودة للوحة التحكم') }}
+        <i class="bi bi-arrow-left me-1"></i> {{ t('Back_To_Dashboard') }}
       </a>
     </div>
   </div>
@@ -24,19 +24,19 @@
             <tr>
               <th>#</th>
               <th>{{ t('Name') }}</th>
-              <th>{{ _('الSlug') }}</th>
+              <th>{{ t('Slug') }}</th>
               <th>{{ t('Currency') }}</th>
               <th>{{ t('Users') }}</th>
               <th>{{ t('Branches') }}</th>
-              <th>{{ t('المتاجر') }}</th>
+              <th>{{ t('Stores') }}</th>
               <th class="text-center">POS</th>
-              <th class="text-center">{{ t('Store_2') }}</th>
-              <th class="text-center">{{ t('رواتب') }}</th>
-              <th class="text-center">{{ t('Cheques_2') }}</th>
-              <th class="text-center">{{ _('مصاريف') }}</th>
+              <th class="text-center">{{ t('Store') }}</th>
+              <th class="text-center">{{ t('Payroll') }}</th>
+              <th class="text-center">{{ t('Cheques') }}</th>
+              <th class="text-center">{{ t('Expenses') }}</th>
               <th>{{ t('Status') }}</th>
-              <th>{{ t('السبب') }}</th>
-              <th class="text-end">{{ t('الإجراءات') }}</th>
+              <th>{{ t('Reason') }}</th>
+              <th class="text-end">{{ t('Actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -47,21 +47,21 @@
                 <div class="fw-semibold">{{ tenant.name_ar or tenant.name }}</div>
                 <small class="text-muted">{{ tenant.name_en or '' }}</small>
               </td>
-              <td><code>{{ tenant.slug }}</code></td>
+              <td><code>{{ tenant.slug|default('') }}</code></td>
               <td>{{ tenant.default_currency or 'AED' }}</td>
               <td>{{ user_counts.get(tenant.id, 0) }}</td>
               <td>{{ branch_counts.get(tenant.id, 0) }}</td>
               <td>{{ store_counts.get(tenant.id, 0) }}</td>
-              <td class="text-center">{% if tenant.enable_pos %}<i class="bi bi-check-circle-fill text-success" title="{{ _('مفعل') }}"></i>{% else %}<i class="bi bi-x-circle-fill text-danger" title="{{ _('معطل') }}"></i>{% endif %}</td>
-              <td class="text-center">{% if tenant.enable_store %}<i class="bi bi-check-circle-fill text-success" title="{{ _('مفعل') }}"></i>{% else %}<i class="bi bi-x-circle-fill text-danger" title="{{ _('معطل') }}"></i>{% endif %}</td>
-              <td class="text-center">{% if tenant.enable_payroll %}<i class="bi bi-check-circle-fill text-success" title="{{ _('مفعل') }}"></i>{% else %}<i class="bi bi-x-circle-fill text-danger" title="{{ _('معطل') }}"></i>{% endif %}</td>
-              <td class="text-center">{% if tenant.enable_cheques %}<i class="bi bi-check-circle-fill text-success" title="{{ _('مفعل') }}"></i>{% else %}<i class="bi bi-x-circle-fill text-danger" title="{{ _('معطل') }}"></i>{% endif %}</td>
-              <td class="text-center">{% if tenant.enable_expenses %}<i class="bi bi-check-circle-fill text-success" title="{{ _('مفعل') }}"></i>{% else %}<i class="bi bi-x-circle-fill text-danger" title="{{ _('معطل') }}"></i>{% endif %}</td>
+              <td class="text-center">{% if tenant.enable_pos %}<i class="bi bi-check-circle-fill text-success" title="{{ t('Enabled') }}"></i>{% else %}<i class="bi bi-x-circle-fill text-danger" title="{{ t('Disabled') }}"></i>{% endif %}</td>
+              <td class="text-center">{% if tenant.enable_store %}<i class="bi bi-check-circle-fill text-success" title="{{ t('Enabled') }}"></i>{% else %}<i class="bi bi-x-circle-fill text-danger" title="{{ t('Disabled') }}"></i>{% endif %}</td>
+              <td class="text-center">{% if tenant.enable_payroll %}<i class="bi bi-check-circle-fill text-success" title="{{ t('Enabled') }}"></i>{% else %}<i class="bi bi-x-circle-fill text-danger" title="{{ t('Disabled') }}"></i>{% endif %}</td>
+              <td class="text-center">{% if tenant.enable_cheques %}<i class="bi bi-check-circle-fill text-success" title="{{ t('Enabled') }}"></i>{% else %}<i class="bi bi-x-circle-fill text-danger" title="{{ t('Disabled') }}"></i>{% endif %}</td>
+              <td class="text-center">{% if tenant.enable_expenses %}<i class="bi bi-check-circle-fill text-success" title="{{ t('Enabled') }}"></i>{% else %}<i class="bi bi-x-circle-fill text-danger" title="{{ t('Disabled') }}"></i>{% endif %}</td>
               <td>
                 {% if tenant.is_suspended %}
-                  <span class="badge bg-danger"><i class="bi bi-pause-circle me-1"></i>{{ t('Pending') }}</span>
+                  <span class="badge bg-danger"><i class="bi bi-pause-circle me-1"></i>{{ t('Suspended') }}</span>
                 {% elif not tenant.is_active %}
-                  <span class="badge bg-secondary"><i class="bi bi-x-circle me-1"></i>{{ t('معطل') }}</span>
+                  <span class="badge bg-secondary"><i class="bi bi-x-circle me-1"></i>{{ t('Disabled') }}</span>
                 {% else %}
                   <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>{{ t('Active') }}</span>
                 {% endif %}
@@ -70,30 +70,30 @@
                 {% if tenant.suspension_reason %}
                   <span class="text-muted small erp-max-w-200 d-inline-block">{{ tenant.suspension_reason }}</span>
                 {% else %}
-                  <span class="text-muted small">—</span>
+                  <span class="text-muted small">&mdash;</span>
                 {% endif %}
               </td>
               <td class="text-end">
                 <div class="btn-group btn-group-sm">
                   <a href="{{ url_for('owner.tenant_edit', tenant_id=tenant.id) }}" class="btn btn-outline-primary">
-                    <i class="bi bi-pencil"></i> {{ _('تعديل') }}
+                    <i class="bi bi-pencil"></i> {{ t('Edit') }}
                   </a>
 
                   {% if tenant.is_active and not tenant.is_suspended %}
                   <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#suspendModal{{ tenant.id }}">
-                    <i class="bi bi-pause-circle"></i> {{ _('تعليق') }}
+                    <i class="bi bi-pause-circle"></i> {{ t('Suspend') }}
                   </button>
                   {% else %}
-                  <form class="needs-validation d-inline" method="POST" action="{{ url_for('owner.tenant_activate', tenant_id=tenant.id) }}" data-action="confirm-submit" data-confirm-message="{{ _('تأكيد تفعيل التينانت؟') }}">
+                  <form class="needs-validation d-inline" method="POST" action="{{ url_for('owner.tenant_activate', tenant_id=tenant.id) }}" data-action="confirm-submit" data-confirm-message="{{ t('Confirm_Activate_Tenant') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                     <button type="submit" class="btn btn-outline-success">
-                      <i class="bi bi-play-circle"></i> {{ _('تفعيل') }}
+                      <i class="bi bi-play-circle"></i> {{ t('Activate') }}
                     </button>
                   </form>
                   {% endif %}
 
                   <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ tenant.id }}">
-                    <i class="bi bi-trash"></i> {{ _('حذف') }}
+                    <i class="bi bi-trash"></i> {{ t('Delete') }}
                   </button>
                 </div>
               </td>
@@ -114,21 +114,21 @@
       <form method="POST" action="{{ url_for('owner.tenant_suspend', tenant_id=tenant.id) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="modal-header bg-warning text-dark">
-          <h5 class="modal-title"><i class="bi bi-pause-circle me-2"></i>{{ _('تعليق تينانت') }}</h5>
+          <h5 class="modal-title"><i class="bi bi-pause-circle me-2"></i>{{ t('Suspend_Tenant') }}</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <p>{{ _('هل أنت متأكد من تعليق تينانت') }} <strong>{{ tenant.name_ar or tenant.name }}</strong>؟</p>
-          <p class="text-muted small">{{ _('سيتم إيقاف جميع المستخدمين والعمليات لهذه الشركة.') }}</p>
+          <p>{{ t('Are_You_Sure_Suspend_Tenant') }} <strong>{{ tenant.name_ar or tenant.name }}</strong>?</p>
+          <p class="text-muted small">{{ t('Suspend_Tenant_Warning') }}</p>
           <div class="mb-3">
-            <label for="suspend_reason_{{ tenant.id }}" class="form-label fw-semibold">{{ _('سبب التعليق (سيظهر للمستخدمين):') }}</label>
-            <textarea name="reason" id="suspend_reason_{{ tenant.id }}" class="form-control" rows="3" placeholder="{{ _('مثال: تأخر الدفع، صيانة النظام، انتهاك شروط الاستخدام...') }}" required></textarea>
-            <div class="form-text">{{ _('هذا النص سيظهر للمستخدمين عند محاولتهم الدخول.') }}</div>
+            <label for="suspend_reason_{{ tenant.id }}" class="form-label fw-semibold">{{ t('Suspension_Reason_Label') }}:</label>
+            <textarea name="reason" id="suspend_reason_{{ tenant.id }}" class="form-control" rows="3" placeholder="{{ t('Suspension_Reason_Placeholder') }}" required></textarea>
+            <div class="form-text">{{ t('Suspension_Reason_Help') }}</div>
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t('Cancel') }}</button>
-          <button type="submit" class="btn btn-warning"><i class="bi bi-pause-circle me-1"></i>{{ t('تعليق') }}</button>
+          <button type="submit" class="btn btn-warning"><i class="bi bi-pause-circle me-1"></i>{{ t('Suspend') }}</button>
         </div>
       </form>
     </div>
@@ -142,14 +142,14 @@
       <form method="POST" action="{{ url_for('owner.tenant_delete', tenant_id=tenant.id) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="modal-header bg-danger text-white">
-          <h5 class="modal-title"><i class="bi bi-trash me-2"></i>{{ _('حذف تينانت') }}</h5>
+          <h5 class="modal-title"><i class="bi bi-trash me-2"></i>{{ t('Delete_Tenant') }}</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <p>{{ _('هل أنت متأكد من حذف') }} <strong>{{ tenant.name_ar or tenant.name }}</strong>؟</p>
+          <p>{{ t('Are_You_Sure_Delete_Tenant') }} <strong>{{ tenant.name_ar or tenant.name }}</strong>?</p>
           <div class="alert alert-warning">
             <i class="bi bi-exclamation-triangle me-1"></i>
-            {{ _('سيتم تعطيل التينانت. لن يتم حذف البيانات فعلياً، لكنها ستصبح غير متاحة.') }}
+            {{ t('Delete_Tenant_Warning') }}
           </div>
         </div>
         <div class="modal-footer">
@@ -165,6 +165,11 @@
 
 {% block extra_js %}
 {{ super() }}
+<script>
+const i18n = {{ {
+  'Confirm_Activate_Tenant': t('Confirm_Activate_Tenant'),
+}|tojson }};
+</script>
 <script>
 document.addEventListener('submit', (e) => {
   const el = e.target.closest('[data-action="confirm-submit"]');
