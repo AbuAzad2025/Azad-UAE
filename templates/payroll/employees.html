@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('Employees') }}{% endblock %}
+{% block title %}{{ _('الموظفون') }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -12,9 +12,9 @@
     white-space: nowrap;
   }
 
-    /* D6: externalized inline styles */
-    .ic-1 { gap:.5rem; }
-    .ic-2 { z-index: 2; }
+    /* Semantic CSS class names */
+    .stats-row { gap:.5rem; }
+    .stats-link { z-index: 2; }
   </style>
 {% endblock %}
 
@@ -22,7 +22,7 @@
 <script>
   (() => {
     const tableSelector = '#employeesTable';
-    const languageUrl = "{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}";
+    const languageUrl = "{{ url_for('static', filename=('datatables/Arabic.json' if is_rtl else 'datatables/English.json')) }}";
 
     function initEmployeesTable() {
       const $table = $(tableSelector);
@@ -36,7 +36,7 @@
       $table.DataTable({
         language: { url: languageUrl },
         pageLength: 25,
-        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "{{ t('All') }}"]],
+        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "{{ _('الكل') }}"]],
         responsive: true,
         autoWidth: false,
         order: [[0, 'asc']],
@@ -54,38 +54,38 @@
 
 {% block content %}
 <div class="container-fluid">
-  <div class="mb-3 d-flex flex-wrap ic-1">
+  <div class="mb-3 d-flex flex-wrap stats-row">
     <span class="badge badge-primary">
-      <i class="fas fa-users"></i> {{ t('Total_3') }}: {{ employees|length }}
+      <i class="fas fa-users"></i> {{ _('الإجمالي') }}: {{ employees|length }}
     </span>
     <span class="badge badge-success">
-      <i class="fas fa-money-check"></i> {{ t('راتب') }} {{ t('Monthly') }}: {{ employees|selectattr('employment_type', 'equalto', 'salary')|list|length }}
+      <i class="fas fa-money-check"></i> {{ _('راتب شهري') }}: {{ employees|selectattr('employment_type', 'equalto', 'salary')|list|length }}
     </span>
     <span class="badge badge-warning">
-      <i class="fas fa-business-time"></i> {{ t('مياومة') }}: {{ employees|selectattr('employment_type', 'equalto', 'daily')|list|length }}
+      <i class="fas fa-business-time"></i> {{ _('مياومة') }}: {{ employees|selectattr('employment_type', 'equalto', 'daily')|list|length }}
     </span>
   </div>
   <div class="card">
     <div class="card-header bg-gradient-purple text-white d-flex justify-content-between align-items-center flex-wrap gap-2">
-      <h3 class="card-title mb-0"><i class="fas fa-users-cog"></i> {{ t('Employees') }}</h3>
-      <a href="{{ url_for('payroll.add_employee') }}" class="btn btn-light position-relative ic-2">
-        <i class="fas fa-plus"></i> {{ t('Add') }} {{ t('Employee') }}
+      <h3 class="card-title mb-0"><i class="fas fa-users-cog"></i> {{ _('الموظفون') }}</h3>
+      <a href="{{ url_for('payroll.add_employee') }}" class="btn btn-light position-relative stats-link">
+        <i class="fas fa-plus"></i> {{ _('إضافة موظف') }}
       </a>
     </div>
     <div class="card-body">
       <div class="table-responsive"><table id="employeesTable" class="table table-bordered table-striped">
         <thead>
           <tr>
-            <th>{{ t('Name') }}</th>
+            <th>{{ _('الاسم') }}</th>
             {% if show_branch_columns %}
-            <th>{{ t('Branch') }}</th>
+            <th>{{ _('الفرع') }}</th>
             {% else %}
-            <th>{{ t('الوظيفة') }}/{{ t('Branch') }}</th>
+            <th>{{ _('الوظيفة/الفرع') }}</th>
             {% endif %}
-            <th>{{ t('Phone') }}</th>
-            <th>{{ t('نوع') }} {{ t('التوظيف') }}</th>
-            <th>{{ t('الراتب') }} {{ t('الأساسي') }}</th>
-            <th>{{ t('الإجراءات') }}</th>
+            <th>{{ _('الهاتف') }}</th>
+            <th>{{ _('نوع التوظيف') }}</th>
+            <th>{{ _('الراتب الأساسي') }}</th>
+            <th>{{ _('الإجراءات') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -100,20 +100,20 @@
                   <span class="text-muted">-</span>
                 {% endif %}
               {% else %}
-                {{ emp.branch.name if emp.branch else 'عام' }}
+                {{ emp.branch.name if emp.branch else _('عام') }}
               {% endif %}
             </td>
             <td>{{ emp.phone }}</td>
             <td>
                 {% if emp.employment_type == 'salary' %}
-                <span class="badge badge-success">{{ t('راتب') }} {{ t('Monthly') }}</span>
+                <span class="badge badge-success">{{ _('راتب شهري') }}</span>
                 {% else %}
-                <span class="badge badge-warning">{{ t('مياومة') }}</span>
+                <span class="badge badge-warning">{{ _('مياومة') }}</span>
                 {% endif %}
             </td>
             <td>{{ emp.basic_salary }} {{ emp.currency }}</td>
             <td class="actions-cell">
-                <a href="{{ url_for('payroll.statement', id=emp.id) }}" class="btn btn-info" title="{{ t('كشف') }} {{ t('Account') }}"><i class="fas fa-file-invoice"></i></a>
+                <a href="{{ url_for('payroll.statement', id=emp.id) }}" class="btn btn-info" title="{{ _('كشف حساب') }}"><i class="fas fa-file-invoice"></i></a>
             </td>
           </tr>
           {% endfor %}

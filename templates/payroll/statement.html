@@ -1,34 +1,34 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('كشف') }} {{ t('Account') }} {{ t('Employee') }}{% endblock %}
+{% block title %}{{ _('كشف حساب موظف') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
     <div class="card">
         <div class="card-header bg-gradient-info text-white">
-            <h3 class="card-title">{{ t('كشف') }} {{ t('Account') }}: {{ employee.name }}</h3>
+            <h3 class="card-title">{{ _('كشف حساب') }}: {{ employee.name }}</h3>
             <div class="card-tools no-print">
-                <button data-action="window-print" class="btn btn-tool" title="{{ t('Print') }}"><i class="fas fa-print"></i></button>
+                <button data-action="window-print" class="btn btn-tool" title="{{ _('طباعة') }}"><i class="fas fa-print"></i></button>
             </div>
         </div>
         <div class="card-body">
             <div class="erp-report-print">
             <div class="row mb-3">
                 <div class="col-md-6">
-                    <p><strong>{{ t('Name') }}:</strong> {{ employee.name }}</p>
-                    <p><strong>{{ t('Branch') }}:</strong> {{ employee.branch.name if employee.branch else 'عام' }}</p>
+                    <p><strong>{{ _('الاسم') }}:</strong> {{ employee.name }}</p>
+                    <p><strong>{{ _('الفرع') }}:</strong> {{ employee.branch.name if employee.branch else _('عام') }}</p>
                 </div>
                 <div class="col-md-6 text-left">
-                    <p><strong>{{ t('الراتب') }} {{ t('الأساسي') }}:</strong> {{ employee.basic_salary }}</p>
-                    <p><strong>{{ t('History') }} {{ t('Printing') }}:</strong> {{ now().strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                    <p><strong>{{ _('الراتب الأساسي') }}:</strong> {{ employee.basic_salary }}</p>
+                    <p><strong>{{ _('تاريخ الطباعة') }}:</strong> {{ now().strftime('%Y-%m-%d %H:%M:%S') }}</p>
                 </div>
             </div>
             
             <div class="table-responsive"><table class="table table-bordered table-striped">
                 <thead>
                     <tr>
-                        <th>{{ t('Date') }}</th>
-                        <th>{{ t('النوع') }}</th>
-                        <th>{{ t('Description_3') }}</th>
-                        <th class="text-center">{{ t('Amount') }}</th>
+                        <th>{{ _('التاريخ') }}</th>
+                        <th>{{ _('النوع') }}</th>
+                        <th>{{ _('الوصف') }}</th>
+                        <th class="text-center">{{ _('المبلغ') }}</th>
                     </tr>
                 </thead>
                 <tbody>
