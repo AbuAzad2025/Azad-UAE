@@ -1,26 +1,27 @@
 {% macro currency_options(default_code='AED', constants=None) %}
   {% if not constants %}
     {% set constants = [
-      ('AED', {'ar': t('Dirham') ~ ' ' ~ t('إماراتي'), 'symbol': 'د.إ'}),
-      ('USD', {'ar': t('Dollar') ~ ' ' ~ t('أمريكي'), 'symbol': '$'}),
-      ('ILS', {'ar': t('Shekel') ~ ' ' ~ t('إسرائيلي'), 'symbol': '₪'}),
-      ('EUR', {'ar': t('Euro'), 'symbol': '€'}),
-      ('GBP', {'ar': t('Pound') ~ ' ' ~ t('إسترليني'), 'symbol': '£'}),
-      ('SAR', {'ar': t('Riyal') ~ ' ' ~ t('سعودي'), 'symbol': 'ر.س'}),
-      ('JOD', {'ar': t('Dinar') ~ ' ' ~ t('أردني'), 'symbol': 'د.أ'}),
-      ('KWD', {'ar': t('Dinar') ~ ' ' ~ t('كويتي'), 'symbol': 'د.ك'}),
-      ('QAR', {'ar': t('Riyal') ~ ' ' ~ t('قطري'), 'symbol': 'ر.ق'}),
-      ('OMR', {'ar': t('Riyal') ~ ' ' ~ t('عماني'), 'symbol': 'ر.ع'}),
-      ('BHD', {'ar': t('Dinar') ~ ' ' ~ t('بحريني'), 'symbol': 'د.ب'}),
+      ('AED', {'name': t('Currency_AED'), 'symbol': 'د.إ'}),
+      ('USD', {'name': t('Currency_USD'), 'symbol': '$'}),
+      ('ILS', {'name': t('Currency_ILS'), 'symbol': '₪'}),
+      ('EUR', {'name': t('Currency_EUR'), 'symbol': '€'}),
+      ('GBP', {'name': t('Currency_GBP'), 'symbol': '£'}),
+      ('SAR', {'name': t('Currency_SAR'), 'symbol': 'ر.س'}),
+      ('JOD', {'name': t('Currency_JOD'), 'symbol': 'د.أ'}),
+      ('KWD', {'name': t('Currency_KWD'), 'symbol': 'د.ك'}),
+      ('QAR', {'name': t('Currency_QAR'), 'symbol': 'ر.ق'}),
+      ('OMR', {'name': t('Currency_OMR'), 'symbol': 'ر.ع'}),
+      ('BHD', {'name': t('Currency_BHD'), 'symbol': 'د.ب'}),
     ] %}
   {% endif %}
   {% for code, data in constants %}
-    <option value="{{ code }}" {% if default_code == code %}selected{% endif %}>{{ data.ar }} ({{ code }})</option>
+    <option value="{{ code }}" {% if default_code == code %}selected{% endif %}>
+      {{ data.name }} ({{ code }})
+    </option>
   {% endfor %}
 {% endmacro %}
 
 {% macro currency_select(name='currency', id='currency', default_code='AED', extra_classes='') %}
-  {% from 'macros/currency_options.html' import currency_options %}
   <select name="{{ name }}" id="{{ id }}" class="{{ extra_classes or 'form-control' }}" aria-label="{{ t('Currency') }}">
     {{ currency_options(default_code=default_code) }}
   </select>

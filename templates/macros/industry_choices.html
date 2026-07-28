@@ -1,23 +1,27 @@
-{% macro industry_options(selected='general') %}
-  {% set industries = [
-    ('general', 'عام / General'),
-    ('automotive', 'كراج / قطع غيار سيارات / Automotive'),
-    ('electronics', 'إلكترونيات / Electronics'),
-    ('supermarket', 'سوبرماركت / Supermarket'),
-    ('pharmacy', 'صيدلية / Pharmacy'),
-    ('restaurant', 'مطعم / كافيه / Restaurant'),
-    ('construction', 'مقاولات / Construction'),
-    ('textile', 'أقمشة / ملابس / Textile'),
-    ('jewelry', 'مجوهرات / ذهب / Jewelry'),
-    ('retail', 'تجارة Retail / Retail'),
-    ('trading', 'تجارة عامة / Trading'),
-    ('batteries', 'بطاريات / Batteries'),
-    ('mobile_new', 'موبايلات جديدة / New Mobile Phones'),
-    ('mobile_used', 'موبايلات مستعملة / Used Mobile Phones'),
-    ('mobile_parts', 'قطع غيار موبايلات / Mobile Spare Parts'),
-    ('clothing', 'ملابس / Clothing'),
-  ] %}
+{% macro industry_options(selected='general', industries=None) %}
+  {% if not industries %}
+    {% set industries = [
+      ('general',      t('Industry_General')),
+      ('automotive',   t('Industry_Automotive')),
+      ('electronics',  t('Industry_Electronics')),
+      ('supermarket',  t('Industry_Supermarket')),
+      ('pharmacy',     t('Industry_Pharmacy')),
+      ('restaurant',   t('Industry_Restaurant')),
+      ('construction', t('Industry_Construction')),
+      ('textile',      t('Industry_Textile')),
+      ('jewelry',      t('Industry_Jewelry')),
+      ('retail',       t('Industry_Retail')),
+      ('trading',      t('Industry_Trading')),
+      ('batteries',    t('Industry_Batteries')),
+      ('mobile_new',   t('Industry_Mobile_New')),
+      ('mobile_used',  t('Industry_Mobile_Used')),
+      ('mobile_parts', t('Industry_Mobile_Parts')),
+      ('clothing',     t('Industry_Clothing')),
+    ] %}
+  {% endif %}
   {% for code, label in industries %}
-    <option value="{{ code }}" {% if selected is equalto code %}selected{% endif %}>{{ label }}</option>
+    <option value="{{ code }}" {% if selected == code %}selected{% endif %}>
+      {{ label }}
+    </option>
   {% endfor %}
 {% endmacro %}
