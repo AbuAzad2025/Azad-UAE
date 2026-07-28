@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
-{% block title %}{% if method %}تعديل{% else %}إضافة{% endif %} طريقة دفع{% endblock %}
+{% block title %}{% if method %}{{ t('Edit') }}{% else %}{{ t('Add') }}{% endif %} {{ t('Payment_Method') }}{% endblock %}
 
 {% block content %}
 <div class="content-header">
   <div class="container-fluid">
-    <h1 class="m-0">{% if method %}تعديل{% else %}إضافة{% endif %} طريقة دفع للمتاجر</h1>
+    <h1 class="m-0">{% if method %}{{ t('Edit') }}{% else %}{{ t('Add') }}{% endif %} {{ t('Store_Payment_Method') }}</h1>
   </div>
 </div>
 
@@ -18,62 +18,62 @@
             <div class="card-body">
               {% if not method or not method.is_builtin %}
               <div class="form-group">
-                <label for="input_code">{{ _('الرمز (code)') }}</label>
+                <label for="input_code">{{ t('Code') }}</label>
                 <input type="text" name="code" class="form-control" value="{{ method.code if method else '' }}" pattern="[a-z][a-z0-9_]+" dir="ltr" {% if method %}required{% else %}required{% endif %} placeholder="my_wallet" id="input_code">
-                <small class="text-muted">{{ _('حروف إنجليزية صغيرة — يُستخدم داخلياً') }}</small>
+                <small class="text-muted">{{ t('Lowercase_English_Internal_Use') }}</small>
               </div>
               {% else %}
               <div class="form-group">
-                <label>{{ t('Code_4') }}</label>
-                <input type="text" class="form-control" value="{{ method.code }}" disabled aria-label="{{ _('الرمز') }}">
+                <label>{{ t('Code') }}</label>
+                <input type="text" class="form-control" value="{{ method.code|default('') }}" disabled aria-label="{{ t('Code') }}">
               </div>
               {% endif %}
 
               <div class="row">
                 <div class="col-md-6 form-group">
-                  <label for="input_name_ar">{{ _('الاسم (عربي) *') }}</label>
+                  <label for="input_name_ar">{{ t('Arabic_Name_Required') }}</label>
                   <input type="text" name="name_ar" class="form-control" value="{{ method.name_ar if method else '' }}" required id="input_name_ar" aria-label="name ar" minlength="2" maxlength="100">
                 </div>
                 <div class="col-md-6 form-group">
-                  <label for="input_name_en">{{ _('الاسم (English) *') }}</label>
+                  <label for="input_name_en">{{ t('English_Name_Required') }}</label>
                   <input type="text" name="name_en" class="form-control" value="{{ method.name_en if method else '' }}" required dir="ltr" id="input_name_en" aria-label="name en" minlength="2" maxlength="100">
                 </div>
               </div>
 
               <div class="row">
                 <div class="col-md-6 form-group">
-                  <label>{{ _('وصف للعميل (عربي)') }}</label>
+                  <label>{{ t('Customer_Description_Ar') }}</label>
                   <textarea name="description_ar" class="form-control" rows="3" aria-label="description ar" maxlength="500">{{ method.description_ar if method else '' }}</textarea>
                 </div>
                 <div class="col-md-6 form-group">
-                  <label>{{ _('وصف للعميل (English)') }}</label>
+                  <label>{{ t('Customer_Description_En') }}</label>
                   <textarea name="description_en" class="form-control" rows="3" dir="ltr" aria-label="description en" maxlength="500">{{ method.description_en if method else '' }}</textarea>
                 </div>
               </div>
 
               <div class="row">
                 <div class="col-md-4 form-group">
-                  <label for="input_icon">{{ _('أيقونة FontAwesome') }}</label>
+                  <label for="input_icon">{{ t('FontAwesome_Icon') }}</label>
                   <input type="text" name="icon" class="form-control" value="{{ method.icon if method else 'fas fa-money-bill-wave' }}" dir="ltr" id="input_icon" aria-label="icon">
                 </div>
                 <div class="col-md-4 form-group">
-                  <label for="input_sort_order">{{ t('الترتيب') }}</label>
+                  <label for="input_sort_order">{{ t('Sort_Order') }}</label>
                   <input type="number" name="sort_order" class="form-control" value="{{ method.sort_order if method else 100 }}" id="input_sort_order" aria-label="sort order">
                 </div>
                 <div class="col-md-4 form-group pt-4">
                   <div class="custom-control custom-switch">
                     <input type="checkbox" class="custom-control-input" id="is_enabled" name="is_enabled" {% if not method or method.is_enabled %}checked{% endif %} aria-label="is enabled">
-                    <label class="custom-control-label" for="is_enabled">{{ _('مفعّلة للمتاجر') }}</label>
+                    <label class="custom-control-label" for="is_enabled">{{ t('Enabled_For_Stores') }}</label>
                   </div>
                 </div>
               </div>
 
               <hr>
-              <h5 class="text-muted">{{ _('بيانات إضافية (اختياري — تظهر للعميل)') }}</h5>
+              <h5 class="text-muted">{{ t('Optional_Extra_Data_Visible') }}</h5>
               {% set cfg = method.get_config() if method else {} %}
               <div class="row">
                 <div class="col-md-4 form-group">
-                  <label for="input_bank_name">اسم البنك</label>
+                  <label for="input_bank_name">{{ t('Bank_Name') }}</label>
                   <input type="text" name="bank_name" class="form-control" value="{{ cfg.get('bank_name', '') }}" id="input_bank_name" aria-label="bank name" minlength="2" maxlength="100">
                 </div>
                 <div class="col-md-4 form-group">
@@ -81,12 +81,12 @@
                   <input type="text" name="iban" class="form-control" value="{{ cfg.get('iban', '') }}" dir="ltr" id="input_iban" aria-label="iban" maxlength="34">
                 </div>
                 <div class="col-md-4 form-group">
-                  <label for="input_account_name">اسم الحساب</label>
+                  <label for="input_account_name">{{ t('Account_Name') }}</label>
                   <input type="text" name="account_name" class="form-control" value="{{ cfg.get('account_name', '') }}" id="input_account_name" aria-label="account name" minlength="2" maxlength="100">
                 </div>
               </div>
               <div class="form-group">
-                <label>مزودو المحافظ / تعليمات إضافية</label>
+                <label>{{ t('Wallet_Providers_Extra_Instructions') }}</label>
                 <textarea name="providers" class="form-control" rows="2" aria-label="providers">{{ cfg.get('providers') or cfg.get('instructions', '') }}</textarea>
               </div>
             </div>

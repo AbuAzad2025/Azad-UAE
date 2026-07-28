@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
-{% block title %}إدارة أسعار الصرف{% endblock %}
+{% block title %}{{ t('Exchange_Rate_Management') }}{% endblock %}
 {% block content %}
 <div class="content-header">
   <div class="container-fluid">
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
-        <h1 class="m-0"><i class="fas fa-exchange-alt text-info"></i> {{ _('إدارة أسعار الصرف') }}</h1>
+        <h1 class="m-0"><i class="fas fa-exchange-alt text-info"></i> {{ t('Exchange_Rate_Management') }}</h1>
       </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
@@ -22,7 +22,7 @@
       <div class="col-md-5">
         <div class="card">
           <div class="card-header bg-info text-white">
-            <h3 class="card-title"><i class="fas fa-plus-circle mr-2"></i> {{ _('إضافة سعر يدوي') }}</h3>
+            <h3 class="card-title"><i class="fas fa-plus-circle mr-2"></i> {{ t('Add_Manual_Rate') }}</h3>
           </div>
           <div class="card-body">
             <form method="POST" action="{{ url_for('owner.exchange_rates') }}">
@@ -30,35 +30,35 @@
               <input type="hidden" name="action" value="save">
 
               <div class="form-group">
-                <label>{{ _('من عملة') }}</label>
-                <select name="from_currency" class="form-control" aria-label="{{ _('من عملة') }}">
-                  {% for c in currencies %}
+                <label>{{ t('From_Currency') }}</label>
+                <select name="from_currency" class="form-control" aria-label="{{ t('From_Currency') }}">
+                  {% for c in currencies|default([]) %}
                   <option value="{{ c }}" {{ 'selected' if c == 'USD' }}>{{ c }}</option>
                   {% endfor %}
                 </select>
               </div>
 
               <div class="form-group">
-                <label>{{ _('إلى عملة') }}</label>
-                <select name="to_currency" class="form-control" aria-label="{{ _('إلى عملة') }}">
-                  {% for c in currencies %}
+                <label>{{ t('To_Currency') }}</label>
+                <select name="to_currency" class="form-control" aria-label="{{ t('To_Currency') }}">
+                  {% for c in currencies|default([]) %}
                   <option value="{{ c }}" {{ 'selected' if c == 'AED' }}>{{ c }}</option>
                   {% endfor %}
                 </select>
               </div>
 
               <div class="form-group">
-                <label for="rate">{{ _('سعر الصرف') }}</label>
-                <input type="number" name="rate" id="rate" class="form-control" step="0.000001" min="0.000001" required placeholder="{{ _('مثال: 3.6725') }}">
+                <label for="rate">{{ t('Exchange_Rate') }}</label>
+                <input type="number" name="rate" id="rate" class="form-control" step="0.000001" min="0.000001" required placeholder="{{ t('Example_3_6725') }}">
               </div>
 
               <div class="form-group">
-                <label>{{ _('تاريخ السريان') }}</label>
-                <input type="date" name="effective_date" class="form-control" value="{{ today }}" aria-label="{{ _('تاريخ السريان') }}">
+                <label>{{ t('Effective_Date') }}</label>
+                <input type="date" name="effective_date" class="form-control" value="{{ today|default('') }}" aria-label="{{ t('Effective_Date') }}">
               </div>
 
               <button type="submit" class="btn btn-info btn-block">
-                <i class="fas fa-save mr-1"></i> {{ _('حفظ السعر') }}
+                <i class="fas fa-save mr-1"></i> {{ t('Save_Rate') }}
               </button>
             </form>
           </div>
@@ -68,50 +68,50 @@
       <div class="col-md-7">
         <div class="card">
           <div class="card-header bg-secondary text-white">
-            <h3 class="card-title"><i class="fas fa-history mr-2"></i> {{ _('سجل الأسعار') }}</h3>
+            <h3 class="card-title"><i class="fas fa-history mr-2"></i> {{ t('Rate_History') }}</h3>
           </div>
           <div class="card-body p-0">
             <div class="table-responsive">
               <table class="table table-sm table-hover mb-0">
                 <thead class="thead-light">
                   <tr>
-                    <th>{{ _('من') }}</th>
-                    <th>{{ _('إلى') }}</th>
-                    <th>{{ _('السعر') }}</th>
-                    <th>{{ _('المصدر') }}</th>
-                    <th>{{ _('التاريخ') }}</th>
+                    <th>{{ t('From') }}</th>
+                    <th>{{ t('To') }}</th>
+                    <th>{{ t('Rate') }}</th>
+                    <th>{{ t('Source') }}</th>
+                    <th>{{ t('Date') }}</th>
                     <th></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {% for r in records %}
+                  {% for r in records|default([]) %}
                   <tr>
-                    <td><strong>{{ r.from_currency }}</strong></td>
-                    <td><strong>{{ r.to_currency }}</strong></td>
-                    <td>{{ "%.6f"|format(r.rate|float) }}</td>
+                    <td><strong>{{ r.from_currency|default('') }}</strong></td>
+                    <td><strong>{{ r.to_currency|default('') }}</strong></td>
+                    <td>{{ "%.6f"|format(r.rate|float|default(0)) }}</td>
                     <td>
                       {% if r.source == 'manual' %}
-                      <span class="badge badge-primary">{{ _('يدوي') }}</span>
+                      <span class="badge badge-primary">{{ t('Manual') }}</span>
                       {% elif r.source == 'api_primary' %}
                       <span class="badge badge-info">API</span>
                       {% else %}
-                      <span class="badge badge-secondary">{{ r.source }}</span>
+                      <span class="badge badge-secondary">{{ r.source|default('') }}</span>
                       {% endif %}
                     </td>
-                    <td>{{ r.effective_date }}</td>
+                    <td>{{ r.effective_date|default('') }}</td>
                     <td>
-                      <form method="POST" action="{{ url_for('owner.exchange_rates') }}" style="display:inline" data-action="confirm-submit" data-confirm-message="{{ _('حذف السجل؟') }}">
+                      <form method="POST" action="{{ url_for('owner.exchange_rates') }}" style="display:inline" data-action="confirm-submit" data-confirm-message="{{ t('Delete_Record_Confirm') }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="action" value="delete">
-                        <input type="hidden" name="record_id" value="{{ r.id }}">
-                        <button type="submit" class="btn btn-xs btn-outline-danger" aria-label="{{ _('حذف') }}" title="{{ _('حذف') }}">
+                        <input type="hidden" name="record_id" value="{{ r.id|default('') }}">
+                        <button type="submit" class="btn btn-xs btn-outline-danger" aria-label="{{ t('Delete') }}" title="{{ t('Delete') }}">
                           <i class="fas fa-trash"></i>
                         </button>
                       </form>
                     </td>
                   </tr>
                   {% else %}
-                  <tr><td colspan="6" class="text-center text-muted">{{ _('لا توجد سجلات.') }}</td></tr>
+                  <tr><td colspan="6" class="text-center text-muted">{{ t('No_Records') }}</td></tr>
                   {% endfor %}
                 </tbody>
               </table>
@@ -125,6 +125,11 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+const i18n = {{ {
+  'Delete_Record_Confirm': t('Delete_Record_Confirm'),
+}|tojson }};
+</script>
 <script>
 document.addEventListener('submit', (e) => {
   const el = e.target.closest('[data-action="confirm-submit"]');

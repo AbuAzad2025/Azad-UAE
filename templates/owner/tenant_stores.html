@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
-{% block title %}متاجر التينانتس{% endblock %}
+{% block title %}{{ t('Tenant_Stores') }}{% endblock %}
 
 {% block content %}
 <div class="content-header">
   <div class="container-fluid">
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
-        <h1 class="m-0"><i class="fas fa-store mr-2"></i>{{ _('متاجر التينانتس — تحكم المنصة') }}</h1>
-        <p class="text-muted small mb-0">{{ _('مالك المنصة يستطيع تعطيل أي متجر؛ عند التعطيل لا يستطيع مالك التينانت تفعيله.') }}</p>
+        <h1 class="m-0"><i class="fas fa-store mr-2"></i>{{ t('Tenant_Stores_Platform_Control') }}</h1>
+        <p class="text-muted small mb-0">{{ t('Platform_Owner_Can_Disable_Store') }}</p>
       </div>
       <div class="col-sm-6 text-left">
         <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary">{{ t('Back') }}</a>
@@ -18,16 +18,16 @@
 
 <div class="content">
   <div class="container-fluid">
-    {% if not global_enabled %}
+    {% if not global_enabled|default(false) %}
     <div class="alert alert-warning">
       <i class="fas fa-globe mr-1"></i>
-      {{ _('المتاجر متوقفة على مستوى المنصة (المفتاح العام). فعّل «المتاجر الإلكترونية» من') }} <a href="{{ url_for('owner.system_config') }}">{{ t('System_Settings_2') }}</a> {{ _('ليظهر أي متجر للعملاء.') }}
+      {{ t('Stores_Stopped_At_Platform_Level') }} <a href="{{ url_for('owner.system_config') }}">{{ t('System_Settings') }}</a> {{ t('To_Show_Store_To_Customers') }}
     </div>
     {% endif %}
 
     <div class="alert alert-info">
       <i class="fas fa-shield-halved mr-1"></i>
-      صلاحية مالك المنصة أقوى: «{{ t('قفل') }}» يفرض إيقاف المتجر ويمنع مالك التينانت من تفعيله. «فك القفل» يعيد التحكم لمالك التينانت.
+      {{ t('Platform_Owner_Can_Lock_Store') }}
     </div>
 
     <div class="card">
@@ -35,61 +35,61 @@
         <table class="table table-hover mb-0 align-middle">
           <thead>
             <tr>
-              <th>{{ t('التينانت') }}</th>
-              <th>{{ t('المعرّف') }}</th>
-              <th>{{ _('حالة التينانت') }}</th>
-              <th>{{ _('قفل المنصة') }}</th>
-              <th>{{ _('متاح للعملاء') }}</th>
-              <th class="text-left">{{ t('إجراء') }}</th>
+              <th>{{ t('Tenant') }}</th>
+              <th>{{ t('Identifier') }}</th>
+              <th>{{ t('Tenant_Status') }}</th>
+              <th>{{ t('Platform_Lock') }}</th>
+              <th>{{ t('Available_To_Customers') }}</th>
+              <th class="text-left">{{ t('Action') }}</th>
             </tr>
           </thead>
           <tbody>
-            {% for row in rows %}
+            {% for row in rows|default([]) %}
             <tr>
               <td>
-                <strong>{{ row.tenant.name_ar or row.tenant.name }}</strong>
-                <div class="text-muted small">{{ row.tenant.slug }}</div>
+                <strong>{{ row.tenant.name_ar|default('') or row.tenant.name|default('') }}</strong>
+                <div class="text-muted small">{{ row.tenant.slug|default('') }}</div>
               </td>
-              <td><code>/s/{{ row.store.store_slug }}</code></td>
+              <td><code>/s/{{ row.store.store_slug|default('') }}</code></td>
               <td>
-                {% if row.is_enabled %}
-                <span class="badge badge-success">{{ t('مفعّل') }}</span>
+                {% if row.is_enabled|default(false) %}
+                <span class="badge badge-success">{{ t('Enabled') }}</span>
                 {% else %}
                 <span class="badge badge-secondary">{{ t('Stopped') }}</span>
                 {% endif %}
               </td>
               <td>
-                {% if row.platform_disabled %}
-                <span class="badge badge-danger"><i class="fas fa-lock mr-1"></i>{{ t('مقفول') }}</span>
+                {% if row.platform_disabled|default(false) %}
+                <span class="badge badge-danger"><i class="fas fa-lock mr-1"></i>{{ t('Locked') }}</span>
                 {% else %}
-                <span class="badge badge-light border">{{ _('مفوّض للتينانت') }}</span>
+                <span class="badge badge-light border">{{ t('Delegated_To_Tenant') }}</span>
                 {% endif %}
               </td>
               <td>
-                {% if row.public_available %}
-                <span class="badge badge-success"><i class="fas fa-check mr-1"></i>{{ t('Available_2') }}</span>
+                {% if row.public_available|default(false) %}
+                <span class="badge badge-success"><i class="fas fa-check mr-1"></i>{{ t('Available') }}</span>
                 {% else %}
-                <span class="badge badge-secondary">{{ _('غير متاح') }}</span>
+                <span class="badge badge-secondary">{{ t('Not_Available') }}</span>
                 {% endif %}
               </td>
               <td class="text-left">
-                <form class="needs-validation d-inline" method="POST" action="{{ url_for('owner.tenant_store_platform_toggle', store_id=row.store.id) }}">
+                <form class="needs-validation d-inline" method="POST" action="{{ url_for('owner.tenant_store_platform_toggle', store_id=row.store.id|default('')) }}">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                  {% if row.platform_disabled %}
+                  {% if row.platform_disabled|default(false) %}
                   <input type="hidden" name="platform_disabled" value="0" aria-label="platform disabled">
-                  <button type="submit" class="btn btn-outline-success"><i class="fas fa-unlock mr-1"></i>{{ _('فك القفل') }}</button>
+                  <button type="submit" class="btn btn-outline-success"><i class="fas fa-unlock mr-1"></i>{{ t('Unlock') }}</button>
                   {% else %}
                   <input type="hidden" name="platform_disabled" value="1" aria-label="platform disabled">
                   <button type="submit" class="btn btn-outline-danger"
-                          data-action="confirm-submit" data-confirm-message="{{ _('تعطيل هذا المتجر من مستوى المنصة؟ لن يتمكن مالك التينانت من تفعيله.') }}">
-                    <i class="fas fa-lock mr-1"></i>{{ _('قفل (تعطيل)') }}
+                          data-action="confirm-submit" data-confirm-message="{{ t('Disable_Store_From_Platform_Confirm') }}">
+                    <i class="fas fa-lock mr-1"></i>{{ t('Lock_Disable') }}
                   </button>
                   {% endif %}
                 </form>
               </td>
             </tr>
             {% else %}
-            <tr><td colspan="6" class="text-center text-muted py-4">{{ _('لا توجد متاجر بعد.') }}</td></tr>
+            <tr><td colspan="6" class="text-center text-muted py-4">{{ t('No_Stores_Yet') }}</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -100,6 +100,11 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+const i18n = {{ {
+  'Disable_Store_From_Platform_Confirm': t('Disable_Store_From_Platform_Confirm'),
+}|tojson }};
+</script>
 <script>
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-action="confirm-submit"]');

@@ -1,20 +1,20 @@
-???????{% extends 'base.html' %}
-{% block title %}????? ????????{% endblock %}
+{% extends 'base.html' %}
+{% block title %}{{ t('Data_Cleanup') }}{% endblock %}
 {% block content %}
 <div class="content-header">
   <div class="container-fluid">
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
-        <h1 class="m-0"><i class="fas fa-trash-alt text-danger"></i> ????? ???????? ???????</h1>
+        <h1 class="m-0"><i class="fas fa-trash-alt text-danger"></i> {{ t('Delete_Old_Data') }}</h1>
       </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
           <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
-            <i class="fas fa-arrow-right mr-1"></i> ?????? ????? ??????
+            <i class="fas fa-arrow-right mr-1"></i> {{ t('Back_To_Owner_Dashboard') }}
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
-            <li class="breadcrumb-item active">????? ????????</li>
+            <li class="breadcrumb-item active">{{ t('Data_Cleanup') }}</li>
           </ol>
         </div>
       </div>
@@ -23,10 +23,10 @@
       <div class="col-12">
         <div class="btn-group quick-nav" role="group">
           <a href="{{ url_for('owner.data_cleanup') }}" class="btn btn-danger">
-            <i class="fas fa-trash"></i> ????? ????????
+            <i class="fas fa-trash"></i> {{ t('Data_Cleanup') }}
           </a>
           <a href="{{ url_for('owner.verify_backups') }}" class="btn btn-outline-success">
-            <i class="fas fa-check-double"></i> ?????? ?? ?????
+            <i class="fas fa-check-double"></i> {{ t('Verify_Backups') }}
           </a>
         </div>
       </div>
@@ -38,12 +38,12 @@
   <div class="container-fluid">
     <div class="card">
       <div class="card-header bg-danger text-white">
-        <h3 class="card-title"><i class="fas fa-exclamation-triangle mr-2"></i> ????? ??? ??? ?????</h3>
+        <h3 class="card-title"><i class="fas fa-exclamation-triangle mr-2"></i> {{ t('Danger_Zone_Data_Removal') }}</h3>
       </div>
       <div class="card-body">
         <div class="alert alert-danger">
           <i class="fas fa-exclamation-circle"></i>
-          <strong>{{ t('Warning') }}</strong> ?? ???? ??????? ?? ?????? ?????. ???? ?? ???? ???? ???????? ????? ??? ????? ?? ?????.
+          <strong>{{ t('Warning') }}</strong> {{ t('Cleanup_Action_Irreversible') }}
         </div>
 
         <div class="row mb-4">
@@ -53,8 +53,8 @@
                 <i class="fas fa-file-alt"></i>
               </span>
               <div class="info-box-content">
-                <span class="info-box-text">????? ????? (90+ {{ t('???') }}</span>
-                <span class="info-box-number">{{ stats.old_logs }}</span>
+                <span class="info-box-text">{{ t('Old_Logs_90_Days') }}</span>
+                <span class="info-box-number">{{ stats.old_logs|default(0) }}</span>
               </div>
             </div>
           </div>
@@ -64,8 +64,8 @@
                 <i class="fas fa-archive"></i>
               </span>
               <div class="info-box-content">
-                <span class="info-box-text">????? ???? (180+ {{ t('???') }}</span>
-                <span class="info-box-number">{{ stats.old_archived }}</span>
+                <span class="info-box-text">{{ t('Old_Archives_180_Days') }}</span>
+                <span class="info-box-number">{{ stats.old_archived|default(0) }}</span>
               </div>
             </div>
           </div>
@@ -75,25 +75,26 @@
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
           <div class="form-group">
-            <label>??? ???????? ?????</label>
+            <label>{{ t('Select_Data_Type') }}</label>
             <select name="cleanup_type" class="form-control" required aria-label="cleanup type">
-              <option value="">{{ t('????') }}</option>
-              <option value="logs">????? ????????</option>
+              <option value="">{{ t('Choose') }}</option>
+              <option value="logs">{{ t('System_Logs') }}</option>
               <option value="archived">{{ t('Archived_Records') }}</option>
             </select>
-            <small class="form-text text-muted">??? ????? ???? ???? ?? ?????. ???? ??????? ???? ??? ?? ??? ??? ?????.</small>
+            <small class="form-text text-muted">{{ t('Cleanup_Type_Help') }}</small>
           </div>
 
           <div class="form-group">
-            <label for="input_days">??? ???????? ?????? ?? (????)</label>
+            <label for="input_days">{{ t('Records_Older_Than_Days') }}</label>
             <input type="number" name="days" class="form-control" value="90" min="30" max="365" id="input_days" aria-label="days">
-            <small class="form-text text-muted">????? ?????? ???? ????? ??????? ??? ???? ?????? 30 ????? ?????? ??? ??????? ???????.</small>
+            <small class="form-text text-muted">{{ t('Cleanup_Days_Help') }}</small>
           </div>
 
           <button type="submit"
                   class="btn btn-danger btn-lg"
-                  data-action="confirm-submit" data-confirm-message="?? ??? ????? ?? ??? ???????? ???????? ??? ??????? ?? ???? ??????? ???!">
-            <i class="fas fa-trash mr-1"></i> ????? ????
+                  data-action="confirm-submit"
+                  data-confirm-message="{{ t('Confirm_Data_Cleanup') }}">
+            <i class="fas fa-trash mr-1"></i> {{ t('Delete_Now') }}
           </button>
         </form>
       </div>
@@ -105,6 +106,11 @@
 
 {% block extra_js %}
 <script>
+const i18n = {{ {
+  'Confirm_Data_Cleanup': t('Confirm_Data_Cleanup'),
+}|tojson }};
+</script>
+<script>
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-action="confirm-submit"]');
   if (!el) return;
@@ -112,4 +118,3 @@ document.addEventListener('click', (e) => {
 });
 </script>
 {% endblock %}
-

@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - عرض البطاقة{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or t('Accounting_System') }} - {{ t('View_Card') }}{% endblock %}
 
 {% block content %}
     <div class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1 class="m-0">{{ _('عرض البطاقة') }}</h1>
+                    <h1 class="m-0">{{ t('View_Card') }}</h1>
                 </div>
             </div>
         </div>
@@ -19,13 +19,14 @@
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">{{ _('معلومات البطاقة') }}</h3>
+                            <h3 class="card-title">{{ t('Card_Information') }}</h3>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive"><table class="table table-bordered">
+                                <tbody>
                                 <tr>
                                     <th>{{ t('Customer') }}</th>
-                                    <td>{{ card.customer.name if card.customer else 'غير محدد' }}</td>
+                                    <td>{{ card.customer.name if card.customer else t('Not_Specified') }}</td>
                                 </tr>
                                 <tr>
                                     <th>{{ t('Card_Type') }}</th>
@@ -35,21 +36,21 @@
                                         {% elif card.card_type == 'mastercard' %}
                                             <span class="badge badge-warning">Mastercard</span>
                                         {% else %}
-                                            <span class="badge badge-secondary">{{ card.card_type }}</span>
+                                            <span class="badge badge-secondary">{{ card.card_type|default('') }}</span>
                                         {% endif %}
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th>{{ _('رقم البطاقة') }}</th>
-                                    <td>{{ card_data.card_number if card_data else '**** **** **** ' + card.last_four_digits }}</td>
+                                    <th>{{ t('Card_Number') }}</th>
+                                    <td>{{ card_data.card_number if card_data else '**** **** **** ' + (card.last_four_digits|default('****')) }}</td>
                                 </tr>
                                 <tr>
-                                    <th>{{ _('اسم حامل البطاقة') }}</th>
-                                    <td>{{ card_data.cardholder_name if card_data else 'غير محدد' }}</td>
+                                    <th>{{ t('Cardholder_Name') }}</th>
+                                    <td>{{ card_data.cardholder_name if card_data else t('Not_Specified') }}</td>
                                 </tr>
                                 <tr>
                                     <th>{{ t('Expiry_Date') }}</th>
-                                    <td>{{ card.expiry_month }}/{{ card.expiry_year }}</td>
+                                    <td>{{ card.expiry_month|default('--') }}/{{ card.expiry_year|default('--') }}</td>
                                 </tr>
                                 <tr>
                                     <th>CVV</th>
@@ -57,41 +58,42 @@
                                 </tr>
                                 <tr>
                                     <th>{{ t('Usage_Count') }}</th>
-                                    <td>{{ card.usage_count }}</td>
+                                    <td>{{ card.usage_count|default(0) }}</td>
                                 </tr>
                                 <tr>
                                     <th>{{ t('Created_Date') }}</th>
-                                    <td>{{ card.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>{{ card.created_at.strftime('%Y-%m-%d %H:%M') if card.created_at else '-' }}</td>
                                 </tr>
                                 <tr>
                                     <th>{{ t('Last_Used') }}</th>
-                                    <td>{{ card.last_used_at.strftime('%Y-%m-%d %H:%M') if card.last_used_at else 'لم يتم الاستخدام' }}</td>
+                                    <td>{{ card.last_used_at.strftime('%Y-%m-%d %H:%M') if card.last_used_at else t('Never_Used') }}</td>
                                 </tr>
+                                </tbody>
                             </table></div>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">{{ _('إجراءات البطاقة') }}</h3>
+                            <h3 class="card-title">{{ t('Card_Actions') }}</h3>
                         </div>
                         <div class="card-body">
                             <div class="alert alert-warning">
-                                <h5><i class="icon fas fa-exclamation-triangle"></i> {{ _('تحذير!') }}</h5>
-                                {{ _('هذه المعلومات حساسة ويجب التعامل معها بحذر.') }}
+                                <h5><i class="icon fas fa-exclamation-triangle"></i> {{ t('Warning') }}</h5>
+                                {{ t('Sensitive_Info_Handle_Carefully') }}
                             </div>
-                            
+
                             <div class="btn-group-vertical w-100">
                                 <button type="button" class="btn btn-info mb-2">
-                                    <i class="fas fa-edit"></i> {{ _('تعديل البطاقة') }}
+                                    <i class="fas fa-edit"></i> {{ t('Edit_Card') }}
                                 </button>
                                 <button type="button" class="btn btn-warning mb-2">
-                                    <i class="fas fa-ban"></i> {{ _('تعطيل البطاقة') }}
+                                    <i class="fas fa-ban"></i> {{ t('Disable_Card') }}
                                 </button>
                                 <button type="button" class="btn btn-danger mb-2">
-                                    <i class="fas fa-trash"></i> {{ _('حذف البطاقة') }}
+                                    <i class="fas fa-trash"></i> {{ t('Delete_Card') }}
                                 </button>
                             </div>
                         </div>

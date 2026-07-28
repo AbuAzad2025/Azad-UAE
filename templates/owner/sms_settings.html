@@ -1,20 +1,20 @@
-???????{% extends 'base.html' %}
-{% block title %}??????? ???????{% endblock %}
+{% extends 'base.html' %}
+{% block title %}{{ t('SMS_Settings') }}{% endblock %}
 {% block content %}
 <div class="content-header">
   <div class="container-fluid">
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
-        <h1 class="m-0"><i class="fas fa-sms text-info"></i> ??????? ??????? ??????</h1>
+        <h1 class="m-0"><i class="fas fa-sms text-info"></i> {{ t('SMS_Service_Settings') }}</h1>
       </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
           <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
-            <i class="fas fa-arrow-right mr-1"></i> ?????? ????? ??????
+            <i class="fas fa-arrow-right mr-1"></i> {{ t('Back_To_Owner_Dashboard') }}
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
-            <li class="breadcrumb-item active">??????? ???????</li>
+            <li class="breadcrumb-item active">{{ t('SMS_Settings') }}</li>
           </ol>
         </div>
       </div>
@@ -26,10 +26,10 @@
             <i class="fas fa-sms"></i> SMS
           </a>
           <a href="{{ url_for('owner.email_settings') }}" class="btn btn-outline-info">
-            <i class="fas fa-envelope"></i> ??????
+            <i class="fas fa-envelope"></i> {{ t('Email') }}
           </a>
           <a href="{{ url_for('owner.whatsapp_settings') }}" class="btn btn-outline-success">
-            <i class="fab fa-whatsapp"></i> ??????
+            <i class="fab fa-whatsapp"></i> {{ t('WhatsApp') }}
           </a>
         </div>
       </div>
@@ -41,22 +41,22 @@
   <div class="container-fluid">
     <div class="card">
       <div class="card-header bg-info text-white">
-        <h3 class="card-title"><i class="fas fa-broadcast-tower mr-2"></i> ????? ??????? ????? ???????</h3>
+        <h3 class="card-title"><i class="fas fa-broadcast-tower mr-2"></i> {{ t('SMS_Broadcast_Settings') }}</h3>
       </div>
       <div class="card-body">
         <form class="needs-validation sms-settings-form" method="POST" action="{{ url_for('owner.sms_settings') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
           <div class="form-group">
-            <label>???? ??????</label>
-            <select name="sms_provider" class="form-control" aria-label="sms provider">
+            <label for="input_sms_provider">{{ t('SMS_Provider') }}</label>
+            <select name="sms_provider" class="form-control" id="input_sms_provider" aria-label="sms provider">
               <option value="" {{ 'selected' if not settings.sms_provider }}>{{ t('None') }}</option>
               <option value="twilio" {{ 'selected' if settings.sms_provider == 'twilio' }}>Twilio</option>
               <option value="nexmo" {{ 'selected' if settings.sms_provider == 'nexmo' }}>Nexmo (Vonage)</option>
-              <option value="local" {{ 'selected' if settings.sms_provider == 'local' }}>???? ????</option>
+              <option value="local" {{ 'selected' if settings.sms_provider == 'local' }}>{{ t('Local_SMS') }}</option>
             </select>
             <small class="form-text text-muted mt-2">
-              ???? ???? ??????? ???? ???? ???????. ????? ?????? ??? API ????? ??? ??????.
+              {{ t('SMS_Provider_Help') }}
             </small>
           </div>
 
@@ -65,22 +65,22 @@
             <input type="password"
                    name="sms_api_key"
                    class="form-control"
-                   value="{{ settings.sms_api_key or '' }}"
-                   placeholder="API Key ?? ??????" id="input_sms_api_key">
+                   value="{{ settings.sms_api_key|default('') }}"
+                   placeholder="API Key {{ t('Or_Keep_Existing') }}" id="input_sms_api_key">
             <small class="form-text text-muted">
-              ???? ????? API ????? ??????? ??? ??????? ???? ???? ???? ???.
+              {{ t('SMS_API_Key_Help') }}
             </small>
           </div>
 
           <div class="form-group">
-            <label for="input_sms_sender_name">??? ??????</label>
+            <label for="input_sms_sender_name">{{ t('Sender_Name') }}</label>
             <input type="text"
                    name="sms_sender_name"
                    class="form-control"
-                   value="{{ settings.sms_sender_name or '' }}"
+                   value="{{ settings.sms_sender_name|default('') }}"
                    placeholder="Azad Garage"
                    maxlength="11" id="input_sms_sender_name" minlength="2">
-            <small class="form-text text-muted">???? ?????? 11 ?????? ???? ?????? ??????? ??? ????????.</small>
+            <small class="form-text text-muted">{{ t('Sender_Name_Help') }}</small>
           </div>
 
           <div class="form-group">
@@ -91,22 +91,20 @@
                      name="sms_enabled"
                      {% if settings.sms_enabled %}checked{% endif %} aria-label="sms enabled">
               <label class="custom-control-label" for="sms_enabled">
-                ????? ??????? ??????
+                {{ t('Enable_SMS_Messaging') }}
               </label>
             </div>
             <small class="form-text text-muted mt-2">
-              ??? ???????? ??????? ?????? ??????? ?????? ?????? ????????? ???????.
+              {{ t('SMS_Enable_Help') }}
             </small>
           </div>
 
           <button type="submit" class="btn btn-info btn-lg">
-            <i class="fas fa-save mr-1"></i> ??? ?????????
+            <i class="fas fa-save mr-1"></i> {{ t('Save_Settings') }}
           </button>
         </form>
       </div>
     </div>
   </div>
 </section>
-
 {% endblock %}
-
