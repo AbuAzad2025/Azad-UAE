@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}أداء المنتجات{% endblock %}
+{% block title %}{{ _('أداء المنتجات') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="mb-3">
@@ -20,32 +20,35 @@
           <thead class="thead-dark">
             <tr>
               <th>#</th>
-              <th>{{ t('Product') }}</th>
-              <th>{{ t('Code') }}</th>
-              <th>{{ t('Sales') }}</th>
-              <th>{{ t('Revenue') }}</th>
+              <th>{{ _('المنتج') }}</th>
+              <th>{{ _('الكود') }}</th>
+              <th>{{ _('المبيعات') }}</th>
+              <th>{{ _('الإيرادات') }}</th>
               <th>{{ _('الهامش') }}</th>
-              <th>{{ _('النسبة %%') }}</th>
-              <th>{{ t('Status') }}</th>
+              <th>{{ _('النسبة %') }}</th>
+              <th>{{ _('الحالة') }}</th>
             </tr>
           </thead>
           <tbody>
-            {% for p in products %}
+            {% for p in products|default([]) %}
             <tr>
               <td>{{ loop.index }}</td>
-              <td>{{ p.name }}</td>
-              <td><code>{{ p.code }}</code></td>
-              <td>{{ "%.0f"|format(p.sold) }}</td>
-              <td>{{ "%.2f"|format(p.revenue) }} {{ tenant_currency_symbol }}</td>
-              <td>{{ "%.2f"|format(p.margin) }} {{ tenant_currency_symbol }}</td>
-              <td>{{ "%.1f"|format(p.margin_percent) }}%</td>
+              <td>{{ p.name|default('') }}</td>
+              <td><code>{{ p.code|default('') }}</code></td>
+              <td>{{ "%.0f"|format(p.sold|default(0)) }}</td>
+              <td>{{ "%.2f"|format(p.revenue|default(0)) }} {{ tenant_currency_symbol|default('AED') }}</td>
+              <td>{{ "%.2f"|format(p.margin|default(0)) }} {{ tenant_currency_symbol|default('AED') }}</td>
+              <td>{{ "%.1f"|format(p.margin_percent|default(0)) }}%</td>
               <td>
-                {% set badge_cls = 'success' if p.status == 'ممتاز' else 'info' if p.status == 'جيد' else 'warning' %}
+                {% set status_map = {'ممتاز': 'success', 'جيد': 'info', 'ضعيف': 'warning'} %}
+                {% set badge_cls = status_map.get(p.status|default(''), 'secondary') %}
                 <span class="badge badge-{{ badge_cls }}">
-                  {{ p.status }}
+                  {{ p.status|default('') }}
                 </span>
               </td>
             </tr>
+            {% else %}
+            <tr><td colspan="8" class="text-center text-muted">{{ _('لا توجد منتجات') }}</td></tr>
             {% endfor %}
           </tbody>
         </table>

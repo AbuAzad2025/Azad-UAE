@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}تحليلات المبيعات{% endblock %}
+{% block title %}{{ _('تحليلات المبيعات') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="mb-3">
@@ -13,18 +13,50 @@
       <i class="fas fa-link"></i> {{ _('العملاء') }}
     </a>
     <a href="{{ url_for('owner.product_performance') }}" class="btn btn-warning">
-      <i class="fas fa-link"></i>{{ t('Products_2') }}</a>
+      <i class="fas fa-link"></i>{{ _('المنتجات') }}</a>
   </div>
-  <div class="card"><div class="card-header"><h3>{{ _('تحليلات المبيعات (30 يوم)') }}</h3></div><div class="card-body"><canvas id="salesChart" height="100"></canvas><hr><h5 class="mt-4">{{ _('أفضل 10 منتجات') }}</h5><div class="table-responsive"><table class="table table-bordered"><thead><tr><th>{{ t('Product') }}</th><th>{{ _('الكمية المباعة') }}</th><th>{{ t('Revenue') }}</th></tr></thead><tbody>{% for p in insights.top_products %}<tr><td>{{ p.name }}</td><td>{{ p.qty }}</td><td>{{ "%.2f"|format(p.revenue) }} AED</td></tr>{% endfor %}</tbody></table></div></div></div></div>
+  <div class="card">
+    <div class="card-header">
+      <h3>{{ _('تحليلات المبيعات (30 يوم)') }}</h3>
+    </div>
+    <div class="card-body">
+      <canvas id="salesChart" style="height: 100px;"></canvas>
+      <hr>
+      <h5 class="mt-4">{{ _('أفضل 10 منتجات') }}</h5>
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>{{ _('المنتج') }}</th>
+              <th>{{ _('الكمية المباعة') }}</th>
+              <th>{{ _('الإيرادات') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in (insights.top_products|default([])) %}
+            <tr>
+              <td>{{ p.name|default('') }}</td>
+              <td>{{ p.qty|default(0) }}</td>
+              <td>{{ "%.2f"|format(p.revenue|default(0)) }} {{ tenant_currency_symbol|default('AED') }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="3" class="text-center text-muted">{{ _('لا توجد منتجات') }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
 <script src="{{ url_for('static', filename='adminlte/plugins/chartjs/chart.min.js') }}"></script>
 <script>
 new Chart(document.getElementById('salesChart'), {
   type: 'bar',
   data: {
-    labels: JSON.parse('{{ insights.daily_sales|map(attribute='date')|list|tojson }}'),
+    labels: {{ (insights.daily_sales|default([]))|map(attribute='date')|list|tojson|safe }},
     datasets: [{
-      label: 'المبيعات اليومية',
-      data: JSON.parse('{{ insights.daily_sales|map(attribute='total')|list|tojson }}'),
+      label: {{ _('المبيعات اليومية')|tojson|safe }},
+      data: {{ (insights.daily_sales|default([]))|map(attribute='total')|list|tojson|safe }},
       backgroundColor: 'rgba(54, 162, 235, 0.5)'
     }]
   }

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}استيراد وتصدير{% endblock %}
+{% block title %}{{ _('استيراد وتصدير') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="mb-3">
@@ -17,28 +17,28 @@
         <div class="col-md-3">
           <a href="{{ url_for('owner.export_excel', table_name='customers') }}" class="btn btn-success btn-block btn-lg mb-3">
             <i class="fas fa-file-excel fa-2x mb-2"></i>
-            <br>{{ t('Customers_2') }}</a>
+            <br>{{ _('العملاء') }}</a>
         </div>
         <div class="col-md-3">
           <a href="{{ url_for('owner.export_excel', table_name='products') }}" class="btn btn-success btn-block btn-lg mb-3">
             <i class="fas fa-file-excel fa-2x mb-2"></i>
-            <br>{{ t('Products') }}</a>
+            <br>{{ _('المنتجات') }}</a>
         </div>
         <div class="col-md-3">
           <a href="{{ url_for('owner.export_excel', table_name='sales') }}" class="btn btn-success btn-block btn-lg mb-3">
             <i class="fas fa-file-excel fa-2x mb-2"></i>
-            <br>{{ t('Sales') }}</a>
+            <br>{{ _('المبيعات') }}</a>
         </div>
         <div class="col-md-3">
           <a href="{{ url_for('owner.export_excel', table_name='expenses') }}" class="btn btn-success btn-block btn-lg mb-3">
             <i class="fas fa-file-excel fa-2x mb-2"></i>
-            <br>{{ t('Expenses') }}</a>
+            <br>{{ _('المصروفات') }}</a>
         </div>
       </div>
-      
+
       <div class="alert alert-info mt-4">
         <i class="fas fa-info-circle"></i>
-        <strong>{{ t('Note') }}</strong> سيتم تنزيل الملف بصيغة Excel (.xlsx) جاهز للفتح في Excel {{ t('Or') }}Google Sheets.
+        {{ _('ملاحظة: سيتم تنزيل الملف بصيغة Excel (.xlsx) جاهز للفتح في Excel أو Google Sheets.') }}
       </div>
     </div>
   </div>

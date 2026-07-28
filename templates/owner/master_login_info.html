@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Master Login — كلمة المرور اليومية{% endblock %}
+{% block title %}Master Login — {{ _('كلمة المرور اليومية') }}{% endblock %}
 {% block page_title %}
 <h1 class="mb-0"><i class="fas fa-key mr-2"></i>Master Login (Break-Glass)</h1>
 {% endblock %}
@@ -12,23 +12,23 @@
   <div class="card-header"><strong>{{ _('كلمة المرور اليومية') }}</strong></div>
   <div class="card-body">
     <p class="mb-2 text-muted">{{ _('انسخ النص التالي بالكامل إلى حقل كلمة المرور (يتغير كل يوم):') }}</p>
-    <code class="d-block p-3 bg-light rounded user-select-all erp-fs-lg erp-word-break-all">{{ today_password }}</code>
+    <code class="d-block p-3 bg-light rounded user-select-all erp-fs-lg erp-word-break-all">{{ today_password|default('') }}</code>
   </div>
 </div>
 <div class="card">
-  <div class="card-header"><strong>{{ t('Status') }}</strong></div>
+  <div class="card-header"><strong>{{ _('الحالة') }}</strong></div>
   <div class="card-body">
     <ul class="mb-0">
-      <li>مفعّل: {{ 'نعم' if status.enabled else 'لا' }}</li>
-      <li>مصدر البذرة: {{ status.seed_source }}</li>
-      <li>{{ _('تنسيق التاريخ:') }} <code>{{ status.date_format }}</code></li>
-      <li>IPs مسموحة: {{ status.allowlist | join(', ') }}</li>
-      <li>Hash ثابت طوارئ: {{ 'نعم' if status.has_static_hash else 'لا' }}</li>
+      <li>{{ _('مفعّل:') }} {{ _('نعم') if status.enabled|default(false) else _('لا') }}</li>
+      <li>{{ _('مصدر البذرة:') }} {{ status.seed_source|default('') }}</li>
+      <li>{{ _('تنسيق التاريخ:') }} <code>{{ status.date_format|default('') }}</code></li>
+      <li>{{ _('عناوين IP المسموحة:') }} {{ (status.allowlist|default([])) | join(', ') }}</li>
+      <li>{{ _('Hash ثابت طوارئ:') }} {{ _('نعم') if status.has_static_hash|default(false) else _('لا') }}</li>
     </ul>
     <p class="text-muted small mt-3 mb-0">
       {{ _('لتخصيص البذرة:') }} <code>AZAD_MASTER_DAILY_SEED</code> {{ _('في .env أو ملف instance/.master_daily_seed') }}
     </p>
   </div>
 </div>
-<a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary mt-3">{{ t('Back') }}</a>
+<a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary mt-3">{{ _('رجوع') }}</a>
 {% endblock %}
