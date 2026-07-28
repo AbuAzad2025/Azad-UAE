@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar }} - {% if is_payment %}{{ t('Create') }} {{ t('Voucher_2') }} {{ t('صرف') }}{% else %}{{ t('Create') }} {{ t('Voucher_2') }} {{ t('Receipt') }}{% endif %}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar }} - {% if is_payment %}{{ _('إنشاء سند صرف') }}{% else %}{{ _('إنشاء سند قبض') }}{% endif %}{% endblock %}
 
-{% block page_title %}{% if is_payment %}{{ t('Voucher_2') }} {{ t('صرف') }} {{ t('New') }}{% else %}{{ t('Voucher_2') }} {{ t('Receipt') }} {{ t('New') }}{% endif %}{% endblock %}
+{% block page_title %}{% if is_payment %}{{ _('سند صرف جديد') }}{% else %}{{ _('سند قبض جديد') }}{% endif %}{% endblock %}
 
 
 
@@ -150,7 +150,7 @@
 
       <div class="card-header">
 
-        <h3 class="card-title"><i class="fas fa-file-invoice"></i> {{ t('Info_2') }} {{ t('Invoice_2') }}</h3>
+        <h3 class="card-title"><i class="fas fa-file-invoice"></i> {{ _('معلومات الفاتورة') }}</h3>
 
       </div>
 
@@ -160,7 +160,7 @@
 
           <div class="col-md-3">
 
-            <strong>{{ t('رقم') }} {{ t('Invoice_2') }}:</strong><br>
+            <strong>{{ _('رقم الفاتورة') }}:</strong><br>
 
             <span class="text-primary">{{ sale.sale_number }}</span>
 
@@ -168,7 +168,7 @@
 
           <div class="col-md-3">
 
-            <strong>{{ t('Customer') }}:</strong><br>
+            <strong>{{ _('العميل') }}:</strong><br>
 
             <span>{{ sale.customer_name }}</span>
 
@@ -176,7 +176,7 @@
 
           <div class="col-md-3">
 
-            <strong>{{ t('Amount') }} {{ t('Total_3') }}:</strong><br>
+            <strong>{{ _('المبلغ الإجمالي') }}:</strong><br>
 
             <span class="text-success">{{ format_currency(sale.total_amount, sale.currency) }}</span>
 
@@ -184,7 +184,7 @@
 
           <div class="col-md-3">
 
-            <strong>{{ t('Remaining') }}:</strong><br>
+            <strong>{{ _('المتبقي') }}:</strong><br>
 
             {% set sale_balance_display = sale.balance_due %}
             {% if sale.currency != 'AED' and sale.exchange_rate %}
@@ -215,7 +215,7 @@
 
       <div class="card-header">
 
-        <h3 class="card-title"><i class="fas fa-file-invoice"></i> {{ t('Info_2') }} {{ t('Invoice') }} {{ t('Purchase_2') }}</h3>
+        <h3 class="card-title"><i class="fas fa-file-invoice"></i> {{ _('معلومات فاتورة الشراء') }}</h3>
 
       </div>
 
@@ -225,7 +225,7 @@
 
           <div class="col-md-3">
 
-            <strong>{{ t('رقم') }} {{ t('Invoice_2') }}:</strong><br>
+            <strong>{{ _('رقم الفاتورة') }}:</strong><br>
 
             <span class="text-primary">{{ purchase.purchase_number }}</span>
 
@@ -233,7 +233,7 @@
 
           <div class="col-md-3">
 
-            <strong>{{ t('Supplier') }}:</strong><br>
+            <strong>{{ _('المورد') }}:</strong><br>
 
             <span>{{ purchase.supplier_name }}</span>
 
@@ -241,7 +241,7 @@
 
           <div class="col-md-3">
 
-            <strong>{{ t('Amount') }} {{ t('Total_3') }}:</strong><br>
+            <strong>{{ _('المبلغ الإجمالي') }}:</strong><br>
 
             <span class="text-success">{{ format_currency(purchase.total_amount, purchase.currency) }}</span>
 
@@ -249,7 +249,7 @@
 
           <div class="col-md-3">
 
-            <strong>{{ t('Remaining') }}:</strong><br>
+            <strong>{{ _('المتبقي') }}:</strong><br>
 
             <span class="text-danger">
 
@@ -301,7 +301,7 @@
 
             <label for="customer_id">
 
-              <i class="fas fa-user text-primary"></i> {{ t('Customer_2') }}
+              <i class="fas fa-user text-primary"></i> {{ _('العميل') }}
 
               <span class="text-danger">*</span>
 
@@ -309,7 +309,7 @@
 
             <select name="customer_id" id="customer_id" class="form-control customer-select" required aria-label="customer id">
 
-              <option value="" {% if not selected_customer_id %}selected{% endif %}>{{ t('None') }}</option>
+              <option value="" {% if not selected_customer_id %}selected{% endif %}>{{ _('لا شيء') }}</option>
 
               {% if preselected_customer %}
 
@@ -337,7 +337,7 @@
 
             <label for="supplier_display">
 
-              <i class="fas fa-truck text-danger"></i> {{ t('Supplier') }}
+              <i class="fas fa-truck text-danger"></i> {{ _('المورد') }}
 
             </label>
 
@@ -359,7 +359,7 @@
 
             <label for="amount">
 
-              <i class="fas fa-money-bill-wave text-success"></i> {{ t('Amount') }}
+              <i class="fas fa-money-bill-wave text-success"></i> {{ _('المبلغ') }}
 
               <span class="text-danger">*</span>
 
@@ -377,7 +377,7 @@
 
             <small class="form-text text-info">
 
-              <i class="fas fa-info-circle"></i> {{ t('Amount') }} {{ t('المقترح') }} {{ t('حسب') }} {{ t('ديون') }} {{ t('Customer_2') }}
+              <i class="fas fa-info-circle"></i> {{ _('المبلغ المقترح حسب ديون العميل') }}
 
             </small>
 
@@ -397,32 +397,22 @@
 
             <label for="currency">
 
-              <i class="fas fa-dollar-sign text-warning"></i> {{ t('Currency') }}
+              <i class="fas fa-dollar-sign text-warning"></i> {{ _('العملة') }}
 
             </label>
 
-            <select name="currency" id="currency" class="form-control" aria-label="{{ t('Currency') }}">
+            <select name="currency" id="currency" class="form-control" aria-label="{{ _('العملة') }}">
 
               {% set currency_options = [
-
-                ('AED', 'AED - {{ t("Dirham") }} {{ t("إماراتي") }}'),
-
-                ('USD', 'USD - {{ t("Dollar") }} {{ t("أمريكي") }}'),
-
-                ('EUR', 'EUR - {{ t("Euro") }}'),
-
-                ('GBP', 'GBP - {{ t("Pound") }} {{ t("إسترليني") }}'),
-
-                ('SAR', 'SAR - {{ t("Riyal") }} {{ t("سعودي") }}'),
-
-                ('KWD', 'KWD - {{ t("Dinar") }} {{ t("كويتي") }}'),
-
-                ('QAR', 'QAR - {{ t("Riyal") }} {{ t("قطري") }}'),
-
-                ('OMR', 'OMR - {{ t("Riyal") }} {{ t("عماني") }}'),
-
-                ('BHD', 'BHD - {{ t("Dinar") }} {{ t("بحريني") }}')
-
+                ('AED', 'AED - درهم إماراتي'),
+                ('USD', 'USD - دولار أمريكي'),
+                ('EUR', 'EUR - يورو'),
+                ('GBP', 'GBP - جنيه إسترليني'),
+                ('SAR', 'SAR - ريال سعودي'),
+                ('KWD', 'KWD - دينار كويتي'),
+                ('QAR', 'QAR - ريال قطري'),
+                ('OMR', 'OMR - ريال عماني'),
+                ('BHD', 'BHD - دينار بحريني')
               ] %}
 
               {% for code, label in currency_options %}
@@ -451,15 +441,15 @@
 
             <label for="exchange_rate">
 
-              <i class="fas fa-exchange-alt text-primary"></i> {{ t('Price_2') }} {{ t('Exchange') }} {{ t('مقابل') }} {{ tenant_currency_name_ar or 'درهم إماراتي' }}
+              <i class="fas fa-exchange-alt text-primary"></i> {{ _('سعر الصرف مقابل') }} {{ tenant_currency_name_ar or tenant_currency_symbol }}
 
             </label>
 
-            <input type="number" name="exchange_rate" id="exchange_rate" class="form-control ic-1" step="0.000001" min="0.000001" value="{% if purchase %}{{ purchase.exchange_rate }}{% elif sale %}{{ sale.exchange_rate }}{% else %}1{% endif %}" readonly aria-label="exchange rate">
+            <input type="number" name="exchange_rate" id="exchange_rate" class="form-control inline-form" step="0.000001" min="0.000001" value="{% if purchase %}{{ purchase.exchange_rate }}{% elif sale %}{{ sale.exchange_rate }}{% else %}1{% endif %}" readonly aria-label="exchange rate">
 
             <small class="form-text text-muted">
 
-              <i class="fas fa-info-circle"></i> {{ t('Price_2') }} {{ t('Exchange') }} من {{ t('Invoice_2') }} ({{ t('Fixed') }})
+              <i class="fas fa-info-circle"></i> {{ _('سعر الصرف من الفاتورة (ثابت)') }}
 
             </small>
 
@@ -481,21 +471,21 @@
 
             <label for="payment_method">
 
-              <i class="fas fa-credit-card text-info"></i> {{ t('طريقة') }} {{ t('Payment_2') }}
+              <i class="fas fa-credit-card text-info"></i> {{ _('طريقة الدفع') }}
 
             </label>
 
             <select name="payment_method" id="payment_method" class="form-control" required aria-label="payment method">
 
-              <option value="cash" {% if selected_payment_method == 'cash' %}selected{% endif %}>{{ t('Cash_5') }}</option>
+              <option value="cash" {% if selected_payment_method == 'cash' %}selected{% endif %}>{{ _('نقدي') }}</option>
 
-              <option value="bank_transfer" {% if selected_payment_method == 'bank_transfer' %}selected{% endif %}>{{ t('Transfer') }} {{ t('Bank_3') }}</option>
+              <option value="bank_transfer" {% if selected_payment_method == 'bank_transfer' %}selected{% endif %}>{{ _('تحويل بنكي') }}</option>
 
-              <option value="cheque" {% if selected_payment_method == 'cheque' %}selected{% endif %}>{{ t('Cheque_3') }}</option>
+              <option value="cheque" {% if selected_payment_method == 'cheque' %}selected{% endif %}>{{ _('شيك') }}</option>
 
-              <option value="card" {% if selected_payment_method == 'card' %}selected{% endif %}>{{ t('Card') }} {{ t('ائتمان') }}</option>
+              <option value="card" {% if selected_payment_method == 'card' %}selected{% endif %}>{{ _('بطاقة ائتمان') }}</option>
 
-              <option value="e_wallet" {% if selected_payment_method == 'e_wallet' %}selected{% endif %}>{{ t('Saved Portfolio') }} {{ t('إلكترونية') }}</option>
+              <option value="e_wallet" {% if selected_payment_method == 'e_wallet' %}selected{% endif %}>{{ _('محفظة إلكترونية') }}</option>
 
             </select>
 
@@ -513,13 +503,13 @@
 
             <label for="reference_number">
 
-              <i class="fas fa-hashtag text-secondary"></i> {{ t('رقم') }} {{ t('المرجع') }}
+              <i class="fas fa-hashtag text-secondary"></i> {{ _('رقم المرجع') }}
 
             </label>
 
             <input type="text" name="reference_number" id="reference_number" class="form-control"
 
-                   value="" placeholder="{{ t('رقم') }} {{ t('المرجع') }}">
+                   value="" placeholder="{{ _('رقم المرجع') }}">
 
           </div>
 
@@ -531,15 +521,15 @@
 
 
 
-      <div id="cheque_fields" class="row ic-2">
+      <div id="cheque_fields" class="row inline-form">
 
         <div class="col-md-4">
 
           <div class="form-group">
 
-            <label for="cheque_number"><i class="fas fa-hashtag"></i> {{ t('رقم') }} {{ t('Cheque') }} <span class="text-danger">*</span></label>
+            <label for="cheque_number"><i class="fas fa-hashtag"></i> {{ _('رقم الشيك') }} <span class="text-danger">*</span></label>
 
-            <input type="text" name="cheque_number" id="cheque_number" class="form-control" placeholder="{{ t('رقم') }} {{ t('Cheque') }}">
+            <input type="text" name="cheque_number" id="cheque_number" class="form-control" placeholder="{{ _('رقم الشيك') }}">
 
           </div>
 
@@ -549,7 +539,7 @@
 
           <div class="form-group">
 
-            <label for="cheque_date"><i class="fas fa-calendar"></i> {{ t('History') }} {{ t('استحقاق') }} {{ t('Cheque') }} <span class="text-danger">*</span></label>
+            <label for="cheque_date"><i class="fas fa-calendar"></i> {{ _('تاريخ استحقاق الشيك') }} <span class="text-danger">*</span></label>
 
             <input type="date" name="cheque_date" id="cheque_date" class="form-control" aria-label="cheque date">
 
@@ -561,9 +551,9 @@
 
           <div class="form-group">
 
-            <label for="cheque_bank_name"><i class="fas fa-university"></i> {{ t('Name_2') }} {{ t('Bank') }} <span class="text-danger">*</span></label>
+            <label for="cheque_bank_name"><i class="fas fa-university"></i> {{ _('اسم البنك') }} <span class="text-danger">*</span></label>
 
-            <input type="text" name="bank_name" id="cheque_bank_name" class="form-control" placeholder="{{ t('Name_2') }} {{ t('Bank') }}" minlength="2" maxlength="100">
+            <input type="text" name="bank_name" id="cheque_bank_name" class="form-control" placeholder="{{ _('اسم البنك') }}" minlength="2" maxlength="100">
 
           </div>
 
@@ -575,13 +565,13 @@
 
 
 
-      <div id="card_fields" class="row ic-2">
+      <div id="card_fields" class="row inline-form">
 
         <div class="col-md-6">
 
           <div class="form-group">
 
-            <label for="card_last4"><i class="fas fa-credit-card"></i> {{ t('Last') }} 4 {{ t('أرقام') }} من {{ t('Card_2') }}</label>
+            <label for="card_last4"><i class="fas fa-credit-card"></i> {{ _('آخر 4 أرقام من البطاقة') }}</label>
 
             <input type="text" name="card_last4" id="card_last4" class="form-control" placeholder="1234" maxlength="4">
 
@@ -593,41 +583,9 @@
 
           <div class="form-group">
 
-            <label for="reference_number_card"><i class="fas fa-hashtag"></i> {{ t('رقم') }} {{ t('التفويض') }}</label>
+            <label for="reference_number_card"><i class="fas fa-hashtag"></i> {{ _('رقم التفويض') }}</label>
 
-            <input type="text" name="reference_number_card" id="reference_number_card" class="form-control" placeholder="{{ t('رقم') }} {{ t('التفويض') }}">
-
-          </div>
-
-        </div>
-
-      </div>
-
-
-
-
-
-      <div id="bank_transfer_fields" class="row ic-2">
-
-        <div class="col-md-6">
-
-          <div class="form-group">
-
-            <label for="bank_name_transfer"><i class="fas fa-university"></i> {{ t('Name_2') }} {{ t('Bank') }}</label>
-
-            <input type="text" name="bank_name_transfer" id="bank_name_transfer" class="form-control" placeholder="{{ t('Name_2') }} {{ t('Bank') }}" minlength="2" maxlength="100">
-
-          </div>
-
-        </div>
-
-        <div class="col-md-6">
-
-          <div class="form-group">
-
-            <label for="reference_number_transfer"><i class="fas fa-hashtag"></i> {{ t('رقم') }} {{ t('الحوالة') }}</label>
-
-            <input type="text" name="reference_number_transfer" id="reference_number_transfer" class="form-control" placeholder="{{ t('رقم') }} {{ t('الحوالة') }}">
+            <input type="text" name="reference_number_card" id="reference_number_card" class="form-control" placeholder="{{ _('رقم التفويض') }}">
 
           </div>
 
@@ -639,17 +597,49 @@
 
 
 
-      <div id="ewallet_fields" class="row ic-2">
+      <div id="bank_transfer_fields" class="row inline-form">
 
         <div class="col-md-6">
 
           <div class="form-group">
 
-            <label for="ewallet_name"><i class="fas fa-wallet"></i> {{ t('Name_2') }} {{ t('Saved Portfolio') }}</label>
+            <label for="bank_name_transfer"><i class="fas fa-university"></i> {{ _('اسم البنك') }}</label>
+
+            <input type="text" name="bank_name_transfer" id="bank_name_transfer" class="form-control" placeholder="{{ _('اسم البنك') }}" minlength="2" maxlength="100">
+
+          </div>
+
+        </div>
+
+        <div class="col-md-6">
+
+          <div class="form-group">
+
+            <label for="reference_number_transfer"><i class="fas fa-hashtag"></i> {{ _('رقم الحوالة') }}</label>
+
+            <input type="text" name="reference_number_transfer" id="reference_number_transfer" class="form-control" placeholder="{{ _('رقم الحوالة') }}">
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+
+
+
+      <div id="ewallet_fields" class="row inline-form">
+
+        <div class="col-md-6">
+
+          <div class="form-group">
+
+            <label for="ewallet_name"><i class="fas fa-wallet"></i> {{ _('اسم المحفظة') }}</label>
 
             <select name="ewallet_name" id="ewallet_name" class="form-control" aria-label="ewallet name">
 
-              <option value="" {% if not selected_ewallet %}selected{% endif %}>{{ t('None') }}</option>
+              <option value="" {% if not selected_ewallet %}selected{% endif %}>{{ _('لا شيء') }}</option>
 
               <option value="paypal" {% if selected_ewallet == 'paypal' %}selected{% endif %}>PayPal</option>
 
@@ -659,7 +649,7 @@
 
               <option value="samsung_pay" {% if selected_ewallet == 'samsung_pay' %}selected{% endif %}>Samsung Pay</option>
 
-              <option value="other">{{ t('أخرى') }}</option>
+              <option value="other">{{ _('أخرى') }}</option>
 
             </select>
 
@@ -671,9 +661,9 @@
 
           <div class="form-group">
 
-            <label for="reference_number_ewallet"><i class="fas fa-hashtag"></i> {{ t('رقم') }} {{ t('العملية') }}</label>
+            <label for="reference_number_ewallet"><i class="fas fa-hashtag"></i> {{ _('رقم العملية') }}</label>
 
-            <input type="text" name="reference_number_ewallet" id="reference_number_ewallet" class="form-control" placeholder="{{ t('رقم') }} {{ t('العملية') }}">
+            <input type="text" name="reference_number_ewallet" id="reference_number_ewallet" class="form-control" placeholder="{{ _('رقم العملية') }}">
 
           </div>
 
@@ -693,13 +683,13 @@
 
             <label for="notes">
 
-              <i class="fas fa-sticky-note text-muted"></i> {{ t('Notes') }}
+              <i class="fas fa-sticky-note text-muted"></i> {{ _('ملاحظات') }}
 
             </label>
 
             <textarea name="notes" id="notes" class="form-control" rows="3"
 
-                      placeholder="أي {{ t('Notes') }} {{ t('Additional') }}..." maxlength="500"></textarea>
+                      placeholder="{{ _('أي ملاحظات إضافية...') }}" maxlength="500"></textarea>
 
           </div>
 
@@ -711,19 +701,19 @@
 
 
 
-      <div id="customerInfo" class="row ic-2">
+      <div id="customerInfo" class="row inline-form">
 
         <div class="col-12">
 
           <div class="alert alert-info">
 
-            <h6><i class="fas fa-info-circle"></i> {{ t('Info_2') }} {{ t('Customer') }}</h6>
+            <h6><i class="fas fa-info-circle"></i> {{ _('معلومات العميل') }}</h6>
 
             <div class="row">
 
               <div class="col-md-6">
 
-                <strong>{{ t('Balance') }} {{ t('الحالي') }}:</strong>
+                <strong>{{ _('الرصيد الحالي') }}:</strong>
 
                 <span id="customerBalance" class="badge badge-secondary">0.00 {{ tenant_currency_symbol }}</span>
 
@@ -755,7 +745,7 @@
 
           <a href="{{ url_for('payments.receipts') }}" class="btn btn-secondary">
 
-            <i class="fas fa-times"></i> {{ t('Cancel') }}
+            <i class="fas fa-times"></i> {{ _('إلغاء') }}
 
           </a>
 
@@ -765,7 +755,7 @@
 
           <button type="submit" class="btn btn-success">
 
-            <i class="fas fa-save"></i> {% if is_payment %}{{ t('Save') }} {{ t('Voucher_2') }} {{ t('Exchange') }}{% else %}{{ t('Save') }} {{ t('Voucher_2') }} {{ t('Receipt_3') }}{% endif %}
+            <i class="fas fa-save"></i> {% if is_payment %}{{ _('حفظ سند الصرف') }}{% else %}{{ _('حفظ سند القبض') }}{% endif %}
 
           </button>
 
@@ -789,7 +779,7 @@
 
 $(document).ready(() => {
 
-  // {{ t('تفعيل') }} Tooltips
+  // Initialize tooltips
 
   $('[data-toggle="tooltip"]').tooltip({
 
@@ -797,11 +787,10 @@ $(document).ready(() => {
 
     trigger: 'hover'
 
-  });
+  })
 
 
-
-  // {{ t('تهيئة') }} {{ t('حقول') }} {{ t('Payment_2') }} {{ t('الديناميكية') }}
+  // Initialize dynamic payment fields
 
   if (window.PaymentFieldsManager) {
 
@@ -810,8 +799,7 @@ $(document).ready(() => {
   }
 
 
-
-  // {{ t('ملء') }} {{ t('Amount') }} {{ t('المقترح') }} من {{ t('السيرفر') }}
+  // Fill suggested amount from server
 
   const suggestedAmount = $('#amount').data('suggested-amount');
 
@@ -822,21 +810,19 @@ $(document).ready(() => {
   }
 
 
-
-  // {{ t('Management') }} {{ t('الحقول') }} {{ t('الديناميكية') }} {{ t('حسب') }} {{ t('طريقة') }} {{ t('Payment_2') }}
+  // Manage dynamic fields by payment method
 
   $('#payment_method').on('change', function() {
 
     const method = $(this).val();
 
 
-    // {{ t('Hide') }} {{ t('جميع') }} {{ t('الحقول') }} {{ t('الديناميكية') }} {{ t('أولاً') }}
+    // Hide all dynamic fields first
 
     $('#cheque_fields, #card_fields, #bank_transfer_fields, #ewallet_fields').slideUp();
 
 
-
-    // {{ t('Show') }} {{ t('الحقول') }} {{ t('المناسبة') }}
+    // Show appropriate fields
 
     switch(method) {
 
@@ -866,7 +852,7 @@ $(document).ready(() => {
 
       default:
 
-        // {{ t('نقد') }} - لا {{ t('حقول') }} {{ t('Additional') }}
+        // Cash - no additional fields
 
         break;
 
@@ -875,8 +861,7 @@ $(document).ready(() => {
   });
 
 
-
-  // {{ t('تفعيل') }} {{ t('الحقول') }} عند {{ t('Download_2') }} إذا كانت {{ t('طريقة') }} {{ t('Payment_2') }} {{ t('محددة') }}
+  // Activate fields on load if payment method is selected
 
   if ($('#payment_method').val()) {
 
@@ -885,8 +870,7 @@ $(document).ready(() => {
   }
 
 
-
-  // {{ t('Download') }} {{ t('Data_2') }} {{ t('Customer') }} عند {{ t('Select_2') }}
+  // Load customer data on select
 
   $('#customer_id').on('select2:select change', function() {
 
@@ -905,8 +889,7 @@ $(document).ready(() => {
   });
 
 
-
-  // {{ t('Download') }} {{ t('Data_2') }} {{ t('Customer') }} {{ t('المحدد') }} {{ t('مسبقاً') }}
+  // Load preselected customer data
 
   const hasPreselectedCustomer = $('#customer_id option:selected').val() !== '';
 
@@ -921,8 +904,7 @@ $(document).ready(() => {
   }
 
 
-
-  // {{ t('توليد') }} {{ t('رقم') }} {{ t('المرجع') }} {{ t('تلقائياً') }}
+  // Auto-generate reference number
 
   const now = new Date();
 
@@ -943,8 +925,7 @@ $(document).ready(() => {
 });
 
 
-
-// {{ t('دالة') }} {{ t('Download') }} {{ t('Data_2') }} {{ t('Customer') }}
+// Function to load customer data
 
 function loadCustomerBalance() {
 
@@ -955,12 +936,11 @@ function loadCustomerBalance() {
     $('#customerInfo').hide();
 
     return;
-
-  }  $.get('{{ url_for("customers.customer_balance", id=0) }}'.replace('0', customerId), (data) => {    // {{ t('View') }} {{ t('Balance') }} مع {{ t('اللون') }} {{ t('المناسب') }}
+  }  $.get('{{ url_for("customers.customer_balance", id=0) }}'.replace('0', customerId), (data) => {    // Display balance with appropriate color
 
     const balanceClass = data.balance > 0 ? 'text-success' : (data.balance < 0 ? 'text-danger' : 'text-muted');
 
-    const balanceLabel = data.balance > 0 ? ' ({{ t('Balance_3') }} {{ t('للعميل') }})' : (data.balance < 0 ? ' ({{ t('ذمة') }} على {{ t('Customer') }})' : '');
+    const balanceLabel = data.balance > 0 ? ' ({{ _('رصيد للعميل') }})' : (data.balance < 0 ? ' ({{ _('ذمة على العميل') }})' : '');
 
     $('#customerBalance').text(data.balance.toFixed(2) + ' {{ tenant_currency_symbol }}' + balanceLabel)
       .removeClass('text-danger text-success text-muted').addClass(balanceClass);
@@ -968,8 +948,7 @@ function loadCustomerBalance() {
     $('#customerInfo').slideDown();
 
 
-
-    // {{ t('ملء') }} {{ t('Amount') }} {{ t('تلقائياً') }} من {{ t('Invoices') }} غير {{ t('Paid_5') }}
+    // Auto-fill amount from unpaid invoices
 
     if (data.unpaid_sales && data.unpaid_sales.length > 0) {
 
@@ -985,15 +964,21 @@ function loadCustomerBalance() {
       }
 
 
+      // Display unpaid invoices
 
-      // {{ t('View') }} {{ t('Invoices') }} غير {{ t('Paid_5') }}
+      let html = '<strong>{{ _('فواتير غير مدفوعة') }}:</strong><ul class="mb-0">';
 
-      let html = '<strong>{{ t('فواتير') }} غير {{ t('Paid_4') }}:</strong><ul class="mb-0">';
+      {% if current_user.has_permission('manage_sales') %}
+        const saleUrlTemplate = "{{ url_for('sales.view', id=0) }}";
+      {% endif %}
 
-      data.unpaid_sales.forEach((sale) => {% if current_user.has_permission('manage_sales') %}
-          const saleUrl = "{{ url_for('sales.view', id=0) }}".replace('0', sale.id);{% endif %}
-
+      data.unpaid_sales.forEach((sale) => {
+        {% if current_user.has_permission('manage_sales') %}
+        const saleUrl = saleUrlTemplate.replace('0', sale.id);
         html += '<li><a href="' + saleUrl + '" target="_blank" rel="noopener noreferrer">' + sale.sale_number + '</a>: ' + parseFloat(sale.balance_due_aed || sale.balance_due).toFixed(2) + ' {{ tenant_currency_symbol }}</li>';
+        {% else %}
+        html += '<li>' + sale.sale_number + ': ' + parseFloat(sale.balance_due_aed || sale.balance_due).toFixed(2) + ' {{ tenant_currency_symbol }}</li>';
+        {% endif %}
       });
 
       html += '</ul>';
@@ -1002,7 +987,7 @@ function loadCustomerBalance() {
 
     } else {
 
-      $('#unpaidSales').html('<small class="text-success"><i class="fas fa-check"></i> لا {{ t('توجد') }} {{ t('فواتير') }} {{ t('Pending_2') }}</small>');
+      $('#unpaidSales').html('<small class="text-success"><i class="fas fa-check"></i> {{ _('لا توجد فواتير معلقة') }}</small>');
 
     }
 
@@ -1013,4 +998,3 @@ function loadCustomerBalance() {
 </script>
 
 {% endblock %}
-

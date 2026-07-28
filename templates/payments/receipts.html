@@ -1,9 +1,8 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar }} - {{ t('Management') }} {{ t('Payments') }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar }} - {{ _('إدارة المدفوعات') }}{% endblock %}
 
-{% block page_title %}{{ t('جميع') }} {{ t('Payments') }}{% endblock %}
-
+{% block page_title %}{{ _('إدارة المدفوعات') }}{% endblock %}
 
 
 {% block extra_css %}
@@ -21,7 +20,6 @@
   }
 
 
-
   body {
 
     -webkit-print-color-adjust: exact !important;
@@ -32,7 +30,6 @@
     direction: rtl;
 
   }
-
 
 
   .main-sidebar,
@@ -66,7 +63,6 @@
   }
 
 
-
   .content-wrapper {
 
     margin: 0 !important;
@@ -74,7 +70,6 @@
     padding: 0 !important;
 
   }
-
 
 
   .card {
@@ -86,13 +81,11 @@
   }
 
 
-
   .table-responsive {
 
     overflow: visible !important;
 
   }
-
 
 
   table {
@@ -104,9 +97,7 @@
   }
 
 
-
   table th,
-
   table td {
 
     border: 1px solid #dee2e6 !important;
@@ -118,7 +109,6 @@
   }
 
 
-
   table thead th {
 
     background: #198754 !important;
@@ -128,19 +118,18 @@
   }
 
 
-
   table tbody tr:nth-child(even) {
 
     background: #f8f9fa !important;
 
   }
 
+
 }
 
 </style>
 
 {% endblock %}
-
 
 
 {% block content %}
@@ -151,7 +140,7 @@
 
     <h3 class="card-title mb-0">
 
-      <i class="fas fa-wallet mr-2"></i>{{ t('Management') }} {{ t('Payments') }}
+      <i class="fas fa-wallet mr-2"></i>{{ _('إدارة المدفوعات') }}
 
     </h3>
 
@@ -159,19 +148,19 @@
 
       <button type="button" class="btn btn-outline-info" id="printReceiptsBtn">
 
-        <i class="fas fa-print mr-1"></i>{{ t('Print') }}
+        <i class="fas fa-print mr-1"></i>{{ _('طباعة') }}
 
       </button>
 
       <a href="{{ url_for('payments.create_voucher') }}" class="btn btn-success">
 
-        <i class="fas fa-plus mr-2"></i>{{ t('Voucher_2') }} {{ t('Receipt') }} {{ t('New') }}
+        <i class="fas fa-plus mr-2"></i>{{ _('سند مالي جديد') }}
 
       </a>
 
       <a href="{{ url_for('payments.archived_receipts') }}" class="btn btn-warning">
 
-        <i class="fas fa-archive mr-2"></i>{{ t('Archive_2') }}
+        <i class="fas fa-archive mr-2"></i>{{ _('الأرشيف') }}
 
       </a>
 
@@ -179,7 +168,7 @@
 
         <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown">
 
-          <i class="fas fa-filter mr-1"></i>{{ t('Filter') }}
+          <i class="fas fa-filter mr-1"></i>{{ _('تصفية') }}
 
         </button>
 
@@ -187,19 +176,19 @@
 
           <a class="dropdown-item" href="{{ url_for('payments.receipts', direction='') }}">
 
-            <i class="fas fa-list mr-1"></i>{{ t('All') }}
+            <i class="fas fa-list mr-1"></i>{{ _('الكل') }}
 
           </a>
 
           <a class="dropdown-item" href="{{ url_for('payments.receipts', direction='incoming') }}">
 
-            <i class="fas fa-arrow-down mr-1 text-success"></i>{{ t('Vouchers') }} {{ t('Receipt') }} ({{ t('Income') }})
+            <i class="fas fa-arrow-down mr-1 text-success"></i>{{ _('سندات القبض (وارد)') }}
 
           </a>
 
           <a class="dropdown-item" href="{{ url_for('payments.receipts', direction='outgoing') }}">
 
-            <i class="fas fa-arrow-up mr-1 text-danger"></i>{{ t('Vouchers') }} {{ t('Exchange') }} ({{ t('Expense') }})
+            <i class="fas fa-arrow-up mr-1 text-danger"></i>{{ _('سندات الصرف (منصرف)') }}
 
           </a>
 
@@ -215,37 +204,37 @@
 
     <div class="table-responsive">
 
-      <table id="receiptsTable" class="table table-bordered table-striped" data-lang-url="{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}">
+      <table id="receiptsTable" class="table table-bordered table-striped" data-lang-url="{{ url_for('static', filename=('datatables/Arabic.json' if is_rtl else 'datatables/English.json')) }}">
 
       <thead>
 
         <tr>
 
-          <th>{{ t('رقم') }} {{ t('Voucher') }}</th>
+          <th>{{ _('رقم السند') }}</th>
 
-          <th>{{ t('Customer') }}/{{ t('Supplier') }}</th>
+          <th>{{ _('العميل/المورد') }}</th>
 
-          <th>{{ t('Date') }}</th>
+          <th>{{ _('التاريخ') }}</th>
 
-          <th>{{ t('Amount') }}</th>
+          <th>{{ _('المبلغ') }}</th>
 
-          <th>{{ t('النوع') }}</th>
+          <th>{{ _('النوع') }}</th>
 
-          <th>{{ t('الاتجاه') }}</th>
+          <th>{{ _('الاتجاه') }}</th>
 
-          <th>{{ t('المصدر') }}</th>
+          <th>{{ _('المصدر') }}</th>
 
-          <th>{{ t('الطريقة') }}</th>
+          <th>{{ _('الطريقة') }}</th>
 
           {% if show_branch_columns %}
 
-          <th>{{ t('Branch') }}</th>
+          <th>{{ _('الفرع') }}</th>
 
           {% endif %}
 
-          <th>{{ t('Status') }}</th>
+          <th>{{ _('الحالة') }}</th>
 
-          <th>{{ t('الإجراءات') }}</th>
+          <th>{{ _('الإجراءات') }}</th>
 
         </tr>
 
@@ -263,11 +252,11 @@
 
             {% if item.type == 'receipt' %}
 
-              <br><small class="text-muted">{{ t('Voucher_2') }} {{ t('Receipt') }}</small>
+              <br><small class="text-muted">{{ _('سند قبض') }}</small>
 
             {% else %}
 
-              <br><small class="text-muted">{{ t('Voucher_2') }} {{ t('صرف') }}</small>
+              <br><small class="text-muted">{{ _('سند صرف') }}</small>
 
             {% endif %}
 
@@ -311,7 +300,7 @@
 
               <span class="badge badge-success">
 
-                <i class="fas fa-arrow-down mr-1"></i>{{ t('Receipt') }}
+                <i class="fas fa-arrow-down mr-1"></i>{{ _('قبض') }}
 
               </span>
 
@@ -319,7 +308,7 @@
 
               <span class="badge badge-danger">
 
-                <i class="fas fa-arrow-up mr-1"></i>{{ t('صرف') }}
+                <i class="fas fa-arrow-up mr-1"></i>{{ _('صرف') }}
 
               </span>
 
@@ -333,7 +322,7 @@
 
               <span class="badge badge-success">
 
-                <i class="fas fa-arrow-down mr-1"></i>{{ t('Income_3') }}
+                <i class="fas fa-arrow-down mr-1"></i>{{ _('وارد') }}
 
               </span>
 
@@ -341,7 +330,7 @@
 
               <span class="badge badge-danger">
 
-                <i class="fas fa-arrow-up mr-1"></i>{{ t('Expense') }}
+                <i class="fas fa-arrow-up mr-1"></i>{{ _('منصرف') }}
 
               </span>
 
@@ -355,7 +344,7 @@
 
               <span class="badge badge-primary">
 
-                <i class="fas fa-file-invoice mr-1"></i>{{ t('Sales_2') }}
+                <i class="fas fa-file-invoice mr-1"></i>{{ _('مبيعات') }}
 
               </span>
 
@@ -363,7 +352,7 @@
 
               <span class="badge badge-warning">
 
-                <i class="fas fa-truck mr-1"></i>{{ t('Supplier_2') }}
+                <i class="fas fa-truck mr-1"></i>{{ _('دفعة مورد') }}
 
               </span>
 
@@ -371,7 +360,7 @@
 
               <span class="badge badge-info">
 
-                <i class="fas fa-user mr-1"></i>{{ t('عميل') }}
+                <i class="fas fa-user mr-1"></i>{{ _('دفعة عميل') }}
 
               </span>
 
@@ -379,7 +368,7 @@
 
               <span class="badge badge-secondary">
 
-                <i class="fas fa-undo mr-1"></i>{{ t('استرداد') }}
+                <i class="fas fa-undo mr-1"></i>{{ _('استرداد') }}
 
               </span>
 
@@ -417,7 +406,7 @@
 
               <span class="badge badge-success">
 
-                <i class="fas fa-check mr-1"></i>{{ t('Confirmed_2') }}
+                <i class="fas fa-check mr-1"></i>{{ _('مؤكد') }}
 
               </span>
 
@@ -425,7 +414,7 @@
 
               <span class="badge badge-warning">
 
-                <i class="fas fa-clock mr-1"></i>{{ t('Pending') }}
+                <i class="fas fa-clock mr-1"></i>{{ _('معلق') }}
 
               </span>
 
@@ -441,7 +430,7 @@
 
                 <a href="{{ url_for('payments.view_receipt', id=item.id) }}" 
 
-                   class="btn btn-info" title="{{ t('View') }}">
+                   class="btn btn-info" title="{{ _('عرض') }}">
 
                   <i class="fas fa-eye"></i>
 
@@ -449,7 +438,7 @@
 
                 <a href="{{ url_for('payments.print_receipt', id=item.id) }}" 
 
-                   class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="{{ t('Print') }}">
+                   class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="{{ _('طباعة') }}">
 
                   <i class="fas fa-print"></i>
 
@@ -459,7 +448,7 @@
 
                 <a href="{{ url_for('payments.view_payment', id=item.id) }}" 
 
-                   class="btn btn-info" title="{{ t('View') }}">
+                   class="btn btn-info" title="{{ _('عرض') }}">
 
                   <i class="fas fa-eye"></i>
 
@@ -467,7 +456,7 @@
 
                 <a href="{{ url_for('payments.print_payment', id=item.id) }}" 
 
-                   class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="{{ t('Print') }}">
+                   class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="{{ _('طباعة') }}">
 
                   <i class="fas fa-print"></i>
 
@@ -483,7 +472,7 @@
 
                       data-item-number="{{ item.number }}"
 
-                      title="{{ t('أرشفة') }}">
+                      title="{{ _('أرشفة') }}">
 
                 <i class="fas fa-archive"></i>
 
@@ -493,7 +482,7 @@
 
                       data-delete-item="{{ item.id }}" data-item-type="{{ item.type ~ 's' }}" data-item-name="{{ item.number }}" 
 
-                      title="{{ t('Delete') }}">
+                      title="{{ _('حذف') }}">
 
                 <i class="fas fa-trash"></i>
 
@@ -524,12 +513,8 @@
 {% endblock %}
 
 
-
 {% block extra_js %}
 
 <script defer src="{{ url_for('static', filename='js/payments-receipts-page.js') }}"></script>
 
 {% endblock %}
-
-
-

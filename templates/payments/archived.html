@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar }} - {{ t('Archive_2') }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar }} - {{ _('الأرشيف') }}{% endblock %}
 
-{% block page_title %}{{ t('Archive') }} {{ t('Payments') }}{% endblock %}
+{% block page_title %}{{ _('أرشيف المدفوعات') }}{% endblock %}
 
 
 
@@ -14,7 +14,7 @@
 
     <a href="{{ url_for('payments.receipts') }}" class="btn btn-secondary">
 
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('Back') }}
+      <i class="fas fa-arrow-right mr-2"></i>{{ _('رجوع') }}
 
     </a>
 
@@ -34,21 +34,21 @@
 
         <tr>
 
-          <th>{{ t('رقم') }} {{ t('Voucher') }}</th>
+          <th>{{ _('رقم السند') }}</th>
 
-          <th>{{ t('Name') }}</th>
+          <th>{{ _('الاسم') }}</th>
 
-          <th>{{ t('Date') }}</th>
+          <th>{{ _('التاريخ') }}</th>
 
-          <th>{{ t('Amount') }}</th>
+          <th>{{ _('المبلغ') }}</th>
 
-          <th>{{ t('النوع') }}</th>
+          <th>{{ _('النوع') }}</th>
 
-          <th>{{ t('المصدر') }}</th>
+          <th>{{ _('المصدر') }}</th>
 
-          <th>{{ t('History') }} {{ t('الأرشفة') }}</th>
+          <th>{{ _('تاريخ الأرشفة') }}</th>
 
-          <th>{{ t('الإجراءات') }}</th>
+          <th>{{ _('الإجراءات') }}</th>
 
         </tr>
 
@@ -66,11 +66,11 @@
 
             {% if item.type == 'receipt' %}
 
-              <br><small class="text-muted">{{ t('Voucher_2') }} {{ t('Receipt') }}</small>
+              <br><small class="text-muted">{{ _('سند قبض') }}</small>
 
             {% else %}
 
-              <br><small class="text-muted">{{ t('Voucher_2') }} {{ t('صرف') }}</small>
+              <br><small class="text-muted">{{ _('سند صرف') }}</small>
 
             {% endif %}
 
@@ -114,7 +114,7 @@
 
               <span class="badge badge-success">
 
-                <i class="fas fa-arrow-down mr-1"></i>{{ t('Receipt') }}
+                <i class="fas fa-arrow-down mr-1"></i>{{ _('قبض') }}
 
               </span>
 
@@ -122,7 +122,7 @@
 
               <span class="badge badge-danger">
 
-                <i class="fas fa-arrow-up mr-1"></i>{{ t('صرف') }}
+                <i class="fas fa-arrow-up mr-1"></i>{{ _('صرف') }}
 
               </span>
 
@@ -136,7 +136,7 @@
 
               <span class="badge badge-primary">
 
-                <i class="fas fa-file-invoice mr-1"></i>{{ t('Sales_2') }}
+                <i class="fas fa-file-invoice mr-1"></i>{{ _('مبيعات') }}
 
               </span>
 
@@ -144,7 +144,7 @@
 
               <span class="badge badge-warning">
 
-                <i class="fas fa-truck mr-1"></i>{{ t('Supplier_2') }}
+                <i class="fas fa-truck mr-1"></i>{{ _('دفعة مورد') }}
 
               </span>
 
@@ -152,7 +152,7 @@
 
               <span class="badge badge-info">
 
-                <i class="fas fa-user mr-1"></i>{{ t('عميل') }}
+                <i class="fas fa-user mr-1"></i>{{ _('دفعة عميل') }}
 
               </span>
 
@@ -160,7 +160,7 @@
 
               <span class="badge badge-secondary">
 
-                <i class="fas fa-undo mr-1"></i>{{ t('استرداد') }}
+                <i class="fas fa-undo mr-1"></i>{{ _('استرداد') }}
 
               </span>
 
@@ -186,7 +186,7 @@
 
                 <a href="{{ url_for('payments.view_receipt', id=item.id) }}" 
 
-                   class="btn btn-info" title="{{ t('View') }}">
+                   class="btn btn-info" title="{{ _('عرض') }}">
 
                   <i class="fas fa-eye"></i>
 
@@ -194,7 +194,7 @@
 
                 <a href="{{ url_for('payments.print_receipt', id=item.id) }}" 
 
-                   class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="{{ t('Print') }}">
+                   class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="{{ _('طباعة') }}">
 
                   <i class="fas fa-print"></i>
 
@@ -204,7 +204,7 @@
 
                 <a href="{{ url_for('payments.view_payment', id=item.id) }}" 
 
-                   class="btn btn-info" title="{{ t('View') }}">
+                   class="btn btn-info" title="{{ _('عرض') }}">
 
                   <i class="fas fa-eye"></i>
 
@@ -212,7 +212,7 @@
 
                 <a href="{{ url_for('payments.print_payment', id=item.id) }}" 
 
-                   class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="{{ t('Print') }}">
+                   class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="{{ _('طباعة') }}">
 
                   <i class="fas fa-print"></i>
 
@@ -226,7 +226,7 @@
 
                       data-id="{{ item.id }}"
 
-                      title="{{ t('Restore') }}">
+                      title="{{ _('استعادة') }}">
 
                 <i class="fas fa-undo"></i>
 
@@ -271,7 +271,7 @@ $(document).ready(() => {
 
   
 
-  // {{ t('Restore') }} {{ t('Vouchers') }}
+  // Restore vouchers
 
   $(document).on('click', '.restore-btn', function(e) {
 
@@ -313,7 +313,7 @@ $(document).ready(() => {
 
       error: (xhr) => {
 
-        alert('{{ t('فشل استعادة السند') }}' + (xhr && xhr.status ? ' (HTTP ' + xhr.status + ')' : ''));
+        alert('{{ _('فشل استعادة السند') }}' + (xhr && xhr.status ? ' (HTTP ' + xhr.status + ')' : ''));
 
       }
 
