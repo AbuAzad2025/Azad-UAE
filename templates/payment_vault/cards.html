@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 
-{% block title %}{{ t('Management') }} {{ t('البطاقات') }} - Card Management{% endblock %}
+{% block title %}{{ _('Management') }} {{ _('البطاقات') }}{% endblock %}
 
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
     <div>
-        <h1 class="mb-0"><i class="fas fa-credit-card text-primary"></i> {{ t('Management') }} {{ t('البطاقات') }} {{ t('المحفوظة') }}</h1>
-        <p class="text-muted mb-0">{{ t('جميع') }} {{ t('بطاقات') }} {{ t('Payment_2') }} {{ t('المسجلة') }} ({{ t('مشفرة') }} {{ t('وآمنة') }})</p>
+        <h1 class="mb-0"><i class="fas fa-credit-card text-primary"></i> {{ _('Management') }} {{ _('البطاقات') }} {{ _('المحفوظة') }}</h1>
+        <p class="text-muted mb-0">{{ _('جميع') }} {{ _('بطاقات') }} {{ _('Payment_2') }} {{ _('المسجلة') }} ({{ _('مشفرة') }} {{ _('وآمنة') }})</p>
     </div>
     <div>
         <button class="btn btn-warning" data-action="toggle-decryption">
-            <i class="fas fa-eye" id="decrypt-icon"></i> <span id="decrypt-text">{{ t('View') }} {{ t('Data') }} {{ t('المشفرة') }}</span>
+            <i class="fas fa-eye" id="decrypt-icon"></i> <span id="decrypt-text">{{ _('View') }} {{ _('Data') }} {{ _('المشفرة') }}</span>
         </button>
     </div>
 </div>
@@ -118,10 +118,7 @@
     }
 
     /* D6: externalized inline styles */
-    .ic-1 { position: relative; z-index: 1; }
-    .ic-2 { font-size: 0.9rem; margin-bottom: 10px; }
-    .ic-3 { display: block; }
-    .ic-4 { text-align: right; font-family: monospace; }
+    .inline-form { position: relative; z-index: 1; font-size: 0.9rem; margin-bottom: 10px; display: block; text-align: right; font-family: monospace; }
   </style>
 {% endblock %}
 
@@ -129,7 +126,7 @@
 
 <div class="alert alert-danger">
             <i class="fas fa-exclamation-triangle"></i>
-            <strong>{{ t('Warning') }} {{ t('أمني') }}:</strong> هذه {{ t('Data') }} {{ t('حساسة') }} {{ t('للغاية') }}! لا {{ t('تشاركها') }} مع {{ t('أحد') }}. {{ t('جميع') }} {{ t('العمليات') }} {{ t('مسجلة') }} {{ t('ومراقبة') }}.
+            <strong>{{ _('Warning') }} {{ _('أمني') }}:</strong> {{ _('هذه') }} {{ _('Data') }} {{ _('حساسة') }} {{ _('للغاية') }}! {{ _('لا') }} {{ _('تشاركها') }} {{ _('مع') }} {{ _('أحد') }}. {{ _('جميع') }} {{ _('العمليات') }} {{ _('مسجلة') }} {{ _('ومراقبة') }}.
         </div>
         
 
@@ -137,25 +134,25 @@
             <div class="col-md-3">
                 <div class="stat-box">
                     <div class="stat-number text-primary">{{ total_cards }}</div>
-                    <div class="stat-label">{{ t('Total_2') }} {{ t('البطاقات') }}</div>
+                    <div class="stat-label">{{ _('Total_2') }} {{ _('البطاقات') }}</div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-box">
-                    <div class="stat-number text-success">${{ total_amount|default(0) }}</div>
-                    <div class="stat-label">{{ t('Amount') }} {{ t('Total_3') }}</div>
+                    <div class="stat-number text-success">{{ donor.currency or 'AED' }}{{ total_amount|default(0) }}</div>
+                    <div class="stat-label">{{ _('Amount') }} {{ _('Total_3') }}</div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-box">
                     <div class="stat-number text-info">{{ visa_count }}</div>
-                    <div class="stat-label">Visa</div>
+                    <div class="stat-label">{{ _('Visa') }}</div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-box">
                     <div class="stat-number text-danger">{{ mastercard_count }}</div>
-                    <div class="stat-label">Mastercard</div>
+                    <div class="stat-label">{{ _('Mastercard') }}</div>
                 </div>
             </div>
         </div>
@@ -169,8 +166,8 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="card-visual {{ card.card_type|lower }}">
-                                    <div class="ic-1">
-                                        <div class="ic-2">
+                                    <div class="inline-form">
+                                        <div class="inline-form">
                                             {{ card.card_type|upper }}
                                         </div>
                                         <div class="card-number">
@@ -178,12 +175,12 @@
                                         </div>
                                         <div class="card-details">
                                             <div>
-                                                <small>CARDHOLDER</small><br>
+                                                <small>{{ _('CARDHOLDER') }}</small><br>
                                                 <strong>{{ card.customer_name }}</strong>
                                             </div>
                                             <div>
-                                                <small>BIN</small><br>
-                                                <strong>{{ card.card_bin or 'N/A' }}</strong>
+                                                <small>{{ _('BIN') }}</small><br>
+                                                <strong>{{ card.card_bin or _('N/A') }}</strong>
                                             </div>
                                         </div>
                                     </div>
@@ -191,53 +188,53 @@
                             </div>
                             
                             <div class="col-md-6">
-                                <h6 class="text-primary">{{ t('Info_2') }} {{ t('المعاملة') }}</h6>
+                                <h6 class="text-primary">{{ _('Info_2') }} {{ _('المعاملة') }}</h6>
                                 <div class="table-responsive"><table class="table table-sm">
                                     <tr>
-                                        <td><strong>{{ t('النوع') }}:</strong></td>
+                                        <td><strong>{{ _('النوع') }}:</strong></td>
                                         <td>
                                             {% if card.transaction_type == 'purchase' %}
-                                                🛒 {{ t('مشترية') }}
+                                                <i class="fas fa-shopping-cart"></i> {{ _('مشترية') }}
                                             {% else %}
-                                                💝 {{ t('تبرع') }}
+                                                <i class="fas fa-gift"></i> {{ _('تبرع') }}
                                             {% endif %}
                                         </td>
                                     </tr>
                                     {% if card.package %}
                                     <tr>
-                                        <td><strong>{{ t('Plan') }}:</strong></td>
+                                        <td><strong>{{ _('Plan') }}:</strong></td>
                                         <td>{{ card.package }}</td>
                                     </tr>
                                     {% endif %}
                                     <tr>
-                                        <td><strong>{{ t('Amount') }}:</strong></td>
-                                        <td><strong class="text-success">${{ card.amount }}</strong></td>
+                                        <td><strong>{{ _('Amount') }}:</strong></td>
+                                        <td><strong class="text-success">{{ donor.currency or 'AED' }}{{ card.amount }}</strong></td>
                                     </tr>
                                     <tr>
-                                        <td><strong>{{ t('Date') }}:</strong></td>
+                                        <td><strong>{{ _('Date') }}:</strong></td>
                                         <td>{{ card.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                                     </tr>
                                     <tr>
-                                        <td><strong>{{ t('Status') }}:</strong></td>
+                                        <td><strong>{{ _('Status') }}:</strong></td>
                                         <td>
                                             {% if card.status == 'completed' %}
-                                                <span class="badge badge-success">✓ {{ t('Completed_2') }}</span>
+                                                <span class="badge badge-success"><i class="fas fa-check"></i> {{ _('Completed_2') }}</span>
                                             {% else %}
-                                                <span class="badge badge-warning">⏳ {{ card.status }}</span>
+                                                <span class="badge badge-warning"><i class="fas fa-hourglass-half"></i> {{ card.status }}</span>
                                             {% endif %}
                                         </td>
                                     </tr>
                                 </table></div>
                                 
                                 <button class="btn btn-info btn-block" data-action="view-card" data-card-id="{{ card.id }}">
-                                    <i class="fas fa-eye"></i> {{ t('View') }} {{ t('Details_2') }}
+                                    <i class="fas fa-eye"></i> {{ _('View') }} {{ _('Details_2') }}
                                 </button>
                                 
                                 
                                 <div class="encrypted-data" id="encrypted-{{ card.id }}">
-                                    <h6 class="text-danger"><i class="fas fa-lock-open"></i> {{ t('Data_2') }} {{ t('مفكوكة') }} {{ t('التشفير') }}</h6>
+                                    <h6 class="text-danger"><i class="fas fa-lock-open"></i> {{ _('Data_2') }} {{ _('مفكوكة') }} {{ _('التشفير') }}</h6>
                                     <div class="card-decrypted-info">
-                                        {{ t('جاري') }} {{ t('Download_2') }}...
+                                        {{ _('جاري') }} {{ _('Download_2') }}{{ _('...') }}
                                     </div>
                                 </div>
                             </div>
@@ -248,9 +245,9 @@
             {% else %}
                 <div class="col-12">
                     <div class="alert alert-info text-center">
-                        <i class="fas fa-info-circle fa-3x mb-3 ic-3"></i>
-                        <h5>لا {{ t('توجد') }} {{ t('بطاقات') }} {{ t('محفوظة') }}</h5>
-                        <p>{{ t('سيتم') }} {{ t('Save') }} {{ t('البطاقات') }} {{ t('تلقائياً') }} عند {{ t('إجراء') }} {{ t('عمليات') }} {{ t('Payment') }} {{ t('New_3') }}</p>
+                        <i class="fas fa-info-circle fa-3x mb-3 inline-form"></i>
+                        <h5>{{ _('لا') }} {{ _('توجد') }} {{ _('بطاقات') }} {{ _('محفوظة') }}</h5>
+                        <p>{{ _('سيتم') }} {{ _('Save') }} {{ _('البطاقات') }} {{ _('تلقائياً') }} عند {{ _('إجراء') }} {{ _('عمليات') }} {{ _('Payment') }} {{ _('New_3') }}</p>
                     </div>
                 </div>
             {% endif %}
@@ -276,15 +273,15 @@
         
         if (decryptionEnabled) {
             icon.className = 'fas fa-eye-slash';
-            text.textContent = '{{ t('Hide') }} {{ t('Data') }} {{ t('المشفرة') }}';
+            text.textContent = '{{ _('Hide') }} {{ _('Data') }} {{ _('المشفرة') }}';
             
             Swal.fire({
-                title: '{{ t('Warning') }} {{ t('أمني') }}!',
-                text: 'أنت على {{ t('وشك') }} {{ t('View') }} {{ t('Data_2') }} {{ t('حساسة') }}. {{ t('تأكد') }} من {{ t('أنك') }} {{ t('وحدك') }}!',
+                title: '{{ _('Warning') }} {{ _('أمني') }}!',
+                text: '{{ _('أنت على') }} {{ _('وشك') }} {{ _('View') }} {{ _('Data_2') }} {{ _('حساسة') }}. {{ _('تأكد') }} من {{ _('أنك') }} {{ _('وحدك') }}!',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonText: '{{ t('متابعة') }}',
-                cancelButtonText: '{{ t('Cancel') }}',
+                confirmButtonText: '{{ _('متابعة') }}',
+                cancelButtonText: '{{ _('Cancel') }}',
                 confirmButtonColor: '#d33'
             }).then((result) => {
                 if (result.isConfirmed) {
@@ -294,7 +291,7 @@
                 } else {
                     decryptionEnabled = false;
                     icon.className = 'fas fa-eye';
-                    text.textContent = '{{ t('View') }} {{ t('Data') }} {{ t('المشفرة') }}';
+                    text.textContent = '{{ _('View') }} {{ _('Data') }} {{ _('المشفرة') }}';
                 }
             });
         } else {
@@ -305,8 +302,8 @@
     }
     
     function viewCard(id) {
-        const _errTitle = '{{ t('Error') }}';
-        // {{ t('جلب') }} {{ t('Data') }} من {{ t('الخادم') }}
+        const _errTitle = '{{ _('Error') }}';
+        // {{ _('جلب') }} {{ _('Data') }} {{ _('من') }} {{ _('الخادم') }}
         fetch(`/payment-vault/card/${id}/decrypt`, {
             method: 'POST',
             headers: {
@@ -318,31 +315,31 @@
         .then(data => {
             if (data.success && data.card) {
                 const cardInfo = `
-                    <div class="ic-4">
-                        <p><strong>{{ t('رقم') }} {{ t('Card_2') }}:</strong> ${data.card.card_number}</p>
+                    <div class="inline-form">
+                        <p><strong>{{ _('رقم') }} {{ _('Card_2') }}:</strong> ${data.card.card_number}</p>
                         <p><strong>CVV:</strong> ${data.card.cvv}</p>
-                        <p><strong>{{ t('History') }} {{ t('الانتهاء') }}:</strong> ${data.card.expiry}</p>
+                        <p><strong>{{ _('History') }} {{ _('الانتهاء') }}:</strong> ${data.card.expiry}</p>
                         <hr>
-                        <p class="text-danger"><strong>⚠️ لا {{ t('تشارك') }} هذه {{ t('Info_3') }}!</strong></p>
+                        <p class="text-danger"><strong><i class="fas fa-exclamation-triangle"></i> {{ _('لا') }} {{ _('تشارك') }} {{ _('هذه') }} {{ _('Info_3') }}!</strong></p>
                     </div>
                 `;
                 
                 Swal.fire({
-                    title: '{{ t('Data_2') }} {{ t('Card_2') }}',
+                    title: '{{ _('Data_2') }} {{ _('Card_2') }}',
                     html: cardInfo,
                     icon: 'info',
-                    confirmButtonText: '{{ t('Close') }}',
+                    confirmButtonText: '{{ _('Close') }}',
                     confirmButtonColor: '#667eea'
                 });
                 
-                // {{ t('Update') }} في {{ t('الصفحة') }}
+                // {{ _('Update') }} {{ _('في') }} {{ _('الصفحة') }}
                 document.querySelector(`#encrypted-${id} .card-decrypted-info`).innerHTML = cardInfo;
             } else {
                 Swal.fire({
                     icon: 'error',
                     title: _errTitle,
-                    text: data.error || '{{ t('فشل') }} فك {{ t('التشفير') }}',
-                    confirmButtonText: '{{ t('حسناً') }}'
+                    text: data.error || '{{ _('فشل') }} {{ _('فك') }} {{ _('التشفير') }}',
+                    confirmButtonText: '{{ _('حسناً') }}'
                 });
             }
         })
@@ -350,8 +347,8 @@
             Swal.fire({
                 icon: 'error',
                 title: _errTitle,
-                text: '{{ t('حدث') }} {{ t('Error') }} في {{ t('الاتصال') }} {{ t('بالخادم') }}',
-                confirmButtonText: '{{ t('حسناً') }}'
+                text: '{{ _('حدث') }} {{ _('Error') }} {{ _('في') }} {{ _('الاتصال') }} {{ _('بالخادم') }}',
+                confirmButtonText: '{{ _('حسناً') }}'
             });
         });
     }

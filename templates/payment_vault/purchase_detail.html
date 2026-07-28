@@ -2,7 +2,7 @@
 
 
 
-{% block title %}{{ t('Details') }} {{ t('Purchase_2') }} #{{ purchase.id }}{% endblock %}
+{% block title %}{{ _('Purchase Details') }} #{{ purchase.id }}{% endblock %}
 
 
 
@@ -12,15 +12,15 @@
 
     <div>
 
-        <h1 class="mb-0"><i class="fas fa-receipt text-primary"></i> {{ t('Details') }} {{ t('Purchase_2') }} #{{ purchase.id }}</h1>
+        <h1 class="mb-0"><i class="fas fa-receipt text-primary"></i> {{ _('Purchase Details') }} #{{ purchase.id }}</h1>
 
-        <p class="text-muted mb-0">{{ t('مراجعة') }} {{ t('عملية') }} {{ t('Purchase_2') }} {{ t('والتفعيل') }} من {{ t('الخزينة') }} {{ t('السرية') }}</p>
+        <p class="text-muted mb-0">{{ _('Review purchase operation and activation from vault') }}</p>
 
     </div>
 
     <a href="{{ url_for('payment_vault.view_purchases') }}" class="btn btn-secondary">
 
-        <i class="fas fa-arrow-right"></i> {{ t('العودة') }} {{ t('Purchases_3') }}
+        <i class="fas fa-arrow-right"></i> {{ _('Back to Purchases') }}
 
     </a>
 
@@ -40,9 +40,9 @@
 
                     <div class="card">
 
-                        <div class="card-header ic-1">
+                        <div class="card-header card-header-gradient">
 
-                            <h3 class="card-title"><i class="fas fa-info-circle"></i> {{ t('Info_2') }} {{ t('Purchase_2') }}</h3>
+                            <h3 class="card-title"><i class="fas fa-info-circle"></i> {{ _('Purchase Info') }}</h3>
 
                         </div>
 
@@ -52,13 +52,13 @@
 
                                 <div class="col-md-6">
 
-                                    <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-box"></i> {{ t('Details') }} {{ t('Plan') }}</h5>
+                                    <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-box"></i> {{ _('Plan Details') }}</h5>
 
                                     <div class="table-responsive"><table class="table table-sm">
 
                                         <tr>
 
-                                            <th class="ic-2">{{ t('Plan') }}:</th>
+                                            <th class="inline-form">{{ _('Plan') }}:</th>
 
                                             <td>
 
@@ -78,15 +78,15 @@
 
                                         <tr>
 
-                                            <th>{{ t('Price') }}:</th>
+                                            <th>{{ _('Price') }}:</th>
 
-                                            <td><strong class="ic-3">{{ format_currency(purchase.amount_paid, 'USD') }}</strong></td>
+                                            <td><strong class="price-text">{{ format_currency(purchase.amount_paid, currency or 'AED') }}</strong></td>
 
                                         </tr>
 
                                         <tr>
 
-                                            <th>{{ t('Currency') }}:</th>
+                                            <th>{{ _('Currency') }}:</th>
 
                                             <td>{{ purchase.currency }}</td>
 
@@ -94,9 +94,9 @@
 
                                         <tr>
 
-                                            <th>{{ t('Date') }}:</th>
+                                            <th>{{ _('Date') }}:</th>
 
-                                            <td>{{ purchase.created_at.strftime('%Y-%m-%d %H:%M:%S') if purchase.created_at else 'N/A' }}</td>
+                                            <td>{{ purchase.created_at.strftime('%Y-%m-%d %H:%M:%S') if purchase.created_at else _('N/A') }}</td>
 
                                         </tr>
 
@@ -108,13 +108,13 @@
 
                                 <div class="col-md-6">
 
-                                    <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-user"></i> {{ t('Data_2') }} {{ t('Customer') }}</h5>
+                                    <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-user"></i> {{ _('Customer Data') }}</h5>
 
                                     <div class="table-responsive"><table class="table table-sm">
 
                                         <tr>
 
-                                            <th class="ic-2">{{ t('Name') }}:</th>
+                                            <th class="inline-form">{{ _('Name') }}:</th>
 
                                             <td><strong>{{ purchase.customer_name }}</strong></td>
 
@@ -122,7 +122,7 @@
 
                                         <tr>
 
-                                            <th>{{ t('Email_2') }}:</th>
+                                            <th>{{ _('Email') }}:</th>
 
                                             <td>
 
@@ -134,7 +134,7 @@
 
                                         <tr>
 
-                                            <th>{{ t('Mobile') }}:</th>
+                                            <th>{{ _('Mobile') }}:</th>
 
                                             <td>
 
@@ -158,7 +158,7 @@
 
                                         <tr>
 
-                                            <th>{{ t('Company') }}:</th>
+                                            <th>{{ _('Company') }}:</th>
 
                                             <td>{{ purchase.company_name or '-' }}</td>
 
@@ -180,23 +180,23 @@
 
                                 <div class="col-md-12">
 
-                                    <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-credit-card"></i> {{ t('Details') }} {{ t('Payment_2') }}</h5>
+                                    <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-credit-card"></i> {{ _('Payment Details') }}</h5>
 
                                     <div class="table-responsive"><table class="table table-sm">
 
                                         <tr>
 
-                                            <th class="ic-4">{{ t('طريقة') }} {{ t('Payment_2') }}:</th>
+                                            <th class="th-label-sm">{{ _('Payment Method') }}:</th>
 
                                             <td>
 
                                                 {% if purchase.payment_method == 'crypto' %}
 
-                                                    <span class="badge badge-warning"><i class="fab fa-bitcoin"></i> {{ t('عملات') }} {{ t('رقمية') }}</span>
+                                                    <span class="badge badge-warning"><i class="fab fa-bitcoin"></i> {{ _('Crypto') }}</span>
 
                                                 {% elif purchase.payment_method == 'card' %}
 
-                                                    <span class="badge badge-primary"><i class="fas fa-credit-card"></i> {{ t('Card') }} {{ t('Bank') }}</span>
+                                                    <span class="badge badge-primary"><i class="fas fa-credit-card"></i> {{ _('Card') }}</span>
 
                                                 {% elif purchase.payment_method == 'paypal' %}
 
@@ -204,7 +204,7 @@
 
                                                 {% elif purchase.payment_method == 'bank' %}
 
-                                                    <span class="badge badge-success"><i class="fas fa-university"></i> {{ t('Transfer') }} {{ t('Bank_3') }}</span>
+                                                    <span class="badge badge-success"><i class="fas fa-university"></i> {{ _('Bank Transfer') }}</span>
 
                                                 {% else %}
 
@@ -218,7 +218,7 @@
 
                                         <tr>
 
-                                            <th>Transaction ID:</th>
+                                            <th>{{ _('Transaction ID') }}:</th>
 
                                             <td><code>{{ purchase.transaction_id or '-' }}</code></td>
 
@@ -228,19 +228,19 @@
 
                                         <tr>
 
-                                            <th>{{ t('Transfer') }} لـ Bitcoin:</th>
+                                            <th>{{ _('Transfer to Bitcoin') }}:</th>
 
                                             <td>
 
                                                 {% if purchase.payment_details.get('converted_to_crypto') %}
 
-                                                    <span class="badge badge-warning">✓ تم {{ t('Transfer_2') }}</span>
+                                                    <span class="badge badge-warning"><i class="fas fa-check"></i> {{ _('Transferred') }}</span>
 
-                                                    <br><small class="text-muted">{{ t('Address') }}: {{ purchase.payment_details.get('pay_address', 'N/A') }}</small>
+                                                    <br><small class="text-muted">{{ _('Address') }}: {{ purchase.payment_details.get('pay_address', _('N/A')) }}</small>
 
                                                 {% else %}
 
-                                                    <span class="badge badge-secondary">✗ {{ t('بدون') }} {{ t('Transfer') }}</span>
+                                                    <span class="badge badge-secondary"><i class="fas fa-times"></i> {{ _('No Transfer') }}</span>
 
                                                 {% endif %}
 
@@ -258,9 +258,9 @@
 
                                     <div class="alert alert-info">
 
-                                        <h6><i class="fas fa-info-circle"></i> {{ t('Details') }} {{ t('Additional') }}:</h6>
+                                        <h6><i class="fas fa-info-circle"></i> {{ _('Additional Details') }}:</h6>
 
-                                        <pre class="ic-5">{{ purchase.payment_details | tojson(indent=2) }}</pre>
+                                        <pre class="pre-scrollable">{{ purchase.payment_details | tojson(indent=2) }}</pre>
 
                                     </div>
 
@@ -278,7 +278,7 @@
 
                             <div class="alert alert-secondary">
 
-                                <h6><i class="fas fa-sticky-note"></i> {{ t('Notes') }}:</h6>
+                                <h6><i class="fas fa-sticky-note"></i> {{ _('Notes') }}:</h6>
 
                                 <p>{{ purchase.notes }}</p>
 
@@ -302,7 +302,7 @@
 
                         <div class="card-header bg-info text-white">
 
-                            <h3 class="card-title"><i class="fas fa-tasks"></i> {{ t('Status') }} {{ t('والإجراءات') }}</h3>
+                            <h3 class="card-title"><i class="fas fa-tasks"></i> {{ _('Status and Actions') }}</h3>
 
                         </div>
 
@@ -310,7 +310,7 @@
 
                             <div class="mb-4">
 
-                                <h6>{{ t('Status_2') }} {{ t('Payment_2') }}:</h6>
+                                <h6>{{ _('Payment Status') }}:</h6>
 
                                 <h3>
 
@@ -318,7 +318,7 @@
 
                                         <span class="badge badge-success badge-lg">
 
-                                            <i class="fas fa-check-circle"></i> {{ t('Completed_2') }}
+                                            <i class="fas fa-check-circle"></i> {{ _('Completed') }}
 
                                         </span>
 
@@ -326,7 +326,7 @@
 
                                         <span class="badge badge-warning badge-lg">
 
-                                            <i class="fas fa-clock"></i> {{ t('قيد') }} {{ t('Waiting') }}
+                                            <i class="fas fa-clock"></i> {{ _('Pending') }}
 
                                         </span>
 
@@ -334,7 +334,7 @@
 
                                         <span class="badge badge-danger badge-lg">
 
-                                            <i class="fas fa-times-circle"></i> {{ t('فشلت') }}
+                                            <i class="fas fa-times-circle"></i> {{ _('Failed') }}
 
                                         </span>
 
@@ -352,7 +352,7 @@
 
                             <div class="mb-4">
 
-                                <h6>{{ t('Status_2') }} {{ t('التفعيل') }}:</h6>
+                                <h6>{{ _('Activation Status') }}:</h6>
 
                                 <h3>
 
@@ -360,7 +360,7 @@
 
                                         <span class="badge badge-success badge-lg">
 
-                                            <i class="fas fa-check-double"></i> {{ t('مفعلة') }}
+                                            <i class="fas fa-check-double"></i> {{ _('Activated') }}
 
                                         </span>
 
@@ -368,7 +368,7 @@
 
                                         <span class="badge badge-warning badge-lg">
 
-                                            <i class="fas fa-hourglass-half"></i> غير {{ t('مفعلة') }}
+                                            <i class="fas fa-hourglass-half"></i> {{ _('Not Activated') }}
 
                                         </span>
 
@@ -376,7 +376,7 @@
 
                                         <span class="badge badge-danger badge-lg">
 
-                                            <i class="fas fa-ban"></i> {{ t('Expired') }}
+                                            <i class="fas fa-ban"></i> {{ _('Expired') }}
 
                                         </span>
 
@@ -396,7 +396,7 @@
 
                             <div class="mb-4">
 
-                                <h6>{{ t('History') }} {{ t('التفعيل') }}:</h6>
+                                <h6>{{ _('Activation History') }}:</h6>
 
                                 <p><i class="fas fa-calendar-check text-success"></i> {{ purchase.activation_date.strftime('%Y-%m-%d %H:%M') }}</p>
 
@@ -416,13 +416,13 @@
 
                                 {% if purchase.payment_status == 'pending' and purchase.activation_status != 'activated' %}
 
-                                <form class="needs-validation" method="POST" action="{{ url_for('payment_vault.activate_purchase', id=purchase.id) }}" data-action="confirm-submit" data-confirm-message="هل {{ t('تريد') }} {{ t('تفعيل') }} هذه {{ t('Plan_3') }}">
+                                <form class="needs-validation" method="POST" action="{{ url_for('payment_vault.activate_purchase', id=purchase.id) }}" data-action="confirm-submit" data-confirm-message="{{ _('Are you sure you want to activate this package?') }}">
 
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
                                     <button type="submit" class="btn btn-success btn-block btn-lg">
 
-                                        <i class="fas fa-check-circle"></i> {{ t('تفعيل') }} {{ t('Plan') }}
+                                        <i class="fas fa-check-circle"></i> {{ _('Activate Package') }}
 
                                     </button>
 
@@ -434,7 +434,7 @@
 
                                 <a href="{{ url_for('payment_vault.view_purchases') }}" class="btn btn-secondary btn-block">
 
-                                    <i class="fas fa-arrow-left"></i> {{ t('العودة') }} {{ t('Purchases_3') }}
+                                    <i class="fas fa-arrow-left"></i> {{ _('Back to Purchases') }}
 
                                 </a>
 
@@ -442,19 +442,19 @@
 
                                 <button class="btn btn-primary btn-block" data-action="send-email-customer">
 
-                                    <i class="fas fa-envelope"></i> {{ t('Submit') }} {{ t('إيميل') }} {{ t('للعميل') }}
+                                    <i class="fas fa-envelope"></i> {{ _('Send Email to Customer') }}
 
                                 </button>
 
                                 
 
-                                <a href="https://wa.me/{{ purchase.customer_phone.replace('+', '').replace(' ', '') if purchase.customer_phone else (developer_whatsapp_link or '972562150193') }}" 
+                                <a href="https://wa.me/{{ purchase.customer_phone.replace('+', '').replace(' ', '') if purchase.customer_phone else '' }}" 
 
                                    target="_blank" rel="noopener noreferrer" 
 
                                    class="btn btn-success btn-block">
 
-                                    <i class="fab fa-whatsapp"></i> {{ t('تواصل') }} {{ t('عبر') }} WhatsApp
+                                    <i class="fab fa-whatsapp"></i> {{ _('Contact via WhatsApp') }}
 
                                 </a>
 
@@ -474,7 +474,7 @@
 
                         <div class="card-header bg-gradient-primary text-white">
 
-                            <h3 class="card-title"><i class="fas fa-list-check"></i> {{ t('ميزات') }} {{ t('Plan') }}</h3>
+                            <h3 class="card-title"><i class="fas fa-list-check"></i> {{ _('Package Features') }}</h3>
 
                         </div>
 
@@ -518,11 +518,11 @@
 
 
     /* D6: externalized inline styles */
-    .ic-1 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-    .ic-2 { width: 40%; }
-    .ic-3 { color: #28a745; font-size: 1.3rem; }
-    .ic-4 { width: 20%; }
-    .ic-5 { max-height: 200px; overflow-y: auto; }
+    .card-header-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .inline-form { width: 40%; }
+    .price-text { color: #28a745; font-size: 1.3rem; }
+    .th-label-sm { width: 20%; }
+    .pre-scrollable { max-height: 200px; overflow-y: auto; }
   </style>
 
 
@@ -542,15 +542,21 @@ document.addEventListener('submit', (e) => {
 });
 
 function sendEmailToCustomer() {
-    const email = '{{ purchase.customer_email }}';
-    const customerName = '{{ purchase.customer_name }}';
-    const packageName = '{{ purchase.package.name_ar if purchase.package else "" }}';
-    const orderId = '{{ purchase.id }}';
-    const amountPaid = '{{ purchase.amount_paid }}';
-    const subject = '{{ t("Confirm") }} {{ t("Purchase") }} {{ t("Plan") }} - {{ developer_name_ar or developer_name or "Azad Systems" }}';
-    const body = `{{ t('مرحباً') }} ${customerName},\n\n{{ t('شكراً') }} {{ t('لشرائك') }} ${packageName}\n{{ t('رقم') }} {{ t('الطلب') }}: #${orderId}\n{{ t('Amount') }}: $${amountPaid}\n\n{{ t('سنتواصل') }} {{ t('معك') }} {{ t('قريباً') }} {{ t('لإكمال') }} {{ t('التفعيل') }}.`;
-
-    window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    fetch('{{ url_for("payment_vault.send_email", id=purchase.id) }}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token() }}',
+            'Content-Type': 'application/json'
+        }
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            Swal.fire('{{ _("Success") }}', '{{ _("Email sent successfully") }}', 'success');
+        } else {
+            Swal.fire('{{ _("Error") }}', data.error || '{{ _("Failed to send email") }}', 'error');
+        }
+    }).catch(() => {
+        Swal.fire('{{ _("Error") }}', '{{ _("Network error") }}', 'error');
+    });
 }
 
 </script>

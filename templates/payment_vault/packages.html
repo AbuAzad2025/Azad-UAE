@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 
-{% block title %}{{ t('Management') }} {{ t('الباقات') }} - Manage Packages{% endblock %}
+{% block title %}{{ _('Manage Packages') }}{% endblock %}
 
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
     <div>
-        <h1 class="mb-0"><i class="fas fa-box-open text-success"></i> {{ t('Management') }} {{ t('الباقات') }}</h1>
-        <p class="text-muted mb-0">{{ t('Add') }} {{ t('Changes') }} {{ t('باقات') }} {{ t('System') }}</p>
+        <h1 class="mb-0"><i class="fas fa-box-open text-success"></i> {{ _('Manage Packages') }}</h1>
+        <p class="text-muted mb-0">{{ _('Add, edit, and manage system packages') }}</p>
     </div>
     <div>
         <button class="btn btn-primary" type="button" data-action="scroll-top">
-            <i class="fas fa-plus"></i> {{ t('Add') }} {{ t('Plan_2') }}
+            <i class="fas fa-plus"></i> {{ _('Add Package') }}
         </button>
     </div>
 </div>
@@ -104,16 +104,16 @@
     }
 
     /* D6: externalized inline styles */
-    .ic-1 { position: absolute; top: -15px; right: 50%; transform: translateX(50%); background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 5px 20px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; }
-    .ic-2 { margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 5px; font-size: 0.85rem; }
-    .ic-3 { text-align: right; }
+    .featured-badge { position: absolute; top: -15px; right: 50%; transform: translateX(50%); background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 5px 20px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; }
+    .inline-form { margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 5px; font-size: 0.85rem; }
+    .text-right { text-align: right; }
   </style>
 {% endblock %}
 
 {% block content %}
 <div class="package-create-card">
     <div class="card-header bg-gradient-primary text-white">
-        <h5 class="mb-0"><i class="fas fa-plus-circle"></i> {{ t('Add') }} {{ t('Plan_2') }} {{ t('New_3') }}</h5>
+        <h5 class="mb-0"><i class="fas fa-plus-circle"></i> {{ _('Add New Package') }}</h5>
     </div>
     <div class="card-body">
         <form class="needs-validation" method="POST" action="{{ url_for('payment_vault.create_package') }}">
@@ -121,31 +121,31 @@
             <div class="row">
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label for="input_name_ar">{{ t('Name') }} {{ t('In Arabic') }}</label>
+                        <label for="input_name_ar">{{ _('Name in Arabic') }}</label>
                         <input type="text" class="form-control" name="name_ar" required id="input_name_ar" aria-label="name ar" minlength="2" maxlength="100">
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label for="input_name_en">{{ t('Name') }} {{ t('In English_2') }}</label>
+                        <label for="input_name_en">{{ _('Name in English') }}</label>
                         <input type="text" class="form-control" name="name_en" required id="input_name_en" aria-label="name en" minlength="2" maxlength="100">
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label for="input_price">{{ t('Price') }}</label>
+                        <label for="input_price">{{ _('Price') }}</label>
                         <input type="number" class="form-control" name="price" min="0" step="0.01" required id="input_price" aria-label="price">
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label for="input_icon">{{ t('الأيقونة') }}</label>
+                        <label for="input_icon">{{ _('Icon') }}</label>
                         <input type="text" class="form-control" name="icon" value="📦" id="input_icon" aria-label="icon">
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label for="input_slug">{{ t('الرابط') }} {{ t('المختصر') }}</label>
+                        <label for="input_slug">{{ _('Short URL') }}</label>
                         <input type="text" class="form-control" name="slug" placeholder="basic-plus" id="input_slug">
                     </div>
                 </div>
@@ -153,78 +153,78 @@
             <div class="row">
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label for="input_support_duration_months">{{ t('Duration') }} {{ t('الدعم') }} {{ t('بالشهور') }}</label>
+                        <label for="input_support_duration_months">{{ _('Support Duration (months)') }}</label>
                         <input type="number" class="form-control" name="support_duration_months" value="3" min="0" id="input_support_duration_months" aria-label="support duration months">
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label for="input_sort_order">{{ t('الترتيب') }}</label>
+                        <label for="input_sort_order">{{ _('Sort Order') }}</label>
                         <input type="number" class="form-control" name="sort_order" value="0" min="0" id="input_sort_order" aria-label="sort order">
                     </div>
                     <div class="form-check form-check-inline mr-0">
                         <input class="form-check-input" type="checkbox" id="is_active_new" name="is_active" checked aria-label="is active">
-                        <label class="form-check-label" for="is_active_new">{{ t('Active_3') }}</label>
+                        <label class="form-check-label" for="is_active_new">{{ _('Active') }}</label>
                     </div>
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" type="checkbox" id="is_featured_new" name="is_featured" aria-label="is featured">
-                        <label class="form-check-label" for="is_featured_new">{{ t('مميزة') }}</label>
+                        <label class="form-check-label" for="is_featured_new">{{ _('Featured') }}</label>
                     </div>
                 </div>
             </div>
 
-            <h6 class="text-primary mt-2"><i class="fas fa-sliders-h"></i> {{ t('الحدود الأساسية') }}</h6>
-            <p class="text-muted small mb-2"><i class="fas fa-info-circle"></i> {{ t('أدخل') }} <code>-1</code> = {{ t('غير محدود') }} ∞</p>
+            <h6 class="text-primary mt-2"><i class="fas fa-sliders-h"></i> {{ _('Core Limits') }}</h6>
+            <p class="text-muted small mb-2"><i class="fas fa-info-circle"></i> {{ _('Enter') }} <code>-1</code> = {{ _('Unlimited') }}</p>
             <div class="row">
                 {% for col, label, default in [
-                    ('max_users', t('Count') ~ ' ' ~ t('Users'), '1'),
-                    ('max_branches', t('Count') ~ ' ' ~ t('Branches'), '1'),
-                    ('max_warehouses', t('المستودعات'), ''),
-                    ('max_products', t('المنتجات'), ''),
-                    ('max_customers', t('العملاء'), ''),
-                    ('max_suppliers', t('الموردون'), ''),
-                    ('max_storage_mb', t('التخزين') ~ ' (MB)', '')
+                    ('max_users', _('User Count'), '1'),
+                    ('max_branches', _('Branch Count'), '1'),
+                    ('max_warehouses', _('Warehouses'), ''),
+                    ('max_products', _('Products'), ''),
+                    ('max_customers', _('Customers'), ''),
+                    ('max_suppliers', _('Suppliers'), ''),
+                    ('max_storage_mb', _('Storage (MB)'), '')
                 ] %}
                 <div class="col-md-3 col-sm-6">
                     <div class="form-group">
                         <label for="new_{{ col }}">{{ label }}</label>
                         <input type="number" class="form-control" name="{{ col }}" min="-1"
-                               value="{{ default }}" placeholder="-1" title="-1 = {{ t('غير محدود') }}"
+                               value="{{ default }}" placeholder="-1" title="-1 = {{ _('Unlimited') }}"
                                id="new_{{ col }}" aria-label="{{ col }}">
                     </div>
                 </div>
                 {% endfor %}
             </div>
 
-            <h6 class="text-primary mt-2"><i class="fas fa-calendar-alt"></i> {{ t('الحصص الشهرية') }}</h6>
-            <p class="text-muted small mb-2"><i class="fas fa-info-circle"></i> {{ t('أدخل') }} <code>-1</code> = {{ t('غير محدود') }} ∞</p>
+            <h6 class="text-primary mt-2"><i class="fas fa-calendar-alt"></i> {{ _('Monthly Quotas') }}</h6>
+            <p class="text-muted small mb-2"><i class="fas fa-info-circle"></i> {{ _('Enter') }} <code>-1</code> = {{ _('Unlimited') }}</p>
             <div class="row">
                 {% for col, label in [
-                    ('max_invoices_per_month', t('الفواتير') ~ ' / ' ~ t('شهر')),
-                    ('max_sales_per_month', t('المبيعات') ~ ' / ' ~ t('شهر'))
+                    ('max_invoices_per_month', _('Invoices / Month')),
+                    ('max_sales_per_month', _('Sales / Month'))
                 ] %}
                 <div class="col-md-3 col-sm-6">
                     <div class="form-group">
                         <label for="new_{{ col }}">{{ label }}</label>
                         <input type="number" class="form-control" name="{{ col }}" min="-1"
-                               value="" placeholder="-1" title="-1 = {{ t('غير محدود') }}"
+                               value="" placeholder="-1" title="-1 = {{ _('Unlimited') }}"
                                id="new_{{ col }}" aria-label="{{ col }}">
                     </div>
                 </div>
                 {% endfor %}
             </div>
 
-            <h6 class="text-primary mt-2"><i class="fas fa-key"></i> {{ t('صلاحيات الميزات') }}</h6>
+            <h6 class="text-primary mt-2"><i class="fas fa-key"></i> {{ _('Feature Permissions') }}</h6>
             <div class="row mb-2">
                 {% for col, label, icon, default_on in [
-                    ('enable_payroll', t('الرواتب'), 'fa-money-check-alt', false),
-                    ('enable_expenses', t('المصروفات'), 'fa-receipt', true),
-                    ('enable_cheques', t('الشيكات'), 'fa-money-check', true),
-                    ('enable_reports', t('التقارير'), 'fa-chart-line', true),
-                    ('enable_ai', t('الذكاء الاصطناعي'), 'fa-robot', false),
-                    ('enable_store', t('المتجر الإلكتروني'), 'fa-store', false),
-                    ('enable_gl', t('دفتر الأستاذ'), 'fa-book', true),
-                    ('enable_api', 'API', 'fa-plug', false)
+                    ('enable_payroll', _('Payroll'), 'fa-money-check-alt', false),
+                    ('enable_expenses', _('Expenses'), 'fa-receipt', true),
+                    ('enable_cheques', _('Cheques'), 'fa-money-check', true),
+                    ('enable_reports', _('Reports'), 'fa-chart-line', true),
+                    ('enable_ai', _('AI'), 'fa-robot', false),
+                    ('enable_store', _('Online Store'), 'fa-store', false),
+                    ('enable_gl', _('General Ledger'), 'fa-book', true),
+                    ('enable_api', _('API'), 'fa-plug', false)
                 ] %}
                 <div class="col-md-3 col-sm-6 mb-2">
                     <div class="custom-control custom-switch">
@@ -238,12 +238,12 @@
                 {% endfor %}
             </div>
             <div class="form-group">
-                <label for="input_features">{{ t('الميزات') }}</label>
-                <textarea class="form-control" name="features" rows="4" placeholder="كل {{ t('ميزة') }} في {{ t('سطر') }} {{ t('مستقل') }}" id="input_features"></textarea>
+                <label for="input_features">{{ _('Features') }}</label>
+                <textarea class="form-control" name="features" rows="4" placeholder="{{ _('One feature per line') }}" id="input_features"></textarea>
             </div>
             <div class="text-left">
                 <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> {{ t('Create') }} {{ t('Plan') }}
+                    <i class="fas fa-save"></i> {{ _('Create Package') }}
                 </button>
             </div>
         </form>
@@ -256,14 +256,14 @@
                 {% for package in packages %}
                 <div class="package-item {% if package.is_featured %}featured{% endif %}">
                     {% if package.is_featured and package.badge_text %}
-                    <div class="ic-1">
-                        ⭐ {{ package.badge_text }}
+                    <div class="featured-badge">
+                        <i class="fas fa-star"></i> {{ package.badge_text }}
                     </div>
                     {% endif %}
                     
                     <div class="package-header">
                         <div class="package-name">{{ package.icon }} {{ package.name_ar }}</div>
-                        <div class="package-price">${{ "{:,.0f}".format(package.price) }}</div>
+                        <div class="package-price">{{ currency or 'AED' }} {{ "{:,.0f}".format(package.price) }}</div>
                         <small class="text-muted">{{ package.currency }}</small>
                     </div>
                     
@@ -271,18 +271,18 @@
                         <li><i class="fas fa-check"></i> {{ feature }}</li>{%- endfor %}
                     </ul>
                     
-                    <div class="ic-2">
-                        <div><i class="fas fa-users"></i> {{ t('Users') }}: {{ package.max_users if package.max_users is not none and package.max_users > 0 else '∞' }}</div>
-                        <div><i class="fas fa-building"></i> {{ t('Branches') }}: {{ package.max_branches if package.max_branches is not none and package.max_branches > 0 else '∞' }}</div>
-                        <div><i class="fas fa-box"></i> {{ t('المنتجات') }}: {{ package.max_products if package.max_products is not none and package.max_products > 0 else '∞' }}</div>
-                        <div><i class="fas fa-calendar-alt"></i> {{ t('المبيعات') }}/{{ t('شهر') }}: {{ package.max_sales_per_month if package.max_sales_per_month is not none and package.max_sales_per_month > 0 else '∞' }}</div>
-                        <div><i class="fas fa-headset"></i> {{ t('الدعم') }}: {{ package.support_duration_months }} {{ t('شهر') }}</div>
+                    <div class="inline-form">
+                        <div><i class="fas fa-users"></i> {{ _('Users') }}: {{ package.max_users if package.max_users is not none and package.max_users > 0 else '∞' }}</div>
+                        <div><i class="fas fa-building"></i> {{ _('Branches') }}: {{ package.max_branches if package.max_branches is not none and package.max_branches > 0 else '∞' }}</div>
+                        <div><i class="fas fa-box"></i> {{ _('Products') }}: {{ package.max_products if package.max_products is not none and package.max_products > 0 else '∞' }}</div>
+                        <div><i class="fas fa-calendar-alt"></i> {{ _('Sales') }}/{{ _('Month') }}: {{ package.max_sales_per_month if package.max_sales_per_month is not none and package.max_sales_per_month > 0 else '∞' }}</div>
+                        <div><i class="fas fa-headset"></i> {{ _('Support') }}: {{ package.support_duration_months }} {{ _('Month') }}</div>
                         <div class="mt-1">
                             {% for flag, label in [
-                                ('enable_payroll', t('الرواتب')),
-                                ('enable_ai', t('الذكاء الاصطناعي')),
-                                ('enable_store', t('المتجر الإلكتروني')),
-                                ('enable_api', 'API')
+                                ('enable_payroll', _('Payroll')),
+                                ('enable_ai', _('AI')),
+                                ('enable_store', _('Online Store')),
+                                ('enable_api', _('API'))
                             ] %}
                                 {% if package[flag] %}<span class="badge badge-success">{{ label }}</span>{% endif %}
                             {% endfor %}
@@ -291,20 +291,20 @@
                     
                     <div class="package-actions">
                         <button class="btn btn-primary" data-action="edit-package" data-package-id="{{ package.id }}">
-                            <i class="fas fa-edit"></i> {{ t('Edit') }}
+                            <i class="fas fa-edit"></i> {{ _('Edit') }}
                         </button>
                         <button class="btn btn-info" data-action="view-package-stats" data-package-id="{{ package.id }}" data-package-name="{{ package.name_ar }}">
-                            <i class="fas fa-chart-bar"></i> {{ t('إحصائيات') }}
+                            <i class="fas fa-chart-bar"></i> {{ _('Statistics') }}
                         </button>
                         <button class="btn {% if package.is_active %}btn-success{% else %}btn-secondary{% endif %}" data-action="toggle-package-status" data-package-id="{{ package.id }}">
-                            <i class="fas fa-power-off"></i> {{ 'نشط' if package.is_active else 'معطل' }}
+                            <i class="fas fa-power-off"></i> {{ _('Active') if package.is_active else _('Disabled') }}
                         </button>
                     </div>
                 </div>
                 {% endfor %}
             {% else %}
                 <div class="alert alert-warning">
-                    <i class="fas fa-exclamation-triangle"></i> لا {{ t('توجد') }} {{ t('باقات') }}. {{ t('يرجى') }} {{ t('Add') }} {{ t('باقات') }} من {{ t('قاعدة') }} {{ t('Data') }}.
+                    <i class="fas fa-exclamation-triangle"></i> {{ _('No packages found. Please add packages from the database.') }}
                 </div>
             {% endif %}
         </div>
@@ -313,7 +313,7 @@
         <div class="card">
             <div class="card-header bg-gradient-info">
                 <h5 class="mb-0 text-white">
-                    <i class="fas fa-chart-pie"></i> {{ t('إحصائيات') }} {{ t('Sales') }} {{ t('حسب') }} {{ t('Plan') }}
+                    <i class="fas fa-chart-pie"></i> {{ _('Sales by Package') }}
                 </h5>
             </div>
             <div class="card-body">
@@ -340,9 +340,9 @@
     new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ["{{ t('Plan') }} {{ t('الأساسية') }}", "{{ t('Plan') }} {{ t('الاحترافية') }}", "{{ t('Plan_2') }} {{ t('الشركات') }}"],
+            labels: ["{{ _('Basic') }}", "{{ _('Professional') }}", "{{ _('Enterprise') }}"],
             datasets: [{
-                label: "{{ t('Count') }} {{ t('Sales') }}",
+                label: "{{ _('Sales Count') }}",
                 data: JSON.parse('{{ package_stats|tojson }}'),
                 backgroundColor: [
                     'rgba(102, 126, 234, 0.8)',
@@ -385,39 +385,36 @@ function viewPackageStats(packageId, packageName) {
         .then(r => r.json())
         .then(data => {
             Swal.fire({
-                title: `{{ t('إحصائيات') }} ${packageName}`,
+                title: `{{ _('Statistics') }} ${packageName}`,
                 html: `
-                    <div class="ic-3">
-                        <p><strong>{{ t('Total_2') }} {{ t('Sales') }}:</strong> ${data.total_sales || 0}</p>
-                        <p><strong>{{ t('Revenue') }}:</strong> $${data.total_revenue || 0}</p>
-                        <p><strong>{{ t('Pending') }}:</strong> ${data.pending || 0}</p>
-                        <p><strong>{{ t('Completed') }}:</strong> ${data.completed || 0}</p>
+                    <div class="text-right">
+                        <p><strong>{{ _('Total Sales') }}:</strong> ${data.total_sales || 0}</p>
+                        <p><strong>{{ _('Revenue') }}:</strong> ${data.total_revenue || 0}</p>
+                        <p><strong>{{ _('Pending') }}:</strong> ${data.pending || 0}</p>
+                        <p><strong>{{ _('Completed') }}:</strong> ${data.completed || 0}</p>
                     </div>
                 `,
                 icon: 'info',
-                confirmButtonText: "{{ t('حسناً') }}"
+                confirmButtonText: "{{ _('OK') }}"
             });
         })
         .catch(() => {
             Swal.fire({
                 icon: 'error',
-                title: "{{ t('Error') }}",
-                text: "{{ t('فشل') }} في {{ t('جلب') }} {{ t('Statistics') }}"
+                title: "{{ _('Error') }}",
+                text: "{{ _('Failed to fetch statistics') }}"
             });
         });
 }
 
 function togglePackageStatus(packageId) {
-    const _change = "{{ t('Change') }}";
-    const _status2 = "{{ t('Status_2') }}";
-    const _plan = "{{ t('Plan') }}";
     Swal.fire({
-        title: _change + ' ' + _status2 + ' ' + _plan,
-        text: "هل {{ t('تريد') }} " + _change + ' ' + _status2 + ' هذه ' + _plan + " ({{ t('Active') }}/{{ t('معطل') }})؟",
+        title: '{{ _("Change Package Status") }}',
+        text: '{{ _("Are you sure you want to change this package status?") }}',
         icon: 'question',
         showCancelButton: true,
-        confirmButtonText: 'نعم',
-        cancelButtonText: "{{ t('Cancel') }}"
+        confirmButtonText: '{{ _("Yes") }}',
+        cancelButtonText: '{{ _("Cancel") }}'
     }).then((result) => {
         if (result.isConfirmed) {
             fetch(`/payment-vault/package/${packageId}/toggle`, {
@@ -429,9 +426,9 @@ function togglePackageStatus(packageId) {
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) {
-                        Swal.fire('تم!', "تم {{ t('Update') }} {{ t('Status') }}", 'success').then(() => location.reload());
+                        Swal.fire('{{ _("Done") }}', '{{ _("Status updated successfully") }}', 'success').then(() => location.reload());
                     } else {
-                        Swal.fire("{{ t('Error') }}", data.error || "{{ t('تعذر') }} {{ t('Update') }} {{ t('Status') }}", 'error');
+                        Swal.fire('{{ _("Error") }}', data.error || '{{ _("Failed to update status") }}', 'error');
                     }
                 });
         }

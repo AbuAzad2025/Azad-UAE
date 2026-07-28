@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 
-{% block title %}{{ t('Edit') }} {{ t('Plan_2') }} - Edit Package{% endblock %}
+{% block title %}{{ _('Edit Package') }}{% endblock %}
 
 {% block page_title %}
 <div class="d-flex align-items-center justify-content-between">
     <div>
-        <h1 class="mb-0"><i class="fas fa-edit text-primary"></i> {{ t('Edit') }} {{ t('Plan_2') }}</h1>
-        <p class="text-muted">{{ t('Update') }} {{ t('Info_2') }} {{ t('Plan') }}</p>
+        <h1 class="mb-0"><i class="fas fa-edit text-primary"></i> {{ _('Edit Package') }}</h1>
+        <p class="text-muted">{{ _('Update package information') }}</p>
     </div>
     <a href="{{ url_for('payment_vault.packages_management') }}" class="btn btn-secondary">
-        <i class="fas fa-arrow-right"></i> {{ t('Back') }}
+        <i class="fas fa-arrow-right"></i>         {{ _('Back') }}
     </a>
 </div>
 {% endblock %}
@@ -19,7 +19,7 @@
     <div class="col-md-8 mx-auto">
         <div class="card">
             <div class="card-header bg-primary">
-                <h3 class="card-title"><i class="fas fa-box"></i> {{ t('Edit') }}: {{ package.name_ar }}</h3>
+                <h3 class="card-title"><i class="fas fa-box"></i> {{ _('Edit') }}: {{ package.name_ar }}</h3>
             </div>
             <div class="card-body">
                 <form class="needs-validation" method="POST" id="editPackageForm" action="">
@@ -28,14 +28,14 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>{{ t('Name') }} {{ t('In Arabic') }} <span class="text-danger">*</span></label>
+                                <label>{{ _('Name (Arabic)') }} <span class="text-danger">*</span></label>
                                 <input type="text" name="name_ar" class="form-control" 
                                        value="{{ package.name_ar }}" required aria-label="name ar" minlength="2" maxlength="100">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>{{ t('Name') }} {{ t('In English_2') }} <span class="text-danger">*</span></label>
+                                <label>{{ _('Name (English)') }} <span class="text-danger">*</span></label>
                                 <input type="text" name="name_en" class="form-control" 
                                        value="{{ package.name_en }}" required aria-label="name en" minlength="2" maxlength="100">
                             </div>
@@ -43,59 +43,59 @@
                     </div>
                     
                     <div class="form-group">
-                        <label>{{ t('Description') }} {{ t('In Arabic') }}</label>
+                        <label>{{ _('Description (Arabic)') }}</label>
                         <textarea name="description_ar" class="form-control" rows="2" aria-label="description ar" maxlength="500">{{ package.description_ar or '' }}</textarea>
                     </div>
                     
                     <div class="form-group">
-                        <label>{{ t('Description') }} {{ t('In English_2') }}</label>
+                        <label>{{ _('Description (English)') }}</label>
                         <textarea name="description_en" class="form-control" rows="2" aria-label="description en" maxlength="500">{{ package.description_en or '' }}</textarea>
                     </div>
                     
                     <div class="row">
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label>{{ t('Price') }} (USD) <span class="text-danger">*</span></label>
+                                <label>{{ _('Price') }} (USD) <span class="text-danger">*</span></label>
                                 <input type="number" name="price" class="form-control" step="0.01"
                                        value="{{ package.price }}" required aria-label="price" min="0">
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label for="input_support_duration_months">{{ t('Duration') }} {{ t('الدعم') }} ({{ t('شهور') }})</label>
+                                <label for="input_support_duration_months">{{ _('Support Duration (Months)') }}</label>
                                 <input type="number" name="support_duration_months" class="form-control"
                                        value="{{ package.support_duration_months }}" id="input_support_duration_months" aria-label="support duration months">
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label for="input_badge_text">نص {{ t('الشارة') }} (Badge)</label>
+                                <label for="input_badge_text">{{ _('Badge Text') }}</label>
                                 <input type="text" name="badge_text" class="form-control"
                                        value="{{ package.badge_text or '' }}"
-                                       placeholder="{{ t('مثال') }}: {{ t('الأكثر') }} {{ t('شعبية') }}" id="input_badge_text">
+                                                                               placeholder="{{ _('Example: Most Popular') }}" id="input_badge_text">
                             </div>
                         </div>
                     </div>
 
                     <hr>
-                    <h6 class="text-primary"><i class="fas fa-sliders-h"></i> {{ t('الحدود الأساسية') }}</h6>
-                    <p class="text-muted small mb-2"><i class="fas fa-info-circle"></i> {{ t('أدخل') }} <code>-1</code> = {{ t('غير محدود') }} ∞</p>
+                    <h6 class="text-primary"><i class="fas fa-sliders-h"></i> {{ _('Core Limits') }}</h6>
+                    <p class="text-muted small mb-2"><i class="fas fa-info-circle"></i> {{ _('Enter -1 for unlimited') }}</p>
                     <div class="row">
                         {% for col, label in [
-                            ('max_users', t('Count') ~ ' ' ~ t('Users')),
-                            ('max_branches', t('Count') ~ ' ' ~ t('Branches')),
-                            ('max_warehouses', t('المستودعات')),
-                            ('max_products', t('المنتجات')),
-                            ('max_customers', t('العملاء')),
-                            ('max_suppliers', t('الموردون')),
-                            ('max_storage_mb', t('التخزين') ~ ' (MB)')
+                            ('max_users', _('Count') ~ ' ' ~ _('Users')),
+                            ('max_branches', _('Count') ~ ' ' ~ _('Branches')),
+                            ('max_warehouses', _('Warehouses')),
+                            ('max_products', _('Products')),
+                            ('max_customers', _('Customers')),
+                            ('max_suppliers', _('Suppliers')),
+                            ('max_storage_mb', _('Storage') ~ ' (MB)')
                         ] %}
                         <div class="col-md-3 col-sm-6">
                             <div class="form-group">
                                 <label for="edit_{{ col }}">{{ label }}</label>
                                 <input type="number" name="{{ col }}" class="form-control" min="-1"
                                        value="{{ package[col] if package[col] is not none else '' }}"
-                                       placeholder="-1" title="-1 = {{ t('غير محدود') }}"
+                                       placeholder="-1" title="{{ _('Unlimited') }}"
                                        id="edit_{{ col }}" aria-label="{{ col }}">
                             </div>
                         </div>
@@ -103,19 +103,19 @@
                     </div>
 
                     <hr>
-                    <h6 class="text-primary"><i class="fas fa-calendar-alt"></i> {{ t('الحصص الشهرية') }}</h6>
-                    <p class="text-muted small mb-2"><i class="fas fa-info-circle"></i> {{ t('أدخل') }} <code>-1</code> = {{ t('غير محدود') }} ∞</p>
+                    <h6 class="text-primary"><i class="fas fa-calendar-alt"></i> {{ _('Monthly Allowances') }}</h6>
+                    <p class="text-muted small mb-2"><i class="fas fa-info-circle"></i> {{ _('Enter -1 for unlimited') }}</p>
                     <div class="row">
                         {% for col, label in [
-                            ('max_invoices_per_month', t('الفواتير') ~ ' / ' ~ t('شهر')),
-                            ('max_sales_per_month', t('المبيعات') ~ ' / ' ~ t('شهر'))
+                            ('max_invoices_per_month', _('Invoices') ~ ' / ' ~ _('Month')),
+                            ('max_sales_per_month', _('Sales') ~ ' / ' ~ _('Month'))
                         ] %}
                         <div class="col-md-3 col-sm-6">
                             <div class="form-group">
                                 <label for="edit_{{ col }}">{{ label }}</label>
                                 <input type="number" name="{{ col }}" class="form-control" min="-1"
                                        value="{{ package[col] if package[col] is not none else '' }}"
-                                       placeholder="-1" title="-1 = {{ t('غير محدود') }}"
+                                       placeholder="-1" title="{{ _('Unlimited') }}"
                                        id="edit_{{ col }}" aria-label="{{ col }}">
                             </div>
                         </div>
@@ -123,17 +123,17 @@
                     </div>
 
                     <hr>
-                    <h6 class="text-primary"><i class="fas fa-key"></i> {{ t('صلاحيات الميزات') }}</h6>
+                    <h6 class="text-primary"><i class="fas fa-key"></i> {{ _('Feature Permissions') }}</h6>
                     <div class="row">
                         {% for col, label, icon in [
-                            ('enable_payroll', t('الرواتب'), 'fa-money-check-alt'),
-                            ('enable_expenses', t('المصروفات'), 'fa-receipt'),
-                            ('enable_cheques', t('الشيكات'), 'fa-money-check'),
-                            ('enable_reports', t('التقارير'), 'fa-chart-line'),
-                            ('enable_ai', t('الذكاء الاصطناعي'), 'fa-robot'),
-                            ('enable_store', t('المتجر الإلكتروني'), 'fa-store'),
-                            ('enable_gl', t('دفتر الأستاذ'), 'fa-book'),
-                            ('enable_api', 'API', 'fa-plug')
+                            ('enable_payroll', _('Payroll'), 'fa-money-check-alt'),
+                            ('enable_expenses', _('Expenses'), 'fa-receipt'),
+                            ('enable_cheques', _('Cheques'), 'fa-money-check'),
+                            ('enable_reports', _('Reports'), 'fa-chart-line'),
+                            ('enable_ai', _('AI'), 'fa-robot'),
+                            ('enable_store', _('Online Store'), 'fa-store'),
+                            ('enable_gl', _('General Ledger'), 'fa-book'),
+                            ('enable_api', _('API'), 'fa-plug')
                         ] %}
                         <div class="col-md-3 col-sm-6 mb-2">
                             <div class="custom-control custom-switch">
@@ -148,9 +148,9 @@
                     </div>
 
                     <div class="form-group">
-                        <label>{{ t('الميزات') }} (كل {{ t('ميزة') }} في {{ t('سطر') }})</label>
+                        <label>{{ _('Features (one per line)') }}</label>
                         <textarea name="features" class="form-control" rows="8" aria-label="features">{% if package.features %}{{ package.features|join('\n') }}{% endif %}</textarea>
-                        <small class="form-text text-muted">{{ t('اكتب') }} كل {{ t('ميزة') }} في {{ t('سطر') }} {{ t('منفصل') }}</small>
+                        <small class="form-text text-muted">{{ _('Write each feature on a separate line') }}</small>
                     </div>
                     
                     <div class="row">
@@ -159,7 +159,7 @@
                                 <input type="checkbox" class="custom-control-input" id="is_active" 
                                        name="is_active" {% if package.is_active %}checked{% endif %} aria-label="is active">
                                 <label class="custom-control-label" for="is_active">
-                                    <i class="fas fa-toggle-on text-success"></i> {{ t('Active_3') }}
+                                    <i class="fas fa-toggle-on text-success"></i> {{ _('Active') }}
                                 </label>
                             </div>
                         </div>
@@ -168,7 +168,7 @@
                                 <input type="checkbox" class="custom-control-input" id="is_featured" 
                                        name="is_featured" {% if package.is_featured %}checked{% endif %} aria-label="is featured">
                                 <label class="custom-control-label" for="is_featured">
-                                    <i class="fas fa-star text-warning"></i> {{ t('مميزة') }}
+                                    <i class="fas fa-star text-warning"></i> {{ _('Featured') }}
                                 </label>
                             </div>
                         </div>
@@ -178,10 +178,10 @@
                     
                     <div class="form-group mb-0">
                         <button type="submit" class="btn btn-success btn-lg">
-                            <i class="fas fa-save"></i> {{ t('Save') }} {{ t('Changes') }}
+                            <i class="fas fa-save"></i> {{ _('Save Changes') }}
                         </button>
                         <a href="{{ url_for('payment_vault.packages_management') }}" class="btn btn-secondary btn-lg">
-                            <i class="fas fa-times"></i> {{ t('Cancel') }}
+                            <i class="fas fa-times"></i> {{ _('Cancel') }}
                         </a>
                     </div>
                 </form>

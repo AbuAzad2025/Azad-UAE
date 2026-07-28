@@ -1,25 +1,25 @@
 {% extends "base.html" %}
 
-{% block title %}{{ t('Dashboard_2') }} {{ t('تحكم') }} {{ t('الخزينة') }} {{ t('السرية') }} - Vault Dashboard{% endblock %}
+{% block title %}{{ _('Vault Dashboard') }}{% endblock %}
 
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
     <div class="d-flex align-items-center">
-        <i class="fas fa-vault text-danger mr-3 ic-1"></i>
+        <i class="fas fa-vault text-danger mr-3 inline-form"></i>
         <div>
-            <h1 class="mb-0">🔐 {{ t('Dashboard_2') }} {{ t('تحكم') }} {{ t('الخزينة') }} {{ t('السرية') }}</h1>
-            <p class="text-muted mb-0">{{ t('Management') }} {{ t('Purchases') }} {{ t('والتبرعات') }} {{ t('والباقات') }}</p>
+            <h1 class="mb-0"><i class="fas fa-lock"></i> {{ _('Vault Dashboard') }}</h1>
+            <p class="text-muted mb-0">{{ _('Manage purchases, donations, and packages') }}</p>
         </div>
     </div>
     <div>
-        <form class="needs-validation ic-2" method="POST" action="{{ url_for('payment_vault.trigger_auto_approve') }}">
+        <form class="needs-validation inline-form" method="POST" action="{{ url_for('payment_vault.trigger_auto_approve') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-            <button type="submit" class="btn btn-success mr-2" data-action="confirm-submit" data-confirm-message="{{ t('تشغيل') }} {{ t('القبول') }} {{ t('Auto') }} {{ t('للعمليات') }} {{ t('الأقدم') }} من {{ t('ساعة_2') }}">
-                <i class="fas fa-check-circle"></i> {{ t('قبول') }} {{ t('تلقائي') }}
+            <button type="submit" class="btn btn-success mr-2" data-action="confirm-submit" data-confirm-message="{{ _('Trigger auto-approve for oldest operations?') }}">
+                <i class="fas fa-check-circle"></i> {{ _('Auto Approve') }}
             </button>
         </form>
         <button data-action="lock-vault" class="btn btn-danger">
-            <i class="fas fa-lock"></i> {{ t('قفل') }} {{ t('الخزينة') }}
+            <i class="fas fa-lock"></i> {{ _('Lock Vault') }}
         </button>
     </div>
 </div>
@@ -81,14 +81,13 @@
     }
 
     /* D6: externalized inline styles */
-    .ic-1 { font-size: 2rem; }
-    .ic-2 { display: inline; }
-    .ic-3 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-    .ic-4 { opacity: 0.8; }
-    .ic-5 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
-    .ic-6 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
-    .ic-7 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
-    .ic-8 { font-size: 1.5rem; }
+    .inline-form { font-size: 2rem; display: inline; }
+    .gradient-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .opacity-80 { opacity: 0.8; }
+    .gradient-pink { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .gradient-blue { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .gradient-green { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+    .font-1-5rem { font-size: 1.5rem; }
   </style>
 {% endblock %}
 
@@ -98,9 +97,9 @@
                 <div class="stat-card ic-3">
                     <div class="stat-number" id="live-purchases">{{ stats.total_purchases }}</div>
                     <div class="stat-label">
-                        <i class="fas fa-shopping-bag"></i> {{ t('Total_2') }} {{ t('Purchases') }}
+                        <i class="fas fa-shopping-bag"></i> {{ _('Total Purchases') }}
                     </div>
-                    <small class="d-block mt-2 ic-4">{{ t('Today') }}: <span id="today-purchases">{{ stats.completed_today or 0 }}</span></small>
+                    <small class="d-block mt-2 ic-4">{{ _('Today') }}: <span id="today-purchases">{{ stats.completed_today or 0 }}</span></small>
                 </div>
             </div>
             
@@ -108,19 +107,19 @@
                 <div class="stat-card ic-5">
                     <div class="stat-number" id="live-donations">{{ stats.total_donations }}</div>
                     <div class="stat-label">
-                        <i class="fas fa-heart"></i> {{ t('Total_2') }} {{ t('التبرعات') }}
+                        <i class="fas fa-heart"></i> {{ _('Total Donations') }}
                     </div>
-                    <small class="d-block mt-2 ic-4">{{ t('Today') }}: <span id="today-donations">{{ stats.today_transactions or 0 }}</span></small>
+                    <small class="d-block mt-2 ic-4">{{ _('Today') }}: <span id="today-donations">{{ stats.today_transactions or 0 }}</span></small>
                 </div>
             </div>
             
             <div class="col-md-3">
                 <div class="stat-card ic-6">
-                    <div class="stat-number" id="live-revenue">${{ "%.2f"|format(stats.total_revenue) }}</div>
+                    <div class="stat-number" id="live-revenue">{{ currency or 'AED' }} {{ "%.2f"|format(stats.total_revenue) }}</div>
                     <div class="stat-label">
-                        <i class="fas fa-dollar-sign"></i> {{ t('Total_2') }} {{ t('Revenue') }}
+                        <i class="fas fa-dollar-sign"></i> {{ _('Total Revenue') }}
                     </div>
-                    <small class="d-block mt-2 ic-4">{{ t('Today') }}: $<span id="today-revenue">{{ "%.2f"|format(stats.today_revenue or 0) }}</span></small>
+                    <small class="d-block mt-2 ic-4">{{ _('Today') }}: {{ currency or 'AED' }} <span id="today-revenue">{{ "%.2f"|format(stats.today_revenue or 0) }}</span></small>
                 </div>
             </div>
             
@@ -128,10 +127,10 @@
                 <div class="stat-card ic-7">
                     <div class="stat-number" id="live-pending">{{ stats.pending_count }}</div>
                     <div class="stat-label">
-                        <i class="fas fa-clock"></i> {{ t('قيد') }} {{ t('Waiting') }}
+                        <i class="fas fa-clock"></i> {{ _('Pending') }}
                     </div>
                     <div class="live-indicator mt-2">
-                        <span class="badge badge-light">🟢 {{ t('مباشر') }}</span>
+                        <span class="badge badge-light"><i class="fas fa-circle text-success"></i> {{ _('Live') }}</span>
                     </div>
                 </div>
             </div>
@@ -142,7 +141,7 @@
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header bg-danger text-white">
-                        <h5 class="mb-0"><i class="fas fa-shield-alt"></i> {{ t('Status_2') }} {{ t('الأمان') }}</h5>
+                        <h5 class="mb-0"><i class="fas fa-shield-alt"></i> {{ _('Security Status') }}</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -150,21 +149,21 @@
                                 <div class="text-center mb-3">
                                     <h3 class="mb-0">
                                         {% if security_status.security_level == 'high' %}
-                                            <span class="badge badge-success ic-8">🛡️ {{ t('عالي') }}</span>
+                                            <span class="badge badge-success ic-8"><i class="fas fa-shield-alt"></i> {{ _('High') }}</span>
                                         {% elif security_status.security_level == 'medium' %}
-                                            <span class="badge badge-warning ic-8">⚠️ {{ t('متوسط') }}</span>
+                                            <span class="badge badge-warning ic-8"><i class="fas fa-exclamation-triangle"></i> {{ _('Medium') }}</span>
                                         {% else %}
-                                            <span class="badge badge-danger ic-8">🚨 {{ t('Low_2') }}</span>
+                                            <span class="badge badge-danger ic-8"><i class="fas fa-bell"></i> {{ _('Low') }}</span>
                                         {% endif %}
                                     </h3>
-                                    <p class="text-muted mb-0">{{ t('مستوى') }} {{ t('الأمان') }}</p>
+                                    <p class="text-muted mb-0">{{ _('Security Level') }}</p>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <ul class="list-unstyled">
-                                    <li><i class="fas fa-ban text-danger"></i> IPs {{ t('Blocked') }}: <strong>{{ security_status.blacklisted_ips }}</strong></li>
-                                    <li><i class="fas fa-exclamation-triangle text-warning"></i> {{ t('محاولات') }} {{ t('فاشلة') }}: <strong>{{ security_status.failed_attempts }}</strong></li>
-                                    <li><i class="fas fa-clock text-info"></i> {{ t('Last') }} {{ t('Sign In') }}: <strong>{{ vault.last_access.strftime('%H:%M') if vault.last_access else 'N/A' }}</strong></li>
+                                    <li><i class="fas fa-ban text-danger"></i> IPs {{ _('Blocked') }}: <strong>{{ security_status.blacklisted_ips }}</strong></li>
+                                    <li><i class="fas fa-exclamation-triangle text-warning"></i> {{ _('Failed Attempts') }}: <strong>{{ security_status.failed_attempts }}</strong></li>
+                                    <li><i class="fas fa-clock text-info"></i> {{ _('Last Sign In') }}: <strong>{{ vault.last_access.strftime('%H:%M') if vault.last_access else _('N/A') }}</strong></li>
                                 </ul>
                             </div>
                         </div>
@@ -175,30 +174,30 @@
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0"><i class="fas fa-users"></i> {{ t('تحليل') }} {{ t('Customers_2') }}</h5>
+                        <h5 class="mb-0"><i class="fas fa-users"></i> {{ _('Customer Analysis') }}</h5>
                     </div>
                     <div class="card-body">
                         <div class="row text-center">
                             <div class="col-md-4">
                                 <h4 class="text-primary">{{ customer_behavior.total_customers }}</h4>
-                                <small class="text-muted">{{ t('Total_2') }} {{ t('Customers_2') }}</small>
+                                <small class="text-muted">{{ _('Total Customers') }}</small>
                             </div>
                             <div class="col-md-4">
                                 <h4 class="text-success">{{ customer_behavior.returning_customers }}</h4>
-                                <small class="text-muted">{{ t('Customers_3') }} {{ t('متكررون') }}</small>
+                                <small class="text-muted">{{ _('Returning Customers') }}</small>
                             </div>
                             <div class="col-md-4">
                                 <h4 class="text-warning">{{ customer_behavior.vip_customers }}</h4>
-                                <small class="text-muted">{{ t('Customers_3') }} VIP</small>
+                                <small class="text-muted">{{ _('VIP Customers') }}</small>
                             </div>
                         </div>
                         <hr>
                         <div class="row text-center">
                             <div class="col-md-6">
-                                <p class="mb-0"><i class="fas fa-shopping-cart"></i> {{ t('متوسط') }} {{ t('Purchases') }}: <strong>{{ "%.1f"|format(customer_behavior.avg_purchases_per_customer) }}</strong></p>
+                                <p class="mb-0"><i class="fas fa-shopping-cart"></i> {{ _('Avg Purchases') }}: <strong>{{ "%.1f"|format(customer_behavior.avg_purchases_per_customer) }}</strong></p>
                             </div>
                             <div class="col-md-6">
-                                <p class="mb-0"><i class="fas fa-dollar-sign"></i> {{ t('متوسط') }} {{ t('الإنفاق') }}: <strong>${{ "%.2f"|format(customer_behavior.avg_spent_per_customer) }}</strong></p>
+                                <p class="mb-0"><i class="fas fa-dollar-sign"></i> {{ _('Avg Spending') }}: <strong>{{ currency or 'AED' }} {{ "%.2f"|format(customer_behavior.avg_spent_per_customer) }}</strong></p>
                             </div>
                         </div>
                     </div>
@@ -209,38 +208,38 @@
         
         <div class="row mb-4">
             <div class="col-12">
-                <h4 class="mb-3"><i class="fas fa-bolt text-warning"></i> {{ t('Actions') }} {{ t('Quick') }}</h4>
+                <h4 class="mb-3"><i class="fas fa-bolt text-warning"></i> {{ _('Quick Actions') }}</h4>
             </div>
             
             <div class="col-md-3">
                 <div class="quick-action" data-action="navigate" data-url="{{ url_for('payment_vault.view_purchases') }}">
                     <i class="fas fa-shopping-cart text-primary"></i>
-                    <h5>{{ t('Management') }} {{ t('Purchases') }}</h5>
-                    <p class="text-muted mb-0">{{ t('View') }} {{ t('and Management') }} {{ t('جميع') }} {{ t('Purchases') }}</p>
+                    <h5>{{ _('Manage Purchases') }}</h5>
+                    <p class="text-muted mb-0">{{ _('View and manage all purchases') }}</p>
                 </div>
             </div>
             
             <div class="col-md-3">
                 <div class="quick-action" data-action="navigate" data-url="{{ url_for('payment_vault.donations') }}">
                     <i class="fas fa-hand-holding-heart text-danger"></i>
-                    <h5>{{ t('Management') }} {{ t('التبرعات') }}</h5>
-                    <p class="text-muted mb-0">{{ t('View') }} {{ t('and Management') }} {{ t('جميع') }} {{ t('التبرعات') }}</p>
+                    <h5>{{ _('Manage Donations') }}</h5>
+                    <p class="text-muted mb-0">{{ _('View and manage all donations') }}</p>
                 </div>
             </div>
             
             <div class="col-md-3">
                 <div class="quick-action" data-action="navigate" data-url="{{ url_for('payment_vault.packages_management') }}">
                     <i class="fas fa-box-open text-success"></i>
-                    <h5>{{ t('Management') }} {{ t('الباقات') }}</h5>
-                    <p class="text-muted mb-0">{{ t('Add') }} {{ t('وتعديل') }} {{ t('الباقات') }}</p>
+                    <h5>{{ _('Manage Packages') }}</h5>
+                    <p class="text-muted mb-0">{{ _('Add and edit packages') }}</p>
                 </div>
             </div>
             
             <div class="col-md-3">
                 <div class="quick-action" data-action="navigate" data-url="{{ url_for('payment_vault.cards') }}">
                     <i class="fas fa-credit-card text-primary"></i>
-                    <h5>{{ t('البطاقات') }} {{ t('المحفوظة') }}</h5>
-                    <p class="text-muted mb-0">{{ t('View') }} {{ t('بطاقات') }} {{ t('Payment_2') }} ({{ t('مشفرة') }})</p>
+                    <h5>{{ _('Saved Cards') }}</h5>
+                    <p class="text-muted mb-0">{{ _('View payment cards (encrypted)') }}</p>
                 </div>
             </div>
         </div>
@@ -248,30 +247,30 @@
         
         <div class="row mb-4">
             <div class="col-12">
-                <h4 class="mb-3"><i class="fas fa-cog text-info"></i> {{ t('Settings_2') }} {{ t('and Reports') }}</h4>
+                <h4 class="mb-3"><i class="fas fa-cog text-info"></i> {{ _('Settings and Reports') }}</h4>
             </div>
             
             <div class="col-md-4">
                 <div class="quick-action" data-action="navigate" data-url="{{ url_for('payment_vault.reports') }}">
                     <i class="fas fa-chart-line text-info"></i>
-                    <h5>{{ t('Reports') }} {{ t('Finance') }}</h5>
-                    <p class="text-muted mb-0">{{ t('Reports_3') }} {{ t('تفصيلية') }} {{ t('وإحصائيات') }}</p>
+                    <h5>{{ _('Financial Reports') }}</h5>
+                    <p class="text-muted mb-0">{{ _('Detailed reports and statistics') }}</p>
                 </div>
             </div>
             
             <div class="col-md-4">
                 <div class="quick-action" data-action="navigate" data-url="{{ url_for('payment_vault.settings') }}">
                     <i class="fas fa-cog text-secondary"></i>
-                    <h5>{{ t('Settings') }}</h5>
-                    <p class="text-muted mb-0">{{ t('Settings_2') }} {{ t('Payment_2') }} {{ t('والأمان') }}</p>
+                    <h5>{{ _('Settings') }}</h5>
+                    <p class="text-muted mb-0">{{ _('Payment and security settings') }}</p>
                 </div>
             </div>
             
             <div class="col-md-4">
                 <div class="quick-action" data-action="navigate" data-url="{{ url_for('payment_vault.change_password') }}">
                     <i class="fas fa-key text-danger"></i>
-                    <h5>{{ t('Change') }} {{ t('كلمة') }} {{ t('المرور') }}</h5>
-                    <p class="text-muted mb-0">{{ t('Update') }} {{ t('كلمة') }} {{ t('مرور') }} {{ t('الخزينة') }}</p>
+                    <h5>{{ _('Change Password') }}</h5>
+                    <p class="text-muted mb-0">{{ _('Update vault password') }}</p>
                 </div>
             </div>
         </div>
@@ -281,17 +280,17 @@
             <div class="col-md-6">
                 <div class="chart-card">
                     <h5 class="mb-3">
-                        <i class="fas fa-history text-primary"></i> {{ t('Last') }} {{ t('Purchases') }}
+                        <i class="fas fa-history text-primary"></i> {{ _('Last Purchases') }}
                     </h5>
                     <div class="table-responsive">
                         <table class="table table-sm">
                             <thead>
                                 <tr>
-                                    <th>{{ t('Date') }}</th>
-                                    <th>{{ t('Customer') }}</th>
-                                    <th>{{ t('Plan') }}</th>
-                                    <th>{{ t('Amount') }}</th>
-                                    <th>{{ t('Status') }}</th>
+                                    <th>{{ _('Date') }}</th>
+                                    <th>{{ _('Customer') }}</th>
+                                    <th>{{ _('Plan') }}</th>
+                                    <th>{{ _('Amount') }}</th>
+                                    <th>{{ _('Status') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -299,20 +298,20 @@
                                     {% for purchase in recent_purchases %}
                                     <tr>
                                         <td>{{ purchase.created_at.strftime('%Y-%m-%d') }}</td>
-                                        <td>{{ purchase.customer_name or 'غير محدد' }}</td>
+                                        <td>{{ purchase.customer_name or _('Unspecified') }}</td>
                                         <td>
-                                            {% if purchase.package == 'basic' %}📦 {{ t('أساسية') }}
-                                            {% elif purchase.package == 'professional' %}💼 {{ t('احترافية') }}
-                                            {% elif purchase.package == 'enterprise' %}🏢 {{ t('شركات') }}
+                                            {% if purchase.package == 'basic' %}<i class="fas fa-box"></i> {{ _('Basic') }}
+                                            {% elif purchase.package == 'professional' %}<i class="fas fa-briefcase"></i> {{ _('Professional') }}
+                                            {% elif purchase.package == 'enterprise' %}<i class="fas fa-building"></i> {{ _('Enterprise') }}
                                             {% else %}{{ purchase.package }}
                                             {% endif %}
                                         </td>
-                                        <td><strong>${{ purchase.amount_usd }}</strong></td>
+                                        <td><strong>{{ currency or 'AED' }} {{ purchase.amount_usd }}</strong></td>
                                         <td>
                                             {% if purchase.status == 'completed' %}
-                                                <span class="badge badge-success">✓ {{ t('Completed_2') }}</span>
+                                                <span class="badge badge-success"><i class="fas fa-check"></i> {{ _('Completed') }}</span>
                                             {% elif purchase.status == 'pending' %}
-                                                <span class="badge badge-warning">⏳ {{ t('قيد') }} {{ t('Waiting') }}</span>
+                                                <span class="badge badge-warning"><i class="fas fa-hourglass-half"></i> {{ _('Pending') }}</span>
                                             {% else %}
                                                 <span class="badge badge-secondary">{{ purchase.status }}</span>
                                             {% endif %}
@@ -321,7 +320,7 @@
                                     {% endfor %}
                                 {% else %}
                                     <tr>
-                                        <td colspan="5" class="text-center text-muted">لا {{ t('توجد') }} {{ t('Purchases_2') }}</td>
+                                        <td colspan="5" class="text-center text-muted">{{ _('No purchases found') }}</td>
                                     </tr>
                                 {% endif %}
                             </tbody>
@@ -333,17 +332,17 @@
             <div class="col-md-6">
                 <div class="chart-card">
                     <h5 class="mb-3">
-                        <i class="fas fa-heart text-danger"></i> {{ t('Last') }} {{ t('التبرعات') }}
+                        <i class="fas fa-heart text-danger"></i> {{ _('Last Donations') }}
                     </h5>
                     <div class="table-responsive">
                         <table class="table table-sm">
                             <thead>
                                 <tr>
-                                    <th>{{ t('Date') }}</th>
-                                    <th>{{ t('المتبرع') }}</th>
-                                    <th>{{ t('Amount') }}</th>
-                                    <th>{{ t('Currency') }}</th>
-                                    <th>{{ t('Status') }}</th>
+                                    <th>{{ _('Date') }}</th>
+                                    <th>{{ _('Donor') }}</th>
+                                    <th>{{ _('Amount') }}</th>
+                                    <th>{{ _('Currency') }}</th>
+                                    <th>{{ _('Status') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -351,21 +350,21 @@
                                     {% for donation in recent_donations %}
                                     <tr>
                                         <td>{{ donation.created_at.strftime('%Y-%m-%d') }}</td>
-                                        <td>{{ donation.donor_name or 'مجهول' }}</td>
-                                        <td><strong>${{ donation.amount_usd }}</strong></td>
+                                        <td>{{ donation.donor_name or _('Anonymous') }}</td>
+                                        <td><strong>{{ currency or 'AED' }} {{ donation.amount_usd }}</strong></td>
                                         <td>{{ donation.crypto_type|upper }}</td>
                                         <td>
                                             {% if donation.status == 'completed' %}
-                                                <span class="badge badge-success">✓</span>
+                                                <span class="badge badge-success"><i class="fas fa-check"></i></span>
                                             {% else %}
-                                                <span class="badge badge-warning">⏳</span>
+                                                <span class="badge badge-warning"><i class="fas fa-hourglass-half"></i></span>
                                             {% endif %}
                                         </td>
                                     </tr>
                                     {% endfor %}
                                 {% else %}
                                     <tr>
-                                        <td colspan="5" class="text-center text-muted">لا {{ t('توجد') }} {{ t('تبرعات') }}</td>
+                                        <td colspan="5" class="text-center text-muted">{{ _('No donations found') }}</td>
                                     </tr>
                                 {% endif %}
                             </tbody>
@@ -380,7 +379,7 @@
             <div class="col-12">
                 <div class="chart-card">
                     <h5 class="mb-3">
-                        <i class="fas fa-chart-area text-success"></i> {{ t('Revenue') }} {{ t('الشهرية') }}
+                        <i class="fas fa-chart-area text-success"></i> {{ _('Monthly Revenue') }}
                     </h5>
                     <canvas id="revenueChart" height="80"></canvas>
                 </div>
@@ -404,64 +403,28 @@
 
     // Revenue Chart
     const ctx = document.getElementById('revenueChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: JSON.parse('{{ monthly_labels|tojson }}'),
-            datasets: [{
-                label: '{{ t("Purchases") }}',
-                data: JSON.parse('{{ monthly_purchases|tojson }}'),
-                borderColor: '#667eea',
-                backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                tension: 0.4
-            }, {
-                label: '{{ t("التبرعات") }}',
-                data: JSON.parse('{{ monthly_donations|tojson }}'),
-                borderColor: '#f5576c',
-                backgroundColor: 'rgba(245, 87, 108, 0.1)',
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top'
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: (value) => {
-                            return '$' + value;
-                        }
-                    }
-                }
-            }
-        }
-    });
+    const chartConfig = JSON.parse('{{ chart_data | tojson | safe }}');
+    new Chart(ctx, chartConfig);
     
     function lockVault() {
-        const _lockLabel = "{{ t('قفل') }}";
-        Swal.fire({
-            title: _lockLabel + ' {{ t("الخزينة_2") }}',
-            text: 'هل أنت {{ t('متأكد') }} من ' + _lockLabel + ' {{ t('الخزينة') }} {{ t('السرية_2') }}',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: '{{ t("نعم،") }} ' + _lockLabel,
-            cancelButtonText: '{{ t("Cancel") }}',
-            confirmButtonColor: '#d33'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = '{{ url_for("payment_vault.lock_vault") }}';
+        fetch('{{ url_for("payment_vault.lock_vault") }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token() }}',
+                'Content-Type': 'application/json'
             }
+        }).then(r => r.json()).then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                Swal.fire('{{ _("Error") }}', data.error || '{{ _("Failed to lock vault") }}', 'error');
+            }
+        }).catch(() => {
+            Swal.fire('{{ _("Error") }}', '{{ _("Network error") }}', 'error');
         });
     }
     
-    // {{ t('Update') }} {{ t('Statistics') }} {{ t('المباشرة') }} كل 30 {{ t('ثانية') }}
+    // {{ _('Live statistics update every 30 seconds') }}
     setInterval(async () => {
         try {
             const response = await fetch('{{ url_for("payment_vault.api_live_stats") }}');
@@ -472,9 +435,9 @@
                 document.getElementById('today-donations').textContent = data.daily_transactions;
                 document.getElementById('live-pending').textContent = data.pending_count;            }
         } catch (error) {        }
-    }, 30000); // كل 30 {{ t('ثانية') }}
+    }, 30000); // {{ _('Every 30 seconds') }}
     
-    // {{ t('جلب') }} {{ t('Notifications') }} {{ t('New_4') }}
+    // {{ _('Fetch new notifications') }}
     async function fetchNotifications() {
         try {
             const response = await fetch('{{ url_for("payment_vault.api_notifications") }}?limit=5');
@@ -489,7 +452,7 @@
         } catch (error) {        }
     }
     
-    // {{ t('View') }} {{ t('Notification') }}
+    // {{ _('View notification') }}
     function showNotification(title, message, type = 'info') {
         const icon = type === 'danger' ? 'error' : type === 'success' ? 'success' : 'info';
         
@@ -505,10 +468,10 @@
         });
     }
     
-    // {{ t('فحص') }} {{ t('Notifications') }} كل {{ t('دقيقة') }}
+    // {{ _('Check notifications every minute') }}
     setInterval(fetchNotifications, 60000);
     
-    // {{ t('تأثير') }} {{ t('لطيف') }} عند {{ t('Download') }} {{ t('الصفحة') }}
+    // {{ _('Smooth effect on page load') }}
     document.addEventListener('DOMContentLoaded', () => {
         const cards = document.querySelectorAll('.stat-card, .quick-action');
         cards.forEach((card, index) => {

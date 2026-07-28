@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}{{ t('Reports') }} {{ t('Finance') }} - Financial Reports{% endblock %}
+{% block title %}{{ _('Financial Reports') }}{% endblock %}
 
 {% block page_title %}
 <div class="d-flex align-items-center">
-    <i class="fas fa-chart-line text-info mr-3 ic-1"></i>
+    <i class="fas fa-chart-line text-info mr-3 inline-form"></i>
     <div>
-        <h1 class="mb-0">📊 {{ t('Reports') }} {{ t('Finance') }}</h1>
-        <p class="text-muted mb-0">{{ t('Reports_3') }} {{ t('شاملة') }} {{ t('Purchases_3') }} {{ t('والتبرعات') }}</p>
+        <h1 class="mb-0"><i class="fas fa-chart-pie"></i> {{ _('Financial Reports') }}</h1>
+        <p class="text-muted mb-0">{{ _('Comprehensive reports for purchases and donations') }}</p>
     </div>
 </div>
 {% endblock %}
@@ -42,10 +42,10 @@
     }
 
     /* D6: externalized inline styles */
-    .ic-1 { font-size: 2rem; }
-    .ic-2 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
-    .ic-3 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
-    .ic-4 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+    .inline-form { font-size: 2rem; }
+    .gradient-purchases { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .gradient-donations { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .gradient-transactions { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
   </style>
 {% endblock %}
 
@@ -55,21 +55,21 @@
             <div class="card-body">
                 <form class="needs-validation row" method="GET" action="">
                     <div class="col-md-3">
-                        <label for="input_from_date">من {{ t('History') }}</label>
+                        <label for="input_from_date">{{ _('From Date') }}</label>
                         <input type="date" name="from_date" class="form-control" 
                                value="{{ request.args.get('from_date', '') }}" id="input_from_date" aria-label="from date">
                     </div>
                     <div class="col-md-3">
-                        <label for="input_to_date">إلى {{ t('History') }}</label>
+                        <label for="input_to_date">{{ _('To Date') }}</label>
                         <input type="date" name="to_date" class="form-control" 
                                value="{{ request.args.get('to_date', '') }}" id="input_to_date" aria-label="to date">
                     </div>
                     <div class="col-md-3">
-                        <label>{{ t('نوع') }} {{ t('Report') }}</label>
+                        <label>{{ _('Report Type') }}</label>
                         <select name="report_type" class="form-control" aria-label="report type">
-                            <option value="all">{{ t('All') }}</option>
-                            <option value="purchases">{{ t('Purchases') }} فقط</option>
-                            <option value="donations">{{ t('التبرعات') }} فقط</option>
+                            <option value="all">{{ _('All') }}</option>
+                            <option value="purchases">{{ _('Purchases Only') }}</option>
+                            <option value="donations">{{ _('Donations Only') }}</option>
                         </select>
                     </div>
                     <div class="col-md-3">
@@ -86,26 +86,26 @@
 <div class="row mb-4">
             <div class="col-md-3">
                 <div class="metric-box">
-                    <div class="metric-value">${{ summary.total_revenue|default(0) }}</div>
-                    <div class="metric-label">{{ t('Total_2') }} {{ t('Revenue') }}</div>
+                    <div class="metric-value">{{ currency or 'AED' }} {{ summary.total_revenue|default(0) }}</div>
+                    <div class="metric-label">{{ _('Total Revenue') }}</div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="metric-box ic-2">
-                    <div class="metric-value">${{ summary.total_purchases_amount|default(0) }}</div>
-                    <div class="metric-label">{{ t('Revenues') }} {{ t('Purchases') }}</div>
+                <div class="metric-box gradient-purchases">
+                    <div class="metric-value">{{ currency or 'AED' }} {{ summary.total_purchases_amount|default(0) }}</div>
+                    <div class="metric-label">{{ _('Purchase Revenues') }}</div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="metric-box ic-3">
-                    <div class="metric-value">${{ summary.total_donations_amount|default(0) }}</div>
-                    <div class="metric-label">{{ t('Revenues') }} {{ t('التبرعات') }}</div>
+                <div class="metric-box gradient-donations">
+                    <div class="metric-value">{{ currency or 'AED' }} {{ summary.total_donations_amount|default(0) }}</div>
+                    <div class="metric-label">{{ _('Donation Revenues') }}</div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="metric-box ic-4">
+                <div class="metric-box gradient-transactions">
                     <div class="metric-value">{{ summary.total_transactions|default(0) }}</div>
-                    <div class="metric-label">{{ t('Total_2') }} {{ t('العمليات') }}</div>
+                    <div class="metric-label">{{ _('Total Transactions') }}</div>
                 </div>
             </div>
         </div>
