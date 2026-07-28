@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - تصفح {{ table_name }}{% endblock %}
-{% block page_title %}تصفح جدول: <code>{{ table_name }}</code>{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or t('Accounting_System') }} - {{ t('Browse') }} {{ table_name }}{% endblock %}
+{% block page_title %}{{ t('Browse_Table') }}: <code>{{ table_name }}</code>{% endblock %}
 
 {% block content %}
 <div class="row">
@@ -10,11 +10,11 @@
       <div class="card-header">
         <h3 class="card-title">
           <i class="fas fa-table"></i> {{ table_name }}
-          <span class="badge badge-info">{{ total }} {{ t('Log') }}</span>
+          <span class="badge badge-info">{{ total|default(0) }} {{ t('Records') }}</span>
         </h3>
         <div class="card-tools">
           <a href="{{ url_for('owner.database_tools') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> {{ _('عودة') }}
+            <i class="fas fa-arrow-left"></i> {{ t('Back') }}
           </a>
         </div>
       </div>
@@ -23,18 +23,20 @@
           <table class="table table-striped table-sm">
             <thead class="bg-dark">
               <tr>
-                {% for col in columns %}
+                {% for col in columns|default([]) %}
                 <th>{{ col }}</th>
                 {% endfor %}
               </tr>
             </thead>
             <tbody>
-              {% for row in rows %}
+              {% for row in rows|default([]) %}
               <tr>
                 {% for cell in row %}
                 <td>{{ cell }}</td>
                 {% endfor %}
               </tr>
+              {% else %}
+              <tr><td colspan="{{ (columns|default([]))|length }}" class="text-center text-muted">{{ t('No_Records') }}</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -42,17 +44,19 @@
       </div>
       <div class="card-footer">
         <nav>
+          {% set page = page|default(1) %}
+          {% set total_pages = total_pages|default(1) %}
           {% set prev_page = page - 1 %}
           {% set next_page = page + 1 %}
           <ul class="pagination pagination-sm m-0">{%- if page > 1 %}
             <li class="page-item">
-              <a class="page-link" href="{{ url_for('owner.browse_table', table_name=table_name, page=prev_page) }}">{{ t('السابق') }}</a>
+              <a class="page-link" href="{{ url_for('owner.browse_table', table_name=table_name, page=prev_page) }}">{{ t('Previous') }}</a>
             </li>{%- endif %}
             <li class="page-item active">
-              <span class="page-link">صفحة {{ page }} من {{ total_pages }}</span>
+              <span class="page-link">{{ t('Page') }} {{ page }} {{ t('Of') }} {{ total_pages }}</span>
             </li>{%- if page < total_pages %}
             <li class="page-item">
-              <a class="page-link" href="{{ url_for('owner.browse_table', table_name=table_name, page=next_page) }}">{{ t('التالي') }}</a>
+              <a class="page-link" href="{{ url_for('owner.browse_table', table_name=table_name, page=next_page) }}">{{ t('Next') }}</a>
             </li>{%- endif %}
           </ul>
         </nav>
@@ -61,4 +65,3 @@
   </div>
 </div>
 {% endblock %}
-

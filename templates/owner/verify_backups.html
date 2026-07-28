@@ -1,53 +1,53 @@
 {% extends 'base.html' %}
-{% block title %}التحقق من النسخ{% endblock %}
+{% block title %}{{ t('Verify_Backups') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="mb-3">
     {% if current_user.is_owner or (current_user.role and current_user.role.slug == 'developer') %}
       <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-        <i class="fas fa-arrow-right"></i> {{ _('رجوع للوحة المالك') }}
+        <i class="fas fa-arrow-right"></i> {{ t('Back_To_Owner_Dashboard') }}
       </a>
     {% else %}
       <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-        <i class="fas fa-arrow-right"></i> {{ _('رجوع للوحة التحكم') }}
+        <i class="fas fa-arrow-right"></i> {{ t('Back_To_Dashboard') }}
       </a>
     {% endif %}
     <a href="{{ url_for('owner.list_backups') }}" class="btn btn-info">
-      <i class="fas fa-archive"></i> {{ _('النسخ الاحتياطية') }}
+      <i class="fas fa-archive"></i> {{ t('Backups') }}
     </a>
     <a href="{{ url_for('owner.data_cleanup') }}" class="btn btn-danger">
-      <i class="fas fa-trash"></i> {{ _('التنظيف') }}
+      <i class="fas fa-trash"></i> {{ t('Cleanup') }}
     </a>
   </div>
   <div class="card">
     <div class="card-header">
-      <h3><i class="fas fa-check-double"></i> {{ _('التحقق من النسخ الاحتياطية') }}</h3>
+      <h3><i class="fas fa-check-double"></i> {{ t('Verify_Backups') }}</h3>
     </div>
     <div class="card-body">
       <div class="table-responsive"><table class="table table-bordered table-hover">
         <thead class="thead-light">
           <tr>
-            <th style="width: 40%">{{ _('اسم الملف') }}</th>
-            <th style="width: 15%">{{ _('الحجم') }}</th>
+            <th style="width: 40%">{{ t('File_Name') }}</th>
+            <th style="width: 15%">{{ t('Size') }}</th>
             <th style="width: 25%">{{ t('Created_Date') }}</th>
             <th style="width: 20%">{{ t('Status') }}</th>
           </tr>
         </thead>
         <tbody>
-          {% if backups %}
+          {% if backups|default([]) %}
             {% for backup in backups %}
-            <tr class="{{ 'table-success' if backup.valid else 'table-danger' }}">
-              <td><code>{{ backup.filename }}</code></td>
-              <td>{{ backup.size }} MB</td>
-              <td>{{ backup.created }}</td>
+            <tr class="{{ 'table-success' if backup.valid|default(false) else 'table-danger' }}">
+              <td><code>{{ backup.filename|default('') }}</code></td>
+              <td>{{ backup.size|default(0) }} MB</td>
+              <td>{{ backup.created|default('') }}</td>
               <td>
-                {% if backup.valid %}
+                {% if backup.valid|default(false) %}
                 <span class="badge badge-success">
-                  <i class="fas fa-check"></i> {{ _('صحيح') }}
+                  <i class="fas fa-check"></i> {{ t('Valid') }}
                 </span>
                 {% else %}
                 <span class="badge badge-danger">
-                  <i class="fas fa-times"></i> {{ _('تالف') }}
+                  <i class="fas fa-times"></i> {{ t('Corrupted') }}
                 </span>
                 {% endif %}
               </td>
@@ -56,7 +56,7 @@
           {% else %}
             <tr>
               <td colspan="4" class="text-center text-muted">
-                <i class="fas fa-info-circle"></i> {{ _('لا توجد نسخ احتياطية') }}
+                <i class="fas fa-info-circle"></i> {{ t('No_Backups') }}
               </td>
             </tr>
           {% endif %}

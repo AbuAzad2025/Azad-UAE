@@ -1,20 +1,20 @@
 {% extends "base.html" %}
 
-{% block title %}شركة أزاد للأنظمة الذكية - إحصائيات النظام والأداء{% endblock %}
+{% block title %}{{ t('Azad_Smart_Systems') }} - {{ t('System_Stats_And_Performance') }}{% endblock %}
 
 {% block content %}
     <div class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1 class="m-0"><i class="fas fa-chart-bar mr-2"></i>{{ _('إحصائيات النظام') }}</h1>
+                    <h1 class="m-0"><i class="fas fa-chart-bar mr-2"></i>{{ t('System_Statistics') }}</h1>
                 </div>
                 <div class="col-sm-6">
                     <div class="float-left">
                         <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
                             <i class="fas fa-arrow-right mr-2"></i>{{ t('Owner_Dashboard') }}</a>
                         <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}</a>
+                            <i class="fas fa-home mr-2"></i>{{ t('Home') }}</a>
                     </div>
                 </div>
             </div>
@@ -27,7 +27,7 @@
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">{{ _('إحصائيات قاعدة البيانات') }}</h3>
+                            <h3 class="card-title">{{ t('Database_Statistics') }}</h3>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -39,15 +39,15 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for table_name, count in db_stats.items() %}
+                                        {% for table_name, count in (db_stats|default({})).items() %}
                                         <tr>
                                             <td>{{ table_name }}</td>
                                             <td>{{ count }}</td>
                                         </tr>
                                         {% endfor %}
-                                        {% if restricted_tables %}
+                                        {% if restricted_tables|default(0) %}
                                         <tr class="table-secondary">
-                                            <td><em>{{ _('جداول محمية (أسماء وعدد السجلات مخفية)') }}</em></td>
+                                            <td><em>{{ t('Protected_Tables_Hidden') }}</em></td>
                                             <td>{{ restricted_tables }}</td>
                                         </tr>
                                         {% endif %}

@@ -1,21 +1,21 @@
 {% extends 'base.html' %}
-{% block title %}تحليلات العملاء{% endblock %}
+{% block title %}{{ t('Customer_Insights') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="mb-3">
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right"></i> {{ _('رجوع للوحة المالك') }}
+      <i class="fas fa-arrow-right"></i> {{ t('Back_To_Owner_Dashboard') }}
     </a>
     <a href="{{ url_for('owner.sales_insights') }}" class="btn btn-primary">
-      <i class="fas fa-shopping-cart"></i> {{ _('المبيعات') }}
+      <i class="fas fa-shopping-cart"></i> {{ t('Sales') }}
     </a>
     <a href="{{ url_for('owner.forecasting') }}" class="btn btn-success">
-      <i class="fas fa-chart-line"></i> {{ _('التنبؤ') }}
+      <i class="fas fa-chart-line"></i> {{ t('Forecasting') }}
     </a>
   </div>
   <div class="card">
     <div class="card-header">
-      <h3><i class="fas fa-users"></i> {{ _('تحليلات العملاء (أفضل 50)') }}</h3>
+      <h3><i class="fas fa-users"></i> {{ t('Customer_Insights_Top_50') }}</h3>
     </div>
     <div class="card-body">
       <div class="table-responsive">
@@ -24,29 +24,32 @@
             <tr>
               <th>#</th>
               <th>{{ t('Customer') }}</th>
-              <th>{{ _('إجمالي المشتريات') }}</th>
-              <th>{{ _('عدد الفواتير') }}</th>
-              <th>{{ _('متوسط الفاتورة') }}</th>
-              <th>{{ _('آخر شراء') }}</th>
+              <th>{{ t('Total_Purchases') }}</th>
+              <th>{{ t('Invoice_Count') }}</th>
+              <th>{{ t('Average_Invoice') }}</th>
+              <th>{{ t('Last_Purchase') }}</th>
               <th>{{ t('Status') }}</th>
             </tr>
           </thead>
           <tbody>
-            {% for c in customers %}
+            {% for c in customers|default([]) %}
             <tr>
               <td>{{ loop.index }}</td>
-              <td><strong>{{ c.name }}</strong></td>
-              <td>{{ "%.2f"|format(c.lifetime_value) }} {{ tenant_currency_symbol }}</td>
-              <td>{{ c.sales_count }}</td>
-              <td>{{ "%.2f"|format(c.avg_sale) }} {{ tenant_currency_symbol }}</td>
-              <td>{{ c.days_since_last }} {{ t('يوم') }}</td>
+              <td><strong>{{ c.name|default('') }}</strong></td>
+              <td>{{ "%.2f"|format(c.lifetime_value|default(0)) }} {{ tenant_currency_symbol|default('AED') }}</td>
+              <td>{{ c.sales_count|default(0) }}</td>
+              <td>{{ "%.2f"|format(c.avg_sale|default(0)) }} {{ tenant_currency_symbol|default('AED') }}</td>
+              <td>{{ c.days_since_last|default(0) }} {{ t('Days') }}</td>
               <td>
-                {% set badge_cls = 'success' if c.status == 'نشط' else 'warning' if c.status == 'خامل' else 'danger' %}
+                {% set raw_status = c.status|default('') %}
+                {% set badge_cls = 'success' if raw_status == 'active' else 'warning' if raw_status == 'dormant' else 'danger' %}
                 <span class="badge badge-{{ badge_cls }}">
-                  {{ c.status }}
+                  {{ c.status|default('') }}
                 </span>
               </td>
             </tr>
+            {% else %}
+            <tr><td colspan="7" class="text-center text-muted">{{ t('No_Customers') }}</td></tr>
             {% endfor %}
           </tbody>
         </table>

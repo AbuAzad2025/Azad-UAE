@@ -1,46 +1,51 @@
 {% extends 'base.html' %}
-{% block title %}لوحة مالية متقدمة{% endblock %}
+{% block title %}{{ t('Advanced_Financial_Dashboard') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="mb-3">
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right"></i> {{ _('رجوع للوحة المالك') }}
+      <i class="fas fa-arrow-right"></i> {{ t('Back_To_Owner_Dashboard') }}
     </a>
     <a href="{{ url_for('owner.sales_insights') }}" class="btn btn-primary">
-      <i class="fas fa-link"></i> {{ _('المبيعات') }}
+      <i class="fas fa-link"></i> {{ t('Sales') }}
     </a>
     <a href="{{ url_for('owner.forecasting') }}" class="btn btn-success">
-      <i class="fas fa-link"></i> {{ _('التنبؤ') }}
+      <i class="fas fa-link"></i> {{ t('Forecasting') }}
     </a>
   </div>
-  
+
 <div class="row">
-<div class="col-md-3"><div class="small-box bg-success"><div class="inner"><h3>{{ "%.0f"|format(kpis.avg_revenue) }}</h3><p>{{ _('متوسط الإيرادات') }}</p></div></div></div>
-<div class="col-md-3"><div class="small-box bg-info"><div class="inner"><h3>{{ "%.0f"|format(kpis.avg_profit) }}</h3><p>{{ _('متوسط الأرباح') }}</p></div></div></div>
-<div class="col-md-3"><div class="small-box bg-primary"><div class="inner"><h3>{{ "%.1f"|format(kpis.avg_margin) }}%</h3><p>{{ _('هامش الربح') }}</p></div></div></div>
-<div class="col-md-3"><div class="small-box bg-{{ 'success' if kpis.growth_rate > 0 else 'danger' }}"><div class="inner"><h3>{{ "%.1f"|format(kpis.growth_rate) }}%</h3><p>{{ _('معدل النمو') }}</p></div></div></div>
+<div class="col-md-3"><div class="small-box bg-success"><div class="inner"><h3>{{ "%.0f"|format(kpis.avg_revenue|default(0)) }}</h3><p>{{ t('Average_Revenue') }}</p></div></div></div>
+<div class="col-md-3"><div class="small-box bg-info"><div class="inner"><h3>{{ "%.0f"|format(kpis.avg_profit|default(0)) }}</h3><p>{{ t('Average_Profit') }}</p></div></div></div>
+<div class="col-md-3"><div class="small-box bg-primary"><div class="inner"><h3>{{ "%.1f"|format(kpis.avg_margin|default(0)) }}%</h3><p>{{ t('Profit_Margin') }}</p></div></div></div>
+<div class="col-md-3"><div class="small-box bg-{{ 'success' if kpis.growth_rate|default(0) > 0 else 'danger' }}"><div class="inner"><h3>{{ "%.1f"|format(kpis.growth_rate|default(0)) }}%</h3><p>{{ t('Growth_Rate') }}</p></div></div></div>
 </div>
-<div class="card"><div class="card-header"><h3>{{ _('الأداء المالي (12 شهر)') }}</h3></div><div class="card-body"><canvas id="financialChart" height="80"></canvas></div></div>
+<div class="card"><div class="card-header"><h3>{{ t('Financial_Performance_12_Months') }}</h3></div><div class="card-body"><canvas id="financialChart" height="80"></canvas></div></div>
 </div>
 <script src="{{ url_for('static', filename='adminlte/plugins/chartjs/chart.min.js') }}"></script>
 <script>
+const i18n = {{ {
+  'revenue': t('Revenue'),
+  'expenses': t('Expenses'),
+  'profit': t('Profit'),
+}|tojson }};
 new Chart(document.getElementById('financialChart'), {
   type: 'line',
   data: {
-    labels: JSON.parse('{{ months_data|map(attribute='month')|list|tojson }}'),
+    labels: JSON.parse('{{ (months_data|default([]))|map(attribute='month')|list|tojson }}'),
     datasets: [{
-      label: 'الإيرادات',
-      data: JSON.parse('{{ months_data|map(attribute='revenue')|list|tojson }}'),
+      label: i18n.revenue,
+      data: JSON.parse('{{ (months_data|default([]))|map(attribute='revenue')|list|tojson }}'),
       borderColor: 'rgb(75, 192, 192)',
       fill: false
     }, {
-      label: 'المصروفات',
-      data: JSON.parse('{{ months_data|map(attribute='expenses')|list|tojson }}'),
+      label: i18n.expenses,
+      data: JSON.parse('{{ (months_data|default([]))|map(attribute='expenses')|list|tojson }}'),
       borderColor: 'rgb(255, 99, 132)',
       fill: false
     }, {
-      label: 'الأرباح',
-      data: JSON.parse('{{ months_data|map(attribute='profit')|list|tojson }}'),
+      label: i18n.profit,
+      data: JSON.parse('{{ (months_data|default([]))|map(attribute='profit')|list|tojson }}'),
       borderColor: 'rgb(54, 162, 235)',
       fill: true
     }]

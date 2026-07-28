@@ -1,25 +1,24 @@
 {% extends 'base.html' %}
-{% block title %}سجل الدخول{% endblock %}
+{% block title %}{{ t('Login_History') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="mb-3">
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right"></i> {{ _('رجوع للوحة المالك') }}
+      <i class="fas fa-arrow-right"></i> {{ t('Back_To_Owner_Dashboard') }}
     </a>
     <a href="{{ url_for('owner.security_alerts') }}" class="btn btn-danger">
-      <i class="fas fa-link"></i> {{ _('التنبيهات') }}
+      <i class="fas fa-link"></i> {{ t('Alerts') }}
     </a>
     <a href="{{ url_for('owner.activity_monitor') }}" class="btn btn-info">
-      <i class="fas fa-link"></i> {{ _('النشاط') }}
+      <i class="fas fa-link"></i> {{ t('Activity') }}
     </a>
   </div>
-  
+
 <div class="row">
-<div class="col-md-4"><div class="info-box bg-success"><span class="info-box-icon"><i class="fas fa-check"></i></span><div class="info-box-content"><span class="info-box-text">{{ _('تسجيلات دخول ناجحة') }}</span><span class="info-box-number">{{ stats.total_logins }}</span></div></div></div>
-<div class="col-md-4"><div class="info-box bg-danger"><span class="info-box-icon"><i class="fas fa-times"></i></span><div class="info-box-content"><span class="info-box-text">{{ _('محاولات فاشلة') }}</span><span class="info-box-number">{{ stats.failed_logins }}</span></div></div></div>
-<div class="col-md-4"><div class="info-box bg-info"><span class="info-box-icon"><i class="fas fa-calendar-day"></i></span><div class="info-box-content"><span class="info-box-text">{{ t('Today') }}</span><span class="info-box-number">{{ stats.today_logins }}</span></div></div></div>
+<div class="col-md-4"><div class="info-box bg-success"><span class="info-box-icon"><i class="fas fa-check"></i></span><div class="info-box-content"><span class="info-box-text">{{ t('Successful_Logins') }}</span><span class="info-box-number">{{ stats.total_logins|default(0) }}</span></div></div></div>
+<div class="col-md-4"><div class="info-box bg-danger"><span class="info-box-icon"><i class="fas fa-times"></i></span><div class="info-box-content"><span class="info-box-text">{{ t('Failed_Attempts') }}</span><span class="info-box-number">{{ stats.failed_logins|default(0) }}</span></div></div></div>
+<div class="col-md-4"><div class="info-box bg-info"><span class="info-box-icon"><i class="fas fa-calendar-day"></i></span><div class="info-box-content"><span class="info-box-text">{{ t('Today') }}</span><span class="info-box-number">{{ stats.today_logins|default(0) }}</span></div></div></div>
 </div>
-<div class="card"><div class="card-header"><h3>{{ t('Login_Log') }}</h3></div><div class="card-body"><div class="table-responsive"><table class="table table-bordered table-sm"><thead><tr><th>{{ t('User') }}</th><th>{{ t('Time_2') }}</th><th>IP</th><th>{{ _('المتصفح') }}</th><th>{{ t('Status') }}</th></tr></thead><tbody>{% for login in logins %}<tr class="{{ 'table-danger' if not login.success else '' }}"><td>{{ login.username }}</td><td>{{ login.login_time.strftime('%Y-%m-%d %H:%M') if login.login_time else '-' }}</td><td>{{ login.ip_address }}</td><td>{{ login.browser }}</td><td>{% if login.success %}<span class="badge badge-success">{{ t('Success') }}</span>{% else %}<span class="badge badge-danger">{{ t('فشل') }}</span>{% endif %}</td></tr>{% endfor %}</tbody></table></div></div></div>
+<div class="card"><div class="card-header"><h3>{{ t('Login_Log') }}</h3></div><div class="card-body"><div class="table-responsive"><table class="table table-bordered table-sm"><thead><tr><th>{{ t('User') }}</th><th>{{ t('Time') }}</th><th>IP</th><th>{{ t('Browser') }}</th><th>{{ t('Status') }}</th></tr></thead><tbody>{% for login in logins|default([]) %}<tr class="{{ 'table-danger' if not login.success|default(false) else '' }}"><td>{{ login.username|default('') }}</td><td>{{ login.login_time.strftime('%Y-%m-%d %H:%M') if login.login_time else '-' }}</td><td>{{ login.ip_address|default('') }}</td><td>{{ login.browser|default('') }}</td><td>{% if login.success|default(false) %}<span class="badge badge-success">{{ t('Success') }}</span>{% else %}<span class="badge badge-danger">{{ t('Failed') }}</span>{% endif %}</td></tr>{% else %}<tr><td colspan="5" class="text-center text-muted">{{ t('No_Login_Records') }}</td></tr>{% endfor %}</tbody></table></div></div></div>
 </div>
 {% endblock %}
-

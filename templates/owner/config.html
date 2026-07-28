@@ -1,20 +1,20 @@
 {% extends "base.html" %}
 
-{% block title %}شركة أزاد للأنظمة الذكية - إعدادات النظام المتقدمة{% endblock %}
+{% block title %}{{ t('Azad_Smart_Systems') }} - {{ t('Advanced_System_Settings') }}{% endblock %}
 
 {% block content %}
     <div class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1 class="m-0"><i class="fas fa-cog mr-2"></i>{{ t('System_Settings_2') }}</h1>
+                    <h1 class="m-0"><i class="fas fa-cog mr-2"></i>{{ t('System_Settings') }}</h1>
                 </div>
                 <div class="col-sm-6">
                     <div class="float-left">
                         <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
                             <i class="fas fa-arrow-right mr-2"></i>{{ t('Owner_Dashboard') }}</a>
                         <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}</a>
+                            <i class="fas fa-home mr-2"></i>{{ t('Home') }}</a>
                     </div>
                 </div>
             </div>
@@ -25,7 +25,7 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-sm-6">
-                    <h1 class="m-0">{{ t('System Settings') }}</h1>
+                    <h1 class="m-0">{{ t('System_Settings') }}</h1>
                 </div>
             </div>
         </div>
@@ -37,26 +37,26 @@
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">{{ t('System Settings') }}</h3>
+                            <h3 class="card-title">{{ t('System_Settings') }}</h3>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
                                 <table class="table table-bordered table-striped">
                                     <thead>
                                         <tr>
-                                            <th>{{ t('المفتاح') }}</th>
+                                            <th>{{ t('Key') }}</th>
                                             <th>{{ t('Value') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for key, value in config.items() %}
+                                        {% for key, value in (config|default({})).items() %}
                                         <tr>
                                             <td><strong>{{ key }}</strong></td>
                                             <td>
                                                 {% if key == 'DATABASE_URL' %}
-                                                    <span class="text-muted">{{ _('مخفي لأسباب أمنية') }}</span>
+                                                    <span class="text-muted">{{ t('Hidden_For_Security') }}</span>
                                                 {% else %}
-                                                    {{ value }}
+                                                    {{ value|default('') }}
                                                 {% endif %}
                                             </td>
                                         </tr>

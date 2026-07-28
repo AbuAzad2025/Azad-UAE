@@ -1,67 +1,67 @@
 {% extends 'base.html' %}
-{% block title %}إعدادات واتساب{% endblock %}
+{% block title %}{{ t('WhatsApp_Settings') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="mb-3">
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right"></i> {{ _('رجوع للوحة المالك') }}
+      <i class="fas fa-arrow-right"></i> {{ t('Back_To_Owner_Dashboard') }}
     </a>
     <a href="{{ url_for('owner.email_settings') }}" class="btn btn-info">
-      <i class="fas fa-envelope"></i> {{ _('البريد') }}
+      <i class="fas fa-envelope"></i> {{ t('Email') }}
     </a>
     <a href="{{ url_for('owner.sms_settings') }}" class="btn btn-warning">
-      <i class="fas fa-sms"></i> {{ _('الرسائل') }}
+      <i class="fas fa-sms"></i> {{ t('SMS') }}
     </a>
   </div>
   <div class="card">
     <div class="card-header">
-      <h3><i class="fab fa-whatsapp"></i> {{ _('إعدادات واتساب') }}</h3>
+      <h3><i class="fab fa-whatsapp"></i> {{ t('WhatsApp_Settings') }}</h3>
     </div>
     <div class="card-body">
       <form class="needs-validation" method="post" action="">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-        
+
         <div class="form-group">
           <label for="input_whatsapp_api_url">API URL</label>
-          <input type="url" 
-                 name="whatsapp_api_url" 
-                 class="form-control" 
-                 value="{{ settings.whatsapp_api_url or '' }}" 
+          <input type="url"
+                 name="whatsapp_api_url"
+                 class="form-control"
+                 value="{{ settings.whatsapp_api_url|default('') }}"
                  placeholder="https://api.whatsapp.com" id="input_whatsapp_api_url">
         </div>
-        
+
         <div class="form-group">
           <label for="input_whatsapp_api_key">API Key</label>
-          <input type="password" 
-                 name="whatsapp_api_key" 
-                 class="form-control" 
-                 value="{{ settings.whatsapp_api_key or '' }}" id="input_whatsapp_api_key" aria-label="whatsapp api key">
+          <input type="password"
+                 name="whatsapp_api_key"
+                 class="form-control"
+                 value="{{ settings.whatsapp_api_key|default('') }}" id="input_whatsapp_api_key" aria-label="whatsapp api key">
         </div>
-        
+
         <div class="form-group">
-          <label for="input_whatsapp_phone_number">{{ _('رقم الهاتف') }}</label>
-          <input type="text" 
-                 name="whatsapp_phone_number" 
-                 class="form-control" 
-                 value="{{ settings.whatsapp_phone_number or '' }}" 
+          <label for="input_whatsapp_phone_number">{{ t('Phone_Number') }}</label>
+          <input type="text"
+                 name="whatsapp_phone_number"
+                 class="form-control"
+                 value="{{ settings.whatsapp_phone_number|default('') }}"
                  placeholder="+971501234567" id="input_whatsapp_phone_number" pattern="^\+?[0-9\s\-]{8,20}$">
         </div>
-        
+
         <div class="form-group">
           <div class="custom-control custom-switch">
-            <input type="checkbox" 
-                   class="custom-control-input" 
-                   id="whatsapp_enabled" 
-                   name="whatsapp_enabled" 
-                   {% if settings.whatsapp_enabled %}checked{% endif %} aria-label="whatsapp enabled">
+            <input type="checkbox"
+                   class="custom-control-input"
+                   id="whatsapp_enabled"
+                   name="whatsapp_enabled"
+                   {% if settings.whatsapp_enabled|default(false) %}checked{% endif %} aria-label="whatsapp enabled">
             <label class="custom-control-label" for="whatsapp_enabled">
-              {{ _('تفعيل واتساب') }}
+              {{ t('Enable_WhatsApp') }}
             </label>
           </div>
         </div>
-        
+
         <button type="submit" class="btn btn-success btn-lg">
-          <i class="fas fa-save"></i> {{ _('حفظ') }}
+          <i class="fas fa-save"></i> {{ t('Save') }}
         </button>
       </form>
     </div>

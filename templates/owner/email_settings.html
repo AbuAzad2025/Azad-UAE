@@ -1,39 +1,39 @@
 {% extends 'base.html' %}
-{% block title %}إعدادات البريد{% endblock %}
+{% block title %}{{ t('Email_Settings') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="mb-3">
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right"></i> {{ _('رجوع للوحة المالك') }}
+      <i class="fas fa-arrow-right"></i> {{ t('Back_To_Owner_Dashboard') }}
     </a>
     <a href="{{ url_for('owner.sms_settings') }}" class="btn btn-warning">
-      <i class="fas fa-link"></i> {{ _('الرسائل') }}
+      <i class="fas fa-link"></i> {{ t('SMS') }}
     </a>
     <a href="{{ url_for('owner.whatsapp_settings') }}" class="btn btn-success">
-      <i class="fas fa-link"></i> {{ _('واتساب') }}
+      <i class="fas fa-link"></i> {{ t('WhatsApp') }}
     </a>
     <a href="{{ url_for('owner.notification_templates') }}" class="btn btn-info">
-      <i class="fas fa-link"></i> {{ _('القوالب') }}
+      <i class="fas fa-link"></i> {{ t('Templates') }}
     </a>
   </div>
   <div class="card">
-    <div class="card-header"><h3>{{ _('إعدادات البريد الإلكتروني') }}</h3></div>
+    <div class="card-header"><h3>{{ t('Email_Settings') }}</h3></div>
     <div class="card-body">
       <form class="needs-validation" method="post" action="">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="row">
-          <div class="col-md-6"><div class="form-group"><label for="smtp_server">SMTP Server</label><input type="text" name="smtp_server" id="smtp_server" class="form-control" value="{{ settings.smtp_server or '' }}" placeholder="smtp.gmail.com"></div></div>
-          <div class="col-md-6"><div class="form-group"><label for="smtp_port">SMTP Port</label><input type="number" name="smtp_port" id="smtp_port" class="form-control" value="{{ settings.smtp_port or 587 }}"></div></div>
+          <div class="col-md-6"><div class="form-group"><label for="smtp_server">SMTP Server</label><input type="text" name="smtp_server" id="smtp_server" class="form-control" value="{{ settings.smtp_server|default('') }}" placeholder="smtp.gmail.com"></div></div>
+          <div class="col-md-6"><div class="form-group"><label for="smtp_port">SMTP Port</label><input type="number" name="smtp_port" id="smtp_port" class="form-control" value="{{ settings.smtp_port|default(587) }}"></div></div>
         </div>
         <div class="row">
-          <div class="col-md-6"><div class="form-group"><label for="smtp_username">Username</label><input type="text" name="smtp_username" id="smtp_username" class="form-control" value="{{ settings.smtp_username or '' }}" minlength="2" maxlength="100"></div></div>
-          <div class="col-md-6"><div class="form-group"><label for="smtp_password">Password</label><input type="password" name="smtp_password" id="smtp_password" class="form-control" value="{{ settings.smtp_password or '' }}" minlength="6"></div></div>
+          <div class="col-md-6"><div class="form-group"><label for="smtp_username">Username</label><input type="text" name="smtp_username" id="smtp_username" class="form-control" value="{{ settings.smtp_username|default('') }}" minlength="2" maxlength="100"></div></div>
+          <div class="col-md-6"><div class="form-group"><label for="smtp_password">Password</label><input type="password" name="smtp_password" id="smtp_password" class="form-control" value="{{ settings.smtp_password|default('') }}" minlength="6"></div></div>
         </div>
         <div class="row">
-          <div class="col-md-6"><div class="form-group"><label for="email_from">From Email</label><input type="email" name="email_from" id="email_from" class="form-control" value="{{ settings.email_from or '' }}"></div></div>
-          <div class="col-md-6"><div class="form-group"><div class="custom-control custom-switch mt-4"><input type="checkbox" class="custom-control-input" id="use_tls" name="smtp_use_tls" {% if settings.smtp_use_tls %}checked{% endif %} aria-label="smtp use tls"><label class="custom-control-label" for="use_tls">{{ _('استخدام TLS') }}</label></div></div></div>
+          <div class="col-md-6"><div class="form-group"><label for="email_from">From Email</label><input type="email" name="email_from" id="email_from" class="form-control" value="{{ settings.email_from|default('') }}"></div></div>
+          <div class="col-md-6"><div class="form-group"><div class="custom-control custom-switch mt-4"><input type="checkbox" class="custom-control-input" id="use_tls" name="smtp_use_tls" {% if settings.smtp_use_tls|default(false) %}checked{% endif %} aria-label="smtp use tls"><label class="custom-control-label" for="use_tls">{{ t('Use_TLS') }}</label></div></div></div>
         </div>
-        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> {{ _('حفظ') }}</button>
+        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> {{ t('Save') }}</button>
       </form>
     </div>
   </div>
