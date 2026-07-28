@@ -2,13 +2,14 @@
 <html lang="{{ current_language or 'ar' }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
 <head>
   <meta charset="utf-8">
-  <title>{{ t('بطاقات') }} {{ t('Products') }}</title>
+  <title>{{ _('Product_Labels') }}</title>
+  {% include 'partials/print_styles.html' %}
   <style>
     @page { size: A4; margin: 8mm; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Cairo', 'Tahoma', sans-serif; direction: rtl; background: #fff; }
+    body { font-family: 'Tajawal', 'Arial', sans-serif; background: #fff; }
     .label-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6mm; }
-    .label-card { border: 1px solid #333; border-radius: 4px; padding: 4mm; page-break-inside: avoid; break-inside: avoid; }
+    .label-card { border: 1px solid #333; border-radius: 4px; padding: 4mm; break-inside: avoid; }
     .label-card .name { font-size: 11pt; font-weight: 700; margin-bottom: 2mm; text-align: center; }
     .label-card .sku { font-size: 8pt; color: #555; margin-bottom: 1mm; text-align: center; }
     .label-card .barcode { font-family: 'Libre Barcode 39', 'monospace'; font-size: 28pt; text-align: center; margin: 2mm 0; letter-spacing: 2px; }
@@ -26,22 +27,23 @@
   </style>
 </head>
 <body>
+<div class="erp-watermark" aria-hidden="true"><span>Azad Intelligent Systems</span></div>
   <div class="no-print">
-    <button data-action="window-print">{{ t('Print') }}</button>
-    <button data-action="window-close">{{ t('Close') }}</button>
+    <button data-action="window-print">{{ _('Print') }}</button>
+    <button data-action="window-close">{{ _('Close') }}</button>
   </div>
   <div class="label-grid">
     {% for p in products %}
     <div class="label-card">
       <div class="name">{{ p.name_ar or p.name }}</div>
-      {% if p.sku %}<div class="sku">SKU: {{ p.sku }}</div>{% endif %}
+      {% if p.sku %}<div class="sku">{{ _('SKU') }}: {{ p.sku }}</div>{% endif %}
       {% if p.barcode %}
       <div class="barcode">*{{ p.barcode }}*</div>
       <div class="barcode-text">{{ p.barcode }}</div>
       {% endif %}
       <div class="details">
         <span class="price">{{ format_currency(p.price) }}</span>
-        {% if p.cost %}<span class="cost">{{ t('Cost') }}: {{ format_currency(p.cost) }}</span>{% endif %}
+        {% if p.cost %}<span class="cost">{{ _('Cost') }}: {{ format_currency(p.cost) }}</span>{% endif %}
       </div>
       {% if p.category %}<div class="category">{{ p.category }}</div>{% endif %}
     </div>

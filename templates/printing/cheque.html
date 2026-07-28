@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ t('Print') }} {{ t('Cheque_3') }} - {{ cheque.cheque_number or cheque.number }}</title>
+  <title>{{ _('Print') }} {{ _('Cheque') }} - {{ cheque.cheque_number or cheque.number }}</title>
   {% include 'partials/print_styles.html' %}
   <style>
     @page { size: 8.5in 3.5in; margin: 0; }
@@ -24,7 +24,7 @@
     .cheque-pay-label { font-size: 11px; font-weight: 700; color: #555; margin-left: 10px; }
     .cheque-payee { flex: 1; font-size: 14px; font-weight: 700; border-bottom: 1px solid #333; padding: 3px 5px; min-width: 200px; }
     .cheque-amount-section { display: flex; align-items: center; margin: 5px 0; }
-    .cheque-amount-digits { font-size: 20px; font-weight: 700; color: #2c3e50; direction: ltr; text-align: left; flex: 1; }
+    .cheque-amount-digits { font-size: 20px; font-weight: 700; color: #2c3e50; direction: ltr; text-align: {{ 'right' if is_rtl else 'left' }}; flex: 1; }
     .cheque-amount-words { font-size: 11px; color: #333; margin-top: 5px; padding: 5px 0; border-top: 1px solid #ccc; }
     .cheque-footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 5px; border-top: 1px solid #ddd; }
     .cheque-date { text-align: center; }
@@ -41,30 +41,34 @@
 </head>
 <body class="invoice-print">
 <div class="erp-watermark" aria-hidden="true"><span>Azad Intelligent Systems</span></div>
+<div class="no-print" style="text-align:center;margin-bottom:10px;">
+  <button data-action="window-print">{{ _('Print') }}</button>
+  <button data-action="window-close">{{ _('Close') }}</button>
+</div>
   <div class="cheque">
     <div class="cheque-bg"></div>
-    <div class="cheque-stamp"><span>{{ t('نموذج') }}</span></div>
+    <div class="cheque-stamp"><span>{{ _('Sample') }}</span></div>
     <div class="cheque-content">
       <div class="cheque-header">
         <div>
-          <div class="bank-name">🏦 {{ cheque.bank_name or settings.bank_name or 'اسم البنك' }}</div>
+          <div class="bank-name"><i class="fas fa-university mr-2"></i> {{ cheque.bank_name or settings.bank_name or _('Bank_Name') }}</div>
           <div class="company-info-cheque">{{ settings.company_name_ar or tenant_name_ar or company_name_ar }}</div>
         </div>
         <div class="cheque-number-display">{{ cheque.cheque_number or cheque.number or '—' }}</div>
       </div>
 
       <div class="cheque-pay-section">
-        <span class="cheque-pay-label">{{ t('المستفيد') }} / Pay to</span>
+        <span class="cheque-pay-label">{{ _('Payee') }}</span>
         <span class="cheque-payee">{{ cheque.payee_name or cheque.supplier_name or cheque.customer_name or '—' }}</span>
       </div>
 
       <div class="cheque-amount-section">
-        <span class="cheque-pay-label">{{ t('Amount') }} / Amount</span>
+        <span class="cheque-pay-label">{{ _('Amount') }}</span>
         <span class="cheque-amount-digits">{{ format_currency(cheque.amount) }}</span>
       </div>
 
       <div class="cheque-amount-words">
-        <strong>{{ t('Amount') }} {{ t('بالحروف') }}:</strong> {{ cheque.amount_in_words or number_to_arabic_words(cheque.amount, cheque.currency or tenant_default_currency or 'AED') }}
+        <strong>{{ _('Amount_In_Words') }}:</strong> {{ cheque.amount_in_words or number_to_arabic_words(cheque.amount, cheque.currency or tenant_default_currency or 'AED') }}
       </div>
 
       <div class="cheque-footer">
@@ -73,12 +77,12 @@
           {{ settings.tax_number or '' }}
         </div>
         <div class="cheque-pay-section" style="margin:0;padding:0;">
-          <span class="cheque-pay-label" style="font-size:10px;">{{ t('Date') }} / Date</span>
-          <span style="font-size:13px;font-weight:700;">{% if cheque.issue_date %}{{ cheque.issue_date.strftime('%Y-%m-%d') }}{% elif cheque.due_date %}{{ cheque.due_date.strftime('%Y-%m-%d') }}{% else %}—{% endif %}</span>
+          <span class="cheque-pay-label" style="font-size:10px;">{{ _('Date') }}</span>
+          <span style="font-size:13px;font-weight:700;">{% if cheque.issue_date %}{{ format_date(cheque.issue_date) }}{% elif cheque.due_date %}{{ format_date(cheque.due_date) }}{% else %}—{% endif %}</span>
         </div>
         <div class="cheque-signature">
           <div class="sig-line"></div>
-          <span>{{ t('التوقيع') }} / Signature</span>
+          <span>{{ _('Signature') }}</span>
         </div>
       </div>
     </div>

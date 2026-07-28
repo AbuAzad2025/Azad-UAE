@@ -3,15 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ settings.company_name_ar or tenant_name_ar or company_name_ar }} - {{ t('إذن') }} {{ t('تسليم') }} #{{ delivery.number or sale.sale_number }}</title>
+  <title>{{ settings.company_name_ar or tenant_name_ar or company_name_ar }} - {{ _('Delivery_Note') }} #{{ delivery.number or sale.sale_number }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
   {% include 'partials/print_styles.html' %}
   <style>
     body { font-family: 'Tajawal', 'Arial', sans-serif; background: #95a5a6; }
-    .invoice {
-      width: 210mm; min-height: 148mm; border-radius: 0; overflow: auto;
-      box-shadow: 0 0 20px rgba(0,0,0,0.3); position: relative;
-    }
+    .invoice { background: #fff; box-shadow: 0 0 20px rgba(0,0,0,0.3); position: relative; }
     .header {
       background: linear-gradient(135deg, {{ settings.header_color if settings else '#f39c12' }} 0%, {{ settings.accent_color if settings else '#d68910' }} 100%);
       color: white; padding: 15px 20px; text-align: center;
@@ -22,7 +19,7 @@
     .doc-title { background: #fff8e6; padding: 10px 15px; text-align: center; border-bottom: 2px solid {{ settings.accent_color if settings else '#d68910' }}; }
     .doc-title h2 { color: {{ settings.header_color if settings else '#f39c12' }}; font-size: 14px; margin: 0; }
     .content { padding: 12px 18px; }
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px; }
     .info-box { background: #fff8e6; padding: 8px 12px; border-radius: 6px; border-right: 3px solid {{ settings.accent_color if settings else '#d68910' }}; }
     .info-box h3 { color: {{ settings.header_color if settings else '#f39c12' }}; margin-bottom: 6px; font-size: 9px; }
     .info-box p { margin: 3px 0; color: #555; font-size: 8px; }
@@ -33,59 +30,63 @@
     .sig-line { border-top: 2px solid #333; width: 100%; height: 35px; margin-bottom: 5px; }
     .footer { background: #f8f9fa; padding: 10px 15px; text-align: center; border-top: 2px solid {{ settings.accent_color if settings else '#d68910' }}; }
     .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 60px; color: rgba(243,156,18,0.06); font-weight: 700; z-index: 0; pointer-events: none; white-space: nowrap; }
+    @media print { body { background: #fff; } .no-print { display: none !important; } }
   </style>
 </head>
 <body class="invoice-print">
 <div class="erp-watermark" aria-hidden="true"><span>Azad Intelligent Systems</span></div>
+  <div class="no-print" style="text-align:center;margin-bottom:10px;">
+    <button data-action="window-print">{{ _('Print') }}</button>
+    <button data-action="window-close">{{ _('Close') }}</button>
+  </div>
   <div class="invoice">
-    <div class="watermark">{{ t('إذن') }} {{ t('تسليم') }}</div>
+    <div class="watermark">{{ _('Delivery_Note') }}</div>
     <div class="header">
       {% include 'partials/print_tenant_logo.html' %}
       <div class="company-name">{{ settings.company_name_ar or tenant_name_ar or company_name_ar }}</div>
       <div class="company-info">
         <div>{{ settings.address_ar or tenant_address or '' }}</div>
-        <div>📞 {{ settings.phone_1 or tenant_phone or '' }} | 📧 {{ settings.email or '' }}</div>
+        <div><i class="fas fa-phone mr-1"></i> {{ settings.phone_1 or tenant_phone or '' }} | <i class="fas fa-envelope mr-1"></i> {{ settings.email or '' }}</div>
       </div>
     </div>
 
     <div class="doc-title">
-      "doc-title">
-      <h2>📦 {{ t('إذن') }} {{ t('تسليم') }} / Delivery Note</h2>
+      <h2><i class="fas fa-box-open mr-1"></i> {{ _('Delivery_Note') }} / {{ _('Delivery Note') }}</h2>
       <div style="font-size:9px;color:#666;margin-top:4px;">
-        {{ t('رقم') }} {{ t('الإذن') }}: <strong>{{ delivery.number or sale.sale_number }}</strong> |
+        {{ _('Document_Number') }}: <strong>{{ delivery.number or sale.sale_number }}</strong> |
         {% set display_date = delivery.date if delivery.date else (sale.sale_date if sale and sale.sale_date else none) %}
-        {{ t('Date') }}: <strong>{{ display_date.strftime('%Y-%m-%d') if display_date else '' }}</strong>
+        {{ _('Date') }}: <strong>{{ display_date.strftime('%Y-%m-%d') if display_date else '' }}</strong>
       </div>
     </div>
 
     <div class="content">
       <div class="info-grid">
         <div class="info-box">
-          <h3>👤 {{ t('Data_2') }} {{ t('Customer') }}</h3>
-          <p><strong>{{ t('Name') }}:</strong> {{ sale.customer.name if sale and sale.customer else delivery.customer_name or '—' }}</p>
-          <p><strong>{{ t('Phone') }}:</strong> {{ sale.customer.phone if sale and sale.customer else delivery.customer_phone or '—' }}</p>
-          <p><strong>{{ t('Address') }}:</strong> {{ delivery.address or (sale.customer.address if sale and sale.customer else '—') }}</p>
+          <h3><i class="fas fa-user mr-1"></i> {{ _('Customer_Data') }}</h3>
+          <p><strong>{{ _('Name') }}:</strong> {{ sale.customer.name if sale and sale.customer else delivery.customer_name or '—' }}</p>
+          <p><strong>{{ _('Phone') }}:</strong> {{ sale.customer.phone if sale and sale.customer else delivery.customer_phone or '—' }}</p>
+          <p><strong>{{ _('Address') }}:</strong> {{ delivery.address or (sale.customer.address if sale and sale.customer else '—') }}</p>
         </div>
         <div class="info-box">
-          <h3>🚚 {{ t('Info_2') }} {{ t('التوصيل') }}</h3>
-          <p><strong>{{ t('طريقة') }} {{ t('التوصيل') }}:</strong> {{ delivery.method or delivery.shipping_method or '—' }}</p>
-          <p><strong>{{ t('Status_2') }} {{ t('التوصيل') }}:</strong> {{ delivery.status or '—' }}</p>
-          {% if delivery.tracking_number %}<p><strong>{{ t('رقم') }} {{ t('التتبع') }}:</strong> {{ delivery.tracking_number }}</p>{% endif %}
+          <h3><i class="fas fa-truck mr-1"></i> {{ _('Delivery_Info') }}</h3>
+          <p><strong>{{ _('Delivery_Method') }}:</strong> {{ delivery.method or delivery.shipping_method or '—' }}</p>
+          <p><strong>{{ _('Delivery_Status') }}:</strong> {{ delivery.status or '—' }}</p>
+          {% if delivery.tracking_number %}<p><strong>{{ _('Tracking_Number') }}:</strong> {{ delivery.tracking_number }}</p>{% endif %}
         </div>
       </div>
 
       <div class="table-responsive"><table>
         <thead>
-          <tr><th>#</th><th>{{ t('Product') }}</th><th>{{ t('Quantity') }}</th><th>{{ t('الوحدة') }}</th><th class="check-col">تم {{ t('التوصيل') }}</th></tr>
+          <tr><th>#</th><th>{{ _('Product') }}</th><th>{{ _('Quantity') }}</th><th>{{ _('Unit') }}</th><th class="check-col">{{ _('Delivered') }}</th></tr>
         </thead>
         <tbody>
           {% for line in lines %}
           <tr>
             <td>{{ loop.index }}</td>
             <td>{{ line.product.name if line.product else line.product_name or '—' }}</td>
-            <td>{{ "{:,.3f}".format(line.quantity) }}</td>
-            <td>{{ line.product.unit if line.product else 'قطعة' }}</td>
-            <td class="check-col">⬜</td>
+            <td>{{ format_number(line.quantity, 3) }}</td>
+            <td>{{ line.product.unit if line.product else _('Piece') }}</td>
+            <td class="check-col">☐</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -93,29 +94,29 @@
 
       {% if notes %}
       <div style="margin-top:10px;padding:8px;background:#fff8e6;border-radius:4px;border-right:2px solid #ffc107;">
-        <p style="font-size:9px;color:#856404;margin:0;">💬 {{ notes }}</p>
+        <p style="font-size:9px;color:#856404;margin:0;"><i class="fas fa-comment mr-1"></i> {{ notes }}</p>
       </div>
       {% endif %}
 
       <div class="signatures">
         <div class="sig-box">
           <div class="sig-line"></div>
-          <div style="font-size:9px;">{{ t('توقيع') }} {{ t('المستلم') }}</div>
+          <div style="font-size:9px;">{{ _('Recipient_Signature') }}</div>
         </div>
         <div class="sig-box">
           <div class="sig-line"></div>
-          <div style="font-size:9px;">{{ t('توقيع') }} {{ t('Rep_2') }}</div>
+          <div style="font-size:9px;">{{ _('Representative_Signature') }}</div>
         </div>
         <div class="sig-box">
           <div class="sig-line"></div>
-          <div style="font-size:9px;">{{ t('ختم') }} {{ t('Company') }}</div>
+          <div style="font-size:9px;">{{ _('Company_Stamp') }}</div>
         </div>
       </div>
     </div>
 
     <div class="footer">
-      <p>{{ t('شكراً') }} {{ t('لتعاملكم') }} {{ t('معنا') }}</p>
-      <p style="font-size:8px;color:#999;">هذا {{ t('المستند') }} {{ t('يمثل') }} {{ t('إذن') }} {{ t('تسليم') }} {{ t('وليس') }} {{ t('Invoice') }} {{ t('ضريبية') }}</p>
+      <p>{{ _('Thank_You_For_Your_Business') }}</p>
+      <p style="font-size:8px;color:#999;">{{ _('Delivery_Note_Not_Tax_Invoice') }}</p>
       {% include 'partials/print_developer_footer.html' %}
     </div>
   </div>
