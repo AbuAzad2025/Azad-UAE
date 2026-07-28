@@ -1,21 +1,21 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('الحملات') }} {{ t('Email Campaigns') }}{% endblock %}
+{% block title %}{{ t('Campaigns') }} — {{ t('Email_Marketing') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <ul class="nav nav-tabs mb-3">
-    <li class="nav-item"><a class="nav-link {% if tab != 'lists' and tab != 'templates' %}active{% endif %}" href="#campaigns" data-toggle="tab">{{ t('الحملات') }}</a></li>
-    <li class="nav-item"><a class="nav-link {% if tab == 'lists' %}active{% endif %}" href="#lists" data-toggle="tab">{{ t('القوائم') }}</a></li>
-    <li class="nav-item"><a class="nav-link {% if tab == 'templates' %}active{% endif %}" href="#templates" data-toggle="tab">{{ t('القوالب') }}</a></li>
+    <li class="nav-item"><a class="nav-link {% if tab != 'lists' and tab != 'templates' %}active{% endif %}" href="#campaigns" data-toggle="tab">{{ t('Campaigns') }}</a></li>
+    <li class="nav-item"><a class="nav-link {% if tab == 'lists' %}active{% endif %}" href="#lists" data-toggle="tab">{{ t('Lists') }}</a></li>
+    <li class="nav-item"><a class="nav-link {% if tab == 'templates' %}active{% endif %}" href="#templates" data-toggle="tab">{{ t('Templates') }}</a></li>
   </ul>
   <div class="tab-content">
     <div class="tab-pane {% if tab != 'lists' and tab != 'templates' %}active{% endif %}" id="campaigns">
       <div class="d-flex justify-content-between mb-3">
-        <h5>{{ t('الحملات') }}</h5>
-        <a href="{{ url_for('email_marketing.create_campaign') }}" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> {{ t('حملة') }}</a>
+        <h5>{{ t('Campaigns') }}</h5>
+        <a href="{{ url_for('email_marketing.create_campaign') }}" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> {{ t('New_Campaign') }}</a>
       </div>
       <div class="table-responsive">
         <table class="table table-bordered" id="campaignsTable">
-          <thead><tr><th>{{ t('Name') }}</th><th>{{ t('Menu') }}</th><th>{{ t('Status') }}</th><th>{{ t('أُرسل') }}</th><th>{{ t('فتح') }}</th><th></th></tr></thead>
+          <thead><tr><th>{{ t('Name') }}</th><th>{{ t('Email_List') }}</th><th>{{ t('Status') }}</th><th>{{ t('Sent') }}</th><th>{{ t('Opened') }}</th><th></th></tr></thead>
           <tbody>
             {% for c in campaigns %}
             <tr>
@@ -24,20 +24,20 @@
               <td><span class="badge badge-{{ 'success' if c.status == 'sent' else 'secondary' }}">{{ c.status }}</span></td>
               <td>{{ c.sent_count }}</td>
               <td>{{ c.open_count }}</td>
-              <td><a href="{{ url_for('email_marketing.campaign_detail', campaign_id=c.id) }}" class="btn btn-sm btn-info" aria-label="{{ t('Campaign') }} {{ t('Statistics') }}"><i class="fas fa-chart-bar"></i></a></td>
+              <td><a href="{{ url_for('email_marketing.campaign_detail', campaign_id=c.id) }}" class="btn btn-sm btn-info" aria-label="{{ t('Campaign_Statistics') }}"><i class="fas fa-chart-bar"></i></a></td>
             </tr>
             {% else %}
-            <tr><td colspan="6" class="text-center text-muted">{{ t('No_Data') }}</td></tr>
+            <tr><td colspan="6" class="text-center text-muted">{{ t('No_Data_Available') }}</td></tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
     </div>
     <div class="tab-pane {% if tab == 'lists' %}active{% endif %}" id="lists">
-      <button class="btn btn-success btn-sm mb-3" data-toggle="modal" data-target="#listModal"><i class="fas fa-plus"></i> {{ t('List') }}</button>
+      <button class="btn btn-success btn-sm mb-3" data-toggle="modal" data-target="#listModal"><i class="fas fa-plus"></i> {{ t('New_List') }}</button>
       <div class="table-responsive">
         <table class="table table-bordered">
-          <thead><tr><th>{{ t('Name') }}</th><th>{{ t('Description') }}</th><th>{{ t('المشتركون') }}</th></tr></thead>
+          <thead><tr><th>{{ t('Name') }}</th><th>{{ t('Description') }}</th><th>{{ t('Subscribers') }}</th></tr></thead>
           <tbody>
             {% for l in lists %}
             <tr>
@@ -46,26 +46,26 @@
               <td>{{ l.subscribers|selectattr('status', 'eq', 'subscribed')|list|length }}</td>
             </tr>
             {% else %}
-            <tr><td colspan="3" class="text-center text-muted">{{ t('No_Data') }}</td></tr>
+            <tr><td colspan="3" class="text-center text-muted">{{ t('No_Data_Available') }}</td></tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
     </div>
     <div class="tab-pane {% if tab == 'templates' %}active{% endif %}" id="templates">
-      <button class="btn btn-success btn-sm mb-3" data-toggle="modal" data-target="#templateModal"><i class="fas fa-plus"></i> {{ t('قالب') }}</button>
+      <button class="btn btn-success btn-sm mb-3" data-toggle="modal" data-target="#templateModal"><i class="fas fa-plus"></i> {{ t('New_Template') }}</button>
       <div class="table-responsive">
         <table class="table table-bordered">
-          <thead><tr><th>{{ t('Name') }}</th><th>{{ t('الموضوع') }}</th><th>{{ t('Email_2') }} {{ t('المرسل') }}</th></tr></thead>
+          <thead><tr><th>{{ t('Name') }}</th><th>{{ t('Subject') }}</th><th>{{ t('Sender_Email') }}</th></tr></thead>
           <tbody>
-            {% for t in templates %}
+            {% for tpl in templates %}
             <tr>
-              <td>{{ t.name }}</td>
-              <td>{{ t.subject }}</td>
-              <td>{{ t.from_email or '-' }}</td>
+              <td>{{ tpl.name }}</td>
+              <td>{{ tpl.subject }}</td>
+              <td>{{ tpl.from_email or '-' }}</td>
             </tr>
             {% else %}
-            <tr><td colspan="3" class="text-center text-muted">{{ t('No_Data') }}</td></tr>
+            <tr><td colspan="3" class="text-center text-muted">{{ t('No_Data_Available') }}</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -75,7 +75,7 @@
 </div>
 <div class="modal fade" id="listModal">
   <div class="modal-dialog"><div class="modal-content">
-    <div class="modal-header"><h5>{{ t('List') }} {{ t('New_3') }}</h5></div>
+    <div class="modal-header"><h5>{{ t('New_List') }}</h5></div>
     <form method="POST" action="{{ url_for('email_marketing.create_list') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="modal-body">
@@ -88,14 +88,14 @@
 </div>
 <div class="modal fade" id="templateModal">
   <div class="modal-dialog modal-lg"><div class="modal-content">
-    <div class="modal-header"><h5>{{ t('قالب') }} {{ t('New') }}</h5></div>
+    <div class="modal-header"><h5>{{ t('New_Template') }}</h5></div>
     <form method="POST" action="{{ url_for('email_marketing.create_template') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="modal-body">
       <div class="form-group"><label for="tpl_name">{{ t('Name') }}</label><input name="name" id="tpl_name" class="form-control" required></div>
-      <div class="form-group"><label for="tpl_subject">{{ t('الموضوع') }}</label><input name="subject" id="tpl_subject" class="form-control" required></div>
-      <div class="form-group"><label for="tpl_from_email">{{ t('Email_2') }} {{ t('المرسل') }}</label><input name="from_email" id="tpl_from_email" class="form-control" placeholder="noreply@example.com"></div>
-      <div class="form-group"><label for="tpl_body_html">{{ t('محتوى') }} HTML</label><textarea name="body_html" id="tpl_body_html" class="form-control" rows="8" required></textarea></div>
+      <div class="form-group"><label for="tpl_subject">{{ t('Subject') }}</label><input name="subject" id="tpl_subject" class="form-control" required></div>
+      <div class="form-group"><label for="tpl_from_email">{{ t('Sender_Email') }}</label><input name="from_email" id="tpl_from_email" class="form-control" placeholder="{{ t('Default_Sender_Email') }}"></div>
+      <div class="form-group"><label for="tpl_body_html">{{ t('HTML_Content') }}</label><textarea name="body_html" id="tpl_body_html" class="form-control" rows="8" required></textarea></div>
     </div>
     <div class="modal-footer"><button type="submit" class="btn btn-success">{{ t('Save') }}</button></div>
     </form>
