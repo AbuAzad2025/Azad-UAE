@@ -4640,6 +4640,8 @@ TRANSLATIONS = {
     "cod": {"en": "Cash on Delivery", "ar": "الدفع عند الاستلام"},
     "menu": {"en": "Menu", "ar": "القائمة"},
     "search": {"en": "Search", "ar": "بحث"},
+    "previous_page": {"en": "Previous Page", "ar": "الصفحة السابقة"},
+    "next_page": {"en": "Next Page", "ar": "الصفحة التالية"},
 }
 
 
