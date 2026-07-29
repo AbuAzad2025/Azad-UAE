@@ -8,7 +8,7 @@
 
   <div>
 
-    <h1 class="mb-0">{{ t('Invoice') }} {{ t('Purchase') }} {{ t('رقم') }}: {{ purchase.purchase_number }}</h1>
+    <h1 class="mb-0">{{ t('Invoice') }} {{ t('Purchase') }} {{ t('Number') }}: {{ purchase.purchase_number }}</h1>
 
   </div>
 
@@ -16,7 +16,7 @@
 
     <a href="{{ url_for('purchases.index') }}" class="btn btn-secondary">
 
-      <i class="fas fa-arrow-right {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i>{{ t('العودة') }} {{ t('للقائمة') }}
+      <i class="fas fa-arrow-right {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i>{{ t('Back_To_List') }}
 
     </a>
 
@@ -52,7 +52,7 @@
 
         <dl class="row">
 
-          <dt class="col-sm-4">{{ t('رقم') }} {{ t('Invoice_2') }}:</dt>
+          <dt class="col-sm-4">{{ t('Invoice_Number') }}:</dt>
 
           <dd class="col-sm-8"><strong>{{ purchase.purchase_number }}</strong></dd>
 
@@ -72,7 +72,7 @@
 
           <dt class="col-sm-4">{{ t('Date') }}:</dt>
 
-          <dd class="col-sm-8">{{ purchase.purchase_date.strftime('%Y-%m-%d') }}</dd>
+          <dd class="col-sm-8">{{ format_date(purchase.purchase_date) }}</dd>
 
         </dl>
 
@@ -152,25 +152,25 @@
 
           <dt class="col-6">{{ t('Total_Before_Discount') }}:</dt>
 
-          <dd class="col-6 {% if is_rtl %}text-right{% else %}text-left{% endif %}">{{ format_currency((purchase.subtotal or 0) + (purchase.discount_amount or 0)) }}</dd>
+          <dd class="col-6 text-{{ 'right' if is_rtl else 'left' }}">{{ format_currency((purchase.subtotal or 0) + (purchase.discount_amount or 0)) }}</dd>
 
           
 
           <dt class="col-6">{{ t('Discount') }}:</dt>
 
-          <dd class="col-6 {% if is_rtl %}text-right{% else %}text-left{% endif %} text-danger">{{ format_currency(purchase.discount_amount or 0) }}</dd>
+          <dd class="col-6 text-{{ 'right' if is_rtl else 'left' }} text-danger">{{ format_currency(purchase.discount_amount or 0) }}</dd>
 
           
 
           <dt class="col-6">{{ t('Total_After_Discount') }}:</dt>
 
-          <dd class="col-6 {% if is_rtl %}text-right{% else %}text-left{% endif %}">{{ format_currency(purchase.subtotal) }}</dd>
+          <dd class="col-6 text-{{ 'right' if is_rtl else 'left' }}">{{ format_currency(purchase.subtotal) }}</dd>
 
           
 
           <dt class="col-6">{{ t('Tax') }}:</dt>
 
-          <dd class="col-6 {% if is_rtl %}text-right{% else %}text-left{% endif %}">{{ format_currency(purchase.tax_amount) }}</dd>
+          <dd class="col-6 text-{{ 'right' if is_rtl else 'left' }}">{{ format_currency(purchase.tax_amount) }}</dd>
 
         </dl>
 
@@ -180,7 +180,7 @@
 
           <dt class="col-6"><h5>{{ t('Total_3') }}:</h5></dt>
 
-          <dd class="col-6 {% if is_rtl %}text-right{% else %}text-left{% endif %}"><h5>{{ format_currency(purchase.total_amount, purchase.currency) }}</h5></dd>
+          <dd class="col-6 text-{{ 'right' if is_rtl else 'left' }}"><h5>{{ format_currency(purchase.total_amount, purchase.currency) }}</h5></dd>
 
         </dl>
 
@@ -196,7 +196,7 @@
 
       <div class="card-header">
 
-        <h3 class="card-title"><i class="fas fa-cog {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i>{{ t('الإجراءات') }}</h3>
+        <h3 class="card-title"><i class="fas fa-cog {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i>{{ t('Actions') }}</h3>
 
       </div>
 
@@ -271,7 +271,7 @@
 $(document).on('click', '[data-action="cancel-purchase"]', confirmCancel);
 
 function confirmCancel() {
-  if (confirm('{{ t('Confirm_Cancel_Purchase_Warning')|e('js') }}')) {
+  if (confirm('{{ t("Confirm_Cancel_Purchase_Warning") }}')) {
     document.getElementById('cancelForm').submit();
   }
 }
