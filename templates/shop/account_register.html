@@ -1,11 +1,13 @@
 {% extends 'shop/base.html' %}
 {% block title %}{{ t('register') }} — {{ store.title }}{% endblock %}
+
+{% block extra_css %}{{ super() }}
 <style>
-    /* D6: externalized inline styles */
     .ic-1 { max-width:480px; margin:2rem auto; }
     .ic-2 { margin:0 0 1rem; font-weight:800; }
     .ic-3 { margin-top:1rem; text-align:center; }
 </style>
+{% endblock %}
 
 {% block content %}
 {% with current_page_name = t('register') %}

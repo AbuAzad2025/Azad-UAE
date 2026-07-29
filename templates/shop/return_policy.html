@@ -2,13 +2,12 @@
 
 {% block title %}{{ t('return_policy') }} — {{ store.title }}{% endblock %}
 
-
-
+{% block extra_css %}{{ super() }}
 <style>
-    /* D6: externalized inline styles */
     .ic-1 { white-space:pre-wrap; line-height:1.75; color:var(--ps-muted); }
     .ic-2 { margin-top:1.25rem; }
 </style>
+{% endblock %}
 
 {% block content %}
 
@@ -16,7 +15,7 @@
 
   <h2 class="ps-page-title">{{ t('return_policy') }}</h2>
 
-  <div class="ps-policy-body ic-1">{{ policy }}</div>
+  <div class="ps-policy-body ic-1">{{ policy | safe }}</div>
 
   <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" class="ps-btn ps-btn-outline ic-2">{{ t('continue_shopping') }}</a>
 
