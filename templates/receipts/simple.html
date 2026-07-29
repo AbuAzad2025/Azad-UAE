@@ -165,7 +165,7 @@
       {% endif %}
     </div>
 
-    {% set doc_title = '💵 سند قبض' %}
+    {% set doc_title = t('Receipt_Voucher') %}
     {% set doc_number = doc_number or receipt.receipt_number %}
     {% include 'partials/print_unified_banner.html' %}
 
@@ -173,14 +173,14 @@
     <div class="table-responsive"><table class="info-table">
       <tr>
         <td><strong>{{ t('رقم') }} {{ t('Voucher') }}:</strong> {{ receipt.receipt_number }}</td>
-        <td><strong>{{ t('Date') }}:</strong> {{ receipt.receipt_date.strftime('%Y-%m-%d') }}</td>
+         <td><strong>{{ t('Date') }}:</strong> {{ format_date(receipt.receipt_date) }}</td>
       </tr>
       <tr>
-        <td><strong>{{ t('المستلم') }} من:</strong> {{ receipt.customer.name if receipt.customer else receipt.customer_name }}</td>
-        <td><strong>{{ t('User') }}:</strong> {{ print_user_name or (receipt.user.full_name if receipt.user else 'النظام') }}</td>
+                 <td><strong>{{ t('Received_From') }}:</strong> {{ receipt.customer.name if receipt.customer else receipt.customer_name }}</td>
+         <td><strong>{{ t('User') }}:</strong> {{ print_user_name or (receipt.user.full_name if receipt.user else t('System')) }}</td>
       </tr>
       <tr>
-        <td colspan="2"><strong>{{ t('طريقة') }} {{ t('Payment_2') }}:</strong> 
+         <td colspan="2"><strong>{{ t('Payment_Method') }}:</strong>
           {% if receipt.payment_method == 'cash' %}💵 {{ t('Cash_2') }}
           {% elif receipt.payment_method == 'card' %}💳 {{ t('Card') }}
           {% elif receipt.payment_method == 'bank_transfer' %}🏦 {{ t('Transfer') }}
@@ -193,7 +193,7 @@
         <td colspan="2">
           <strong>{{ t('Details') }} {{ t('Cheque') }}:</strong>
           {{ t('رقم') }} {{ receipt.cheque_number }} • 
-          {{ t('استحقاق') }} {{ receipt.cheque_date.strftime('%Y-%m-%d') if receipt.cheque_date else '-' }}
+            {{ t('Due_Date') }} {{ format_date(receipt.cheque_date) if receipt.cheque_date else '-' }}
           {% if receipt.bank_name %} • {{ t('Bank_2') }} {{ receipt.bank_name }}{% endif %}
         </td>
       </tr>
@@ -202,7 +202,7 @@
 
     
     <div class="amount-box">
-      <div class="amount-label">{{ t('Amount') }} {{ t('المستلم') }}</div>
+       <div class="amount-label">{{ t('Amount') }} {{ t('Received') }}</div>
       <div class="amount-value">{{ format_currency(receipt.base_amount) }}</div>
       <div class="ic-3">
         {{ amount_in_words or '' }}
@@ -247,7 +247,7 @@
       
       {% if settings and ((settings.bank_name and settings.bank_name != 'None') or (settings.iban and settings.iban != 'None') or (settings.swift_code and settings.swift_code != 'None')) %}
       <div class="bank-info">
-        <strong>{{ t('for Transfer') }} {{ t('Bank_4') }}:</strong><br>
+         <strong>{{ t('For_Transfer') }} {{ t('Bank_4') }}:</strong><br>
         {% if settings.bank_name and settings.bank_name != 'None' %}{{ settings.bank_name }}{% if settings.iban and settings.iban != 'None' %} • {% endif %}{% endif %}
         {% if settings.iban and settings.iban != 'None' %}IBAN: {{ settings.iban }}{% endif %}
         {% if settings.swift_code and settings.swift_code != 'None' %}<br>SWIFT: {{ settings.swift_code }}{% endif %}
@@ -257,9 +257,9 @@
       
       {% if settings and ((settings.commercial_register and settings.commercial_register != 'None') or (settings.license_number and settings.license_number != 'None')) %}
       <div class="ic-8">
-        {% if settings.commercial_register and settings.commercial_register != 'None' %}س.ت: {{ settings.commercial_register }}{% endif %}
+         {% if settings.commercial_register and settings.commercial_register != 'None' %}{{ t('CR') }}: {{ settings.commercial_register }}{% endif %}
         {% if settings.commercial_register and settings.license_number %} | {% endif %}
-        {% if settings.license_number and settings.license_number != 'None' %}{{ t('رخصة') }}: {{ settings.license_number }}{% endif %}
+         {% if settings.license_number and settings.license_number != 'None' %}{{ t('License') }}: {{ settings.license_number }}{% endif %}
       </div>
       {% endif %}
       
@@ -270,7 +270,7 @@
       </div>
       {% endif %}
       
-      <div class="ic-10">{{ t('شكراً') }} {{ t('لكم') }}</div>
+       <div class="ic-10">{{ t('Thank_You') }}</div>
       
       
       {% if settings and (settings.facebook_url or settings.instagram_url or settings.whatsapp_number) %}
@@ -283,7 +283,7 @@
     
     <div class="signature">
       <div class="sig-box">
-        <div class="sig-line">{{ t('المحصل') }}</div>
+        <div class="sig-line">{{ t('Collector') }}</div>
       </div>
       <div class="sig-box">
         <div class="sig-line">{{ t('Customer') }}</div>
