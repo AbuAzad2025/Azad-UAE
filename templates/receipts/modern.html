@@ -74,7 +74,7 @@
       background: #f8f9fa;
       padding: 6px;
       border-radius: 8px;
-      border-right: 4px solid var(--accent-color);
+      border-inline-start: 4px solid var(--accent-color);
     }
     .info-box h3 { color: var(--header-color); margin-bottom: 8px; font-size: 9px; font-weight: 700; }
     .info-box p { margin: 5px 0; font-size: 8px; }
@@ -92,7 +92,7 @@
       background: #d4edda;
       padding: 6px;
       border-radius: 8px;
-      border-right: 4px solid var(--header-color);
+      border-inline-start: 4px solid var(--header-color);
       margin: 15px 0;
     }
     .payment-method h4 { color: var(--header-color); font-size: 9px; margin-bottom: 8px; }
@@ -127,7 +127,7 @@
       background: #e7f3ff;
       padding: 8px;
       border-radius: 8px;
-      border-right: 4px solid #007bff;
+      border-inline-start: 4px solid #007bff;
       margin: 20px 0;
     }
     .allocations-section h4 { 
@@ -248,7 +248,7 @@
       </div>
     </div>
 
-    {% set doc_title = '💵 سند قبض' %}
+    {% set doc_title = t('Receipt_Voucher') %}
     {% set doc_number = doc_number or receipt.receipt_number %}
     {% include 'partials/print_unified_banner.html' %}
 
@@ -262,9 +262,9 @@
         </div>
         <div class="info-box">
           <h3>📅 {{ t('Data_2') }} {{ t('Voucher') }}</h3>
-          <p><strong>{{ t('Date') }}:</strong> {{ receipt.receipt_date.strftime('%Y-%m-%d') }}</p>
-          <p><strong>{{ t('Time_2') }}:</strong> {{ receipt.receipt_date.strftime('%H:%M') }}</p>
-          <p><strong>{{ t('User') }}:</strong> {{ print_user_name or (receipt.user.full_name if receipt.user else 'النظام') }}</p>
+           <p><strong>{{ t('Date') }}:</strong> {{ format_date(receipt.receipt_date) }}</p>
+           <p><strong>{{ t('Time_2') }}:</strong> {{ format_time(receipt.receipt_date) }}</p>
+           <p><strong>{{ t('User') }}:</strong> {{ print_user_name or (receipt.user.full_name if receipt.user else t('System')) }}</p>
         </div>
       </div>
 
@@ -279,13 +279,13 @@
       </div>
 
       <div class="payment-method">
-        <h4>💳 {{ t('طريقة') }} {{ t('Payment_2') }}</h4>
+        <h4>💳 {{ t('Payment_Method') }}</h4>
         <div class="ic-5">
           {% if receipt.payment_method == 'cash' %}💵 {{ t('Cash_2') }}
-          {% elif receipt.payment_method == 'card' %}💳 {{ t('Card') }} {{ t('ائتمانية') }}
+           {% elif receipt.payment_method == 'card' %}💳 {{ t('Card') }} {{ t('Credit') }}
           {% elif receipt.payment_method == 'bank_transfer' %}🏦 {{ t('Transfer') }} {{ t('Bank_3') }}
           {% elif receipt.payment_method == 'cheque' %}📝 {{ t('Cheque_3') }} {{ t('Bank_3') }}
-          {% else %}💰 {{ t('محفظة') }} {{ t('إلكترونية') }}{% endif %}
+           {% else %}💰 {{ t('Wallet') }} {{ t('Electronic') }}{% endif %}
         </div>
         
         {% if receipt.payment_method == 'cheque' and receipt.cheque_number %}
@@ -300,7 +300,7 @@
             </div>
             <div class="cheque-item">
               <label>{{ t('History') }} {{ t('Due') }}</label>
-              <span class="value-text">{{ receipt.cheque_date.strftime('%Y-%m-%d') if receipt.cheque_date else '-' }}</span>
+               <span class="value-text">{{ format_date(receipt.cheque_date) if receipt.cheque_date else '-' }}</span>
             </div>
             <div class="cheque-item">
               <label>{{ t('Bank') }}</label>
@@ -334,7 +334,7 @@
 
       {% if receipt.notes %}
       <div class="notes-section">
-        <h4>📝 {{ t('Notes') }} {{ t('وسبب') }} {{ t('Payment_2') }}</h4>
+        <h4>📝 {{ t('Notes_And_Payment_Reason') }}</h4>
         <p>{{ receipt.notes }}</p>
       </div>
       {% endif %}
@@ -369,7 +369,7 @@
       
       {% if settings and ((settings.commercial_register and settings.commercial_register != 'None') or (settings.license_number and settings.license_number != 'None')) %}
       <div class="ic-16">
-        {% if settings.commercial_register and settings.commercial_register != 'None' %}س.ت: {{ settings.commercial_register }}{% endif %}
+         {% if settings.commercial_register and settings.commercial_register != 'None' %}{{ t('CR') }}: {{ settings.commercial_register }}{% endif %}
         {% if settings.commercial_register and settings.license_number %} | {% endif %}
         {% if settings.license_number and settings.license_number != 'None' %}{{ t('رخصة') }}: {{ settings.license_number }}{% endif %}
       </div>
@@ -382,8 +382,8 @@
       </div>
       {% endif %}
       
-      <div class="ic-19">{{ settings.payment_terms_ar if settings and settings.payment_terms_ar else 'شكراً لثقتكم' }}</div>
-      <div>✨ {{ t('نتمنى') }} {{ t('لكم') }} {{ t('تجربة') }} {{ t('Excellent_2') }} ✨</div>
+       <div class="ic-19">{{ settings.payment_terms_ar if settings and settings.payment_terms_ar else t('Thank_You_For_Your_Trust') }}</div>
+       <div>✨ {{ t('We_Wish_You_Excellent_Experience') }} ✨</div>
       {% if settings and settings.website and settings.website != 'None' %}
       <div class="ic-20">🌐 {{ settings.website }}</div>
       {% endif %}
