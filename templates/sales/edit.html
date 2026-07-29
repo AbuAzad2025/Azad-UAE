@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ t('Edit') }} {{ t('Invoice') }} #{{ sale.sale_number }}{% endblock %}
+{% block title %}{{ t('edit_invoice_number', number=sale.sale_number) }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -8,13 +8,13 @@
     <div class="col-12">
       <div class="alert alert-warning">
         <i class="fas fa-exclamation-triangle"></i>
-        <strong>{{ t('Alert_2') }} {{ t('Accounting_3') }}:</strong> يمكن {{ t('Edit') }} {{ t('Notes_2') }} {{ t('with Discount') }} فقط. لا يمكن {{ t('Edit') }} {{ t('Products') }} أو {{ t('الكميات') }} بعد {{ t('Create') }} {{ t('Invoice_2') }}.
+        <strong>{{ t('accounting_alert') }}:</strong> {{ t('edit_notes_and_discount_only') }}
       </div>
 
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">
-            <i class="fas fa-edit"></i> {{ t('Edit') }} {{ t('Invoice') }} #{{ sale.sale_number }}
+            <i class="fas fa-edit"></i> {{ t('edit_invoice_number', number=sale.sale_number) }}
           </h3>
         </div>
         <div class="card-body">
@@ -24,35 +24,35 @@
             
             <div class="row mb-4">
               <div class="col-md-6">
-                <h5>{{ t('Info_2') }} {{ t('Invoice_2') }}</h5>
-                <p><strong>{{ t('رقم') }} {{ t('Invoice_2') }}:</strong> {{ sale.sale_number }}</p>
-                <p><strong>{{ t('Date') }}:</strong> {{ sale.sale_date.strftime('%Y-%m-%d') }}</p>
-                <p><strong>{{ t('Customer') }}:</strong> {{ sale.customer.name }}</p>
-                <p><strong>{{ t('البائع') }}:</strong> {{ sale.seller.full_name }}</p>
+                <h5>{{ t('invoice_info') }}</h5>
+                <p><strong>{{ t('invoice_number') }}:</strong> {{ sale.sale_number }}</p>
+                <p><strong>{{ t('date') }}:</strong> {{ sale.sale_date.strftime('%Y-%m-%d') }}</p>
+                <p><strong>{{ t('customer') }}:</strong> {{ sale.customer.name | e }}</p>
+                <p><strong>{{ t('seller') }}:</strong> {{ sale.seller.full_name | e }}</p>
                 {% if sale.warehouse %}
-                <p><strong><i class="fas fa-warehouse text-info"></i> {{ t('Warehouse') }}:</strong> {{ sale.warehouse.name_ar or sale.warehouse.name }}</p>
+                <p><strong><i class="fas fa-warehouse text-info"></i> {{ t('warehouse') }}:</strong> {{ sale.warehouse.name_ar or sale.warehouse.name }}</p>
                 {% endif %}
               </div>
               <div class="col-md-6">
-                <h5>{{ t('Totals') }}</h5>
-                <p><strong>{{ t('Total') }} {{ t('Sub') }}:</strong> {{ sale.subtotal }} {{ tenant_currency_symbol }}</p>
-                <p><strong>{{ t('Tax') }}:</strong> {{ sale.tax_amount }} {{ tenant_currency_symbol }}</p>
-                <p><strong>{{ t('Total_3') }}:</strong> {{ sale.total_amount }} {{ tenant_currency_symbol }}</p>
-                <p><strong>{{ t('Paid') }}:</strong> {{ sale.paid_amount }} {{ tenant_currency_symbol }}</p>
-                <p><strong>{{ t('Remaining') }}:</strong> {{ sale.balance_due }} {{ tenant_currency_symbol }}</p>
+                <h5>{{ t('totals') }}</h5>
+                <p><strong>{{ t('subtotal') }}:</strong> {{ format_currency(sale.subtotal) }}</p>
+                <p><strong>{{ t('tax') }}:</strong> {{ format_currency(sale.tax_amount) }}</p>
+                <p><strong>{{ t('total') }}:</strong> {{ format_currency(sale.total_amount) }}</p>
+                <p><strong>{{ t('paid') }}:</strong> {{ format_currency(sale.paid_amount) }}</p>
+                <p><strong>{{ t('remaining') }}:</strong> {{ format_currency(sale.balance_due) }}</p>
               </div>
             </div>
 
             
-            <h5>{{ t('Products') }} (لا يمكن {{ t('will Edit (feminine)') }})</h5>
+            <h5>{{ t('products') }} ({{ t('cannot_be_edited') }})</h5>
             <div class="table-responsive"><table class="table table-bordered mb-4">
               <thead>
                 <tr>
-                  <th>{{ t('Product') }}</th>
-                  <th>{{ t('Quantity') }}</th>
-                  <th>{{ t('Price') }}</th>
-                  <th>{{ t('Discount') }}</th>
-                  <th>{{ t('Total_3') }}</th>
+                  <th>{{ t('product') }}</th>
+                  <th>{{ t('quantity') }}</th>
+                  <th>{{ t('price') }}</th>
+                  <th>{{ t('discount') }}</th>
+                  <th>{{ t('total') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -72,27 +72,27 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label for="input_discount_amount">{{ t('Discount') }} {{ t('Additional_4') }} ({{ tenant_currency_symbol }})</label>
+                  <label for="input_discount_amount">{{ t('additional_discount') }} ({{ tenant_currency_symbol }})</label>
                   <input type="number" name="discount_amount" class="form-control" 
                          value="{{ sale.discount_amount or 0 }}" step="0.01" min="0" id="input_discount_amount" aria-label="discount amount">
-                  <small class="text-muted">{{ t('Discount_2') }} {{ t('Additional_2') }} على {{ t('Total_2') }} {{ t('Invoice_2') }}</small>
+                  <small class="text-muted">{{ t('discount_on_invoice_total') }}</small>
                 </div>
               </div>
               
               <div class="col-md-6">
                 <div class="form-group">
-                  <label for="notes">{{ t('Notes_2') }}</label>
-                  <textarea name="notes" class="form-control" rows="3" id="notes" maxlength="500">{{ sale.notes or '' }}</textarea>
+                  <label for="notes">{{ t('notes') }}</label>
+                  <textarea name="notes" class="form-control" rows="3" id="notes" maxlength="500">{{ sale.notes or '' | e }}</textarea>
                 </div>
               </div>
             </div>
 
             <div class="form-group">
               <button type="submit" class="btn btn-success">
-                <i class="fas fa-save"></i> {{ t('Save') }} {{ t('Changes') }}
+                <i class="fas fa-save"></i> {{ t('save_changes') }}
               </button>
               <a href="{{ url_for('sales.view', id=sale.id) }}" class="btn btn-secondary">
-                <i class="fas fa-times"></i> {{ t('Cancel') }}
+                <i class="fas fa-times"></i> {{ t('cancel') }}
               </a>
             </div>
           </form>
