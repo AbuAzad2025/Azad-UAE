@@ -4,11 +4,11 @@
 {{ super() }}
 <meta property="og:type" content="product">
 <meta property="og:title" content="{{ product.get_display_name(lang) }} — {{ store.title }}">
-<meta property="og:description" content="{{ product.description[:200] if product.description else product.get_display_name(lang) }}">
+<meta property="og:description" content="{{ (product.description[:200] if product.description else product.get_display_name(lang)) | e }}">
 <meta property="og:image" content="{{ product.image_url or '' }}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ product.get_display_name(lang) }} — {{ store.title }}">
-<meta name="twitter:description" content="{{ product.description[:200] if product.description else product.get_display_name(lang) }}">
+<meta name="twitter:description" content="{{ (product.description[:200] if product.description else product.get_display_name(lang)) | e }}">
 <meta name="twitter:image" content="{{ product.image_url or '' }}">
 {% endblock %}
 
@@ -17,13 +17,13 @@
 {
   "@context": "https://schema.org/",
   "@type": "Product",
-  "name": "{{ product.get_display_name(lang) }}",
-  "image": "{{ product.image_url or '' }}",
-  "description": "{{ product.description or product.get_display_name(lang) }}",
-  "sku": "{{ product.sku or '' }}",
+  "name": {{ product.get_display_name(lang) | tojson }},
+  "image": {{ (product.image_url or '') | tojson }},
+  "description": {{ (product.description or product.get_display_name(lang)) | tojson }},
+  "sku": {{ (product.sku or '') | tojson }},
   "brand": {
     "@type": "Brand",
-    "name": "{{ store.title or tenant.name }}"
+    "name": {{ (store.title or tenant.name) | tojson }}
   },
   "offers": {
     "@type": "Offer",
@@ -33,7 +33,7 @@
     "availability": "https://schema.org/InStock",
     "seller": {
       "@type": "Organization",
-      "name": "{{ store.title or tenant.name }}"
+      "name": {{ (store.title or tenant.name) | tojson }}
     }
   }
 }
@@ -58,13 +58,13 @@
   <div>
     <h2 class="ic-3">{{ product.get_display_name(lang) }}{% if is_shop_logged_in %} <button class="ps-wishlist-btn" data-wishlist-toggle data-product-id="{{ product.id }}" aria-label="{{ t('wishlist') }}"><i class="far fa-heart"></i></button>{% endif %}</h2>
     {% if product.sku %}<p class="ps-card-meta">{{ product.sku }}</p>{% endif %}
-    <p class="ps-price ic-4">{{ '%.2f'|format(product.regular_price) }} {{ tenant.default_currency or 'AED' }}</p>
+    <p class="ps-price ic-4">{{ format_currency(product.regular_price) }}</p>
     {% if is_shop_logged_in %}
-    <small class="ps-loyalty-earn"><i class="fas fa-gem"></i> {{ t('earn_points') }} {{ '%d'|format(product.regular_price|int) }}</small>
+    <small class="ps-loyalty-earn"><i class="fas fa-gem"></i> {{ t('earn_points') }} {{ product.regular_price|int }}</small>
     {% endif %}
     <p class="ps-stock-ok"><i class="fas fa-check-circle"></i> {{ t('in_stock') }} — {{ available|int }}</p>
     {% if product.description %}
-    <div class="ic-5">{{ product.description }}</div>
+    <div class="ic-5">{{ product.description | e }}</div>
     {% endif %}
 
     <form method="post" action="{{ url_for('shop.cart_add', slug=store.store_slug) }}" data-ajax-cart>
@@ -134,12 +134,12 @@
       <div class="ps-card-body">
         <h3 class="ps-card-title"><a href="{{ url_for('shop.product_detail', slug=store.store_slug, product_id=rp.id) }}">{{ rp.get_display_name(lang) }}</a></h3>
         <div class="ps-card-footer">
-          <span class="ps-price">{{ '%.2f'|format(rp.regular_price) }} {{ tenant.default_currency or 'AED' }}</span>
+          <span class="ps-price">{{ format_currency(rp.regular_price) }}</span>
           <form method="post" action="{{ url_for('shop.cart_add', slug=store.store_slug) }}" data-ajax-cart>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="product_id" value="{{ rp.id }}">
             <input type="hidden" name="quantity" value="1">
-            <button type="submit" class="ps-btn ps-btn-sm" aria-label="{{ t('Add') }} {{ t('to') }} {{ t('Cart') }}"><i class="fas fa-plus"></i></button>
+            <button type="submit" class="ps-btn ps-btn-sm" aria-label="{{ t('add_to_cart') }}"><i class="fas fa-plus"></i></button>
           </form>
         </div>
       </div>
@@ -165,7 +165,7 @@
       <div class="ps-card-body">
         <h3 class="ps-card-title"><a href="{{ url_for('shop.product_detail', slug=store.store_slug, product_id=rp.id) }}">{{ rp.get_display_name(lang) }}</a></h3>
         <div class="ps-card-footer">
-          <span class="ps-price">{{ '%.2f'|format(rp.regular_price) }} {{ tenant.default_currency or 'AED' }}</span>
+          <span class="ps-price">{{ format_currency(rp.regular_price) }}</span>
         </div>
       </div>
     </article>
@@ -187,10 +187,10 @@
     {% for review in reviews %}
     <div class="ps-review-item">
       <div class="ps-review-header">
-        <strong>{{ review.customer_name }}</strong>
+        <strong>{{ review.customer_name | e }}</strong>
         <span class="ps-rating-stars">{{ review.rating }}</span>
       </div>
-      {% if review.comment %}<p>{{ review.comment }}</p>{% endif %}
+      {% if review.comment %}<p>{{ review.comment | e }}</p>{% endif %}
       <small class="ps-review-date">{{ review.created_at.strftime('%Y-%m-%d') if review.created_at else '' }}</small>
     </div>
     {% endfor %}
@@ -219,4 +219,4 @@
   {% endif %}
 </section>
 {% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/shop-utilities.css') }}">{% endblock %}
+
