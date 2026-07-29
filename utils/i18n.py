@@ -4375,6 +4375,78 @@ TRANSLATIONS = {
     "Unresolved_Alerts": {"ar": "تنبيهات غير محلولة", "en": "Unresolved Alerts"},
     "Use_TLS": {"ar": "استخدام TLS", "en": "Use TLS"},
     "WhatsApp_Settings": {"ar": "إعدادات واتساب", "en": "WhatsApp Settings"},
+    "Total_Before_Discount": {"ar": "الإجمالي قبل الخصم", "en": "Total Before Discount"},
+    "Total_After_Discount": {"ar": "الإجمالي بعد الخصم", "en": "Total After Discount"},
+    "Confirm_Cancel_Purchase_Warning": {
+        "ar": "هل أنت متأكد من إلغاء فاتورة المشتريات هذه؟ سيتم عكس القيد المحاسبي والمخزون ورصيد المورد. لا يمكن التراجع عن هذا الإجراء.",
+        "en": "Are you sure you want to cancel this purchase invoice? The accounting entry, inventory, and supplier balance will be reversed. This action cannot be undone.",
+    },
+    "Select_Supplier_Tooltip": {
+        "ar": "اختر المورد - بحث ذكي (مطلوب)",
+        "en": "Select supplier - Smart search (Required)",
+    },
+    "Warehouse_Goods_Tooltip": {
+        "ar": "المستودع الذي ستُضاف إليه البضاعة (مطلوب)",
+        "en": "The warehouse where goods will be added (Required)",
+    },
+    "Auto_Fill_Supplier_Tooltip": {
+        "ar": "يُملأ تلقائياً عند اختيار المورد",
+        "en": "Auto-filled when supplier is selected",
+    },
+    "Currency_Default_Tooltip": {
+        "ar": "عملة الفاتورة (افتراضي: {currency})",
+        "en": "Invoice currency (Default: {currency})",
+    },
+    "Exchange_Rate_Against": {
+        "ar": "سعر الصرف مقابل {currency}",
+        "en": "Exchange rate against {currency}",
+    },
+    "Tax_Activate_Settings": {
+        "ar": "تُفعّل من إعدادات الضرائب للشركة",
+        "en": "Activated from company tax settings",
+    },
+    "Landed_Cost": {"ar": "تكاليف الوصول", "en": "Landed Cost"},
+    "Include_Cost_Inventory": {
+        "ar": "تُضمّن في تكلفة المخزون",
+        "en": "Included in inventory cost",
+    },
+    "Shipping_Costs": {"ar": "تكاليف الشحن", "en": "Shipping Costs"},
+    "Insurance": {"ar": "التأمين", "en": "Insurance"},
+    "Customs": {"ar": "الجمارك", "en": "Customs"},
+    "Other_Costs": {"ar": "أخرى", "en": "Other Costs"},
+    "Products_Purchased": {"ar": "المنتجات المشتراة", "en": "Products Purchased"},
+    "Notes_Placeholder": {
+        "ar": "أي ملاحظات إضافية عن فاتورة المشتريات...",
+        "en": "Any additional notes about the purchase invoice...",
+    },
+    "Supplier_Not_Found_Hint": {
+        "ar": "لا يوجد مورد؟ اضغط زر الإضافة لفتح صفحة الموردين في نافذة جديدة.",
+        "en": "No supplier? Click the add button to open suppliers page in a new window.",
+    },
+    "Recalculate": {"ar": "إعادة حساب", "en": "Recalculate"},
+    "Edit_Purchase_Notes_Only": {
+        "ar": "يمكن تعديل الملاحظات فقط. لا يمكن تعديل المنتجات أو المبالغ بعد إنشاء الفاتورة.",
+        "en": "Only notes can be edited. Products or amounts cannot be changed after invoice creation.",
+    },
+    "You_Can": {"ar": "يمكنك", "en": "You can"},
+    "Add_Or_Edit_Notes": {"ar": "إضافة أو تعديل الملاحظات", "en": "Add or edit notes"},
+    "No_Purchases": {"ar": "لا توجد مشتريات", "en": "No Purchases"},
+    "Purchases_Log": {"ar": "سجل المشتريات", "en": "Purchases Log"},
+    "Previous_Returns": {"ar": "المرتجعات السابقة", "en": "Previous Returns"},
+    "Return_Reason": {"ar": "سبب الإرجاع", "en": "Return Reason"},
+    "Items_Invoice": {"ar": "بنود الفاتورة", "en": "Invoice Items"},
+    "Purchased_Quantity": {"ar": "الكمية المشتراة", "en": "Purchased Quantity"},
+    "Select_Product_At_Least_One": {
+        "ar": "يرجى اختيار منتج واحد على الأقل للإرجاع",
+        "en": "Please select at least one product to return",
+    },
+    "Confirm_Create_Return": {
+        "ar": "تأكيد إنشاء مرتجع المشتريات",
+        "en": "Confirm creating purchase return",
+    },
+    "Voucher_Spend": {"ar": "سند صرف", "en": "Payment Voucher"},
+    "Add_New_Supplier": {"ar": "إضافة مورد جديد", "en": "Add New Supplier"},
+    "Thank you for your business": {"ar": "شكراً لتعاملكم معنا", "en": "Thank you for your business"},
 }
 
 
