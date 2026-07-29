@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('حركات') }} {{ t('Inventory') }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('inventory_movements') }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="text-gradient mb-0"><i class="fas fa-exchange-alt mr-3"></i>{{ t('Stock Movements') }}</h1>
-    <p class="text-muted">{{ t('Log') }} {{ t('كامل') }} {{ t('لجميع') }} {{ t('حركات') }} {{ t('Entry and Exit') }} {{ t('والخروج') }}</p>
+    <h1 class="text-gradient mb-0"><i class="fas fa-exchange-alt mr-3"></i>{{ t('stock_movements') }}</h1>
+    <p class="text-muted">{{ t('full_stock_movements_log') }}</p>
   </div>
   <div>
     <a href="{{ url_for('warehouse.index') }}" class="btn btn-info">
-      <i class="fas fa-warehouse mr-2"></i>{{ t('Warehouse') }} {{ t('Main') }}
+      <i class="fas fa-warehouse mr-2"></i>{{ t('dashboard') }}
     </a>
   </div>
 </div>
@@ -22,18 +22,14 @@
   border-right: 4px solid #28a745;
   background: linear-gradient(90deg, rgba(40, 167, 69, 0.05) 0%, transparent 100%);
 }
-/* purgecss start ignore */
 .movement-out {
   border-right: 4px solid #dc3545;
   background: linear-gradient(90deg, rgba(220, 53, 69, 0.05) 0%, transparent 100%);
 }
-/* purgecss end ignore */
-/* purgecss start ignore */
 .movement-adjustment {
   border-right: 4px solid #ffc107;
   background: linear-gradient(90deg, rgba(255, 193, 7, 0.05) 0%, transparent 100%);
 }
-/* purgecss end ignore */
 .timeline-badge {
   width: 40px;
   height: 40px;
@@ -45,33 +41,34 @@
   font-weight: 700;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
-
-    /* D6: externalized inline styles */
-    .ic-1 { gap: .75rem; }
-    .ic-2 { gap: .5rem; }
-    .ic-3 { min-width: 220px; }
-    .ic-4 { background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white; }
-  </style>
+.badge-in { background: #28a745; }
+.badge-out { background: #dc3545; }
+.badge-adjust { background: #ffc107; }
+.ic-mov-header { background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white; }
+.ic-mov-gap { gap: .75rem; }
+.ic-mov-small-gap { gap: .5rem; }
+.ic-mov-filter { min-width: 220px; }
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="card">
   <div class="card-header">
-    <div class="d-flex justify-content-between align-items-center flex-wrap ic-1">
+    <div class="d-flex justify-content-between align-items-center flex-wrap ic-mov-gap">
       <div>
         <h3 class="card-title mb-0">
-          <i class="fas fa-history mr-2"></i>{{ t('Log') }} {{ t('Movements') }}
+          <i class="fas fa-history mr-2"></i>{{ t('inventory_movements_log') }}
         </h3>
         {% if current_warehouse %}
         <small class="text-muted d-block mt-1">
-          <i class="fas fa-warehouse mr-1"></i>{{ t('Warehouse') }} {{ t('الحالي') }}: {{ current_warehouse.name_ar or current_warehouse.name }}
+          <i class="fas fa-warehouse mr-1"></i>{{ t('current_warehouse_label', name=current_warehouse.name_ar or current_warehouse.name) }}
         </small>
         {% endif %}
       </div>
-      <form method="GET" class="needs-validation form-inline d-flex align-items-center ic-2">
+      <form method="GET" class="needs-validation form-inline d-flex align-items-center ic-mov-small-gap">
         <label class="sr-only" for="warehouseFilter">{{ t('Warehouse') }}</label>
-        <select name="warehouse" id="warehouseFilter" class="form-control select2 ic-3" data-placeholder="{{ t('اختر') }} {{ t('Warehouse_2') }}..." aria-label="warehouse">
-          <option value="">كل {{ t('Warehouses') }}</option>
+        <select name="warehouse" id="warehouseFilter" class="form-control select2 ic-mov-filter" data-placeholder="{{ t('filter_by_warehouse') }}" aria-label="warehouse">
+          <option value="">{{ t('All') }} {{ t('Warehouses') }}</option>
           {% for w in warehouses %}
           <option value="{{ w.id }}" {% if current_warehouse and w.id == current_warehouse.id %}selected{% endif %}>
             {{ w.name_ar or w.name }}
@@ -79,26 +76,26 @@
           {% endfor %}
         </select>
         <button type="submit" class="btn btn-outline-primary">
-          <i class="fas fa-filter mr-1"></i>{{ t('تصفية') }}
+          <i class="fas fa-filter mr-1"></i>{{ t('filter_all') }}
         </button>
         {% if current_warehouse %}
         <a href="{{ url_for('warehouse.movements') }}" class="btn btn-outline-secondary">
-          <i class="fas fa-times mr-1"></i>{{ t('إزالة') }} {{ t('التصفية') }}
+          <i class="fas fa-times mr-1"></i>{{ t('clear_filter') }}
         </a>
         {% endif %}
       </form>
       <div class="btn-group">
         <button type="button" class="btn btn-outline-primary active" id="filterAll">
-          <i class="fas fa-list mr-1"></i>{{ t('All') }}
+          <i class="fas fa-list mr-1"></i>{{ t('filter_all') }}
         </button>
         <button type="button" class="btn btn-outline-success" id="filterIn">
-          <i class="fas fa-arrow-down mr-1"></i>{{ t('Sign In') }}
+          <i class="fas fa-arrow-down mr-1"></i>{{ t('movement_type_in') }}
         </button>
         <button type="button" class="btn btn-outline-danger" id="filterOut">
-          <i class="fas fa-arrow-up mr-1"></i>{{ t('خروج') }}
+          <i class="fas fa-arrow-up mr-1"></i>{{ t('movement_type_out') }}
         </button>
         <button type="button" class="btn btn-outline-warning" id="filterAdjust">
-          <i class="fas fa-edit mr-1"></i>{{ t('Edit') }}
+          <i class="fas fa-edit mr-1"></i>{{ t('movement_type_adjustment') }}
         </button>
       </div>
     </div>
@@ -106,29 +103,31 @@
   <div class="card-body">
     <div class="table-responsive">
       <table id="movementsTable" class="table table-hover">
-        <thead class="ic-4">
+        <thead class="ic-mov-header">
           <tr>
             <th><i class="far fa-calendar mr-2"></i>{{ t('Date') }}</th>
             <th><i class="fas fa-box mr-2"></i>{{ t('Product') }}</th>
-            <th><i class="fas fa-tag mr-2"></i>{{ t('نوع') }} {{ t('Movement') }}</th>
+            <th><i class="fas fa-tag mr-2"></i>{{ t('Movement') }}</th>
             <th><i class="fas fa-sort-numeric-down mr-2"></i>{{ t('Quantity') }}</th>
-            <th><i class="fas fa-layer-group mr-2"></i>{{ _('قبل') }}</th>
-            <th><i class="fas fa-layer-group mr-2"></i>{{ _('بعد') }}</th>
-            <th><i class="fas fa-link mr-2"></i>{{ t('المرجع') }}</th>
+            <th><i class="fas fa-layer-group mr-2"></i>{{ t('before') }}</th>
+            <th><i class="fas fa-layer-group mr-2"></i>{{ t('after') }}</th>
+            <th><i class="fas fa-link mr-2"></i>{{ t('reference_label') }}</th>
             <th><i class="fas fa-sticky-note mr-2"></i>{{ t('Notes') }}</th>
           </tr>
         </thead>
         <tbody>
           {% for movement in movements %}
-          <tr class="fade-in 
+          <tr class="fade-in
                      {% if movement.movement_type == 'in' %}movement-in
                      {% elif movement.movement_type == 'out' %}movement-out
-                   {% else %}movement-adjustment{% endif %}"
+                    {% else %}movement-adjustment{% endif %}"
               data-type="{{ movement.movement_type }}">
             <td>
               <div class="d-flex align-items-center">
-                <div class="timeline-badge mr-2" 
-                     style="background: {% if movement.movement_type == 'in' %}#28a745{% elif movement.movement_type == 'out' %}#dc3545{% else %}#ffc107{% endif %};">
+                <div class="timeline-badge mr-2
+                     {% if movement.movement_type == 'in' %}badge-in
+                     {% elif movement.movement_type == 'out' %}badge-out
+                     {% else %}badge-adjust{% endif %}">
                   <i class="fas fa-{% if movement.movement_type == 'in' %}arrow-down{% elif movement.movement_type == 'out' %}arrow-up{% else %}edit{% endif %}"></i>
                 </div>
                 <div>
@@ -138,27 +137,29 @@
               </div>
             </td>
             <td>
-              <strong>{{ movement.product.name if movement.product else 'غير محدد' }}</strong>
+              <strong>{{ movement.product.name if movement.product else t('none') }}</strong>
               {% if movement.product and movement.product.sku %}
               <br><small class="text-muted">SKU: {{ movement.product.sku }}</small>
               {% endif %}
             </td>
             <td>
+              <span data-type="{{ movement.movement_type }}">
               {% if movement.movement_type == 'in' %}
                 <span class="badge badge-success px-3">
-                  <i class="fas fa-arrow-down mr-1"></i>{{ t('Sign In') }}
+                  <i class="fas fa-arrow-down mr-1"></i>{{ t('movement_type_in') }}
                 </span>
               {% elif movement.movement_type == 'out' %}
                 <span class="badge badge-danger px-3">
-                  <i class="fas fa-arrow-up mr-1"></i>{{ t('خروج') }}
+                  <i class="fas fa-arrow-up mr-1"></i>{{ t('movement_type_out') }}
                 </span>
               {% elif movement.movement_type == 'adjustment' %}
                 <span class="badge badge-warning px-3">
-                  <i class="fas fa-edit mr-1"></i>{{ t('Edit') }}
+                  <i class="fas fa-edit mr-1"></i>{{ t('movement_type_adjustment') }}
                 </span>
               {% else %}
                 <span class="badge badge-secondary px-3">{{ movement.movement_type }}</span>
               {% endif %}
+              </span>
             </td>
             <td>
               {% if movement.quantity > 0 %}
@@ -202,7 +203,7 @@
         </tbody>
       </table>
     </div>
-    
+
     {% if pagination %}
     {% set endpoint = 'warehouse.movements' %}
     {% include 'partials/flask_pagination.html' %}
@@ -217,7 +218,7 @@
 $(document).ready(() => {
   if ($.fn.select2) {
     $('#warehouseFilter').select2({
-      placeholder: $('#warehouseFilter').data('placeholder') || '{{ t('اختر') }} {{ t('Warehouse_2') }}...',
+      placeholder: $('#warehouseFilter').data('placeholder') || '{{ t('filter_by_warehouse') }}',
       allowClear: true,
       width: 'resolve',
       dir: 'rtl'
@@ -231,33 +232,33 @@ $(document).ready(() => {
     responsive: true,
     dom: 'Bfrtip',
     buttons: [
-      {extend: 'excel', text: '<i class="fas fa-file-excel mr-1"></i> Excel', className: ' btn-success'},
-      {extend: 'pdf', text: '<i class="fas fa-file-pdf mr-1"></i> PDF', className: ' btn-danger'},
-      {extend: 'print', text: '<i class="fas fa-print mr-1"></i> {{ t('Print') }}', className: ' btn-info'}
+      {extend: 'excel', text: '<i class="fas fa-file-excel mr-1"></i> Excel', className: 'btn-success'},
+      {extend: 'pdf', text: '<i class="fas fa-file-pdf mr-1"></i> PDF', className: 'btn-danger'},
+      {extend: 'print', text: '<i class="fas fa-print mr-1"></i> {{ t('Print') }}', className: 'btn-info'}
     ]
   });
 
-  // Filter buttons
+  // Filter buttons by data-type attribute instead of translated text
   $('#filterAll').on('click', function() {
-    table.search('').draw();
+    table.column(2).search('').draw();
     $('.btn-group .btn').removeClass('active');
     $(this).addClass('active');
   });
 
   $('#filterIn').on('click', function() {
-    table.column(2).search('{{ t('Sign In') }}').draw();
+    table.column(2).search('in').draw();
     $('.btn-group .btn').removeClass('active');
     $(this).addClass('active');
   });
 
   $('#filterOut').on('click', function() {
-    table.column(2).search('{{ t('خروج') }}').draw();
+    table.column(2).search('out').draw();
     $('.btn-group .btn').removeClass('active');
     $(this).addClass('active');
   });
 
   $('#filterAdjust').on('click', function() {
-    table.column(2).search('{{ t('Edit') }}').draw();
+    table.column(2).search('adjustment').draw();
     $('.btn-group .btn').removeClass('active');
     $(this).addClass('active');
   });

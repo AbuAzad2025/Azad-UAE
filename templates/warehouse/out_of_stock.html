@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('نفاد') }} {{ t('Inventory') }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('out_of_stock_view_title') }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0 ic-1">
-      <i class="fas fa-ban mr-3"></i>{{ t('نفاد') }} {{ t('Inventory') }}
+    <h1 class="mb-0 text-danger">
+      <i class="fas fa-ban mr-3"></i>{{ t('out_of_stock_view_title') }}
     </h1>
-    <p class="text-muted">{{ t('Products_2') }} {{ t('منفذة') }} {{ t('تماماً') }} - {{ t('تحتاج') }} {{ t('إعادة') }} {{ t('تموين') }} {{ t('فورية') }}</p>
+    <p class="text-muted">{{ t('products_fully_out_of_stock') }}</p>
   </div>
   <div>
     <a href="{{ url_for('warehouse.index') }}" class="btn btn-info">
@@ -15,9 +15,9 @@
     </a>
     {% if current_user.has_permission('manage_purchases') %}
     <a href="{{ url_for('purchases.create') }}" class="btn btn-success pulse">
-    {% endif %}
-      <i class="fas fa-shopping-cart mr-2"></i>{{ t('طلب') }} {{ t('Purchase') }} {{ t('عاجل') }}
+      <i class="fas fa-shopping-cart mr-2"></i>{{ t('request_urgent_purchase') }}
     </a>
+    {% endif %}
   </div>
 </div>
 {% endblock %}
@@ -34,11 +34,11 @@
   animation: pulse-danger 2s infinite;
 }
 @keyframes pulse-danger {
-  0%, 100% { 
+  0%, 100% {
     box-shadow: 0 0 20px rgba(220, 53, 69, 0.3);
     border-right-color: #dc3545;
   }
-  50% { 
+  50% {
     box-shadow: 0 0 50px rgba(220, 53, 69, 0.6);
     border-right-color: #ff6b6b;
   }
@@ -50,50 +50,55 @@
   0%, 100% { background: rgba(220, 53, 69, 0.05); }
   50% { background: rgba(220, 53, 69, 0.1); }
 }
-
-    /* D6: externalized inline styles */
-    .ic-1 { color: #dc3545; }
-    .ic-2 { opacity: 0.3; color: #dc3545; }
-    .ic-3 { background: linear-gradient(135deg, #dc3545 0%, #CE1126 100%); color: white; }
-    .ic-4 { background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white; }
-    .ic-5 { font-size: 1.2rem; animation: pulse 2s infinite; }
-    .ic-6 { color: #007A3D; }
-  </style>
+.warehouse-product-img {
+  width: 45px;
+  height: 45px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid #e0e0e0;
+}
+.ic-out-header { color: #dc3545; }
+.ic-out-muted { opacity: 0.3; color: #dc3545; }
+.ic-out-header-bg { background: linear-gradient(135deg, #dc3545 0%, #CE1126 100%); color: white; }
+.ic-out-primary-bg { background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white; }
+.ic-out-badge { font-size: 1.2rem; animation: pulse 2s infinite; }
+.ic-out-price { color: #007A3D; }
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="alert-critical">
   <div class="d-flex justify-content-between align-items-center">
     <div>
-      <h4 class="mb-2 ic-1">
-        <i class="fas fa-ban mr-2"></i>{{ t('Warning') }} {{ t('عاجل') }} - {{ t('نفاد') }} {{ t('Inventory_2') }}!
+      <h4 class="mb-2 text-danger">
+        <i class="fas fa-ban mr-2"></i>{{ t('urgent_warning') }} — {{ t('out_of_stock_view_title') }}!
       </h4>
       <p class="mb-0">
-        <strong class="ic-1">{{ products|length }}</strong> {{ t('Product_2') }} {{ t('منفذ') }} {{ t('تماماً') }} من {{ t('Inventory') }}
-        <br><small class="text-muted">يجب {{ t('اتخاذ') }} {{ t('إجراء') }} {{ t('فوري') }} {{ t('لتجنب') }} {{ t('فقدان') }} {{ t('Sales') }}</small>
+        <strong class="text-danger">{{ t('out_of_stock_products_count', count=products|length) }}</strong>
+        <br><small class="text-muted">{{ t('take_immediate_action_to_avoid_sales_loss') }}</small>
       </p>
     </div>
     <div>
-      <i class="fas fa-box-open fa-4x ic-2"></i>
+      <i class="fas fa-box-open fa-4x ic-out-muted"></i>
     </div>
   </div>
 </div>
 
 <div class="card">
-  <div class="card-header ic-3">
+  <div class="card-header ic-out-header-bg">
     <h3 class="card-title text-white mb-0">
-      <i class="fas fa-times-circle mr-2"></i>{{ t('Products_2') }} {{ t('منفذة') }} من {{ t('Inventory') }}
+      <i class="fas fa-times-circle mr-2"></i>{{ t('products_out_of_stock') }}
     </h3>
   </div>
   <div class="card-body">
     <div class="table-responsive">
       <table id="outOfStockTable" class="table table-hover">
-        <thead class="ic-4">
+        <thead class="ic-out-primary-bg">
           <tr>
             <th><i class="fas fa-box mr-2"></i>{{ t('Product') }}</th>
             <th><i class="fas fa-barcode mr-2"></i>SKU</th>
             <th><i class="fas fa-ban mr-2"></i>{{ t('Inventory') }}</th>
-            <th><i class="fas fa-bell mr-2"></i>حد {{ t('Alert') }}</th>
+            <th><i class="fas fa-bell mr-2"></i>{{ t('Alert') }}</th>
             <th><i class="fas fa-money-bill-wave mr-2"></i>{{ t('Price') }}</th>
             <th><i class="fas fa-map-marker-alt mr-2"></i>{{ t('Website') }}</th>
             <th class="text-center"><i class="fas fa-cog mr-2"></i>{{ t('Actions') }}</th>
@@ -105,24 +110,24 @@
             <td>
               <div class="d-flex align-items-center">
                 {% if product.image_url %}
-                  <img src="{{ url_for('static', filename=product.image_url) }}" 
-                       class="warehouse-product-img mr-2" alt="{{ product.name }}">
+                  <img src="{{ url_for('static', filename=product.image_url) | e }}"
+                       class="warehouse-product-img mr-2" alt="{{ product.name | e }}">
                 {% else %}
-                  <div class="warehouse-product-img mr-2 d-flex align-items-center justify-content-center ic-3">
+                  <div class="warehouse-product-img mr-2 d-flex align-items-center justify-content-center ic-out-header-bg">
                     <i class="fas fa-box"></i>
                   </div>
                 {% endif %}
                 <div>
-                  <strong>{{ product.name }}</strong>
+                  <strong>{{ product.name | e }}</strong>
                   {% if product.name_ar %}
-                  <br><small class="text-muted">{{ product.name_ar }}</small>
+                  <br><small class="text-muted">{{ product.name_ar | e }}</small>
                   {% endif %}
                 </div>
               </div>
             </td>
-            <td><code class="bg-light px-2 py-1 rounded">{{ product.sku }}</code></td>
+            <td><code class="bg-light px-2 py-1 rounded">{{ product.sku | e }}</code></td>
             <td>
-              <span class="badge badge-danger px-3 py-2 ic-5">
+              <span class="badge badge-danger px-3 py-2 ic-out-badge">
                 <i class="fas fa-times mr-1"></i>{{ product.current_stock }}
               </span>
               <br><small class="text-muted">{{ product.unit or 'بلا' }}</small>
@@ -131,26 +136,26 @@
               <span class="badge badge-secondary">{{ product.min_stock_alert }}</span>
             </td>
             <td>
-              <strong class="ic-6">{{ format_currency(product.regular_price) }}</strong>
+              <strong class="ic-out-price">{{ format_currency(product.regular_price) }}</strong>
             </td>
             <td>
               <i class="fas fa-map-marker-alt text-danger mr-1"></i>
-              {{ product.location or 'غير محدد' }}
+              {{ product.location or t('none') }}
             </td>
             <td class="text-center">
               <div class="btn-group btn-group-sm">
                 {% if current_user.has_permission('manage_products') %}
-                <a href="{{ url_for('products.view', id=product.id) }}" class="btn btn-info" title="{{ t('View') }}">
+                <a href="{{ url_for('products.view', id=product.id) }}" class="btn btn-info" title="{{ t('View') }}" aria-label="{{ t('View') }}">
                   <i class="fas fa-eye"></i>
                 </a>
                 {% endif %}
                 {% if current_user.has_permission('manage_products') %}
-                <a href="{{ url_for('products.edit', id=product.id) }}" class="btn btn-warning" title="{{ t('Edit') }}">
+                <a href="{{ url_for('products.edit', id=product.id) }}" class="btn btn-warning" title="{{ t('Edit') }}" aria-label="{{ t('Edit') }}">
                   <i class="fas fa-edit"></i>
                 </a>
                 {% endif %}
                 {% if current_user.has_permission('manage_purchases') %}
-                <a href="{{ url_for('purchases.create') }}" class="btn btn-success" title="{{ t('طلب') }} {{ t('Purchase') }} {{ t('عاجل') }}">
+                <a href="{{ url_for('purchases.create') }}" class="btn btn-success" title="{{ t('request_urgent_purchase') }}" aria-label="{{ t('request_urgent_purchase') }}">
                   <i class="fas fa-shopping-cart"></i>
                 </a>
                 {% endif %}
@@ -163,16 +168,6 @@
     </div>
   </div>
 </div>
-
-<style>
-.warehouse-product-img {
-  width: 45px;
-  height: 45px;
-  object-fit: cover;
-  border-radius: 8px;
-  border: 2px solid #e0e0e0;
-}
-</style>
 {% endblock %}
 
 {% block extra_js %}
@@ -186,24 +181,29 @@ $(document).ready((() => {
     dom: 'Bfrtip',
     buttons: [
       {
-        extend: 'excel', 
-        text: '<i class="fas fa-file-excel mr-1"></i> {{ t('Export') }} {{ t('for Purchase') }}', 
-        className: ' btn-success'
+        extend: 'excel',
+        text: '<i class="fas fa-file-excel mr-1"></i> {{ t('export_for_purchase') }}',
+        className: 'btn-success'
       },
-      {extend: 'pdf', text: '<i class="fas fa-file-pdf mr-1"></i> PDF', className: ' btn-danger'},
-      {extend: 'print', text: '<i class="fas fa-print mr-1"></i> {{ t('Print') }}', className: ' btn-info'}
+      {extend: 'pdf', text: '<i class="fas fa-file-pdf mr-1"></i> PDF', className: 'btn-danger'},
+      {extend: 'print', text: '<i class="fas fa-print mr-1"></i> {{ t('Print') }}', className: 'btn-info'}
     ]
   });
 
   // Show urgent notification
-  if ({{ products|length }}) > 0) 
-    setTimeout(() => {
+  {% if products %}
+  setTimeout(() => {
+    if (typeof UI !== 'undefined' && UI.toast) {
       UI.toast(
-        '🚨 {{ t('يوجد') }} {{ products|length }} {{ t('Product_2') }} {{ t('منفذ') }} من {{ t('Inventory') }} - {{ t('يتطلب') }} {{ t('إجراء') }} {{ t('عاجل') }}!',
+        '🚨 {{ t('n_products_out_of_stock', count=products|length) }}',
         'error',
         5000
       );
-    }, 500);
+    } else {
+      alert('🚨 {{ t('n_products_out_of_stock', count=products|length) }}');
+    }
+  }, 500);
+  {% endif %}
 });
 </script>
 {% endblock %}

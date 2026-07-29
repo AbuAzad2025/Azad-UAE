@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
-{% block title %}{{ t('Details') }} {{ t('Warehouse') }} - {{ warehouse.name_ar or warehouse.name }}{% endblock %}
+{% block title %}{{ t('warehouse_details') }} - {{ warehouse.name_ar or warehouse.name }}{% endblock %}
+
+{% block extra_css %}{% endblock %}
 
 {% block content %}
 <div class="content-header">
@@ -10,17 +12,17 @@
         <h1 class="m-0">
           <i class="fas fa-warehouse"></i> {{ warehouse.name_ar or warehouse.name }}
           {% if warehouse.is_main %}
-          <span class="badge badge-primary text-sm ml-2">{{ t('رئيسي') }}</span>
+          <span class="badge badge-primary text-sm ml-2">{{ t('main_warehouse_label') }}</span>
           {% endif %}
           {% if warehouse.is_online %}
-          <span class="badge badge-info text-sm ml-2"><i class="fas fa-globe"></i> {{ t('أونلاين') }} — {{ t('Store') }}</span>
+          <span class="badge badge-info text-sm ml-2"><i class="fas fa-globe"></i> {{ t('online') }} — {{ t('Store') }}</span>
           {% endif %}
           <a href="{{ url_for('warehouse.edit_warehouse', id=warehouse.id) }}" class="btn btn-sm btn-warning ml-2"><i class="fas fa-edit"></i> {{ t('Edit') }}</a>
         </h1>
       </div>
       <div class="col-sm-6">
         <ol class="breadcrumb float-sm-left">
-          <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">{{ t('Main_2') }}</a></li>
+          <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">{{ t('Dashboard') }}</a></li>
           <li class="breadcrumb-item"><a href="{{ url_for('warehouse.list_warehouses') }}">{{ t('Warehouses') }}</a></li>
           <li class="breadcrumb-item active">{{ warehouse.name_ar or warehouse.name }}</li>
         </ol>
@@ -31,11 +33,10 @@
 
 <section class="content">
   <div class="container-fluid">
-    
-    
+
     <div class="card mb-4">
       <div class="card-header bg-gradient-light">
-        <h3 class="card-title"><i class="fas fa-info-circle"></i> {{ t('Info_2') }} {{ t('Warehouse') }}</h3>
+        <h3 class="card-title"><i class="fas fa-info-circle"></i> {{ t('warehouse_info') }}</h3>
       </div>
       <div class="card-body">
         <div class="row">
@@ -43,20 +44,20 @@
             <strong>{{ t('Name') }}:</strong> {{ warehouse.name_ar or warehouse.name }}
           </div>
           <div class="col-md-3">
-            <strong>{{ t('Code_4') }}:</strong> {{ warehouse.code or '-' }}
+            <strong>{{ t('warehouse_code') }}:</strong> {{ warehouse.code or '-' }}
           </div>
           <div class="col-md-3">
             <strong>{{ t('Website') }}:</strong> {{ warehouse.location or '-' }}
           </div>
           <div class="col-md-3">
-            <strong>{{ t('النوع') }}:</strong> {{ warehouse.type_label_ar() }}
+            <strong>{{ t('warehouse_type_label') }}:</strong> {{ warehouse.type_label_ar() }}
           </div>
           <div class="col-md-3">
-            <strong>{{ _('سحب السالب:') }}</strong>
+            <strong>{{ t('negative_stock_withdrawal') }}</strong>
             {% if warehouse.allow_negative_inventory %}
-              <span class="badge badge-warning">{{ _('مسموح') }}</span>
+              <span class="badge badge-warning">{{ t('allowed') }}</span>
             {% else %}
-              <span class="badge badge-secondary">{{ _('غير مسموح') }}</span>
+              <span class="badge badge-secondary">{{ t('not_allowed') }}</span>
             {% endif %}
           </div>
         </div>
@@ -69,12 +70,11 @@
       </div>
     </div>
 
-    
     <div class="card">
       <div class="card-header bg-primary">
-        <h3 class="card-title"><i class="fas fa-boxes"></i> {{ t('Inventory') }} {{ t('الحالي') }} في {{ t('Warehouse') }}</h3>
+        <h3 class="card-title"><i class="fas fa-boxes"></i> {{ t('current_stock_in_warehouse') }}</h3>
         <div class="card-tools">
-            <button type="button" class="btn btn-tool" data-card-widget="collapse" title="طي/{{ t('توسيع') }}">
+            <button type="button" class="btn btn-tool" data-card-widget="collapse" title="{{ t('collapse_card') }}">
                 <i class="fas fa-minus"></i>
             </button>
         </div>
@@ -85,9 +85,9 @@
             <tr>
               <th>{{ t('Product') }}</th>
               <th>SKU</th>
-              <th>{{ t('التصنيف') }}</th>
+              <th>{{ t('category') }}</th>
               <th class="text-center">{{ t('Quantity') }}</th>
-              <th>{{ t('الوحدة') }}</th>
+              <th>{{ t('unit') }}</th>
               <th>{{ t('Actions') }}</th>
             </tr>
           </thead>
@@ -116,9 +116,9 @@
                   {{ item.quantity }}
                 </span>
               </td>
-              <td>{{ item.product.unit or 'قطعة' }}</td>
+              <td>{{ item.product.unit or t('none') }}</td>
               <td>
-                <a href="{{ url_for('warehouse.movements', product=item.product.id, warehouse=warehouse.id) }}" class="btn btn-info" title="{{ t('حركات') }} {{ t('Inventory') }}">
+                <a href="{{ url_for('warehouse.movements', product=item.product.id, warehouse=warehouse.id) }}" class="btn btn-info" title="{{ t('inventory_movements') }}" aria-label="{{ t('inventory_movements') }}">
                   <i class="fas fa-history"></i>
                 </a>
               </td>
@@ -127,7 +127,7 @@
             <tr>
               <td colspan="6" class="text-center text-muted p-4">
                 <i class="fas fa-box-open fa-3x mb-3"></i><br>
-                لا {{ t('يوجد') }} {{ t('Products_2') }} في هذا {{ t('Warehouse') }} {{ t('حالياً') }}
+                {{ t('no_products_in_this_warehouse') }}
               </td>
             </tr>
             {% endfor %}
@@ -139,3 +139,5 @@
   </div>
 </section>
 {% endblock %}
+
+{% block extra_js %}{% endblock %}

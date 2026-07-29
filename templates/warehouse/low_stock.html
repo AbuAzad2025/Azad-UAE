@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Inventory_2') }} {{ t('Low_2') }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('low_stock_view_title') }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0 ic-1">
-      <i class="fas fa-exclamation-triangle mr-3"></i>{{ t('Inventory_2') }} {{ t('Low_2') }}
+    <h1 class="mb-0 text-warning">
+      <i class="fas fa-exclamation-triangle mr-3"></i>{{ t('low_stock_view_title') }}
     </h1>
-    <p class="text-muted">{{ t('Products_2') }} {{ t('تحتاج') }} إلى {{ t('إعادة') }} {{ t('تموين') }} {{ t('عاجلة') }}</p>
+    <p class="text-muted">{{ t('products_needing_restock') }}</p>
   </div>
   <div>
     <a href="{{ url_for('warehouse.index') }}" class="btn btn-info">
@@ -15,9 +15,9 @@
     </a>
     {% if current_user.has_permission('manage_purchases') %}
     <a href="{{ url_for('purchases.create') }}" class="btn btn-success">
-    {% endif %}
-      <i class="fas fa-shopping-cart mr-2"></i>{{ t('Purchase') }} {{ t('New') }}
+      <i class="fas fa-shopping-cart mr-2"></i>{{ t('purchase_new_stock') }}
     </a>
+    {% endif %}
   </div>
 </div>
 {% endblock %}
@@ -49,16 +49,21 @@
   height: 100%;
   background: linear-gradient(90deg, #ff6b6b 0%, #ffc107 100%);
 }
-
-    /* D6: externalized inline styles */
-    .ic-1 { color: #ffc107; }
-    .ic-2 { opacity: 0.3; color: #ffc107; }
-    .ic-3 { background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); color: white; }
-    .ic-4 { background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white; }
-    .ic-5 { font-size: 1.1rem; }
-    .ic-6 { height: 25px; }
-    .ic-7 { color: #007A3D; }
-  </style>
+.warehouse-product-img {
+  width: 45px;
+  height: 45px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid #e0e0e0;
+}
+.ic-low-header { color: #ffc107; }
+.ic-low-muted { opacity: 0.3; color: #ffc107; }
+.ic-low-warn-bg { background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); color: white; }
+.ic-low-primary-bg { background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white; }
+.ic-low-badge { font-size: 1.1rem; }
+.ic-low-progress { height: 25px; }
+.ic-low-price { color: #007A3D; }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -66,35 +71,35 @@
   <div class="d-flex justify-content-between align-items-center">
     <div>
       <h4 class="mb-2">
-        <i class="fas fa-exclamation-triangle mr-2"></i>{{ t('Alert_2') }} {{ t('Inventory_2') }}!
+        <i class="fas fa-exclamation-triangle mr-2"></i>{{ t('inventory_alert') }}
       </h4>
       <p class="mb-0">
-        {{ t('يوجد') }} <strong>{{ products|length }}</strong> {{ t('Product_2') }} {{ t('بحاجة') }} إلى {{ t('إعادة') }} {{ t('تموين') }} {{ t('فورية') }}
+        {{ t('n_products_need_restocking', count=products|length) }}
       </p>
     </div>
     <div>
-      <i class="fas fa-warehouse fa-4x ic-2"></i>
+      <i class="fas fa-warehouse fa-4x ic-low-muted"></i>
     </div>
   </div>
 </div>
 
 <div class="card">
-  <div class="card-header ic-3">
+  <div class="card-header ic-low-warn-bg">
     <h3 class="card-title text-white mb-0">
-      <i class="fas fa-boxes mr-2"></i>{{ t('Products') }} ذات {{ t('Inventory') }} {{ t('Low_3') }}
+      <i class="fas fa-boxes mr-2"></i>{{ t('low_stock_products_title') }}
     </h3>
   </div>
   <div class="card-body">
     <div class="table-responsive">
       <table id="lowStockTable" class="table table-hover">
-        <thead class="ic-4">
+        <thead class="ic-low-primary-bg">
           <tr>
-            <th><i class="fas fa-exclamation-circle mr-2"></i>{{ t('الأولوية') }}</th>
+            <th><i class="fas fa-exclamation-circle mr-2"></i>{{ t('priority') }}</th>
             <th><i class="fas fa-box mr-2"></i>{{ t('Product') }}</th>
             <th><i class="fas fa-barcode mr-2"></i>SKU</th>
             <th><i class="fas fa-layer-group mr-2"></i>{{ t('Inventory') }}</th>
-            <th><i class="fas fa-bell mr-2"></i>حد {{ t('Alert') }}</th>
-            <th><i class="fas fa-percentage mr-2"></i>{{ t('Rate_2') }}</th>
+            <th><i class="fas fa-bell mr-2"></i>{{ t('Alert') }}</th>
+            <th><i class="fas fa-percentage mr-2"></i>{{ t('stock_percentage') }}</th>
             <th><i class="fas fa-money-bill-wave mr-2"></i>{{ t('Price') }}</th>
             <th class="text-center"><i class="fas fa-cog mr-2"></i>{{ t('Actions') }}</th>
           </tr>
@@ -106,62 +111,62 @@
           <tr class="fade-in" data-urgency="{{ urgency }}">
             <td>
               <div class="urgency-meter">
-                <div class="urgency-bar" style="width: {{ urgency }}%"></div>
+                <div class="urgency-bar" data-width="{{ urgency }}"></div>
               </div>
-              <small class="text-muted">{{ "{:.0f}".format(urgency) }}% {{ t('نقص') }}</small>
+              <small class="text-muted">{{ "{:.0f}".format(urgency) }}% {{ t('deficit') }}</small>
             </td>
             <td>
               <div class="d-flex align-items-center">
                 {% if product.image_url %}
-                  <img src="{{ url_for('static', filename=product.image_url) }}" 
-                       class="warehouse-product-img mr-2" alt="{{ product.name }}">
+                  <img src="{{ url_for('static', filename=product.image_url) | e }}"
+                       class="warehouse-product-img mr-2" alt="{{ product.name | e }}">
                 {% else %}
-                  <div class="warehouse-product-img mr-2 d-flex align-items-center justify-content-center ic-3">
+                  <div class="warehouse-product-img mr-2 d-flex align-items-center justify-content-center ic-low-warn-bg">
                     <i class="fas fa-box"></i>
                   </div>
                 {% endif %}
                 <div>
-                  <strong>{{ product.name }}</strong>
+                  <strong>{{ product.name | e }}</strong>
                   {% if product.name_ar %}
-                  <br><small class="text-muted">{{ product.name_ar }}</small>
+                  <br><small class="text-muted">{{ product.name_ar | e }}</small>
                   {% endif %}
                 </div>
               </div>
             </td>
             <td><code class="bg-light px-2 py-1 rounded">{{ product.sku }}</code></td>
             <td>
-              <span class="badge badge-warning px-3 py-2 ic-5">
+              <span class="badge badge-warning px-3 py-2 ic-low-badge">
                 <i class="fas fa-exclamation-triangle mr-1"></i>{{ product.current_stock }}
               </span>
-              <br><small class="text-muted">{{ product.unit or 'بلا' }}</small>
+              <br><small class="text-muted">{{ product.unit or t('none') }}</small>
             </td>
             <td>
               <span class="badge badge-secondary">{{ product.min_stock_alert }}</span>
             </td>
             <td>
-              <div class="progress ic-6">
-                <div class="progress-bar bg-warning" style="width: {{ stock_percent }}%">
+              <div class="progress ic-low-progress">
+                <div class="progress-bar bg-warning" data-width="{{ stock_percent }}">
                   {{ "{:.0f}".format(stock_percent) }}%
                 </div>
               </div>
             </td>
             <td>
-              <strong class="ic-7">{{ format_currency(product.regular_price) }}</strong>
+              <strong class="ic-low-price">{{ format_currency(product.regular_price) }}</strong>
             </td>
             <td class="text-center">
               <div class="btn-group btn-group-sm">
                 {% if current_user.has_permission('manage_products') %}
-                <a href="{{ url_for('products.view', id=product.id) }}" class="btn btn-info" title="{{ t('View') }}">
+                <a href="{{ url_for('products.view', id=product.id) }}" class="btn btn-info" title="{{ t('View') }}" aria-label="{{ t('View') }}">
                   <i class="fas fa-eye"></i>
                 </a>
                 {% endif %}
                 {% if current_user.has_permission('manage_products') %}
-                <a href="{{ url_for('products.edit', id=product.id) }}" class="btn btn-warning" title="{{ t('Edit') }}">
+                <a href="{{ url_for('products.edit', id=product.id) }}" class="btn btn-warning" title="{{ t('Edit') }}" aria-label="{{ t('Edit') }}">
                   <i class="fas fa-edit"></i>
                 </a>
                 {% endif %}
                 {% if current_user.has_permission('manage_purchases') %}
-                <a href="{{ url_for('purchases.create') }}" class="btn btn-success" title="{{ t('طلب') }} {{ t('Purchase') }}">
+                <a href="{{ url_for('purchases.create') }}" class="btn btn-success" title="{{ t('purchase_new_stock') }}" aria-label="{{ t('purchase_new_stock') }}">
                   <i class="fas fa-shopping-cart"></i>
                 </a>
                 {% endif %}
@@ -174,32 +179,30 @@
     </div>
   </div>
 </div>
-
-<style>
-.warehouse-product-img {
-  width: 45px;
-  height: 45px;
-  object-fit: cover;
-  border-radius: 8px;
-  border: 2px solid #e0e0e0;
-}
-</style>
 {% endblock %}
 
 {% block extra_js %}
 {% include 'partials/datatables_assets.html' %}
 <script>
 $(document).ready(() => {
+  // Set bar widths from data attributes
+  $('.urgency-bar[data-width]').each(function() {
+    $(this).css('width', $(this).data('width') + '%');
+  });
+  $('.progress-bar[data-width]').each(function() {
+    $(this).css('width', $(this).data('width') + '%');
+  });
+
   $('#lowStockTable').DataTable({
     language: { url: "{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}" },
     pageLength: 50,
-    order: [[5, 'asc']],  // Sort by percentage (most urgent first)
+    order: [[5, 'asc']],
     responsive: true,
     dom: 'Bfrtip',
     buttons: [
-      {extend: 'excel', text: '<i class="fas fa-file-excel mr-1"></i> Excel', className: ' btn-success'},
-      {extend: 'pdf', text: '<i class="fas fa-file-pdf mr-1"></i> PDF', className: ' btn-danger'},
-      {extend: 'print', text: '<i class="fas fa-print mr-1"></i> {{ t('Print') }}', className: ' btn-info'}
+      {extend: 'excel', text: '<i class="fas fa-file-excel mr-1"></i> Excel', className: 'btn-success'},
+      {extend: 'pdf', text: '<i class="fas fa-file-pdf mr-1"></i> PDF', className: 'btn-danger'},
+      {extend: 'print', text: '<i class="fas fa-print mr-1"></i> {{ t('Print') }}', className: 'btn-info'}
     ]
   });
 });
