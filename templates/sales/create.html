@@ -1,21 +1,37 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Create') }} {{ t('Invoice') }} {{ t('Sale') }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or t('default_system_name') }} - {{ t('new_invoice') }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-file-invoice mr-2"></i>{{ t('Invoice') }} {{ t('Sale') }} {{ t('New_3') }}</h1>
+    <h1 class="mb-0"><i class="fas fa-file-invoice mr-2"></i>{{ t('new_invoice') }}</h1>
   </div>
   <div>
     <a href="{{ url_for('sales.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('Sales_3') }}
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('back_to_sales') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
+      <i class="fas fa-home mr-2"></i>{{ t('main_dashboard') }}
     </a>
   </div>
 </div>
 {% endblock %}
 
+
+{% block extra_css %}
+<style>
+@media print {
+  .main-sidebar, .main-header, .main-footer, .content-header,
+  .btn, .btn-group, .card-header, .nav-tabs, .no-print,
+  .dataTables_filter, .dataTables_length, .dataTables_paginate, .dataTables_info {
+    display: none !important;
+  }
+  .content-wrapper { margin: 0 !important; padding: 0 !important; }
+  .card { border: none !important; box-shadow: none !important; }
+  table { width: 100% !important; border-collapse: collapse !important; }
+  th, td { border: 1px solid #dee2e6 !important; padding: 6px 8px !important; }
+}
+</style>
+{% endblock %}
 
 {% block content %}
 <form class="needs-validation sale-create-form" method="POST" action="{{ url_for('sales.create') }}" id="saleForm">
@@ -26,29 +42,29 @@
     <div class="col-md-8">
       <div class="card">
         <div class="card-header bg-gradient-primary">
-          <h3 class="card-title text-white"><i class="fas fa-file-invoice mr-2"></i>{{ t('Info_2') }} {{ t('Invoice_2') }}</h3>
+          <h3 class="card-title text-white"><i class="fas fa-file-invoice mr-2"></i>{{ t('invoice_info') }}</h3>
         </div>
         <div class="card-body">
           <div class="row">
             <div class="col-md-3">
               <div class="form-group">
                 <label class="font-weight-bold">
-                  <i class="fas fa-user text-primary mr-1"></i>{{ t('Customer_2') }}
+                  <i class="fas fa-user text-primary mr-1"></i>{{ t('customer') }}
                   <span class="text-danger">*</span>
-                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('اختر') }} {{ t('Customer') }} - {{ t('Filter_3') }} {{ t('Smart') }}: {{ t('ابحث') }} {{ t('By name') }} أو {{ t('Phone') }} ({{ t('Required') }})"></i>
+                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('customer_select_tooltip') }}"></i>
                 </label>
                 <select name="customer_id" id="customer_id" class="form-control customer-select" required aria-label="customer id">
                   <option value="" selected>{{ t('None') }}</option>
                 </select>
-                <small class="form-text text-muted">💡 {{ t('Filter_3') }} {{ t('Smart') }}: {{ t('ابحث') }} {{ t('By name') }} أو {{ t('رقم') }} {{ t('Phone') }}</small>
+                <small class="form-text text-muted"><i class="fas fa-lightbulb"></i> {{ t('search_customer_hint') }}</small>
               </div>
             </div>
             <div class="col-md-3">
               <div class="form-group">
                 <label class="font-weight-bold">
-                  <i class="fas fa-warehouse text-info mr-1"></i>{{ t('Warehouse') }}
+                  <i class="fas fa-warehouse text-info mr-1"></i>{{ t('warehouse') }}
                   <span class="text-danger">*</span>
-                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Warehouse') }} {{ t('الذي') }} {{ t('will Discount') }} {{ t('منه') }} {{ t('Inventory') }} ({{ t('Required') }})"></i>
+                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('warehouse_select_tooltip') }}"></i>
                 </label>
                 <select name="warehouse_id" id="warehouse_id" class="form-control" required aria-label="warehouse id">
                   <option value="" selected>{{ t('None') }}</option>
@@ -61,19 +77,19 @@
                     </option>
                     {% endfor %}
                   {% else %}
-                    <option value="">لا {{ t('توجد') }} {{ t('Warehouses_2') }} {{ t('Available') }}</option>
+                    <option value="">{{ t('no_warehouses_available') }}</option>
                   {% endif %}
                 </select>
                 <small class="form-text text-info">
-                  <i class="fas fa-info-circle"></i> {{ t('will Discount') }} {{ t('Inventory') }} من هذا {{ t('Warehouse') }}
+                  <i class="fas fa-info-circle"></i> {{ t('inventory_will_be_deducted_from_warehouse') }}
                 </small>
               </div>
             </div>
             <div class="col-md-3">
               <div class="form-group">
                 <label for="sale_sales_rep_id" class="font-weight-bold">
-                  <i class="fas fa-id-badge text-warning mr-1"></i>{{ t('Rep') }} {{ t('Sales') }}
-                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('اختر') }} {{ t('Rep_2') }} {{ t('Responsible') }} عن هذه {{ t('Invoice_2') }} ({{ t('Optional') }})"></i>
+                  <i class="fas fa-id-badge text-warning mr-1"></i>{{ t('sales_rep') }}
+                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('sales_rep_tooltip') }}"></i>
                 </label>
                 <select name="sales_rep_id" id="sale_sales_rep_id" class="form-control">
                   <option value="">{{ t('None') }}</option>
@@ -86,37 +102,37 @@
             <div class="col-md-3">
               <div class="form-group">
                 <label for="sale_coupon_code" class="font-weight-bold">
-                  <i class="fas fa-ticket-alt text-success mr-1"></i>{{ t('كوبون') }} {{ t('Discount_2') }}
-                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('أدخل') }} {{ t('Code_2') }} {{ t('الكوبون') }} إذا كان {{ t('Customer') }} لديه ({{ t('Optional') }})"></i>
+                  <i class="fas fa-ticket-alt text-success mr-1"></i>{{ t('coupon_discount') }}
+                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('coupon_tooltip') }}"></i>
                 </label>
-                <input type="text" name="coupon_code" id="sale_coupon_code" class="form-control" placeholder="{{ t('Code_2') }} {{ t('الكوبون') }}" autocomplete="off">
+                <input type="text" name="coupon_code" id="sale_coupon_code" class="form-control" placeholder="{{ t('coupon_code') }}" autocomplete="off">
               </div>
             </div>
             <div class="col-md-2">
               <div class="form-group">
                 <label class="font-weight-bold">
-                  <i class="fas fa-money-bill-wave text-success mr-1"></i>{{ t('Currency_2') }} {{ t('Payment_2') }}
-                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Currency') }} {{ t('التي') }} {{ t('Payment Pending') }} {{ t('بها') }} {{ t('Customer') }} - {{ t('Invoice_2') }} {{ t('بال') }}{{ tenant_currency_name_ar or 'درهم إماراتي' }} دائماً ({{ t('Optional') }})"></i>
+                  <i class="fas fa-money-bill-wave text-success mr-1"></i>{{ t('currency') }} {{ t('payment') }}
+                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('currency_tooltip') }}"></i>
                 </label>
                 {% set dc = company_default_currency or system_default_currency or 'AED' %}
                 {% from 'macros/currency_options.html' import currency_select %}
                 {{ currency_select(name='currency', id='currency', default_code=dc) }}
                 <small class="form-text text-info">
-                  <i class="fas fa-lightbulb"></i> {{ t('الأسعار') }} {{ t('بال') }}{{ tenant_currency_name_ar or 'درهم إماراتي' }} - {{ t('Currency') }} فقط {{ t('for Transfer') }} {{ t('Paid') }}
+                  <i class="fas fa-lightbulb"></i> {{ t('prices_in_base_currency') }}
                 </small>
               </div>
             </div>
             <div class="col-md-2">
               <div class="form-group">
                 <label for="exchange_rate" class="font-weight-bold">
-                  <i class="fas fa-exchange-alt text-info mr-1"></i>{{ t('Price_2') }} {{ t('Exchange') }}
-                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Price_2') }} {{ t('صرف') }} {{ t('Currency') }} {{ t('مقابل') }} {{ tenant_currency_name_ar or 'الدرهم الإماراتي' }} - يمكن {{ t('تعديله') }} {{ t('Manually') }} ({{ t('Optional') }})"></i>
+                  <i class="fas fa-exchange-alt text-info mr-1"></i>{{ t('exchange_rate') }}
+                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('exchange_rate_tooltip') }}"></i>
                 </label>
                 <input type="number" name="exchange_rate" id="exchange_rate" class="form-control" 
                        value="1.000000" step="0.000001" min="0.000001" 
                        placeholder="1.000000">
                 <small class="form-text text-muted">
-                  <i class="fas fa-edit"></i> {{ t('قابل') }} {{ t('للتعديل') }} {{ t('Manual_2') }}
+                  <i class="fas fa-edit"></i> {{ t('editable_manually') }}
                 </small>
               </div>
             </div>
@@ -126,7 +142,7 @@
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5><i class="fas fa-list mr-2"></i>{{ t('Items') }} (<span id="line_count_display">0</span>)</h5>
             <button type="button" class="btn btn-success" data-action="add-line">
-              <i class="fas fa-plus mr-2"></i>{{ t('Add') }} {{ t('Item') }}
+              <i class="fas fa-plus mr-2"></i>{{ t('add_item') }}
             </button>
           </div>
           <div id="linesContainer"></div>
@@ -142,8 +158,8 @@
         <div class="card-body">
           <div class="form-group">
             <label for="sale_discount_amount" class="font-weight-bold">
-              <i class="fas fa-percent text-danger mr-1"></i>{{ t('Discount') }} {{ t('Total_3') }}
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Discount_2') }} {{ t('Additional_2') }} على {{ t('Total_2') }} {{ t('Invoice_2') }} بـ{{ tenant_currency_name_ar or 'درهم إماراتي' }} ({{ t('Optional') }} - {{ t('افتراضي') }}: 0)"></i>
+              <i class="fas fa-percent text-danger mr-1"></i>{{ t('discount') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('discount_tooltip') }}"></i>
             </label>
             <div class="input-group">
               <input type="number" name="discount_amount" id="sale_discount_amount" class="form-control" value="0" step="0.01" min="0" 
@@ -153,13 +169,13 @@
                 <span class="input-group-text">{{ tenant_default_currency or 'AED' }}</span>
               </div>
             </div>
-            <small class="form-text text-muted">{{ t('Discount_2') }} على {{ t('Total') }} {{ t('Sub') }}</small>
+            <small class="form-text text-muted">{{ t('discount_on_subtotal') }}</small>
           </div>
 
           <div class="form-group">
             <label for="sale_shipping_cost" class="font-weight-bold">
-              <i class="fas fa-shipping-fast text-primary mr-1"></i>{{ t('Cost_2') }} {{ t('Shipping') }}
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Cost_2') }} {{ t('Shipping') }} {{ t('والتوصيل') }} ({{ t('Optional') }} - {{ t('افتراضي') }}: 0)"></i>
+              <i class="fas fa-shipping-fast text-primary mr-1"></i>{{ t('shipping_cost') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('shipping_cost_tooltip') }}"></i>
             </label>
             <div class="input-group">
               <input type="number" name="shipping_cost" id="sale_shipping_cost" class="form-control" value="0" step="0.01" min="0" 
@@ -169,13 +185,13 @@
                 <span class="input-group-text">{{ tenant_default_currency or 'AED' }}</span>
               </div>
             </div>
-            <small class="form-text text-muted">{{ t('تُضاف') }} {{ t('للمجموع') }} قبل {{ t('Tax') }}</small>
+            <small class="form-text text-muted">{{ t('added_before_tax') }}</small>
           </div>
 
           <div id="tax-rate-group" class="form-group{% if not tenant_enable_tax %} d-none{% endif %}">
             <label for="sale_tax_rate" class="font-weight-bold">
-              <i class="fas fa-receipt text-warning mr-1"></i>{{ t('Rate') }} {{ t('Tax') }}
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Rate') }} {{ t('Tax_2') }} {{ t('Value') }} {{ t('المضافة') }} VAT% ({{ t('Optional') }})"></i>
+              <i class="fas fa-receipt text-warning mr-1"></i>{{ t('tax_rate') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('tax_rate_tooltip') }}"></i>
             </label>
             <div class="input-group">
               {% set _default_tax_rate = (tenant_default_tax_rate if tenant_enable_tax else 0) %}
@@ -186,7 +202,7 @@
                 <span class="input-group-text">%</span>
               </div>
             </div>
-            <small class="form-text text-muted">{{ t('Tax_2') }} {{ t('Value') }} {{ t('المضافة') }} — {{ t('تُفعّل') }} من {{ t('Settings_2') }} {{ t('الضرائب') }} {{ t('للشركة') }}</small>
+            <small class="form-text text-muted">{{ t('vat_info') }} — {{ t('enable_from_tax_settings') }}</small>
           </div>
           {% if not tenant_enable_tax %}
           <input type="hidden" name="tax_rate" value="0" aria-label="tax rate">
@@ -195,12 +211,12 @@
           <div class="total-box text-center">
             <div class="alert alert-info mb-3 ic-1">
               <i class="fas fa-info-circle"></i>
-              <strong>{{ t('Note') }}:</strong> {{ t('جميع') }} {{ t('الأسعار') }} {{ t('بال') }}{{ tenant_currency_name_ar or 'درهم إماراتي' }} ({{ tenant_default_currency or 'AED' }})
+              <strong>{{ t('note') }}:</strong> {{ t('all_prices_in_currency') }} ({{ tenant_default_currency or 'AED' }})
             </div>
-            <h6 class="mb-2">{{ t('Subtotal') }}</h6>
+            <h6 class="mb-2">{{ t('subtotal') }}</h6>
             <h3 id="subtotal" class="mb-3">0.00</h3>
             <hr class="ic-2">
-            <h5 class="mb-2">{{ t('Final Total') }}</h5>
+            <h5 class="mb-2">{{ t('final_total') }}</h5>
             <h2 id="total" class="mb-0 ic-3">0.00</h2>
             <small class="ic-4">
               <i class="fas fa-coins"></i> <span id="total_currency_label">{{ tenant_currency_name_ar or 'درهم إماراتي' }} ({{ tenant_default_currency or 'AED' }})</span>
@@ -209,19 +225,19 @@
 
           <div class="form-group mt-3">
             <label class="font-weight-bold">
-              <i class="fas fa-credit-card text-info"></i> {{ t('طريقة') }} {{ t('Payment_2') }}
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('اختر') }} {{ t('طريقة') }} {{ t('Payment_2') }} أو {{ t('اتركها') }} {{ t('فارغة') }} {{ t('for Payment') }} {{ t('Credit_3') }}"></i>
+              <i class="fas fa-credit-card text-info"></i> {{ t('payment_method') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('payment_method_tooltip') }}"></i>
             </label>
             <select name="payment_method" id="payment_method" class="form-control" aria-label="payment method">
-              <option value="">{{ t('Credit') }} ({{ t('بدون') }} {{ t('Payment') }})</option>
-              <option value="cash">💵 {{ t('Cash_2') }}</option>
-              <option value="card">💳 {{ t('Card') }}</option>
-              <option value="bank_transfer">🏦 {{ t('Transfer') }} {{ t('Bank_3') }}</option>
-              <option value="cheque">📝 {{ t('Cheque_3') }}</option>
-              <option value="e_wallet">💰 {{ t('Saved Portfolio') }} {{ t('إلكترونية') }}</option>
+              <option value="">{{ t('credit_no_payment') }}</option>
+              <option value="cash"><i class="fas fa-money-bill-wave"></i> {{ t('cash') }}</option>
+              <option value="card"><i class="fas fa-credit-card"></i> {{ t('card') }}</option>
+              <option value="bank_transfer"><i class="fas fa-university"></i> {{ t('bank_transfer') }}</option>
+              <option value="cheque"><i class="fas fa-file-invoice"></i> {{ t('cheque') }}</option>
+              <option value="e_wallet"><i class="fas fa-wallet"></i> {{ t('e_wallet') }}</option>
             </select>
             <small class="form-text text-muted">
-              <i class="fas fa-info-circle"></i> {{ t('اترك') }} {{ t('فارغاً') }} {{ t('for Payment') }} {{ t('Credit_3') }} (على {{ t('Account') }})
+              <i class="fas fa-info-circle"></i> {{ t('leave_empty_for_credit') }}
             </small>
           </div>
 
@@ -230,36 +246,36 @@
 
           <div class="form-group ic-5" id="payment_amount_group">
             <label class="font-weight-bold">
-              <i class="fas fa-hand-holding-usd mr-1"></i>{{ t('Amount') }} {{ t('Paid') }}
-              <i class="fas fa-info-circle text-info" title="{{ t('أدخل') }} {{ t('Amount') }} {{ t('Currency') }} {{ t('المختارة') }} - {{ t('سيتم') }} {{ t('will Transfer') }} لـ{{ tenant_currency_name_ar or 'درهم إماراتي' }} {{ t('تلقائياً') }}"></i>
+              <i class="fas fa-hand-holding-usd mr-1"></i>{{ t('paid_amount') }}
+              <i class="fas fa-info-circle text-info" title="{{ t('paid_amount_tooltip') }}"></i>
             </label>
             <div class="input-group">
               <input type="number" name="payment_amount" id="payment_amount" class="form-control" 
                      value="0" step="0.01" min="0"
-                     title="{{ t('Amount') }} {{ t('Paid') }} {{ t('Currency') }} {{ t('Payment_2') }} {{ t('المختارة') }}">
+                     title="{{ t('paid_amount_input_title') }}">
               <div class="input-group-append">
                 <span class="input-group-text" id="payment_currency_display">{{ tenant_default_currency or 'AED' }}</span>
               </div>
             </div>
             <small class="form-text text-success">
-              <i class="fas fa-calculator"></i> {{ t('سيتم') }} {{ t('Transfer') }} {{ t('Amount') }} لـ{{ tenant_currency_name_ar or 'درهم إماراتي' }} {{ t('تلقائياً') }} {{ t('حسب') }} {{ t('Price_2') }} {{ t('Exchange') }}
+              <i class="fas fa-calculator"></i> {{ t('auto_converted_to_base_currency') }}
             </small>
-            <small class="text-muted d-block mt-1">{{ t('اترك') }} {{ t('Zero_2') }} {{ t('for Payment') }} {{ t('Credit_3') }}</small>
+            <small class="text-muted d-block mt-1">{{ t('leave_zero_for_credit') }}</small>
           </div>
 
           <div class="form-group">
             <label for="sale_notes" class="font-weight-bold">
-              <i class="fas fa-sticky-note text-warning"></i> {{ t('Notes') }}
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="أي {{ t('Notes') }} أو {{ t('تعليمات') }} {{ t('Additional') }} عن هذه {{ t('Invoice_2') }}"></i>
+              <i class="fas fa-sticky-note text-warning"></i> {{ t('notes') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('notes_tooltip') }}"></i>
             </label>
-            <textarea name="notes" id="sale_notes" class="form-control" rows="2" placeholder="{{ t('Notes') }} {{ t('Additional') }} عن {{ t('Invoice_2') }}..." maxlength="500"></textarea>
+            <textarea name="notes" id="sale_notes" class="form-control" rows="2" placeholder="{{ t('notes_placeholder') }}" maxlength="500"></textarea>
             <small class="form-text text-muted">
-              <i class="fas fa-lightbulb"></i> {{ t('يمكنك') }} {{ t('كتابة') }} أي {{ t('Notes') }} أو {{ t('تعليمات') }} {{ t('Specific') }}
+              <i class="fas fa-lightbulb"></i> {{ t('notes_helper') }}
             </small>
           </div>
 
           <button type="submit" class="btn btn-primary btn-block btn-lg">
-            <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Invoice_2') }}
+            <i class="fas fa-save mr-2"></i>{{ t('save_invoice') }}
           </button>
         </div>
       </div>
@@ -272,7 +288,7 @@
     <div class="modal-content">
       <div class="modal-header bg-warning">
         <h5 class="modal-title" id="serialNumberModalLabel">
-          <i class="fas fa-fingerprint mr-2"></i>{{ t('إدخال') }} {{ t('الأرقام') }} {{ t('Serial') }}
+          <i class="fas fa-fingerprint mr-2"></i>{{ t('enter_serial_numbers') }}
         </h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
@@ -280,22 +296,22 @@
       </div>
       <div class="modal-body">
         <p class="text-muted">
-          هذا {{ t('Product') }} {{ t('يتطلب') }} {{ t('رقم') }} {{ t('Serial') }} {{ t('فريد') }} {{ t('لكل') }} {{ t('قطعة') }}.
+          {{ t('serial_product_requires_unique_numbers') }}
           <br>
-          <strong>{{ t('Product') }}:</strong> <span id="serial_product_name" class="font-weight-bold"></span>
+          <strong>{{ t('product') }}:</strong> <span id="serial_product_name" class="font-weight-bold"></span>
           <br>
-          <strong>{{ t('Quantity') }} {{ t('المطلوبة') }}:</strong> <span id="serial_quantity_needed" class="badge badge-info">0</span>
+          <strong>{{ t('quantity_required') }}:</strong> <span id="serial_quantity_needed" class="badge badge-info">0</span>
         </p>
         
         <div class="form-group">
-          <label for="serial_input">{{ t('امسح') }} {{ t('الرقم') }} {{ t('Serial_2') }} (أو {{ t('أدخله') }} {{ t('Manually') }}):</label>
+          <label for="serial_input">{{ t('scan_or_enter_serial') }}:</label>
           <div class="input-group mb-3">
             <input type="text" id="serial_input" class="form-control" placeholder="Scan or type serial..." autofocus>
             <div class="input-group-append">
               <button class="btn btn-primary" type="button" id="add_serial_btn">
                 <i class="fas fa-plus"></i> {{ t('Add') }}
               </button>
-              <button class="btn btn-secondary" type="button" id="generate_serial_btn" title="{{ t('توليد') }} {{ t('رقم') }} {{ t('تلقائي') }}">
+              <button class="btn btn-secondary" type="button" id="generate_serial_btn" title="{{ t('generate_serial_auto') }}">
                 <i class="fas fa-magic"></i>
               </button>
             </div>
@@ -308,12 +324,12 @@
       </div>
       <div class="modal-footer justify-content-between">
         <button type="button" class="btn btn-outline-info ic-5" id="print_serials_btn">
-            <i class="fas fa-print mr-1"></i> {{ t('Print') }} {{ t('ملصقات') }}
+            <i class="fas fa-print mr-1"></i> {{ t('print_labels') }}
         </button>
         <div>
             <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ t('Cancel') }}</button>
             <button type="button" class="btn btn-success" id="save_serials_btn" disabled>
-              <i class="fas fa-check mr-2"></i>{{ t('Confirm') }} (<span id="serial_count">0</span>)
+              <i class="fas fa-check mr-2"></i>{{ t('confirm') }} (<span id="serial_count">0</span>)
             </button>
         </div>
       </div>
@@ -329,9 +345,9 @@
 {% block extra_js %}
 <script>
   window._API_SEARCH_URL = {% if current_user.has_permission('view_reports') %}'{{ url_for('api.api_search') }}'{% else %}null{% endif %};
-  window._PRESELECTED_CUSTOMER = {% if preselected_customer %}'id': preselected_customer.id, 'name': preselected_customer.name, 'phone': preselected_customer.phone or ''|tojson {% else %}null{% endif %};
-  window._GARAGE_NAME = '{{ current_user.garage_name if current_user.garage_name else 'Garage System' }}';
-  window._COMPANY_PHONE = '{{ current_user.phone if current_user.phone else '' }}';
+  window._PRESELECTED_CUSTOMER = {{ preselected_customer | tojson if preselected_customer else 'null' }};
+  window._COMPANY_INFO = {{ company_info | tojson }};
+  window._COMPANY_PHONE = {{ (current_user.phone or '') | e | tojson }};
 </script>
 <script src="{{ url_for('static', filename='js/sales-enhanced.js') }}"></script>
 <script src="{{ url_for('static', filename='js/ai-sales.js') }}"></script>
