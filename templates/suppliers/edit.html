@@ -1,19 +1,19 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Edit') }} {{ t('Supplier') }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('edit_supplier') }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-edit mr-2"></i>{{ t('Edit') }} {{ t('Data_2') }} {{ t('Supplier') }}: {{ supplier.name }}</h1>
+    <h1 class="mb-0"><i class="fas fa-edit mr-2"></i>{{ t('edit_supplier_data') }}: {{ supplier.name }}</h1>
   </div>
   <div>
     <a href="{{ url_for('suppliers.view', id=supplier.id) }}" class="btn btn-info">
       <i class="fas fa-eye mr-2"></i>{{ t('View') }}
     </a>
     <a href="{{ url_for('suppliers.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للقائمة') }}
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('back_to_list') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
+      <i class="fas fa-home mr-2"></i>{{ t('main_dashboard') }}
     </a>
   </div>
 </div>
@@ -69,7 +69,7 @@
 {% block content %}
 <div class="card card-warning">
   <div class="card-header">
-    <h3 class="card-title"><i class="fas fa-edit mr-2"></i>{{ t('Edit') }} {{ t('Data_2') }} {{ t('Supplier') }}</h3>
+    <h3 class="card-title"><i class="fas fa-edit mr-2"></i>{{ t('edit_supplier_data') }}</h3>
   </div>
   
   <form class="needs-validation supplier-edit-form" method="POST" action="{{ url_for('suppliers.edit', id=supplier.id) }}">
@@ -80,7 +80,7 @@
       <div class="row">
         <div class="col-md-12">
           <h5 class="text-warning mb-3">
-            <i class="fas fa-info-circle"></i> {{ t('Info_3') }} {{ t('الأساسية') }}
+            <i class="fas fa-info-circle"></i> {{ t('basic_info') }}
           </h5>
         </div>
       </div>
@@ -100,7 +100,7 @@
         <div class="col-md-4">
           <div class="form-group">
             <label for="supplier_name_en">
-              <i class="fas fa-font text-info"></i> {{ t('Name') }} {{ t('In English_2') }}
+              <i class="fas fa-font text-info"></i> {{ t('name_in_english') }}
             </label>
             <input type="text" name="name_en" class="form-control"
                    value="{{ supplier.name_en or '' }}" id="supplier_name_en" minlength="2" maxlength="100">
@@ -110,7 +110,7 @@
         <div class="col-md-4">
           <div class="form-group">
             <label for="supplier_company_name">
-              <i class="fas fa-building text-primary"></i> {{ t('Name_2') }} {{ t('Company') }}
+              <i class="fas fa-building text-primary"></i> {{ t('company_name') }}
             </label>
             <input type="text" name="company_name" class="form-control"
                    value="{{ supplier.company_name or '' }}" id="supplier_company_name" minlength="2" maxlength="100">
@@ -121,13 +121,13 @@
       <div class="row">
         <div class="col-md-3">
           <div class="form-group">
-            <label for="supplier_supplier_type">{{ t('نوع') }} {{ t('Supplier') }}</label>
+            <label for="supplier_supplier_type">{{ t('supplier_type') }}</label>
             <select name="supplier_type" class="form-control" id="supplier_supplier_type">
               <option value="" {% if not supplier.supplier_type %}selected{% endif %}>{{ t('None') }}</option>
-              <option value="parts" {% if supplier.supplier_type == 'parts' %}selected{% endif %}>{{ t('قطع') }} {{ t('غيار') }}</option>
-              <option value="equipment" {% if supplier.supplier_type == 'equipment' %}selected{% endif %}>{{ t('معدات') }}</option>
-              <option value="services" {% if supplier.supplier_type == 'services' %}selected{% endif %}>{{ t('خدمات') }}</option>
-              <option value="materials" {% if supplier.supplier_type == 'materials' %}selected{% endif %}>{{ t('مواد') }} {{ t('Gross') }}</option>
+              <option value="parts" {% if supplier.supplier_type == 'parts' %}selected{% endif %}>{{ t('spare_parts') }}</option>
+              <option value="equipment" {% if supplier.supplier_type == 'equipment' %}selected{% endif %}>{{ t('equipment') }}</option>
+              <option value="services" {% if supplier.supplier_type == 'services' %}selected{% endif %}>{{ t('services') }}</option>
+              <option value="materials" {% if supplier.supplier_type == 'materials' %}selected{% endif %}>{{ t('materials') }}</option>
               <option value="other" {% if supplier.supplier_type == 'other' %}selected{% endif %}>{{ t('Other') }}</option>
             </select>
           </div>
@@ -135,21 +135,21 @@
         
         <div class="col-md-3">
           <div class="form-group">
-            <label for="supplier_rating">{{ t('التقييم') }}</label>
+            <label for="supplier_rating">{{ t('rating') }}</label>
             <select name="rating" class="form-control" id="supplier_rating">
               <option value="" {% if supplier.rating is none %}selected{% endif %}>{{ t('None') }}</option>
-              <option value="1" {% if supplier.rating == 1 %}selected{% endif %}>⭐ {{ t('نجمة') }} {{ t('واحدة') }}</option>
-              <option value="2" {% if supplier.rating == 2 %}selected{% endif %}>⭐⭐ {{ t('نجمتان') }}</option>
-              <option value="3" {% if supplier.rating == 3 %}selected{% endif %}>⭐⭐⭐ 3 {{ t('نجوم') }}</option>
-              <option value="4" {% if supplier.rating == 4 %}selected{% endif %}>⭐⭐⭐⭐ 4 {{ t('نجوم') }}</option>
-              <option value="5" {% if supplier.rating == 5 %}selected{% endif %}>⭐⭐⭐⭐⭐ 5 {{ t('نجوم') }}</option>
+              <option value="1" {% if supplier.rating == 1 %}selected{% endif %}>⭐ {{ t('rating_1_star') }}</option>
+              <option value="2" {% if supplier.rating == 2 %}selected{% endif %}>⭐⭐ {{ t('rating_2_stars') }}</option>
+              <option value="3" {% if supplier.rating == 3 %}selected{% endif %}>⭐⭐⭐ {{ t('rating_3_stars') }}</option>
+              <option value="4" {% if supplier.rating == 4 %}selected{% endif %}>⭐⭐⭐⭐ {{ t('rating_4_stars') }}</option>
+              <option value="5" {% if supplier.rating == 5 %}selected{% endif %}>⭐⭐⭐⭐⭐ {{ t('rating_5_stars') }}</option>
             </select>
           </div>
         </div>
         
         <div class="col-md-3">
           <div class="form-group">
-            <label for="supplier_preferred_currency">{{ t('Currency') }} {{ t('المفضلة') }}</label>
+            <label for="supplier_preferred_currency">{{ t('preferred_currency') }}</label>
             <select name="preferred_currency" class="form-control" id="supplier_preferred_currency">
               <option value="AED" {% if supplier.preferred_currency == 'AED' %}selected{% endif %}>AED - {{ t('Dirham') }}</option>
               <option value="USD" {% if supplier.preferred_currency == 'USD' %}selected{% endif %}>USD - {{ t('Dollar') }}</option>
@@ -166,7 +166,7 @@
               <input type="checkbox" class="custom-control-input" id="is_verified" name="is_verified"
                      {% if supplier.is_verified %}checked{% endif %} aria-label="is verified">
               <label class="custom-control-label" for="is_verified">
-                <i class="fas fa-check-circle text-success"></i> {{ t('Supplier_2') }} {{ t('موثوق') }}
+                <i class="fas fa-check-circle text-success"></i> {{ t('verified_supplier') }}
               </label>
             </div>
           </div>
@@ -178,7 +178,7 @@
       <div class="row">
         <div class="col-md-12">
           <h5 class="text-warning mb-3">
-            <i class="fas fa-phone"></i> {{ t('Info_2') }} {{ t('الاتصال') }}
+            <i class="fas fa-phone"></i> {{ t('contact_info') }}
           </h5>
         </div>
       </div>
@@ -210,7 +210,7 @@
         
         <div class="col-md-3">
           <div class="form-group">
-            <label for="input_website">{{ t('Website') }} {{ t('Email_3') }}</label>
+            <label for="input_website">{{ t('website') }}</label>
             <input type="url" name="website" class="form-control"
                    value="{{ supplier.website or '' }}" id="input_website" aria-label="website">
           </div>
@@ -248,7 +248,7 @@
       <div class="row">
         <div class="col-md-12">
           <h5 class="text-warning mb-3">
-            <i class="fas fa-file-contract"></i> {{ t('Info_3') }} {{ t('القانونية') }} {{ t('والمالية') }}
+            <i class="fas fa-file-contract"></i> {{ t('legal_and_financial_info') }}
           </h5>
         </div>
       </div>
@@ -256,7 +256,7 @@
       <div class="row">
         <div class="col-md-3">
           <div class="form-group">
-            <label for="input_tax_number">{{ t('الرقم') }} {{ t('الضريبي') }} (TRN)</label>
+            <label for="input_tax_number">{{ t('tax_number') }} (TRN)</label>
             <input type="text" name="tax_number" class="form-control"
                    value="{{ supplier.tax_number or '' }}" id="input_tax_number" aria-label="tax number" maxlength="20">
           </div>
@@ -264,7 +264,7 @@
         
         <div class="col-md-3">
           <div class="form-group">
-            <label for="input_commercial_registration">{{ t('Log_2') }} {{ t('التجاري') }}</label>
+            <label for="input_commercial_registration">{{ t('commercial_registration') }}</label>
             <input type="text" name="commercial_registration" class="form-control"
                    value="{{ supplier.commercial_registration or '' }}" id="input_commercial_registration" aria-label="commercial registration">
           </div>
@@ -272,7 +272,7 @@
         
         <div class="col-md-3">
           <div class="form-group">
-            <label for="input_credit_limit">{{ t('الحد') }} {{ t('الائتماني') }} ({{ tenant_default_currency or 'AED' }})</label>
+            <label for="input_credit_limit">{{ t('credit_limit') }} ({{ tenant_default_currency or 'AED' }})</label>
             <input type="number" name="credit_limit" class="form-control"
                    value="{{ supplier.credit_limit or 0 }}" step="0.01" min="0" id="input_credit_limit" aria-label="credit limit">
           </div>
@@ -280,7 +280,7 @@
         
         <div class="col-md-3">
           <div class="form-group">
-            <label for="input_payment_terms_days">{{ t('شروط') }} {{ t('Payment_2') }} ({{ t('Days') }})</label>
+            <label for="input_payment_terms_days">{{ t('payment_terms') }} ({{ t('Days') }})</label>
             <input type="number" name="payment_terms_days" class="form-control"
                    value="{{ supplier.payment_terms_days or 30 }}" min="0" id="input_payment_terms_days" aria-label="payment terms days">
           </div>
@@ -292,7 +292,7 @@
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
-            <label for="input_tags">{{ t('الوسوم') }} (Tags)</label>
+            <label for="input_tags">{{ t('tags') }} (Tags)</label>
             <input type="text" name="tags" class="form-control"
                    value="{{ supplier.tags or '' }}" id="input_tags" aria-label="tags">
           </div>
@@ -309,7 +309,7 @@
     
     <div class="card-footer">
       <button type="submit" class="btn btn-warning btn-lg">
-        <i class="fas fa-save mr-2"></i> {{ t('Save') }} {{ t('Changes') }}
+        <i class="fas fa-save mr-2"></i> {{ t('save_supplier') }}
       </button>
       <a href="{{ url_for('suppliers.view', id=supplier.id) }}" class="btn btn-secondary btn-lg">
         <i class="fas fa-times mr-2"></i> {{ t('Cancel') }}
@@ -325,7 +325,7 @@
 
 {% block extra_js %}
 <script>
-// {{ t('تفعيل') }} Tooltips
+// Initialize Tooltips
 $(() => {
   $('[data-toggle="tooltip"]').tooltip({
     placement: 'top',
@@ -338,23 +338,22 @@ $(document).on('click', '[data-action="delete-supplier"]', function() {
 });
 
 function deleteSupplier(id) {
-  if (confirm('هل أنت {{ t('متأكد') }} من {{ t('Delete') }} هذا {{ t('Supplier_3') }}')) {
+  if (confirm({{ t('confirm_delete_supplier') | tojson }})) {
     $.ajax({
-      url: `/suppliers/${id}/delete`,
+      url: '{{ url_for("suppliers.delete", id="__ID__") }}'.replace('__ID__', id),
       method: 'POST',
       headers: {
         'X-CSRFToken': $('input[name="csrf_token"]').val()
       },
       success: () => {
-        toastr.success('✅ تم {{ t('Delete') }} {{ t('Supplier') }} {{ t('بنجاح') }}');
+        toastr.success({{ t('supplier_deleted_success') | tojson }});
         window.location.href = '{{ url_for("suppliers.index") }}';
       },
       error: () => {
-        toastr.error('❌ {{ t('Error') }} في {{ t('Delete') }} {{ t('Supplier') }}');
+        toastr.error({{ t('supplier_delete_error') | tojson }});
       }
     });
   }
 }
 </script>
 {% endblock %}
-

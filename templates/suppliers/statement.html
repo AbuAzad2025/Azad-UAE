@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('كشف') }} {{ t('Account') }} {{ t('Supplier') }} {{ supplier.name }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('supplier_statement') }} {{ supplier.name }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -52,7 +52,7 @@ table.statement-table thead th {
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-file-invoice mr-2"></i>{{ t('كشف') }} {{ t('Account') }} {{ t('Supplier') }}</h1>
+    <h1 class="mb-0"><i class="fas fa-file-invoice mr-2"></i>{{ t('supplier_statement') }}</h1>
     <p class="text-muted mb-0">{{ supplier.name }}</p>
   </div>
   <div>
@@ -60,10 +60,10 @@ table.statement-table thead th {
       <i class="fas fa-print mr-2"></i>{{ t('Print') }}
     </button>
     <a href="{{ url_for('suppliers.view', id=supplier.id) }}" class="btn btn-info">
-      <i class="fas fa-truck mr-2"></i>{{ t('Details') }} {{ t('Supplier') }}
+      <i class="fas fa-truck mr-2"></i>{{ t('supplier_details') }}
     </a>
     <a href="{{ url_for('suppliers.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للقائمة') }}
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('back_to_list') }}
     </a>
   </div>
 </div>
@@ -75,27 +75,27 @@ table.statement-table thead th {
     <div class="row">
       <div class="col-md-6">
         <h2 class="mb-3">
-          <i class="fas fa-truck mr-2"></i>{{ supplier.name }}
+          <i class="fas fa-truck mr-2"></i>{{ supplier.name | e }}
           {% if supplier.is_verified %}
-            <span class="badge badge-success">✓ {{ t('موثوق') }}</span>
+            <span class="badge badge-success">✓ {{ t('verified') }}</span>
           {% endif %}
         </h2>
         {% if supplier.company_name %}
-          <p class="mb-1"><strong>{{ supplier.company_name }}</strong></p>
+          <p class="mb-1"><strong>{{ supplier.company_name | e }}</strong></p>
         {% endif %}
         {% if supplier.phone %}
-          <p class="mb-1"><i class="fas fa-phone mr-2"></i>{{ supplier.phone }}</p>
+          <p class="mb-1"><i class="fas fa-phone mr-2"></i>{{ supplier.phone | e }}</p>
         {% endif %}
         {% if supplier.email %}
-          <p class="mb-1"><i class="fas fa-envelope mr-2"></i>{{ supplier.email }}</p>
+          <p class="mb-1"><i class="fas fa-envelope mr-2"></i>{{ supplier.email | e }}</p>
         {% endif %}
       </div>
       <div class="col-md-6 text-left">
-        <h4 class="mb-3">{{ t('كشف') }} {{ t('Account') }}</h4>
+        <h4 class="mb-3">{{ t('supplier_statement') }}</h4>
         <p class="mb-1"><i class="fas fa-calendar mr-2"></i>{{ t('Date') }}: {{ now().strftime('%Y-%m-%d') }}</p>
-        <p class="mb-1"><i class="fas fa-hashtag mr-2"></i>{{ t('رقم') }} {{ t('Supplier') }}: #{{ supplier.id }}</p>
+        <p class="mb-1"><i class="fas fa-hashtag mr-2"></i>{{ t('supplier_number') }}: #{{ supplier.id }}</p>
         {% if supplier.tax_number %}
-          <p class="mb-1"><i class="fas fa-receipt mr-2"></i>{{ t('الرقم') }} {{ t('الضريبي') }}: {{ supplier.tax_number }}</p>
+          <p class="mb-1"><i class="fas fa-receipt mr-2"></i>{{ t('tax_number') }}: {{ supplier.tax_number | e }}</p>
         {% endif %}
       </div>
     </div>
@@ -106,15 +106,15 @@ table.statement-table thead th {
     <div class="statement-info">
       <div class="row text-center">
         <div class="col-md-4">
-          <h6 class="text-muted">{{ t('Total_2') }} {{ t('Purchases') }}</h6>
+          <h6 class="text-muted">{{ t('total_purchases') }}</h6>
           <h3 class="text-info">{{ transactions|selectattr('type', 'equalto', 'purchase')|list|length }}</h3>
         </div>
         <div class="col-md-4">
-          <h6 class="text-muted">{{ t('Amount') }} {{ t('Total_3') }}</h6>
+          <h6 class="text-muted">{{ t('total_amount') }}</h6>
           <h3 class="text-success">{{ format_currency(supplier.total_purchases_base or 0) }}</h3>
         </div>
         <div class="col-md-4">
-          <h6 class="text-muted">{{ t('Balance') }} {{ t('المستحق') }}</h6>
+          <h6 class="text-muted">{{ t('balance_due') }}</h6>
           <h3 class="{% if final_balance > 0 %}text-danger{% else %}text-success{% endif %}">
             {{ format_currency(final_balance) }}
           </h3>
@@ -126,16 +126,16 @@ table.statement-table thead th {
     <div class="mb-3 no-print">
       <form class="form-inline" method="get">
         <div class="form-group mx-1 mb-2">
-          <label for="date_from" class="sr-only">من {{ t('History') }}</label>
-          <input type="date" id="date_from" name="date_from" class="form-control form-control-sm" value="{{ filters.date_from }}" aria-label="من {{ t('History') }}">
+          <label for="date_from" class="sr-only">{{ t('date_from') }}</label>
+          <input type="date" id="date_from" name="date_from" class="form-control form-control-sm" value="{{ filters.date_from }}" aria-label="{{ t('date_from') }}">
         </div>
         <div class="form-group mx-1 mb-2">
-          <label for="date_to" class="sr-only">إلى {{ t('History') }}</label>
-          <input type="date" id="date_to" name="date_to" class="form-control form-control-sm" value="{{ filters.date_to }}" aria-label="إلى {{ t('History') }}">
+          <label for="date_to" class="sr-only">{{ t('date_to') }}</label>
+          <input type="date" id="date_to" name="date_to" class="form-control form-control-sm" value="{{ filters.date_to }}" aria-label="{{ t('date_to') }}">
         </div>
         <div class="form-group mx-1 mb-2">
           <button type="submit" class="btn btn-primary btn-sm">{{ t('Apply') }}</button>
-          <a href="{{ url_for('suppliers.statement', id=supplier.id) }}" class="btn btn-light btn-sm ml-1">{{ t('إعادة') }} {{ t('تعيين') }}</a>
+          <a href="{{ url_for('suppliers.statement', id=supplier.id) }}" class="btn btn-light btn-sm ml-1">{{ t('reset') }}</a>
         </div>
       </form>
     </div>
@@ -146,11 +146,11 @@ table.statement-table thead th {
         <thead>
           <tr>
             <th>{{ t('Date') }}</th>
-            <th>{{ t('Description_3') }}</th>
-            <th>{{ t('المرجع') }}</th>
-            <th class="text-danger">{{ t('مدين') }} ({{ t('Purchases_2') }})</th>
-            <th class="text-success">{{ t('دائن') }} ({{ t('مدفوعات') }})</th>
-            <th>{{ t('Balance') }} {{ t('الجاري') }}</th>
+            <th>{{ t('description') }}</th>
+            <th>{{ t('reference') }}</th>
+            <th class="text-danger">{{ t('debit_purchases') }}</th>
+            <th class="text-success">{{ t('credit_payments') }}</th>
+            <th>{{ t('running_balance') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -158,7 +158,7 @@ table.statement-table thead th {
           <tr class="{% if t.type == 'opening' %}table-info{% elif t.type == 'purchase' %}table-light{% endif %}">
             <td>{{ t.date.strftime('%Y-%m-%d') if t.date is string else (t.date.strftime('%Y-%m-%d') if t.date else '-') }}</td>
             <td>
-              <strong>{{ t.description }}</strong>
+              <strong>{{ t.description | e }}</strong>
               {% if t.type == 'payment' and t.payment_method %}
               <div class="transaction-meta">
                 <span>{{ t.payment_method }}</span>
@@ -166,7 +166,7 @@ table.statement-table thead th {
                 <span class="text-warning">{{ t('Pending') }}</span>
                 {% endif %}
                 {% if t.notes %}
-                <span>{{ t.notes }}</span>
+                <span>{{ t.notes | e }}</span>
                 {% endif %}
               </div>
               {% endif %}
@@ -181,11 +181,11 @@ table.statement-table thead th {
           </tr>
           {% else %}
           <tr>
-            <td colspan="6" class="text-center text-muted py-4">لا {{ t('توجد') }} {{ t('معاملات') }} {{ t('للعرض') }}.</td>
+            <td colspan="6" class="text-center text-muted py-4">{{ t('no_transactions_to_display') }}</td>
           </tr>
           {% endfor %}
           <tr class="final-balance-row">
-            <td colspan="5" class="text-center">{{ t('Balance') }} {{ t('النهائي') }}</td>
+            <td colspan="5" class="text-center">{{ t('final_balance') }}</td>
             <td class="text-right amount-cell">{{ format_currency(final_balance) }}</td>
           </tr>
         </tbody>
@@ -196,17 +196,17 @@ table.statement-table thead th {
     {% set purchases_list = transactions|selectattr('type', 'equalto', 'purchase')|list %}
     {% if purchases_list %}
     <div class="mt-4">
-      <h5 class="mb-3"><i class="fas fa-shopping-cart mr-2"></i>{{ t('Details') }} {{ t('Purchases') }}</h5>
+      <h5 class="mb-3"><i class="fas fa-shopping-cart mr-2"></i>{{ t('purchases_details') }}</h5>
       <div class="table-responsive">
         <table class="table table-bordered table-striped">
           <thead class="ic-1">
             <tr>
               <th class="text-center">#</th>
-              <th>{{ t('رقم') }} {{ t('Purchase_2') }}</th>
+              <th>{{ t('purchase_number') }}</th>
               <th>{{ t('Date') }}</th>
               <th>{{ t('Currency') }}</th>
-              <th>{{ t('Price_2') }} {{ t('Exchange') }}</th>
-              <th class="text-center">{{ t('Count') }} {{ t('Products') }}</th>
+              <th>{{ t('exchange_rate') }}</th>
+              <th class="text-center">{{ t('product_count') }}</th>
               <th class="text-left">{{ t('Amount') }}</th>
               <th class="text-left">{{ t('Amount') }} (AED)</th>
               <th class="text-center">{{ t('Status') }}</th>
@@ -229,13 +229,13 @@ table.statement-table thead th {
               <td class="text-center">-</td>
               <td class="text-left">{{ format_currency(p.amount) }}</td>
               <td class="text-left text-success"><strong>{{ format_currency(p.base_amount) }}</strong></td>
-              <td class="text-center"><span class="badge badge-success">{{ t('Confirmed_2') }}</span></td>
+              <td class="text-center"><span class="badge badge-success">{{ t('confirmed') }}</span></td>
             </tr>
             {% endfor %}
           </tbody>
           <tfoot class="ic-2">
             <tr>
-              <td colspan="7" class="text-left">{{ t('Total_3') }}:</td>
+              <td colspan="7" class="text-left">{{ t('total') }}:</td>
               <td class="text-left text-success"><h5 class="mb-0">{{ format_currency(supplier.total_purchases_base or 0) }}</h5></td>
               <td></td>
             </tr>
@@ -248,15 +248,15 @@ table.statement-table thead th {
     {% set payments_list = transactions|selectattr('type', 'equalto', 'payment')|list %}
     {% if payments_list %}
     <div class="mt-4">
-      <h5 class="mb-3"><i class="fas fa-money-check-alt mr-2"></i>{{ t('Details') }} {{ t('الدفعات') }}</h5>
+      <h5 class="mb-3"><i class="fas fa-money-check-alt mr-2"></i>{{ t('payments_details') }}</h5>
       <div class="table-responsive">
         <table class="table table-bordered table-striped">
           <thead class="ic-3">
             <tr>
               <th class="text-center">#</th>
-              <th>{{ t('رقم') }} {{ t('Voucher') }}</th>
+              <th>{{ t('voucher_number') }}</th>
               <th>{{ t('Date') }}</th>
-              <th>{{ t('الطريقة') }}</th>
+              <th>{{ t('method') }}</th>
               <th>{{ t('Status') }}</th>
               <th>{{ t('History') }} {{ t('Due') }}/{{ t('Exchange') }}</th>
               <th class="text-left">{{ t('Amount') }} (AED)</th>
@@ -266,14 +266,16 @@ table.statement-table thead th {
           <tbody>
             {% for p in payments_list %}
             {% set is_cheque = (p.payment_method == 'cheque') %}
-            {% set status_badge = ('badge-success' if p.payment_confirmed else 'badge-warning') %}
-            {% set status_text = ('مؤكدة ✅' if p.payment_confirmed else 'معلقة ⏳') %}
             <tr>
               <td class="text-center">{{ loop.index }}</td>
               <td><strong>{{ p.payment_number }}</strong></td>
               <td>{{ p.payment_date.strftime('%Y-%m-%d') if p.payment_date else '-' }}</td>
               <td>{{ p.payment_method }}</td>
-              <td><span class="badge {{ status_badge }}">{{ status_text }}</span></td>
+              <td>{% if p.payment_confirmed %}
+                <span class="badge badge-success">{{ t('confirmed') }} <i class="fas fa-check"></i></span>
+              {% else %}
+                <span class="badge badge-warning">{{ t('pending') }} <i class="fas fa-clock"></i></span>
+              {% endif %}</td>
               <td>
                 {% if is_cheque and p.cheque_due_date %}
                   {{ p.cheque_due_date.strftime('%Y-%m-%d') }}
@@ -286,7 +288,7 @@ table.statement-table thead th {
           </tbody>
           <tfoot class="ic-2">
             <tr>
-              <td colspan="6" class="text-left">{{ t('Total_2') }} {{ t('الدفعات') }}:</td>
+              <td colspan="6" class="text-left">{{ t('total_payments') }}:</td>
               <td class="text-left text-primary"><h5 class="mb-0">{{ format_currency(payments_list|sum(attribute='base_amount') or 0) }}</h5></td>
               <td></td>
             </tr>
@@ -301,13 +303,13 @@ table.statement-table thead th {
         <div class="col-md-6">
           <small class="text-muted">
             <i class="fas fa-info-circle mr-1"></i>
-            تم {{ t('Create') }} هذا {{ t('الكشف') }} {{ t('بواسطة') }} {{ t('System_2') }} {{ t('Management') }} {{ t('Purchases') }}
+            {{ t('statement_generated_by') }}
           </small>
         </div>
         <div class="col-md-6 text-left">
           <small class="text-muted">
             <i class="fas fa-calendar mr-1"></i>
-            {{ t('History') }} {{ t('Printing') }}: {{ now().strftime('%Y-%m-%d %H:%M') }}
+            {{ t('print_date') }}: {{ now().strftime('%Y-%m-%d %H:%M') }}
           </small>
         </div>
       </div>
@@ -317,10 +319,10 @@ table.statement-table thead th {
 
 <div class="text-center mt-3 no-print">
   <button data-action="window-print" class="btn btn-lg btn-primary">
-    <i class="fas fa-print mr-2"></i>{{ t('Print') }} {{ t('كشف') }} {{ t('Account') }}
+    <i class="fas fa-print mr-2"></i>{{ t('print_statement') }}
   </button>
   <a href="{{ url_for('suppliers.view', id=supplier.id) }}" class="btn btn-lg btn-secondary">
-    <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للمورد') }}
+    <i class="fas fa-arrow-right mr-2"></i>{{ t('back_to_supplier') }}
   </a>
 </div>
 {% endblock %}

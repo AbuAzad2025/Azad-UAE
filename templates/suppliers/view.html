@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Details') }} {{ t('Supplier') }} {{ supplier.name }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('supplier_details') }} {{ supplier.name }}{% endblock %}
 
 {% block page_title %}
 
@@ -16,7 +16,7 @@
 
         <span class="badge badge-success ml-2">
 
-          <i class="fas fa-check-circle"></i> {{ t('موثوق') }}
+          <i class="fas fa-check-circle"></i> {{ t('verified') }}
 
         </span>
 
@@ -44,13 +44,13 @@
 
     <a href="{{ url_for('suppliers.statement', id=supplier.id) }}" class="btn btn-success">
 
-      <i class="fas fa-file-invoice mr-1"></i>{{ t('كشف') }} {{ t('Account') }}
+      <i class="fas fa-file-invoice mr-1"></i>{{ t('supplier_statement') }}
 
     </a>
 
     <button type="button" class="btn btn-danger" 
 
-            data-delete-item="{{supplier.id}}" data-item-type="suppliers" data-item-name="{{supplier.name|tojson}}" data-redirect-url="{{url_for('suppliers.index')|tojson}}">
+            data-delete-item="{{supplier.id}}" data-item-type="suppliers" data-item-name="{{ supplier.name | e }}" data-redirect-url="{{url_for('suppliers.index')|tojson}}">
 
       <i class="fas fa-trash mr-1"></i>{{ t('Delete') }}
 
@@ -58,13 +58,13 @@
 
     <a href="{{ url_for('suppliers.index') }}" class="btn btn-secondary">
 
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للقائمة') }}
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('back_to_list') }}
 
     </a>
 
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
 
-      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
+      <i class="fas fa-home mr-2"></i>{{ t('main_dashboard') }}
 
     </a>
 
@@ -90,7 +90,7 @@
 
         <h3>{{ stats.total_purchases }}</h3>
 
-        <p>{{ t('Total_2') }} {{ t('Purchases') }}</p>
+        <p>{{ t('total_purchases') }}</p>
 
       </div>
 
@@ -112,9 +112,9 @@
 
       <div class="inner">
 
-        <h3>{{ '{:,.0f}'.format(stats.total_amount) }}</h3>
+        <h3>{{ format_currency(stats.total_amount) }}</h3>
 
-        <p>{{ t('Total_2') }} {{ t('Amount') }} ({{ tenant_currency_symbol }})</p>
+        <p>{{ t('total_amount') }} ({{ tenant_currency_symbol }})</p>
 
       </div>
 
@@ -138,7 +138,7 @@
 
         <h3>{{ format_currency(stats.balance) }}</h3>
 
-        <p>{{ t('Balance') }} {{ t('المستحق') }} ({{ tenant_currency_symbol }})</p>
+        <p>{{ t('balance_due') }} ({{ tenant_currency_symbol }})</p>
 
       </div>
 
@@ -160,9 +160,9 @@
 
       <div class="inner">
 
-        <h3>{{ '{:,.0f}'.format(stats.avg_purchase) }}</h3>
+        <h3>{{ format_currency(stats.avg_purchase) }}</h3>
 
-        <p>{{ t('متوسط') }} {{ t('Purchase_2') }} ({{ tenant_currency_symbol }})</p>
+        <p>{{ t('average_purchase') }} ({{ tenant_currency_symbol }})</p>
 
       </div>
 
@@ -190,7 +190,7 @@
 
       <div class="card-header">
 
-        <h3 class="card-title"><i class="fas fa-info-circle mr-2"></i>{{ t('Info_2') }} {{ t('Supplier') }}</h3>
+        <h3 class="card-title"><i class="fas fa-info-circle mr-2"></i>{{ t('supplier_info') }}</h3>
 
       </div>
 
@@ -202,13 +202,13 @@
 
             <th style="width: 40%"><i class="fas fa-building text-muted mr-2"></i>{{ t('Company') }}:</th>
 
-            <td>{{ supplier.company_name or 'غير محدد' }}</td>
+            <td>{{ supplier.company_name | e or t('not_specified') }}</td>
 
           </tr>
 
           <tr>
 
-            <th><i class="fas fa-tag text-muted mr-2"></i>{{ t('النوع') }}:</th>
+            <th><i class="fas fa-tag text-muted mr-2"></i>{{ t('type') }}:</th>
 
             <td><span class="badge badge-info">{{ supplier.get_type_display() }}</span></td>
 
@@ -216,7 +216,7 @@
 
           <tr>
 
-            <th><i class="fas fa-star text-warning mr-2"></i>{{ t('التقييم') }}:</th>
+            <th><i class="fas fa-star text-warning mr-2"></i>{{ t('rating') }}:</th>
 
             <td>{{ supplier.get_rating_stars() }}</td>
 
@@ -226,7 +226,7 @@
 
             <th><i class="fas fa-phone text-muted mr-2"></i>{{ t('Phone') }} 1:</th>
 
-            <td>{{ supplier.phone or 'لا يوجد' }}</td>
+            <td>{{ supplier.phone | e or t('not_available') }}</td>
 
           </tr>
 
@@ -234,15 +234,15 @@
 
             <th><i class="fas fa-phone text-muted mr-2"></i>{{ t('Phone') }} 2:</th>
 
-            <td>{{ supplier.phone2 or 'لا يوجد' }}</td>
+            <td>{{ supplier.phone2 | e or t('not_available') }}</td>
 
           </tr>
 
           <tr>
 
-            <th><i class="fas fa-envelope text-muted mr-2"></i>{{ t('Email_2') }}:</th>
+            <th><i class="fas fa-envelope text-muted mr-2"></i>{{ t('email') }}:</th>
 
-            <td>{{ supplier.email or 'لا يوجد' }}</td>
+            <td>{{ supplier.email | e or t('not_available') }}</td>
 
           </tr>
 
@@ -258,7 +258,7 @@
 
               {% else %}
 
-                لا {{ t('يوجد') }}
+                {{ t('not_available') }}
 
               {% endif %}
 
@@ -268,11 +268,11 @@
 
           <tr>
 
-            <th><i class="fas fa-map-marker-alt text-muted mr-2"></i>{{ t('Website') }}:</th>
+            <th><i class="fas fa-map-marker-alt text-muted mr-2"></i>{{ t('location') }}:</th>
 
             <td>
 
-              {{ supplier.city or '' }}{% if supplier.city and supplier.country %}, {% endif %}{{ supplier.country or 'غير محدد' }}
+              {{ supplier.city or '' }}{% if supplier.city and supplier.country %}, {% endif %}{{ supplier.country | e or t('not_specified') }}
 
             </td>
 
@@ -282,7 +282,7 @@
 
             <th><i class="fas fa-map text-muted mr-2"></i>{{ t('Address') }}:</th>
 
-            <td>{{ supplier.address or 'غير محدد' }}</td>
+            <td>{{ supplier.address | e or t('not_specified') }}</td>
 
           </tr>
 
@@ -304,7 +304,7 @@
 
       <div class="card-header">
 
-        <h3 class="card-title"><i class="fas fa-file-contract mr-2"></i>{{ t('Info_2') }} {{ t('قانونية') }} {{ t('ومالية') }}</h3>
+        <h3 class="card-title"><i class="fas fa-file-contract mr-2"></i>{{ t('legal_and_financial_info') }}</h3>
 
       </div>
 
@@ -316,21 +316,21 @@
 
             <th style="width: 40%"><i class="fas fa-receipt text-muted mr-2"></i>{{ t('Tax Number') }}:</th>
 
-            <td>{{ supplier.tax_number or 'غير محدد' }}</td>
+            <td>{{ supplier.tax_number | e or t('not_specified') }}</td>
 
           </tr>
 
           <tr>
 
-            <th><i class="fas fa-file-alt text-muted mr-2"></i>{{ t('Log_2') }} {{ t('التجاري') }}:</th>
+            <th><i class="fas fa-file-alt text-muted mr-2"></i>{{ t('commercial_registration') }}:</th>
 
-            <td>{{ supplier.commercial_registration or 'غير محدد' }}</td>
+            <td>{{ supplier.commercial_registration | e or t('not_specified') }}</td>
 
           </tr>
 
           <tr>
 
-            <th><i class="fas fa-coins text-muted mr-2"></i>{{ t('الحد') }} {{ t('الائتماني') }}:</th>
+            <th><i class="fas fa-coins text-muted mr-2"></i>{{ t('credit_limit') }}:</th>
 
             <td><strong>{{ format_currency(supplier.credit_limit or 0) }}</strong></td>
 
@@ -338,15 +338,15 @@
 
           <tr>
 
-            <th><i class="fas fa-calendar text-muted mr-2"></i>{{ t('شروط') }} {{ t('Payment_2') }}:</th>
+            <th><i class="fas fa-calendar text-muted mr-2"></i>{{ t('payment_terms') }}:</th>
 
-            <td>{{ supplier.payment_terms_days or 30 }} {{ t('يوم') }}</td>
+            <td>{{ supplier.payment_terms_days or 30 }} {{ t('days') }}</td>
 
           </tr>
 
           <tr>
 
-            <th><i class="fas fa-dollar-sign text-muted mr-2"></i>{{ t('Currency') }} {{ t('المفضلة') }}:</th>
+            <th><i class="fas fa-dollar-sign text-muted mr-2"></i>{{ t('preferred_currency') }}:</th>
 
             <td><span class="badge badge-primary">{{ supplier.preferred_currency }}</span></td>
 
@@ -354,7 +354,7 @@
 
           <tr>
 
-            <th><i class="fas fa-shopping-cart text-muted mr-2"></i>{{ t('Total_2') }} {{ t('Purchases') }}:</th>
+            <th><i class="fas fa-shopping-cart text-muted mr-2"></i>{{ t('total_purchases') }}:</th>
 
             <td class="text-success"><strong>{{ format_currency(supplier.total_purchases_base or 0) }}</strong></td>
 
@@ -370,7 +370,7 @@
 
           <tr>
 
-            <th><i class="fas fa-calendar-check text-muted mr-2"></i>{{ t('Last') }} {{ t('Purchase') }}:</th>
+            <th><i class="fas fa-calendar-check text-muted mr-2"></i>{{ t('last_purchase') }}:</th>
 
             <td>
 
@@ -380,7 +380,7 @@
 
               {% else %}
 
-                لا {{ t('يوجد') }}
+                {{ t('not_available') }}
 
               {% endif %}
 
@@ -412,7 +412,7 @@
 
       <div class="card-header">
 
-        <h3 class="card-title"><i class="fas fa-sticky-note mr-2"></i>{{ t('Additional Information') }}</h3>
+        <h3 class="card-title"><i class="fas fa-sticky-note mr-2"></i>{{ t('additional_information') }}</h3>
 
       </div>
 
@@ -422,7 +422,7 @@
 
         <div class="mb-3">
 
-          <strong><i class="fas fa-tags mr-2"></i>{{ t('الوسوم') }}:</strong><br>
+          <strong><i class="fas fa-tags mr-2"></i>{{ t('tags') }}:</strong><br>
 
           {% for tag in supplier.tags.split(',') %}
 
@@ -442,7 +442,7 @@
 
           <strong><i class="fas fa-comment mr-2"></i>{{ t('Notes') }}:</strong><br>
 
-          <p class="text-muted mb-0">{{ supplier.notes }}</p>
+          <p class="text-muted mb-0">{{ supplier.notes | e }}</p>
 
         </div>
 
@@ -475,14 +475,10 @@
         <div class="card-tools">
 
           {% if current_user.has_permission('manage_purchases') %}
-          <a href="{{ url_for('purchases.create') }}?supplier_id={{ supplier.id }}"
-          {% endif %}
-
-             class="btn btn-primary">
-
-            <i class="fas fa-plus mr-1"></i>{{ t('Purchase') }} {{ t('New') }}
-
+          <a href="{{ url_for('purchases.create') }}?supplier_id={{ supplier.id }}" class="btn btn-primary">
+            <i class="fas fa-plus mr-1"></i>{{ t('new_purchase') }}
           </a>
+          {% endif %}
 
         </div>
 
@@ -500,7 +496,7 @@
 
               <tr>
 
-                <th>{{ t('رقم') }} {{ t('Purchase_2') }}</th>
+                <th>{{ t('purchase_number') }}</th>
 
                 <th>{{ t('Date') }}</th>
 
@@ -512,7 +508,7 @@
 
                 <th>{{ t('Status') }}</th>
 
-                <th>{{ t('الإجراءات') }}</th>
+                <th>{{ t('actions') }}</th>
 
               </tr>
 
@@ -538,7 +534,7 @@
 
                   <span class="badge badge-success">
 
-                    <i class="fas fa-check"></i> {{ t('Confirmed_2') }}
+                    <i class="fas fa-check"></i> {{ t('confirmed') }}
 
                   </span>
 
@@ -547,14 +543,10 @@
                 <td>
 
                   {% if current_user.has_permission('manage_purchases') %}
-                  <a href="{{ url_for('purchases.view', id=purchase.id) }}"
-                  {% endif %}
-
-                     class="btn btn-info" title="{{ t('View') }}">
-
+                  <a href="{{ url_for('purchases.view', id=purchase.id) }}" class="btn btn-info" title="{{ t('view') }}">
                     <i class="fas fa-eye"></i>
-
                   </a>
+                  {% endif %}
 
                 </td>
 
@@ -574,17 +566,13 @@
 
           <i class="fas fa-inbox fa-3x mb-3"></i>
 
-          <p>لا {{ t('توجد') }} {{ t('Purchases_2') }} من هذا {{ t('Supplier') }} بعد</p>
+          <p>{{ t('no_purchases_from_supplier') }}</p>
 
           {% if current_user.has_permission('manage_purchases') %}
-          <a href="{{ url_for('purchases.create') }}?supplier_id={{ supplier.id }}"
-          {% endif %}
-
-             class="btn btn-primary">
-
-            <i class="fas fa-plus mr-2"></i>{{ t('Add') }} {{ t('Purchase') }} {{ t('New') }}
-
+          <a href="{{ url_for('purchases.create') }}?supplier_id={{ supplier.id }}" class="btn btn-primary">
+            <i class="fas fa-plus mr-2"></i>{{ t('new_purchase') }}
           </a>
+          {% endif %}
 
         </div>
 
