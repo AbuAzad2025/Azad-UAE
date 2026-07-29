@@ -29,13 +29,13 @@
     .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
     .info-box {
       background: #f8f9fa; padding: 8px 12px; border-radius: 6px;
-      border-right: 3px solid {{ settings.accent_color if settings else '#34495e' }};
+      border-inline-start: 3px solid {{ settings.accent_color if settings else '#34495e' }};
     }
     .info-box h3 { color: {{ settings.header_color if settings else '#2c3e50' }}; margin-bottom: 6px; font-size: 9px; }
     .info-box p { margin: 3px 0; color: #555; font-size: 8px; }
     thead { background: linear-gradient(135deg, {{ settings.header_color if settings else '#2c3e50' }} 0%, {{ settings.accent_color if settings else '#34495e' }} 100%); }
     .total-section {
-      margin-top: 10px; text-align: left; background: #f8f9fa;
+      margin-top: 10px; text-align: {{ 'right' if is_rtl else 'left' }}; background: #f8f9fa;
       padding: 10px 15px; border-radius: 6px;
     }
     .total-row.final { border-top: 2px solid {{ settings.header_color if settings else '#2c3e50' }}; color: {{ settings.header_color if settings else '#2c3e50' }}; }
@@ -54,7 +54,7 @@
       <div class="company-info">
         <div>{{ settings.address_ar or tenant_address or '' }}</div>
         <div>📞 {{ settings.phone_1 or tenant_phone or '' }} {% if settings.email %} | 📧 {{ settings.email }}{% endif %}</div>
-        {% if settings and settings.tax_number %}<div>{{ t('الرقم') }} {{ t('الضريبي') }}: {{ settings.tax_number }}</div>{% endif %}
+        {% if settings and settings.tax_number %}<div>{{ t('Tax Number') }}: {{ settings.tax_number }}</div>{% endif %}
         {% if purchase.branch %}<div>🏢 {{ t('Branch') }}: {{ purchase.branch.name }}{% if purchase.branch.code %} ({{ purchase.branch.code }}){% endif %}</div>{% endif %}
       </div>
     </div>
@@ -62,7 +62,7 @@
     <div class="doc-title">
       <h2>🧾 {{ t('Invoice') }} {{ t('Purchase') }}</h2>
       <div class="invoice-number" style="font-size:9px;color:#666;margin-top:4px;">
-        {{ t('رقم') }} {{ t('Invoice_2') }}: <strong>{{ purchase.purchase_number }}</strong> |
+        {{ t('Invoice Number') }}: <strong>{{ purchase.purchase_number }}</strong> |
         {{ t('Date') }}: <strong>{{ purchase.purchase_date.strftime('%Y-%m-%d') if purchase.purchase_date else '' }}</strong>
       </div>
     </div>
@@ -84,7 +84,7 @@
 
       <div class="table-responsive"><table>
         <thead>
-          <tr><th>#</th><th>{{ t('Product') }}</th><th>{{ t('Quantity') }}</th><th>{{ t('Price_2') }} {{ t('الوحدة') }}</th><th>{{ t('Total_3') }}</th></tr>
+          <tr><th>#</th><th>{{ t('Product') }}</th><th>{{ t('Quantity') }}</th><th>{{ t('Unit Price') }}</th><th>{{ t('Total_3') }}</th></tr>
         </thead>
         <tbody>
           {% for line in purchase.lines %}
@@ -107,11 +107,11 @@
         {% if purchase.discount_amount and purchase.discount_amount > 0 %}
         <div class="total-row"><span>{{ t('Discount') }}:</span> <strong>-{{ format_currency(purchase.discount_amount) }}</strong></div>
         {% endif %}
-        <div class="total-row final"><span>{{ t('Total_3') }} {{ t('النهائي') }}:</span> <strong>{{ format_currency(purchase.total_amount) }}</strong></div>
+        <div class="total-row final"><span>{{ t('Total_3') }}:</span> <strong>{{ format_currency(purchase.total_amount) }}</strong></div>
       </div>
 
       {% if purchase.notes %}
-      <div style="margin-top:10px;padding:8px;background:#fff3cd;border-radius:4px;border-right:2px solid #ffc107;">
+      <div style="margin-top:10px;padding:8px;background:#fff3cd;border-radius:4px;border-inline-start:2px solid #ffc107;">
         <p style="font-size:9px;color:#856404;margin:0;">💬 {{ purchase.notes }}</p>
       </div>
       {% endif %}
@@ -124,7 +124,7 @@
     </div>
 
     <div class="footer">
-      <p>{{ t('شكراً') }} {{ t('لتعاملكم') }} {{ t('معنا') }}</p>
+      <p>{{ t('Thank you for your business') }}</p>
       {% if settings and settings.bank_name %}
       <div style="font-size:8px;margin-top:5px;">
         <strong>🏦 {{ settings.bank_name }}</strong> |
