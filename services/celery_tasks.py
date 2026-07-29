@@ -1,4 +1,5 @@
 from celery import Celery
+from flask_babel import gettext
 from flask import current_app
 import os
 from utils.db_safety import atomic_transaction
@@ -155,9 +156,9 @@ def send_invoice_email(sale_id: int):
         sale = Sale.query.get(sale_id)
         if sale and sale.customer and sale.customer.email:
             msg = Message(
-                subject=f"فاتورة رقم {sale.sale_number}",
+                subject=gettext(f"فاتورة رقم {sale.sale_number}"),
                 recipients=[sale.customer.email],
-                body=f"تجدون في المرفق فاتورتكم رقم {sale.sale_number}",
+                body=gettext(f"تجدون في المرفق فاتورتكم رقم {sale.sale_number}"),
             )
             mail.send(msg)
             return {"success": True}

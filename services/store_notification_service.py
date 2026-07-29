@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from flask import current_app
 
+from flask_babel import gettext
 from models import TenantStore
 
 
@@ -33,7 +34,7 @@ class StoreNotificationService:
                 f"Total: {sale.total_amount} {sale.currency}\n"
                 f"Items:\n" + "\n".join(lines)
             )
-        return (
+        return gettext(
             f"طلب جديد {sale.sale_number}\n"
             f"المتجر: {store.title}\n"
             f"العميل: {customer.name if customer else '-'}\n"
@@ -79,7 +80,7 @@ class StoreNotificationService:
                 admin_url = f"/store/admin/orders/{sale.id}"
 
             msg = Message(
-                subject=f"طلب متجر جديد — {sale.sale_number}",
+                subject=gettext(f"طلب متجر جديد — {sale.sale_number}"),
                 recipients=recipients,
                 body=f"{summary}\n\nرابط الإدارة:\n{admin_url}",
             )

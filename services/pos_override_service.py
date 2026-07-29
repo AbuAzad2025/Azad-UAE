@@ -16,6 +16,8 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
+from flask_babel import gettext
+
 from extensions import db
 from models import PosOverrideToken, User
 from models.enums import PermissionEnum
@@ -56,12 +58,12 @@ class PosOverrideService:
     def authorize_with_pin(*, pin: str, action: str, cashier, session=None) -> PosOverrideToken:
         """Validate a supervisor PIN and issue a one-time override token row."""
         if action not in OVERRIDE_ACTION_PERMISSIONS:
-            raise ValueError("إجراء التفويض غير معروف.")
+            raise ValueError(gettext("إجراء التفويض غير معروف."))
         if not pin:
-            raise ValueError("الرمز السري للمشرف مطلوب.")
+            raise ValueError(gettext("الرمز السري للمشرف مطلوب."))
         tenant_id = get_active_tenant_id(cashier)
         if not tenant_id:
-            raise ValueError("لا توجد شركة نشطة.")
+            raise ValueError(gettext("لا توجد شركة نشطة."))
 
         supervisor = PosOverrideService._find_supervisor_by_pin(pin=pin, cashier=cashier)
         session_id = getattr(session, "id", None)
@@ -81,7 +83,7 @@ class PosOverrideService:
                 cashier_user_id=cashier.id,
                 session_id=session_id,
             )
-            raise PosOverrideError("الرمز السري غير صالح أو ليس لدى المشرف صلاحية التفويض.")
+            raise PosOverrideError(gettext("الرمز السري غير صالح أو ليس لدى المشرف صلاحية التفويض."))
 
         token_row = PosOverrideToken(
             tenant_id=int(tenant_id),
@@ -113,18 +115,18 @@ class PosOverrideService:
         """Validate + burn a presented override token. Returns supervisor_user_id."""
         parts = str(token_str or "").split(".")
         if len(parts) != 3 or not parts[0].isdigit():
-            raise PosOverrideError("رمز التفويض غير صالح.")
+            raise PosOverrideError(gettext("رمز التفويض غير صالح."))
         token_row = tenant_query(PosOverrideToken, user=user).filter(PosOverrideToken.id == int(parts[0])).first()
         if token_row is None or token_row.nonce != parts[1]:
-            raise PosOverrideError("رمز التفويض غير صالح.")
+            raise PosOverrideError(gettext("رمز التفويض غير صالح."))
         if token_row.action != action or token_row.cashier_user_id != user.id:
-            raise PosOverrideError("رمز التفويض لا يطابق هذا الإجراء.")
+            raise PosOverrideError(gettext("رمز التفويض لا يطابق هذا الإجراء."))
         if token_row.used_at is not None:
-            raise PosOverrideError("تم استخدام رمز التفويض مسبقاً.")
+            raise PosOverrideError(gettext("تم استخدام رمز التفويض مسبقاً."))
         if token_row.is_expired():
-            raise PosOverrideError("انتهت صلاحية رمز التفويض — اطلب تفويضاً جديداً.")
+            raise PosOverrideError(gettext("انتهت صلاحية رمز التفويض — اطلب تفويضاً جديداً."))
         if not verify_override_token_signature(token_row, token_str):
-            raise PosOverrideError("رمز التفويض غير صالح.")
+            raise PosOverrideError(gettext("رمز التفويض غير صالح."))
         token_row.used_at = _utcnow()
         db.session.flush()
         return token_row.supervisor_user_id
@@ -140,9 +142,9 @@ class PosOverrideService:
         """
         permission = OVERRIDE_ACTION_PERMISSIONS.get(action)
         if permission is None:
-            raise ValueError("إجراء التفويض غير معروف.")
+            raise ValueError(gettext("إجراء التفويض غير معروف."))
         if user.has_permission(permission):
             return None
         if not override_token:
-            raise PosOverrideError("يتطلب هذا الإجراء تفويض مشرف.")
+            raise PosOverrideError(gettext("يتطلب هذا الإجراء تفويض مشرف."))
         return PosOverrideService.consume_override_token(token_str=override_token, action=action, user=user)

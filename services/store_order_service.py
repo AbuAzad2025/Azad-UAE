@@ -10,14 +10,15 @@ from models import Sale
 from services.sale_service import SaleService
 from services.stock_service import StockService
 from utils.constants import normalize_payment_method_code
+from flask_babel import gettext
 
 STATUS_LABELS_AR = {
-    "pending": "بانتظار التأكيد",
-    "confirmed": "مؤكد",
-    "processing": "قيد التجهيز",
-    "shipped": "تم الشحن",
-    "delivered": "تم التوصيل",
-    "cancelled": "ملغى",
+    "pending": gettext("بانتظار التأكيد"),
+    "confirmed": gettext("مؤكد"),
+    "processing": gettext("قيد التجهيز"),
+    "shipped": gettext("تم الشحن"),
+    "delivered": gettext("تم التوصيل"),
+    "cancelled": gettext("ملغى"),
 }
 
 STATUS_LABELS_EN = {
@@ -95,11 +96,11 @@ class StoreOrderService:
     @staticmethod
     def confirm_order(sale: Sale, *, mark_paid: bool = False) -> Sale:
         if not StoreOrderService.is_online_order(sale):
-            raise ValueError("هذا ليس طلب متجر إلكتروني.")
+            raise ValueError(gettext("هذا ليس طلب متجر إلكتروني."))
         if sale.status == "cancelled":
-            raise ValueError("لا يمكن تأكيد طلب ملغى.")
+            raise ValueError(gettext("لا يمكن تأكيد طلب ملغى."))
         if sale.status == "confirmed" and StoreOrderService.is_fulfilled(sale):
-            raise ValueError("الطلب مؤكد مسبقاً.")
+            raise ValueError(gettext("الطلب مؤكد مسبقاً."))
 
         if not StoreOrderService.is_fulfilled(sale):
             SaleService.fulfill_sale(sale)
@@ -121,7 +122,7 @@ class StoreOrderService:
                 payment_method=internal_method,
                 currency=sale.currency,
                 exchange_rate=sale.exchange_rate,
-                notes="دفع طلب متجر — تأكيد من لوحة المتجر",
+                notes=gettext("دفع طلب متجر — تأكيد من لوحة المتجر"),
             )
             if checkout_code == "online_pay":
                 from services.azad_platform_fee_service import AzadPlatformFeeService
@@ -199,9 +200,9 @@ class StoreOrderService:
     @staticmethod
     def cancel_order(sale: Sale) -> Sale:
         if not StoreOrderService.is_online_order(sale):
-            raise ValueError("هذا ليس طلب متجر إلكتروني.")
+            raise ValueError(gettext("هذا ليس طلب متجر إلكتروني."))
         if sale.status == "cancelled":
-            raise ValueError("الطلب ملغى بالفعل.")
+            raise ValueError(gettext("الطلب ملغى بالفعل."))
 
         StoreOrderService._reverse_loyalty_points(sale)
 

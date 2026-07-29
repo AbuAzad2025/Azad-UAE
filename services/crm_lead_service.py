@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 from extensions import db
+from flask_babel import gettext
 from models import CRMLead, CRMStage, CRMActivity, Customer
 from utils.tenanting import get_active_tenant_id
 from utils.branching import branch_scope_id_for, is_global_user
@@ -12,7 +13,7 @@ class CRMLeadService:
     def _validate_tenant(lead, user):
         tid = get_active_tenant_id(user)
         if tid is not None and int(lead.tenant_id) != int(tid):
-            raise ValueError("العميل المتوقع لا ينتمي إلى شركتك النشطة.")
+            raise ValueError(gettext("العميل المتوقع لا ينتمي إلى شركتك النشطة."))
 
     @staticmethod
     def _branch_scope_check(user, branch_id=None):
@@ -20,13 +21,13 @@ class CRMLeadService:
             return
         scoped = branch_scope_id_for(user)
         if scoped is not None and branch_id is not None and int(branch_id) != int(scoped):
-            raise ValueError("لا يمكنك التعامل مع عميل متوقع من فرع آخر.")
+            raise ValueError(gettext("لا يمكنك التعامل مع عميل متوقع من فرع آخر."))
 
     @staticmethod
     def create_lead(data, user):
         tid = get_active_tenant_id(user)
         if not tid and not is_global_owner_user(user):
-            raise ValueError("لا توجد شركة نشطة.")
+            raise ValueError(gettext("لا توجد شركة نشطة."))
         from models.branch import Branch
 
         branch_id = data.get("branch_id")
@@ -37,14 +38,14 @@ class CRMLeadService:
                 if tid is None:
                     tid = int(branch.tenant_id)
                 elif int(branch.tenant_id) != int(tid):
-                    raise ValueError("الفرع لا ينتمي إلى شركتك.")
+                    raise ValueError(gettext("الفرع لا ينتمي إلى شركتك."))
         stage_id = data.get("stage_id")
         if stage_id:
             stage = db.session.get(CRMStage, int(stage_id))
             if not stage:
-                raise ValueError("المرحلة غير صالحة.")
+                raise ValueError(gettext("المرحلة غير صالحة."))
             if int(stage.tenant_id) != int(tid or 0):
-                raise ValueError("المرحلة لا تنتمي إلى شركتك.")
+                raise ValueError(gettext("المرحلة لا تنتمي إلى شركتك."))
         lead = CRMLead(
             tenant_id=int(tid) if tid else 0,
             branch_id=int(branch_id) if branch_id else None,
@@ -73,7 +74,7 @@ class CRMLeadService:
     def update_lead(lead_id, data, user):
         lead = db.session.get(CRMLead, int(lead_id))
         if not lead:
-            raise ValueError("العميل المتوقع غير موجود.")
+            raise ValueError(gettext("العميل المتوقع غير موجود."))
         CRMLeadService._validate_tenant(lead, user)
         CRMLeadService._branch_scope_check(user, lead.branch_id)
         for field in ("name", "email", "phone", "company", "description", "source"):
@@ -90,9 +91,9 @@ class CRMLeadService:
         if data.get("stage_id"):
             stage = db.session.get(CRMStage, int(data["stage_id"]))
             if not stage:
-                raise ValueError("المرحلة غير صالحة.")
+                raise ValueError(gettext("المرحلة غير صالحة."))
             if int(stage.tenant_id) != int(lead.tenant_id):
-                raise ValueError("المرحلة لا تنتمي إلى شركتك.")
+                raise ValueError(gettext("المرحلة لا تنتمي إلى شركتك."))
             lead.stage_id = int(data["stage_id"])
             if stage and stage.is_won:
                 lead.status = "won"
@@ -111,12 +112,12 @@ class CRMLeadService:
     def move_stage(lead_id, stage_id, user):
         lead = db.session.get(CRMLead, int(lead_id))
         if not lead:
-            raise ValueError("العميل المتوقع غير موجود.")
+            raise ValueError(gettext("العميل المتوقع غير موجود."))
         CRMLeadService._validate_tenant(lead, user)
         CRMLeadService._branch_scope_check(user, lead.branch_id)
         stage = db.session.get(CRMStage, int(stage_id))
         if not stage or int(stage.tenant_id) != int(lead.tenant_id):
-            raise ValueError("المرحلة غير صالحة.")
+            raise ValueError(gettext("المرحلة غير صالحة."))
         lead.stage_id = int(stage_id)
         if stage.is_won:
             lead.status = "won"
@@ -137,7 +138,7 @@ class CRMLeadService:
     def get_lead(lead_id, user):
         lead = db.session.get(CRMLead, int(lead_id))
         if not lead:
-            raise ValueError("العميل المتوقع غير موجود.")
+            raise ValueError(gettext("العميل المتوقع غير موجود."))
         CRMLeadService._validate_tenant(lead, user)
         CRMLeadService._branch_scope_check(user, lead.branch_id)
         return lead
@@ -220,7 +221,7 @@ class CRMLeadService:
     def convert_to_customer(lead_id, user):
         lead = db.session.get(CRMLead, int(lead_id))
         if not lead:
-            raise ValueError("العميل المتوقع غير موجود.")
+            raise ValueError(gettext("العميل المتوقع غير موجود."))
         CRMLeadService._validate_tenant(lead, user)
         CRMLeadService._branch_scope_check(user, lead.branch_id)
         if lead.customer_id:
@@ -236,7 +237,7 @@ class CRMLeadService:
         if len(dup_filters) > 1:
             existing = Customer.query.filter(db.or_(*dup_filters)).first()
             if existing:
-                raise ValueError("يوجد عميل مسجل بالفعل بنفس البريد الإلكتروني أو رقم الهاتف.")
+                raise ValueError(gettext("يوجد عميل مسجل بالفعل بنفس البريد الإلكتروني أو رقم الهاتف."))
         customer = Customer(
             tenant_id=tenant_id,
             name=lead.name,
@@ -314,7 +315,7 @@ class CRMLeadService:
     def add_activity(lead_id, data, user):
         lead = db.session.get(CRMLead, int(lead_id))
         if not lead:
-            raise ValueError("العميل المتوقع غير موجود.")
+            raise ValueError(gettext("العميل المتوقع غير موجود."))
         CRMLeadService._validate_tenant(lead, user)
         CRMLeadService._branch_scope_check(user, lead.branch_id)
         activity = CRMActivity(

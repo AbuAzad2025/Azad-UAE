@@ -1,6 +1,7 @@
 import logging
 from typing import Any
 
+from flask_babel import gettext
 from models import GLAccount
 from models.gl_account_registry import BASE_ACCOUNTS, INDUSTRY_EXTENSIONS
 from extensions import db
@@ -267,7 +268,7 @@ class GLTreeBuilder:
             GLTreeBuilder._ensure_liquidity_account(
                 tenant_id=tenant_id,
                 code=GLTreeBuilder._branch_account_code("1110", branch.id),
-                name_ar=f"صندوق {branch.name}",
+                name_ar=gettext(f"صندوق {branch.name}"),
                 name_en=f"Cashbox - {branch.name}",
                 parent_code="1110",
                 branch_id=branch.id,
@@ -279,7 +280,7 @@ class GLTreeBuilder:
             GLTreeBuilder._ensure_liquidity_account(
                 tenant_id=tenant_id,
                 code=GLTreeBuilder._branch_account_code("1120", branch.id),
-                name_ar=f"بنك {branch.name}",
+                name_ar=gettext(f"بنك {branch.name}"),
                 name_en=f"Bank - {branch.name}",
                 parent_code="1120",
                 branch_id=branch.id,
@@ -401,7 +402,7 @@ class GLTreeBuilder:
                 validation["valid"] = False
             else:
                 if not account_codes[code].is_active:
-                    validation["issues"].append({"code": code, "issue": "الحساب الأساسي غير نشط!"})
+                    validation["issues"].append({"code": code, "issue": gettext("الحساب الأساسي غير نشط!")})
                     validation["valid"] = False
 
         validation["core_accounts_found"] = len(CORE_ACCOUNT_CODES) - len(validation["missing_core_accounts"])
@@ -422,7 +423,7 @@ class GLTreeBuilder:
             if acc.parent_id:
                 parent = db.session.get(GLAccount, acc.parent_id)
                 if not parent or parent.tenant_id != tenant_id:
-                    validation["issues"].append({"code": acc.code, "issue": f"الأب #{acc.parent_id} غير صالح"})
+                    validation["issues"].append({"code": acc.code, "issue": gettext(f"الأب #{acc.parent_id} غير صالح")})
                     validation["valid"] = False
 
             # التحقق من مستوى الحساب
@@ -432,7 +433,7 @@ class GLTreeBuilder:
                     validation["issues"].append(
                         {
                             "code": acc.code,
-                            "issue": f"المستوى ({acc.level}) لا يتطابق مع مستوى الأب",
+                            "issue": gettext(f"المستوى ({acc.level}) لا يتطابق مع مستوى الأب"),
                         }
                     )
                     validation["valid"] = False

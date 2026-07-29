@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from flask_babel import gettext
 from flask import current_app
 
 from extensions import db
@@ -59,8 +60,8 @@ class DonationGLService:
         amount_aed = convert_and_quantize_aed(amount_usd, "USD", rate, tenant_id=tenant_id)
 
         method_label = donation.payment_method or "donation"
-        donor = donation.donor_name or donation.customer_name or "متبرع"
-        desc = f"تبرع Azad #{donation.id} — {donor} ({method_label})"
+        donor = donation.donor_name or donation.customer_name or gettext("متبرع")
+        desc = gettext(f"تبرع Azad #{donation.id} — {donor} ({method_label})")
 
         lines = [
             {

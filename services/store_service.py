@@ -11,6 +11,7 @@ from models import Product, Tenant, TenantStore, Warehouse, Branch
 from models.system_settings import SystemSettings
 from utils.branching import get_branch_stock_map, get_accessible_warehouses
 from utils.tenanting import require_active_tenant_id
+from flask_babel import gettext
 
 
 class StoreService:
@@ -41,7 +42,7 @@ class StoreService:
 
         tenant = db.session.get(Tenant, tenant_id)
         if not tenant:
-            raise ValueError("الشركة غير موجودة.")
+            raise ValueError(gettext("الشركة غير موجودة."))
 
         branch = (
             Branch.query.filter_by(tenant_id=tenant_id, is_active=True)
@@ -52,7 +53,7 @@ class StoreService:
         suffix = tenant_id
         code = f"ONLINE-{suffix}"
         name = f"Online Store WH {suffix}"
-        name_ar = f"مستودع المتجر الإلكتروني ({tenant.name_ar or tenant.name})"
+        name_ar = gettext("مستودع المتجر الإلكتروني (%(name)s)") % {"name": tenant.name_ar or tenant.name}
 
         if Warehouse.query.filter_by(tenant_id=tenant_id, code=code).first():
             code = f"ONLINE-T{suffix}"
@@ -92,7 +93,7 @@ class StoreService:
 
         tenant = db.session.get(Tenant, tenant_id)
         if not tenant:
-            raise ValueError("الشركة غير موجودة.")
+            raise ValueError(gettext("الشركة غير موجودة."))
 
         online_wh = StoreService.ensure_online_warehouse(tenant_id)
         slug = StoreService.normalize_slug(tenant.slug or f"tenant-{tenant_id}")
@@ -134,7 +135,7 @@ class StoreService:
     def validate_slug(slug: str) -> str:
         normalized = StoreService.normalize_slug(slug)
         if not StoreService.SLUG_RE.match(normalized):
-            raise ValueError("رابط المتجر يجب أن يحتوي على حروف إنجليزية صغيرة وأرقام وشرطات فقط.")
+            raise ValueError(gettext("رابط المتجر يجب أن يحتوي على حروف إنجليزية صغيرة وأرقام وشرطات فقط."))
         return normalized
 
     @staticmethod
@@ -193,7 +194,7 @@ class StoreService:
         if warehouse_id:
             q = q.filter(Warehouse.id != int(warehouse_id))
         if q.first():
-            raise ValueError("يوجد مستودع أونلاين نشط بالفعل لهذه الشركة. مسموح بواحد فقط.")
+            raise ValueError(gettext("يوجد مستودع أونلاين نشط بالفعل لهذه الشركة. مسموح بواحد فقط."))
 
     @staticmethod
     def get_physical_warehouses(tenant_id: int, *, user=None):

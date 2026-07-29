@@ -1,5 +1,6 @@
 from decimal import Decimal
 from typing import Dict, List, Optional
+from flask_babel import gettext
 from extensions import db
 
 
@@ -16,12 +17,12 @@ class GamificationService:
     }
 
     BADGES: dict[str, dict[str, int | str]] = {
-        "newbie": {"points": 0, "name_ar": "مبتدئ", "icon": "🌱"},
-        "bronze": {"points": 100, "name_ar": "برونزي", "icon": "🥉"},
-        "silver": {"points": 500, "name_ar": "فضي", "icon": "🥈"},
-        "gold": {"points": 1000, "name_ar": "ذهبي", "icon": "🥇"},
-        "platinum": {"points": 5000, "name_ar": "بلاتيني", "icon": "💎"},
-        "legend": {"points": 10000, "name_ar": "أسطوري", "icon": "👑"},
+        "newbie": {"points": 0, "name_ar": gettext("مبتدئ"), "icon": "🌱"},
+        "bronze": {"points": 100, "name_ar": gettext("برونزي"), "icon": "🥉"},
+        "silver": {"points": 500, "name_ar": gettext("فضي"), "icon": "🥈"},
+        "gold": {"points": 1000, "name_ar": gettext("ذهبي"), "icon": "🥇"},
+        "platinum": {"points": 5000, "name_ar": gettext("بلاتيني"), "icon": "💎"},
+        "legend": {"points": 10000, "name_ar": gettext("أسطوري"), "icon": "👑"},
     }
 
     @staticmethod

@@ -13,6 +13,7 @@ from extensions import db
 from utils.db_safety import atomic_transaction
 from models import Donation, PackagePurchase
 from services.notification_service import NotificationService
+from flask_babel import gettext
 
 logger = logging.getLogger(__name__)
 
@@ -125,7 +126,7 @@ class WebhookService:
 
             NotificationService.notify_payment_received(
                 float(donation.amount_usd),
-                donation.donor_name or "مجهول",
+                donation.donor_name or gettext("مجهول"),
                 donation.payment_method,
             )
 
@@ -255,8 +256,8 @@ class WebhookService:
         logger.warning("Stripe payment failed for %s: %s", customer_email, error_message)
 
         NotificationService.notify_security_alert(
-            "فشل دفعة Stripe",
-            f"فشلت دفعة من {customer_email}: {error_message}",
+            gettext("فشل دفعة Stripe"),
+            gettext(f"فشلت دفعة من {customer_email}: {error_message}"),
         )
 
         return {"success": True, "message": "Payment failure processed"}

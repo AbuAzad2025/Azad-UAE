@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ vault.donation_title_ar if not is_en else vault.donation_title_en }} — Azad</title>
+  <title>{{ vault.donation_title_ar if not is_en else vault.donation_title_en }} — {{ config.COMPANY_NAME }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/azad-donation-palestine.css') }}">
 </head>
@@ -20,18 +20,18 @@
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
           <div class="az-field">
-            <label for="input_amount">{{ 'المبلغ (USD)' if not is_en else 'Amount (USD)' }}</label>
+            <label for="input_amount">{{ t('Amount_USD') }}</label>
             <input type="number" name="amount" min="{{ vault.min_donation_amount or 10 }}" max="{{ vault.max_donation_amount or 10000 }}" step="0.01" required id="input_amount" aria-label="amount">
           </div>
 
           <div class="az-field">
-            <label>{{ 'طريقة الدفع' if not is_en else 'Payment method' }}</label>
+            <label>{{ t('Payment_Method') }}</label>
             <div class="az-methods">
               {% if vault.bitcoin_address or vault.nowpayments_api_key %}
               <label class="az-method"><input type="radio" name="payment_method" value="crypto" checked aria-label="payment method"> <i class="fab fa-bitcoin"></i> Crypto</label>
               {% endif %}
               {% if vault.bank_iban or vault.bank_account_number %}
-              <label class="az-method"><input type="radio" name="payment_method" value="bank_transfer" {% if not vault.bitcoin_address %}checked{% endif %} aria-label="payment method"> <i class="fas fa-university"></i> {{ 'تحويل بنكي' if not is_en else 'Bank transfer' }}</label>
+              <label class="az-method"><input type="radio" name="payment_method" value="bank_transfer" {% if not vault.bitcoin_address %}checked{% endif %} aria-label="payment method"> <i class="fas fa-university"></i> {{ t('Bank_Transfer') }}</label>
               {% endif %}
               {% if vault.paypal_business_email %}
               <label class="az-method"><input type="radio" name="payment_method" value="paypal" aria-label="payment method"> <i class="fab fa-paypal"></i> PayPal</label>
@@ -41,14 +41,14 @@
 
           {% if vault.bank_iban %}
           <div class="az-bank-hint" id="bank-hint">
-            {% if not is_en %}بعد التحويل أدخل بياناتك — سنؤكد التبرع ونُرحّل القيد المحاسبي.{% else %}After transfer, submit your details — we confirm and post the GL entry.{% endif %}
+            {{ t('Bank_Transfer_Hint') }}
             <br><strong>{{ vault.bank_name or '' }}</strong>
             {% if vault.bank_iban %}<br>IBAN: {{ vault.bank_iban }}{% endif %}
           </div>
           {% endif %}
 
           <div class="az-field">
-            <label for="input_donor_name">{{ 'الاسم' if not is_en else 'Name' }}</label>
+            <label for="input_donor_name">{{ t('Name') }}</label>
             <input type="text" name="donor_name" required id="input_donor_name" aria-label="donor name" minlength="2" maxlength="100">
           </div>
           <div class="az-field">
@@ -56,19 +56,19 @@
             <input type="email" name="donor_email" dir="ltr" id="input_donor_email" aria-label="donor email">
           </div>
           <div class="az-field">
-            <label>{{ 'رسالة (اختياري)' if not is_en else 'Message (optional)' }}</label>
+            <label>{{ t('Message_Optional') }}</label>
             <textarea name="donor_message" rows="3" aria-label="donor message"></textarea>
           </div>
 
           <button type="submit" class="az-btn">
-            <i class="fas fa-seedling"></i> {{ 'ادعم أزاد' if not is_en else 'Support Azad' }}
+            <i class="fas fa-seedling"></i> {{ t('Support_Azad') }}
           </button>
         </form>
       </div>
 
       <p class="az-footer">
-        {{ 'فلسطين في القلب — Azad Systems' if not is_en else 'Palestine in our heart — Azad Systems' }}
-        · <a href="{{ url_for('public.landing') }}">{{ 'الرئيسية' if not is_en else 'Home' }}</a>
+        {{ t('Palestine_In_Our_Heart') }}
+        · <a href="{{ url_for('public.landing') }}">{{ t('Home') }}</a>
       </p>
     </div>
     <div class="az-tatreez-top"></div>

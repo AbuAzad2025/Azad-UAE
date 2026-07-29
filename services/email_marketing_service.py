@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from extensions import db
+from flask_babel import gettext
 from models import (
     CampaignLog,
     EmailCampaign,
@@ -25,9 +26,9 @@ class EmailMarketingService:
     def create_list(data, user):
         tid = EmailMarketingService._tid(user)
         if not tid:
-            raise ValueError("لا توجد شركة نشطة.")
+            raise ValueError(gettext("لا توجد شركة نشطة."))
         if not data.get("name"):
-            raise ValueError("اسم القائمة مطلوب.")
+            raise ValueError(gettext("اسم القائمة مطلوب."))
         lst = EmailList(
             tenant_id=int(tid),
             name=data["name"],
@@ -58,12 +59,12 @@ class EmailMarketingService:
     def subscribe(list_id, email, name=None, customer_id=None, user=None):
         lst = db.session.get(EmailList, int(list_id))
         if not lst:
-            raise ValueError("القائمة غير موجودة.")
+            raise ValueError(gettext("القائمة غير موجودة."))
         tid = lst.tenant_id
         if user and not is_global_owner_user(user):
             user_tid = EmailMarketingService._tid(user)
             if user_tid is not None and int(tid) != int(user_tid):
-                raise ValueError("القائمة لا تنتمي إلى شركتك.")
+                raise ValueError(gettext("القائمة لا تنتمي إلى شركتك."))
         existing = EmailSubscriber.query.filter_by(list_id=lst.id, email=email).first()
         if existing:
             if existing.status == "unsubscribed":
@@ -116,9 +117,9 @@ class EmailMarketingService:
     def create_template(data, user):
         tid = EmailMarketingService._tid(user)
         if not tid:
-            raise ValueError("لا توجد شركة نشطة.")
+            raise ValueError(gettext("لا توجد شركة نشطة."))
         if not data.get("name") or not data.get("subject") or not data.get("body_html"):
-            raise ValueError("اسم القالب والموضوع والمحتوى مطلوبون.")
+            raise ValueError(gettext("اسم القالب والموضوع والمحتوى مطلوبون."))
         tpl = EmailTemplate(
             tenant_id=int(tid),
             name=data["name"],
@@ -151,9 +152,9 @@ class EmailMarketingService:
     def create_campaign(data, user):
         tid = EmailMarketingService._tid(user)
         if not tid:
-            raise ValueError("لا توجد شركة نشطة.")
+            raise ValueError(gettext("لا توجد شركة نشطة."))
         if not data.get("name"):
-            raise ValueError("اسم الحملة مطلوب.")
+            raise ValueError(gettext("اسم الحملة مطلوب."))
         campaign = EmailCampaign(
             tenant_id=int(tid),
             name=data["name"],
@@ -173,27 +174,27 @@ class EmailMarketingService:
     def send_campaign(campaign_id, user):
         campaign = db.session.get(EmailCampaign, int(campaign_id))
         if not campaign:
-            raise ValueError("الحملة غير موجودة.")
+            raise ValueError(gettext("الحملة غير موجودة."))
         tid = EmailMarketingService._tid(user)
         if tid is not None and int(campaign.tenant_id) != int(tid):
-            raise ValueError("الحملة لا تنتمي إلى شركتك.")
+            raise ValueError(gettext("الحملة لا تنتمي إلى شركتك."))
         if campaign.status != "draft":
-            raise ValueError("يمكن إرسال الحملات في حالة المسودة فقط.")
+            raise ValueError(gettext("يمكن إرسال الحملات في حالة المسودة فقط."))
         if not campaign.list_id:
-            raise ValueError("الحملة لا تحتوي على قائمة بريدية.")
+            raise ValueError(gettext("الحملة لا تحتوي على قائمة بريدية."))
         if not campaign.template_id:
-            raise ValueError("الحملة لا تحتوي على قالب بريد إلكتروني.")
+            raise ValueError(gettext("الحملة لا تحتوي على قالب بريد إلكتروني."))
         subscribers = EmailSubscriber.query.filter_by(
             list_id=campaign.list_id,
             status="subscribed",
         ).all()
         if not subscribers:
-            raise ValueError("لا يوجد مشتركون نشطون في القائمة.")
+            raise ValueError(gettext("لا يوجد مشتركون نشطون في القائمة."))
         from flask import current_app
 
         mail = current_app.extensions.get("mail")
         if not mail:
-            raise ValueError("خدمة البريد الإلكتروني غير مهيأة.")
+            raise ValueError(gettext("خدمة البريد الإلكتروني غير مهيأة."))
         from flask_mail import Message
 
         template = campaign.template
@@ -239,10 +240,10 @@ class EmailMarketingService:
     def get_campaign_stats(campaign_id, user):
         campaign = db.session.get(EmailCampaign, int(campaign_id))
         if not campaign:
-            raise ValueError("الحملة غير موجودة.")
+            raise ValueError(gettext("الحملة غير موجودة."))
         tid = EmailMarketingService._tid(user)
         if tid is not None and int(campaign.tenant_id) != int(tid):
-            raise ValueError("الحملة لا تنتمي إلى شركتك.")
+            raise ValueError(gettext("الحملة لا تنتمي إلى شركتك."))
         logs = CampaignLog.query.filter_by(campaign_id=campaign.id).all()
         return {
             "campaign": {

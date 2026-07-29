@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 import json
+from flask_babel import gettext
 from extensions import db
 from models.gl import GLJournalEntry
 from models.journal_entry_audit import JournalEntryAudit
@@ -122,7 +123,7 @@ class AdvancedJournalEntryManager:
         total_debit = sum(Decimal(str(line.get("debit", 0))) for line in lines)
         total_credit = sum(Decimal(str(line.get("credit", 0))) for line in lines)
         if abs(total_debit - total_credit) > Decimal("0.001"):
-            raise ValueError(f"القيد غير متوازن: المدين {total_debit} ≠ الدائن {total_credit}")
+            raise ValueError(gettext(f"القيد غير متوازن: المدين {total_debit} ≠ الدائن {total_credit}"))
 
         # Header account check
         for line in lines:
@@ -135,7 +136,7 @@ class AdvancedJournalEntryManager:
                     tenant_id=kwargs.get("tenant_id") or active_tenant_id(),
                 )
                 if account and account.is_header:
-                    raise ValueError(f"لا يمكن القيد على الحساب الرئيسي: {account.full_name}")
+                    raise ValueError(gettext(f"لا يمكن القيد على الحساب الرئيسي: {account.full_name}"))
 
         entry = GLService.create_manual_entry(
             description=description,
@@ -156,7 +157,7 @@ class AdvancedJournalEntryManager:
             "create",
             None,
             entry.to_dict(),
-            f"إنشاء قيد جديد: {description}",
+            gettext(f"إنشاء قيد جديد: {description}"),
             created_by,
         )
         return entry
@@ -176,7 +177,7 @@ class AdvancedJournalEntryManager:
         """
         entry = AdvancedJournalEntryManager._entry_or_404(entry_id)
         if entry.status not in ("draft", "error"):
-            raise ValueError(f"لا يمكن تعديل قيد بحالة: {entry.status}")
+            raise ValueError(gettext(f"لا يمكن تعديل قيد بحالة: {entry.status}"))
 
         old_values = entry.to_dict()
         for field, value in updates.items():
@@ -187,7 +188,7 @@ class AdvancedJournalEntryManager:
             total_debit = sum(line.get("debit", 0) for line in updates["lines"])
             total_credit = sum(line.get("credit", 0) for line in updates["lines"])
             if abs(total_debit - total_credit) > 0.01:
-                raise ValueError(f"القيد غير متوازن بعد التحديث: المدين {total_debit} ≠ الدائن {total_credit}")
+                raise ValueError(gettext(f"القيد غير متوازن بعد التحديث: المدين {total_debit} ≠ الدائن {total_credit}"))
 
         entry.updated_at = datetime.now(timezone.utc)
         AdvancedJournalEntryManager._log_audit(
@@ -195,7 +196,7 @@ class AdvancedJournalEntryManager:
             "update",
             old_values,
             entry.to_dict(),
-            reason or "تحديث القيد",
+            reason or gettext("تحديث القيد"),
             updated_by,
         )
         try:
@@ -249,9 +250,9 @@ class AdvancedJournalEntryManager:
         """عكس قيد محاسبي — creates a reversing entry."""
         entry = AdvancedJournalEntryManager._entry_or_404(entry_id)
         if entry.status == "reversed":
-            raise ValueError("القيد معكوس مسبقاً")
+            raise ValueError(gettext("القيد معكوس مسبقاً"))
         if entry.status != "posted":
-            raise ValueError(f"لا يمكن عكس قيد بحالة: {entry.status}")
+            raise ValueError(gettext(f"لا يمكن عكس قيد بحالة: {entry.status}"))
 
         old_values = entry.to_dict()
         reversal_entry = None
@@ -263,14 +264,14 @@ class AdvancedJournalEntryManager:
                         "account_code": line.account.code,
                         "debit": line.credit,
                         "credit": line.debit,
-                        "description": f"عكس: {line.description or ''}",
+                        "description": gettext(f"عكس: {line.description or ''}"),
                     }
                 )
             reversal_entry = AdvancedJournalEntryManager.create_entry_with_validation(
-                description=f"عكس القيد {entry.entry_number}",
+                description=gettext(f"عكس القيد {entry.entry_number}"),
                 lines=reversal_lines,
                 entry_date=datetime.now().date(),
-                notes=f"سبب العكس: {reason}",
+                notes=gettext(f"سبب العكس: {reason}"),
                 created_by=reversed_by,
                 entry_type="reversing",
             )
@@ -287,7 +288,7 @@ class AdvancedJournalEntryManager:
             "reverse",
             old_values,
             entry.to_dict(),
-            f"عكس القيد - السبب: {reason}",
+            gettext(f"عكس القيد - السبب: {reason}"),
             reversed_by,
         )
         if reversal_entry:
@@ -296,7 +297,7 @@ class AdvancedJournalEntryManager:
                 "create",
                 None,
                 reversal_entry.to_dict(),
-                f"إنشاء قيد عكسي للقيد {entry.entry_number}",
+                gettext(f"إنشاء قيد عكسي للقيد {entry.entry_number}"),
                 reversed_by,
             )
         db.session.flush()
@@ -322,7 +323,7 @@ class AdvancedJournalEntryManager:
                 f'Cannot delete entry in status "{entry.status}". Use reverse_entry_advanced() for posted entries.'
             )
         if entry.reversed_entry_id:
-            raise ValueError("لا يمكن حذف قيد له قيود عكسية مرتبطة")
+            raise ValueError(gettext("لا يمكن حذف قيد له قيود عكسية مرتبطة"))
 
         old_values = entry.to_dict()
         AdvancedJournalEntryManager._transition(entry, "cancelled", user_id=deleted_by, reason=reason)
@@ -331,7 +332,7 @@ class AdvancedJournalEntryManager:
             "cancel",
             old_values,
             entry.to_dict(),
-            f"إلغاء القيد - السبب: {reason}",
+            gettext(f"إلغاء القيد - السبب: {reason}"),
             deleted_by,
         )
         db.session.flush()

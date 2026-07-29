@@ -5,6 +5,7 @@
 from decimal import Decimal
 from datetime import datetime
 from typing import Any
+from flask_babel import gettext
 from sqlalchemy import func, and_
 from extensions import db
 from models import GLAccount, GLJournalEntry, GLJournalLine, Payment, Receipt, Expense
@@ -170,22 +171,22 @@ class CashFlowService:
             "net_cash_from_operating": float(net_cash_from_operating),
             "items": [
                 {
-                    "description": "مقبوضات من العملاء",
+                    "description": gettext("مقبوضات من العملاء"),
                     "amount": float(receipts),
                     "type": "inflow",
                 },
                 {
-                    "description": "مدفوعات للموردين",
+                    "description": gettext("مدفوعات للموردين"),
                     "amount": float(supplier_payments),
                     "type": "outflow",
                 },
                 {
-                    "description": "مدفوعات مصروفات",
+                    "description": gettext("مدفوعات مصروفات"),
                     "amount": float(expense_payments),
                     "type": "outflow",
                 },
                 {
-                    "description": "رواتب وأجور",
+                    "description": gettext("رواتب وأجور"),
                     "amount": float(salaries),
                     "type": "outflow",
                 },
@@ -251,12 +252,12 @@ class CashFlowService:
             "net_cash_from_investing": float(net_cash_from_investing),
             "items": [
                 {
-                    "description": "شراء أصول ثابتة",
+                    "description": gettext("شراء أصول ثابتة"),
                     "amount": float(purchase_of_assets),
                     "type": "outflow",
                 },
                 {
-                    "description": "بيع أصول ثابتة",
+                    "description": gettext("بيع أصول ثابتة"),
                     "amount": float(sale_of_assets),
                     "type": "inflow",
                 },
@@ -370,22 +371,22 @@ class CashFlowService:
             "net_cash_from_financing": float(net_cash_from_financing),
             "items": [
                 {
-                    "description": "إضافات رأس المال",
+                    "description": gettext("إضافات رأس المال"),
                     "amount": float(capital_contributions),
                     "type": "inflow",
                 },
                 {
-                    "description": "قروض مستلمة",
+                    "description": gettext("قروض مستلمة"),
                     "amount": float(loans_received),
                     "type": "inflow",
                 },
                 {
-                    "description": "سحوبات المالك",
+                    "description": gettext("سحوبات المالك"),
                     "amount": float(owner_withdrawals),
                     "type": "outflow",
                 },
                 {
-                    "description": "سداد قروض",
+                    "description": gettext("سداد قروض"),
                     "amount": float(loan_repayments),
                     "type": "outflow",
                 },

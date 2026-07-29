@@ -29,6 +29,7 @@ from decimal import Decimal
 from typing import Any
 
 from flask import current_app
+from flask_babel import gettext
 
 from utils.db_safety import atomic_transaction
 
@@ -69,14 +70,14 @@ class ExchangeRateService:
     }
 
     CURRENCY_NAMES_AR = {
-        "USD": "دولار أمريكي",
-        "ILS": "شيقل إسرائيلي",
-        "JOD": "دينار أردني",
-        "EUR": "يورو",
-        "AED": "درهم إماراتي",
-        "SAR": "ريال سعودي",
-        "EGP": "جنيه مصري",
-        "GBP": "جنيه إسترليني",
+        "USD": gettext("دولار أمريكي"),
+        "ILS": gettext("شيقل إسرائيلي"),
+        "JOD": gettext("دينار أردني"),
+        "EUR": gettext("يورو"),
+        "AED": gettext("درهم إماراتي"),
+        "SAR": gettext("ريال سعودي"),
+        "EGP": gettext("جنيه مصري"),
+        "GBP": gettext("جنيه إسترليني"),
     }
 
     CURRENCY_SYMBOLS = {

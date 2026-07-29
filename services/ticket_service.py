@@ -4,6 +4,7 @@ from models import Ticket, TicketComment, TicketPriority
 from utils.tenanting import get_active_tenant_id
 from utils.branching import branch_scope_id_for
 from utils.auth_helpers import is_global_owner_user
+from flask_babel import gettext
 
 
 class TicketService:
@@ -11,7 +12,7 @@ class TicketService:
     def _validate_tenant(ticket, user):
         tid = get_active_tenant_id(user)
         if tid is not None and int(ticket.tenant_id) != int(tid):
-            raise ValueError("التذكرة لا تنتمي إلى شركتك النشطة.")
+            raise ValueError(gettext("التذكرة لا تنتمي إلى شركتك النشطة."))
 
     @staticmethod
     def _next_number(tid):
@@ -38,9 +39,9 @@ class TicketService:
     def create_ticket(data, user):
         tid = get_active_tenant_id(user)
         if not tid and not is_global_owner_user(user):
-            raise ValueError("لا توجد شركة نشطة.")
+            raise ValueError(gettext("لا توجد شركة نشطة."))
         if not data.get("subject"):
-            raise ValueError("عنوان التذكرة مطلوب.")
+            raise ValueError(gettext("عنوان التذكرة مطلوب."))
         priority_id = data.get("priority_id")
         sla_deadline = None
         if priority_id:
@@ -71,7 +72,7 @@ class TicketService:
     def assign_ticket(ticket_id, user_id, current_user):
         ticket = db.session.get(Ticket, int(ticket_id))
         if not ticket:
-            raise ValueError("التذكرة غير موجودة.")
+            raise ValueError(gettext("التذكرة غير موجودة."))
         TicketService._validate_tenant(ticket, current_user)
         ticket.assigned_user_id = int(user_id) if user_id else None
         ticket.updated_at = datetime.now(timezone.utc)
@@ -85,7 +86,7 @@ class TicketService:
     def resolve_ticket(ticket_id, current_user):
         ticket = db.session.get(Ticket, int(ticket_id))
         if not ticket:
-            raise ValueError("التذكرة غير موجودة.")
+            raise ValueError(gettext("التذكرة غير موجودة."))
         TicketService._validate_tenant(ticket, current_user)
         ticket.status = "resolved"
         ticket.resolved_at = datetime.now(timezone.utc)
@@ -100,7 +101,7 @@ class TicketService:
     def close_ticket(ticket_id, current_user):
         ticket = db.session.get(Ticket, int(ticket_id))
         if not ticket:
-            raise ValueError("التذكرة غير موجودة.")
+            raise ValueError(gettext("التذكرة غير موجودة."))
         TicketService._validate_tenant(ticket, current_user)
         ticket.status = "closed"
         ticket.closed_at = datetime.now(timezone.utc)
@@ -115,7 +116,7 @@ class TicketService:
     def reopen_ticket(ticket_id, current_user):
         ticket = db.session.get(Ticket, int(ticket_id))
         if not ticket:
-            raise ValueError("التذكرة غير موجودة.")
+            raise ValueError(gettext("التذكرة غير موجودة."))
         TicketService._validate_tenant(ticket, current_user)
         ticket.status = "open"
         ticket.resolved_at = None
@@ -131,10 +132,10 @@ class TicketService:
     def add_comment(ticket_id, data, current_user):
         ticket = db.session.get(Ticket, int(ticket_id))
         if not ticket:
-            raise ValueError("التذكرة غير موجودة.")
+            raise ValueError(gettext("التذكرة غير موجودة."))
         TicketService._validate_tenant(ticket, current_user)
         if not data.get("body"):
-            raise ValueError("نص التعليق مطلوب.")
+            raise ValueError(gettext("نص التعليق مطلوب."))
         comment = TicketComment(
             tenant_id=ticket.tenant_id,
             ticket_id=ticket.id,
@@ -155,7 +156,7 @@ class TicketService:
     def get_ticket(ticket_id, user):
         ticket = db.session.get(Ticket, int(ticket_id))
         if not ticket:
-            raise ValueError("التذكرة غير موجودة.")
+            raise ValueError(gettext("التذكرة غير موجودة."))
         TicketService._validate_tenant(ticket, user)
         return ticket
 

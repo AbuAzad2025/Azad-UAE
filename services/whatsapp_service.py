@@ -6,6 +6,7 @@ import os
 from typing import Dict
 
 import requests
+from flask_babel import gettext
 
 
 class WhatsAppService:
@@ -39,10 +40,10 @@ class WhatsAppService:
 
         phone_clean = WhatsAppService._normalize_phone(phone)
         message = (
-            f"السلام عليكم ورحمة الله وبركاته\n\n"
+            gettext(f"السلام عليكم ورحمة الله وبركاته\n\n"
             f"فاتورتك رقم {invoice_number} جاهزة!\n\n"
             f"يمكنك مراجعتها والدفع.\n\n"
-            f"شكراً لتعاملكم معنا"
+            f"شكراً لتعاملكم معنا")
         )
 
         try:
@@ -80,10 +81,10 @@ class WhatsAppService:
         api_key, api_url, instance_id = WhatsAppService._api_config()
         phone_clean = WhatsAppService._normalize_phone(phone)
         message = (
-            f"السلام عليكم {customer_name}\n\n"
+            gettext(f"السلام عليكم {customer_name}\n\n"
             f"تذكير ودي بالرصيد المستحق: {amount_due:,.2f} درهم\n\n"
             f"نرجو منكم التكرم بالسداد في أقرب وقت ممكن.\n\n"
-            f"شكراً لكم"
+            f"شكراً لكم")
         )
 
         try:

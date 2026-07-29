@@ -3,6 +3,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from datetime import datetime, timezone
 from typing import Any
 
+from flask_babel import gettext
 from extensions import db
 from models import GLAccount, GLJournalEntry, GLJournalLine
 from models.tenant import Tenant
@@ -468,7 +469,7 @@ class GLService:
         for line in lines:
             account = GLService._resolve_journal_line_account(line, tenant_id, branch_id=branch_id)
             if getattr(account, "is_header", False):
-                raise ValueError(f"لا يمكن القيد على الحساب الرئيسي: {getattr(account, 'full_name', account.code)}")
+                raise ValueError(gettext(f"لا يمكن القيد على الحساب الرئيسي: {getattr(account, 'full_name', account.code)}"))
             debit = Decimal(str(line.get("debit", 0)))
             credit = Decimal(str(line.get("credit", 0)))
             validate_gl_line_sides(debit, credit)
@@ -511,7 +512,7 @@ class GLService:
                 reference_type=reference_type,
                 reference_id=reference_id,
             )
-            raise UnbalancedJournalEntryError(f"القيد غير متوازن: مدين={total_debit} دائن={total_credit}")
+            raise UnbalancedJournalEntryError(gettext(f"القيد غير متوازن: مدين={total_debit} دائن={total_credit}"))
 
         return entry
 
@@ -871,11 +872,11 @@ class GLService:
                 GLService.ensure_core_accounts(tenant_id=tenant_id)
                 account = gl_helpers.get_account(account_code, tenant_id)
             if not account:
-                raise ValueError(f"الحساب {account_code} غير موجود")
+                raise ValueError(gettext(f"الحساب {account_code} غير موجود"))
             if account.is_header:
-                raise ValueError(f"الحساب {account.full_name} هو حساب رئيسي ولا يمكن إضافة قيود عليه")
+                raise ValueError(gettext(f"الحساب {account.full_name} هو حساب رئيسي ولا يمكن إضافة قيود عليه"))
             if not getattr(account, "is_active", True):
-                raise ValueError(f"الحساب {account.full_name} غير نشط ولا يمكن إضافة قيود عليه")
+                raise ValueError(gettext(f"الحساب {account.full_name} غير نشط ولا يمكن إضافة قيود عليه"))
 
         entry = GLService.post_entry(
             lines,

@@ -1,4 +1,5 @@
 from extensions import db
+from flask_babel import gettext
 from typing import Any
 from models.cheque import Cheque
 from models.gl import GLJournalEntry
@@ -36,24 +37,24 @@ class ChequeAccountingIntegration:
         """تسجيل استلام شيك وارد"""
         cheque = Cheque.query.get_or_404(cheque_id)
         if cheque.cheque_type != "incoming":
-            raise ValueError("هذا الشيك ليس شيك وارد")
+            raise ValueError(gettext("هذا الشيك ليس شيك وارد"))
         if cheque.status != "pending":
-            raise ValueError("الشيك ليس في حالة معلق")
+            raise ValueError(gettext("الشيك ليس في حالة معلق"))
         try:
             entry = process_cheque_receive(cheque)
             db.session.flush()
             return entry
         except Exception as e:
-            raise Exception(f"فشل في تسجيل استلام الشيك: {str(e)}")
+            raise Exception(gettext(f"فشل في تسجيل استلام الشيك: {str(e)}"))
 
     @staticmethod
     def issue_cheque(cheque_id, issued_by=None):
         """تسجيل إصدار شيك صادر"""
         cheque = Cheque.query.get_or_404(cheque_id)
         if cheque.cheque_type != "outgoing":
-            raise ValueError("هذا الشيك ليس شيك صادر")
+            raise ValueError(gettext("هذا الشيك ليس شيك صادر"))
         if cheque.status != "pending":
-            raise ValueError("الشيك ليس في حالة معلق")
+            raise ValueError(gettext("الشيك ليس في حالة معلق"))
         try:
             process_cheque_issue(cheque)
             db.session.flush()
@@ -66,14 +67,14 @@ class ChequeAccountingIntegration:
             )
             return entry
         except Exception as e:
-            raise Exception(f"فشل في تسجيل إصدار الشيك: {str(e)}")
+            raise Exception(gettext(f"فشل في تسجيل إصدار الشيك: {str(e)}"))
 
     @staticmethod
     def clear_cheque(cheque_id, cleared_by=None, bank_charges=0, exchange_gain_loss=0):
         """تسجيل صرف شيك"""
         cheque = Cheque.query.get_or_404(cheque_id)
         if cheque.status not in ["pending", "under_collection", "deposited"]:
-            raise ValueError("الشيك ليس في حالة يمكن صرفه")
+            raise ValueError(gettext("الشيك ليس في حالة يمكن صرفه"))
         try:
             exchange_rate = None
             if (
@@ -109,16 +110,16 @@ class ChequeAccountingIntegration:
                 return _DummyEntry()
             return entry
         except Exception as e:
-            raise Exception(f"فشل في تسجيل صرف الشيك: {str(e)}")
+            raise Exception(gettext(f"فشل في تسجيل صرف الشيك: {str(e)}"))
 
     @staticmethod
     def bounce_cheque(cheque_id, bounced_by=None, bounce_reason=None):
         """تسجيل ارتداد شيك"""
         cheque = Cheque.query.get_or_404(cheque_id)
         if cheque.status not in ["pending", "under_collection", "deposited"]:
-            raise ValueError("الشيك ليس في حالة يمكن ارتداده")
+            raise ValueError(gettext("الشيك ليس في حالة يمكن ارتداده"))
         try:
-            process_cheque_bounce(cheque, reason=bounce_reason or "غير محدد")
+            process_cheque_bounce(cheque, reason=bounce_reason or gettext("غير محدد"))
             db.session.flush()
             # إرجاع القيد المرتبط
             entry = (
@@ -130,7 +131,7 @@ class ChequeAccountingIntegration:
             )
             return entry
         except Exception as e:
-            raise Exception(f"فشل في تسجيل ارتداد الشيك: {str(e)}")
+            raise Exception(gettext(f"فشل في تسجيل ارتداد الشيك: {str(e)}"))
 
     @staticmethod
     def get_cheque_accounting_summary(cheque_id):

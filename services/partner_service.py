@@ -8,6 +8,7 @@ import logging
 
 from sqlalchemy import func
 from extensions import db
+from flask_babel import gettext
 
 logger = logging.getLogger(__name__)
 
@@ -154,7 +155,7 @@ class PartnerService:
 
         total_share_pct = sum(Decimal(str(p.share_percentage or 0)) for p in partners)
         if total_share_pct > Decimal("100"):
-            raise ValueError(f"إجمالي نسب الأرباح ({total_share_pct}%) يتجاوز 100%")
+            raise ValueError(gettext(f"إجمالي نسب الأرباح ({total_share_pct}%) يتجاوز 100%"))
 
         distribution_ids = []
         for partner in partners:
@@ -178,7 +179,7 @@ class PartnerService:
                 )
             except Exception as exc:
                 raise ValueError(
-                    f"فشل حساب أرباح النطاق للشريك {partner.id} ({partner.scope_type}/{partner.scope_id}): {exc}"
+                    gettext(f"فشل حساب أرباح النطاق للشريك {partner.id} ({partner.scope_type}/{partner.scope_id}): {exc}")
                 ) from exc
 
             net_profit = Decimal(str(pnl["net_profit"]))
@@ -201,7 +202,7 @@ class PartnerService:
             elif net_profit < 0:
                 if loss_pct <= Decimal("0"):
                     raise ValueError(
-                        f"الشريك {partner.id} ليس لديه نسبة تحمل خسارة بينما صافي الربح سالب ({net_profit})"
+                        gettext(f"الشريك {partner.id} ليس لديه نسبة تحمل خسارة بينما صافي الربح سالب ({net_profit})")
                     )
                 loss_share = (abs(net_profit) * loss_pct / 100).quantize(Decimal("0.001"))
                 expense_share = (total_expenses_dec * expense_pct / 100).quantize(Decimal("0.001"))
@@ -268,7 +269,7 @@ class PartnerService:
                 amount=abs(net) if net > 0 else -abs(net),
                 amount_base=abs(net) if net > 0 else -abs(net),
                 transaction_date=dist.period_end,
-                notes=f"توزيع فترة {dist.period_start} – {dist.period_end}",
+                notes=gettext(f"توزيع فترة {dist.period_start} – {dist.period_end}"),
             )
             db.session.add(tx)
             partner = db.session.get(Partner, dist.partner_id)
@@ -327,18 +328,18 @@ class PartnerService:
                     "account": partner_account,
                     "concept_code": "PARTNER_CURRENT_ACCOUNT",
                     "debit": amount,
-                    "description": f"دفع مستحق شريك - توزيع {dist.id}",
+                    "description": gettext(f"دفع مستحق شريك - توزيع {dist.id}"),
                 },
                 {
                     "account": bank_account,
                     "concept_code": "BANK",
                     "credit": amount,
-                    "description": f"دفع مستحق شريك - توزيع {dist.id}",
+                    "description": gettext(f"دفع مستحق شريك - توزيع {dist.id}"),
                 },
             ]
             post_or_fail(
                 lines,
-                description=f"دفع توزيع شريك #{dist.id}",
+                description=gettext(f"دفع توزيع شريك #{dist.id}"),
                 reference_type=GLRef.PARTNER_DISTRIBUTION,
                 reference_id=dist.id,
                 tenant_id=dist.tenant_id,
@@ -451,7 +452,7 @@ class PartnerService:
                 ]
             post_or_fail(
                 lines,
-                description=f"حركة شريك - {transaction_type} #{tx.id}",
+                description=gettext(f"حركة شريك - {transaction_type} #{tx.id}"),
                 reference_type=GLRef.PARTNER_TRANSACTION,
                 reference_id=tx.id,
                 tenant_id=partner.tenant_id,

@@ -6,6 +6,7 @@ from decimal import Decimal, ROUND_HALF_UP
 
 from extensions import db
 from models.store_coupon import StoreCoupon
+from flask_babel import gettext
 
 
 class StoreCouponService:
@@ -27,14 +28,14 @@ class StoreCouponService:
     def validate_for_checkout(tenant_id: int, code: str, subtotal: Decimal) -> tuple[Decimal, StoreCoupon]:
         coupon = StoreCouponService.get_by_code(tenant_id, code)
         if not coupon:
-            raise ValueError("كود الخصم غير صالح.")
+            raise ValueError(gettext("كود الخصم غير صالح."))
         if not coupon.is_valid_now():
-            raise ValueError("كود الخصم منتهٍ أو غير نشط.")
+            raise ValueError(gettext("كود الخصم منتهٍ أو غير نشط."))
 
         subtotal = Decimal(str(subtotal or 0))
         min_order = Decimal(str(coupon.min_order_amount or 0))
         if min_order > 0 and subtotal < min_order:
-            raise ValueError(f"الحد الأدنى للطلب لتطبيق الكوبون: {min_order}")
+            raise ValueError(gettext(f"الحد الأدنى للطلب لتطبيق الكوبون: {min_order}"))
 
         discount = Decimal("0")
         if coupon.discount_percent and Decimal(str(coupon.discount_percent)) > 0:
@@ -45,7 +46,7 @@ class StoreCouponService:
             discount = Decimal(str(coupon.discount_amount))
 
         if discount <= Decimal("0"):
-            raise ValueError("كوبون غير صالح — لا يوجد خصم.")
+            raise ValueError(gettext("كوبون غير صالح — لا يوجد خصم."))
         if discount > subtotal:
             discount = subtotal
         return discount, coupon
@@ -54,26 +55,26 @@ class StoreCouponService:
     def create_coupon(tenant_id: int, data: dict) -> StoreCoupon:
         code = StoreCoupon.normalize_code(data.get("code") or "")
         if len(code) < 3:
-            raise ValueError("رمز الكوبون قصير جداً.")
+            raise ValueError(gettext("رمز الكوبون قصير جداً."))
         if StoreCouponService.get_by_code(tenant_id, code):
-            raise ValueError("الكود مستخدم مسبقاً.")
+            raise ValueError(gettext("الكود مستخدم مسبقاً."))
 
         pct = data.get("discount_percent")
         amt = data.get("discount_amount")
         pct_provided = pct is not None
         amt_provided = amt is not None
         if pct_provided and amt_provided:
-            raise ValueError("حدد نسبة أو مبلغ خصم، لا كلاهما.")
+            raise ValueError(gettext("حدد نسبة أو مبلغ خصم، لا كلاهما."))
         if not pct_provided and not amt_provided:
-            raise ValueError("حدد نسبة أو مبلغ خصم.")
+            raise ValueError(gettext("حدد نسبة أو مبلغ خصم."))
         if pct_provided:
             pct_decimal = Decimal(str(pct))
             if pct_decimal <= Decimal("0") or pct_decimal > Decimal("100"):
-                raise ValueError("نسبة الخصم يجب أن تكون بين 0.01 و 100.")
+                raise ValueError(gettext("نسبة الخصم يجب أن تكون بين 0.01 و 100."))
         if amt_provided:
             amt_decimal = Decimal(str(amt))
             if amt_decimal <= Decimal("0"):
-                raise ValueError("مبلغ الخصم يجب أن يكون أكبر من صفر.")
+                raise ValueError(gettext("مبلغ الخصم يجب أن يكون أكبر من صفر."))
 
         coupon = StoreCoupon(
             tenant_id=int(tenant_id),
@@ -94,22 +95,22 @@ class StoreCouponService:
     def update_coupon(coupon_id: int, tenant_id: int, data: dict) -> StoreCoupon:
         coupon = StoreCoupon.query.filter_by(id=int(coupon_id), tenant_id=int(tenant_id)).first()
         if not coupon:
-            raise ValueError("الكوبون غير موجود.")
+            raise ValueError(gettext("الكوبون غير موجود."))
         if data.get("description") is not None:
             coupon.description = (data.get("description") or "").strip() or None
 
         pct_provided = "discount_percent" in data
         amt_provided = "discount_amount" in data
         if pct_provided and amt_provided:
-            raise ValueError("حدد نسبة أو مبلغ خصم، لا كلاهما.")
+            raise ValueError(gettext("حدد نسبة أو مبلغ خصم، لا كلاهما."))
         if pct_provided:
             pct_raw = data["discount_percent"]
             if pct_raw is not None:
                 pct_decimal = Decimal(str(pct_raw))
                 if pct_decimal <= Decimal("0") or pct_decimal > Decimal("100"):
-                    raise ValueError("نسبة الخصم يجب أن تكون بين 0.01 و 100.")
+                    raise ValueError(gettext("نسبة الخصم يجب أن تكون بين 0.01 و 100."))
                 if coupon.discount_amount is not None:
-                    raise ValueError("لا يمكن تعيين نسبة خصم عندما يكون هناك مبلغ خصم موجود.")
+                    raise ValueError(gettext("لا يمكن تعيين نسبة خصم عندما يكون هناك مبلغ خصم موجود."))
                 coupon.discount_percent = pct_decimal
             else:
                 coupon.discount_percent = None
@@ -118,9 +119,9 @@ class StoreCouponService:
             if amt_raw is not None:
                 amt_decimal = Decimal(str(amt_raw))
                 if amt_decimal <= Decimal("0"):
-                    raise ValueError("مبلغ الخصم يجب أن يكون أكبر من صفر.")
+                    raise ValueError(gettext("مبلغ الخصم يجب أن يكون أكبر من صفر."))
                 if coupon.discount_percent is not None:
-                    raise ValueError("لا يمكن تعيين مبلغ خصم عندما تكون هناك نسبة خصم موجودة.")
+                    raise ValueError(gettext("لا يمكن تعيين مبلغ خصم عندما تكون هناك نسبة خصم موجودة."))
                 coupon.discount_amount = amt_decimal
             else:
                 coupon.discount_amount = None
@@ -151,7 +152,7 @@ class StoreCouponService:
             )
         )
         if result == 0:
-            raise ValueError("كود الخصم تجاوز الحد الأقصى للاستخدام.")
+            raise ValueError(gettext("كود الخصم تجاوز الحد الأقصى للاستخدام."))
         db.session.flush()
 
     @staticmethod

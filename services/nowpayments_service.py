@@ -2,6 +2,8 @@
 
 import hashlib
 import hmac
+
+from flask_babel import gettext
 import json
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -10,6 +12,7 @@ import requests
 from flask import current_app
 
 from extensions import db
+from flask_babel import gettext
 from utils.db_safety import atomic_transaction
 from models import Donation
 from services.payments.nowpayments_provider import NowPaymentsProvider
@@ -43,14 +46,14 @@ class NOWPaymentsService:
             if amount < 1:
                 return {
                     "success": False,
-                    "error": "الحد الأدنى للتبرع هو $1",
+                    "error": gettext("الحد الأدنى للتبرع هو $1"),
                 }
 
             data = {
                 "price_amount": float(amount),
                 "price_currency": currency.lower(),
                 "pay_currency": crypto_currency.lower(),
-                "order_description": description or f"تبرع لمشروع Azad Systems - ${amount}",
+                "order_description": description or gettext(f"تبرع لمشروع Azad Systems - ${amount}"),
                 "ipn_callback_url": get_nowpayments_ipn_url(),
             }
             if order_id:
@@ -114,20 +117,20 @@ class NOWPaymentsService:
             )
             return {
                 "success": False,
-                "error": "تعذر إنشاء دفعة NOWPayments حالياً",
+                "error": gettext("تعذر إنشاء دفعة NOWPayments حالياً"),
             }
 
         except requests.exceptions.RequestException:
             current_app.logger.exception("NOWPayments create_payment request failed")
             return {
                 "success": False,
-                "error": "تعذر الاتصال بخدمة NOWPayments حالياً",
+                "error": gettext("تعذر الاتصال بخدمة NOWPayments حالياً"),
             }
         except Exception:
             current_app.logger.exception("NOWPayments create_payment failed")
             return {
                 "success": False,
-                "error": "تعذر إنشاء دفعة NOWPayments حالياً",
+                "error": gettext("تعذر إنشاء دفعة NOWPayments حالياً"),
             }
 
     def get_payment_status(self, payment_id):
@@ -155,14 +158,14 @@ class NOWPaymentsService:
             )
             return {
                 "success": False,
-                "error": "تعذر جلب حالة الدفعة حالياً",
+                "error": gettext("تعذر جلب حالة الدفعة حالياً"),
             }
 
         except Exception:
             current_app.logger.exception("NOWPayments get_payment_status failed")
             return {
                 "success": False,
-                "error": "تعذر جلب حالة الدفعة حالياً",
+                "error": gettext("تعذر جلب حالة الدفعة حالياً"),
             }
 
     def get_available_currencies(self):
@@ -184,14 +187,14 @@ class NOWPaymentsService:
             )
             return {
                 "success": False,
-                "error": "تعذر جلب العملات المتاحة حالياً",
+                "error": gettext("تعذر جلب العملات المتاحة حالياً"),
             }
 
         except Exception:
             current_app.logger.exception("NOWPayments get_available_currencies failed")
             return {
                 "success": False,
-                "error": "تعذر جلب العملات المتاحة حالياً",
+                "error": gettext("تعذر جلب العملات المتاحة حالياً"),
             }
 
     def get_estimated_amount(self, amount, from_currency="usd", to_currency="btc"):
@@ -220,14 +223,14 @@ class NOWPaymentsService:
             )
             return {
                 "success": False,
-                "error": "تعذر تقدير المبلغ حالياً",
+                "error": gettext("تعذر تقدير المبلغ حالياً"),
             }
 
         except Exception:
             current_app.logger.exception("NOWPayments get_estimated_amount failed")
             return {
                 "success": False,
-                "error": "تعذر تقدير المبلغ حالياً",
+                "error": gettext("تعذر تقدير المبلغ حالياً"),
             }
 
     def verify_ipn(self, request_data, signature):
@@ -281,5 +284,5 @@ class NOWPaymentsService:
             return True
 
         except Exception as e:
-            current_app.logger.error(f"خطأ في معالجة callback: {str(e)}")
+            current_app.logger.error(gettext(f"خطأ في معالجة callback: {str(e)}"))
             return False

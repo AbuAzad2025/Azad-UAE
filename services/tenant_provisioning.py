@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from typing import Optional
 
+from flask_babel import gettext
 from services.industry_service import (
     VALID_BUSINESS_TYPES,
     get_pos_profile,
@@ -30,7 +31,7 @@ def validate_tenant_industry(business_type: Optional[str], industry: Optional[st
     """
     bt = (business_type or "").strip()
     if not bt:
-        raise ValueError("يجب تحديد نوع النشاط (business_type) عند إنشاء الشركة.")
+        raise ValueError(gettext("يجب تحديد نوع النشاط (business_type) عند إنشاء الشركة."))
     # Legacy/unknown codes are accepted; they simply map to neutral behaviour.
     ind = (industry or "").strip() or None
     return bt, ind

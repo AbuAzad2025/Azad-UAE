@@ -8,6 +8,7 @@ import logging
 from datetime import datetime, timezone
 from decimal import Decimal, ROUND_HALF_UP
 
+from flask_babel import gettext
 from extensions import db
 from models.tenant import Tenant
 from services.gl_helpers import assert_period_open
@@ -119,7 +120,7 @@ def post_or_fail(
             currency = get_system_default_currency()
 
     if not lines:
-        raise GlPostingError(f'لا يمكن ترحيل "{description}" بدون سطور قيد.')
+        raise GlPostingError(gettext(f'لا يمكن ترحيل "{description}" بدون سطور قيد.'))
 
     assert_balanced_lines(lines, currency=currency)
 
@@ -135,7 +136,7 @@ def post_or_fail(
         rate = Decimal(str(exchange_rate))
     if rate <= 0:
         if (currency or "").upper() != (base_currency or "").upper():
-            raise GlPostingError(f'سعر صرف غير صالح للقيد "{description}": {exchange_rate}')
+            raise GlPostingError(gettext(f'سعر صرف غير صالح للقيد "{description}": {exchange_rate}'))
         rate = Decimal("1")
     lines = _normalize_lines_to_base(
         lines,
@@ -207,4 +208,4 @@ def assert_balanced_lines(lines, *, currency=None, tolerance=None):
     total_debit = sum(Decimal(str(line.get("debit", 0) or 0)) for line in lines)
     total_credit = sum(Decimal(str(line.get("credit", 0) or 0)) for line in lines)
     if abs(total_debit - total_credit) > tolerance:
-        raise UnbalancedJournalEntryError(f"القيد غير متوازن: مدين={total_debit} دائن={total_credit}")
+        raise UnbalancedJournalEntryError(gettext(f"القيد غير متوازن: مدين={total_debit} دائن={total_credit}"))

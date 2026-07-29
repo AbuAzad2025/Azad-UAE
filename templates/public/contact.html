@@ -7,7 +7,7 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>{{ _('شركة أزاد للأنظمة الذكية - اتصل بنا') }}</title>
+    <title>{{ t('Contact_Page_Title') }} — {{ config.COMPANY_NAME_AR or config.COMPANY_NAME }}</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" integrity="sha384-i/MU8rSFPCGh+nV0UkwJ/uFXJ/S0mrH1ZKIiNdWk4WKZBTMmlN1C3RjnKDce2V2z" crossorigin="anonymous" rel="stylesheet">
 
@@ -30,7 +30,6 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body { font-family: 'Tajawal', sans-serif; background: #040914; color: #f8fafc; }
-
         
 
         .navbar {
@@ -60,7 +59,6 @@
         .logo img { width:42px; height:42px; object-fit:contain; border-radius:8px; background:rgba(255,255,255,.9); padding:4px; }
 
         .logo span { font-size: 1.3rem; font-weight: 900; color: var(--gulf-gold); }
-
         
 
         .contact-container {
@@ -179,7 +177,8 @@
 
         }
 
-    
+       
+
     /* D6: externalized inline styles */
     .ic-1 { position: fixed; top: 20px; left: 20px; z-index: 9999; }
     .ic-2 { background: rgba(255,255,255,0.9); border-radius: 20px; padding: 8px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
@@ -192,39 +191,36 @@
     .ic-9 { margin-top: 16px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
     .ic-10 { padding: 14px 28px; background: #25D366; color: white; border-radius: 50px; text-decoration: none; font-weight: 700; }
     .ic-11 { padding: 14px 28px; background: #667eea; color: white; border-radius: 50px; text-decoration: none; font-weight: 700; }
-  </style>
+    .ic-12 { margin-left: 8px; }
+      </style>
 
 </head>
 
 <body class="keep-theme contact-page">
 
-    {% set platform_name_ar = config.COMPANY_NAME_AR or 'شركة أزاد للأنظمة الذكية' %}
-
+    {% set platform_name_ar = config.COMPANY_NAME_AR or config.COMPANY_NAME or t('Company_Name') %}
+    {% set platform_name_en = config.COMPANY_NAME or t('Company_Name') %}
     {% set platform_logo = config.COMPANY_LOGO or 'assets/brand/azad/logos/logo-gold-web.png' %}
-
-
-
-    
+    {% set _company_name = platform_name_ar if not is_en else platform_name_en %}
 
     <div class="ic-1">
 
         <a href="{{ url_for('language.set_language', lang='en' if session.get('language', 'ar') == 'ar' else 'ar') }}" class="btn ic-2">
 
-            <i class="fas fa-globe mr-2"></i>{{ 'English' if session.get('language', 'ar') == 'ar' else 'العربية' }}
+            <i class="fas fa-globe ms-2"></i>{{ 'English' if session.get('language', 'ar') == 'ar' else 'العربية' }}
 
         </a>
 
     </div>
 
 
-
     <nav class="navbar">
 
         <a class="logo" href="{{ url_for('public.landing') }}">
 
-            <img src="{{ url_for('static', filename=platform_logo) }}" alt="{{ platform_name_ar }}">
+            <img src="{{ url_for('static', filename=platform_logo) }}" alt="{{ _company_name }}">
 
-            <span>{{ platform_name_ar }}</span>
+            <span>{{ _company_name }}</span>
 
         </a>
 
@@ -232,28 +228,26 @@
 
             <a href="{{ url_for('public.landing') }}">{{ t('Dashboard') }}</a>
 
-            <a href="{{ url_for('public.pricing') }}">الأسعار</a>
+            <a href="{{ url_for('public.pricing') }}">{{ t('Pricing') }}</a>
 
-            <a href="{{ url_for('public.user_guide') }}">دليل المستخدم</a>
+            <a href="{{ url_for('public.user_guide') }}">{{ t('User_Guide') }}</a>
 
-            <a href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt"></i> دخول</a>
+            <a href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt ms-2"></i> {{ t('Login') }}</a>
 
         </div>
 
     </nav>
 
 
-
     <div class="contact-container">
 
         <div class="contact-header">
 
-            <h1>📞 اتصل بنا</h1>
+            <h1><i class="fas fa-phone-alt ms-2"></i> {{ t('Contact_Us') }}</h1>
 
-            <p>نحن هنا لخدمتك. تواصل معنا في أي وقت</p>
+            <p>{{ t('Contact_Subtitle') }}</p>
 
         </div>
-
 
 
         <div class="contact-grid">
@@ -262,28 +256,26 @@
 
                 <i class="fab fa-whatsapp"></i>
 
-                <h3>واتساب</h3>
+                <h3>{{ t('WhatsApp') }}</h3>
 
                 <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener noreferrer">{{ developer_whatsapp or config.DEVELOPER_WHATSAPP or '—' }}</a>
 
-                <p class="ic-3">{{ developer_name_ar or developer_name or 'شركة أزاد للأنظمة الذكية' }}</p>
+                <p class="ic-3">{{ developer_name_ar or developer_name or t('Company_Name') }}</p>
 
             </div>
-
 
 
             <div class="contact-card">
 
                 <i class="fas fa-phone"></i>
 
-                <h3>جوال</h3>
+                <h3>{{ t('Phone') }}</h3>
 
                 <a href="tel:{{ developer_phone or config.DEVELOPER_PHONE }}">{{ developer_phone or config.DEVELOPER_PHONE or '—' }}</a>
 
-                <p class="ic-3">متاح 24/7</p>
+                <p class="ic-3">{{ t('Available_24_7') }}</p>
 
             </div>
-
 
 
             <div class="contact-card">
@@ -294,10 +286,9 @@
 
                 <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}">{{ developer_email or config.DEVELOPER_EMAIL or '—' }}</a>
 
-                <p class="ic-3">للاستفسارات</p>
+                <p class="ic-3">{{ t('For_Inquiries') }}</p>
 
             </div>
-
 
 
             <div class="contact-card">
@@ -313,38 +304,36 @@
         </div>
 
 
-
         <div class="ic-5">
 
-            <p class="ic-6"><strong>دعم فني / المطور:</strong> {{ developer_credit or config.DEVELOPER_CREDIT }}</p>
+            <p class="ic-6"><strong>{{ t('Technical_Support') }}:</strong> {{ developer_credit or config.DEVELOPER_CREDIT }}</p>
 
-            <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light">واتساب المطور</a>
+            <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light">{{ t('Developer_WhatsApp') }}</a>
 
-            <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}" class="btn btn-outline-light ml-2">بريد المطور</a>
+            <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}" class="btn btn-outline-light ms-2">{{ t('Developer_Email') }}</a>
 
         </div>
-
 
 
         <div class="ic-7">
 
             <a href="{{ url_for('public.pricing') }}" class="ic-8">
 
-                <i class="fas fa-tags"></i> عرض الأسعار والباقات
+                <i class="fas fa-tags ms-2"></i> {{ t('View_Pricing_And_Plans') }}
 
             </a>
 
             <div class="ic-9">
 
-                <a href="https://wa.me/{{ developer_whatsapp_link }}?text={{ 'مرحباً، أريد شراء النظام أو الحصول على عرض سعر' | urlencode }}" class="ic-10">
+                <a href="https://wa.me/{{ developer_whatsapp_link }}?text={{ t('WA_Msg_Sales') | urlencode }}" class="ic-10" target="_blank" rel="noopener noreferrer">
 
-                    <i class="fab fa-whatsapp"></i> شراء النظام عبر واتساب
+                    <i class="fab fa-whatsapp ms-2"></i> {{ t('Buy_Via_WhatsApp') }}
 
                 </a>
 
-                <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}?subject={{ 'طلب شراء الكود أو تخصيص النظام' | urlencode }}" class="ic-11">
+                <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}?subject={{ t('Email_Subject_Sales') | urlencode }}" class="ic-11">
 
-                    <i class="fas fa-envelope"></i> شراء الكود أو التخصيص
+                    <i class="fas fa-envelope ms-2"></i> {{ t('Buy_Code_Or_Customize') }}
 
                 </a>
 
@@ -355,10 +344,6 @@
     </div>
 
 
-
 </body>
 
 </html>
-
-
-

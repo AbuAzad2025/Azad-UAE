@@ -15,6 +15,7 @@ from models import (
 )
 from models.warehouse import ProductWarehouseStock
 from services.stock_batch_service import StockBatchService
+from flask_babel import gettext
 from utils.branching import get_accessible_warehouse_ids, get_branch_stock_map
 from utils.gl_reference_types import GLRef
 from utils.logger import log_financial
@@ -235,7 +236,7 @@ class StockService:
             product_id=product_id,
             quantity=Decimal(str(quantity)),
             movement_type="purchase",
-            notes=notes or "مخزون افتتاحي",
+            notes=notes or gettext("مخزون افتتاحي"),
             warehouse_id=warehouse_id,
             reference_type=GLRef.PRODUCT_CREATION,
         )
@@ -259,17 +260,17 @@ class StockService:
                             "concept_code": "INVENTORY_ASSET",
                             "debit": cost_value,
                             "credit": 0,
-                            "description": f"مخزون افتتاحي - {product.name}",
+                            "description": gettext(f"مخزون افتتاحي - {product.name}"),
                         },
                         {
                             "account": equity_account,
                             "concept_code": "OPENING_BALANCE_EQUITY",
                             "debit": 0,
                             "credit": cost_value,
-                            "description": f"مخزون افتتاحي - {product.name}",
+                            "description": gettext(f"مخزون افتتاحي - {product.name}"),
                         },
                     ],
-                    description=f"مخزون افتتاحي - {product.name}",
+                    description=gettext(f"مخزون افتتاحي - {product.name}"),
                     reference_type=GLRef.PRODUCT_CREATION,
                     reference_id=product.id,
                     branch_id=warehouse.branch_id if warehouse else None,
@@ -295,7 +296,7 @@ class StockService:
             product = db.session.get(Product, product_id)
 
             if not product:
-                raise ValueError(f"⚠️ المنتج غير موجود (ID: {product_id}).\n💡 تأكد من اختيار منتج صحيح من القائمة.")
+                raise ValueError(gettext(f"⚠️ المنتج غير موجود (ID: {product_id}).\n💡 تأكد من اختيار منتج صحيح من القائمة."))
 
             try:
                 user_id = current_user.id if current_user and current_user.is_authenticated else None
@@ -309,13 +310,13 @@ class StockService:
             if warehouse_id:
                 warehouse = Warehouse.query.filter_by(id=warehouse_id, is_active=True).first()
                 if not warehouse:
-                    raise ValueError(f"⚠️ المستودع المحدد غير موجود أو غير نشط (ID: {warehouse_id}).")
+                    raise ValueError(gettext(f"⚠️ المستودع المحدد غير موجود أو غير نشط (ID: {warehouse_id})."))
                 if (
                     tenant_id is not None
                     and getattr(warehouse, "tenant_id", None) is not None
                     and warehouse.tenant_id != tenant_id
                 ):
-                    raise ValueError(f"⚠️ المستودع (ID: {warehouse_id}) لا ينتمي لنفس شركة المنتج.")
+                    raise ValueError(gettext(f"⚠️ المستودع (ID: {warehouse_id}) لا ينتمي لنفس شركة المنتج."))
             else:
                 warehouse = Warehouse.query.filter_by(tenant_id=tenant_id, is_active=True, is_main=True).first()
                 if not warehouse:
@@ -324,7 +325,7 @@ class StockService:
                 if not warehouse:
                     warehouse = Warehouse(
                         name="Main Warehouse",
-                        name_ar="المستودع الرئيسي",
+                        name_ar=gettext("المستودع الرئيسي"),
                         is_active=True,
                         is_main=True,
                         tenant_id=tenant_id,
@@ -370,9 +371,9 @@ class StockService:
                         requested=str(abs(qty)),
                     )
                     raise ValueError(
-                        f'❌ المخزون غير كافٍ في المستودع للمنتج "{product.name}"!\n'
+                        gettext(f'❌ المخزون غير كافٍ في المستودع للمنتج "{product.name}"!\n'
                         f"📦 المتوفر في المستودع: {pws.quantity} | المطلوب: {abs(qty)}\n"
-                        f"💡 قلل الكمية أو انقل مخزوناً من مستودع آخر."
+                        f"💡 قلل الكمية أو انقل مخزوناً من مستودع آخر.")
                     )
                 pws.quantity = new_qty_pws
                 pws.updated_at = datetime.now(timezone.utc)
@@ -389,9 +390,9 @@ class StockService:
                         requested=str(abs(qty)),
                     )
                     raise ValueError(
-                        f'❌ المخزون غير كافٍ في المستودع للمنتج "{product.name}"!\n'
+                        gettext(f'❌ المخزون غير كافٍ في المستودع للمنتج "{product.name}"!\n'
                         f"📦 المتوفر في المستودع: 0 | المطلوب: {abs(qty)}\n"
-                        f"💡 أضف مخزوناً أولاً."
+                        f"💡 أضف مخزوناً أولاً.")
                     )
                 pws = ProductWarehouseStock(
                     tenant_id=tenant_id,
@@ -418,7 +419,7 @@ class StockService:
                     requested=str(quantity),
                 )
                 raise ValueError(
-                    f'❌ المخزون غير كافٍ للمنتج "{product.name}"!\n📦 المتوفر: {product.current_stock} | المطلوب: {quantity}\n💡 قلل الكمية أو اطلب مخزون جديد من المورد.'
+                    gettext(f'❌ المخزون غير كافٍ للمنتج "{product.name}"!\n📦 المتوفر: {product.current_stock} | المطلوب: {quantity}\n💡 قلل الكمية أو اطلب مخزون جديد من المورد.')
                 )
 
             try:
@@ -460,19 +461,19 @@ class StockService:
         """Transfer quantity between warehouses (net zero on product.current_stock)."""
         qty = abs(Decimal(str(quantity)))
         if qty <= 0:
-            raise ValueError("الكمية يجب أن تكون أكبر من صفر.")
+            raise ValueError(gettext("الكمية يجب أن تكون أكبر من صفر."))
 
         product = db.session.get(Product, product_id)
         if not product:
-            raise ValueError("المنتج غير موجود.")
+            raise ValueError(gettext("المنتج غير موجود."))
         tenant_id = getattr(product, "tenant_id", None)
 
         from_wh = Warehouse.query.filter_by(id=int(from_warehouse_id), is_active=True).first()
         to_wh = Warehouse.query.filter_by(id=int(to_warehouse_id), is_active=True).first()
         if not from_wh or not to_wh:
-            raise ValueError("المستودع المصدر أو الوجهة غير موجود أو غير نشط.")
+            raise ValueError(gettext("المستودع المصدر أو الوجهة غير موجود أو غير نشط."))
         if from_wh.id == to_wh.id:
-            raise ValueError("لا يمكن التحويل إلى نفس المستودع.")
+            raise ValueError(gettext("لا يمكن التحويل إلى نفس المستودع."))
 
         # التحقق من التينانت
         if tenant_id is not None:
@@ -481,9 +482,9 @@ class StockService:
                 getattr(to_wh, "tenant_id", None),
             ]
             if tenant_id not in wh_tenant_ids:
-                raise ValueError("المنتج لا ينتمي إلى نفس المستودع (تعارض في التينانت).")
+                raise ValueError(gettext("المنتج لا ينتمي إلى نفس المستودع (تعارض في التينانت)."))
             if from_wh.tenant_id != tenant_id or to_wh.tenant_id != tenant_id:
-                raise ValueError("المستودع المصدر والوجهة يجب أن ينتميان لنفس شركة المنتج.")
+                raise ValueError(gettext("المستودع المصدر والوجهة يجب أن ينتميان لنفس شركة المنتج."))
 
         # التحقق من صلاحية المستخدم - إذا تم تمرير مستخدم
         if user is not None:
@@ -494,13 +495,13 @@ class StockService:
 
                 accessible = get_accessible_warehouse_ids(user)
                 if accessible and (from_wh.id not in accessible or to_wh.id not in accessible):
-                    raise ValueError("ليس لديك صلاحية الوصول لأحد المستودعين.")
+                    raise ValueError(gettext("ليس لديك صلاحية الوصول لأحد المستودعين."))
 
         available = StockService.get_product_stock(product_id, warehouse_id=from_wh.id)
         if available < qty:
-            raise ValueError(f"الكمية غير متوفرة في المستودع المصدر (المتوفر: {available}).")
+            raise ValueError(gettext(f"الكمية غير متوفرة في المستودع المصدر (المتوفر: {available})."))
 
-        label = notes or f"تحويل من {from_wh.name_ar or from_wh.name} إلى {to_wh.name_ar or to_wh.name}"
+        label = notes or gettext(f"تحويل من {from_wh.name_ar or from_wh.name} إلى {to_wh.name_ar or to_wh.name}")
         out_movement = StockService.create_movement(
             product_id=product_id,
             quantity=-qty,
@@ -552,7 +553,7 @@ class StockService:
                 quantity=line.quantity,
                 reference_type=GLRef.SALE,
                 reference_id=sale.id,
-                notes=f"بيع: {sale.sale_number}",
+                notes=gettext(f"بيع: {sale.sale_number}"),
                 warehouse_id=warehouse_id,  # ← تمرير المستودع
             )
 
@@ -588,9 +589,9 @@ class StockService:
         if last_purchase and last_purchase.movement_unit_cost and last_purchase.movement_unit_cost > Decimal("0"):
             return Decimal(str(last_purchase.movement_unit_cost)), "last_purchase"
         raise ValueError(
-            f"لا يمكن تحديد تكلفة البضاعة المباعة (COGS) للمنتج {product_id}: "
+            gettext(f"لا يمكن تحديد تكلفة البضاعة المباعة (COGS) للمنتج {product_id}: "
             "لا يوجد مخزون، ولا سعر تكلفة، ولا سجل شراء سابق. "
-            "يرجى إدخال تكلفة المنتج أو توريد مخزون قبل البيع."
+            "يرجى إدخال تكلفة المنتج أو توريد مخزون قبل البيع.")
         )
 
     @staticmethod
@@ -771,7 +772,7 @@ class StockService:
                 quantity=line.quantity,
                 reference_type=GLRef.PURCHASE,
                 reference_id=purchase.id,
-                notes=f"شراء: {purchase.purchase_number}",
+                notes=gettext(f"شراء: {purchase.purchase_number}"),
                 warehouse_id=warehouse_id,
             )
 
@@ -1040,7 +1041,7 @@ class StockService:
                 quantity=line.quantity,
                 reference_type=GLRef.SALE_REVERSED,
                 reference_id=sale.id,
-                notes=f"إلغاء بيع: {sale.sale_number}",
+                notes=gettext(f"إلغاء بيع: {sale.sale_number}"),
                 warehouse_id=warehouse_id,
             )
 
@@ -1139,7 +1140,7 @@ class StockService:
                 quantity=line.quantity,
                 reference_type=GLRef.PURCHASE,
                 reference_id=purchase.id,
-                notes=f"إلغاء شراء: {purchase.purchase_number}",
+                notes=gettext(f"إلغاء شراء: {purchase.purchase_number}"),
                 warehouse_id=warehouse_id,
             )
 
@@ -1216,41 +1217,41 @@ class StockService:
         product = db.session.get(Product, product_id)
 
         if not product:
-            return False, "المنتج غير موجود"
+            return False, gettext("المنتج غير موجود")
 
         if not product.is_active:
-            return False, "المنتج غير نشط"
+            return False, gettext("المنتج غير نشط")
 
         if product.current_stock < Decimal(str(quantity)):
-            return False, f"المخزون غير كافٍ (المتوفر: {product.current_stock})"
+            return False, gettext(f"المخزون غير كافٍ (المتوفر: {product.current_stock})")
 
-        return True, "متوفر"
+        return True, gettext("متوفر")
 
     @staticmethod
     def check_availability_in_warehouse(product_id, quantity, warehouse_id):
         product = db.session.get(Product, product_id)
 
         if not product:
-            return False, "المنتج غير موجود"
+            return False, gettext("المنتج غير موجود")
 
         if not product.is_active:
-            return False, "المنتج غير نشط"
+            return False, gettext("المنتج غير نشط")
 
         warehouse = Warehouse.query.filter_by(id=warehouse_id, is_active=True).first()
         if not warehouse:
-            return False, "المستودع غير موجود أو غير نشط"
+            return False, gettext("المستودع غير موجود أو غير نشط")
 
         if warehouse.allow_negative_inventory:
-            return True, "متوفر (البيع بالسالب مفعل)"
+            return True, gettext("متوفر (البيع بالسالب مفعل)")
 
         available_qty = StockService.get_product_stock(product_id, warehouse_id=warehouse_id)
         if available_qty < Decimal(str(quantity)):
             return (
                 False,
-                f"المخزون غير كافٍ في المستودع المحدد (المتوفر: {available_qty})",
+                gettext(f"المخزون غير كافٍ في المستودع المحدد (المتوفر: {available_qty})"),
             )
 
-        return True, "متوفر"
+        return True, gettext("متوفر")
 
     @staticmethod
     def get_product_stock(product_id, warehouse_id=None, warehouse_ids=None, user=None):

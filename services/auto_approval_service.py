@@ -4,6 +4,7 @@ Auto Approval Service
 """
 
 from datetime import datetime, timezone, timedelta
+from flask_babel import gettext
 from extensions import db
 from utils.db_safety import atomic_transaction
 from models import Donation, PackagePurchase
@@ -69,7 +70,7 @@ class AutoApprovalService:
                 "success": True,
                 "approved_count": approved_count,
                 "approved_amount": approved_amount,
-                "message": f"تم قبول {approved_count} تبرع تلقائياً",
+                "message": gettext(f"تم قبول {approved_count} تبرع تلقائياً"),
             }
 
         except Exception as e:
@@ -140,7 +141,7 @@ class AutoApprovalService:
                 "success": True,
                 "approved_count": approved_count,
                 "approved_amount": approved_amount,
-                "message": f"تم قبول {approved_count} مشترية تلقائياً",
+                "message": gettext(f"تم قبول {approved_count} مشترية تلقائياً"),
             }
 
         except Exception as e:

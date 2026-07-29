@@ -28,6 +28,8 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal, ROUND_HALF_UP
 
+from flask_babel import gettext
+
 from extensions import db
 from models import Payment, ProductReturn, ProductReturnLine, Sale
 from models.enums import PermissionEnum
@@ -136,7 +138,7 @@ class PosRmaService:
         """
         number = (number or "").strip()
         if not number:
-            raise ValueError("رقم الإيصال مطلوب.")
+            raise ValueError(gettext("رقم الإيصال مطلوب."))
 
         query = tenant_query(Sale, user=user).filter(Sale.sale_number == number)
         scoped_branch_id = branch_scope_id_for(user)
@@ -253,7 +255,7 @@ class PosRmaService:
         tenant_id = int(sale.tenant_id)
         refund_amount = _money(product_return.refund_amount)
         if refund_amount <= 0:
-            raise ValueError("مبلغ الاسترداد النقدي يجب أن يكون أكبر من صفر.")
+            raise ValueError(gettext("مبلغ الاسترداد النقدي يجب أن يكون أكبر من صفر."))
 
         payment_number = generate_number(
             "PAY",
@@ -279,7 +281,7 @@ class PosRmaService:
             payment_method="cash",
             payment_confirmed=True,
             confirmation_date=datetime.now(),
-            notes=f"استرداد نقدي للمرتجع {product_return.return_number} — فاتورة {sale.sale_number}",
+            notes=gettext(f"استرداد نقدي للمرتجع {product_return.return_number} — فاتورة {sale.sale_number}"),
             user_id=getattr(user, "id", None),
             branch_id=session.branch_id,
         )
@@ -292,7 +294,7 @@ class PosRmaService:
             tenant_id=tenant_id,
         )
         cash_code = resolve_pos_cash_account_code(tenant_id, session.branch_id)
-        description = f"استرداد نقدي {payment.payment_number} — مرتجع {product_return.return_number}"
+        description = gettext(f"استرداد نقدي {payment.payment_number} — مرتجع {product_return.return_number}")
         GLService.ensure_core_accounts(tenant_id=tenant_id)
         post_or_fail(
             [
@@ -330,7 +332,7 @@ class PosRmaService:
     def create_pos_return(*, user, session, shift, sale_id, return_lines, refund_method, notes=None):
         """Create a POS return (+ optional cash refund) inside the caller's transaction."""
         if refund_method not in REFUND_METHODS:
-            raise ValueError("طريقة الاسترداد يجب أن تكون credit أو cash.")
+            raise ValueError(gettext("طريقة الاسترداد يجب أن تكون credit أو cash."))
 
         product_return = ReturnService.create_return(
             sale_id=sale_id,

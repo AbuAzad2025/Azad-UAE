@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from decimal import Decimal, ROUND_HALF_UP
 from flask import current_app
+from flask_babel import gettext
 from extensions import db
 from models import (
     Purchase,
@@ -74,40 +75,40 @@ class PurchaseService:
         Returns:
             Purchase object
         """
-        if not currency:
-            try:
-                from models import Tenant
+    if not currency:
+        try:
+            from models import Tenant
 
-                currency = resolve_default_currency(Tenant.get_current())
-            except Exception:
-                currency = get_system_default_currency()
-        currency = (currency or "").strip() or get_system_default_currency()
-        currency = validate_currency_code(currency)
-        # Validate Warehouse
-        if not warehouse_id:
-            raise ValueError("⚠️ يجب اختيار المستودع الذي ستُضاف إليه البضاعة.")
+            currency = resolve_default_currency(Tenant.get_current())
+        except Exception:
+            currency = get_system_default_currency()
+    currency = (currency or "").strip() or get_system_default_currency()
+    currency = validate_currency_code(currency)
+    # Validate Warehouse
+    if not warehouse_id:
+        raise ValueError(gettext("⚠️ يجب اختيار المستودع الذي ستُضاف إليه البضاعة."))
 
-        warehouse = ensure_warehouse_access(warehouse_id, user=user)
+    warehouse = ensure_warehouse_access(warehouse_id, user=user)
 
-        # Validate Supplier
-        supplier_id = supplier_data.get("supplier_id")
-        supplier_name = supplier_data.get("supplier_name")
+    # Validate Supplier
+    supplier_id = supplier_data.get("supplier_id")
+    supplier_name = supplier_data.get("supplier_name")
 
-        supplier = None
-        if supplier_id:
-            # Validate supplier belongs to the same tenant as the warehouse
-            supplier = Supplier.query.filter_by(id=supplier_id, tenant_id=warehouse.tenant_id).first()
-            if not supplier:
-                raise ValueError("⚠️ المورد المحدد غير موجود أو لا ينتمي لنفس الشركة.")
-            supplier_name = supplier.name
-            supplier_data["phone"] = supplier.phone or ""
-            supplier_data["email"] = supplier.email or ""
+    supplier = None
+    if supplier_id:
+        # Validate supplier belongs to the same tenant as the warehouse
+        supplier = Supplier.query.filter_by(id=supplier_id, tenant_id=warehouse.tenant_id).first()
+        if not supplier:
+            raise ValueError(gettext("⚠️ المورد المحدد غير موجود أو لا ينتمي لنفس الشركة."))
+        supplier_name = supplier.name
+        supplier_data["phone"] = supplier.phone or ""
+        supplier_data["email"] = supplier.email or ""
 
-        if not supplier_name:
-            raise ValueError("⚠️ يجب إدخال اسم المورد.")
+    if not supplier_name:
+        raise ValueError(gettext("⚠️ يجب إدخال اسم المورد."))
 
-        if not lines_data:
-            raise ValueError("⚠️ يجب إضافة منتج واحد على الأقل للفاتورة.")
+    if not lines_data:
+        raise ValueError(gettext("⚠️ يجب إضافة منتج واحد على الأقل للفاتورة."))
 
         has_valid_line = False
         for line_data in lines_data:
@@ -118,7 +119,7 @@ class PurchaseService:
                 has_valid_line = True
                 break
         if not has_valid_line:
-            raise ValueError("⚠️ يجب إضافة منتج واحد على الأقل للفاتورة.")
+            raise ValueError(gettext("⚠️ يجب إضافة منتج واحد على الأقل للفاتورة."))
 
         # Resolve tenant from warehouse (validated above) or active context
         tenant_id = (
@@ -147,11 +148,11 @@ class PurchaseService:
             tenant_id=tenant_id,
         )
         if rate_info.get("rate_mode") == "needs_input":
-            raise ValueError(
+            raise ValueError(gettext(
                 "⚠️ سعر الصرف غير متوفر.\n"
                 "💡 اذهب إلى إعدادات المالك ← أسعار الصرف ← أدخل سعر يدوي، "
                 'أو أدخل سعراً في حقل "سعر الصرف".'
-            )
+            ))
         exchange_rate = Decimal(str(rate_info["rate"]))
 
         # Create Purchase Header
@@ -237,7 +238,7 @@ class PurchaseService:
                             ProductSerial.serial_number.in_(clean_serials),
                         ).count()
                         if existing_serials > 0:
-                            raise ValueError(f'⚠️ بعض الأرقام التسلسلية موجودة مسبقاً للمنتج "{product.name}".')
+                            raise ValueError(gettext(f'⚠️ بعض الأرقام التسلسلية موجودة مسبقاً للمنتج "{product.name}".'))
 
                         for sn in clean_serials:
                             serial_obj = ProductSerial(
@@ -262,7 +263,7 @@ class PurchaseService:
                 "Purchase creation rolled back: no lines added for purchase %s",
                 purchase.purchase_number,
             )
-            raise ValueError("⚠️ يجب إضافة منتج واحد على الأقل للفاتورة.")
+            raise ValueError(gettext("⚠️ يجب إضافة منتج واحد على الأقل للفاتورة."))
 
         purchase.subtotal = subtotal
         purchase.calculate_totals()
@@ -298,13 +299,13 @@ class PurchaseService:
                 "account": GL_ACCOUNTS["inventory"],
                 "concept_code": "INVENTORY_ASSET",
                 "debit": inventory_debit,
-                "description": f"شراء بضاعة {purchase.purchase_number}",
+                "description": gettext(f"شراء بضاعة {purchase.purchase_number}"),
             },
             {
                 "account": GL_ACCOUNTS["payable"],
                 "concept_code": "AP",
                 "credit": total_payable,
-                "description": f"ذمم دائنة - مورد: {purchase.supplier_name}",
+                "description": gettext(f"ذمم دائنة - مورد: {purchase.supplier_name}"),
             },
         ]
 
@@ -316,7 +317,7 @@ class PurchaseService:
                         "account": GL_ACCOUNTS.get("freight_in", "5301"),
                         "concept_code": "FREIGHT_IN",
                         "debit": purchase.freight,
-                        "description": f"أجور شحن - {purchase.purchase_number}",
+                        "description": gettext(f"أجور شحن - {purchase.purchase_number}"),
                     }
                 )
             if purchase.customs_duty > 0:
@@ -325,7 +326,7 @@ class PurchaseService:
                         "account": GL_ACCOUNTS.get("customs_duty", "5302"),
                         "concept_code": "CUSTOMS_DUTY",
                         "debit": purchase.customs_duty,
-                        "description": f"رسوم جمركية - {purchase.purchase_number}",
+                        "description": gettext(f"رسوم جمركية - {purchase.purchase_number}"),
                     }
                 )
             if purchase.insurance > 0:
@@ -334,7 +335,7 @@ class PurchaseService:
                         "account": GL_ACCOUNTS.get("insurance_in", "5303"),
                         "explicit_account_allowed": True,
                         "debit": purchase.insurance,
-                        "description": f"تأمين شحن - {purchase.purchase_number}",
+                        "description": gettext(f"تأمين شحن - {purchase.purchase_number}"),
                     }
                 )
             if purchase.other_landed_cost > 0:
@@ -343,7 +344,7 @@ class PurchaseService:
                         "account": GL_ACCOUNTS.get("misc_expense", "6500"),
                         "explicit_account_allowed": True,
                         "debit": purchase.other_landed_cost,
-                        "description": f"تكاليف إضافية أخرى - {purchase.purchase_number}",
+                        "description": gettext(f"تكاليف إضافية أخرى - {purchase.purchase_number}"),
                     }
                 )
 
@@ -353,7 +354,7 @@ class PurchaseService:
                     "account": GL_ACCOUNTS["vat_input"],
                     "concept_code": "VAT_INPUT",
                     "debit": purchase.tax_amount,
-                    "description": f"ضريبة مدخلات (شراء) {purchase.purchase_number}",
+                    "description": gettext(f"ضريبة مدخلات (شراء) {purchase.purchase_number}"),
                 }
             )
 
@@ -385,7 +386,7 @@ class PurchaseService:
     def cancel_purchase(purchase):
         """إلغاء فاتورة شراء - عكس القيد المحاسبي والمخزون ورصيد المورد."""
         if purchase.status == "cancelled":
-            raise ValueError("فاتورة الشراء ملغاة بالفعل")
+            raise ValueError(gettext("فاتورة الشراء ملغاة بالفعل"))
 
         from models import Payment
 
@@ -400,7 +401,7 @@ class PurchaseService:
             .scalar()
         )
         if direct_paid and Decimal(str(direct_paid)) > 0:
-            raise ValueError("لا يمكن إلغاء فاتورة شراء لها مدفوعات مؤكدة. قم بإلغاء المدفوعات أولاً.")
+            raise ValueError(gettext("لا يمكن إلغاء فاتورة شراء لها مدفوعات مؤكدة. قم بإلغاء المدفوعات أولاً."))
 
         supplier = purchase.supplier
         amount_aed = Decimal(str(purchase.amount_aed or 0))
@@ -448,10 +449,10 @@ class PurchaseService:
         from decimal import Decimal as _D
 
         if purchase.status == "cancelled":
-            raise ValueError("لا يمكن عمل مرتجع لفاتورة شراء ملغاة")
+            raise ValueError(gettext("لا يمكن عمل مرتجع لفاتورة شراء ملغاة"))
 
         if not lines_data:
-            raise ValueError("يجب إرجاع منتج واحد على الأقل")
+            raise ValueError(gettext("يجب إرجاع منتج واحد على الأقل"))
 
         tenant_id = getattr(purchase, "tenant_id", None)
         warehouse_id = getattr(purchase, "warehouse_id", None)
@@ -534,7 +535,7 @@ class PurchaseService:
                 quantity=quantity,
                 reference_type=GLRef.PURCHASE,
                 reference_id=purchase_return.id,
-                notes=f"مرتجع مشتريات: {return_number}",
+                notes=gettext(f"مرتجع مشتريات: {return_number}"),
                 warehouse_id=warehouse_id,
             )
 
@@ -602,7 +603,7 @@ class PurchaseService:
                 "Purchase return rolled back: no lines for return %s",
                 getattr(purchase_return, "return_number", None),
             )
-            raise ValueError("يجب إرجاع منتج واحد على الأقل")
+            raise ValueError(gettext("يجب إرجاع منتج واحد على الأقل"))
 
         # حساب الضريبة التناسبية
         if purchase.tax_amount and purchase.subtotal and purchase.subtotal > 0:
@@ -651,13 +652,13 @@ class PurchaseService:
                 "account": GL_ACCOUNTS["payable"],
                 "concept_code": "AP",
                 "debit": purchase_return.total_amount,
-                "description": f"مرتجع مشتريات {return_number}",
+                "description": gettext(f"مرتجع مشتريات {return_number}"),
             },
             {
                 "account": GL_ACCOUNTS["inventory"],
                 "concept_code": "INVENTORY_ASSET",
-                "credit": inventory_credit,
-                "description": f"إرجاع بضاعة للمورد {return_number}",
+                    "credit": inventory_credit,
+                    "description": gettext(f"إرجاع بضاعة للمورد {return_number}"),
             },
         ]
 
@@ -667,7 +668,7 @@ class PurchaseService:
                     "account": GL_ACCOUNTS["vat_input"],
                     "concept_code": "VAT_INPUT",
                     "credit": tax_amount,
-                    "description": f"عكس ضريبة مدخلات {return_number}",
+                    "description": gettext(f"عكس ضريبة مدخلات {return_number}"),
                 }
             )
 

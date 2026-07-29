@@ -15,6 +15,7 @@ from utils.currency_utils import resolve_default_currency
 from services.stock_service import StockService
 from services.store_service import StoreService
 from services.store_payment_method_service import StorePaymentMethodService
+from flask_babel import gettext
 
 
 class StoreCheckoutService:
@@ -67,9 +68,9 @@ class StoreCheckoutService:
     def normalize_phone(phone: str) -> str:
         digits = re.sub(r"\D", "", phone or "")
         if not digits:
-            raise ValueError("رقم الهاتف مطلوب.")
+            raise ValueError(gettext("رقم الهاتف مطلوب."))
         if len(digits) < 8:
-            raise ValueError("رقم الهاتف غير صالح.")
+            raise ValueError(gettext("رقم الهاتف غير صالح."))
         return digits
 
     @staticmethod
@@ -83,7 +84,7 @@ class StoreCheckoutService:
         phone_norm = StoreCheckoutService.normalize_phone(phone)
         name = (name or "").strip()
         if len(name) < 2:
-            raise ValueError("الاسم مطلوب.")
+            raise ValueError(gettext("الاسم مطلوب."))
 
         customer = Customer.query.filter_by(tenant_id=int(tenant_id), phone=phone_norm).first()
         if customer:
@@ -118,13 +119,13 @@ class StoreCheckoutService:
         if not seller:
             seller = User.query.filter_by(tenant_id=int(tenant_id), is_active=True).order_by(User.id.asc()).first()
         if not seller:
-            raise ValueError("لا يوجد مستخدم نظام لمعالجة الطلب.")
+            raise ValueError(gettext("لا يوجد مستخدم نظام لمعالجة الطلب."))
         return seller
 
     @staticmethod
     def build_lines_from_cart(tenant_id: int, cart: dict, online_warehouse_id: int) -> list:
         if not cart:
-            raise ValueError("السلة فارغة.")
+            raise ValueError(gettext("السلة فارغة."))
 
         lines = []
         stock_map = StoreService.online_stock_map(tenant_id, list(cart.keys()))
@@ -140,13 +141,13 @@ class StoreCheckoutService:
 
             product = Product.query.filter_by(id=product_id, tenant_id=int(tenant_id), is_active=True).first()
             if not product:
-                raise ValueError("منتج في السلة غير متاح.")
+                raise ValueError(gettext("منتج في السلة غير متاح."))
             if product.has_serial_number:
-                raise ValueError(f'المنتج "{product.name}" يتطلب متابعة عبر الهاتف.')
+                raise ValueError(gettext(f'المنتج "{product.name}" يتطلب متابعة عبر الهاتف.'))
 
             available = stock_map.get(product_id, Decimal("0"))
             if qty > available:
-                raise ValueError(f'الكمية المطلوبة من "{product.name}" تتجاوز المتوفر ({available}).')
+                raise ValueError(gettext(f'الكمية المطلوبة من "{product.name}" تتجاوز المتوفر ({available}).'))
 
             ok, msg = StockService.check_availability_in_warehouse(product_id, qty, online_warehouse_id)
             if not ok:
@@ -161,7 +162,7 @@ class StoreCheckoutService:
             )
 
         if not lines:
-            raise ValueError("السلة فارغة.")
+            raise ValueError(gettext("السلة فارغة."))
         return lines
 
     @staticmethod
@@ -180,7 +181,7 @@ class StoreCheckoutService:
         tenant_id = int(store.tenant_id)
         online_wh = db.session.get(Warehouse, store.warehouse_id)
         if not online_wh or not online_wh.is_online:
-            raise ValueError("مستودع المتجر غير مهيأ.")
+            raise ValueError(gettext("مستودع المتجر غير مهيأ."))
 
         pay_method = StorePaymentMethodService.validate_for_checkout(payment_method_code or "cod")
 

@@ -2,6 +2,7 @@ from utils.tenanting import get_active_tenant_id
 from decimal import Decimal, ROUND_HALF_UP
 from flask import current_app
 from flask_login import current_user
+from flask_babel import gettext
 from extensions import db
 from models import Receipt, Sale
 from services.exchange_rate_service import ExchangeRateService
@@ -36,11 +37,11 @@ class PaymentService:
             tenant_id=tenant_id,
         )
         if rate_info.get("rate_mode") == "needs_input":
-            raise ValueError(
+            raise ValueError(gettext(
                 "⚠️ سعر الصرف غير متوفر.\n"
                 "💡 اذهب إلى إعدادات المالك ← أسعار الصرف ← أدخل سعر يدوي، "
                 'أو أدخل سعراً في حقل "سعر الصرف".'
-            )
+            ))
         return Decimal(str(rate_info["rate"]))
 
     @staticmethod
@@ -191,7 +192,7 @@ class PaymentService:
 
         supplier = db.session.get(Supplier, supplier_id)
         if not supplier:
-            raise ValueError("المورد غير موجود")
+            raise ValueError(gettext("المورد غير موجود"))
 
         try:
             payment_number = generate_number(
@@ -293,13 +294,13 @@ class PaymentService:
                         "account": "2110",
                         "concept_code": "AP",
                         "debit": payment.amount,
-                        "description": f"دفعة للمورد {supplier.name}",
+                        "description": gettext(f"دفعة للمورد {supplier.name}"),
                     },
                     {
                         "account": credit_account,
                         "concept_code": GLService.get_payment_credit_concept(payment_method),
                         "credit": payment.amount,
-                        "description": f"سند صرف {payment.payment_number}",
+                        "description": gettext(f"سند صرف {payment.payment_number}"),
                     },
                 ]
                 post_or_fail(
@@ -314,7 +315,7 @@ class PaymentService:
                 )
             except Exception as _e:
                 current_app.logger.exception("GL posting failed for payment: %s", _e)
-                raise ValueError(f"فشل الترحيل المحاسبي للدفعة: {_e}") from _e
+                raise ValueError(gettext(f"فشل الترحيل المحاسبي للدفعة: {_e}")) from _e
 
             purchase_id = payment_data.get("purchase_id")
             if purchase_id:
@@ -374,7 +375,7 @@ class PaymentService:
             try:
                 cheque_date = datetime.strptime(cheque_date, "%Y-%m-%d").date()
             except ValueError:
-                raise ValueError("تاريخ الشيك غير صالح")
+                raise ValueError(gettext("تاريخ الشيك غير صالح"))
 
         customer = db.session.get(Customer, customer_id)
         if not customer:
@@ -473,7 +474,7 @@ class PaymentService:
                 # استخدام منطق الشيك المحاسبي (شيكات تحت التحصيل -> ذمم مدينة)
                 gl_entry = process_cheque_receive(cheque)
                 if gl_entry is None:
-                    raise GlPostingError("فشل ترحيل الشيك محاسبياً")
+                    raise GlPostingError(gettext("فشل ترحيل الشيك محاسبياً"))
                 # تحديث رصيد العميل فوراً لأن قيد الاستلام (Dr CUC / Cr AR) يخفض الذمم
                 from decimal import Decimal as _D
 
@@ -500,13 +501,13 @@ class PaymentService:
                             "account": payment_account,
                             "concept_code": GLService.get_payment_debit_concept(receipt.payment_method),
                             "debit": receipt.amount,
-                            "description": f"قبض من {customer.name}",
+                            "description": gettext(f"قبض من {customer.name}"),
                         },
                         {
                             "account": credit_account,
                             "concept_code": GLService.get_customer_credit_concept(customer),
                             "credit": receipt.amount,
-                            "description": f"سند قبض {receipt.receipt_number}",
+                            "description": gettext(f"سند قبض {receipt.receipt_number}"),
                         },
                     ]
                     post_or_fail(
@@ -604,7 +605,7 @@ class PaymentService:
                                     raise
                 except Exception as _e:
                     current_app.logger.exception("GL posting failed for receipt: %s", _e)
-                    raise ValueError(f"فشل الترحيل المحاسبي لسند القبض: {_e}") from _e
+                    raise ValueError(gettext(f"فشل الترحيل المحاسبي لسند القبض: {_e}")) from _e
 
                 # تحديث رصيد العميل التراكمي (ما دُفع منه)
                 from decimal import Decimal as _D

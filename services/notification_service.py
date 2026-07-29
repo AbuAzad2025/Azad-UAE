@@ -3,6 +3,7 @@ Notification Service - خدمة الإشعارات
 إرسال إشعارات فورية للمستخدمين
 """
 
+from flask_babel import gettext
 from datetime import datetime, timezone
 import logging
 
@@ -59,7 +60,7 @@ class NotificationService:
         """إشعار باستلام دفعة"""
         return NotificationService.send_notification(
             title="💰 دفعة جديدة",
-            message=f"تم استلام ${amount} من {customer_name} عبر {payment_method}",
+            message=gettext(f"تم استلام ${amount} من {customer_name} عبر {payment_method}"),
             notification_type="success",
             data={"amount": amount, "customer": customer_name},
         )
@@ -79,7 +80,7 @@ class NotificationService:
         """إشعار بتفعيل باقة"""
         return NotificationService.send_notification(
             title="✅ تفعيل باقة",
-            message=f"تم تفعيل باقة {package_name} للعميل {customer_name}",
+            message=gettext(f"تم تفعيل باقة {package_name} للعميل {customer_name}"),
             notification_type="info",
             data={"package": package_name, "customer": customer_name},
         )
@@ -89,7 +90,7 @@ class NotificationService:
         """إشعار بالقبول التلقائي"""
         return NotificationService.send_notification(
             title="⚡ قبول تلقائي",
-            message=f"تم قبول {count} عملية تلقائياً بمبلغ ${total_amount}",
+            message=gettext(f"تم قبول {count} عملية تلقائياً بمبلغ ${total_amount}"),
             notification_type="success",
             data={"count": count, "amount": total_amount},
         )
@@ -119,7 +120,7 @@ class SecurityService:
         """
         # فحص القائمة السوداء
         if ip_address in SecurityService._blacklist:
-            NotificationService.notify_security_alert("IP محظور", f"محاولة وصول من IP محظور: {ip_address}")
+            NotificationService.notify_security_alert(gettext("IP محظور"), gettext(f"محاولة وصول من IP محظور: {ip_address}"))
             return {"suspicious": True, "reason": "blacklisted_ip"}
 
         # فحص المحاولات الفاشلة
@@ -129,14 +130,14 @@ class SecurityService:
                 SecurityService._blacklist.add(ip_address)
                 NotificationService.notify_security_alert(
                     "IP محظور تلقائياً",
-                    f"تم حظر IP {ip_address} بسبب محاولات فاشلة متكررة",
+                    gettext(f"تم حظر IP {ip_address} بسبب محاولات فاشلة متكررة"),
                 )
                 return {"suspicious": True, "reason": "too_many_failed_attempts"}
 
         # فحص User Agent المشبوه
         suspicious_agents = ["bot", "crawler", "scraper", "scanner"]
         if any(agent in user_agent.lower() for agent in suspicious_agents):
-            NotificationService.notify_security_alert("User Agent مشبوه", f"كشف user agent مشبوه: {user_agent[:100]}")
+            NotificationService.notify_security_alert(gettext("User Agent مشبوه"), gettext(f"كشف user agent مشبوه: {user_agent[:100]}"))
             return {"suspicious": True, "reason": "suspicious_user_agent"}
 
         return {"suspicious": False}

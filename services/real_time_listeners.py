@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from flask_babel import gettext
 from extensions import db
 from sqlalchemy import event
 from models.gl import GLJournalEntry, GLJournalLine, GLAccount
@@ -68,14 +69,14 @@ class RealTimeAccountingListeners:
 
             # إشعار فوري
             RealTimeAccountingListeners._send_notification(
-                "قيد جديد", f"تم إنشاء قيد جديد رقم {entry.entry_number}", "success"
+                gettext("قيد جديد"), gettext(f"تم إنشاء قيد جديد رقم {entry.entry_number}"), "success"
             )
 
             # تحديث الإحصائيات
             RealTimeAccountingListeners._update_statistics()
 
         except Exception as e:
-            print(f"خطأ في مستمع إنشاء القيد: {e}")
+            print(gettext(f"خطأ في مستمع إنشاء القيد: {e}"))
 
     @staticmethod
     def _on_journal_entry_updated(entry):
@@ -96,15 +97,15 @@ class RealTimeAccountingListeners:
             # إشعار حسب نوع التحديث
             if entry.is_posted:
                 RealTimeAccountingListeners._send_notification(
-                    "قيد مرحل", f"تم ترحيل القيد رقم {entry.entry_number}", "info"
+                    gettext("قيد مرحل"), gettext(f"تم ترحيل القيد رقم {entry.entry_number}"), "info"
                 )
             elif entry.is_reversed:
                 RealTimeAccountingListeners._send_notification(
-                    "قيد معكوس", f"تم عكس القيد رقم {entry.entry_number}", "warning"
+                    gettext("قيد معكوس"), gettext(f"تم عكس القيد رقم {entry.entry_number}"), "warning"
                 )
 
         except Exception as e:
-            print(f"خطأ في مستمع تحديث القيد: {e}")
+            print(gettext(f"خطأ في مستمع تحديث القيد: {e}"))
 
     @staticmethod
     def _on_journal_line_created(line):
@@ -140,7 +141,7 @@ class RealTimeAccountingListeners:
                 RealTimeAccountingListeners._update_account_balance(line.account_id)
 
         except Exception as e:
-            print(f"خطأ في مستمع إنشاء سطر القيد: {e}")
+            print(gettext(f"خطأ في مستمع إنشاء سطر القيد: {e}"))
 
     @staticmethod
     def _on_account_updated(account):
@@ -162,13 +163,13 @@ class RealTimeAccountingListeners:
             balance = account.get_balance()
             if abs(balance) > 100000:  # أكثر من 100,000 درهم
                 RealTimeAccountingListeners._send_notification(
-                    "رصيد عالي",
-                    f"رصيد حساب {account.full_name} عالي: {balance:,.2f} درهم",
+                    gettext("رصيد عالي"),
+                    gettext(f"رصيد حساب {account.full_name} عالي: {balance:,.2f} درهم"),
                     "warning",
                 )
 
         except Exception as e:
-            print(f"خطأ في مستمع تحديث الحساب: {e}")
+            print(gettext(f"خطأ في مستمع تحديث الحساب: {e}"))
 
     @staticmethod
     def _on_expense_created(expense):
@@ -190,21 +191,21 @@ class RealTimeAccountingListeners:
 
             # إشعار فوري
             RealTimeAccountingListeners._send_notification(
-                "مصروف جديد",
-                f"تم إنشاء مصروف جديد رقم {expense.expense_number} بقيمة {expense.amount_aed:,.2f} درهم",
+                gettext("مصروف جديد"),
+                gettext(f"تم إنشاء مصروف جديد رقم {expense.expense_number} بقيمة {expense.amount_aed:,.2f} درهم"),
                 "info",
             )
 
             # فحص حدود الموافقة
             if expense.requires_approval and expense.amount_aed > expense.category.approval_limit:
                 RealTimeAccountingListeners._send_notification(
-                    "موافقة مطلوبة",
-                    f"مصروف رقم {expense.expense_number} يحتاج موافقة (يتجاوز الحد المسموح)",
+                    gettext("موافقة مطلوبة"),
+                    gettext(f"مصروف رقم {expense.expense_number} يحتاج موافقة (يتجاوز الحد المسموح)"),
                     "warning",
                 )
 
         except Exception as e:
-            print(f"خطأ في مستمع إنشاء المصروف: {e}")
+            print(gettext(f"خطأ في مستمع إنشاء المصروف: {e}"))
 
     @staticmethod
     def _on_cheque_updated(cheque):
@@ -225,21 +226,21 @@ class RealTimeAccountingListeners:
 
             # إشعار حسب الحالة
             status_messages = {
-                "received": "تم استلام شيك وارد",
-                "issued": "تم إصدار شيك صادر",
-                "cleared": "تم صرف شيك",
-                "bounced": "شيك مرتد",
+                "received": gettext("تم استلام شيك وارد"),
+                "issued": gettext("تم إصدار شيك صادر"),
+                "cleared": gettext("تم صرف شيك"),
+                "bounced": gettext("شيك مرتد"),
             }
 
             if cheque.status in status_messages:
                 RealTimeAccountingListeners._send_notification(
                     status_messages[cheque.status],
-                    f"شيك رقم {cheque.cheque_bank_number} - {cheque.status_ar}",
+                    gettext(f"شيك رقم {cheque.cheque_bank_number} - {cheque.status_ar}"),
                     ("success" if cheque.status == "cleared" else "warning" if cheque.status == "bounced" else "info"),
                 )
 
         except Exception as e:
-            print(f"خطأ في مستمع تحديث الشيك: {e}")
+            print(gettext(f"خطأ في مستمع تحديث الشيك: {e}"))
 
     @staticmethod
     def _log_event(event_type, data):
@@ -250,7 +251,7 @@ class RealTimeAccountingListeners:
             print(f"🔔 حدث محاسبي: {event_type} - {json.dumps(data, ensure_ascii=False)}")
 
         except Exception as e:
-            print(f"خطأ في تسجيل الحدث: {e}")
+            print(gettext(f"خطأ في تسجيل الحدث: {e}"))
 
     @staticmethod
     def _send_notification(title, message, level="info"):
@@ -263,7 +264,7 @@ class RealTimeAccountingListeners:
             print(f"{icon} {title}: {message}")
 
         except Exception as e:
-            print(f"خطأ في إرسال الإشعار: {e}")
+            print(gettext(f"خطأ في إرسال الإشعار: {e}"))
 
     @staticmethod
     def _update_statistics():
@@ -285,7 +286,7 @@ class RealTimeAccountingListeners:
             print(f"📊 إحصائيات محدثة: {json.dumps(stats, ensure_ascii=False)}")
 
         except Exception as e:
-            print(f"خطأ في تحديث الإحصائيات: {e}")
+            print(gettext(f"خطأ في تحديث الإحصائيات: {e}"))
 
     @staticmethod
     def _update_account_balance(account_id):
@@ -307,7 +308,7 @@ class RealTimeAccountingListeners:
                 )
 
         except Exception as e:
-            print(f"خطأ في تحديث رصيد الحساب: {e}")
+            print(gettext(f"خطأ في تحديث رصيد الحساب: {e}"))
 
 
 class AccountingEventStream:
@@ -337,7 +338,7 @@ class AccountingEventStream:
             try:
                 listener(event)
             except Exception as e:
-                print(f"خطأ في المستمع: {e}")
+                print(gettext(f"خطأ في المستمع: {e}"))
 
     def get_recent_events(self, limit=50):
         """الحصول على الأحداث الأخيرة"""

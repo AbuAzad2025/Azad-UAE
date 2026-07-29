@@ -11,6 +11,7 @@ from extensions import db
 from models.payment_vault import PaymentVault
 from utils.currency_utils import get_system_default_currency
 from utils.nowpayments_ipn import get_nowpayments_ipn_url
+from flask_babel import gettext
 
 
 class StoreOnlinePaymentService:
@@ -36,14 +37,14 @@ class StoreOnlinePaymentService:
         if not key:
             key = (current_app.config.get("NOWPAYMENTS_API_KEY") or "").strip()
         if not key:
-            raise ValueError("بوابة الدفع غير مهيأة على المنصة.")
+            raise ValueError(gettext("بوابة الدفع غير مهيأة على المنصة."))
         return key
 
     @staticmethod
     def create_payment_for_sale(sale, store, *, customer_email: str | None = None, crypto_currency: str = "btc"):
         amount_aed = float(Decimal(str(sale.amount_aed or 0)))
         if amount_aed < 1:
-            raise ValueError("الحد الأدنى للدفع الإلكتروني 1 AED.")
+            raise ValueError(gettext("الحد الأدنى للدفع الإلكتروني 1 AED."))
         amount = float(Decimal(str(sale.total_amount or 0)))
 
         currency = (sale.currency or get_system_default_currency()).lower()
@@ -72,13 +73,13 @@ class StoreOnlinePaymentService:
             timeout=30,
         )
         if response.status_code not in (200, 201):
-            raise ValueError(f"فشل إنشاء الدفع: {response.text[:200]}")
+            raise ValueError(gettext(f"فشل إنشاء الدفع: {response.text[:200]}"))
 
         data = response.json()
         payment_id = data.get("payment_id")
         payment_url = data.get("invoice_url") or data.get("payment_url")
         if not payment_url:
-            raise ValueError("لم يُرجَع رابط الدفع من البوابة.")
+            raise ValueError(gettext("لم يُرجَع رابط الدفع من البوابة."))
 
         sale.checkout_gateway_ref = str(payment_id)
         sale.checkout_payment_method = sale.checkout_payment_method or "online_pay"

@@ -12,6 +12,7 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import joinedload
 from typing import TYPE_CHECKING, Any
 
+from flask_babel import gettext
 from extensions import db
 
 if TYPE_CHECKING:
@@ -61,8 +62,8 @@ class AIService:
     """
 
     # AI Configuration
-    NAME = "أزاد"
-    COMPANY = "شركة أزاد للأنظمة الذكية"
+    NAME = gettext("أزاد")
+    COMPANY = gettext("شركة أزاد للأنظمة الذكية")
     DEVELOPER = "م. أحمد غنام"
 
     # تهيئة المكونات الذكية
@@ -219,50 +220,50 @@ class AIService:
 
     # قائمة الكلمات المفتاحية للمعلومات السرية
     SENSITIVE_KEYWORDS = [
-        "كلمة مرور",
-        "كلمات مرور",
-        "كلمة المرور",
-        "كلمات المرور",
-        "كلمة سر",
-        "كلمات سر",
-        "كلمة السر",
-        "كلمات السر",
-        "باسورد",
+        gettext("كلمة مرور"),
+        gettext("كلمات مرور"),
+        gettext("كلمة المرور"),
+        gettext("كلمات المرور"),
+        gettext("كلمة سر"),
+        gettext("كلمات سر"),
+        gettext("كلمة السر"),
+        gettext("كلمات السر"),
+        gettext("باسورد"),
         "password",
         "passwords",
         "pass",
         "pwd",
-        "معلومات مستخدم",
-        "معلومات مستخدمين",
-        "معلومات المستخدم",
-        "معلومات المستخدمين",
-        "بيانات مستخدم",
-        "بيانات مستخدمين",
-        "بيانات المستخدم",
-        "بيانات المستخدمين",
+        gettext("معلومات مستخدم"),
+        gettext("معلومات مستخدمين"),
+        gettext("معلومات المستخدم"),
+        gettext("معلومات المستخدمين"),
+        gettext("بيانات مستخدم"),
+        gettext("بيانات مستخدمين"),
+        gettext("بيانات المستخدم"),
+        gettext("بيانات المستخدمين"),
         "user info",
         "user data",
         "users info",
         "users data",
         "user",
         "users",
-        "صلاحيات",
-        "صلاحية",
+        gettext("صلاحيات"),
+        gettext("صلاحية"),
         "permissions",
         "permission",
         "roles",
         "role",
         "access",
-        "مفتاح",
-        "مفاتيح",
+        gettext("مفتاح"),
+        gettext("مفاتيح"),
         "key",
         "keys",
         "token",
         "tokens",
         "secret",
         "secrets",
-        "حساب",
-        "حسابات",
+        gettext("حساب"),
+        gettext("حسابات"),
         "account",
         "accounts",
         "account details",
@@ -322,17 +323,17 @@ class AIService:
 
         # تحليل ذكي: هل الرسالة تحتوي على مجموعة من الكلمات السرية؟
         password_keywords = [
-            "كلمة",
-            "كلمات",
-            "مرور",
-            "سر",
+            gettext("كلمة"),
+            gettext("كلمات"),
+            gettext("مرور"),
+            gettext("سر"),
             "password",
             "pass",
             "pwd",
-            "باسورد",
+            gettext("باسورد"),
         ]
-        user_keywords = ["مستخدم", "مستخدمين", "user", "users", "معلومات", "بيانات"]
-        security_keywords = ["صلاحيات", "صلاحية", "permission", "access", "role"]
+        user_keywords = [gettext("مستخدم"), gettext("مستخدمين"), "user", "users", gettext("معلومات"), gettext("بيانات")]
+        security_keywords = [gettext("صلاحيات"), gettext("صلاحية"), "permission", "access", "role"]
 
         # فحص ذكي
         is_about_password = any(kw in message_normalized for kw in password_keywords)
@@ -355,10 +356,10 @@ class AIService:
                 False,
                 {
                     "type": "warning",
-                    "message": "🔒 **عذراً، هذه المعلومات سرية**\n\n"
-                    "المعلومات التي طلبتها (كلمات المرور، معلومات المستخدمين، الصلاحيات) "
-                    "متاحة فقط لمالك النظام.\n\n"
-                    "إذا كنت بحاجة للوصول لهذه المعلومات، يرجى التواصل مع مدير النظام.",
+                    "message": gettext("🔒 **عذراً، هذه المعلومات سرية**\n\n")
+                    + gettext("المعلومات التي طلبتها (كلمات المرور، معلومات المستخدمين، الصلاحيات) ")
+                    + gettext("متاحة فقط لمالك النظام.\n\n")
+                    + gettext("إذا كنت بحاجة للوصول لهذه المعلومات، يرجى التواصل مع مدير النظام."),
                     "icon": "🔒",
                 },
             )
@@ -385,7 +386,7 @@ class AIService:
             "id": user.id,
             "username": user.username,
             "email": user.email,
-            "role": user.role.name_ar if user.role else "لا يوجد",
+            "role": user.role.name_ar if user.role else gettext("لا يوجد"),
             "is_active": user.is_active,
             "is_owner": user.is_owner,
         }
@@ -416,7 +417,7 @@ class AIService:
             if not user:
                 return {
                     "success": False,
-                    "message": f"لم يتم العثور على مستخدم بالاسم: {username}",
+                    "message": gettext(f"لم يتم العثور على مستخدم بالاسم: {username}"),
                 }
 
             summary = AIService._user_summary(user)
@@ -480,7 +481,7 @@ class AIService:
             "recommended_price": float(recommended),
             "base_price": float(base_price),
             "customer_avg": float(avg_sale_price) if avg_sale_price else None,
-            "reason": f"سعر موصى به لـ {customer.name} بناءً على السجل",
+            "reason": gettext(f"سعر موصى به لـ {customer.name} بناءً على السجل"),
         }
 
     @staticmethod
@@ -614,7 +615,7 @@ class AIService:
             "medium": "⚠️ عميل جيد - المتابعة العادية كافية",
             "high": "🔴 عميل عالي المخاطر - يُنصح بالدفع المسبق",
         }
-        return recommendations.get(risk_level, "تحليل غير متوفر")
+        return recommendations.get(risk_level, gettext("تحليل غير متوفر"))
 
     @staticmethod
     def get_exchange_rate_suggestion(currency, target_date=None):
@@ -645,7 +646,7 @@ class AIService:
                 "currency": currency,
                 "suggested_rate": float(avg_rate),
                 "latest_rate": float(latest_rate),
-                "source": "نظام داخلي - متوسط آخر 7 أيام",
+                "source": gettext("نظام داخلي - متوسط آخر 7 أيام"),
                 "count": len(recent_sales),
             }
 
@@ -655,7 +656,7 @@ class AIService:
             "currency": currency,
             "suggested_rate": default_rates.get(currency, 1.0),
             "latest_rate": None,
-            "source": "سعر افتراضي",
+            "source": gettext("سعر افتراضي"),
             "count": 0,
         }
 
@@ -676,7 +677,7 @@ class AIService:
             return {
                 "prediction": None,
                 "confidence": 0,
-                "message": "لا توجد بيانات كافية",
+                "message": gettext("لا توجد بيانات كافية"),
             }
 
         # Calculate daily averages
@@ -694,7 +695,7 @@ class AIService:
             return {
                 "prediction": None,
                 "confidence": 0,
-                "message": "بيانات غير كافية (يحتاج 7 أيام)",
+                "message": gettext("بيانات غير كافية (يحتاج 7 أيام)"),
             }
 
         n = len(values)
@@ -716,7 +717,7 @@ class AIService:
         ss_tot = sum((y[i] - y_mean) ** 2 for i in range(n))
         r_squared = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0
 
-        trend = "صاعد 📈" if slope > 0 else "نازل 📉" if slope < 0 else "مستقر ➡️"
+        trend = gettext("صاعد 📈") if slope > 0 else gettext("نازل 📉") if slope < 0 else gettext("مستقر ➡️")
 
         return {
             "prediction": {
@@ -743,7 +744,7 @@ class AIService:
         sales = sales.all()
 
         if not sales:
-            return {"success": False, "message": "لا توجد مبيعات"}
+            return {"success": False, "message": gettext("لا توجد مبيعات")}
 
         total_revenue = sum((Decimal(str(s.amount_aed)) for s in sales), Decimal("0"))
         total_cost = Decimal("0")
@@ -813,7 +814,7 @@ class AIService:
         sales = sales.all()
 
         if len(sales) < 10:
-            return {"success": False, "message": "بيانات غير كافية"}
+            return {"success": False, "message": gettext("بيانات غير كافية")}
 
         # تحليل زمني
         weekday_sales = {i: {"count": 0, "total": Decimal("0")} for i in range(7)}
@@ -832,13 +833,13 @@ class AIService:
         peak_hour = max(hour_sales.items(), key=lambda x: x[1]["count"])
 
         days_ar = [
-            "الإثنين",
-            "الثلاثاء",
-            "الأربعاء",
-            "الخميس",
-            "الجمعة",
-            "السبت",
-            "الأحد",
+            gettext("الإثنين"),
+            gettext("الثلاثاء"),
+            gettext("الأربعاء"),
+            gettext("الخميس"),
+            gettext("الجمعة"),
+            gettext("السبت"),
+            gettext("الأحد"),
         ]
 
         return {
@@ -862,7 +863,7 @@ class AIService:
         products = q.all()
 
         if not products:
-            return {"success": False, "message": "لا توجد منتجات"}
+            return {"success": False, "message": gettext("لا توجد منتجات")}
 
         out = sum(1 for p in products if p.current_stock <= 0)
         low = sum(1 for p in products if 0 < p.current_stock <= p.min_stock_alert)
@@ -875,9 +876,9 @@ class AIService:
             "summary": {"total": len(products), "out": out, "low": low, "good": good},
             "health_score": health_score,
             "rating": (
-                "ممتاز"
+                gettext("ممتاز")
                 if health_score >= 80
-                else ("جيد" if health_score >= 60 else "مقبول" if health_score >= 40 else "ضعيف")
+                else (gettext("جيد") if health_score >= 60 else gettext("مقبول") if health_score >= 40 else gettext("ضعيف"))
             ),
         }
 
@@ -1257,7 +1258,7 @@ class AIService:
             return "\n\n".join(data_parts)
 
         except Exception as e:
-            return f"خطأ في جمع البيانات: {str(e)}"
+            return gettext(f"خطأ في جمع البيانات: {str(e)}")
 
     @staticmethod
     def generate_business_insights():
@@ -1284,9 +1285,9 @@ class AIService:
                 insights.append(
                     {
                         "type": "warning",
-                        "title": "تنبيه المخزون",
-                        "message": f"يوجد {low_stock_count} منتج بمخزون منخفض",
-                        "action": "تحقق من المستودع",
+                        "title": gettext("تنبيه المخزون"),
+                        "message": gettext(f"يوجد {low_stock_count} منتج بمخزون منخفض"),
+                        "action": gettext("تحقق من المستودع"),
                         "priority": "high",
                     }
                 )
@@ -1303,9 +1304,9 @@ class AIService:
                 insights.append(
                     {
                         "type": "info",
-                        "title": "متابعة المدفوعات",
-                        "message": f"{overdue_count} عميل لديهم ذمم أكثر من 1000 درهم",
-                        "action": "تواصل مع العملاء",
+                        "title": gettext("متابعة المدفوعات"),
+                        "message": gettext(f"{overdue_count} عميل لديهم ذمم أكثر من 1000 درهم"),
+                        "action": gettext("تواصل مع العملاء"),
                         "priority": "medium",
                     }
                 )
@@ -1321,9 +1322,9 @@ class AIService:
                 insights.append(
                     {
                         "type": "info",
-                        "title": "مبيعات اليوم",
-                        "message": "لا توجد مبيعات اليوم",
-                        "action": "تحفيز المبيعات",
+                        "title": gettext("مبيعات اليوم"),
+                        "message": gettext("لا توجد مبيعات اليوم"),
+                        "action": gettext("تحفيز المبيعات"),
                         "priority": "low",
                     }
                 )
@@ -1334,8 +1335,8 @@ class AIService:
             return [
                 {
                     "type": "error",
-                    "title": "خطأ",
-                    "message": f"فشل توليد الرؤى: {str(e)}",
+                    "title": gettext("خطأ"),
+                    "message": gettext(f"فشل توليد الرؤى: {str(e)}"),
                     "action": "",
                     "priority": "low",
                 }
@@ -1385,16 +1386,16 @@ class AIService:
     def contextual_help(page, user_role):
         """مساعدة سياقية حسب الصفحة"""
         help_content = {
-            "dashboard": "لوحة التحكم تعرض إحصائيات شاملة عن النظام",
-            "sales": "صفحة المبيعات لإدارة الفواتير والمبيعات",
-            "products": "إدارة المنتجات والمخزون",
-            "customers": "إدارة العملاء والذمم",
-            "warehouse": "إدارة المستودعات والمخزون",
+            "dashboard": gettext("لوحة التحكم تعرض إحصائيات شاملة عن النظام"),
+            "sales": gettext("صفحة المبيعات لإدارة الفواتير والمبيعات"),
+            "products": gettext("إدارة المنتجات والمخزون"),
+            "customers": gettext("إدارة العملاء والذمم"),
+            "warehouse": gettext("إدارة المستودعات والمخزون"),
         }
 
         return {
             "page": page,
-            "help": help_content.get(page, "لا توجد مساعدة متاحة لهذه الصفحة"),
+            "help": help_content.get(page, gettext("لا توجد مساعدة متاحة لهذه الصفحة")),
             "user_role": user_role,
         }
 
@@ -1406,7 +1407,7 @@ class AIService:
             return {
                 "success": True,
                 "analysis": analysis,
-                "summary": f"تم تحليل {len(analysis)} جانب من أداء النظام",
+                "summary": gettext(f"تم تحليل {len(analysis)} جانب من أداء النظام"),
                 "generated_at": datetime.now().isoformat(),
             }
         except Exception as e:
@@ -1556,7 +1557,7 @@ class AIService:
 
                 return AzadResponses.get_error_response()
             except Exception:
-                return "عذراً، حدث خطأ. يرجى المحاولة مرة أخرى."
+                return gettext("عذراً، حدث خطأ. يرجى المحاولة مرة أخرى.")
 
     @staticmethod
     def analyze_sales_with_predictions(days_ahead=30):
@@ -1611,9 +1612,9 @@ class AIService:
         """معلومات الضرائب والجمارك."""
         try:
             q = query.lower()
-            if "vat" in q or "ضريبة" in query:
+            if "vat" in q or gettext("ضريبة") in query:
                 return get_tax_info("uae") or get_tax_advice(query)
-            if "customs" in q or "جمارك" in query:
+            if "customs" in q or gettext("جمارك") in query:
                 return get_customs_advice(query)
             return get_tax_advice(query)
         except Exception as e:
@@ -1648,7 +1649,7 @@ class AIService:
             return tip
         except Exception as e:
             logger.warning("get_customer_service_response failed: %s", e)
-            return "عذراً، حدث خطأ. يرجى المحاولة مرة أخرى."
+            return gettext("عذراً، حدث خطأ. يرجى المحاولة مرة أخرى.")
 
     @staticmethod
     def get_system_guide(topic):
@@ -1693,9 +1694,9 @@ class AIService:
         """معلومات قانونية متقدمة."""
         try:
             topic = str(law_topic).lower()
-            if "customs" in topic or "جمارك" in str(law_topic):
+            if "customs" in topic or gettext("جمارك") in str(law_topic):
                 return AdvancedLaws.get_customs_info("uae")
-            if "shipping" in topic or "شحن" in str(law_topic):
+            if "shipping" in topic or gettext("شحن") in str(law_topic):
                 return AdvancedLaws.get_shipping_info("air")
             return AdvancedLaws.get_tax_info("uae", law_topic)
         except Exception as e:
@@ -2038,7 +2039,7 @@ class AIService:
 
         except Exception as e:
             logger.error(f"Chat failed: {e}")
-            return {"response": "عذراً، حدث خطأ"}
+            return {"response": gettext("عذراً، حدث خطأ")}
 
     @staticmethod
     def self_reflect():
@@ -2149,7 +2150,7 @@ class AIService:
             },
             "master_brain": {
                 "available": True,
-                "description": "العقل الموحد الخارق - يجمع كل القدرات",
+                "description": gettext("العقل الموحد الخارق - يجمع كل القدرات"),
                 "features": [
                     "Unified Intelligence",
                     "Lightning Fast Response",
@@ -2158,13 +2159,13 @@ class AIService:
                     "Expert in All Domains",
                 ],
                 "domains": [
-                    "محاسبة وضرائب",
-                    "إدارة مالية",
-                    "هندسة وصيانة",
-                    "إدارة مخزون",
-                    "قانون تجاري",
-                    "برمجة وتقنية",
-                    "سكرتارية تنفيذية",
+                    gettext("محاسبة وضرائب"),
+                    gettext("إدارة مالية"),
+                    gettext("هندسة وصيانة"),
+                    gettext("إدارة مخزون"),
+                    gettext("قانون تجاري"),
+                    gettext("برمجة وتقنية"),
+                    gettext("سكرتارية تنفيذية"),
                 ],
             },
         }
@@ -2205,7 +2206,7 @@ class AIService:
         except Exception as e:
             logger.error(f"Genius query failed: {e}")
             return {
-                "answer": "عذراً، حدث خطأ. يرجى المحاولة مرة أخرى.",
+                "answer": gettext("عذراً، حدث خطأ. يرجى المحاولة مرة أخرى."),
                 "confidence": 0,
             }
 
@@ -2248,7 +2249,7 @@ class AIService:
             return brain.explain(concept)
 
         except Exception as e:
-            return f"عذراً، لم أتمكن من الشرح: {e}"
+            return gettext(f"عذراً، لم أتمكن من الشرح: {e}")
 
     @staticmethod
     def validate_entry(debit: float, credit: float):
@@ -2310,7 +2311,7 @@ class AIService:
 
         except Exception as e:
             logger.error(f"Transformers generation failed: {e}")
-            return "عذراً، حدث خطأ"
+            return gettext("عذراً، حدث خطأ")
 
     @staticmethod
     def analyze_attention(text: str):
@@ -2329,7 +2330,7 @@ class AIService:
             return {
                 "attention_map": understanding.get("attention_map", {}),
                 "tokens": understanding.get("tokens", []),
-                "visualization": "خريطة الانتباه جاهزة",
+                "visualization": gettext("خريطة الانتباه جاهزة"),
             }
 
         except Exception:

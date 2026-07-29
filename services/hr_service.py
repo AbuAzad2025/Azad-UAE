@@ -3,6 +3,7 @@ from datetime import datetime, timezone, date
 from decimal import Decimal
 from typing import Any
 from extensions import db
+from flask_babel import gettext
 from models import (
     Department,
     HRContract,
@@ -32,7 +33,7 @@ class HRService:
             return
         scoped = branch_scope_id_for(user)
         if scoped is not None and branch_id is not None and int(branch_id) != int(scoped):
-            raise ValueError("لا يمكنك التعامل مع سجل من فرع آخر.")
+            raise ValueError(gettext("لا يمكنك التعامل مع سجل من فرع آخر."))
 
     @staticmethod
     def clock_in(user, branch_id=None):
@@ -44,7 +45,7 @@ class HRService:
             Attendance.check_out.is_(None),
         ).first()
         if existing:
-            raise ValueError("لديك تسجيل حضور مفتوح بالفعل. قم بتسجيل الانصراف أولاً.")
+            raise ValueError(gettext("لديك تسجيل حضور مفتوح بالفعل. قم بتسجيل الانصراف أولاً."))
         if branch_id:
             HRService._branch_check(user, branch_id)
         att = Attendance(
@@ -75,7 +76,7 @@ class HRService:
             .first()
         )
         if not att:
-            raise ValueError("لا يوجد تسجيل حضور مفتوح اليوم.")
+            raise ValueError(gettext("لا يوجد تسجيل حضور مفتوح اليوم."))
         now = datetime.now(timezone.utc)
         check_in = att.check_in
         if check_in.tzinfo is None:
@@ -128,17 +129,17 @@ class HRService:
     def request_leave(data, user):
         tid = HRService._tid(user)
         if not tid and not is_global_owner_user(user):
-            raise ValueError("لا توجد شركة نشطة.")
+            raise ValueError(gettext("لا توجد شركة نشطة."))
         if not data.get("leave_type_id"):
-            raise ValueError("نوع الإجازة مطلوب.")
+            raise ValueError(gettext("نوع الإجازة مطلوب."))
         date_from = datetime.strptime(data["date_from"], "%Y-%m-%d").date()
         date_to = datetime.strptime(data["date_to"], "%Y-%m-%d").date()
         if date_to < date_from:
-            raise ValueError("تاريخ النهاية يجب أن يكون بعد تاريخ البداية.")
+            raise ValueError(gettext("تاريخ النهاية يجب أن يكون بعد تاريخ البداية."))
         duration = (date_to - date_from).days + 1
         leave_type = db.session.get(LeaveType, int(data["leave_type_id"]))
         if not leave_type or int(leave_type.tenant_id) != int(tid or 0):
-            raise ValueError("نوع الإجازة غير صالح.")
+            raise ValueError(gettext("نوع الإجازة غير صالح."))
         leave = LeaveRequest(
             tenant_id=int(tid) if tid else 0,
             branch_id=int(user.branch_id) if getattr(user, "branch_id", None) else None,
@@ -163,9 +164,9 @@ class HRService:
     def approve_leave(leave_id, manager):
         leave = db.session.get(LeaveRequest, int(leave_id))
         if not leave:
-            raise ValueError("طلب الإجازة غير موجود.")
+            raise ValueError(gettext("طلب الإجازة غير موجود."))
         if leave.state != "draft":
-            raise ValueError("يمكن الموافقة على الطلبات في حالة المسودة فقط.")
+            raise ValueError(gettext("يمكن الموافقة على الطلبات في حالة المسودة فقط."))
         leave.state = "approved"
         leave.manager_id = manager.id
         leave.updated_at = datetime.now(timezone.utc)
@@ -180,9 +181,9 @@ class HRService:
     def refuse_leave(leave_id, manager, reason=None):
         leave = db.session.get(LeaveRequest, int(leave_id))
         if not leave:
-            raise ValueError("طلب الإجازة غير موجود.")
+            raise ValueError(gettext("طلب الإجازة غير موجود."))
         if leave.state != "draft":
-            raise ValueError("يمكن رفض الطلبات في حالة المسودة فقط.")
+            raise ValueError(gettext("يمكن رفض الطلبات في حالة المسودة فقط."))
         leave.state = "refused"
         leave.manager_id = manager.id
         leave.rejected_reason = reason
@@ -214,7 +215,7 @@ class HRService:
     def create_department(data, user):
         tid = HRService._tid(user)
         if not tid:
-            raise ValueError("لا توجد شركة نشطة.")
+            raise ValueError(gettext("لا توجد شركة نشطة."))
         dept = Department(
             tenant_id=int(tid),
             name=data.get("name"),
@@ -249,7 +250,7 @@ class HRService:
     def create_contract(data, user):
         tid = HRService._tid(user)
         if not tid:
-            raise ValueError("لا توجد شركة نشطة.")
+            raise ValueError(gettext("لا توجد شركة نشطة."))
         branch_id = data.get("branch_id")
         HRService._branch_check(user, branch_id)
         contract = HRContract(
@@ -281,7 +282,7 @@ class PayrollEngine:
     @staticmethod
     def assert_mutable(transaction):
         if transaction.status in PayrollEngine.LOCKED_STATUSES:
-            raise ImmutableRecordError(f"لا يمكن تعديل معاملة راتب في حالة {transaction.status}.")
+            raise ImmutableRecordError(gettext(f"لا يمكن تعديل معاملة راتب في حالة {transaction.status}."))
 
     @staticmethod
     def register_employee_debt(employee_id, tenant_id, amount, month, year, reason="payroll_shortfall"):
@@ -422,7 +423,7 @@ class PayrollService:
     @staticmethod
     def assert_batch_mutable(batch):
         if batch.status in PayrollEngine.LOCKED_STATUSES:
-            raise ImmutableRecordError(f"لا يمكن تعديل دفعة رواتب في حالة {batch.status}.")
+            raise ImmutableRecordError(gettext(f"لا يمكن تعديل دفعة رواتب في حالة {batch.status}."))
 
     @staticmethod
     def update_allowances(transaction, new_allowances, batch=None):
@@ -443,7 +444,7 @@ class PayrollService:
     def approve_batch(batch, user_id):
         PayrollService.assert_batch_mutable(batch)
         if not batch.transactions:
-            raise ValueError("لا توجد معاملات راتب في الدفعة.")
+            raise ValueError(gettext("لا توجد معاملات راتب في الدفعة."))
 
         from services.gl_posting import post_or_fail
         from services.gl_service import GLService

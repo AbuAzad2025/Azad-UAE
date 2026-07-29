@@ -1,6 +1,7 @@
 from datetime import timezone
 from decimal import Decimal, ROUND_HALF_UP
 from flask import current_app
+from flask_babel import gettext
 from extensions import db
 from models import PartnerCommissionEntry, Sale, SaleLine, Payment
 from services.stock_service import StockService
@@ -69,7 +70,7 @@ class SaleService:
             raise ValueError("⚠️ العميل غير صالح أو غير نشط.\n💡 اختر عميل نشط من القائمة أو قم بتفعيله.")
 
         if not seller or not seller.is_active:
-            raise ValueError("البائع غير صالح أو غير نشط")
+            raise ValueError(gettext("البائع غير صالح أو غير نشط"))
 
         if not lines_data or len(lines_data) == 0:
             raise ValueError('⚠️ يجب إضافة منتج واحد على الأقل للفاتورة.\n💡 اضغط زر "➕ إضافة صف" واختر منتجاً.')
@@ -90,10 +91,10 @@ class SaleService:
         raw_tax_rate = Decimal(str(tax_rate)) if tax_rate else Decimal("0")
 
         if discount_decimal < Decimal("0"):
-            raise ValueError("قيمة الخصم لا يمكن أن تكون سالبة")
+            raise ValueError(gettext("قيمة الخصم لا يمكن أن تكون سالبة"))
 
         if shipping_decimal < Decimal("0"):
-            raise ValueError("تكلفة الشحن لا يمكن أن تكون سالبة")
+            raise ValueError(gettext("تكلفة الشحن لا يمكن أن تكون سالبة"))
 
         # SaaS quota — a confirmed sale consumes both monthly quotas. No-op
         # outside a tenant/request context (owner/platform flows).
@@ -146,16 +147,16 @@ class SaleService:
                 tenant_id=tenant_id,
             )
             if rate_info.get("rate_mode") == "needs_input":
-                raise ValueError(
+                raise ValueError(gettext(
                     "⚠️ سعر الصرف غير متوفر.\n"
                     "💡 اذهب إلى إعدادات المالك ← أسعار الصرف ← أدخل سعر يدوي، "
                     'أو أدخل سعراً في حقل "سعر الصرف" بالفاتورة.'
-                )
+                ))
             exchange_rate = Decimal(str(rate_info["rate"]))
 
             # Validate exchange rate
             if exchange_rate <= Decimal("0"):
-                raise ValueError("سعر الصرف غير صالح")
+                raise ValueError(gettext("سعر الصرف غير صالح"))
 
             # Create Sale Header
             sale = Sale(
@@ -382,7 +383,7 @@ class SaleService:
             if promotion_evaluation:
                 promo_total = PromotionService.record_applied_promotions(sale, promotion_evaluation)
                 if promo_total < Decimal("0") or promo_total > sale.subtotal:
-                    raise ValueError("قيمة الخصم الترويجي غير صالحة")
+                    raise ValueError(gettext("قيمة الخصم الترويجي غير صالحة"))
 
             sale.calculate_totals()
 
@@ -394,7 +395,7 @@ class SaleService:
                 prepared_payments = SaleService.prepare_split_payments(payments_data, tenant_id=tenant_id)
                 paid_amount_aed = sum((p["amount_aed"] for p in prepared_payments), Decimal("0"))
                 if paid_amount_aed <= Decimal("0"):
-                    raise ValueError("مجموع الدفعات يجب أن يكون أكبر من صفر")
+                    raise ValueError(gettext("مجموع الدفعات يجب أن يكون أكبر من صفر"))
                 sale.paid_amount_aed = paid_amount_aed
             elif payment_data:
                 paid_amount = Decimal(str(payment_data.get("amount", 0)))
@@ -414,7 +415,7 @@ class SaleService:
 
                 # Validate payment amount (in AED)
                 if payment_exchange_decimal <= Decimal("0") or paid_amount_aed < Decimal("0"):
-                    raise ValueError("مبلغ الدفع لا يمكن أن يكون سالب")
+                    raise ValueError(gettext("مبلغ الدفع لا يمكن أن يكون سالب"))
 
                 sale.paid_amount = paid_amount  # في عملة الفاتورة
                 sale.paid_amount_aed = paid_amount_aed  # محول للدرهم
@@ -480,13 +481,13 @@ class SaleService:
         """
         customer = sale.customer
         if not customer:
-            raise ValueError("العميل غير موجود")
+            raise ValueError(gettext("العميل غير موجود"))
 
         warehouse_id = sale.warehouse_id
         tenant_id = getattr(sale, "tenant_id", None)
 
         if SaleService.has_inventory_posted(sale):
-            raise ValueError("تم تنفيذ المخزون لهذه الفاتورة مسبقاً")
+            raise ValueError(gettext("تم تنفيذ المخزون لهذه الفاتورة مسبقاً"))
 
         for line in sale.lines:
             available, msg = StockService.check_availability_in_warehouse(line.product_id, line.quantity, warehouse_id)
@@ -511,7 +512,7 @@ class SaleService:
                 paid_amount, payment_currency, payment_exchange_decimal, tenant_id=tenant_id
             )
             if payment_exchange_decimal <= Decimal("0") or paid_aed < Decimal("0"):
-                raise ValueError("مبلغ الدفع لا يمكن أن يكون سالب")
+                raise ValueError(gettext("مبلغ الدفع لا يمكن أن يكون سالب"))
 
             sale.paid_amount = paid_amount
             sale.paid_amount_aed = paid_aed
@@ -569,7 +570,7 @@ class SaleService:
                     amount_aed=overpayment_aed,
                     payment_method=payment_data["payment_method"],
                     payment_confirmed=(payment_data["payment_method"] != "cheque"),
-                    notes=f"دفع زائد من فاتورة {sale.sale_number}",
+                    notes=gettext(f"دفع زائد من فاتورة {sale.sale_number}"),
                     user_id=sale.seller_id,
                     branch_id=sale.branch_id,
                 )
@@ -636,7 +637,7 @@ class SaleService:
                 "account": ar_account,
                 "concept_code": GLService.get_customer_credit_concept(customer),
                 "debit": sale.total_amount,
-                "description": f"فاتورة {sale.sale_number}",
+                "description": gettext(f"فاتورة {sale.sale_number}"),
             },
             {
                 "account": GLService.get_account_code_for_concept(
@@ -647,7 +648,7 @@ class SaleService:
                 ),
                 "concept_code": "SALES_REVENUE",
                 "credit": revenue_credit,
-                "description": "إيرادات المبيعات",
+                "description": gettext("إيرادات المبيعات"),
             },
         ]
 
@@ -662,7 +663,7 @@ class SaleService:
                     ),
                     "concept_code": "SHIPPING_REVENUE",
                     "credit": shipping_credit,
-                    "description": "إيرادات الشحن",
+                    "description": gettext("إيرادات الشحن"),
                 }
             )
 
@@ -677,7 +678,7 @@ class SaleService:
                     ),
                     "concept_code": "SALES_DISCOUNT",
                     "debit": discount_debit,
-                    "description": "خصومات ممنوحة",
+                    "description": gettext("خصومات ممنوحة"),
                 }
             )
 
@@ -692,7 +693,7 @@ class SaleService:
                     ),
                     "concept_code": "CAMPAIGN_DISCOUNT_EXPENSE",
                     "debit": promo_debit,
-                    "description": "خصومات الحملات الترويجية",
+                    "description": gettext("خصومات الحملات الترويجية"),
                 }
             )
 
@@ -707,7 +708,7 @@ class SaleService:
                     ),
                     "concept_code": "VAT_OUTPUT",
                     "credit": sale.tax_amount,
-                    "description": "ضرائب مستحقة (VAT Output)",
+                    "description": gettext("ضرائب مستحقة (VAT Output)"),
                 }
             )
 
@@ -733,7 +734,7 @@ class SaleService:
                     ),
                     "concept_code": "COGS",
                     "debit": cogs_total_aed,
-                    "description": "تكلفة البضاعة المباعة",
+                    "description": gettext("تكلفة البضاعة المباعة"),
                 },
                 {
                     "account": GLService.get_account_code_for_concept(
@@ -744,7 +745,7 @@ class SaleService:
                     ),
                     "concept_code": "INVENTORY_ASSET",
                     "credit": cogs_total_aed,
-                    "description": "خصم من المخزون",
+                    "description": gettext("خصم من المخزون"),
                 },
             ]
             post_or_fail(
@@ -791,19 +792,19 @@ class SaleService:
         of truth for conversion. Returns a new list of prepared chunk dicts.
         """
         if not payments_data:
-            raise ValueError("قائمة الدفعات فارغة")
+            raise ValueError(gettext("قائمة الدفعات فارغة"))
         prepared = []
         for chunk in payments_data:
             if not isinstance(chunk, dict):
-                raise ValueError("بيانات الدفعة غير صالحة")
+                raise ValueError(gettext("بيانات الدفعة غير صالحة"))
             amount = Decimal(str(chunk.get("amount") or "0"))
             if amount <= Decimal("0"):
-                raise ValueError("مبلغ الدفعة يجب أن يكون أكبر من صفر")
+                raise ValueError(gettext("مبلغ الدفعة يجب أن يكون أكبر من صفر"))
             method = validate_payment_method(chunk.get("payment_method") or chunk.get("method"))
             currency = validate_currency_code(chunk.get("currency") or get_system_default_currency())
             rate = Decimal(str(chunk.get("exchange_rate") or "1"))
             if rate <= Decimal("0"):
-                raise ValueError("سعر الصرف غير صالح")
+                raise ValueError(gettext("سعر الصرف غير صالح"))
             amount_aed = convert_and_quantize_aed(amount, currency, rate, tenant_id=tenant_id)
             prepared.append(
                 {
@@ -831,7 +832,7 @@ class SaleService:
         """
         total_paid_aed = sum((p["amount_aed"] for p in prepared_payments), Decimal("0"))
         if total_paid_aed <= Decimal("0"):
-            raise ValueError("مجموع الدفعات يجب أن يكون أكبر من صفر")
+            raise ValueError(gettext("مجموع الدفعات يجب أن يكون أكبر من صفر"))
 
         remaining_aed = Decimal(str(sale.amount_aed or 0))
         excess_aed = Decimal("0")
@@ -893,7 +894,7 @@ class SaleService:
             amount_aed=excess_aed,
             payment_method=chunk["payment_method"],
             payment_confirmed=(chunk["payment_method"] != "cheque"),
-            notes=f"دفع زائد من فاتورة {sale.sale_number}",
+            notes=gettext(f"دفع زائد من فاتورة {sale.sale_number}"),
             user_id=sale.seller_id,
             branch_id=sale.branch_id,
         )
@@ -945,7 +946,7 @@ class SaleService:
                 try:
                     cheque_date = datetime.strptime(cheque_date, "%Y-%m-%d").date()
                 except ValueError:
-                    raise ValueError("تاريخ الشيك غير صالح")
+                    raise ValueError(gettext("تاريخ الشيك غير صالح"))
 
         payment_number = generate_number(
             "PAY",
@@ -1180,7 +1181,7 @@ class SaleService:
     @staticmethod
     def cancel_sale(sale):
         if sale.status == "cancelled":
-            raise ValueError("الفاتورة ملغاة بالفعل")
+            raise ValueError(gettext("الفاتورة ملغاة بالفعل"))
 
         from models import Payment
 
@@ -1189,7 +1190,7 @@ class SaleService:
             payment_confirmed=True,
         ).count()
         if confirmed_payments > 0:
-            raise ValueError("لا يمكن إلغاء فاتورة لها دفعات مؤكدة. قم بإلغاء الدفعات أولاً.")
+            raise ValueError(gettext("لا يمكن إلغاء فاتورة لها دفعات مؤكدة. قم بإلغاء الدفعات أولاً."))
 
         # Reject any pending payments/cheques linked to this sale
         pending_payments = Payment.query.filter_by(
@@ -1203,8 +1204,8 @@ class SaleService:
 
                 cheque = db.session.get(Cheque, pmt.cheque_id)
                 if cheque and cheque.status not in ["cancelled", "bounced"]:
-                    process_cheque_cancel(cheque, reason=f"إلغاء فاتورة {sale.sale_number}")
-            pmt.reject_payment(f"إلغاء فاتورة {sale.sale_number}")
+                    process_cheque_cancel(cheque, reason=gettext(f"إلغاء فاتورة {sale.sale_number}"))
+            pmt.reject_payment(gettext(f"إلغاء فاتورة {sale.sale_number}"))
 
         customer = sale.customer
 
@@ -1238,7 +1239,7 @@ class SaleService:
                 )
             except Exception as _e:
                 current_app.logger.exception("GL reversal failed for cancelled sale %s", sale.sale_number)
-                raise ValueError(f"فشل عكس القيد المحاسبي: {_e}") from _e
+                raise ValueError(gettext(f"فشل عكس القيد المحاسبي: {_e}")) from _e
 
         # إعادة حساب حالة الدفع بعد الإلغاء
         sale.recalculate_payment_status()

@@ -5,6 +5,7 @@
 import logging
 from decimal import Decimal
 from datetime import timedelta
+from flask_babel import gettext
 from extensions import db
 from models import (
     BankReconciliation,
@@ -101,7 +102,7 @@ class BankReconciliationService:
                 reconciliation_id=reconciliation.id,
                 item_type="outstanding_deposit",
                 transaction_date=cheque.issue_date,
-                description=f"شيك وارد رقم {cheque.cheque_bank_number} - {cheque.drawer_name or ''}",
+                description=gettext(f"شيك وارد رقم {cheque.cheque_bank_number} - {cheque.drawer_name or ''}"),
                 amount=cheque.amount_aed,
                 cheque_id=cheque.id,
             )
@@ -125,7 +126,7 @@ class BankReconciliationService:
                 reconciliation_id=reconciliation.id,
                 item_type="outstanding_withdrawal",
                 transaction_date=cheque.issue_date,
-                description=f"شيك صادر رقم {cheque.cheque_bank_number} - {cheque.payee_name or ''}",
+                description=gettext(f"شيك صادر رقم {cheque.cheque_bank_number} - {cheque.payee_name or ''}"),
                 amount=cheque.amount_aed,
                 cheque_id=cheque.id,
             )
@@ -140,7 +141,7 @@ class BankReconciliationService:
         reconciliation = BankReconciliation.query.get_or_404(reconciliation_id)
 
         if reconciliation.status != "draft":
-            raise ValueError("لا يمكن تعديل مطابقة معتمدة")
+            raise ValueError(gettext("لا يمكن تعديل مطابقة معتمدة"))
 
         item = BankReconciliationItem(
             tenant_id=reconciliation.tenant_id,
@@ -171,7 +172,7 @@ class BankReconciliationService:
         reconciliation = BankReconciliation.query.get_or_404(reconciliation_id)
 
         if reconciliation.status != "draft":
-            raise ValueError("لا يمكن تعديل مطابقة معتمدة")
+            raise ValueError(gettext("لا يمكن تعديل مطابقة معتمدة"))
 
         item = BankReconciliationItem(
             tenant_id=reconciliation.tenant_id,
@@ -202,13 +203,13 @@ class BankReconciliationService:
         reconciliation = BankReconciliation.query.get_or_404(reconciliation_id)
 
         if reconciliation.status != "draft":
-            raise ValueError("المطابقة معتمدة مسبقاً")
+            raise ValueError(gettext("المطابقة معتمدة مسبقاً"))
 
         # التحقق من التوازن
         result = reconciliation.calculate_reconciliation()
 
         if not result["is_balanced"]:
-            raise ValueError(f"المطابقة غير متوازنة - الفرق: {result['difference']}")
+            raise ValueError(gettext(f"المطابقة غير متوازنة - الفرق: {result['difference']}"))
 
         # إنشاء قيود التسوية
 
@@ -222,7 +223,7 @@ class BankReconciliationService:
                     "concept_code": "BANK_FEES",
                     "debit": reconciliation.bank_charges,
                     "credit": 0,
-                    "description": "مصاريف بنكية",
+                    "description": gettext("مصاريف بنكية"),
                 }
             )
             lines.append(
@@ -231,7 +232,7 @@ class BankReconciliationService:
                     "concept_code": "BANK",
                     "debit": 0,
                     "credit": reconciliation.bank_charges,
-                    "description": "مصاريف بنكية",
+                    "description": gettext("مصاريف بنكية"),
                 }
             )
 
@@ -243,7 +244,7 @@ class BankReconciliationService:
                     "concept_code": "BANK",
                     "debit": reconciliation.bank_interest,
                     "credit": 0,
-                    "description": "فوائد بنكية",
+                    "description": gettext("فوائد بنكية"),
                 }
             )
             lines.append(
@@ -252,7 +253,7 @@ class BankReconciliationService:
                     "concept_code": "BANK_INTEREST_INCOME",
                     "debit": 0,
                     "credit": reconciliation.bank_interest,
-                    "description": "فوائد بنكية",
+                    "description": gettext("فوائد بنكية"),
                 }
             )
 
@@ -261,7 +262,7 @@ class BankReconciliationService:
 
             post_or_fail(
                 lines=lines,
-                description=f"قيد تسوية بنك - {reconciliation.reconciliation_number}",
+                description=gettext(f"قيد تسوية بنك - {reconciliation.reconciliation_number}"),
                 reference_type=GLRef.BANK_RECONCILIATION,
                 reference_id=reconciliation.id,
                 branch_id=getattr(reconciliation, "branch_id", None),
@@ -596,7 +597,7 @@ class BankReconciliationService:
         """
         reconciliation = BankReconciliation.query.get_or_404(reconciliation_id)
         if reconciliation.status != "draft":
-            raise ValueError("لا يمكن تعديل مطابقة معتمدة")
+            raise ValueError(gettext("لا يمكن تعديل مطابقة معتمدة"))
 
         for m in matches:
             stmt = db.session.get(BankStatementLine, m["statement_line_id"])
@@ -613,7 +614,7 @@ class BankReconciliationService:
                 tenant_id=reconciliation.tenant_id,
                 item_type="cleared",
                 transaction_date=stmt.transaction_date,
-                description=f"مطابق: {stmt.reference} - {stmt.description}",
+                description=gettext(f"مطابق: {stmt.reference} - {stmt.description}"),
                 amount=abs(Decimal(str(stmt.amount))),
                 journal_entry_id=gl.entry_id,
                 is_cleared=True,

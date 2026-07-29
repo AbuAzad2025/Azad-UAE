@@ -15,6 +15,8 @@ from __future__ import annotations
 
 from decimal import Decimal, ROUND_HALF_UP
 
+from flask_babel import gettext
+
 from extensions import db
 from models import PosCashMovement
 from services.gl_posting import post_or_fail
@@ -39,7 +41,7 @@ class PosCashMovementService:
             branch_id=session.branch_id,
             fallback_key="misc_expense",
         )
-        label = "إيداع نقدي" if movement.movement_type == PosCashMovement.TYPE_PAY_IN else "سحب نقدي"
+        label = gettext("إيداع نقدي") if movement.movement_type == PosCashMovement.TYPE_PAY_IN else gettext("سحب نقدي")
         description = f"{label} POS — جلسة {session.session_number}: {movement.reason}"
         if movement.movement_type == PosCashMovement.TYPE_PAY_OUT:
             lines = [
@@ -97,13 +99,13 @@ class PosCashMovementService:
         authorized_by_user_id: int | None = None,
     ) -> PosCashMovement:
         if movement_type not in PosCashMovement.TYPES:
-            raise ValueError("نوع الحركة النقدية غير صالح.")
+            raise ValueError(gettext("نوع الحركة النقدية غير صالح."))
         amt = Decimal(str(amount or "0")).quantize(_AED_QUANTUM, rounding=ROUND_HALF_UP)
         if amt <= Decimal("0"):
-            raise ValueError("مبلغ الحركة يجب أن يكون أكبر من صفر.")
+            raise ValueError(gettext("مبلغ الحركة يجب أن يكون أكبر من صفر."))
         reason = (reason or "").strip()
         if not reason:
-            raise ValueError("سبب الحركة النقدية مطلوب.")
+            raise ValueError(gettext("سبب الحركة النقدية مطلوب."))
 
         tenant_id = get_active_tenant_id(user) or session.tenant_id
         movement = PosCashMovement(

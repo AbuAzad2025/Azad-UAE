@@ -6,6 +6,7 @@ import logging
 import re
 from datetime import datetime, timezone
 
+from flask_babel import gettext
 from extensions import db
 from models import GLAccount, GLJournalEntry
 
@@ -152,4 +153,4 @@ def assert_period_open(entry_date, tenant_id):
         is_closed=True,
     ).first()
     if closed:
-        raise ValueError(f"الفترة المحاسبية {dt.year}-{dt.month:02d} مقفلة.")
+        raise ValueError(gettext(f"الفترة المحاسبية {dt.year}-{dt.month:02d} مقفلة."))

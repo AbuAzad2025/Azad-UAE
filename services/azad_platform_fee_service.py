@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from decimal import Decimal, ROUND_HALF_UP
 
+from flask_babel import gettext
 from flask import current_app
 
 from extensions import db
@@ -194,18 +195,18 @@ class AzadPlatformFeeService:
                     "account": GL_ACCOUNTS["azad_platform_payable"],
                     "concept_code": "AZAD_PLATFORM_PAYABLE",
                     "debit": total,
-                    "description": f"تسوية رسوم منصة أزاد — {len(fees)} سجل",
+                    "description": gettext(f"تسوية رسوم منصة أزاد — {len(fees)} سجل"),
                 },
                 {
                     "account": GL_ACCOUNTS[payment_method],
                     "concept_code": "BANK" if payment_method == "bank" else "CASH",
                     "credit": total,
-                    "description": f"دفع رسوم منصة أزاد — {total} AED",
+                    "description": gettext(f"دفع رسوم منصة أزاد — {total} AED"),
                 },
             ]
             post_or_fail(
                 lines,
-                description=f"تسوية رسوم منصة أزاد — Tenant {tid}",
+                description=gettext(f"تسوية رسوم منصة أزاد — Tenant {tid}"),
                 reference_type=GLRef.AZAD_PLATFORM_FEE,
                 reference_id=fees[0].id,
                 date=settlement_date,

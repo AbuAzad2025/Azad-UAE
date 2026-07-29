@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from decimal import Decimal
 
+from flask_babel import gettext
 from models import PartnerCommissionEntry
 from services.gl_posting import post_or_fail
 from services.gl_service import GL_ACCOUNTS, GLService
@@ -42,13 +43,13 @@ def post_sale_commissions(sale):
                 "account": GL_ACCOUNTS["commission_expense"],
                 "concept_code": "COMMISSION_EXPENSE",
                 "debit": total,
-                "description": f"عمولات شركاء — {sale.sale_number}",
+                "description": gettext(f"عمولات شركاء — {sale.sale_number}"),
             },
             {
                 "account": GL_ACCOUNTS["partner_current_account"],
                 "concept_code": "PARTNER_CURRENT_ACCOUNT",
                 "credit": total,
-                "description": f"جاري شركاء — {sale.sale_number}",
+                "description": gettext(f"جاري شركاء — {sale.sale_number}"),
             },
         ],
         description=f"Partner commissions {sale.sale_number}",

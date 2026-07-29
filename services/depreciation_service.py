@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 
+from flask_babel import gettext
 from extensions import db
 from utils.db_safety import atomic_transaction
 from models.fixed_asset import FixedAsset
@@ -36,7 +37,7 @@ class DepreciationService:
                     posted += 1
             except ValueError as exc:
                 msg = str(exc)
-                if "مسبقاً" in msg:
+                if gettext("مسبقاً") in msg:
                     skipped += 1
                 else:
                     errors.append(f"{asset.asset_number}: {msg}")

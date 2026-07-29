@@ -1,3 +1,5 @@
+from flask_babel import gettext
+
 VALID_BUSINESS_TYPES = frozenset(
     [
         "general",
@@ -21,23 +23,23 @@ VALID_BUSINESS_TYPES = frozenset(
 )
 
 BUSINESS_TYPE_LABELS = {
-    "general": ("عام", "General"),
-    "automotive": ("كراج / قطع غيار سيارات", "Automotive"),
-    "electronics": ("إلكترونيات", "Electronics"),
-    "supermarket": ("سوبرماركت", "Supermarket"),
-    "pharmacy": ("صيدلية", "Pharmacy"),
-    "restaurant": ("مطعم / كافيه", "Restaurant"),
-    "construction": ("مقاولات", "Construction"),
-    "textile": ("أقمشة / ملابس", "Textile"),
-    "jewelry": ("مجوهرات / ذهب", "Jewelry"),
-    "retail": ("تجارة Retail", "Retail"),
-    "trading": ("تجارة عامة", "Trading"),
-    "batteries": ("بطاريات", "Batteries"),
-    "mobile_new": ("موبايلات جديدة", "New Mobile Phones"),
-    "mobile_used": ("موبايلات مستعملة", "Used Mobile Phones"),
-    "mobile_parts": ("قطع غيار موبايلات", "Mobile Spare Parts"),
-    "clothing": ("ملابس", "Clothing"),
-    "multi_branch_retail": ("تجارة متعددة الفروع", "Multi-Branch Retail"),
+    "general": (gettext("عام"), "General"),
+    "automotive": (gettext("كراج / قطع غيار سيارات"), "Automotive"),
+    "electronics": (gettext("إلكترونيات"), "Electronics"),
+    "supermarket": (gettext("سوبرماركت"), "Supermarket"),
+    "pharmacy": (gettext("صيدلية"), "Pharmacy"),
+    "restaurant": (gettext("مطعم / كافيه"), "Restaurant"),
+    "construction": (gettext("مقاولات"), "Construction"),
+    "textile": (gettext("أقمشة / ملابس"), "Textile"),
+    "jewelry": (gettext("مجوهرات / ذهب"), "Jewelry"),
+    "retail": (gettext("تجارة Retail"), "Retail"),
+    "trading": (gettext("تجارة عامة"), "Trading"),
+    "batteries": (gettext("بطاريات"), "Batteries"),
+    "mobile_new": (gettext("موبايلات جديدة"), "New Mobile Phones"),
+    "mobile_used": (gettext("موبايلات مستعملة"), "Used Mobile Phones"),
+    "mobile_parts": (gettext("قطع غيار موبايلات"), "Mobile Spare Parts"),
+    "clothing": (gettext("ملابس"), "Clothing"),
+    "multi_branch_retail": (gettext("تجارة متعددة الفروع"), "Multi-Branch Retail"),
 }
 
 

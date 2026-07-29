@@ -11,6 +11,7 @@ from extensions import db
 from models import Customer
 from models.shop_customer_account import ShopCustomerAccount
 from utils.currency_utils import resolve_default_currency
+from flask_babel import gettext
 
 logger = logging.getLogger(__name__)
 
@@ -48,14 +49,14 @@ class ShopCustomerAuthService:
     def normalize_email(email: str) -> str:
         email = (email or "").strip().lower()
         if not email or "@" not in email:
-            raise ValueError("البريد الإلكتروني غير صالح.")
+            raise ValueError(gettext("البريد الإلكتروني غير صالح."))
         return email
 
     @staticmethod
     def normalize_phone(phone: str) -> str:
         digits = re.sub(r"\D", "", phone or "")
         if len(digits) < 8:
-            raise ValueError("رقم الهاتف غير صالح.")
+            raise ValueError(gettext("رقم الهاتف غير صالح."))
         return digits
 
     @staticmethod
@@ -70,15 +71,15 @@ class ShopCustomerAuthService:
         tenant_id = int(tenant_id)
         name = (name or "").strip()
         if len(name) < 2:
-            raise ValueError("الاسم مطلوب.")
+            raise ValueError(gettext("الاسم مطلوب."))
         email = ShopCustomerAuthService.normalize_email(email)
         phone_norm = ShopCustomerAuthService.normalize_phone(phone)
         if not password or len(password) < 6:
-            raise ValueError("كلمة المرور 6 أحرف على الأقل.")
+            raise ValueError(gettext("كلمة المرور 6 أحرف على الأقل."))
 
         existing = ShopCustomerAccount.query.filter_by(tenant_id=tenant_id, email=email).first()
         if existing:
-            raise ValueError("هذا البريد مسجّل مسبقاً — سجّل الدخول.")
+            raise ValueError(gettext("هذا البريد مسجّل مسبقاً — سجّل الدخول."))
 
         customer = Customer.query.filter_by(tenant_id=tenant_id, phone=phone_norm).first()
         if not customer:
@@ -123,7 +124,7 @@ class ShopCustomerAuthService:
         email = ShopCustomerAuthService.normalize_email(email)
         account = ShopCustomerAccount.query.filter_by(tenant_id=int(tenant_id), email=email, is_active=True).first()
         if not account or not account.check_password(password):
-            raise ValueError("بيانات الدخول غير صحيحة.")
+            raise ValueError(gettext("بيانات الدخول غير صحيحة."))
         from datetime import datetime, timezone
 
         account.last_login_at = datetime.now(timezone.utc)
@@ -159,9 +160,9 @@ class ShopCustomerAuthService:
     def reset_password(tenant_id: int, token: str, new_password: str) -> ShopCustomerAccount:
         token = (token or "").strip()
         if not token:
-            raise ValueError("رمز الاستعادة غير صالح.")
+            raise ValueError(gettext("رمز الاستعادة غير صالح."))
         if not new_password or len(new_password) < 6:
-            raise ValueError("كلمة المرور 6 أحرف على الأقل.")
+            raise ValueError(gettext("كلمة المرور 6 أحرف على الأقل."))
 
         account = ShopCustomerAccount.query.filter_by(
             tenant_id=int(tenant_id),
@@ -169,10 +170,10 @@ class ShopCustomerAuthService:
             is_active=True,
         ).first()
         if not account:
-            raise ValueError("رمز الاستعادة غير صالح أو منتهٍ.")
+            raise ValueError(gettext("رمز الاستعادة غير صالح أو منتهٍ."))
         expires = account.password_reset_expires_at
         if not expires or expires.replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
-            raise ValueError("انتهت صلاحية رابط الاستعادة — اطلب رابطاً جديداً.")
+            raise ValueError(gettext("انتهت صلاحية رابط الاستعادة — اطلب رابطاً جديداً."))
 
         account.set_password(new_password)
         account.password_reset_token = None
@@ -196,9 +197,9 @@ class ShopCustomerAuthService:
             from extensions import mail
 
             msg = Message(
-                subject=f"استعادة كلمة المرور — {store.title or 'المتجر'}",
+                subject=gettext(f"استعادة كلمة المرور — {store.title or 'المتجر'}"),
                 recipients=[account.email],
-                body=(
+                body=gettext(
                     f"مرحباً {account.name},\n\n"
                     f"لإعادة تعيين كلمة المرور اضغط الرابط:\n{reset_url}\n\n"
                     f"صلاحية الرابط: ساعتان.\n"
@@ -225,7 +226,7 @@ class ShopCustomerAuthService:
                 f"Product: {pname}\nSKU: {product.sku or '-'}\nQty: {quantity}\nPrice: {price} {currency}"
             )
         else:
-            text = (
+            text = gettext(
                 f"مرحباً، أريد طلباً من {store.title or 'متجركم'}:\n"
                 f"المنتج: {pname}\nالرمز: {product.sku or '-'}\nالكمية: {quantity}\nالسعر: {price} {currency}"
             )

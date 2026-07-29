@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime, timezone, date
 from decimal import Decimal
+from flask_babel import gettext
 from extensions import db
 from models import Project, TaskStage, Task, Timesheet, ProjectMember
 from utils.tenanting import get_active_tenant_id
@@ -15,15 +16,15 @@ class ProjectService:
     def _validate_tenant(record, user):
         tid = get_active_tenant_id(user)
         if tid is not None and int(record.tenant_id) != int(tid):
-            raise ValueError("السجل لا ينتمي إلى شركتك النشطة.")
+            raise ValueError(gettext("السجل لا ينتمي إلى شركتك النشطة."))
 
     @staticmethod
     def create_project(data, user):
         tid = get_active_tenant_id(user)
         if not tid and not is_global_owner_user(user):
-            raise ValueError("لا توجد شركة نشطة.")
+            raise ValueError(gettext("لا توجد شركة نشطة."))
         if not data.get("name"):
-            raise ValueError("اسم المشروع مطلوب.")
+            raise ValueError(gettext("اسم المشروع مطلوب."))
         project = Project(
             tenant_id=int(tid) if tid else 0,
             name=data["name"],
@@ -42,9 +43,9 @@ class ProjectService:
             logger.exception("Failed to flush project creation")
             raise
         default_stages = [
-            ("To Do", "للتنفيذ", 0, "#6b7280"),
-            ("In Progress", "قيد التنفيذ", 1, "#3b82f6"),
-            ("Done", "منجز", 2, "#10b981"),
+            ("To Do", gettext("للتنفيذ"), 0, "#6b7280"),
+            ("In Progress", gettext("قيد التنفيذ"), 1, "#3b82f6"),
+            ("Done", gettext("منجز"), 2, "#10b981"),
         ]
         for sname, sname_ar, seq, color in default_stages:
             stage = TaskStage(
@@ -68,7 +69,7 @@ class ProjectService:
     def get_project(project_id, user):
         project = db.session.get(Project, int(project_id))
         if not project:
-            raise ValueError("المشروع غير موجود.")
+            raise ValueError(gettext("المشروع غير موجود."))
         ProjectService._validate_tenant(project, user)
         return project
 
@@ -108,12 +109,12 @@ class ProjectService:
     def create_task(project_id, data, user):
         project = ProjectService.get_project(project_id, user)
         if not data.get("name"):
-            raise ValueError("اسم المهمة مطلوب.")
+            raise ValueError(gettext("اسم المهمة مطلوب."))
         stage_id = data.get("stage_id")
         if stage_id:
             stage = db.session.get(TaskStage, int(stage_id))
             if not stage or int(stage.project_id) != int(project_id):
-                raise ValueError("المرحلة غير صالحة لهذا المشروع.")
+                raise ValueError(gettext("المرحلة غير صالحة لهذا المشروع."))
         task = Task(
             tenant_id=project.tenant_id,
             project_id=project.id,
@@ -138,11 +139,11 @@ class ProjectService:
     def move_task(task_id, stage_id, user):
         task = db.session.get(Task, int(task_id))
         if not task:
-            raise ValueError("المهمة غير موجودة.")
+            raise ValueError(gettext("المهمة غير موجودة."))
         ProjectService._validate_tenant(task, user)
         stage = db.session.get(TaskStage, int(stage_id))
         if not stage or int(stage.project_id) != int(task.project_id):
-            raise ValueError("المرحلة غير صالحة لهذا المشروع.")
+            raise ValueError(gettext("المرحلة غير صالحة لهذا المشروع."))
         task.stage_id = int(stage_id)
         task.updated_at = datetime.now(timezone.utc)
         try:
@@ -156,11 +157,11 @@ class ProjectService:
     def log_timesheet(task_id, data, user):
         task = db.session.get(Task, int(task_id))
         if not task:
-            raise ValueError("المهمة غير موجودة.")
+            raise ValueError(gettext("المهمة غير موجودة."))
         ProjectService._validate_tenant(task, user)
         hours = Decimal(str(data.get("hours", 0)))
         if hours <= 0:
-            raise ValueError("عدد الساعات يجب أن يكون أكبر من صفر.")
+            raise ValueError(gettext("عدد الساعات يجب أن يكون أكبر من صفر."))
         ts = Timesheet(
             tenant_id=task.tenant_id,
             task_id=task.id,
@@ -219,7 +220,7 @@ class ProjectService:
         project = ProjectService.get_project(project_id, user)
         existing = ProjectMember.query.filter_by(project_id=project.id, user_id=int(user_id)).first()
         if existing:
-            raise ValueError("المستخدم مضاف بالفعل للمشروع.")
+            raise ValueError(gettext("المستخدم مضاف بالفعل للمشروع."))
         member = ProjectMember(
             tenant_id=project.tenant_id,
             project_id=project.id,

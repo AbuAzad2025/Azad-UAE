@@ -52,6 +52,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from decimal import Decimal, ROUND_HALF_UP
 
+from flask_babel import gettext
+
 from extensions import db
 from utils.tenanting import tenant_query
 
@@ -138,20 +140,20 @@ class PromotionService:
     @staticmethod
     def _normalize_cart(cart_lines):
         if not cart_lines:
-            raise ValueError("بيانات السلة غير صالحة.")
+            raise ValueError(gettext("بيانات السلة غير صالحة."))
         lines = []
         units = []
         for index, raw in enumerate(cart_lines):
             if not isinstance(raw, dict):
-                raise ValueError("بيانات السلة غير صالحة.")
+                raise ValueError(gettext("بيانات السلة غير صالحة."))
             try:
                 product_id = int(raw.get("product_id") or 0)
                 quantity = Decimal(str(raw.get("quantity") or "0"))
                 unit_price = PromotionService._quantize(raw.get("unit_price") or "0")
             except (ArithmeticError, ValueError) as exc:
-                raise ValueError("بيانات السلة غير صالحة.") from exc
+                raise ValueError(gettext("بيانات السلة غير صالحة.")) from exc
             if product_id <= 0 or quantity <= 0 or unit_price < 0:
-                raise ValueError("بيانات السلة غير صالحة.")
+                raise ValueError(gettext("بيانات السلة غير صالحة."))
             line = {
                 "index": index,
                 "product_id": product_id,
@@ -506,7 +508,7 @@ class PromotionService:
                             PromotionService._prompt(
                                 campaign,
                                 RULE_BUNDLE,
-                                f"أضف {needed} قطعة إضافية للحصول على سعر العرض (اشترِ {size}).",
+                                gettext(f"أضف {needed} قطعة إضافية للحصول على سعر العرض (اشترِ {size})."),
                                 product_id=product_id,
                                 needed_quantity=needed,
                             )
@@ -529,7 +531,7 @@ class PromotionService:
                             PromotionService._prompt(
                                 campaign,
                                 RULE_BOGO,
-                                f"أضف {needed} قطعة إضافية واحصل على {get_m} بخصم (اشترِ {buy_n} واحصل على {get_m}).",
+                                gettext(f"أضف {needed} قطعة إضافية واحصل على {get_m} بخصم (اشترِ {buy_n} واحصل على {get_m})."),
                                 product_id=product_id,
                                 needed_quantity=needed,
                             )
@@ -547,7 +549,7 @@ class PromotionService:
                         PromotionService._prompt(
                             campaign,
                             RULE_TIERED,
-                            f"أضف بقيمة {PromotionService._quantize(min_amount - value)} للحصول على الخصم.",
+                            gettext(f"أضف بقيمة {PromotionService._quantize(min_amount - value)} للحصول على الخصم."),
                             needed_amount=PromotionService._quantize(min_amount - value),
                         )
                     )
@@ -557,7 +559,7 @@ class PromotionService:
                         PromotionService._prompt(
                             campaign,
                             RULE_TIERED,
-                            f"أضف {needed} قطعة إضافية للحصول على الخصم.",
+                            gettext(f"أضف {needed} قطعة إضافية للحصول على الخصم."),
                             needed_quantity=needed,
                         )
                     )
@@ -574,7 +576,7 @@ class PromotionService:
                             PromotionService._prompt(
                                 campaign,
                                 RULE_COMBO,
-                                "أضف المنتجات الناقصة لإكمال العرض المجمّع.",
+                                gettext("أضف المنتجات الناقصة لإكمال العرض المجمّع."),
                                 product_id=missing[0],
                                 needed_quantity=1,
                             )

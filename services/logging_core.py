@@ -40,6 +40,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 from flask import g, has_request_context, current_app
+from flask_babel import gettext
 from utils.db_safety import atomic_transaction
 
 try:
@@ -124,14 +125,14 @@ _DISK_WARN_PERCENT = 85
 _DB_RETRY_MAX_SECONDS = 8.0
 
 _AUDIT_ACTION_DISPLAY = {
-    "create": {"ar": "إضافة", "en": "Create"},
-    "update": {"ar": "تعديل", "en": "Update"},
-    "delete": {"ar": "حذف", "en": "Delete"},
-    "login": {"ar": "تسجيل دخول", "en": "Login"},
-    "logout": {"ar": "تسجيل خروج", "en": "Logout"},
-    "view": {"ar": "عرض", "en": "View"},
-    "export": {"ar": "تصدير", "en": "Export"},
-    "print": {"ar": "طباعة", "en": "Print"},
+    "create": {"ar": gettext("إضافة"), "en": "Create"},
+    "update": {"ar": gettext("تعديل"), "en": "Update"},
+    "delete": {"ar": gettext("حذف"), "en": "Delete"},
+    "login": {"ar": gettext("تسجيل دخول"), "en": "Login"},
+    "logout": {"ar": gettext("تسجيل خروج"), "en": "Logout"},
+    "view": {"ar": gettext("عرض"), "en": "View"},
+    "export": {"ar": gettext("تصدير"), "en": "Export"},
+    "print": {"ar": gettext("طباعة"), "en": "Print"},
 }
 
 _CATEGORIES = frozenset(

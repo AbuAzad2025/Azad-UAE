@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Azad Smart Systems - Features</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" integrity="sha384-SQmEOkBgKgEIh61hWWvG/unqqDDppl6UsaeOX71NjfnDB32XCcgWtNdUamQ7ics0" crossorigin="anonymous" rel="stylesheet">
+  <title>{{ t('Features_Page_Title') }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" integrity="sha384-i/MU8rSFPCGh+nV0UkwJ/uFXJ/S0mrH1ZKIiNdWk4WKZBTMmlN1C3RjnKDce2V2z" crossorigin="anonymous" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
   <style>
     :root { --gulf-gold:#D4AF37; --gulf-blue:#1B4D89; }
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'Inter',sans-serif; background:#0a0e27; color:#fff; }
+    body { font-family:'Tajawal',sans-serif; background:#0a0e27; color:#fff; }
     .navbar { position: sticky; top:0; z-index: 1000; background: rgba(10,14,39,0.92); backdrop-filter: blur(10px); padding: 16px 22px; display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid rgba(212,175,55,0.25); }
     .brand { display:flex; align-items:center; gap:12px; color:#fff; text-decoration:none; font-weight:900; }
     .brand img { height: 32px; filter: brightness(0) invert(1); }
@@ -20,14 +20,14 @@
     .lang { display:inline-flex; align-items:center; gap:8px; padding: 8px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.22); background: rgba(255,255,255,0.08); color:#fff; text-decoration:none; font-weight:900; }
     .lang:hover { border-color: rgba(212,175,55,0.6); }
     header { padding: 70px 20px 40px; text-align:center; background: linear-gradient(135deg, #1B4D89 0%, #6B46C1 50%, #D4AF37 100%); }
-    header h1 { font-size: 2.6rem; margin-bottom: 12px; }
-    header p { font-size: 1.05rem; opacity: 0.92; max-width: 900px; margin: 0 auto; }
+    header h1 { font-size: 2.8rem; margin-bottom: 12px; }
+    header p { font-size: 1.15rem; opacity: 0.92; max-width: 900px; margin: 0 auto; }
     .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px 70px; }
     .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
     .card { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); border-radius: 18px; padding: 22px; text-align:center; transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
     .card:hover { transform: translateY(-6px); border-color: rgba(212,175,55,0.45); box-shadow: 0 18px 60px rgba(212,175,55,0.12); }
     .icon { font-size: 2.4rem; color: var(--gulf-gold); margin-bottom: 12px; }
-    .card h3 { font-size: 1.2rem; margin-bottom: 10px; }
+    .card h3 { font-size: 1.25rem; margin-bottom: 10px; }
     .card p { color: rgba(255,255,255,0.82); line-height: 1.7; font-size: 0.98rem; }
     .cta { text-align:center; margin-top: 40px; }
     .cta a { display:inline-flex; align-items:center; gap:10px; padding: 14px 22px; border-radius: 999px; background: rgba(212,175,55,0.96); color: #111827; text-decoration:none; font-weight: 900; }
@@ -36,77 +36,78 @@
   </style>
 </head>
 <body class="keep-theme">
-  {% set platform_name_en = config.COMPANY_NAME if config.COMPANY_NAME != config.COMPANY_NAME_AR else 'Azad Smart Systems' %}
+  {% set platform_name_ar = config.COMPANY_NAME_AR or config.COMPANY_NAME or t('Company_Name') %}
+  {% set platform_name_en = config.COMPANY_NAME or t('Company_Name') %}
   <nav class="navbar">
     <a class="brand" href="{{ url_for('public.landing') }}">
-      <img src="{{ url_for('static', filename=config.COMPANY_LOGO or 'assets/brand/azad/logos/logo-gold-web.png') }}" alt="{{ platform_name_en }}">
-      <span>{{ platform_name_en }}</span>
+      <img src="{{ url_for('static', filename=config.COMPANY_LOGO or 'assets/brand/azad/logos/logo-gold-web.png') }}" alt="{{ platform_name_ar }}">
+      <span>{{ platform_name_ar }}</span>
     </a>
     <div class="nav-links">
-      <a href="{{ url_for('public.landing') }}"><i class="fas fa-home"></i> Home</a>
-      <a href="{{ url_for('public.pricing') }}"><i class="fas fa-tags"></i> Pricing</a>
-      <a href="{{ url_for('public.contact') }}"><i class="fas fa-envelope"></i> Contact</a>
-      <a href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt"></i> Login</a>
-      <a class="lang" href="{{ url_for('language.set_language', lang='ar') }}"><i class="fas fa-globe"></i> AR</a>
+      <a href="{{ url_for('public.landing') }}"><i class="fas fa-home"></i> {{ t('Home') }}</a>
+      <a href="{{ url_for('public.pricing') }}"><i class="fas fa-tags"></i> {{ t('Pricing') }}</a>
+      <a href="{{ url_for('public.contact') }}"><i class="fas fa-envelope"></i> {{ t('Contact_Us') }}</a>
+      <a href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt"></i> {{ t('Login') }}</a>
+      <a class="lang" href="{{ url_for('language.set_language', lang='en' if current_language == 'ar' else 'ar') }}"><i class="fas fa-globe"></i> {{ 'EN' if current_language == 'ar' else 'AR' }}</a>
     </div>
   </nav>
 
   <header>
-    <h1>System Features</h1>
-    <p>A complete system for sales, purchases, inventory, reporting, and AI-powered insights.</p>
+    <h1>{{ t('System_Features') }}</h1>
+    <p>{{ t('Features_Subtitle') }}</p>
   </header>
 
   <div class="container">
     <div class="grid">
       <div class="card">
         <div class="icon"><i class="fas fa-shopping-cart"></i></div>
-        <h3>Sales</h3>
-        <p>Professional invoicing, payments tracking, and collections workflows.</p>
+        <h3>{{ t('Sales_Management') }}</h3>
+        <p>{{ t('Sales_Description') }}</p>
       </div>
       <div class="card">
         <div class="icon"><i class="fas fa-warehouse"></i></div>
-        <h3>Inventory</h3>
-        <p>Real-time stock, low-stock alerts, and multi-warehouse support.</p>
+        <h3>{{ t('Inventory_Management') }}</h3>
+        <p>{{ t('Inventory_Description') }}</p>
       </div>
       <div class="card">
         <div class="icon"><i class="fas fa-users"></i></div>
-        <h3>Customers & Suppliers</h3>
-        <p>Full profiles, statements, and receivables/payables tracking.</p>
+        <h3>{{ t('Customers_And_Suppliers') }}</h3>
+        <p>{{ t('Customers_Description') }}</p>
       </div>
       <div class="card">
         <div class="icon"><i class="fas fa-chart-line"></i></div>
-        <h3>Reports & Analytics</h3>
-        <p>Dashboards and financial reporting to make faster decisions.</p>
+        <h3>{{ t('Reports_And_Analytics') }}</h3>
+        <p>{{ t('Reports_Description') }}</p>
       </div>
       <div class="card">
         <div class="icon"><i class="fas fa-robot"></i></div>
-        <h3>AI</h3>
-        <p>Smart assistance, recommendations, and advanced insights.</p>
+        <h3>{{ t('AI') }}</h3>
+        <p>{{ t('AI_Description') }}</p>
       </div>
       <div class="card">
         <div class="icon"><i class="fab fa-whatsapp"></i></div>
-        <h3>WhatsApp</h3>
-        <p>Send invoices and notifications quickly to customers.</p>
+        <h3>{{ t('WhatsApp_Integration') }}</h3>
+        <p>{{ t('WhatsApp_Description') }}</p>
       </div>
       <div class="card">
         <div class="icon"><i class="fas fa-calculator"></i></div>
-        <h3>Accounting & GL</h3>
-        <p>Journal entries, general ledger (GL), and financial statements.</p>
+        <h3>{{ t('Accounting_And_GL') }}</h3>
+        <p>{{ t('Accounting_Description') }}</p>
       </div>
       <div class="card">
         <div class="icon"><i class="fas fa-shield-alt"></i></div>
-        <h3>Security</h3>
-        <p>Advanced permissions, audit logs, and backups.</p>
+        <h3>{{ t('Security_And_Permissions') }}</h3>
+        <p>{{ t('Security_Description') }}</p>
       </div>
       <div class="card">
         <div class="icon"><i class="fas fa-mobile-alt"></i></div>
-        <h3>Responsive</h3>
-        <p>Optimized for desktop, tablet, and mobile.</p>
+        <h3>{{ t('Responsive') }}</h3>
+        <p>{{ t('Responsive_Description') }}</p>
       </div>
     </div>
 
     <div class="cta">
-      <a href="{{ url_for('public.contact') }}"><i class="fas fa-phone-alt"></i> Contact us</a>
+      <a href="{{ url_for('public.contact') }}"><i class="fas fa-phone-alt"></i> {{ t('Contact_Us') }}</a>
     </div>
   </div>
 </body>

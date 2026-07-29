@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ 'شكراً' if not is_en else 'Thank you' }} — Azad</title>
+  <title>{{ t('Thank_You') }} — Azad</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/azad-donation-palestine.css') }}">
   <style>
     /* D6: externalized inline styles */
@@ -16,10 +16,10 @@
     <div class="az-tatreez-top"></div>
     <div class="az-wrap ic-1">
       <div class="az-emblem"><i class="fas fa-check"></i></div>
-      <h1 class="az-title">{{ 'وصل تبرعك' if not is_en else 'Donation received' }}</h1>
+      <h1 class="az-title">{{ t('Donation_Received') }}</h1>
       <p class="az-intro">#{{ donation.id }} · ${{ '%.2f'|format(donation.amount_usd) }}</p>
-      <p class="az-intro">{{ 'سنؤكد التبرع من الخزينة السرية ويُرحّل القيد المحاسبي تلقائياً.' if not is_en else 'We will confirm from the vault and post the GL entry automatically.' }}</p>
-      <a href="{{ url_for('public.landing') }}" class="az-btn ic-2">{{ 'الرئيسية' if not is_en else 'Home' }}</a>
+      <p class="az-intro">{{ t('Donation_Confirmation_Message') }}</p>
+      <a href="{{ url_for('public.landing') }}" class="az-btn ic-2">{{ t('Home') }}</a>
     </div>
   </div>
 </body>

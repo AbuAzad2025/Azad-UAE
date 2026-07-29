@@ -3,6 +3,7 @@ Export Service - خدمة التصدير
 تصدير التقارير إلى PDF, Excel, CSV
 """
 
+from flask_babel import gettext
 from datetime import datetime, timezone
 from io import BytesIO, StringIO
 import csv
@@ -78,14 +79,14 @@ class ExportService:
     def export_purchases_to_csv(purchases):
         """تصدير المشتريات إلى CSV"""
         headers = [
-            "الرقم",
-            "الباقة",
-            "العميل",
-            "البريد الإلكتروني",
-            "المبلغ",
-            "طريقة الدفع",
-            "الحالة",
-            "التاريخ",
+            gettext("الرقم"),
+            gettext("الباقة"),
+            gettext("العميل"),
+            gettext("البريد الإلكتروني"),
+            gettext("المبلغ"),
+            gettext("طريقة الدفع"),
+            gettext("الحالة"),
+            gettext("التاريخ"),
         ]
 
         data = []
@@ -109,13 +110,13 @@ class ExportService:
     def export_donations_to_csv(donations):
         """تصدير التبرعات إلى CSV"""
         headers = [
-            "الرقم",
-            "المتبرع",
-            "البريد الإلكتروني",
-            "المبلغ",
-            "طريقة الدفع",
-            "الحالة",
-            "التاريخ",
+            gettext("الرقم"),
+            gettext("المتبرع"),
+            gettext("البريد الإلكتروني"),
+            gettext("المبلغ"),
+            gettext("طريقة الدفع"),
+            gettext("الحالة"),
+            gettext("التاريخ"),
         ]
 
         data = []
@@ -123,7 +124,7 @@ class ExportService:
             data.append(
                 [
                     donation.id,
-                    donation.donor_name or "مجهول",
+                    donation.donor_name or gettext("مجهول"),
                     donation.donor_email or "N/A",
                     f"${donation.amount_usd}",
                     donation.payment_method,
@@ -138,14 +139,14 @@ class ExportService:
     def export_cards_to_csv(cards):
         """تصدير البطاقات إلى CSV (معلومات عامة فقط)"""
         headers = [
-            "الرقم",
-            "العميل",
-            "البريد الإلكتروني",
-            "البطاقة",
-            "النوع",
-            "المبلغ",
-            "الحالة",
-            "التاريخ",
+            gettext("الرقم"),
+            gettext("العميل"),
+            gettext("البريد الإلكتروني"),
+            gettext("البطاقة"),
+            gettext("النوع"),
+            gettext("المبلغ"),
+            gettext("الحالة"),
+            gettext("التاريخ"),
         ]
 
         data = []

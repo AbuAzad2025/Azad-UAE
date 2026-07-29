@@ -7,6 +7,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timezone, timedelta
 
+from flask_babel import gettext
 from extensions import db
 from utils.db_safety import atomic_transaction
 
@@ -17,13 +18,13 @@ logger = logging.getLogger(__name__)
 DEFAULT_PACKAGES: tuple[dict, ...] = (
     {
         "slug": "basic",
-        "name_ar": "الباقة الأساسية",
+        "name_ar": gettext("الباقة الأساسية"),
         "name_en": "Basic",
         "icon": "📦",
         "price": "29.000",
-        "description_ar": "بداية مثالية للمنشآت الصغيرة — نقاط بيع وفواتير وتقارير أساسية.",
+        "description_ar": gettext("بداية مثالية للمنشآت الصغيرة — نقاط بيع وفواتير وتقارير أساسية."),
         "description_en": "Starter tier for small businesses — core POS, invoicing and basic reports.",
-        "features": ["نقاط بيع أساسية", "فواتير", "تقارير أساسية"],
+        "features": [gettext("نقاط بيع أساسية"), gettext("فواتير"), gettext("تقارير أساسية")],
         "tier_level": 10,
         "max_users": 2,
         "max_branches": 1,
@@ -50,15 +51,15 @@ DEFAULT_PACKAGES: tuple[dict, ...] = (
     },
     {
         "slug": "pro",
-        "name_ar": "الباقة الاحترافية",
+        "name_ar": gettext("الباقة الاحترافية"),
         "name_en": "Pro",
         "icon": "🚀",
         "price": "79.000",
-        "description_ar": "للمنشآت المتوسطة — رواتب وتقارير متقدمة وسعة أوسع.",
+        "description_ar": gettext("للمنشآت المتوسطة — رواتب وتقارير متقدمة وسعة أوسع."),
         "description_en": "For growing SMEs — payroll, advanced reports and wider capacity.",
-        "features": ["كل ميزات الأساسية", "رواتب", "تقارير متقدمة", "POS متقدم"],
+        "features": [gettext("كل ميزات الأساسية"), gettext("رواتب"), gettext("تقارير متقدمة"), "POS متقدم"],
         "is_featured": True,
-        "badge_text": "الأكثر شعبية",
+        "badge_text": gettext("الأكثر شعبية"),
         "tier_level": 20,
         "max_users": 10,
         "max_branches": 3,
@@ -85,13 +86,13 @@ DEFAULT_PACKAGES: tuple[dict, ...] = (
     },
     {
         "slug": "enterprise",
-        "name_ar": "باقة المؤسسات",
+        "name_ar": gettext("باقة المؤسسات"),
         "name_en": "Enterprise",
         "icon": "👑",
         "price": "199.000",
-        "description_ar": "بلا حدود — كل الميزات والذكاء الاصطناعي والمتجر والتكاملات.",
+        "description_ar": gettext("بلا حدود — كل الميزات والذكاء الاصطناعي والمتجر والتكاملات."),
         "description_en": "Unlimited — every feature including AI, store and integrations.",
-        "features": ["كل الميزات", "ذكاء اصطناعي", "متجر إلكتروني", "API", "دعم أولوية"],
+        "features": [gettext("كل الميزات"), gettext("ذكاء اصطناعي"), gettext("متجر إلكتروني"), "API", gettext("دعم أولوية")],
         "tier_level": 30,
         "max_users": -1,
         "max_branches": -1,

@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from extensions import db
+from flask_babel import gettext
 from utils.gl_reference_types import GLRef
 from services.gl_service import GLService
 from utils.gl_services import (
@@ -18,19 +19,19 @@ logger = logging.getLogger(__name__)
 
 def validate_cheque(cheque):
     if not cheque.cheque_number:
-        raise ValueError("رقم الشيك مطلوب")
+        raise ValueError(gettext("رقم الشيك مطلوب"))
     if not cheque.cheque_bank_number:
-        raise ValueError("رقم الشيك البنكي مطلوب")
+        raise ValueError(gettext("رقم الشيك البنكي مطلوب"))
     if not cheque.bank_name:
-        raise ValueError("اسم البنك مطلوب")
+        raise ValueError(gettext("اسم البنك مطلوب"))
     if not cheque.amount or cheque.amount <= 0:
-        raise ValueError("المبلغ يجب أن يكون أكبر من صفر")
+        raise ValueError(gettext("المبلغ يجب أن يكون أكبر من صفر"))
     if not cheque.issue_date:
-        raise ValueError("تاريخ الإصدار مطلوب")
+        raise ValueError(gettext("تاريخ الإصدار مطلوب"))
     if not cheque.due_date:
-        raise ValueError("تاريخ الاستحقاق مطلوب")
+        raise ValueError(gettext("تاريخ الاستحقاق مطلوب"))
     if cheque.cheque_type not in ("incoming", "outgoing"):
-        raise ValueError("نوع الشيك غير صحيح")
+        raise ValueError(gettext("نوع الشيك غير صحيح"))
 
 
 def calculate_amount_aed(cheque):
@@ -81,7 +82,7 @@ def _existing_posted_entry(cheque, reference_type):
 
 def process_cheque_deposit(cheque, deposit_date=None):
     if cheque.status not in ["pending", "under_collection"]:
-        raise ValueError(f"لا يمكن إيداع شيك بحالة: {cheque.status_ar}")
+        raise ValueError(gettext(f"لا يمكن إيداع شيك بحالة: {cheque.status_ar}"))
     cheque.status = "deposited"
     cheque.deposit_date = deposit_date or datetime.now().date()
 
@@ -118,20 +119,20 @@ def process_cheque_receive(cheque):
             "concept_code": "CHEQUES_UNDER_COLLECTION",
             "debit": cheque.amount_aed,
             "credit": 0,
-            "description": f"استلام شيك رقم {cheque.cheque_bank_number}",
+            "description": gettext(f"استلام شيك رقم {cheque.cheque_bank_number}"),
         },
         {
             "account": credit_account,
             "concept_code": credit_concept,
             "debit": 0,
             "credit": cheque.amount_aed,
-            "description": f"استلام شيك من عميل - رقم {cheque.cheque_bank_number}",
+            "description": gettext(f"استلام شيك من عميل - رقم {cheque.cheque_bank_number}"),
         },
     ]
     return _post_gl(
         cheque,
         lines,
-        description=f"استلام شيك وارد رقم {cheque.cheque_bank_number}",
+        description=gettext(f"استلام شيك وارد رقم {cheque.cheque_bank_number}"),
         reference_type=GLRef.CHEQUE_RECEIVE,
     )
 
@@ -177,7 +178,7 @@ def process_cheque_issue(cheque):
             "concept_code": debit_concept,
             "debit": cheque.amount_aed,
             "credit": 0,
-            "description": f"إصدار شيك رقم {cheque.cheque_bank_number}",
+            "description": gettext(f"إصدار شيك رقم {cheque.cheque_bank_number}"),
         },
         {
             "account": GLService.get_account_code_for_concept(
@@ -189,13 +190,13 @@ def process_cheque_issue(cheque):
             "concept_code": "DEFERRED_CHEQUES_PAYABLE",
             "debit": 0,
             "credit": cheque.amount_aed,
-            "description": f"إصدار شيك - رقم {cheque.cheque_bank_number}",
+            "description": gettext(f"إصدار شيك - رقم {cheque.cheque_bank_number}"),
         },
     ]
     entry = _post_gl(
         cheque,
         lines,
-        description=f"إصدار شيك صادر رقم {cheque.cheque_bank_number}",
+        description=gettext(f"إصدار شيك صادر رقم {cheque.cheque_bank_number}"),
         reference_type=GLRef.CHEQUE_ISSUE,
     )
     cheque.gl_journal_entry_id = entry.id
@@ -216,7 +217,7 @@ def _create_clearing_journal_entry(cheque):
                 "explicit_account_allowed": True,
                 "debit": cheque.actual_amount_aed,
                 "credit": 0,
-                "description": f"صرف شيك وارد رقم {cheque.cheque_bank_number}",
+                "description": gettext(f"صرف شيك وارد رقم {cheque.cheque_bank_number}"),
             }
         )
         lines.append(
@@ -230,7 +231,7 @@ def _create_clearing_journal_entry(cheque):
                 "concept_code": "CHEQUES_UNDER_COLLECTION",
                 "debit": 0,
                 "credit": cheque.amount_aed,
-                "description": f"صرف شيك رقم {cheque.cheque_bank_number}",
+                "description": gettext(f"صرف شيك رقم {cheque.cheque_bank_number}"),
             }
         )
         if cheque.currency_gain_loss and abs(cheque.currency_gain_loss) > Decimal("0.01"):
@@ -246,7 +247,7 @@ def _create_clearing_journal_entry(cheque):
                         "concept_code": "FX_GAIN",
                         "debit": 0,
                         "credit": abs(cheque.currency_gain_loss),
-                        "description": f"ربح فرق عملة - شيك {cheque.cheque_bank_number}",
+                        "description": gettext(f"ربح فرق عملة - شيك {cheque.cheque_bank_number}"),
                     }
                 )
             else:
@@ -261,7 +262,7 @@ def _create_clearing_journal_entry(cheque):
                         "concept_code": "FX_LOSS",
                         "debit": abs(cheque.currency_gain_loss),
                         "credit": 0,
-                        "description": f"خسارة فرق عملة - شيك {cheque.cheque_bank_number}",
+                        "description": gettext(f"خسارة فرق عملة - شيك {cheque.cheque_bank_number}"),
                     }
                 )
     elif cheque.cheque_type == "outgoing":
@@ -276,7 +277,7 @@ def _create_clearing_journal_entry(cheque):
                 "concept_code": "DEFERRED_CHEQUES_PAYABLE",
                 "debit": cheque.amount_aed,
                 "credit": 0,
-                "description": f"صرف شيك صادر رقم {cheque.cheque_bank_number}",
+                "description": gettext(f"صرف شيك صادر رقم {cheque.cheque_bank_number}"),
             }
         )
         lines.append(
@@ -285,7 +286,7 @@ def _create_clearing_journal_entry(cheque):
                 "explicit_account_allowed": True,
                 "debit": 0,
                 "credit": cheque.actual_amount_aed,
-                "description": f"صرف شيك رقم {cheque.cheque_bank_number}",
+                "description": gettext(f"صرف شيك رقم {cheque.cheque_bank_number}"),
             }
         )
         if cheque.currency_gain_loss and abs(cheque.currency_gain_loss) > Decimal("0.01"):
@@ -301,7 +302,7 @@ def _create_clearing_journal_entry(cheque):
                         "concept_code": "FX_LOSS",
                         "debit": abs(cheque.currency_gain_loss),
                         "credit": 0,
-                        "description": f"خسارة فرق عملة - شيك {cheque.cheque_bank_number}",
+                        "description": gettext(f"خسارة فرق عملة - شيك {cheque.cheque_bank_number}"),
                     }
                 )
             else:
@@ -316,21 +317,21 @@ def _create_clearing_journal_entry(cheque):
                         "concept_code": "FX_GAIN",
                         "debit": 0,
                         "credit": abs(cheque.currency_gain_loss),
-                        "description": f"ربح فرق عملة - شيك {cheque.cheque_bank_number}",
+                        "description": gettext(f"ربح فرق عملة - شيك {cheque.cheque_bank_number}"),
                     }
                 )
     if lines:
         _post_gl(
             cheque,
             lines=lines,
-            description=f"صرف شيك {cheque.cheque_type_ar} رقم {cheque.cheque_bank_number}",
+            description=gettext(f"صرف شيك {cheque.cheque_type_ar} رقم {cheque.cheque_bank_number}"),
             reference_type=GLRef.CHEQUE_CLEAR,
         )
 
 
 def process_cheque_clear(cheque, clearance_date=None, clearance_exchange_rate=None):
     if cheque.status not in ["deposited", "pending"]:
-        raise ValueError(f"لا يمكن تأكيد صرف شيك بحالة: {cheque.status_ar}")
+        raise ValueError(gettext(f"لا يمكن تأكيد صرف شيك بحالة: {cheque.status_ar}"))
     try:
         cheque.status = "cleared"
         cheque.clearance_date = clearance_date or datetime.now().date()
@@ -403,7 +404,7 @@ def _create_bounce_journal_entry(cheque):
                 "concept_code": ar_concept,
                 "debit": cheque.amount_aed,
                 "credit": 0,
-                "description": f"ارتداد شيك رقم {cheque.cheque_bank_number} - إرجاع الدين",
+                "description": gettext(f"ارتداد شيك رقم {cheque.cheque_bank_number} - إرجاع الدين"),
             }
         )
         lines.append(
@@ -417,7 +418,7 @@ def _create_bounce_journal_entry(cheque):
                 "concept_code": "CHEQUES_UNDER_COLLECTION",
                 "debit": 0,
                 "credit": cheque.amount_aed,
-                "description": f"ارتداد شيك رقم {cheque.cheque_bank_number}",
+                "description": gettext(f"ارتداد شيك رقم {cheque.cheque_bank_number}"),
             }
         )
     elif cheque.cheque_type == "outgoing":
@@ -432,7 +433,7 @@ def _create_bounce_journal_entry(cheque):
                 "concept_code": "DEFERRED_CHEQUES_PAYABLE",
                 "debit": cheque.amount_aed,
                 "credit": 0,
-                "description": f"ارتداد شيك صادر رقم {cheque.cheque_bank_number}",
+                "description": gettext(f"ارتداد شيك صادر رقم {cheque.cheque_bank_number}"),
             }
         )
         if cheque.expense_id:
@@ -479,14 +480,14 @@ def _create_bounce_journal_entry(cheque):
                 "concept_code": credit_concept,
                 "debit": 0,
                 "credit": cheque.amount_aed,
-                "description": f"ارتداد شيك رقم {cheque.cheque_bank_number} - إرجاع الالتزام",
+                "description": gettext(f"ارتداد شيك رقم {cheque.cheque_bank_number} - إرجاع الالتزام"),
             }
         )
     if lines:
         _post_gl(
             cheque,
             lines=lines,
-            description=f"ارتداد شيك {cheque.cheque_type_ar} رقم {cheque.cheque_bank_number}",
+            description=gettext(f"ارتداد شيك {cheque.cheque_type_ar} رقم {cheque.cheque_bank_number}"),
             reference_type=GLRef.CHEQUE_BOUNCE,
         )
 
@@ -496,11 +497,11 @@ def process_cheque_bounce(cheque, reason, bounce_fee=None):
     # (incoming) or from pending/outgoing. Prevent direct pending→bounce for incoming.
     if cheque.cheque_type == "incoming" and cheque.status == "pending":
         raise ValueError(
-            "لا يمكن رفض شيك وارد بحالة معلق — يجب إيداعه أولاً. "
-            "Use process_cheque_deposit() before bouncing an incoming cheque."
+            gettext("لا يمكن رفض شيك وارد بحالة معلق — يجب إيداعه أولاً. "
+                    "Use process_cheque_deposit() before bouncing an incoming cheque.")
         )
     if cheque.status not in ["deposited", "pending"]:
-        raise ValueError(f"لا يمكن رفض شيك بحالة: {cheque.status_ar}")
+        raise ValueError(gettext(f"لا يمكن رفض شيك بحالة: {cheque.status_ar}"))
     try:
         cheque.status = "bounced"
         cheque.bounce_reason = reason
@@ -527,19 +528,19 @@ def process_cheque_bounce(cheque, reason, bounce_fee=None):
                         "concept_code": "MISC_EXPENSE",
                         "debit": Decimal(str(bounce_fee)),
                         "credit": 0,
-                        "description": f"رسوم ارتداد شيك رقم {cheque.cheque_bank_number}",
+                        "description": gettext(f"رسوم ارتداد شيك رقم {cheque.cheque_bank_number}"),
                     },
                     {
                         "account": bank_account,
                         "concept_code": "BANK",
                         "debit": 0,
                         "credit": Decimal(str(bounce_fee)),
-                        "description": f"خصم رسوم ارتداد شيك رقم {cheque.cheque_bank_number}",
+                        "description": gettext(f"خصم رسوم ارتداد شيك رقم {cheque.cheque_bank_number}"),
                     },
                 ]
                 post_or_fail(
                     fee_lines,
-                    description=f"رسوم ارتداد شيك {cheque.cheque_type_ar} رقم {cheque.cheque_bank_number}",
+                    description=gettext(f"رسوم ارتداد شيك {cheque.cheque_type_ar} رقم {cheque.cheque_bank_number}"),
                     reference_type=GLRef.CHEQUE_BOUNCE,
                     reference_id=cheque.id,
                     branch_id=cheque.branch_id,
@@ -605,7 +606,7 @@ def _create_cancel_journal_entry(cheque):
                 "concept_code": ar_concept,
                 "debit": cheque.amount_aed,
                 "credit": 0,
-                "description": f"إلغاء شيك وارد رقم {cheque.cheque_bank_number}",
+                "description": gettext(f"إلغاء شيك وارد رقم {cheque.cheque_bank_number}"),
             },
             {
                 "account": GLService.get_account_code_for_concept(
@@ -617,7 +618,7 @@ def _create_cancel_journal_entry(cheque):
                 "concept_code": "CHEQUES_UNDER_COLLECTION",
                 "debit": 0,
                 "credit": cheque.amount_aed,
-                "description": f"إلغاء شيك رقم {cheque.cheque_bank_number}",
+                "description": gettext(f"إلغاء شيك رقم {cheque.cheque_bank_number}"),
             },
         ]
     elif cheque.cheque_type == "outgoing":
@@ -670,21 +671,21 @@ def _create_cancel_journal_entry(cheque):
                 "concept_code": "DEFERRED_CHEQUES_PAYABLE",
                 "debit": cheque.amount_aed,
                 "credit": 0,
-                "description": f"إلغاء شيك صادر رقم {cheque.cheque_bank_number}",
+                "description": gettext(f"إلغاء شيك صادر رقم {cheque.cheque_bank_number}"),
             },
             {
                 "account": credit_account,
                 "concept_code": credit_concept,
                 "debit": 0,
                 "credit": cheque.amount_aed,
-                "description": f"إلغاء شيك رقم {cheque.cheque_bank_number}",
+                "description": gettext(f"إلغاء شيك رقم {cheque.cheque_bank_number}"),
             },
         ]
     if lines:
         _post_gl(
             cheque,
             lines=lines,
-            description=f"إلغاء شيك {cheque.cheque_type_ar} رقم {cheque.cheque_bank_number}",
+            description=gettext(f"إلغاء شيك {cheque.cheque_type_ar} رقم {cheque.cheque_bank_number}"),
             reference_type=GLRef.CHEQUE_CANCEL,
         )
 
@@ -695,7 +696,7 @@ def process_cheque_cancel(cheque, reason=None, *, create_gl=True):
     if cheque.status == "cancelled":
         return
     if cheque.status == "cleared":
-        raise ValueError("لا يمكن إلغاء شيك تم صرفه")
+        raise ValueError(gettext("لا يمكن إلغاء شيك تم صرفه"))
     # A bounced cheque is already fully reversed by the bounce entry —
     # cancelling it must not post the same reversal a second time.
     skip_gl = cheque.status == "bounced"
@@ -710,12 +711,12 @@ def process_cheque_cancel(cheque, reason=None, *, create_gl=True):
     if tid:
         pmt_q = pmt_q.filter(Payment.tenant_id == tid)
     for payment in pmt_q.all():
-        payment.reject_payment(reason or "تم إلغاء الشيك")
+        payment.reject_payment(reason or gettext("تم إلغاء الشيك"))
     rcpt_q = Receipt.query.filter_by(cheque_id=cheque.id)
     if tid:
         rcpt_q = rcpt_q.filter(Receipt.tenant_id == tid)
     for receipt in rcpt_q.all():
-        receipt.reject_receipt(reason or "تم إلغاء الشيك")
+        receipt.reject_receipt(reason or gettext("تم إلغاء الشيك"))
 
     # Cancelling an outgoing supplier cheque restores AP in the GL, so restore
     # the cached supplier paid total to keep the balance consistent.
@@ -756,7 +757,7 @@ def register_cheque_event_listeners():
     def _auto_log_status_change(mapper, connection, target):
         try:
             if target.status in ["cleared", "bounced"]:
-                status_ar = "تم الصرف" if target.status == "cleared" else "مرتد"
+                status_ar = gettext("تم الصرف") if target.status == "cleared" else gettext("مرتد")
                 logger.info(f"Cheque {target.cheque_number} status changed to: {status_ar}")
         except Exception as e:
             logger.error(f"Failed to log cheque status change: {e}")

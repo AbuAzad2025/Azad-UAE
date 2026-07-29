@@ -1,6 +1,7 @@
 import logging
 from decimal import Decimal
 from typing import Any
+from flask_babel import gettext
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +50,7 @@ def validate_journal_entry_balance(mapper, connection, target):
         credit = target.total_credit or Decimal("0")
         if (debit > 0 or credit > 0) and abs(debit - credit) > Decimal("0.01"):
             logger.error(f"Journal entry {target.entry_number} is UNBALANCED! Debit: {debit}, Credit: {credit}")
-            raise ValueError(f"القيد غير متوازن! المدين: {debit}, الدائن: {credit}")
+            raise ValueError(gettext(f"القيد غير متوازن! المدين: {debit}, الدائن: {credit}"))
         logger.info(f"Journal entry {target.entry_number} is balanced: {debit} = {credit}")
     except ValueError:
         raise

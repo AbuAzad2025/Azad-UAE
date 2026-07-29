@@ -12,6 +12,8 @@ import json
 from datetime import datetime, timezone
 from decimal import Decimal, ROUND_HALF_UP
 
+from flask_babel import gettext
+
 from extensions import db
 from models import PosCart
 from utils.tenanting import get_active_tenant_id, tenant_query
@@ -48,21 +50,21 @@ class PosCartService:
     @staticmethod
     def _sanitize_payload(payload: dict) -> tuple[dict, int, Decimal]:
         if not isinstance(payload, dict):
-            raise ValueError("بيانات السلة غير صالحة.")
+            raise ValueError(gettext("بيانات السلة غير صالحة."))
         clean = {key: payload[key] for key in _ALLOWED_PAYLOAD_KEYS if key in payload}
 
         lines = clean.get("lines") or []
         if not isinstance(lines, list) or not lines:
-            raise ValueError("لا يمكن ركن سلة فارغة — أضف منتجات أولاً.")
+            raise ValueError(gettext("لا يمكن ركن سلة فارغة — أضف منتجات أولاً."))
 
         item_count = 0
         total = Decimal("0")
         for row in lines:
             if not isinstance(row, dict):
-                raise ValueError("بيانات السلة غير صالحة.")
+                raise ValueError(gettext("بيانات السلة غير صالحة."))
             qty = Decimal(str(row.get("quantity") or "0"))
             if qty <= 0:
-                raise ValueError("الكمية يجب أن تكون أكبر من صفر.")
+                raise ValueError(gettext("الكمية يجب أن تكون أكبر من صفر."))
             price_raw = row.get("unit_price")
             price = Decimal(str(price_raw)) if price_raw not in (None, "") else Decimal("0")
             discount = Decimal(str(row.get("discount_percent") or "0"))
@@ -74,7 +76,7 @@ class PosCartService:
 
         blob = json.dumps(clean, ensure_ascii=False, default=str)
         if len(blob.encode("utf-8")) > PosCartService.MAX_PAYLOAD_BYTES:
-            raise ValueError("حجم السلة كبير جداً — قلّل عدد الأصناف أو الملاحظات.")
+            raise ValueError(gettext("حجم السلة كبير جداً — قلّل عدد الأصناف أو الملاحظات."))
         return clean, item_count, total
 
     @staticmethod
@@ -85,10 +87,10 @@ class PosCartService:
     def park_cart(*, user, session, payload: dict, label: str | None = None, cart_id=None) -> PosCart:
         """Create or update a parked cart for the cashier's open session."""
         if not session:
-            raise ValueError("لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً.")
+            raise ValueError(gettext("لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً."))
         tenant_id = get_active_tenant_id(user)
         if not tenant_id:
-            raise ValueError("لا توجد شركة نشطة.")
+            raise ValueError(gettext("لا توجد شركة نشطة."))
 
         clean, item_count, total = PosCartService._sanitize_payload(payload)
         label = (label or "").strip()[:120] or None
@@ -97,7 +99,7 @@ class PosCartService:
         if cart_id:
             cart = PosCartService._own_cart_query(user).filter(PosCart.id == int(cart_id)).first()
             if cart is None:
-                raise LookupError("السلة غير موجودة.")
+                raise LookupError(gettext("السلة غير موجودة."))
             cart.payload = clean
             cart.label = label
             cart.item_count = item_count
@@ -116,9 +118,9 @@ class PosCartService:
             .count()
         )
         if parked_count >= PosCartService.MAX_CARTS_PER_SESSION:
-            raise ValueError(
+            raise ValueError(gettext(
                 f"وصلت للحد الأقصى من السلات المركونة ({PosCartService.MAX_CARTS_PER_SESSION}). استرجع أو احذف سلة أولاً."
-            )
+            ))
 
         cart = PosCart(
             tenant_id=int(tenant_id),
@@ -158,9 +160,9 @@ class PosCartService:
         """
         cart = PosCartService._own_cart_query(user).filter(PosCart.id == int(cart_id)).with_for_update().first()
         if cart is None:
-            raise LookupError("السلة غير موجودة.")
+            raise LookupError(gettext("السلة غير موجودة."))
         if cart.status != PosCart.STATUS_PARKED:
-            raise PosCartConflictError("تم استرجاع هذه السلة مسبقاً أو انتهت صلاحيتها.")
+            raise PosCartConflictError(gettext("تم استرجاع هذه السلة مسبقاً أو انتهت صلاحيتها."))
         cart.status = PosCart.STATUS_RESUMED
         cart.resumed_at = datetime.now(timezone.utc)
         db.session.flush()
@@ -172,16 +174,16 @@ class PosCartService:
         at the route boundary). Totals are recomputed from the payload."""
         cart = PosCartService._own_cart_query(user).filter(PosCart.id == int(cart_id)).first()
         if cart is None:
-            raise LookupError("السلة غير موجودة.")
+            raise LookupError(gettext("السلة غير موجودة."))
         if cart.status != PosCart.STATUS_PARKED:
-            raise PosCartConflictError("لا يمكن تعديل سلة تم استرجاعها أو انتهت صلاحيتها.")
+            raise PosCartConflictError(gettext("لا يمكن تعديل سلة تم استرجاعها أو انتهت صلاحيتها."))
         payload = dict(cart.payload or {})
         lines = list(payload.get("lines") or [])
         remaining = [row for row in lines if int(row.get("product_id") or 0) != int(product_id or 0)]
         if len(remaining) == len(lines):
-            raise LookupError("الصنف غير موجود في السلة.")
+            raise LookupError(gettext("الصنف غير موجود في السلة."))
         if not remaining:
-            raise ValueError("لا يمكن إفراغ السلة بالكامل عبر الإلغاء — احذف السلة بدلاً من ذلك.")
+            raise ValueError(gettext("لا يمكن إفراغ السلة بالكامل عبر الإلغاء — احذف السلة بدلاً من ذلك."))
         payload["lines"] = remaining
         clean, item_count, total = PosCartService._sanitize_payload(payload)
         cart.payload = clean
@@ -194,6 +196,6 @@ class PosCartService:
     def delete_cart(*, user, cart_id) -> None:
         cart = PosCartService._own_cart_query(user).filter(PosCart.id == int(cart_id)).first()
         if cart is None:
-            raise LookupError("السلة غير موجودة.")
+            raise LookupError(gettext("السلة غير موجودة."))
         db.session.delete(cart)
         db.session.flush()

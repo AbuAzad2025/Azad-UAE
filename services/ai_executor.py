@@ -9,6 +9,7 @@ import logging
 from datetime import datetime, timezone
 from decimal import Decimal
 
+from flask_babel import gettext
 from flask_login import current_user as flask_user
 from extensions import db
 from utils.tenanting import get_active_tenant_id
@@ -38,7 +39,7 @@ class AIExecutor:
 
     def _require_tenant(self):
         if not self.tenant_id:
-            raise AIExecutorError("لا يوجد تينانت نشط — يرجى تسجيل الدخول لشركة محددة")
+            raise AIExecutorError(gettext("لا يوجد تينانت نشط — يرجى تسجيل الدخول لشركة محددة"))
 
     def _current_user_id(self):
         return getattr(self.user, "id", None)
@@ -61,7 +62,7 @@ class AIExecutor:
         from models import Customer
 
         if not name:
-            raise AIExecutorError("اسم العميل مطلوب")
+            raise AIExecutorError(gettext("اسم العميل مطلوب"))
 
         customer = Customer(
             tenant_id=self.tenant_id,
@@ -78,7 +79,7 @@ class AIExecutor:
         return {
             "success": True,
             "id": customer.id,
-            "message": f'تم إنشاء العميل "{name}" بنجاح',
+            "message": gettext(f'تم إنشاء العميل "{name}" بنجاح'),
             "customer": (customer.to_dict() if hasattr(customer, "to_dict") else {"id": customer.id, "name": name}),
         }
 
@@ -111,7 +112,7 @@ class AIExecutor:
 
         c = Customer.query.filter_by(tenant_id=self.tenant_id, name=name, is_active=True).first()
         if not c:
-            raise AIExecutorError(f'العميل "{name}" غير موجود')
+            raise AIExecutorError(gettext(f'العميل "{name}" غير موجود'))
 
         return {
             "success": True,
@@ -139,9 +140,9 @@ class AIExecutor:
         from models import Product
 
         if not name:
-            raise AIExecutorError("اسم المنتج مطلوب")
+            raise AIExecutorError(gettext("اسم المنتج مطلوب"))
         if regular_price <= 0:
-            raise AIExecutorError("سعر البيع يجب أن يكون أكبر من صفر")
+            raise AIExecutorError(gettext("سعر البيع يجب أن يكون أكبر من صفر"))
 
         product = Product(
             tenant_id=self.tenant_id,
@@ -162,7 +163,7 @@ class AIExecutor:
         return {
             "success": True,
             "id": product.id,
-            "message": f'تم إنشاء المنتج "{name}" بنجاح',
+            "message": gettext(f'تم إنشاء المنتج "{name}" بنجاح'),
             "product": {
                 "id": product.id,
                 "name": name,
@@ -235,13 +236,13 @@ class AIExecutor:
 
         customer = Customer.query.filter_by(tenant_id=self.tenant_id, name=customer_name, is_active=True).first()
         if not customer:
-            raise AIExecutorError(f'العميل "{customer_name}" غير موجود')
+            raise AIExecutorError(gettext(f'العميل "{customer_name}" غير موجود'))
 
         seller = self.user
         if not seller or not hasattr(seller, "id"):
             seller = User.query.filter_by(tenant_id=self.tenant_id, is_active=True).first()
             if not seller:
-                raise AIExecutorError("لا يوجد مستخدم نشط لإنشاء الفاتورة")
+                raise AIExecutorError(gettext("لا يوجد مستخدم نشط لإنشاء الفاتورة"))
 
         lines_data = []
         for pl in product_lines:
@@ -249,7 +250,7 @@ class AIExecutor:
             qty = pl.get("quantity", 1)
             product = Product.query.filter_by(tenant_id=self.tenant_id, name=pname, is_active=True).first()
             if not product:
-                raise AIExecutorError(f'المنتج "{pname}" غير موجود')
+                raise AIExecutorError(gettext(f'المنتج "{pname}" غير موجود'))
 
             lines_data.append(
                 {
@@ -280,7 +281,7 @@ class AIExecutor:
             "sale_id": sale.id,
             "sale_number": sale.sale_number,
             "total": float(sale.total_amount or 0),
-            "message": f"تم إنشاء الفاتورة رقم {sale.sale_number} بقيمة {float(sale.total_amount or 0):,.2f} درهم",
+            "message": gettext(f"تم إنشاء الفاتورة رقم {sale.sale_number} بقيمة {float(sale.total_amount or 0):,.2f} درهم"),
         }
 
     def list_sales(self, limit: int = 10) -> dict:
@@ -317,9 +318,9 @@ class AIExecutor:
 
         customer = Customer.query.filter_by(tenant_id=self.tenant_id, name=customer_name, is_active=True).first()
         if not customer:
-            raise AIExecutorError(f'العميل "{customer_name}" غير موجود')
+            raise AIExecutorError(gettext(f'العميل "{customer_name}" غير موجود'))
         if amount <= 0:
-            raise AIExecutorError("مبلغ الدفع يجب أن يكون أكبر من صفر")
+            raise AIExecutorError(gettext("مبلغ الدفع يجب أن يكون أكبر من صفر"))
 
         amount_dec = Decimal(str(amount))
 
@@ -376,7 +377,7 @@ class AIExecutor:
             "success": True,
             "payment_id": payment.id,
             "payment_number": payment_number,
-            "message": f"تم استلام {amount:,.2f} درهم من {customer_name}",
+            "message": gettext(f"تم استلام {amount:,.2f} درهم من {customer_name}"),
         }
 
     # ── EXPENSE ───────────────────────────────────────────────
@@ -394,14 +395,14 @@ class AIExecutor:
         from utils.helpers import generate_number
 
         if not description:
-            raise AIExecutorError("وصف المصروف مطلوب")
+            raise AIExecutorError(gettext("وصف المصروف مطلوب"))
         if amount <= 0:
-            raise AIExecutorError("المبلغ يجب أن يكون أكبر من صفر")
+            raise AIExecutorError(gettext("المبلغ يجب أن يكون أكبر من صفر"))
 
         if not category_id:
             cat = ExpenseCategory.query.filter_by(tenant_id=self.tenant_id).first()
             if not cat:
-                raise AIExecutorError("لا يوجد تصنيف مصروفات — أنشئ تصنيفاً أولاً")
+                raise AIExecutorError(gettext("لا يوجد تصنيف مصروفات — أنشئ تصنيفاً أولاً"))
             category_id = cat.id
 
         expense_number = generate_number(
@@ -433,7 +434,7 @@ class AIExecutor:
             "success": True,
             "expense_id": expense.id,
             "expense_number": expense_number,
-            "message": f'تم تسجيل المصروف "{description}" بقيمة {amount:,.2f} درهم',
+            "message": gettext(f'تم تسجيل المصروف "{description}" بقيمة {amount:,.2f} درهم'),
         }
 
     # ── SUPPLIER ──────────────────────────────────────────────
@@ -450,7 +451,7 @@ class AIExecutor:
         from models import Supplier
 
         if not name:
-            raise AIExecutorError("اسم المورد مطلوب")
+            raise AIExecutorError(gettext("اسم المورد مطلوب"))
 
         supplier = Supplier(
             tenant_id=self.tenant_id,
@@ -467,7 +468,7 @@ class AIExecutor:
         return {
             "success": True,
             "id": supplier.id,
-            "message": f'تم إنشاء المورد "{name}" بنجاح',
+            "message": gettext(f'تم إنشاء المورد "{name}" بنجاح'),
         }
 
     # ── EMPLOYEE ──────────────────────────────────────────────
@@ -484,7 +485,7 @@ class AIExecutor:
         from models.payroll import Employee
 
         if not name:
-            raise AIExecutorError("اسم الموظف مطلوب")
+            raise AIExecutorError(gettext("اسم الموظف مطلوب"))
 
         employee = Employee(
             tenant_id=self.tenant_id,
@@ -502,7 +503,7 @@ class AIExecutor:
         return {
             "success": True,
             "id": employee.id,
-            "message": f'تم إنشاء الموظف "{name}" بنجاح',
+            "message": gettext(f'تم إنشاء الموظف "{name}" بنجاح'),
         }
 
     # ── PURCHASE (uses PurchaseService for full GL/stock) ─────
@@ -514,13 +515,13 @@ class AIExecutor:
 
         supplier = Supplier.query.filter_by(tenant_id=self.tenant_id, name=supplier_name, is_active=True).first()
         if not supplier:
-            raise AIExecutorError(f'المورد "{supplier_name}" غير موجود')
+            raise AIExecutorError(gettext(f'المورد "{supplier_name}" غير موجود'))
 
         warehouse = Warehouse.query.filter_by(tenant_id=self.tenant_id, is_active=True, is_main=True).first()
         if not warehouse:
             warehouse = Warehouse.query.filter_by(tenant_id=self.tenant_id, is_active=True).first()
         if not warehouse:
-            raise AIExecutorError("لا يوجد مستودع نشط — أنشئ مستودعاً أولاً")
+            raise AIExecutorError(gettext("لا يوجد مستودع نشط — أنشئ مستودعاً أولاً"))
 
         lines_data = []
         for pl in product_lines:
@@ -530,7 +531,7 @@ class AIExecutor:
 
             product = Product.query.filter_by(tenant_id=self.tenant_id, name=pname, is_active=True).first()
             if not product:
-                raise AIExecutorError(f'المنتج "{pname}" غير موجود')
+                raise AIExecutorError(gettext(f'المنتج "{pname}" غير موجود'))
 
             lines_data.append(
                 {
@@ -552,7 +553,7 @@ class AIExecutor:
             "success": True,
             "purchase_id": purchase.id,
             "purchase_number": purchase.purchase_number,
-            "message": f"تم إنشاء أمر الشراء رقم {purchase.purchase_number}",
+            "message": gettext(f"تم إنشاء أمر الشراء رقم {purchase.purchase_number}"),
         }
 
     # ── SALES SUMMARY / PROFIT ────────────────────────────────

@@ -20,6 +20,8 @@ import logging
 import os
 from decimal import ROUND_HALF_UP, Decimal
 
+from flask_babel import gettext
+
 import requests
 
 logger = logging.getLogger(__name__)
@@ -54,14 +56,14 @@ def amount_to_minor_units(amount, currency: str = "AED") -> int:
     """Exact minor-unit conversion (AED fils): quantize then scale."""
     value = Decimal(str(amount or "0")).quantize(_MINOR_UNIT_QUANTUM, rounding=ROUND_HALF_UP)
     if value <= 0:
-        raise PosTerminalError("المبلغ يجب أن يكون أكبر من صفر.")
+        raise PosTerminalError(gettext("المبلغ يجب أن يكون أكبر من صفر."))
     return int(value * 100)
 
 
 def _stripe_post(path: str, params: dict) -> dict:
     key = _stripe_secret_key()
     if not key:
-        raise PosTerminalError("الدفع الطرفي غير مهيأ لهذه الشركة.")
+        raise PosTerminalError(gettext("الدفع الطرفي غير مهيأ لهذه الشركة."))
     try:
         resp = requests.post(
             f"{_STRIPE_API_BASE}{path}",
@@ -75,10 +77,10 @@ def _stripe_post(path: str, params: dict) -> dict:
         logger.warning(
             "Stripe Terminal HTTP %s on %s", exc.response.status_code if exc.response is not None else "?", path
         )
-        raise PosTerminalError("رفض مزود الدفع العملية. حاول مرة أخرى أو استخدم الدفع اليدوي.") from exc
+        raise PosTerminalError(gettext("رفض مزود الدفع العملية. حاول مرة أخرى أو استخدم الدفع اليدوي.")) from exc
     except (requests.RequestException, ValueError) as exc:
         logger.warning("Stripe Terminal transport failure on %s: %s", path, type(exc).__name__)
-        raise PosTerminalError("تعذر الوصول إلى مزود الدفع. تحقق من الاتصال أو استخدم الدفع اليدوي.") from exc
+        raise PosTerminalError(gettext("تعذر الوصول إلى مزود الدفع. تحقق من الاتصال أو استخدم الدفع اليدوي.")) from exc
 
 
 def create_connection_token() -> str:
@@ -86,7 +88,7 @@ def create_connection_token() -> str:
     payload = _stripe_post("/v1/terminal/connection_tokens", {})
     secret = payload.get("secret")
     if not secret:
-        raise PosTerminalError("استجابة غير مكتملة من مزود الدفع.")
+        raise PosTerminalError(gettext("استجابة غير مكتملة من مزود الدفع."))
     return secret
 
 
@@ -113,7 +115,7 @@ def create_terminal_payment_intent(
     intent_id = payload.get("id")
     client_secret = payload.get("client_secret")
     if not intent_id or not client_secret:
-        raise PosTerminalError("استجابة غير مكتملة من مزود الدفع.")
+        raise PosTerminalError(gettext("استجابة غير مكتملة من مزود الدفع."))
     return {
         "id": intent_id,
         "client_secret": client_secret,

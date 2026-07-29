@@ -3,254 +3,343 @@
 
 <head>
 
-  <meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Azad Smart Systems - Contact</title>
+    <title>{{ t('Contact_Page_Title') }} — {{ config.COMPANY_NAME_AR or config.COMPANY_NAME }}</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" integrity="sha384-SQmEOkBgKgEIh61hWWvG/unqqDDppl6UsaeOX71NjfnDB32XCcgWtNdUamQ7ics0" crossorigin="anonymous" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" integrity="sha384-i/MU8rSFPCGh+nV0UkwJ/uFXJ/S0mrH1ZKIiNdWk4WKZBTMmlN1C3RjnKDce2V2z" crossorigin="anonymous" rel="stylesheet">
 
-  <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}">
 
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
 
-  <style>
+    <style>
 
-    :root { --gulf-gold:#D4AF37; --gulf-blue:#1B4D89; }
+        :root {
 
-    * { margin:0; padding:0; box-sizing:border-box; }
+            --gulf-gold: #D4AF37;
 
-    body { font-family:'Inter',sans-serif; background:#040914; color:#f8fafc; }
+            --gulf-blue: #1B4D89;
 
-    .navbar { background: rgba(10,14,39,0.95); backdrop-filter: blur(10px); padding: 18px 26px; display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid var(--gulf-gold); }
+            --gradient-gulf: linear-gradient(135deg, #1B4D89 0%, #6B46C1 50%, #D4AF37 100%);
 
-    .navbar a { color: white; text-decoration:none; margin: 0 12px; transition: color .2s ease; font-weight: 800; }
+        }
 
-    .navbar a:hover { color: var(--gulf-gold); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    .logo { display:flex; align-items:center; gap:10px; color: var(--gulf-gold); text-decoration:none; }
+        body { font-family: 'Tajawal', sans-serif; background: #040914; color: #f8fafc; }
+        
 
-    .logo img { width:40px; height:40px; object-fit:contain; border-radius:8px; background:rgba(255,255,255,.92); padding:4px; }
+        .navbar {
 
-    .logo span { font-size: 1.2rem; font-weight: 900; color: var(--gulf-gold); }
+            background: rgba(10,14,39,0.95);
 
-    .contact-container { max-width: 1200px; margin: 80px auto; padding: 0 20px; }
+            backdrop-filter: blur(10px);
 
-    .contact-header { text-align:center; margin-bottom: 60px; }
+            padding: 20px 40px;
 
-    .contact-header h1 { font-size: 3rem; color: var(--gulf-gold); margin-bottom: 15px; text-shadow: 0 0 30px rgba(212,175,55,0.5); }
+            display: flex;
 
-    .contact-header p { font-size: 1.15rem; color: rgba(255,255,255,0.85); }
+            justify-content: space-between;
 
-    .contact-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 60px; }
+            align-items: center;
 
-    .contact-card { background: rgba(15,23,42,0.85); backdrop-filter: blur(10px); padding: 34px; border-radius: 20px; text-align:center; border: 2px solid rgba(212,175,55,0.35); transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
+            border-bottom: 2px solid var(--gulf-gold);
 
-    .contact-card:hover { transform: translateY(-8px); border-color: var(--gulf-gold); box-shadow: 0 20px 60px rgba(212,175,55,0.22); }
+        }
 
-    .contact-card i { font-size: 3.2rem; color: var(--gulf-gold); margin-bottom: 18px; }
+        .navbar a { color: white; text-decoration: none; margin: 0 15px; transition: color 0.3s; }
 
-    .contact-card h3 { font-size: 1.25rem; margin-bottom: 12px; }
+        .navbar a:hover { color: var(--gulf-gold); }
 
-    .contact-card a { color: #f8fafc; text-decoration:none; font-size: 1.05rem; font-weight: 800; }
+        .logo { display:flex; align-items:center; gap:10px; color: var(--gulf-gold); text-decoration:none; }
+        .logo img { width:42px; height:42px; object-fit:contain; border-radius:8px; background:rgba(255,255,255,.9); padding:4px; }
+        .logo span { font-size: 1.3rem; font-weight: 900; color: var(--gulf-gold); }
+        
 
-    .contact-card a:hover { color: var(--gulf-gold); }
+        .contact-container {
 
-    .hint { margin-top: 10px; color: rgba(255,255,255,0.65); font-size: 0.95rem; }
+            max-width: 1200px;
 
-    .cta { text-align:center; margin-top: 60px; }
+            margin: 80px auto;
 
-    .cta a { padding: 18px 45px; background: var(--gulf-gold); color: var(--gulf-blue); border-radius: 50px; text-decoration:none; font-weight: 900; font-size: 1.15rem; display:inline-flex; align-items:center; gap: 10px; transition: filter .2s ease, transform .2s ease; }
+            padding: 0 20px;
 
-    .cta a:hover { transform: translateY(-2px); filter: brightness(1.02); }
+        }
 
-  
-    /* D6: externalized inline styles */
-    .ic-1 { position: fixed; top: 20px; left: 20px; z-index: 9999; }
-    .ic-2 { background: rgba(255,255,255,0.9); border-radius: 20px; padding: 8px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); text-decoration:none; color:#111827; font-weight:900; }
-    .ic-3 { margin-right: 8px; }
-    .ic-4 { font-size: 1.1rem; font-weight: 900; }
-    .ic-5 { margin-top: 16px; display:flex; justify-content:center; gap:12px; flex-wrap:wrap; }
-    .ic-6 { padding: 14px 28px; background:#25D366; color:white; border-radius:50px; text-decoration:none; font-weight:900; display:inline-flex; align-items:center; gap:8px; }
-    .ic-7 { padding: 14px 28px; background:#667eea; color:white; border-radius:50px; text-decoration:none; font-weight:900; display:inline-flex; align-items:center; gap:8px; }
-  </style>
+        .contact-header {
+
+            text-align: center;
+
+            margin-bottom: 60px;
+
+        }
+
+        .contact-header h1 {
+
+            font-size: 3.5rem;
+
+            color: var(--gulf-gold);
+
+            margin-bottom: 15px;
+
+            text-shadow: 0 0 30px rgba(212,175,55,0.5);
+
+        }
+
+        .contact-header p {
+
+            font-size: 1.3rem;
+
+            color: rgba(255,255,255,0.8);
+
+        }
+
+        
+
+        .contact-grid {
+
+            display: grid;
+
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+
+            gap: 30px;
+
+            margin-bottom: 60px;
+
+        }
+
+        .contact-card {
+
+            background: rgba(15,23,42,0.85);
+
+            backdrop-filter: blur(10px);
+
+            padding: 40px;
+
+            border-radius: 20px;
+
+            text-align: center;
+
+            border: 2px solid rgba(212,175,55,0.35);
+
+            transition: all 0.4s;
+
+        }
+
+        .contact-card:hover {
+
+            transform: translateY(-10px);
+
+            border-color: var(--gulf-gold);
+
+            box-shadow: 0 20px 60px rgba(212,175,55,0.3);
+
+        }
+
+        .contact-card i {
+
+            font-size: 4rem;
+
+            color: var(--gulf-gold);
+
+            margin-bottom: 20px;
+
+        }
+
+        .contact-card h3 {
+
+            font-size: 1.5rem;
+
+            margin-bottom: 15px;
+
+        }
+
+        .contact-card a {
+
+            color: #f8fafc;
+
+            text-decoration: none;
+
+            font-size: 1.2rem;
+
+            font-weight: 700;
+
+        }
+
+        .contact-card a:hover {
+
+            color: var(--gulf-gold);
+
+        }
+
+        /* D6: externalized inline styles */
+        .ic-1 { position: fixed; top: 20px; left: 20px; z-index: 9999; }
+        .ic-2 { background: rgba(255,255,255,0.9); border-radius: 20px; padding: 8px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .ic-3 { margin-top: 10px; color: rgba(255,255,255,0.6); font-size: 0.95rem; }
+        .ic-4 { font-size: 1.2rem; font-weight: 700; }
+        .ic-5 { text-align: center; margin-top: 30px; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 12px; }
+        .ic-6 { margin-bottom: 10px; }
+        .ic-7 { text-align: center; margin-top: 60px; }
+        .ic-8 { padding: 18px 45px; background: var(--gulf-gold); color: var(--gulf-blue); border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 1.2rem; display: inline-block; transition: all 0.3s; }
+        .ic-9 { margin-top: 16px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+        .ic-10 { padding: 14px 28px; background: #25D366; color: white; border-radius: 50px; text-decoration: none; font-weight: 700; }
+        .ic-11 { padding: 14px 28px; background: #667eea; color: white; border-radius: 50px; text-decoration: none; font-weight: 700; }
+      </style>
 
 </head>
 
 <body class="keep-theme contact-page">
 
-  {% set platform_name_en = config.COMPANY_NAME if config.COMPANY_NAME != config.COMPANY_NAME_AR else 'Azad Smart Systems' %}
+    {% set platform_name_ar = config.COMPANY_NAME_AR or config.COMPANY_NAME or t('Company_Name') %}
 
-  {% set platform_logo = config.COMPANY_LOGO or 'assets/brand/azad/logos/logo-gold-web.png' %}
+    {% set platform_logo = config.COMPANY_LOGO or 'assets/brand/azad/logos/logo-gold-web.png' %}
 
-  {% set company_address_en = config.COMPANY_ADDRESS_EN or company_address or tenant_address %}
 
-  <div class="ic-1">
+    
+    <div class="ic-1">
 
-    <a href="{{ url_for('language.set_language', lang='ar') }}" class="btn ic-2">
+        <a href="{{ url_for('language.set_language', lang='en' if session.get('language', 'ar') == 'ar' else 'ar') }}" class="btn ic-2">
 
-      <i class="fas fa-globe ic-3"></i>AR
-
-    </a>
-
-  </div>
-
-
-
-  <nav class="navbar">
-
-    <a class="logo" href="{{ url_for('public.landing') }}">
-
-      <img src="{{ url_for('static', filename=platform_logo) }}" alt="{{ platform_name_en }}">
-
-      <span>{{ platform_name_en }}</span>
-
-    </a>
-
-    <div>
-
-      <a href="{{ url_for('public.landing') }}">Home</a>
-
-      <a href="{{ url_for('public.features') }}">Features</a>
-
-      <a href="{{ url_for('public.pricing') }}">Pricing</a>
-
-      <a href="{{ url_for('public.user_guide') }}">User guide</a>
-
-      <a href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt"></i> Login</a>
-
-    </div>
-
-  </nav>
-
-
-
-  <div class="contact-container">
-
-    <div class="contact-header">
-
-      <h1>Contact us</h1>
-
-      <p>We are here to help. Reach out anytime.</p>
-
-    </div>
-
-
-
-    <div class="contact-grid">
-
-      <div class="contact-card">
-
-        <i class="fab fa-whatsapp"></i>
-
-        <h3>WhatsApp</h3>
-
-        <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener noreferrer">{{ developer_whatsapp or config.DEVELOPER_WHATSAPP or '—' }}</a>
-
-        <div class="hint">Fastest way to reach us</div>
-
-      </div>
-
-
-
-      <div class="contact-card">
-
-        <i class="fas fa-phone"></i>
-
-        <h3>Phone</h3>
-
-        <a href="tel:{{ developer_phone or config.DEVELOPER_PHONE }}">{{ developer_phone or config.DEVELOPER_PHONE or '—' }}</a>
-
-        <div class="hint">Available 24/7</div>
-
-      </div>
-
-
-
-      <div class="contact-card">
-
-        <i class="fas fa-mobile-alt"></i>
-
-        <h3>Alt phone</h3>
-
-        <a href="tel:{{ developer_phone or config.DEVELOPER_PHONE }}">{{ developer_phone or config.DEVELOPER_PHONE or '—' }}</a>
-
-        <div class="hint">Local calls</div>
-
-      </div>
-
-
-
-      <div class="contact-card">
-
-        <i class="fas fa-envelope"></i>
-
-        <h3>Email</h3>
-
-        <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}">{{ developer_email or config.DEVELOPER_EMAIL or '—' }}</a>
-
-        <div class="hint">For formal inquiries</div>
-
-      </div>
-
-
-
-      <div class="contact-card">
-
-        <i class="fas fa-map-marker-alt"></i>
-
-        <h3>Address</h3>
-
-        <div class="ic-4">{{ company_address_en }}</div>
-
-        <div class="hint">Office / region</div>
-
-      </div>
-
-
-
-      <div class="contact-card">
-
-        <i class="fas fa-globe"></i>
-
-        <h3>Website</h3>
-
-        <a href="{{ developer_website or config.DEVELOPER_WEBSITE }}" target="_blank" rel="noopener noreferrer">{{ developer_website or config.DEVELOPER_WEBSITE or '—' }}</a>
-
-        <div class="hint">Visit our website</div>
-
-      </div>
-
-    </div>
-
-
-
-    <div class="cta">
-
-      <a href="{{ url_for('public.pricing') }}"><i class="fas fa-tags"></i> View plans & pricing</a>
-
-      <div class="ic-5">
-
-        <a href="https://wa.me/{{ developer_whatsapp_link }}?text={{ 'Hello, I want to buy the system or get a quote' | urlencode }}" class="ic-6">
-
-          <i class="fab fa-whatsapp"></i> Buy via WhatsApp
+            <i class="fas fa-globe ms-2"></i>{{ t('Switch_Language') }}
 
         </a>
 
-        <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}?subject={{ 'Source code or customization request' | urlencode }}" class="ic-7">
+    </div>
 
-          <i class="fas fa-envelope"></i> Buy code / customize
+
+    <nav class="navbar">
+
+        <a class="logo" href="{{ url_for('public.landing') }}">
+
+            <img src="{{ url_for('static', filename=platform_logo) }}" alt="{{ platform_name_ar }}">
+
+            <span>{{ platform_name_ar }}</span>
 
         </a>
 
-      </div>
+        <div>
+
+            <a href="{{ url_for('public.landing') }}">{{ t('Dashboard') }}</a>
+
+            <a href="{{ url_for('public.pricing') }}">{{ t('Pricing') }}</a>
+
+            <a href="{{ url_for('public.user_guide') }}">{{ t('User_Guide') }}</a>
+
+            <a href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt ms-2"></i> {{ t('Login') }}</a>
+
+        </div>
+
+    </nav>
+
+
+    <div class="contact-container">
+
+        <div class="contact-header">
+
+            <h1><i class="fas fa-phone-alt ms-2"></i>{{ t('Contact_Us') }}</h1>
+
+            <p>{{ t('Contact_Subtitle') }}</p>
+
+        </div>
+
+
+        <div class="contact-grid">
+
+            <div class="contact-card">
+
+                <i class="fab fa-whatsapp"></i>
+
+                <h3>{{ t('WhatsApp') }}</h3>
+
+                <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener noreferrer">{{ developer_whatsapp or config.DEVELOPER_WHATSAPP or '—' }}</a>
+
+                <p class="ic-3">{{ developer_name_ar or developer_name or t('Company_Name') }}</p>
+
+            </div>
+
+
+            <div class="contact-card">
+
+                <i class="fas fa-phone"></i>
+
+                <h3>{{ t('Phone') }}</h3>
+
+                <a href="tel:{{ developer_phone or config.DEVELOPER_PHONE }}">{{ developer_phone or config.DEVELOPER_PHONE or '—' }}</a>
+
+                <p class="ic-3">{{ t('Available_24_7') }}</p>
+
+            </div>
+
+
+            <div class="contact-card">
+
+                <i class="fas fa-envelope"></i>
+
+                <h3>{{ t('Email') }}</h3>
+
+                <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}">{{ developer_email or config.DEVELOPER_EMAIL or '—' }}</a>
+
+                <p class="ic-3">{{ t('For_Inquiries') }}</p>
+
+            </div>
+
+
+            <div class="contact-card">
+
+                <i class="fas fa-map-marker-alt"></i>
+
+                <h3>{{ t('Address') }}</h3>
+
+                <p class="ic-4">{{ config.COMPANY_ADDRESS_AR or company_address or tenant_address or '—' }}</p>
+
+            </div>
+
+        </div>
+
+
+        <div class="ic-5">
+
+            <p class="ic-6"><strong>{{ t('Technical_Support') }}:</strong> {{ developer_credit or config.DEVELOPER_CREDIT }}</p>
+
+            <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light">{{ t('Developer_WhatsApp') }}</a>
+
+            <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}" class="btn btn-outline-light ms-2">{{ t('Developer_Email') }}</a>
+
+        </div>
+
+
+        <div class="ic-7">
+
+            <a href="{{ url_for('public.pricing') }}" class="ic-8">
+
+                <i class="fas fa-tags ms-2"></i> {{ t('View_Pricing_And_Plans') }}
+
+            </a>
+
+            <div class="ic-9">
+
+                <a href="https://wa.me/{{ developer_whatsapp_link }}?text={{ t('WA_Msg_Sales') | urlencode }}" class="ic-10" target="_blank" rel="noopener noreferrer">
+
+                    <i class="fab fa-whatsapp ms-2"></i> {{ t('Buy_Via_WhatsApp') }}
+
+                </a>
+
+                <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}?subject={{ t('Email_Subject_Sales') | urlencode }}" class="ic-11">
+
+                    <i class="fas fa-envelope ms-2"></i> {{ t('Buy_Code_Or_Customize') }}
+
+                </a>
+
+            </div>
+
+        </div>
 
     </div>
 
-  </div>
 
 </body>
 
 </html>
-

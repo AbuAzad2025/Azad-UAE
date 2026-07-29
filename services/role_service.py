@@ -1,3 +1,4 @@
+from flask_babel import gettext
 from models import Role, Permission, User
 from sqlalchemy.orm import joinedload
 
@@ -10,7 +11,7 @@ class RoleService:
 
         perm_categories = {}
         for p in permissions:
-            perm_categories.setdefault(p.category or "عام", []).append(p)
+            perm_categories.setdefault(p.category or gettext("عام"), []).append(p)
 
         role_user_counts = {}
         for r in roles:

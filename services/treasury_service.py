@@ -5,6 +5,7 @@ Phase 8: Multi-branch bank, cashier, and post-dated cheque position tracking.
 
 from datetime import datetime, timezone
 from decimal import Decimal
+from flask_babel import gettext
 from utils.currency_utils import get_system_default_currency
 
 
@@ -12,15 +13,15 @@ class TreasuryService:
     """خدمة المركز المالي والخزينة"""
 
     LIQUIDITY_KINDS = {
-        "cash": "نقدية",
-        "bank": "بنك",
-        "gateway": "بوابة دفع",
-        "card": "بطاقة",
-        "in_transit": "تحت التحصيل",
+        "cash": gettext("نقدية"),
+        "bank": gettext("بنك"),
+        "gateway": gettext("بوابة دفع"),
+        "card": gettext("بطاقة"),
+        "in_transit": gettext("تحت التحصيل"),
     }
 
     CHEQUE_BUCKETS = [
-        ("overdue", "متأخر", lambda d: d < 0),
+        ("overdue", gettext("متأخر"), lambda d: d < 0),
         ("0_7_days", "0-7 أيام", lambda d: 0 <= d <= 7),
         ("8_30_days", "8-30 يوم", lambda d: 8 <= d <= 30),
         ("31_plus_days", "31+ يوم", lambda d: d > 30),

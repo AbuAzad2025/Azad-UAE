@@ -1,3 +1,4 @@
+from flask_babel import gettext
 from datetime import datetime, timezone
 
 import requests
@@ -68,22 +69,22 @@ class IntegrationService:
         sender_email = (config.get("from_email") or config.get("smtp_user") or "").strip()
         sender_name = (config.get("from_name") or config.get("sender_name") or "").strip()
         if not sender_email:
-            message = "البريد الإلكتروني غير مهيأ — أدخل SMTP Username أو بريد المُرسل أولاً"
+            message = gettext("البريد الإلكتروني غير مهيأ — أدخل SMTP Username أو بريد المُرسل أولاً")
             IntegrationService._record_test_result(integration, False, message)
             return False, message
         try:
             msg = Message(
-                subject="اختبار الاتصال بالبريد الإلكتروني",
+                subject=gettext("اختبار الاتصال بالبريد الإلكتروني"),
                 recipients=[sender_email],
-                body="هذه رسالة اختبار من لوحة المالك للتحقق من إعدادات البريد الإلكتروني (SMTP).",
+                body=gettext("هذه رسالة اختبار من لوحة المالك للتحقق من إعدادات البريد الإلكتروني (SMTP)."),
                 sender=(sender_name, sender_email) if sender_name else sender_email,
             )
             mail.send(msg)
         except Exception as exc:
             current_app.logger.exception("Integration email test failed")
             IntegrationService._record_test_result(integration, False, str(exc))
-            return False, f"فشل إرسال رسالة الاختبار: {exc}"
-        message = f"تم إرسال رسالة اختبار إلى {sender_email} بنجاح"
+            return False, gettext(f"فشل إرسال رسالة الاختبار: {exc}")
+        message = gettext(f"تم إرسال رسالة اختبار إلى {sender_email} بنجاح")
         IntegrationService._record_test_result(integration, True, message)
         return True, message
 
@@ -118,19 +119,19 @@ class IntegrationService:
         except Exception as exc:
             current_app.logger.exception("Currency API test request failed")
             IntegrationService._record_test_result(integration, False, str(exc))
-            return False, f"فشل الاتصال بخدمة أسعار الصرف: {exc}"
+            return False, gettext(f"فشل الاتصال بخدمة أسعار الصرف: {exc}")
         if response.status_code != 200:
-            message = f"استجابة غير ناجحة من الخدمة (HTTP {response.status_code})"
+            message = gettext(f"استجابة غير ناجحة من الخدمة (HTTP {response.status_code})")
             current_app.logger.warning("Currency API test got HTTP %s", response.status_code)
             IntegrationService._record_test_result(integration, False, message)
             return False, message
         try:
             response.json()
         except ValueError:
-            message = "الرد من الخدمة ليس JSON صالحاً"
+            message = gettext("الرد من الخدمة ليس JSON صالحاً")
             current_app.logger.warning("Currency API test returned non-JSON body")
             IntegrationService._record_test_result(integration, False, message)
             return False, message
-        message = "تم الاتصال بخدمة أسعار الصرف بنجاح"
+        message = gettext("تم الاتصال بخدمة أسعار الصرف بنجاح")
         IntegrationService._record_test_result(integration, True, message)
         return True, message

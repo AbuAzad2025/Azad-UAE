@@ -2,6 +2,8 @@ from datetime import datetime
 
 from decimal import Decimal
 
+from flask_babel import gettext
+
 from extensions import db
 
 from models import Employee, SalaryAdvance, PayrollTransaction
@@ -21,17 +23,17 @@ class PayrollService:
 
         branch = db.session.get(Branch, int(branch_id))
         if not branch:
-            raise ValueError("الفرع المحدد غير موجود.")
+            raise ValueError(gettext("الفرع المحدد غير موجود."))
         tenant_id = getattr(branch, "tenant_id", None)
         if tenant_id is None:
-            raise ValueError("الفرع المحدد غير مرتبط بشركة نشطة.")
+            raise ValueError(gettext("الفرع المحدد غير مرتبط بشركة نشطة."))
         return int(tenant_id or 0)
 
     @staticmethod
     def _require_employee_tenant_id(employee):
         tenant_id = getattr(employee, "tenant_id", None)
         if tenant_id is None:
-            raise ValueError("الموظف غير مرتبط بشركة — لا يمكن إتمام العملية.")
+            raise ValueError(gettext("الموظف غير مرتبط بشركة — لا يمكن إتمام العملية."))
         return int(tenant_id or 0)
 
     @staticmethod
@@ -40,7 +42,7 @@ class PayrollService:
         branch_id = data.get("branch_id")
 
         if not branch_id:
-            raise ValueError("يجب ربط الموظف بفرع محدد.")
+            raise ValueError(gettext("يجب ربط الموظف بفرع محدد."))
 
         tenant_id = PayrollService._branch_tenant_id(branch_id)
 
@@ -82,12 +84,12 @@ class PayrollService:
 
                 scoped = branch_scope_id_for(actor_user)
                 if scoped is not None and employee.branch_id != scoped:
-                    raise ValueError("لا يمكنك إنشاء سلفة لموظف في فرع آخر.")
+                    raise ValueError(gettext("لا يمكنك إنشاء سلفة لموظف في فرع آخر."))
                 from utils.tenanting import get_active_tenant_id
 
                 actor_tid = get_active_tenant_id(actor_user)
                 if actor_tid is not None and int(employee.tenant_id) != int(actor_tid):
-                    raise ValueError("الموظف لا ينتمي إلى شركتك النشطة.")
+                    raise ValueError(gettext("الموظف لا ينتمي إلى شركتك النشطة."))
 
         advance = SalaryAdvance(
             employee_id=employee_id,
@@ -170,12 +172,12 @@ class PayrollService:
 
                 scoped = branch_scope_id_for(actor_user)
                 if scoped is not None and employee.branch_id != scoped:
-                    raise ValueError("لا يمكنك معالجة راتب لموظف في فرع آخر.")
+                    raise ValueError(gettext("لا يمكنك معالجة راتب لموظف في فرع آخر."))
                 from utils.tenanting import get_active_tenant_id
 
                 actor_tid = get_active_tenant_id(actor_user)
                 if actor_tid is not None and int(employee.tenant_id) != int(actor_tid):
-                    raise ValueError("الموظف لا ينتمي إلى شركتك النشطة.")
+                    raise ValueError(gettext("الموظف لا ينتمي إلى شركتك النشطة."))
 
         basic_amount = Decimal(0)
 
@@ -212,14 +214,14 @@ class PayrollService:
             year=year,
         ).first()
         if existing:
-            raise ValueError(f'تمت معالجة راتب الموظف "{employee.name}" لشهر {month}/{year} مسبقاً.')
+            raise ValueError(gettext(f'تمت معالجة راتب الموظف "{employee.name}" لشهر {month}/{year} مسبقاً.'))
 
         # التحقق من أن صافي الراتب غير سالب — خصم جزئي للسلفة
         actual_deduction = advance_deduction_total  # المبلغ الذي سيتم خصمه فعلياً من السلف
         if net_salary < Decimal("0"):
             max_deductible = basic_amount + Decimal(allowances) - Decimal(deductions)
             if max_deductible <= Decimal("0"):
-                raise ValueError(f'صافي راتب الموظف "{employee.name}" سالب ({net_salary}). لا يمكن صرف الراتب.')
+                raise ValueError(gettext(f'صافي راتب الموظف "{employee.name}" سالب ({net_salary}). لا يمكن صرف الراتب.'))
             actual_deduction = max_deductible
             net_salary = Decimal("0")
 
