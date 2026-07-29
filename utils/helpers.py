@@ -367,3 +367,20 @@ def generate_sku():
 
 def generate_barcode():
     return f"{datetime.now().strftime('%Y%m%d')}{uuid.uuid4().hex[:6].upper()}"
+
+
+def format_date(date_obj, fmt="%Y-%m-%d"):
+    if date_obj is None:
+        return ""
+    if hasattr(date_obj, "strftime"):
+        return date_obj.strftime(fmt)
+    return str(date_obj)
+
+
+def format_number(value, decimals=2):
+    if value is None:
+        return "0"
+    try:
+        return f"{float(value):,.{decimals}f}"
+    except (ValueError, TypeError):
+        return str(value)
