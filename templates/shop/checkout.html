@@ -10,7 +10,7 @@
 {% if is_shop_logged_in and loyalty_points and loyalty_points > 0 %}
 <div class="ps-loyalty-info">
   <i class="fas fa-gem"></i> {{ t('loyalty_points') }}: <strong>{{ loyalty_points }}</strong>
-  <small>(= {{ '%.2f'|format(loyalty_points / 100) }} {{ tenant.default_currency or 'AED' }})</small>
+  <small>(= {{ format_currency(loyalty_value) }})</small>
 </div>
 {% endif %}
 
@@ -39,7 +39,7 @@
         </div>
         <div class="ps-form-group">
           <label for="customer_email">{{ t('email') }}</label>
-          <input type="email" id="customer_email" name="customer_email" autocomplete="email" value="{{ prefilled.email or account.email if account else '' }}" aria-label="email" maxlength="120">
+          <input type="email" id="customer_email" name="customer_email" autocomplete="email" value="{{ prefilled_email }}" aria-label="email" maxlength="120">
         </div>
         <div class="ps-form-group">
           <label for="phone">{{ t('phone') }} *</label>
@@ -87,7 +87,7 @@
       {% for line in totals.lines %}
       <div class="ps-checkout-summary-line">
         <span>{{ line.product.get_display_name(lang) }} × {{ line.quantity|int }}</span>
-        <span>{{ '%.2f'|format(line.line_total) }}</span>
+        <span>{{ format_currency(line.line_total) }}</span>
       </div>
       {% endfor %}
 
@@ -98,16 +98,16 @@
 
       <div class="ps-checkout-summary-total">
         <span>{{ t('total') }}</span>
-        <span>{{ '%.2f'|format(totals.subtotal) }} {{ tenant.default_currency or 'AED' }}</span>
+        <span>{{ format_currency(totals.subtotal) }}</span>
       </div>
 
       {% if min_order and min_order > 0 %}
-      <p class="ic-6" style="margin-top:10px"><i class="fas fa-coins"></i> {{ t('free_from') }}: {{ '%.2f'|format(min_order) }}</p>
+      <p class="ic-6" style="margin-top:10px"><i class="fas fa-coins"></i> {{ t('free_from') }}: {{ format_currency(min_order) }}</p>
       {% endif %}
 
       {% if is_shop_logged_in and loyalty_points and loyalty_points > 0 %}
       <div class="ps-loyalty-info" style="margin-top:10px">
-        <i class="fas fa-gem"></i> {{ loyalty_points }} {{ t('loyalty_points') }} (= {{ '%.2f'|format(loyalty_points / 100) }})
+        <i class="fas fa-gem"></i> {{ loyalty_points }} {{ t('loyalty_points') }} (= {{ format_currency(loyalty_value) }})
       </div>
       {% endif %}
     </div>
@@ -134,4 +134,4 @@
 })();
 </script>
 {% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/shop-utilities.css') }}">{% endblock %}
+

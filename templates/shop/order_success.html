@@ -11,12 +11,12 @@
   <p class="ic-3">{{ t('order_number') }} <strong>{{ sale.sale_number }}</strong></p>
   <div class="ps-summary-row total ic-4">
     <span>{{ t('total') }}</span>
-    <span>{{ '%.2f'|format(sale.total_amount) }} {{ sale.currency }}</span>
+    <span>{{ format_currency(sale.total_amount, sale.currency) }}</span>
   </div>
   {% if sale.coupon_code %}
   <div class="ps-summary-row ic-4">
     <span>{{ t('coupon_code') }} ({{ sale.coupon_code }})</span>
-    <span>-{{ '%.2f'|format(sale.discount_amount or 0) }} {{ sale.currency }}</span>
+    <span>-{{ format_currency(sale.discount_amount or 0, sale.currency) }}</span>
   </div>
   {% endif %}
   <span class="ps-badge-cod ic-5">
@@ -30,4 +30,4 @@
   <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" class="ps-btn ps-btn-primary ic-8">{{ t('continue_shopping') }}</a>
 </div>
 {% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/shop-utilities.css') }}">{% endblock %}
+

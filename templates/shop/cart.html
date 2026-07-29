@@ -22,7 +22,7 @@
       </div>
       <div class="ic-3">
         <strong>{{ product.get_display_name(lang) }}</strong>
-        <div class="ps-card-meta">{{ '%.2f'|format(product.regular_price) }} × {{ line.quantity|int }}</div>
+        <div class="ps-card-meta">{{ format_currency(product.regular_price) }} × {{ line.quantity|int }}</div>
         <div class="ic-4">
           <input type="number" form="cart-update-form" name="qty_{{ product.id }}" value="{{ line.quantity|int }}" min="0" class="ps-qty-input" aria-label="qty {{ product.id }}">
           <form method="post" action="{{ url_for('shop.cart_remove', slug=store.store_slug, product_id=product.id) }}">
@@ -31,7 +31,7 @@
           </form>
         </div>
       </div>
-      <strong class="ps-price">{{ '%.2f'|format(line.line_total) }}</strong>
+      <strong class="ps-price">{{ format_currency(line.line_total) }}</strong>
     </div>
     {% endfor %}
     <button type="submit" form="cart-update-form" class="ps-btn ps-btn-outline ic-6">{{ t('update') }}</button>
@@ -41,7 +41,7 @@
     <h3>{{ t('subtotal') }}</h3>
     <div class="ps-summary-row total">
       <span>{{ t('total') }}</span>
-      <span>{{ '%.2f'|format(totals.subtotal) }} {{ tenant.default_currency or 'AED' }}</span>
+      <span>{{ format_currency(totals.subtotal) }}</span>
     </div>
     <a href="{{ url_for('shop.checkout', slug=store.store_slug) }}" class="ps-btn ps-btn-primary ps-btn-block ic-7">{{ t('checkout') }} <i class="fas fa-arrow-{{ 'left' if is_rtl else 'right' }}"></i></a>
     <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" class="ps-btn ps-btn-outline ps-btn-block ic-8">{{ t('continue_shopping') }}</a>
@@ -55,4 +55,4 @@
 </div>
 {% endif %}
 {% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/shop-utilities.css') }}">{% endblock %}
+

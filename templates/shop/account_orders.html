@@ -46,7 +46,7 @@
 
           <span>{{ t('total') }}</span>
 
-          <span>{{ '%.2f'|format(order.total_amount) }} {{ order.currency }}</span>
+          <span>{{ format_currency(order.total_amount, order.currency) }}</span>
 
         </div>
 
