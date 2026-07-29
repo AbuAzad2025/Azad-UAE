@@ -8,7 +8,7 @@
     <div class="col-12">
       <div class="alert alert-info">
         <i class="fas fa-info-circle"></i>
-        <strong>{{ t('Note') }}:</strong> يمكن {{ t('Edit') }} {{ t('Notes_2') }} فقط. لا يمكن {{ t('Edit') }} {{ t('Products') }} أو {{ t('Amounts') }} بعد {{ t('Create') }} {{ t('Invoice_2') }}.
+        <strong>{{ t('Note') }}:</strong> {{ t('Edit_Purchase_Notes_Only') }}
       </div>
 
       <div class="card">
@@ -25,7 +25,7 @@
             <div class="row mb-4">
               <div class="col-md-6">
                 <h5>{{ t('Info_2') }} {{ t('Invoice_2') }}</h5>
-                <p><strong>{{ t('رقم') }} {{ t('Invoice_2') }}:</strong> {{ purchase.purchase_number }}</p>
+                <p><strong>{{ t('Invoice Number') }}:</strong> {{ purchase.purchase_number }}</p>
                 <p><strong>{{ t('Date') }}:</strong> {{ purchase.purchase_date.strftime('%Y-%m-%d') }}</p>
                 <p><strong>{{ t('Supplier') }}:</strong> {{ purchase.supplier_name }}</p>
                 {% if purchase.warehouse %}
@@ -51,7 +51,7 @@
                 <tr>
                   <th>{{ t('Product') }}</th>
                   <th>{{ t('Quantity') }}</th>
-                  <th>{{ t('Price_2') }} {{ t('الوحدة') }}</th>
+                  <th>{{ t('Price_2') }} {{ t('Unit Price') }}</th>
                   <th>{{ t('Discount') }} %</th>
                   <th>{{ t('Total_3') }}</th>
                 </tr>
@@ -73,15 +73,15 @@
             <div class="form-group">
               <label for="notes">{{ t('Notes_2') }}</label>
               <textarea name="notes" class="form-control" rows="4" id="notes" maxlength="500">{{ purchase.notes or '' }}</textarea>
-              <small class="text-muted">{{ t('يمكنك') }} {{ t('Add') }} أو {{ t('Edit') }} {{ t('Notes_2') }}</small>
+              <small class="text-muted">{{ t('Add_Or_Edit_Notes') }}</small>
             </div>
 
             <div class="form-group">
               <button type="submit" class="btn btn-success btn-lg">
-                <i class="fas fa-save"></i> {{ t('Save') }} {{ t('Changes') }}
+                <i class="fas fa-save {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i> {{ t('Save') }} {{ t('Changes') }}
               </button>
               <a href="{{ url_for('purchases.view', id=purchase.id) }}" class="btn btn-secondary btn-lg">
-                <i class="fas fa-times"></i> {{ t('Cancel') }}
+                <i class="fas fa-times {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i> {{ t('Cancel') }}
               </a>
             </div>
           </form>
