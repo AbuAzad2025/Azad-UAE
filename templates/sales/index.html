@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ t('Company_2') }} {{ t('أزاد') }} {{ t('للأنظمة') }} {{ t('الذكية') }} - {{ t('Management') }} {{ t('Sales') }} {{ t('والفواتير') }}{% endblock %}
+{% block title %}{{ t('sales_management') }} - {{ t('management') }} {{ t('sales') }} {{ t('and_invoices') }}{% endblock %}
 
 {% block page_title %}
 
@@ -8,9 +8,9 @@
 
   <div>
 
-    <h1 class="text-gradient mb-0"><i class="fas fa-file-invoice mr-3"></i>{{ t('Sales Management') }}</h1>
+    <h1 class="text-gradient mb-0"><i class="fas fa-file-invoice mr-3"></i>{{ t('sales_management') }}</h1>
 
-    <p class="text-muted">{{ t('جميع') }} {{ t('فواتير') }} {{ t('Sale_2') }} {{ t('والمعاملات') }} {{ t('Finance') }}</p>
+    <p class="text-muted">{{ t('all') }} {{ t('invoices') }} {{ t('sale') }} {{ t('and_transactions') }} {{ t('financial') }}</p>
 
   </div>
 
@@ -18,14 +18,14 @@
 
     <a href="{{ url_for('sales.create') }}" class="btn btn-primary btn-lg pulse text-white ic-1">
 
-      <i class="fas fa-plus-circle mr-2 ic-1"></i>{{ t('Invoice') }} {{ t('New_3') }}
+      <i class="fas fa-plus-circle mr-2 ic-1"></i>{{ t('new_invoice') }}
 
     </a>
 
     {% if current_user.has_permission('manage_sales') %}
     <a href="{{ url_for('sales.archived') }}" class="btn btn-warning btn-lg">
 
-      <i class="fas fa-archive mr-2"></i>{{ t('Archive_2') }}
+      <i class="fas fa-archive mr-2"></i>{{ t('archive') }}
 
     </a>
     {% endif %}
@@ -41,11 +41,23 @@
 
 
 
-{% block content %}
-<script>
-window._DATATABLES_LANG_URL = "{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}";
-</script>
+{% block extra_css %}
+<style>
+@media print {
+  .main-sidebar, .main-header, .main-footer, .content-header,
+  .btn, .btn-group, .card-header, .nav-tabs, .no-print,
+  .dataTables_filter, .dataTables_length, .dataTables_paginate, .dataTables_info {
+    display: none !important;
+  }
+  .content-wrapper { margin: 0 !important; padding: 0 !important; }
+  .card { border: none !important; box-shadow: none !important; }
+  table { width: 100% !important; border-collapse: collapse !important; }
+  th, td { border: 1px solid #dee2e6 !important; padding: 6px 8px !important; }
+}
+</style>
+{% endblock %}
 
+{% block content %}
 <div class="card">
 
   <div class="card-header">
@@ -54,7 +66,7 @@ window._DATATABLES_LANG_URL = "{{ url_for("static", filename=("datatables/Arabic
 
       <h3 class="card-title mb-0">
 
-        <i class="fas fa-list mr-2"></i>{{ t('Log') }} {{ t('Sales') }}
+        <i class="fas fa-list mr-2"></i>{{ t('sales_log') }}
 
       </h3>
 
@@ -74,19 +86,19 @@ window._DATATABLES_LANG_URL = "{{ url_for("static", filename=("datatables/Arabic
 
         <button type="button" class="btn btn-outline-success" id="filterPaid">
 
-          <i class="fas fa-check mr-1"></i>{{ t('Paid_2') }}
+          <i class="fas fa-check mr-1"></i>{{ t('paid') }}
 
         </button>
 
         <button type="button" class="btn btn-outline-warning" id="filterPartial">
 
-          <i class="fas fa-clock mr-1"></i>{{ t('Partial_2') }}
+          <i class="fas fa-clock mr-1"></i>{{ t('partial') }}
 
         </button>
 
         <button type="button" class="btn btn-outline-danger" id="filterUnpaid">
 
-          <i class="fas fa-times mr-1"></i>{{ t('Credit') }}
+          <i class="fas fa-times mr-1"></i>{{ t('credit') }}
 
         </button>
 
@@ -106,25 +118,25 @@ window._DATATABLES_LANG_URL = "{{ url_for("static", filename=("datatables/Arabic
 
           <tr>
 
-            <th><i class="fas fa-hashtag mr-2"></i>{{ t('Invoice Number') }}</th>
+            <th><i class="fas fa-hashtag mr-2"></i>{{ t('invoice_number') }}</th>
 
-            <th><i class="fas fa-user mr-2"></i>{{ t('Customer_2') }}</th>
+            <th><i class="fas fa-user mr-2"></i>{{ t('customer') }}</th>
 
-            <th><i class="far fa-calendar mr-2"></i>{{ t('Date') }}</th>
+            <th><i class="far fa-calendar mr-2"></i>{{ t('date') }}</th>
 
-            <th><i class="fas fa-money-bill-wave mr-2"></i>{{ t('Amount') }}</th>
+            <th><i class="fas fa-money-bill-wave mr-2"></i>{{ t('amount') }}</th>
 
-            <th><i class="fas fa-check-circle mr-2"></i>{{ t('Paid') }}</th>
+            <th><i class="fas fa-check-circle mr-2"></i>{{ t('paid') }}</th>
 
-            <th><i class="fas fa-exclamation-circle mr-2"></i>{{ t('Remaining_2') }}</th>
+            <th><i class="fas fa-exclamation-circle mr-2"></i>{{ t('remaining') }}</th>
 
-            <th><i class="fas fa-exchange-alt mr-2"></i>{{ t('Price_2') }} {{ t('Exchange') }}</th>
+            <th><i class="fas fa-exchange-alt mr-2"></i>{{ t('exchange_rate') }}</th>
 
-            <th><i class="fas fa-code-branch mr-2"></i>{{ t('Branch') }}</th>
+            <th><i class="fas fa-code-branch mr-2"></i>{{ t('branch') }}</th>
 
-            <th><i class="fas fa-wallet mr-2"></i>{{ t('Status') }}</th>
+            <th><i class="fas fa-wallet mr-2"></i>{{ t('status') }}</th>
 
-            <th class="text-center"><i class="fas fa-cog mr-2"></i>{{ t('Actions') }}</th>
+            <th class="text-center"><i class="fas fa-cog mr-2"></i>{{ t('actions') }}</th>
 
           </tr>
 
@@ -216,7 +228,7 @@ window._DATATABLES_LANG_URL = "{{ url_for("static", filename=("datatables/Arabic
 
               {% if sale.exchange_rate and sale.exchange_rate != 1 %}
 
-                <span class="badge badge-info" title="{{ t('Price_2') }} {{ t('Exchange') }} {{ t('Time') }} {{ t('المعاملة') }}">
+                <span class="badge badge-info" title="{{ t('exchange_rate_at_transaction_time') }}">
 
                   <i class="fas fa-exchange-alt mr-1"></i>{{ "{:.4f}".format(sale.exchange_rate) }}
 
@@ -250,7 +262,7 @@ window._DATATABLES_LANG_URL = "{{ url_for("static", filename=("datatables/Arabic
 
                 <span class="badge badge-success px-3">
 
-                  <i class="fas fa-check mr-1"></i>{{ t('Paid_2') }}
+                  <i class="fas fa-check mr-1"></i>{{ t('paid') }}
 
                 </span>
 
@@ -258,7 +270,7 @@ window._DATATABLES_LANG_URL = "{{ url_for("static", filename=("datatables/Arabic
 
                 <span class="badge badge-warning px-3">
 
-                  <i class="fas fa-clock mr-1"></i>{{ t('Partial_2') }}
+                  <i class="fas fa-clock mr-1"></i>{{ t('partial') }}
 
                 </span>
 
@@ -266,7 +278,7 @@ window._DATATABLES_LANG_URL = "{{ url_for("static", filename=("datatables/Arabic
 
                 <span class="badge badge-danger px-3">
 
-                  <i class="fas fa-hourglass-half mr-1"></i>{{ t('Credit') }}
+                  <i class="fas fa-hourglass-half mr-1"></i>{{ t('credit') }}
 
                 </span>
 
@@ -296,7 +308,7 @@ window._DATATABLES_LANG_URL = "{{ url_for("static", filename=("datatables/Arabic
 
                 {% if sale.balance_due > 0 and current_user.has_permission('manage_payments') %}
                 <a href="{{ url_for('payments.create_voucher', direction='incoming', party_type='customer', party_id=sale.customer_id, amount=sale.balance_due) }}"
-                   class="btn btn-success" title="{{ t('Voucher_2') }} {{ t('Payment') }}">
+                   class="btn btn-success" title="{{ t('payment_voucher') }}">
                   <i class="fas fa-credit-card"></i>
                 </a>
                 {% endif %}
@@ -305,7 +317,7 @@ window._DATATABLES_LANG_URL = "{{ url_for("static", filename=("datatables/Arabic
 
                 <button type="button" class="btn btn-danger" 
 
-                        data-delete-item="{{sale.id}}" data-item-type="sales" data-item-name="{{sale.sale_number|tojson}}" 
+                        data-delete-item="{{sale.id}}" data-item-type="sales" data-item-name="{{ sale.sale_number | e }}" 
 
                         title="{{ t('Delete') }}">
 
@@ -323,9 +335,9 @@ window._DATATABLES_LANG_URL = "{{ url_for("static", filename=("datatables/Arabic
 
           {% else %}
           <tr>
-            <td colspan="99" class="text-center text-muted py-5">
+            <td colspan="10" class="text-center text-muted py-5">
               <i class="fas fa-inbox fa-3x mb-3 d-block text-muted opacity-50"></i>
-              {{ t('لا توجد') }} {{ t('فواتير') }}
+              {{ t('no_invoices_found') }}
             </td>
           </tr>
           {% endfor %}
@@ -349,6 +361,9 @@ window._DATATABLES_LANG_URL = "{{ url_for("static", filename=("datatables/Arabic
 
 
 {% block extra_js %}
+<script>
+window._DATATABLES_LANG_URL = "{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}";
+</script>
 <script src="{{ url_for('static', filename='js/sales-index.js') }}"></script>
 {% endblock %}
 
