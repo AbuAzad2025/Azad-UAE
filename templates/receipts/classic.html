@@ -264,7 +264,7 @@
       {% endif %}
     </div>
 
-    {% set doc_title = '💵 سند قبض' %}
+    {% set doc_title = t('Receipt_Voucher') %}
     {% set doc_number = doc_number or receipt.receipt_number %}
     {% include 'partials/print_unified_banner.html' %}
 
@@ -277,8 +277,8 @@
       </div>
       <div class="info-box">
         <h3>{{ t('Data_2') }} {{ t('Voucher') }}</h3>
-        <p><strong>{{ t('Date') }}:</strong> {{ receipt.receipt_date.strftime('%Y-%m-%d %H:%M') }}</p>
-        <p><strong>{{ t('User') }}:</strong> {{ print_user_name or (receipt.user.full_name if receipt.user else 'النظام') }}</p>
+        <p><strong>{{ t('Date') }}:</strong> {{ format_datetime(receipt.receipt_date) }}</p>
+        <p><strong>{{ t('User') }}:</strong> {{ print_user_name or (receipt.user.full_name if receipt.user else t('System')) }}</p>
       </div>
     </div>
 
@@ -293,7 +293,7 @@
     </div>
 
     <div class="payment-details">
-      <h4>{{ t('طريقة') }} {{ t('Payment_2') }}</h4>
+      <h4>{{ t('Payment_Method') }}</h4>
       <p class="ic-5">
         {% if receipt.payment_method == 'cash' %}{{ t('Cash_2') }}
         {% elif receipt.payment_method == 'card' %}{{ t('Card') }}
@@ -310,7 +310,7 @@
         </div>
         <div class="cheque-row">
           <label>{{ t('History') }} {{ t('Due') }}:</label>
-          <span class="value">{{ receipt.cheque_date.strftime('%Y-%m-%d') if receipt.cheque_date else '-' }}</span>
+          <span class="value">{{ format_date(receipt.cheque_date) if receipt.cheque_date else '-' }}</span>
         </div>
         <div class="cheque-row">
           <label>{{ t('Bank') }}:</label>
@@ -335,7 +335,7 @@
 
     {% if receipt.notes %}
     <div class="notes">
-      <h4>{{ t('Notes') }} {{ t('وسبب') }} {{ t('Payment_2') }}</h4>
+      <h4>{{ t('Notes_And_Payment_Reason') }}</h4>
       <p>{{ receipt.notes }}</p>
     </div>
     {% endif %}
@@ -358,9 +358,9 @@
       
       {% if settings and ((settings.commercial_register and settings.commercial_register != 'None') or (settings.license_number and settings.license_number != 'None')) %}
       <p class="ic-11">
-        {% if settings.commercial_register and settings.commercial_register != 'None' %}س.ت: {{ settings.commercial_register }}{% endif %}
+         {% if settings.commercial_register and settings.commercial_register != 'None' %}{{ t('CR') }}: {{ settings.commercial_register }}{% endif %}
         {% if settings.commercial_register and settings.license_number %} | {% endif %}
-        {% if settings.license_number and settings.license_number != 'None' %}{{ t('رخصة') }}: {{ settings.license_number }}{% endif %}
+         {% if settings.license_number and settings.license_number != 'None' %}{{ t('License') }}: {{ settings.license_number }}{% endif %}
       </p>
       {% endif %}
       
@@ -371,8 +371,8 @@
       </p>
       {% endif %}
       
-      <p>{{ settings.payment_terms_ar if settings and settings.payment_terms_ar else 'نرجو الالتزام بمواعيد الدفع' }}</p>
-      <p class="ic-13">{{ t('شكراً') }} {{ t('لتعاملكم') }} {{ t('معنا') }}</p>
+       <p>{{ settings.payment_terms_ar if settings and settings.payment_terms_ar else t('Please_Adhere_To_Payment_Deadlines') }}</p>
+       <p class="ic-13">{{ t('Thank_You_For_Your_Business') }}</p>
       {% if settings and settings.website and settings.website != 'None' %}<p class="ic-3">🌐 {{ settings.website }}</p>{% endif %}
       
       
@@ -386,7 +386,7 @@
     </div>
 
     <div class="signature">
-      <div>{{ t('المحصل') }}</div>
+      <div>{{ t('Collector') }}</div>
       <div>{{ t('Customer') }}</div>
     </div>
     
