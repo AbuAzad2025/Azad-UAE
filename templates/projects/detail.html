@@ -8,17 +8,17 @@
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h4><i class="fas fa-project-diagram"></i> {{ project.name_ar or project.name }}</h4>
     <div>
-      <button class="btn btn-sm btn-outline-info" data-action="show-modal" data-target="#timesheetModal"><i class="fas fa-clock"></i> {{ t('تسجيل') }} {{ t('Time') }}</button>
-      <button class="btn btn-sm btn-outline-secondary" data-action="show-modal" data-target="#memberModal"><i class="fas fa-user-plus"></i> {{ t('Add') }} {{ t('عضو') }}</button>
-      <a href="{{ url_for('projects.edit_project', project_id=project.id) }}" class="btn btn-sm btn-warning" aria-label="{{ t('Edit') }} {{ t('Project') }}"><i class="fas fa-edit"></i></a>
+      <button class="btn btn-sm btn-outline-info" data-action="show-modal" data-target="#timesheetModal" aria-label="{{ t('Log_Time') }}"><i class="fas fa-clock"></i> {{ t('Log_Time') }}</button>
+      <button class="btn btn-sm btn-outline-secondary" data-action="show-modal" data-target="#memberModal" aria-label="{{ t('Add_Member') }}"><i class="fas fa-user-plus"></i> {{ t('Add_Member') }}</button>
+      <a href="{{ url_for('projects.edit_project', project_id=project.id) }}" class="btn btn-sm btn-warning" aria-label="{{ t('Edit_Project') }}"><i class="fas fa-edit"></i></a>
     </div>
   </div>
   <div class="row">
     <div class="col-12 mb-2">
-      <span class="badge badge-info">{{ project.status }}</span>
+      <span class="badge badge-info">{{ t(project.status) }}</span>
       {% if project.customer %}<span class="badge badge-secondary">{{ project.customer.name }}</span>{% endif %}
       {% if project.date_start or project.date_end %}
-      <small class="text-muted">{{ project.date_start.strftime('%Y-%m-%d') if project.date_start }} → {{ project.date_end.strftime('%Y-%m-%d') if project.date_end }}</small>
+      <small class="text-muted">{{ format_date(project.date_start) if project.date_start }} → {{ format_date(project.date_end) if project.date_end }}</small>
       {% endif %}
     </div>
   </div>
@@ -35,7 +35,7 @@
             <div class="card-body p-2">
               <h6 class="mb-1">{{ task.name }}</h6>
               {% if task.assigned_user %}<small><i class="fas fa-user"></i> {{ task.assigned_user.name }}</small>{% endif %}
-              {% if task.date_deadline %}<small class="d-block text-muted">{{ task.date_deadline.strftime('%Y-%m-%d') }}</small>{% endif %}
+              {% if task.date_deadline %}<small class="d-block text-muted">{{ format_date(task.date_deadline) }}</small>{% endif %}
               {% if task.effective_hours %}<small class="d-block"><i class="fas fa-clock"></i> {{ task.effective_hours }}h</small>{% endif %}
             </div>
           </div>
@@ -44,26 +44,33 @@
       </div>
     </div>
     {% endfor %}
+    {% if not stages %}
+    <div class="col-12 text-center text-muted py-5">
+      <i class="fas fa-columns fa-3x mb-3 d-block opacity-50"></i>
+      {{ t('No_Stages') }}
+    </div>
+    {% endif %}
   </div>
 </div>
 <div class="modal fade" id="timesheetModal">
   <div class="modal-dialog"><div class="modal-content">
-    <div class="modal-header"><h5>{{ t('تسجيل') }} {{ t('Time') }}</h5><button class="close" data-dismiss="modal">&times;</button></div>
+    <div class="modal-header"><h5>{{ t('Log_Time') }}</h5><button class="close" data-dismiss="modal">&times;</button></div>
     <form method="POST" action="{{ url_for('projects.api_log_timesheet') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="modal-body">
-      <div class="form-group"><label for="timesheet_task_id">{{ t('Task_2') }}</label>
+      <div class="form-group"><label for="timesheet_task_id">{{ t('Task') }}</label>
         <select name="task_id" id="timesheet_task_id" class="form-control" required>
           {% for t in tasks %}
           <option value="{{ t.id }}">{{ t.name }}</option>
           {% endfor %}
         </select></div>
-      <div class="form-group"><label for="timesheet_hours">{{ t('الساعات') }}</label>
+      <div class="form-group"><label for="timesheet_hours">{{ t('Hours') }}</label>
         <input name="hours" id="timesheet_hours" type="number" step="0.5" class="form-control" required></div>
       <div class="form-group"><label for="timesheet_description">{{ t('Description') }}</label>
         <input name="description" id="timesheet_description" class="form-control"></div>
     </div>
     <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ t('Cancel') }}</button>
       <button type="submit" class="btn btn-success">{{ t('Save') }}</button>
     </div>
     </form>
@@ -71,7 +78,7 @@
 </div>
 <div class="modal fade" id="memberModal">
   <div class="modal-dialog"><div class="modal-content">
-    <div class="modal-header"><h5>{{ t('Add') }} {{ t('عضو') }}</h5><button class="close" data-dismiss="modal">&times;</button></div>
+    <div class="modal-header"><h5>{{ t('Add_Member') }}</h5><button class="close" data-dismiss="modal">&times;</button></div>
     <form method="POST" action="{{ url_for('projects.add_member', project_id=project.id) }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="modal-body">
@@ -83,8 +90,8 @@
         </select></div>
       <div class="form-group"><label for="member_role">{{ t('Role') }}</label>
         <select name="role" id="member_role" class="form-control">
-          <option value="member">{{ t('عضو') }}</option>
-          <option value="manager">{{ t('مدير') }}</option>
+          <option value="member">{{ t('Member') }}</option>
+          <option value="manager">{{ t('Manager') }}</option>
         </select></div>
     </div>
     <div class="modal-footer"><button type="submit" class="btn btn-success">{{ t('Add') }}</button></div>

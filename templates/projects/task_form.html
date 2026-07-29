@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
-{% block title %}{% if project %}{{ t('Edit') }} {{ t('مشروع') }}{% else %}{{ t('مشروع') }} {{ t('New') }}{% endif %}{% endblock %}
+{% block title %}{% if project %}{{ t('Edit') }} {{ t('Project') }}{% else %}{{ t('New_Project') }}{% endif %}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="card">
-    <div class="card-header"><h5>{% if project %}{{ t('Edit') }} {{ t('مشروع') }}{% else %}{{ t('مشروع') }} {{ t('New') }}{% endif %}</h5></div>
+    <div class="card-header"><h5>{% if project %}{{ t('Edit') }} {{ t('Project') }}{% else %}{{ t('New_Project') }}{% endif %}</h5></div>
     <div class="card-body">
       <form method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -19,7 +19,7 @@
           <div class="col-md-6">
             <div class="form-group"><label for="customer_id">{{ t('Customer') }}</label>
               <select name="customer_id" id="customer_id" class="form-control">
-                <option value="">{{ t('اختر') }}</option>
+                <option value="">{{ t('Select') }}</option>
                 {% for c in customers %}
                 <option value="{{ c.id }}" {% if project and project.customer_id == c.id %}selected{% endif %}>{{ c.name }}</option>
                 {% endfor %}
@@ -29,17 +29,21 @@
             <div class="form-group"><label for="status">{{ t('Status') }}</label>
               <select name="status" id="status" class="form-control">
                 {% for s in ['planning','active','done','cancelled'] %}
-                <option value="{{ s }}" {% if project and project.status == s %}selected{% endif %}>{{ s }}</option>
+                <option value="{{ s }}" {% if project and project.status == s %}selected{% endif %}>{{ t(s) }}</option>
                 {% endfor %}
               </select></div>
           </div>
           <div class="col-md-6">
-            <div class="form-group"><label for="date_start">{{ t('History') }} {{ t('Start') }}</label>
-              <input id="date_start" name="date_start" type="date" class="form-control" value="{{ project.date_start.strftime('%Y-%m-%d') if project and project.date_start else '' }}"></div>
+            <div class="form-group"><label for="date_start">{{ t('Start_Date') }}</label>
+              <input id="date_start" name="date_start" type="date" class="form-control" value="{{ format_date(project.date_start) if project and project.date_start else '' }}"></div>
           </div>
           <div class="col-md-6">
-            <div class="form-group"><label for="date_end">{{ t('History') }} {{ t('End_2') }}</label>
-              <input id="date_end" name="date_end" type="date" class="form-control" value="{{ project.date_end.strftime('%Y-%m-%d') if project and project.date_end else '' }}"></div>
+            <div class="form-group"><label for="date_end">{{ t('End_Date') }}</label>
+              <input id="date_end" name="date_end" type="date" class="form-control" value="{{ format_date(project.date_end) if project and project.date_end else '' }}"></div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group"><label for="color">{{ t('Color') }}</label>
+              <input type="color" id="color" name="color" class="form-control" value="{{ project.color if project else '#667eea' }}"></div>
           </div>
           <div class="col-12">
             <div class="form-group"><label for="description">{{ t('Description') }}</label>
@@ -47,14 +51,19 @@
           </div>
         </div>
         {% if not project %}
-        <hr><h6>{{ t('Task_2') }} {{ t('الأولى') }}</h6>
+        <hr><h6>{{ t('First_Task') }}</h6>
         <div class="row">
           <div class="col-md-6">
-            <div class="form-group"><label for="task_name">{{ t('Name_2') }} {{ t('Task_2') }}</label><input id="task_name" name="task_name" class="form-control" placeholder="{{ t('Optional') }}"></div>
+            <div class="form-group"><label for="task_name">{{ t('Task_Name') }}</label><input id="task_name" name="task_name" class="form-control" placeholder="{{ t('Optional') }}"></div>
           </div>
           <div class="col-md-6">
             <div class="form-group"><label for="task_user_id">{{ t('Responsible') }}</label>
-              <select name="task_user_id" id="task_user_id" class="form-control"><option value="">{{ t('اختر') }}</option></select></div>
+              <select name="task_user_id" id="task_user_id" class="form-control">
+                <option value="">{{ t('Select') }}</option>
+                {% for u in users %}
+                <option value="{{ u.id }}">{{ u.name }}</option>
+                {% endfor %}
+              </select></div>
           </div>
         </div>
         {% endif %}

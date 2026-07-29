@@ -1,28 +1,34 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('المشاريع') }}{% endblock %}
+{% block title %}{{ t('Projects') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4><i class="fas fa-project-diagram"></i> {{ t('المشاريع') }}</h4>
-    <a href="{{ url_for('projects.create_project') }}" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> {{ t('مشروع') }} {{ t('New') }}</a>
+    <h4><i class="fas fa-project-diagram"></i> {{ t('Projects') }}</h4>
+    <a href="{{ url_for('projects.create_project') }}" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> {{ t('New_Project') }}</a>
   </div>
   <div class="row">
     {% for p in projects %}
     <div class="col-md-4 col-lg-3 mb-3">
       <div class="card h-100">
-        <div class="card-header" style="border-left:4px solid {{ p.color }}">
+        <div class="card-header" style="border-inline-start:4px solid {{ p.color }}">
           <a href="{{ url_for('projects.project_detail', project_id=p.id) }}" class="text-dark"><strong>{{ p.name_ar or p.name }}</strong></a>
         </div>
         <div class="card-body p-2">
           <small class="text-muted d-block">{{ p.description|truncate(100) if p.description else '' }}</small>
-          <small class="d-block mt-2"><span class="badge badge-{{ 'success' if p.status == 'done' else ('info' if p.status == 'active' else 'secondary') }}">{{ p.status }}</span></small>
+          <small class="d-block mt-2"><span class="badge badge-{{ 'success' if p.status == 'done' else ('info' if p.status == 'active' else 'secondary') }}">{{ t(p.status) }}</span></small>
           {% if p.date_start or p.date_end %}
-          <small class="d-block text-muted mt-1">{{ p.date_start.strftime('%Y-%m-%d') if p.date_start }} → {{ p.date_end.strftime('%Y-%m-%d') if p.date_end }}</small>
+          <small class="d-block text-muted mt-1">{{ format_date(p.date_start) if p.date_start }} → {{ format_date(p.date_end) if p.date_end }}</small>
           {% endif %}
         </div>
       </div>
     </div>
     {% endfor %}
+    {% if not projects %}
+    <div class="col-12 text-center text-muted py-5">
+      <i class="fas fa-folder-open fa-3x mb-3 d-block opacity-50"></i>
+      {{ t('No_Projects') }}
+    </div>
+    {% endif %}
   </div>
 </div>
 {% endblock %}
