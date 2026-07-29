@@ -4631,6 +4631,15 @@ TRANSLATIONS = {
     "tax_rate_tooltip": {"en": "Tax Rate Tooltip", "ar": "نسبة ضريبة القيمة المضافة VAT"},
     "vat_info": {"en": "VAT Info", "ar": "ضريبة القيمة المضافة"},
     "warehouse_select_tooltip": {"en": "Warehouse Select Tooltip", "ar": "المستودع الذي سيتم خصم المخزون منه"},
+    "recipient_signature": {"en": "Recipient Signature", "ar": "توقيع المستلم"},
+    "company_stamp": {"en": "Company Stamp", "ar": "ختم الشركة"},
+    "no_products_found": {"en": "No Products Found", "ar": "لا توجد منتجات"},
+    "no_products": {"en": "No Products", "ar": "لا توجد منتجات"},
+    "whatsapp_inquiry_text": {"en": "Hello, I want: {product} — {price}", "ar": "مرحباً، أريد: {product} — {price}"},
+    "register_question": {"en": "No account? Register", "ar": "ليس لديك حساب؟ سجل"},
+    "cod": {"en": "Cash on Delivery", "ar": "الدفع عند الاستلام"},
+    "menu": {"en": "Menu", "ar": "القائمة"},
+    "search": {"en": "Search", "ar": "بحث"},
 }
 
 
