@@ -8,7 +8,7 @@
     <div class="col-12">
       <div class="alert alert-info">
         <i class="fas fa-info-circle"></i>
-        <strong>{{ t('Note') }}:</strong> {{ t('Edit_Purchase_Notes_Only') }}
+        <strong>{{ t('Note') }}:</strong> {{ t('Edit_Notes_Only_Warning') }}
       </div>
 
       <div class="card">
@@ -24,9 +24,9 @@
             
             <div class="row mb-4">
               <div class="col-md-6">
-                <h5>{{ t('Info_2') }} {{ t('Invoice_2') }}</h5>
-                <p><strong>{{ t('Invoice Number') }}:</strong> {{ purchase.purchase_number }}</p>
-                <p><strong>{{ t('Date') }}:</strong> {{ purchase.purchase_date.strftime('%Y-%m-%d') }}</p>
+                <h5>{{ t('Invoice_Info') }}</h5>
+                <p><strong>{{ t('Invoice_Number') }}:</strong> {{ purchase.purchase_number }}</p>
+                <p><strong>{{ t('Date') }}:</strong> {{ format_date(purchase.purchase_date) }}</p>
                 <p><strong>{{ t('Supplier') }}:</strong> {{ purchase.supplier_name }}</p>
                 {% if purchase.warehouse %}
                 <p><strong><i class="fas fa-warehouse text-info"></i> {{ t('Warehouse') }}:</strong> {{ purchase.warehouse.name_ar or purchase.warehouse.name }}</p>
@@ -51,7 +51,7 @@
                 <tr>
                   <th>{{ t('Product') }}</th>
                   <th>{{ t('Quantity') }}</th>
-                  <th>{{ t('Price_2') }} {{ t('Unit Price') }}</th>
+                  <th>{{ t('Unit_Price') }}</th>
                   <th>{{ t('Discount') }} %</th>
                   <th>{{ t('Total_3') }}</th>
                 </tr>
@@ -71,9 +71,9 @@
 
             
             <div class="form-group">
-              <label for="notes">{{ t('Notes_2') }}</label>
+              <label for="notes">{{ t('Notes') }}</label>
               <textarea name="notes" class="form-control" rows="4" id="notes" maxlength="500">{{ purchase.notes or '' }}</textarea>
-              <small class="text-muted">{{ t('Add_Or_Edit_Notes') }}</small>
+              <small class="text-muted">{{ t('You_Can_Add_Or_Edit_Notes') }}</small>
             </div>
 
             <div class="form-group">
