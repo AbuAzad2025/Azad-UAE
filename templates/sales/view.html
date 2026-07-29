@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Invoice') }} {{ t('Sales_2') }} #{{ sale.sale_number }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or t('default_system_name') }} - {{ t('invoice') }} {{ t('sales') }} #{{ sale.sale_number }}{% endblock %}
 
 {% block page_title %}
 
@@ -12,7 +12,7 @@
 
     <p class="text-muted mb-0">
 
-      <i class="far fa-calendar"></i> {{ sale.sale_date.strftime('%Y-%m-%d %H:%M') }}
+      <i class="far fa-calendar"></i> {{ sale.sale_date.strftime('%Y-%m-%d') }}
 
     </p>
 
@@ -34,13 +34,13 @@
 
     <a href="{{ url_for('sales.index') }}" class="btn btn-info">
 
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للقائمة') }}
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('back_to_list') }}
 
     </a>
 
     <button type="button" class="btn btn-danger" 
 
-            data-delete-item="{{sale.id}}" data-item-type="sales" data-item-name="{{sale.sale_number|tojson}}">
+            data-delete-item="{{sale.id}}" data-item-type="sales" data-item-name="{{ sale.sale_number | e }}">
 
       <i class="fas fa-trash mr-2"></i>{{ t('Delete') }}
 
@@ -48,7 +48,7 @@
 
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
 
-      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
+      <i class="fas fa-home mr-2"></i>{{ t('main_dashboard') }}
 
     </a>
 
@@ -139,6 +139,18 @@
     .ic-3 { font-size: 1.3rem; }
     .ic-4 { font-size: 1.2rem; }
     .ic-5 { display:none; }
+
+      @media print {
+        .main-sidebar, .main-header, .main-footer, .content-header,
+        .btn, .btn-group, .card-header, .nav-tabs, .no-print,
+        .dataTables_filter, .dataTables_length, .dataTables_paginate, .dataTables_info {
+          display: none !important;
+        }
+        .content-wrapper { margin: 0 !important; padding: 0 !important; }
+        .card { border: none !important; box-shadow: none !important; }
+        table { width: 100% !important; border-collapse: collapse !important; }
+        th, td { border: 1px solid #dee2e6 !important; padding: 6px 8px !important; }
+      }
   </style>
 
 {% endblock %}
@@ -161,9 +173,9 @@
 
           <div class="col-6">
 
-            <h2 class="mb-3"><i class="fas fa-file-invoice mr-2"></i>{{ t('Invoice') }} {{ t('Sale') }}</h2>
+            <h2 class="mb-3"><i class="fas fa-file-invoice mr-2"></i>{{ t('invoice') }} {{ t('sale') }}</h2>
 
-            <p class="mb-1"><strong>{{ t('رقم') }} {{ t('Invoice_2') }}:</strong> {{ sale.sale_number }}</p>
+            <p class="mb-1"><strong>{{ t('invoice_number') }}:</strong> {{ sale.sale_number }}</p>
 
             <p class="mb-0"><strong>{{ t('Date') }}:</strong> {{ sale.sale_date.strftime('%Y-%m-%d %H:%M') }}</p>
 
@@ -171,13 +183,13 @@
 
           <div class="col-6 text-left">
 
-            <h4>{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}</h4>
+            <h4>{{ tenant_name_ar or company_name_ar or t('default_system_name') }}</h4>
 
-            <p class="mb-0">{{ tenant_address or company_address }}</p>
+            <p class="mb-0">{{ (tenant_address or company_address) | e }}</p>
 
             <p class="mb-0">
 
-              <i class="fas fa-phone mr-1"></i> {{ tenant_phone or company_phone }}
+              <i class="fas fa-phone mr-1"></i> {{ (tenant_phone or company_phone) | e }}
 
             </p>
 
@@ -195,7 +207,7 @@
 
           <div class="col-md-6">
 
-            <h5 class="text-primary"><i class="fas fa-user-circle mr-2"></i>{{ t('Info_2') }} {{ t('Customer_2') }}</h5>
+            <h5 class="text-primary"><i class="fas fa-user-circle mr-2"></i>{{ t('customer_info') }}</h5>
 
             <div class="p-3 bg-light rounded">
 
@@ -205,23 +217,23 @@
 
                 {% if current_user.has_permission('manage_customers') %}
                 <a href="{{ url_for('customers.view', id=sale.customer.id) }}" class="text-primary">
-                  {{ sale.customer.name }}
+{{ sale.customer.name | e }}
                 </a>
                 {% else %}
-                {{ sale.customer.name }}
+                {{ sale.customer.name | e }}
                 {% endif %}
 
               </p>
 
               {% if sale.customer.phone %}
 
-              <p class="mb-2"><strong>{{ t('Phone') }}:</strong> {{ sale.customer.phone }}</p>
+              <p class="mb-2"><strong>{{ t('Phone') }}:</strong> {{ sale.customer.phone | e }}</p>
 
               {% endif %}
 
               {% if sale.customer.email %}
 
-              <p class="mb-0"><strong>{{ t('Email_2') }}:</strong> {{ sale.customer.email }}</p>
+              <p class="mb-0"><strong>{{ t('email') }}:</strong> {{ sale.customer.email | e }}</p>
 
               {% endif %}
 
@@ -231,17 +243,17 @@
 
           <div class="col-md-6">
 
-            <h5 class="text-success"><i class="fas fa-user-tie mr-2"></i>{{ t('Info_2') }} {{ t('البائع') }}</h5>
+            <h5 class="text-success"><i class="fas fa-user-tie mr-2"></i>{{ t('seller_info') }}</h5>
 
             <div class="p-3 bg-light rounded">
 
-              <p class="mb-2"><strong>{{ t('Name') }}:</strong> {{ sale.seller.full_name or sale.seller.username }}</p>
+              <p class="mb-2"><strong>{{ t('Name') }}:</strong> {{ (sale.seller.full_name or sale.seller.username) | e }}</p>
 
               <p class="mb-0"><strong>{{ t('Currency') }}:</strong> {{ sale.currency }}</p>
 
               {% if sale.exchange_rate != 1 %}
 
-              <p class="mb-0"><strong>{{ t('Price_2') }} {{ t('Exchange') }}:</strong> {{ "{:,.6f}".format(sale.exchange_rate) }}</p>
+              <p class="mb-0"><strong>{{ t('exchange_rate') }}:</strong> {{ "{:,.6f}".format(sale.exchange_rate) }}</p>
 
               {% endif %}
 
@@ -295,11 +307,11 @@
 
                     <div>
 
-                      <strong>{{ line.product.name if line.product else '-' }}</strong>
+                      <strong>{{ (line.product.name if line.product else '-') | e }}</strong>
 
                       {% if line.product and line.product.sku %}
 
-                      <br><small class="text-muted">SKU: {{ line.product.sku }}</small>
+                      <br><small class="text-muted">SKU: {{ line.product.sku | e }}</small>
 
                       {% endif %}
 
@@ -355,7 +367,7 @@
 
           <h6><i class="fas fa-sticky-note mr-2"></i>{{ t('Notes') }}:</h6>
 
-          <p class="mb-0">{{ sale.notes }}</p>
+          <p class="mb-0">{{ sale.notes | e }}</p>
 
         </div>
 
@@ -367,7 +379,7 @@
 
         {% if sale.payments %}
 
-        <h5 class="text-primary mb-3 mt-4"><i class="fas fa-money-bill-wave mr-2"></i>{{ t('الدفعات') }}</h5>
+        <h5 class="text-primary mb-3 mt-4"><i class="fas fa-money-bill-wave mr-2"></i>{{ t('payments') }}</h5>
 
         <div class="table-responsive">
 
@@ -377,15 +389,15 @@
 
               <tr>
 
-                <th>{{ t('رقم') }} {{ t('Payment') }}</th>
+                <th>{{ t('payment_number') }}</th>
 
-                <th>{{ t('Date') }}</th>
+                <th>{{ t('date') }}</th>
 
-                <th>{{ t('Amount') }}</th>
+                <th>{{ t('amount') }}</th>
 
-                <th>{{ t('طريقة') }} {{ t('Payment_2') }}</th>
+                <th>{{ t('payment_method') }}</th>
 
-                <th>{{ t('Details_2') }}</th>
+                <th>{{ t('details') }}</th>
 
               </tr>
 
@@ -407,23 +419,23 @@
 
                   {% if payment.payment_method == 'cash' %}
 
-                    <span class="badge badge-success"><i class="fas fa-money-bill-wave"></i> {{ t('Cash_2') }}</span>
+                    <span class="badge badge-success"><i class="fas fa-money-bill-wave"></i> {{ t('cash') }}</span>
 
                   {% elif payment.payment_method == 'card' %}
 
-                    <span class="badge badge-info"><i class="fas fa-credit-card"></i> {{ t('Card') }}</span>
+                    <span class="badge badge-info"><i class="fas fa-credit-card"></i> {{ t('card') }}</span>
 
                   {% elif payment.payment_method == 'bank_transfer' %}
 
-                    <span class="badge badge-primary"><i class="fas fa-university"></i> {{ t('Transfer') }} {{ t('Bank_3') }}</span>
+                    <span class="badge badge-primary"><i class="fas fa-university"></i> {{ t('bank_transfer') }}</span>
 
                   {% elif payment.payment_method == 'cheque' %}
 
-                    <span class="badge badge-warning"><i class="fas fa-file-invoice"></i> {{ t('Cheque_3') }}</span>
+                    <span class="badge badge-warning"><i class="fas fa-file-invoice"></i> {{ t('cheque') }}</span>
 
                   {% else %}
 
-                    <span class="badge badge-secondary"><i class="fas fa-wallet"></i> {{ t('محفظة') }} {{ t('إلكترونية') }}</span>
+                    <span class="badge badge-secondary"><i class="fas fa-wallet"></i> {{ t('e_wallet') }}</span>
 
                   {% endif %}
 
@@ -437,13 +449,13 @@
 
                       <small>
 
-                        <i class="fas fa-hashtag"></i> <strong>{{ t('رقم') }} {{ t('Cheque') }}:</strong> {{ payment.cheque_number }}<br>
+                        <i class="fas fa-hashtag"></i> <strong>{{ t('cheque_number') }}:</strong> {{ payment.cheque_number | e }}<br>
 
-                        <i class="fas fa-calendar"></i> <strong>{{ t('History') }} {{ t('Due') }}:</strong> 
+                        <i class="fas fa-calendar"></i> <strong>{{ t('due_date') }}:</strong> 
 
                         <span class="badge badge-info">{{ payment.cheque_date.strftime('%Y-%m-%d') if payment.cheque_date else '-' }}</span><br>
 
-                        <i class="fas fa-university"></i> <strong>{{ t('Bank') }}:</strong> {{ payment.bank_name or '-' }}
+                        <i class="fas fa-university"></i> <strong>{{ t('bank') }}:</strong> {{ (payment.bank_name or '-') | e }}
 
                       </small>
 
@@ -451,7 +463,7 @@
 
                   {% elif payment.reference_number %}
 
-                    <small><i class="fas fa-hashtag"></i> {{ payment.reference_number }}</small>
+                    <small><i class="fas fa-hashtag"></i> {{ payment.reference_number | e }}</small>
 
                   {% else %}
 
@@ -489,13 +501,13 @@
 
       <div class="card-body text-center">
 
-        <h5 class="mb-3">{{ t('Status_2') }} {{ t('Payment_2') }}</h5>
+        <h5 class="mb-3">{{ t('payment_status') }}</h5>
 
         {% if sale.payment_status == 'paid' %}
 
         <div class="status-badge badge-success">
 
-          <i class="fas fa-check-circle"></i> {{ t('Paid_4') }} {{ t('بالكامل') }}
+          <i class="fas fa-check-circle"></i> {{ t('paid_in_full') }}
 
         </div>
 
@@ -503,7 +515,7 @@
 
         <div class="status-badge badge-warning">
 
-          <i class="fas fa-clock"></i> {{ t('Paid_4') }} {{ t('Partial') }}
+          <i class="fas fa-clock"></i> {{ t('partially_paid') }}
 
         </div>
 
@@ -511,7 +523,7 @@
 
         <div class="status-badge badge-danger">
 
-          <i class="fas fa-hourglass-half"></i> {{ t('Credit_2') }}
+          <i class="fas fa-hourglass-half"></i> {{ t('credit') }}
 
         </div>
 
@@ -531,7 +543,7 @@
 
         <h3 class="card-title text-white mb-0">
 
-          <i class="fas fa-calculator mr-2"></i>{{ t('Totals') }}
+          <i class="fas fa-calculator mr-2"></i>{{ t('totals') }}
 
         </h3>
 
@@ -543,7 +555,7 @@
 
           <div class="d-flex justify-content-between mb-2">
 
-            <span>{{ t('Total') }} {{ t('Sub') }}:</span>
+            <span>{{ t('subtotal') }}:</span>
 
             <strong>{{ format_currency(sale.subtotal) }}</strong>
 
@@ -555,7 +567,7 @@
 
           <div class="d-flex justify-content-between mb-2">
 
-            <span><i class="fas fa-tag text-danger mr-1"></i>{{ t('Discount') }}:</span>
+            <span><i class="fas fa-tag text-danger mr-1"></i>{{ t('discount') }}:</span>
 
             <strong class="text-danger">-{{ format_currency(sale.discount_amount) }}</strong>
 
@@ -569,7 +581,7 @@
 
           <div class="d-flex justify-content-between mb-2">
 
-            <span><i class="fas fa-truck text-info mr-1"></i>{{ t('Shipping') }}:</span>
+            <span><i class="fas fa-truck text-info mr-1"></i>{{ t('shipping') }}:</span>
 
             <strong class="text-info">+{{ format_currency(sale.shipping_cost) }}</strong>
 
@@ -583,7 +595,7 @@
 
           <div class="d-flex justify-content-between mb-2">
 
-            <span><i class="fas fa-percent text-warning mr-1"></i>{{ t('Tax') }}:</span>
+            <span><i class="fas fa-percent text-warning mr-1"></i>{{ t('tax') }}:</span>
 
             <strong class="text-warning">+{{ format_currency(sale.tax_amount) }}</strong>
 
@@ -601,7 +613,7 @@
 
         <div class="d-flex justify-content-between align-items-center mb-3 ic-3">
 
-          <strong>{{ t('Total_3') }}:</strong>
+          <strong>{{ t('total') }}:</strong>
 
           <strong class="ic-2">
 
@@ -617,7 +629,7 @@
 
         <div class="d-flex justify-content-between mb-3 text-muted">
 
-          <span>{{ t('بال') }}{{ tenant_currency_name_ar or 'درهم' }}:</span>
+          <span>{{ t('in_currency') }} {{ tenant_currency_name_ar or t('default_currency_name') }}:</span>
 
           <strong>{{ format_currency(sale.base_amount) }}</strong>
 
@@ -629,7 +641,7 @@
 
         <div class="d-flex justify-content-between mb-2">
 
-          <span><i class="fas fa-check-circle text-success mr-1"></i>{{ t('Paid') }} {{ t('Confirmed_4') }}:</span>
+          <span><i class="fas fa-check-circle text-success mr-1"></i>{{ t('paid_confirmed') }}:</span>
 
           <strong class="text-success">{{ format_currency(sale.paid_amount, sale.currency) }}</strong>
 
@@ -641,7 +653,7 @@
 
         <div class="d-flex justify-content-between mb-2">
 
-          <span><i class="fas fa-hourglass-half text-warning mr-1"></i>{{ t('Cheques_2') }} {{ t('Pending_2') }}:</span>
+          <span><i class="fas fa-hourglass-half text-warning mr-1"></i>{{ t('pending_cheques') }}:</span>
 
           <strong class="text-warning">{{ format_currency(sale.pending_cheques_amount) }}</strong>
 
@@ -649,7 +661,7 @@
 
         <small class="text-muted d-block mb-2">
 
-          <i class="fas fa-info-circle"></i> هذه {{ t('Cheques') }} لم {{ t('تُصرف') }} بعد من {{ t('Bank') }}
+          <i class="fas fa-info-circle"></i> {{ t('cheques_not_cashed_yet') }}
 
         </small>
 
@@ -659,13 +671,13 @@
 
         <div class="d-flex justify-content-between mb-3">
 
-          <span><i class="fas fa-exclamation-circle text-danger mr-1"></i>{{ t('Remaining_2') }}:</span>
+          <span><i class="fas fa-exclamation-circle text-danger mr-1"></i>{{ t('remaining') }}:</span>
 
           <strong class="text-danger ic-4">
 
             {{ format_currency(sale.balance_due) }}
             {% if sale.currency and sale.currency != tenant_default_currency %}
-            <small class="d-block text-muted">{{ format_currency(sale.balance_due / sale.exchange_rate if sale.exchange_rate and sale.exchange_rate > 0 else sale.balance_due, sale.currency) }}</small>
+            <small class="d-block text-muted">{{ format_currency(sale.balance_due_converted) }}</small>
             {% endif %}
 
           </strong>
@@ -682,7 +694,7 @@
 
            class="btn btn-success btn-block btn-lg">
 
-          <i class="fas fa-money-bill-wave mr-2"></i>{{ t('Add') }} {{ t('دفعة') }}
+          <i class="fas fa-money-bill-wave mr-2"></i>{{ t('add_payment') }}
 
         </a>
 
@@ -692,7 +704,7 @@
 
           <i class="fas fa-check-circle fa-2x mb-2"></i>
 
-          <p class="mb-0"><strong>{{ t('Invoice_2') }} {{ t('Paid_4') }} {{ t('بالكامل') }}</strong></p>
+          <p class="mb-0"><strong>{{ t('invoice_fully_paid') }}</strong></p>
 
         </div>
 
@@ -710,7 +722,7 @@
 
       <div class="card-header">
 
-        <h3 class="card-title"><i class="fas fa-cog mr-2"></i>{{ t('الإجراءات') }}</h3>
+        <h3 class="card-title"><i class="fas fa-cog mr-2"></i>{{ t('actions') }}</h3>
 
       </div>
 
@@ -722,13 +734,13 @@
 
              class="btn btn-secondary mb-2" target="_blank" rel="noopener noreferrer">
 
-            <i class="fas fa-print mr-2"></i>{{ t('Print') }} {{ t('Invoice_2') }}
+            <i class="fas fa-print mr-2"></i>{{ t('print_invoice') }}
 
           </a>
 
           <a href="{{ url_for('sales.index') }}" class="btn btn-info mb-2">
 
-            <i class="fas fa-list mr-2"></i>كل {{ t('Invoices') }}
+            <i class="fas fa-list mr-2"></i>{{ t('all_invoices') }}
 
           </a>
 
@@ -736,7 +748,7 @@
 
           <button type="button" class="btn btn-danger" data-action="cancel-sale">
 
-            <i class="fas fa-ban mr-2"></i>{{ t('Cancel') }} {{ t('Invoice_2') }}
+            <i class="fas fa-ban mr-2"></i>{{ t('cancel_invoice') }}
 
           </button>
 
@@ -754,7 +766,7 @@
 
           <button type="button" class="btn btn-outline-danger w-100" data-action="delete-sale">
 
-            <i class="fas fa-trash-alt mr-2"></i>{{ t('Delete') }} {{ t('Invoice_2') }}
+            <i class="fas fa-trash-alt mr-2"></i>{{ t('delete_invoice') }}
 
           </button>
 
@@ -790,7 +802,7 @@
 
       <div class="modal-header bg-warning text-white">
 
-        <h5 class="modal-title" id="returnModalLabel"><i class="fas fa-undo mr-2"></i>{{ t('Create') }} {{ t('Return') }} {{ t('Sales_2') }}</h5>
+        <h5 class="modal-title" id="returnModalLabel"><i class="fas fa-undo mr-2"></i>{{ t('create_sales_return') }}</h5>
 
         <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
 
@@ -818,13 +830,13 @@
 
                   <th>{{ t('Product') }}</th>
 
-                  <th>{{ t('Quantity') }} {{ t('المباعة') }}</th>
+                  <th>{{ t('quantity_sold') }}</th>
 
-                  <th>{{ t('Quantity') }} {{ t('Return') }}</th>
+                  <th>{{ t('return_quantity') }}</th>
 
-                  <th>{{ t('Status_2') }} {{ t('Product') }}</th>
+                  <th>{{ t('product_condition') }}</th>
 
-                  <th>{{ t('Notes') }}</th>
+                  <th>{{ t('notes') }}</th>
 
                 </tr>
 
@@ -836,7 +848,7 @@
 
                 <tr class="return-line-row" data-line-id="{{ line.id }}">
 
-                  <td>{{ line.product.name }}</td>
+                  <td>{{ line.product.name | e }}</td>
 
                   <td>{{ line.quantity }}</td>
 
@@ -852,9 +864,9 @@
 
                     <select class="form-control return-condition" id="return_condition_{{ line.id }}" name="return_condition_{{ line.id }}" aria-label="return condition {{ line.id }}">
 
-                      <option value="good">{{ t('سليم') }} ({{ t('لإعادة') }} {{ t('Sale_2') }})</option>
+                      <option value="good">{{ t('good_for_resale') }}</option>
 
-                      <option value="damaged">{{ t('تالف') }} ({{ t('للإتلاف') }})</option>
+                      <option value="damaged">{{ t('damaged_for_disposal') }}</option>
 
                     </select>
 
@@ -862,8 +874,8 @@
 
                   <td>
 
-                    <label for="return_notes_{{ line.id }}" class="sr-only">{{ t('سبب') }} {{ t('الإرجاع') }}</label>
-                    <input type="text" class="form-control return-notes" id="return_notes_{{ line.id }}" name="return_notes_{{ line.id }}" placeholder="{{ t('سبب') }} {{ t('الإرجاع') }}" maxlength="500">
+                    <label for="return_notes_{{ line.id }}" class="sr-only">{{ t('return_reason') }}</label>
+                    <input type="text" class="form-control return-notes" id="return_notes_{{ line.id }}" name="return_notes_{{ line.id }}" placeholder="{{ t('return_reason') }}" maxlength="500">
 
                   </td>
 
@@ -879,7 +891,7 @@
 
           <div class="form-group">
 
-            <label for="return_general_notes">{{ t('Notes') }} {{ t('General_4') }} على {{ t('Return_3') }}</label>
+            <label for="return_general_notes">{{ t('general_return_notes') }}</label>
 
             <textarea class="form-control" id="return_general_notes" name="return_general_notes" rows="3" maxlength="500"></textarea>
 
@@ -891,9 +903,9 @@
 
       <div class="modal-footer">
 
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ t('Cancel') }}</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ t('cancel') }}</button>
 
-        <button type="button" class="btn btn-primary" data-action="submit-return">{{ t('Create') }} {{ t('Return_3') }}</button>
+        <button type="button" class="btn btn-primary" data-action="submit-return">{{ t('create_return') }}</button>
 
       </div>
 
@@ -908,8 +920,8 @@
 <script>
 
 const RETURN_CSRF_TOKEN = document.querySelector('#returnForm [name="csrf_token"]').value;
-const RETURN_QTY_ALERT = '{{ t("يرجى") }} {{ t("تحديد") }} {{ t("Qty") }} {{ t("لمنتج") }} واحد على {{ t("الأقل") }} {{ t("Return_2") }}';
-const RETURN_CONFIRM_MSG = '{{ t("متأكد") }} {{ t("Create") }} {{ t("Return_4") }} {{ t("سيتم") }} {{ t("Update") }} {{ t("Inventory") }} {{ t("والحسابات") }} {{ t("تلقائياً") }}.';
+const RETURN_QTY_ALERT = {{ t('return_qty_alert') | tojson }};
+const RETURN_CONFIRM_MSG = {{ t('return_confirm_msg') | tojson }};
 
 $(document).on('click', '[data-action="cancel-sale"]', confirmCancel);
 $(document).on('click', '[data-action="delete-sale"]', confirmDelete);
@@ -967,7 +979,7 @@ function submitReturn() {
 
     
 
-    fetch('/returns/api/create', {
+    fetch('{{ url_for("returns.api_create") }}', {
 
         method: 'POST',
 
@@ -997,7 +1009,7 @@ function submitReturn() {
 
         if (data.success) {
 
-            alert('تم {{ t('Create') }} {{ t('Return_3') }} {{ t('بنجاح') }}: ' + data.return_number);
+            alert({{ t('return_created_success') | tojson }}.replace('{return_number}', data.return_number));
 
             window.location.reload();
 
@@ -1013,7 +1025,7 @@ function submitReturn() {
 
         console.error('Error:', error);
 
-        alert('{{ t("حدث") }} {{ t("Error") }} {{ t("أثناء") }} {{ t("الاتصال") }} {{ t("بالخادم") }}');
+        alert({{ t('server_connection_error') | tojson }});
 
     });
 
@@ -1023,7 +1035,7 @@ function submitReturn() {
 
 function confirmCancel() {
 
-  if (confirm('هل أنت {{ t("متأكد") }} من {{ t("Cancel") }} هذه {{ t("Invoice_3") }}\nلا يمكن {{ t("التراجع") }} عن هذا {{ t("الإجراء") }}.')) {
+  if (confirm({{ t('confirm_cancel_invoice') | tojson }})) {
 
     document.getElementById('cancelForm').submit();
 
@@ -1035,7 +1047,7 @@ function confirmCancel() {
 
 function confirmDelete() {
 
-  if (confirm('هل أنت {{ t("متأكد") }} من {{ t("Delete") }} هذه {{ t("Invoice_3") }}\n\n{{ t("Alert_2") }}: {{ t("سيتم") }} {{ t("أرشفة") }} {{ t("Invoice_2") }} إذا كان لها {{ t("ارتباطات") }} {{ t("مالية") }} ({{ t("دفعات") }}/{{ t("Cheques_2") }})، أو {{ t("will Delete (feminine)") }} {{ t("نهائياً") }} إذا كانت غير {{ t("مرتبطة") }}.')) {
+  if (confirm({{ t('confirm_delete_invoice') | tojson }})) {
 
     document.getElementById('deleteForm').submit();
 
