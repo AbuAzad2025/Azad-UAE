@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ t('Edit') }} {{ t('User') }} - {{ user.username }}{% endblock %}
-{% block page_title %}<i class="fas fa-user-edit mr-2"></i> {{ t('Edit') }} {{ t('User') }} - {{ user.username }}{% endblock %}
+{% block title %}{{ t('edit_user') }} - {{ user.username | e }}{% endblock %}
+{% block page_title %}<i class="fas fa-user-edit mr-2"></i> {{ t('edit_user') }} - {{ user.username | e }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -9,7 +9,7 @@
     <div class="col-12">
       <div class="card">
         <div class="card-header">
-          <h3 class="card-title"><i class="fas fa-user-cog"></i> {{ t('Data_2') }} {{ t('User') }}</h3>
+          <h3 class="card-title"><i class="fas fa-user-cog"></i> {{ t('user_data') }}</h3>
         </div>
         <div class="card-body">
           <form class="needs-validation" id="user-edit-form" method="post" action="{{ url_for('users.edit', id=user.id) }}">
@@ -18,29 +18,14 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>{{ t('Name_2') }} {{ t('User') }}</label>
-                  <input type="text" class="form-control" value="{{ user.username }}" disabled aria-label="{{ t('Name_2') }} {{ t('User') }}">
+                  <label>{{ t('user_name') }}</label>
+                  <input type="text" class="form-control" value="{{ user.username | e }}" disabled aria-label="{{ t('user_name') }}">
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="form-group">
-                  <label for="input_full_name">{{ t('Name') }} {{ t('الكامل') }}</label>
-                   <input type="text" name="full_name" class="form-control" value="{{ user.full_name or '' }}" id="input_full_name" minlength="2" maxlength="100">
-                </div>
-              </div>
-            </div>
-
-            <div class="row">
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label for="input_full_name_ar">{{ t('Name') }} {{ t('الكامل') }} {{ t('In Arabic') }}</label>
-                   <input type="text" name="full_name_ar" class="form-control" value="{{ user.full_name_ar or '' }}" id="input_full_name_ar" minlength="2" maxlength="100">
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label for="input_email">{{ t('Email_2') }} {{ t('Email_3') }}</label>
-                   <input type="email" name="email" class="form-control" value="{{ user.email or '' }}" id="input_email">
+                  <label for="input_full_name">{{ t('full_name') }}</label>
+                   <input type="text" name="full_name" class="form-control" value="{{ user.full_name | e or '' }}" id="input_full_name" minlength="2" maxlength="100">
                 </div>
               </div>
             </div>
@@ -48,17 +33,32 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label for="input_phone">{{ t('رقم') }} {{ t('Phone') }}</label>
-                   <input type="text" name="phone" class="form-control" value="{{ user.phone or '' }}" id="input_phone" pattern="^\+?[0-9\s\-]{8,20}$">
+                  <label for="input_full_name_ar">{{ t('arabic_full_name') }}</label>
+                   <input type="text" name="full_name_ar" class="form-control" value="{{ user.full_name_ar | e or '' }}" id="input_full_name_ar" minlength="2" maxlength="100">
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="form-group">
-                   <label for="role_id">{{ t('Role') }}</label>
+                  <label for="input_email">{{ t('email') }}</label>
+                   <input type="email" name="email" class="form-control" value="{{ user.email | e or '' }}" id="input_email">
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="input_phone">{{ t('phone') }}</label>
+                   <input type="text" name="phone" class="form-control" value="{{ user.phone | e or '' }}" id="input_phone" pattern="^\+?[0-9\s\-]{8,20}$">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                   <label for="role_id">{{ t('role') }}</label>
                    <select name="role_id" id="role_id" class="form-control">
                     {% for r in roles %}
                       <option value="{{ r.id }}" data-role-slug="{{ r.slug }}" {% if user.role_id == r.id %}selected{% endif %}>
-                        {{ r.name_ar or r.name }}
+                        {{ (r.name_ar or r.name) | e }}
                       </option>
                     {% endfor %}
                   </select>
@@ -66,16 +66,16 @@
               </div>
               <div class="col-md-6">
                 <div class="form-group">
-                   <label for="branch_id">{{ t('Branch') }}</label>
+                   <label for="branch_id">{{ t('branch') }}</label>
                    <select name="branch_id" id="branch_id" class="form-control">
-                    <option value="">-- {{ t('اختر') }} {{ t('Branch') }} --</option>
+                    <option value="">-- {{ t('select_branch') }} --</option>
                     {% for branch in branches %}
                     <option value="{{ branch.id }}" {% if user.branch_id == branch.id %}selected{% endif %}>
-                      {{ branch.name }} ({{ branch.code }})
+                      {{ branch.name | e }} ({{ branch.code | e }})
                     </option>
                     {% endfor %}
                   </select>
-                  <small class="form-text text-muted" id="branch-help-text">{{ t('Required') }} {{ t('لكل') }} {{ t('User_2') }} غير {{ t('المالك') }} {{ t('وغير') }} {{ t('المطور') }}/{{ t('السوبر') }} {{ t('أدمن') }}.</small>
+                  <small class="form-text text-muted" id="branch-help-text">{{ t('branch_required_except_owner_dev') }}</small>
                 </div>
               </div>
             </div>
@@ -83,33 +83,36 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
-                   <label for="new_password">{{ t('كلمة') }} {{ t('المرور') }} {{ t('New_4') }}</label>
-                   <input type="password" name="new_password" id="new_password" class="form-control" minlength="10" autocomplete="new-password">
+                   <label for="new_password">{{ t('new_password') }}</label>
+                   <input type="password" name="new_password" id="new_password" class="form-control" minlength="6" autocomplete="new-password">
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="form-group">
-                   <label for="confirm_password">{{ t('Confirm') }} {{ t('كلمة') }} {{ t('المرور') }}</label>
-                   <input type="password" id="confirm_password" class="form-control" minlength="10" autocomplete="new-password" data-equal-to="#new_password">
+                   <label for="confirm_password">{{ t('confirm_password') }}</label>
+                   <input type="password" id="confirm_password" class="form-control" minlength="6" autocomplete="new-password" data-equal-to="#new_password">
                 </div>
               </div>
             </div>
 
             <div class="d-flex align-items-center erp-gap-2">
-              <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> {{ t('Save') }} {{ t('Changes') }}</button>
+              <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> {{ t('save_changes') }}</button>
               {% if current_user.has_permission('manage_users') %}
-              <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-secondary"><i class="fas fa-times"></i> {{ t('Cancel') }}</a>
+              <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-secondary"><i class="fas fa-times"></i> {{ t('cancel') }}</a>
               {% endif %}
-              <form method="post" action="{{ url_for('users.toggle_active', id=user.id) }}" class="d-inline">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                {% if user.is_active %}
-                  <button type="submit" class="btn btn-warning"><i class="fas fa-user-slash"></i> {{ t('Cancel') }} {{ t('تفعيل') }}</button>
-                {% else %}
-                  <button type="submit" class="btn btn-primary"><i class="fas fa-user-check"></i> {{ t('تفعيل') }}</button>
-                {% endif %}
-              </form>
             </div>
           </form>
+
+          {% if current_user.has_permission('manage_users') %}
+          <form method="post" action="{{ url_for('users.toggle_active', id=user.id) }}" class="d-inline mt-3">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+            {% if user.is_active %}
+              <button type="submit" class="btn btn-warning"><i class="fas fa-user-slash"></i> {{ t('deactivate') }}</button>
+            {% else %}
+              <button type="submit" class="btn btn-primary"><i class="fas fa-user-check"></i> {{ t('activate') }}</button>
+            {% endif %}
+          </form>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -119,7 +122,7 @@
 
 {% block extra_js %}
 <script>
-$(() => {
+$(function() {
   function branchRequiredForSelectedRole() {
     const slug = $('#role_id option:selected').data('role-slug');
     return slug && !['developer', 'super_admin'].includes(slug);
@@ -129,8 +132,8 @@ $(() => {
     const required = branchRequiredForSelectedRole();
     $('#branch_id').prop('required', !!required);
     $('#branch-help-text').text(required
-      ? '{{ t('Required') }} {{ t('لكل') }} {{ t('User_2') }} غير {{ t('المالك') }} {{ t('وغير') }} {{ t('المطور') }}/{{ t('السوبر') }} {{ t('أدمن') }}.'
-      : '{{ t('Optional') }} فقط {{ t('Users_3') }} {{ t('العالميين') }}.'
+      ? {{ t('branch_required_except_owner_dev') | tojson }}
+      : {{ t('branch_optional_global_users') | tojson }}
     );
   }
 
@@ -141,7 +144,7 @@ $(() => {
     const p = $('#new_password').val() || '';
     const c = $('#confirm_password').val() || '';
     let ok = true;
-    if (p.length && p.length < 10) ok = false;
+    if (p.length && p.length < 6) ok = false;
     if (p.length && !/[A-Z]/.test(p)) ok = false;
     if (p.length && !/[0-9]/.test(p)) ok = false;
     if (p.length && !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(p)) ok = false;
@@ -152,15 +155,22 @@ $(() => {
     if (!validatePassword()) {
       e.preventDefault();
       if (typeof hideLoading === 'function') hideLoading();
-      Swal.fire({icon:'warning',title:'{{ t('تحقق') }} من {{ t('كلمة') }} {{ t('المرور') }}',text:'يجب أن تكون 10 {{ t('أحرف') }} على {{ t('الأقل') }} {{ t('وتحتوي') }} على {{ t('حرف') }} {{ t('Large') }} {{ t('ورقم') }} {{ t('ورمز') }} {{ t('خاص،') }} {{ t('ويجب') }} أن {{ t('تتطابق') }} مع {{ t('Confirm_2') }}'});
+      Swal.fire({
+        icon: 'warning',
+        title: {{ t('password_check_title') | tojson }},
+        text: {{ t('password_complexity_message') | tojson }}
+      });
       return;
     }
     if (branchRequiredForSelectedRole() && !$('#branch_id').val()) {
       e.preventDefault();
-      Swal.fire({icon:'warning',title:'{{ t('Branch') }} {{ t('Required_3') }}',text:'يجب {{ t('Select') }} {{ t('Branch_2') }} {{ t('لهذا') }} {{ t('User') }} قبل {{ t('Save_2') }}'});
+      Swal.fire({
+        icon: 'warning',
+        title: {{ t('branch_required_title') | tojson }},
+        text: {{ t('branch_required_message') | tojson }}
+      });
     }
   });
 });
 </script>
 {% endblock %}
-

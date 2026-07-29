@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ t('Details') }} {{ t('User') }} - {{ user.username }}{% endblock %}
+{% block title %}{{ t('user_details') }} - {{ user.username | e }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -9,14 +9,14 @@
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">
-            <i class="fas fa-user"></i> {{ t('Details') }} {{ t('User') }} - {{ user.username }}
+            <i class="fas fa-user"></i> {{ t('user_details') }} - {{ user.username | e }}
           </h3>
           <div class="card-tools">
             <a href="{{ url_for('users.edit', id=user.id) }}" class="btn btn-warning">
-              <i class="fas fa-edit"></i> {{ t('Edit') }}
+              <i class="fas fa-edit"></i> {{ t('edit') }}
             </a>
             <a href="{{ url_for('users.index') }}" class="btn btn-secondary">
-              <i class="fas fa-arrow-left"></i> {{ t('Back') }}
+              <i class="fas fa-arrow-left"></i> {{ t('back') }}
             </a>
           </div>
         </div>
@@ -24,39 +24,39 @@
           <div class="row">
             
             <div class="col-md-6">
-              <h4>{{ t('Basic Info') }}</h4>
+              <h4>{{ t('basic_info') }}</h4>
               <div class="table-responsive"><table class="table table-bordered">
                 <tr>
-                  <th style="width: 40%">{{ t('User Name') }}</th>
-                  <td>{{ user.username }}</td>
+                  <th style="width: 40%">{{ t('user_name') }}</th>
+                  <td>{{ user.username | e }}</td>
                 </tr>
                 <tr>
-                  <th>{{ t('Full Name') }}</th>
-                  <td>{{ user.full_name }}</td>
+                  <th>{{ t('full_name') }}</th>
+                  <td>{{ user.full_name | e }}</td>
                 </tr>
                 <tr>
-                  <th>{{ t('Email_2') }} {{ t('Email_3') }}</th>
-                  <td>{{ user.email or '-' }}</td>
+                  <th>{{ t('email') }}</th>
+                  <td>{{ user.email | e or '-' }}</td>
                 </tr>
                 <tr>
-                  <th>{{ t('Role') }}</th>
+                  <th>{{ t('role') }}</th>
                   <td>
                     {% if user.is_owner %}
-                      <span class="badge badge-danger">{{ t('مالك') }}</span>
+                      <span class="badge badge-danger">{{ t('owner') }}</span>
                     {% elif user.is_admin %}
-                      <span class="badge badge-warning">{{ t('مدير') }}</span>
+                      <span class="badge badge-warning">{{ t('admin') }}</span>
                     {% else %}
                       <span class="badge badge-info">{{ user.role }}</span>
                     {% endif %}
                   </td>
                 </tr>
                 <tr>
-                  <th>{{ t('Status') }}</th>
+                  <th>{{ t('status') }}</th>
                   <td>
                     {% if user.is_active %}
-                      <span class="badge badge-success">{{ t('Active') }}</span>
+                      <span class="badge badge-success">{{ t('active') }}</span>
                     {% else %}
-                      <span class="badge badge-secondary">غير {{ t('Active') }}</span>
+                      <span class="badge badge-secondary">{{ t('inactive') }}</span>
                     {% endif %}
                   </td>
                 </tr>
@@ -65,18 +65,18 @@
 
             
             <div class="col-md-6">
-              <h4>{{ t('Additional Info') }}</h4>
+              <h4>{{ t('additional_info') }}</h4>
               <div class="table-responsive"><table class="table table-bordered">
                 <tr>
-                  <th style="width: 40%">{{ t('Created Date') }}</th>
+                  <th style="width: 40%">{{ t('created_date') }}</th>
                   <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at else '-' }}</td>
                 </tr>
                 <tr>
-                  <th>{{ t('Last Seen') }}</th>
+                  <th>{{ t('last_seen') }}</th>
                   <td>{{ user.last_seen.strftime('%Y-%m-%d %H:%M') if user.last_seen else '-' }}</td>
                 </tr>
                 <tr>
-                  <th>{{ t('Count') }} {{ t('Sales') }}</th>
+                  <th>{{ t('sales_count') }}</th>
                   <td>{{ user.sales.count() if user.sales else 0 }}</td>
                 </tr>
               </table></div>
@@ -86,8 +86,8 @@
         <div class="card-footer">
           {% if current_user.is_admin %}
           <button type="button" class="btn btn-danger" 
-                  data-delete-item="{{user.id}}" data-item-type="users" data-item-name="{{user.username|tojson}}" data-redirect-url="{{url_for('users.index')|tojson}}">
-            <i class="fas fa-trash"></i> {{ t('Delete') }}
+                  data-delete-item="{{user.id}}" data-item-type="users" data-item-name="{{ user.username | e }}" data-redirect-url="{{ url_for('users.index') }}">
+            <i class="fas fa-trash"></i> {{ t('delete') }}
           </button>
           {% endif %}
         </div>
@@ -96,4 +96,3 @@
   </div>
 </div>
 {% endblock %}
-

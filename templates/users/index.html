@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('Company_2') }} {{ t('أزاد') }} {{ t('للأنظمة') }} {{ t('الذكية') }} - {{ t('Management') }} {{ t('Users') }} {{ t('والصلاحيات') }}{% endblock %}
-{% block page_title %}{{ t('Users') }}{% endblock %}
+{% block title %}{{ t('users_management') }}{% endblock %}
+{% block page_title %}{{ t('users_management') }}{% endblock %}
 
 {% block content %}
 <div class="row mb-3">
   <div class="col-12">
     <a href="{{ url_for('users.create') }}" class="btn btn-primary">
-      <i class="fas fa-user-plus mr-2"></i>{{ t('Add') }} {{ t('User_2') }}
+      <i class="fas fa-user-plus mr-2"></i>{{ t('add_user') }}
     </a>
   </div>
 </div>
@@ -16,49 +16,49 @@
     <div class="table-responsive"><table class="table table-bordered table-striped">
       <thead>
         <tr>
-          <th>{{ t('Username') }}</th>
-          <th>{{ t('Email_2') }}</th>
-          <th>{{ t('Role') }}</th>
-          <th>{{ t('Branch') }}</th>
-          <th>{{ t('Status') }}</th>
-          <th>{{ t('Last') }} {{ t('Sign In') }}</th>
-          <th>{{ t('الإجراءات') }}</th>
+          <th>{{ t('username') }}</th>
+          <th>{{ t('email') }}</th>
+          <th>{{ t('role') }}</th>
+          <th>{{ t('branch') }}</th>
+          <th>{{ t('status') }}</th>
+          <th>{{ t('last_sign_in') }}</th>
+          <th>{{ t('actions') }}</th>
         </tr>
       </thead>
       <tbody>
         {% for user in users %}
         <tr>
-          <td><strong>{{ user.username }}</strong></td>
-          <td>{{ user.email or '-' }}</td>
-          <td><span class="badge badge-info">{{ user.role.name_ar if user.role else '-' }}</span></td>
+          <td><strong>{{ user.username | e }}</strong></td>
+          <td>{{ user.email | e or '-' }}</td>
+          <td><span class="badge badge-info">{{ user.role.name_ar | e if user.role else '-' }}</span></td>
           <td>
             {% if user.branch %}
-            <span class="badge badge-primary" title="{{ t('Branch_2') }} {{ t('User') }}">
-              {{ user.branch.name }}{% if user.branch.code %} ({{ user.branch.code }}){% endif %}
+            <span class="badge badge-primary" title="{{ t('branch') }}">
+              {{ user.branch.name | e }}{% if user.branch.code %} ({{ user.branch.code | e }}){% endif %}
             </span>
             {% else %}
-            <span class="text-muted">{{ t('General_2') }} / {{ t('بدون') }} {{ t('Branch_2') }}</span>
+            <span class="text-muted">{{ t('general_no_branch') }}</span>
             {% endif %}
           </td>
           <td>
             {% if user.is_active %}
-            <span class="badge badge-success">{{ t('Active') }}</span>
+            <span class="badge badge-success">{{ t('active') }}</span>
             {% else %}
-            <span class="badge badge-danger">{{ t('معطل') }}</span>
+            <span class="badge badge-danger">{{ t('inactive') }}</span>
             {% endif %}
           </td>
           <td>{{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else '-' }}</td>
           <td>
-            <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-info" title="{{ t('View') }}">
+            <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-info" title="{{ t('view') }}">
               <i class="fas fa-eye"></i>
             </a>
-            <a href="{{ url_for('users.edit', id=user.id) }}" class="btn btn-warning" title="{{ t('Edit') }}">
+            <a href="{{ url_for('users.edit', id=user.id) }}" class="btn btn-warning" title="{{ t('edit') }}">
               <i class="fas fa-edit"></i>
             </a>
             {% if current_user.is_owner and user.id != current_user.id %}
             <button type="button" class="btn btn-danger" 
-                    data-delete-item="{{user.id}}" data-item-type="users" data-item-name="{{user.username|tojson}}" 
-                    title="{{ t('Delete') }} ({{ t('المالك') }} فقط)">
+                    data-delete-item="{{user.id}}" data-item-type="users" data-item-name="{{ user.username | e }}" 
+                    title="{{ t('delete_owner_only') }}">
               <i class="fas fa-trash"></i>
             </button>
             {% endif %}
@@ -72,4 +72,3 @@
   </div>
 </div>
 {% endblock %}
-
