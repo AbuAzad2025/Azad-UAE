@@ -342,6 +342,22 @@ def save_uploaded_file(file, upload_folder="uploads", allowed_extensions=None):
     return os.path.join(upload_folder, unique_filename).replace("\\", "/")
 
 
+
+
+def format_time(datetime_obj, fmt='%H:%M'):
+    if datetime_obj is None:
+        return ''
+    if hasattr(datetime_obj, 'strftime'):
+        return datetime_obj.strftime(fmt)
+    return str(datetime_obj)
+
+
+def format_datetime(datetime_obj, fmt='%Y-%m-%d %H:%M'):
+    if datetime_obj is None:
+        return ''
+    if hasattr(datetime_obj, 'strftime'):
+        return datetime_obj.strftime(fmt)
+    return str(datetime_obj)
 def convert_currency(amount, from_currency, to_currency=None):
     from services.currency_service import CurrencyService
 
