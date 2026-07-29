@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Edit') }} {{ t('Product') }} {{ product.name }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or t('Accounting_System') }} - {{ t('Edit') }} {{ t('Product') }} {{ product.name }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
@@ -10,10 +10,10 @@
       <i class="fas fa-eye mr-2"></i>{{ t('View') }}
     </a>
     <a href="{{ url_for('products.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('for List') }}
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('Back_To_List') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
+      <i class="fas fa-home mr-2"></i>{{ t('Dashboard') }}
     </a>
   </div>
 </div>
@@ -46,7 +46,7 @@
         <div class="col-md-6">
           <div class="form-group">
             <label for="product_name_ar">
-              <i class="fas fa-font text-info"></i> {{ t('Name') }} {{ t('بالعربي') }}
+              <i class="fas fa-font text-info"></i> {{ t('Name_In_Arabic') }}
             </label>
             <input type="text" id="product_name_ar" name="name_ar" class="form-control" value="{{ product.name_ar or '' }}" minlength="2" maxlength="100">
           </div>
@@ -57,7 +57,7 @@
         <div class="col-md-6 col-lg-3">
           <div class="form-group">
             <label for="product_sku">
-              <i class="fas fa-hashtag text-primary"></i> {{ t('رقم') }} {{ t('القطعة') }} (SKU)
+              <i class="fas fa-hashtag text-primary"></i> {{ t('Part_Number') }} (SKU)
               <span class="text-danger">*</span>
             </label>
             <input type="text" id="product_sku" name="sku" class="form-control" value="{{ product.sku or '' }}" required maxlength="50">
@@ -66,8 +66,8 @@
         <div class="col-md-6 col-lg-3">
           <div class="form-group">
             <label for="product_part_number">
-              <i class="fas fa-hashtag text-primary"></i> {{ t('رقم') }} {{ t('القطعة') }} (Part Number)
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('رقم') }} {{ t('Supplier') }} أو {{ t('الرقم') }} {{ t('الداخلي') }} ({{ t('Optional') }})"></i>
+              <i class="fas fa-hashtag text-primary"></i> {{ t('Part_Number') }} (Part Number)
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Supplier_Part_Number') }} {{ t('Or_Internal_Number') }} ({{ t('Optional') }})"></i>
             </label>
             <input type="text" id="product_part_number" name="part_number" class="form-control" value="{{ product.part_number or '' }}">
           </div>
@@ -84,11 +84,11 @@
         <div class="col-md-6 col-lg-3">
           <div class="form-group">
             <label for="product_category">
-              <i class="fas fa-folder text-warning"></i> {{ t('الفئة') }}
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="يمكن {{ t('تركها') }} {{ t('None') }} {{ t('لتصنيف') }} {{ t('Product') }} {{ t('لاحقاً') }} ({{ t('Optional') }})"></i>
+              <i class="fas fa-folder text-warning"></i> {{ t('Category') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Can_Leave_Empty') }} {{ t('For_Later_Classification') }} ({{ t('Optional') }})"></i>
             </label>
             <div class="input-group js-category-actions">
-              <select name="category_id" id="product_category" class="form-control select2 ic-1" data-placeholder="{{ t('اختر') }} {{ t('الفئة') }}...">
+              <select name="category_id" id="product_category" class="form-control select2 ic-1" data-placeholder="{{ t('Select_Category') }}...">
                 <option value="0" {% if not product.category_id %}selected{% endif %}>{{ t('None') }}</option>
                 {% for category in categories %}
                 <option value="{{ category.id }}"
@@ -111,8 +111,8 @@
         <div class="col-md-3">
           <div class="form-group">
             <label for="product_country_of_origin">
-              <i class="fas fa-globe text-info"></i> {{ t('بلد') }} {{ t('المنشأ') }}
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('بلد') }} {{ t('الصنع') }} ({{ t('Optional') }})"></i>
+              <i class="fas fa-globe text-info"></i> {{ t('Country_Of_Origin') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Country_Of_Manufacture') }} ({{ t('Optional') }})"></i>
             </label>
             <input type="text" id="product_country_of_origin" name="country_of_origin" class="form-control" value="{{ product.country_of_origin or '' }}">
           </div>
@@ -120,7 +120,7 @@
         <div class="col-md-3">
           <div class="form-group">
             <label for="product_industry">
-              <i class="fas fa-industry text-info"></i> {{ t('نوع') }} {{ t('النشاط') }}
+              <i class="fas fa-industry text-info"></i> {{ t('Activity_Type') }}
             </label>
             <select name="industry" id="product_industry" class="form-control">
               {% from 'macros/industry_choices.html' import industry_options %}
@@ -131,12 +131,12 @@
       </div>
       {% include 'partials/industry_fields.html' %}
       <hr>
-      <h5 class="text-success"><i class="fas fa-money-bill-wave"></i> {{ t('الأسعار') }}</h5>
+      <h5 class="text-success"><i class="fas fa-money-bill-wave"></i> {{ t('Prices') }}</h5>
       <div class="row">
         <div class="col-md-3">
           <div class="form-group">
             <label for="product_cost_price">
-              <i class="fas fa-dollar-sign text-danger"></i> {{ t('Price_2') }} {{ t('Cost') }}
+              <i class="fas fa-dollar-sign text-danger"></i> {{ t('Cost_Price') }}
               <span class="text-danger">*</span>
             </label>
             <input type="number" id="product_cost_price" name="cost_price" class="form-control" value="{{ product.cost_price }}" step="0.01" required min="0">
@@ -145,9 +145,9 @@
         <div class="col-md-3">
           <div class="form-group">
             <label for="product_regular_price">
-              <i class="fas fa-tag text-success"></i> {{ t('Price_2') }} {{ t('عادي') }}
+              <i class="fas fa-tag text-success"></i> {{ t('Sale_Price') }}
               <span class="text-danger">*</span>
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Price_2') }} {{ t('التجزئة') }} ({{ t('Required') }})"></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Retail_Price') }} ({{ t('Required') }})"></i>
             </label>
             <input type="number" id="product_regular_price" name="regular_price" class="form-control" value="{{ product.regular_price }}" step="0.01" required min="0">
           </div>
@@ -155,8 +155,8 @@
         <div class="col-md-3">
           <div class="form-group">
             <label for="product_merchant_price">
-              <i class="fas fa-store text-primary"></i> {{ t('Discount_2') }} {{ t('التاجر') }} (%)
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Rate') }} {{ t('Discount') }} {{ t('للتجار') }} ({{ t('مثال') }}: 10 {{ t('تعني') }} 10%)"></i>
+              <i class="fas fa-store text-primary"></i> {{ t('Merchant_Discount_Percent') }} (%)
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Discount_Rate_For_Merchants') }} ({{ t('Example') }}: 10 {{ t('Means') }} 10%)"></i>
             </label>
             <input type="number" id="product_merchant_price" name="merchant_price" class="form-control" step="0.01" min="0" max="100" value="{{ product.merchant_price or '' }}" placeholder="10" autocomplete="off">
           </div>
@@ -164,40 +164,40 @@
         <div class="col-md-3">
           <div class="form-group">
             <label for="product_partner_price">
-              <i class="fas fa-handshake text-info"></i> {{ t('Discount_2') }} {{ t('Partner_2') }} (%)
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Rate') }} {{ t('Discount') }} {{ t('Partners_2') }} ({{ t('مثال') }}: 15 {{ t('تعني') }} 15%)"></i>
+              <i class="fas fa-handshake text-info"></i> {{ t('Partner_Discount_Percent') }} (%)
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Discount_Rate_For_Partners') }} ({{ t('Example') }}: 15 {{ t('Means') }} 15%)"></i>
             </label>
             <input type="number" id="product_partner_price" name="partner_price" class="form-control" step="0.01" min="0" max="100" value="{{ product.partner_price or '' }}" placeholder="15" autocomplete="off">
           </div>
         </div>
       </div>
       <hr>
-      <h5 class="text-info"><i class="fas fa-layer-group"></i> {{ t('فئات') }} {{ t('الأسعار') }} (Tiers)</h5>
+      <h5 class="text-info"><i class="fas fa-layer-group"></i> {{ t('Price_Tiers') }}</h5>
       <div class="row">
         <div class="col-md-6 col-lg-3">
           <div class="form-group">
-            <label for="tier_wholesale_price"><i class="fas fa-users text-primary"></i> {{ t('جملة') }} (Wholesale)</label>
+            <label for="tier_wholesale_price"><i class="fas fa-users text-primary"></i> {{ t('Wholesale') }} (Wholesale)</label>
             {% set tw = product.price_tiers|selectattr('tier_code', 'equalto', 'wholesale')|first %}
             <input type="number" id="tier_wholesale_price" name="tier_wholesale_price" class="form-control" step="0.01" min="0" value="{{ tw.price if tw else '' }}" placeholder="0.00">
           </div>
         </div>
         <div class="col-md-6 col-lg-3">
           <div class="form-group">
-            <label for="tier_retail_price"><i class="fas fa-user text-success"></i> {{ t('تجزئة') }} (Retail)</label>
+            <label for="tier_retail_price"><i class="fas fa-user text-success"></i> {{ t('Retail') }} (Retail)</label>
             {% set tr = product.price_tiers|selectattr('tier_code', 'equalto', 'retail')|first %}
             <input type="number" id="tier_retail_price" name="tier_retail_price" class="form-control" step="0.01" min="0" value="{{ tr.price if tr else '' }}" placeholder="0.00">
           </div>
         </div>
         <div class="col-md-6 col-lg-3">
           <div class="form-group">
-            <label for="tier_distributor_price"><i class="fas fa-building text-info"></i> {{ t('موزع') }} (Distributor)</label>
+            <label for="tier_distributor_price"><i class="fas fa-building text-info"></i> {{ t('Distributor') }} (Distributor)</label>
             {% set td = product.price_tiers|selectattr('tier_code', 'equalto', 'distributor')|first %}
             <input type="number" id="tier_distributor_price" name="tier_distributor_price" class="form-control" step="0.01" min="0" value="{{ td.price if td else '' }}" placeholder="0.00">
           </div>
         </div>
         <div class="col-md-6 col-lg-3">
           <div class="form-group">
-            <label for="tier_rep_price"><i class="fas fa-id-badge text-warning"></i> {{ t('Rep') }} (Rep)</label>
+            <label for="tier_rep_price"><i class="fas fa-id-badge text-warning"></i> {{ t('Representative') }} (Rep)</label>
             {% set trp = product.price_tiers|selectattr('tier_code', 'equalto', 'rep')|first %}
             <input type="number" id="tier_rep_price" name="tier_rep_price" class="form-control" step="0.01" min="0" value="{{ trp.price if trp else '' }}" placeholder="0.00">
           </div>
@@ -206,7 +206,7 @@
       <div class="form-group">
         <label for="product_description">
           <i class="fas fa-align-left text-secondary"></i> {{ t('Description') }}
-          <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Description_2') }} {{ t('تفصيلي') }} ({{ t('Optional') }})"></i>
+          <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Detailed_Description') }} ({{ t('Optional') }})"></i>
         </label>
         <textarea id="product_description" name="description" class="form-control" rows="3" maxlength="500">{{ product.description or '' }}</textarea>
       </div>
@@ -216,8 +216,8 @@
         <div class="col-md-4">
           <div class="form-group">
             <label for="product_current_stock">
-              <i class="fas fa-boxes text-success"></i> {{ t('Quantity') }} {{ t('الحالية') }}
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="يمكن {{ t('Edit') }} {{ t('Quantity') }} {{ t('الحالية،') }} {{ t('وسيتم') }} {{ t('Create') }} {{ t('Movement_2') }} {{ t('Inventory_2') }} {{ t('تلقائية') }} {{ t('بالفرق') }}."></i>
+              <i class="fas fa-boxes text-success"></i> {{ t('Current_Quantity') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Can_Edit_Current_Quantity') }}, {{ t('Creates_Auto_Inventory_Movement') }} {{ t('With_Difference') }}."></i>
             </label>
             <input type="number" id="product_current_stock" name="current_stock" class="form-control" step="0.001" min="0" value="{{ product.visible_stock if product.visible_stock is defined else (product.current_stock or 0) }}" placeholder="0">
           </div>
@@ -225,8 +225,8 @@
         <div class="col-md-4">
           <div class="form-group">
             <label for="product_min_stock_alert">
-              <i class="fas fa-exclamation-triangle text-warning"></i> حد {{ t('Alert') }}
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عند {{ t('الوصول') }} {{ t('لهذا') }} {{ t('الحد') }} {{ t('يظهر') }} {{ t('Alert_2') }} {{ t('and Inventory') }} {{ t('Low_3') }}."></i>
+              <i class="fas fa-exclamation-triangle text-warning"></i> {{ t('Alert_Threshold') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Shows_Alert_When_Reached') }}, {{ t('Shows_Low_Inventory') }}."></i>
             </label>
             <input type="number" id="product_min_stock_alert" name="min_stock_alert" class="form-control" step="0.001" min="0" value="{{ product.min_stock_alert or 0 }}" placeholder="0">
           </div>
@@ -234,8 +234,8 @@
         <div class="col-md-4">
           <div class="form-group">
             <label for="product_warehouse_id">
-              <i class="fas fa-warehouse text-info"></i> {{ t('Warehouse_2') }} {{ t('Edit_2') }}
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('سيُطبّق') }} {{ t('Edit') }} {{ t('Inventory') }} على هذا {{ t('Warehouse') }}."></i>
+              <i class="fas fa-warehouse text-info"></i> {{ t('Warehouse_Adjustment') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Inventory_Adjustment_Applied_To_This_Warehouse') }}."></i>
             </label>
             {% set selected_warehouse = request.form.get('warehouse_id', '') if request.method == 'POST' else '' %}
             <select id="product_warehouse_id" name="warehouse_id" class="form-control">
@@ -243,7 +243,7 @@
               {% for warehouse in warehouses %}
               <option value="{{ warehouse.id }}"
                 {% if selected_warehouse and selected_warehouse|int == warehouse.id %}selected{% endif %}>
-                {% if warehouse.is_main %}⭐{% elif warehouse.parent_id %}🔀{% else %}📦{% endif %}
+                {% if warehouse.is_main %}<i class="fas fa-star text-warning"></i>{% elif warehouse.parent_id %}<i class="fas fa-sitemap text-info"></i>{% else %}<i class="fas fa-box text-primary"></i>{% endif %}
                 {{ warehouse.name_ar or warehouse.name }}
                 {% if warehouse.code %}({{ warehouse.code }}){% endif %}
               </option>
@@ -254,18 +254,18 @@
         <div class="col-md-4">
           <div class="form-group">
             <label for="product_unit">
-              <i class="fas fa-balance-scale text-primary"></i> {{ t('الوحدة') }}
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="يمكن {{ t('Select') }} {{ t('الوحدة') }} أو {{ t('تركها') }} {{ t('None') }} {{ t('Products_3') }} غير {{ t('المقيسة') }}."></i>
+              <i class="fas fa-balance-scale text-primary"></i> {{ t('Unit') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Can_Select_Unit') }} {{ t('Or_Leave_None_For_Non_Measured_Products') }}."></i>
             </label>
             {% set selected_unit = request.form.get('unit') if request.method == 'POST' else product.unit %}
-            <select id="product_unit" name="unit" class="form-control select2" data-placeholder="{{ t('اختر') }} {{ t('الوحدة') }}..." data-allow-clear="true">
+            <select id="product_unit" name="unit" class="form-control select2" data-placeholder="{{ t('Select_Unit') }}..." data-allow-clear="true">
               <option value="" {% if not selected_unit %}selected{% endif %}>{{ t('None') }}</option>
-              <option value="piece" {% if selected_unit == 'piece' %}selected{% endif %}>{{ t('قطعة') }}</option>
-              <option value="kg" {% if selected_unit == 'kg' %}selected{% endif %}>{{ t('كيلو') }}</option>
-              <option value="liter" {% if selected_unit == 'liter' %}selected{% endif %}>{{ t('لتر') }}</option>
-              <option value="meter" {% if selected_unit == 'meter' %}selected{% endif %}>{{ t('متر') }}</option>
-              <option value="box" {% if selected_unit == 'box' %}selected{% endif %}>{{ t('صندوق') }}</option>
-              <option value="set" {% if selected_unit == 'set' %}selected{% endif %}>{{ t('طقم') }}</option>
+              <option value="piece" {% if selected_unit == 'piece' %}selected{% endif %}>{{ t('Piece') }}</option>
+              <option value="kg" {% if selected_unit == 'kg' %}selected{% endif %}>{{ t('Kilogram') }}</option>
+              <option value="liter" {% if selected_unit == 'liter' %}selected{% endif %}>{{ t('Liter') }}</option>
+              <option value="meter" {% if selected_unit == 'meter' %}selected{% endif %}>{{ t('Meter') }}</option>
+              <option value="box" {% if selected_unit == 'box' %}selected{% endif %}>{{ t('Box') }}</option>
+              <option value="set" {% if selected_unit == 'set' %}selected{% endif %}>{{ t('Set') }}</option>
             </select>
           </div>
         </div>
@@ -273,18 +273,18 @@
 
       
       <hr>
-      <h5 class="text-primary"><i class="fas fa-users-cog"></i> {{ t('حقوق') }} {{ t('الملكية') }} {{ t('with Partners') }}</h5>
+      <h5 class="text-primary"><i class="fas fa-users-cog"></i> {{ t('Ownership_And_Partners') }}</h5>
       <div class="row">
         
         <div class="col-md-6">
           <div class="form-group">
             <label for="merchant_customer_id">
-              <i class="fas fa-user-tie text-purple"></i> {{ t('التاجر') }} {{ t('المالك') }} ({{ t('Optional') }})
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('اختر') }} {{ t('التاجر') }} إذا كان هذا {{ t('Product') }} {{ t('مملوكاً') }} {{ t('لتاجر') }} {{ t('معين') }}"></i>
+              <i class="fas fa-user-tie text-purple"></i> {{ t('Owner_Merchant') }} ({{ t('Optional') }})
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Select_Merchant_If_Product_Owned_By_Merchant') }}"></i>
             </label>
             <div class="input-group">
               <select name="merchant_customer_id" id="merchant_customer_id" class="form-control select2" aria-label="merchant customer id">
-                <option value="">-- {{ t('اختر') }} {{ t('التاجر') }} --</option>
+                <option value="">-- {{ t('Select_Merchant') }} --</option>
                 {% for merchant in merchants %}
                 <option value="{{ merchant.id }}" {% if product.merchant_customer_id == merchant.id %}selected{% endif %}>{{ merchant.name }}</option>
                 {% endfor %}
@@ -295,8 +295,8 @@
         <div class="col-md-6 {% if product.merchant_customer_id %}d-block{% else %}d-none{% endif %}" id="merchantShareContainer">
           <div class="form-group">
             <label for="merchant_share">
-              <i class="fas fa-percentage text-warning"></i> {{ t('Rate') }} {{ t('التاجر') }} من {{ t('Sales') }} (%)
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Rate_2') }} {{ t('التي') }} {{ t('يحصل') }} عليها {{ t('التاجر') }} عند {{ t('Sale') }} {{ t('Product') }} ({{ t('Default') }} 100%)"></i>
+              <i class="fas fa-percentage text-warning"></i> {{ t('Merchant_Rate_From_Sales') }} (%)
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Rate_Merchant_Gets_On_Sale') }} ({{ t('Default') }} 100%)"></i>
             </label>
             <div class="input-group">
               <input type="number" id="merchant_share" name="merchant_share" class="form-control" step="0.01" min="0" max="100" value="{{ product.merchant_share or 100 }}" placeholder="100">
@@ -305,7 +305,7 @@
               </div>
             </div>
             <small class="form-text text-muted">
-              {{ t('Remaining') }} من {{ t('Rate_2') }} {{ t('يعتبر') }} {{ t('ربحاً') }} {{ t('للشركة') }}.
+              {{ t('Remaining_Rate_Is_Company_Profit') }}.
             </small>
           </div>
         </div>
@@ -315,13 +315,13 @@
       <div class="row">
         <div class="col-12">
           <label>
-            <i class="fas fa-handshake text-info"></i> {{ t('Partners') }} {{ t('ونسب') }} {{ t('Profits') }}
+            <i class="fas fa-handshake text-info"></i> {{ t('Partners_And_Profit_Shares') }}
           </label>
           <div class="table-responsive"><table class="table table-bordered table-sm">
             <thead>
               <tr>
-                <th class="ic-2">{{ t('Partner_2') }}</th>
-                <th class="ic-3">{{ t('Rate_2') }} (%)</th>
+                <th class="ic-2">{{ t('Partner') }}</th>
+                <th class="ic-3">{{ t('Rate') }} (%)</th>
                 <th class="ic-4">{{ t('Delete') }}</th>
               </tr>
             </thead>
@@ -332,7 +332,7 @@
               <tr>
                 <td colspan="3">
                   <button type="button" class="btn btn-outline-primary" id="addPartnerBtn">
-                    <i class="fas fa-plus"></i> {{ t('Add') }} {{ t('Partner') }}
+                    <i class="fas fa-plus"></i> {{ t('Add_Partner') }}
                   </button>
                 </td>
               </tr>
@@ -344,7 +344,7 @@
 
     <div class="card-footer">
       <button type="submit" class="btn btn-warning btn-lg">
-        <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Changes') }}
+        <i class="fas fa-save mr-2"></i>{{ t('Save_Changes') }}
       </button>
       <a href="{{ url_for('products.view', id=product.id) }}" class="btn btn-secondary btn-lg">
         <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}
@@ -357,23 +357,25 @@
 {% include 'products/_category_modal.html' %}
 {% endblock %}
 
+
 {% block extra_js %}
 {% include 'partials/select2_assets.html' %}
 <script src="{{ url_for('static', filename='js/products/category-controls.js') }}"></script>
 <script>
-$(() => {
-  // {{ t('تفعيل') }} Tooltips
+$(function() {
+  // Initialize tooltips
   $('[data-toggle="tooltip"]').tooltip({
     placement: 'top',
     trigger: 'hover'
   });
 
-  // {{ t('Management') }} {{ t('جدول') }} {{ t('Partners') }}
+  // Manage partners table
   const partnersList = $('#partnersList');
   const addPartnerBtn = $('#addPartnerBtn');
   
-  // {{ t('List') }} {{ t('Partners') }} {{ t('المتاحين') }}
-  let partnerOptions = '<option value="">{{ t('اختر') }} {{ t('Partner_2') }}...</option>';partners_json | tojson .forEach((partner) => {
+  // List of available partners
+  let partnerOptions = '<option value="">{{ t('Select_Partner') }}...</option>';
+  {{ partners_json | tojson }}.forEach((partner) => {
     partnerOptions += '<option value="' + partner.id + '">' + partner.name + '</option>';
   });
 
@@ -403,7 +405,7 @@ $(() => {
     `;
     partnersList.append(html);
     
-    // {{ t('تحديد') }} {{ t('Value') }} {{ t('المختارة') }} إذا {{ t('وجدت') }}
+    // Set selected value if provided
     if (partnerId) {
       $(`#row-${rowId} select`).val(partnerId);
     }
@@ -416,7 +418,9 @@ $(() => {
   $(document).on('click', '.remove-partner-btn', function() {
     const rowId = $(this).data('row');
     $('#' + rowId).remove();
-  });partner_shares_json | tojson .forEach((share) => {
+  });
+  
+  {{ partner_shares_json | tojson }}.forEach((share) => {
     addPartnerRow(String(share.partner_customer_id), String(share.percentage));
   });
   

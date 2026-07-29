@@ -1,17 +1,17 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Management') }} {{ t('Products') }} {{ t('and Inventory') }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or t('Accounting_System') }} - {{ t('Product_Catalog') }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="text-gradient mb-0"><i class="fas fa-box-open mr-3"></i>{{ t('Products Management') }}</h1>
-    <p class="text-muted">{{ t('Complete inventory for all products and parts') }}</p>
+    <h1 class="text-gradient mb-0"><i class="fas fa-box-open mr-3"></i>{{ t('Product_Catalog') }}</h1>
+    <p class="text-muted">{{ t('Complete_Inventory_For_All_Products') }}</p>
   </div>
   <div>
     <a href="{{ url_for('products.import_products') }}" class="btn btn-secondary mr-2">
-      <i class="fas fa-file-import mr-2"></i>{{ t('استيراد') }}
+      <i class="fas fa-file-import mr-2"></i>{{ t('Import') }}
     </a>
     <a href="{{ url_for('products.create') }}" class="btn btn-primary">
-      <i class="fas fa-plus mr-2"></i>{{ t('Product_2') }} {{ t('New') }}
+      <i class="fas fa-plus mr-2"></i>{{ t('New_Product') }}
     </a>
   </div>
 </div>
@@ -132,7 +132,7 @@
   <div class="card-header">
     <div class="d-flex justify-content-between align-items-center">
       <h3 class="card-title mb-0">
-        <i class="fas fa-list mr-2"></i>{{ t('كتالوج') }} {{ t('Products') }}
+        <i class="fas fa-list mr-2"></i>{{ t('Product_Catalog') }}
       </h3>
       <div class="btn-group">
         <button type="button" class="btn btn-outline-info" id="printProductsBtn">
@@ -142,10 +142,10 @@
           <i class="fas fa-boxes mr-1"></i>{{ t('All') }}
         </button>
         <button type="button" class="btn btn-outline-danger" id="filterLow">
-          <i class="fas fa-exclamation-triangle mr-1"></i>{{ t('Inventory_2') }} {{ t('Low_2') }}
+          <i class="fas fa-exclamation-triangle mr-1"></i>{{ t('Low_Inventory') }}
         </button>
         <button type="button" class="btn btn-outline-warning" id="filterOut">
-          <i class="fas fa-ban mr-1"></i>{{ t('نفذ') }}
+          <i class="fas fa-ban mr-1"></i>{{ t('Out_Of_Stock') }}
         </button>
       </div>
     </div>
@@ -155,10 +155,10 @@
       <table id="productsTable" class="table table-hover table-bordered">
         <thead class="ic-1">
           <tr>
-            <th><i class="fas fa-image mr-2"></i>{{ t('صورة') }}</th>
+            <th><i class="fas fa-image mr-2"></i>{{ t('Image') }}</th>
             <th><i class="fas fa-box mr-2"></i>{{ t('Product') }}</th>
-            <th><i class="fas fa-barcode mr-2"></i>SKU</th>
-            <th><i class="fas fa-tag mr-2"></i>{{ t('الفئة') }}</th>
+            <th><i class="fas fa-barcode mr-2"></i>{{ t('SKU') }}</th>
+            <th><i class="fas fa-tag mr-2"></i>{{ t('Category') }}</th>
             <th><i class="fas fa-money-bill-wave mr-2"></i>{{ t('Price') }}</th>
             <th><i class="fas fa-code-branch mr-2"></i>{{ t('Branch') }}</th>
             <th><i class="fas fa-warehouse mr-2"></i>{{ t('Warehouse') }}</th>
@@ -221,7 +221,7 @@
             <td>
               {% if shown_stock <= 0 %}
                 <span class="badge badge-danger stock-low px-3 py-2">
-                  <i class="fas fa-times mr-1"></i>{{ t('نفذ') }} ({{ shown_stock }})
+                  <i class="fas fa-times mr-1"></i>{{ t('Out_Of_Stock') }} ({{ shown_stock }})
                 </span>
               {% elif shown_stock <= product.min_stock_alert %}
                 <span class="badge badge-warning px-3 py-2">
@@ -232,7 +232,7 @@
                   <i class="fas fa-check mr-1"></i>{{ shown_stock }}
                 </span>
               {% endif %}
-              <small class="text-muted d-block">{{ product.unit or 'بلا' }}</small>
+              <small class="text-muted d-block">{{ product.unit or t('None') }}</small>
             </td>
             <td class="text-center">
               <div class="btn-group btn-group-sm">
@@ -254,7 +254,7 @@
                   <i class="fas fa-shopping-cart"></i>
                 </a>
                 {% endif %}
-                <button type="button" class="btn btn-primary" title="{{ t('Add') }} {{ t('Qty') }}"
+                <button type="button" class="btn btn-primary" title="{{ t('Add_Quantity') }}"
                         data-action="adjust-stock" data-product-id="{{ product.id }}" data-product-name="{{ product.name|tojson }}" data-current-stock="{{ shown_stock }}">
                   <i class="fas fa-plus"></i>
                 </button>
@@ -265,7 +265,7 @@
           <tr>
             <td colspan="9" class="text-center text-muted py-5">
               <i class="fas fa-inbox fa-3x mb-3 d-block text-muted opacity-50"></i>
-              {{ t('لا توجد') }} {{ t('منتجات') }}
+              {{ t('No_Products') }}
             </td>
           </tr>
           {% endfor %}
@@ -280,7 +280,7 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">{{ t('Edit') }} {{ t('Inventory') }}</h5>
+        <h5 class="modal-title">{{ t('Edit_Inventory') }}</h5>
         <button type="button" class="close" data-dismiss="modal">
           <span>&times;</span>
         </button>
@@ -290,20 +290,20 @@
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <input type="hidden" id="productId" name="product_id" aria-label="product id">
           <div class="form-group">
-            <label for="productName">{{ t('Name_2') }} {{ t('Product') }}</label>
+            <label for="productName">{{ t('Name_Product') }}</label>
             <input type="text" id="productName" name="product_name" class="form-control" readonly autocomplete="off" aria-label="product name" minlength="2" maxlength="100">
           </div>
           <div class="form-group">
-            <label for="currentStock">{{ t('Inventory') }} {{ t('الحالي') }}</label>
+            <label for="currentStock">{{ t('Current_Inventory') }}</label>
             <input type="number" id="currentStock" name="current_stock" class="form-control" readonly autocomplete="off" aria-label="current stock">
           </div>
           <div class="form-group">
-            <label for="adjustmentType">{{ t('نوع') }} {{ t('Edit_2') }}</label>
+            <label for="adjustmentType">{{ t('Adjustment_Type') }}</label>
             <select id="adjustmentType" name="adjustment_type" class="form-control" required autocomplete="off" aria-label="adjustment type">
               <option value="" selected>{{ t('None') }}</option>
               <option value="add">{{ t('Add') }}</option>
-              <option value="subtract">{{ t('Discount_2') }}</option>
-              <option value="set">{{ t('تعيين') }}</option>
+              <option value="subtract">{{ t('Subtract') }}</option>
+              <option value="set">{{ t('Set') }}</option>
             </select>
           </div>
           <div class="form-group">
@@ -311,13 +311,13 @@
             <input type="number" id="adjustmentQuantity" name="adjustment_quantity" class="form-control" step="0.001" min="0" required autocomplete="off" aria-label="adjustment quantity">
           </div>
           <div class="form-group">
-            <label for="adjustmentReason">{{ t('السبب') }}</label>
+            <label for="adjustmentReason">{{ t('Reason') }}</label>
             <select id="adjustmentReason" name="adjustment_reason" class="form-control" required autocomplete="off" aria-label="adjustment reason">
               <option value="" selected>{{ t('None') }}</option>
               <option value="purchase">{{ t('Purchase') }}</option>
-              <option value="return">{{ t('إرجاع') }}</option>
-              <option value="adjustment">{{ t('Edit') }}</option>
-              <option value="damage">{{ t('تلف') }}</option>
+              <option value="return">{{ t('Return') }}</option>
+              <option value="adjustment">{{ t('Adjustment') }}</option>
+              <option value="damage">{{ t('Damage') }}</option>
               <option value="other">{{ t('Other') }}</option>
             </select>
           </div>
@@ -342,7 +342,7 @@
 $(document).ready(() => {
   const $tableEl = $('#productsTable');
   const printOptions = {
-    title: '{{ t("كتالوج") }} {{ t("Products") }}',
+    title: '{{ t("Product_Catalog") }}',
     headerColor: '#007A3D'
   };
 
@@ -351,7 +351,7 @@ $(document).ready(() => {
     table = $tableEl.DataTable();
   } else {
     table = $tableEl.DataTable({
-      language: { url: "{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}" },
+      language: { url: "{{ url_for('static', filename=('datatables/Arabic.json' if is_rtl else 'datatables/English.json')) }}" },
       pageLength: 25,
       order: [[7, 'asc']],  // Sort by stock (low first)
       responsive: true,
@@ -390,7 +390,7 @@ $(document).ready(() => {
   });
 
   $('#filterOut').off('click.smartPrint').on('click.smartPrint', function() {
-    $.fn.dataTable.ext.search.push((settings, data) => data[7].includes('{{ t("نفذ") }}'));
+    $.fn.dataTable.ext.search.push((settings, data) => data[7].includes('{{ t("Out_Of_Stock") }}'));
     table.draw();
     $.fn.dataTable.ext.search.pop();
     $('.btn-group .btn').removeClass('active');
@@ -426,17 +426,17 @@ function saveStockAdjustment() {
   const notes = $('#adjustmentNotes').val();
   
   if (!adjustmentType) {
-    alert('{{ t("يرجى") }} {{ t("Select") }} {{ t("نوع") }} {{ t("Edit_2") }}');
+    alert('{{ t("Please_Select_Adjustment_Type") }}');
     return;
   }
   
   if (!reason) {
-    alert('{{ t("يرجى") }} {{ t("Select") }} {{ t("سبب") }} {{ t("Edit_2") }}');
+    alert('{{ t("Please_Select_Reason") }}');
     return;
   }
   
   if (!quantity || quantity <= 0) {
-    alert('{{ t("يرجى") }} {{ t("إدخال") }} {{ t("Qty") }} {{ t("صحيحة") }}');
+    alert('{{ t("Please_Enter_Valid_Quantity") }}');
     return;
   }
   
@@ -455,14 +455,13 @@ function saveStockAdjustment() {
         $('#stockModal').modal('hide');
         location.reload();
       } else {
-        alert('{{ t("حدث") }} {{ t("Error") }}: ' + response.message);
+        alert('{{ t("An_Error_Occurred") }}: ' + response.message);
       }
     },
     error: () => {
-      alert('{{ t("حدث") }} {{ t("Error") }} في {{ t("الاتصال") }}');
+      alert('{{ t("Connection_Error") }}');
     }
   });
 }
 </script>
 {% endblock %}
-

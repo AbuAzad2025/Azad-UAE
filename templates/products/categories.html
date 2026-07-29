@@ -1,21 +1,21 @@
 {% extends "base.html" %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('فئات') }} {{ t('Products') }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or t('Accounting_System') }} - {{ t('Product_Categories') }}{% endblock %}
 
 {% block content %}
     <div class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1 class="m-0">{{ t('فئات') }} {{ t('Products') }}</h1>
+                    <h1 class="m-0">{{ t('Product_Categories') }}</h1>
                 </div>
                 <div class="col-sm-6">
                     <div class="float-right">
                         <button type="button" class="btn btn-primary js-category-add" data-toggle="modal" data-target="#categoryModal">
-                            <i class="fas fa-plus"></i> {{ t('Add') }} {{ t('فئة') }} {{ t('New_3') }}
+                            <i class="fas fa-plus"></i> {{ t('Add_New_Category') }}
                         </button>
                         <a href="{{ url_for('products.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('Products_3') }}
+                            <i class="fas fa-arrow-right ms-2"></i>{{ t('Back_To_Products') }}
                         </a>
                     </div>
                 </div>
@@ -32,10 +32,10 @@
                             <thead>
                                 <tr>
                                     <th>{{ t('Name') }}</th>
-                                    <th>{{ t('Name') }} {{ t('In Arabic') }}</th>
+                                    <th>{{ t('Name_In_Arabic') }}</th>
                                     <th>{{ t('Description') }}</th>
-                                    <th>{{ t('Count') }} {{ t('Products') }}</th>
-                                    <th>{{ t('الإجراءات') }}</th>
+                                    <th>{{ t('Product_Count') }}</th>
+                                    <th>{{ t('Actions') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -61,7 +61,7 @@
                                     </td>
                                 </tr>
                                 {% else %}
-                                <tr><td colspan="5" class="text-center text-muted py-4">{{ _('لا توجد فئات — أضف فئة جديدة') }}</td></tr>
+                                <tr><td colspan="5" class="text-center text-muted py-4">{{ t('No_Categories_Add_New') }}</td></tr>
                                 {% endfor %}
                             </tbody>
                         </table>
@@ -77,11 +77,11 @@
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/products/category-controls.js') }}"></script>
 <script>
-$(() => {
+$(function() {
   $('.js-category-add').on('click', () => {
     $('#categoryModal').removeData('edit-id');
-    $('#categoryModal .js-category-modal-title').text('إضافة فئة منتجات');
-    $('#categoryModal .js-category-save-label').text('حفظ الفئة');
+    $('#categoryModal .js-category-modal-title').text('{{ t('Add_Product_Category') }}');
+    $('#categoryModal .js-category-save-label').text('{{ t('Save_Category') }}');
     $('#category_name, #category_name_ar, #category_description').val('');
   });
   initCategoryListControls({

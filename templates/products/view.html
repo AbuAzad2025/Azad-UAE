@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('Company_2') }} {{ t('أزاد') }} {{ t('للأنظمة') }} {{ t('الذكية') }} - {{ t('Details') }} {{ t('Product') }} {{ product.name }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or t('Azad_Intelligent_Systems') }} - {{ t('Details') }} {{ t('Product') }} {{ product.name }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
@@ -7,10 +7,10 @@
   </div>
   <div>
     <a href="{{ url_for('products.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للقائمة') }}
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('Back_To_List') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
+      <i class="fas fa-home mr-2"></i>{{ t('Dashboard') }}
     </a>
   </div>
 </div>
@@ -28,7 +28,7 @@
         
         <ul class="list-group list-group-unbordered mb-3">
           <li class="list-group-item">
-            <b>{{ t('رقم') }} {{ t('القطعة') }}</b>
+            <b>{{ t('Part_Number') }}</b>
             <span class="float-left">{{ product.part_number or '-' }}</span>
           </li>
           <li class="list-group-item">
@@ -39,7 +39,7 @@
             <b>{{ t('Inventory') }}</b>
             {% set shown_stock = product.visible_stock if product.visible_stock is defined else product.current_stock %}
             <span class="float-left {% if product.min_stock_alert and shown_stock < product.min_stock_alert %}text-danger{% else %}text-success{% endif %}">
-            {{ shown_stock }} {{ product.unit or 'بلا' }}
+            {{ shown_stock }} {{ product.unit or t('None') }}
             </span>
           </li>
           <li class="list-group-item">
@@ -62,20 +62,20 @@
   <div class="col-md-8">
     <div class="card">
       <div class="card-header">
-        <h3 class="card-title">{{ t('Info_2') }} {{ t('Product') }}</h3>
+        <h3 class="card-title">{{ t('Product_Info') }}</h3>
       </div>
       <div class="card-body">
         <dl class="row">
-          <dt class="col-sm-4">{{ t('Name') }} {{ t('التجاري') }}:</dt>
+          <dt class="col-sm-4">{{ t('Commercial_Name') }}:</dt>
           <dd class="col-sm-8">{{ product.commercial_name or '-' }}</dd>
-          
-          <dt class="col-sm-4">{{ t('بلد') }} {{ t('المنشأ') }}:</dt>
+           
+          <dt class="col-sm-4">{{ t('Country_Of_Origin') }}:</dt>
           <dd class="col-sm-8">{{ product.country_of_origin or '-' }}</dd>
-          
-          <dt class="col-sm-4">{{ t('الفئة') }}:</dt>
+           
+          <dt class="col-sm-4">{{ t('Category') }}:</dt>
           <dd class="col-sm-8">{{ product.category.name if product.category else '-' }}</dd>
 
-          <dt class="col-sm-4">{{ t('التاجر') }} {{ t('المالك') }}:</dt>
+          <dt class="col-sm-4">{{ t('Owner_Merchant') }}:</dt>
           <dd class="col-sm-8 text-primary">{{ product.merchant_customer.name if product.merchant_customer else '-' }}</dd>
 
           {% if product.partner_shares %}
@@ -88,11 +88,11 @@
             </ul>
           </dd>
           {% endif %}
-          
-          <dt class="col-sm-4">{{ t('Price_2') }} {{ t('Cost') }}:</dt>
+           
+          <dt class="col-sm-4">{{ t('Cost_Price') }}:</dt>
           <dd class="col-sm-8">{{ format_currency(product.cost_price or 0) }}</dd>
-          
-          <dt class="col-sm-4">{{ t('Discount_2') }} {{ t('التاجر') }}:</dt>
+           
+          <dt class="col-sm-4">{{ t('Merchant_Discount') }}:</dt>
           <dd class="col-sm-8">
             {% if product.merchant_price %}
               {{ product.merchant_price }}% 
@@ -101,8 +101,8 @@
               -
             {% endif %}
           </dd>
-          
-          <dt class="col-sm-4">{{ t('Discount_2') }} {{ t('Partner_2') }}:</dt>
+           
+          <dt class="col-sm-4">{{ t('Partner_Discount') }}:</dt>
           <dd class="col-sm-8">
             {% if product.partner_price %}
               {{ product.partner_price }}%
@@ -111,14 +111,14 @@
               -
             {% endif %}
           </dd>
-          
+           
           <dt class="col-sm-4">{{ t('Guarantee') }}:</dt>
-          <dd class="col-sm-8">{{ product.warranty_period or 0 }} {{ product.warranty_unit or 'شهر' }}</dd>
-          
-          <dt class="col-sm-4">{{ t('قابل') }} {{ t('Return_2') }}:</dt>
+          <dd class="col-sm-8">{{ product.warranty_period or 0 }} {{ product.warranty_unit or 'Month' }}</dd>
+           
+          <dt class="col-sm-4">{{ t('Returnable') }}:</dt>
           <dd class="col-sm-8">
             {% if product.is_returnable %}
-            <span class="badge badge-success">نعم ({{ product.return_period_days }} {{ t('يوم') }})</span>
+            <span class="badge badge-success">{{ t('Yes') }} ({{ product.return_period_days }} {{ t('Day') }})</span>
             {% else %}
             <span class="badge badge-danger">{{ t('No') }}</span>
             {% endif %}
@@ -135,16 +135,16 @@
 
     <div class="card">
       <div class="card-header">
-        <h3 class="card-title">{{ t('Last') }} {{ t('Movements') }}</h3>
+        <h3 class="card-title">{{ t('Last_Movements') }}</h3>
       </div>
       <div class="card-body p-0">
         <div class="table-responsive"><table class="table table-sm">
           <thead>
             <tr>
-              <th>{{ t('النوع') }}</th>
+              <th>{{ t('Type') }}</th>
               <th>{{ t('Quantity') }}</th>
               <th>{{ t('Date') }}</th>
-              <th>{{ t('المرجع') }}</th>
+              <th>{{ t('Reference') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -152,21 +152,21 @@
             <tr>
               <td>
                 {% if movement.movement_type in ['in', 'purchase'] %}
-                <span class="badge badge-success">{{ t('إدخال') }}</span>
+                <span class="badge badge-success">{{ t('Inbound') }}</span>
                 {% elif movement.movement_type in ['out', 'sale'] %}
-                <span class="badge badge-danger">{{ t('إخراج') }}</span>
+                <span class="badge badge-danger">{{ t('Outbound') }}</span>
                 {% elif movement.movement_type == 'adjustment' %}
                     {% if movement.quantity > 0 %}
-                    <span class="badge badge-info">{{ t('Edit') }} ({{ t('Add') }})</span>
+                    <span class="badge badge-info">{{ t('Adjustment') }} ({{ t('Add') }})</span>
                     {% else %}
-                    <span class="badge badge-warning">{{ t('Edit') }} ({{ t('Discount_2') }})</span>
+                    <span class="badge badge-warning">{{ t('Adjustment') }} ({{ t('Subtract') }})</span>
                     {% endif %}
                 {% else %}
                 <span class="badge badge-secondary">{{ movement.movement_type }}</span>
                 {% endif %}
               </td>
               <td dir="ltr" class="text-left">{{ movement.quantity }}</td>
-              <td>{{ movement.created_at.strftime('%Y-%m-%d') }}</td>
+              <td>{{ format_date(movement.created_at) }}</td>
               <td>
                 {% if movement.reference_type and movement.reference_id %}
                   {{ movement.reference_type }} #{{ movement.reference_id }}
@@ -177,7 +177,7 @@
             </tr>
             {% else %}
             <tr>
-              <td colspan="4" class="text-center text-muted">لا {{ t('توجد') }} {{ t('حركات') }} {{ t('ضمن') }} {{ t('نطاقك') }} {{ t('الحالي') }}</td>
+              <td colspan="4" class="text-center text-muted">{{ t('No_Movements_In_Current_Scope') }}</td>
             </tr>
             {% endfor %}
           </tbody>
@@ -187,4 +187,3 @@
   </div>
 </div>
 {% endblock %}
-
