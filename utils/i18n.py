@@ -4929,6 +4929,23 @@ TRANSLATIONS = {
     "ticket_number": {"en": "Ticket #{number}", "ar": "تذكرة #{number}"},
     "unassigned": {"en": "Unassigned", "ar": "غير معين"},
     "view": {"en": "View", "ar": "عرض"},
+    "active": {"en": "Active", "ar": "نشط"},
+    "add": {"en": "Add", "ar": "إضافة"},
+    "campaigns": {"en": "Campaigns", "ar": "حملات"},
+    "carrier": {"en": "Carrier", "ar": "الناقل"},
+    "claim_number": {"en": "Claim #", "ar": "رقم المطالبة"},
+    "claim_type": {"en": "Claim Type", "ar": "نوع المطالبة"},
+    "claim_type_placeholder": {"en": "Type (repair/refund)", "ar": "إصلاح/استرداد"},
+    "cost": {"en": "Cost", "ar": "التكلفة"},
+    "inactive": {"en": "Inactive", "ar": "غير نشط"},
+    "name": {"en": "Name", "ar": "الاسم"},
+    "no_data": {"en": "No Data", "ar": "لا توجد بيانات"},
+    "product_id": {"en": "Product ID", "ar": "معرّف المنتج"},
+    "sale": {"en": "Sale", "ar": "بيع"},
+    "sale_id": {"en": "Sale ID", "ar": "معرّف البيع"},
+    "shipments": {"en": "Shipments", "ar": "الشحنات"},
+    "tracking_number": {"en": "Tracking #", "ar": "رقم التتبع"},
+    "warranty_claims": {"en": "Warranty Claims", "ar": "مطالبات الضمان"},
 }
 
 

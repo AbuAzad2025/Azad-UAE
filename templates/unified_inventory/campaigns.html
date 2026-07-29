@@ -1,17 +1,23 @@
 {% extends 'base.html' %}
-{% block title %}Campaigns{% endblock %}
+{% block title %}{{ t('campaigns') }}{% endblock %}
+{% block page_title %}<h1 class="mb-0">{{ t('campaigns') }}</h1>{% endblock %}
 {% block content %}
 <div class="card">
-  <div class="card-header"><h3>Campaigns</h3></div>
+  <div class="card-header"><h3>{{ t('campaigns') }}</h3></div>
   <div class="card-body">
     <div class="table-responsive">
       <table class="table table-sm">
-        <thead><tr><th>Code</th><th>Name</th><th>Discount</th><th>Status</th></tr></thead>
+        <thead><tr><th>{{ t('code') }}</th><th>{{ t('name') }}</th><th>{{ t('discount') }}</th><th>{{ t('status') }}</th></tr></thead>
         <tbody>
           {% for c in campaigns %}
-          <tr><td>{{ c.coupon_code }}</td><td>{{ c.name }}</td><td>{{ c.discount_value }}</td><td>{{ 'Active' if c.is_active else 'Inactive' }}</td></tr>
+          <tr>
+            <td>{{ c.coupon_code | e }}</td>
+            <td>{{ c.name | e }}</td>
+            <td>{{ format_currency(c.discount_value) }}</td>
+            <td>{% if c.is_active %}<span class="badge badge-success">{{ t('active') }}</span>{% else %}<span class="badge badge-secondary">{{ t('inactive') }}</span>{% endif %}</td>
+          </tr>
           {% else %}
-          <tr><td colspan="4" class="text-center text-muted">{{ t('No_Data') }}</td></tr>
+          <tr><td colspan="4" class="text-center text-muted">{{ t('no_data') }}</td></tr>
           {% endfor %}
         </tbody>
       </table>
@@ -19,10 +25,10 @@
     <form method="POST" action="{{ url_for('unified_inventory.campaigns_create') }}" class="mt-3">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="row">
-        <div class="col"><label for="campaign_name" class="sr-only">Name</label><input name="name" id="campaign_name" class="form-control" placeholder="Name" required></div>
-        <div class="col"><label for="campaign_coupon_code" class="sr-only">Coupon Code</label><input name="coupon_code" id="campaign_coupon_code" class="form-control" placeholder="Coupon Code" required></div>
-        <div class="col"><label for="campaign_discount_value" class="sr-only">Discount</label><input name="discount_value" id="campaign_discount_value" type="number" class="form-control" placeholder="Discount" step="0.01" required></div>
-        <div class="col"><button class="btn btn-success">Add</button></div>
+        <div class="col"><label for="campaign_name" class="sr-only">{{ t('name') }}</label><input name="name" id="campaign_name" class="form-control" placeholder="{{ t('name') }}" aria-label="{{ t('name') }}" required></div>
+        <div class="col"><label for="campaign_coupon_code" class="sr-only">{{ t('coupon_code') }}</label><input name="coupon_code" id="campaign_coupon_code" class="form-control" placeholder="{{ t('coupon_code') }}" aria-label="{{ t('coupon_code') }}" required></div>
+        <div class="col"><label for="campaign_discount_value" class="sr-only">{{ t('discount') }}</label><input name="discount_value" id="campaign_discount_value" type="number" class="form-control" placeholder="{{ t('discount') }}" aria-label="{{ t('discount') }}" step="0.01" required></div>
+        <div class="col"><button class="btn btn-success">{{ t('add') }}</button></div>
       </div>
     </form>
   </div>
