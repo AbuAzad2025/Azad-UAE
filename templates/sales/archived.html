@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Archive') }} {{ t('Sales') }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or t('default_system_name') }} - {{ t('archive') }} {{ t('sales') }}{% endblock %}
 
 {% block page_title %}
 
@@ -8,17 +8,17 @@
 
   <div>
 
-    <h1 class="text-gradient mb-0"><i class="fas fa-archive mr-3"></i>{{ t('Archive') }} {{ t('Sales') }}</h1>
+    <h1 class="text-gradient mb-0"><i class="fas fa-archive mr-3"></i>{{ t('archive') }} {{ t('sales') }}</h1>
 
-    <p class="text-muted">{{ t('جميع') }} {{ t('فواتير') }} {{ t('Sale_2') }} {{ t('Archived') }}</p>
+    <p class="text-muted">{{ t('all') }} {{ t('invoices') }} {{ t('sale') }} {{ t('archived') }}</p>
 
   </div>
 
   <div>
 
-    <a href="{{ url_for('sales.index') }}" class="btn btn-secondary btn-lg">
+      <a href="{{ url_for('sales.index') }}" class="btn btn-secondary btn-lg btn-archive-back">
 
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('Back') }}
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('back') }}
 
     </a>
 
@@ -32,28 +32,27 @@
 
 {% block extra_css %}
 <style>
-      a.btn.btn-secondary,
-
-      .btn.btn-secondary {
-
+      .btn-archive-back {
         color: #ffffff !important;
-
         -webkit-text-fill-color: #ffffff !important;
-
         background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%) !important;
-
         border-color: #3498db !important;
-
         box-shadow: 0 0 10px rgba(52, 152, 219, 0.3) !important;
-
       }
-
-      a.btn.btn-secondary i,
-
-      a.btn.btn-secondary span {
-
+      .btn-archive-back i,
+      .btn-archive-back span {
         color: #ffffff !important;
-
+      }
+      @media print {
+        .main-sidebar, .main-header, .main-footer, .content-header,
+        .btn, .btn-group, .card-header, .nav-tabs, .no-print,
+        .dataTables_filter, .dataTables_length, .dataTables_paginate, .dataTables_info {
+          display: none !important;
+        }
+        .content-wrapper { margin: 0 !important; padding: 0 !important; }
+        .card { border: none !important; box-shadow: none !important; }
+        table { width: 100% !important; border-collapse: collapse !important; }
+        th, td { border: 1px solid #dee2e6 !important; padding: 6px 8px !important; }
       }
     </style>
 {% endblock %}
@@ -70,21 +69,21 @@
 
         <tr>
 
-          <th>{{ t('رقم') }} {{ t('Invoice_2') }}</th>
+          <th>{{ t('number') }} {{ t('invoice') }}</th>
 
-          <th>{{ t('Branch') }}</th>
+          <th>{{ t('branch') }}</th>
 
-          <th>{{ t('Date') }}</th>
+          <th>{{ t('date') }}</th>
 
-          <th>{{ t('Customer') }}</th>
+          <th>{{ t('customer') }}</th>
 
-          <th>{{ t('Amount') }}</th>
+          <th>{{ t('amount') }}</th>
 
-          <th>{{ t('Status_2') }} {{ t('Payment_2') }}</th>
+          <th>{{ t('payment_status') }}</th>
 
-          <th>{{ t('History') }} {{ t('الأرشفة') }}</th>
+          <th>{{ t('archiving_date') }}</th>
 
-          <th>{{ t('الإجراءات') }}</th>
+          <th>{{ t('actions') }}</th>
 
         </tr>
 
@@ -122,15 +121,15 @@
 
             {% if sale.payment_status == 'paid' %}
 
-              <span class="badge badge-success">{{ t('Paid_2') }}</span>
+              <span class="badge badge-success">{{ t('paid') }}</span>
 
             {% elif sale.payment_status == 'partial' %}
 
-              <span class="badge badge-warning">{{ t('Partial_2') }}</span>
+              <span class="badge badge-warning">{{ t('partial') }}</span>
 
             {% else %}
 
-              <span class="badge badge-danger">{{ t('Credit') }}</span>
+              <span class="badge badge-danger">{{ t('credit') }}</span>
 
             {% endif %}
 
@@ -205,7 +204,7 @@ $(document).ready(() => {
 
   
 
-  // {{ t('Restore') }} {{ t('Invoice') }}
+  // {{ t('restore') }} {{ t('invoice') }}
 
   $(document).on('click', '.restore-sale-btn', function(e) {
 
@@ -223,7 +222,7 @@ $(document).ready(() => {
 
     $.ajax({
 
-      url: '/sales/' + id + '/restore',
+      url: '{{ url_for("sales.restore", id="__ID__") }}'.replace('__ID__', id),
 
       type: 'POST',
 
@@ -239,9 +238,9 @@ $(document).ready(() => {
 
       },
 
-      error: () => {
+      error: (xhr) => {
 
-        location.reload();
+        alert({{ t('restore_failed') | tojson }} + ': ' + xhr.statusText);
 
       }
 
