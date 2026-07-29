@@ -12,7 +12,6 @@ import requests
 from flask import current_app
 
 from extensions import db
-from flask_babel import gettext
 from utils.db_safety import atomic_transaction
 from models import Donation
 from services.payments.nowpayments_provider import NowPaymentsProvider

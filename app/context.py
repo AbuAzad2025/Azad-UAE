@@ -27,7 +27,7 @@ def register_context_processors(app):
 
     # The same helpers are injected per-request as callable globals below; also
     # register them as real filters so `value|format_currency` compiles too.
-from utils.helpers import format_currency, timeago, format_date, format_number, format_time, format_datetime
+    from utils.helpers import format_currency, timeago, format_date, format_number, format_time, format_datetime
 
     app.jinja_env.filters.setdefault("format_currency", format_currency)
     app.jinja_env.filters.setdefault("format_date", format_date)
