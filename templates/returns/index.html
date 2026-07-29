@@ -1,8 +1,7 @@
-{% extends 'base.html' %}
-{% block title %}{{ t('Returns') }}{% endblock %}
+{% block title %}{{ t('returns') }}{% endblock %}
 
 {% block extra_css %}
-{% include 'partials/datatables_assets.html' %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/datatables.css') }}">
 <style>
   #returnsTable th,
   #returnsTable td {
@@ -12,15 +11,25 @@
   #returnsTable .actions-cell {
     white-space: nowrap;
   }
+
+  @media print {
+    .main-sidebar, .main-header, .main-footer, .btn, .content-header, .dataTables_filter, .dataTables_length, .dataTables_paginate, .dataTables_info {
+      display: none !important;
+    }
+    .content-wrapper { margin: 0 !important; padding: 0 !important; }
+    .card { border: none !important; box-shadow: none !important; }
+    #returnsTable { width: 100% !important; }
+    #returnsTable th, #returnsTable td { border: 1px solid #dee2e6 !important; padding: 6px 8px !important; }
+  }
 </style>
 {% endblock %}
 
 {% block extra_js %}
-{% include 'partials/datatables_assets.html' %}
+<script src="{{ url_for('static', filename='js/datatables.js') }}"></script>
 <script>
   (() => {
     const tableSelector = '#returnsTable';
-    const languageUrl = "{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}";
+    const languageUrl = "{{ url_for('static', filename=('datatables/Arabic.json' if is_rtl else 'datatables/English.json')) }}";
 
     function initReturnsTable() {
       const $table = $(tableSelector);
@@ -54,12 +63,15 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-undo-alt mr-2"></i>{{ t('Returns') }}</h1>
-    <p class="text-muted mb-0">{{ t('Log') }} {{ t('مرتجعات') }} {{ t('فواتير') }} {{ t('Sale_2') }}</p>
+    <h1 class="mb-0"><i class="fas fa-undo-alt {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i>{{ t('returns') }}</h1>
+    <p class="text-muted mb-0">{{ t('returns_sales_invoices_log') }}</p>
   </div>
   <div>
+    <a href="{{ url_for('returns.create') }}" class="btn btn-primary">
+      <i class="fas fa-plus {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i>{{ t('new_return') }}
+    </a>
     <a href="{{ url_for('sales.index') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-file-invoice mr-2"></i>{{ t('Sales') }}
+      <i class="fas fa-file-invoice {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i>{{ t('sales') }}
     </a>
   </div>
 </div>
@@ -68,35 +80,35 @@
 {% block content %}
 <div class="mb-3 d-flex flex-wrap erp-gap-1">
   <span class="badge badge-primary">
-    <i class="fas fa-undo-alt"></i> {{ t('Total_3') }}: {{ returns|length }}
+    <i class="fas fa-undo-alt"></i> {{ t('total') }}: {{ returns|length }}
   </span>
   <span class="badge badge-success">
-    <i class="fas fa-check"></i> {{ t('معتمد') }}: {{ returns|selectattr('status', 'equalto', 'approved')|list|length }}
+    <i class="fas fa-check"></i> {{ t('approved') }}: {{ returns|selectattr('status', 'equalto', 'approved')|list|length }}
   </span>
   <span class="badge badge-warning">
-    <i class="fas fa-hourglass-half"></i> {{ t('قيد') }} {{ t('Review') }}: {{ returns|selectattr('status', 'equalto', 'pending')|list|length }}
+    <i class="fas fa-hourglass-half"></i> {{ t('under_review') }}: {{ returns|selectattr('status', 'equalto', 'pending')|list|length }}
   </span>
   <span class="badge badge-danger">
-    <i class="fas fa-times"></i> {{ t('Rejected_2') }}: {{ returns|selectattr('status', 'equalto', 'rejected')|list|length }}
+    <i class="fas fa-times"></i> {{ t('rejected') }}: {{ returns|selectattr('status', 'equalto', 'rejected')|list|length }}
   </span>
 </div>
 <div class="card">
   <div class="card-header">
-    <h3 class="card-title mb-0"><i class="fas fa-list mr-2"></i>{{ t('List') }} {{ t('Returns') }}</h3>
+    <h3 class="card-title mb-0"><i class="fas fa-list {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i>{{ t('list') }} {{ t('returns') }}</h3>
   </div>
   <div class="card-body">
     <div class="table-responsive">
       <table id="returnsTable" class="table table-hover table-bordered">
         <thead>
           <tr>
-            <th>{{ t('رقم') }} {{ t('Return_3') }}</th>
-            <th>{{ t('Branch') }}</th>
-            <th>{{ t('Invoice') }} {{ t('Sale_2') }}</th>
-            <th>{{ t('Customer') }}</th>
-            <th>{{ t('Date') }}</th>
-            <th>{{ t('Status') }}</th>
-            <th class="text-left">{{ t('Total_3') }}</th>
-            <th class="text-center">{{ t('Actions') }}</th>
+            <th>{{ t('return_number') }}</th>
+            <th>{{ t('branch') }}</th>
+            <th>{{ t('sale_number') }}</th>
+            <th>{{ t('customer') }}</th>
+            <th>{{ t('date') }}</th>
+            <th>{{ t('status') }}</th>
+            <th class="text-{{ 'right' if is_rtl else 'left' }}">{{ t('total') }}</th>
+            <th class="text-center">{{ t('actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -118,26 +130,26 @@
               {% endif %}
             </td>
             <td>{{ r.customer.name if r.customer else '-' }}</td>
-            <td>{{ r.return_date.strftime('%Y-%m-%d %H:%M') if r.return_date else '-' }}</td>
+            <td>{{ r.return_date.strftime('%Y-%m-%d') if r.return_date else '-' }}</td>
             <td>
               {% if r.status == 'approved' %}
-                <span class="badge badge-success">{{ t('معتمد') }}</span>
+                <span class="badge badge-success">{{ t('approved') }}</span>
               {% elif r.status == 'rejected' %}
-                <span class="badge badge-danger">{{ t('Rejected_2') }}</span>
+                <span class="badge badge-danger">{{ t('rejected') }}</span>
               {% else %}
-                <span class="badge badge-warning">{{ t('قيد') }} {{ t('Review') }}</span>
+                <span class="badge badge-warning">{{ t('under_review') }}</span>
               {% endif %}
             </td>
-            <td class="text-left">{{ format_currency(r.total_amount or 0, r.currency) }}</td>
+            <td class="text-{{ 'right' if is_rtl else 'left' }}">{{ format_currency(r.total_amount or 0, r.currency) }}</td>
             <td class="text-center actions-cell">
               <a href="{{ url_for('returns.view', id=r.id) }}" class="btn btn-outline-primary">
-                <i class="fas fa-eye mr-1"></i>{{ t('View') }}
+                <i class="fas fa-eye {% if is_rtl %}ms-1{% else %}mr-1{% endif %}"></i>{{ t('view') }}
               </a>
             </td>
           </tr>
           {% else %}
           <tr>
-            <td colspan="8" class="text-center text-muted">لا {{ t('توجد') }} {{ t('مرتجعات') }}</td>
+            <td colspan="8" class="text-center text-muted">{{ t('no_returns_found') }}</td>
           </tr>
           {% endfor %}
         </tbody>
