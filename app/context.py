@@ -27,11 +27,13 @@ def register_context_processors(app):
 
     # The same helpers are injected per-request as callable globals below; also
     # register them as real filters so `value|format_currency` compiles too.
-    from utils.helpers import format_currency, timeago, format_date, format_number
+from utils.helpers import format_currency, timeago, format_date, format_number, format_time, format_datetime
 
     app.jinja_env.filters.setdefault("format_currency", format_currency)
     app.jinja_env.filters.setdefault("format_date", format_date)
+    app.jinja_env.filters.setdefault("format_datetime", format_datetime)
     app.jinja_env.filters.setdefault("format_number", format_number)
+    app.jinja_env.filters.setdefault("format_time", format_time)
     app.jinja_env.filters.setdefault("timeago", timeago)
 
     @app.context_processor
@@ -40,7 +42,7 @@ def register_context_processors(app):
 
     @app.context_processor
     def utility_processor() -> dict[str, Any]:
-        from utils.helpers import format_currency, timeago, format_date, format_number
+        from utils.helpers import format_currency, timeago, format_date, format_number, format_time, format_datetime
         from utils.number_to_arabic import number_to_arabic_words
         from utils.i18n import t, is_rtl, get_current_language
         from utils.report_registry import (
@@ -332,7 +334,9 @@ def register_context_processors(app):
         return {
             "format_currency": format_currency,
             "format_date": format_date,
+            "format_datetime": format_datetime,
             "format_number": format_number,
+            "format_time": format_time,
             "timeago": timeago,
             "t": t,
             "is_rtl": is_rtl(),
