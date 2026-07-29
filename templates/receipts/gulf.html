@@ -330,7 +330,7 @@
     .ic-10 { font-weight: 700; font-size: 9px; margin-bottom: 8px; text-align: center; }
     .ic-11 { font-size: 8px; line-height: 1.8; text-align: center; }
     .ic-12 { font-size: 9px; opacity: 0.8; margin-bottom: 10px; text-align: center; }
-    .ic-13 { background: rgba(255,243,205,0.3); border-right: 3px solid #ffc107; padding: 10px; margin-bottom: 12px; border-radius: 5px; }
+    .ic-13 { background: rgba(255,243,205,0.3); border-inline-start: 3px solid #ffc107; padding: 10px; margin-bottom: 12px; border-radius: 5px; }
     .ic-14 { font-size: 8px; }
     .ic-15 { font-size: 9px; margin-bottom: 8px; font-weight: 700; }
     .ic-16 { margin-top: 8px; font-size: 9px; }
@@ -357,7 +357,7 @@
         <div>{{ (settings.address_ar if settings and settings.address_ar else none) or tenant_address or company_address }}</div>
         <div>📞 {{ (settings.phone_1 if settings and settings.phone_1 else none) or tenant_phone or company_phone }} {% if settings and settings.phone_2 and settings.phone_2 != 'None' %}| {{ settings.phone_2 }}{% endif %}</div>
         <div>📧 {{ (settings.email if settings and settings.email else none) or tenant_email or company_email }} {% if settings and settings.website and settings.website != 'None' %}| 🌐 {{ settings.website }}{% endif %}</div>
-        {% if settings and settings.tax_number and settings.tax_number != 'None' %}<div class="ic-3">{{ t('الرقم') }} {{ t('الضريبي') }}: {{ settings.tax_number }}</div>{% endif %}
+        {% if settings and settings.tax_number and settings.tax_number != 'None' %}<div>{{ t('Tax_Number') }}: {{ settings.tax_number }}</div>{% endif %}
         {% if print_branch %}
         <div>🏢 {{ t('Branch') }}: {{ print_branch.name }}{% if print_branch.code %} ({{ print_branch.code }}){% endif %}</div>
         {% if print_branch.address %}
@@ -367,7 +367,7 @@
       </div>
     </div>
 
-    {% set doc_title = '☪ سند قبض ☪' %}
+    {% set doc_title = t('Receipt_Voucher') %}
     {% set doc_number = doc_number or receipt.receipt_number %}
     {% include 'partials/print_unified_banner.html' %}
 
@@ -381,14 +381,14 @@
         </div>
         <div class="info-card">
           <h3>📅 {{ t('Info_2') }} {{ t('Voucher') }}</h3>
-          <p><strong>{{ t('Date') }}:</strong> {{ receipt.receipt_date.strftime('%Y-%m-%d') }}</p>
-          <p><strong>{{ t('Time_2') }}:</strong> {{ receipt.receipt_date.strftime('%H:%M') }}</p>
-          <p><strong>{{ t('User') }}:</strong> {{ print_user_name or (receipt.user.full_name if receipt.user else 'النظام') }}</p>
+<p><strong>{{ t('Date') }}:</strong> {{ format_date(receipt.receipt_date) }}</p>
+           <p><strong>{{ t('Time') }}:</strong> {{ format_time(receipt.receipt_date) }}</p>
+          <p><strong>{{ t('User') }}:</strong> {{ print_user_name or (receipt.user.full_name if receipt.user else t('System')) }}</p>
         </div>
       </div>
 
       <div class="amount-showcase">
-        <div class="amount-label-top">⭐ {{ t('Amount') }} {{ t('المستلم') }} ⭐</div>
+        <div class="amount-label-top">⭐ {{ t('Amount') }} {{ t('Received') }} ⭐</div>
         <div class="amount-huge">{{ format_currency(receipt.base_amount) }}</div>
         <div class="amount-label-bottom">{{ tenant_currency_name_ar or tenant_default_currency }}</div>
         {% if receipt.currency != tenant_default_currency %}
@@ -399,13 +399,13 @@
       </div>
 
       <div class="payment-section">
-        <h4>💳 {{ t('طريقة') }} {{ t('Payment_2') }}</h4>
+        <h4>💳 {{ t('Payment_Method') }}</h4>
         <div class="payment-type">
           {% if receipt.payment_method == 'cash' %}💵 {{ t('Payment') }} {{ t('Cash_2') }}
-          {% elif receipt.payment_method == 'card' %}💳 {{ t('Card') }} {{ t('ائتمانية') }}
+          {% elif receipt.payment_method == 'card' %}💳 {{ t('Card') }} {{ t('Credit') }}
           {% elif receipt.payment_method == 'bank_transfer' %}🏦 {{ t('Transfer') }} {{ t('Bank_3') }}
           {% elif receipt.payment_method == 'cheque' %}📝 {{ t('Cheque_3') }} {{ t('Bank_3') }}
-          {% else %}💰 {{ t('محفظة') }} {{ t('إلكترونية') }}{% endif %}
+          {% else %}💰 {{ t('Wallet') }} {{ t('Electronic') }}{% endif %}
         </div>
 
         {% if receipt.payment_method == 'cheque' and receipt.cheque_number %}
@@ -418,10 +418,10 @@
             </div>
             <div class="cheque-detail-box">
               <div class="cheque-detail-label">{{ t('History') }} {{ t('Due') }}</div>
-              <div class="cheque-detail-value">{{ receipt.cheque_date.strftime('%Y-%m-%d') if receipt.cheque_date else '-' }}</div>
+               <div class="cheque-detail-value">{{ format_date(receipt.cheque_date) if receipt.cheque_date else '-' }}</div>
             </div>
             <div class="cheque-detail-box">
-              <div class="cheque-detail-label">{{ t('Bank') }} {{ t('المسحوب') }} عليه</div>
+              <div class="cheque-detail-label">{{ t('Drawn_On_Bank') }}</div>
               <div class="cheque-detail-value">{{ receipt.bank_name or '-' }}</div>
             </div>
           </div>
@@ -452,7 +452,7 @@
 
       {% if receipt.notes %}
       <div class="notes-gulf">
-        <h4>📝 {{ t('Notes') }} {{ t('وسبب') }} {{ t('Payment_2') }}</h4>
+        <h4>📝 {{ t('Notes_And_Payment_Reason') }}</h4>
         <p>{{ receipt.notes }}</p>
       </div>
       {% endif %}
@@ -461,7 +461,7 @@
 
       <div class="signatures-gulf">
         <div class="sig-gulf">
-          <div class="sig-label">{{ t('ختم') }} {{ t('وتوقيع') }} {{ t('المحصل') }}</div>
+          <div class="sig-label">{{ t('ختم') }} {{ t('And_Signature') }} {{ t('Collector') }}</div>
           <div class="sig-line-gulf">_____________</div>
         </div>
         <div class="sig-gulf">
@@ -487,9 +487,9 @@
       
       {% if settings and ((settings.commercial_register and settings.commercial_register != 'None') or (settings.license_number and settings.license_number != 'None')) %}
       <div class="ic-12">
-        {% if settings.commercial_register and settings.commercial_register != 'None' %}<span>{{ t('Log_2') }} {{ t('التجاري') }}: {{ settings.commercial_register }}</span>{% endif %}
+        {% if settings.commercial_register and settings.commercial_register != 'None' %}<span>{{ t('Commercial_Register') }}: {{ settings.commercial_register }}</span>{% endif %}
         {% if settings.commercial_register and settings.license_number %} ☪ {% endif %}
-        {% if settings.license_number and settings.license_number != 'None' %}<span>{{ t('الرخصة') }}: {{ settings.license_number }}</span>{% endif %}
+        {% if settings.license_number and settings.license_number != 'None' %}<span>{{ t('License') }}: {{ settings.license_number }}</span>{% endif %}
       </div>
       {% endif %}
       
@@ -501,9 +501,9 @@
       {% endif %}
       
       <div class="ic-15">
-        {{ settings.payment_terms_ar if settings and settings.payment_terms_ar else 'نرجو الالتزام بمواعيد الدفع المحددة' }}
+        {{ settings.payment_terms_ar if settings and settings.payment_terms_ar else t('Please_Adhere_To_Payment_Deadlines') }}
       </div>
-      <div class="ic-14">☪ {{ t('شكراً') }} {{ t('لتعاملكم') }} {{ t('الكريم') }} {{ t('معنا') }} ☪</div>
+      <div class="ic-14">☪ {{ t('Thank_You_For_Your_Kind_Business') }} ☪</div>
       {% if settings and settings.website and settings.website != 'None' %}
       <div class="ic-16">🌐 {{ settings.website }}</div>
       {% endif %}
