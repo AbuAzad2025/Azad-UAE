@@ -4,62 +4,62 @@
 <div class="card shadow mb-4">
     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-primary text-white">
         <h6 class="m-0 font-weight-bold">
-            <i class="fas fa-user-circle fa-lg ml-2"></i>
-            {{ entity.name }}
-            <span class="badge badge-light text-primary ml-2">{{ type_label }}</span>
+            <i class="fas fa-user-circle fa-lg {% if is_rtl %}ms-2{% else %}ml-2{% endif %}"></i>
+            {{ entity.name|e }}
+            <span class="badge badge-light text-primary {% if is_rtl %}ms-2{% else %}ml-2{% endif %}">{{ t(type_label_key) }}</span>
         </h6>
         <div class="text-white">
-            <span class="ml-3"><i class="fas fa-phone ml-1"></i> {{ entity.phone or '---' }}</span>
-            <span class="font-weight-bold ml-3">
-                {{ t('Balance') }}: {{ format_currency(balance) }}
-                <small>({{ balance_label }})</small>
+            <span class="{% if is_rtl %}ms-3{% else %}ml-3{% endif %}"><i class="fas fa-phone {% if is_rtl %}ms-1{% else %}ml-1{% endif %}"></i> {{ entity.phone|e or '---' }}</span>
+            <span class="font-weight-bold {% if is_rtl %}ms-3{% else %}ml-3{% endif %}">
+                {{ t('balance') }}: {{ format_currency(balance) }}
+                <small>({{ t(balance_label_key) }})</small>
             </span>
         </div>
     </div>
     <div class="card-body">
         
         <ul class="nav nav-tabs" id="entityReportTabs" role="tablist">
-            <li class="nav-item">
-                <a class="nav-link active" id="products-tab" data-toggle="tab" href="#products" role="tab" aria-controls="products" aria-selected="true">
-                    <i class="fas fa-box-open text-info"></i> {{ t('Products') }}
-                </a>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" role="tab" aria-controls="products" aria-selected="true">
+                    <i class="fas fa-box-open text-info"></i> {{ t('products') }}
+                </button>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" id="invoices-tab" data-toggle="tab" href="#invoices" role="tab" aria-controls="invoices" aria-selected="false">
-                    <i class="fas fa-file-invoice text-warning"></i> {{ t('Invoices') }}
-                </a>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="invoices-tab" data-bs-toggle="tab" data-bs-target="#invoices" role="tab" aria-controls="invoices" aria-selected="false">
+                    <i class="fas fa-file-invoice text-warning"></i> {{ t('invoices') }}
+                </button>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" id="payments-tab" data-toggle="tab" href="#payments" role="tab" aria-controls="payments" aria-selected="false">
-                    <i class="fas fa-money-bill-wave text-success"></i> {{ t('Payments') }} {{ t('and Receipts') }}
-                </a>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" role="tab" aria-controls="payments" aria-selected="false">
+                    <i class="fas fa-money-bill-wave text-success"></i> {{ t('payments_and_receipts') }}
+                </button>
             </li>
         </ul>
 
         <div class="tab-content pt-3" id="entityReportTabsContent">
             
             
-            <div class="tab-pane fade show active" id="products" role="tabpanel" aria-labelledby="products-tab">
+<div class="tab-pane fade show active" id="products" role="tabpanel" aria-labelledby="products-tab">
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm table-hover">
                         <thead class="thead-light">
                             <tr>
-                                <th>{{ t('Product') }}</th>
-                                <th>{{ t('Quantity') }}</th>
-                                <th>{{ t('Total') }} ({{ tenant_currency_symbol }})</th>
-                                <th>{{ t('Last') }} {{ t('Movement_2') }}</th>
+                                <th>{{ t('product') }}</th>
+                                <th>{{ t('quantity') }}</th>
+                                <th>{{ t('total_amount') }}</th>
+                                <th>{{ t('last_movement') }}</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for prod in products %}
                             <tr>
-                                <td>{{ prod.name }}</td>
+                                <td>{{ prod.name|e }}</td>
                                 <td>{{ prod.quantity }}</td>
                                 <td>{{ format_currency(prod.total) }}</td>
-                                <td>{{ prod.last_date }}</td>
+                                <td>{{ prod.last_date|date:'Y-m-d' if prod.last_date else '-' }}</td>
                             </tr>
                             {% else %}
-                            <tr><td colspan="4" class="text-center text-muted">لا {{ t('توجد') }} {{ t('Products_2') }}</td></tr>
+                            <tr><td colspan="4" class="text-center text-muted">{{ t('no_products_found') }}</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -67,35 +67,32 @@
             </div>
 
             
-            <div class="tab-pane fade" id="invoices" role="tabpanel" aria-labelledby="invoices-tab">
+<div class="tab-pane fade" id="invoices" role="tabpanel" aria-labelledby="invoices-tab">
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm table-hover">
                         <thead class="thead-light">
                             <tr>
-                                <th>{{ t('رقم') }} {{ t('Invoice_2') }}</th>
-                                <th>{{ t('Date') }}</th>
-                                <th>{{ t('Status') }}</th>
-                                <th>{{ t('Amount') }} ({{ tenant_currency_symbol }})</th>
-                                <th>{{ t('Paid') }}</th>
-                                <th>{{ t('Remaining') }}</th>
+                                <th>{{ t('number') }}</th>
+                                <th>{{ t('date') }}</th>
+                                <th>{{ t('status') }}</th>
+                                <th>{{ t('amount') }}</th>
+                                <th>{{ t('paid') }}</th>
+                                <th>{{ t('remaining') }}</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for inv in invoices %}
+                            {% set status_class = {'confirmed': 'success', 'draft': 'secondary', 'cancelled': 'danger'}.get(inv.status, 'secondary') %}
                             <tr>
-                                <td>{{ inv.number }}</td>
-                                <td>{{ inv.date }}</td>
-                                <td>
-                                    <span class="badge badge-{{ 'success' if inv.status == 'confirmed' else 'secondary' }}">
-                                        {{ inv.status }}
-                                    </span>
-                                </td>
+                                <td>{{ inv.number|e }}</td>
+                                <td>{{ inv.date|date:'Y-m-d' if inv.date else '-' }}</td>
+                                <td><span class="badge badge-{{ status_class }}">{{ t(inv.status)|e }}</span></td>
                                 <td>{{ format_currency(inv.amount) }}</td>
                                 <td class="text-success">{{ format_currency(inv.paid) }}</td>
                                 <td class="text-danger">{{ format_currency(inv.balance) }}</td>
                             </tr>
                             {% else %}
-                            <tr><td colspan="6" class="text-center text-muted">لا {{ t('توجد') }} {{ t('فواتير') }}</td></tr>
+                            <tr><td colspan="6" class="text-center text-muted">{{ t('no_invoices') }}</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -108,32 +105,32 @@
                     <table class="table table-bordered table-sm table-hover">
                         <thead class="thead-light">
                             <tr>
-                                <th>{{ t('رقم') }} {{ t('Voucher') }}</th>
-                                <th>{{ t('النوع') }}</th>
-                                <th>{{ t('Date') }}</th>
-                                <th>{{ t('Amount') }} ({{ tenant_currency_symbol }})</th>
-                                <th>{{ t('طريقة') }} {{ t('Payment_2') }}</th>
-                                <th>{{ t('Description_3') }}</th>
+                                <th>{{ t('number') }}</th>
+                                <th>{{ t('type') }}</th>
+                                <th>{{ t('date') }}</th>
+                                <th>{{ t('amount') }}</th>
+                                <th>{{ t('method') }}</th>
+                                <th>{{ t('description') }}</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for trans in transactions %}
                             <tr>
-                                <td>{{ trans.number }}</td>
+                                <td>{{ trans.number|e }}</td>
                                 <td>
                                     {% if trans.type == 'in' %}
-                                    <span class="badge badge-success"><i class="fas fa-arrow-down"></i> {{ t('Receipt') }}</span>
+                                    <span class="badge badge-success"><i class="fas fa-arrow-down"></i> {{ t('receipt') }}</span>
                                     {% else %}
-                                    <span class="badge badge-danger"><i class="fas fa-arrow-up"></i> {{ t('صرف') }}</span>
+                                    <span class="badge badge-danger"><i class="fas fa-arrow-up"></i> {{ t('payment_out') }}</span>
                                     {% endif %}
                                 </td>
-                                <td>{{ trans.date }}</td>
+                                <td>{{ trans.date|date:'Y-m-d' if trans.date else '-' }}</td>
                                 <td class="font-weight-bold">{{ format_currency(trans.amount) }}</td>
-                                <td>{{ trans.method }}</td>
-                                <td>{{ trans.notes }}</td>
+                                <td>{{ trans.method|e }}</td>
+                                <td>{{ trans.notes|e }}</td>
                             </tr>
                             {% else %}
-                            <tr><td colspan="6" class="text-center text-muted">لا {{ t('توجد') }} {{ t('حركات') }} {{ t('مالية') }}</td></tr>
+                            <tr><td colspan="6" class="text-center text-muted">{{ t('no_financial_transactions') }}</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
