@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ t('طلبات') }} {{ t('Store') }}{% endblock %}
+{% block title %}{{ t('orders') }} {{ t('Store') }}{% endblock %}
 
 
 
@@ -8,7 +8,7 @@
 
 <div class="d-flex justify-content-between align-items-center flex-wrap">
 
-  <h1 class="mb-0"><i class="fas fa-receipt mr-2"></i>{{ t('طلبات') }} {{ t('Store') }} {{ t('Email_3') }}</h1>
+  <h1 class="mb-0"><i class="fas fa-receipt mr-2"></i>{{ t('orders') }} {{ t('Store') }} {{ t('ecommerce') }}</h1>
 
   <a href="{{ url_for('store.admin_index') }}" class="btn btn-secondary">{{ t('Back') }}</a>
 
@@ -30,7 +30,7 @@
 
       <div class="info-box-content">
 
-        <span class="info-box-text">{{ t('بانتظار') }} {{ t('Confirm_2') }}</span>
+        <span class="info-box-text">{{ t('awaiting_confirm') }}</span>
 
         <span class="info-box-number">{{ order_counts.pending }}</span>
 
@@ -66,7 +66,7 @@
 
       <div class="info-box-content">
 
-        <span class="info-box-text">{{ t('Cancelled_2') }}</span>
+        <span class="info-box-text">{{ t('cancelled') }}</span>
 
         <span class="info-box-number">{{ order_counts.cancelled }}</span>
 
@@ -84,7 +84,7 @@
 
       <div class="info-box-content">
 
-        <span class="info-box-text">{{ t('Total_2') }} {{ t('الطلبات') }}</span>
+        <span class="info-box-text">{{ t('total_orders') }}</span>
 
         <span class="info-box-number">{{ order_counts.total }}</span>
 
@@ -106,11 +106,11 @@
 
       <a href="{{ url_for('store.admin_orders') }}" class="btn btn-{% if not status_filter %}primary{% else %}outline-secondary{% endif %}">{{ t('All') }}</a>
 
-      <a href="{{ url_for('store.admin_orders', status='pending') }}" class="btn btn-{% if status_filter == 'pending' %}warning{% else %}outline-secondary{% endif %}">{{ t('معلّقة') }}</a>
+      <a href="{{ url_for('store.admin_orders', status='pending') }}" class="btn btn-{% if status_filter == 'pending' %}warning{% else %}outline-secondary{% endif %}">{{ t('pending') }}</a>
 
       <a href="{{ url_for('store.admin_orders', status='confirmed') }}" class="btn btn-{% if status_filter == 'confirmed' %}success{% else %}outline-secondary{% endif %}">{{ t('Confirmed') }}</a>
 
-      <a href="{{ url_for('store.admin_orders', status='cancelled') }}" class="btn btn-{% if status_filter == 'cancelled' %}secondary{% else %}outline-secondary{% endif %}">{{ t('Cancelled_2') }}</a>
+      <a href="{{ url_for('store.admin_orders', status='cancelled') }}" class="btn btn-{% if status_filter == 'cancelled' %}secondary{% else %}outline-secondary{% endif %}">{{ t('cancelled') }}</a>
 
     </div>
 
@@ -130,17 +130,17 @@
 
         <tr>
 
-          <th>{{ t('رقم') }} {{ t('الطلب') }}</th>
+          <th>{{ t('order_number') }}</th>
 
           <th>{{ t('Date') }}</th>
 
           <th>{{ t('Customer') }}</th>
 
-          <th>{{ t('طريقة') }} {{ t('Payment_2') }}</th>
+          <th>{{ t('payment_method') }}</th>
 
-          <th>{{ t('Total_3') }}</th>
+          <th>{{ t('total') }}</th>
 
-          <th>{{ t('Payment_2') }}</th>
+          <th>{{ t('payment') }}</th>
 
           <th>{{ t('Status') }}</th>
 
@@ -164,25 +164,25 @@
 
           <td>
 
-            {{ order.customer.name if order.customer else '—' }}
+            {{ order.customer.name | e if order.customer else '—' }}
 
-            {% if order.customer and order.customer.phone %}<br><small class="text-muted">{{ order.customer.phone }}</small>{% endif %}
+            {% if order.customer and order.customer.phone %}<br><small class="text-muted">{{ order.customer.phone | e }}</small>{% endif %}
 
           </td>
 
           <td>
 
-            {% if pm %}<i class="{{ pm.icon }} mr-1"></i>{{ pm.name_ar }}{% else %}<code>{{ order.checkout_payment_method or 'cod' }}</code>{% endif %}
+            {% if pm %}<i class="{{ pm.icon }} mr-1"></i>{{ pm.name_ar }}{% else %}<code>{{ order.checkout_payment_method or t('cod') }}</code>{% endif %}
 
           </td>
 
-          <td>{{ '%.2f'|format(order.total_amount) }} {{ order.currency }}</td>
+          <td>{{ format_currency(order.total_amount, order.currency) }}</td>
 
           <td>
 
             <span class="badge badge-{% if order.payment_status == 'paid' %}success{% elif order.payment_status == 'partial' %}info{% else %}light border{% endif %}">
 
-              {{ order.payment_status or 'unpaid' }}
+              {{ order.payment_status or t('unpaid') }}
 
             </span>
 
@@ -206,7 +206,7 @@
 
             {% if order.status == 'pending' %}
 
-            <form class="needs-validation d-inline" method="post" action="{{ url_for('store.admin_order_confirm', order_id=order.id) }}" data-action="confirm-order-number" data-confirm-prefix="{{ t('Confirm') }} {{ t('الطلب') }} " data-order-number="{{ order.sale_number }}" data-confirm-suffix="؟">
+            <form class="needs-validation d-inline" method="post" action="{{ url_for('store.admin_order_confirm', order_id=order.id) }}" data-action="confirm-order-number" data-confirm-message="{{ t('confirm_order_number', number=order.sale_number) }}">
 
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
@@ -222,7 +222,7 @@
 
         {% else %}
 
-        <tr><td colspan="8" class="text-center text-muted py-4">لا {{ t('طلبات') }} {{ t('أونلاين') }} بعد</td></tr>
+        <tr><td colspan="8" class="text-center text-muted py-4">{{ t('no_online_orders_yet') }}</td></tr>
 
         {% endfor %}
 
@@ -239,9 +239,9 @@
     <nav>
 
       <ul class="pagination pagination-sm mb-0 justify-content-center">{%- if pagination.has_prev %}
-        <li class="page-item"><a class="page-link" href="{{ url_for('store.admin_orders', page=pagination.prev_num, status=status_filter or none) }}">{{ t('السابق') }}</a></li>{%- endif %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('store.admin_orders', page=pagination.prev_num, status=status_filter or none) }}">{{ t('previous') }}</a></li>{%- endif %}
         <li class="page-item disabled"><span class="page-link">{{ pagination.page }} / {{ pagination.pages }}</span></li>{%- if pagination.has_next %}
-        <li class="page-item"><a class="page-link" href="{{ url_for('store.admin_orders', page=pagination.next_num, status=status_filter or none) }}">{{ t('التالي') }}</a></li>{%- endif %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('store.admin_orders', page=pagination.next_num, status=status_filter or none) }}">{{ t('next') }}</a></li>{%- endif %}
       </ul>
 
     </nav>
@@ -256,7 +256,7 @@
 
   <i class="fas fa-info-circle"></i>
 
-  {{ t('الطلبات') }} {{ t('New_4') }} لا {{ t('تخصم') }} {{ t('Inventory') }} حتى {{ t('Confirm_2') }} — عند {{ t('Confirm_2') }} {{ t('يُرحّل') }} {{ t('Inventory') }} {{ t('والمحاسبة') }} {{ t('تلقائياً') }}.
+  {{ t('new_orders_dont_deduct_inventory') }}
 
 </p>
 
@@ -267,8 +267,7 @@
 document.addEventListener('submit', (e) => {
   const el = e.target.closest('[data-action="confirm-order-number"]');
   if (!el) return;
-  if (!confirm(el.dataset.confirmPrefix + el.dataset.orderNumber + el.dataset.confirmSuffix)) e.preventDefault();
+  if (!confirm(el.dataset.confirmMessage)) e.preventDefault();
 });
 </script>
 {% endblock %}
-

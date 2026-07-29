@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ t('طلب') }} {{ order.sale_number }}{% endblock %}
+{% block title %}{{ t('order') }} {{ order.sale_number }}{% endblock %}
 
 
 
@@ -10,7 +10,7 @@
 
   <div>
 
-    <h1 class="mb-0"><i class="fas fa-file-invoice mr-2"></i>{{ t('طلب') }} <code>{{ order.sale_number }}</code></h1>
+    <h1 class="mb-0"><i class="fas fa-file-invoice mr-2"></i>{{ t('order') }} <code>{{ order.sale_number }}</code></h1>
 
     <p class="text-muted mb-0 small">{{ status_label }} · {{ order.sale_date.strftime('%Y-%m-%d %H:%M') if order.sale_date else '' }}</p>
 
@@ -18,10 +18,10 @@
 
   <div class="mt-2 mt-md-0">
 
-    <a href="{{ url_for('store.admin_orders') }}" class="btn btn-secondary">كل {{ t('الطلبات') }}</a>
+    <a href="{{ url_for('store.admin_orders') }}" class="btn btn-secondary">{{ t('all_orders') }}</a>
 
     {% if current_user.has_permission('manage_sales') %}
-    <a href="{{ url_for('sales.view', id=order.id) }}" class="btn btn-outline-primary">{{ t('View') }} في {{ t('Sales') }}</a>
+    <a href="{{ url_for('sales.view', id=order.id) }}" class="btn btn-outline-primary">{{ t('View') }} {{ t('in') }} {{ t('Sales') }}</a>
     {% endif %}
 
   </div>
@@ -38,7 +38,7 @@
 
 <div class="alert alert-warning">
 
-  <strong><i class="fas fa-exclamation-triangle"></i> {{ t('Inventory_2') }} غير {{ t('كافٍ') }} {{ t('for Confirm') }}:</strong>
+  <strong><i class="fas fa-exclamation-triangle"></i> {{ t('inventory_not_sufficient_for_confirm') }}:</strong>
 
   <ul class="mb-0 mt-2">
 
@@ -58,7 +58,7 @@
 
     <div class="card">
 
-      <div class="card-header"><h3 class="card-title mb-0">{{ t('بنود') }} {{ t('الطلب') }}</h3></div>
+      <div class="card-header"><h3 class="card-title mb-0">{{ t('order_items') }}</h3></div>
 
       <div class="card-body table-responsive p-0">
 
@@ -74,7 +74,7 @@
 
               <th class="text-right">{{ t('Price') }}</th>
 
-              <th class="text-right">{{ t('Total_3') }}</th>
+              <th class="text-right">{{ t('total') }}</th>
 
             </tr>
 
@@ -90,9 +90,9 @@
 
               <td class="text-center">{{ '%.0f'|format(line.quantity) if line.quantity == line.quantity|int else line.quantity }}</td>
 
-              <td class="text-right">{{ '%.2f'|format(line.unit_price) }}</td>
+              <td class="text-right">{{ format_currency(line.unit_price) }}</td>
 
-              <td class="text-right">{{ '%.2f'|format(line.line_total) }}</td>
+              <td class="text-right">{{ format_currency(line.line_total) }}</td>
 
             </tr>
 
@@ -104,9 +104,9 @@
 
             <tr>
 
-              <th colspan="3" class="text-right">{{ t('Total') }}</th>
+              <th colspan="3" class="text-right">{{ t('Subtotal') }}</th>
 
-              <th class="text-right">{{ '%.2f'|format(order.subtotal or 0) }} {{ order.currency }}</th>
+              <th class="text-right">{{ format_currency(order.subtotal or 0, order.currency) }}</th>
 
             </tr>
 
@@ -114,9 +114,9 @@
 
             <tr>
 
-              <td colspan="3" class="text-right">{{ t('Discount_2') }}</td>
+              <td colspan="3" class="text-right">{{ t('discount') }}</td>
 
-              <td class="text-right">-{{ '%.2f'|format(order.discount_amount) }}</td>
+              <td class="text-right">-{{ format_currency(order.discount_amount, order.currency) }}</td>
 
             </tr>
 
@@ -126,9 +126,9 @@
 
             <tr>
 
-              <td colspan="3" class="text-right">{{ t('Tax_2') }}</td>
+              <td colspan="3" class="text-right">{{ t('tax') }}</td>
 
-              <td class="text-right">{{ '%.2f'|format(order.tax_amount) }}</td>
+              <td class="text-right">{{ format_currency(order.tax_amount, order.currency) }}</td>
 
             </tr>
 
@@ -136,9 +136,9 @@
 
             <tr class="table-active">
 
-              <th colspan="3" class="text-right">{{ t('Total_3') }}</th>
+              <th colspan="3" class="text-right">{{ t('total') }}</th>
 
-              <th class="text-right">{{ '%.2f'|format(order.total_amount) }} {{ order.currency }}</th>
+              <th class="text-right">{{ format_currency(order.total_amount, order.currency) }}</th>
 
             </tr>
 
@@ -158,7 +158,7 @@
 
       <div class="card-header"><h3 class="card-title mb-0">{{ t('Notes') }}</h3></div>
 
-      <div class="card-body"><pre class="mb-0 erp-pre-wrap erp-font-inherit">{{ order.notes }}</pre></div>
+      <div class="card-body"><pre class="mb-0 erp-pre-wrap erp-font-inherit">{{ order.notes | e }}</pre></div>
 
     </div>
 
@@ -176,11 +176,11 @@
 
       <div class="card-body">
 
-        <p class="mb-1"><strong>{{ order.customer.name if order.customer else '—' }}</strong></p>
+        <p class="mb-1"><strong>{{ order.customer.name | e if order.customer else '—' }}</strong></p>
 
-        {% if order.customer and order.customer.phone %}<p class="mb-1"><i class="fas fa-phone mr-1"></i>{{ order.customer.phone }}</p>{% endif %}
+        {% if order.customer and order.customer.phone %}<p class="mb-1"><i class="fas fa-phone mr-1"></i>{{ order.customer.phone | e }}</p>{% endif %}
 
-        {% if order.customer and order.customer.address %}<p class="mb-0 text-muted small">{{ order.customer.address }}</p>{% endif %}
+        {% if order.customer and order.customer.address %}<p class="mb-0 text-muted small">{{ order.customer.address | e }}</p>{% endif %}
 
       </div>
 
@@ -190,31 +190,31 @@
 
     <div class="card">
 
-      <div class="card-header"><h3 class="card-title mb-0">{{ t('Payment_2') }} {{ t('Status') }}</h3></div>
+      <div class="card-header"><h3 class="card-title mb-0">{{ t('payment') }} {{ t('Status') }}</h3></div>
 
       <div class="card-body">
 
         <dl class="row mb-0 small">
 
-          <dt class="col-5">{{ t('طريقة') }} {{ t('Payment_2') }}</dt>
+          <dt class="col-5">{{ t('payment_method') }}</dt>
 
           <dd class="col-7">
 
-            {% if pay_method %}<i class="{{ pay_method.icon }}"></i> {{ pay_method.name_ar }}{% else %}{{ order.checkout_payment_method or 'cod' }}{% endif %}
+            {% if pay_method %}<i class="{{ pay_method.icon }}"></i> {{ pay_method.name_ar }}{% else %}{{ order.checkout_payment_method or t('cod') }}{% endif %}
 
           </dd>
 
-          <dt class="col-5">{{ t('Status_2') }} {{ t('الطلب') }}</dt>
+          <dt class="col-5">{{ t('order_status') }}</dt>
 
           <dd class="col-7">{{ status_label }}</dd>
 
-          <dt class="col-5">{{ t('Status_2') }} {{ t('Payment_2') }}</dt>
+          <dt class="col-5">{{ t('payment_status') }}</dt>
 
-          <dd class="col-7">{{ order.payment_status or 'unpaid' }}</dd>
+          <dd class="col-7">{{ order.payment_status or t('unpaid') }}</dd>
 
           <dt class="col-5">{{ t('Inventory') }}</dt>
 
-          <dd class="col-7">{% if is_fulfilled %}<span class="text-success">{{ t('مُخصَم') }}</span>{% else %}<span class="text-warning">{{ t('Reserved') }} — {{ t('يُخصَم') }} عند {{ t('Confirm_2') }}</span>{% endif %}</dd>
+          <dd class="col-7">{% if is_fulfilled %}<span class="text-success">{{ t('deducted') }}</span>{% else %}<span class="text-warning">{{ t('Reserved') }} — {{ t('will_be_deducted_upon_confirm') }}</span>{% endif %}</dd>
 
         </dl>
 
@@ -234,7 +234,7 @@
 
             <input type="checkbox" class="custom-control-input" id="mark_paid" name="mark_paid" aria-label="mark paid">
 
-            <label class="custom-control-label" for="mark_paid">{{ t('تسجيل') }} {{ t('Payment_2') }} مع {{ t('Confirm_2') }}</label>
+            <label class="custom-control-label" for="mark_paid">{{ t('record_payment_with_confirm') }}</label>
 
           </div>
 
@@ -244,25 +244,25 @@
 
             <input type="checkbox" class="custom-control-input" id="mark_paid_cod" name="mark_paid" aria-label="mark paid">
 
-            <label class="custom-control-label" for="mark_paid_cod">{{ t('استلام') }} {{ t('Cash_5') }} (COD) — {{ t('تسجيل') }} {{ t('Payment_2') }}</label>
+            <label class="custom-control-label" for="mark_paid_cod">{{ t('receive_cash_record_payment') }}</label>
 
           </div>
 
           {% endif %}
 
-          <button type="submit" class="btn btn-success btn-block" {% if stock_issues %}disabled title="{{ t('Inventory') }} غير {{ t('كافٍ') }}" {% endif %} >
+          <button type="submit" class="btn btn-success btn-block" {% if stock_issues %}disabled title="{{ t('insufficient_inventory') }}" {% endif %} >
 
-            <i class="fas fa-check mr-1"></i>{{ t('Confirm') }} {{ t('الطلب') }}
+            <i class="fas fa-check mr-1"></i>{{ t('confirm_order') }}
 
           </button>
 
         </form>
 
-        <form method="post" action="{{ url_for('store.admin_order_cancel', order_id=order.id) }}" data-action="confirm-order-number" data-confirm-prefix="{{ t('Cancel') }} {{ t('الطلب') }} " data-order-number="{{ order.sale_number }}" data-confirm-suffix="؟">
+        <form method="post" action="{{ url_for('store.admin_order_cancel', order_id=order.id) }}" data-action="confirm-order-number" data-confirm-message="{{ t('confirm_cancel_order', number=order.sale_number) }}">
 
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
-          <button type="submit" class="btn btn-outline-danger btn-block"><i class="fas fa-times mr-1"></i>{{ t('Cancel') }} {{ t('الطلب') }}</button>
+          <button type="submit" class="btn btn-outline-danger btn-block"><i class="fas fa-times mr-1"></i>{{ t('cancel_order') }}</button>
 
         </form>
 
@@ -272,11 +272,11 @@
 
       <div class="card-footer">
 
-        <form method="post" action="{{ url_for('store.admin_order_cancel', order_id=order.id) }}" data-action="confirm-submit" data-confirm-message="{{ t('Cancel') }} {{ t('طلب') }} {{ t('Confirmed_2') }} {{ t('سيُعيد') }} {{ t('Inventory') }} {{ t('ويعكس') }} {{ t('القيود') }} — {{ t('متابعة_2') }}">
+        <form method="post" action="{{ url_for('store.admin_order_cancel', order_id=order.id) }}" data-action="confirm-submit" data-confirm-message="{{ t('cancel_confirmed_order_warning') }}">
 
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
-          <button type="submit" class="btn btn-outline-danger btn-block"><i class="fas fa-ban mr-1"></i>{{ t('Cancel') }} (مع {{ t('عكس') }} {{ t('Inventory') }})</button>
+          <button type="submit" class="btn btn-outline-danger btn-block"><i class="fas fa-ban mr-1"></i>{{ t('cancel_with_reverse_inventory') }}</button>
 
         </form>
 
@@ -286,7 +286,7 @@
 
       {% if wa_admin_url %}
       <div class="card-footer border-top-0 pt-0">
-        <a href="{{ wa_admin_url }}" target="_blank" rel="noopener" class="btn btn-success btn-block"><i class="fab fa-whatsapp mr-1"></i>{{ t('مشاركة') }} {{ t('الطلب') }} {{ t('عبر') }} {{ t('واتساب') }}</a>
+        <a href="{{ wa_admin_url }}" target="_blank" rel="noopener" class="btn btn-success btn-block"><i class="fab fa-whatsapp mr-1"></i>{{ t('share_order_via_whatsapp') }}</a>
       </div>
       {% endif %}
 
@@ -307,9 +307,8 @@ document.addEventListener('submit', (e) => {
   if (action === 'confirm-submit') {
     if (!confirm(el.dataset.confirmMessage)) e.preventDefault();
   } else if (action === 'confirm-order-number') {
-    if (!confirm(el.dataset.confirmPrefix + el.dataset.orderNumber + el.dataset.confirmSuffix)) e.preventDefault();
+    if (!confirm(el.dataset.confirmMessage)) e.preventDefault();
   }
 });
 </script>
 {% endblock %}
-

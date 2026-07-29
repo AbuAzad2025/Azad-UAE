@@ -1,20 +1,20 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('Customers_3') }} {{ t('Store') }} {{ t('المسجّلون') }}{% endblock %}
+{% block title %}{{ t('customers') }} {{ t('Store') }} {{ t('registered') }}{% endblock %}
 {% block page_title %}
-<h1 class="mb-0"><i class="fas fa-user-friends mr-2"></i>{{ t('Customers_3') }} {{ t('Store') }} ({{ t('Accounts_2') }} {{ t('أونلاين') }})</h1>
+<h1 class="mb-0"><i class="fas fa-user-friends mr-2"></i>{{ t('customers') }} {{ t('Store') }} ({{ t('accounts') }} {{ t('online') }})</h1>
 {% endblock %}
 {% block content %}
-<div class="alert alert-info"><i class="fas fa-info-circle mr-1"></i> {{ t('الزوار') }} غير {{ t('المسجّلين') }} {{ t('يتصفحون') }} فقط {{ t('ويطلبون') }} {{ t('عبر') }} {{ t('واتساب') }}. هنا من {{ t('سجّل') }} {{ t('حساباً') }} {{ t('ويمكنه') }} {{ t('Purchase_2') }}.</div>
+<div class="alert alert-info"><i class="fas fa-info-circle mr-1"></i> {{ t('guests_browse_only') }}</div>
 <div class="card">
   <div class="card-body table-responsive p-0">
     <table class="table table-hover mb-0">
-      <thead><tr><th>{{ t('Name') }}</th><th>Email</th><th>{{ t('Phone') }}</th><th>{{ t('History') }} {{ t('التسجيل') }}</th><th>{{ t('Last') }} {{ t('Sign In') }}</th><th></th></tr></thead>
+      <thead><tr><th>{{ t('Name') }}</th><th>Email</th><th>{{ t('Phone') }}</th><th>{{ t('History') }} {{ t('registration') }}</th><th>{{ t('Last') }} {{ t('Sign In') }}</th><th></th></tr></thead>
       <tbody>
         {% for acc in accounts %}
         <tr>
-          <td>{{ acc.name }}</td>
-          <td><code>{{ acc.email }}</code></td>
-          <td>{{ acc.phone or '—' }}</td>
+          <td>{{ acc.name | e }}</td>
+          <td><code>{{ acc.email | e }}</code></td>
+          <td>{{ acc.phone | e or '—' }}</td>
           <td>{{ acc.created_at.strftime('%Y-%m-%d') if acc.created_at else '—' }}</td>
           <td>{{ acc.last_login_at.strftime('%Y-%m-%d %H:%M') if acc.last_login_at else '—' }}</td>
           {% if current_user.has_permission('manage_customers') %}
@@ -22,7 +22,7 @@
           {% endif %}
         </tr>
         {% else %}
-        <tr><td colspan="6" class="text-center text-muted py-4">لا {{ t('Accounts_2') }} بعد</td></tr>
+        <tr><td colspan="6" class="text-center text-muted py-4">{{ t('no_accounts_yet') }}</td></tr>
         {% endfor %}
       </tbody>
     </table>

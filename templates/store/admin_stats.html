@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ t('إحصائيات') }} {{ t('Store') }}{% endblock %}
+{% block title %}{{ t('statistics') }} {{ t('Store') }}{% endblock %}
 
 
 
@@ -8,7 +8,7 @@
 
 <div class="d-flex justify-content-between align-items-center flex-wrap">
 
-  <h1 class="mb-0"><i class="fas fa-chart-line mr-2"></i>{{ t('إحصائيات') }} {{ t('Store') }}</h1>
+  <h1 class="mb-0"><i class="fas fa-chart-line mr-2"></i>{{ t('statistics') }} {{ t('Store') }}</h1>
 
   <a href="{{ url_for('store.admin_index') }}" class="btn btn-secondary">{{ t('Back') }}</a>
 
@@ -22,13 +22,13 @@
 
 <div class="row">
 
-  <div class="col-md-3 col-sm-6"><div class="info-box"><span class="info-box-icon bg-primary"><i class="fas fa-shopping-bag"></i></span><div class="info-box-content"><span class="info-box-text">{{ t('طلبات') }} {{ t('Today') }}</span><span class="info-box-number">{{ stats.orders_today }}</span></div></div></div>
+  <div class="col-md-3 col-sm-6"><div class="info-box"><span class="info-box-icon bg-primary"><i class="fas fa-shopping-bag"></i></span><div class="info-box-content"><span class="info-box-text">{{ t('orders_today') }}</span><span class="info-box-number">{{ stats.orders_today }}</span></div></div></div>
 
-  <div class="col-md-3 col-sm-6"><div class="info-box"><span class="info-box-icon bg-success"><i class="fas fa-coins"></i></span><div class="info-box-content"><span class="info-box-text">{{ t('Revenue_3') }} {{ t('Today') }}</span><span class="info-box-number">{{ '%.2f'|format(stats.revenue_today) }}</span></div></div></div>
+  <div class="col-md-3 col-sm-6"><div class="info-box"><span class="info-box-icon bg-success"><i class="fas fa-coins"></i></span><div class="info-box-content"><span class="info-box-text">{{ t('revenue_today') }}</span><span class="info-box-number">{{ format_currency(stats.revenue_today) }}</span></div></div></div>
 
-  <div class="col-md-3 col-sm-6"><div class="info-box"><span class="info-box-icon bg-info"><i class="fas fa-calendar-week"></i></span><div class="info-box-content"><span class="info-box-text">{{ t('طلبات') }} 7 {{ t('Days') }}</span><span class="info-box-number">{{ stats.orders_week }}</span></div></div></div>
+  <div class="col-md-3 col-sm-6"><div class="info-box"><span class="info-box-icon bg-info"><i class="fas fa-calendar-week"></i></span><div class="info-box-content"><span class="info-box-text">{{ t('orders_last_7_days') }}</span><span class="info-box-number">{{ stats.orders_week }}</span></div></div></div>
 
-  <div class="col-md-3 col-sm-6"><div class="info-box"><span class="info-box-icon bg-warning"><i class="fas fa-calendar-alt"></i></span><div class="info-box-content"><span class="info-box-text">{{ t('Revenue_3') }} 30 {{ t('يوم') }}</span><span class="info-box-number">{{ '%.2f'|format(stats.revenue_month) }}</span></div></div></div>
+  <div class="col-md-3 col-sm-6"><div class="info-box"><span class="info-box-icon bg-warning"><i class="fas fa-calendar-alt"></i></span><div class="info-box-content"><span class="info-box-text">{{ t('revenue_last_30_days') }}</span><span class="info-box-number">{{ format_currency(stats.revenue_month) }}</span></div></div></div>
 
 </div>
 
@@ -40,13 +40,13 @@
 
     <div class="card">
 
-      <div class="card-header"><h3 class="card-title mb-0">{{ t('أكثر') }} {{ t('Products') }} {{ t('مبيعاً') }}</h3></div>
+      <div class="card-header"><h3 class="card-title mb-0">{{ t('top_selling_products') }}</h3></div>
 
       <div class="card-body table-responsive p-0">
 
         <table class="table table-sm mb-0">
 
-          <thead><tr><th>{{ t('Product') }}</th><th>{{ t('Quantity') }}</th><th>{{ t('Revenue_2') }}</th></tr></thead>
+          <thead><tr><th>{{ t('Product') }}</th><th>{{ t('Quantity') }}</th><th>{{ t('revenue') }}</th></tr></thead>
 
           <tbody>
 
@@ -58,13 +58,13 @@
 
               <td>{{ row.quantity|int if row.quantity == row.quantity|int else row.quantity }}</td>
 
-              <td>{{ '%.2f'|format(row.total) }}</td>
+              <td>{{ format_currency(row.total) }}</td>
 
             </tr>
 
             {% else %}
 
-            <tr><td colspan="3" class="text-center text-muted py-3">لا {{ t('Data_2') }} بعد</td></tr>
+            <tr><td colspan="3" class="text-center text-muted py-3">{{ t('no_data_yet') }}</td></tr>
 
             {% endfor %}
 
@@ -80,7 +80,7 @@
 
     <div class="card">
 
-      <div class="card-header"><h3 class="card-title mb-0">{{ t('طلبات') }} {{ t('يومية') }} (14 {{ t('يوم') }})</h3></div>
+      <div class="card-header"><h3 class="card-title mb-0">{{ t('daily_orders_14_days') }}</h3></div>
 
       <div class="card-body">
 
@@ -93,7 +93,7 @@
 
         {% else %}
 
-        <p class="text-muted mb-0">لا {{ t('طلبات') }} في {{ t('Period_2') }}.</p>
+        <p class="text-muted mb-0">{{ t('no_orders_in_period') }}</p>
 
         {% endif %}
 
@@ -109,13 +109,13 @@
 
     <div class="card card-outline card-warning">
 
-      <div class="card-header"><h3 class="card-title mb-0">{{ t('Alert_2') }} {{ t('Inventory_2') }} {{ t('Low_2') }} (WH_O)</h3></div>
+      <div class="card-header"><h3 class="card-title mb-0">{{ t('low_stock_alert') }} (WH_O)</h3></div>
 
       <div class="card-body p-0">
 
         <table class="table table-sm mb-0">
 
-          <thead><tr><th>{{ t('Product') }}</th><th>{{ t('المتوفر') }}</th></tr></thead>
+          <thead><tr><th>{{ t('Product') }}</th><th>{{ t('available') }}</th></tr></thead>
 
           <tbody>
 
@@ -131,7 +131,7 @@
 
             {% else %}
 
-            <tr><td colspan="2" class="text-center text-muted py-3">{{ t('Inventory') }} {{ t('Good') }} ✓</td></tr>
+            <tr><td colspan="2" class="text-center text-muted py-3">{{ t('inventory_good') }} <i class="fas fa-check text-success"></i></td></tr>
 
             {% endfor %}
 
@@ -141,7 +141,7 @@
 
       </div>
 
-      <div class="card-footer"><a href="{{ url_for('store.admin_transfer') }}" class="btn btn-warning">{{ t('Transfer') }} {{ t('Inventory_2') }}</a></div>
+      <div class="card-footer"><a href="{{ url_for('store.admin_transfer') }}" class="btn btn-warning">{{ t('Transfer') }} {{ t('inventory') }}</a></div>
 
     </div>
 
@@ -153,13 +153,13 @@
 
         <dl class="row mb-0 small">
 
-          <dt class="col-6">{{ t('معلّقة') }}</dt><dd class="col-6">{{ stats.pending }}</dd>
+          <dt class="col-6">{{ t('pending') }}</dt><dd class="col-6">{{ stats.pending }}</dd>
 
           <dt class="col-6">{{ t('Confirmed') }}</dt><dd class="col-6">{{ stats.confirmed }}</dd>
 
-          <dt class="col-6">{{ t('Cancelled_2') }}</dt><dd class="col-6">{{ stats.cancelled }}</dd>
+          <dt class="col-6">{{ t('cancelled') }}</dt><dd class="col-6">{{ stats.cancelled }}</dd>
 
-          <dt class="col-6">{{ t('Total_2') }}</dt><dd class="col-6">{{ stats.total_orders }}</dd>
+          <dt class="col-6">{{ t('total') }}</dt><dd class="col-6">{{ stats.total_orders }}</dd>
 
         </dl>
 
@@ -172,4 +172,3 @@
 </div>
 
 {% endblock %}
-

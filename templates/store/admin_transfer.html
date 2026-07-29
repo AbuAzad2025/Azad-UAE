@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('نقل المخزون') }} — {{ t('المتجر') }}{% endblock %}
+{% block title %}{{ t('inventory_transfer') }} — {{ t('store') }}{% endblock %}
 
 {% block page_title %}
-<h1 class="mb-0"><i class="fas fa-exchange-alt ml-2"></i>{{ _('نقل المخزون — المتجر ↔ المستودعات') }}</h1>
+<h1 class="mb-0"><i class="fas fa-exchange-alt ms-2"></i>{{ t('inventory_transfer_title') }}</h1>
 {% endblock %}
 
 {% block content %}
@@ -10,40 +10,40 @@
   <div class="col-lg-8">
     <div class="card card-outline card-success">
       <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-exchange-alt ml-1"></i>{{ _('تحويل مخزون') }}</h3>
+        <h3 class="card-title"><i class="fas fa-exchange-alt ms-1"></i>{{ t('transfer_inventory') }}</h3>
       </div>
       <form method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="card-body">
           <div class="form-group">
-            <label class="font-weight-bold">{{ _('اتجاه النقل') }}</label>
+            <label class="font-weight-bold">{{ t('transfer_direction') }}</label>
             <div>
               <label class="radio-inline ml-3">
                 <input type="radio" name="direction" value="to_online" checked>
-                <i class="fas fa-arrow-right text-info"></i> {{ _('إلى الأونلاين') }}
+                <i class="fas fa-arrow-right text-info"></i> {{ t('to_online') }}
               </label>
               <label class="radio-inline">
                 <input type="radio" name="direction" value="from_online">
-                <i class="fas fa-arrow-left text-warning"></i> {{ _('من الأونلاين') }}
+                <i class="fas fa-arrow-left text-warning"></i> {{ t('from_online') }}
               </label>
             </div>
           </div>
 
           <div class="form-group">
-            <label class="font-weight-bold" for="source_warehouse_id" id="wh_label">{{ _('المستودع الفعلي') }}</label>
+            <label class="font-weight-bold" for="source_warehouse_id" id="wh_label">{{ t('physical_warehouse') }}</label>
             <select name="source_warehouse_id" id="source_warehouse_id" class="form-control" required data-action="filter-by-warehouse">
-              <option value="">{{ _('— اختر المستودع —') }}</option>
+              <option value="">{{ t('select_warehouse') }}</option>
               {% for wh in physical_warehouses %}
               <option value="{{ wh.id }}">{{ wh.name_ar or wh.name }} ({{ wh.code or wh.id }})</option>
               {% endfor %}
             </select>
-            <small class="form-text text-muted" id="wh_count"></small>
+            <small class="form-text text-muted" id="wh_count" data-i18n-products-with-stock="{{ t('products_with_stock') }}"></small>
           </div>
 
           <div class="form-group">
-            <label class="font-weight-bold" for="product_id">{{ _('المنتج') }}</label>
-            <select name="product_id" id="product_id" class="form-control" required size="10">
-              <option value="">{{ _('— اختر مستودعاً أولاً —') }}</option>
+            <label class="font-weight-bold" for="product_id">{{ t('product') }}</label>
+            <select name="product_id" id="product_id" class="form-control" required size="10" data-i18n-select-product="{{ t('select_product') }}" data-i18n-select-warehouse-first="{{ t('select_warehouse_first') }}">
+              <option value="">{{ t('select_warehouse_first') }}</option>
               {% for product in products %}
               <option value="{{ product.id }}"
                 {% for wh in physical_warehouses %}
@@ -53,22 +53,22 @@
               </option>
               {% endfor %}
             </select>
-            <small class="form-text text-muted" id="product_stock_detail">{{ _('اختر مستودعاً لعرض المنتجات المتوفرة') }}</small>
+            <small class="form-text text-muted" id="product_stock_detail" data-i18n-products-available="{{ t('products_available') }}">{{ t('select_warehouse_first') }}</small>
           </div>
 
           <div class="form-group">
-            <label class="font-weight-bold" for="input_quantity">{{ _('الكمية') }}</label>
-            <input type="number" name="quantity" class="form-control" min="0.001" step="any" required id="input_quantity" placeholder="{{ _('مثال: 10') }}">
+            <label class="font-weight-bold" for="input_quantity">{{ t('quantity') }}</label>
+            <input type="number" name="quantity" class="form-control" min="0.001" step="any" required id="input_quantity" placeholder="{{ t('example_quantity') }}">
           </div>
 
           <div class="form-group">
-            <label for="notes">{{ _('ملاحظة (اختياري)') }}</label>
+            <label for="notes">{{ t('note_optional') }}</label>
             <textarea name="notes" id="notes" class="form-control" rows="2" maxlength="500"></textarea>
           </div>
         </div>
         <div class="card-footer">
-          <button type="submit" class="btn btn-success px-4"><i class="fas fa-check ml-1"></i>{{ _('تنفيذ النقل') }}</button>
-          <a href="{{ url_for('store.admin_catalog') }}" class="btn btn-outline-secondary">{{ _('رجوع') }}</a>
+          <button type="submit" class="btn btn-success px-4"><i class="fas fa-check ms-1"></i>{{ t('execute_transfer') }}</button>
+          <a href="{{ url_for('store.admin_catalog') }}" class="btn btn-outline-secondary">{{ t('back') }}</a>
         </div>
       </form>
     </div>
@@ -77,15 +77,15 @@
   <div class="col-lg-4">
     <div class="card card-outline card-info">
       <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-cloud ml-1"></i>{{ _('مستودع الأونلاين') }}</h3>
+        <h3 class="card-title"><i class="fas fa-cloud ms-1"></i>{{ t('online_warehouse') }}</h3>
       </div>
       <div class="card-body">
         <p><strong>{{ online_warehouse.name_ar or online_warehouse.name }}</strong></p>
         <p class="text-muted small">الرمز: {{ online_warehouse.code }}</p>
         <hr>
         <p class="small text-muted mb-0">
-          <i class="fas fa-info-circle ml-1"></i>
-          {{ _('المتجر يقرأ فقط من هذا المستودع.') }}
+          <i class="fas fa-info-circle ms-1"></i>
+          {{ t('store_reads_from_warehouse') }}
         </p>
       </div>
     </div>
@@ -110,8 +110,8 @@ function filterByWarehouse() {
   for (let i = 0; i < sel.options.length; i++) {
     const opt = sel.options[i];
     if (!opt.value) {
-      if (whId) opt.text = '— اختر منتجاً —';
-      else opt.text = '— اختر مستودعاً أولاً —';
+      if (whId) opt.text = opt.closest('select').dataset.i18nSelectProduct;
+      else opt.text = opt.closest('select').dataset.i18nSelectWarehouseFirst;
       opt.hidden = false;
       continue;
     }
@@ -130,10 +130,10 @@ function filterByWarehouse() {
   sel.value = '';
 
   if (whId) {
-    detail.textContent = 'منتجات متوفرة في هذا المستودع: ' + count;
-    whCount.textContent = count + ' منتج برصيد > 0';
+    detail.textContent = detail.dataset.i18nProductsAvailable.replace('{count}', count);
+    whCount.textContent = whCount.dataset.i18nProductsWithStock.replace('{count}', count);
   } else {
-    detail.textContent = 'اختر مستودعاً لعرض المنتجات المتوفرة';
+    detail.textContent = '';
     whCount.textContent = '';
   }
 }
