@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or t('Accounting_System') }} - {{ t('Return') }} {{ t('Purchases_2') }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or t('Accounting_System') }} - {{ t('Return') }} {{ t('Purchases') }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
   <div class="row mb-3">
     <div class="col-12">
-      <h2><i class="fas fa-undo-alt {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i> {{ t('Return') }} {{ t('Purchases_2') }} — {{ t('Invoice') }} #{{ purchase.purchase_number }}</h2>
+      <h2><i class="fas fa-undo-alt {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i> {{ t('Return') }} {{ t('Purchases') }} — {{ t('Invoice') }} #{{ purchase.purchase_number }}</h2>
       <p class="text-muted">{{ t('Supplier') }}: {{ purchase.supplier.name if purchase.supplier else '—' }}</p>
     </div>
   </div>
@@ -14,7 +14,7 @@
   <div class="row">
     <div class="col-md-8">
       <div class="card card-outline card-info">
-        <div class="card-header"><h3 class="card-title">{{ t('Items_Invoice') }}</h3></div>
+        <div class="card-header"><h3 class="card-title">{{ t('Invoice_Items') }}</h3></div>
         <form method="POST" id="returnForm">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <div class="card-body table-responsive p-0">
@@ -25,8 +25,8 @@
                   <th>{{ t('Product') }}</th>
                   <th>{{ t('Purchased_Quantity') }}</th>
                   <th>{{ t('Quantity') }} {{ t('Return') }}</th>
-                  <th>{{ t('Unit Price') }}</th>
-                  <th>{{ t('Total_3') }}</th>
+                  <th>{{ t('Unit_Price') }}</th>
+                  <th>{{ t('Total') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -55,7 +55,7 @@
               <textarea name="notes" class="form-control" rows="2" id="notes" placeholder="{{ t('Optional') }}"></textarea>
             </div>
             <button type="submit" class="btn btn-info" id="submitBtn">
-              <i class="fas fa-check {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i>{{ t('Confirm') }} {{ t('Return_3') }}
+              <i class="fas fa-check {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i>{{ t('Confirm_Return') }}
             </button>
             <a href="{{ url_for('purchases.view', id=purchase.id) }}" class="btn btn-secondary">{{ t('Cancel') }}</a>
           </div>
@@ -72,12 +72,12 @@
             {% for r in returns %}
             <li class="list-group-item d-flex justify-content-between">
               <span>{{ r.return_number }}</span>
-              <span class="text-muted small">{{ r.created_at.strftime('%Y-%m-%d') if r.created_at else '' }}</span>
+              <span class="text-muted small">{{ format_date(r.created_at) if r.created_at else '' }}</span>
             </li>
             {% endfor %}
           </ul>
           {% else %}
-          <p class="text-muted p-3 mb-0">{{ t('No_Purchases') }}.</p>
+          <p class="text-muted p-3 mb-0">{{ t('No_Previous_Returns_For_Invoice') }}.</p>
           {% endif %}
         </div>
       </div>
@@ -105,10 +105,10 @@ document.getElementById('returnForm').addEventListener('submit', (e) => {
   const checked = document.querySelectorAll('.line-check:checked');
   if (checked.length === 0) {
     e.preventDefault();
-    alert('{{ t('Select_Product_At_Least_One')|e('js') }}');
+    alert('{{ t("Please_Select_At_Least_One_Product_To_Return") }}');
     return;
   }
-  if (!confirm('{{ t('Confirm_Create_Return')|e('js') }}')) {
+  if (!confirm('{{ t("Confirm_Create_Purchase_Return") }}')) {
     e.preventDefault();
   }
 });
