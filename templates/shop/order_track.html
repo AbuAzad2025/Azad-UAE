@@ -31,9 +31,8 @@
     </div>
   </div>
   <p><strong>{{ t('status') }}:</strong> {{ status_label }}</p>
-  <p><strong>{{ t('payment_method') }}:</strong> {{ sale.checkout_payment_method or 'COD' }}</p>
-  <p><strong>{{ t('total') }}:</strong> {{ '%.2f'|format(sale.total_amount) }} {{ sale.currency }}</p>
+  <p><strong>{{ t('payment_method') }}:</strong> {{ sale.checkout_payment_method or t('cod') }}</p>
+  <p><strong>{{ t('total') }}:</strong> {{ format_currency(sale.total_amount, sale.currency) }}</p>
 </div>
 {% endif %}
 {% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/shop-utilities.css') }}">{% endblock %}
