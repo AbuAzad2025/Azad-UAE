@@ -69,7 +69,13 @@ class AnalyticsService:
                     "sales_count": sales_count,
                     "avg_sale": (float(total_sales / sales_count) if sales_count > 0 else 0),
                     "days_since_last": days_since_last,
-                    "status": (gettext("نشط") if days_since_last < 30 else gettext("خامل") if days_since_last < 90 else gettext("متوقف")),
+                    "status": (
+                        gettext("نشط")
+                        if days_since_last < 30
+                        else gettext("خامل")
+                        if days_since_last < 90
+                        else gettext("متوقف")
+                    ),
                 }
             )
         customers_data.sort(key=lambda x: x["lifetime_value"], reverse=True)
@@ -185,7 +191,13 @@ class AnalyticsService:
             cost_price = p.cost_price or Decimal("0")
             margin = total_revenue - (cost_price * total_sold)
             margin_percent = (margin / total_revenue * 100) if total_revenue > 0 else 0
-            status = gettext("ممتاز") if total_sold > high_threshold else gettext("جيد") if total_sold > low_threshold else gettext("ضعيف")
+            status = (
+                gettext("ممتاز")
+                if total_sold > high_threshold
+                else gettext("جيد")
+                if total_sold > low_threshold
+                else gettext("ضعيف")
+            )
             performance_data.append(
                 {
                     "name": p.name,
@@ -233,7 +245,9 @@ class AnalyticsService:
             trend = (historical_data[-1]["revenue"] - historical_data[-3]["revenue"]) / 3
             revenues = [m["revenue"] for m in historical_data if m["revenue"] > 0]
             volatility = (max(revenues) - min(revenues)) / max(avg_revenue, 1) if revenues else 0
-            confidence = gettext("عالية") if volatility < 0.2 else gettext("متوسطة") if volatility < 0.5 else gettext("منخفضة")
+            confidence = (
+                gettext("عالية") if volatility < 0.2 else gettext("متوسطة") if volatility < 0.5 else gettext("منخفضة")
+            )
             forecast = {
                 "next_month": avg_revenue + trend,
                 "next_3_months": (avg_revenue + trend) * 3,

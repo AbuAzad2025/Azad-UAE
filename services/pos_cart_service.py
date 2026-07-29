@@ -118,9 +118,11 @@ class PosCartService:
             .count()
         )
         if parked_count >= PosCartService.MAX_CARTS_PER_SESSION:
-            raise ValueError(gettext(
-                f"وصلت للحد الأقصى من السلات المركونة ({PosCartService.MAX_CARTS_PER_SESSION}). استرجع أو احذف سلة أولاً."
-            ))
+            raise ValueError(
+                gettext(
+                    f"وصلت للحد الأقصى من السلات المركونة ({PosCartService.MAX_CARTS_PER_SESSION}). استرجع أو احذف سلة أولاً."
+                )
+            )
 
         cart = PosCart(
             tenant_id=int(tenant_id),

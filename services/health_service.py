@@ -217,7 +217,9 @@ class HealthCheckService:
             },
             "database": {
                 "size_mb": round(db_size_mb, 2),
-                "status": (gettext("جيد") if db_size_mb < 500 else gettext("تحذير") if db_size_mb < 1000 else gettext("خطر")),
+                "status": (
+                    gettext("جيد") if db_size_mb < 500 else gettext("تحذير") if db_size_mb < 1000 else gettext("خطر")
+                ),
             },
             "system": {
                 "os": platform.system(),

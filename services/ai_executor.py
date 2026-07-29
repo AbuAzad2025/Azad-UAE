@@ -281,7 +281,9 @@ class AIExecutor:
             "sale_id": sale.id,
             "sale_number": sale.sale_number,
             "total": float(sale.total_amount or 0),
-            "message": gettext(f"تم إنشاء الفاتورة رقم {sale.sale_number} بقيمة {float(sale.total_amount or 0):,.2f} درهم"),
+            "message": gettext(
+                f"تم إنشاء الفاتورة رقم {sale.sale_number} بقيمة {float(sale.total_amount or 0):,.2f} درهم"
+            ),
         }
 
     def list_sales(self, limit: int = 10) -> dict:

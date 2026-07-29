@@ -469,7 +469,9 @@ class GLService:
         for line in lines:
             account = GLService._resolve_journal_line_account(line, tenant_id, branch_id=branch_id)
             if getattr(account, "is_header", False):
-                raise ValueError(gettext(f"لا يمكن القيد على الحساب الرئيسي: {getattr(account, 'full_name', account.code)}"))
+                raise ValueError(
+                    gettext(f"لا يمكن القيد على الحساب الرئيسي: {getattr(account, 'full_name', account.code)}")
+                )
             debit = Decimal(str(line.get("debit", 0)))
             credit = Decimal(str(line.get("credit", 0)))
             validate_gl_line_sides(debit, credit)

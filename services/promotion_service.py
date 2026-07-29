@@ -531,7 +531,9 @@ class PromotionService:
                             PromotionService._prompt(
                                 campaign,
                                 RULE_BOGO,
-                                gettext(f"أضف {needed} قطعة إضافية واحصل على {get_m} بخصم (اشترِ {buy_n} واحصل على {get_m})."),
+                                gettext(
+                                    f"أضف {needed} قطعة إضافية واحصل على {get_m} بخصم (اشترِ {buy_n} واحصل على {get_m})."
+                                ),
                                 product_id=product_id,
                                 needed_quantity=needed,
                             )

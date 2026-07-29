@@ -148,11 +148,13 @@ class PurchaseService:
                 tenant_id=tenant_id,
             )
             if rate_info.get("rate_mode") == "needs_input":
-                raise ValueError(gettext(
-                    "⚠️ سعر الصرف غير متوفر.\n"
-                    "💡 اذهب إلى إعدادات المالك ← أسعار الصرف ← أدخل سعر يدوي، "
-                    'أو أدخل سعراً في حقل "سعر الصرف".'
-                ))
+                raise ValueError(
+                    gettext(
+                        "⚠️ سعر الصرف غير متوفر.\n"
+                        "💡 اذهب إلى إعدادات المالك ← أسعار الصرف ← أدخل سعر يدوي، "
+                        'أو أدخل سعراً في حقل "سعر الصرف".'
+                    )
+                )
             exchange_rate = Decimal(str(rate_info["rate"]))
 
             # Create Purchase Header
@@ -238,7 +240,9 @@ class PurchaseService:
                                 ProductSerial.serial_number.in_(clean_serials),
                             ).count()
                             if existing_serials > 0:
-                                raise ValueError(gettext(f'⚠️ بعض الأرقام التسلسلية موجودة مسبقاً للمنتج "{product.name}".'))
+                                raise ValueError(
+                                    gettext(f'⚠️ بعض الأرقام التسلسلية موجودة مسبقاً للمنتج "{product.name}".')
+                                )
 
                             for sn in clean_serials:
                                 serial_obj = ProductSerial(
@@ -657,8 +661,8 @@ class PurchaseService:
             {
                 "account": GL_ACCOUNTS["inventory"],
                 "concept_code": "INVENTORY_ASSET",
-                    "credit": inventory_credit,
-                    "description": gettext(f"إرجاع بضاعة للمورد {return_number}"),
+                "credit": inventory_credit,
+                "description": gettext(f"إرجاع بضاعة للمورد {return_number}"),
             },
         ]
 

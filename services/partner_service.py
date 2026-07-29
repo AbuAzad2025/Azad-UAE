@@ -179,7 +179,9 @@ class PartnerService:
                 )
             except Exception as exc:
                 raise ValueError(
-                    gettext(f"فشل حساب أرباح النطاق للشريك {partner.id} ({partner.scope_type}/{partner.scope_id}): {exc}")
+                    gettext(
+                        f"فشل حساب أرباح النطاق للشريك {partner.id} ({partner.scope_type}/{partner.scope_id}): {exc}"
+                    )
                 ) from exc
 
             net_profit = Decimal(str(pnl["net_profit"]))

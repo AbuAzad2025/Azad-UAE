@@ -296,7 +296,9 @@ class StockService:
             product = db.session.get(Product, product_id)
 
             if not product:
-                raise ValueError(gettext(f"⚠️ المنتج غير موجود (ID: {product_id}).\n💡 تأكد من اختيار منتج صحيح من القائمة."))
+                raise ValueError(
+                    gettext(f"⚠️ المنتج غير موجود (ID: {product_id}).\n💡 تأكد من اختيار منتج صحيح من القائمة.")
+                )
 
             try:
                 user_id = current_user.id if current_user and current_user.is_authenticated else None
@@ -371,9 +373,11 @@ class StockService:
                         requested=str(abs(qty)),
                     )
                     raise ValueError(
-                        gettext(f'❌ المخزون غير كافٍ في المستودع للمنتج "{product.name}"!\n'
-                        f"📦 المتوفر في المستودع: {pws.quantity} | المطلوب: {abs(qty)}\n"
-                        f"💡 قلل الكمية أو انقل مخزوناً من مستودع آخر.")
+                        gettext(
+                            f'❌ المخزون غير كافٍ في المستودع للمنتج "{product.name}"!\n'
+                            f"📦 المتوفر في المستودع: {pws.quantity} | المطلوب: {abs(qty)}\n"
+                            f"💡 قلل الكمية أو انقل مخزوناً من مستودع آخر."
+                        )
                     )
                 pws.quantity = new_qty_pws
                 pws.updated_at = datetime.now(timezone.utc)
@@ -390,9 +394,11 @@ class StockService:
                         requested=str(abs(qty)),
                     )
                     raise ValueError(
-                        gettext(f'❌ المخزون غير كافٍ في المستودع للمنتج "{product.name}"!\n'
-                        f"📦 المتوفر في المستودع: 0 | المطلوب: {abs(qty)}\n"
-                        f"💡 أضف مخزوناً أولاً.")
+                        gettext(
+                            f'❌ المخزون غير كافٍ في المستودع للمنتج "{product.name}"!\n'
+                            f"📦 المتوفر في المستودع: 0 | المطلوب: {abs(qty)}\n"
+                            f"💡 أضف مخزوناً أولاً."
+                        )
                     )
                 pws = ProductWarehouseStock(
                     tenant_id=tenant_id,
@@ -419,7 +425,9 @@ class StockService:
                     requested=str(quantity),
                 )
                 raise ValueError(
-                    gettext(f'❌ المخزون غير كافٍ للمنتج "{product.name}"!\n📦 المتوفر: {product.current_stock} | المطلوب: {quantity}\n💡 قلل الكمية أو اطلب مخزون جديد من المورد.')
+                    gettext(
+                        f'❌ المخزون غير كافٍ للمنتج "{product.name}"!\n📦 المتوفر: {product.current_stock} | المطلوب: {quantity}\n💡 قلل الكمية أو اطلب مخزون جديد من المورد.'
+                    )
                 )
 
             try:
@@ -589,9 +597,11 @@ class StockService:
         if last_purchase and last_purchase.movement_unit_cost and last_purchase.movement_unit_cost > Decimal("0"):
             return Decimal(str(last_purchase.movement_unit_cost)), "last_purchase"
         raise ValueError(
-            gettext(f"لا يمكن تحديد تكلفة البضاعة المباعة (COGS) للمنتج {product_id}: "
-            "لا يوجد مخزون، ولا سعر تكلفة، ولا سجل شراء سابق. "
-            "يرجى إدخال تكلفة المنتج أو توريد مخزون قبل البيع.")
+            gettext(
+                f"لا يمكن تحديد تكلفة البضاعة المباعة (COGS) للمنتج {product_id}: "
+                "لا يوجد مخزون، ولا سعر تكلفة، ولا سجل شراء سابق. "
+                "يرجى إدخال تكلفة المنتج أو توريد مخزون قبل البيع."
+            )
         )
 
     @staticmethod

@@ -221,7 +221,9 @@ class PayrollService:
         if net_salary < Decimal("0"):
             max_deductible = basic_amount + Decimal(allowances) - Decimal(deductions)
             if max_deductible <= Decimal("0"):
-                raise ValueError(gettext(f'صافي راتب الموظف "{employee.name}" سالب ({net_salary}). لا يمكن صرف الراتب.'))
+                raise ValueError(
+                    gettext(f'صافي راتب الموظف "{employee.name}" سالب ({net_salary}). لا يمكن صرف الراتب.')
+                )
             actual_deduction = max_deductible
             net_salary = Decimal("0")
 

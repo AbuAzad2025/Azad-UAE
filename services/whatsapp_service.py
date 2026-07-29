@@ -39,11 +39,11 @@ class WhatsAppService:
             return {"success": False, "error": "Missing configuration"}
 
         phone_clean = WhatsAppService._normalize_phone(phone)
-        message = (
-            gettext(f"السلام عليكم ورحمة الله وبركاته\n\n"
+        message = gettext(
+            f"السلام عليكم ورحمة الله وبركاته\n\n"
             f"فاتورتك رقم {invoice_number} جاهزة!\n\n"
             f"يمكنك مراجعتها والدفع.\n\n"
-            f"شكراً لتعاملكم معنا")
+            f"شكراً لتعاملكم معنا"
         )
 
         try:
@@ -80,11 +80,11 @@ class WhatsAppService:
 
         api_key, api_url, instance_id = WhatsAppService._api_config()
         phone_clean = WhatsAppService._normalize_phone(phone)
-        message = (
-            gettext(f"السلام عليكم {customer_name}\n\n"
+        message = gettext(
+            f"السلام عليكم {customer_name}\n\n"
             f"تذكير ودي بالرصيد المستحق: {amount_due:,.2f} درهم\n\n"
             f"نرجو منكم التكرم بالسداد في أقرب وقت ممكن.\n\n"
-            f"شكراً لكم")
+            f"شكراً لكم"
         )
 
         try:

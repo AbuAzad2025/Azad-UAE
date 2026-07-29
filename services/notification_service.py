@@ -120,7 +120,9 @@ class SecurityService:
         """
         # فحص القائمة السوداء
         if ip_address in SecurityService._blacklist:
-            NotificationService.notify_security_alert(gettext("IP محظور"), gettext(f"محاولة وصول من IP محظور: {ip_address}"))
+            NotificationService.notify_security_alert(
+                gettext("IP محظور"), gettext(f"محاولة وصول من IP محظور: {ip_address}")
+            )
             return {"suspicious": True, "reason": "blacklisted_ip"}
 
         # فحص المحاولات الفاشلة
@@ -137,7 +139,9 @@ class SecurityService:
         # فحص User Agent المشبوه
         suspicious_agents = ["bot", "crawler", "scraper", "scanner"]
         if any(agent in user_agent.lower() for agent in suspicious_agents):
-            NotificationService.notify_security_alert(gettext("User Agent مشبوه"), gettext(f"كشف user agent مشبوه: {user_agent[:100]}"))
+            NotificationService.notify_security_alert(
+                gettext("User Agent مشبوه"), gettext(f"كشف user agent مشبوه: {user_agent[:100]}")
+            )
             return {"suspicious": True, "reason": "suspicious_user_agent"}
 
         return {"suspicious": False}

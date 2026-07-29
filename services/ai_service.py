@@ -878,7 +878,13 @@ class AIService:
             "rating": (
                 gettext("ممتاز")
                 if health_score >= 80
-                else (gettext("جيد") if health_score >= 60 else gettext("مقبول") if health_score >= 40 else gettext("ضعيف"))
+                else (
+                    gettext("جيد")
+                    if health_score >= 60
+                    else gettext("مقبول")
+                    if health_score >= 40
+                    else gettext("ضعيف")
+                )
             ),
         }
 
