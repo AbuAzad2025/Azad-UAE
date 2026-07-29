@@ -2,6 +2,8 @@
 
 {% block title %}{{ t('Report_2') }} {{ t('Inventory') }}{% endblock %}
 
+{% block page_title %}{{ t('Report_2') }} {{ t('Inventory') }}{% endblock %}
+
 <style>
     /* D6: externalized inline styles */
     .ic-1 { min-width: 140px; }
@@ -35,11 +37,11 @@
                 {% endfor %}
               </select>
 
-              <label class="mr-2" for="input_in_date_from">{{ t('History') }} {{ t('الإدخال') }}:</label>
+              <label class="mr-2" for="input_in_date_from">{{ t('History') }} {{ t('Entry') }}:</label>
               <input type="date" name="in_date_from" value="{{ in_date_from or '' }}" class="form-control form-control-sm mr-2" id="input_in_date_from" aria-label="in date from">
               <input type="date" name="in_date_to" value="{{ in_date_to or '' }}" class="form-control form-control-sm mr-2" aria-label="in date to">
 
-              <label class="mr-2" for="input_out_date_from">{{ t('History') }} {{ t('الإخراج') }}:</label>
+              <label class="mr-2" for="input_out_date_from">{{ t('History') }} {{ t('Exit') }}:</label>
               <input type="date" name="out_date_from" value="{{ out_date_from or '' }}" class="form-control form-control-sm mr-2" id="input_out_date_from" aria-label="out date from">
               <input type="date" name="out_date_to" value="{{ out_date_to or '' }}" class="form-control form-control-sm mr-2" aria-label="out date to">
 
@@ -69,7 +71,7 @@
           </div>
         </div>
         <div class="card-body">
-          
+
           <div class="erp-report-print">
           {% if stats %}
           <div class="row mb-4">
@@ -86,7 +88,7 @@
               <div class="info-box">
                 <span class="info-box-icon bg-success"><i class="fas fa-check"></i></span>
                 <div class="info-box-content">
-                  <span class="info-box-text">{{ t('متوفر') }}</span>
+                  <span class="info-box-text">{{ t('Available') }}</span>
                   <span class="info-box-number">{{ stats.in_stock }}</span>
                 </div>
               </div>
@@ -95,7 +97,7 @@
               <div class="info-box">
                 <span class="info-box-icon bg-warning"><i class="fas fa-exclamation-triangle"></i></span>
                 <div class="info-box-content">
-                  <span class="info-box-text">{{ t('ناقص') }}</span>
+                  <span class="info-box-text">{{ t('Low_Stock') }}</span>
                   <span class="info-box-number">{{ stats.low_stock }}</span>
                 </div>
               </div>
@@ -104,7 +106,7 @@
               <div class="info-box">
                 <span class="info-box-icon bg-danger"><i class="fas fa-times"></i></span>
                 <div class="info-box-content">
-                  <span class="info-box-text">{{ t('نفذ') }}</span>
+                  <span class="info-box-text">{{ t('Out_of_Stock') }}</span>
                   <span class="info-box-number">{{ stats.out_of_stock }}</span>
                 </div>
               </div>
@@ -112,17 +114,17 @@
           </div>
           {% endif %}
 
-          
+
           <div class="table-responsive"><table class="table table-bordered table-striped">
             <thead>
               <tr>
                 <th>{{ t('Product') }}</th>
                 <th>{{ t('Code') }}</th>
                 <th>{{ t('Quantity') }} {{ t('Available_3') }}</th>
-                <th>{{ t('إدخال') }} ({{ t('حسب') }} {{ t('Date') }})</th>
-                <th>{{ t('إخراج') }} ({{ t('حسب') }} {{ t('Date') }})</th>
-                <th>{{ t('مباع') }} ({{ t('حسب') }} {{ t('Date') }})</th>
-                <th>{{ t('الحد') }} {{ t('الأدنى') }}</th>
+                <th>{{ t('Entry') }} ({{ t('Per') }} {{ t('Date') }})</th>
+                <th>{{ t('Exit') }} ({{ t('Per') }} {{ t('Date') }})</th>
+                <th>{{ t('Sold') }} ({{ t('Per') }} {{ t('Date') }})</th>
+                <th>{{ t('Minimum') }} {{ t('Threshold') }}</th>
                 <th>{{ t('Price_2') }} {{ t('Cost') }}</th>
                 <th>{{ t('Price_2') }} {{ t('Sale_2') }}</th>
                 <th>{{ t('Value') }} {{ t('Total') }}</th>
@@ -143,22 +145,22 @@
                 <td>{{ out_qty }}</td>
                 <td>{{ sold_qty }}</td>
                 <td>{{ product.min_stock_alert }}</td>
-                <td>{{ product.cost_price }}</td>
-                <td>{{ product.regular_price }}</td>
-                <td>{{ (qty * (product.cost_price or 0))|round(2) }}</td>
+                <td>{{ format_currency(product.cost_price) }}</td>
+                <td>{{ format_currency(product.regular_price) }}</td>
+                <td>{{ format_currency((qty * (product.cost_price or 0))|round(2)) }}</td>
                 <td>
                   {% if qty == 0 %}
-                    <span class="badge badge-danger">{{ t('نفذ') }}</span>
+                    <span class="badge badge-danger">{{ t('Out_of_Stock') }}</span>
                   {% elif qty <= (product.min_stock_alert or 0) %}
-                    <span class="badge badge-warning">{{ t('ناقص') }}</span>
+                    <span class="badge badge-warning">{{ t('Low_Stock') }}</span>
                   {% else %}
-                    <span class="badge badge-success">{{ t('متوفر') }}</span>
+                    <span class="badge badge-success">{{ t('Available') }}</span>
                   {% endif %}
                 </td>
               </tr>
               {% else %}
               <tr>
-                <td colspan="11" class="text-center">لا {{ t('توجد') }} {{ t('Products_2') }}</td>
+                <td colspan="11" class="text-center">{{ t('No') }} {{ t('Products_2') }}</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -168,6 +170,5 @@
     </div>
   </div>
 </div>
-{% block extra_css %}<style>@media print{@page{size:A4 landscape;margin:10mm}}</style>{% endblock %}
 {% endblock %}
-
+{% block extra_css %}<style>@media print{@page{size:A4 landscape;margin:10mm}}</style>{% endblock %}

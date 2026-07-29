@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}{{ t('مركز') }} {{ t('الخزينة') }} {{ t('والمركز') }} {{ t('المالي') }}{% endblock %}
+{% block title %}{{ t('center') }} {{ t('treasury') }} {{ t('and') }} {{ t('financial_center') }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
   <div class="row mb-3">
     <div class="col-12">
-      <h2><i class="fas fa-university mr-2"></i> {{ t('مركز') }} {{ t('الخزينة') }} {{ t('والمركز') }} {{ t('المالي') }}</h2>
+      <h2><i class="fas fa-university mr-2"></i> {{ t('center') }} {{ t('treasury') }} {{ t('and') }} {{ t('financial_center') }}</h2>
     </div>
   </div>
 
@@ -64,7 +64,7 @@
       <div class="small-box bg-warning">
         <div class="inner">
           <h3>{{ format_currency(report.liquidity.kind_summary.get('in_transit', {}).get('total_balance', 0)) }}</h3>
-          <p>تحت {{ t('التحصيل') }}</p>
+          <p>{{ t('collection') }}</p>
         </div>
         <div class="icon"><i class="fas fa-exchange-alt"></i></div>
       </div>

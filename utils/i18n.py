@@ -4510,7 +4510,38 @@ TRANSLATIONS = {
         "en": "Confirm create purchase return",
     },
     "Add_New_Supplier": {"ar": "إضافة مورد جديد", "en": "Add New Supplier"},
-    "Thank you for your business": {"ar": "شكراً لتعاملكم معنا", "en": "Thank you for your business"},
+        "Thank you for your business": {"ar": "شكراً لتعاملكم معنا", "en": "Thank you for your business"},
+    "Receipt_Voucher": {"ar": "☪ سند قبض ☪", "en": "Receipt Voucher"},
+    "Received": {"ar": "المستلم", "en": "Received"},
+    "Payment_Method": {"ar": "طريقة الدفع", "en": "Payment Method"},
+    "Wallet": {"ar": "محفظة", "en": "Wallet"},
+    "Electronic": {"ar": "إلكترونية", "en": "Electronic"},
+    "Notes_And_Payment_Reason": {"ar": "ملاحظات وسبب الدفع", "en": "Notes And Payment Reason"},
+    "Collector": {"ar": "المحصل", "en": "Collector"},
+    "And_Signature": {"ar": "وتوقيع", "en": "And Signature"},
+    "Tax_Number": {"ar": "الرقم الضريبي", "en": "Tax Number"},
+    "Due_Date": {"ar": "تاريخ الاستحقاق", "en": "Due Date"},
+    "Please_Adhere_To_Payment_Deadlines": {
+        "ar": "نرجو الالتزام بمواعيد الدفع المحددة",
+        "en": "Please adhere to the specified payment deadlines",
+    },
+    "Thank_You_For_Your_Trust": {
+        "ar": "شكرا لثقتكم",
+        "en": "Thank you for your trust",
+    },
+    "CR": {"ar": "س.ت", "en": "CR"},
+    "Thank_You_For_Your_Kind_Business": {
+        "ar": "شكرا لتعاملكم الكريم معنا",
+        "en": "Thank you for your kind business",
+    },
+    "Thank_You": {"ar": "شكرا لك", "en": "Thank You"},
+    "We_Wish_You_Excellent_Experience": {
+        "ar": "نتمنى لكم تجربة ممتازة",
+        "en": "We wish you an excellent experience",
+    },
+    "Drawn_On_Bank": {"ar": "المسحوب عليه", "en": "Drawn On Bank"},
+    "Received_From": {"ar": "المستلم من", "en": "Received From"},
+    "For_Transfer": {"ar": "للتحويل", "en": "For Transfer"},
 }
 
 

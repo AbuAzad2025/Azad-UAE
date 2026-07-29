@@ -24,7 +24,7 @@
           <span class="info-box-icon"><i class="fas fa-dollar-sign"></i></span>
           <div class="info-box-content">
             <span class="info-box-text">{{ t('Total_2') }} {{ t('Sales') }}</span>
-            <span class="info-box-number">{{ "{:,.0f}".format(summary.total_sales_aed|default(0)) }}</span>
+            <span class="info-box-number">{{ format_currency(summary.total_sales_aed|default(0)) }}</span>
           </div>
         </div>
       </div>
@@ -34,7 +34,7 @@
           <span class="info-box-icon"><i class="fas fa-coins"></i></span>
           <div class="info-box-content">
             <span class="info-box-text">{{ t('Paid') }}</span>
-            <span class="info-box-number">{{ "{:,.0f}".format(summary.total_paid_aed|default(0)) }}</span>
+            <span class="info-box-number">{{ format_currency(summary.total_paid_aed|default(0)) }}</span>
           </div>
         </div>
       </div>
@@ -43,8 +43,8 @@
         <div class="info-box bg-gradient-danger">
           <span class="info-box-icon"><i class="fas fa-exclamation-circle"></i></span>
           <div class="info-box-content">
-            <span class="info-box-text">{{ t('المستحق') }}</span>
-            <span class="info-box-number">{{ "{:,.0f}".format(summary.total_pending_aed|default(0)) }}</span>
+            <span class="info-box-text">{{ t('due') }}</span>
+            <span class="info-box-number">{{ format_currency(summary.total_pending_aed|default(0)) }}</span>
           </div>
         </div>
       </div>
@@ -57,10 +57,10 @@
     <h3 class="card-title mb-0">{{ t('Details') }} {{ t('Sales') }}</h3>
     <div class="d-flex align-items-center">
       <form class="needs-validation form-inline mr-2" method="get">
-        <label class="mr-2" for="input_date_from">{{ _('من') }}</label>
-        <input type="date" name="date_from" value="{{ date_from or '' }}" class="form-control form-control-sm mr-2" id="input_date_from" aria-label="من {{ t('History') }}">
-        <label class="mr-2" for="input_date_to">{{ _('إلى') }}</label>
-        <input type="date" name="date_to" value="{{ date_to or '' }}" class="form-control form-control-sm mr-2" id="input_date_to" aria-label="إلى {{ t('History') }}">
+        <label class="mr-2" for="input_date_from">{{ t('From') }}</label>
+        <input type="date" name="date_from" value="{{ date_from or '' }}" class="form-control form-control-sm mr-2" id="input_date_from" aria-label="{{ t('From') }} {{ t('History') }}">
+        <label class="mr-2" for="input_date_to">{{ t('To') }}</label>
+        <input type="date" name="date_to" value="{{ date_to or '' }}" class="form-control form-control-sm mr-2" id="input_date_to" aria-label="{{ t('To') }} {{ t('History') }}">
         <label class="mr-2" for="customer">{{ t('Customer_2') }}</label>
         <select name="customer" class="form-control form-control-sm mr-2 ic-1" id="customer">
           <option value="">{{ t('All') }}</option>
@@ -68,7 +68,7 @@
           <option value="{{ c.id }}" {{ 'selected' if customer_id == c.id else '' }}>{{ c.name }}</option>
           {% endfor %}
         </select>
-        <label class="mr-2" for="seller">{{ t('البائع') }}</label>
+        <label class="mr-2" for="seller">{{ t('Seller') }}</label>
         <select name="seller" class="form-control form-control-sm mr-2 ic-2" id="seller">
           <option value="">{{ t('All') }}</option>
           {% for u in sellers or [] %}
@@ -85,8 +85,8 @@
           <i class="fas fa-download mr-1"></i>{{ t('Export') }}
         </button>
         <div class="dropdown-menu dropdown-menu-right">
-          <a class="dropdown-item" href="{{ url_for('reports.sales_export', date_from=request.args.get('date_from'), date_to=request.args.get('date_to'), customer=request.args.get('customer'), seller=request.args.get('seller'), format='csv') }}">CSV</a>
-          <a class="dropdown-item" href="{{ url_for('reports.sales_export', date_from=request.args.get('date_from'), date_to=request.args.get('date_to'), customer=request.args.get('customer'), seller=request.args.get('seller'), format='xlsx') }}">Excel</a>
+          <a class="dropdown-item" href="{{ url_for('reports.sales_export', date_from=date_from, date_to=date_to, customer=customer_id, seller=seller_id, format='csv') }}">CSV</a>
+          <a class="dropdown-item" href="{{ url_for('reports.sales_export', date_from=date_from, date_to=date_to, customer=customer_id, seller=seller_id, format='xlsx') }}">Excel</a>
         </div>
       </div>
 
@@ -99,7 +99,9 @@
     <div class="table-responsive"><table id="salesReportTable" class="table table-striped table-bordered">
       <thead>
         <tr>
+          {% if current_user.has_permission('manage_sales') %}
           <th>{{ t('Invoice_2') }}</th>
+          {% endif %}
           <th>{{ t('Customer_2') }}</th>
           <th>{{ t('Date') }}</th>
           <th>{{ t('Amount') }}</th>
@@ -118,7 +120,7 @@
           <td>{{ format_currency(sale.base_amount) }}</td>
           <td>
             {% if sale.exchange_rate and sale.exchange_rate != 1 %}
-              <span class="badge badge-info" title="{{ t('Price_2') }} {{ t('Exchange') }} {{ t('Time') }} {{ t('المعاملة') }}">
+              <span class="badge badge-info" title="{{ t('Price_2') }} {{ t('Exchange') }} {{ t('Time') }} {{ t('transaction') }}">
                 <i class="fas fa-exchange-alt mr-1"></i>{{ "{:.4f}".format(sale.exchange_rate) }}
               </span>
             {% else %}

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Reconciliation') }} {{ t('Inventory') }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or t('Accounting_System') }} - {{ t('Reconciliation') }} {{ t('Inventory') }}{% endblock %}
 {% block page_title %}{{ t('Reconciliation') }} {{ t('Inventory') }} - PWC vs {{ t('Movements') }} vs GL{% endblock %}
 
 {% block content %}
@@ -22,10 +22,10 @@
             <option value="{{ wh.id }}" {% if selected_warehouse == wh.id %}selected{% endif %}>{{ wh.name_ar or wh.name }}</option>
             {% endfor %}
           </select>
-          <label class="mr-2" for="input_date_from">{{ _('من:') }}</label>
-          <input type="date" name="date_from" class="form-control mr-2" value="{{ date_from or '' }}" data-action="submit-form" id="input_date_from" aria-label="من {{ t('History') }}">
-          <label class="mr-2" for="input_date_to">{{ _('إلى:') }}</label>
-          <input type="date" name="date_to" class="form-control mr-2" value="{{ date_to or '' }}" data-action="submit-form" id="input_date_to" aria-label="إلى {{ t('History') }}">
+          <label class="mr-2" for="input_date_from">{{ t('From') }}</label>
+          <input type="date" name="date_from" class="form-control mr-2" value="{{ date_from or '' }}" data-action="submit-form" id="input_date_from" aria-label="From {{ t('History') }}">
+          <label class="mr-2" for="input_date_to">{{ t('To') }}</label>
+          <input type="date" name="date_to" class="form-control mr-2" value="{{ date_to or '' }}" data-action="submit-form" id="input_date_to" aria-label="To {{ t('History') }}">
           <div class="ml-auto">
             <a href="{{ url_for('reports.inventory_reconciliation_export', format='xlsx', branch_id=selected_branch, warehouse_id=selected_warehouse, date_from=date_from, date_to=date_to) }}" class="btn btn-success">
               <i class="fas fa-file-excel mr-1"></i>Excel
@@ -58,12 +58,12 @@
       <div class="card-body text-center">
         <h4 class="mb-0">
           {% if report.summary.all_matched_qty %}
-            <i class="fas fa-check"></i> {{ t('متطابق') }}
+            <i class="fas fa-check"></i> {{ t('matched') }}
           {% else %}
-            <i class="fas fa-exclamation-triangle"></i> {{ t('فروقات') }}
+            <i class="fas fa-exclamation-triangle"></i> {{ t('discrepancies') }}
           {% endif %}
         </h4>
-        <small>{{ t('Status_2') }} {{ t('الكميات') }}</small>
+        <small>{{ t('Status_2') }} {{ t('quantities') }}</small>
       </div>
     </div>
   </div>
@@ -89,20 +89,20 @@
 <div class="card">
   <div class="card-header bg-gradient-primary d-flex justify-content-between align-items-center">
     <h3 class="card-title text-white mb-0">
-      <i class="fas fa-warehouse mr-2"></i>{{ t('Reconciliation') }} {{ t('حسب') }} {{ t('Warehouse') }}
+      <i class="fas fa-warehouse mr-2"></i>{{ t('Reconciliation') }} {{ t('by') }} {{ t('Warehouse') }}
     </h3>
     {% if report.summary.all_matched_qty %}
-    <span class="badge badge-success"><i class="fas fa-check"></i> {{ t('الكميات') }} {{ t('متطابقة') }}</span>
+     <span class="badge badge-success"><i class="fas fa-check"></i> {{ t('quantities') }} {{ t('matched') }}</span>
     {% else %}
-    <span class="badge badge-warning"><i class="fas fa-exclamation-triangle"></i> {{ t('يوجد') }} {{ t('فروقات') }} {{ t('Qty') }}</span>
+    <span class="badge badge-warning"><i class="fas fa-exclamation-triangle"></i> {{ t('exists') }} {{ t('discrepancies') }} {{ t('Qty') }}</span>
     {% endif %}
     {% if report.summary.all_matched_value %}
-    <span class="badge badge-success ml-2"><i class="fas fa-check"></i> {{ t('القيم') }} {{ t('متطابقة') }}</span>
+    <span class="badge badge-success ml-2"><i class="fas fa-check"></i> {{ t('values') }} {{ t('matched') }}</span>
     {% else %}
-    <span class="badge badge-info ml-2"><i class="fas fa-info-circle"></i> {{ t('مراجعة') }} GL</span>
+    <span class="badge badge-info ml-2"><i class="fas fa-info-circle"></i> {{ t('review') }} GL</span>
     {% endif %}
     {% if report.summary.has_unallocated_gl %}
-    <span class="badge badge-warning ml-2"><i class="fas fa-tags"></i> GL غير {{ t('موزع') }}</span>
+    <span class="badge badge-warning ml-2"><i class="fas fa-tags"></i> GL غير {{ t('allocated') }}</span>
     {% endif %}
   </div>
   <div class="card-body p-0">
@@ -113,10 +113,10 @@
           <th class="text-center">{{ t('Products') }}</th>
           <th class="text-left">{{ t('Qty') }} PWC</th>
           <th class="text-left">{{ t('Qty') }} {{ t('Movements') }}</th>
-          <th class="text-left">{{ t('فرق') }} {{ t('Quantity') }}</th>
-          <th class="text-left">{{ t('Value_2') }} PWC ({{ tenant_currency_symbol }})</th>
-          <th class="text-left">{{ t('Balance_3') }} GL ({{ tenant_currency_symbol }})</th>
-          <th class="text-left">{{ t('فرق') }} {{ t('Value') }}</th>
+           <th class="text-left">{{ t('difference') }} {{ t('Quantity') }}</th>
+           <th class="text-left">{{ t('Value_2') }} PWC ({{ tenant_currency_symbol }})</th>
+           <th class="text-left">{{ t('Balance_3') }} GL ({{ tenant_currency_symbol }})</th>
+           <th class="text-left">{{ t('difference') }} {{ t('Value') }}</th>
           <th class="text-center">{{ t('Status') }}</th>
         </tr>
       </thead>
@@ -134,7 +134,7 @@
           <td class="text-left">
             {{ format_currency(row.gl_value) }}
             {% if row.gl_untagged %}
-            <span class="badge badge-info" title="{{ t('قيود') }} GL {{ t('Old') }} {{ t('بدون') }} warehouse_id">legacy</span>
+            <span class="badge badge-info" title="{{ t('entries') }} GL {{ t('Old') }} {{ t('without') }} warehouse_id">legacy</span>
             {% endif %}
           </td>
           <td class="text-left {% if not row.matched_value %}text-warning{% endif %}">
@@ -144,11 +144,11 @@
             {% if row.matched_qty and row.matched_value %}
             <span class="badge badge-success">OK</span>
             {% elif row.gl_untagged %}
-            <span class="badge badge-warning">GL غير {{ t('موسوم') }}</span>
+            <span class="badge badge-warning">GL غير {{ t('tagged') }}</span>
             {% elif row.matched_qty %}
-            <span class="badge badge-warning">{{ t('مراجعة') }} GL</span>
+            <span class="badge badge-warning">{{ t('review') }} GL</span>
             {% else %}
-            <span class="badge badge-danger">{{ t('مراجعة') }} {{ t('Qty') }}</span>
+            <span class="badge badge-danger">{{ t('review') }} {{ t('Qty') }}</span>
             {% endif %}
           </td>
         </tr>
@@ -172,10 +172,10 @@
   </div>
   <div class="card-footer text-muted small">
     <strong>GL account:</strong> {{ report.summary.inventory_account_code }} - Inventory Asset &nbsp;|&nbsp;
-    <strong>{{ t('Quantity') }}:</strong> {{ t('مقارنة') }} بين PWC.total_quantity و SUM(stock_movements.quantity) &nbsp;|&nbsp;
-    <strong>{{ t('Value') }}:</strong> {{ t('مقارنة') }} بين PWC.total_value {{ t('and Balance') }} {{ t('Account') }} GL 1140.
+    <strong>{{ t('Quantity') }}:</strong> {{ t('compare') }} بين PWC.total_quantity و SUM(stock_movements.quantity) &nbsp;|&nbsp;
+    <strong>{{ t('Value') }}:</strong> {{ t('compare') }} بين PWC.total_value {{ t('and Balance') }} {{ t('Account') }} GL 1140.
     {% if report.summary.has_unallocated_gl %}
-    &nbsp;|&nbsp; <strong>GL غير {{ t('موزع') }} على {{ t('Warehouse_2') }}:</strong> {{ format_currency(report.summary.unallocated_gl_value) }}
+    &nbsp;|&nbsp; <strong>GL غير {{ t('allocated') }} على {{ t('Warehouse_2') }}:</strong> {{ format_currency(report.summary.unallocated_gl_value) }}
     {% endif %}
   </div>
 </div>
@@ -184,7 +184,7 @@
 <div class="card mt-4">
   <div class="card-header bg-gradient-secondary">
     <h3 class="card-title text-white mb-0">
-      <i class="fas fa-boxes mr-2"></i>{{ t('Details') }} {{ t('حسب') }} {{ t('Product') }} / {{ t('Warehouse') }}
+      <i class="fas fa-boxes mr-2"></i>{{ t('Details') }} {{ t('by') }} {{ t('Product') }} / {{ t('Warehouse') }}
     </h3>
   </div>
   <div class="card-body p-0">
@@ -196,8 +196,8 @@
             <th>{{ t('Warehouse') }}</th>
             <th class="text-left">{{ t('Qty') }} PWC</th>
             <th class="text-left">{{ t('Qty') }} {{ t('Movements') }}</th>
-            <th class="text-left">{{ t('فرق') }} {{ t('Quantity') }}</th>
-            <th class="text-left">{{ t('متوسط') }} {{ t('Cost') }}</th>
+           <th class="text-left">{{ t('difference') }} {{ t('Quantity') }}</th>
+           <th class="text-left">{{ t('average') }} {{ t('Cost') }}</th>
             <th class="text-left">{{ t('Value_2') }} PWC</th>
             <th class="text-center">{{ t('Status') }}</th>
           </tr>
@@ -218,7 +218,7 @@
               {% if row.matched_qty %}
               <span class="badge badge-success">OK</span>
               {% else %}
-              <span class="badge badge-danger">{{ t('مراجعة') }}</span>
+              <span class="badge badge-danger">{{ t('review') }}</span>
               {% endif %}
             </td>
           </tr>
@@ -229,6 +229,8 @@
   </div>
 </div>
 {% endblock %}
+
+{% block extra_css %}<style>@media print{@page{size:A4 landscape;margin:10mm}}</style>{% endblock %}
 
 {% block extra_js %}
 <script>

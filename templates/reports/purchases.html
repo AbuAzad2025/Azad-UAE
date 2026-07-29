@@ -2,6 +2,17 @@
 
 {% block title %}{{ t('Report_2') }} {{ t('Purchases') }}{% endblock %}
 
+{% block page_title %}{{ t('Report_2') }} {{ t('Purchases') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+  @page { size: A4 landscape; margin: 10mm; }
+  .main-sidebar, .main-header, .main-footer, .content-header, .btn, .card-header, .card-footer, .no-print, .filters, .pagination { display: none !important; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
   <div class="row">
@@ -32,11 +43,11 @@
           <form class="needs-validation no-print mb-4" method="get" action="">
             <div class="row">
               <div class="col-md-3">
-                <label for="input_start_date">من {{ t('History') }}</label>
+                <label for="input_start_date">{{ t('from') }} {{ t('History') }}</label>
                 <input type="date" name="start_date" class="form-control" value="{{ start_date }}" id="input_start_date" aria-label="start date">
               </div>
               <div class="col-md-3">
-                <label for="input_end_date">إلى {{ t('History') }}</label>
+                <label for="input_end_date">{{ t('to') }} {{ t('History') }}</label>
                 <input type="date" name="end_date" class="form-control" value="{{ end_date }}" id="input_end_date" aria-label="end date">
               </div>
               <div class="col-md-3">
@@ -52,7 +63,7 @@
               </div>
               <div class="col-md-3">
                 <label aria-hidden="true">&nbsp;</label>
-                <button type="submit" class="btn btn-info btn-block">
+                <button type="submit" class="btn btn-info btn-block no-print">
                   <i class="fas fa-search"></i> {{ t('Search') }}
                 </button>
               </div>
@@ -65,18 +76,7 @@
             <div class="col-md-3">
               <div class="small-box bg-info">
                 <div class="inner">
-                  <h3>{{ stats.total_purchases }}</h3>
-                  <p>{{ t('Total_2') }} {{ t('Purchases') }}</p>
-                </div>
-                <div class="icon">
-                  <i class="fas fa-shopping-cart"></i>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="small-box bg-success">
-                <div class="inner">
-                  <h3>{{ stats.total_amount }}</h3>
+                  <h3>{{ format_currency(stats.total_amount) }}</h3>
                   <p>{{ t('Total_2') }} {{ t('Amounts') }}</p>
                 </div>
                 <div class="icon">
@@ -85,9 +85,9 @@
               </div>
             </div>
             <div class="col-md-3">
-              <div class="small-box bg-warning">
+              <div class="small-box bg-success">
                 <div class="inner">
-                  <h3>{{ stats.total_paid }}</h3>
+                  <h3>{{ format_currency(stats.total_paid) }}</h3>
                   <p>{{ t('Paid') }}</p>
                 </div>
                 <div class="icon">
@@ -96,9 +96,9 @@
               </div>
             </div>
             <div class="col-md-3">
-              <div class="small-box bg-danger">
+              <div class="small-box bg-warning">
                 <div class="inner">
-                  <h3>{{ stats.total_due }}</h3>
+                  <h3>{{ format_currency(stats.total_due) }}</h3>
                   <p>{{ t('Remaining') }}</p>
                 </div>
                 <div class="icon">
@@ -106,14 +106,25 @@
                 </div>
               </div>
             </div>
+            <div class="col-md-3">
+              <div class="small-box bg-info">
+                <div class="inner">
+                  <h3>{{ stats.total_purchases }}</h3>
+                  <p>{{ t('Total_2') }} {{ t('Purchases') }}</p>
+                </div>
+                <div class="icon">
+                  <i class="fas fa-shopping-cart"></i>
+                </div>
+              </div>
+            </div>
           </div>
           {% endif %}
 
           
-          <div class="table-responsive"><table class="table table-bordered table-striped">
+<div class="table-responsive no-print"><table class="table table-bordered table-striped">
             <thead>
               <tr>
-                <th>{{ t('رقم') }} {{ t('Invoice_2') }}</th>
+                <th>{{ t('number') }} {{ t('invoices') }}</th>
                 <th>{{ t('Date') }}</th>
                 <th>{{ t('Supplier') }}</th>
                 <th>{{ t('Amount') }} {{ t('Total_3') }}</th>
@@ -127,13 +138,13 @@
                 <td>{{ purchase.purchase_number }}</td>
                 <td>{{ purchase.purchase_date.strftime('%Y-%m-%d') }}</td>
                 <td>{{ purchase.supplier.name }}</td>
-                <td>{{ purchase.total_amount }}</td>
-                <td>{{ purchase.paid_amount }}</td>
-                <td>{{ purchase.balance_due }}</td>
+                <td>{{ format_currency(purchase.total_amount) }}</td>
+                <td>{{ format_currency(purchase.paid_amount) }}</td>
+                <td>{{ format_currency(purchase.balance_due) }}</td>
               </tr>
               {% else %}
               <tr>
-                <td colspan="6" class="text-center">لا {{ t('توجد') }} {{ t('Purchases_2') }}</td>
+                <td colspan="6" class="text-center">{{ t('no') }} {{ t('Purchases_2') }}</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -143,6 +154,5 @@
     </div>
   </div>
 </div>
-{% block extra_css %}<style>@media print{@page{size:A4 landscape;margin:10mm}}</style>{% endblock %}
 {% endblock %}
 
