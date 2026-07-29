@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('Purchases_Log') }} - {{ t('Purchases') }}{% endblock %}
-{% block page_title %}{{ t('Purchases') }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or t('Azad_Intelligent_Systems') }} - {{ t('Purchase_Log') }}{% endblock %}
+{% block page_title %}{{ t('Purchase_Log') }}{% endblock %}
 
 {% block extra_css %}
 {% include 'partials/datatables_assets.html' %}
@@ -76,14 +76,14 @@
 <div class="card">
   <div class="card-header d-flex justify-content-between align-items-center">
     <h3 class="card-title mb-0">
-      <i class="fas fa-file-invoice-dollar {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i>{{ t('Purchases_Log') }}
+      <i class="fas fa-file-invoice-dollar {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i>{{ t('Purchase_Log') }}
     </h3>
     <div class="btn-group">
       <button type="button" class="btn btn-outline-info" id="printPurchasesBtn">
         <i class="fas fa-print {% if is_rtl %}ms-1{% else %}mr-1{% endif %}"></i>{{ t('Print') }}
       </button>
       <a href="{{ url_for('purchases.create') }}" class="btn btn-primary">
-        <i class="fas fa-plus {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i>{{ t('Invoice') }} {{ t('Purchase') }} {{ t('New_3') }}
+        <i class="fas fa-plus {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i>{{ t('New_Purchase_Invoice') }}
       </a>
     </div>
   </div>
@@ -92,10 +92,10 @@
       <table id="purchasesTable" class="table table-bordered table-striped">
       <thead>
         <tr>
-          <th>{{ t('Invoice Number') }}</th>
+          <th>{{ t('Invoice_Number') }}</th>
           <th>{{ t('Supplier') }}</th>
           <th>{{ t('Date') }}</th>
-          <th>{{ t('Amount') }} {{ t('Total_3') }}</th>
+          <th>{{ t('Total_Amount') }}</th>
           <th>{{ t('Paid') }}</th>
           <th>{{ t('Remaining') }}</th>
           <th>{{ t('Status') }}</th>
@@ -109,7 +109,7 @@
         <tr>
           <td><strong>{{ purchase.purchase_number }}</strong></td>
           <td>{{ purchase.supplier_name }}</td>
-          <td>{{ purchase.purchase_date.strftime('%Y-%m-%d') }}</td>
+          <td>{{ format_date(purchase.purchase_date) }}</td>
           <td class="text-right"><strong>{{ format_currency(purchase.total_amount) }}</strong></td>
           <td class="text-right text-success">{{ format_currency(purchase.get_paid_amount()) }}</td>
           <td class="text-right">
@@ -122,15 +122,15 @@
             {% set balance = (purchase.total_amount - purchase.get_paid_amount()) %}
             {% if balance <= 0 %}
               <span class="badge badge-success px-3">
-                <i class="fas fa-check mr-1"></i>{{ t('Paid_2') }}
+                <i class="fas fa-check {% if is_rtl %}ms-1{% else %}mr-1{% endif %}"></i>{{ t('Paid_In_Full') }}
               </span>
             {% elif balance > 0 and purchase.get_paid_amount() > 0 %}
               <span class="badge badge-warning px-3">
-                <i class="fas fa-clock mr-1"></i>{{ t('Partial_2') }}
+                <i class="fas fa-clock {% if is_rtl %}ms-1{% else %}mr-1{% endif %}"></i>{{ t('Partially_Paid') }}
               </span>
             {% else %}
               <span class="badge badge-danger px-3">
-                <i class="fas fa-hourglass-half mr-1"></i>{{ t('Credit') }}
+                <i class="fas fa-hourglass-half {% if is_rtl %}ms-1{% else %}mr-1{% endif %}"></i>{{ t('On_Credit') }}
               </span>
             {% endif %}
           </td>
@@ -153,7 +153,7 @@
               {% if current_user.has_permission('manage_payments') %}
               <a href="{{ url_for('payments.create_payment', purchase_id=purchase.id) }}"
               {% endif %}
-                 class="btn btn-danger" title="{{ t('Voucher_Spend') }}">
+                 class="btn btn-danger" title="{{ t('Payment_Voucher') }}">
                 <i class="fas fa-money-bill-wave"></i>
               </a>
               {% endif %}
@@ -187,7 +187,7 @@
 $(document).ready(() => {
   const $tableEl = $('#purchasesTable');
   const printOptions = {
-    title: '{{ t('Log') }} {{ t('Purchases') }}',
+    title: '{{ t('Purchase_Log') }}',
     headerColor: '#0d6efd'
   };
 
