@@ -240,9 +240,7 @@ class PurchaseService:
                             ProductSerial.serial_number.in_(clean_serials),
                         ).count()
                         if existing_serials > 0:
-                            raise ValueError(
-                                gettext(f'⚠️ بعض الأرقام التسلسلية موجودة مسبقاً للمنتج "{product.name}".')
-                            )
+                            raise ValueError(gettext(f'⚠️ بعض الأرقام التسلسلية موجودة مسبقاً للمنتج "{product.name}".'))
 
                         for sn in clean_serials:
                             serial_obj = ProductSerial(
