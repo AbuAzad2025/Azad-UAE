@@ -125,7 +125,7 @@
                 </tr>
               </thead>
               <tbody>
-                {% for item in expense_breakdown.items[:5] %}
+                {% for account_name, item in (expense_breakdown.items() | list)[:5] %}
                 <tr>
                   <td>{{ item.account_name }}</td>
                   <td>{{ format_currency(item.amount) }}</td>

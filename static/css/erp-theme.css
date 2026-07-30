@@ -3238,11 +3238,13 @@ a.btn.btn-outline-secondary span {
     border-radius: 0.5rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
+
 .print-action-bar .pab-title {
     font-weight: 700;
     color: #495057;
     margin-inline-end: auto;
 }
+
 .print-action-bar .pab-btn {
     display: inline-flex;
     align-items: center;
@@ -3255,16 +3257,19 @@ a.btn.btn-outline-secondary span {
     text-decoration: none;
     line-height: 1.4;
 }
+
 .print-action-bar .pab-print {
     background: #0d6efd;
     color: #fff;
 }
 .print-action-bar .pab-print:hover { background: #0b5ed7; }
+
 .print-action-bar .pab-export {
     background: #198754;
     color: #fff;
 }
 .print-action-bar .pab-export:hover { background: #157347; }
+
 .print-action-bar .pab-back {
     background: #fff;
     color: #495057;

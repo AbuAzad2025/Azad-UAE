@@ -320,7 +320,7 @@
                   {% if month_data.change > 0 %}
                     <span class="trend-up"><i class="fas fa-arrow-up"></i> {{ "{:.1f}".format(month_data.change) }}%</span>
                   {% else %}
-                    <span class="trend-down"><i class="fas fa-arrow-down"></i> {{ "{:.1f}".format(abs(month_data.change)) }}%</span>
+                    <span class="trend-down"><i class="fas fa-arrow-down"></i> {{ "{:.1f}".format(month_data.change|abs) }}%</span>
                   {% endif %}
                 </td>
               </tr>
