@@ -47,7 +47,7 @@
 <div class="card card-warning">
   <div class="card-header">
     <h3 class="card-title">
-      <i class="fas fa-clock me-2"></i>{{ t('Cheques_2') }} {{ t('Near') }} {{ t('Due') }} {{ t('خلال 7 أيام') }}
+      <i class="fas fa-clock mr-2"></i>{{ t('Cheques_2') }} {{ t('Near') }} {{ t('Due') }} {{ t('خلال 7 أيام') }}
     </h3>
   </div>
   <div class="card-body p-0">
@@ -82,7 +82,7 @@
           <td>{{ cheque.due_date.strftime('%Y-%m-%d') if cheque.due_date else '-' }}</td>
           <td>
             <span class="badge badge-warning">
-              <i class="fas fa-clock me-1"></i>{{ cheque.days_until_due }} {{ t('يوم') }}
+              <i class="fas fa-clock mr-1"></i>{{ cheque.days_until_due }} {{ t('يوم') }}
             </span>
           </td>
           {% if show_branch_columns %}
@@ -117,7 +117,7 @@
 <div class="card card-danger mt-3">
   <div class="card-header">
     <h3 class="card-title">
-      <i class="fas fa-exclamation-triangle me-2"></i>{{ t('Cheques_2') }} {{ t('Late') }} - {{ t('تحتاج') }} {{ t('متابعة') }} {{ t('فورية') }}!
+      <i class="fas fa-exclamation-triangle mr-2"></i>{{ t('Cheques_2') }} {{ t('Late') }} - {{ t('تحتاج') }} {{ t('متابعة') }} {{ t('فورية') }}!
     </h3>
   </div>
   <div class="card-body p-0">
@@ -161,7 +161,7 @@
           <td>{{ cheque.due_date.strftime('%Y-%m-%d') if cheque.due_date else '-' }}</td>
           <td>
             <span class="badge badge-danger">
-              <i class="fas fa-exclamation-circle me-1"></i>{{ cheque.days_until_due|abs }} {{ t('يوم') }}
+              <i class="fas fa-exclamation-circle mr-1"></i>{{ cheque.days_until_due|abs }} {{ t('يوم') }}
             </span>
           </td>
           {% if show_branch_columns %}
@@ -196,7 +196,7 @@
 <div class="card card-dark mt-3">
   <div class="card-header">
     <h3 class="card-title">
-      <i class="fas fa-ban me-2"></i>{{ t('Cheques_2') }} {{ t('Returned') }}
+      <i class="fas fa-ban mr-2"></i>{{ t('Cheques_2') }} {{ t('Returned') }}
     </h3>
   </div>
   <div class="card-body p-0">
@@ -229,7 +229,7 @@
           <td>{{ format_currency(cheque.amount, cheque.currency) }}</td>
           <td>
             <span class="text-danger">
-              <i class="fas fa-info-circle me-1"></i>
+              <i class="fas fa-info-circle mr-1"></i>
               {{ cheque.bounce_reason or _('غير محدد') }}
             </span>
           </td>

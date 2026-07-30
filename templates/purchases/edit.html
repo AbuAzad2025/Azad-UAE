@@ -78,10 +78,10 @@
 
             <div class="form-group">
               <button type="submit" class="btn btn-success btn-lg">
-                <i class="fas fa-save {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i> {{ t('Save') }} {{ t('Changes') }}
+                <i class="fas fa-save {% if is_rtl %}ml-2{% else %}mr-2{% endif %}"></i> {{ t('Save') }} {{ t('Changes') }}
               </button>
               <a href="{{ url_for('purchases.view', id=purchase.id) }}" class="btn btn-secondary btn-lg">
-                <i class="fas fa-times {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i> {{ t('Cancel') }}
+                <i class="fas fa-times {% if is_rtl %}ml-2{% else %}mr-2{% endif %}"></i> {{ t('Cancel') }}
               </a>
             </div>
           </form>

@@ -5,9 +5,9 @@
 {% block content %}
 <div class="container-fluid py-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold"><i class="bi bi-building-add me-2"></i>{{ t('Create_New_Tenant') }}</h2>
+    <h2 class="fw-bold"><i class="bi bi-building-add mr-2"></i>{{ t('Create_New_Tenant') }}</h2>
     <a href="{{ url_for('owner.tenants_list') }}" class="btn btn-outline-secondary">
-      <i class="bi bi-arrow-left me-1"></i> {{ t('Back_To_List') }}
+      <i class="bi bi-arrow-left mr-1"></i> {{ t('Back_To_List') }}
     </a>
   </div>
 
@@ -16,7 +16,7 @@
       <form method="POST" class="card shadow-sm">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="card-header bg-success text-white">
-          <i class="bi bi-plus-circle me-2"></i>{{ t('New_Tenant_Data') }}
+          <i class="bi bi-plus-circle mr-2"></i>{{ t('New_Tenant_Data') }}
         </div>
         <div class="card-body">
           <div class="row g-3">
@@ -64,7 +64,7 @@
           </div>
 
           <hr class="my-4">
-          <h5 class="fw-semibold text-primary mb-3"><i class="bi bi-box-seam me-2"></i>{{ t('Subscription_And_Plan') }}</h5>
+          <h5 class="fw-semibold text-primary mb-3"><i class="bi bi-box-seam mr-2"></i>{{ t('Subscription_And_Plan') }}</h5>
           <div class="row g-3">
             <div class="col-md-4">
               <label class="form-label fw-semibold" for="input_package_id">{{ t('Plan') }}</label>
@@ -93,8 +93,8 @@
           </div>
 
           <hr class="my-4">
-          <h5 class="fw-semibold text-primary mb-1"><i class="bi bi-speedometer2 me-2"></i>{{ t('Limits_And_Quotas') }}</h5>
-          <p class="text-muted small mb-3"><i class="bi bi-info-circle me-1"></i>{{ t('Enter') }} <code>-1</code> = {{ t('Unlimited') }} ∞</p>
+          <h5 class="fw-semibold text-primary mb-1"><i class="bi bi-speedometer2 mr-2"></i>{{ t('Limits_And_Quotas') }}</h5>
+          <p class="text-muted small mb-3"><i class="bi bi-info-circle mr-1"></i>{{ t('Enter') }} <code>-1</code> = {{ t('Unlimited') }} ∞</p>
           <div class="row g-3">
             <div class="col-md-4">
               <label class="form-label fw-semibold" for="input_max_users">{{ t('User_Limit') }}</label>
@@ -139,7 +139,7 @@
           </div>
 
           <hr class="my-4">
-          <h5 class="fw-semibold text-primary mb-3"><i class="bi bi-sliders me-2"></i>{{ t('Features_And_Permissions') }}</h5>
+          <h5 class="fw-semibold text-primary mb-3"><i class="bi bi-sliders mr-2"></i>{{ t('Features_And_Permissions') }}</h5>
           <div class="row g-3">
             <div class="col-md-3">
               <div class="custom-control custom-switch">
@@ -228,8 +228,8 @@
           </div>
 
           <hr class="my-4">
-          <h5 class="fw-semibold text-primary mb-1"><i class="bi bi-shop me-2"></i>{{ t('Advanced_POS_Features') }}</h5>
-          <p class="text-muted small mb-3"><i class="bi bi-info-circle me-1"></i>{{ t('Plan_Inheritance_Meaning') }}</p>
+          <h5 class="fw-semibold text-primary mb-1"><i class="bi bi-shop mr-2"></i>{{ t('Advanced_POS_Features') }}</h5>
+          <p class="text-muted small mb-3"><i class="bi bi-info-circle mr-1"></i>{{ t('Plan_Inheritance_Meaning') }}</p>
           <div class="row g-3">
             {% for name, label in [
               ('enable_pos_promotions', t('Promotions_And_Discounts')),
@@ -250,7 +250,7 @@
         </div>
         <div class="card-footer d-flex justify-content-between">
           <a href="{{ url_for('owner.tenants_list') }}" class="btn btn-secondary">{{ t('Cancel') }}</a>
-          <button type="submit" class="btn btn-success"><i class="bi bi-plus-circle me-1"></i>{{ t('Create_Tenant') }}</button>
+          <button type="submit" class="btn btn-success"><i class="bi bi-plus-circle mr-1"></i>{{ t('Create_Tenant') }}</button>
         </div>
       </form>
     </div>
@@ -258,16 +258,16 @@
     <div class="col-lg-4">
       <div class="card shadow-sm border-0 mb-3">
         <div class="card-header bg-info text-white">
-          <i class="bi bi-info-circle me-2"></i>{{ t('Instructions') }}</div>
+          <i class="bi bi-info-circle mr-2"></i>{{ t('Instructions') }}</div>
         <div class="card-body">
           <p class="text-muted small">
-            <i class="bi bi-check-circle me-1"></i> {{ t('Arabic_Name_And_Slug_Required') }}
+            <i class="bi bi-check-circle mr-1"></i> {{ t('Arabic_Name_And_Slug_Required') }}
           </p>
           <p class="text-muted small">
-            <i class="bi bi-check-circle me-1"></i> {{ t('Slug_Unique_No_Spaces') }}
+            <i class="bi bi-check-circle mr-1"></i> {{ t('Slug_Unique_No_Spaces') }}
           </p>
           <p class="text-muted small">
-            <i class="bi bi-check-circle me-1"></i> {{ t('After_Creation_Edit_Limits') }}
+            <i class="bi bi-check-circle mr-1"></i> {{ t('After_Creation_Edit_Limits') }}
           </p>
         </div>
       </div>

@@ -211,7 +211,7 @@ function printPDF() {
     // {{ t('Save') }} {{ t('File') }}
     doc.save('trial_balance_' + new Date().toISOString().split('T')[0] + '.pdf');
   } else {
-    alert('{{ t('jsPDF_Not_Available') }}');
+    notify('{{ t('jsPDF_Not_Available') }}');
   }
 }
 

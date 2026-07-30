@@ -240,7 +240,7 @@ $(document).ready(() => {
 
       error: (xhr) => {
 
-        alert({{ t('restore_failed') | tojson }} + ': ' + xhr.statusText);
+        notify({{ t('restore_failed') | tojson }} + ': ' + xhr.statusText);
 
       }
 

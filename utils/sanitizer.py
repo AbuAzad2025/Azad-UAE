@@ -20,8 +20,8 @@ bleach, _BLEACH_AVAILABLE = _resolve_bleach()
 class InputSanitizer:
     """منظف المدخلات ضد XSS"""
 
-    ALLOWED_TAGS = ["b", "i", "u", "em", "strong", "p", "br", "ul", "ol", "li"]
-    ALLOWED_ATTRS: dict[str, list[str]] = {}
+    ALLOWED_TAGS = ["b", "i", "u", "em", "strong", "p", "br", "ul", "ol", "li", "span"]
+    ALLOWED_ATTRS: dict[str, list[str]] = {"i": ["class"], "span": ["class"]}
 
     @staticmethod
     def sanitize_html(text, allow_tags=False):

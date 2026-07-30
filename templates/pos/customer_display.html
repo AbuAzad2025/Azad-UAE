@@ -8,12 +8,15 @@
   </div>
   <div id="cdItems" class="row justify-content-center mb-4 d-none">
     <div class="col-md-6">
-      <table class="table table-dark table-borderless text-right">
+      <div class="table-responsive">
+<table class="table table-dark table-borderless text-right">
         <thead><tr><th>{{ _('الوصف') }}</th><th>{{ _('الكمية') }}</th><th>{{ _('السعر') }}</th><th>{{ _('الخصم') }}</th><th>{{ _('المبلغ') }}</th></tr></thead>
         <tbody id="cdItemsBody"></tbody>
       </table>
+</div>
       <hr class="border-light">
-      <table class="table table-dark table-borderless text-right h5">
+      <div class="table-responsive">
+<table class="table table-dark table-borderless text-right h5">
         <tbody>
           <tr><td>{{ _('المجموع') }}</td><td id="cdSubtotal" class="text-left"></td></tr>
           <tr id="cdDiscountRow" class="d-none"><td>{{ _('الخصم') }}</td><td id="cdDiscount" class="text-left"></td></tr>
@@ -23,6 +26,7 @@
           <tr id="cdExemptRow" class="d-none"><td>{{ _('غير خاضع') }}</td><td id="cdExempt" class="text-left"></td></tr>
         </tbody>
       </table>
+</div>
       <h3 id="cdTotal" class="text-left"></h3>
       <div id="cdTender" class="d-none h5 text-left">
         <span id="cdPaid"></span> — <span id="cdChange" class="text-success"></span>

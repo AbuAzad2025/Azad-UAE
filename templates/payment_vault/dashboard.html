@@ -403,7 +403,7 @@
 
     // Revenue Chart
     const ctx = document.getElementById('revenueChart').getContext('2d');
-    const chartConfig = JSON.parse('{{ chart_data | tojson | safe }}');
+    const chartConfig = {{ chart_data | tojson }};
     new Chart(ctx, chartConfig);
     
     function lockVault() {

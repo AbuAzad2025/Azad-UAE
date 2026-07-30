@@ -21,9 +21,9 @@
             <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">
               {{ t('العودة') }} {{ t('للرئيسية') }}
             </a>
-            <a href="javascript:history.back()" class="btn btn-secondary">
+            <button type="button" class="btn btn-secondary" data-action="history-back">
               {{ t('Back') }}
-            </a>
+            </button>
           </div>
         </div>
       </div>

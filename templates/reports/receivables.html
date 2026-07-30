@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('Company_2') }} {{ t('أزاد') }} {{ t('للأنظمة') }} {{ t('الذكية') }} - {{ t('Report_2') }} {{ t('Receivables_2') }} {{ t('Receivables') }} {{ t('والمستحقات') }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Receivables Report') }}{% endblock %}
 {% block page_title %}{{ t('Report_2') }} {{ t('Receivables_2') }} {{ t('Receivables') }} - Aging Report{% endblock %}
 
 {% block content %}

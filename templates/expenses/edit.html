@@ -184,7 +184,7 @@ $(() => {
     const name_ar = $('#expense_category_name_ar').val().trim();
     
     if (!name) {
-      alert({{ (t('الرجاء') + ' ' + t('إدخال') + ' ' + t('Name_2') + ' ' + t('الفئة') + ' ' + t('In English_2'))|tojson }});
+      notify({{ (t('الرجاء') + ' ' + t('إدخال') + ' ' + t('Name_2') + ' ' + t('الفئة') + ' ' + t('In English_2'))|tojson }});
       return;
     }
     
@@ -216,15 +216,15 @@ $(() => {
           if (typeof UI !== 'undefined') {
             UI.success({{ t('تم إضافة الفئة بنجاح!')|tojson }});
           } else {
-            alert({{ t('تم إضافة الفئة بنجاح!')|tojson }});
+            notify({{ t('تم إضافة الفئة بنجاح!')|tojson }});
           }
         } else {
-          alert({{ t('Error')|tojson }} + ': ' + (response.error || {{ t('فشل في إضافة الفئة')|tojson }}));
+          notify({{ t('Error')|tojson }} + ': ' + (response.error || {{ t('فشل في إضافة الفئة')|tojson }}));
         }
       },
       error: (xhr) => {
         const error = xhr.responseJSON?.error || {{ t('حدث خطأ أثناء الحفظ')|tojson }};
-        alert({{ t('Error')|tojson }} + ': ' + error);
+        notify({{ t('Error')|tojson }} + ': ' + error);
       }
     });
   });

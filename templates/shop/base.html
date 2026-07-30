@@ -16,9 +16,10 @@
   {% endblock %}
   <link rel="manifest" href="{{ url_for('static', filename='shop-manifest.json') }}">
   <meta name="theme-color" content="{{ theme_primary or '#1B7A4E' }}">
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&display=swap" as="style">
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" as="style">
-   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" crossorigin="anonymous" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/shop-palestine.css') }}">
    <style>:root { --theme-primary: {{ theme_primary }}; --theme-secondary: {{ theme_secondary }}; }</style>
@@ -101,7 +102,7 @@
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, message in messages %}
-          <div class="ps-alert ps-alert-{{ 'danger' if category == 'danger' else ('warning' if category == 'warning' else 'success') }}">{{ message }}</div>
+          <div class="ps-alert ps-alert-{{ 'danger' if category in ('danger', 'error') else ('warning' if category == 'warning' else ('info' if category == 'info' else 'success')) }}" role="alert">{{ message }}</div>
         {% endfor %}
       {% endif %}
     {% endwith %}
@@ -173,9 +174,9 @@
         <p class="ps-azad-manager">{{ t('azad_managed_by') }}</p>
         <p class="ps-powered-by-azad"><i class="fas fa-bolt"></i> {{ t('azad_powered_by') }}</p>
         <ul class="ps-footer-contact ps-azad-contact">
-          <li><i class="fas fa-globe"></i> <a href="https://www.azad.ae" target="_blank" rel="noopener">www.azad.ae</a></li>
-          <li><i class="fas fa-envelope"></i> info@azad.ae</li>
-          <li><i class="fas fa-phone"></i> +971 50 123 4567</li>
+          <li><i class="fas fa-globe"></i> <a href="{{ config.DEVELOPER_WEBSITE }}" target="_blank" rel="noopener">{{ config.DEVELOPER_WEBSITE | replace('https://', '') | replace('http://', '') }}</a></li>
+          {% if config.DEVELOPER_EMAIL %}<li><i class="fas fa-envelope"></i> {{ config.DEVELOPER_EMAIL }}</li>{% endif %}
+          {% if config.DEVELOPER_PHONE %}<li><i class="fas fa-phone"></i> {{ config.DEVELOPER_PHONE }}</li>{% endif %}
         </ul>
       </div>
     </div>
@@ -203,7 +204,7 @@
   <script src="{{ url_for('static', filename='js/shop-storefront.js') }}" defer></script>
   <script>
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/static/sw.js');
+    navigator.serviceWorker.register('{{ url_for("static", filename="sw.js") }}');
   }
   </script>
   <script src="{{ url_for('static', filename='js/shop-cart.js') }}" defer></script>

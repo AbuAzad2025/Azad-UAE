@@ -21,7 +21,7 @@
           <h5 class="fw-bold">{{ user.full_name or user.full_name_ar or user.username }}</h5>
           <p class="text-muted mb-1"><code>{{ user.username }}</code></p>
           <a href="#edit-section" class="btn btn-warning mb-2">
-            <i class="fas fa-edit me-1"></i>{{ _('تعديل بياناتي') }}
+            <i class="fas fa-edit mr-1"></i>{{ _('تعديل بياناتي') }}
           </a>
           <p class="text-muted small mb-2">
             {% if user.role %}
@@ -137,7 +137,7 @@
 
             <div class="mt-4 d-flex justify-content-between">
               <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">{{ _('العودة للوحة التحكم') }}</a>
-              <button type="submit" class="btn btn-warning"><i class="fas fa-save me-1"></i>{{ _('حفظ التغييرات') }}</button>
+              <button type="submit" class="btn btn-warning"><i class="fas fa-save mr-1"></i>{{ _('حفظ التغييرات') }}</button>
             </div>
           </form>
         </div>

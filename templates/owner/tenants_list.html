@@ -5,13 +5,13 @@
 {% block content %}
 <div class="container-fluid py-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold"><i class="bi bi-building me-2"></i>{{ t('Tenants_Management') }}</h2>
+    <h2 class="fw-bold"><i class="bi bi-building mr-2"></i>{{ t('Tenants_Management') }}</h2>
     <div>
-      <a href="{{ url_for('owner.tenant_create') }}" class="btn btn-success me-2">
-        <i class="bi bi-plus-circle me-1"></i> {{ t('Create_New_Tenant') }}
+      <a href="{{ url_for('owner.tenant_create') }}" class="btn btn-success mr-2">
+        <i class="bi bi-plus-circle mr-1"></i> {{ t('Create_New_Tenant') }}
       </a>
       <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i> {{ t('Back_To_Dashboard') }}
+        <i class="bi bi-arrow-left mr-1"></i> {{ t('Back_To_Dashboard') }}
       </a>
     </div>
   </div>
@@ -59,11 +59,11 @@
               <td class="text-center">{% if tenant.enable_expenses %}<i class="bi bi-check-circle-fill text-success" title="{{ t('Enabled') }}"></i>{% else %}<i class="bi bi-x-circle-fill text-danger" title="{{ t('Disabled') }}"></i>{% endif %}</td>
               <td>
                 {% if tenant.is_suspended %}
-                  <span class="badge bg-danger"><i class="bi bi-pause-circle me-1"></i>{{ t('Suspended') }}</span>
+                  <span class="badge bg-danger"><i class="bi bi-pause-circle mr-1"></i>{{ t('Suspended') }}</span>
                 {% elif not tenant.is_active %}
-                  <span class="badge bg-secondary"><i class="bi bi-x-circle me-1"></i>{{ t('Disabled') }}</span>
+                  <span class="badge bg-secondary"><i class="bi bi-x-circle mr-1"></i>{{ t('Disabled') }}</span>
                 {% else %}
-                  <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>{{ t('Active') }}</span>
+                  <span class="badge bg-success"><i class="bi bi-check-circle mr-1"></i>{{ t('Active') }}</span>
                 {% endif %}
               </td>
               <td>
@@ -114,7 +114,7 @@
       <form method="POST" action="{{ url_for('owner.tenant_suspend', tenant_id=tenant.id) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="modal-header bg-warning text-dark">
-          <h5 class="modal-title"><i class="bi bi-pause-circle me-2"></i>{{ t('Suspend_Tenant') }}</h5>
+          <h5 class="modal-title"><i class="bi bi-pause-circle mr-2"></i>{{ t('Suspend_Tenant') }}</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
@@ -128,7 +128,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t('Cancel') }}</button>
-          <button type="submit" class="btn btn-warning"><i class="bi bi-pause-circle me-1"></i>{{ t('Suspend') }}</button>
+          <button type="submit" class="btn btn-warning"><i class="bi bi-pause-circle mr-1"></i>{{ t('Suspend') }}</button>
         </div>
       </form>
     </div>
@@ -142,19 +142,19 @@
       <form method="POST" action="{{ url_for('owner.tenant_delete', tenant_id=tenant.id) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="modal-header bg-danger text-white">
-          <h5 class="modal-title"><i class="bi bi-trash me-2"></i>{{ t('Delete_Tenant') }}</h5>
+          <h5 class="modal-title"><i class="bi bi-trash mr-2"></i>{{ t('Delete_Tenant') }}</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <p>{{ t('Are_You_Sure_Delete_Tenant') }} <strong>{{ tenant.name_ar or tenant.name }}</strong>?</p>
           <div class="alert alert-warning">
-            <i class="bi bi-exclamation-triangle me-1"></i>
+            <i class="bi bi-exclamation-triangle mr-1"></i>
             {{ t('Delete_Tenant_Warning') }}
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t('Cancel') }}</button>
-          <button type="submit" class="btn btn-danger"><i class="bi bi-trash me-1"></i>{{ t('Delete') }}</button>
+          <button type="submit" class="btn btn-danger"><i class="bi bi-trash mr-1"></i>{{ t('Delete') }}</button>
         </div>
       </form>
     </div>

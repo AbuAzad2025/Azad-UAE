@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('Company_2') }} {{ t('أزاد') }} {{ t('للأنظمة') }} {{ t('الذكية') }} - {{ t('Details') }} {{ t('Cheque') }} #{{ cheque.cheque_bank_number }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Cheque Details') }} #{{ cheque.cheque_bank_number }}{% endblock %}
 {% block page_title %}<i class="fas fa-money-check"></i> {{ t('Details') }} {{ t('Cheque') }}{% endblock %}
 
 {% block content %}
@@ -9,7 +9,7 @@
     <div class="card">
       <div class="card-header {% if cheque.cheque_type == 'incoming' %}bg-success{% else %}bg-danger{% endif %}">
         <h3 class="card-title text-white">
-          <i class="fas fa-money-check me-2"></i>
+          <i class="fas fa-money-check mr-2"></i>
           {{ t('Cheque_3') }} {{ cheque.type_ar }} - {{ cheque.cheque_bank_number }}
         </h3>
       </div>
@@ -22,10 +22,10 @@
             </div>
             <div class="col-md-6 text-end">
               {% if cheque.is_overdue and cheque.status == 'pending' %}
-                <i class="fas fa-exclamation-triangle me-1"></i>
+                <i class="fas fa-exclamation-triangle mr-1"></i>
                 <strong>{{ t('Late_2') }} {{ cheque.days_until_due|abs }} {{ t('يوم') }}!</strong>
               {% elif cheque.is_due_soon and cheque.status == 'pending' %}
-                <i class="fas fa-clock me-1"></i>
+                <i class="fas fa-clock mr-1"></i>
                 {{ t('Balance_4') }} {{ cheque.days_until_due }} {{ t('يوم') }}
               {% endif %}
             </div>
@@ -50,11 +50,11 @@
                 <td>
                   {% if cheque.cheque_type == 'incoming' %}
                   <span class="badge badge-success">
-                    <i class="fas fa-arrow-down me-1"></i>{{ t('Income_3') }}
+                    <i class="fas fa-arrow-down mr-1"></i>{{ t('Income_3') }}
                   </span>
                   {% else %}
                   <span class="badge badge-danger">
-                    <i class="fas fa-arrow-up me-1"></i>{{ t('Expense') }}
+                    <i class="fas fa-arrow-up mr-1"></i>{{ t('Expense') }}
                   </span>
                   {% endif %}
                 </td>
@@ -219,7 +219,7 @@
 
         {% if cheque.bounce_reason %}
         <div class="alert alert-danger">
-          <i class="fas fa-ban me-2"></i>
+          <i class="fas fa-ban mr-2"></i>
           <strong>{{ t('سبب') }} {{ t('الإرتداد') }}:</strong> {{ cheque.bounce_reason }}
         </div>
         {% endif %}
@@ -238,21 +238,21 @@
         
         {% if cheque.status == 'pending' %}
         <button type="button" class="btn btn-primary btn-block mb-2" data-action="deposit-cheque">
-          <i class="fas fa-university me-2"></i>{{ t('إيداع') }} في {{ t('Bank') }}
+          <i class="fas fa-university mr-2"></i>{{ t('إيداع') }} في {{ t('Bank') }}
         </button>
 
         
         <a href="{{ url_for('cheques.edit', id=cheque.id) }}" class="btn btn-info btn-block mb-2">
-          <i class="fas fa-edit me-2"></i>{{ t('Edit') }}
+          <i class="fas fa-edit mr-2"></i>{{ t('Edit') }}
         </a>
         
         {% elif cheque.status == 'deposited' %}
         <button type="button" class="btn btn-success btn-block mb-2" data-action="clear-cheque">
-          <i class="fas fa-check-circle me-2"></i>✅ {{ t('Confirm') }} {{ t('Exchange') }} ({{ t('Bank') }} {{ t('وافق') }})
+          <i class="fas fa-check-circle mr-2"></i>✅ {{ t('Confirm') }} {{ t('Exchange') }} ({{ t('Bank') }} {{ t('وافق') }})
         </button>
 
         <button type="button" class="btn btn-danger btn-block mb-2" data-action="bounce-cheque">
-          <i class="fas fa-times-circle me-2"></i>❌ {{ t('رفض') }} ({{ t('Bank') }} {{ t('رفض') }})
+          <i class="fas fa-times-circle mr-2"></i>❌ {{ t('رفض') }} ({{ t('Bank') }} {{ t('رفض') }})
         </button>
         
         {% elif cheque.status == 'cleared' %}
@@ -277,20 +277,20 @@
 
         {% if cheque.status not in ['cleared', 'cancelled'] %}
         <button type="button" class="btn btn-secondary btn-block mb-2" data-action="cancel-cheque">
-          <i class="fas fa-ban me-2"></i>{{ t('Cancel') }} {{ t('Cheque') }}
+          <i class="fas fa-ban mr-2"></i>{{ t('Cancel') }} {{ t('Cheque') }}
         </button>
         {% endif %}
 
         
         <button type="button" class="btn btn-danger btn-block" 
                 data-delete-item="{{cheque.id}}" data-item-type="cheques" data-item-name="{{cheque.cheque_bank_number|tojson}}">
-          <i class="fas fa-trash me-2"></i>{{ t('أرشفة') }}
+          <i class="fas fa-trash mr-2"></i>{{ t('أرشفة') }}
         </button>
 
         <hr>
 
         <a href="{{ url_for('cheques.index') }}" class="btn btn-outline-primary btn-block">
-          <i class="fas fa-arrow-left me-2"></i>{{ t('العودة') }} {{ t('للقائمة') }}
+          <i class="fas fa-arrow-left mr-2"></i>{{ t('العودة') }} {{ t('للقائمة') }}
         </a>
       </div>
     </div>
@@ -339,7 +339,7 @@
           
           {% if cheque.currency != tenant_default_currency %}
           <div class="alert alert-info">
-            <i class="fas fa-exchange-alt me-2"></i>
+            <i class="fas fa-exchange-alt mr-2"></i>
             <strong>{{ t('Price_2') }} {{ t('Exchange') }} عند {{ t('Create_2') }}:</strong> {{ "{:.4f}".format(cheque.exchange_rate) }}
           </div>
           
@@ -373,7 +373,7 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ t('Cancel') }}</button>
           <button type="submit" class="btn btn-success">
-            <i class="fas fa-check me-2"></i>{{ t('Confirm') }} {{ t('Exchange') }}
+            <i class="fas fa-check mr-2"></i>{{ t('Confirm') }} {{ t('Exchange') }}
           </button>
         </div>
       </form>
@@ -405,7 +405,7 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ t('Cancel') }}</button>
           <button type="submit" class="btn btn-warning">
-            <i class="fas fa-undo me-2"></i>{{ t('تسجيل') }} {{ t('الإرتداد') }}
+            <i class="fas fa-undo mr-2"></i>{{ t('تسجيل') }} {{ t('الإرتداد') }}
           </button>
         </div>
       </form>
@@ -443,7 +443,7 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ t('Cancel') }}</button>
           <button type="submit" class="btn btn-primary">
-            <i class="fas fa-university me-2"></i>{{ t('إيداع') }} في {{ t('Bank') }}
+            <i class="fas fa-university mr-2"></i>{{ t('إيداع') }} في {{ t('Bank') }}
           </button>
         </div>
       </form>
@@ -475,7 +475,7 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ t('Cancel') }}</button>
           <button type="submit" class="btn btn-dark">
-            <i class="fas fa-ban me-2"></i>{{ t('Cancel') }} {{ t('Cheque') }}
+            <i class="fas fa-ban mr-2"></i>{{ t('Cancel') }} {{ t('Cheque') }}
           </button>
         </div>
       </form>

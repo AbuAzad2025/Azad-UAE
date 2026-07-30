@@ -40,7 +40,7 @@
             <b>{{ t('Balance') }}</b>
             <span class="float-left {% if customer.get_balance_base() > 0 %}text-success{% elif customer.get_balance_base() < 0 %}text-danger{% else %}text-muted{% endif %}">
               {{ format_currency(customer.get_balance_base()) }}
-              {% if customer.get_balance_base() > 0 %}<small class="text-success ms-1">({{ t('Balance_3') }} {{ t('للعميل') }})</small>{% elif customer.get_balance_base() < 0 %}<small class="text-danger ms-1">({{ t('ذمة') }} على {{ t('Customer') }})</small>{% endif %}
+              {% if customer.get_balance_base() > 0 %}<small class="text-success ml-1">({{ t('Balance_3') }} {{ t('للعميل') }})</small>{% elif customer.get_balance_base() < 0 %}<small class="text-danger ml-1">({{ t('ذمة') }} على {{ t('Customer') }})</small>{% endif %}
             </span>
           </li>
           <li class="list-group-item">

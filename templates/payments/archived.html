@@ -313,7 +313,7 @@ $(document).ready(() => {
 
       error: (xhr) => {
 
-        alert('{{ _('فشل استعادة السند') }}' + (xhr && xhr.status ? ' (HTTP ' + xhr.status + ')' : ''));
+        notify('{{ _('فشل استعادة السند') }}' + (xhr && xhr.status ? ' (HTTP ' + xhr.status + ')' : ''));
 
       }
 

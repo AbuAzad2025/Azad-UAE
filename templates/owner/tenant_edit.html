@@ -5,9 +5,9 @@
 {% block content %}
 <div class="container-fluid py-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold"><i class="bi bi-building-gear me-2"></i>{{ t('Edit_Company_Data') }}</h2>
+    <h2 class="fw-bold"><i class="bi bi-building-gear mr-2"></i>{{ t('Edit_Company_Data') }}</h2>
     <a href="{{ url_for('owner.tenants_list') }}" class="btn btn-outline-secondary">
-      <i class="bi bi-arrow-left me-1"></i> {{ t('Back_To_List') }}
+      <i class="bi bi-arrow-left mr-1"></i> {{ t('Back_To_List') }}
     </a>
   </div>
 
@@ -16,7 +16,7 @@
       <form class="needs-validation card shadow-sm" method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="card-header bg-primary text-white">
-          <i class="bi bi-pencil-square me-2"></i>{{ t('Tenant_Data') }}
+          <i class="bi bi-pencil-square mr-2"></i>{{ t('Tenant_Data') }}
         </div>
         <div class="card-body">
           <div class="row g-3">
@@ -101,12 +101,12 @@
               <input type="number" name="data_retention_days" class="form-control" value="{{ tenant.data_retention_days or 365 }}" min="1" id="input_data_retention_days" aria-label="data retention days">
             </div>
             <div class="col-12">
-              <div class="form-text"><i class="bi bi-info-circle me-1"></i>{{ t('Minus_One_Unlimited') }}</div>
+              <div class="form-text"><i class="bi bi-info-circle mr-1"></i>{{ t('Minus_One_Unlimited') }}</div>
             </div>
           </div>
 
           <hr class="my-4">
-          <h5 class="fw-semibold text-primary mb-3"><i class="bi bi-sliders me-2"></i>{{ t('Features_And_Permissions') }}</h5>
+          <h5 class="fw-semibold text-primary mb-3"><i class="bi bi-sliders mr-2"></i>{{ t('Features_And_Permissions') }}</h5>
           <div class="row g-3">
             <div class="col-md-3">
               <div class="custom-control custom-switch">
@@ -201,7 +201,7 @@
           </div>
 
           <hr class="my-4">
-          <h5 class="fw-semibold text-primary mb-3"><i class="bi bi-shop me-2"></i>{{ t('Advanced_POS_Features') }}</h5>
+          <h5 class="fw-semibold text-primary mb-3"><i class="bi bi-shop mr-2"></i>{{ t('Advanced_POS_Features') }}</h5>
           <div class="row g-3">
             <div class="col-md-3">
               <label class="form-label fw-semibold" for="input_pos_promotions">{{ t('Promotions_And_Discounts') }}</label>
@@ -239,7 +239,7 @@
         </div>
         <div class="card-footer d-flex justify-content-between">
           <a href="{{ url_for('owner.tenants_list') }}" class="btn btn-secondary">{{ t('Cancel') }}</a>
-          <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>{{ t('Save_Changes') }}</button>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-save mr-1"></i>{{ t('Save_Changes') }}</button>
         </div>
       </form>
     </div>
@@ -247,7 +247,7 @@
     <div class="col-lg-4">
       <div class="card shadow-sm border-0 mb-3">
         <div class="card-header bg-info text-white">
-          <i class="bi bi-info-circle me-2"></i>{{ t('Tenant_Status') }}
+          <i class="bi bi-info-circle mr-2"></i>{{ t('Tenant_Status') }}
         </div>
         <div class="card-body">
           <ul class="list-group list-group-flush"><li class="list-group-item d-flex justify-content-between">
@@ -280,7 +280,7 @@
 
       <div class="card shadow-sm border-0">
         <div class="card-header bg-warning text-dark">
-          <i class="bi bi-calendar-plus me-2"></i>{{ t('Manage_Subscription_Duration') }}
+          <i class="bi bi-calendar-plus mr-2"></i>{{ t('Manage_Subscription_Duration') }}
         </div>
         <div class="card-body">
           <ul class="list-group list-group-flush mb-3">
@@ -343,7 +343,7 @@
               <input class="form-check-input" type="checkbox" name="is_trial" id="input_is_trial" value="1" {% if tenant.is_trial %}checked{% endif %} aria-label="is trial">
               <label class="form-check-label" for="input_is_trial">{{ t('Enable_Trial_Mode') }}</label>
             </div>
-            <button type="submit" class="btn btn-warning w-100"><i class="bi bi-calendar-check me-1"></i>{{ t('Apply_Subscription_Update') }}</button>
+            <button type="submit" class="btn btn-warning w-100"><i class="bi bi-calendar-check mr-1"></i>{{ t('Apply_Subscription_Update') }}</button>
           </form>
         </div>
       </div>

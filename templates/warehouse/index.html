@@ -23,6 +23,21 @@
 {% endblock %}
 
 {% block extra_css %}
+<style>
+.warehouse-row {
+  transition: all 0.2s ease;
+}
+.warehouse-row:hover {
+  background: rgba(0, 122, 61, 0.05);
+}
+.warehouse-product-img {
+  width: 45px;
+  height: 45px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid #e0e0e0;
+}
+</style>
 {% include 'partials/datatables_assets.html' %}
 <style>
 .stat-card {
@@ -296,21 +311,6 @@
   </div>
 </div>
 
-<style>
-.warehouse-row {
-  transition: all 0.2s ease;
-}
-.warehouse-row:hover {
-  background: rgba(0, 122, 61, 0.05);
-}
-.warehouse-product-img {
-  width: 45px;
-  height: 45px;
-  object-fit: cover;
-  border-radius: 8px;
-  border: 2px solid #e0e0e0;
-}
-</style>
 {% endblock %}
 
 {% block extra_js %}

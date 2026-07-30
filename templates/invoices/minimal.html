@@ -20,10 +20,10 @@
     }
     .invoice {
       {% if settings.paper_size == 'A5' %}
-        --page-width: 212mm;
+        --page-width: 148mm;
         --page-height: {{ '210mm' if settings.orientation == 'portrait' else '148mm' }};
       {% elif settings.paper_size == 'Letter' %}
-        --page-width: 212mm;
+        --page-width: 216mm;
         --page-height: {{ '279mm' if settings.orientation == 'portrait' else '216mm' }};
       {% else %}
         --page-width: {{ '210mm' if settings.orientation == 'portrait' else '297mm' }};

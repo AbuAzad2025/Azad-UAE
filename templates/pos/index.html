@@ -2,6 +2,14 @@
 
 {% block title %}{{ _('نقطة البيع') }}{% endblock %}
 
+{% block extra_head %}
+<meta name="pos-base-currency" content="{{ tenant_default_currency }}">
+<meta name="pos-currency-symbol" content="{{ currency_symbol }}">
+<meta name="pos-prices-include-vat" content="{{ 'true' if prices_include_vat else 'false' }}">
+{# SECURITY: tojson|e — never |safe inside an HTML attribute #}
+<meta name="pos-config" content="{{ pos_config | tojson | e }}">
+{% endblock %}
+
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/pos-theme.css') }}">
 {% endblock %}
@@ -201,7 +209,7 @@
 
 <div class="field">
 <label for="orderType">{{ _('نوع الطلب') }}
-                 <a href="{{ url_for('pos.order_type_settings') }}" class="btn btn-sm btn-link p-0 ml-1" target="_blank" title="{{ _('إدارة أنواع الطلبات') }}"><i class="fas fa-cog"></i></a>
+                 <a href="{{ url_for('pos.order_type_settings') }}" class="btn btn-sm btn-link p-0 ml-1" target="_blank" rel="noopener noreferrer" title="{{ _('إدارة أنواع الطلبات') }}"><i class="fas fa-cog"></i></a>
                </label>
               <select id="orderType" class="form-control">
             <option value="">--</option>
@@ -387,10 +395,6 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/barcode-scanner.js') }}"></script>
-<meta name="pos-base-currency" content="{{ tenant_default_currency }}">
-<meta name="pos-currency-symbol" content="{{ currency_symbol }}">
-<meta name="pos-prices-include-vat" content="{{ 'true' if prices_include_vat else 'false' }}">
-<meta name="pos-config" content="{{ pos_config | tojson | safe }}">
 <script src="{{ url_for('static', filename='js/pos/pos-config.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pos/cfd-broadcast.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pos/scale-serial.js') }}"></script>

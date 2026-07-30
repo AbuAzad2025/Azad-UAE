@@ -708,7 +708,7 @@ function applyTemplate(templateName) {
   if (window.notify) {
     notify.success(i18n.template_applied.replace('{template}', i18n[templateName]) + '. ' + i18n.save_settings_to_apply);
   } else {
-    alert(i18n.template_applied.replace('{template}', i18n[templateName]));
+    notify(i18n.template_applied.replace('{template}', i18n[templateName]));
   }
   
   $('select[name="active_template"]').css('background-color', '#d4edda').css('color', '#155724');

@@ -3177,3 +3177,7 @@ a.btn.btn-outline-secondary span {
 		break-inside: avoid !important;
 	}
 }
+
+/* Logical text alignment utilities (Bootstrap 5 compatibility layer) */
+.text-start { text-align: start !important; }
+.text-end { text-align: end !important; }

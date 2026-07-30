@@ -212,14 +212,14 @@ $(document).ready(() => {
 
     if (newPass && newPass !== confirmPass) {
       e.preventDefault();
-      alert(i18n.Passwords_Do_Not_Match);
+      notify(i18n.Passwords_Do_Not_Match);
       $('#confirm_new_password').focus();
       return false;
     }
 
     if (branchRequiredForSelectedRole() && !$('#branch_id').val()) {
       e.preventDefault();
-      alert(i18n.Please_Select_Branch);
+      notify(i18n.Please_Select_Branch);
       $('#branch_id').focus();
       return false;
     }

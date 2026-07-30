@@ -39,8 +39,8 @@
                     <small>{{ budget_data.budget.fiscal_year }} - {{ budget_data.budget.period_type_ar }} | {{ t('Budget_Period', start=budget_data.budget.period_start, end=budget_data.budget.period_end) }}</small>
                 </div>
                 <div class="text-end">
-                    <span class="badge bg-light text-dark me-2">{{ t('Total_2') }} {{ t('المخطط') }}: {{ budget_data.total_budgeted|format_currency }}</span>
-                    <span class="badge bg-success me-2">{{ t('Total_2') }} {{ t('Actual') }}: {{ budget_data.total_actual|format_currency }}</span>
+                    <span class="badge bg-light text-dark mr-2">{{ t('Total_2') }} {{ t('المخطط') }}: {{ budget_data.total_budgeted|format_currency }}</span>
+                    <span class="badge bg-success mr-2">{{ t('Total_2') }} {{ t('Actual') }}: {{ budget_data.total_actual|format_currency }}</span>
                     <span class="badge {% if budget_data.total_variance < 0 %}bg-danger{% else %}bg-success{% endif %}">
                         {{ t('الانحراف') }}: {{ budget_data.total_variance|format_currency }} ({{ budget_data.variance_pct }}%)
                     </span>

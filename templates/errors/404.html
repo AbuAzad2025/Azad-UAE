@@ -19,11 +19,11 @@
           </p>
           <div class="mt-4">
             <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">
-              {{ t('العودة') }} {{ t('للرئيسية') }}
+              {{ t('Back to Dashboard') }}
             </a>
-            <a href="javascript:history.back()" class="btn btn-secondary">
+            <button type="button" class="btn btn-secondary" data-action="history-back">
               {{ t('Back') }}
-            </a>
+            </button>
           </div>
         </div>
       </div>

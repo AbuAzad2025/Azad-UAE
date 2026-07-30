@@ -36,6 +36,16 @@ def register_context_processors(app):
     app.jinja_env.filters.setdefault("format_time", format_time)
     app.jinja_env.filters.setdefault("timeago", timeago)
 
+    # XSS-safe rich-text filter: keeps a whitelist of basic formatting tags only
+    from utils.sanitizer import InputSanitizer
+
+    def _sanitize_rich(value):
+        from markupsafe import Markup
+
+        return Markup(InputSanitizer.sanitize_html(value, allow_tags=True))
+
+    app.jinja_env.filters.setdefault("sanitize", _sanitize_rich)
+
     @app.context_processor
     def inject_has_endpoint():
         return dict(has_endpoint=lambda endpoint: endpoint in current_app.view_functions)

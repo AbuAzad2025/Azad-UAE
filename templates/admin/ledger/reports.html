@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('Reports') }} {{ t('Finance') }} {{ t('المتقدمة') }} - Advanced Reports{% endblock %}
+{% block title %}{{ t('Advanced Financial Reports') }}{% endblock %}
 {% block page_title %}{{ t('Reports') }} {{ t('Finance') }} {{ t('المتقدمة') }}{% endblock %}
 
 {% block content %}
 <div class="row mb-3">
   <div class="col-12">
     <a href="{{ url_for('ledger.admin_dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-left me-2"></i>{{ t('العودة') }} {{ t('للوحة') }} {{ t('Control') }}
+      <i class="fas fa-arrow-left mr-2"></i>{{ t('العودة') }} {{ t('للوحة') }} {{ t('Control') }}
     </a>
   </div>
 </div>
@@ -17,7 +17,7 @@
     <div class="card">
       <div class="card-header bg-gradient-primary">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-chart-line me-2"></i>{{ t('Reports') }} {{ t('الأساسية') }}
+          <i class="fas fa-chart-line mr-2"></i>{{ t('Reports') }} {{ t('الأساسية') }}
         </h5>
       </div>
       <div class="card-body">
@@ -65,7 +65,7 @@
     <div class="card">
       <div class="card-header bg-gradient-success">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-chart-bar me-2"></i>{{ t('Reports') }} {{ t('المتقدمة') }}
+          <i class="fas fa-chart-bar mr-2"></i>{{ t('Reports') }} {{ t('المتقدمة') }}
         </h5>
       </div>
       <div class="card-body">
@@ -121,7 +121,7 @@
     <div class="card">
       <div class="card-header bg-gradient-info">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-cogs me-2"></i>{{ t('Reports_3') }} {{ t('مخصصة') }}
+          <i class="fas fa-cogs mr-2"></i>{{ t('Reports_3') }} {{ t('مخصصة') }}
         </h5>
       </div>
       <div class="card-body">
@@ -138,7 +138,7 @@
                 <input type="date" id="tb_date_to" name="date_to" class="form-control" required aria-label="إلى {{ t('History') }}">
               </div>
               <button type="submit" class="btn btn-primary">
-                <i class="fas fa-search me-2"></i>{{ t('Create') }} {{ t('Report') }}
+                <i class="fas fa-search mr-2"></i>{{ t('Create') }} {{ t('Report') }}
               </button>
             </form>
           </div>
@@ -161,7 +161,7 @@
                 <input type="date" id="stmt_date_to" name="date_to" class="form-control" aria-label="إلى {{ t('History') }}">
               </div>
               <button type="submit" class="btn btn-success">
-                <i class="fas fa-file-alt me-2"></i>{{ t('كشف') }} {{ t('Account') }}
+                <i class="fas fa-file-alt mr-2"></i>{{ t('كشف') }} {{ t('Account') }}
               </button>
             </form>
           </div>
@@ -276,7 +276,7 @@ document.getElementById('accountStatementForm').addEventListener('submit', funct
     this.action = `/ledger/account/${accountId}/statement`;
   } else {
     e.preventDefault();
-    alert("{{ t('يرجى') }} {{ t('Select') }} {{ t('Account') }}");
+    notify("{{ t('يرجى') }} {{ t('Select') }} {{ t('Account') }}");
   }
 });
 </script>

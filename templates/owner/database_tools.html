@@ -430,7 +430,7 @@ function confirmMaintenance(form, requiredWord) {
 
   if (userInput !== requiredWord) {
     if (userInput !== null) {
-      alert('{{ t('Invalid_Confirmation') }}');
+      notify('{{ t('Invalid_Confirmation') }}');
     }
     return false;
   }

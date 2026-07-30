@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ t('Report_2') }} {{ t('Tax_2') }} {{ t('Value') }} {{ t('المضافة') }}{% endblock %}
+{% block title %}{{ t('VAT Report') }}{% endblock %}
 
 {% block content %}
 <div class="no-print container py-4">
@@ -29,7 +29,7 @@
       </select>
     </div>
 
-    <div class="col-md-2 mb-2"><button class="btn btn-primary btn-block">{{ t('View') }}</button></div>
+    <div class="col-md-2 mb-2"><button type="submit" class="btn btn-primary btn-block">{{ t('View') }}</button></div>
 
   </form>
 

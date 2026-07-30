@@ -2,6 +2,23 @@
 {% block title %}{{ title }} - Aging Analysis{% endblock %}
 {% block page_title %}{{ title }}{% endblock %}
 
+{% block extra_css %}
+<style>
+.text-orange {
+  color: #fd7e14 !important;
+}
+.bg-orange {
+  background-color: #fd7e14 !important;
+}
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 12mm;
+  }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row mb-3 no-print">
   <div class="col-12">
@@ -259,19 +276,5 @@ new Chart(pieCtx, {
 });
 </script>
 
-<style>
-.text-orange {
-  color: #fd7e14 !important;
-}
-.bg-orange {
-  background-color: #fd7e14 !important;
-}
-@media print {
-  @page {
-    size: A4 landscape;
-    margin: 12mm;
-  }
-}
-</style>
 {% endblock %}
 

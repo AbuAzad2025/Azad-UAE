@@ -266,9 +266,17 @@
                     {% endif %}
                   </td>
                   <td class="text-center">
-                    <span class="badge badge-success">
-                      <i class="fas fa-check-circle"></i> {{ _('مؤكد') }}
-                    </span>
+                    {% if sale.status == 'cancelled' %}
+                      <span class="badge badge-danger">
+                        <i class="fas fa-ban"></i> {{ _('ملغي') }}
+                      </span>
+                    {% elif sale.status == 'confirmed' %}
+                      <span class="badge badge-success">
+                        <i class="fas fa-check-circle"></i> {{ _('مؤكد') }}
+                      </span>
+                    {% else %}
+                      <span class="badge badge-secondary">{{ sale.status }}</span>
+                    {% endif %}
                   </td>
                   <td class="text-center erp-col-actions">
                     <div class="btn-group btn-group-sm erp-table-actions" role="group">

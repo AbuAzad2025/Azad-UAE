@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('كشف') }} {{ t('Account') }} {{ customer.name }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Account Statement') }} {{ customer.name }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
@@ -357,7 +357,7 @@ table.statement-table thead th {
                     <span>{{ t('Balance') }} {{ t('الحالي') }}</span>
                     <strong class="{% if final_balance > 0 %}text-success{% elif final_balance < 0 %}text-danger{% else %}text-muted{% endif %}">
                       {{ format_currency(final_balance|default(0)) }}
-                      {% if final_balance > 0 %}<small class="text-success ms-1">({{ t('Balance_3') }} {{ t('للعميل') }})</small>{% elif final_balance < 0 %}<small class="text-danger ms-1">({{ t('ذمة') }} على {{ t('Customer') }})</small>{% endif %}
+                      {% if final_balance > 0 %}<small class="text-success ml-1">({{ t('Balance_3') }} {{ t('للعميل') }})</small>{% elif final_balance < 0 %}<small class="text-danger ml-1">({{ t('ذمة') }} على {{ t('Customer') }})</small>{% endif %}
                     </strong>
                   </div>
                   <div class="small text-muted mt-1">
@@ -419,7 +419,7 @@ table.statement-table thead th {
                 <td class="text-success amount-cell">{{ format_currency(trans.credit) if trans.credit else '0.00' }}</td>
                 <td class="amount-cell {% if trans.balance > 0 %}text-success{% elif trans.balance < 0 %}text-danger{% else %}text-muted{% endif %}">
                   {{ format_currency(trans.balance) }}
-                  {% if trans.balance > 0 %}<small class="text-success ms-1">({{ t('Balance_3') }})</small>{% elif trans.balance < 0 %}<small class="text-danger ms-1">({{ t('ذمة') }})</small>{% endif %}
+                  {% if trans.balance > 0 %}<small class="text-success ml-1">({{ t('Balance_3') }})</small>{% elif trans.balance < 0 %}<small class="text-danger ml-1">({{ t('ذمة') }})</small>{% endif %}
                 </td>
                 <td>
                   {% if trans.type == 'sale' %}

@@ -269,14 +269,14 @@ $(() => {
         } else if (window.toastr) {
           toastr.warning({{ (t('تعذر') + ' ' + t('جلب') + ' ' + t('Price_2') + ' ' + t('Exchange،') + ' ' + t('يرجى') + ' ' + t('إدخال') + ' ' + t('Value') + ' ' + t('Manually') + '.')|tojson }});
         } else {
-          alert({{ (t('تعذر') + ' ' + t('جلب') + ' ' + t('Price_2') + ' ' + t('Exchange،') + ' ' + t('يرجى') + ' ' + t('إدخال') + ' ' + t('Value') + ' ' + t('Manually') + '.')|tojson }});
+          notify({{ (t('تعذر') + ' ' + t('جلب') + ' ' + t('Price_2') + ' ' + t('Exchange،') + ' ' + t('يرجى') + ' ' + t('إدخال') + ' ' + t('Value') + ' ' + t('Manually') + '.')|tojson }});
         }
       },
       error: () => {
         if (window.toastr) {
           toastr.warning({{ (t('تعذر') + ' ' + t('جلب') + ' ' + t('Price_2') + ' ' + t('Exchange،') + ' ' + t('يرجى') + ' ' + t('إدخال') + ' ' + t('Value') + ' ' + t('Manually') + '.')|tojson }});
         } else {
-          alert({{ (t('تعذر') + ' ' + t('جلب') + ' ' + t('Price_2') + ' ' + t('Exchange،') + ' ' + t('يرجى') + ' ' + t('إدخال') + ' ' + t('Value') + ' ' + t('Manually') + '.')|tojson }});
+          notify({{ (t('تعذر') + ' ' + t('جلب') + ' ' + t('Price_2') + ' ' + t('Exchange،') + ' ' + t('يرجى') + ' ' + t('إدخال') + ' ' + t('Value') + ' ' + t('Manually') + '.')|tojson }});
         }
       }
     });
@@ -292,7 +292,7 @@ $('#saveExpenseCategoryBtn').on('click', () => {
   const name_ar = $('#expense_category_name_ar').val().trim();
   
   if (!name) {
-    alert({{ (t('الرجاء') + ' ' + t('إدخال') + ' ' + t('Name_2') + ' ' + t('الفئة') + ' ' + t('In English_2'))|tojson }});
+    notify({{ (t('الرجاء') + ' ' + t('إدخال') + ' ' + t('Name_2') + ' ' + t('الفئة') + ' ' + t('In English_2'))|tojson }});
     return;
   }
   
@@ -324,15 +324,15 @@ $('#saveExpenseCategoryBtn').on('click', () => {
         if (typeof UI !== 'undefined') {
           UI.success({{ t('تم إضافة الفئة بنجاح!')|tojson }});
         } else {
-          alert({{ t('تم إضافة الفئة بنجاح!')|tojson }});
+          notify({{ t('تم إضافة الفئة بنجاح!')|tojson }});
         }
       } else {
-        alert({{ t('Error')|tojson }} + ': ' + (response.error || {{ t('فشل في إضافة الفئة')|tojson }}));
+        notify({{ t('Error')|tojson }} + ': ' + (response.error || {{ t('فشل في إضافة الفئة')|tojson }}));
       }
     },
     error: (xhr) => {
       const error = xhr.responseJSON?.error || {{ t('حدث خطأ أثناء الحفظ')|tojson }};
-      alert({{ t('Error')|tojson }} + ': ' + error);
+      notify({{ t('Error')|tojson }} + ': ' + error);
     }
   });
 });

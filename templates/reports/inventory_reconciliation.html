@@ -106,7 +106,8 @@
     {% endif %}
   </div>
   <div class="card-body p-0">
-    <table class="table table-bordered table-striped mb-0">
+    <div class="table-responsive">
+<table class="table table-bordered table-striped mb-0">
       <thead class="thead-light">
         <tr>
           <th>{{ t('Warehouse') }}</th>
@@ -169,6 +170,7 @@
         </tr>
       </tfoot>
     </table>
+</div>
   </div>
   <div class="card-footer text-muted small">
     <strong>GL account:</strong> {{ report.summary.inventory_account_code }} - Inventory Asset &nbsp;|&nbsp;

@@ -123,7 +123,7 @@
         {% if current_user.has_permission('view_reports') %}
         <a href="{{ url_for('partners.view', id=partner.id) }}" class="btn btn-secondary">{{ _('إلغاء') }}</a>
         {% endif %}
-        <button type="submit" class="btn btn-warning"><i class="fas fa-save me-1"></i> {{ _('حفظ التغييرات') }}</button>
+        <button type="submit" class="btn btn-warning"><i class="fas fa-save mr-1"></i> {{ _('حفظ التغييرات') }}</button>
       </div>
     </form>
   </div>

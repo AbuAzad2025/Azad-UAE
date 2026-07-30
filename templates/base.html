@@ -110,11 +110,29 @@ window.ROUTES = {
       payUrl: '{{ url_for("payments.create_voucher") }}'
     }
   };
+  // Unified UI notification — replaces raw alert() with the design-system toast
+  window.notify = function (msg, type) {
+    const a = window.azad;
+    if (a && a.showError) {
+      const fn = { error: a.showError, success: a.showSuccess, warning: a.showWarning, info: a.showInfo }[type] || a.showInfo;
+      fn.call(a, msg);
+    } else {
+      alert(msg);
+    }
+  };
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-action="window-print"]');
     if (btn) { e.preventDefault(); window.print(); }
     const closeBtn = e.target.closest('[data-action="window-close"]');
     if (closeBtn) { e.preventDefault(); window.close(); }
+    const backBtn = e.target.closest('[data-action="history-back"]');
+    if (backBtn) {
+      e.preventDefault();
+      if (window.history.length > 1) { window.history.back(); }
+      else { window.location.href = '{{ url_for("main.dashboard") }}'; }
+    }
+    const reloadBtn = e.target.closest('[data-action="location-reload"]');
+    if (reloadBtn) { e.preventDefault(); window.location.reload(); }
   });
   if (new URLSearchParams(window.location.search).get('auto_print') === 'true') {
     window.addEventListener('DOMContentLoaded', () => { setTimeout(() => { window.print(); }, 300); });

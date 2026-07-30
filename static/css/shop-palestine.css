@@ -246,6 +246,12 @@ body.ps-shop.rtl {
 	color: var(--azad-gold);
 }
 
+.ps-alert-info {
+	background: #e7f1fb;
+	color: #1a4e7a;
+	border: 1px solid #bcd7f0;
+}
+
 /* purgecss end ignore */
 
 .ps-cart-link {

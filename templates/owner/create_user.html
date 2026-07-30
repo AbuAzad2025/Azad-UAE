@@ -438,7 +438,7 @@ $(document).ready(() => {
           confirmButtonText: i18n.ok
         });
       } else {
-        alert(i18n.password_mismatch_error + '\n' + i18n.password_mismatch_hint);
+        notify(i18n.password_mismatch_error + '\n' + i18n.password_mismatch_hint);
       }
       $('#confirm_password').focus();
       return false;
@@ -475,7 +475,7 @@ $(document).ready(() => {
 
     if (branchRequiredForSelectedRole() && !$('#branch_id').val()) {
       e.preventDefault();
-      alert(i18n.branch_required_alert);
+      notify(i18n.branch_required_alert);
       $('#branch_id').focus();
       return false;
     }

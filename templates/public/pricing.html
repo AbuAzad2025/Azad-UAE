@@ -331,7 +331,7 @@
         {% if p.badge_ar and p.badge_en %}
         <div class="azad-tier-badge">{{ p.badge_ar if not is_en else p.badge_en }}</div>
         {% endif %}
-        <div class="azad-tier-icon">{{ p.icon | safe }}</div>
+        <div class="azad-tier-icon">{{ p.icon | sanitize }}</div>
         <div class="azad-tier-name">{{ p.name_ar if not is_en else p.name_en }}</div>
         <div class="azad-tier-desc">{{ p.desc_ar if not is_en else p.desc_en }}</div>
 
@@ -343,7 +343,7 @@
 
         <ul class="azad-tier-features">
             {% for feat in (p.features_ar if not is_en else p.features_en) %}
-            <li>{{ feat | safe }}</li>
+            <li>{{ feat | sanitize }}</li>
             {% endfor %}
         </ul>
 

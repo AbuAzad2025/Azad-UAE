@@ -264,7 +264,7 @@
 
               <div class="input-group-append">
 
-                <button class="btn btn-outline-success btn-sm" data-action="update-tenant-setting" data-key="default_tax_rate" data-source="#taxRateInput">
+                <button type="button" class="btn btn-outline-success btn-sm" data-action="update-tenant-setting" data-key="default_tax_rate" data-source="#taxRateInput" aria-label="{{ t('Save') }}">
 
                   <i class="fas fa-save"></i>
 
@@ -308,7 +308,7 @@
 
               <div class="input-group-append">
 
-                <button class="btn btn-outline-success btn-sm" data-action="update-tenant-setting" data-key="logo_url" data-source="#logoUrlInput">
+                <button type="button" class="btn btn-outline-success btn-sm" data-action="update-tenant-setting" data-key="logo_url" data-source="#logoUrlInput" aria-label="{{ t('Save') }}">
 
                   <i class="fas fa-save"></i>
 
@@ -458,7 +458,7 @@ function toggleWarehouseNegative() {
 
     contentType: 'application/json',
 
-    data: JSON.stringify({ warehouse_id: JSON.parse('{{ warehouses[0].id if warehouses and warehouses|length > 0 else 0 }}') }),
+    data: JSON.stringify({ warehouse_id: {{ warehouses[0].id if warehouses and warehouses|length > 0 else 0 }} }),
 
     headers: { 'X-CSRFToken': '{{ csrf_token() }}' }
 

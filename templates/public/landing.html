@@ -128,7 +128,7 @@
 
         <div class="azad-nav-links azad-nav-links-auto">
             <div class="azad-nav-dropdown">
-                <a href="javascript:void(0)" class="azad-dropdown-trigger">{{ 'المنتجات' if not is_en else 'Products' }} <i class="fas fa-chevron-down azad-dropdown-icon"></i></a>
+                <a class="azad-dropdown-trigger" role="button" tabindex="0" aria-haspopup="true">{{ 'المنتجات' if not is_en else 'Products' }} <i class="fas fa-chevron-down azad-dropdown-icon"></i></a>
                 <div class="azad-dropdown-menu">
                     <a href="{{ url_for('public.features') }}#accounting"><i class="fas fa-calculator"></i> {{ 'محاسبة' if not is_en else 'Accounting' }}</a>
                     <a href="{{ url_for('public.features') }}#inventory"><i class="fas fa-warehouse"></i> {{ 'مخزون' if not is_en else 'Inventory' }}</a>

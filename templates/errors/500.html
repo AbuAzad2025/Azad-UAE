@@ -30,9 +30,9 @@
             <a href="{{ url_for('main.dashboard') }}" class="btn btn-danger">
               {{ t('العودة') }} {{ t('للرئيسية') }}
             </a>
-            <a href="javascript:location.reload()" class="btn btn-secondary">
+            <button type="button" class="btn btn-secondary" data-action="location-reload">
               {{ t('إعادة') }} {{ t('المحاولة') }}
-            </a>
+            </button>
           </div>
         </div>
       </div>

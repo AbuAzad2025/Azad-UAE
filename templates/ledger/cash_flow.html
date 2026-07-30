@@ -2,6 +2,18 @@
 {% block title %}{{ t('Cash Flow Statement') }}{% endblock %}
 {% block page_title %}{{ t('Cash Flow Statement') }}{% endblock %}
 
+{% block extra_css %}
+<style>
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 15mm;
+  }
+  .card-header { display: none !important; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row mb-3 no-print">
   <div class="col-12">
@@ -230,14 +242,5 @@ new Chart(ctx, {
 });
 </script>
 
-<style>
-@media print {
-  @page {
-    size: A4 landscape;
-    margin: 15mm;
-  }
-  .card-header { display: none !important; }
-}
-</style>
 {% endblock %}
 

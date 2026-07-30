@@ -343,7 +343,7 @@
             labels: ["{{ _('Basic') }}", "{{ _('Professional') }}", "{{ _('Enterprise') }}"],
             datasets: [{
                 label: "{{ _('Sales Count') }}",
-                data: JSON.parse('{{ package_stats|tojson }}'),
+                data: {{ package_stats|tojson }},
                 backgroundColor: [
                     'rgba(102, 126, 234, 0.8)',
                     'rgba(245, 87, 108, 0.8)',

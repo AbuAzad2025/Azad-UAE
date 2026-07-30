@@ -2,6 +2,14 @@
 {% block title %}{{ t('Entry Number') }} {{ entry.entry_number }}{% endblock %}
 {% block page_title %}{{ t('Entry Details') }}{% endblock %}
 
+{% block extra_css %}
+<style>
+@media print {
+  @page { size: A4 portrait; margin: 15mm; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row mb-3 no-print">
   <div class="col-12">
@@ -223,10 +231,5 @@
   </div>
 </div>
 
-<style>
-@media print {
-  @page { size: A4 portrait; margin: 15mm; }
-}
-</style>
 {% endblock %}
 

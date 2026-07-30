@@ -205,16 +205,16 @@
     new Chart(revenueCtx, {
         type: 'line',
         data: {
-            labels: JSON.parse('{{ monthly_labels|tojson }}'),
+            labels: {{ monthly_labels|tojson }},
             datasets: [{
                 label: "{{ t('Purchases') }}",
-                data: JSON.parse('{{ monthly_purchases_data|tojson }}'),
+                data: {{ monthly_purchases_data|tojson }},
                 borderColor: '#667eea',
                 backgroundColor: 'rgba(102, 126, 234, 0.1)',
                 tension: 0.4
             }, {
                 label: "{{ t('التبرعات') }}",
-                data: JSON.parse('{{ monthly_donations_data|tojson }}'),
+                data: {{ monthly_donations_data|tojson }},
                 borderColor: '#f5576c',
                 backgroundColor: 'rgba(245, 87, 108, 0.1)',
                 tension: 0.4
@@ -233,7 +233,7 @@
         data: {
             labels: ["{{ t('Purchases') }}", "{{ t('التبرعات') }}"],
             datasets: [{
-                data: [JSON.parse('{{ summary.total_purchases_amount|default(0) }}'), JSON.parse('{{ summary.total_donations_amount|default(0) }}')],
+                data: [{{ summary.total_purchases_amount|default(0) }}, {{ summary.total_donations_amount|default(0) }}],
                 backgroundColor: ['#667eea', '#f5576c']
             }]
         }
@@ -246,7 +246,7 @@
         data: {
             labels: ["{{ t('أساسية') }}", "{{ t('احترافية') }}", "{{ t('شركات') }}"],
             datasets: [{
-                data: JSON.parse('{{ package_stats|tojson }}'),
+                data: {{ package_stats|tojson }},
                 backgroundColor: ['#667eea', '#f5576c', '#28a745']
             }]
         }

@@ -289,7 +289,7 @@
                         <select name="package_id" id="package_id" class="form-control" required>
                             {% for pkg in packages %}
                             <option value="{{ pkg.id }}">
-                                {{ pkg.icon|safe }} {{ pkg.name_en }} — {{ pkg.price }} {{ pkg.currency_symbol or pkg.currency }}
+                                {{ pkg.icon | sanitize }} {{ pkg.name_en }} — {{ pkg.price }} {{ pkg.currency_symbol or pkg.currency }}
                             </option>
                             {% endfor %}
                         </select>

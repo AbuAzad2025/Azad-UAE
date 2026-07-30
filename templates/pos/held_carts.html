@@ -93,10 +93,10 @@ document.querySelectorAll('[data-delete-cart]').forEach(btn => {
         btn.closest('tr').remove();
         if (!document.querySelector('tbody tr')) location.reload();
       } else {
-        alert(data.error || '{{ _('خطأ') }}');
+        notify(data.error || '{{ _('خطأ') }}');
       }
     } catch (e) {
-      alert('{{ _('خطأ') }}');
+      notify('{{ _('خطأ') }}');
     }
   });
 });

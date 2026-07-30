@@ -4,13 +4,13 @@
 <div class="card shadow mb-4">
     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-primary text-white">
         <h6 class="m-0 font-weight-bold">
-            <i class="fas fa-user-circle fa-lg {% if is_rtl %}ms-2{% else %}ml-2{% endif %}"></i>
+            <i class="fas fa-user-circle fa-lg {% if is_rtl %}ml-2{% else %}ml-2{% endif %}"></i>
             {{ entity.name|e }}
-            <span class="badge badge-light text-primary {% if is_rtl %}ms-2{% else %}ml-2{% endif %}">{{ t(type_label_key) }}</span>
+            <span class="badge badge-light text-primary {% if is_rtl %}ml-2{% else %}ml-2{% endif %}">{{ t(type_label_key) }}</span>
         </h6>
         <div class="text-white">
-            <span class="{% if is_rtl %}ms-3{% else %}ml-3{% endif %}"><i class="fas fa-phone {% if is_rtl %}ms-1{% else %}ml-1{% endif %}"></i> {{ entity.phone|e or '---' }}</span>
-            <span class="font-weight-bold {% if is_rtl %}ms-3{% else %}ml-3{% endif %}">
+            <span class="{% if is_rtl %}ml-3{% else %}ml-3{% endif %}"><i class="fas fa-phone {% if is_rtl %}ml-1{% else %}ml-1{% endif %}"></i> {{ entity.phone|e or '---' }}</span>
+            <span class="font-weight-bold {% if is_rtl %}ml-3{% else %}ml-3{% endif %}">
                 {{ t('balance') }}: {{ format_currency(balance) }}
                 <small>({{ t(balance_label_key) }})</small>
             </span>

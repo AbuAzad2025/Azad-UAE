@@ -30,6 +30,27 @@
 
 
 
+{% block extra_css %}
+<style>
+
+.badge-lg {
+
+    font-size: 1.1rem;
+
+    padding: 10px 20px;
+
+}
+
+
+    /* D6: externalized inline styles */
+    .card-header-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .inline-form { width: 40%; }
+    .price-text { color: #28a745; font-size: 1.3rem; }
+    .th-label-sm { width: 20%; }
+    .pre-scrollable { max-height: 200px; overflow-y: auto; }
+  </style>
+{% endblock %}
+
 {% block content %}
 
 <div class="row">
@@ -506,24 +527,6 @@
 
 
 
-<style>
-
-.badge-lg {
-
-    font-size: 1.1rem;
-
-    padding: 10px 20px;
-
-}
-
-
-    /* D6: externalized inline styles */
-    .card-header-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-    .inline-form { width: 40%; }
-    .price-text { color: #28a745; font-size: 1.3rem; }
-    .th-label-sm { width: 20%; }
-    .pre-scrollable { max-height: 200px; overflow-y: auto; }
-  </style>
 
 
 

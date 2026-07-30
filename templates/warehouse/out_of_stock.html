@@ -200,7 +200,7 @@ $(document).ready((() => {
         5000
       );
     } else {
-      alert('🚨 {{ t('n_products_out_of_stock', count=products|length) }}');
+      notify('🚨 {{ t('n_products_out_of_stock', count=products|length) }}');
     }
   }, 500);
   {% endif %}

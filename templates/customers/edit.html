@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('Company_2') }} {{ t('أزاد') }} {{ t('للأنظمة') }} {{ t('الذكية') }} - {{ t('Edit') }} {{ t('Data_2') }} {{ t('Customer') }} {{ customer.name }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Edit Customer') }} {{ customer.name }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>

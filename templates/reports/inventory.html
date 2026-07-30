@@ -4,11 +4,6 @@
 
 {% block page_title %}{{ t('Report_2') }} {{ t('Inventory') }}{% endblock %}
 
-<style>
-    /* D6: externalized inline styles */
-    .ic-1 { min-width: 140px; }
-    .ic-2 { min-width: 160px; }
-</style>
 
 {% block content %}
 <div class="container-fluid">
@@ -171,4 +166,9 @@
   </div>
 </div>
 {% endblock %}
-{% block extra_css %}<style>@media print{@page{size:A4 landscape;margin:10mm}}</style>{% endblock %}
+{% block extra_css %}<style>
+    /* D6: externalized inline styles */
+    .ic-1 { min-width: 140px; }
+    .ic-2 { min-width: 160px; }
+</style>
+<style>@media print{@page{size:A4 landscape;margin:10mm}}</style>{% endblock %}

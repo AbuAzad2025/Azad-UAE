@@ -189,6 +189,20 @@ document.addEventListener('click', (e) => {
   else if (action === 'load-template') loadTemplate(el.dataset.template);
   else if (action === 'add-line') addLine();
   else if (action === 'reset-form') resetForm();
+  else if (action === 'delete-line') deleteLine(el);
+});
+
+// Delegated input handlers for dynamically added journal lines
+document.addEventListener('input', (e) => {
+  if (e.target.matches('.debit-input')) handleDebitChange(e.target);
+  else if (e.target.matches('.credit-input')) handleCreditChange(e.target);
+});
+document.addEventListener('change', (e) => {
+  if (e.target.matches('.debit-input')) handleDebitChange(e.target);
+  else if (e.target.matches('.credit-input')) handleCreditChange(e.target);
+});
+document.addEventListener('keyup', (e) => {
+  if (e.target.matches('.debit-input, .credit-input')) calculateJournalTotals();
 });
 
 // Account list (from backend)
@@ -219,14 +233,14 @@ function addLine() {
     </td>
     <td>
       <input type="number" name="line_${lineCounter}_debit" class="form-control text-center debit-input" 
-             step="0.01" min="0" value="0" oninput="handleDebitChange(this)" onchange="handleDebitChange(this)" onkeyup="calculateJournalTotals()" aria-label="line ${lineCounter} debit">
+             step="0.01" min="0" value="0" aria-label="line ${lineCounter} debit">
     </td>
   <td>
     <input type="number" name="line_${lineCounter}_credit" class="form-control text-center credit-input" 
-            step="0.01" min="0" value="0" oninput="handleCreditChange(this)" onchange="handleCreditChange(this)" onkeyup="calculateJournalTotals()" aria-label="line ${lineCounter} credit">
+            step="0.01" min="0" value="0" aria-label="line ${lineCounter} credit">
   </td>
   <td>
-    <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteLine(this)" title="{{ t('Delete_Line') }}">
+    <button type="button" class="btn btn-sm btn-outline-danger" data-action="delete-line" title="{{ t('Delete_Line') }}">
       <i class="fas fa-trash"></i>
     </button>
   </td>
@@ -382,11 +396,11 @@ function addLineWithData(accountCode, accountName, debit, credit) {
     </td>
     <td>
       <input type="number" name="line_${lineCounter}_debit" class="form-control text-center debit-input" 
-             step="0.01" min="0" value="${debit}" oninput="handleDebitChange(this)" onchange="handleDebitChange(this)" onkeyup="calculateJournalTotals()" aria-label="line ${lineCounter} debit">
+             step="0.01" min="0" value="${debit}" aria-label="line ${lineCounter} debit">
     </td>
     <td>
       <input type="number" name="line_${lineCounter}_credit" class="form-control text-center credit-input" 
-             step="0.01" min="0" value="${credit}" oninput="handleCreditChange(this)" onchange="handleCreditChange(this)" onkeyup="calculateJournalTotals()" aria-label="line ${lineCounter} credit">
+             step="0.01" min="0" value="${credit}" aria-label="line ${lineCounter} credit">
     </td>
   `;
   tbody.appendChild(row);

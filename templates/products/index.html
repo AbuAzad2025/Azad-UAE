@@ -426,17 +426,17 @@ function saveStockAdjustment() {
   const notes = $('#adjustmentNotes').val();
   
   if (!adjustmentType) {
-    alert('{{ t("Please_Select_Adjustment_Type") }}');
+    notify('{{ t("Please_Select_Adjustment_Type") }}');
     return;
   }
   
   if (!reason) {
-    alert('{{ t("Please_Select_Reason") }}');
+    notify('{{ t("Please_Select_Reason") }}');
     return;
   }
   
   if (!quantity || quantity <= 0) {
-    alert('{{ t("Please_Enter_Valid_Quantity") }}');
+    notify('{{ t("Please_Enter_Valid_Quantity") }}');
     return;
   }
   
@@ -455,11 +455,11 @@ function saveStockAdjustment() {
         $('#stockModal').modal('hide');
         location.reload();
       } else {
-        alert('{{ t("An_Error_Occurred") }}: ' + response.message);
+        notify('{{ t("An_Error_Occurred") }}: ' + response.message);
       }
     },
     error: () => {
-      alert('{{ t("Connection_Error") }}');
+      notify('{{ t("Connection_Error") }}');
     }
   });
 }

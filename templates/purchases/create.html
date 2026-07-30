@@ -8,7 +8,7 @@
 
   <div>
 
-    <h1 class="mb-0"><i class="fas fa-file-invoice-dollar {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i>{{ t('Invoice') }} {{ t('Purchase') }} {{ t('New_3') }}</h1>
+    <h1 class="mb-0"><i class="fas fa-file-invoice-dollar {% if is_rtl %}ml-2{% else %}mr-2{% endif %}"></i>{{ t('Invoice') }} {{ t('Purchase') }} {{ t('New_3') }}</h1>
 
   </div>
 
@@ -16,13 +16,13 @@
 
     <a href="{{ url_for('purchases.index') }}" class="purchase-header-link purchase-header-link--primary">
 
-      <i class="fas fa-arrow-right {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i>{{ t('Back_To_Purchases') }}
+      <i class="fas fa-arrow-right {% if is_rtl %}ml-2{% else %}mr-2{% endif %}"></i>{{ t('Back_To_Purchases') }}
 
     </a>
 
     <a href="{{ url_for('main.dashboard') }}" class="purchase-header-link purchase-header-link--secondary">
 
-      <i class="fas fa-home {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i>{{ t('Main_2') }}
+      <i class="fas fa-home {% if is_rtl %}ml-2{% else %}mr-2{% endif %}"></i>{{ t('Main_2') }}
 
     </a>
 
@@ -396,7 +396,7 @@
 
       <button type="button" id="addLineBtn" class="btn btn-success">
 
-        <i class="fas fa-plus-circle {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i> {{ t('Add') }} {{ t('Product_2') }}
+        <i class="fas fa-plus-circle {% if is_rtl %}ml-2{% else %}mr-2{% endif %}"></i> {{ t('Add') }} {{ t('Product_2') }}
 
       </button>
 
@@ -484,19 +484,19 @@
 
       <button type="submit" class="btn btn-primary btn-lg">
 
-        <i class="fas fa-save {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i> {{ t('Save_Purchase_Invoice') }}
+        <i class="fas fa-save {% if is_rtl %}ml-2{% else %}mr-2{% endif %}"></i> {{ t('Save_Purchase_Invoice') }}
 
       </button>
 
       <a href="{{ url_for('purchases.index') }}" class="btn btn-secondary btn-lg">
 
-        <i class="fas fa-times {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i> {{ t('Cancel') }}
+        <i class="fas fa-times {% if is_rtl %}ml-2{% else %}mr-2{% endif %}"></i> {{ t('Cancel') }}
 
       </a>
 
       <button type="button" id="recalcTotalsBtn" class="btn btn-info btn-lg {% if is_rtl %}float-right{% else %}float-left{% endif %}">
 
-        <i class="fas fa-calculator {% if is_rtl %}ms-2{% else %}mr-2{% endif %}"></i> {{ t('Recalculate') }}
+        <i class="fas fa-calculator {% if is_rtl %}ml-2{% else %}mr-2{% endif %}"></i> {{ t('Recalculate') }}
 
       </button>
 

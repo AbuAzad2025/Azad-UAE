@@ -123,7 +123,7 @@
       <div class="col-lg-8">
         <div class="card info-card mb-4">
           <div class="card-body">
-            <h5 class="fw-bold mb-4"><i class="bi bi-info-circle-fill text-primary me-2"></i>{{ _('معلومات التواصل') }}</h5>
+            <h5 class="fw-bold mb-4"><i class="bi bi-info-circle-fill text-primary mr-2"></i>{{ _('معلومات التواصل') }}</h5>
             <div class="row g-4">
               {% if tenant.phone_1 %}
               <div class="col-md-6 d-flex align-items-center">
@@ -199,13 +199,13 @@
         {% if branches %}
         <div class="card info-card">
           <div class="card-body">
-            <h5 class="fw-bold mb-4"><i class="bi bi-shop text-primary me-2"></i>{{ _('الفروع') }}</h5>
+            <h5 class="fw-bold mb-4"><i class="bi bi-shop text-primary mr-2"></i>{{ _('الفروع') }}</h5>
             <div class="row g-3">
               {% for branch in branches %}
               <div class="col-md-6">
                 <div class="branch-card p-3">
                   <div class="d-flex align-items-center mb-2">
-                    <i class="bi bi-shop text-primary me-2 fs-4"></i>
+                    <i class="bi bi-shop text-primary mr-2 fs-4"></i>
                     <div class="fw-bold">{{ branch.name }}</div>
                   </div>
                   {% if branch.code %}
@@ -231,7 +231,7 @@
         
         <div class="card info-card mb-4">
           <div class="card-body">
-            <h6 class="fw-bold mb-3"><i class="bi bi-file-text text-primary me-2"></i>{{ _('البيانات القانونية') }}</h6>
+            <h6 class="fw-bold mb-3"><i class="bi bi-file-text text-primary mr-2"></i>{{ _('البيانات القانونية') }}</h6>
             <ul class="list-group list-group-flush">
               {% if tenant.commercial_register %}
               <li class="list-group-item d-flex justify-content-between px-0">
@@ -271,7 +271,7 @@
         {% if tenant.enable_store %}
         <div class="card info-card">
           <div class="card-body text-center">
-            <h6 class="fw-bold mb-3"><i class="bi bi-bag text-primary me-2"></i>{{ _('المتجر الإلكتروني') }}</h6>
+            <h6 class="fw-bold mb-3"><i class="bi bi-bag text-primary mr-2"></i>{{ _('المتجر الإلكتروني') }}</h6>
             <p class="text-muted small">{{ _('تصفح منتجاتنا واطلب أونلاين') }}</p>
             <a href="{{ url_for('shop.catalog', slug=tenant.slug) }}" class="btn btn-primary w-100">
               <i class="bi bi-bag mr-1"></i>{{ _('تصفح المتجر') }}
@@ -288,7 +288,7 @@
   <div class="footer-bar text-center">
     <div class="container">
       <div class="mb-2">
-        <i class="bi bi-building me-2"></i>{{ tenant.name_ar or tenant.name }}
+        <i class="bi bi-building mr-2"></i>{{ tenant.name_ar or tenant.name }}
       </div>
       <small class="opacity-75">{{ _('نظام أزاد المحاسبي — Azad Accounting System') }}</small>
     </div>

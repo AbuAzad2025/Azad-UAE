@@ -32,20 +32,20 @@ const i18n = {{ {
 new Chart(document.getElementById('financialChart'), {
   type: 'line',
   data: {
-    labels: JSON.parse('{{ (months_data|default([]))|map(attribute='month')|list|tojson }}'),
+    labels: {{ (months_data|default([]))|map(attribute='month')|list|tojson }},
     datasets: [{
       label: i18n.revenue,
-      data: JSON.parse('{{ (months_data|default([]))|map(attribute='revenue')|list|tojson }}'),
+      data: {{ (months_data|default([]))|map(attribute='revenue')|list|tojson }},
       borderColor: 'rgb(75, 192, 192)',
       fill: false
     }, {
       label: i18n.expenses,
-      data: JSON.parse('{{ (months_data|default([]))|map(attribute='expenses')|list|tojson }}'),
+      data: {{ (months_data|default([]))|map(attribute='expenses')|list|tojson }},
       borderColor: 'rgb(255, 99, 132)',
       fill: false
     }, {
       label: i18n.profit,
-      data: JSON.parse('{{ (months_data|default([]))|map(attribute='profit')|list|tojson }}'),
+      data: {{ (months_data|default([]))|map(attribute='profit')|list|tojson }},
       borderColor: 'rgb(54, 162, 235)',
       fill: true
     }]

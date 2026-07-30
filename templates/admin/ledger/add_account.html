@@ -6,7 +6,7 @@
 <div class="row mb-3">
   <div class="col-12">
     <a href="{{ url_for('admin_ledger.accounts_management') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-left me-2"></i>{{ t('العودة') }}
+      <i class="fas fa-arrow-left mr-2"></i>{{ t('العودة') }}
     </a>
   </div>
 </div>
@@ -14,7 +14,7 @@
 <div class="card">
   <div class="card-header bg-gradient-success">
     <h3 class="card-title text-white">
-      <i class="fas fa-plus-circle me-2"></i>{{ t('Add') }} {{ t('Account') }} {{ t('Accounting_3') }} {{ t('New') }}
+      <i class="fas fa-plus-circle mr-2"></i>{{ t('Add') }} {{ t('Account') }} {{ t('Accounting_3') }} {{ t('New') }}
     </h3>
   </div>
   <div class="card-body">
@@ -133,7 +133,7 @@
 
       <div id="bank_fields" class="row mt-4" style="display: none;">
         <div class="col-12">
-          <h5 class="mb-3"><i class="fas fa-university me-2"></i>{{ _('معلومات البنك') }}</h5>
+          <h5 class="mb-3"><i class="fas fa-university mr-2"></i>{{ _('معلومات البنك') }}</h5>
         </div>
         <div class="col-md-6">
           <div class="form-group">
@@ -172,10 +172,10 @@
       <div class="row mt-4">
         <div class="col-12">
           <button type="submit" class="btn btn-success btn-lg">
-            <i class="fas fa-save me-2"></i>{{ t('Save') }} {{ t('Account') }}
+            <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Account') }}
           </button>
           <a href="{{ url_for('admin_ledger.accounts_management') }}" class="btn btn-secondary btn-lg">
-            <i class="fas fa-times me-2"></i>{{ t('Cancel') }}
+            <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}
           </a>
         </div>
       </div>
@@ -187,7 +187,7 @@
 <div class="card mt-4">
   <div class="card-header bg-gradient-info">
     <h5 class="card-title text-white mb-0">
-      <i class="fas fa-lightbulb me-2"></i>{{ t('مساعدة') }} {{ t('Quick') }}
+      <i class="fas fa-lightbulb mr-2"></i>{{ t('مساعدة') }} {{ t('Quick') }}
     </h5>
   </div>
   <div class="card-body">
@@ -195,11 +195,11 @@
       <div class="col-md-6">
         <h6>{{ t('أنواع') }} {{ t('Accounts') }}:</h6>
         <ul class="list-unstyled">
-          <li><span class="badge badge-success me-2">{{ t('أصول') }}</span> ما {{ t('تملكه') }} {{ t('Company') }}</li>
-          <li><span class="badge badge-warning me-2">{{ t('خصوم') }}</span> ما {{ t('تدين') }} به {{ t('Company') }}</li>
-          <li><span class="badge badge-info me-2">{{ t('حقوق') }} {{ t('الملكية') }}</span> {{ t('رأس') }} {{ t('المال') }} {{ t('والأرباح') }}</li>
-          <li><span class="badge badge-primary me-2">{{ t('Revenues') }}</span> {{ t('Income') }} {{ t('Company') }}</li>
-          <li><span class="badge badge-danger me-2">{{ t('Expenses_2') }}</span> {{ t('تكاليف') }} {{ t('Company') }}</li>
+          <li><span class="badge badge-success mr-2">{{ t('أصول') }}</span> ما {{ t('تملكه') }} {{ t('Company') }}</li>
+          <li><span class="badge badge-warning mr-2">{{ t('خصوم') }}</span> ما {{ t('تدين') }} به {{ t('Company') }}</li>
+          <li><span class="badge badge-info mr-2">{{ t('حقوق') }} {{ t('الملكية') }}</span> {{ t('رأس') }} {{ t('المال') }} {{ t('والأرباح') }}</li>
+          <li><span class="badge badge-primary mr-2">{{ t('Revenues') }}</span> {{ t('Income') }} {{ t('Company') }}</li>
+          <li><span class="badge badge-danger mr-2">{{ t('Expenses_2') }}</span> {{ t('تكاليف') }} {{ t('Company') }}</li>
         </ul>
       </div>
       <div class="col-md-6">

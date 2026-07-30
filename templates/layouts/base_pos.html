@@ -49,6 +49,17 @@
     <script type="application/json" id="user-permissions-data">{{ current_user_permissions|tojson }}</script>
     <script>
         window.APP_ENUMS = JSON.parse(document.getElementById('app-enums-data').textContent || '{}');
+        // Unified UI notification — replaces raw alert() with the design-system toast
+        window.notify = function (msg, type) {
+            const a = window.azad;
+            if (a && a.showError) {
+                const fn = { error: a.showError, success: a.showSuccess, warning: a.showWarning, info: a.showInfo }[type] || a.showInfo;
+                fn.call(a, msg);
+            } else {
+                alert(msg);
+            }
+        };
+
         window.CURRENT_USER_PERMISSIONS = JSON.parse(document.getElementById('user-permissions-data').textContent || '[]');
     </script>
     <script src="{{ url_for('static', filename='js/pos-permissions.js') }}"></script>

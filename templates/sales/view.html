@@ -963,7 +963,7 @@ function submitReturn() {
 
     if (lines.length === 0) {
 
-        alert(RETURN_QTY_ALERT);
+        notify(RETURN_QTY_ALERT);
 
         return;
 
@@ -1009,13 +1009,13 @@ function submitReturn() {
 
         if (data.success) {
 
-            alert({{ t('return_created_success') | tojson }}.replace('{return_number}', data.return_number));
+            notify({{ t('return_created_success') | tojson }}.replace('{return_number}', data.return_number));
 
             window.location.reload();
 
         } else {
 
-            alert('{{ t("Error") }}: ' + data.message);
+            notify('{{ t("Error") }}: ' + data.message);
 
         }
 
@@ -1025,7 +1025,7 @@ function submitReturn() {
 
         console.error('Error:', error);
 
-        alert({{ t('server_connection_error') | tojson }});
+        notify({{ t('server_connection_error') | tojson }});
 
     });
 
