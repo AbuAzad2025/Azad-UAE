@@ -293,7 +293,9 @@ class TestHandle403Standardization:
 
     def test_xhr_403_returns_json(self, app_with_handlers):
         with patch("app.handlers.LoggingCore.log_error"):
-            with app_with_handlers.test_request_context("/payments/delete/5", headers={"X-Requested-With": "XMLHttpRequest"}):
+            with app_with_handlers.test_request_context(
+                "/payments/delete/5", headers={"X-Requested-With": "XMLHttpRequest"}
+            ):
                 resp = _invoke(app_with_handlers, Forbidden())
         assert resp.status_code == 403
         assert resp.get_json()["error"] == "PERMISSION_DENIED"
@@ -347,6 +349,7 @@ class TestPermissionRequiredMessage:
             patch("utils.decorators.flash") as flash_mock,
             app.test_request_context("/sales/delete"),
         ):
+
             @permission_required("manage_sales")
             def view():
                 return "ok"
