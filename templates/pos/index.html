@@ -6,7 +6,7 @@
 <meta name="pos-base-currency" content="{{ tenant_default_currency }}">
 <meta name="pos-currency-symbol" content="{{ currency_symbol }}">
 <meta name="pos-prices-include-vat" content="{{ 'true' if prices_include_vat else 'false' }}">
-{# SECURITY: tojson|e — never |safe inside an HTML attribute #}
+{# SECURITY: use tojson|e inside HTML attributes #}
 <meta name="pos-config" content="{{ pos_config | tojson | e }}">
 {% endblock %}
 
