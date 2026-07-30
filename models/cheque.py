@@ -83,14 +83,14 @@ class Cheque(db.Model):
     payee_name = db.Column(db.String(200))  # اسم المستفيد (للصادر)
 
     # الربط مع العمليات
-    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), index=True)
-    supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.id"), index=True)
-    sale_id = db.Column(db.Integer, db.ForeignKey("sales.id"), index=True)
-    purchase_id = db.Column(db.Integer, db.ForeignKey("purchases.id"), index=True)
-    payment_id = db.Column(db.Integer, db.ForeignKey("payments.id"), index=True)
-    receipt_id = db.Column(db.Integer, db.ForeignKey("receipts.id"), index=True)
-    expense_id = db.Column(db.Integer, db.ForeignKey("expenses.id"), index=True)
-    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"), index=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id", ondelete="RESTRICT"), index=True)
+    supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.id", ondelete="RESTRICT"), index=True)
+    sale_id = db.Column(db.Integer, db.ForeignKey("sales.id", ondelete="RESTRICT"), index=True)
+    purchase_id = db.Column(db.Integer, db.ForeignKey("purchases.id", ondelete="RESTRICT"), index=True)
+    payment_id = db.Column(db.Integer, db.ForeignKey("payments.id", ondelete="RESTRICT"), index=True)
+    receipt_id = db.Column(db.Integer, db.ForeignKey("receipts.id", ondelete="RESTRICT"), index=True)
+    expense_id = db.Column(db.Integer, db.ForeignKey("expenses.id", ondelete="RESTRICT"), index=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id", ondelete="RESTRICT"), index=True)
 
     # ملاحظات وسبب الإرتداد
     notes = db.Column(db.Text)
@@ -113,7 +113,7 @@ class Cheque(db.Model):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
 
     customer = db.relationship("Customer", backref="cheques", foreign_keys=[customer_id])
     supplier = db.relationship("Supplier", backref="cheques", foreign_keys=[supplier_id])

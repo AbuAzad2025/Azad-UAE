@@ -375,6 +375,7 @@ class LoggingCore:
     # ── Instance state ────────────────────────────────────────────
     _handlers: dict[str, logging.Handler] = {}
     _initialized = False
+    _slow_query_listener_registered = False
     _alert_callbacks: list = []
     _rate_monitor = _RateMonitor()
     _json_mode = False
@@ -558,7 +559,14 @@ class LoggingCore:
         """Register SQLAlchemy engine event listener for slow queries.
 
         Replaces utils/performance_tracker.py → log_slow_queries()
+        Idempotent: Engine listeners are process-global — registering them
+        again (per app instance / reload) would duplicate every log line.
         """
+        if cls._slow_query_listener_registered:
+            app.logger.info("Slow query listener already registered — skipping duplicate")
+            return
+        cls._slow_query_listener_registered = True
+
         from sqlalchemy import event
         from sqlalchemy.engine import Engine
 

@@ -11,8 +11,8 @@ class PosSession(db.Model):
 
     __table_args__ = (
         db.UniqueConstraint("tenant_id", "session_number", name="uq_pos_sessions_tenant_session_number"),
-        db.Index("idx_pos_session_branch_status", "branch_id", "status"),
-        db.Index("idx_pos_session_user_status", "user_id", "status"),
+        db.Index("idx_pos_session_branch_status", 'tenant_id', "branch_id", "status"),
+        db.Index("idx_pos_session_user_status", 'tenant_id', "user_id", "status"),
         # Partial (PG): hot "current open session for this branch" lookup.
         db.Index(
             "idx_pos_sessions_tenant_open",
@@ -43,8 +43,8 @@ class PosSession(db.Model):
         nullable=False,
         index=True,
     )
-    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"), nullable=False, index=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id",ondelete="RESTRICT"), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), nullable=False, index=True)
     session_number = db.Column(db.String(50), nullable=False, index=True)
 
     # Phase 3 — terminal binding. Client-supplied terminal identifier; when

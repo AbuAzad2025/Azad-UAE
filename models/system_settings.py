@@ -152,7 +152,7 @@ class SystemSettings(db.Model):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
-    updated_by = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
+    updated_by = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), index=True)
 
     user = db.relationship("User", foreign_keys=[updated_by])
 

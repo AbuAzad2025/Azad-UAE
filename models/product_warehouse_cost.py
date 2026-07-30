@@ -31,8 +31,8 @@ class ProductWarehouseCost(db.Model):
         nullable=False,
         index=True,
     )
-    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False, index=True)
-    warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id"), nullable=False, index=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id",ondelete="RESTRICT"), nullable=False, index=True)
+    warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id",ondelete="RESTRICT"), nullable=False, index=True)
 
     # MWAC fields
     average_cost = db.Column(db.Numeric(18, 6), default=0, nullable=False)
@@ -45,7 +45,7 @@ class ProductWarehouseCost(db.Model):
 
     # Lock to prevent concurrent WAC updates
     last_updated = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    updated_by_movement_id = db.Column(db.Integer, db.ForeignKey("stock_movements.id"), nullable=True, index=True)
+    updated_by_movement_id = db.Column(db.Integer, db.ForeignKey("stock_movements.id",ondelete="RESTRICT"), nullable=True, index=True)
 
     # Audit
     created_at = db.Column(

@@ -11,7 +11,7 @@ class AzadSubscriptionFee(db.Model):
         db.Index("ix_azad_subscription_fees_tenant_status", "tenant_id", "status"),
         db.Index(
             "ix_azad_subscription_fees_period",
-            "billing_period_start",
+            'tenant_id', "billing_period_start",
             "billing_period_end",
         ),
     )

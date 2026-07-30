@@ -9,9 +9,9 @@ class Sale(db.Model):
 
     __table_args__ = (
         db.UniqueConstraint("tenant_id", "sale_number", name="uq_sales_tenant_sale_number"),
-        db.Index("idx_sale_customer_date", "customer_id", "sale_date"),
-        db.Index("idx_sale_status_date", "status", "sale_date"),
-        db.Index("idx_sale_payment_status", "payment_status", "customer_id"),
+        db.Index("idx_sale_customer_date", 'tenant_id', "customer_id", "sale_date"),
+        db.Index("idx_sale_status_date", 'tenant_id', "status", "sale_date"),
+        db.Index("idx_sale_payment_status", 'tenant_id', "payment_status", "customer_id"),
         db.Index("idx_sales_tenant_date", "tenant_id", "sale_date"),
     )
 
@@ -24,11 +24,11 @@ class Sale(db.Model):
     )
     sale_number = db.Column(db.String(50), nullable=False, index=True)
 
-    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=False, index=True)
-    seller_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
-    sales_rep_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True, index=True)
-    warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id"), nullable=True, index=True)
-    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True)  # New Branch ID
+    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id",ondelete="RESTRICT"), nullable=False, index=True)
+    seller_id = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), nullable=False, index=True)
+    sales_rep_id = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), nullable=True, index=True)
+    warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id",ondelete="RESTRICT"), nullable=True, index=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id",ondelete="RESTRICT"), nullable=True, index=True)  # New Branch ID
 
     sale_date = db.Column(
         db.DateTime,
@@ -100,9 +100,9 @@ class Sale(db.Model):
     checkout_payment_method = db.Column(db.String(50), nullable=True, index=True)
     checkout_gateway_ref = db.Column(db.String(120), nullable=True)
     coupon_code = db.Column(db.String(50), nullable=True)
-    pos_session_id = db.Column(db.Integer, db.ForeignKey("pos_sessions.id"), nullable=True, index=True)
+    pos_session_id = db.Column(db.Integer, db.ForeignKey("pos_sessions.id",ondelete="RESTRICT"), nullable=True, index=True)
     order_type = db.Column(db.String(20), nullable=True, index=True)
-    table_id = db.Column(db.Integer, db.ForeignKey("pos_tables.id"), nullable=True, index=True)
+    table_id = db.Column(db.Integer, db.ForeignKey("pos_tables.id",ondelete="RESTRICT"), nullable=True, index=True)
 
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
 
@@ -338,7 +338,7 @@ class SaleLine(db.Model):
         nullable=False,
         index=True,
     )
-    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False, index=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id",ondelete="RESTRICT"), nullable=False, index=True)
 
     quantity = db.Column(db.Numeric(15, 3), nullable=False)
     unit_price = db.Column(db.Numeric(15, 3), nullable=False)

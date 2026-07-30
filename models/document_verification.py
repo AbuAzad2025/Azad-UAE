@@ -17,13 +17,13 @@ class DocumentVerification(db.Model):
     __tablename__ = "document_verifications"
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id"), nullable=False)
+    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=False)
     document_type = db.Column(db.String(50), nullable=False)
     document_id = db.Column(db.Integer, nullable=False)
     document_hash = db.Column(db.String(64), unique=True, nullable=False, index=True)
     public_token = db.Column(db.String(36), unique=True, nullable=False, index=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    created_by = db.Column(db.Integer, db.ForeignKey("users.id"))
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
 
     __table_args__ = (
         db.Index(

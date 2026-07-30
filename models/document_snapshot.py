@@ -36,7 +36,7 @@ class DocumentSnapshot(db.Model):
         nullable=False,
         index=True,
     )
-    created_by = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
 
     tenant = db.relationship("Tenant", backref="document_snapshots", foreign_keys=[tenant_id])
     user = db.relationship("User", foreign_keys=[created_by])

@@ -50,7 +50,7 @@ class ExchangeRate(db.Model):
     from_currency = db.Column(db.String(3), nullable=False, index=True)
     to_currency = db.Column(db.String(3), nullable=False, index=True)
 
-    currency_id = db.Column(db.Integer, db.ForeignKey("currencies.id"), index=True)
+    currency_id = db.Column(db.Integer, db.ForeignKey("currencies.id", ondelete="RESTRICT"), index=True)
 
     rate = db.Column(db.Numeric(15, 6), nullable=False)
 
@@ -72,7 +72,7 @@ class ExchangeRate(db.Model):
         nullable=False,
         index=True,
     )
-    created_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True, index=True)
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=True, index=True)
 
     currency = db.relationship("Currency", back_populates="exchange_rates")
 

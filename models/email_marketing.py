@@ -48,7 +48,7 @@ class EmailSubscriber(db.Model):
     )
     email = db.Column(db.String(200), nullable=False)
     name = db.Column(db.String(200))
-    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id", ondelete="SET NULL"), nullable=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id", ondelete="SET NULL"), nullable=True,index=True)
     status = db.Column(db.String(20), default="subscribed", index=True)
     unsubscribed_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
@@ -112,7 +112,7 @@ class EmailCampaign(db.Model):
         db.Integer,
         db.ForeignKey("email_templates.id", ondelete="SET NULL"),
         nullable=True,
-    )
+    index=True)
     scheduled_date = db.Column(db.DateTime, nullable=True)
     sent_date = db.Column(db.DateTime, nullable=True)
     status = db.Column(db.String(20), default="draft", index=True)
@@ -157,7 +157,7 @@ class CampaignLog(db.Model):
         db.Integer,
         db.ForeignKey("email_subscribers.id", ondelete="CASCADE"),
         nullable=False,
-    )
+    index=True)
     status = db.Column(db.String(20), nullable=False, index=True)
     sent_at = db.Column(db.DateTime, nullable=True)
     opened_at = db.Column(db.DateTime, nullable=True)

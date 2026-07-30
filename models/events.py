@@ -11,6 +11,22 @@ logger = logging.getLogger(__name__)
 
 _ADVANCED_SALE_LISTENER_ALLOWED = False
 
+# ── Idempotency guard ────────────────────────────────────────────────────
+# register_all_listeners() runs inside the app factory; the factory executes
+# once per app instance (and hundreds of times across the test-suite). The
+# listeners attach to GLOBAL model classes, so every extra call would stack
+# duplicate hooks. Each group registers at most once per process.
+_LISTENER_GROUPS_REGISTERED: set = set()
+
+
+def _mark(group: str) -> bool:
+    """Return True the first time a listener group is registered."""
+    if group in _LISTENER_GROUPS_REGISTERED:
+        logger.info("Listener group %r already registered — skipping duplicate", group)
+        return False
+    _LISTENER_GROUPS_REGISTERED.add(group)
+    return True
+
 
 def register_all_listeners():
     register_sale_listeners()
@@ -43,6 +59,8 @@ def register_all_listeners():
 
 
 def register_sale_listeners():
+    if not _mark("sale"):
+        return
     from models import Sale
 
     @event.listens_for(Sale, "after_insert")
@@ -67,6 +85,8 @@ def register_sale_listeners():
 
 
 def register_receipt_listeners():
+    if not _mark("receipt"):
+        return
     from models import Receipt
 
     @event.listens_for(Receipt, "after_insert")
@@ -84,6 +104,8 @@ def register_receipt_listeners():
 
 
 def register_purchase_listeners():
+    if not _mark("purchase"):
+        return
     from models import Purchase
 
     @event.listens_for(Purchase, "after_insert")
@@ -101,6 +123,8 @@ def register_purchase_listeners():
 
 
 def register_payment_listeners():
+    if not _mark("payment"):
+        return
     from models import Payment
 
     @event.listens_for(Payment, "after_insert")
@@ -115,12 +139,16 @@ def register_payment_listeners():
 
 
 def register_branch_listeners():
+    if not _mark("branch"):
+        return
     from services.branch_audit_service import register_branch_event_listeners
 
     register_branch_event_listeners()
 
 
 def register_stock_movement_listeners():
+    if not _mark("stock_movement"):
+        return
     from models import StockMovement
     from decimal import Decimal
 
@@ -143,12 +171,16 @@ def register_stock_movement_listeners():
 
 
 def register_cheque_listeners():
+    if not _mark("cheque"):
+        return
     from services.cheque_service import register_cheque_event_listeners
 
     register_cheque_event_listeners()
 
 
 def register_product_return_listeners():
+    if not _mark("product_return"):
+        return
     from models import ProductReturn
 
     @event.listens_for(ProductReturn, "after_insert")
@@ -161,6 +193,8 @@ def register_product_return_listeners():
 
 
 def register_expense_listeners():
+    if not _mark("expense"):
+        return
     from models import Expense
 
     @event.listens_for(Expense, "after_insert")
@@ -174,18 +208,24 @@ def register_expense_listeners():
 
 
 def register_gl_listeners():
+    if not _mark("gl"):
+        return
     from services.gl_auto_service import register_gl_event_listeners
 
     register_gl_event_listeners()
 
 
 def register_validation_listeners():
+    if not _mark("validation"):
+        return
     from services.gl_auto_service import register_validation_event_listeners
 
     register_validation_event_listeners()
 
 
 def register_audit_listeners():
+    if not _mark("audit"):
+        return
     from models import Sale, Purchase, Receipt, Payment
 
     @event.listens_for(Sale, "after_delete")
@@ -206,12 +246,16 @@ def register_audit_listeners():
 
 
 def register_ai_listeners():
+    if not _mark("ai"):
+        return
     from services.events_ai_service import register_ai_event_listeners
 
     register_ai_event_listeners()
 
 
 def register_neural_training_listeners():
+    if not _mark("neural_training"):
+        return
     from services.events_ai_service import register_neural_event_listeners
 
     register_neural_event_listeners()

@@ -25,8 +25,8 @@ class PosFraudSignal(db.Model):
         nullable=False,
         index=True,
     )
-    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True, index=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id",ondelete="RESTRICT"), nullable=True, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), nullable=True, index=True)
     session_id = db.Column(
         db.Integer,
         db.ForeignKey("pos_sessions.id", ondelete="SET NULL"),

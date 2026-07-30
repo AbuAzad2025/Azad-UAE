@@ -62,7 +62,7 @@ class CRMTeam(db.Model):
     )
     name = db.Column(db.String(100), nullable=False)
     name_ar = db.Column(db.String(100))
-    leader_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    leader_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     is_active = db.Column(db.Boolean, default=True, index=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(
@@ -142,8 +142,8 @@ class CRMLead(db.Model):
         nullable=True,
         index=True,
     )
-    team_id = db.Column(db.Integer, db.ForeignKey("crm_teams.id", ondelete="SET NULL"), nullable=True)
-    assigned_user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    team_id = db.Column(db.Integer, db.ForeignKey("crm_teams.id", ondelete="SET NULL"), nullable=True, index=True)
+    assigned_user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     expected_revenue = db.Column(db.Numeric(15, 3), default=0)
     priority = db.Column(db.String(20), default="medium")
     source = db.Column(db.String(50))
@@ -209,7 +209,7 @@ class CRMActivity(db.Model):
         nullable=False,
         index=True,
     )
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     activity_type = db.Column(db.String(30), nullable=False)
     summary = db.Column(db.String(500))
     date_deadline = db.Column(db.DateTime, nullable=True)

@@ -17,6 +17,17 @@ def _app_context(app):
 
 
 @pytest.fixture(autouse=True)
+def _reset_slow_query_listener_flag():
+    """LoggingCore slow-query listener is guarded process-wide (idempotency);
+    tests that exercise its registration must see a fresh flag."""
+    from services.logging_core import LoggingCore
+
+    LoggingCore._slow_query_listener_registered = False
+    yield
+    LoggingCore._slow_query_listener_registered = False
+
+
+@pytest.fixture(autouse=True)
 def _transaction_rollback(db_session):
     yield
     db_session.rollback()

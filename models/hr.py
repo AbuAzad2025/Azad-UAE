@@ -14,8 +14,8 @@ class Department(db.Model):
     )
     name = db.Column(db.String(100), nullable=False)
     name_ar = db.Column(db.String(100))
-    manager_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    parent_id = db.Column(db.Integer, db.ForeignKey("departments.id", ondelete="SET NULL"), nullable=True)
+    manager_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True,index=True)
+    parent_id = db.Column(db.Integer, db.ForeignKey("departments.id", ondelete="SET NULL"), nullable=True,index=True)
     color = db.Column(db.String(7), default="#3b82f6")
     is_active = db.Column(db.Boolean, default=True, index=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
@@ -40,7 +40,7 @@ class JobPosition(db.Model):
     )
     name = db.Column(db.String(100), nullable=False)
     name_ar = db.Column(db.String(100))
-    department_id = db.Column(db.Integer, db.ForeignKey("departments.id", ondelete="SET NULL"), nullable=True)
+    department_id = db.Column(db.Integer, db.ForeignKey("departments.id", ondelete="SET NULL"), nullable=True,index=True)
     no_of_employees = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True, index=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
@@ -74,12 +74,12 @@ class HRContract(db.Model):
         nullable=False,
         index=True,
     )
-    department_id = db.Column(db.Integer, db.ForeignKey("departments.id", ondelete="SET NULL"), nullable=True)
+    department_id = db.Column(db.Integer, db.ForeignKey("departments.id", ondelete="SET NULL"), nullable=True,index=True)
     job_id = db.Column(
         db.Integer,
         db.ForeignKey("job_positions.id", ondelete="SET NULL"),
         nullable=True,
-    )
+    index=True)
     date_start = db.Column(db.Date, nullable=False)
     date_end = db.Column(db.Date, nullable=True)
     wage = db.Column(db.Numeric(15, 3), default=0)
@@ -135,7 +135,7 @@ class Attendance(db.Model):
     branch = db.relationship("Branch", foreign_keys=[branch_id])
     user = db.relationship("User", foreign_keys=[user_id])
 
-    __table_args__ = (db.Index("ix_attendance_user_date", "user_id", "check_in"),)
+    __table_args__ = (db.Index("ix_attendance_user_date", 'tenant_id', "user_id", "check_in"),)
 
     def __repr__(self):
         return f"<Attendance U{self.user_id} {self.check_in}>"
@@ -187,13 +187,13 @@ class LeaveRequest(db.Model):
         nullable=False,
         index=True,
     )
-    leave_type_id = db.Column(db.Integer, db.ForeignKey("leave_types.id", ondelete="SET NULL"), nullable=True)
+    leave_type_id = db.Column(db.Integer, db.ForeignKey("leave_types.id", ondelete="SET NULL"), nullable=True,index=True)
     date_from = db.Column(db.Date, nullable=False)
     date_to = db.Column(db.Date, nullable=False)
     duration = db.Column(db.Numeric(5, 1), nullable=False)
     reason = db.Column(db.Text)
     state = db.Column(db.String(20), default="draft", index=True)
-    manager_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    manager_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True,index=True)
     rejected_reason = db.Column(db.String(500))
     is_active = db.Column(db.Boolean, default=True, index=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)

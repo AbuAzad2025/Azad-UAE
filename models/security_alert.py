@@ -11,7 +11,7 @@ class SecurityAlert(db.Model):
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     ip_address = db.Column(db.String(50))
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), index=True)
     username = db.Column(db.String(50))
     url = db.Column(db.String(500))
     method = db.Column(db.String(10))
@@ -19,7 +19,7 @@ class SecurityAlert(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     is_resolved = db.Column(db.Boolean, default=False)
     resolved_at = db.Column(db.DateTime)
-    resolved_by = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
+    resolved_by = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), index=True)
 
     user = db.relationship("User", foreign_keys=[user_id], backref="security_alerts")
     resolver = db.relationship("User", foreign_keys=[resolved_by])

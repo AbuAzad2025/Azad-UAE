@@ -44,9 +44,9 @@ class Budget(db.Model):
     notes = db.Column(db.Text)
 
     # Meta
-    created_by = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
-    approved_by = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
-    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True)  # New Branch ID
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
+    approved_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id", ondelete="RESTRICT"), nullable=True, index=True)  # New Branch ID
     created_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -166,8 +166,8 @@ class BudgetLine(db.Model):
         nullable=False,
         index=True,
     )
-    budget_id = db.Column(db.Integer, db.ForeignKey("budgets.id"), nullable=False, index=True)
-    account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id"), nullable=False, index=True)
+    budget_id = db.Column(db.Integer, db.ForeignKey("budgets.id", ondelete="RESTRICT"), nullable=False, index=True)
+    account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id", ondelete="RESTRICT"), nullable=False, index=True)
 
     # المبالغ المخططة
     budgeted_amount = db.Column(db.Numeric(18, 3), nullable=False)

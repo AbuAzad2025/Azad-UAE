@@ -59,7 +59,7 @@ class ErrorAuditLog(db.Model):
     app_version = db.Column(db.String(30))
 
     # ── User / tenant context ──────────────────────────────────
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), index=True)
     tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id", ondelete="CASCADE"), index=True)
 
     # Sanitized request data (no passwords, tokens, secrets)
@@ -68,7 +68,7 @@ class ErrorAuditLog(db.Model):
     # ── Resolution tracking ────────────────────────────────────
     is_resolved = db.Column(db.Boolean, default=False, index=True)
     resolved_at = db.Column(db.DateTime)
-    resolved_by = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
+    resolved_by = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), index=True)
     resolution_note = db.Column(db.Text)
 
     created_at = db.Column(

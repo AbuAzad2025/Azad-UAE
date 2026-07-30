@@ -7,7 +7,7 @@ class Customer(db.Model):
     __tablename__ = "customers"
 
     __table_args__ = (
-        db.Index("idx_customer_active_type", "is_active", "customer_type"),
+        db.Index("idx_customer_active_type", 'tenant_id', "is_active", "customer_type"),
         db.Index("idx_customer_balance", "balance"),
         db.Index("idx_customers_tenant_name", "tenant_id", "name"),
     )
@@ -31,7 +31,7 @@ class Customer(db.Model):
     address = db.Column(db.Text)
     tax_number = db.Column(db.String(50))
     country = db.Column(db.String(2))  # ISO country code for fiscal position matching
-    fiscal_position_id = db.Column(db.Integer, db.ForeignKey("fiscal_positions.id"), nullable=True, index=True)
+    fiscal_position_id = db.Column(db.Integer, db.ForeignKey("fiscal_positions.id", ondelete="RESTRICT"), nullable=True, index=True)
 
     preferred_currency = db.Column(
         db.String(3), default=context_aware_default_currency

@@ -93,7 +93,7 @@ class Supplier(db.Model):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
-    created_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True, index=True)
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), nullable=True, index=True)
 
     # العلاقات
     purchases = db.relationship("Purchase", back_populates="supplier", lazy="dynamic")

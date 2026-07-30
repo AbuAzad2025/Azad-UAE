@@ -27,13 +27,13 @@ class StockBatch(db.Model):
     )
     product_id = db.Column(
         db.Integer,
-        db.ForeignKey("products.id"),
+        db.ForeignKey("products.id",ondelete="RESTRICT"),
         nullable=False,
         index=True,
     )
     warehouse_id = db.Column(
         db.Integer,
-        db.ForeignKey("warehouses.id"),
+        db.ForeignKey("warehouses.id",ondelete="RESTRICT"),
         nullable=False,
         index=True,
     )

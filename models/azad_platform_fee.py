@@ -21,9 +21,9 @@ class AzadPlatformFee(db.Model):
         nullable=False,
         index=True,
     )
-    sale_id = db.Column(db.Integer, db.ForeignKey("sales.id"), nullable=False, index=True)
-    payment_id = db.Column(db.Integer, db.ForeignKey("payments.id"), nullable=True, index=True)
-    vault_id = db.Column(db.Integer, db.ForeignKey("payment_vault.id"), nullable=True, index=True)
+    sale_id = db.Column(db.Integer, db.ForeignKey("sales.id", ondelete="RESTRICT"), nullable=False, index=True)
+    payment_id = db.Column(db.Integer, db.ForeignKey("payments.id", ondelete="RESTRICT"), nullable=True, index=True)
+    vault_id = db.Column(db.Integer, db.ForeignKey("payment_vault.id", ondelete="RESTRICT"), nullable=True, index=True)
 
     rate_percent = db.Column(db.Numeric(5, 2), nullable=False, default=1)
     base_amount_aed = db.Column(db.Numeric(15, 3), nullable=False)

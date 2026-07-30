@@ -29,7 +29,7 @@ class CardVault(db.Model):
         index=True,
     )
 
-    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=False, index=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id", ondelete="RESTRICT"), nullable=False, index=True)
 
     card_hash = db.Column(db.String(64), unique=True, nullable=False, index=True)
 
@@ -55,7 +55,7 @@ class CardVault(db.Model):
         nullable=False,
         index=True,
     )
-    created_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True, index=True)
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=True, index=True)
 
     tenant = db.relationship("Tenant", backref="card_vaults", foreign_keys=[tenant_id])
     customer = db.relationship("Customer", backref="cards")

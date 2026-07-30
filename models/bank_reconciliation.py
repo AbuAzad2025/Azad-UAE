@@ -29,7 +29,7 @@ class BankReconciliation(db.Model):
         index=True,
     )
     reconciliation_number = db.Column(db.String(50), nullable=False, index=True)
-    bank_account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id"), nullable=False, index=True)
+    bank_account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id", ondelete="RESTRICT"), nullable=False, index=True)
 
     # الفترة
     period_start = db.Column(db.Date, nullable=False)
@@ -57,8 +57,8 @@ class BankReconciliation(db.Model):
     notes = db.Column(db.Text)
 
     # Meta
-    created_by = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
-    approved_by = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
+    approved_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
     created_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -139,7 +139,7 @@ class BankReconciliationItem(db.Model):
         nullable=False,
         index=True,
     )
-    reconciliation_id = db.Column(db.Integer, db.ForeignKey("bank_reconciliations.id"), nullable=False, index=True)
+    reconciliation_id = db.Column(db.Integer, db.ForeignKey("bank_reconciliations.id", ondelete="RESTRICT"), nullable=False, index=True)
 
     # نوع العنصر
     item_type = db.Column(
@@ -152,8 +152,8 @@ class BankReconciliationItem(db.Model):
     amount = db.Column(db.Numeric(18, 3), nullable=False)
 
     # الربط
-    journal_entry_id = db.Column(db.Integer, db.ForeignKey("gl_journal_entries.id"), index=True)
-    cheque_id = db.Column(db.Integer, db.ForeignKey("cheques.id"), index=True)
+    journal_entry_id = db.Column(db.Integer, db.ForeignKey("gl_journal_entries.id", ondelete="RESTRICT"), index=True)
+    cheque_id = db.Column(db.Integer, db.ForeignKey("cheques.id", ondelete="RESTRICT"), index=True)
 
     # الحالة
     is_cleared = db.Column(db.Boolean, default=False)
@@ -201,11 +201,11 @@ class BankStatementLine(db.Model):
     )
 
     # Import metadata
-    bank_account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id"), nullable=False, index=True)
+    bank_account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id", ondelete="RESTRICT"), nullable=False, index=True)
     statement_date = db.Column(db.Date, nullable=False, index=True)
     source_filename = db.Column(db.String(255))
     imported_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    created_by = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
 
     transaction_date = db.Column(db.Date, nullable=False, index=True)
     reference = db.Column(db.String(120), index=True)
@@ -218,11 +218,11 @@ class BankStatementLine(db.Model):
         db.String(20), default="imported", index=True
     )  # imported, suggested_match, matched, ignored, reconciled
     matched_at = db.Column(db.DateTime)
-    matched_by = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
+    matched_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
     match_type = db.Column(db.String(30))  # exact, amount_date, fuzzy
-    matched_journal_entry_id = db.Column(db.Integer, db.ForeignKey("gl_journal_entries.id"), index=True)
-    matched_cheque_id = db.Column(db.Integer, db.ForeignKey("cheques.id"), index=True)
-    reconciliation_item_id = db.Column(db.Integer, db.ForeignKey("bank_reconciliation_items.id"), index=True)
+    matched_journal_entry_id = db.Column(db.Integer, db.ForeignKey("gl_journal_entries.id", ondelete="RESTRICT"), index=True)
+    matched_cheque_id = db.Column(db.Integer, db.ForeignKey("cheques.id", ondelete="RESTRICT"), index=True)
+    reconciliation_item_id = db.Column(db.Integer, db.ForeignKey("bank_reconciliation_items.id", ondelete="RESTRICT"), index=True)
 
     # Raw import data
     raw_data = db.Column(db.Text)

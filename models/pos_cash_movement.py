@@ -9,7 +9,7 @@ class PosCashMovement(db.Model):
     __tablename__ = "pos_cash_movements"
 
     __table_args__ = (
-        db.Index("idx_pos_cash_movement_session", "session_id", "movement_type"),
+        db.Index("idx_pos_cash_movement_session", 'tenant_id', "session_id", "movement_type"),
         db.Index("idx_pos_cash_movement_shift", "shift_id"),
     )
 
@@ -24,9 +24,9 @@ class PosCashMovement(db.Model):
         nullable=False,
         index=True,
     )
-    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"), nullable=False, index=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id",ondelete="RESTRICT"), nullable=False, index=True)
     # Acting cashier who performed the movement.
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), nullable=False, index=True)
     session_id = db.Column(
         db.Integer,
         db.ForeignKey("pos_sessions.id", ondelete="CASCADE"),
@@ -35,14 +35,14 @@ class PosCashMovement(db.Model):
     )
     shift_id = db.Column(db.Integer, db.ForeignKey("pos_shifts.id", ondelete="SET NULL"), nullable=True)
     # Supervisor who authorized the movement via override, when applicable.
-    authorized_by_user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    authorized_by_user_id = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), nullable=True,index=True)
 
     movement_type = db.Column(db.String(10), nullable=False, index=True)
     # Amount in tenant base currency, quantized to 0.001.
     amount = db.Column(db.Numeric(15, 3), nullable=False)
     reason = db.Column(db.String(255), nullable=False)
 
-    gl_entry_id = db.Column(db.Integer, db.ForeignKey("gl_journal_entries.id"), nullable=True)
+    gl_entry_id = db.Column(db.Integer, db.ForeignKey("gl_journal_entries.id",ondelete="RESTRICT"), nullable=True,index=True)
 
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 

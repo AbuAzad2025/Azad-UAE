@@ -24,7 +24,7 @@ class CashBox(db.Model):
         nullable=False,
         index=True,
     )
-    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id", ondelete="RESTRICT"), nullable=True, index=True)
 
     code = db.Column(db.String(20), nullable=False, index=True)
     name_ar = db.Column(db.String(200), nullable=False)
@@ -54,7 +54,7 @@ class CashBox(db.Model):
     is_default = db.Column(db.Boolean, default=False, nullable=False)
 
     # GL linkage
-    gl_account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id"), nullable=True, index=True)
+    gl_account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id", ondelete="RESTRICT"), nullable=True, index=True)
 
     # Audit
     created_at = db.Column(

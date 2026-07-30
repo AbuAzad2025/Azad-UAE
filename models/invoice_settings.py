@@ -115,7 +115,7 @@ class InvoiceSettings(db.Model):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
-    updated_by = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
+    updated_by = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), index=True)
 
     tenant = db.relationship("Tenant", backref="invoice_settings", foreign_keys=[tenant_id])
     user = db.relationship("User", foreign_keys=[updated_by])

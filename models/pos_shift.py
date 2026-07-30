@@ -11,8 +11,8 @@ class PosShift(db.Model):
 
     __table_args__ = (
         db.UniqueConstraint("tenant_id", "shift_number", name="uq_pos_shifts_tenant_shift_number"),
-        db.Index("idx_pos_shift_session_status", "session_id", "status"),
-        db.Index("idx_pos_shift_user_status", "user_id", "status"),
+        db.Index("idx_pos_shift_session_status", 'tenant_id', "session_id", "status"),
+        db.Index("idx_pos_shift_user_status", 'tenant_id', "user_id", "status"),
     )
 
     id = db.Column(db.Integer, primary_key=True)
@@ -28,7 +28,7 @@ class PosShift(db.Model):
         nullable=False,
         index=True,
     )
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), nullable=False, index=True)
     shift_number = db.Column(db.String(50), nullable=False, index=True)
 
     opened_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)

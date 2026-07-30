@@ -17,7 +17,7 @@ class AuditLog(db.Model):
         index=True,
     )
 
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
 
     action = db.Column(db.String(50), nullable=False, index=True)
 

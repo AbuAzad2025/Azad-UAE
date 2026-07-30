@@ -19,7 +19,7 @@ class PartnerProfitDistribution(db.Model):
         nullable=False,
         index=True,
     )
-    partner_id = db.Column(db.Integer, db.ForeignKey("partners.id"), nullable=False, index=True)
+    partner_id = db.Column(db.Integer, db.ForeignKey("partners.id",ondelete="RESTRICT"), nullable=False, index=True)
 
     period_start = db.Column(db.Date, nullable=False)
     period_end = db.Column(db.Date, nullable=False)
@@ -55,8 +55,8 @@ class PartnerProfitDistribution(db.Model):
     status = db.Column(db.String(20), default="draft", index=True)  # draft / approved / paid / cancelled
 
     # Audit
-    created_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True, index=True)
-    approved_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True, index=True)
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), nullable=True, index=True)
+    approved_by = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), nullable=True, index=True)
     approved_at = db.Column(db.DateTime, nullable=True)
 
     notes = db.Column(db.Text)

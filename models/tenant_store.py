@@ -16,7 +16,7 @@ class TenantStore(db.Model):
         unique=True,
         index=True,
     )
-    warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id"), nullable=False, index=True)
+    warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id",ondelete="RESTRICT"), nullable=False, index=True)
 
     is_enabled = db.Column(db.Boolean, default=False, nullable=False)
     # Platform-owner hard lock (force-OFF). When True the store is forced closed

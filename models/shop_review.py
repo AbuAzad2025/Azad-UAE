@@ -11,10 +11,10 @@ class ShopReview(db.Model):
         nullable=False,
         index=True,
     )
-    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False, index=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id",ondelete="RESTRICT"), nullable=False, index=True)
     account_id = db.Column(
         db.Integer,
-        db.ForeignKey("shop_customer_accounts.id"),
+        db.ForeignKey("shop_customer_accounts.id",ondelete="RESTRICT"),
         nullable=True,
         index=True,
     )

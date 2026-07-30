@@ -26,14 +26,14 @@ class CostCenter(db.Model):
     name_en = db.Column(db.String(200))
 
     # التسلسل الهرمي
-    parent_id = db.Column(db.Integer, db.ForeignKey("cost_centers.id"), index=True)
+    parent_id = db.Column(db.Integer, db.ForeignKey("cost_centers.id", ondelete="RESTRICT"), index=True)
     level = db.Column(db.Integer, default=0)
 
     # النوع
     center_type = db.Column(db.String(30), default="department")  # department, branch, project, product_line
 
     # المسؤول
-    manager_id = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
+    manager_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
 
     # الموازنة
     budget_amount = db.Column(db.Numeric(18, 3), default=0)

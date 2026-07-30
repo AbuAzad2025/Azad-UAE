@@ -25,7 +25,7 @@ class ArchivedRecord(db.Model):
         nullable=False,
         index=True,
     )
-    archived_by = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
+    archived_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
 
     reason = db.Column(db.String(255))
 

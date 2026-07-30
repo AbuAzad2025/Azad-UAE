@@ -37,9 +37,9 @@ class FixedAsset(db.Model):
     category = db.Column(db.String(50), index=True)  # land, building, vehicle, equipment, furniture
 
     # الحسابات المحاسبية
-    asset_account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id"), nullable=False, index=True)  # حساب الأصل
-    depreciation_account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id"), index=True)  # مجمع الاستهلاك
-    expense_account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id"), index=True)  # مصروف الاستهلاك
+    asset_account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id",ondelete="RESTRICT"), nullable=False, index=True)  # حساب الأصل
+    depreciation_account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id",ondelete="RESTRICT"), index=True)  # مجمع الاستهلاك
+    expense_account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id",ondelete="RESTRICT"), index=True)  # مصروف الاستهلاك
 
     # التكلفة
     purchase_date = db.Column(db.Date, nullable=False, index=True)
@@ -58,8 +58,8 @@ class FixedAsset(db.Model):
 
     # الموقع
     location = db.Column(db.String(200))
-    cost_center_id = db.Column(db.Integer, db.ForeignKey("cost_centers.id"), index=True)
-    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True)  # New Branch ID
+    cost_center_id = db.Column(db.Integer, db.ForeignKey("cost_centers.id",ondelete="RESTRICT"), index=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id",ondelete="RESTRICT"), nullable=True, index=True)  # New Branch ID
 
     # الحالة
     status = db.Column(db.String(20), default="active", index=True)
@@ -74,7 +74,7 @@ class FixedAsset(db.Model):
     notes = db.Column(db.Text)
 
     # Meta
-    created_by = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), index=True)
     created_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -355,7 +355,7 @@ class DepreciationSchedule(db.Model):
         nullable=False,
         index=True,
     )
-    asset_id = db.Column(db.Integer, db.ForeignKey("fixed_assets.id"), nullable=False, index=True)
+    asset_id = db.Column(db.Integer, db.ForeignKey("fixed_assets.id",ondelete="RESTRICT"), nullable=False, index=True)
 
     period_date = db.Column(db.Date, nullable=False, index=True)  # نهاية الشهر/الفترة
     depreciation_amount = db.Column(db.Numeric(18, 3), nullable=False)
@@ -363,7 +363,7 @@ class DepreciationSchedule(db.Model):
     book_value = db.Column(db.Numeric(18, 3), nullable=False)
 
     # الربط بالقيد المحاسبي
-    journal_entry_id = db.Column(db.Integer, db.ForeignKey("gl_journal_entries.id"), index=True)
+    journal_entry_id = db.Column(db.Integer, db.ForeignKey("gl_journal_entries.id",ondelete="RESTRICT"), index=True)
 
     notes = db.Column(db.Text)
 

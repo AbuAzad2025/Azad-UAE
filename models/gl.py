@@ -23,8 +23,8 @@ class GLAccount(db.Model):
     code = db.Column(db.String(20), nullable=False, index=True)
     name = db.Column(db.String(200), nullable=False)  # English name
     name_ar = db.Column(db.String(200))  # Arabic name
-    parent_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id"), index=True)
-    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True)
+    parent_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id",ondelete="RESTRICT"), index=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id",ondelete="RESTRICT"), nullable=True, index=True)
     type = db.Column(db.String(20), nullable=False, index=True)  # asset, liability, equity, revenue, expense
     sub_type = db.Column(
         db.String(50), nullable=True, index=True
@@ -201,7 +201,7 @@ class GLJournalEntry(db.Model):
         db.String(50)
     )  # sale, purchase, payment, expense, manual, adjustment, closing, reversing
     reference_id = db.Column(db.Integer)
-    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True)  # New Branch ID
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id",ondelete="RESTRICT"), nullable=True, index=True)  # New Branch ID
     entry_type = db.Column(db.String(30), default="manual")  # manual, auto, adjustment, closing, reversing
     currency = db.Column(
         db.String(3), default=context_aware_default_currency, nullable=False
@@ -225,10 +225,10 @@ class GLJournalEntry(db.Model):
     # 'cancelled': soft-deleted entry (audit trail preserved)
     validation_errors = db.Column(db.Text)  # JSON list of validation failures
     validated_at = db.Column(db.DateTime)
-    validated_by = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
-    reversed_entry_id = db.Column(db.Integer, db.ForeignKey("gl_journal_entries.id"), index=True)  # القيد المعكوس
+    validated_by = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), index=True)
+    reversed_entry_id = db.Column(db.Integer, db.ForeignKey("gl_journal_entries.id",ondelete="RESTRICT"), index=True)  # القيد المعكوس
     notes = db.Column(db.Text)  # ملاحظات إضافية
-    created_by = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), index=True)
     created_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -337,7 +337,7 @@ class GLPeriod(db.Model):
     month = db.Column(db.Integer, nullable=False)
     is_closed = db.Column(db.Boolean, default=False, nullable=False)
     closed_at = db.Column(db.DateTime)
-    closed_by = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
+    closed_by = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), index=True)
     notes = db.Column(db.Text)
     created_at = db.Column(
         db.DateTime,
@@ -370,7 +370,7 @@ class GLJournalLine(db.Model):
         nullable=False,
         index=True,
     )
-    account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id"), nullable=False, index=True)
+    account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id",ondelete="RESTRICT"), nullable=False, index=True)
     description = db.Column(db.String(255))
     debit = db.Column(db.Numeric(18, 3), default=0)
     credit = db.Column(db.Numeric(18, 3), default=0)
@@ -387,11 +387,11 @@ class GLJournalLine(db.Model):
         self.amount_aed = value
 
     # الأبعاد المالية (Financial Dimensions)
-    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True)
-    warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id"), nullable=True, index=True)
-    cost_center_id = db.Column(db.Integer, db.ForeignKey("cost_centers.id"), nullable=True, index=True)
-    profit_center_id = db.Column(db.Integer, db.ForeignKey("profit_centers.id"), nullable=True, index=True)
-    partner_id = db.Column(db.Integer, db.ForeignKey("partners.id"), nullable=True, index=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id",ondelete="RESTRICT"), nullable=True, index=True)
+    warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id",ondelete="RESTRICT"), nullable=True, index=True)
+    cost_center_id = db.Column(db.Integer, db.ForeignKey("cost_centers.id",ondelete="RESTRICT"), nullable=True, index=True)
+    profit_center_id = db.Column(db.Integer, db.ForeignKey("profit_centers.id",ondelete="RESTRICT"), nullable=True, index=True)
+    partner_id = db.Column(db.Integer, db.ForeignKey("partners.id",ondelete="RESTRICT"), nullable=True, index=True)
 
     entry = db.relationship("GLJournalEntry", back_populates="lines")
     account = db.relationship("GLAccount")

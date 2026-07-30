@@ -19,13 +19,13 @@ class ProductReturn(db.Model):
     )
     return_number = db.Column(db.String(50), nullable=False, index=True)
 
-    sale_id = db.Column(db.Integer, db.ForeignKey("sales.id"), nullable=False, index=True)
-    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=False, index=True)
-    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"), nullable=True, index=True)
+    sale_id = db.Column(db.Integer, db.ForeignKey("sales.id",ondelete="RESTRICT"), nullable=False, index=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id",ondelete="RESTRICT"), nullable=False, index=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id",ondelete="RESTRICT"), nullable=True, index=True)
     # ── Credit Note linkage ──────────────────────────────────────────────
     # When a return is created as a formal reversal of an invoice,
     # this FK links back to the original invoice for audit traceability.
-    reverses_invoice_id = db.Column(db.Integer, db.ForeignKey("sales.id"), nullable=True, index=True)
+    reverses_invoice_id = db.Column(db.Integer, db.ForeignKey("sales.id",ondelete="RESTRICT"), nullable=True, index=True)
 
     return_date = db.Column(
         db.DateTime,
@@ -57,7 +57,7 @@ class ProductReturn(db.Model):
 
     notes = db.Column(db.Text)
 
-    processed_by = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
+    processed_by = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), index=True)
     created_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -98,9 +98,9 @@ class ProductReturnLine(db.Model):
         nullable=False,
         index=True,
     )
-    return_id = db.Column(db.Integer, db.ForeignKey("product_returns.id"), nullable=False, index=True)
-    sale_line_id = db.Column(db.Integer, db.ForeignKey("sale_lines.id"), index=True)
-    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False, index=True)
+    return_id = db.Column(db.Integer, db.ForeignKey("product_returns.id",ondelete="RESTRICT"), nullable=False, index=True)
+    sale_line_id = db.Column(db.Integer, db.ForeignKey("sale_lines.id",ondelete="RESTRICT"), index=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id",ondelete="RESTRICT"), nullable=False, index=True)
 
     quantity = db.Column(db.Numeric(15, 3), nullable=False)
     unit_price = db.Column(db.Numeric(15, 3), nullable=False)
