@@ -14,19 +14,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gnupg=* \
     && rm -rf /var/lib/apt/lists/*
 
-RUN groupadd -r azad && useradd -r -g azad -d /app azad
+RUN groupadd -r -g 1000 azad && useradd -r -u 1000 -g azad -d /app azad
 
 WORKDIR /app
-COPY --chown=azad:azad requirements.txt .
+COPY --chown=1000:1000 requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY --chown=azad:azad . .
-RUN mkdir -p /app/data /app/logs && chown -R azad:azad /app/data /app/logs
+COPY --chown=1000:1000 . .
+RUN mkdir -p /app/data /app/logs && chown -R 1000:1000 /app/data /app/logs
 
-USER azad
+USER 1000
 EXPOSE 5000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD curl --fail http://localhost:5000/health || exit 1
+    CMD ["curl", "--fail", "http://localhost:5000/health"]
 
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--timeout", "120", "wsgi:app"]
