@@ -110,281 +110,281 @@ class PurchaseService:
         if not lines_data:
             raise ValueError(gettext("⚠️ يجب إضافة منتج واحد على الأقل للفاتورة."))
 
-            has_valid_line = False
-            for line_data in lines_data:
-                product_id = line_data.get("product_id")
-                quantity = Decimal(str(line_data.get("quantity") or 0))
-                unit_cost = Decimal(str(line_data.get("unit_cost") or 0))
-                if product_id and quantity > 0 and unit_cost >= 0:
-                    has_valid_line = True
-                    break
-            if not has_valid_line:
-                raise ValueError(gettext("⚠️ يجب إضافة منتج واحد على الأقل للفاتورة."))
+        has_valid_line = False
+        for line_data in lines_data:
+            product_id = line_data.get("product_id")
+            quantity = Decimal(str(line_data.get("quantity") or 0))
+            unit_cost = Decimal(str(line_data.get("unit_cost") or 0))
+            if product_id and quantity > 0 and unit_cost >= 0:
+                has_valid_line = True
+                break
+        if not has_valid_line:
+            raise ValueError(gettext("⚠️ يجب إضافة منتج واحد على الأقل للفاتورة."))
 
-            # Resolve tenant from warehouse (validated above) or active context
-            tenant_id = (
-                get_active_tenant_id(user) or getattr(user, "tenant_id", None) or getattr(warehouse, "tenant_id", None)
-            )
+        # Resolve tenant from warehouse (validated above) or active context
+        tenant_id = (
+            get_active_tenant_id(user) or getattr(user, "tenant_id", None) or getattr(warehouse, "tenant_id", None)
+        )
 
-            # Generate Number
-            purchase_branch_id = warehouse.branch_id or user.branch_id
-            purchase_number = generate_number(
-                "P",
-                Purchase,
-                "purchase_number",
-                branch_id=purchase_branch_id,
-                tenant_id=tenant_id,
-            )
+        # Generate Number
+        purchase_branch_id = warehouse.branch_id or user.branch_id
+        purchase_number = generate_number(
+            "P",
+            Purchase,
+            "purchase_number",
+            branch_id=purchase_branch_id,
+            tenant_id=tenant_id,
+        )
 
-            from utils.tax_settings import get_prices_include_vat
+        from utils.tax_settings import get_prices_include_vat
 
-            prices_include_vat = get_prices_include_vat(tenant_id=tenant_id, branch_id=purchase_branch_id)
+        prices_include_vat = get_prices_include_vat(tenant_id=tenant_id, branch_id=purchase_branch_id)
 
-            base_currency = PurchaseService.resolve_tenant_base_currency(tenant_id=tenant_id)
-            rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
-                currency,
-                base_currency,
-                user_rate=user_exchange_rate,
-                tenant_id=tenant_id,
-            )
-            if rate_info.get("rate_mode") == "needs_input":
-                raise ValueError(
-                    gettext(
-                        "⚠️ سعر الصرف غير متوفر.\n"
-                        "💡 اذهب إلى إعدادات المالك ← أسعار الصرف ← أدخل سعر يدوي، "
-                        'أو أدخل سعراً في حقل "سعر الصرف".'
-                    )
+        base_currency = PurchaseService.resolve_tenant_base_currency(tenant_id=tenant_id)
+        rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
+            currency,
+            base_currency,
+            user_rate=user_exchange_rate,
+            tenant_id=tenant_id,
+        )
+        if rate_info.get("rate_mode") == "needs_input":
+            raise ValueError(
+                gettext(
+                    "⚠️ سعر الصرف غير متوفر.\n"
+                    "💡 اذهب إلى إعدادات المالك ← أسعار الصرف ← أدخل سعر يدوي، "
+                    'أو أدخل سعراً في حقل "سعر الصرف".'
                 )
-            exchange_rate = Decimal(str(rate_info["rate"]))
-
-            # Create Purchase Header
-            effective_tax_rate = normalize_tax_rate(tax_rate, tenant_id)
-            purchase = Purchase(
-                tenant_id=tenant_id,
-                purchase_number=purchase_number,
-                supplier_id=supplier_id,
-                warehouse_id=warehouse_id,
-                branch_id=purchase_branch_id,
-                supplier_name=supplier_name,
-                supplier_phone=supplier_data.get("phone"),
-                supplier_email=supplier_data.get("email"),
-                currency=currency,
-                exchange_rate=exchange_rate,
-                discount_amount=Decimal(str(discount_amount or 0)),
-                tax_rate=effective_tax_rate,
-                prices_include_vat=prices_include_vat,
-                notes=notes,
-                user_id=user.id,
-                subtotal=Decimal("0"),
-                tax_amount=Decimal("0"),
-                total_amount=Decimal("0"),
-                amount=Decimal("0"),
-                amount_aed=Decimal("0"),
-                freight=Decimal(str(freight or 0)),
-                insurance=Decimal(str(insurance or 0)),
-                customs_duty=Decimal(str(customs_duty or 0)),
-                other_landed_cost=Decimal(str(other_landed_cost or 0)),
             )
+        exchange_rate = Decimal(str(rate_info["rate"]))
 
-            db.session.add(purchase)
-            db.session.flush()
+        # Create Purchase Header
+        effective_tax_rate = normalize_tax_rate(tax_rate, tenant_id)
+        purchase = Purchase(
+            tenant_id=tenant_id,
+            purchase_number=purchase_number,
+            supplier_id=supplier_id,
+            warehouse_id=warehouse_id,
+            branch_id=purchase_branch_id,
+            supplier_name=supplier_name,
+            supplier_phone=supplier_data.get("phone"),
+            supplier_email=supplier_data.get("email"),
+            currency=currency,
+            exchange_rate=exchange_rate,
+            discount_amount=Decimal(str(discount_amount or 0)),
+            tax_rate=effective_tax_rate,
+            prices_include_vat=prices_include_vat,
+            notes=notes,
+            user_id=user.id,
+            subtotal=Decimal("0"),
+            tax_amount=Decimal("0"),
+            total_amount=Decimal("0"),
+            amount=Decimal("0"),
+            amount_aed=Decimal("0"),
+            freight=Decimal(str(freight or 0)),
+            insurance=Decimal(str(insurance or 0)),
+            customs_duty=Decimal(str(customs_duty or 0)),
+            other_landed_cost=Decimal(str(other_landed_cost or 0)),
+        )
 
-            subtotal = Decimal("0")
-            lines_added = 0
+        db.session.add(purchase)
+        db.session.flush()
 
-            for line_data in lines_data:
-                product_id = line_data.get("product_id")
-                quantity = Decimal(str(line_data.get("quantity") or 0))
-                unit_cost = Decimal(str(line_data.get("unit_cost") or 0))
-                discount_percent = Decimal(str(line_data.get("discount_percent") or 0))
+        subtotal = Decimal("0")
+        lines_added = 0
 
-                if product_id and quantity > 0 and unit_cost >= 0:
-                    product = db.session.get(Product, product_id)
-                    if product:
-                        line = PurchaseLine(
-                            tenant_id=tenant_id,
-                            purchase_id=purchase.id,
-                            product_id=product_id,
-                            quantity=quantity,
-                            unit_cost=unit_cost,
-                            discount_percent=discount_percent,
+        for line_data in lines_data:
+            product_id = line_data.get("product_id")
+            quantity = Decimal(str(line_data.get("quantity") or 0))
+            unit_cost = Decimal(str(line_data.get("unit_cost") or 0))
+            discount_percent = Decimal(str(line_data.get("discount_percent") or 0))
+
+            if product_id and quantity > 0 and unit_cost >= 0:
+                product = db.session.get(Product, product_id)
+                if product:
+                    line = PurchaseLine(
+                        tenant_id=tenant_id,
+                        purchase_id=purchase.id,
+                        product_id=product_id,
+                        quantity=quantity,
+                        unit_cost=unit_cost,
+                        discount_percent=discount_percent,
+                    )
+
+                    # Calculate line totals
+                    line_subtotal = quantity * unit_cost
+                    line_discount = line_subtotal * (discount_percent / Decimal("100"))
+                    line_total = line_subtotal - line_discount
+
+                    line.line_total = line_total
+                    db.session.add(line)
+                    db.session.flush()
+                    subtotal += line_total
+                    lines_added += 1
+                    if getattr(product, "has_serial_number", False):
+                        from utils.serial_helpers import (
+                            extract_serials,
+                            validate_serials,
                         )
 
-                        # Calculate line totals
-                        line_subtotal = quantity * unit_cost
-                        line_discount = line_subtotal * (discount_percent / Decimal("100"))
-                        line_total = line_subtotal - line_discount
+                        clean_serials = extract_serials(line_data)
+                        validate_serials(
+                            clean_serials,
+                            product.name,
+                            int(Decimal(str(line_data.get("quantity", 0)))),
+                        )
 
-                        line.line_total = line_total
-                        db.session.add(line)
-                        db.session.flush()
-                        subtotal += line_total
-                        lines_added += 1
-                        if getattr(product, "has_serial_number", False):
-                            from utils.serial_helpers import (
-                                extract_serials,
-                                validate_serials,
+                        from models.product_serial import ProductSerial
+
+                        existing_serials = ProductSerial.query.filter(
+                            ProductSerial.tenant_id == tenant_id,
+                            ProductSerial.serial_number.in_(clean_serials),
+                        ).count()
+                        if existing_serials > 0:
+                            raise ValueError(
+                                gettext(f'⚠️ بعض الأرقام التسلسلية موجودة مسبقاً للمنتج "{product.name}".')
                             )
 
-                            clean_serials = extract_serials(line_data)
-                            validate_serials(
-                                clean_serials,
-                                product.name,
-                                int(Decimal(str(line_data.get("quantity", 0)))),
+                        for sn in clean_serials:
+                            serial_obj = ProductSerial(
+                                tenant_id=tenant_id,
+                                product_id=product_id,
+                                serial_number=sn,
+                                status="available",
+                                warehouse_id=warehouse_id,
+                                purchase_line_id=line.id,
                             )
+                            if getattr(product, "warranty_days", 0) > 0:
+                                from datetime import datetime, timedelta
 
-                            from models.product_serial import ProductSerial
-
-                            existing_serials = ProductSerial.query.filter(
-                                ProductSerial.tenant_id == tenant_id,
-                                ProductSerial.serial_number.in_(clean_serials),
-                            ).count()
-                            if existing_serials > 0:
-                                raise ValueError(
-                                    gettext(f'⚠️ بعض الأرقام التسلسلية موجودة مسبقاً للمنتج "{product.name}".')
+                                serial_obj.warranty_start_date = datetime.now()
+                                serial_obj.warranty_end_date = datetime.now() + timedelta(
+                                    days=int(product.warranty_days)
                                 )
+                            db.session.add(serial_obj)
 
-                            for sn in clean_serials:
-                                serial_obj = ProductSerial(
-                                    tenant_id=tenant_id,
-                                    product_id=product_id,
-                                    serial_number=sn,
-                                    status="available",
-                                    warehouse_id=warehouse_id,
-                                    purchase_line_id=line.id,
-                                )
-                                if getattr(product, "warranty_days", 0) > 0:
-                                    from datetime import datetime, timedelta
+        if lines_added == 0:
+            current_app.logger.warning(
+                "Purchase creation rolled back: no lines added for purchase %s",
+                purchase.purchase_number,
+            )
+            raise ValueError(gettext("⚠️ يجب إضافة منتج واحد على الأقل للفاتورة."))
 
-                                    serial_obj.warranty_start_date = datetime.now()
-                                    serial_obj.warranty_end_date = datetime.now() + timedelta(
-                                        days=int(product.warranty_days)
-                                    )
-                                db.session.add(serial_obj)
+        purchase.subtotal = subtotal
+        purchase.calculate_totals()
 
-            if lines_added == 0:
-                current_app.logger.warning(
-                    "Purchase creation rolled back: no lines added for purchase %s",
-                    purchase.purchase_number,
-                )
-                raise ValueError(gettext("⚠️ يجب إضافة منتج واحد على الأقل للفاتورة."))
+        total_landed = purchase.total_landed_cost
+        if total_landed > 0 and purchase.subtotal > 0:
+            for line in purchase.lines:
+                if line.line_total and line.line_total > 0:
+                    ratio = line.line_total / purchase.subtotal
+                    line.landed_cost = (total_landed * ratio).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
-            purchase.subtotal = subtotal
-            purchase.calculate_totals()
+        db.session.flush()
 
-            total_landed = purchase.total_landed_cost
-            if total_landed > 0 and purchase.subtotal > 0:
-                for line in purchase.lines:
-                    if line.line_total and line.line_total > 0:
-                        ratio = line.line_total / purchase.subtotal
-                        line.landed_cost = (total_landed * ratio).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        # Stock Update (uses landed_unit_cost for WAC when MWAC is enabled)
+        StockService.process_purchase_lines(purchase, warehouse_id)
 
-            db.session.flush()
+        # GL Entries
+        GLService.ensure_core_accounts(tenant_id=tenant_id)
 
-            # Stock Update (uses landed_unit_cost for WAC when MWAC is enabled)
-            StockService.process_purchase_lines(purchase, warehouse_id)
+        capitalize_landed = current_app.config.get("ENABLE_LANDED_COST_CAPITALIZATION", True)
 
-            # GL Entries
-            GLService.ensure_core_accounts(tenant_id=tenant_id)
+        # Inventory debit should be VAT-exclusive (taxable_amount) plus landed costs if capitalized
+        inventory_debit = purchase.taxable_amount or Decimal("0")
+        if capitalize_landed:
+            inventory_debit += total_landed
+        if inventory_debit < Decimal("0"):
+            inventory_debit = Decimal("0")
 
-            capitalize_landed = current_app.config.get("ENABLE_LANDED_COST_CAPITALIZATION", True)
+        total_payable = purchase.total_amount
 
-            # Inventory debit should be VAT-exclusive (taxable_amount) plus landed costs if capitalized
-            inventory_debit = purchase.taxable_amount or Decimal("0")
-            if capitalize_landed:
-                inventory_debit += total_landed
-            if inventory_debit < Decimal("0"):
-                inventory_debit = Decimal("0")
+        lines = [
+            {
+                "account": GL_ACCOUNTS["inventory"],
+                "concept_code": "INVENTORY_ASSET",
+                "debit": inventory_debit,
+                "description": gettext(f"شراء بضاعة {purchase.purchase_number}"),
+            },
+            {
+                "account": GL_ACCOUNTS["payable"],
+                "concept_code": "AP",
+                "credit": total_payable,
+                "description": gettext(f"ذمم دائنة - مورد: {purchase.supplier_name}"),
+            },
+        ]
 
-            total_payable = purchase.total_amount
-
-            lines = [
-                {
-                    "account": GL_ACCOUNTS["inventory"],
-                    "concept_code": "INVENTORY_ASSET",
-                    "debit": inventory_debit,
-                    "description": gettext(f"شراء بضاعة {purchase.purchase_number}"),
-                },
-                {
-                    "account": GL_ACCOUNTS["payable"],
-                    "concept_code": "AP",
-                    "credit": total_payable,
-                    "description": gettext(f"ذمم دائنة - مورد: {purchase.supplier_name}"),
-                },
-            ]
-
-            # إذا كانت التكاليف الإضافية لا تُرسمل، فترحيلها إلى حساباتها المناسبة
-            if not capitalize_landed and total_landed > 0:
-                if purchase.freight > 0:
-                    lines.append(
-                        {
-                            "account": GL_ACCOUNTS.get("freight_in", "5301"),
-                            "concept_code": "FREIGHT_IN",
-                            "debit": purchase.freight,
-                            "description": gettext(f"أجور شحن - {purchase.purchase_number}"),
-                        }
-                    )
-                if purchase.customs_duty > 0:
-                    lines.append(
-                        {
-                            "account": GL_ACCOUNTS.get("customs_duty", "5302"),
-                            "concept_code": "CUSTOMS_DUTY",
-                            "debit": purchase.customs_duty,
-                            "description": gettext(f"رسوم جمركية - {purchase.purchase_number}"),
-                        }
-                    )
-                if purchase.insurance > 0:
-                    lines.append(
-                        {
-                            "account": GL_ACCOUNTS.get("insurance_in", "5303"),
-                            "explicit_account_allowed": True,
-                            "debit": purchase.insurance,
-                            "description": gettext(f"تأمين شحن - {purchase.purchase_number}"),
-                        }
-                    )
-                if purchase.other_landed_cost > 0:
-                    lines.append(
-                        {
-                            "account": GL_ACCOUNTS.get("misc_expense", "6500"),
-                            "explicit_account_allowed": True,
-                            "debit": purchase.other_landed_cost,
-                            "description": gettext(f"تكاليف إضافية أخرى - {purchase.purchase_number}"),
-                        }
-                    )
-
-            if purchase.tax_amount > 0 and should_post_vat_gl(tenant_id):
+        # إذا كانت التكاليف الإضافية لا تُرسمل، فترحيلها إلى حساباتها المناسبة
+        if not capitalize_landed and total_landed > 0:
+            if purchase.freight > 0:
                 lines.append(
                     {
-                        "account": GL_ACCOUNTS["vat_input"],
-                        "concept_code": "VAT_INPUT",
-                        "debit": purchase.tax_amount,
-                        "description": gettext(f"ضريبة مدخلات (شراء) {purchase.purchase_number}"),
+                        "account": GL_ACCOUNTS.get("freight_in", "5301"),
+                        "concept_code": "FREIGHT_IN",
+                        "debit": purchase.freight,
+                        "description": gettext(f"أجور شحن - {purchase.purchase_number}"),
+                    }
+                )
+            if purchase.customs_duty > 0:
+                lines.append(
+                    {
+                        "account": GL_ACCOUNTS.get("customs_duty", "5302"),
+                        "concept_code": "CUSTOMS_DUTY",
+                        "debit": purchase.customs_duty,
+                        "description": gettext(f"رسوم جمركية - {purchase.purchase_number}"),
+                    }
+                )
+            if purchase.insurance > 0:
+                lines.append(
+                    {
+                        "account": GL_ACCOUNTS.get("insurance_in", "5303"),
+                        "explicit_account_allowed": True,
+                        "debit": purchase.insurance,
+                        "description": gettext(f"تأمين شحن - {purchase.purchase_number}"),
+                    }
+                )
+            if purchase.other_landed_cost > 0:
+                lines.append(
+                    {
+                        "account": GL_ACCOUNTS.get("misc_expense", "6500"),
+                        "explicit_account_allowed": True,
+                        "debit": purchase.other_landed_cost,
+                        "description": gettext(f"تكاليف إضافية أخرى - {purchase.purchase_number}"),
                     }
                 )
 
-            post_or_fail(
-                lines,
-                description=f"Purchase {purchase.purchase_number}",
-                reference_type=GLRef.PURCHASE,
-                reference_id=purchase.id,
-                currency=purchase.currency,
-                exchange_rate=purchase.exchange_rate,
-                branch_id=purchase.branch_id,
-                tenant_id=tenant_id,
+        if purchase.tax_amount > 0 and should_post_vat_gl(tenant_id):
+            lines.append(
+                {
+                    "account": GL_ACCOUNTS["vat_input"],
+                    "concept_code": "VAT_INPUT",
+                    "debit": purchase.tax_amount,
+                    "description": gettext(f"ضريبة مدخلات (شراء) {purchase.purchase_number}"),
+                }
             )
 
-            if supplier:
-                try:
-                    from decimal import Decimal as _D
+        post_or_fail(
+            lines,
+            description=f"Purchase {purchase.purchase_number}",
+            reference_type=GLRef.PURCHASE,
+            reference_id=purchase.id,
+            currency=purchase.currency,
+            exchange_rate=purchase.exchange_rate,
+            branch_id=purchase.branch_id,
+            tenant_id=tenant_id,
+        )
 
-                    supplier.apply_purchase(_D(str(purchase.amount_aed or 0)))
-                except Exception as e:
-                    current_app.logger.warning(f"Supplier stats update failed: {e}")
+        if supplier:
+            try:
+                from decimal import Decimal as _D
 
-            db.session.flush()
-            LoggingCore.log_audit("create", "purchases", purchase.id)
+                supplier.apply_purchase(_D(str(purchase.amount_aed or 0)))
+            except Exception as e:
+                current_app.logger.warning(f"Supplier stats update failed: {e}")
 
-            return purchase
+        db.session.flush()
+        LoggingCore.log_audit("create", "purchases", purchase.id)
+
+        return purchase
 
     @staticmethod
     def cancel_purchase(purchase):
