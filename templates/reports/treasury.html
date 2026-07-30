@@ -221,7 +221,7 @@
             </thead>
             <tbody>
               {% for bkey, bucket in report.cheques[direction].buckets.items() %}
-                {% for c in bucket.items() %}
+                {% for c in bucket["items"] %}
                 {% set row_class = {'overdue': 'table-danger', '0_7_days': 'table-warning'}.get(bkey, '') %}
                 <tr class="{{ row_class }}">
                   <td>{{ c.cheque_bank_number or c.cheque_number }}</td>

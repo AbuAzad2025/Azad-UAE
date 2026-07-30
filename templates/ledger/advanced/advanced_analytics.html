@@ -112,7 +112,7 @@
           <h4><i class="fas fa-chart-pie mr-2"></i>{{ t('توزيع') }} {{ t('Expenses') }}</h4>
         </div>
         <div class="card-body">
-          {% if expense_breakdown.items %}
+          {% if expense_breakdown["items"] %}
           <canvas id="expenseChart" height="300"></canvas>
           <div class="mt-3">
             <h5>{{ t('Total_3') }}: {{ format_currency(expense_breakdown.total) }}</h5>
@@ -125,7 +125,7 @@
                 </tr>
               </thead>
               <tbody>
-                {% for account_name, item in (expense_breakdown.items() | list)[:5] %}
+                {% for item in expense_breakdown["items"][:5] %}
                 <tr>
                   <td>{{ item.account_name }}</td>
                   <td>{{ format_currency(item.amount) }}</td>
@@ -151,7 +151,7 @@
           <h4><i class="fas fa-chart-pie mr-2"></i>{{ t('توزيع') }} {{ t('Revenue') }}</h4>
         </div>
         <div class="card-body">
-          {% if revenue_breakdown.items %}
+          {% if revenue_breakdown["items"] %}
           <canvas id="revenueChart" height="300"></canvas>
           <div class="mt-3">
             <h5>{{ t('Total_3') }}: {{ format_currency(revenue_breakdown.total) }}</h5>
@@ -164,7 +164,7 @@
                 </tr>
               </thead>
               <tbody>
-                {% for item in revenue_breakdown.items[:5] %}
+                {% for item in revenue_breakdown["items"][:5] %}
                 <tr>
                   <td>{{ item.account_name }}</td>
                   <td>{{ format_currency(item.amount) }}</td>
@@ -212,7 +212,7 @@
 <script src="{{ url_for('static', filename='adminlte/plugins/chartjs/chart.min.js') }}"></script>
 <script>
 // {{ t('رسم') }} {{ t('بياني') }} {{ t('Expenses_3') }}
-const expenseData = {{ expense_breakdown.items|tojson }};
+const expenseData = {{ expense_breakdown["items"]|tojson }};
 const expenseLabels = expenseData.slice(0, 5).map(item => item.account_name);
 const expenseValues = expenseData.slice(0, 5).map(item => item.amount);
 
@@ -232,7 +232,7 @@ new Chart(document.getElementById('expenseChart'), {
 });
 
 // {{ t('رسم') }} {{ t('بياني') }} {{ t('للإيرادات') }}
-const revenueData = {{ revenue_breakdown.items|tojson }};
+const revenueData = {{ revenue_breakdown["items"]|tojson }};
 const revenueLabels = revenueData.slice(0, 5).map(item => item.account_name);
 const revenueValues = revenueData.slice(0, 5).map(item => item.amount);
 
