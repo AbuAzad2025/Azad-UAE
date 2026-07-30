@@ -42,7 +42,7 @@ def register_context_processors(app):
     def _sanitize_rich(value):
         from markupsafe import Markup
 
-        return Markup(InputSanitizer.sanitize_html(value, allow_tags=True))
+        return Markup(InputSanitizer.sanitize_html(value, allow_tags=True))  # nosec B704
 
     app.jinja_env.filters.setdefault("sanitize", _sanitize_rich)
 

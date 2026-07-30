@@ -2447,7 +2447,6 @@ TRANSLATIONS = {
     "Enter Value Manually": {},
     "No Warehouses Registered": {},
     "Add New Warehouse": {},
-    "Page Not Found": {},
     "Server Error": {},
     "Access Denied": {},
     "Confirm Delete Receipt": {},
