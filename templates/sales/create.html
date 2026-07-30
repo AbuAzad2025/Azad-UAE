@@ -346,7 +346,7 @@
 <script>
   window._API_SEARCH_URL = {% if current_user.has_permission('view_reports') %}'{{ url_for('api.api_search') }}'{% else %}null{% endif %};
   window._PRESELECTED_CUSTOMER = {{ preselected_customer | tojson if preselected_customer else 'null' }};
-  window._COMPANY_INFO = {{ company_info | tojson }};
+  window._COMPANY_INFO = {{ company_info | tojson if company_info else '{}' }};
   window._COMPANY_PHONE = {{ (current_user.phone or '') | e | tojson }};
 </script>
 <script src="{{ url_for('static', filename='js/sales-enhanced.js') }}"></script>
