@@ -19,6 +19,7 @@ def app():
         ENABLE_MWAC=False,
     )
     from extensions import babel, get_locale
+
     babel.init_app(application, locale_selector=get_locale)
     return application
 
