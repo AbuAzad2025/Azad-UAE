@@ -82,6 +82,7 @@
 
 
 
+      {% if current_user.has_permission('manage_ledger') %}
       <form method="post" action="{{ url_for('ledger.run_depreciation') }}" class="form-row">
 
 
@@ -103,6 +104,7 @@
 
 
       </form>
+      {% endif %}
 
 
 

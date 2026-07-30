@@ -9,7 +9,9 @@
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
       <a href="{{ url_for('crm.leads_list') }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-list"></i> {{ t('كافة') }} {{ t('Customers_2') }}</a>
+      {% if current_user.has_permission('crm.manage') %}
       <a href="{{ url_for('crm.create_lead') }}" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> {{ t('عميل') }} {{ t('Expected_2') }}</a>
+      {% endif %}
     </div>
   </div>
   <div class="row pipeline-board" id="pipelineBoard">

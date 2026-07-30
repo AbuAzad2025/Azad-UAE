@@ -268,3 +268,93 @@ class TestHttpErrorHandlers:
         ):
             resp = app_with_handlers.test_client().get("/not-found")
         assert resp.status_code == 404
+
+
+class TestHandle403Standardization:
+    """403 responses: JSON for APIs, instructive HTML for web (RBAC audit)."""
+
+    def test_api_403_returns_permission_denied_json(self, app_with_handlers):
+        with patch("app.handlers.LoggingCore.log_error"):
+            with app_with_handlers.test_request_context("/api/v1/sales", headers={"Accept": "application/json"}):
+                resp = _invoke(app_with_handlers, Forbidden())
+        assert resp.status_code == 403
+        body = resp.get_json()
+        assert body["success"] is False
+        assert body["error"] == "PERMISSION_DENIED"
+        assert body["status"] == 403
+        assert "permission" in body["message"].lower()
+
+    def test_api_403_includes_custom_description(self, app_with_handlers):
+        with patch("app.handlers.LoggingCore.log_error"):
+            with app_with_handlers.test_request_context("/api/v1/gl"):
+                resp = _invoke(app_with_handlers, Forbidden("Requires manage_ledger"))
+        assert resp.status_code == 403
+        assert resp.get_json()["message"] == "Requires manage_ledger"
+
+    def test_xhr_403_returns_json(self, app_with_handlers):
+        with patch("app.handlers.LoggingCore.log_error"):
+            with app_with_handlers.test_request_context("/payments/delete/5", headers={"X-Requested-With": "XMLHttpRequest"}):
+                resp = _invoke(app_with_handlers, Forbidden())
+        assert resp.status_code == 403
+        assert resp.get_json()["error"] == "PERMISSION_DENIED"
+
+    def test_web_403_sets_denial_reason_on_g(self, app_with_handlers):
+        from flask import g
+
+        with (
+            patch("app.handlers.LoggingCore.log_error"),
+            patch("app.handlers.render_template", return_value="forbidden") as render,
+        ):
+            with app_with_handlers.test_request_context("/ledger/admin"):
+                resp = _invoke(app_with_handlers, Forbidden("ميزة مقفلة في باقتك"))
+                assert g.denial_reason == "ميزة مقفلة في باقتك"
+        assert resp.status_code == 403
+        render.assert_called_once_with("errors/403.html")
+
+    def test_web_403_default_description_hides_reason(self, app_with_handlers):
+        from flask import g
+
+        with (
+            patch("app.handlers.LoggingCore.log_error"),
+            patch("app.handlers.render_template", return_value="forbidden"),
+        ):
+            with app_with_handlers.test_request_context("/ledger/admin"):
+                resp = _invoke(app_with_handlers, Forbidden())
+                assert g.denial_reason is None
+        assert resp.status_code == 403
+
+
+class TestPermissionRequiredMessage:
+    """permission_required flash must name the missing permission."""
+
+    def test_flash_names_permission_code(self):
+        from flask import Flask
+        from flask_login import LoginManager
+
+        from utils.decorators import permission_required
+
+        app = Flask(__name__)
+        app.config["SECRET_KEY"] = "t"
+        LoginManager(app)
+
+        user = MagicMock()
+        user.is_authenticated = True
+        user.has_permission.return_value = False
+
+        with (
+            patch("utils.decorators.current_user", user),
+            patch("utils.decorators.is_global_owner_user", return_value=False),
+            patch("utils.decorators.flash") as flash_mock,
+            app.test_request_context("/sales/delete"),
+        ):
+            @permission_required("manage_sales")
+            def view():
+                return "ok"
+
+            try:
+                view()
+                raise AssertionError("expected abort 403")
+            except Exception as exc:
+                assert getattr(exc, "code", None) == 403
+        flash_mock.assert_called_once()
+        assert "manage_sales" in flash_mock.call_args[0][0]

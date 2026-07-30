@@ -82,6 +82,7 @@
 <div class="modal fade" id="deptModal">
   <div class="modal-dialog"><div class="modal-content">
     <div class="modal-header"><h5>{{ t('قسم') }} {{ t('New') }}</h5></div>
+    {% if current_user.has_permission('hr.manage') %}
     <form method="POST" class="needs-validation" action="{{ url_for('hr.create_department') }}" novalidate>
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="modal-body">
@@ -90,6 +91,7 @@
     </div>
     <div class="modal-footer"><button type="submit" class="btn btn-success">{{ t('Save') }}</button></div>
     </form>
+    {% endif %}
   </div></div>
 </div>
 {% endblock %}

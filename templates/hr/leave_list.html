@@ -43,6 +43,7 @@
               <td><span class="badge badge-{{ 'success' if l.state == 'approved' else ('danger' if l.state == 'refused' else 'warning') }}">{{ t(l.state) }}</span></td>
               <td>
                 {% if l.state == 'draft' %}
+                {% if current_user.has_permission('hr.manage') %}
                 <form method="POST" action="{{ url_for('hr.approve_leave', leave_id=l.id) }}" style="display:inline">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button type="submit" class="btn btn-sm btn-success" aria-label="{{ t('Approve') }} {{ t('Leave') }}"><i class="fas fa-check"></i></button>
@@ -51,6 +52,7 @@
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button type="submit" class="btn btn-sm btn-danger" aria-label="{{ t('Refuse') }} {{ t('Leave') }}"><i class="fas fa-times"></i></button>
                 </form>
+                {% endif %}
                 {% endif %}
               </td>
             </tr>

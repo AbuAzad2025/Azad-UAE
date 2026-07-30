@@ -4,7 +4,9 @@
 <div class="container-fluid">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h4><i class="fas fa-ticket-alt"></i> {{ t('technical_support_tickets') }}</h4>
+    {% if current_user.has_permission('support.manage') %}
     <a href="{{ url_for('tickets.create_ticket') }}" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> {{ t('new_ticket') }}</a>
+    {% endif %}
   </div>
   <div class="card">
     <div class="card-body">

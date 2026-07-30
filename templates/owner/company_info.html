@@ -62,10 +62,12 @@
           <i class="fas fa-file-invoice"></i>
           <span>{{ t('Invoice_Settings') }}</span>
         </a>
+        {% if current_user.has_permission('manage_warehouse') %}
         <a href="{{ url_for('warehouse.index') }}" class="quick-link" aria-label="{{ t('Warehouses') }}">
           <i class="fas fa-warehouse"></i>
           <span>{{ t('Warehouses') }}</span>
         </a>
+        {% endif %}
       </div>
     </div>
   </aside>

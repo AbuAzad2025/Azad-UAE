@@ -227,9 +227,13 @@
                 {% for sale in stats.recent_sales %}
                 <tr class="fade-in">
                   <td>
+                    {% if current_user.has_permission('manage_sales') %}
                     <a href="{{ url_for('sales.view', id=sale.id) }}" class="font-weight-bold text-primary">
                       {{ sale.sale_number }}
                     </a>
+                    {% else %}
+                    <span class="font-weight-bold">{{ sale.sale_number }}</span>
+                    {% endif %}
                   </td>
                   <td>
                     <div class="d-flex align-items-center">

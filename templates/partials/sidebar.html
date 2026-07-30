@@ -149,12 +149,14 @@
 
           {% set _led = current_user.is_authenticated and current_user.has_permission('view_ledger') %}
           {{ _tree('fas fa-book', t('General_Ledger'), 'ledger', _led) }}
+            {% if _led %}
             <li class="nav-item"><a href="{{ url_for('ledger.index') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>{{ t('Chart_Of_Accounts') }}</p></a></li>
             <li class="nav-item"><a href="{{ url_for('ledger.trial_balance') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>{{ t('Trial_Balance') }}</p></a></li>
             <li class="nav-item"><a href="{{ url_for('ledger.income_statement') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>{{ t('Income_Statement') }}</p></a></li>
             <li class="nav-item"><a href="{{ url_for('ledger.balance_sheet') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>{{ t('Balance_Sheet') }}</p></a></li>
             {% if current_user.is_authenticated and current_user.is_admin() %}
             <li class="nav-item"><a href="{{ url_for('ledger.admin_dashboard') }}" class="nav-link"><i class="fas fa-cogs nav-icon"></i><p>{{ t('Admin_Dashboard') }}</p></a></li>
+            {% endif %}
             {% endif %}
           {{ _end(_led) }}
 

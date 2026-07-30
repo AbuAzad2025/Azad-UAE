@@ -17,6 +17,9 @@
           <p class="text-muted mb-4">
             {{ t('You do not have permission to access this page') }}
           </p>
+          {% if g.denial_reason %}
+          <p class="alert alert-warning small mb-4" dir="auto" role="note">{{ g.denial_reason }}</p>
+          {% endif %}
           <div class="mt-4">
             <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">
               {{ t('العودة') }} {{ t('للرئيسية') }}

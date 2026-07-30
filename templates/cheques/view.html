@@ -461,6 +461,7 @@
         </h5>
         <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
       </div>
+      {% if current_user.is_admin() %}
       <form method="POST" novalidate action="{{ url_for('cheques.cancel', id=cheque.id) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="modal-body">
@@ -479,6 +480,7 @@
           </button>
         </div>
       </form>
+      {% endif %}
     </div>
   </div>
 </div>

@@ -90,6 +90,25 @@ def register_error_handlers(app):
         )
         if app.config.get("DEBUG"):
             raise exc
+        description = getattr(exc, "description", "") or ""
+        if _wants_json_error_response():
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "PERMISSION_DENIED",
+                        "message": description or "You do not have permission to perform this action",
+                        "status": 403,
+                    }
+                ),
+                403,
+            )
+        # اعرض سبب الرفض المخصص (مثل رسالة قفل الميزة) دون وصف Werkzeug الافتراضي
+        default_desc = (
+            "You don't have the permission to access the requested resource. "
+            "It is either read-protected or not readable by the server."
+        )
+        g.denial_reason = description if description and description != default_desc else None
         return render_template("errors/403.html"), 403
 
     @app.errorhandler(HTTPException)

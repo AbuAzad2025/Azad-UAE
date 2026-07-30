@@ -33,7 +33,7 @@ def permission_required(permission_code):
 
             code = permission_code.value if isinstance(permission_code, PermissionEnum) else permission_code
             if not current_user.has_permission(code):
-                flash("ليس لديك صلاحية للوصول لهذه الصفحة", "danger")
+                flash(f"ليس لديك صلاحية للوصول لهذه الصفحة — الصلاحية المطلوبة: {code}", "danger")
                 abort(403)
 
             return f(*args, **kwargs)
@@ -57,7 +57,7 @@ def any_permission_required(*permission_codes):
             codes = [c.value if isinstance(c, PermissionEnum) else c for c in permission_codes if c]
             allowed = any(current_user.has_permission(code) for code in codes)
             if not allowed:
-                flash("ليس لديك صلاحية للوصول لهذه الصفحة", "danger")
+                flash(f"ليس لديك صلاحية للوصول لهذه الصفحة — الصلاحية المطلوبة: {' / '.join(codes)}", "danger")
                 abort(403)
 
             return f(*args, **kwargs)

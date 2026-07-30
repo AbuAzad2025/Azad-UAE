@@ -42,11 +42,13 @@
 
     </a>
 
+    {% if current_user.is_admin() %}
     <a href="{{ url_for('suppliers.statement', id=supplier.id) }}" class="btn btn-success">
 
       <i class="fas fa-file-invoice mr-1"></i>{{ t('supplier_statement') }}
 
     </a>
+    {% endif %}
 
     <button type="button" class="btn btn-danger" 
 

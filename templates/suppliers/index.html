@@ -253,10 +253,12 @@
                    class="btn btn-warning" title="{{ t('Edit') }}">
                   <i class="fas fa-edit"></i>
                 </a>
+                {% if current_user.is_admin() %}
                 <a href="{{ url_for('suppliers.statement', id=supplier.id) }}" 
                    class="btn btn-success" title="{{ t('supplier_statement') }}">
                   <i class="fas fa-file-invoice"></i>
                 </a>
+                {% endif %}
                 <button type="button" class="btn btn-danger" 
                         data-delete-item="{{supplier.id}}" data-item-type="suppliers" data-item-name="{{ supplier.name | e }}" 
                         title="{{ t('Delete') }}">
