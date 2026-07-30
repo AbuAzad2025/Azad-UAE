@@ -3181,3 +3181,32 @@ a.btn.btn-outline-secondary span {
 /* Logical text alignment utilities (Bootstrap 5 compatibility layer) */
 .text-start { text-align: start !important; }
 .text-end { text-align: end !important; }
+
+
+/* ============================================================
+   Shell containment hardening (responsive audit 2026-07)
+   ============================================================ */
+
+/* Clip any stray wide content before it stretches the shell/page */
+.wrapper {
+	overflow-x: hidden;
+}
+
+/* Long modals scroll internally instead of exceeding the viewport */
+.modal-body {
+	max-height: calc(100vh - 220px);
+	overflow-y: auto;
+}
+
+/* Media and code blocks never force horizontal page scroll */
+.content-wrapper img {
+	max-width: 100%;
+	height: auto;
+}
+
+.content-wrapper pre {
+	white-space: pre-wrap;
+	word-break: break-word;
+	max-width: 100%;
+	overflow-x: auto;
+}

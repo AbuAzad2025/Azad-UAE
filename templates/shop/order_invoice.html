@@ -72,6 +72,7 @@
         <p><strong>{{ t('address') }}:</strong> {{ sale.customer.address if sale.customer else '—' }}</p>
       </div>
 
+      <div class="table-responsive">
       <table>
         <thead>
           <tr><th>#</th><th>{{ t('product') }}</th><th>{{ t('quantity') }}</th><th>{{ t('price') }}</th><th>{{ t('total') }}</th></tr>
@@ -94,6 +95,7 @@
           <tr class="total-row"><td colspan="4" style="text-align:left;">{{ t('total') }}:</td><td><strong>{{ format_currency(sale.total_amount, sale.currency) }}</strong></td></tr>
         </tfoot>
       </table>
+      </div>
 
       <div class="payment-info">
         <p><strong>{{ t('payment_method') }}:</strong> {{ pay_method.display_name(lang) if pay_method else sale.checkout_payment_method or '—' }}</p>

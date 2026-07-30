@@ -235,7 +235,7 @@
               <small class="text-muted d-block">{{ product.unit or t('None') }}</small>
             </td>
             <td class="text-center">
-              <div class="btn-group btn-group-sm">
+              <div class="btn-group flex-wrap btn-group-sm">
                 <a href="{{ url_for('products.view', id=product.id) }}" 
                    class="btn btn-info" title="{{ t('View') }}">
                   <i class="fas fa-eye"></i>
