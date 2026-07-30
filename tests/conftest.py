@@ -293,44 +293,61 @@ def _ensure_fk_anchor_user():
     ``super_admin``: ``sample_role`` reuses an existing super_admin row
     as-is, so a permissionless anchor under that slug would strip every
     authenticated test of its permissions (403s).
+
+    Idempotency hardening: the check-then-insert below races when two
+    pytest processes share the same test database (parallel local runs),
+    or when create_app() seeding leaves the scoped session dirty. Hence:
+    rollback first, check via the ORM identity map, and swallow the
+    IntegrityError if another path committed the anchor concurrently.
     """
+    from sqlalchemy.exc import IntegrityError
+
     from models import Role, Tenant, User
 
-    anchor = db.session.execute(sa_text("SELECT 1 FROM users WHERE id = 1")).scalar()
+    # Clear any leaked/aborted transaction state from create_app() so the
+    # existence check sees committed truth, not a stale session snapshot.
+    db.session.rollback()
+
+    anchor = db.session.get(User, 1)
     if anchor:
         return
-    tenant = Tenant(
-        name="FK Anchor",
-        name_ar="مرساة",
-        slug="fk-anchor",
-        email="fk-anchor@test.local",
-        phone_1="0500000000",
-        country="AE",
-        subscription_plan="basic",
-        default_currency="AED",
-        base_currency="AED",
-    )
-    db.session.add(tenant)
-    db.session.flush()
-    role = db.session.query(Role).filter_by(slug="fk-anchor").first()
-    if role is None:
-        role = Role(name="FK Anchor", slug="fk-anchor", is_active=True)
-        db.session.add(role)
+    try:
+        tenant = Tenant(
+            name="FK Anchor",
+            name_ar="مرساة",
+            slug="fk-anchor",
+            email="fk-anchor@test.local",
+            phone_1="0500000000",
+            country="AE",
+            subscription_plan="basic",
+            default_currency="AED",
+            base_currency="AED",
+        )
+        db.session.add(tenant)
         db.session.flush()
-    user = User(
-        id=1,
-        username="fk-anchor",
-        email="fk-anchor@test.local",
-        full_name="FK Anchor",
-        tenant_id=tenant.id,
-        role_id=role.id,
-        branch_id=None,
-    )
-    user.set_password("password123")
-    db.session.add(user)
-    db.session.flush()
-    db.session.execute(sa_text("SELECT setval('users_id_seq', (SELECT MAX(id) FROM users))"))
-    db.session.commit()
+        role = db.session.query(Role).filter_by(slug="fk-anchor").first()
+        if role is None:
+            role = Role(name="FK Anchor", slug="fk-anchor", is_active=True)
+            db.session.add(role)
+            db.session.flush()
+        user = User(
+            id=1,
+            username="fk-anchor",
+            email="fk-anchor@test.local",
+            full_name="FK Anchor",
+            tenant_id=tenant.id,
+            role_id=role.id,
+            branch_id=None,
+        )
+        user.set_password("password123")
+        db.session.add(user)
+        db.session.flush()
+        db.session.execute(sa_text("SELECT setval('users_id_seq', (SELECT MAX(id) FROM users))"))
+        db.session.commit()
+    except IntegrityError:
+        # Another pytest process (shared test DB) or app seeding committed
+        # the anchor concurrently — roll back and treat it as satisfied.
+        db.session.rollback()
 
 
 @pytest.fixture(scope="session")
