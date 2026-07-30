@@ -43,3 +43,4 @@ __all__ = [
     "USER_ROLES",
     "CURRENCIES",
 ]
+
