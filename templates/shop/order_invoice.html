@@ -43,6 +43,7 @@
   </style>
 </head>
 <body class="invoice-print">
+{% include 'partials/print_action_bar.html' %}
 <div class="erp-watermark" aria-hidden="true"><span>Azad Intelligent Systems</span></div>
   <div class="invoice">
     <div class="watermark">{{ t('invoice') }}</div>
@@ -119,5 +120,6 @@
     </div>
     {% include 'partials/print_developer_footer.html' %}
   </div>
+{% include 'partials/print_handlers.html' %}
 </body>
 </html>

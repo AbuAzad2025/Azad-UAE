@@ -343,11 +343,7 @@
   {% include 'partials/print_styles.html' %}
 </head>
 <body class="invoice-print receipt-print gulf-receipt">
-  <div class="no-print ic-1">
-    <button data-action="window-print" class="ic-2">
-      🖨️ {{ t('Print') }} {{ t('Voucher') }}
-    </button>
-  </div>
+{% include 'partials/print_action_bar.html' %}
 
   <div class="receipt">
     <div class="header">

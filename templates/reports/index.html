@@ -17,6 +17,7 @@
 {% endblock %}
 
 {% block content %}
+{% include 'partials/print_action_bar.html' %}
 <div class="container-fluid">
   {% for cat in report_categories %}
   {% set cat_reports = report_registry_by_category.get(cat.id) %}

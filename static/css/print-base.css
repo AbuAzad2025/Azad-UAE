@@ -1,3 +1,28 @@
+/* ============================================================================
+   PRINT ARCHITECTURE — البنية الموحّدة للطباعة (2026-07)
+   ----------------------------------------------------------------------------
+   الهيكل المعتمد لأي مستند قابل للطباعة في النظام:
+
+   1) مستندات مستقلة (Standalone: فواتير، سندات، قسائم، شيكات، ملصقات):
+      - <head> يضمّن {% include 'partials/print_styles.html' %}
+        الذي يحمّل هذا الملف (print-base.css) + إعدادات @page من الثيم.
+      - أعلى <body> يضمّن {% include 'partials/print_action_bar.html' %}
+        (شريط طباعة/تصدير/رجوع — مخفي تلقائياً عن الورق عبر .no-print).
+      - قبل </body> يضمّن {% include 'partials/print_handlers.html' %}
+        لربط أزرار data-action="window-print|window-close|history-back".
+      - بعض المستندات تحمّل erp-theme.css إضافةً لهذا الملف.
+
+   2) صفحات داخل Shell (تمتد base.html: تقارير، كشوفات، دفاتر):
+      - ترث erp-theme.css عالمياً (فيه كتلتا @media print للعزل ومكافحة القص).
+      - يكفي حقن print_action_bar أعلى block content؛ الربط العالمي موجود في base.html.
+
+   3) ملفات مكمّلة: professional-print.css / reports-print.css لقوالب متخصصة.
+      ملف print.css القديم أُرشف في static/css/_archive/ (يتيم، لا تستخدمه).
+
+   قاعدة ذهبية: أي ارتفاع ثابت أو overflow على حاوية قابلة للطباعة يجب
+   تصفيره داخل @media print في هذا الملف أو في erp-theme.css.
+   ============================================================================ */
+
 /* ── Print base styles (static, no Jinja2 dependency) ── */
 * {
 	margin: 0;
@@ -253,6 +278,27 @@ td {
 		overflow-wrap: anywhere;
 	}
 
+	/* Universal anti-clip guard (merged from archived print.css) */
+	* {
+		overflow: visible !important;
+	}
+
+	.container,
+	.container-fluid,
+	.table-responsive {
+		overflow: visible !important;
+		width: auto !important;
+		max-width: none !important;
+	}
+
+	/* Anti-clip: fixed-height scroll containers must expand on paper (D3) */
+	.erp-scroll-200,
+	.erp-scroll-300,
+	.erp-scroll-400 {
+		max-height: none !important;
+		overflow: visible !important;
+	}
+
 	.no-print {
 		display: none !important;
 	}
@@ -260,5 +306,68 @@ td {
 	* {
 		-webkit-print-color-adjust: exact;
 		print-color-adjust: exact;
+	}
+}
+
+/* ============================================================
+   UNIFIED PRINT ACTION BAR — شريط إجراءات الطباعة الموحّد
+   يُحقن عبر {% include 'partials/print_action_bar.html' %}
+   ============================================================ */
+.print-action-bar {
+	position: sticky;
+	top: 0;
+	z-index: 1050;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	flex-wrap: wrap;
+	padding: 10px 14px;
+	margin: 0 auto 12px;
+	background: #fff;
+	border: 1px solid #dee2e6;
+	border-radius: 8px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+	font-size: 12px;
+}
+
+.print-action-bar .pab-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 7px 14px;
+	border-radius: 6px;
+	border: 1px solid transparent;
+	font-weight: 700;
+	cursor: pointer;
+	text-decoration: none;
+	line-height: 1.4;
+}
+
+.print-action-bar .pab-print {
+	background: #0d6efd;
+	color: #fff;
+}
+
+.print-action-bar .pab-print:hover { background: #0b5ed7; }
+
+.print-action-bar .pab-export {
+	background: #198754;
+	color: #fff;
+}
+
+.print-action-bar .pab-export:hover { background: #157347; }
+
+.print-action-bar .pab-back {
+	background: #fff;
+	color: #495057;
+	border-color: #adb5bd;
+}
+
+.print-action-bar .pab-back:hover { background: #f8f9fa; }
+
+@media print {
+	.print-action-bar {
+		display: none !important;
 	}
 }

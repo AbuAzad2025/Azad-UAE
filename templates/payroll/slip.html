@@ -36,6 +36,8 @@
   </style>
 </head>
 <body class="invoice-print">
+{% set export_url = url_for('printing.print_document_pdf', doc_type='payroll_slip', id=slip.id) if slip else none %}
+{% include 'partials/print_action_bar.html' %}
 <div class="erp-watermark" aria-hidden="true"><span>Azad Intelligent Systems</span></div>
   <div class="invoice">
     <div class="header">
@@ -109,5 +111,6 @@
       {% include 'partials/print_developer_footer.html' %}
     </div>
   </div>
+{% include 'partials/print_handlers.html' %}
 </body>
 </html>

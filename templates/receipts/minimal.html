@@ -239,11 +239,7 @@
   {% include 'partials/print_styles.html' %}
 </head>
 <body class="invoice-print receipt-print minimal-receipt">
-  <div class="no-print ic-1">
-    <button data-action="window-print" class="erp-invoice-btn-print" style="background: {{ settings.header_color or '#28a745' }};">
-      {{ t('Print') }}
-    </button>
-  </div>
+{% include 'partials/print_action_bar.html' %}
 
   <div class="receipt">
     <div class="header">

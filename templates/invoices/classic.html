@@ -154,11 +154,8 @@
   </style>
 </head>
 <body class="invoice-print classic-invoice">
-  <div class="no-print ic-1">
-    <button data-action="window-print" class="ic-2">
-      {{ t('Print') }}
-    </button>
-  </div>
+{% set export_url = url_for('printing.print_document_pdf', doc_type='sale', id=sale.id) if sale else none %}
+{% include 'partials/print_action_bar.html' %}
 
   <div class="invoice">
     <div class="header">

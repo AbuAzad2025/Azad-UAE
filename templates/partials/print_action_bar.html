@@ -1,0 +1,31 @@
+{# Unified sticky print action bar — Print / Export PDF / Back.
+   Wrapped in .no-print so it never reaches paper output.
+
+   Usage (top of any printable document body or content block):
+     {% include 'partials/print_action_bar.html' %}
+
+   Optional context variables:
+     export_url  — URL for the Export/PDF button (hidden when falsy)
+     back_url    — fallback URL for the Back button (defaults to history.back)
+   Handlers: data-action attributes are wired globally in base.html and
+   static/js/print-handlers.js (standalone documents).
+#}
+<div class="print-action-bar no-print" role="toolbar" aria-label="{{ t('Print') }}">
+  <button type="button" class="pab-btn pab-print" data-action="window-print">
+    <i class="fas fa-print" aria-hidden="true"></i> {{ t('Print') }}
+  </button>
+  {% if export_url %}
+  <a class="pab-btn pab-export" href="{{ export_url }}">
+    <i class="fas fa-file-pdf" aria-hidden="true"></i> {{ t('Export') }} PDF
+  </a>
+  {% endif %}
+  {% if back_url %}
+  <a class="pab-btn pab-back" href="{{ back_url }}">
+    <i class="fas fa-arrow-right" aria-hidden="true"></i> {{ t('Back') }}
+  </a>
+  {% else %}
+  <button type="button" class="pab-btn pab-back" data-action="history-back">
+    <i class="fas fa-arrow-right" aria-hidden="true"></i> {{ t('Back') }}
+  </button>
+  {% endif %}
+</div>

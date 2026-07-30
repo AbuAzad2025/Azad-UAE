@@ -3,6 +3,7 @@
 {% block title %}{{ t('VAT Report') }}{% endblock %}
 
 {% block content %}
+{% include 'partials/print_action_bar.html' %}
 <div class="no-print container py-4">
 
   <h2 class="mb-2">{{ t('Report_2') }} VAT — {{ t('Tax_2') }} {{ t('Value') }} {{ t('المضافة') }}</h2>

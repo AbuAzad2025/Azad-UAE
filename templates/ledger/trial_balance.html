@@ -19,6 +19,7 @@
 {% endblock %}
 
 {% block content %}
+{% include 'partials/print_action_bar.html' %}
 {% from 'partials/financial_filter_bar.html' import render_filter_bar, render_report_header %}
 
 {{ render_filter_bar(
