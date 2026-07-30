@@ -19,6 +19,8 @@ def app():
         ENABLE_MWAC=False,
         ENABLE_LANDED_COST_CAPITALIZATION=True,
     )
+    from extensions import babel, get_locale
+    babel.init_app(application, locale_selector=get_locale)
     return application
 
 
