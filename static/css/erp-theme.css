@@ -3206,7 +3206,7 @@ a.btn.btn-outline-secondary span {
 
 .content-wrapper pre {
 	white-space: pre-wrap;
-	word-break: break-word;
+	overflow-wrap: anywhere;
 	max-width: 100%;
 	overflow-x: auto;
 }
