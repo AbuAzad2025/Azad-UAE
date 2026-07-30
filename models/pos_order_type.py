@@ -11,7 +11,7 @@ class PosOrderType(db.Model):
     __tablename__ = "pos_order_types"
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id",ondelete="RESTRICT"), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=False, index=True)
     code = db.Column(db.String(40), nullable=False)
     name_ar = db.Column(db.String(120), nullable=False)
     name_en = db.Column(db.String(120), nullable=True)

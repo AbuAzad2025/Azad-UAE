@@ -33,7 +33,7 @@ class IdempotencyKey(db.Model):
     )
     endpoint = db.Column(db.String(100), nullable=False)
     key = db.Column(db.String(128), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), nullable=True, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=True, index=True)
     request_hash = db.Column(db.String(64), nullable=False)
     status = db.Column(db.String(20), default=STATUS_IN_PROGRESS, nullable=False, index=True)
     response_body = db.Column(db.Text, nullable=True)

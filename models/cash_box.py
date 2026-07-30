@@ -54,7 +54,9 @@ class CashBox(db.Model):
     is_default = db.Column(db.Boolean, default=False, nullable=False)
 
     # GL linkage
-    gl_account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id", ondelete="RESTRICT"), nullable=True, index=True)
+    gl_account_id = db.Column(
+        db.Integer, db.ForeignKey("gl_accounts.id", ondelete="RESTRICT"), nullable=True, index=True
+    )
 
     # Audit
     created_at = db.Column(

@@ -26,11 +26,11 @@ class ProfitCenter(db.Model):
     name_en = db.Column(db.String(200))
 
     # التسلسل الهرمي
-    parent_id = db.Column(db.Integer, db.ForeignKey("profit_centers.id",ondelete="RESTRICT"), index=True)
+    parent_id = db.Column(db.Integer, db.ForeignKey("profit_centers.id", ondelete="RESTRICT"), index=True)
     level = db.Column(db.Integer, default=0)
 
     # المسؤول
-    manager_id = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), index=True)
+    manager_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
 
     # الحالة
     is_active = db.Column(db.Boolean, default=True, index=True)

@@ -17,9 +17,11 @@ class Purchase(db.Model):
     )
     purchase_number = db.Column(db.String(50), nullable=False, index=True)
 
-    supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.id",ondelete="RESTRICT"), index=True)
-    warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id",ondelete="RESTRICT"), nullable=True, index=True)
-    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id",ondelete="RESTRICT"), nullable=True, index=True)  # New Branch ID
+    supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.id", ondelete="RESTRICT"), index=True)
+    warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id", ondelete="RESTRICT"), nullable=True, index=True)
+    branch_id = db.Column(
+        db.Integer, db.ForeignKey("branches.id", ondelete="RESTRICT"), nullable=True, index=True
+    )  # New Branch ID
 
     supplier_name = db.Column(db.String(200), nullable=False)
     supplier_phone = db.Column(db.String(20))
@@ -83,7 +85,7 @@ class Purchase(db.Model):
 
     notes = db.Column(db.Text)
 
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True)
     created_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -256,7 +258,7 @@ class PurchaseLine(db.Model):
         nullable=False,
         index=True,
     )
-    product_id = db.Column(db.Integer, db.ForeignKey("products.id",ondelete="RESTRICT"), nullable=False, index=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id", ondelete="RESTRICT"), nullable=False, index=True)
 
     quantity = db.Column(db.Numeric(15, 3), nullable=False)
     unit_cost = db.Column(db.Numeric(15, 3), nullable=False)

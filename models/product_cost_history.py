@@ -23,8 +23,10 @@ class ProductCostHistory(db.Model):
         nullable=False,
         index=True,
     )
-    product_id = db.Column(db.Integer, db.ForeignKey("products.id",ondelete="RESTRICT"), nullable=False, index=True)
-    warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id",ondelete="RESTRICT"), nullable=False, index=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id", ondelete="RESTRICT"), nullable=False, index=True)
+    warehouse_id = db.Column(
+        db.Integer, db.ForeignKey("warehouses.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
 
     # Movement details
     movement_type = db.Column(db.String(30), nullable=False)  # purchase, sale, adjustment, return

@@ -46,7 +46,9 @@ class Budget(db.Model):
     # Meta
     created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
     approved_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
-    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id", ondelete="RESTRICT"), nullable=True, index=True)  # New Branch ID
+    branch_id = db.Column(
+        db.Integer, db.ForeignKey("branches.id", ondelete="RESTRICT"), nullable=True, index=True
+    )  # New Branch ID
     created_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),

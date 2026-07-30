@@ -17,7 +17,7 @@ class ShopCustomerAccount(db.Model):
         nullable=False,
         index=True,
     )
-    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id",ondelete="RESTRICT"), nullable=False, index=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id", ondelete="RESTRICT"), nullable=False, index=True)
     email = db.Column(db.String(120), nullable=False, index=True)
     phone = db.Column(db.String(30))
     name = db.Column(db.String(200), nullable=False)

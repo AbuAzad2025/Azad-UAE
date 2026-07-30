@@ -21,7 +21,7 @@ class Project(db.Model):
     name = db.Column(db.String(200), nullable=False)
     name_ar = db.Column(db.String(200))
     description = db.Column(db.Text)
-    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id", ondelete="SET NULL"), nullable=True,index=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id", ondelete="SET NULL"), nullable=True, index=True)
     status = db.Column(db.String(20), default="planning", index=True)
     date_start = db.Column(db.DateTime, nullable=True)
     date_end = db.Column(db.DateTime, nullable=True)
@@ -112,7 +112,7 @@ class Task(db.Model):
         nullable=True,
         index=True,
     )
-    parent_id = db.Column(db.Integer, db.ForeignKey("tasks.id", ondelete="SET NULL"), nullable=True,index=True)
+    parent_id = db.Column(db.Integer, db.ForeignKey("tasks.id", ondelete="SET NULL"), nullable=True, index=True)
     name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     assigned_user_id = db.Column(

@@ -81,15 +81,19 @@ class FiscalPositionTaxRule(db.Model):
         nullable=False,
         index=True,
     )
-    fiscal_position_id = db.Column(db.Integer, db.ForeignKey("fiscal_positions.id",ondelete="RESTRICT"), nullable=False, index=True)
+    fiscal_position_id = db.Column(
+        db.Integer, db.ForeignKey("fiscal_positions.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
 
     # Source (what the product has by default)
-    source_tax_id = db.Column(db.Integer, db.ForeignKey("tax_calculation_rules.id",ondelete="RESTRICT"),index=True)
-    source_account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id",ondelete="RESTRICT"),index=True)
+    source_tax_id = db.Column(db.Integer, db.ForeignKey("tax_calculation_rules.id", ondelete="RESTRICT"), index=True)
+    source_account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id", ondelete="RESTRICT"), index=True)
 
     # Destination (what to use under this fiscal position)
-    destination_tax_id = db.Column(db.Integer, db.ForeignKey("tax_calculation_rules.id",ondelete="RESTRICT"),index=True)
-    destination_account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id",ondelete="RESTRICT"),index=True)
+    destination_tax_id = db.Column(
+        db.Integer, db.ForeignKey("tax_calculation_rules.id", ondelete="RESTRICT"), index=True
+    )
+    destination_account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id", ondelete="RESTRICT"), index=True)
 
     # Rule type
     rule_type = db.Column(db.String(20), nullable=False, default="tax")  # 'tax' or 'account'

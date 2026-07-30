@@ -17,7 +17,7 @@ class ProductCategory(db.Model):
     name = db.Column(db.String(100), nullable=False, index=True)
     name_ar = db.Column(db.String(100))
     description = db.Column(db.Text)
-    parent_id = db.Column(db.Integer, db.ForeignKey("product_categories.id",ondelete="RESTRICT"), index=True)
+    parent_id = db.Column(db.Integer, db.ForeignKey("product_categories.id", ondelete="RESTRICT"), index=True)
     sort_order = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True, index=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
@@ -51,8 +51,10 @@ class ProductPartner(db.Model):
         nullable=False,
         index=True,
     )
-    product_id = db.Column(db.Integer, db.ForeignKey("products.id",ondelete="RESTRICT"), nullable=False, index=True)
-    partner_customer_id = db.Column(db.Integer, db.ForeignKey("customers.id",ondelete="RESTRICT"), nullable=False, index=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id", ondelete="RESTRICT"), nullable=False, index=True)
+    partner_customer_id = db.Column(
+        db.Integer, db.ForeignKey("customers.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
     percentage = db.Column(db.Numeric(5, 2), nullable=False, default=0)
     created_at = db.Column(
         db.DateTime,
@@ -70,8 +72,8 @@ class Product(db.Model):
     __tablename__ = "products"
 
     __table_args__ = (
-        db.Index("idx_product_active_stock", 'tenant_id', "is_active", "current_stock"),
-        db.Index("idx_product_category_active", 'tenant_id', "category_id", "is_active"),
+        db.Index("idx_product_active_stock", "tenant_id", "is_active", "current_stock"),
+        db.Index("idx_product_category_active", "tenant_id", "category_id", "is_active"),
         db.Index("idx_products_tenant_active_name", "tenant_id", "is_active", "name"),
         Index(
             "uq_products_tenant_sku",
@@ -106,11 +108,11 @@ class Product(db.Model):
 
     country_of_origin = db.Column(db.String(100))
 
-    category_id = db.Column(db.Integer, db.ForeignKey("product_categories.id",ondelete="RESTRICT"), index=True)
+    category_id = db.Column(db.Integer, db.ForeignKey("product_categories.id", ondelete="RESTRICT"), index=True)
     category = db.relationship("ProductCategory", back_populates="products")
     tenant = db.relationship("Tenant", backref="products", foreign_keys=[tenant_id])
 
-    merchant_customer_id = db.Column(db.Integer, db.ForeignKey("customers.id",ondelete="RESTRICT"), index=True)
+    merchant_customer_id = db.Column(db.Integer, db.ForeignKey("customers.id", ondelete="RESTRICT"), index=True)
     merchant_customer = db.relationship("Customer", foreign_keys=[merchant_customer_id])
 
     cost_price = db.Column(db.Numeric(15, 3), default=0)

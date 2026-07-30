@@ -178,7 +178,7 @@ class PackagePurchase(db.Model):
     __tablename__ = "package_purchases"
 
     id = db.Column(db.Integer, primary_key=True)
-    package_id = db.Column(db.Integer, db.ForeignKey("packages.id",ondelete="RESTRICT"), nullable=False, index=True)
+    package_id = db.Column(db.Integer, db.ForeignKey("packages.id", ondelete="RESTRICT"), nullable=False, index=True)
 
     # بيانات المشتري
     customer_name = db.Column(db.String(200), nullable=False)
@@ -205,7 +205,7 @@ class PackagePurchase(db.Model):
     notes = db.Column(db.Text)
 
     # ربط العملية المالية بالمستأجر
-    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id",ondelete="RESTRICT"), nullable=True, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=True, index=True)
 
     created_at = db.Column(db.DateTime, default=_utc_now, index=True)
     updated_at = db.Column(db.DateTime, default=_utc_now, onupdate=_utc_now)

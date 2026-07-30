@@ -18,8 +18,8 @@ class PosPrinter(db.Model):
     CONNECTION_TYPES = ("agent_network", "agent_serial", "webusb", "webserial")
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id",ondelete="RESTRICT"), nullable=False, index=True)
-    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id",ondelete="RESTRICT"), nullable=True, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=False, index=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id", ondelete="RESTRICT"), nullable=True, index=True)
     name = db.Column(db.String(120), nullable=False)
     role = db.Column(db.String(20), nullable=False, default="customer")
     connection_type = db.Column(db.String(20), nullable=False, default="agent_network")

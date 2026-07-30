@@ -195,7 +195,7 @@ class PaymentTransaction(db.Model):
     updated_at = db.Column(db.DateTime, default=_utc_now, onupdate=_utc_now)
     completed_at = db.Column(db.DateTime)  # وقت الإكمال
 
-    vault_id = db.Column(db.Integer, db.ForeignKey("payment_vault.id",ondelete="RESTRICT"), nullable=False, index=True)
+    vault_id = db.Column(db.Integer, db.ForeignKey("payment_vault.id", ondelete="RESTRICT"), nullable=False, index=True)
     vault = db.relationship("PaymentVault", backref="transactions")
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
 
@@ -248,7 +248,7 @@ class PaymentLog(db.Model):
 
     created_at = db.Column(db.DateTime, default=_utc_now, index=True)
 
-    vault_id = db.Column(db.Integer, db.ForeignKey("payment_vault.id",ondelete="RESTRICT"), nullable=False, index=True)
+    vault_id = db.Column(db.Integer, db.ForeignKey("payment_vault.id", ondelete="RESTRICT"), nullable=False, index=True)
     vault = db.relationship("PaymentVault", backref="logs")
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
 

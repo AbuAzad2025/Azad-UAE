@@ -26,7 +26,7 @@ class ProductImage(db.Model):
     is_active = db.Column(db.Boolean, default=True, index=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
-    __table_args__ = (db.Index("ix_product_image_type_order", 'tenant_id', "product_id", "image_type", "sort_order"),)
+    __table_args__ = (db.Index("ix_product_image_type_order", "tenant_id", "product_id", "image_type", "sort_order"),)
 
     product = db.relationship("Product", back_populates="images")
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])

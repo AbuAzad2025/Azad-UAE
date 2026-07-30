@@ -23,10 +23,10 @@ class PurchaseReturn(db.Model):
     )
     return_number = db.Column(db.String(50), nullable=False, index=True)
 
-    purchase_id = db.Column(db.Integer, db.ForeignKey("purchases.id",ondelete="RESTRICT"), nullable=False, index=True)
-    supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.id",ondelete="RESTRICT"), nullable=False, index=True)
-    warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id",ondelete="RESTRICT"), nullable=True, index=True)
-    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id",ondelete="RESTRICT"), nullable=True, index=True)
+    purchase_id = db.Column(db.Integer, db.ForeignKey("purchases.id", ondelete="RESTRICT"), nullable=False, index=True)
+    supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.id", ondelete="RESTRICT"), nullable=False, index=True)
+    warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id", ondelete="RESTRICT"), nullable=True, index=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id", ondelete="RESTRICT"), nullable=True, index=True)
 
     return_date = db.Column(
         db.DateTime,
@@ -54,7 +54,7 @@ class PurchaseReturn(db.Model):
     reason = db.Column(db.String(500))
     notes = db.Column(db.Text)
 
-    processed_by = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), index=True)
+    processed_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
     created_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -91,9 +91,11 @@ class PurchaseReturnLine(db.Model):
         nullable=False,
         index=True,
     )
-    return_id = db.Column(db.Integer, db.ForeignKey("purchase_returns.id",ondelete="RESTRICT"), nullable=False, index=True)
-    purchase_line_id = db.Column(db.Integer, db.ForeignKey("purchase_lines.id",ondelete="RESTRICT"), index=True)
-    product_id = db.Column(db.Integer, db.ForeignKey("products.id",ondelete="RESTRICT"), nullable=False, index=True)
+    return_id = db.Column(
+        db.Integer, db.ForeignKey("purchase_returns.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    purchase_line_id = db.Column(db.Integer, db.ForeignKey("purchase_lines.id", ondelete="RESTRICT"), index=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id", ondelete="RESTRICT"), nullable=False, index=True)
 
     quantity = db.Column(db.Numeric(15, 3), nullable=False)
     unit_cost = db.Column(db.Numeric(15, 3), nullable=False)

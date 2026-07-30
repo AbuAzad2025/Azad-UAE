@@ -12,9 +12,9 @@ class PosKdsOrder(db.Model):
         nullable=False,
         index=True,
     )
-    sale_id = db.Column(db.Integer, db.ForeignKey("sales.id",ondelete="RESTRICT"), nullable=False, index=True)
-    session_id = db.Column(db.Integer, db.ForeignKey("pos_sessions.id",ondelete="RESTRICT"), nullable=True, index=True)
-    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id",ondelete="RESTRICT"), nullable=True, index=True)
+    sale_id = db.Column(db.Integer, db.ForeignKey("sales.id", ondelete="RESTRICT"), nullable=False, index=True)
+    session_id = db.Column(db.Integer, db.ForeignKey("pos_sessions.id", ondelete="RESTRICT"), nullable=True, index=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id", ondelete="RESTRICT"), nullable=True, index=True)
 
     order_number = db.Column(db.String(50), nullable=False)
     items_json = db.Column(db.Text, nullable=False)

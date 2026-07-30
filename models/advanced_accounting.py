@@ -25,7 +25,9 @@ class CustomsTax(db.Model):
     rate = db.Column(db.Numeric(5, 4), nullable=False)  # نسبة الضريبة (0.05 = 5%)
     is_percentage = db.Column(db.Boolean, default=True)
     fixed_amount = db.Column(db.Numeric(18, 3), default=0)  # مبلغ ثابت
-    gl_account_id = db.Column(db.Integer, db.ForeignKey("gl_accounts.id", ondelete="RESTRICT"), nullable=False, index=True)
+    gl_account_id = db.Column(
+        db.Integer, db.ForeignKey("gl_accounts.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
     is_active = db.Column(db.Boolean, default=True, index=True)
     effective_from = db.Column(db.Date, nullable=False)
     effective_to = db.Column(db.Date)
@@ -72,7 +74,9 @@ class AdvancedExpense(db.Model):
     expense_date = db.Column(db.Date, nullable=False, index=True)
     description = db.Column(db.String(255), nullable=False)
     description_ar = db.Column(db.String(255), nullable=False)
-    category_id = db.Column(db.Integer, db.ForeignKey("expense_categories.id", ondelete="RESTRICT"), nullable=False, index=True)
+    category_id = db.Column(
+        db.Integer, db.ForeignKey("expense_categories.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
     supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.id", ondelete="RESTRICT"), index=True)
     amount = db.Column(db.Numeric(18, 3), nullable=False)
     currency = db.Column(
@@ -112,7 +116,9 @@ class AdvancedExpense(db.Model):
 
     # معلومات النظام
     created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True)
-    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id", ondelete="RESTRICT"), nullable=True, index=True)  # New Branch ID
+    branch_id = db.Column(
+        db.Integer, db.ForeignKey("branches.id", ondelete="RESTRICT"), nullable=True, index=True
+    )  # New Branch ID
     gl_journal_entry_id = db.Column(db.Integer, db.ForeignKey("gl_journal_entries.id", ondelete="RESTRICT"), index=True)
     is_reversed = db.Column(db.Boolean, default=False)
     reversed_at = db.Column(db.DateTime)

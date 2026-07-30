@@ -13,11 +13,11 @@ class ShopWishlist(db.Model):
     )
     account_id = db.Column(
         db.Integer,
-        db.ForeignKey("shop_customer_accounts.id",ondelete="RESTRICT"),
+        db.ForeignKey("shop_customer_accounts.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
     )
-    product_id = db.Column(db.Integer, db.ForeignKey("products.id",ondelete="RESTRICT"), nullable=False, index=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id", ondelete="RESTRICT"), nullable=False, index=True)
     created_at = db.Column(
         db.DateTime,
         nullable=False,

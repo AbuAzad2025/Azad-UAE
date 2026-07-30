@@ -92,7 +92,7 @@ class User(UserMixin, db.Model):
     full_name_ar = db.Column(db.String(100))
     phone = db.Column(db.String(50))
 
-    role_id = db.Column(db.Integer, db.ForeignKey("roles.id",ondelete="RESTRICT"), nullable=False, index=True)
+    role_id = db.Column(db.Integer, db.ForeignKey("roles.id", ondelete="RESTRICT"), nullable=False, index=True)
     role = db.relationship("Role", back_populates="users")
     tenant_id = db.Column(
         db.Integer,
@@ -100,7 +100,9 @@ class User(UserMixin, db.Model):
         nullable=True,
         index=True,
     )
-    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id",ondelete="RESTRICT"), nullable=True, index=True)  # User Home Branch
+    branch_id = db.Column(
+        db.Integer, db.ForeignKey("branches.id", ondelete="RESTRICT"), nullable=True, index=True
+    )  # User Home Branch
     branch = db.relationship("Branch", backref="users", foreign_keys=[branch_id])
     tenant = db.relationship("Tenant", backref="users", foreign_keys=[tenant_id])
 

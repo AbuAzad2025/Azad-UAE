@@ -13,14 +13,16 @@ class PartnerCommissionEntry(db.Model):
         nullable=False,
         index=True,
     )
-    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id",ondelete="RESTRICT"), nullable=True, index=True)
-    warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id",ondelete="RESTRICT"), nullable=True, index=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id", ondelete="RESTRICT"), nullable=True, index=True)
+    warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id", ondelete="RESTRICT"), nullable=True, index=True)
 
-    sale_id = db.Column(db.Integer, db.ForeignKey("sales.id",ondelete="RESTRICT"), nullable=False, index=True)
-    sale_line_id = db.Column(db.Integer, db.ForeignKey("sale_lines.id",ondelete="RESTRICT"), nullable=True, index=True)
+    sale_id = db.Column(db.Integer, db.ForeignKey("sales.id", ondelete="RESTRICT"), nullable=False, index=True)
+    sale_line_id = db.Column(db.Integer, db.ForeignKey("sale_lines.id", ondelete="RESTRICT"), nullable=True, index=True)
 
-    partner_customer_id = db.Column(db.Integer, db.ForeignKey("customers.id",ondelete="RESTRICT"), nullable=False, index=True)
-    product_id = db.Column(db.Integer, db.ForeignKey("products.id",ondelete="RESTRICT"), nullable=True, index=True)
+    partner_customer_id = db.Column(
+        db.Integer, db.ForeignKey("customers.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id", ondelete="RESTRICT"), nullable=True, index=True)
 
     percentage = db.Column(db.Numeric(5, 2), nullable=False)
     currency = db.Column(db.String(3), default=context_aware_default_currency)

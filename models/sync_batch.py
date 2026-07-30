@@ -12,7 +12,7 @@ class SyncBatch(db.Model):
     __tablename__ = "sync_batches"
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id",ondelete="RESTRICT"), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=False, index=True)
     idempotency_key = db.Column(db.String(64), nullable=False)
     status = db.Column(db.String(20), default="pending")  # pending | completed | failed
     payload_hash = db.Column(db.String(64))

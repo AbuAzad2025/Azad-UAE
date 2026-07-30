@@ -40,7 +40,9 @@ class Expense(db.Model):
     )
     expense_number = db.Column(db.String(50), nullable=False, index=True)
 
-    category_id = db.Column(db.Integer, db.ForeignKey("expense_categories.id",ondelete="RESTRICT"), nullable=False, index=True)
+    category_id = db.Column(
+        db.Integer, db.ForeignKey("expense_categories.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
 
     description = db.Column(db.String(255), nullable=False)
     description_ar = db.Column(db.String(255))
@@ -79,7 +81,7 @@ class Expense(db.Model):
     status = db.Column(db.String(20), default="confirmed", index=True)
     is_active = db.Column(db.Boolean, default=True, index=True)
 
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True)
     created_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -88,7 +90,7 @@ class Expense(db.Model):
     )
 
     # Branch Support
-    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id",ondelete="RESTRICT"), nullable=True, index=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id", ondelete="RESTRICT"), nullable=True, index=True)
     is_reversed = db.Column(db.Boolean, default=False, index=True)
 
     category = db.relationship("ExpenseCategory", back_populates="expenses")

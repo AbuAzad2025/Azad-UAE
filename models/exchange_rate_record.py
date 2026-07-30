@@ -48,7 +48,7 @@ class ExchangeRateRecord(db.Model):
     locked_by_document_id = db.Column(db.Integer, nullable=True)
 
     # Audit
-    created_by = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), nullable=True, index=True)
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=True, index=True)
     created_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),

@@ -18,7 +18,7 @@ class PrintHistory(db.Model):
         index=True,
     )
 
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), nullable=True, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=True, index=True)
 
     document_type = db.Column(db.String(50), nullable=False, index=True)
 

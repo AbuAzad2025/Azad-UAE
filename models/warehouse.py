@@ -26,10 +26,12 @@ class Warehouse(db.Model):
     location = db.Column(db.String(255))
     warehouse_type = db.Column(db.String(20), default=TYPE_PHYSICAL, nullable=False, index=True)
 
-    parent_id = db.Column(db.Integer, db.ForeignKey("warehouses.id",ondelete="RESTRICT"), index=True)
-    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id",ondelete="RESTRICT"), nullable=True, index=True)  # Linked Branch
+    parent_id = db.Column(db.Integer, db.ForeignKey("warehouses.id", ondelete="RESTRICT"), index=True)
+    branch_id = db.Column(
+        db.Integer, db.ForeignKey("branches.id", ondelete="RESTRICT"), nullable=True, index=True
+    )  # Linked Branch
 
-    manager_id = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), index=True)
+    manager_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
     is_active = db.Column(db.Boolean, default=True, index=True)
     is_main = db.Column(db.Boolean, default=False)
     allow_negative_inventory = db.Column(db.Boolean, default=False, index=True)
@@ -118,7 +120,9 @@ class StockMovement(db.Model):
         nullable=False,
         index=True,
     )
-    warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id",ondelete="RESTRICT"), nullable=False, index=True)
+    warehouse_id = db.Column(
+        db.Integer, db.ForeignKey("warehouses.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
 
     movement_type = db.Column(db.String(20), nullable=False, index=True)
 
@@ -127,7 +131,7 @@ class StockMovement(db.Model):
     reference_type = db.Column(db.String(50))
     reference_id = db.Column(db.Integer)
 
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
     notes = db.Column(db.Text)
 
     created_at = db.Column(

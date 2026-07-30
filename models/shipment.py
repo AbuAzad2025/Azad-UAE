@@ -33,7 +33,7 @@ class Shipment(db.Model):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    __table_args__ = (db.Index("ix_shipment_source", 'tenant_id', "source_type", "source_id"),)
+    __table_args__ = (db.Index("ix_shipment_source", "tenant_id", "source_type", "source_id"),)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
 

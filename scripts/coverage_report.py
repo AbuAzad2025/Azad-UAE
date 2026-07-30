@@ -209,7 +209,7 @@ def get_js_coverage(rendered_templates: set[str]):
                 js_rel = m.split("/static/js/")[-1]
                 referenced.add(_norm(js_rel))
             elif m.startswith("static/js/"):
-                js_rel = m[len("static/js/"):]
+                js_rel = m[len("static/js/") :]
                 referenced.add(_norm(js_rel))
         for m in _JS_URLFOR_RE.findall(content):
             referenced.add(_norm(m))

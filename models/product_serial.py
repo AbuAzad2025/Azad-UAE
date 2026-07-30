@@ -29,8 +29,8 @@ class ProductSerial(db.Model):
         nullable=False,
         index=True,
     )
-    product_id = db.Column(db.Integer, db.ForeignKey("products.id",ondelete="RESTRICT"), nullable=False, index=True)
-    warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id",ondelete="RESTRICT"), nullable=True, index=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id", ondelete="RESTRICT"), nullable=False, index=True)
+    warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id", ondelete="RESTRICT"), nullable=True, index=True)
 
     serial_number = db.Column(db.String(100), nullable=False, index=True)
     imei1 = db.Column(db.String(15), nullable=True, index=True)
@@ -47,10 +47,10 @@ class ProductSerial(db.Model):
     # lost: Lost/Stolen
 
     purchase_line_id = db.Column(
-        db.Integer, db.ForeignKey("purchase_lines.id",ondelete="RESTRICT"), nullable=True, index=True
+        db.Integer, db.ForeignKey("purchase_lines.id", ondelete="RESTRICT"), nullable=True, index=True
     )  # Where did we get it?
     sale_line_id = db.Column(
-        db.Integer, db.ForeignKey("sale_lines.id",ondelete="RESTRICT"), nullable=True, index=True
+        db.Integer, db.ForeignKey("sale_lines.id", ondelete="RESTRICT"), nullable=True, index=True
     )  # Who did we sell it to?
 
     # Warranty Info (Calculated from Sale Date)

@@ -14,7 +14,7 @@ class PosCart(db.Model):
     __tablename__ = "pos_carts"
 
     __table_args__ = (
-        db.Index("idx_pos_cart_user_session_status", 'tenant_id', "user_id", "session_id", "status"),
+        db.Index("idx_pos_cart_user_session_status", "tenant_id", "user_id", "session_id", "status"),
         db.Index("idx_pos_cart_tenant_status", "tenant_id", "status"),
     )
 
@@ -36,7 +36,7 @@ class PosCart(db.Model):
         nullable=False,
         index=True,
     )
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True)
 
     label = db.Column(db.String(120), nullable=True)
     status = db.Column(db.String(20), default=STATUS_PARKED, nullable=False, index=True)

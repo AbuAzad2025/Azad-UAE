@@ -34,7 +34,7 @@ class PosTable(db.Model):
         nullable=False,
         index=True,
     )
-    floor_id = db.Column(db.Integer, db.ForeignKey("pos_floors.id",ondelete="RESTRICT"), nullable=False, index=True)
+    floor_id = db.Column(db.Integer, db.ForeignKey("pos_floors.id", ondelete="RESTRICT"), nullable=False, index=True)
     label = db.Column(db.String(20), nullable=False)
     capacity = db.Column(db.Integer, default=4)
     pos_x = db.Column(db.Integer, default=0)
@@ -57,8 +57,8 @@ class PosTableOrder(db.Model):
         nullable=False,
         index=True,
     )
-    table_id = db.Column(db.Integer, db.ForeignKey("pos_tables.id",ondelete="RESTRICT"), nullable=False, index=True)
-    sale_id = db.Column(db.Integer, db.ForeignKey("sales.id",ondelete="RESTRICT"), nullable=False, index=True)
+    table_id = db.Column(db.Integer, db.ForeignKey("pos_tables.id", ondelete="RESTRICT"), nullable=False, index=True)
+    sale_id = db.Column(db.Integer, db.ForeignKey("sales.id", ondelete="RESTRICT"), nullable=False, index=True)
     guest_count = db.Column(db.Integer, default=1)
     is_split = db.Column(db.Boolean, default=False)
     split_group = db.Column(db.String(20), nullable=True)

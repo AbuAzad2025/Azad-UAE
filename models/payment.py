@@ -22,14 +22,14 @@ class Payment(db.Model):
     # اتجاه المدفوعات
     direction = db.Column(db.String(10), default="outgoing", index=True)  # incoming, outgoing
 
-    sale_id = db.Column(db.Integer, db.ForeignKey("sales.id",ondelete="RESTRICT"), index=True)
-    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id",ondelete="RESTRICT"), index=True)
+    sale_id = db.Column(db.Integer, db.ForeignKey("sales.id", ondelete="RESTRICT"), index=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id", ondelete="RESTRICT"), index=True)
 
     # معلومات المورد (لسندات الصرف)
-    supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.id",ondelete="RESTRICT"), index=True)
+    supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.id", ondelete="RESTRICT"), index=True)
     supplier_name = db.Column(db.String(200))
-    purchase_id = db.Column(db.Integer, db.ForeignKey("purchases.id",ondelete="RESTRICT"), index=True)
-    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id",ondelete="RESTRICT"), index=True)
+    purchase_id = db.Column(db.Integer, db.ForeignKey("purchases.id", ondelete="RESTRICT"), index=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id", ondelete="RESTRICT"), index=True)
 
     amount = db.Column(db.Numeric(15, 3), nullable=False)
     currency = db.Column(
@@ -57,7 +57,7 @@ class Payment(db.Model):
     bank_name = db.Column(db.String(100))
 
     # ربط مع نموذج الشيك (جديد - للمحاسبة الدقيقة)
-    cheque_id = db.Column(db.Integer, db.ForeignKey("cheques.id",ondelete="RESTRICT"), index=True)
+    cheque_id = db.Column(db.Integer, db.ForeignKey("cheques.id", ondelete="RESTRICT"), index=True)
 
     # حالة الدفعة - للشيكات فقط
     # confirmed: مؤكدة (الشيك صُرف)
@@ -74,7 +74,7 @@ class Payment(db.Model):
     )
     notes = db.Column(db.Text)
 
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), nullable=True, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=True, index=True)
     created_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -180,7 +180,7 @@ class Receipt(db.Model):
     # اتجاه المدفوعات
     direction = db.Column(db.String(10), default="incoming", index=True)  # incoming, outgoing
 
-    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id",ondelete="RESTRICT"), nullable=False, index=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id", ondelete="RESTRICT"), nullable=False, index=True)
 
     amount = db.Column(db.Numeric(15, 3), nullable=False)
     currency = db.Column(
@@ -208,13 +208,13 @@ class Receipt(db.Model):
     bank_name = db.Column(db.String(100))
 
     # ربط مع نموذج الشيك (جديد - للمحاسبة الدقيقة)
-    cheque_id = db.Column(db.Integer, db.ForeignKey("cheques.id",ondelete="RESTRICT"), index=True)
+    cheque_id = db.Column(db.Integer, db.ForeignKey("cheques.id", ondelete="RESTRICT"), index=True)
 
     # حالة السند - للشيكات فقط
     payment_confirmed = db.Column(db.Boolean, default=True, index=True)
     confirmation_date = db.Column(db.DateTime)
     rejection_reason = db.Column(db.String(500))
-    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id",ondelete="RESTRICT"), index=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id", ondelete="RESTRICT"), index=True)
 
     receipt_date = db.Column(
         db.DateTime,
@@ -224,7 +224,7 @@ class Receipt(db.Model):
     )
     notes = db.Column(db.Text)
 
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), nullable=True, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=True, index=True)
     created_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),

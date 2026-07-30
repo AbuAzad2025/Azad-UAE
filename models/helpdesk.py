@@ -15,7 +15,9 @@ class TicketCategory(db.Model):
     name = db.Column(db.String(100), nullable=False)
     name_ar = db.Column(db.String(100))
     color = db.Column(db.String(7), default="#3b82f6")
-    auto_assign_user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True,index=True)
+    auto_assign_user_id = db.Column(
+        db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     is_active = db.Column(db.Boolean, default=True, index=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
@@ -76,15 +78,11 @@ class Ticket(db.Model):
         index=True,
     )
     category_id = db.Column(
-        db.Integer,
-        db.ForeignKey("ticket_categories.id", ondelete="SET NULL"),
-        nullable=True,
-    index=True)
+        db.Integer, db.ForeignKey("ticket_categories.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     priority_id = db.Column(
-        db.Integer,
-        db.ForeignKey("ticket_priorities.id", ondelete="SET NULL"),
-        nullable=True,
-    index=True)
+        db.Integer, db.ForeignKey("ticket_priorities.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     assigned_user_id = db.Column(
         db.Integer,
         db.ForeignKey("users.id", ondelete="SET NULL"),
@@ -146,7 +144,7 @@ class TicketComment(db.Model):
         nullable=False,
         index=True,
     )
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True,index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     body = db.Column(db.Text, nullable=False)
     is_internal = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)

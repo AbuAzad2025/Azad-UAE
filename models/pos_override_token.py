@@ -14,7 +14,7 @@ from extensions import db
 class PosOverrideToken(db.Model):
     __tablename__ = "pos_override_tokens"
 
-    __table_args__ = (db.Index("idx_pos_override_token_cashier", 'tenant_id', "cashier_user_id", "action"),)
+    __table_args__ = (db.Index("idx_pos_override_token_cashier", "tenant_id", "cashier_user_id", "action"),)
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -24,9 +24,11 @@ class PosOverrideToken(db.Model):
         index=True,
     )
     action = db.Column(db.String(40), nullable=False, index=True)
-    cashier_user_id = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), nullable=False, index=True)
-    supervisor_user_id = db.Column(db.Integer, db.ForeignKey("users.id",ondelete="RESTRICT"), nullable=False, index=True)
-    session_id = db.Column(db.Integer, db.ForeignKey("pos_sessions.id", ondelete="SET NULL"), nullable=True,index=True)
+    cashier_user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True)
+    supervisor_user_id = db.Column(
+        db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    session_id = db.Column(db.Integer, db.ForeignKey("pos_sessions.id", ondelete="SET NULL"), nullable=True, index=True)
 
     nonce = db.Column(db.String(64), nullable=False, unique=True)
     expires_at = db.Column(db.DateTime, nullable=False)
