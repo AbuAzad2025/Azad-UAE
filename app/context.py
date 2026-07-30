@@ -1,4 +1,4 @@
-"""Context processors and template globals for AZADEXA ERP."""
+"""Context processors and template globals for Azad Intelligent Systems ERP."""
 
 import re
 from datetime import datetime

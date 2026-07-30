@@ -1,4 +1,4 @@
-"""Flask application factory for AZADEXA ERP."""
+"""Flask application factory for Azad Intelligent Systems ERP."""
 
 import os
 import uuid

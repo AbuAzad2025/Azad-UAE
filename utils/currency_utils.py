@@ -1,14 +1,18 @@
 import logging
 from decimal import Decimal, ROUND_HALF_UP
 
-from config import Config
 from extensions import db
+from utils.regional_defaults import FALLBACK_CURRENCY
 
 logger = logging.getLogger(__name__)
 
 
 def get_system_default_currency() -> str:
-    return getattr(Config, "DEFAULT_CURRENCY", None) or "ILS"
+    # Lazy config import: config.py now imports utils.regional_defaults, so a
+    # top-level "from config import Config" here would close an import cycle.
+    from config import Config
+
+    return getattr(Config, "DEFAULT_CURRENCY", None) or FALLBACK_CURRENCY
 
 
 def context_aware_default_currency() -> str:

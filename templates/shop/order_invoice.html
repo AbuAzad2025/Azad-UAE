@@ -44,7 +44,7 @@
 </head>
 <body class="invoice-print">
 {% include 'partials/print_action_bar.html' %}
-<div class="erp-watermark" aria-hidden="true"><span>Azad Intelligent Systems</span></div>
+<div class="erp-watermark" aria-hidden="true"><span>{{ settings.watermark_text if settings is defined and settings and settings.watermark_text else (developer_name or t('Default_Watermark')) }}</span></div>
   <div class="invoice">
     <div class="watermark">{{ t('invoice') }}</div>
     <div class="header">
@@ -120,6 +120,7 @@
     </div>
     {% include 'partials/print_developer_footer.html' %}
   </div>
+{% include 'partials/print_meta_line.html' %}
 {% include 'partials/print_handlers.html' %}
 </body>
 </html>

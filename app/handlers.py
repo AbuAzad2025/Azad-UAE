@@ -1,4 +1,4 @@
-"""Error handlers for AZADEXA ERP."""
+"""Error handlers for Azad Intelligent Systems ERP."""
 
 from flask import jsonify, render_template, request, flash, redirect, url_for, g
 from flask_login import current_user

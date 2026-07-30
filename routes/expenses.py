@@ -298,11 +298,15 @@ def print_expense(**kwargs):
     expense = tenant_get_or_404(Expense, record_id)
     if not _expense_in_scope(expense):
         return render_template("errors/403.html"), 403
-    from models.invoice_settings import InvoiceSettings
-
     tid = getattr(expense, "tenant_id", None)
-    tenant, settings, company = InvoiceSettings.company_print_context(tid)
-    return render_template("expenses/print.html", expense=expense, company=company, settings=settings, tenant=tenant)
+    from datetime import timezone
+
+    from services.print_service import PrintService
+
+    ctx = PrintService._get_tenant_context(tid)
+    ctx.update(PrintService._user_context())
+    ctx["printed_at"] = datetime.now(timezone.utc)
+    return render_template("expenses/print.html", expense=expense, **ctx)
 
 
 @expenses_bp.route("/<int:id>/edit", methods=["GET", "POST"])

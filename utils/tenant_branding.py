@@ -15,6 +15,11 @@ from typing import Any
 
 from utils.static_asset_paths import AZAD_LOGO, AZAD_FAVICON
 from utils.cache_decorators import cached_query
+from utils.regional_defaults import (
+    FALLBACK_CURRENCY,
+    FALLBACK_TIMEZONE,
+    FALLBACK_VAT_COUNTRY,
+)
 
 _WINDOWS_ABS = re.compile(r"^[A-Za-z]:[\\/]")
 _POWERED_BY = "Powered by AZAD Intelligent Systems"
@@ -122,9 +127,9 @@ def resolve_tenant_branding(tenant_id: int | None = None) -> dict[str, Any]:
         ),
         "email": ((settings.email if settings else None) or (tenant.email if tenant else None) or ""),
         "tax_number": ((settings.tax_number if settings else None) or (tenant.tax_number if tenant else None) or ""),
-        "vat_country": (tenant.vat_country if tenant else None) or "AE",
-        "default_currency": (tenant.default_currency if tenant else None) or "AED",
-        "timezone": (tenant.timezone if tenant else None) or "Asia/Dubai",
+        "vat_country": (tenant.vat_country if tenant else None) or FALLBACK_VAT_COUNTRY,
+        "default_currency": (tenant.default_currency if tenant else None) or FALLBACK_CURRENCY,
+        "timezone": (tenant.timezone if tenant else None) or FALLBACK_TIMEZONE,
         "city": (tenant.city if tenant else None) or "",
         "developer_logo_url": AZAD_LOGO,
         "powered_by_text": _POWERED_BY,

@@ -6,6 +6,13 @@ from datetime import timedelta
 from typing import Any
 from dotenv import load_dotenv
 
+from utils.regional_defaults import (
+    FALLBACK_COUNTRY,
+    FALLBACK_CURRENCY,
+    FALLBACK_TIMEZONE,
+    FALLBACK_VAT_COUNTRY,
+)
+
 basedir = os.path.abspath(os.path.dirname(__file__))
 instance_dir = os.path.join(basedir, "instance")
 
@@ -175,7 +182,10 @@ class Config:
     CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", REDIS_URL)
     CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", REDIS_URL)
 
-    DEFAULT_CURRENCY = os.environ.get("DEFAULT_CURRENCY", "ILS")
+    # Regional fallbacks — single source of truth: utils/regional_defaults.py
+    DEFAULT_CURRENCY = FALLBACK_CURRENCY
+    DEFAULT_COUNTRY = FALLBACK_COUNTRY
+    DEFAULT_VAT_COUNTRY = FALLBACK_VAT_COUNTRY
 
     # --- Feature Flags (Accounting Modernization) ---
     # When False (default): legacy hardcoded GL code lookups remain active.
@@ -253,7 +263,7 @@ class Config:
     DEVELOPER_LOGO = os.environ.get("DEVELOPER_LOGO", "assets/brand/azad/logos/logo.png")
     GOOGLE_SITE_VERIFICATION = os.environ.get("GOOGLE_SITE_VERIFICATION", "")
     APP_VERSION = os.environ.get("APP_VERSION", "2.0.0")
-    BABEL_DEFAULT_TIMEZONE = os.environ.get("BABEL_DEFAULT_TIMEZONE", "Asia/Dubai")
+    BABEL_DEFAULT_TIMEZONE = os.environ.get("BABEL_DEFAULT_TIMEZONE", FALLBACK_TIMEZONE)
     BABEL_DEFAULT_LOCALE = os.environ.get("BABEL_DEFAULT_LOCALE", "ar")
     LANGUAGES = {"ar": "العربية", "en": "English"}
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from utils.regional_defaults import FALLBACK_VAT_COUNTRY
 
 VAT_RATES_BY_COUNTRY = {
     "PS": Decimal("16.00"),
@@ -52,8 +53,8 @@ def is_tax_enabled(tenant_id=None) -> bool:
 def vat_country(tenant_id=None) -> str:
     tenant = _resolve_tenant(tenant_id)
     if tenant is None:
-        return "AE"
-    return (getattr(tenant, "vat_country", None) or "AE").strip().upper()
+        return FALLBACK_VAT_COUNTRY
+    return (getattr(tenant, "vat_country", None) or FALLBACK_VAT_COUNTRY).strip().upper()
 
 
 def default_tax_rate(tenant_id=None) -> Decimal:

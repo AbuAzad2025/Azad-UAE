@@ -371,3 +371,16 @@ td {
 		display: none !important;
 	}
 }
+
+/* ============================================================
+   PRINT META LINE — سطر تدقيق الطباعة (المستخدم + التوقيت)
+   يُحقن عبر {% include 'partials/print_meta_line.html' %}
+   ============================================================ */
+.print-meta-line {
+	margin-top: 12px;
+	padding-top: 6px;
+	border-top: 1px dashed #cbd5e1;
+	font-size: 8px;
+	color: #64748b;
+	text-align: center;
+}

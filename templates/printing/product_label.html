@@ -28,7 +28,7 @@
   </style>
 </head>
 <body>
-<div class="erp-watermark" aria-hidden="true"><span>Azad Intelligent Systems</span></div>
+<div class="erp-watermark" aria-hidden="true"><span>{{ settings.watermark_text if settings is defined and settings and settings.watermark_text else (developer_name or t('Default_Watermark')) }}</span></div>
   <div class="no-print">
     <button data-action="window-print">{{ _('Print') }}</button>
     <button data-action="window-close">{{ _('Close') }}</button>
@@ -50,5 +50,6 @@
     </div>
     {% endfor %}
   </div>
+{% include 'partials/print_meta_line.html' %}
 </body>
 </html>

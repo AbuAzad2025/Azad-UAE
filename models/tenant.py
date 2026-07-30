@@ -6,6 +6,12 @@ Tenant Model - Multi-Tenant System
 from datetime import datetime, timezone
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
+from utils.regional_defaults import (
+    FALLBACK_COUNTRY,
+    FALLBACK_CURRENCY,
+    FALLBACK_TIMEZONE,
+    FALLBACK_VAT_COUNTRY,
+)
 from decimal import Decimal
 
 
@@ -30,7 +36,7 @@ class Tenant(db.Model):
     address_ar = db.Column(db.Text)
     address_en = db.Column(db.Text)
     city = db.Column(db.String(100))
-    country = db.Column(db.String(100), default="PS")
+    country = db.Column(db.String(100), default=FALLBACK_COUNTRY)
 
     phone_1 = db.Column(db.String(50))
     phone_2 = db.Column(db.String(50))
@@ -97,7 +103,7 @@ class Tenant(db.Model):
         db.String(3), default=context_aware_default_currency
     )  # TODO: use Config.DEFAULT_CURRENCY
     default_language = db.Column(db.String(10), default="ar")
-    timezone = db.Column(db.String(50), default="Asia/Hebron")
+    timezone = db.Column(db.String(50), default=FALLBACK_TIMEZONE)
     date_format = db.Column(db.String(20), default="%Y-%m-%d")
     time_format = db.Column(db.String(20), default="%H:%M")
 
@@ -105,10 +111,10 @@ class Tenant(db.Model):
     fiscal_year_start = db.Column(db.Integer, default=1)  # Month: 1-12
     enable_tax = db.Column(db.Boolean, default=True)
     default_tax_rate = db.Column(db.Numeric(5, 2), default=Decimal("5.00"))
-    vat_country = db.Column(db.String(2), default="PS")  # PS, IL, AE
+    vat_country = db.Column(db.String(2), default=FALLBACK_VAT_COUNTRY)  # PS, IL, AE, ...
 
     # Dynamic Base Currency - العملة الأساسية الديناميكية للمستأجر
-    base_currency = db.Column(db.String(3), default="ILS")  # ILS, AED, USD, JOD, etc.
+    base_currency = db.Column(db.String(3), default=FALLBACK_CURRENCY)  # ILS, AED, USD, JOD, etc.
 
     # Pricing Method - هل الأسعار تشمل الضريبة؟
     prices_include_vat = db.Column(db.Boolean, default=False, nullable=False)

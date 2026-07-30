@@ -363,6 +363,9 @@ def print_invoice(**kwargs):
 
     template = settings.active_template if settings and settings.active_template else "modern"
     template_path = f"invoices/{template}.html"
+    from datetime import datetime, timezone
+
+    printed_at = datetime.now(timezone.utc)
 
     try:
         return render_template(
@@ -376,6 +379,7 @@ def print_invoice(**kwargs):
             qr_data_url=qr_data_url,
             print_branding=print_branding,
             print_tenant_id=tid,
+            printed_at=printed_at,
         )
     except Exception:
         current_app.logger.warning("Invoice template %s not found, falling back to modern", template)
@@ -390,6 +394,7 @@ def print_invoice(**kwargs):
             qr_data_url=qr_data_url,
             print_branding=print_branding,
             print_tenant_id=tid,
+            printed_at=printed_at,
         )
 
 

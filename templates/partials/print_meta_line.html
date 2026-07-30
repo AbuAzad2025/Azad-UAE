@@ -1,0 +1,14 @@
+{# Unified print audit meta line — Printed by + print timestamp.
+   Inject near the end of any standalone printable document body:
+
+     {% include 'partials/print_meta_line.html' %}
+
+   Context (all optional, with graceful fallbacks):
+     print_user_name — resolved via PrintService._user_context() or route arg
+     printed_at      — datetime passed by the route; falls back to `now()`
+   This line is audit information and intentionally STAYS on paper. #}
+<div class="print-meta-line" dir="rtl">
+  {{ t('User') }}: <strong>{{ print_user_name or t('Not_Available') }}</strong>
+  —
+  {{ t('Date') }}: <span>{{ (printed_at.strftime('%Y-%m-%d %H:%M') if printed_at is defined and printed_at else (now().strftime('%Y-%m-%d %H:%M') if now is defined and now else '-')) }}</span>
+</div>

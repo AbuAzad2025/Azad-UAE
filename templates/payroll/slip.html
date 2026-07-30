@@ -38,7 +38,7 @@
 <body class="invoice-print">
 {% set export_url = url_for('printing.print_document_pdf', doc_type='payroll_slip', id=slip.id) if slip else none %}
 {% include 'partials/print_action_bar.html' %}
-<div class="erp-watermark" aria-hidden="true"><span>Azad Intelligent Systems</span></div>
+<div class="erp-watermark" aria-hidden="true"><span>{{ settings.watermark_text if settings is defined and settings and settings.watermark_text else (developer_name or t('Default_Watermark')) }}</span></div>
   <div class="invoice">
     <div class="header">
       {% include 'partials/print_tenant_logo.html' %}
@@ -111,6 +111,7 @@
       {% include 'partials/print_developer_footer.html' %}
     </div>
   </div>
+{% include 'partials/print_meta_line.html' %}
 {% include 'partials/print_handlers.html' %}
 </body>
 </html>

@@ -1256,6 +1256,9 @@ def order_invoice(slug, sale_id):
         status_label=StoreOrderService.status_label(sale.status, ctx.get("lang", "")),
         pay_method=pay_method,
     )
+    from datetime import datetime, timezone
+
+    ctx["printed_at"] = datetime.now(timezone.utc)
     return render_template("shop/order_invoice.html", sale=sale, **ctx)
 
 

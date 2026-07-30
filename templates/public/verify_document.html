@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ _('توثيق المستند — Azad Intelligent Systems') }}</title>
+  <title>{{ _('توثيق المستند') }} — {{ developer_name or t('Default_Watermark') }}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -29,7 +29,7 @@
       overflow: hidden;
     }
     .verify-card::before {
-      content: 'Azad Intelligent Systems';
+      content: "{{ (developer_name or t('Default_Watermark')) | e }}";
       position: absolute;
       top: 50%;
       left: 50%;
@@ -203,7 +203,7 @@
     </div>
     <div class="verify-footer">
       <p>تم التحقق في {{ verified_at.strftime('%Y-%m-%d %H:%M UTC') }}</p>
-      <p class="brand">Azad Intelligent Systems — توثيق آمن</p>
+      <p class="brand">{{ developer_name or t('Default_Watermark') }} — {{ _('توثيق آمن') }}</p>
     </div>
   </div>
 </body>
