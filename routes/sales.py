@@ -656,7 +656,7 @@ def archive(**kwargs):
     return redirect(url_for("sales.index"))
 
 
-@sales_bp.route("/<int:id>/restore", methods=["POST"])
+@sales_bp.route("/<string:id>/restore", methods=["POST"])
 @login_required
 @permission_required("manage_sales")
 def restore(**kwargs):
