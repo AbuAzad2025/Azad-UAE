@@ -51,11 +51,11 @@ class TestTaxFlags:
 
         assert is_tax_enabled(1) is True
 
-    def test_vat_country_defaults_ae(self, mocker):
+    def test_vat_country_defaults_ps(self, mocker):
         mocker.patch("utils.tax_settings._resolve_tenant", return_value=None)
         from utils.tax_settings import vat_country
 
-        assert vat_country() == "AE"
+        assert vat_country() == "PS"
 
     def test_vat_country_from_tenant(self, mocker):
         mocker.patch(

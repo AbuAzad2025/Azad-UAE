@@ -90,7 +90,7 @@ class TestResolveBranding:
         mocker.patch("models.invoice_settings.InvoiceSettings.get_active", return_value=None)
         branding = tb.resolve_tenant_branding()
         assert branding["company_name_en"] == "Company"
-        assert branding["default_currency"] == "AED"
+        assert branding["default_currency"] == "ILS"
 
     def test_document_logo_explicit_settings_override(self, mocker):
         settings = MagicMock(logo_path="assets/custom.png", logo_url=None)

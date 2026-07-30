@@ -7,13 +7,13 @@ from unittest.mock import MagicMock
 
 class TestSystemDefaultCurrency:
     def test_get_system_default_currency(self, mocker):
-        mocker.patch("utils.currency_utils.Config", MagicMock(DEFAULT_CURRENCY="AED"))
+        mocker.patch("config.Config", MagicMock(DEFAULT_CURRENCY="AED"))
         from utils.currency_utils import get_system_default_currency
 
         assert get_system_default_currency() == "AED"
 
     def test_get_system_default_currency_fallback(self, mocker):
-        mocker.patch("utils.currency_utils.Config", MagicMock(DEFAULT_CURRENCY=None))
+        mocker.patch("config.Config", MagicMock(DEFAULT_CURRENCY=None))
         from utils.currency_utils import get_system_default_currency
 
         assert get_system_default_currency() == "ILS"
