@@ -32,6 +32,7 @@ import re
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
+from pydantic_core import ErrorDetails
 
 logger = logging.getLogger(__name__)
 
@@ -313,7 +314,7 @@ _ERROR_TRANSLATIONS: list[tuple[str, str]] = [
 ]
 
 
-def _arabic_error(err: dict) -> str:
+def _arabic_error(err: ErrorDetails) -> str:
     """Translate a Pydantic error message into a short Arabic reason."""
     msg = str(err.get("msg", ""))
     if msg.startswith("Value error, "):
