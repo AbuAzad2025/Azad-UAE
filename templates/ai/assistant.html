@@ -311,6 +311,7 @@
   contentWrap.appendChild(nameStrong);
 
   const textDiv = document.createElement('div');
+  textDiv.className = 'msg-text';
   textDiv.style.whiteSpace = 'pre-wrap';
   textDiv.textContent = text;
   contentWrap.appendChild(textDiv);
@@ -390,19 +391,104 @@ function sendMessage() {
   $userMessage.val('');
   $sendBtn.prop('disabled', true);
   showTyping();
+  const payload = {
+    message: msg,
+    ai_mode: localStorage.getItem('ai_mode') || 'groq',
+    context: { dialect: currentDialect, beginners_mode: beginnersMode }
+  };
+  // P3-2: بث حقيقي token-by-token عبر SSE مع تراجع تلقائي لـ AJAX
+  if (window.fetch && window.ReadableStream && window.TextDecoder) {
+    streamSend(payload, $sendBtn, $userMessage);
+  } else {
+    legacySend(payload, $sendBtn, $userMessage);
+  }
+}
+
+function legacySend(payload, $sendBtn, $userMessage) {
   $.ajax({
     url: '{{ url_for("ai.chat") }}',
     method: 'POST',
     contentType: 'application/json',
     headers: { 'X-CSRFToken': '{{ csrf_token() }}' },
-    data: JSON.stringify({
-      message: msg,
-      ai_mode: localStorage.getItem('ai_mode') || 'groq',
-      context: { dialect: currentDialect, beginners_mode: beginnersMode }
-    }),
+    data: JSON.stringify(payload),
     success: (r) => { hideTyping(); addMessage('bot', r.response, true); $sendBtn.prop('disabled', false); $userMessage.focus(); },
     error: () => { hideTyping(); addMessage('bot', '❌ ' + {{ t("عذراً،")|tojson }} + ' ' + {{ t("حدث")|tojson }} + ' ' + {{ t("Error")|tojson }} + '. ' + {{ t("حاول")|tojson }} + ' ' + {{ t(" مرة")|tojson }} + ' ' + {{ t(" أخرى")|tojson }} + '.', true); $sendBtn.prop('disabled', false); }
   });
+}
+
+async function streamSend(payload, $sendBtn, $userMessage) {
+  const failMsg = '❌ ' + {{ t("عذراً،")|tojson }} + ' ' + {{ t("حدث")|tojson }} + ' ' + {{ t("Error")|tojson }} + '. ' + {{ t("حاول")|tojson }} + ' ' + {{ t(" مرة")|tojson }} + ' ' + {{ t(" أخرى")|tojson }} + '.';
+  let $txt = null;
+  try {
+    const res = await fetch('{{ url_for("ai.chat") }}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token() }}',
+        'Accept': 'text/event-stream'
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok || !res.body) { legacySend(payload, $sendBtn, $userMessage); return; }
+
+    hideTyping();
+    addMessage('bot', '', true);
+    $txt = $('#chatBox .bot-message').last().find('.msg-text');
+    const $cb = $('#chatBox');
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '', acc = '', finalResp = null, failed = null;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      let idx;
+      while ((idx = buf.indexOf('\n\n')) !== -1) {
+        const evt = buf.slice(0, idx);
+        buf = buf.slice(idx + 2);
+        const line = evt.split('\n').find((l) => l.startsWith('data:'));
+        if (!line) continue;
+        let data;
+        try { data = JSON.parse(line.slice(5).trim()); } catch (e) { continue; }
+        if (data.delta) {
+          acc += data.delta;
+          $txt.text(acc);
+          $cb.scrollTop($cb[0].scrollHeight);
+        } else if (Object.prototype.hasOwnProperty.call(data, 'response')) {
+          finalResp = data.response;
+        }
+        if (data.error) failed = data.error;
+      }
+    }
+
+    if (finalResp) {
+      // الرد النهائي الكامل (مع التذييل ونتائج الأدوات) يحل محل المخزن المتدفق
+      chatHistory[chatHistory.length - 1].content = finalResp;
+      $txt.text(finalResp);
+    } else if (failed) {
+      chatHistory[chatHistory.length - 1].content = failMsg;
+      $txt.text(failMsg);
+    } else if (!acc) {
+      chatHistory[chatHistory.length - 1].content = failMsg;
+      $txt.text(failMsg);
+    }
+    $cb.scrollTop($cb[0].scrollHeight);
+    $sendBtn.prop('disabled', false);
+    $userMessage.focus();
+  } catch (e) {
+    if ($txt && $txt.length) {
+      // فشل أثناء البث بعد إنشاء الفقاعة — أظهر الخطأ مكانها
+      hideTyping();
+      chatHistory[chatHistory.length - 1].content = failMsg;
+      $txt.text(failMsg);
+      $sendBtn.prop('disabled', false);
+    } else {
+      // فشل قبل بدء البث — تراجع كامل لمسار AJAX التقليدي
+      hideTyping();
+      legacySend(payload, $sendBtn, $userMessage);
+    }
+  }
 }
 
 window.clearChat = () => {

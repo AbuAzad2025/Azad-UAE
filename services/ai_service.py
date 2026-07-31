@@ -890,8 +890,13 @@ class AIService:
         }
 
     @staticmethod
-    def chat_response(message, context=None):
-        """🤖 أزاد يرد على سؤالك - تعاون متكامل بين المحلي وGroq"""
+    def _chat_stage1_to_3(message, context=None):
+        """المراحل 1–3 من معالجة المحادثة: حارس الطلبات الحساسة، المعالجة
+        المحلية، سياق المعرفة، ومسارات التنفيذ/المعرفة السريعة.
+
+        Returns ``(early_answer, pipe)`` — عند وجود رد مبكر يكون ``pipe=None``،
+        وإلا يحمل ``pipe`` كامل السياق اللازم لمرحلة التعاون مع LLM (P3-2).
+        """
         from ai_knowledge.agents.intelligent_assistant import intelligent_assistant
 
         ctx = context or {}
@@ -903,7 +908,7 @@ class AIService:
         try:
             _is_sensitive, _requires_owner, sensitive_response = AIService.is_sensitive_request(message, current_user)
             if _is_sensitive and sensitive_response:
-                return sensitive_response["message"]
+                return sensitive_response["message"], None
         except Exception:
             logger.debug("Sensitive request check failed", exc_info=True)
 
@@ -917,7 +922,6 @@ class AIService:
         try:
             from ai_knowledge.system_knowledge import search_knowledge
 
-            role_slug = current_user.role.slug if current_user and getattr(current_user, "role", None) else None
             sys_ctx = search_knowledge(message)
             if sys_ctx:
                 ctx_text = "\n".join(
@@ -936,7 +940,7 @@ class AIService:
                 action_type, args = parsed
                 result = action_dispatcher.dispatch(action_type, args)
                 if result.success:
-                    return f"{result.message}\n\n<sub>🤖 المصدر: محرك التنفيذ الذكي</sub>"
+                    return f"{result.message}\n\n<sub>🤖 المصدر: محرك التنفيذ الذكي</sub>", None
         except Exception:
             logger.debug("Action dispatcher failed for chat message", exc_info=True)
 
@@ -946,40 +950,94 @@ class AIService:
 
             fast_path = ask_azad_enhanced(message, user_id=user_id)
             if fast_path and fast_path.get("answer") and fast_path.get("source") != "local":
-                return f"{fast_path['answer']}\n\n<sub>🤖 المصدر: GROQ API + معرفة النظام</sub>"
+                return f"{fast_path['answer']}\n\n<sub>🤖 المصدر: GROQ API + معرفة النظام</sub>", None
         except Exception:
             logger.debug("Knowledge agents failed for chat message", exc_info=True)
 
-        # ========== المرحلة 4: التعاون مع Groq ==========
-        api_key = AIService.get_api_key()
-        use_groq = api_key and not force_local
+        return None, {
+            "message": message,
+            "context": ctx,
+            "current_user": current_user,
+            "user_id": user_id,
+            "local_response": local_response,
+            "knowledge_context": knowledge_context,
+            "system_context": system_context,
+            "force_local": force_local,
+        }
 
-        if use_groq:
+    @staticmethod
+    def chat_response(message, context=None):
+        """🤖 أزاد يرد على سؤالك - تعاون متكامل بين المحلي وGroq"""
+        early, pipe = AIService._chat_stage1_to_3(message, context)
+        if early is not None:
+            return early
+
+        plan = AIService._build_llm_plan(pipe)
+        if plan is not None:
             try:
-                import requests
+                final = AIService._execute_llm_request(plan, pipe)
+                if final is not None:
+                    return final
+            except Exception as e:
+                AIService._log_llm_failure(e)
 
-                # تحديد المزود والنموذج
-                provider = AIService.get_provider()
-                is_gemini = provider == "gemini"
+        return f"{pipe['local_response']}\n\n<sub>💻 المصدر: النظام المحلي الذكي</sub>"
 
-                if provider == "groq":
-                    url = "https://api.groq.com/openai/v1/chat/completions"
-                    model = AIService.ACTIVE_MODELS["groq"]
-                elif is_gemini:
-                    # Native Gemini endpoint — the API key travels as a query
-                    # param and the payload uses the contents/parts schema,
-                    # NOT the OpenAI chat-completions schema.
-                    model = AIService.ACTIVE_MODELS["gemini"]
-                    url = (
-                        f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
-                    )
-                else:  # openai
-                    url = "https://api.openai.com/v1/chat/completions"
-                    model = AIService.ACTIVE_MODELS["openai"]
+    @staticmethod
+    def _log_llm_failure(exc):
+        """تسجيل فشل التعاون مع مزود LLM الخارجي."""
+        logger.warning("Groq collaboration failed: %s", exc)
+        try:
+            from services.logging_core import LoggingCore
 
-                # بناء البرومبت مع معرفة النظام الشاملة
-                role_slug = current_user.role.slug if current_user and getattr(current_user, "role", None) else "user"
-                expert_prompt = f"""أنت أزاد - مساعد ذكي خبير لنظام إدارة كراجات وورش المعدات الثقيلة.
+            LoggingCore.log_error(
+                message=str(exc),
+                category="AI",
+                source="services.ai_service.chat_response",
+                level="ERROR",
+                exception=exc,
+            )
+        except Exception:
+            logger.warning(
+                "Failed to log AI chat response error via LoggingCore",
+                exc_info=True,
+            )
+
+    @staticmethod
+    def _build_llm_plan(pipe):
+        """تجهيز خطة طلب LLM (المزود/النموذج/البرومبت/الترويسات/الحمولة).
+
+        Returns ``None`` عند غياب مفتاح API أو عند فرض الوضع المحلي، وإلا
+        يُرجع dict يصلح للتنفيذ العادي (P3-1) وللبث المتدفق (P3-2) معاً.
+        """
+        api_key = AIService.get_api_key()
+        if not api_key or pipe.get("force_local"):
+            return None
+
+        # تحديد المزود والنموذج
+        provider = AIService.get_provider()
+        is_gemini = provider == "gemini"
+
+        if provider == "groq":
+            url = "https://api.groq.com/openai/v1/chat/completions"
+            model = AIService.ACTIVE_MODELS["groq"]
+        elif is_gemini:
+            # Native Gemini endpoint — the API key travels as a query
+            # param and the payload uses the contents/parts schema,
+            # NOT the OpenAI chat-completions schema.
+            model = AIService.ACTIVE_MODELS["gemini"]
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+        else:  # openai
+            url = "https://api.openai.com/v1/chat/completions"
+            model = AIService.ACTIVE_MODELS["openai"]
+
+        # بناء البرومبت مع معرفة النظام الشاملة
+        current_user = pipe.get("current_user")
+        message = pipe["message"]
+        knowledge_context = pipe["knowledge_context"]
+        system_context = pipe["system_context"]
+        role_slug = current_user.role.slug if current_user and getattr(current_user, "role", None) else "user"
+        expert_prompt = f"""أنت أزاد - مساعد ذكي خبير لنظام إدارة كراجات وورش المعدات الثقيلة.
 
 دور المستخدم: {role_slug}
 
@@ -1024,85 +1082,186 @@ class AIService:
 
 ⚠️ مهم: إذا سأل عن بيانات - استخدم الأرقام الموجودة. إذا سأل عن واجهة النظام أو جداوله - أخبره بناءً على المعلومات أعلاه. إذا طلب شيئاً خارج قدراتك - أخبره أنك لا تستطيع."""
 
-                if is_gemini:
-                    response = requests.post(
-                        url,
-                        headers={"Content-Type": "application/json"},
-                        json={
-                            "contents": [{"parts": [{"text": expert_prompt}]}],
-                            "generationConfig": {"temperature": 0.7, "maxOutputTokens": 2000},
-                        },
-                        timeout=20,
-                    )
-                else:
-                    response = requests.post(
-                        url,
-                        headers={
-                            "Authorization": f"Bearer {api_key}",
-                            "Content-Type": "application/json",
-                        },
-                        json={
-                            "model": model,
-                            "messages": [{"role": "user", "content": expert_prompt}],
-                            "temperature": 0.7,
-                            "max_tokens": 2000,
-                        },
-                        timeout=20,
-                    )
+        if is_gemini:
+            headers = {"Content-Type": "application/json"}
+            payload = {
+                "contents": [{"parts": [{"text": expert_prompt}]}],
+                "generationConfig": {"temperature": 0.7, "maxOutputTokens": 2000},
+            }
+        else:
+            # P3-1: native tool calling — expose the AI action schemas
+            # so Groq/OpenAI return structured tool_calls instead of
+            # embedding fragile JSON in free text.
+            try:
+                from ai_knowledge.tool_schemas import get_openai_tools
 
-                if response.status_code == 200:
-                    result = response.json()
-                    if is_gemini:
-                        candidates = result.get("candidates") or []
-                        groq_response = (
-                            (candidates[0].get("content", {}).get("parts") or [{}])[0].get("text", "")
-                            if candidates
-                            else ""
-                        )
-                        if not groq_response:
-                            raise ValueError("Empty Gemini response")
-                    else:
-                        groq_response = result["choices"][0]["message"]["content"]
+                _tools = get_openai_tools()
+            except Exception:
+                logger.debug("Tool schemas unavailable", exc_info=True)
+                _tools = None
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            }
+            payload = {
+                "model": model,
+                "messages": [{"role": "user", "content": expert_prompt}],
+                "temperature": 0.7,
+                "max_tokens": 2000,
+            }
+            if _tools:
+                payload["tools"] = _tools
+                payload["tool_choice"] = "auto"
 
-                    # فحص إذا Groq يطلب تنفيذ action
-                    action_result = AIService._execute_ai_action(groq_response, user_id)
-                    if action_result:
-                        groq_response = action_result
+        return {
+            "provider": provider,
+            "is_gemini": is_gemini,
+            "url": url,
+            "model": model,
+            "headers": headers,
+            "payload": payload,
+        }
 
-                    # Groq يدرب المحلي
-                    try:
-                        AIService._train_local_from_groq(
-                            message,
-                            str(local_response),
-                            str(groq_response),
-                            user_id,
-                            tenant_id=getattr(current_user, "tenant_id", None),
-                        )
-                    except Exception as e:
-                        logger.debug("Training skipped: %s", e)
+    @staticmethod
+    def _finalize_llm_response(groq_response, plan, pipe):
+        """تدريب النظام المحلي من رد المزود + إلحاق تذييل المصدر."""
+        try:
+            AIService._train_local_from_groq(
+                pipe["message"],
+                str(pipe["local_response"]),
+                str(groq_response),
+                pipe["user_id"],
+                tenant_id=getattr(pipe.get("current_user"), "tenant_id", None),
+            )
+        except Exception as e:
+            logger.debug("Training skipped: %s", e)
+        provider = plan["provider"]
+        return f"{groq_response}\n\n<sub>🤖 المصدر: {provider.upper()} API + التحليل المحلي</sub>"
 
-                    provider = AIService.get_provider()
-                    return f"{groq_response}\n\n<sub>🤖 المصدر: {provider.upper()} API + التحليل المحلي</sub>"
+    @staticmethod
+    def _execute_llm_request(plan, pipe):
+        """تنفيذ طلب LLM غير المتدفق وإرجاع الرد النهائي أو None."""
+        import requests
 
-            except Exception as e:
-                logger.warning("Groq collaboration failed: %s", e)
+        response = requests.post(
+            plan["url"],
+            headers=plan["headers"],
+            json=plan["payload"],
+            timeout=20,
+        )
+        if response.status_code != 200:
+            return None
+
+        result = response.json()
+        handled_natively = False
+        if plan["is_gemini"]:
+            candidates = result.get("candidates") or []
+            groq_response = (
+                (candidates[0].get("content", {}).get("parts") or [{}])[0].get("text", "") if candidates else ""
+            )
+            if not groq_response:
+                raise ValueError("Empty Gemini response")
+        else:
+            message_obj = result["choices"][0]["message"]
+            tool_calls = message_obj.get("tool_calls") or []
+            if tool_calls:
+                # P3-1: native tool calls — validated + dispatched
+                groq_response = AIService._execute_native_tool_calls(tool_calls, pipe["user_id"])
+                handled_natively = True
+            else:
+                groq_response = message_obj.get("content") or ""
+
+        # فحص إذا Groq يطلب تنفيذ action (legacy regex fallback —
+        # يُتخطى عندما عُولجت العملية عبر tool calling الأصلي)
+        if not handled_natively:
+            action_result = AIService._execute_ai_action(groq_response, pipe["user_id"])
+            if action_result:
+                groq_response = action_result
+
+        return AIService._finalize_llm_response(groq_response, plan, pipe)
+
+    @staticmethod
+    def chat_response_stream(message, context=None):
+        """P3-2: بث حقيقي token-by-token بدل heartbeat الزائف.
+
+        مولّد يُنتج أزواج ``("delta", نص)`` للرموز المتدفقة فور وصولها من
+        المزود (Groq/OpenAI عبر SSE) ويختم بـ``("final", الرد الكامل)``.
+        يحافظ على رصد tool calls أثناء البث عبر مخزن مؤقت ثم ينفذها بعد
+        اكتمالها، ويتراجع إلى الرد المحلي عند أي فشل.
+        """
+        early, pipe = AIService._chat_stage1_to_3(message, context)
+        if early is not None:
+            yield ("final", early)
+            return
+
+        plan = AIService._build_llm_plan(pipe)
+        if plan is None or plan["is_gemini"]:
+            # لا بث رمزي متاح عبر Gemini REST أو الوضع المحلي — تنفيذ كامل
+            yield ("final", AIService.chat_response(message, context))
+            return
+
+        try:
+            import json as _json
+
+            import requests
+
+            payload = dict(plan["payload"])
+            payload["stream"] = True
+            response = requests.post(
+                plan["url"],
+                headers=plan["headers"],
+                json=payload,
+                timeout=30,
+                stream=True,
+            )
+            if response.status_code != 200:
+                raise ValueError(f"LLM stream HTTP {response.status_code}")
+
+            chunks: list[str] = []
+            tool_buf: dict[int, dict[str, str]] = {}
+            for raw_line in response.iter_lines(decode_unicode=True):
+                if not raw_line or not raw_line.startswith("data:"):
+                    continue
+                data = raw_line[len("data:") :].strip()
+                if data == "[DONE]":
+                    break
                 try:
-                    from services.logging_core import LoggingCore
-
-                    LoggingCore.log_error(
-                        message=str(e),
-                        category="AI",
-                        source="services.ai_service.chat_response",
-                        level="ERROR",
-                        exception=e,
-                    )
+                    chunk = _json.loads(data)
                 except Exception:
-                    logger.warning(
-                        "Failed to log AI chat response error via LoggingCore",
-                        exc_info=True,
-                    )
+                    continue
+                choices = chunk.get("choices") or []
+                if not choices:
+                    continue
+                delta = choices[0].get("delta") or {}
+                piece = delta.get("content")
+                if piece:
+                    chunks.append(piece)
+                    yield ("delta", piece)
+                # رصد tool calls المتدفقة وتجميعها في مخزن مؤقت
+                for tc in delta.get("tool_calls") or []:
+                    idx = tc.get("index", 0)
+                    buf = tool_buf.setdefault(idx, {"name": "", "arguments": ""})
+                    fn = tc.get("function") or {}
+                    if fn.get("name"):
+                        buf["name"] += fn["name"]
+                    if fn.get("arguments"):
+                        buf["arguments"] += fn["arguments"]
 
-        return f"{local_response}\n\n<sub>💻 المصدر: النظام المحلي الذكي</sub>"
+            if tool_buf:
+                tool_calls = [
+                    {"function": {"name": b["name"], "arguments": b["arguments"]}} for _, b in sorted(tool_buf.items())
+                ]
+                final_text = AIService._execute_native_tool_calls(tool_calls, pipe["user_id"])
+            else:
+                final_text = "".join(chunks)
+                action_result = AIService._execute_ai_action(final_text, pipe["user_id"])
+                if action_result:
+                    final_text = action_result
+
+            yield ("final", AIService._finalize_llm_response(final_text, plan, pipe))
+        except Exception as e:
+            AIService._log_llm_failure(e)
+            yield ("final", f"{pipe['local_response']}\n\n<sub>💻 المصدر: النظام المحلي الذكي</sub>")
 
     @staticmethod
     def _execute_ai_action(groq_response, user_id):
@@ -1156,6 +1315,56 @@ class AIService:
             return f"⚠️ حدث خطأ أثناء تنفيذ العملية: {str(e)[:100]}"
 
     @staticmethod
+    def _execute_native_tool_calls(tool_calls, user_id):
+        """P3-1: تنفيذ tool calls الأصلية من Groq/OpenAI.
+
+        كل استدعاء يُتحقق منه عبر Pydantic schemas (ai_knowledge.tool_schemas)
+        ثم يمر عبر ActionDispatcher لضمان RBAC و confirmation gate والتدقيق.
+        """
+        try:
+            import json
+
+            from ai_knowledge.action_dispatcher import ActionDispatcher
+            from ai_knowledge.tool_schemas import validate_tool_args
+
+            dispatcher = ActionDispatcher()
+            messages = []
+            for call in tool_calls:
+                fn = (call or {}).get("function") or {}
+                action_type = fn.get("name", "")
+                if not action_type:
+                    continue
+                try:
+                    raw_args = fn.get("arguments") or "{}"
+                    args = json.loads(raw_args) if isinstance(raw_args, str) else dict(raw_args)
+                except Exception:
+                    messages.append(f"⚠️ معطيات غير قابلة للقراءة للعملية {action_type}")
+                    continue
+                try:
+                    clean_args = validate_tool_args(action_type, args)
+                except ValueError as ve:
+                    messages.append(f"⚠️ {ve}")
+                    continue
+
+                result = dispatcher.dispatch(action_type, clean_args)
+                if result.needs_confirmation:
+                    messages.append(f"⚠️ {result.message}")
+                elif result.needs_permission:
+                    messages.append(f"🚫 {result.message}")
+                elif result.success:
+                    messages.append(str(result.message))
+                else:
+                    messages.append(f"⚠️ {result.message}")
+
+            if not messages:
+                return "⚠️ لم يتم تنفيذ أي عملية — معطيات غير مكتملة"
+            return "\n".join(messages) + "\n\n<sub>🤖 تم التنفيذ بواسطة أزاد (Native Tools)</sub>"
+
+        except Exception as e:
+            logger.warning("Native tool call execution error: %s", e)
+            return f"⚠️ حدث خطأ أثناء تنفيذ العملية: {str(e)[:100]}"
+
+    @staticmethod
     def _train_local_from_groq(question, local_answer, groq_answer, user_id, tenant_id=None):
         """Groq يدرب ويحدث النظام المحلي"""
         try:
@@ -1173,6 +1382,29 @@ class AIService:
 
         except Exception as e:
             logger.debug("Training from Groq failed: %s", e)
+
+    @staticmethod
+    def _is_ai_external_sharing_enabled(ctx_user) -> bool:
+        """Per-tenant AI privacy flag (P4-2).
+
+        Returns True when the tenant allows sending enriched business context
+        to third-party LLM providers. Fails open (True) when the flag or the
+        tenant row cannot be resolved so legacy behavior is preserved; an
+        explicit False on the Tenant row always wins.
+        """
+        try:
+            tid = getattr(ctx_user, "tenant_id", None)
+            if tid is None or not isinstance(tid, int):
+                return True
+            from models import Tenant
+
+            tenant = db.session.get(Tenant, tid)
+            if tenant is None:
+                return True
+            return bool(getattr(tenant, "ai_external_sharing_enabled", True))
+        except Exception:
+            logger.debug("AI external sharing flag lookup failed", exc_info=True)
+            return True
 
     @staticmethod
     def _gather_relevant_knowledge(message, local_result):
@@ -1205,6 +1437,16 @@ class AIService:
 
             # 📊 إحصائيات الشركة النشطة (User معفى من ORM — scoped يدوياً)
             tid = ctx_user.tenant_id
+
+            # P4-2: Per-tenant AI privacy opt-out — إن عطّلت المنشأة مشاركة
+            # البيانات مع مزودي LLM الخارجيين، لا تُرسل أي بيانات أعمال
+            # تفصيلية (مبيعات/مصروفات/شيكات/أرقام مالية) في البرومبت.
+            if not AIService._is_ai_external_sharing_enabled(ctx_user):
+                return (
+                    "🔒 **الخصوصية:** مشاركة البيانات التفصيلية مع مزودي الذكاء "
+                    "الخارجيين معطلة لهذه المنشأة. تتم الإجابة عبر المحرك المحلي فقط."
+                )
+
             users_count = scoped_user_query(ctx_user, exclude_owners=True).count()
             customers_count = db.session.query(Customer).filter_by(is_active=True, tenant_id=tid).count()
             suppliers_count = db.session.query(Supplier).filter_by(is_active=True, tenant_id=tid).count()

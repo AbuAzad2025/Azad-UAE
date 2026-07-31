@@ -211,8 +211,16 @@ def chat():
                 result = action_dispatcher.dispatch(action_type, args)
                 if result.success:
                     action_result = result.message
+                elif result.needs_confirmation is True or (
+                    isinstance(result.needs_permission, str) and result.needs_permission
+                ):
+                    # P4-1: RBAC / confirmation-gate decisions are FINAL — never
+                    # re-route them through the legacy wizard (eliminates the
+                    # dual-route drift where denied actions got a second chance).
+                    action_result = result.message
                 else:
-                    # Fall back to old wizard on failure
+                    # Input-validation failure only: let the interactive wizard
+                    # guide the user step by step to complete the action.
                     action_result = _process_user_action(message, current_user)
         else:
             action_result = _process_user_action(message, current_user)

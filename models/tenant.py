@@ -80,6 +80,10 @@ class Tenant(db.Model):
     enable_multi_currency = db.Column(db.Boolean, default=True)
     enable_gl = db.Column(db.Boolean, default=True)
     enable_ai = db.Column(db.Boolean, default=True)
+    # AI Privacy — عند False تُجرد البرومبتات المُرسلة إلى مزودي LLM الخارجيين
+    # (Groq/OpenAI/Gemini) من البيانات المالية التفصيلية (مبيعات/مصروفات/شيكات)
+    # ويُعتمد على المحرك المحلي فقط. الافتراضي True يحافظ على السلوك الحالي.
+    ai_external_sharing_enabled = db.Column(db.Boolean, default=True, nullable=False, server_default="1")
     enable_reports = db.Column(db.Boolean, default=True)
     enable_api = db.Column(db.Boolean, default=False)
     enable_pos = db.Column(db.Boolean, default=True)

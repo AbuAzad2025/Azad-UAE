@@ -1,4 +1,18 @@
-"""AI action processor — dispatches user intents to business logic."""
+"""AI action processor — dispatches user intents to business logic.
+
+.. deprecated:: P4-1 (2026-07)
+   هذا الملف هو **المعالج التفاعلي القديم (wizard)** فقط. جميع العمليات
+   الأحادية (one-shot) — إنشاء عميل/منتج/فاتورة/دفعة/مصروف... — تُنفَّذ حصرياً
+   عبر ``ai_knowledge.action_dispatcher.ActionDispatcher`` مع RBAC موحّد
+   وconfirmation gate وتدقيق مركزي، وتُعرَّف للنماذج عبر
+   ``ai_knowledge.tool_schemas`` (Native Tool Calling).
+
+   ⚠️ ممنوع إضافة عمليات جديدة هنا. أي action جديد يُسجَّل في
+   ``action_dispatcher._register_all`` فقط. يبقى هذا الملف لإدارة التدفقات
+   التفاعلية متعددة الخطوات (wizard contexts) حتى ترحيلها بالكامل، ولا يُستدعى
+   إلا عند فشل التحقق من المدخلات أو لاستكمال تدفق تفاعلي نشط
+   (routes/ai_routes/chat.py).
+"""
 
 from flask_babel import gettext
 
@@ -39,7 +53,11 @@ def _user_can_ai_execute_actions(user):
 
 
 def _process_user_action(message, user):
-    """معالجة أوامر المستخدم المباشرة - جميع عمليات النظام"""
+    """معالجة أوامر المستخدم المباشرة - جميع عمليات النظام
+
+    .. deprecated:: P4-1 — مسار احتياطي للمعالج التفاعلي فقط؛ العمليات
+       الأحادية تمر عبر ``action_dispatcher`` حصراً (انظر ترويسة الملف).
+    """
     try:
         from models import (
             Customer,

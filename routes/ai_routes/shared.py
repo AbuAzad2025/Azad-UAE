@@ -186,6 +186,15 @@ _PROMPT_INJECTION_PATTERNS = [
     r"DAN\s*:?|do\s+anything\s+now",
     r"jailbreak|jail.?break",
     r"act\s+as\s+(if\s+)?you\s+are",
+    # ===== Arabic adversarial injection vectors =====
+    r"تجاهل\s+(كل|جميع)?\s*(التعليمات|الأوامر|الاوامر|التوجيهات)(\s+السابقة)?",
+    r"تجاهل\s+كل\s+ما\s+(سبق|قيل)",
+    r"(?:أظهر|اظهر|اعرض|اطبع|اكشف|أخرج|اخرج)\s+(?:لي\s+)?(?:برومبت|موج[هّ])\s*النظام",
+    r"(?:أظهر|اظهر|اطبع|اكشف)\s+(?:لي\s+)?التعليمات\s+(?:الأصلية|الاصلية|السرية|الخفية|الداخلية)",
+    r"تظاهر\s+بأنك",
+    r"(?:قم\s+)?بتغيير\s+دورك",
+    r"العب\s+دور\s+(?:شخص|نظام|مساعد)\s+(?:آخر|اخر|جديد)",
+    r"تجاوز\s+(?:القيود|القواعد|الحماية|الصلاحيات)",
 ]
 
 
@@ -262,45 +271,31 @@ def _sanitize_ai_prompt(message, context):
 
 def _stream_ai_response(message, context, ai_mode):
     """
-    Generator that yields heartbeat comments while processing, then yields
-    the final JSON result via SSE. This keeps the Gunicorn connection alive and
-    prevents 60-second worker timeouts for long-running AI queries.
+    P3-2: Real token-by-token SSE streaming.
+
+    Consumes ``AIService.chat_response_stream`` and forwards every LLM token
+    delta to the client as ``data: {"delta": ...}`` events in real time,
+    then emits the final JSON payload (same contract as before, with the
+    full ``response`` text). Falls back gracefully on any failure.
     """
     import time
     import json as json_module
-    from threading import Thread, Event
 
     t0 = time.time()
-    heartbeat_interval = 10  # seconds
-    last_heartbeat = time.time()
+    final_response = None
 
-    result_container = {}
-    done_event = Event()
-
-    def _run_ai():
-        try:
-            result_container["response"] = AIService.chat_response(message, context)
-        except Exception as e:
-            result_container["error"] = str(e)
-        finally:
-            done_event.set()
-
-    thread = Thread(target=_run_ai, daemon=True)
-    thread.start()
-
-    while not done_event.is_set():
-        if time.time() - last_heartbeat >= heartbeat_interval:
-            yield ": heartbeat\n\n"
-            last_heartbeat = time.time()
-        done_event.wait(1)
-
-    elapsed_ms = int((time.time() - t0) * 1000)
-
-    if "error" in result_container:
+    try:
+        for kind, text in AIService.chat_response_stream(message, context):
+            if kind == "delta":
+                yield f"data: {json_module.dumps({'delta': text}, ensure_ascii=False)}\n\n"
+            else:
+                final_response = text
+    except Exception as e:
+        elapsed_ms = int((time.time() - t0) * 1000)
         payload = json_module.dumps(
             {
                 "response": None,
-                "error": result_container["error"],
+                "error": str(e),
                 "ai_enabled": True,
                 "elapsed_ms": elapsed_ms,
             }
@@ -308,7 +303,21 @@ def _stream_ai_response(message, context, ai_mode):
         yield f"data: {payload}\n\n"
         return
 
-    response = result_container["response"]
+    elapsed_ms = int((time.time() - t0) * 1000)
+
+    if final_response is None:
+        payload = json_module.dumps(
+            {
+                "response": None,
+                "error": "empty_stream",
+                "ai_enabled": True,
+                "elapsed_ms": elapsed_ms,
+            }
+        )
+        yield f"data: {payload}\n\n"
+        return
+
+    response = final_response
     state = get_ai_access_state(current_user)
     payload = json_module.dumps(
         {

@@ -109,6 +109,9 @@ certifi==2026.6.17
 urllib3==2.7.0
 six==1.17.0
 
+# AI native tool-calling argument validation (ai_knowledge/tool_schemas.py)
+pydantic>=2.0,<3
+
 # -----------------------------------------------------------------------------
 # Deployment notes (not pip packages):
 # - WeasyPrint needs system libs: cairo, pango, gdk-pixbuf (apt install in Docker)
