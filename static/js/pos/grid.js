@@ -51,6 +51,57 @@
 		?.getAttribute("content");
 	if (baseCurrency && tenantPosSymbol) CURRENCY_SYMBOLS[baseCurrency] = tenantPosSymbol;
 	const currencySymbolFor = (code) => CURRENCY_SYMBOLS[code] || code;
+	const loadOrderTypes = async () => {
+		const sel = qs("#orderType");
+		if (!sel) return;
+		try {
+			const r = await fetch("/pos/api/order-types", {
+				credentials: "same-origin",
+				headers: { Accept: "application/json" },
+			});
+			const data = await r.json();
+			if (!data.success) return;
+			sel.innerHTML = "";
+			(data.order_types || []).forEach((ot) => {
+				const o = document.createElement("option");
+				o.value = ot.code;
+				o.textContent = ot.display_name;
+				sel.appendChild(o);
+			});
+			if (data.default_code) sel.value = data.default_code;
+			toggleTableField();
+		} catch (_) {}
+	};
+	// Restaurant mode: show the table selector for dine-in style order types
+	const toggleTableField = () => {
+		const tableField = qs("#tableField");
+		const sel = qs("#orderType");
+		if (!tableField || !sel) return;
+		const code = (sel.value || "").toLowerCase();
+		const needsTable = code.includes("dine") || code.includes("table");
+		tableField.classList.toggle("d-none", !needsTable);
+		if (needsTable) loadTables();
+	};
+	const loadTables = async () => {
+		const sel = qs("#tableSelect");
+		if (!sel || sel.dataset.loaded) return;
+		try {
+			const r = await fetch("/pos/api/tables", {
+				credentials: "same-origin",
+				headers: { Accept: "application/json" },
+			});
+			const tables = await r.json();
+			(tables || []).forEach((t) => {
+				const o = document.createElement("option");
+				o.value = t.id;
+				o.textContent = t.floor_name ? `${t.label} — ${t.floor_name}` : t.label;
+				sel.appendChild(o);
+			});
+			sel.dataset.loaded = "1";
+		} catch (_) {}
+	};
+	const orderTypeSel = qs("#orderType");
+	if (orderTypeSel) orderTypeSel.addEventListener("change", toggleTableField);
 	const esc = (s) => {
 		if (s == null) return "";
 		return String(s)
@@ -672,6 +723,11 @@
 			payment_currency: selectedCurrency(),
 			payment_exchange_rate: currentRate() || 1,
 			reference_number: qs("#referenceNumber")?.value || "",
+			order_type: qs("#orderType")?.value || null,
+			table_id:
+				qs("#tableSelect") && !qs("#tableField")?.classList.contains("d-none")
+					? qs("#tableSelect").value || null
+					: null,
 			lines: lines,
 		};
 		if (splitEnabled()) {
@@ -745,6 +801,7 @@
 	document.addEventListener("DOMContentLoaded", () => {
 		void loadCategories();
 		void loadProducts();
+		void loadOrderTypes();
 		initSession();
 
 		qs("#posPinConfirm")?.addEventListener("click", () => void confirmPin());

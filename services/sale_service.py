@@ -1,4 +1,4 @@
-from datetime import timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal, ROUND_HALF_UP
 from flask import current_app
 from flask_babel import gettext
@@ -275,6 +275,23 @@ class SaleService:
                 # Calculate total before flush
                 line.calculate_line_total()
 
+                # --- Warranty tracking (P3): explicit per-line override wins;
+                # otherwise auto-derive from the product's warranty_days ---
+                _ws_str = (line_data.get("warranty_start_date") or "").strip()
+                _we_str = (line_data.get("warranty_end_date") or "").strip()
+                if _ws_str or _we_str:
+                    try:
+                        if _ws_str:
+                            line.warranty_start_date = datetime.strptime(_ws_str, "%Y-%m-%d")
+                        if _we_str:
+                            line.warranty_end_date = datetime.strptime(_we_str, "%Y-%m-%d")
+                    except (ValueError, TypeError):
+                        current_app.logger.warning("Invalid warranty dates ignored for product %s", product.id)
+                elif getattr(product, "warranty_days", 0) and int(product.warranty_days) > 0:
+                    _w_start = sale.sale_date or datetime.now(timezone.utc)
+                    line.warranty_start_date = _w_start
+                    line.warranty_end_date = _w_start + timedelta(days=int(product.warranty_days))
+
                 db.session.add(line)
                 db.session.flush()  # Get Line ID for serials
 
@@ -360,7 +377,6 @@ class SaleService:
                 # --- Link Serials to Sale Line ---
                 if product.has_serial_number:
                     from models import ProductSerial
-                    from datetime import datetime, timedelta
                     from utils.serial_helpers import extract_serials
 
                     clean_serials = extract_serials(line_data)

@@ -90,8 +90,13 @@
             </thead>
             <tbody>
               {% for currency, rate in (rates|default({})).items() %}
-              <tr>
-                <td><strong>{{ currency }}</strong></td>
+              <tr class="{% if currency == base_currency %}table-success{% endif %}">
+                <td>
+                  <strong>{{ currency }}</strong>
+                  {% if currency == base_currency %}
+                  <span class="badge badge-success ml-2"><i class="fas fa-star mr-1"></i>{{ t('Base_Currency') }}</span>
+                  {% endif %}
+                </td>
                 <td>{{ rate }}</td>
               </tr>
               {% else %}

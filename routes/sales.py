@@ -129,6 +129,10 @@ def create():
                     # Get Serials if any
                     serials = request.form.getlist(f"lines[{i}][serials][]")
 
+                    # Optional per-line warranty override (warranty-eligible items)
+                    warranty_start_str = (request.form.get(f"lines[{i}][warranty_start_date]") or "").strip()
+                    warranty_end_str = (request.form.get(f"lines[{i}][warranty_end_date]") or "").strip()
+
                     if product_id and quantity and quantity > 0:
                         product = tenant_get_or_404(Product, product_id)
                         if product:
@@ -139,6 +143,8 @@ def create():
                                     "discount_percent": discount_percent,
                                     "unit_price": override_price,
                                     "serials": serials,  # Pass serials to service
+                                    "warranty_start_date": warranty_start_str or None,
+                                    "warranty_end_date": warranty_end_str or None,
                                 }
                             )
                 except (ValueError, TypeError):
@@ -291,7 +297,9 @@ def view(**kwargs):
         flash(ErrorMessages.permission_denied(gettext("عرض هذه الفاتورة")), "danger")
         return redirect(url_for("sales.index"))
 
-    return render_template("sales/view.html", sale=sale)
+    from datetime import date as _date
+
+    return render_template("sales/view.html", sale=sale, now_date=_date.today())
 
 
 @sales_bp.route("/<int:id>/print")

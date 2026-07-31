@@ -263,6 +263,27 @@
 
         </div>
 
+        {% if sale.seller_id or sale.pos_session_id or sale.taxable_amount %}
+        <div class="row mb-4">
+          <div class="col-12">
+            <h5 class="text-muted"><i class="fas fa-clipboard-check mr-2"></i>{{ t('Audit_Info') }}</h5>
+            <div class="p-3 border rounded small">
+              <div class="row">
+                {% if sale.seller_id %}
+                <div class="col-md-4"><strong>{{ t('Seller_ID') }}:</strong> #{{ sale.seller_id }}</div>
+                {% endif %}
+                {% if sale.pos_session_id %}
+                <div class="col-md-4"><strong>{{ t('POS_Session') }}:</strong> #{{ sale.pos_session_id }}</div>
+                {% endif %}
+                {% if sale.taxable_amount %}
+                <div class="col-md-4"><strong>{{ t('Taxable_Amount') }}:</strong> {{ format_currency(sale.taxable_amount, sale.currency) }}</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
 
 
         <h5 class="text-primary mb-3"><i class="fas fa-list mr-2"></i>{{ t('Items') }}</h5>
@@ -284,6 +305,8 @@
                 <th class="text-center">{{ t('Price') }}</th>
 
                 <th class="text-center">{{ t('Discount') }}%</th>
+
+                <th class="text-center">{{ t('Warranty') }}</th>
 
                 <th class="text-center">{{ t('Total') }}</th>
 
@@ -334,6 +357,34 @@
                   {% if line.discount_percent > 0 %}
 
                     <span class="badge badge-warning">{{ line.discount_percent }}%</span>
+
+                  {% else %}
+
+                    <span class="text-muted">-</span>
+
+                  {% endif %}
+
+                </td>
+
+                <td class="text-center">
+
+                  {% if line.warranty_end_date %}
+
+                    {% if line.warranty_end_date.date() >= now_date %}
+
+                      <span class="badge badge-success" title="{{ t('Warranty_Valid_Until') }}: {{ line.warranty_end_date.strftime('%Y-%m-%d') }}">
+                        <i class="fas fa-shield-alt mr-1"></i>{{ t('Warranty_Active') }}
+                      </span>
+
+                    {% else %}
+
+                      <span class="badge badge-danger" title="{{ t('Warranty_Ended_On') }}: {{ line.warranty_end_date.strftime('%Y-%m-%d') }}">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>{{ t('Warranty_Expired') }}
+                      </span>
+
+                    {% endif %}
+
+                    <br><small class="text-muted">{{ line.warranty_end_date.strftime('%Y-%m-%d') }}</small>
 
                   {% else %}
 

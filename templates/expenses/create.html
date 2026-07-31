@@ -267,16 +267,16 @@ $(() => {
         if (data && data.rate) {
           $('#exchange_rate').val(parseFloat(data.rate).toFixed(6));
         } else if (window.toastr) {
-          toastr.warning({{ (t('تعذر') + ' ' + t('جلب') + ' ' + t('Price_2') + ' ' + t('Exchange،') + ' ' + t('يرجى') + ' ' + t('إدخال') + ' ' + t('Value') + ' ' + t('Manually') + '.')|tojson }});
+          toastr.warning({{ (t('تعذر') + ' ' + t('جلب') + ' ' + t('Price_2') + ' ' + t('Exchange_Comma') + ' ' + t('يرجى') + ' ' + t('إدخال') + ' ' + t('Value') + ' ' + t('Manually') + '.')|tojson }});
         } else {
-          notify({{ (t('تعذر') + ' ' + t('جلب') + ' ' + t('Price_2') + ' ' + t('Exchange،') + ' ' + t('يرجى') + ' ' + t('إدخال') + ' ' + t('Value') + ' ' + t('Manually') + '.')|tojson }});
+          notify({{ (t('تعذر') + ' ' + t('جلب') + ' ' + t('Price_2') + ' ' + t('Exchange_Comma') + ' ' + t('يرجى') + ' ' + t('إدخال') + ' ' + t('Value') + ' ' + t('Manually') + '.')|tojson }});
         }
       },
       error: () => {
         if (window.toastr) {
-          toastr.warning({{ (t('تعذر') + ' ' + t('جلب') + ' ' + t('Price_2') + ' ' + t('Exchange،') + ' ' + t('يرجى') + ' ' + t('إدخال') + ' ' + t('Value') + ' ' + t('Manually') + '.')|tojson }});
+          toastr.warning({{ (t('تعذر') + ' ' + t('جلب') + ' ' + t('Price_2') + ' ' + t('Exchange_Comma') + ' ' + t('يرجى') + ' ' + t('إدخال') + ' ' + t('Value') + ' ' + t('Manually') + '.')|tojson }});
         } else {
-          notify({{ (t('تعذر') + ' ' + t('جلب') + ' ' + t('Price_2') + ' ' + t('Exchange،') + ' ' + t('يرجى') + ' ' + t('إدخال') + ' ' + t('Value') + ' ' + t('Manually') + '.')|tojson }});
+          notify({{ (t('تعذر') + ' ' + t('جلب') + ' ' + t('Price_2') + ' ' + t('Exchange_Comma') + ' ' + t('يرجى') + ' ' + t('إدخال') + ' ' + t('Value') + ' ' + t('Manually') + '.')|tojson }});
         }
       }
     });

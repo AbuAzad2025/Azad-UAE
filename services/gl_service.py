@@ -987,6 +987,7 @@ class GLService:
             transactions.append(
                 {
                     "date": line.entry.entry_date,
+                    "entry_id": line.entry_id,
                     "entry_number": line.entry.entry_number,
                     "entry_type": line.entry.entry_type,  # Fixed from entry_type_ar if not property
                     "description": line.description or line.entry.description,

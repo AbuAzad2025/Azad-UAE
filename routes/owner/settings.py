@@ -898,7 +898,9 @@ def currency_settings():
         default_currency = get_system_default_currency()
     rates = CurrencyService.get_all_rates(default_currency)
 
-    return render_template("owner/currency_settings.html", settings=settings, rates=rates)
+    return render_template(
+        "owner/currency_settings.html", settings=settings, rates=rates, base_currency=default_currency
+    )
 
 
 @owner_bp.route("/exchange-rates", methods=["GET", "POST"])

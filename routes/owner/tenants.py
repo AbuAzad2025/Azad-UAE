@@ -20,7 +20,7 @@ from routes.owner import (
 from services.logging_core import LoggingCore
 from services.saas_provisioning_service import SaaSProvisioningService
 import logging
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from routes.owner import owner_bp
 from routes.owner.shared import _invalidate_owner_changes, _audit_owner_db_action
 from utils.db_safety import atomic_transaction
@@ -83,9 +83,17 @@ def tenant_ai_toggle(tenant_id):
     )
     if ai_access_level not in ("basic", "advanced", "execute"):
         ai_access_level = "execute"
+    # AI external-sharing privacy flag (P1): hidden+checkbox pattern —
+    # getlist returns DOM order, so the checkbox value (when checked) wins.
+    ext_sharing_values = request.form.getlist("ai_external_sharing_enabled")
+    new_ext_sharing = None
+    if ext_sharing_values:
+        new_ext_sharing = ext_sharing_values[-1] == "1"
     try:
         with atomic_transaction("tenant_ai_toggle"):
             tenant.enable_ai = enabled
+            if new_ext_sharing is not None:
+                tenant.ai_external_sharing_enabled = new_ext_sharing
             ai_access_level = set_tenant_ai_level(int(tenant.id), ai_access_level)
         LoggingCore.log_audit(
             "platform_tenant_ai_enable" if enabled else "platform_tenant_ai_disable",
@@ -95,6 +103,7 @@ def tenant_ai_toggle(tenant_id):
                 "tenant_name": tenant.name,
                 "enabled": enabled,
                 "ai_access_level": ai_access_level,
+                "ai_external_sharing_enabled": tenant.ai_external_sharing_enabled,
             },
         )
         _invalidate_owner_changes()
@@ -153,6 +162,7 @@ def tenants_list():
         user_counts=context["user_counts"],
         branch_counts=context["branch_counts"],
         store_counts=context["store_counts"],
+        today_date=date.today(),
     )
 
 

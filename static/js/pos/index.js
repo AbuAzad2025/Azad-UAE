@@ -146,8 +146,39 @@
 				sel.appendChild(o);
 			});
 			if (data.default_code) sel.value = data.default_code;
+			toggleTableField();
 		} catch (_) {}
 	};
+	// Restaurant mode: show the table selector for dine-in style order types
+	const toggleTableField = () => {
+		const tableField = qs("#tableField");
+		const sel = qs("#orderType");
+		if (!tableField || !sel) return;
+		const code = (sel.value || "").toLowerCase();
+		const needsTable = code.includes("dine") || code.includes("table");
+		tableField.classList.toggle("d-none", !needsTable);
+		if (needsTable) loadTables();
+	};
+	const loadTables = async () => {
+		const sel = qs("#tableSelect");
+		if (!sel || sel.dataset.loaded) return;
+		try {
+			const r = await fetch("/pos/api/tables", {
+				credentials: "same-origin",
+				headers: { Accept: "application/json" },
+			});
+			const tables = await r.json();
+			(tables || []).forEach((t) => {
+				const o = document.createElement("option");
+				o.value = t.id;
+				o.textContent = t.floor_name ? `${t.label} — ${t.floor_name}` : t.label;
+				sel.appendChild(o);
+			});
+			sel.dataset.loaded = "1";
+		} catch (_) {}
+	};
+	const orderTypeSel = qs("#orderType");
+	if (orderTypeSel) orderTypeSel.addEventListener("change", toggleTableField);
 	const recalc = async () => {
 		const taxRate = Math.max(0, Math.min(100, toNum(qs("#taxRate").value)));
 		const shipping = Math.max(0, toNum(qs("#shippingCost").value));
@@ -763,6 +794,7 @@
 			discount_amount: toNum(qs("#discountAmount").value) || 0,
 			payment_method: qs("#paymentMethod").value || "",
 			order_type: qs("#orderType") ? qs("#orderType").value : "takeaway",
+			table_id: qs("#tableSelect") && !qs("#tableField").classList.contains("d-none") ? qs("#tableSelect").value || null : null,
 			paid_amount: toNum(qs("#paidAmount").value) || 0,
 			payment_currency: qs("#currency").value,
 			payment_exchange_rate: toNum(qs("#exchangeRate").value) || 1,

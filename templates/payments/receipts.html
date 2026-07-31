@@ -404,7 +404,7 @@
 
             {% if item.payment_confirmed %}
 
-              <span class="badge badge-success">
+              <span class="badge badge-success"{% if item.confirmation_date %} title="{{ _('تاريخ التسوية') }}: {{ item.confirmation_date.strftime('%Y-%m-%d %H:%M') }}"{% endif %}>
 
                 <i class="fas fa-check mr-1"></i>{{ _('مؤكد') }}
 
@@ -412,9 +412,9 @@
 
             {% else %}
 
-              <span class="badge badge-warning">
+              <span class="badge {% if item.rejection_reason %}badge-danger{% else %}badge-warning{% endif %}"{% if item.rejection_reason %} title="{{ _('سبب الرفض') }}: {{ item.rejection_reason }}"{% endif %}>
 
-                <i class="fas fa-clock mr-1"></i>{{ _('معلق') }}
+                <i class="fas {% if item.rejection_reason %}fa-times{% else %}fa-clock{% endif %} mr-1"></i>{{ _('مرفوض') if item.rejection_reason else _('معلق') }}
 
               </span>
 

@@ -145,6 +145,20 @@
               <option value="e_wallet">محفظة إلكترونية</option>
             </select>
           </div>
+          <div class="form-group-sm">
+            <label for="orderType">{{ _('نوع الطلب') }}
+              <a href="{{ url_for('pos.order_type_settings') }}" class="btn btn-sm btn-link p-0 ml-1" target="_blank" rel="noopener noreferrer" title="{{ _('إدارة أنواع الطلبات') }}"><i class="fas fa-cog"></i></a>
+            </label>
+            <select id="orderType" class="form-control form-control-sm" aria-label="{{ _('نوع الطلب') }}">
+              <option value="">--</option>
+            </select>
+          </div>
+          <div class="form-group-sm d-none" id="tableField">
+            <label for="tableSelect">{{ _('الطاولة') }}</label>
+            <select id="tableSelect" class="form-control form-control-sm" aria-label="{{ _('الطاولة') }}">
+              <option value="">{{ _('بدون طاولة') }}</option>
+            </select>
+          </div>
           <div class="row no-gutters">
             <div class="col-6 pr-1">
               <div class="form-group-sm">

@@ -73,6 +73,18 @@
                     <i class="fas fa-power-off mr-1"></i>{{ t('Enable_For_Tenant') }}
                   </button>
                 {% endif %}
+                <span class="d-inline-block align-middle ml-2" title="{{ t('AI_External_Sharing_Hint') }}">
+                  <input type="hidden" name="ai_external_sharing_enabled" value="0" aria-label="ai external sharing fallback">
+                  <span class="custom-control custom-switch custom-control-inline">
+                    <input type="checkbox" class="custom-control-input" id="extShare{{ tenant.id|default(0) }}"
+                           name="ai_external_sharing_enabled" value="1"
+                           {% if tenant.ai_external_sharing_enabled|default(true) %}checked{% endif %}
+                           aria-label="{{ t('AI_External_Sharing') }}">
+                    <label class="custom-control-label small" for="extShare{{ tenant.id|default(0) }}">
+                      <i class="fas fa-shield-alt mr-1 {% if tenant.ai_external_sharing_enabled|default(true) %}text-warning{% else %}text-success{% endif %}"></i>{{ t('AI_External_Sharing') }}
+                    </label>
+                  </span>
+                </span>
               </form>
             </td>
           </tr>

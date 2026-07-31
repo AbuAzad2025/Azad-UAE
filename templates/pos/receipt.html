@@ -60,6 +60,9 @@
             <span class="r-label">{{ _('التاريخ') }}:</span><span>{{ sale.sale_date.strftime('%Y-%m-%d %H:%M') if sale.sale_date else '' }}</span>
             <span class="r-label">{{ _('الكاشير') }}:</span><span>{{ current_user.full_name or current_user.username }}</span>
             <span class="r-label">{{ _('العميل') }}:</span><span>{{ customer.name if customer else _('عميل نقدي') }}</span>
+            {% if order_type_label %}
+            <span class="r-label">{{ _('نوع الطلب') }}:</span><span>{{ order_type_label }}{% if table_label %} — {{ _('الطاولة') }} {{ table_label }}{% endif %}</span>
+            {% endif %}
         </div>
 
         <div class="r-divider"></div>

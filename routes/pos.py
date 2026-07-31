@@ -1136,6 +1136,17 @@ def api_checkout():
                 ot = PosOrderType.default_for_tenant(tid)
                 order_type = ot.code if ot else ""
             sale.order_type = order_type
+            # Restaurant mode (P3-2): persist the selected table for dine-in
+            # orders after validating it belongs to the active tenant.
+            table_id_raw = payload.get("table_id")
+            if table_id_raw:
+                try:
+                    from models import PosTable
+
+                    _table = tenant_query(PosTable).filter_by(id=int(table_id_raw), is_active=True).first()
+                    sale.table_id = _table.id if _table else None
+                except (ValueError, TypeError):
+                    sale.table_id = None
             sale.pos_session_id = session.id
             db.session.add(sale)
             session.total_sales = Decimal(str(session.total_sales or 0)) + Decimal(str(sale.total_amount or 0))
@@ -2773,12 +2784,28 @@ def customer_display():
 @permission_required(PermissionEnum.MANAGE_SALES)
 def thermal_receipt(sale_id):
     from models import Sale
+    from models.pos_floor import PosTable
+    from models.pos_order_type import PosOrderType
 
     sale = tenant_get(Sale, sale_id)
     if not sale:
         abort(404)
     customer = sale.customer
-    return render_template("pos/receipt.html", sale=sale, customer=customer)
+    order_type_label = None
+    if sale.order_type:
+        ot = PosOrderType.get_by_code(sale.tenant_id, sale.order_type)
+        order_type_label = ot.display_name if ot else sale.order_type
+    table_label = None
+    if getattr(sale, "table_id", None):
+        tbl = tenant_get(PosTable, sale.table_id)
+        table_label = tbl.label if tbl else None
+    return render_template(
+        "pos/receipt.html",
+        sale=sale,
+        customer=customer,
+        order_type_label=order_type_label,
+        table_label=table_label,
+    )
 
 
 @pos_bp.route("/api/sale/<int:sale_id>/print-tickets")
@@ -2953,6 +2980,28 @@ def api_floors():
                 "table_count": f.tables.filter_by(is_active=True).count(),
             }
             for f in floors
+        ]
+    )
+
+
+@pos_bp.route("/api/tables")
+@login_required
+@permission_required("manage_sales")
+def api_tables():
+    """All active tables across floors — powers the dine-in table selector."""
+    from models import PosTable
+
+    tables = tenant_query(PosTable).filter_by(is_active=True).order_by(PosTable.sort_order).all()
+    return jsonify(
+        [
+            {
+                "id": t.id,
+                "label": t.label,
+                "capacity": t.capacity,
+                "status": t.status,
+                "floor_name": (t.floor.name_ar or t.floor.name) if getattr(t, "floor", None) else "",
+            }
+            for t in tables
         ]
     )
 

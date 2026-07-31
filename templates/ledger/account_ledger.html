@@ -54,7 +54,7 @@
             <td>{{ transaction.description }}</td>
             <td>
               {% if transaction.reference %}
-              <a href="#">{{ transaction.reference }}</a>
+              <a href="{{ url_for('ledger.view_entry', entry_id=transaction.entry_id) }}" title="{{ t('View_Entry_Details') }}">{{ transaction.reference }}</a>
               {% else %}-{% endif %}
             </td>
             <td class="text-danger">{{ format_currency(transaction.debit) if transaction.debit > 0 else '-' }}</td>

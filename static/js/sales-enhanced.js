@@ -82,6 +82,24 @@ function addLine() {
                     </small>
                 </div>
             </div>
+            <div class="row mt-2">
+                <div class="col-md-3">
+                    <label class="font-weight-bold mb-1">
+                        <i class="fas fa-shield-alt text-success"></i> بداية الضمان
+                        <small class="text-muted">(اختياري)</small>
+                    </label>
+                    <input type="date" name="lines[${salesLineIndex}][warranty_start_date]" class="form-control form-control-sm"
+                           title="يبقى فارغاً للاشتقاق التلقائي من مدة ضمان المنتج">
+                </div>
+                <div class="col-md-3">
+                    <label class="font-weight-bold mb-1">
+                        <i class="fas fa-calendar-times text-danger"></i> نهاية الضمان
+                        <small class="text-muted">(اختياري)</small>
+                    </label>
+                    <input type="date" name="lines[${salesLineIndex}][warranty_end_date]" class="form-control form-control-sm"
+                           title="يبقى فارغاً للاشتقاق التلقائي من مدة ضمان المنتج">
+                </div>
+            </div>
         </div>
     `;
 
