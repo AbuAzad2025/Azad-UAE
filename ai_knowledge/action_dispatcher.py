@@ -372,6 +372,60 @@ class ActionDispatcher:
             except Exception as e:
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
+        def _transfer_stock(args: dict) -> ActionResult:
+            product_name = str(args.get("product_name") or "").strip()
+            quantity = args.get("quantity", 0)
+            from_wh = args.get("from_warehouse_id")
+            to_wh = args.get("to_warehouse_id")
+            if not product_name or not from_wh or not to_wh:
+                return ActionResult(False, "يرجى إدخال اسم المنتج والمستودع المصدر والوجهة")
+            try:
+                from models import Product
+                from services.stock_service import StockService
+
+                tid, guard = _tenant_guard()
+                if guard:
+                    return guard
+                safe = _escape_ilike(product_name)
+                product = (
+                    Product.query.filter(
+                        Product.tenant_id == tid,
+                        Product.is_active,
+                        Product.name.ilike(f"%{safe}%", escape="\\"),
+                    )
+                    .order_by(Product.name)
+                    .first()
+                )
+                if not product:
+                    return ActionResult(False, f"المنتج {product_name} غير موجود")
+                StockService.transfer_stock(
+                    product_id=product.id,
+                    from_warehouse_id=int(from_wh),
+                    to_warehouse_id=int(to_wh),
+                    quantity=quantity,
+                    notes=args.get("notes") or None,
+                    user=current_user if getattr(current_user, "is_authenticated", False) else None,
+                )
+                db.session.flush()
+                _audit(
+                    "transfer",
+                    "Product",
+                    product.id,
+                    {"from": int(from_wh), "to": int(to_wh), "qty": float(quantity)},
+                )
+                return ActionResult(
+                    True,
+                    f"تم تحويل {float(quantity):,.0f} من المنتج {product.name} من المستودع {from_wh} إلى {to_wh} بنجاح",
+                    {"product_id": product.id, "quantity": float(quantity)},
+                    "stock_transfer",
+                    "manage_warehouse",
+                )
+            except ValueError as ve:
+                return ActionResult(False, str(ve))
+            except Exception as e:
+                _log_ai_error("stock_transfer_error", str(e), request_data=args)
+                return ActionResult(False, f"خطأ في تحويل المخزون: {str(e)[:100]}")
+
         # ===== SALES / INVOICES =====
         def _create_sale(args: dict[str, Any]) -> ActionResult:
             from services.ai_executor import AIExecutor
@@ -442,6 +496,40 @@ class ActionDispatcher:
                 )
             except Exception as e:
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
+
+        def _cancel_sale(args: dict) -> ActionResult:
+            sale_number = str(args.get("sale_number") or "").strip()
+            sale_id = args.get("sale_id")
+            if not sale_number and not sale_id:
+                return ActionResult(False, "يرجى إدخال رقم الفاتورة المراد إلغاؤها")
+            try:
+                from models import Sale
+                from services.sale_service import SaleService
+
+                tid, guard = _tenant_guard()
+                if guard:
+                    return guard
+                q = Sale.query.filter_by(tenant_id=tid)
+                sale = q.filter_by(id=int(sale_id)).first() if sale_id else q.filter_by(sale_number=sale_number).first()
+                if not sale:
+                    return ActionResult(False, f"الفاتورة {sale_number or sale_id} غير موجودة")
+                number = sale.sale_number
+                total = float(sale.total_amount or 0)
+                SaleService.cancel_sale(sale)
+                db.session.flush()
+                _audit("cancel", "Sale", sale.id, {"sale_number": number})
+                return ActionResult(
+                    True,
+                    f"تم إلغاء الفاتورة {number} (القيمة: {total:,.2f}) وعكس قيودها ومخزونها بنجاح",
+                    {"sale_id": sale.id, "sale_number": number, "total": total},
+                    "sale_cancel",
+                    "manage_sales",
+                )
+            except ValueError as ve:
+                return ActionResult(False, str(ve))
+            except Exception as e:
+                _log_ai_error("sale_cancel_error", str(e), request_data=args)
+                return ActionResult(False, f"خطأ في إلغاء الفاتورة: {str(e)[:100]}")
 
         # ===== PAYMENTS =====
         def _receive_payment(args: dict) -> ActionResult:
@@ -737,8 +825,12 @@ class ActionDispatcher:
         self._register("create_product", _create_product, "manage_products", "إنشاء منتج جديد", confirm_required=True)
         self._register("list_products", _list_products, "manage_products", "عرض المنتجات")
         self._register("check_stock", _check_stock, "manage_warehouse", "فحص المخزون")
+        self._register(
+            "transfer_stock", _transfer_stock, "manage_warehouse", "تحويل مخزون بين المستودعات", confirm_required=True
+        )
         self._register("create_sale", _create_sale, "manage_sales", "إنشاء فاتورة مبيعات", confirm_required=True)
         self._register("list_sales", _list_sales, "manage_sales", "عرض الفواتير")
+        self._register("cancel_sale", _cancel_sale, "manage_sales", "إلغاء فاتورة مبيعات", confirm_required=True)
         self._register("receive_payment", _receive_payment, "manage_payments", "استلام دفعة", confirm_required=True)
         self._register("add_expense", _add_expense, "manage_expenses", "تسجيل مصروف", confirm_required=True)
         self._register("create_supplier", _create_supplier, "manage_suppliers", "إنشاء مورد", confirm_required=True)
@@ -751,6 +843,11 @@ class ActionDispatcher:
     def get_registered_actions(self) -> list[str]:
         """List all registered action types."""
         return list(self._registry.keys())
+
+    def get_action_metadata(self, action_type: str) -> dict | None:
+        """Read-only metadata for one action (used by ai_knowledge.tool_registry)."""
+        entry = self._registry.get(action_type)
+        return dict(entry) if entry else None
 
     def dispatch(self, action_type: str, args: dict | None = None) -> ActionResult:
         """

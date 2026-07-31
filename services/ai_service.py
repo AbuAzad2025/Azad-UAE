@@ -1037,7 +1037,15 @@ class AIService:
         knowledge_context = pipe["knowledge_context"]
         system_context = pipe["system_context"]
         role_slug = current_user.role.slug if current_user and getattr(current_user, "role", None) else "user"
-        expert_prompt = f"""أنت أزاد - مساعد ذكي خبير لنظام إدارة كراجات وورش المعدات الثقيلة.
+        try:
+            from ai_knowledge.personality.prompts import PROFESSIONAL_OPERATOR_PERSONA
+
+            _persona = PROFESSIONAL_OPERATOR_PERSONA
+        except Exception:
+            logger.debug("Operator persona unavailable", exc_info=True)
+            _persona = ""
+        expert_prompt = f"""{_persona}
+أنت أزاد - مساعد ذكي خبير لنظام إدارة كراجات وورش المعدات الثقيلة.
 
 دور المستخدم: {role_slug}
 
@@ -1089,15 +1097,16 @@ class AIService:
                 "generationConfig": {"temperature": 0.7, "maxOutputTokens": 2000},
             }
         else:
-            # P3-1: native tool calling — expose the AI action schemas
-            # so Groq/OpenAI return structured tool_calls instead of
-            # embedding fragile JSON in free text.
+            # Layer 1 (Pre-LLM RBAC): build the tools payload dynamically from
+            # the user's permissions via the central tool registry —
+            # unpermitted tools never reach the model context. When the user
+            # has no actionable tools the model runs in conversational mode.
             try:
-                from ai_knowledge.tool_schemas import get_openai_tools
+                from ai_knowledge.tool_registry import get_tools_for_user
 
-                _tools = get_openai_tools()
+                _tools = get_tools_for_user(current_user)
             except Exception:
-                logger.debug("Tool schemas unavailable", exc_info=True)
+                logger.debug("Tool registry unavailable", exc_info=True)
                 _tools = None
             headers = {
                 "Authorization": f"Bearer {api_key}",

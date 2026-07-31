@@ -70,6 +70,14 @@ class CheckStockArgs(_BaseArgs):
     pass
 
 
+class TransferStockArgs(_BaseArgs):
+    product_name: str = Field(min_length=1, description="اسم المنتج")
+    from_warehouse_id: int = Field(gt=0, description="معرف المستودع المصدر")
+    to_warehouse_id: int = Field(gt=0, description="معرف المستودع الوجهة")
+    quantity: float = Field(gt=0, description="الكمية")
+    notes: str = ""
+
+
 # ===== SALES / PAYMENTS / EXPENSES =====
 
 
@@ -84,6 +92,11 @@ class CreateSaleArgs(_BaseArgs):
 
 class ListSalesArgs(_BaseArgs):
     pass
+
+
+class CancelSaleArgs(_BaseArgs):
+    sale_number: str = ""
+    sale_id: int | None = None
 
 
 class ReceivePaymentArgs(_BaseArgs):
@@ -157,8 +170,10 @@ ACTION_ARG_MODELS: dict[str, tuple[type[_BaseArgs], str]] = {
     "create_product": (CreateProductArgs, "إنشاء منتج جديد في المخزون"),
     "list_products": (ListProductsArgs, "عرض قائمة المنتجات مع بحث اختياري"),
     "check_stock": (CheckStockArgs, "فحص المنتجات منخفضة المخزون"),
+    "transfer_stock": (TransferStockArgs, "تحويل كمية من منتج بين مستودعين"),
     "create_sale": (CreateSaleArgs, "إنشاء فاتورة مبيعات جديدة"),
     "list_sales": (ListSalesArgs, "عرض آخر فواتير المبيعات"),
+    "cancel_sale": (CancelSaleArgs, "إلغاء فاتورة مبيعات وعكس قيودها ومخزونها"),
     "receive_payment": (ReceivePaymentArgs, "استلام دفعة من عميل"),
     "add_expense": (AddExpenseArgs, "تسجيل مصروف جديد"),
     "create_supplier": (CreateSupplierArgs, "إنشاء مورد جديد"),
