@@ -482,6 +482,7 @@ class PartnerService:
         txs = (
             PartnerTransaction.query.filter(
                 PartnerTransaction.partner_id == partner_id,
+                PartnerTransaction.tenant_id == partner.tenant_id,
                 PartnerTransaction.transaction_date >= start_date,
                 PartnerTransaction.transaction_date <= end_date,
             )

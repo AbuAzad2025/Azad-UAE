@@ -18,7 +18,7 @@ from flask import (
 from flask_login import login_required, current_user
 from sqlalchemy import select
 from extensions import db, limiter
-from models import Supplier, Purchase, Payment
+from models import Supplier, Purchase, Payment, PurchaseReturn
 from utils.decorators import permission_required, admin_required, branch_scope_id
 from utils.branching import should_show_all_branch_columns
 from services.logging_core import LoggingCore
@@ -435,7 +435,7 @@ def delete(**kwargs):
 @admin_required
 def statement(**kwargs):
     """كشف حساب المورد مع الرصيد الجاري والتصفية حسب التاريخ"""
-    from datetime import datetime, date as date_type
+    from datetime import datetime
 
     record_id = kwargs.pop("id")
     supplier = tenant_get_or_404(Supplier, record_id)
@@ -450,18 +450,65 @@ def statement(**kwargs):
     # Include both outgoing payments (credit) and incoming refunds (debit) so
     # the statement balance matches the supplier's ledger balance.
     payments_q = Payment.query.filter_by(supplier_id=record_id, tenant_id=tid)
+    # مرتجعات المشتريات دائن — تقلل المستحق للمورد
+    returns_q = PurchaseReturn.query.filter_by(supplier_id=record_id, tenant_id=tid)
     if branch_scope_id() is not None:
         purchases_q = purchases_q.filter(Purchase.branch_id == branch_scope_id())
         payments_q = payments_q.filter(Payment.branch_id == branch_scope_id())
+        returns_q = returns_q.filter(PurchaseReturn.branch_id == branch_scope_id())
+
+    # الرصيد الافتتاحي من استعلامات مستقلة لما قبل الفترة — الاستعلامات
+    # الرئيسية ستُصفّى على >= date_from فلا يمكن استخلاصه منها.
+    def _payment_affects_balance(pm):
+        return bool(pm.payment_confirmed) or (pm.payment_method == "cheque" and not pm.rejection_reason)
+
+    opening_balance = 0.0
+    if date_from:
+        pre_purchases_q = Purchase.query.filter(
+            Purchase.supplier_id == record_id,
+            Purchase.status == "confirmed",
+            Purchase.tenant_id == tid,
+            func.date(Purchase.purchase_date) < date_from,
+        )
+        pre_payments_q = Payment.query.filter(
+            Payment.supplier_id == record_id,
+            Payment.tenant_id == tid,
+            func.date(Payment.payment_date) < date_from,
+        )
+        pre_returns_q = PurchaseReturn.query.filter(
+            PurchaseReturn.supplier_id == record_id,
+            PurchaseReturn.tenant_id == tid,
+            func.date(PurchaseReturn.return_date) < date_from,
+        )
+        if branch_scope_id() is not None:
+            pre_purchases_q = pre_purchases_q.filter(Purchase.branch_id == branch_scope_id())
+            pre_payments_q = pre_payments_q.filter(Payment.branch_id == branch_scope_id())
+            pre_returns_q = pre_returns_q.filter(PurchaseReturn.branch_id == branch_scope_id())
+        opening_balance = float(
+            pre_purchases_q.with_entities(func.coalesce(func.sum(Purchase.amount_aed), 0)).scalar() or 0
+        )
+        for pm in pre_payments_q.all():
+            if not _payment_affects_balance(pm):
+                continue
+            amt = float(pm.amount_aed or 0)
+            opening_balance += amt if pm.direction == "incoming" else -amt
+        # المرتجعات قبل الفترة تقلل المستحق للمورد
+        opening_balance -= float(
+            pre_returns_q.with_entities(func.coalesce(func.sum(PurchaseReturn.amount_aed), 0)).scalar() or 0
+        )
+
     if date_from:
         purchases_q = purchases_q.filter(func.date(Purchase.purchase_date) >= date_from)
         payments_q = payments_q.filter(func.date(Payment.payment_date) >= date_from)
+        returns_q = returns_q.filter(func.date(PurchaseReturn.return_date) >= date_from)
     if date_to:
         purchases_q = purchases_q.filter(func.date(Purchase.purchase_date) <= date_to)
         payments_q = payments_q.filter(func.date(Payment.payment_date) <= date_to)
+        returns_q = returns_q.filter(func.date(PurchaseReturn.return_date) <= date_to)
 
     purchases = purchases_q.order_by(Purchase.purchase_date.asc()).all()
     payments = payments_q.order_by(Payment.payment_date.asc()).all()
+    returns_list = returns_q.order_by(PurchaseReturn.return_date.asc()).all()
 
     transactions = []
     for p in purchases:
@@ -486,7 +533,7 @@ def statement(**kwargs):
         # still-pending cheque (issuing an outgoing cheque reduces AP
         # immediately). Bounced/cancelled cheques carry a rejection_reason and
         # have had their AP restored, so they have no effect.
-        affects_balance = bool(pm.payment_confirmed) or (pm.payment_method == "cheque" and not pm.rejection_reason)
+        affects_balance = _payment_affects_balance(pm)
         # Outgoing payments reduce the balance owed (credit); incoming refunds
         # from the supplier offset AP and increase the balance owed (debit).
         is_refund = pm.direction == "incoming"
@@ -518,15 +565,38 @@ def statement(**kwargs):
             }
         )
 
-    transactions.sort(key=lambda x: x["date"] or datetime.min)
+    # مرتجعات المشتريات: دائن يقلل المستحق للمورد.
+    # المبالغ بالعملة الأساسية (amount_aed) — لا جمع لعملات مختلفة.
+    for pr in returns_list:
+        transactions.append(
+            {
+                "date": pr.return_date,
+                "type": "return",
+                "reference": pr.return_number,
+                "debit": 0,
+                "credit": float(pr.amount_aed or 0),
+                "balance": 0,
+                "currency": pr.currency or "AED",
+                "exchange_rate": float(pr.exchange_rate or 1),
+                "description": gettext("مرتجع مشتريات"),
+                "amount": float(pr.total_amount or 0),
+                "base_amount": float(pr.amount_aed or 0),
+            }
+        )
+
+    # توحيد التواريخ قبل الفرز — المرتجعات aware والمشتريات من قاعدة
+    # البيانات naive، والمقارنة المختلطة تفشل.
+    def _sort_key(trans):
+        d = trans.get("date")
+        if d is None:
+            return datetime.min
+        if isinstance(d, datetime):
+            return d.replace(tzinfo=None) if d.tzinfo else d
+        return datetime(d.year, d.month, d.day)
+
+    transactions.sort(key=_sort_key)
 
     if date_from:
-        opening_balance = 0
-        for t in transactions:
-            if isinstance(t["date"], (datetime, date_type)):
-                d = t["date"].date() if isinstance(t["date"], datetime) else t["date"]
-                if d < datetime.strptime(date_from, "%Y-%m-%d").date():
-                    opening_balance += t["debit"] - t["credit"]
         # Insert opening balance entry
         transactions.insert(
             0,
@@ -543,7 +613,7 @@ def statement(**kwargs):
             },
         )
 
-    running_balance = 0
+    running_balance = opening_balance if date_from else 0
     for t in transactions:
         if t["type"] != "opening":
             running_balance += t["debit"] - t["credit"]

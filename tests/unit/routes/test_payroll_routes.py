@@ -52,6 +52,9 @@ def _mock_advance(**_kwargs):
     adv.date = datetime(2026, 5, 1)
     adv.amount = Decimal("200")
     adv.description = "loan"
+    adv.deducted_amount = Decimal("0")
+    adv.remaining_amount = Decimal("200")
+    adv.fully_deducted_at = None
     return adv
 
 

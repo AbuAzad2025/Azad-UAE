@@ -156,7 +156,7 @@ table.statement-table thead th {
         <tbody>
           {% for t in transactions %}
           <tr class="{% if t.type == 'opening' %}table-info{% elif t.type == 'purchase' %}table-light{% endif %}">
-            <td>{{ t.date.strftime('%Y-%m-%d') if t.date is string else (t.date.strftime('%Y-%m-%d') if t.date else '-') }}</td>
+            <td>{{ t.date if t.date is string else (t.date.strftime('%Y-%m-%d') if t.date else '-') }}</td>
             <td>
               <strong>{{ t.description | e }}</strong>
               {% if t.type == 'payment' and t.payment_method %}

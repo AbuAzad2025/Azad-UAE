@@ -947,29 +947,37 @@ class GLService:
         if date_to:
             query = query.filter(func.date(GLJournalEntry.entry_date) <= date_to)
 
-        lines = query.order_by(GLJournalEntry.entry_date).all()
+        # ترتيب حتمي: التاريخ ثم معرّف القيد لضمان ثبات الرصيد الجاري
+        # بين قيود نفس اليوم.
+        lines = query.order_by(GLJournalEntry.entry_date, GLJournalEntry.id).all()
 
-        # حساب الرصيد الافتتاحي
-        opening_query = GLJournalLine.query.filter_by(account_id=account_id).join(GLJournalEntry)
-
-        if tenant_id is not None:
-            opening_query = opening_query.filter(GLJournalEntry.tenant_id == int(tenant_id))
-        if branch_id:
-            opening_query = opening_query.filter(GLJournalEntry.branch_id == branch_id)
-
+        # حساب الرصيد الافتتاحي — القيود المرحّلة فقط، وما قبل الفترة فقط.
+        # بدون date_from لا يوجد رصيد افتتاحي (كل الحركات ضمن الفترة)،
+        # وإلا تُحسب الحركات مرتين (مضاعفة الرصيد الختامي).
+        opening_balance = 0
         if date_from:
+            opening_query = (
+                GLJournalLine.query.filter_by(account_id=account_id)
+                .join(GLJournalEntry)
+                .filter(GLJournalEntry.status == "posted")
+            )
+
+            if tenant_id is not None:
+                opening_query = opening_query.filter(GLJournalEntry.tenant_id == int(tenant_id))
+            if branch_id:
+                opening_query = opening_query.filter(GLJournalEntry.branch_id == branch_id)
+
             opening_query = opening_query.filter(func.date(GLJournalEntry.entry_date) < date_from)
 
-        # Calculate opening balance manually since we need to filter by date and branch
-        opening_lines = opening_query.all()
-        opening_debit = sum(line.debit for line in opening_lines)
-        opening_credit = sum(line.credit for line in opening_lines)
+            opening_lines = opening_query.all()
+            opening_debit = sum(line.debit for line in opening_lines)
+            opening_credit = sum(line.credit for line in opening_lines)
 
-        # حساب الرصيد بناءً على نوع الحساب
-        if account.type in ["asset", "expense"]:
-            opening_balance = opening_debit - opening_credit
-        else:  # liability, equity, revenue
-            opening_balance = opening_credit - opening_debit
+            # حساب الرصيد بناءً على نوع الحساب
+            if account.type in ["asset", "expense"]:
+                opening_balance = opening_debit - opening_credit
+            else:  # liability, equity, revenue
+                opening_balance = opening_credit - opening_debit
 
         # إنشاء كشف الحساب
         running_balance = opening_balance

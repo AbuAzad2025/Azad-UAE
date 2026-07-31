@@ -273,6 +273,20 @@ def statement(**kwargs):
                 "desc": a.description,
             }
         )
+        # عند خصم (جزء من) السلفة من راتب لاحق، يظهر الراتب في الكشف
+        # بصافيه المخصوم أصلًا — فنضيف قيد سداد موجبًا بالمبلغ المخصوم
+        # وإلا احتُسبت السلفة مرتين (سلفة سالبة + راتب منقوص).
+        deducted = float(a.deducted_amount or 0)
+        if deducted > 0:
+            deducted_on = a.fully_deducted_at.date() if a.fully_deducted_at else a.date
+            history.append(
+                {
+                    "date": deducted_on,
+                    "type": gettext("سداد سلفة"),
+                    "amount": deducted,
+                    "desc": gettext("خصم السلفة من الراتب"),
+                }
+            )
     for p in payments:
         history.append(
             {

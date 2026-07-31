@@ -520,30 +520,93 @@ def statement(**kwargs):
     transaction_type = request.args.get("transaction_type", "all")
 
     from sqlalchemy import func
-    from models import Payment, Receipt
+    from models import Payment, ProductReturn, Receipt
 
     tid = get_active_tenant_id(current_user)
     sales_query = Sale.query.filter_by(customer_id=record_id, status="confirmed", tenant_id=tid)
     payments_query = Payment.query.filter_by(customer_id=record_id, tenant_id=tid)
     receipts_query = Receipt.query.filter_by(customer_id=record_id, tenant_id=tid)
+    # مرتجعات المبيعات المعتمدة دائن — تقلل ذمة العميل (المرفوضة لا أثر لها)
+    returns_query = ProductReturn.query.filter_by(customer_id=record_id, status="approved", tenant_id=tid)
     if branch_scope_id() is not None:
         sales_query = sales_query.filter(Sale.branch_id == branch_scope_id())
         payments_query = payments_query.filter(Payment.branch_id == branch_scope_id())
         receipts_query = receipts_query.filter(Receipt.branch_id == branch_scope_id())
+        returns_query = returns_query.filter(ProductReturn.branch_id == branch_scope_id())
 
     if date_from:
         sales_query = sales_query.filter(func.date(Sale.sale_date) >= date_from)
         payments_query = payments_query.filter(func.date(Payment.payment_date) >= date_from)
         receipts_query = receipts_query.filter(func.date(Receipt.receipt_date) >= date_from)
+        returns_query = returns_query.filter(func.date(ProductReturn.return_date) >= date_from)
+
+    # الرصيد الافتتاحي: مجاميع ما قبل الفترة من استعلامات مستقلة.
+    # الاستعلامات الرئيسية أعلاه مصفّاة على >= date_from، فلا يمكن
+    # استخلاص رصيد افتتاحي منها (كان يُحسب صفرًا دائمًا).
+    opening_balance = 0.0
+    if date_from:
+        pre_sales_q = Sale.query.filter(
+            Sale.customer_id == record_id,
+            Sale.status == "confirmed",
+            Sale.tenant_id == tid,
+            func.date(Sale.sale_date) < date_from,
+        )
+        pre_payments_q = Payment.query.filter(
+            Payment.customer_id == record_id,
+            Payment.tenant_id == tid,
+            func.date(Payment.payment_date) < date_from,
+        )
+        pre_receipts_q = Receipt.query.filter(
+            Receipt.customer_id == record_id,
+            Receipt.tenant_id == tid,
+            func.date(Receipt.receipt_date) < date_from,
+        )
+        pre_returns_q = ProductReturn.query.filter(
+            ProductReturn.customer_id == record_id,
+            ProductReturn.status == "approved",
+            ProductReturn.tenant_id == tid,
+            func.date(ProductReturn.return_date) < date_from,
+        )
+        if branch_scope_id() is not None:
+            pre_sales_q = pre_sales_q.filter(Sale.branch_id == branch_scope_id())
+            pre_payments_q = pre_payments_q.filter(Payment.branch_id == branch_scope_id())
+            pre_receipts_q = pre_receipts_q.filter(Receipt.branch_id == branch_scope_id())
+            pre_returns_q = pre_returns_q.filter(ProductReturn.branch_id == branch_scope_id())
+
+        pre_sales_total = float(pre_sales_q.with_entities(func.coalesce(func.sum(Sale.amount_aed), 0)).scalar() or 0)
+        # الدفعات الواردة المؤكدة دائن (تقلل الذمة)، والصادرة مدين (استرداد)
+        pre_pay_rows = pre_payments_q.with_entities(
+            Payment.direction, Payment.amount_aed, Payment.payment_confirmed
+        ).all()
+        pre_payments_net = sum(
+            (float(amount or 0) if direction == "incoming" else -float(amount or 0))
+            for direction, amount, confirmed in pre_pay_rows
+            if confirmed
+        )
+        # سندات القبض المؤكدة دائن — باستثناء الممثلة بدفعة مخصصة
+        pre_payment_refs = {ref for (ref,) in pre_payments_q.with_entities(Payment.reference_number).all() if ref}
+        pre_receipts_total = sum(
+            float(r.amount_aed or 0)
+            for r in pre_receipts_q.all()
+            if r.payment_confirmed and (r.receipt_number or "") not in pre_payment_refs
+        )
+        # المرتجعات المعتمدة قبل الفترة دائن (تقلل الذمة)
+        pre_returns_total = float(
+            pre_returns_q.with_entities(func.coalesce(func.sum(ProductReturn.amount_aed), 0)).scalar() or 0
+        )
+        # مدين (فواتير) يزيد الذمة => سالب؛ دائن (مدفوعات/سندات/مرتجعات) يقللها => موجب
+        opening_balance = (pre_payments_net + pre_receipts_total + pre_returns_total) - pre_sales_total
 
     if date_to:
         sales_query = sales_query.filter(func.date(Sale.sale_date) <= date_to)
         payments_query = payments_query.filter(func.date(Payment.payment_date) <= date_to)
         receipts_query = receipts_query.filter(func.date(Receipt.receipt_date) <= date_to)
+        returns_query = returns_query.filter(func.date(ProductReturn.return_date) <= date_to)
 
     sales = sales_query.order_by(Sale.sale_date).all()
     payments = payments_query.order_by(Payment.payment_date).all()
     receipts = receipts_query.order_by(Receipt.receipt_date).all()
+    returns_list = returns_query.order_by(ProductReturn.return_date).all()
 
     transactions = []
 
@@ -753,29 +816,39 @@ def statement(**kwargs):
             }
         )
 
-    transactions.sort(key=lambda x: x["date"] or datetime.min)
+    # مرتجعات المبيعات المعتمدة: دائن يقلل ذمة العميل.
+    # المبالغ دائمًا بالعملة الأساسية (amount_aed) — لا جمع لعملات مختلفة.
+    for ret in returns_list:
+        transactions.append(
+            {
+                "date": ret.return_date,
+                "type": "return",
+                "reference": ret.return_number,
+                "debit": 0,
+                "credit": float(ret.amount_aed or 0),
+                "balance": 0,
+                "description": gettext("مرتجع مبيعات"),
+                "currency": ret.currency or default_currency,
+                "exchange_rate": float(ret.exchange_rate or 1),
+                "paid_amount": 0,
+                "balance_due": 0,
+                "status": gettext("معتمد"),
+            }
+        )
 
-    opening_balance = 0
-    if date_from:
-        cutoff = datetime.strptime(date_from, "%Y-%m-%d").date() if isinstance(date_from, str) else date_from
-        remaining = []
-        for trans in transactions:
-            tdate = trans.get("date")
-            if isinstance(tdate, datetime):
-                tdate = tdate.date()
-            if tdate is not None and tdate < cutoff:
-                is_confirmed = (
-                    trans.get("payment", {}).get("payment_confirmed", True)
-                    if trans["type"] == "payment"
-                    else (trans.get("status") != gettext("معلقة") if trans["type"] == "receipt" else True)
-                )
-                if is_confirmed:
-                    opening_balance += trans["credit"] - trans["debit"]
-            else:
-                remaining.append(trans)
-        transactions = remaining
+    # توحيد التواريخ قبل الفرز — بعضها naive (من قاعدة البيانات) وبعضها
+    # aware (تواريخ المرتجعات والسندات)، والمقارنة المختلطة تفشل.
+    def _sort_key(trans):
+        d = trans.get("date")
+        if d is None:
+            return datetime.min
+        if isinstance(d, datetime):
+            return d.replace(tzinfo=None) if d.tzinfo else d
+        return datetime(d.year, d.month, d.day)
 
-    if transaction_type in {"sale", "payment", "receipt"}:
+    transactions.sort(key=_sort_key)
+
+    if transaction_type in {"sale", "payment", "receipt", "return"}:
         transactions = [trans for trans in transactions if trans["type"] == transaction_type]
 
     # Insert opening balance entry
