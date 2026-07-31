@@ -157,9 +157,9 @@
 		const code = (sel.value || "").toLowerCase();
 		const needsTable = code.includes("dine") || code.includes("table");
 		tableField.classList.toggle("d-none", !needsTable);
-		if (needsTable) loadTables();
+		if (needsTable) loadTableOptions();
 	};
-	const loadTables = async () => {
+	const loadTableOptions = async () => {
 		const sel = qs("#tableSelect");
 		if (!sel || sel.dataset.loaded) return;
 		try {
@@ -794,7 +794,10 @@
 			discount_amount: toNum(qs("#discountAmount").value) || 0,
 			payment_method: qs("#paymentMethod").value || "",
 			order_type: qs("#orderType") ? qs("#orderType").value : "takeaway",
-			table_id: qs("#tableSelect") && !qs("#tableField").classList.contains("d-none") ? qs("#tableSelect").value || null : null,
+			table_id:
+				qs("#tableSelect") && !qs("#tableField").classList.contains("d-none")
+					? qs("#tableSelect").value || null
+					: null,
 			paid_amount: toNum(qs("#paidAmount").value) || 0,
 			payment_currency: qs("#currency").value,
 			payment_exchange_rate: toNum(qs("#exchangeRate").value) || 1,
