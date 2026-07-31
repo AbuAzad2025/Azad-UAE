@@ -45,7 +45,7 @@
 				escapeHtml(item.name) +
 				'</span><span class="ps-ac-price">' +
 				(parseFloat(item.price) || 0).toFixed(2) +
-				(item.currency ? " " + escapeHtml(item.currency) : "") +
+				(item.currency ? ` ${escapeHtml(item.currency)}` : "") +
 				"</span></span>";
 			a.innerHTML = html;
 			a.addEventListener("click", (e) => {
