@@ -67,6 +67,11 @@ TRANSLATION_CALL = re.compile(
 
 FLASK_ROUTE_BARE_STRING = re.compile(r"return\s+(?:render_template|redirect|jsonify|make_response)\s*\(")
 
+# A trailing/standalone ``# i18n-ignore`` comment on a line opts that line out
+# of the scan.  Used for non user-facing literals such as security regex
+# patterns or machine-only strings that contain RTL characters.
+IGNORE_MARKER = re.compile(r"#\s*i18n-ignore\b")
+
 
 # Tracks whether the current scan position is inside a triple-quoted string
 # literal (docstring / multi-line string).  Module-level state is reset per
@@ -226,6 +231,8 @@ def scan_file(filepath):
             if in_jinja_block:
                 continue
         if _should_skip_line(line):
+            continue
+        if IGNORE_MARKER.search(line):
             continue
         # Track <script>/<style> raw blocks so their JS/CSS content is never
         # treated as user-facing template text.
