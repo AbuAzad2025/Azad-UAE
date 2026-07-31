@@ -2,7 +2,7 @@
 
 ![CI](https://github.com/AbuAzad2025/Azad-UAE/actions/workflows/ci.yml/badge.svg)
 
-**Azadexa** (أزاديكسا) is a multi-tenant ERP, accounting, inventory, and commerce platform built for SMEs in the UAE and GCC by **AZAD Intelligent Systems**.
+**Azadexa** (أزاديكسا) is a multi-tenant ERP, accounting, inventory, and commerce platform built for SMEs worldwide by **AZAD Intelligent Systems**. It is country-agnostic: each tenant configures its own country, currency, VAT regime, and timezone.
 
 ---
 
@@ -24,12 +24,12 @@ Each tenant (company) operates in full isolation with its own chart of accounts,
 | **Double-Entry Accounting** | Full GL with dynamic account mapping, journal entries, trial balance, balance sheet, income statement, cost centers, budgets, fixed asset depreciation |
 | **Payments & Treasury** | Payment receipts, cheque lifecycle, bank reconciliation, cash flow analysis, FX revaluation |
 | **HR & Payroll** | Employee profiles, attendance, leave management, payroll processing, loans & overtime |
-| **E-Commerce** | Tenant-specific storefront with cart, checkout, coupons, loyalty, reviews, wishlist, stock alerts |
+| **E-Commerce** | Tenant-specific storefront with unified multi-currency display pricing, cart, checkout, coupons, loyalty, reviews, wishlist, stock alerts, and per-order platform commission tracking |
 | **CRM** | Lead pipeline, campaign management, email marketing |
 | **Projects** | Project tracking, timesheets, resource allocation |
 | **Integrations** | REST API, GraphQL, WhatsApp, webhooks, OpenAPI documentation |
 | **Analytics** | Real-time dashboards, custom reports, data export (Excel/PDF) |
-| **Multi-Currency** | Live exchange rates, currency conversion, FX revaluation |
+| **Multi-Currency** | Live exchange rates with graceful stored-rate fallback, currency conversion, FX revaluation, tenant base currency |
 | **Bilingual** | Full Arabic/English support with RTL layout |
 
 ---

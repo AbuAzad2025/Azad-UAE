@@ -223,8 +223,18 @@ AZADEXA هو نظام ERP SaaS متعدد المستأجرين (multi-tenant) م
 
 ### المتجر الإلكتروني
 - النماذج: `TenantStore`، `ShopCustomerAccount`، `ShopAbandonedCart`، `ShopWishlist`، `ShopReview`، `ShopSavedPayment`، `ShopProductVariant`، `ShopStockAlert`، `ShopNewsletter`، `ShopLoyalty` / `ShopLoyaltyTransaction`، `StoreCoupon`، `StorePaymentMethod`
-- الخدمات: `store_service.py`، `store_order_service.py`، `store_checkout_service.py`، `store_coupon_service.py`، `store_payment_method_service.py`، `store_online_payment_service.py`، `store_analytics_service.py`، `store_notification_service.py`، `shop_customer_auth_service.py`
+- الخدمات: `store_service.py`، `store_order_service.py`، `store_checkout_service.py`، `store_coupon_service.py`، `store_payment_method_service.py`، `store_online_payment_service.py`، `store_analytics_service.py`، `store_notification_service.py`، `shop_customer_auth_service.py`، `store_pricing_service.py`، `azad_platform_fee_service.py`
 - المسارات: `routes/shop.py`، `routes/store.py`
+
+**محرك التسعير الموحد (`StorePricingService`):**
+- `TenantStore.display_currency` يحدد عملة عرض الأسعار في الواجهة (مثل USD)؛ عند غيابه يُستخدم `default_currency` للمستأجر ثم العملة الأساسية.
+- دالة `resolve_display_price` تُستخدم في كل نقاط الواجهة (الكتالوج، المنتج، السلة، إتمام الشراء، العرض السريع، المفضلة، Search API) لضمان سعر واحد متسق في كل الخطوات.
+- سلسلة تحويل السعر: السعر المباشر (live) ← السعر المخزّن (`ExchangeRateRecord`) ← تحذير مسجّل دون سقوط صامت إلى 1.
+
+**عمولة منصة أزاد (`AzadPlatformFeeService`):**
+- تُسجَّل العمولة على **كل** مبيعات المتجر (`source="online_store"`) عند تأكيد الطلب (`confirm_order`) بغضّ النظر عن قناة الدفع (COD، تحويل بنكي، محفظة، دفع إلكتروني).
+- التبديل `SystemSettings.azad_platform_fee_include_offline` يتحكم في القنوات غير الإلكترونية (الدفع الإلكتروني دائمًا مُتتبَّع).
+- السجلات idempotent (مفتاح تكرار لكل عملية بيع/دفعة) مع قيود GL متوازنة، وتظهر متراكمتها وحالة تسويتها في لوحة تحكم التاجر `/store/admin`.
 
 ### التسويق بالبريد
 - النماذج: `EmailList`، `EmailSubscriber`، `EmailTemplate`، `EmailCampaign`، `CampaignLog`
