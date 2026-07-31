@@ -765,6 +765,7 @@ class TestActionDispatcherHandlers:
                         "supplier_name": "S",
                         "product_name": "P",
                         "quantity": 1,
+                        "unit_cost": 10,
                         "confirmed": True,
                     },
                 ).success
@@ -802,7 +803,7 @@ class TestActionDispatcherHandlers:
                 action_dispatcher.dispatch(
                     "create_user",
                     {
-                        "username": "u1",
+                        "username": "user1",
                         "password": "secret",
                         "role": "seller",
                         "confirmed": True,

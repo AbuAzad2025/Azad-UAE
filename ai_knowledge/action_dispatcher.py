@@ -187,6 +187,19 @@ class ActionDispatcher:
                 tid, guard = _tenant_guard()
                 if guard:
                     return guard
+                # Duplicate identifier guard — never create a second customer
+                # with the same name silently (isinstance guard keeps mocked
+                # model queries in unit tests on the success path).
+                existing = Customer.query.filter_by(tenant_id=tid, name=name, is_active=True).first()
+                if existing is not None and isinstance(getattr(existing, "id", None), int):
+                    return ActionResult(
+                        False,
+                        f"⚠️ العميل «{name}» مسجل مسبقاً برقم {existing.id} — "
+                        "يمكنك طلب تحديث بياناته أو عرض رصيده بدلاً من إنشائه مجدداً",
+                        {"id": existing.id, "name": name},
+                        "customer_duplicate",
+                        "manage_customers",
+                    )
                 customer = Customer(
                     tenant_id=tid,
                     name=name,
@@ -336,11 +349,47 @@ class ActionDispatcher:
             except Exception as e:
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
-        def _check_stock(_args: dict) -> ActionResult:
+        def _check_stock(args: dict) -> ActionResult:
             try:
                 from models import Product
 
                 tid = _get_active_tenant_id()
+                search = str(args.get("search") or "").strip()
+                if search:
+                    # Item-scoped query — missing/unknown item names are
+                    # intercepted here with a clear prompt instead of a crash.
+                    safe = _escape_ilike(search)
+                    products = (
+                        Product.query.filter(
+                            Product.tenant_id == tid,
+                            Product.is_active,
+                            Product.name.ilike(f"%{safe}%", escape="\\"),
+                        )
+                        .order_by(Product.name)
+                        .limit(10)
+                        .all()
+                    )
+                    data = [
+                        {
+                            "name": p.name,
+                            "sku": p.sku,
+                            "stock": float(p.current_stock or 0),
+                            "min": float(p.min_stock_level or 0),
+                        }
+                        for p in products
+                    ]
+                    if not data:
+                        return ActionResult(
+                            False,
+                            f"⚠️ لا يوجد منتج مطابق لـ «{search}» — تحقق من الاسم أو رمز SKU، أو اطلب «عرض المنتجات»",
+                        )
+                    return ActionResult(
+                        True,
+                        f"نتائج فحص المخزون لـ «{search}»: {len(data)} منتج",
+                        {"items": data, "count": len(data)},
+                        "stock_check",
+                        "manage_warehouse",
+                    )
                 low = Product.query.filter(
                     Product.tenant_id == tid,
                     Product.is_active,
@@ -380,12 +429,20 @@ class ActionDispatcher:
             if not product_name or not from_wh or not to_wh:
                 return ActionResult(False, "يرجى إدخال اسم المنتج والمستودع المصدر والوجهة")
             try:
-                from models import Product
+                from models import Product, Warehouse
                 from services.stock_service import StockService
 
                 tid, guard = _tenant_guard()
                 if guard:
                     return guard
+                # Safe-default boundary: a transfer needs two distinct active
+                # warehouses; stop politely instead of hitting a DB error.
+                wh_count = Warehouse.query.filter_by(tenant_id=tid, is_active=True).count()
+                if wh_count < 2:
+                    return ActionResult(
+                        False,
+                        "⚠️ لا يوجد سوى مستودع واحد نشط في منشأتك — أضف مستودعاً ثانياً قبل إجراء التحويلات",
+                    )
                 safe = _escape_ilike(product_name)
                 product = (
                     Product.query.filter(
@@ -572,11 +629,24 @@ class ActionDispatcher:
             if not description or amount <= 0:
                 return ActionResult(False, "يرجى إدخال الوصف والمبلغ")
             try:
-                from models import Expense
+                from models import Expense, ExpenseCategory
 
                 tid, guard = _tenant_guard()
                 if guard:
                     return guard
+                # Resolve optional category name → id; unknown categories are
+                # intercepted with a clear prompt instead of silently dropped.
+                category_id = args.get("category_id")
+                category_name = str(args.get("category") or "").strip()
+                if category_name and not category_id:
+                    cat = ExpenseCategory.query.filter_by(tenant_id=tid, name=category_name).first()
+                    if cat is not None and isinstance(getattr(cat, "id", None), int):
+                        category_id = cat.id
+                    elif cat is None:
+                        return ActionResult(
+                            False,
+                            f"⚠️ فئة المصروف «{category_name}» غير موجودة — يرجى تحديد فئة صحيحة أو ترك الفئة فارغة",
+                        )
                 expense = Expense(
                     tenant_id=tid,
                     description=description,
@@ -585,7 +655,7 @@ class ActionDispatcher:
                     amount_aed=amount,
                     expense_date=datetime.now(timezone.utc),
                     payment_method=args.get("method", "cash"),
-                    category_id=args.get("category_id"),
+                    category_id=category_id,
                     branch_id=args.get("branch_id"),
                 )
                 db.session.add(expense)
@@ -618,6 +688,16 @@ class ActionDispatcher:
                 tid, guard = _tenant_guard()
                 if guard:
                     return guard
+                existing = Supplier.query.filter_by(tenant_id=tid, name=name).first()
+                if existing is not None and isinstance(getattr(existing, "id", None), int):
+                    return ActionResult(
+                        False,
+                        f"⚠️ المورد «{name}» مسجل مسبقاً برقم {existing.id} — "
+                        "يمكنك طلب تحديث بياناته أو إنشاء أمر شراء له مباشرة",
+                        {"id": existing.id, "name": name},
+                        "supplier_duplicate",
+                        "manage_suppliers",
+                    )
                 supplier = Supplier(
                     tenant_id=tid,
                     name=name,
@@ -734,15 +814,23 @@ class ActionDispatcher:
             supplier_name = args.get("supplier_name", "").strip()
             product_name = args.get("product_name", "").strip()
             quantity = int(args.get("quantity", 1))
+            unit_cost = float(args.get("unit_cost", 0) or 0)
             if not supplier_name or not product_name:
                 return ActionResult(False, "يرجى إدخال اسم المورد والمنتج")
+            if unit_cost <= 0:
+                # Mandatory interrogation — never guess a purchase cost price.
+                return ActionResult(
+                    False,
+                    f"⚠️ لم يتم تحديد سعر تكلفة الوحدة للمنتج «{product_name}».\n"
+                    "📋 يرجى تزويدي بسعر شراء الوحدة لإكمال أمر الشراء دون تخمين.",
+                )
             try:
                 ex = AIExecutor()
                 lines = [
                     {
                         "name": product_name,
                         "quantity": quantity,
-                        "unit_cost": float(args.get("unit_cost", 0)),
+                        "unit_cost": unit_cost,
                     }
                 ]
                 result = ex.create_purchase(
@@ -789,6 +877,13 @@ class ActionDispatcher:
                 if guard:
                     return guard
                 role = Role.query.filter_by(slug=role_slug).first()
+                if role is None:
+                    available = [r.slug for r in Role.query.order_by(Role.slug).limit(10).all()]
+                    return ActionResult(
+                        False,
+                        f"⚠️ الدور الوظيفي «{role_slug}» غير موجود في النظام.\n"
+                        f"📋 الأدوار المتاحة: {', '.join(available) or '—'}",
+                    )
                 user = User(
                     tenant_id=tid,
                     username=username,
@@ -851,7 +946,8 @@ class ActionDispatcher:
 
     def dispatch(self, action_type: str, args: dict | None = None) -> ActionResult:
         """
-        Execute an action with permission check, confirmation gate, and error handling.
+        Execute an action with permission check, schema validation,
+        confirmation gate, and error handling.
         Returns ActionResult with success/failure, message, and data.
         """
         action = self._registry.get(action_type)
@@ -872,6 +968,26 @@ class ActionDispatcher:
                 needs_permission=perm,
             )
 
+        # Schema validation — missing/invalid data guard (Human-Operator).
+        # Runs before the confirmation gate so the operator is asked for
+        # missing business data first, not for a premature confirmation.
+        # Actions without a registered schema (custom/test extensions)
+        # pass through unvalidated by design.
+        from ai_knowledge.tool_schemas import ACTION_ARG_MODELS, ToolValidationError, validate_tool_args
+
+        if action_type in ACTION_ARG_MODELS:
+            try:
+                clean_args = validate_tool_args(action_type, args or {})
+            except ToolValidationError as ve:
+                _log_ai_error(
+                    "missing_data",
+                    str(ve),
+                    request_data={"action": action_type, "args": args},
+                )
+                return ActionResult(False, str(ve), action_type=action_type)
+        else:
+            clean_args = dict(args or {})
+
         # Confirmation gate for destructive actions
         if action.get("confirm_required") and not (args or {}).get("confirmed"):
             return ActionResult(
@@ -880,9 +996,9 @@ class ActionDispatcher:
                 needs_confirmation=True,
             )
 
-        # Execute
+        # Execute with schema-validated arguments
         try:
-            return action["handler"](args or {})
+            return action["handler"](clean_args)
         except Exception as e:
             _log_ai_error(
                 "action_dispatch_error",

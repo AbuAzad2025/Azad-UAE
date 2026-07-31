@@ -1334,7 +1334,7 @@ class AIService:
             import json
 
             from ai_knowledge.action_dispatcher import ActionDispatcher
-            from ai_knowledge.tool_schemas import validate_tool_args
+            from ai_knowledge.tool_schemas import validate_tool_args_safe
 
             dispatcher = ActionDispatcher()
             messages = []
@@ -1349,10 +1349,10 @@ class AIService:
                 except Exception:
                     messages.append(f"⚠️ معطيات غير قابلة للقراءة للعملية {action_type}")
                     continue
-                try:
-                    clean_args = validate_tool_args(action_type, args)
-                except ValueError as ve:
-                    messages.append(f"⚠️ {ve}")
+                clean_args, validation_error = validate_tool_args_safe(action_type, args)
+                if validation_error is not None:
+                    # Structured clarification prompt — ask, never guess.
+                    messages.append(f"⚠️ {validation_error}")
                     continue
 
                 result = dispatcher.dispatch(action_type, clean_args)

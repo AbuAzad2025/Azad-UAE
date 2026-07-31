@@ -208,7 +208,7 @@ class TestActionDispatcherWave6:
                 ("create_product", {"name": "Bolt", "confirmed": True}),
                 ("add_expense", {"description": "x", "amount": 10, "confirmed": True}),
                 ("create_supplier", {"name": "Sup", "confirmed": True}),
-                ("create_user", {"username": "u", "password": "p", "confirmed": True}),
+                ("create_user", {"username": "user1", "password": "secret6", "confirmed": True}),
             ):
                 r = action_dispatcher.dispatch(action, args)
                 assert r.success is False
@@ -234,6 +234,7 @@ class TestActionDispatcherWave6:
                 {
                     "customer_name": "A",
                     "product_name": "P",
+                    "quantity": 2,
                     "unit_price": 25,
                     "confirmed": True,
                 },
@@ -266,6 +267,8 @@ class TestActionDispatcherWave6:
                     {
                         "supplier_name": "S",
                         "product_name": "P",
+                        "quantity": 2,
+                        "unit_cost": 10,
                         "confirmed": True,
                     },
                 ).success
@@ -278,6 +281,8 @@ class TestActionDispatcherWave6:
                     {
                         "supplier_name": "S",
                         "product_name": "P",
+                        "quantity": 2,
+                        "unit_cost": 10,
                         "confirmed": True,
                     },
                 ).success
