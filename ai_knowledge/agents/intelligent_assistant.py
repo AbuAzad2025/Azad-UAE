@@ -266,13 +266,17 @@ class IntelligentAssistant:
                 except Exception as exc:
                     logger.debug("Tenant resolution failed: %s", exc)
 
+            # Fail-closed tenant guard (S1): without a resolved tenant_id we
+            # must NEVER fall back to unfiltered cross-tenant queries. Return
+            # empty data so the assistant answers without database records.
+            if tid is None:
+                return {}
+
             def _f(model: type) -> Any:
                 from sqlalchemy.orm import Query
 
                 q: Query = db.session.query(model)
-                if tid is not None:
-                    q = q.filter_by(tenant_id=tid)
-                return q
+                return q.filter_by(tenant_id=tid)
 
             data: dict[str, Any] = {}
 

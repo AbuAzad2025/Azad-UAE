@@ -496,6 +496,8 @@ class TestWave8AgentsAndCore:
                 return_value={"success": True},
             ),
             patch("extensions.db.session"),
+            patch("flask.has_request_context", return_value=True),
+            patch("utils.tenanting.get_active_tenant_id", return_value=1),
         ):
             Customer.query.filter.return_value.first.return_value = customer
             data = ia._collect_real_data("customer_balance", {"names": ["Ali"]}, 1)
@@ -508,14 +510,17 @@ class TestWave8AgentsAndCore:
                 return_value={"success": True},
             ),
             patch("extensions.db.session") as session,
+            patch("flask.has_request_context", return_value=True),
+            patch("utils.tenanting.get_active_tenant_id", return_value=1),
         ):
             Customer.query.filter.return_value.first.return_value = customer
-            session.query.return_value.filter.return_value.first.side_effect = RuntimeError("x")
+            session.query.side_effect = RuntimeError("x")
             data2 = ia._collect_real_data("customer_balance", {"names": ["Ali"]}, 1)
             assert "customer_data" not in data2
         product = MagicMock(id=1, name="P", current_stock=1, min_stock_alert=5)
         with (
-            patch("flask.has_request_context", return_value=False),
+            patch("flask.has_request_context", return_value=True),
+            patch("utils.tenanting.get_active_tenant_id", return_value=1),
             patch("models.Product") as Product,
             patch("models.Sale") as Sale,
             patch("models.Customer") as Customer,
@@ -534,7 +539,7 @@ class TestWave8AgentsAndCore:
             Sale.sale_date = _Col()
             for attr in ("is_active", "current_stock", "min_stock_alert"):
                 setattr(Product, attr, _Col())
-            Product.query.filter.return_value.all.return_value = [product]
+            chain.all.return_value = [product]
             inv = ia._collect_real_data("inventory_check", {}, 1)
             assert inv.get("low_stock_products")
             chain.filter.side_effect = RuntimeError("x")

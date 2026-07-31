@@ -721,7 +721,8 @@ class TestIntelligentAssistantWave6:
                 patch("models.Customer") as Customer,
                 patch("models.Product") as Product,
                 patch("models.Payment"),
-                patch("flask.has_request_context", return_value=False),
+                patch("flask.has_request_context", return_value=True),
+                patch("utils.tenanting.get_active_tenant_id", return_value=1),
             ):
                 for m in (Sale, Customer, Product):
                     q = MagicMock()

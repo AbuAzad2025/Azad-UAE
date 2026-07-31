@@ -4,6 +4,7 @@ Imports from individual agent modules and adds enhanced AI capabilities.
 """
 
 import logging
+import os
 from typing import Any, Optional
 from ai_knowledge.agents.intelligent_assistant import (
     intelligent_assistant,
@@ -13,6 +14,30 @@ from ai_knowledge.agents.master_brain import (
 )
 
 logger = logging.getLogger(__name__)
+
+# ============================================================================
+# Cached dotenv loading (S6): avoid re-parsing .env from disk on EVERY web
+# request. The file is re-read only when its mtime changes (e.g. after the
+# owner updates an API key via /ai/config).
+# ============================================================================
+
+_env_loaded_mtime: float | None = None
+
+
+def load_env_cached() -> None:
+    """Load .env once; re-read only when the file mtime changes."""
+    global _env_loaded_mtime
+    try:
+        from dotenv import find_dotenv, load_dotenv
+
+        env_path = find_dotenv(usecwd=True) or ".env"
+        mtime = os.path.getmtime(env_path) if os.path.exists(env_path) else None
+        if mtime != _env_loaded_mtime:
+            load_dotenv(override=True)
+            _env_loaded_mtime = mtime
+    except Exception as exc:
+        logger.debug("dotenv cached load skipped: %s", exc)
+
 
 # ============================================================================
 # intelligent_response - dispatcher-aware wrapper
@@ -88,12 +113,7 @@ def _check_llm_availability() -> bool:
         return _llm_available
     import os
 
-    try:
-        from dotenv import load_dotenv
-
-        load_dotenv(override=True)
-    except Exception as exc:
-        logger.debug("dotenv load skipped: %s", exc)
+    load_env_cached()
     _llm_available = bool(
         os.environ.get("GROQ_API_KEY") or os.environ.get("GEMINI_API_KEY") or os.environ.get("OPENAI_API_KEY")
     )
@@ -104,12 +124,7 @@ def _get_llm_response(system_prompt: str, user_message: str) -> str | None:
     """Send a message to the LLM provider and return the response."""
     import os
 
-    try:
-        from dotenv import load_dotenv
-
-        load_dotenv(override=True)
-    except Exception as exc:
-        logger.debug("dotenv load skipped: %s", exc)
+    load_env_cached()
 
     groq_key = os.environ.get("GROQ_API_KEY")
     if groq_key:

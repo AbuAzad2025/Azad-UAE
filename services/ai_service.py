@@ -269,21 +269,22 @@ class AIService:
         "account details",
     ]
 
-    GROQ_MODELS = {
-        "fast": "llama-3.1-70b-versatile",
-        "smart": "llama-3.1-70b-versatile",
-        "expert": "llama-3.1-70b-versatile",
+    # Active model defaults per provider (kept in sync with the request
+    # layer in chat_response; the old GROQ_MODELS/OPENAI_MODELS dicts with
+    # retired llama-3.1 / gpt-3.5 entries were removed as dead code).
+    ACTIVE_MODELS = {
+        "groq": "llama-3.3-70b-versatile",
+        "gemini": "gemini-2.0-flash",
+        "openai": "gpt-4o",
     }
-
-    OPENAI_MODELS = {"fast": "gpt-3.5-turbo", "smart": "gpt-4", "expert": "gpt-4-turbo"}
 
     @staticmethod
     def get_api_key():
         """الحصول على مفتاح API - يدعم Groq, OpenAI, Gemini"""
-        # Reload env to catch manual updates
-        from dotenv import load_dotenv
+        # Cached dotenv reload (mtime-gated) instead of re-parsing on every call
+        from ai_knowledge.agents_core import load_env_cached
 
-        load_dotenv(override=True)
+        load_env_cached()
 
         return os.environ.get("GROQ_API_KEY") or os.environ.get("GEMINI_API_KEY") or os.environ.get("OPENAI_API_KEY")
 
@@ -295,10 +296,10 @@ class AIService:
     @staticmethod
     def get_provider():
         """معرفة المزود النشط"""
-        # Reload env to catch manual updates
-        from dotenv import load_dotenv
+        # Cached dotenv reload (mtime-gated) instead of re-parsing on every call
+        from ai_knowledge.agents_core import load_env_cached
 
-        load_dotenv(override=True)
+        load_env_cached()
 
         if os.environ.get("GROQ_API_KEY"):
             return "groq"
@@ -897,6 +898,15 @@ class AIService:
         current_user = ctx.get("current_user")
         user_id = current_user.id if current_user else None
 
+        # Sensitive request guard (S2): block credential/permission inquiries
+        # for non-owner users before any data gathering or LLM call.
+        try:
+            _is_sensitive, _requires_owner, sensitive_response = AIService.is_sensitive_request(message, current_user)
+            if _is_sensitive and sensitive_response:
+                return sensitive_response["message"]
+        except Exception:
+            logger.debug("Sensitive request check failed", exc_info=True)
+
         local_result = intelligent_assistant.process(message, user_id, context)
         local_response = local_result.get("response", "")
 
@@ -950,16 +960,22 @@ class AIService:
 
                 # تحديد المزود والنموذج
                 provider = AIService.get_provider()
+                is_gemini = provider == "gemini"
 
                 if provider == "groq":
                     url = "https://api.groq.com/openai/v1/chat/completions"
-                    model = "llama-3.3-70b-versatile"
-                elif provider == "gemini":
-                    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent"
-                    model = "gemini-2.0-flash-exp"
+                    model = AIService.ACTIVE_MODELS["groq"]
+                elif is_gemini:
+                    # Native Gemini endpoint — the API key travels as a query
+                    # param and the payload uses the contents/parts schema,
+                    # NOT the OpenAI chat-completions schema.
+                    model = AIService.ACTIVE_MODELS["gemini"]
+                    url = (
+                        f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+                    )
                 else:  # openai
                     url = "https://api.openai.com/v1/chat/completions"
-                    model = "gpt-4"
+                    model = AIService.ACTIVE_MODELS["openai"]
 
                 # بناء البرومبت مع معرفة النظام الشاملة
                 role_slug = current_user.role.slug if current_user and getattr(current_user, "role", None) else "user"
@@ -1008,24 +1024,45 @@ class AIService:
 
 ⚠️ مهم: إذا سأل عن بيانات - استخدم الأرقام الموجودة. إذا سأل عن واجهة النظام أو جداوله - أخبره بناءً على المعلومات أعلاه. إذا طلب شيئاً خارج قدراتك - أخبره أنك لا تستطيع."""
 
-                response = requests.post(
-                    url,
-                    headers={
-                        "Authorization": f"Bearer {api_key}",
-                        "Content-Type": "application/json",
-                    },
-                    json={
-                        "model": model,
-                        "messages": [{"role": "user", "content": expert_prompt}],
-                        "temperature": 0.7,
-                        "max_tokens": 2000,
-                    },
-                    timeout=20,
-                )
+                if is_gemini:
+                    response = requests.post(
+                        url,
+                        headers={"Content-Type": "application/json"},
+                        json={
+                            "contents": [{"parts": [{"text": expert_prompt}]}],
+                            "generationConfig": {"temperature": 0.7, "maxOutputTokens": 2000},
+                        },
+                        timeout=20,
+                    )
+                else:
+                    response = requests.post(
+                        url,
+                        headers={
+                            "Authorization": f"Bearer {api_key}",
+                            "Content-Type": "application/json",
+                        },
+                        json={
+                            "model": model,
+                            "messages": [{"role": "user", "content": expert_prompt}],
+                            "temperature": 0.7,
+                            "max_tokens": 2000,
+                        },
+                        timeout=20,
+                    )
 
                 if response.status_code == 200:
                     result = response.json()
-                    groq_response = result["choices"][0]["message"]["content"]
+                    if is_gemini:
+                        candidates = result.get("candidates") or []
+                        groq_response = (
+                            (candidates[0].get("content", {}).get("parts") or [{}])[0].get("text", "")
+                            if candidates
+                            else ""
+                        )
+                        if not groq_response:
+                            raise ValueError("Empty Gemini response")
+                    else:
+                        groq_response = result["choices"][0]["message"]["content"]
 
                     # فحص إذا Groq يطلب تنفيذ action
                     action_result = AIService._execute_ai_action(groq_response, user_id)
@@ -1034,7 +1071,13 @@ class AIService:
 
                     # Groq يدرب المحلي
                     try:
-                        AIService._train_local_from_groq(message, str(local_response), str(groq_response), user_id)
+                        AIService._train_local_from_groq(
+                            message,
+                            str(local_response),
+                            str(groq_response),
+                            user_id,
+                            tenant_id=getattr(current_user, "tenant_id", None),
+                        )
                     except Exception as e:
                         logger.debug("Training skipped: %s", e)
 
@@ -1113,7 +1156,7 @@ class AIService:
             return f"⚠️ حدث خطأ أثناء تنفيذ العملية: {str(e)[:100]}"
 
     @staticmethod
-    def _train_local_from_groq(question, local_answer, groq_answer, user_id):
+    def _train_local_from_groq(question, local_answer, groq_answer, user_id, tenant_id=None):
         """Groq يدرب ويحدث النظام المحلي"""
         try:
             from ai_knowledge.core.learning_system import learning_system
@@ -1126,7 +1169,7 @@ class AIService:
                 "user_id": user_id,
             }
 
-            learning_system.learn_from_groq_feedback(learning_data)
+            learning_system.learn_from_groq_feedback(learning_data, tenant_id=tenant_id)
 
         except Exception as e:
             logger.debug("Training from Groq failed: %s", e)

@@ -1353,8 +1353,9 @@ class TestCoverageGaps:
         mocker.patch("ai_knowledge.agents_core.ask_azad_enhanced", return_value=None)
         mocker.patch("services.ai_service.AIService._gather_relevant_knowledge", return_value="")
         resp = MagicMock(status_code=200)
-        resp.json.return_value = {"choices": [{"message": {"content": "Gemini"}}]}
-        mocker.patch("requests.post", return_value=resp)
+        # Native Gemini response shape (candidates -> content -> parts -> text)
+        resp.json.return_value = {"candidates": [{"content": {"parts": [{"text": "Gemini"}]}}]}
+        post_mock = mocker.patch("requests.post", return_value=resp)
         mocker.patch("services.ai_service.AIService._execute_ai_action", return_value="تنفيذ")
         mocker.patch(
             "services.ai_service.AIService._train_local_from_groq",
@@ -1362,6 +1363,30 @@ class TestCoverageGaps:
         )
         out = AIService.chat_response("q")
         assert "تنفيذ" in out
+        # The request must use the native Gemini payload (contents/parts),
+        # not the OpenAI chat-completions schema.
+        _, kwargs = post_mock.call_args
+        assert "contents" in kwargs["json"]
+        assert "messages" not in kwargs["json"]
+
+    def test_chat_gemini_empty_candidates_falls_back(self, mocker, monkeypatch):
+        monkeypatch.setenv("GEMINI_API_KEY", "key")
+        mocker.patch(
+            "ai_knowledge.agents.intelligent_assistant.intelligent_assistant.process",
+            return_value={"response": "local"},
+        )
+        mocker.patch("ai_knowledge.system_knowledge.search_knowledge", return_value=None)
+        mocker.patch(
+            "ai_knowledge.action_dispatcher.action_dispatcher.parse_chat_action",
+            return_value=None,
+        )
+        mocker.patch("ai_knowledge.agents_core.ask_azad_enhanced", return_value=None)
+        mocker.patch("services.ai_service.AIService._gather_relevant_knowledge", return_value="")
+        resp = MagicMock(status_code=200)
+        resp.json.return_value = {"candidates": []}
+        mocker.patch("requests.post", return_value=resp)
+        out = AIService.chat_response("q")
+        assert "local" in out
 
     def test_chat_groq_logging_core_failure(self, mocker, monkeypatch):
         monkeypatch.setenv("GROQ_API_KEY", "key")

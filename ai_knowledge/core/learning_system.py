@@ -186,8 +186,9 @@ class AzadLearningSystem:
             tenant_prefs["last_question"] = question
             tenant_prefs["last_updated"] = datetime.now().isoformat()
             self._save_tenant_data(tenant_id)
-
-        self._save_data()
+        # S3 hardening: no tenant context -> no persistence at all. Shared
+        # global JSON logs (interactions_log.json / patterns.json) mixed all
+        # tenants' data; persistence is now strictly tenant-scoped.
         self._update_stats()
 
     def _analyze_patterns(self, question, response, success):
@@ -335,34 +336,15 @@ class AzadLearningSystem:
             logger.warning("Error saving tenant learning data: %s", exc)
 
     def _save_data(self) -> None:
-        """حفظ البيانات"""
-        try:
-            # حفظ المعرفة المكتسبة
-            to_save = dict(self.learned_knowledge)
-            ea = self.learned_knowledge.get("expertise_areas", {})
-            try:
-                to_save["expertise_areas"] = dict(ea)
-            except (TypeError, ValueError):
-                to_save["expertise_areas"] = {}
-            with open(self.knowledge_file, "w", encoding="utf-8") as f:
-                json.dump(to_save, f, ensure_ascii=False, indent=2)
+        """Deprecated no-op (S3 hardening).
 
-            # حفظ التفاعلات (آخر 1000 تفاعل)
-            recent_interactions = self.interactions[-1000:]
-            with open(self.interactions_file, "w", encoding="utf-8") as f:
-                json.dump(recent_interactions, f, ensure_ascii=False, indent=2)
-
-            # حفظ الأنماط
-            with open(self.patterns_file, "w", encoding="utf-8") as f:
-                json.dump(
-                    self._patterns_to_storage(self.patterns),
-                    f,
-                    ensure_ascii=False,
-                    indent=2,
-                )
-
-        except Exception as e:
-            logger.warning("Error saving learning data: %s", e)
+        Shared global JSON persistence mixed every tenant's interactions,
+        learned knowledge, and patterns in single files — a cross-tenant
+        data-leak vector. All persistence now goes through
+        ``_save_tenant_data`` (tenant-scoped paths) only. Kept as a no-op
+        so legacy callers fail safe instead of crashing.
+        """
+        return
 
     def _update_stats(self) -> None:
         """تحديث الإحصائيات"""
@@ -616,7 +598,7 @@ class AzadLearningSystem:
 
         return enhanced_response
 
-    def learn_from_groq_feedback(self, learning_data):
+    def learn_from_groq_feedback(self, learning_data, tenant_id=None):
         """تعلم من ردود Groq - Groq يدرب المحلي"""
         try:
             question = learning_data["question"]
@@ -636,7 +618,12 @@ class AzadLearningSystem:
             if len(self.groq_training_log) > 100:
                 self.groq_training_log = self.groq_training_log[-100:]
 
-            self.learn_from_interaction(question, groq_answer, user_feedback="groq_improved")
+            self.learn_from_interaction(
+                question,
+                groq_answer,
+                user_feedback="groq_improved",
+                tenant_id=tenant_id,
+            )
 
         except Exception as e:
             print(f"Groq training error: {e}")
