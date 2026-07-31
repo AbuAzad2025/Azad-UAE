@@ -17,7 +17,7 @@
     <div class="ps-card-body">
       <h3 class="ps-card-title"><a href="{{ url_for('shop.product_detail', slug=store.store_slug, product_id=p.id) }}">{{ p.get_display_name(lang) }}</a></h3>
       <div class="ps-card-footer">
-        <span class="ps-price">{{ format_currency(p.regular_price) }}</span>
+        <span class="ps-price">{{ format_currency(dp(p), currency=store_currency) }}</span>
       </div>
     </div>
   </article>

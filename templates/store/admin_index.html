@@ -130,6 +130,48 @@
 
 
 
+<div class="row">
+
+  <div class="col-md-6 col-sm-12">
+
+    <div class="info-box">
+
+      <span class="info-box-icon bg-dark"><i class="fas fa-hand-holding-usd"></i></span>
+
+      <div class="info-box-content">
+
+        <span class="info-box-text">{{ t('azad_platform_fees') }} — {{ t('accrued_pending_settlement') }}</span>
+
+        <span class="info-box-number">{{ format_currency(fee_accrued_total) }}</span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="col-md-6 col-sm-12">
+
+    <div class="info-box">
+
+      <span class="info-box-icon bg-secondary"><i class="fas fa-file-invoice-dollar"></i></span>
+
+      <div class="info-box-content">
+
+        <span class="info-box-text">{{ t('settlement_status') }}</span>
+
+        <span class="info-box-number small">{{ t('accrued') }}: {{ fee_status_counts['accrued'] }} · {{ t('settled') }}: {{ fee_status_counts['settled'] }} · {{ t('paid') }}: {{ fee_status_counts['paid'] }}</span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
 {% if store.platform_disabled %}
 
 <div class="alert alert-danger"><i class="fas fa-lock mr-1"></i>{{ t('store_disabled_by_platform') }}</div>

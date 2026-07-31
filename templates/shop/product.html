@@ -28,8 +28,8 @@
   "offers": {
     "@type": "Offer",
     "url": "{{ request.url }}",
-    "priceCurrency": "{{ tenant.default_currency or 'AED' }}",
-    "price": "{{ '%.2f'|format(product.regular_price) }}",
+    "priceCurrency": "{{ store_currency }}",
+    "price": "{{ '%.2f'|format(display_price) }}",
     "availability": "https://schema.org/InStock",
     "seller": {
       "@type": "Organization",
@@ -58,9 +58,9 @@
   <div>
     <h2 class="ic-3">{{ product.get_display_name(lang) }}{% if is_shop_logged_in %} <button class="ps-wishlist-btn" data-wishlist-toggle data-product-id="{{ product.id }}" aria-label="{{ t('wishlist') }}"><i class="far fa-heart"></i></button>{% endif %}</h2>
     {% if product.sku %}<p class="ps-card-meta">{{ product.sku }}</p>{% endif %}
-    <p class="ps-price ic-4">{{ format_currency(product.regular_price) }}</p>
+    <p class="ps-price ic-4">{{ format_currency(display_price, currency=store_currency) }}</p>
     {% if is_shop_logged_in %}
-    <small class="ps-loyalty-earn"><i class="fas fa-gem"></i> {{ t('earn_points') }} {{ product.regular_price|int }}</small>
+    <small class="ps-loyalty-earn"><i class="fas fa-gem"></i> {{ t('earn_points') }} {{ display_price|int }}</small>
     {% endif %}
     <p class="ps-stock-ok"><i class="fas fa-check-circle"></i> {{ t('in_stock') }} — {{ available|int }}</p>
     {% if product.description %}
@@ -73,9 +73,9 @@
       {% if variants %}
       <div class="ps-form-group">
         <label for="ps_variant">{{ t('variant') }}</label>
-        <select id="ps_variant" name="variant_id" class="ps-variant-select" data-price-base="{{ product.regular_price }}">
+        <select id="ps_variant" name="variant_id" class="ps-variant-select" data-price-base="{{ display_price }}">
           {% for v in variants %}
-          <option value="{{ v.id }}" data-price="{{ '%.2f'|format(product.regular_price + v.price_adjustment) }}">
+          <option value="{{ v.id }}" data-price="{{ '%.2f'|format(display_price + conv(v.price_adjustment)) }}">
             {{ v.get_display_name(lang) }}
           </option>
           {% endfor %}
@@ -134,7 +134,7 @@
       <div class="ps-card-body">
         <h3 class="ps-card-title"><a href="{{ url_for('shop.product_detail', slug=store.store_slug, product_id=rp.id) }}">{{ rp.get_display_name(lang) }}</a></h3>
         <div class="ps-card-footer">
-          <span class="ps-price">{{ format_currency(rp.regular_price) }}</span>
+          <span class="ps-price">{{ format_currency(dp(rp), currency=store_currency) }}</span>
           <form method="post" action="{{ url_for('shop.cart_add', slug=store.store_slug) }}" data-ajax-cart>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="product_id" value="{{ rp.id }}">
@@ -165,7 +165,7 @@
       <div class="ps-card-body">
         <h3 class="ps-card-title"><a href="{{ url_for('shop.product_detail', slug=store.store_slug, product_id=rp.id) }}">{{ rp.get_display_name(lang) }}</a></h3>
         <div class="ps-card-footer">
-          <span class="ps-price">{{ format_currency(rp.regular_price) }}</span>
+          <span class="ps-price">{{ format_currency(dp(rp), currency=store_currency) }}</span>
         </div>
       </div>
     </article>

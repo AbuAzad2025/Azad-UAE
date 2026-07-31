@@ -30,11 +30,30 @@ class AzadPlatformFeeService:
 
     @staticmethod
     def is_online_store_transaction(sale) -> bool:
+        """True for online-store sales paid through the online gateway channel."""
         if getattr(sale, "source", None) != "online_store":
             return False
         channel = (getattr(sale, "checkout_payment_method", None) or "").strip().lower()
         gateway_ref = (getattr(sale, "checkout_gateway_ref", None) or "").strip()
         return channel == "online_pay" or bool(gateway_ref)
+
+    @staticmethod
+    def offline_channels_enabled() -> bool:
+        """Owner toggle: accrue platform fee on non-gateway channels too (COD, bank transfer, e-wallet)."""
+        from models import SystemSettings
+
+        settings = SystemSettings.get_current()
+        flag = getattr(settings, "azad_platform_fee_include_offline", None)
+        return True if flag is None else bool(flag)
+
+    @staticmethod
+    def should_record_fee(sale) -> bool:
+        """Fee applies to every online-store sale. Offline channels require the owner toggle."""
+        if getattr(sale, "source", None) != "online_store":
+            return False
+        if AzadPlatformFeeService.is_online_store_transaction(sale):
+            return True
+        return AzadPlatformFeeService.offline_channels_enabled()
 
     @staticmethod
     def _base_amount_aed(sale, payment=None) -> Decimal:
@@ -60,8 +79,8 @@ class AzadPlatformFeeService:
         gateway_name="nowpayments",
         gateway_reference=None,
     ) -> AzadPlatformFee | None:
-        """Record and post Azad's 1% share for a confirmed online-store payment."""
-        if not AzadPlatformFeeService.is_online_store_transaction(sale):
+        """Record and post Azad's platform share for a confirmed online-store sale (any channel)."""
+        if not AzadPlatformFeeService.should_record_fee(sale):
             return None
 
         tenant_id = getattr(sale, "tenant_id", None)

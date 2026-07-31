@@ -5011,6 +5011,23 @@ TRANSLATIONS = {
     "low_stock_alert": {"en": "Low Stock Alert (Online Warehouse)", "ar": "تنبيه المخزون المنخفض (مستودع الأونلاين)"},
     "low_stock_alert_threshold": {"en": "Low Stock Alert Threshold", "ar": "حد تنبيه المخزون المنخفض"},
     "min_order_amount": {"en": "Minimum Order Amount", "ar": "الحد الأدنى للطلب"},
+    "store_display_currency": {
+        "en": "Store Display Currency",
+        "ar": "عملة عرض الأسعار في المتجر",
+    },
+    "store_display_currency_hint": {
+        "en": "e.g. USD — leave empty to use the tenant default currency.",
+        "ar": "مثل USD — اترك الحقل فارغاً لاستخدام عملة المنشأة الافتراضية.",
+    },
+    "azad_platform_fees": {"en": "Azad Platform Fees", "ar": "عمولات منصة أزاد"},
+    "accrued_pending_settlement": {
+        "en": "Accrued, pending settlement",
+        "ar": "متراكمة بانتظار التسوية",
+    },
+    "settlement_status": {"en": "Settlement Status", "ar": "حالة التسوية"},
+    "settled": {"en": "Settled", "ar": "مسوّاة"},
+    "paid": {"en": "Paid", "ar": "مدفوعة"},
+    "accrued": {"en": "Accrued", "ar": "متراكمة"},
     "minimum": {"en": "Minimum", "ar": "الأدنى"},
     "new_orders_dont_deduct_inventory": {
         "en": "New orders do not deduct inventory until confirmed. Upon confirmation, inventory and accounting entries are posted automatically.",

@@ -10,6 +10,13 @@ from services.currency_service import CurrencyService
 
 @pytest.fixture(autouse=True)
 def _clear_rates_cache():
+    # Re-bind to the class object currently exposed by the module. Some
+    # coverage suites reload services.currency_service, which orphans the
+    # class imported at collection time and empties its rate cache.
+    global CurrencyService
+    import services.currency_service as cs
+
+    CurrencyService = cs.CurrencyService
     CurrencyService._rates_cache.clear()
     yield
     CurrencyService._rates_cache.clear()

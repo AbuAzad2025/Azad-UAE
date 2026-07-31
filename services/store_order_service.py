@@ -107,6 +107,7 @@ class StoreOrderService:
 
         sale.status = "confirmed"
 
+        payment = None
         if mark_paid and (sale.payment_status or "unpaid") != "paid":
             checkout_code = (sale.checkout_payment_method or "cod").strip().lower()
             internal_method = CHECKOUT_PAYMENT_MAP.get(
@@ -124,11 +125,13 @@ class StoreOrderService:
                 exchange_rate=sale.exchange_rate,
                 notes=gettext("دفع طلب متجر — تأكيد من لوحة المتجر"),
             )
-            if checkout_code == "online_pay":
-                from services.azad_platform_fee_service import AzadPlatformFeeService
-
-                AzadPlatformFeeService.record_store_online_fee(sale, payment=payment)
             sale.recalculate_payment_status()
+
+        # Azad platform fee — every confirmed online-store sale, any payment channel
+        # (offline channels gated by SystemSettings.azad_platform_fee_include_offline)
+        from services.azad_platform_fee_service import AzadPlatformFeeService
+
+        AzadPlatformFeeService.record_store_online_fee(sale, payment=payment)
 
         try:
             db.session.flush()

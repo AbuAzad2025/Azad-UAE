@@ -1,5 +1,5 @@
-const CACHE_NAME = "azad-shop-v1";
-const urlsToCache = ["/", "/static/css/shop-palestine.css", "/static/css/shop-utilities.css"];
+const CACHE_NAME = "azad-shop-v2";
+const urlsToCache = ["/", "/static/css/shop-theme.css", "/static/css/shop-utilities.css"];
 
 self.addEventListener("install", (event) => {
 	event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache)));

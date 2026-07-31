@@ -9,7 +9,7 @@
   <meta name="description" content="{% block meta_description %}{{ tenant_meta_description or t('Default_Meta_Description') }}{% endblock %}">
   <meta name="keywords" content="{% block meta_keywords %}{{ tenant_meta_keywords or t('Default_Meta_Keywords') }}{% endblock %}">
   <meta name="author" content="{{ developer_name_ar or t('Default_Author') }}">
-  <meta name="copyright" content="{{ config.COMPANY_NAME_AR or t('Default_Copyright') }} © {{ now().year }}">
+  <meta name="copyright" content="{{ config.COMPANY_NAME_AR or t('Default_Copyright') }} © {{ current_year }}">
   <meta name="robots" content="{% block robots %}index, follow{% endblock %}">
   <meta name="language" content="{{ current_language }}">
   <meta name="revisit-after" content="7 days">

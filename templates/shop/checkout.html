@@ -10,7 +10,7 @@
 {% if is_shop_logged_in and loyalty_points and loyalty_points > 0 %}
 <div class="ps-loyalty-info">
   <i class="fas fa-gem"></i> {{ t('loyalty_points') }}: <strong>{{ loyalty_points }}</strong>
-  <small>(= {{ format_currency(loyalty_value) }})</small>
+  <small>(= {{ format_currency(conv(loyalty_value or 0), currency=store_currency) }})</small>
 </div>
 {% endif %}
 
@@ -87,7 +87,7 @@
       {% for line in totals.lines %}
       <div class="ps-checkout-summary-line">
         <span>{{ line.product.get_display_name(lang) }} × {{ line.quantity|int }}</span>
-        <span>{{ format_currency(line.line_total) }}</span>
+        <span>{{ format_currency(line.display_line_total, currency=store_currency) }}</span>
       </div>
       {% endfor %}
 
@@ -98,16 +98,16 @@
 
       <div class="ps-checkout-summary-total">
         <span>{{ t('total') }}</span>
-        <span>{{ format_currency(totals.subtotal) }}</span>
+        <span>{{ format_currency(totals.display_subtotal, currency=store_currency) }}</span>
       </div>
 
       {% if min_order and min_order > 0 %}
-      <p class="ic-6" style="margin-top:10px"><i class="fas fa-coins"></i> {{ t('free_from') }}: {{ format_currency(min_order) }}</p>
+      <p class="ic-6" style="margin-top:10px"><i class="fas fa-coins"></i> {{ t('free_from') }}: {{ format_currency(conv(min_order), currency=store_currency) }}</p>
       {% endif %}
 
       {% if is_shop_logged_in and loyalty_points and loyalty_points > 0 %}
       <div class="ps-loyalty-info" style="margin-top:10px">
-        <i class="fas fa-gem"></i> {{ loyalty_points }} {{ t('loyalty_points') }} (= {{ format_currency(loyalty_value) }})
+        <i class="fas fa-gem"></i> {{ loyalty_points }} {{ t('loyalty_points') }} (= {{ format_currency(conv(loyalty_value or 0), currency=store_currency) }})
       </div>
       {% endif %}
     </div>

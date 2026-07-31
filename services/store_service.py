@@ -328,23 +328,17 @@ class StoreService:
         min_price=None,
         max_price=None,
         in_stock_only=False,
+        display_currency: str | None = None,
     ):
-        """Storefront catalog — in-stock online warehouse, no serial-tracked products."""
+        """Storefront catalog — in-stock online warehouse, no serial-tracked products.
+
+        display_price is resolved through StorePricingService (single pricing
+        engine) so the catalog matches product/cart/checkout exactly.
+        """
+        from services.store_pricing_service import StorePricingService
+
         products, stock_map = StoreService.get_catalog_products(tenant_id, include_zero=False)
         tenant = db.session.get(Tenant, int(tenant_id))
-        base_currency = (tenant.base_currency or "ILS").upper() if tenant else "ILS"
-        default_currency = (tenant.default_currency or "AED").upper() if tenant else "AED"
-        exchange_rate = Decimal("1")
-        if base_currency != default_currency:
-            try:
-                from services.currency_service import CurrencyService
-
-                info = CurrencyService.get_exchange_rate_details(base_currency, default_currency)
-                rate_raw = info.get("rate") or info.get("rates", {}).get(default_currency)
-                if rate_raw:
-                    exchange_rate = Decimal(str(rate_raw))
-            except Exception:
-                exchange_rate = Decimal("1")
         items = []
         q = (search or "").strip().lower()
         for product in products:
@@ -359,7 +353,7 @@ class StoreService:
             qty = stock_map.get(product.id, Decimal("0"))
             if qty <= 0:
                 continue
-            display_price = (Decimal(str(product.regular_price or 0)) * exchange_rate).quantize(Decimal("0.01"))
+            display_price = StorePricingService.resolve_display_price(product, tenant, display_currency)
             items.append(
                 {
                     "product": product,
@@ -398,9 +392,16 @@ class StoreService:
         }
 
     @staticmethod
-    def cart_totals(tenant_id: int, cart: dict) -> dict:
+    def cart_totals(tenant_id: int, cart: dict, display_currency: str | None = None) -> dict:
+        """Cart lines + totals. When display_currency is provided, each line also
+        carries display_price / display_line_total and the dict display_subtotal —
+        resolved via the unified StorePricingService."""
+        from services.store_pricing_service import StorePricingService
+
         lines = []
         subtotal = Decimal("0")
+        display_subtotal = Decimal("0")
+        tenant = db.session.get(Tenant, int(tenant_id))
         stock_map = StoreService.online_stock_map(tenant_id, [int(k) for k in cart.keys()] if cart else None)
         for pid, qty_raw in cart.items():
             product = Product.query.filter_by(id=int(pid), tenant_id=int(tenant_id), is_active=True).first()
@@ -414,12 +415,22 @@ class StoreService:
                 continue
             line_total = Decimal(str(product.regular_price or 0)) * qty
             subtotal += line_total
-            lines.append({"product": product, "quantity": qty, "line_total": line_total})
-        return {
+            line = {"product": product, "quantity": qty, "line_total": line_total}
+            if display_currency:
+                display_price = StorePricingService.resolve_display_price(product, tenant, display_currency)
+                display_line_total = (display_price * qty).quantize(Decimal("0.01"))
+                display_subtotal += display_line_total
+                line["display_price"] = display_price
+                line["display_line_total"] = display_line_total
+            lines.append(line)
+        result = {
             "lines": lines,
             "subtotal": subtotal,
             "count": sum(line["quantity"] for line in lines),
         }
+        if display_currency:
+            result["display_subtotal"] = display_subtotal
+        return result
 
     @staticmethod
     def get_recently_viewed_products(tenant_id: int, product_ids: list, exclude_id: int | None = None, limit: int = 6):

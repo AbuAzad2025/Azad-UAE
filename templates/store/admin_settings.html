@@ -223,7 +223,7 @@
 
           <div class="row">
 
-            <div class="col-md-6 form-group">
+            <div class="col-md-4 form-group">
 
               <label for="input_min_order_amount">{{ t('min_order_amount') }}</label>
 
@@ -231,7 +231,17 @@
 
             </div>
 
-            <div class="col-md-6 form-group">
+            <div class="col-md-4 form-group">
+
+              <label for="input_display_currency">{{ t('store_display_currency') }}</label>
+
+              <input type="text" name="display_currency" class="form-control" value="{{ store.display_currency or '' }}" maxlength="3" placeholder="USD" id="input_display_currency" aria-label="store display currency">
+
+              <small class="form-text text-muted">{{ t('store_display_currency_hint') }}</small>
+
+            </div>
+
+            <div class="col-md-4 form-group">
 
               <label for="input_low_stock_threshold">{{ t('low_stock_alert_threshold') }}</label>
 

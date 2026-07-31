@@ -310,6 +310,10 @@ def _ensure_fk_anchor_user():
 
     anchor = db.session.get(User, 1)
     if anchor:
+        # Close the read transaction opened by session.get(). Leaving it
+        # open keeps an AccessShare lock on users, which blocks
+        # TRUNCATE-based cleanup helpers in other test modules forever.
+        db.session.rollback()
         return
     try:
         tenant = Tenant(
@@ -908,7 +912,7 @@ def sample_owner(db_session):
         username=f"owner-{unique}",
         email=f"owner-{unique}@example.com",
         full_name="Platform Owner",
-        tenant_id=tenant.id,
+        tenant_id=None,
         role_id=role.id,
         is_owner=True,
     )

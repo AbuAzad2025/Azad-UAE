@@ -9,7 +9,7 @@
   <div class="ps-qv-info">
     <h2>{{ product.get_display_name(lang) }}</h2>
     {% if product.sku %}<p class="ps-card-meta">{{ product.sku }}</p>{% endif %}
-    <p class="ps-price ps-qv-price">{{ format_currency(product.regular_price) }}</p>
+    <p class="ps-price ps-qv-price">{{ format_currency(display_price, currency=store_currency) }}</p>
 
     <p class="ps-stock-ok"><i class="fas fa-check-circle"></i> {{ t('in_stock') }} — {{ available|int }}</p>
     {% if product.description %}

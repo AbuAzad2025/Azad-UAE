@@ -111,7 +111,7 @@
         </h3>
         {% if product.sku %}<div class="ps-card-meta">{{ product.sku }}</div>{% endif %}
         <div class="ps-card-footer">
-          <span class="ps-price">{{ format_currency(row.display_price) }}</span>
+          <span class="ps-price">{{ format_currency(row.display_price, currency=store_currency) }}</span>
           <form method="post" action="{{ url_for('shop.cart_add', slug=store.store_slug) }}" data-ajax-cart>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             <input type="hidden" name="product_id" value="{{ product.id }}" aria-label="product id">
@@ -119,7 +119,7 @@
             <button type="submit" class="ps-btn ps-btn-primary ps-btn-sm"><i class="fas fa-plus"></i> {{ t('add_to_cart') }}</button>
           </form>
           {% if not is_shop_logged_in and wa_digits %}
-          {% set wa_text = t('whatsapp_inquiry_text', product=product.get_display_name(lang), price=format_currency(row.display_price)) | urlencode %}
+          {% set wa_text = t('whatsapp_inquiry_text', product=product.get_display_name(lang), price=format_currency(row.display_price, currency=store_currency)) | urlencode %}
           <a href="https://wa.me/{{ wa_digits }}?text={{ wa_text|urlencode }}" target="_blank" rel="noopener" class="ps-btn ps-btn-wa ps-btn-sm"><i class="fab fa-whatsapp"></i></a>
           {% endif %}
         </div>

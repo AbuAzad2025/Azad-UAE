@@ -9,6 +9,16 @@ from extensions import db
 from services.store_order_service import StoreOrderService
 
 
+@pytest.fixture(autouse=True)
+def _mock_platform_fee_recording(mocker):
+    """Isolate confirm_order unit tests from the platform-fee accrual service
+    (covered directly in tests/unit/services/test_azad_platform_fee.py)."""
+    mocker.patch(
+        "services.azad_platform_fee_service.AzadPlatformFeeService.record_store_online_fee",
+        return_value=None,
+    )
+
+
 class TestLabelsAndQueries:
     def test_status_label_ar_and_en(self):
         assert StoreOrderService.status_label("pending", "ar") == "بانتظار التأكيد"

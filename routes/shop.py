@@ -101,6 +101,8 @@ def _require_shop_account(store, ctx):
 
 def _store_context(store):
 
+    from services.store_pricing_service import StorePricingService
+
     tenant = db.session.get(Tenant, store.tenant_id)
 
     lang = shop_lang()
@@ -112,6 +114,8 @@ def _store_context(store):
     secondary = (tenant.brand_color_secondary if tenant else None) or "#CE1126"
 
     cart_count = int(sum(StoreService.get_cart(session, store.tenant_id).values()) or 0)
+
+    store_currency = StorePricingService.resolve_display_currency(store, tenant)
 
     return {
         "store": store,
@@ -125,6 +129,11 @@ def _store_context(store):
         "shop_account": account,
         "is_shop_logged_in": account is not None,
         "analytics_id": current_app.config.get("ANALYTICS_GA_ID", ""),
+        "store_currency": store_currency,
+        # Unified display-price helper for every template (fixes audit D1)
+        "dp": lambda product: StorePricingService.resolve_display_price(product, tenant, store_currency),
+        # Convert any base-currency amount (variant adjustments, min order, loyalty value)
+        "conv": lambda amount: StorePricingService.convert_amount(amount, tenant, store_currency),
     }
 
 
@@ -456,6 +465,7 @@ def catalog(slug):
         min_price=min_price,
         max_price=max_price,
         in_stock_only=in_stock_only,
+        display_currency=ctx["store_currency"],
     )
 
     items = catalog_result["items"]
@@ -494,6 +504,10 @@ def api_search(slug):
     if not q or len(q) < 2:
         return jsonify({"results": []})
     items = StoreService.get_public_catalog(store.tenant_id, search=q, page=1, per_page=5)
+    from services.store_pricing_service import StorePricingService
+
+    tenant = db.session.get(Tenant, store.tenant_id)
+    display_currency = StorePricingService.resolve_display_currency(store, tenant)
     results = []
     for row in items["items"]:
         product = row["product"]
@@ -501,7 +515,8 @@ def api_search(slug):
             {
                 "id": product.id,
                 "name": product.get_display_name(shop_lang()),
-                "price": float(product.regular_price or 0),
+                "price": float(StorePricingService.resolve_display_price(product, tenant, display_currency)),
+                "currency": display_currency,
                 "image": product.image_url or "",
                 "url": url_for("shop.product_detail", slug=store.store_slug, product_id=product.id),
             }
@@ -559,6 +574,7 @@ def product_detail(slug, product_id):
     return render_template(
         "shop/product.html",
         product=product,
+        display_price=ctx["dp"](product),
         available=qty,
         wa_url=wa_url,
         related_products=related_products,
@@ -682,7 +698,7 @@ def cart_view(slug):
 
     cart = StoreService.get_cart(session, store.tenant_id)
 
-    totals = StoreService.cart_totals(store.tenant_id, cart)
+    totals = StoreService.cart_totals(store.tenant_id, cart, display_currency=ctx["store_currency"])
 
     return render_template("shop/cart.html", totals=totals, noindex=True, **ctx)
 
@@ -797,13 +813,18 @@ def cart_update(slug):
 
     if _is_ajax():
         cart_ajax = StoreService.get_cart(session, store.tenant_id)
-        totals_ajax = StoreService.cart_totals(store.tenant_id, cart_ajax)
+        from services.store_pricing_service import StorePricingService
+
+        tenant_ajax = db.session.get(Tenant, store.tenant_id)
+        currency_ajax = StorePricingService.resolve_display_currency(store, tenant_ajax)
+        totals_ajax = StoreService.cart_totals(store.tenant_id, cart_ajax, display_currency=currency_ajax)
         count = int(sum(cart_ajax.values()) or 0)
         return jsonify(
             {
                 "success": True,
                 "cart_count": count,
-                "subtotal": float(totals_ajax["subtotal"]),
+                "subtotal": float(totals_ajax.get("display_subtotal", totals_ajax["subtotal"])),
+                "currency": currency_ajax,
                 "count": int(totals_ajax.get("count", 0)),
             }
         )
@@ -857,15 +878,12 @@ def checkout(slug):
 
     cart = StoreService.get_cart(session, store.tenant_id)
 
-    totals = StoreService.cart_totals(store.tenant_id, cart)
+    totals = StoreService.cart_totals(store.tenant_id, cart, display_currency=ctx["store_currency"])
 
     if not totals["lines"]:
         return redirect(url_for("shop.catalog", slug=store.store_slug))
 
     min_order = Decimal(str(store.min_order_amount or 0))
-
-    if min_order > 0 and totals["subtotal"] < min_order:
-        flash(f"{t('free_from', ctx['lang'])}: {min_order}", "warning")
 
     if request.method == "POST":
         if request.form.get("website"):
@@ -1032,6 +1050,7 @@ def quick_view(slug, product_id):
     return render_template(
         "shop/partials/quick_view_body.html",
         product=product,
+        display_price=ctx["dp"](product),
         available=qty,
         wa_url=wa_url,
         **ctx,

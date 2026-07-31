@@ -1,4 +1,4 @@
-/* Palestinian storefront — green · red · olive · tatreez accents */
+/* Azad storefront theme — brand palette, layout, badges, responsive rules */
 :root {
 	--ps-green: #007a3d;
 	--ps-green-dark: #005c2e;
@@ -1538,5 +1538,92 @@ body.ps-shop.rtl {
 	.ps-azad-mark {
 		width: 48px;
 		height: 48px;
+	}
+}
+
+/* ==========================================================
+   Mobile UX polish (P3)
+   - 44px touch targets on small screens
+   - Compact 2-col product grid with readable cards
+   - Standardized sale badge (same pill family as stock badges)
+   ========================================================== */
+
+.ps-badge-sale {
+	display: inline-block;
+	padding: 3px 10px;
+	border-radius: 20px;
+	font-size: 0.7rem;
+	font-weight: 700;
+	background: rgba(206, 17, 38, 0.9);
+	color: #fff;
+	backdrop-filter: blur(8px);
+}
+
+@media (max-width: 768px) {
+	.ps-btn {
+		min-height: 44px;
+	}
+
+	.ps-btn-sm {
+		min-height: 40px;
+		padding: 0.5rem 0.9rem !important;
+	}
+
+	.ps-card-title a {
+		min-height: 40px;
+		display: inline-flex;
+		align-items: center;
+	}
+
+	.ps-nav a,
+	.ps-nav button {
+		min-height: 44px;
+		display: flex;
+		align-items: center;
+	}
+
+	.ps-quick-add {
+		min-height: 44px;
+	}
+}
+
+@media (max-width: 480px) {
+	.ps-card-body {
+		padding: 0.6rem 0.7rem;
+	}
+
+	.ps-card-title {
+		font-size: 0.82rem;
+		line-height: 1.35;
+	}
+
+	.ps-price {
+		font-size: 0.95rem;
+	}
+
+	.ps-card-footer {
+		flex-wrap: wrap;
+		gap: 0.4rem;
+	}
+
+	.ps-card-footer form {
+		width: 100%;
+	}
+
+	.ps-card-footer form .ps-btn {
+		width: 100%;
+		justify-content: center;
+	}
+
+	.ps-stock-badge {
+		top: 6px;
+		inset-inline-end: 6px;
+		font-size: 0.62rem;
+		padding: 2px 8px;
+	}
+
+	html[dir="rtl"] .ps-stock-badge {
+		right: 6px;
+		left: auto;
 	}
 }

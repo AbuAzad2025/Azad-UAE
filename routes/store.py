@@ -15,6 +15,7 @@ from flask import (
 from flask_login import current_user, login_required
 
 from models import Product, Sale, TenantStore, ShopCustomerAccount
+from services.azad_platform_fee_service import AzadPlatformFeeService
 from services.stock_service import StockService
 from services.store_analytics_service import StoreAnalyticsService
 from services.store_coupon_service import StoreCouponService
@@ -56,6 +57,14 @@ def admin_index():
     low_stock = StoreAnalyticsService.low_stock_products(tenant_id)
     stats = StoreAnalyticsService.order_stats(tenant_id)
 
+    fee_accrued_rows = AzadPlatformFeeService.get_accrued_summary(tenant_id)
+    fee_accrued_total = fee_accrued_rows[0]["total_fee_aed"] if fee_accrued_rows else Decimal("0")
+    fee_report = AzadPlatformFeeService.get_settlement_report(tenant_id)
+    fee_status_counts = {"accrued": 0, "settled": 0, "paid": 0}
+    for fee in fee_report["items"]:
+        if fee.status in fee_status_counts:
+            fee_status_counts[fee.status] += 1
+
     return render_template(
         "store/admin_index.html",
         store=store,
@@ -66,6 +75,8 @@ def admin_index():
         pending_orders=pending_orders,
         low_stock=low_stock,
         stats=stats,
+        fee_accrued_total=fee_accrued_total,
+        fee_status_counts=fee_status_counts,
     )
 
 
@@ -115,6 +126,8 @@ def admin_settings():
                     store.min_order_amount = Decimal(min_raw)
                 else:
                     store.min_order_amount = None
+                dc_raw = (request.form.get("display_currency") or "").strip().upper()[:3]
+                store.display_currency = dc_raw or None
                 store.delivery_note = (request.form.get("delivery_note") or "").strip() or None
 
                 store.meta_title = (request.form.get("meta_title") or "").strip() or None

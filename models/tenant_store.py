@@ -32,6 +32,8 @@ class TenantStore(db.Model):
     email = db.Column(db.String(120))
     min_order_amount = db.Column(db.Numeric(15, 3), nullable=True)
     delivery_note = db.Column(db.String(500))
+    # عملة عرض المتجر للزبائن (مثل USD). عند تركها فارغة تُستخدم عملة المنشأة الافتراضية.
+    display_currency = db.Column(db.String(3), nullable=True)
 
     logo_path = db.Column(db.String(255))
     meta_title = db.Column(db.String(200))

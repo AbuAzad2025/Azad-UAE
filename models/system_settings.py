@@ -136,6 +136,9 @@ class SystemSettings(db.Model):
 
     # Azad Platform Fees - رسوم منصة أزاد
     azad_platform_fee_rate = db.Column(db.Numeric(5, 2), default=Decimal("1.00"))
+    # عند التفعيل تُحتسب عمولة المنصة على كل قنوات البيع أونلاين (COD/حوالة/محفظة)
+    # وليس الدفع الإلكتروني فقط. يمكن لمالك المنصة إيقاف تتبع عمولة القنوات غير الإلكترونية.
+    azad_platform_fee_include_offline = db.Column(db.Boolean, default=True)
     subscription_monthly_fee_aed = db.Column(db.Numeric(15, 3), default=Decimal("0.000"))
     subscription_yearly_fee_aed = db.Column(db.Numeric(15, 3), default=Decimal("0.000"))
     subscription_perpetual_fee_aed = db.Column(db.Numeric(15, 3), default=Decimal("0.000"))
