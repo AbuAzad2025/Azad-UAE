@@ -355,7 +355,7 @@ class TestSaveAndLegacy:
 
     def test_fetch_and_store_online_rate_failure(self, mocker):
         mocker.patch(
-            "services.currency_service.CurrencyService.get_exchange_rate",
+            "services.currency_service.CurrencyService.get_exchange_rate_details",
             side_effect=RuntimeError("api"),
         )
         assert _ERS()._fetch_and_store_online_rate("USD", "AED") is None

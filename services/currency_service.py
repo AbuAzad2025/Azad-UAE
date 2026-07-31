@@ -231,7 +231,7 @@ class CurrencyService:
         return rates
 
     @staticmethod
-    def get_exchange_rate_details(from_currency, to_currency="AED", user_rate=None):
+    def get_exchange_rate_details(from_currency, to_currency=None, user_rate=None):
         """
         Detailed exchange-rate resolver with source metadata.
         Source priority:
@@ -242,10 +242,13 @@ class CurrencyService:
           5) forex-python provider
           6) static fallback table
         """
-        if not from_currency:
-            from_currency = "AED"
         if not to_currency:
-            to_currency = "AED"
+            # Dynamic tenant base currency (was hardcoded "AED")
+            from utils.currency_utils import resolve_tenant_base_currency
+
+            to_currency = resolve_tenant_base_currency()
+        if not from_currency:
+            from_currency = to_currency
 
         from_currency = from_currency.upper()
         to_currency = to_currency.upper()
@@ -339,6 +342,6 @@ class CurrencyService:
         }
 
     @staticmethod
-    def get_exchange_rate(from_currency, to_currency="AED", user_rate=None):
+    def get_exchange_rate(from_currency, to_currency=None, user_rate=None):
         details = CurrencyService.get_exchange_rate_details(from_currency, to_currency, user_rate=user_rate)
         return details["rate"]

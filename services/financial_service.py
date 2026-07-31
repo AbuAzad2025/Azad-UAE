@@ -24,10 +24,10 @@ class FinancialService:
                 branch_id=branch_id,
                 date_from=month_start_date,
                 date_to=month_end_date,
-                field=Sale.total_amount,
+                field=Sale.amount_aed,
             )
 
-            expenses = db.session.query(func.sum(Expense.amount)).filter(
+            expenses = db.session.query(func.sum(Expense.amount_aed)).filter(
                 Expense.expense_date >= month_start_date,
                 Expense.expense_date <= month_end_date,
                 Expense.tenant_id == tenant_id,

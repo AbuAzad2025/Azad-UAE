@@ -347,7 +347,7 @@ class ExchangeRateService:
     @staticmethod
     def resolve_exchange_rate_for_transaction(
         from_currency: str,
-        to_currency: str = "AED",
+        to_currency: str | None = None,
         *,
         user_rate: float | Decimal | None = None,
         fixed_rate: float | Decimal | None = None,
@@ -378,8 +378,13 @@ class ExchangeRateService:
             returns rate_mode="frozen" and refuses any automatic change.
           - On needs_input: stop form submission, show modal, then re-submit with user_rate.
         """
-        from_currency = (from_currency or "AED").upper()
-        to_currency = (to_currency or "AED").upper()
+        if not to_currency:
+            # Dynamic tenant base currency (was hardcoded "AED")
+            from utils.currency_utils import resolve_tenant_base_currency
+
+            to_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
+        from_currency = (from_currency or to_currency).upper()
+        to_currency = to_currency.upper()
 
         # 1. Already frozen in document — read-only
         if fixed_rate is not None:
@@ -524,21 +529,41 @@ class ExchangeRateService:
         to_currency: str,
         tenant_id: int | None = None,
     ) -> str | None:
-        """Fetch online rate, auto-save to exchange_rate_records, return the rate as a Decimal-safe string."""
+        """Fetch online rate, auto-save to exchange_rate_records, return the rate as a Decimal-safe string.
+
+        Guardrail (P3): when every online provider is down, CurrencyService
+        falls back to a static AED-anchored table. For tenants whose base
+        currency is NOT AED that silent static rate is *wrong money*, so we
+        refuse it and return None — the resolution hierarchy then degrades to
+        last_record and finally "needs_input" (explicit user entry).
+        """
         try:
             from services.currency_service import CurrencyService
 
-            rate_decimal = CurrencyService.get_exchange_rate(from_currency, to_currency, user_rate=None)
+            details = CurrencyService.get_exchange_rate_details(from_currency, to_currency, user_rate=None)
+            rate_decimal = details.get("rate")
+            if details.get("source") == "fallback_static" and (to_currency or "").upper() != "AED":
+                logger.warning(
+                    "Refusing AED-anchored static fallback rate for non-AED tenant base %s (%s -> %s); "
+                    "deferring to last_record / needs_input",
+                    to_currency,
+                    from_currency,
+                    to_currency,
+                )
+                return None
             if rate_decimal and rate_decimal > Decimal("0"):
                 rate_str = str(rate_decimal.quantize(Decimal("0.000001")))
-                # Auto-save to exchange_rate_records as 'api_primary' for today
-                ExchangeRateService._save_rate_record(
-                    from_currency=from_currency,
-                    to_currency=to_currency,
-                    rate=rate_str,
-                    source="api_primary",
-                    tenant_id=tenant_id,
-                )
+                # Auto-save genuinely-online rates (not static fallbacks) to
+                # tenant-scoped exchange_rate_records as 'api_primary' for today.
+                # exchange_rate_records.tenant_id is NOT NULL, so skip when unset.
+                if tenant_id is not None and details.get("source") in {"open_er_api", "forex_python", "cache"}:
+                    ExchangeRateService._save_rate_record(
+                        from_currency=from_currency,
+                        to_currency=to_currency,
+                        rate=rate_str,
+                        source="api_primary",
+                        tenant_id=tenant_id,
+                    )
                 return rate_str
         except Exception:
             logger.warning(
@@ -677,7 +702,7 @@ class ExchangeRateService:
 
     @staticmethod
     def get_manual_rate_for_calculation(
-        from_currency: str, to_currency: str = "AED", user_rate: float | None = None
+        from_currency: str, to_currency: str | None = None, user_rate: float | None = None
     ) -> dict[str, Any]:
         """
         LEGACY wrapper — kept for backward compatibility.

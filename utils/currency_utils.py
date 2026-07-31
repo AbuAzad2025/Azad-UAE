@@ -103,7 +103,9 @@ def resolve_tenant_base_currency(tenant=None, tenant_id=None) -> str:
                 return val
     if tenant_id is not None:
         return get_tenant_base_currency(tenant_id)
-    return get_system_default_currency()
+    # No explicit tenant: resolve from the current request's tenant if any,
+    # then fall back to the deployment default (utils/regional_defaults).
+    return context_aware_default_currency()
 
 
 _AED_QUANTUM = Decimal("0.001")

@@ -363,6 +363,10 @@ class TestExpensesViewScope:
                 "models.invoice_settings.InvoiceSettings.company_print_context",
                 return_value=(MagicMock(name="tenant"), MagicMock(name="settings"), company),
             ),
+            patch(
+                "utils.tenant_branding.get_print_header_context",
+                return_value={},
+            ),
         ):
             resp = expenses_client.get("/expenses/1/print")
         assert resp.status_code == 200

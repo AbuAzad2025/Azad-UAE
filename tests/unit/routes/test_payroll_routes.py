@@ -331,6 +331,10 @@ class TestPayrollSlipAndStatement:
                 "models.invoice_settings.InvoiceSettings.company_print_context",
                 return_value=(MagicMock(name="tenant"), MagicMock(name="settings"), {"name_ar": "Co"}),
             ),
+            patch(
+                "utils.tenant_branding.get_print_header_context",
+                return_value={},
+            ),
         ):
             resp = payroll_client.get("/payroll/slip/10")
         assert resp.status_code == 200

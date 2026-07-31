@@ -35,7 +35,7 @@ class AnalyticsService:
             )
 
         for customer in customers_query.all():
-            total_sales = session.query(func.sum(models.Sale.total_amount)).filter(
+            total_sales = session.query(func.sum(models.Sale.amount_aed)).filter(
                 models.Sale.customer_id == customer.id,
                 models.Sale.status == "confirmed",
                 models.Sale.tenant_id == tenant_id,
@@ -91,7 +91,7 @@ class AnalyticsService:
             .query(
                 func.date(models.Sale.sale_date).label("date"),
                 func.count(models.Sale.id).label("count"),
-                func.sum(models.Sale.total_amount).label("total"),
+                func.sum(models.Sale.amount_aed).label("total"),
             )
             .filter(
                 models.Sale.sale_date >= last_30_days,
@@ -226,7 +226,7 @@ class AnalyticsService:
                 month_end = month_start.replace(month=month_start.month + 1, day=1) - timedelta(days=1)
             revenue = (
                 _db_session()
-                .query(func.sum(models.Sale.total_amount))
+                .query(func.sum(models.Sale.amount_aed))
                 .filter(
                     models.Sale.sale_date >= month_start,
                     models.Sale.sale_date <= month_end,

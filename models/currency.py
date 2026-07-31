@@ -43,6 +43,17 @@ class Currency(db.Model):
 
 
 class ExchangeRate(db.Model):
+    """LEGACY global exchange-rate table (NOT tenant-scoped).
+
+    .. deprecated::
+        The sole system-of-record for multi-tenant exchange rates is
+        ``models.exchange_rate_record.ExchangeRateRecord`` (tenant-scoped,
+        immutable, effective-dated, manual/api sourced). This legacy table is
+        only referenced by initial seeding (``utils/system_init.py``) and must
+        NOT be used for transaction or accounting logic — it has no
+        ``tenant_id`` and therefore cannot isolate rates per tenant.
+    """
+
     __tablename__ = "exchange_rates"
 
     id = db.Column(db.Integer, primary_key=True)
