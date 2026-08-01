@@ -220,9 +220,7 @@ class TestMultiWarehouseInventoryIsolation:
 
         with app.app_context():
             with pytest.raises(ValueError):
-                StockService.transfer_stock(
-                    product.id, wh1.id, fwh.id, Decimal("5"), user=env["user"]
-                )
+                StockService.transfer_stock(product.id, wh1.id, fwh.id, Decimal("5"), user=env["user"])
         db.session.expire_all()
         movements = StockMovement.query.filter(
             StockMovement.product_id == product.id,
@@ -239,9 +237,7 @@ class TestMultiWarehouseInventoryIsolation:
 
         with app.app_context():
             with pytest.raises(ValueError):
-                StockService.transfer_stock(
-                    product.id, fwh.id, fwh.id, Decimal("5"), user=env["user"]
-                )
+                StockService.transfer_stock(product.id, fwh.id, fwh.id, Decimal("5"), user=env["user"])
 
     def test_create_movement_rejects_foreign_warehouse(self, app, db_session):
         from services.stock_service import StockService
@@ -269,9 +265,7 @@ class TestMultiWarehouseInventoryIsolation:
         product = env["product"]
         tenant_id = env["tenant"].id
 
-        out_m, in_m = StockService.transfer_stock(
-            product.id, wh1.id, wh2.id, Decimal("30"), user=env["user"]
-        )
+        out_m, in_m = StockService.transfer_stock(product.id, wh1.id, wh2.id, Decimal("30"), user=env["user"])
         db.session.flush()
 
         db.session.expire_all()
@@ -310,12 +304,10 @@ class TestMultiWarehouseInventoryIsolation:
         wh1, wh2 = env["warehouses"]
         product = env["product"]
 
-        movements_before = (
-            StockMovement.query.filter(
-                StockMovement.product_id == product.id,
-                StockMovement.warehouse_id.in_([wh1.id, wh2.id]),
-            ).count()
-        )
+        movements_before = StockMovement.query.filter(
+            StockMovement.product_id == product.id,
+            StockMovement.warehouse_id.in_([wh1.id, wh2.id]),
+        ).count()
         real = StockService.create_movement
         calls = {"n": 0}
 
@@ -346,12 +338,10 @@ class TestMultiWarehouseInventoryIsolation:
         assert calls["n"] == 2, "expected exactly the out-leg to succeed before the in-leg failed"
 
         db.session.expire_all()
-        movements_after = (
-            StockMovement.query.filter(
-                StockMovement.product_id == product.id,
-                StockMovement.warehouse_id.in_([wh1.id, wh2.id]),
-            ).count()
-        )
+        movements_after = StockMovement.query.filter(
+            StockMovement.product_id == product.id,
+            StockMovement.warehouse_id.in_([wh1.id, wh2.id]),
+        ).count()
         assert movements_after == movements_before, "partial transfer leaked stock movements"
         assert _pws_quantity(product.id, wh1.id) == Decimal("100"), "source PWS drifted after rollback"
         assert _pws_quantity(product.id, wh2.id) == Decimal("0"), "destination PWS leaked after rollback"
@@ -378,7 +368,9 @@ class TestPosCashSessionMath:
         )
         expected = session.compute_expected_balance()
         assert expected == Decimal("155.000"), f"formula broke: expected={expected}"
-        assert expected == (Decimal("100") + Decimal("50") - Decimal("5") - Decimal("0") + Decimal("20") - Decimal("10"))
+        assert expected == (
+            Decimal("100") + Decimal("50") - Decimal("5") - Decimal("0") + Decimal("20") - Decimal("10")
+        )
 
     def test_blind_close_sets_expected_and_difference(self):
         from models import PosSession
