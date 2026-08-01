@@ -595,9 +595,7 @@ def statement(**kwargs):
         pre_receipts_total = sum(
             float(r.amount_aed or 0)
             for r in pre_receipts_q.all()
-            if (
-                r.payment_confirmed or (r.payment_method == "cheque" and not r.rejection_reason)
-            )
+            if (r.payment_confirmed or (r.payment_method == "cheque" and not r.rejection_reason))
             and (r.receipt_number or "") not in pre_payment_refs
         )
         # المرتجعات المعتمدة قبل الفترة دائن (تقلل الذمة)
