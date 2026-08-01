@@ -70,6 +70,29 @@ class IdempotencyService:
         )
 
     @staticmethod
+    def replay_if_completed(*, tenant_id: int, endpoint: str, key: str, request_hash: str):
+        """Read-only replay lookup — never creates or mutates a row.
+
+        Returns ``(response_payload, status_code)`` when a completed row with a
+        matching hash exists, ``None`` when the key is fresh (or expired), and
+        raises the same :class:`IdempotencyHashMismatchError` /
+        :class:`IdempotencyInFlightError` as :meth:`begin`. Callers use this
+        before any resource guard so a replay of an already-completed operation
+        (e.g. a session close whose session no longer exists) still returns the
+        stored response instead of a 404.
+        """
+        existing = IdempotencyService._scoped_query(tenant_id, endpoint, key).first()
+        if existing is None or _is_expired(existing):
+            return None
+        if existing.request_hash != request_hash:
+            raise IdempotencyHashMismatchError("Idempotency key was already used with a different payload.")
+        if existing.status == IdempotencyKey.STATUS_COMPLETED:
+            if existing.response_body:
+                return json.loads(existing.response_body), existing.response_status or 200
+            return None
+        raise IdempotencyInFlightError("A request with this idempotency key is in progress.")
+
+    @staticmethod
     def begin(*, tenant_id: int, endpoint: str, key: str, user_id: int | None, request_hash: str):
         """Start (or replay) an idempotent execution.
 

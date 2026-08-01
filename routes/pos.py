@@ -348,6 +348,36 @@ def _idempotency_conflict_response():
     )
 
 
+def _idempotent_replay_only(endpoint: str, payload, key):
+    """Read-only idempotency replay that runs BEFORE any resource guard.
+
+    After a session close succeeds the session is gone, so a guard such as
+    ``_get_closable_session`` would return 404 before ``_idempotent_begin``
+    could replay the stored response. This lookup returns the stored response
+    (or a 409/422 conflict) without creating or mutating any ledger row.
+    """
+    tid = get_active_tenant_id(current_user)
+    request_hash = hash_request_payload({k: v for k, v in (payload or {}).items() if k != "idempotency_key"})
+    try:
+        stored = IdempotencyService.replay_if_completed(
+            tenant_id=int(tid or 0),
+            endpoint=endpoint,
+            key=key,
+            request_hash=request_hash,
+        )
+    except IdempotencyInFlightError:
+        return _idempotency_conflict_response()
+    except IdempotencyHashMismatchError:
+        return (
+            jsonify({"success": False, "error": gettext("مفتاح عدم التكرار استُخدم مع بيانات مختلفة.")}),
+            422,
+        )
+    if stored is not None:
+        body, status = stored
+        return jsonify({**body, "idempotent_replay": True}), status
+    return None
+
+
 def _session_report_payload(session, include_sensitive: bool):
     """Blind-close serialization: expected/difference/tender totals are only
     present for roles with expected-balance visibility."""
@@ -1756,6 +1786,14 @@ def api_session_close():
         return jsonify({"success": False, "error": gettext("المبلغ المعدود غير صالح.")}), 400
     notes = (payload.get("notes") or "").strip() or None
 
+    idempotency_key = _extract_idempotency_key(payload)
+    if idempotency_key:
+        # Replay check runs before the session guard: a replayed close whose
+        # session is already closed must return the stored response, not 404.
+        replay_response = _idempotent_replay_only("pos.session_close", payload, idempotency_key)
+        if replay_response is not None:
+            return replay_response
+
     session = _get_closable_session(current_user)
     if not session:
         return (
@@ -1767,7 +1805,6 @@ def api_session_close():
     if token_error:
         return token_error
 
-    idempotency_key = _extract_idempotency_key(payload)
     try:
         with atomic_transaction("pos_session_close"):
             idem_record = None
