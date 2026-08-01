@@ -561,7 +561,7 @@ class StockService:
                 quantity=line.quantity,
                 reference_type=GLRef.SALE,
                 reference_id=sale.id,
-                notes=gettext(f"بيع: {sale.sale_number}"),
+                notes="بيع: {}".format(sale.sale_number),
                 warehouse_id=warehouse_id,  # ← تمرير المستودع
             )
 
@@ -1261,7 +1261,7 @@ class StockService:
                 gettext(f"المخزون غير كافٍ في المستودع المحدد (المتوفر: {available_qty})"),
             )
 
-        return True, gettext("متوفر")
+        return True, "متوفر"
 
     @staticmethod
     def get_product_stock(product_id, warehouse_id=None, warehouse_ids=None, user=None):

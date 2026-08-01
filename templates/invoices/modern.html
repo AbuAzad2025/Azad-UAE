@@ -137,7 +137,7 @@
 </style>
 </head>
 <body class="invoice-print modern-invoice">
-{% set export_url = url_for('printing.print_document_pdf', doc_type='sale', id=sale.id) if sale else none %}
+{% set export_url = url_for('printing.print_document_pdf', doc_type='sale', id=sale.id) if sale and sale.id else none %}
 {% include 'partials/print_action_bar.html' %}
   <div class="invoice">
     <div class="header">

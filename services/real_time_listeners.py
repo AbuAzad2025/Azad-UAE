@@ -69,14 +69,14 @@ class RealTimeAccountingListeners:
 
             # إشعار فوري
             RealTimeAccountingListeners._send_notification(
-                gettext("قيد جديد"), gettext(f"تم إنشاء قيد جديد رقم {entry.entry_number}"), "success"
+                "قيد جديد", f"تم إنشاء قيد جديد رقم {entry.entry_number}", "success"
             )
 
             # تحديث الإحصائيات
             RealTimeAccountingListeners._update_statistics()
 
         except Exception as e:
-            print(gettext(f"خطأ في مستمع إنشاء القيد: {e}"))
+            print(f"خطأ في مستمع إنشاء القيد: {e}")
 
     @staticmethod
     def _on_journal_entry_updated(entry):

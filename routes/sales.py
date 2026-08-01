@@ -266,7 +266,20 @@ def create():
     preselected_customer = None
     preselected_customer_id = request.args.get("customer_id", type=int)
     if preselected_customer_id:
-        preselected_customer = tenant_get(Customer, preselected_customer_id)
+        customer = tenant_get(Customer, preselected_customer_id)
+        if customer:
+            preselected_customer = {
+                "id": customer.id,
+                "name": customer.name,
+                "name_ar": customer.name_ar,
+                "phone": customer.phone,
+                "email": customer.email,
+                "address": customer.address,
+                "tax_number": customer.tax_number,
+                "balance": str(customer.balance or 0),
+                "preferred_currency": customer.preferred_currency,
+                "customer_type": customer.customer_type,
+            }
 
     from models import User
 

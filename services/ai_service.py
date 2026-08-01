@@ -12,7 +12,7 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import joinedload
 from typing import TYPE_CHECKING, Any
 
-from flask_babel import gettext
+from flask_babel import gettext, lazy_gettext
 from extensions import db
 
 if TYPE_CHECKING:
@@ -62,8 +62,8 @@ class AIService:
     """
 
     # AI Configuration
-    NAME = gettext("أزاد")
-    COMPANY = gettext("شركة أزاد للأنظمة الذكية")
+    NAME = lazy_gettext("أزاد")
+    COMPANY = lazy_gettext("شركة أزاد للأنظمة الذكية")
     DEVELOPER = "م. أحمد غنام"
 
     # تهيئة المكونات الذكية

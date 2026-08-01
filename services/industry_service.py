@@ -1,4 +1,4 @@
-from flask_babel import gettext
+from flask_babel import lazy_gettext
 
 VALID_BUSINESS_TYPES = frozenset(
     [
@@ -23,23 +23,23 @@ VALID_BUSINESS_TYPES = frozenset(
 )
 
 BUSINESS_TYPE_LABELS = {
-    "general": (gettext("عام"), "General"),
-    "automotive": (gettext("كراج / قطع غيار سيارات"), "Automotive"),
-    "electronics": (gettext("إلكترونيات"), "Electronics"),
-    "supermarket": (gettext("سوبرماركت"), "Supermarket"),
-    "pharmacy": (gettext("صيدلية"), "Pharmacy"),
-    "restaurant": (gettext("مطعم / كافيه"), "Restaurant"),
-    "construction": (gettext("مقاولات"), "Construction"),
-    "textile": (gettext("أقمشة / ملابس"), "Textile"),
-    "jewelry": (gettext("مجوهرات / ذهب"), "Jewelry"),
-    "retail": (gettext("تجارة Retail"), "Retail"),
-    "trading": (gettext("تجارة عامة"), "Trading"),
-    "batteries": (gettext("بطاريات"), "Batteries"),
-    "mobile_new": (gettext("موبايلات جديدة"), "New Mobile Phones"),
-    "mobile_used": (gettext("موبايلات مستعملة"), "Used Mobile Phones"),
-    "mobile_parts": (gettext("قطع غيار موبايلات"), "Mobile Spare Parts"),
-    "clothing": (gettext("ملابس"), "Clothing"),
-    "multi_branch_retail": (gettext("تجارة متعددة الفروع"), "Multi-Branch Retail"),
+    "general": (lazy_gettext("عام"), "General"),
+    "automotive": (lazy_gettext("كراج / قطع غيار سيارات"), "Automotive"),
+    "electronics": (lazy_gettext("إلكترونيات"), "Electronics"),
+    "supermarket": (lazy_gettext("سوبرماركت"), "Supermarket"),
+    "pharmacy": (lazy_gettext("صيدلية"), "Pharmacy"),
+    "restaurant": (lazy_gettext("مطعم / كافيه"), "Restaurant"),
+    "construction": (lazy_gettext("مقاولات"), "Construction"),
+    "textile": (lazy_gettext("أقمشة / ملابس"), "Textile"),
+    "jewelry": (lazy_gettext("مجوهرات / ذهب"), "Jewelry"),
+    "retail": (lazy_gettext("تجارة Retail"), "Retail"),
+    "trading": (lazy_gettext("تجارة عامة"), "Trading"),
+    "batteries": (lazy_gettext("بطاريات"), "Batteries"),
+    "mobile_new": (lazy_gettext("موبايلات جديدة"), "New Mobile Phones"),
+    "mobile_used": (lazy_gettext("موبايلات مستعملة"), "Used Mobile Phones"),
+    "mobile_parts": (lazy_gettext("قطع غيار موبايلات"), "Mobile Spare Parts"),
+    "clothing": (lazy_gettext("ملابس"), "Clothing"),
+    "multi_branch_retail": (lazy_gettext("تجارة متعددة الفروع"), "Multi-Branch Retail"),
 }
 
 

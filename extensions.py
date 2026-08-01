@@ -23,8 +23,11 @@ except ImportError:
 
 
 def get_locale():
-    if "language" in session:
-        return session.get("language", "ar")
+    try:
+        if "language" in session:
+            return session.get("language", "ar")
+    except RuntimeError:
+        pass
     return "ar"
 
 

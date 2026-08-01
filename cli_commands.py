@@ -339,6 +339,11 @@ def _do_seed_demo(_app):
         # Demo baseline — the seeded demo company gets headroom above the
         # platform default (5) so the full demo dataset fits.
         max_users=15,
+        # The demo dataset seeds 4 branches + 4 warehouses while the trial
+        # defaults are 3/2 — without headroom the "plan limit reached" banner
+        # fires on the dashboard on every visit.
+        max_branches=15,
+        max_warehouses=15,
     )
     # Application-level industry enforcement (no DB schema change).
     validate_tenant_industry(demo_tenant.business_type, demo_tenant.industry)

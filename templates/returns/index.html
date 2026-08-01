@@ -1,6 +1,7 @@
 {% block title %}{{ t('returns') }}{% endblock %}
 
 {% block extra_css %}
+{% include 'partials/datatables_assets.html' %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/datatables.css') }}">
 <style>
   #returnsTable th,
@@ -25,6 +26,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{% include 'partials/datatables_assets.html' %}
 <script src="{{ url_for('static', filename='js/datatables.js') }}"></script>
 <script>
   (() => {

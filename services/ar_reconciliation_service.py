@@ -6,16 +6,16 @@ from decimal import Decimal
 
 from sqlalchemy import func
 
-from flask_babel import gettext
+from flask_babel import lazy_gettext
 from extensions import db
 from models import Customer, GLAccount, GLJournalEntry, GLJournalLine, Sale
 from services.gl_service import GL_ACCOUNTS
 from utils.gl_tenant import scope_gl_accounts
 
 AR_SUBLEDGER_ACCOUNTS = (
-    ("1130", gettext("ذمم مدينة"), ("regular",)),
-    ("3350", gettext("جاري الشركاء"), ("partner",)),
-    ("2115", gettext("ذمم التجار"), ("merchant",)),
+    ("1130", lazy_gettext("ذمم مدينة"), ("regular",)),
+    ("3350", lazy_gettext("جاري الشركاء"), ("partner",)),
+    ("2115", lazy_gettext("ذمم التجار"), ("merchant",)),
 )
 
 

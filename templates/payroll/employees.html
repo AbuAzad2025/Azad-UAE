@@ -2,6 +2,7 @@
 {% block title %}{{ _('الموظفون') }}{% endblock %}
 
 {% block extra_css %}
+{% include 'partials/datatables_assets.html' %}
 <style>
   #employeesTable th,
   #employeesTable td {
@@ -19,6 +20,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{% include 'partials/datatables_assets.html' %}
 <script>
   (() => {
     const tableSelector = '#employeesTable';

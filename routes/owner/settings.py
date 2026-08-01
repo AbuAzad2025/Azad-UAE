@@ -607,8 +607,15 @@ def preview_invoice(template):
     tid = request.args.get("tenant_id", type=int) or get_active_tenant_id(current_user)
     if request.args.get("tenant_id") and not is_global_owner_user(current_user):
         abort(403)
-    settings = InvoiceSettings.get_active(tid)
-    print_branding = get_print_header_context(tid)
+    from utils.tenanting import without_tenant_scope
+
+    if tid != get_active_tenant_id(current_user):
+        with without_tenant_scope():
+            settings = InvoiceSettings.get_active(tid)
+            print_branding = get_print_header_context(tid)
+    else:
+        settings = InvoiceSettings.get_active(tid)
+        print_branding = get_print_header_context(tid)
     from utils.number_to_arabic import number_to_arabic_words
     from utils.qr_generator import generate_qr_data_url
 
@@ -726,8 +733,15 @@ def preview_receipt(template):
     tid = request.args.get("tenant_id", type=int) or get_active_tenant_id(current_user)
     if request.args.get("tenant_id") and not is_global_owner_user(current_user):
         abort(403)
-    settings = InvoiceSettings.get_active(tid)
-    print_branding = get_print_header_context(tid)
+    from utils.tenanting import without_tenant_scope
+
+    if tid != get_active_tenant_id(current_user):
+        with without_tenant_scope():
+            settings = InvoiceSettings.get_active(tid)
+            print_branding = get_print_header_context(tid)
+    else:
+        settings = InvoiceSettings.get_active(tid)
+        print_branding = get_print_header_context(tid)
     try:
         from models import Tenant
 
@@ -772,6 +786,7 @@ def preview_receipt(template):
         user = SampleUser()
         amount = Decimal("1500.00")
         amount_aed = Decimal("1500.00")
+        base_amount = Decimal("1500.00")
         currency = default_currency
         payment_method = "cheque"
         cheque_number = "789456"
