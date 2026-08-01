@@ -85,6 +85,7 @@ class TestCustomersStatementBuilder:
             cheque_number=None,
             bank_name=None,
             status_ar="معلقة",
+            rejection_reason=None,
         )
         payment.cheque = cheque
         payment.get_method_display.return_value = "شيك"
@@ -202,6 +203,8 @@ class TestCustomersStatementBuilder:
             amount_aed=40,
             amount=40,
             payment_confirmed=False,
+            payment_method="cheque",
+            rejection_reason=None,
         )
         with (
             patch("routes.customers.Sale") as SaleMod,

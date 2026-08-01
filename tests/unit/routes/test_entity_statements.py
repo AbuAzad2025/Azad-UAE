@@ -4,7 +4,8 @@
 - الرصيد الافتتاحي يُحسب من حركات ما قبل الفترة (وليس صفرًا).
 - الرصيد الختامي للفترة المحددة يساوي الرصيد بدون تحديد فترة (لا فقدان للتاريخ).
 - المرتجعات المعتمدة تظهر كدائن وتقلل الذمة.
-- الدفعات غير المؤكدة والشيكات المرفوضة لا تؤثر على الرصيد.
+- الدفعات المرفوضة (شيكات مرتدة) لا تؤثر على الرصيد، بينما الشيك المعلق
+  يؤثر فوراً (قيد الاستلام Dr شيكات تحت التحصيل / Cr ذمم يخفض الذمة).
 - GL: الرصيد الافتتاحي للقيود المرحلة فقط، ولا مضاعفة عند غياب date_from.
 - الموظف: السلفة المخصومة من الراتب لا تُحسب مرتين.
 - الشريك: عزل tenant صارم.
@@ -186,7 +187,7 @@ class TestCustomerStatement:
         _sale_return(tid, s_new, "RET-NEW-1", 150, datetime(2026, 5, 20, tzinfo=timezone.utc))
         # مرتجع مرفوض — لا أثر له
         _sale_return(tid, s_new, "RET-REJ-1", 999, datetime(2026, 5, 21, tzinfo=timezone.utc), status="rejected")
-        # دفعة غير مؤكدة — لا أثر لها على الرصيد
+        # شيك وارد معلق — يؤثر فوراً (قيد الاستلام Dr CUC / Cr AR يخفض الذمة)
         _payment(
             tid,
             "PAY-PEND-1",
@@ -205,8 +206,8 @@ class TestCustomerStatement:
         self._seed(db_session, sample_tenant, sample_customer, sample_user)
         resp = auth_client.get(f"/customers/{sample_customer.id}/statement")
         assert resp.status_code == 200
-        # دائن: 200 + 400 + 150 = 750 | مدين: 500 + 1000 = 1500 → -750
-        assert _final_balance_from_html(resp.get_data(as_text=True)) == pytest.approx(-750.0)
+        # دائن: 200 + 400 + 150 + 777 (شيك معلق) = 1527 | مدين: 500 + 1000 = 1500 → 27
+        assert _final_balance_from_html(resp.get_data(as_text=True)) == pytest.approx(27.0)
 
     def test_opening_balance_and_period_consistency(
         self, db_session, auth_client, sample_tenant, sample_customer, sample_user
@@ -217,9 +218,9 @@ class TestCustomerStatement:
         html = resp.get_data(as_text=True)
         # الافتتاحي: 200 دفع - 500 بيع = -300
         assert "الرصيد الافتتاحي" in html
-        assert _final_balance_from_html(html) == pytest.approx(-750.0)
+        assert _final_balance_from_html(html) == pytest.approx(27.0)
 
-    def test_rejected_return_and_pending_cheque_excluded(
+    def test_rejected_return_excluded_and_pending_cheque_included(
         self, db_session, auth_client, sample_tenant, sample_customer, sample_user
     ):
         tid = sample_tenant.id
@@ -240,8 +241,8 @@ class TestCustomerStatement:
         db_session.commit()
         resp = auth_client.get(f"/customers/{cid}/statement")
         assert resp.status_code == 200
-        # فقط البيع 300 مدين — المرفوض والمعلق لا أثر لهما
-        assert _final_balance_from_html(resp.get_data(as_text=True)) == pytest.approx(-300.0)
+        # البيع 300 مدين - شيك معلق 120 دائن → -180 (المرتجع المرفوض لا أثر له)
+        assert _final_balance_from_html(resp.get_data(as_text=True)) == pytest.approx(-180.0)
 
 
 # ───────────────────── supplier statement ─────────────────────

@@ -574,21 +574,31 @@ def statement(**kwargs):
             pre_returns_q = pre_returns_q.filter(ProductReturn.branch_id == branch_scope_id())
 
         pre_sales_total = float(pre_sales_q.with_entities(func.coalesce(func.sum(Sale.amount_aed), 0)).scalar() or 0)
-        # الدفعات الواردة المؤكدة دائن (تقلل الذمة)، والصادرة مدين (استرداد)
+        # الدفعات الواردة دائن (تقلل الذمة)، والصادرة مدين (استرداد).
+        # القاعدة موحّدة مع الرصيد الجاري ودفتر الأستاذ: الدفعة المؤكدة تؤثر،
+        # والشيك المعلق يؤثر فوراً (قيد الاستلام Dr شيكات تحت التحصيل / Cr ذمم)،
+        # والمرفوض (مرتد) لا أثر له.
         pre_pay_rows = pre_payments_q.with_entities(
-            Payment.direction, Payment.amount_aed, Payment.payment_confirmed
+            Payment.direction,
+            Payment.amount_aed,
+            Payment.payment_confirmed,
+            Payment.payment_method,
+            Payment.rejection_reason,
         ).all()
         pre_payments_net = sum(
             (float(amount or 0) if direction == "incoming" else -float(amount or 0))
-            for direction, amount, confirmed in pre_pay_rows
-            if confirmed
+            for direction, amount, confirmed, method, rejection in pre_pay_rows
+            if confirmed or (method == "cheque" and not rejection)
         )
-        # سندات القبض المؤكدة دائن — باستثناء الممثلة بدفعة مخصصة
+        # سندات القبض الدائنة — بنفس القاعدة — باستثناء الممثلة بدفعة مخصصة
         pre_payment_refs = {ref for (ref,) in pre_payments_q.with_entities(Payment.reference_number).all() if ref}
         pre_receipts_total = sum(
             float(r.amount_aed or 0)
             for r in pre_receipts_q.all()
-            if r.payment_confirmed and (r.receipt_number or "") not in pre_payment_refs
+            if (
+                r.payment_confirmed or (r.payment_method == "cheque" and not r.rejection_reason)
+            )
+            and (r.receipt_number or "") not in pre_payment_refs
         )
         # المرتجعات المعتمدة قبل الفترة دائن (تقلل الذمة)
         pre_returns_total = float(
@@ -767,6 +777,7 @@ def statement(**kwargs):
                     "reference_number": payment.reference_number or "-",
                     "direction": payment.direction,
                     "payment_confirmed": payment.payment_confirmed,
+                    "rejection_reason": getattr(payment, "rejection_reason", None),
                     "status_ar": (
                         payment.status_ar
                         if hasattr(payment, "status_ar")
@@ -813,6 +824,9 @@ def statement(**kwargs):
                 "paid_amount": float(receipt.amount_aed or 0),
                 "balance_due": 0,
                 "status": gettext("مؤكدة") if receipt.payment_confirmed else gettext("معلقة"),
+                "payment_method": receipt.payment_method,
+                "payment_confirmed": receipt.payment_confirmed,
+                "rejection_reason": getattr(receipt, "rejection_reason", None),
             }
         )
 
@@ -877,11 +891,16 @@ def statement(**kwargs):
         if trans["type"] == "opening":
             trans["balance"] = running_balance
             continue
-        is_confirmed = (
-            trans.get("payment", {}).get("payment_confirmed", True)
-            if trans["type"] == "payment"
-            else (trans.get("status") != gettext("معلقة") if trans["type"] == "receipt" else True)
-        )
+        # قاعدة التأثير موحّدة مع دفتر الأستاذ: الدفعة المؤكدة تؤثر دائمًا،
+        # والشيك الوارد المعلق يؤثر أيضًا لأن قيد الاستلام (Dr شيكات تحت
+        # التحصيل / Cr ذمم) يخفض الذمة فورًا. المرفوض (مرتد) لا أثر له.
+        if trans["type"] in ("payment", "receipt"):
+            source = trans.get("payment") or trans
+            confirmed = bool(source.get("payment_confirmed"))
+            pending_cheque = source.get("payment_method") == "cheque" and not source.get("rejection_reason")
+            is_confirmed = confirmed or pending_cheque
+        else:
+            is_confirmed = True
         if is_confirmed:
             running_balance += trans["credit"] - trans["debit"]
         trans["balance"] = running_balance

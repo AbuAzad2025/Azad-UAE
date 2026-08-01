@@ -4,6 +4,21 @@ from utils.currency_utils import context_aware_default_currency
 from utils.constants import normalize_payment_method_code
 
 
+def payment_affects_balance(model):
+    """Unified balance-impact condition for Payment/Receipt.
+
+    A record affects balances when it is confirmed, or when it is a pending
+    (non-rejected) cheque: issuing an outgoing cheque reduces AP immediately and
+    receiving an incoming cheque reduces AR immediately (GL: Dr CUC / Cr AR),
+    with the effect reversed only on bounce/cancellation (which sets a
+    rejection_reason). Non-cheque unconfirmed records have no effect.
+    """
+    return db.or_(
+        model.payment_confirmed,
+        db.and_(model.payment_method == "cheque", model.rejection_reason.is_(None)),
+    )
+
+
 class Payment(db.Model):
     __tablename__ = "payments"
     __table_args__ = (db.UniqueConstraint("tenant_id", "payment_number", name="uq_payments_tenant_payment_number"),)

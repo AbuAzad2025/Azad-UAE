@@ -209,11 +209,17 @@ class AgingAnalysisService:
                 purchases_query = purchases_query.filter(Purchase.branch_id == branch_id)
             all_purchases = purchases_query.all()
 
+            # القاعدة موحّدة مع الكشوفات ودفتر الأستاذ: الدفعة المؤكدة تؤثر،
+            # والشيك الصادر المعلق يخفض AP فوراً (Dr AP / Cr شيكات مؤجلة)،
+            # والمرفوض (مرتد) لا أثر له.
             payments_query = db.session.query(func.sum(Payment.amount_aed)).filter(
                 Payment.supplier_id == supplier.id,
                 Payment.tenant_id == tid,
                 Payment.direction == "outgoing",
-                Payment.payment_confirmed,
+                db.or_(
+                    Payment.payment_confirmed,
+                    db.and_(Payment.payment_method == "cheque", Payment.rejection_reason.is_(None)),
+                ),
                 func.date(Payment.payment_date) <= as_of_date,
             )
             if branch_id:

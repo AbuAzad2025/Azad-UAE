@@ -16,6 +16,7 @@ from models import (
     Customer,
     ProductPartner,
 )
+from models.payment import payment_affects_balance
 from utils.decorators import permission_required, report_branch_scope_id
 from utils.tenanting import (
     get_active_tenant_id,
@@ -48,7 +49,7 @@ def get_confirmed_sale_paid_aed(sale_id, tenant_id=None, branch_id=None):
 
     q = db.session.query(func.coalesce(func.sum(Payment.amount_aed), 0)).filter(
         Payment.sale_id == sale_id,
-        Payment.payment_confirmed,
+        payment_affects_balance(Payment),
         Payment.direction == "incoming",
     )
     if tenant_id is not None:
@@ -64,7 +65,7 @@ def get_confirmed_supplier_paid_aed(supplier_id, purchase_id=None, tenant_id=Non
 
     q = db.session.query(func.coalesce(func.sum(Payment.amount_aed), 0)).filter(
         Payment.supplier_id == supplier_id,
-        Payment.payment_confirmed,
+        payment_affects_balance(Payment),
         Payment.direction == "outgoing",
     )
     if purchase_id is not None:
@@ -315,15 +316,15 @@ def partners():
             paid_query_total = db.session.query(func.sum(Payment.amount_aed)).filter(
                 Payment.customer_id == cust.id,
                 Payment.direction == "outgoing",
-                Payment.payment_confirmed,
+                payment_affects_balance(Payment),
             )
             receipts_query = db.session.query(func.sum(Receipt.amount_aed)).filter(
-                Receipt.customer_id == cust.id, Receipt.payment_confirmed
+                Receipt.customer_id == cust.id, payment_affects_balance(Receipt)
             )
             payment_in_query = db.session.query(func.sum(Payment.amount_aed)).filter(
                 Payment.customer_id == cust.id,
                 Payment.direction == "incoming",
-                Payment.payment_confirmed,
+                payment_affects_balance(Payment),
             )
             if tenant_id is not None:
                 paid_query_total = paid_query_total.filter(Payment.tenant_id == tenant_id)
@@ -387,14 +388,14 @@ def partners():
             Payment.supplier_id == sup.id,
             Payment.tenant_id == sup.tenant_id,
             Payment.direction == "outgoing",
-            Payment.payment_confirmed,
+            payment_affects_balance(Payment),
         )
         # Received FROM Supplier (Incoming - Refunds)
         received_query = db.session.query(func.sum(Payment.amount_aed)).filter(
             Payment.supplier_id == sup.id,
             Payment.tenant_id == sup.tenant_id,
             Payment.direction == "incoming",
-            Payment.payment_confirmed,
+            payment_affects_balance(Payment),
         )
 
         if date_from:
@@ -674,7 +675,7 @@ def purchases():
     pmt_query = tenant_query(Payment).filter(
         Payment.direction == "outgoing",
         Payment.supplier_id.isnot(None),
-        Payment.payment_confirmed,
+        payment_affects_balance(Payment),
     )
     if tenant_id is not None:
         pmt_query = pmt_query.filter(Payment.tenant_id == tenant_id)
@@ -1745,7 +1746,7 @@ def entity_report_fragment(entity_type, **kwargs):
             supplier_payments_base = Payment.query.filter(
                 Payment.supplier_id == record_id,
                 Payment.direction == "outgoing",
-                Payment.payment_confirmed,
+                payment_affects_balance(Payment),
             )
             if tenant_id is not None:
                 supplier_payments_base = supplier_payments_base.filter(Payment.tenant_id == tenant_id)
@@ -1790,7 +1791,7 @@ def entity_report_fragment(entity_type, **kwargs):
             context["allocation_exact"] = has_direct_allocation
             context["unallocated_supplier_credit"] = unallocated_credit
 
-            payments = Payment.query.filter_by(supplier_id=record_id, payment_confirmed=True)
+            payments = Payment.query.filter(Payment.supplier_id == record_id, payment_affects_balance(Payment))
             if tenant_id is not None:
                 payments = payments.filter(Payment.tenant_id == tenant_id)
             if scoped_branch_id is not None:
@@ -1835,13 +1836,13 @@ def entity_report_fragment(entity_type, **kwargs):
                 Sale.customer_id == record_id, Sale.status == "confirmed"
             )
             total_receipts_query = db.session.query(func.sum(Receipt.amount_aed)).filter(
-                Receipt.customer_id == record_id, Receipt.payment_confirmed
+                Receipt.customer_id == record_id, payment_affects_balance(Receipt)
             )
             # Payments made TO customer (e.g. returns/share/drawings)
             total_payments_query = db.session.query(func.sum(Payment.amount_aed)).filter(
                 Payment.customer_id == record_id,
                 Payment.direction == "outgoing",
-                Payment.payment_confirmed,
+                payment_affects_balance(Payment),
             )
             if tenant_id is not None:
                 total_sales_query = total_sales_query.filter(Sale.tenant_id == tenant_id)
@@ -1978,8 +1979,10 @@ def entity_report_fragment(entity_type, **kwargs):
                 for s in sales
             ]
 
-            receipts = Receipt.query.filter_by(customer_id=record_id, payment_confirmed=True)
-            payments_out = Payment.query.filter_by(customer_id=record_id, direction="outgoing", payment_confirmed=True)
+            receipts = Receipt.query.filter(Receipt.customer_id == record_id, payment_affects_balance(Receipt))
+            payments_out = Payment.query.filter(
+                Payment.customer_id == record_id, Payment.direction == "outgoing", payment_affects_balance(Payment)
+            )
             if tenant_id is not None:
                 receipts = receipts.filter(Receipt.tenant_id == tenant_id)
                 payments_out = payments_out.filter(Payment.tenant_id == tenant_id)

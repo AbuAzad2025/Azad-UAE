@@ -865,10 +865,10 @@ class TestEntityFragmentDirectCall:
                 patch("models.Purchase.query", ctx["purchase_q"]),
                 patch("models.Payment.query") as pay_query,
             ):
-                pay_query.filter.return_value = ctx["pay_chain"]
-                pay_query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = [
-                    ctx["payment"]
-                ]
+                list_chain = MagicMock()
+                list_chain.filter.return_value = list_chain
+                list_chain.order_by.return_value.all.return_value = [ctx["payment"]]
+                pay_query.filter.side_effect = [ctx["pay_chain"], list_chain]
                 from routes.reports import entity_report_fragment
 
                 resp = entity_report_fragment("supplier", id=12)
@@ -904,8 +904,10 @@ class TestEntityFragmentDirectCall:
                 patch("models.Purchase.query", ctx["purchase_q"]),
                 patch("models.Payment.query") as pay_query,
             ):
-                pay_query.filter.return_value = ctx["pay_chain"]
-                pay_query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = []
+                list_chain = MagicMock()
+                list_chain.filter.return_value = list_chain
+                list_chain.order_by.return_value.all.return_value = []
+                pay_query.filter.side_effect = [ctx["pay_chain"], list_chain]
                 from routes.reports import entity_report_fragment
 
                 entity_report_fragment("supplier", id=12)
@@ -1050,10 +1052,10 @@ class TestEntityFragmentDirectCall:
                 patch("models.Purchase.query", ctx["purchase_q"]),
                 patch("models.Payment.query") as pay_query,
             ):
-                pay_query.filter.return_value = ctx["pay_chain"]
-                pay_query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = [
-                    ctx["payment"]
-                ]
+                list_chain = MagicMock()
+                list_chain.filter.return_value = list_chain
+                list_chain.order_by.return_value.all.return_value = [ctx["payment"]]
+                pay_query.filter.side_effect = [ctx["pay_chain"], list_chain]
                 from routes.reports import entity_report_fragment
 
                 entity_report_fragment("supplier", id=12)

@@ -63,14 +63,23 @@ class ARReconciliationService:
 
         total_unpaid = Decimal("0")
         for sale_id, amount_aed, customer_id in sales_q.all():
+            # القاعدة موحّدة مع الكشوفات ودفتر الأستاذ: الدفعة المؤكدة تؤثر،
+            # والشيك المعلق يؤثر فوراً (Dr شيكات تحت التحصيل / Cr ذمم)،
+            # والمرفوض (مرتد) لا أثر له.
             confirmed_payments = db.session.query(func.coalesce(func.sum(Payment.amount_aed), 0)).filter(
                 Payment.sale_id == sale_id,
-                Payment.payment_confirmed,
+                db.or_(
+                    Payment.payment_confirmed,
+                    db.and_(Payment.payment_method == "cheque", Payment.rejection_reason.is_(None)),
+                ),
                 Payment.direction == "incoming",
             )
             confirmed_receipts = db.session.query(func.coalesce(func.sum(Receipt.amount_aed), 0)).filter(
                 Receipt.customer_id == customer_id,
-                Receipt.payment_confirmed,
+                db.or_(
+                    Receipt.payment_confirmed,
+                    db.and_(Receipt.payment_method == "cheque", Receipt.rejection_reason.is_(None)),
+                ),
             )
             if tenant_id is not None:
                 confirmed_payments = confirmed_payments.filter(Payment.tenant_id == int(tenant_id))
