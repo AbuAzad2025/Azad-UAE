@@ -10,14 +10,14 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from unittest.mock import MagicMock
 
+# ── Setup paths FIRST ──
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, project_root)
+
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from utils.i18n import t
 from utils.helpers import format_currency, format_date, format_datetime, format_time, format_number
-
-# ── Setup paths ──
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, project_root)
 
 os.makedirs("audit_output", exist_ok=True)
 

@@ -1,5 +1,13 @@
 {# Developer/platform footer — Azad Intelligent Systems branding with WhatsApp support. #}
 <div class="print-developer-footer">
+  <div class="print-developer-brand">
+    {% if developer_logo %}
+    <img src="{{ url_for('static', filename=developer_logo) }}"
+         alt="Azad Logo"
+         class="print-developer-logo">
+    {% endif %}
+    <span class="print-developer-name">{{ developer_name_ar or config.DEVELOPER_NAME_AR or 'شركة أزاد للأنظمة الذكية' }}</span>
+  </div>
   <p class="mb-0">{{ print_branding.powered_by_text if print_branding is defined else (developer_credit or config.DEVELOPER_CREDIT) }}</p>
   <p class="erp-print-footer-contact">
     {% if developer_phone %}📞 {{ developer_phone }} | {% endif %}
