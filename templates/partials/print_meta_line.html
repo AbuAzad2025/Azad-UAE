@@ -10,5 +10,5 @@
 <div class="print-meta-line" dir="rtl">
   {{ t('User') }}: <strong>{{ print_user_name or t('Not_Available') }}</strong>
   —
-  {{ t('Date') }}: <span>{{ (printed_at.strftime('%Y-%m-%d %H:%M') if printed_at is defined and printed_at else (now().strftime('%Y-%m-%d %H:%M') if now is defined and now else '-')) }}</span>
+  {{ t('Date') }}: <span>{{ (printed_at.strftime('%Y-%m-%d %H:%M') if printed_at is defined and printed_at else (now().strftime('%Y-%m-%d %H:%M') if now is defined else '-')) }}</span>
 </div>

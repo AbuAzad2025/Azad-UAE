@@ -501,6 +501,93 @@ def delete(**kwargs):
     return redirect(url_for("customers.index"))
 
 
+@customers_bp.route("/<int:id>/statement/print")
+@login_required
+@permission_required("manage_customers")
+def print_statement(**kwargs):
+    """طباعة كشف حساب العميل"""
+    record_id = kwargs.pop("id")
+    customer = tenant_get_or_404(Customer, record_id)
+    if not _customer_in_scope(record_id):
+        return render_template("errors/403.html"), 403
+
+    date_from = request.args.get("date_from", type=str)
+    date_to = request.args.get("date_to", type=str)
+
+    from sqlalchemy import func
+    from models import Payment, ProductReturn, Receipt
+
+    tid = get_active_tenant_id(current_user)
+    sales_q = Sale.query.filter_by(customer_id=record_id, status="confirmed", tenant_id=tid)
+    payments_q = Payment.query.filter_by(customer_id=record_id, tenant_id=tid)
+    receipts_q = Receipt.query.filter_by(customer_id=record_id, tenant_id=tid)
+    returns_q = ProductReturn.query.filter_by(customer_id=record_id, status="approved", tenant_id=tid)
+    if branch_scope_id() is not None:
+        sales_q = sales_q.filter(Sale.branch_id == branch_scope_id())
+        payments_q = payments_q.filter(Payment.branch_id == branch_scope_id())
+        receipts_q = receipts_q.filter(Receipt.branch_id == branch_scope_id())
+        returns_q = returns_q.filter(ProductReturn.branch_id == branch_scope_id())
+
+    opening_balance = 0.0
+    if date_from:
+        pre_sales = float(Sale.query.filter(Sale.customer_id==record_id,Sale.status=="confirmed",Sale.tenant_id==tid,func.date(Sale.sale_date)<date_from).with_entities(func.coalesce(func.sum(Sale.amount_aed),0)).scalar() or 0)
+        pre_pay = sum((float(p.amount_aed or 0) if p.direction=="incoming" else -float(p.amount_aed or 0)) for p in Payment.query.filter(Payment.customer_id==record_id,Payment.tenant_id==tid,func.date(Payment.payment_date)<date_from).all() if p.payment_confirmed or (p.payment_method=="cheque" and not p.rejection_reason))
+        pre_receipt = sum(float(r.amount_aed or 0) for r in Receipt.query.filter(Receipt.customer_id==record_id,Receipt.tenant_id==tid,func.date(Receipt.receipt_date)<date_from).all() if r.payment_confirmed or (r.payment_method=="cheque" and not r.rejection_reason))
+        pre_return = float(ProductReturn.query.filter(ProductReturn.customer_id==record_id,ProductReturn.status=="approved",ProductReturn.tenant_id==tid,func.date(ProductReturn.return_date)<date_from).with_entities(func.coalesce(func.sum(ProductReturn.amount_aed),0)).scalar() or 0)
+        opening_balance = (pre_pay + pre_receipt + pre_return) - pre_sales
+        sales_q = sales_q.filter(func.date(Sale.sale_date) >= date_from)
+        payments_q = payments_q.filter(func.date(Payment.payment_date) >= date_from)
+        receipts_q = receipts_q.filter(func.date(Receipt.receipt_date) >= date_from)
+        returns_q = returns_q.filter(func.date(ProductReturn.return_date) >= date_from)
+    if date_to:
+        sales_q = sales_q.filter(func.date(Sale.sale_date) <= date_to)
+        payments_q = payments_q.filter(func.date(Payment.payment_date) <= date_to)
+        receipts_q = receipts_q.filter(func.date(Receipt.receipt_date) <= date_to)
+        returns_q = returns_q.filter(func.date(ProductReturn.return_date) <= date_to)
+
+    transactions = []
+    for s in sales_q.order_by(Sale.sale_date).all():
+        transactions.append({"date": s.sale_date, "type": "sale", "reference": s.sale_number, "debit": float(s.amount_aed or 0), "credit": 0, "description": gettext("فاتورة بيع")})
+    for p in payments_q.order_by(Payment.payment_date).all():
+        amt = float(p.amount_aed or 0)
+        if p.direction == "incoming":
+            transactions.append({"date": p.payment_date, "type": "payment", "reference": p.payment_number or p.reference_number or "", "debit": 0, "credit": amt, "description": gettext("دفعة")})
+        else:
+            transactions.append({"date": p.payment_date, "type": "payment", "reference": p.payment_number or p.reference_number or "", "debit": amt, "credit": 0, "description": gettext("استرداد")})
+    for r in receipts_q.order_by(Receipt.receipt_date).all():
+        transactions.append({"date": r.receipt_date, "type": "receipt", "reference": r.receipt_number, "debit": 0, "credit": float(r.amount_aed or 0), "description": gettext("سند قبض")})
+    for ret in returns_q.order_by(ProductReturn.return_date).all():
+        transactions.append({"date": ret.return_date, "type": "return", "reference": ret.return_number, "debit": 0, "credit": float(ret.amount_aed or 0), "description": gettext("مرتجع مبيعات")})
+
+    transactions.sort(key=lambda x: x["date"] or datetime.min)
+
+    if date_from:
+        transactions.insert(0, {"date": date_from, "type": "opening", "reference": "", "debit": 0, "credit": 0, "balance": opening_balance, "description": gettext("الرصيد الافتتاحي")})
+
+    running = opening_balance if date_from else 0
+    for t in transactions:
+        if t["type"] != "opening":
+            running += t["credit"] - t["debit"]
+        t["balance"] = running
+
+    from utils.tenant_branding import get_print_header_context
+    from models.invoice_settings import InvoiceSettings
+    tenant, settings, company = InvoiceSettings.company_print_context(tid)
+    branding = get_print_header_context(tid)
+    return render_template(
+        "customers/statement_print.html",
+        customer=customer,
+        transactions=transactions,
+        final_balance=running,
+        filters={"date_from": date_from or "", "date_to": date_to or ""},
+        settings=settings,
+        company=company,
+        print_branding=branding,
+        print_tenant_id=tid,
+        tenant=tenant,
+    )
+
+
 @customers_bp.route("/<int:id>/statement")
 @login_required
 @permission_required("manage_customers")

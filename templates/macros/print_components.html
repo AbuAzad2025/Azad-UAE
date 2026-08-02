@@ -1,0 +1,274 @@
+{# ==============================================================================
+   PRINT COMPONENTS — Reusable Jinja macros for standardized printable documents
+   ============================================================================== #}
+
+{# ── HEADER BANNER ─────────────────────────────────────────────────────────────
+   Renders a top branding banner with clean alignment.
+   Args:
+     company_name    — str, primary company/tenant name (AR)
+     company_meta    — dict or None with keys: address, phone, email, tax_number
+     document_name   — str, e.g. "فاتورة بيع"
+     document_number — str or int
+     document_date   — datetime or str
+     logo_src        — optional logo URL/path
+─────────────────────────────────────────────────────────────────────────────── #}
+{% macro render_header(company_name, document_name, document_number, document_date, company_meta=None, logo_src=None) %}
+<div class="print-header-banner">
+  <div class="brand">
+    {% if logo_src %}
+    <img src="{{ logo_src }}" alt="{{ company_name | default('', true) }}" class="logo">
+    {% endif %}
+    <div>
+      <div class="company-name">{{ company_name | default('—', true) }}</div>
+      {% if company_meta %}
+      <div class="company-meta">
+        {% if company_meta.address %}{{ company_meta.address }}{% endif %}
+        {% if company_meta.phone %} | <span class="phone">{{ company_meta.phone }}</span>{% endif %}
+        {% if company_meta.email %} | {{ company_meta.email }}{% endif %}
+        {% if company_meta.tax_number %} | <span class="code">{{ t('Tax_Number') }}: {{ company_meta.tax_number }}</span>{% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="doc-identity">
+    <div class="doc-title">{{ document_name | default('—', true) }}</div>
+    <div class="doc-meta">
+      <div>
+        <span class="document-number">{{ t('Document_Number') }}: <strong>{{ document_number | default('—', true) }}</strong></span>
+      </div>
+      <div>
+        <span class="date">{{ t('Date') }}: <strong>
+          {% if document_date is string %}{{ document_date }}
+          {% elif document_date and document_date.strftime %}{{ document_date.strftime('%Y-%m-%d') }}
+          {% else %}{{ t('Not_Available') }}{% endif %}
+        </strong></span>
+      </div>
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+
+{# ── PARTNER CARD ──────────────────────────────────────────────────────────────
+   Renders a clean 2-column info box for customer / supplier / partner.
+   Args:
+     partner_label — str, e.g. "العميل" / "المورد"
+     name          — str
+     phone         — str or None
+     address       — str or None
+     code          — str or None (tax number / commercial register / partner code)
+     extra_meta    — dict of additional key-value pairs
+─────────────────────────────────────────────────────────────────────────────── #}
+{% macro render_partner_card(partner_label, name, phone=None, address=None, code=None, extra_meta=None) %}
+<div class="print-partner-grid">
+  <div class="print-partner-card">
+    <div class="partner-label">{{ partner_label | default('—', true) }}</div>
+    <div class="partner-name">{{ name | default('—', true) }}</div>
+    {% if phone %}
+    <div class="partner-meta"><span class="phone">{{ t('Phone') }}: {{ phone }}</span></div>
+    {% endif %}
+    {% if address %}
+    <div class="partner-meta">{{ t('Address') }}: {{ address }}</div>
+    {% endif %}
+    {% if code %}
+    <div class="partner-meta"><span class="code">{{ t('Tax_Number') }}: {{ code }}</span></div>
+    {% endif %}
+  </div>
+  {% if extra_meta %}
+  <div class="print-partner-card">
+    {% for label, value in extra_meta.items() %}
+      <div class="partner-meta"><strong>{{ label }}:</strong> {{ value | default('—', true) }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endmacro %}
+
+
+{# ── FINANCIAL SUMMARY ─────────────────────────────────────────────────────────
+   Renders a high-contrast totals block with optional Tafqeet (amount in words).
+   Args:
+     subtotal     — float or Decimal
+     discount     — float or Decimal (0 if none)
+     tax          — float or Decimal (0 if none)
+     shipping     — float or Decimal (0 if none)
+     total        — float or Decimal
+     currency     — str, e.g. "AED"
+     tafqeet_text — str or None
+─────────────────────────────────────────────────────────────────────────────── #}
+{% macro render_financial_summary(subtotal, discount=0, tax=0, shipping=0, total=0, currency='AED', tafqeet_text=None) %}
+<div class="print-financial-summary">
+  <div class="summary-row">
+    <span class="label">{{ t('Subtotal') }}:</span>
+    <span class="value amount">{{ format_currency(subtotal, currency) }}</span>
+  </div>
+  {% if discount and discount > 0 %}
+  <div class="summary-row">
+    <span class="label">{{ t('Discount') }}:</span>
+    <span class="value amount">-{{ format_currency(discount, currency) }}</span>
+  </div>
+  {% endif %}
+  {% if tax and tax > 0 %}
+  <div class="summary-row">
+    <span class="label">{{ t('Tax') }}:</span>
+    <span class="value amount">{{ format_currency(tax, currency) }}</span>
+  </div>
+  {% endif %}
+  {% if shipping and shipping > 0 %}
+  <div class="summary-row">
+    <span class="label">{{ t('Shipping') }}:</span>
+    <span class="value amount">{{ format_currency(shipping, currency) }}</span>
+  </div>
+  {% endif %}
+  <div class="summary-row total">
+    <span class="label">{{ t('Grand_Total') }}:</span>
+    <span class="value amount">{{ format_currency(total, currency) }}</span>
+  </div>
+  {% if tafqeet_text %}
+  <div class="print-tafqeet-box">
+    <strong>{{ t('Amount') }} {{ t('بالحروف') }}:</strong> {{ tafqeet_text }}
+  </div>
+  {% endif %}
+</div>
+{% endmacro %}
+
+
+{# ── SIGNATURES ────────────────────────────────────────────────────────────────
+   Renders a unified signature block at the bottom.
+   Args:
+     roles — list of role names, default: ["المستلم", "المحاسب", "الاعتماد"]
+─────────────────────────────────────────────────────────────────────────────── #}
+{% macro render_signatures(roles=None) %}
+{% set _roles = roles or [t('المستلم'), t('المحاسب'), t('الاعتماد')] %}
+<div class="print-signatures">
+  {% for role in _roles %}
+  <div class="print-sig-box">
+    <div class="sig-line">{{ role }}</div>
+  </div>
+  {% endfor %}
+</div>
+{% endmacro %}
+
+
+{# ── KPI SUMMARY (for statements) ─────────────────────────────────────────────
+   Renders a 4-card KPI summary row.
+   Args:
+     opening_balance — float
+     total_debit     — float
+     total_credit    — float
+     closing_balance — float
+     currency        — str
+─────────────────────────────────────────────────────────────────────────────── #}
+{% macro render_statement_kpis(opening_balance=0, total_debit=0, total_credit=0, closing_balance=0, currency='AED') %}
+<div class="print-kpi-grid">
+  <div class="print-kpi-card">
+    <div class="kpi-label">{{ t('Opening_Balance') }}</div>
+    <div class="kpi-value amount">{{ format_currency(opening_balance, currency) }}</div>
+  </div>
+  <div class="print-kpi-card">
+    <div class="kpi-label">{{ t('Total_Debit') }}</div>
+    <div class="kpi-value amount">{{ format_currency(total_debit, currency) }}</div>
+  </div>
+  <div class="print-kpi-card">
+    <div class="kpi-label">{{ t('Total_Credit') }}</div>
+    <div class="kpi-value amount">{{ format_currency(total_credit, currency) }}</div>
+  </div>
+  <div class="print-kpi-card {% if closing_balance >= 0 %}kpi-positive{% else %}kpi-negative{% endif %}">
+    <div class="kpi-label">{{ t('Closing_Balance') }}</div>
+    <div class="kpi-value amount">{{ format_currency(closing_balance, currency) }}</div>
+  </div>
+</div>
+{% endmacro %}
+
+
+{# ── STATEMENT LEDGER TABLE ───────────────────────────────────────────────────
+   Renders a strict 7-column ledger table for account statements.
+   Args:
+     transactions    — list of dicts with keys: date, reference, type, description, debit, credit, balance
+     currency        — str
+     final_balance   — float
+─────────────────────────────────────────────────────────────────────────────── #}
+{% macro render_ledger_table(transactions, currency='AED', final_balance=0) %}
+<table class="print-table">
+  <thead>
+    <tr>
+      <th>{{ t('Date') }}</th>
+      <th>{{ t('Document_Number') }}</th>
+      <th>{{ t('Movement_Type') }}</th>
+      <th>{{ t('Description') }}</th>
+      <th class="amount-cell">{{ t('Debit') }}</th>
+      <th class="amount-cell">{{ t('Credit') }}</th>
+      <th class="amount-cell">{{ t('Running_Balance') }}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for t_row in transactions %}
+    <tr>
+      <td>
+        {% if t_row.date is string %}{{ t_row.date }}
+        {% elif t_row.date and t_row.date.strftime %}{{ t_row.date.strftime('%Y-%m-%d') }}
+        {% else %}—{% endif %}
+      </td>
+      <td class="code">{{ t_row.reference | default('—', true) }}</td>
+      <td>{{ t_row.type | default('—', true) }}</td>
+      <td>{{ t_row.description | default('—', true) }}</td>
+      <td class="amount-cell">{% if t_row.debit %}{{ format_currency(t_row.debit, currency) }}{% else %}—{% endif %}</td>
+      <td class="amount-cell">{% if t_row.credit %}{{ format_currency(t_row.credit, currency) }}{% else %}—{% endif %}</td>
+      <td class="amount-cell font-bold">{{ format_currency(t_row.balance, currency) }}</td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="7" class="text-center">{{ t('no_transactions_to_display') }}</td>
+    </tr>
+    {% endfor %}
+    <tr style="background:#e2e8f0;">
+      <td colspan="6" class="text-center font-bold">{{ t('final_balance') }}</td>
+      <td class="amount-cell font-bold">{{ format_currency(final_balance, currency) }}</td>
+    </tr>
+  </tbody>
+</table>
+{% endmacro %}
+
+
+{# ── VOUCHER AMOUNT BOX ───────────────────────────────────────────────────────
+   Renders a large stylized voucher amount box.
+   Args:
+     amount       — float
+     currency     — str
+     amount_words — str or None
+     label        — str, e.g. "المبلغ المستلم"
+─────────────────────────────────────────────────────────────────────────────── #}
+{% macro render_voucher_amount_box(amount, currency='AED', amount_words=None, label=None) %}
+<div class="print-voucher-amount">
+  <div class="amount-label">{{ label | default(t('Amount'), true) }}</div>
+  <div class="amount-value amount">{{ format_currency(amount, currency) }}</div>
+  {% if amount_words %}
+  <div class="amount-words">{{ amount_words }}</div>
+  {% endif %}
+</div>
+{% endmacro %}
+
+
+{# ── DOCUMENT META HEADER (lightweight) ───────────────────────────────────────
+   A minimal header for vouchers and small documents.
+   Args:
+     company_name    — str
+     document_name   — str
+     document_number — str
+     document_date   — datetime or str
+─────────────────────────────────────────────────────────────────────────────── #}
+{% macro render_doc_meta(company_name, document_name, document_number, document_date) %}
+<div style="text-align:center; border-bottom:1px solid #0f172a; padding-bottom:10px; margin-bottom:12px;">
+  <div style="font-size:11px; font-weight:700;">{{ company_name | default('—', true) }}</div>
+  <div style="font-size:14px; font-weight:700; margin:6px 0;">{{ document_name | default('—', true) }}</div>
+  <div style="font-size:8px; color:#475569;">
+    <span class="document-number">{{ t('Document_Number') }}: {{ document_number | default('—', true) }}</span>
+    <span style="margin:0 8px;">|</span>
+    <span class="date">{{ t('Date') }}:
+      {% if document_date is string %}{{ document_date }}
+      {% elif document_date and document_date.strftime %}{{ document_date.strftime('%Y-%m-%d') }}
+      {% else %}—{% endif %}
+    </span>
+  </div>
+</div>
+{% endmacro %}

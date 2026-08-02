@@ -88,9 +88,23 @@ def print_document(doc_type, **kwargs):
     PrintService.create_snapshot(eff_tid, doc_type, record_id, reason="print", document=doc)
     PrintService.audit_print(eff_tid, doc_type, record_id, action="print")
 
+    template = entry["template"]
+    requested = (request.args.get("template") or "").strip().lower()
+    if template is None:
+        template = PrintService.resolve_template(doc_type, tenant_id=eff_tid, requested_template=requested)
+
+    current_template = requested
+    if not current_template:
+        s = InvoiceSettings.get_active(eff_tid)
+        current_template = s.active_template if s and s.active_template else "modern"
+
     return PrintService.render_print(
-        entry["template"],
-        {entry["context_key"]: doc},
+        template,
+        {
+            entry["context_key"]: doc,
+            "available_templates": sorted(PrintService.INVOICE_TEMPLATES if doc_type == "sale" else PrintService.RECEIPT_TEMPLATES),
+            "current_template": current_template,
+        },
         tenant_id=eff_tid,
     )
 
@@ -126,8 +140,13 @@ def print_document_pdf(doc_type, **kwargs):
 
     eff_tid = tid or getattr(doc, "tenant_id", None)
     filename = _get_filename(entry, doc, doc_type, record_id)
+    template = entry["template"]
+    if template is None:
+        requested = (request.args.get("template") or "").strip().lower()
+        template = PrintService.resolve_template(doc_type, tenant_id=eff_tid, requested_template=requested)
+
     pdf = PrintService.render_pdf(
-        entry["template"],
+        template,
         {entry["context_key"]: doc},
         tenant_id=eff_tid,
         filename=filename,
@@ -258,7 +277,15 @@ def bulk_print():
             PrintService.create_snapshot(eff_tid, doc_type, doc_id, reason="bulk_print", document=doc)
             PrintService.audit_print(eff_tid, f"{doc_type}_bulk", doc_id, action="bulk_print")
 
-    html = PrintService.bulk_print_documents(documents, {doc_type: entry["template"]}, tid)
+    template_map = {}
+    for d in documents:
+        dt = d.get("type", doc_type)
+        ent = PrintService.PRINTABLE_DOCUMENTS.get(dt)
+        tmpl = ent["template"] if ent else None
+        if tmpl is None:
+            tmpl = PrintService.resolve_template(dt, tenant_id=tid)
+        template_map[dt] = tmpl
+    html = PrintService.bulk_print_documents(documents, template_map, tid)
     return html, 200, {"Content-Type": "text/html; charset=utf-8"}
 
 

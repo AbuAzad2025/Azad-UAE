@@ -507,21 +507,49 @@ def print_payment(**kwargs):
                     "b": print_branch.name if print_branch else "",
                 }
             )
-    return render_template(
-        "payments/print_receipt.html",
-        receipt=payment,
-        is_payment=True,
-        company=company,
-        settings=settings,
-        printed_at=datetime.now(),
-        print_branch=print_branch,
-        print_user_name=print_user_name,
-        amount_in_words=amount_in_words,
-        qr_data_url=qr_data_url,
-        doc_number=payment.payment_number,
-        print_branding=print_branding,
-        print_tenant_id=tid,
-    )
+    # ── Template resolution: respect active_template + ?template= override ──
+    from services.print_service import PrintService
+
+    requested_template = (request.args.get("template") or "").strip().lower()
+    template_path = PrintService.resolve_template("payment", tenant_id=tid, requested_template=requested_template)
+
+    ctx = {
+        "receipt": payment,
+        "is_payment": True,
+        "company": company,
+        "settings": settings,
+        "printed_at": datetime.now(),
+        "print_branch": print_branch,
+        "print_user_name": print_user_name,
+        "amount_in_words": amount_in_words,
+        "qr_data_url": qr_data_url,
+        "doc_number": payment.payment_number,
+        "print_branding": print_branding,
+        "print_tenant_id": tid,
+    }
+
+    ctx["available_templates"] = sorted(PrintService.RECEIPT_TEMPLATES)
+    ctx["current_template"] = requested_template or (settings.active_template if settings and settings.active_template else "modern")
+
+    try:
+        return render_template(template_path, **ctx)
+    except Exception as e:
+        import sys
+        import traceback
+
+        sys.stderr.write(f"[PAYMENTS_WARNING] Failed to render payment template {template_path}, falling back: {e}\n")
+        traceback.print_exc()
+        try:
+            LoggingCore.log_error(
+                message=str(e),
+                category="PAYMENTS",
+                source="routes.payments.print_payment.render_template",
+                level="WARNING",
+                exception=e,
+            )
+        except Exception:
+            current_app.logger.exception("Failed to log payment template rendering error")
+        return render_template("payments/print_receipt.html", **ctx)
 
 
 @payments_bp.route("/payments/<int:id>/archive", methods=["POST"])
@@ -1184,8 +1212,10 @@ def print_receipt(**kwargs):
     settings = InvoiceSettings.get_active(tid)
     print_branding = get_print_header_context(tid)
 
-    template = settings.active_template if settings and settings.active_template else "modern"
-    template_path = f"receipts/{template}.html"
+    from services.print_service import PrintService
+
+    requested_template = (request.args.get("template") or "").strip().lower()
+    template_path = PrintService.resolve_template("receipt", tenant_id=tid, requested_template=requested_template)
 
     from models import Branch
 
@@ -1226,21 +1256,24 @@ def print_receipt(**kwargs):
                     "b": print_branch.name if print_branch else "",
                 }
             )
+    ctx = {
+        "receipt": receipt,
+        "settings": settings,
+        "company": company,
+        "printed_at": datetime.now(),
+        "print_branch": print_branch,
+        "print_user_name": print_user_name,
+        "amount_in_words": amount_in_words,
+        "qr_data_url": qr_data_url,
+        "doc_number": receipt.receipt_number,
+        "print_branding": print_branding,
+        "print_tenant_id": tid,
+        "available_templates": sorted(PrintService.RECEIPT_TEMPLATES),
+        "current_template": requested_template or (settings.active_template if settings and settings.active_template else "modern"),
+    }
+
     try:
-        return render_template(
-            template_path,
-            receipt=receipt,
-            settings=settings,
-            company=company,
-            printed_at=datetime.now(),
-            print_branch=print_branch,
-            print_user_name=print_user_name,
-            amount_in_words=amount_in_words,
-            qr_data_url=qr_data_url,
-            doc_number=receipt.receipt_number,
-            print_branding=print_branding,
-            print_tenant_id=tid,
-        )
+        return render_template(template_path, **ctx)
     except Exception as e:
         import sys
         import traceback
@@ -1257,20 +1290,7 @@ def print_receipt(**kwargs):
             )
         except Exception:
             current_app.logger.exception("Failed to log receipt template rendering error")
-        return render_template(
-            "receipts/modern.html",
-            receipt=receipt,
-            settings=settings,
-            company=company,
-            printed_at=datetime.now(),
-            print_branch=print_branch,
-            print_user_name=print_user_name,
-            amount_in_words=amount_in_words,
-            qr_data_url=qr_data_url,
-            doc_number=receipt.receipt_number,
-            print_branding=print_branding,
-            print_tenant_id=tid,
-        )
+        return render_template("receipts/modern.html", **ctx)
 
 
 @payments_bp.route("/archived")

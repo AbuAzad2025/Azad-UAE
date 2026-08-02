@@ -14,6 +14,15 @@
   <button type="button" class="pab-btn pab-print" data-action="window-print">
     <i class="fas fa-print" aria-hidden="true"></i> {{ t('Print') }}
   </button>
+  {% if available_templates %}
+  <select class="pab-btn pab-template-select"
+          onchange="const u = new URL(window.location.href); u.searchParams.set('template', this.value); window.location.href = u.toString();"
+          title="{{ t('Template') }}">
+    {% for tmpl in available_templates %}
+    <option value="{{ tmpl }}" {% if tmpl == current_template %}selected{% endif %}>{{ tmpl|capitalize }}</option>
+    {% endfor %}
+  </select>
+  {% endif %}
   {% if export_url %}
   <a class="pab-btn pab-export" href="{{ export_url }}">
     <i class="fas fa-file-pdf" aria-hidden="true"></i> {{ t('Export') }} PDF

@@ -3,13 +3,11 @@
   <p class="mb-0">{{ print_branding.powered_by_text if print_branding is defined else (developer_credit or config.DEVELOPER_CREDIT) }}</p>
   <p class="erp-print-footer-contact">
     {% if developer_phone %}📞 {{ developer_phone }} | {% endif %}
+    {% if developer_whatsapp %}
     <span class="erp-print-whatsapp">
-      {% if developer_whatsapp %}
-        {{ t('WhatsApp') }}: {{ developer_whatsapp }}
-      {% else %}
-        {{ t('WhatsApp') }}: {{ t('Not_Available') }}
-      {% endif %}
+      {{ t('WhatsApp') }}: {{ developer_whatsapp }}
     </span>
+    {% endif %}
     {% if developer_email %} | 📧 {{ developer_email }}{% endif %}
   </p>
 </div>

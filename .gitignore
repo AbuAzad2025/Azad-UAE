@@ -181,3 +181,4 @@ load_tests/
 
 nul
 .schemathesis/
+audit_output/

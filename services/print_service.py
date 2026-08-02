@@ -14,6 +14,10 @@ logger = logging.getLogger(__name__)
 class PrintService:
     """Professional print service with PDF generation, bulk print, and audit logging."""
 
+    # Valid template names for invoices and receipts
+    INVOICE_TEMPLATES = {"modern", "classic", "gulf", "minimal", "simple"}
+    RECEIPT_TEMPLATES = {"modern", "classic", "gulf", "minimal", "simple"}
+
     PRINTABLE_DOCUMENTS = {
         "purchase": {
             "template": "purchases/print.html",
@@ -56,14 +60,62 @@ class PrintService:
             "filename_prefix": "packing_slip",
         },
         "sale": {
-            "template": "invoices/modern.html",
+            "template": None,  # resolved dynamically via resolve_template()
             "model": "Sale",
             "context_key": "sale",
             "permission": "manage_sales",
             "filename_attr": "sale_number",
             "filename_prefix": "invoice",
         },
+        "receipt": {
+            "template": None,  # resolved dynamically via resolve_template()
+            "model": "Receipt",
+            "context_key": "receipt",
+            "permission": "manage_payments",
+            "filename_attr": "receipt_number",
+            "filename_prefix": "receipt",
+        },
+        "payment": {
+            "template": None,  # resolved dynamically via resolve_template()
+            "model": "Payment",
+            "context_key": "payment",
+            "permission": "manage_payments",
+            "filename_attr": "payment_number",
+            "filename_prefix": "payment",
+        },
     }
+
+    @staticmethod
+    def resolve_template(doc_type, tenant_id=None, requested_template=None):
+        """Resolve the print template path for a document type.
+
+        Args:
+            doc_type: Document type key (sale, receipt, payment).
+            tenant_id: Optional tenant ID to read active_template from InvoiceSettings.
+            requested_template: Optional explicit template name from user query param.
+
+        Returns:
+            Template path string.
+        """
+        from models.invoice_settings import InvoiceSettings
+
+        settings = InvoiceSettings.get_active(tenant_id) if tenant_id else None
+        active = (settings.active_template if settings and settings.active_template else "modern")
+
+        if doc_type == "sale":
+            chosen = requested_template if requested_template in PrintService.INVOICE_TEMPLATES else active
+            return f"invoices/{chosen}.html"
+
+        if doc_type in ("receipt", "payment"):
+            chosen = requested_template if requested_template in PrintService.RECEIPT_TEMPLATES else active
+            return f"receipts/{chosen}.html"
+
+        entry = PrintService.PRINTABLE_DOCUMENTS.get(doc_type)
+        if entry and entry.get("template"):
+            return entry["template"]
+
+        logger.warning("No template resolved for doc_type=%s, falling back to invoices/modern.html", doc_type)
+        return "invoices/modern.html"
 
     @staticmethod
     def _get_model(model_name):

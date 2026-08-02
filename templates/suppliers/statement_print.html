@@ -1,0 +1,90 @@
+{% extends 'layouts/base_print.html' %}
+{% from 'macros/print_components.html' import render_header, render_partner_card, render_statement_kpis, render_ledger_table, render_signatures %}
+
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('supplier_statement') }} {{ supplier.name | default('—', true) }}{% endblock %}
+
+{% block content %}
+{# ── Resolve company meta ── #}
+{% set _company_name = (settings.company_name_ar if settings and settings.company_name_ar else none) or tenant_name_ar or company_name_ar or t('Accounting_System') %}
+{% set _company_meta = {
+  'address': (settings.address_ar if settings and settings.address_ar else none) or tenant_address or '',
+  'phone': (settings.phone_1 if settings and settings.phone_1 else none) or tenant_phone or '',
+  'email': settings.email if settings and settings.email else '',
+  'tax_number': settings.tax_number if settings and settings.tax_number else ''
+} %}
+
+{# ── Resolve logo ── #}
+{% set _logo = none %}
+{% if settings is not defined or settings is none or settings.show_logo != false %}
+  {% set _doc_logo = tenant_document_logo(settings, print_tenant_id|default(none)) %}
+  {% if _doc_logo %}
+    {% set _logo = _doc_logo if _doc_logo.startswith('http') else url_for('static', filename=_doc_logo) %}
+  {% endif %}
+{% endif %}
+
+{# ── Compute statement KPIs ── #}
+{% set ns = namespace(opening=0, total_debit=0, total_credit=0) %}
+{% for t_row in transactions %}
+  {% if t_row.type == 'opening' %}
+    {% set ns.opening = t_row.balance | default(0, true) | float %}
+  {% else %}
+    {% set ns.total_debit = ns.total_debit + (t_row.debit | default(0, true) | float) %}
+    {% set ns.total_credit = ns.total_credit + (t_row.credit | default(0, true) | float) %}
+  {% endif %}
+{% endfor %}
+
+{# ── Header ── #}
+{{ render_header(
+  company_name=_company_name,
+  company_meta=_company_meta,
+  document_name=t('supplier_statement'),
+  document_number=supplier.id,
+  document_date=now().strftime('%Y-%m-%d') if now is defined else '-',
+  logo_src=_logo
+) }}
+
+{# ── Partner Card ── #}
+{{ render_partner_card(
+  partner_label=t('Supplier'),
+  name=supplier.name | default('—', true),
+  phone=supplier.phone | default(none, true),
+  address=supplier.address | default(none, true),
+  code=supplier.tax_number | default(none, true)
+) }}
+
+{# ── Period info ── #}
+{% set _date_from = filters.date_from if filters is defined else '' %}
+{% set _date_to = filters.date_to if filters is defined else '' %}
+<div style="font-size:8px; color:#64748b; margin-bottom:10px; text-align:center;">
+  {% if _date_from or _date_to %}
+    {{ t('Period_2') }}:
+    {% if _date_from %}{{ t('من التاريخ') }} <span class="date">{{ _date_from }}</span>{% else %}{{ t('من البداية') }}{% endif %}
+    —
+    {% if _date_to %}{{ t('إلى التاريخ') }} <span class="date">{{ _date_to }}</span>{% else %}{{ t('حتى اليوم') }}{% endif %}
+  {% else %}
+    {{ t('All_Periods') }}
+  {% endif %}
+</div>
+
+{# ── KPI Summary ── #}
+{{ render_statement_kpis(
+  opening_balance=ns.opening,
+  total_debit=ns.total_debit,
+  total_credit=ns.total_credit,
+  closing_balance=final_balance | default(0, true),
+  currency=tenant_default_currency or 'AED'
+) }}
+
+{# ── Ledger Table ── #}
+{{ render_ledger_table(
+  transactions=transactions,
+  currency=tenant_default_currency or 'AED',
+  final_balance=final_balance | default(0, true)
+) }}
+
+{# ── Signatures ── #}
+{{ render_signatures() }}
+
+{# ── Print audit ── #}
+{% include 'partials/print_developer_footer.html' %}
+{% endblock %}

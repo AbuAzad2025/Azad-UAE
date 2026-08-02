@@ -1,144 +1,158 @@
-<!DOCTYPE html>
-<html lang="{{ current_language or 'ar' }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ settings.company_name_ar or tenant_name_ar or company_name_ar }} - {{ t('Purchase_Invoice') }} #{{ purchase.purchase_number }}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
-  {% include 'partials/print_styles.html' %}
-  <style>
-    body { font-family: 'Tajawal', 'Arial', sans-serif; background: #95a5a6; }
-    .invoice {
-      width: {{ '210mm' if (not settings or settings.orientation == 'portrait') else '297mm' }};
-      height: {{ '297mm' if (not settings or settings.orientation == 'portrait') else '210mm' }};
-      border-radius: 0; overflow: auto; box-shadow: 0 0 20px rgba(0,0,0,0.3); position: relative;
-    }
-    .header {
-      background: linear-gradient(135deg, {{ settings.header_color if settings else '#2c3e50' }} 0%, {{ settings.accent_color if settings else '#34495e' }} 100%);
-      color: white; padding: 15px 20px; text-align: center;
-    }
-    .logo { background: white; padding: 8px; border-radius: 8px; display: inline-block; }
-    .company-name { font-size: 9px; font-weight: 700; margin-bottom: 3px; }
-    .company-info { font-size: 8px; opacity: 0.95; }
-    .doc-title {
-      background: #f8f9fa; padding: 10px 15px; text-align: center;
-      border-bottom: 1px solid {{ settings.accent_color if settings else '#34495e' }};
-    }
-    .doc-title h2 { color: {{ settings.header_color if settings else '#2c3e50' }}; font-size: 14px; margin: 0; }
-    .content { padding: 12px 18px; }
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-    .info-box {
-      background: #f8f9fa; padding: 8px 12px; border-radius: 6px;
-      border-inline-start: 3px solid {{ settings.accent_color if settings else '#34495e' }};
-    }
-    .info-box h3 { color: {{ settings.header_color if settings else '#2c3e50' }}; margin-bottom: 6px; font-size: 9px; }
-    .info-box p { margin: 3px 0; color: #555; font-size: 8px; }
-    thead { background: linear-gradient(135deg, {{ settings.header_color if settings else '#2c3e50' }} 0%, {{ settings.accent_color if settings else '#34495e' }} 100%); }
-    .total-section {
-      margin-top: 10px; text-align: {{ 'right' if is_rtl else 'left' }}; background: #f8f9fa;
-      padding: 10px 15px; border-radius: 6px;
-    }
-    .total-row.final { border-top: 2px solid {{ settings.header_color if settings else '#2c3e50' }}; color: {{ settings.header_color if settings else '#2c3e50' }}; }
-    .footer {
-      background: #f8f9fa; padding: 10px 15px; text-align: center;
-      border-top: 2px solid {{ settings.accent_color if settings else '#34495e' }};
-    }
-  </style>
-</head>
-<body class="invoice-print">
-<div class="erp-watermark" aria-hidden="true"><span>{{ settings.watermark_text if settings is defined and settings and settings.watermark_text else (developer_name or t('Default_Watermark')) }}</span></div>
-  <div class="no-print" style="text-align:center;margin-bottom:10px;">
-    <button data-action="window-print">{{ t('Print') }}</button>
-    <button data-action="window-close">{{ t('Close') }}</button>
-  </div>
-  <div class="invoice">
-    <div class="header">
-      {% include 'partials/print_tenant_logo.html' %}
-      <div class="company-name">{{ settings.company_name_ar or tenant_name_ar or company_name_ar }}</div>
-      <div class="company-info">
-        <div>{{ settings.address_ar or tenant_address or '' }}</div>
-        <div>📞 {{ settings.phone_1 or tenant_phone or '' }} {% if settings.email %} | 📧 {{ settings.email }}{% endif %}</div>
-        {{ t('Tax_Number') }}: {{ settings.tax_number }}</div>
-        {% if purchase.branch %}<div>🏢 {{ t('Branch') }}: {{ purchase.branch.name }}{% if purchase.branch.code %} ({{ purchase.branch.code }}){% endif %}</div>{% endif %}
-      </div>
-    </div>
+{% extends 'layouts/base_print.html' %}
+{% from 'macros/print_components.html' import render_header, render_partner_card, render_financial_summary, render_signatures %}
 
-    <div class="doc-title">
-      <h2>🧾 {{ t('Purchase_Invoice') }}</h2>
-      <div class="invoice-number" style="font-size:9px;color:#666;margin-top:4px;">
-        {{ t('Invoice_Number') }}: <strong>{{ purchase.purchase_number }}</strong> |
-        {{ t('Date') }}: <strong>        {{ format_date(purchase.purchase_date) if purchase.purchase_date else '' }}</strong>
-      </div>
-    </div>
+{% block title %}{{ settings.company_name_ar or tenant_name_ar or company_name_ar }} - {{ t('Purchase_Invoice') }} #{{ purchase.purchase_number }}{% endblock %}
 
-    <div class="content">
-      <div class="info-grid">
-        <div class="info-box">
-          <h3>🏢 {{ t('Supplier_Data') }}</h3>
-          <p><strong>{{ t('Supplier') }}:</strong> {{ purchase.supplier.name if purchase.supplier else purchase.supplier_name }}</p>
-          {% if purchase.supplier and purchase.supplier.phone %}<p><strong>{{ t('Phone') }}:</strong> {{ purchase.supplier.phone }}</p>{% endif %}
-          {% if purchase.supplier and purchase.supplier.address %}<p><strong>{{ t('Address') }}:</strong> {{ purchase.supplier.address }}</p>{% endif %}
-        </div>
-        <div class="info-box">
-          <h3>📅 {{ t('Invoice_Info') }}</h3>
-          <p><strong>{{ t('User') }}:</strong> {{ print_user_name or (purchase.user.full_name if purchase.user else '-') }}</p>
-          <p><strong>{{ t('Status') }}:</strong> {{ t('Confirmed') }}</p>
-        </div>
-      </div>
+{% block extra_css %}
+<style>
+  :root {
+    --header-color: {{ settings.header_color if settings else '#2c3e50' }};
+    --accent-color: {{ settings.accent_color if settings else '#34495e' }};
+  }
+  .purchase-header {
+    background: linear-gradient(135deg, var(--header-color) 0%, var(--accent-color) 100%);
+    color: white;
+    padding: 14px 18px;
+    text-align: center;
+    border-radius: 8px 8px 0 0;
+  }
+  .purchase-header .company-name { font-size: 11px; font-weight: 700; margin-bottom: 3px; }
+  .purchase-header .company-info { font-size: 8px; opacity: 0.95; }
+  .doc-title-bar {
+    background: #f8f9fa;
+    padding: 10px 15px;
+    text-align: center;
+    border-bottom: 1px solid var(--accent-color);
+  }
+  .doc-title-bar h2 { color: var(--header-color); font-size: 14px; margin: 0; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+  .info-box {
+    background: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border-inline-start: 3px solid var(--accent-color);
+  }
+  .info-box h3 { color: var(--header-color); margin-bottom: 6px; font-size: 9px; }
+  .info-box p { margin: 3px 0; color: #555; font-size: 8px; }
+  .purchase-table { width: 100%; border-collapse: collapse; font-size: 8px; margin: 10px 0; }
+  .purchase-table thead { background: linear-gradient(135deg, var(--header-color) 0%, var(--accent-color) 100%); color: white; }
+  .purchase-table th, .purchase-table td { padding: 6px 8px; border-bottom: 1px solid #e0e0e0; text-align: right; }
+  .purchase-table tbody tr:nth-child(even) { background: #f8f9fa; }
+  .total-section {
+    margin-top: 10px;
+    text-align: end;
+    background: #f8f9fa;
+    padding: 10px 15px;
+    border-radius: 6px;
+    font-size: 9px;
+  }
+  .total-row { display: flex; justify-content: space-between; padding: 4px 0; }
+  .total-row.final { border-top: 2px solid var(--header-color); color: var(--header-color); font-weight: 700; margin-top: 4px; padding-top: 8px; }
+  .footer-block {
+    margin-top: 16px;
+    padding-top: 10px;
+    border-top: 2px solid var(--accent-color);
+    text-align: center;
+    font-size: 8px;
+    color: #666;
+  }
+  @media print {
+    .purchase-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+{% endblock %}
 
-      <div class="table-responsive"><table>
-        <thead>
-          <tr><th>#</th><th>{{ t('Product') }}</th><th>{{ t('Quantity') }}</th><th>{{ t('Unit_Price') }}</th><th>{{ t('Total') }}</th></tr>
-        </thead>
-        <tbody>
-          {% for line in purchase.lines %}
-          <tr>
-            <td>{{ loop.index }}</td>
-            <td>{{ line.product.name if line.product else '-' }}</td>
-            <td>{{ format_number(line.quantity, 3) }}</td>
-            <td>{{ format_currency(line.unit_cost) }}</td>
-            <td>{{ format_currency(line.line_total) }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table></div>
-
-      <div class="total-section">
-        <div class="total-row"><span>{{ t('Total') }}:</span> <strong>{{ format_currency(purchase.subtotal) }}</strong></div>
-        {% if purchase.tax_amount and purchase.tax_amount > 0 %}
-        <div class="total-row"><span>{{ t('Tax') }}:</span> <strong>{{ format_currency(purchase.tax_amount) }}</strong></div>
-        {% endif %}
-        {% if purchase.discount_amount and purchase.discount_amount > 0 %}
-        <div class="total-row"><span>{{ t('Discount') }}:</span> <strong>-{{ format_currency(purchase.discount_amount) }}</strong></div>
-        {% endif %}
-        <div class="total-row final"><span>{{ t('Final') }}:</span> <strong>{{ format_currency(purchase.total_amount) }}</strong></div>
-      </div>
-
-      {% if purchase.notes %}
-      <div style="margin-top:10px;padding:8px;background:#fff3cd;border-radius:4px;border-inline-start:2px solid #ffc107;">
-        <p style="font-size:9px;color:#856404;margin:0;">💬 {{ purchase.notes }}</p>
-      </div>
-      {% endif %}
-
-      <div style="margin-top:10px;">
-        {% set amount_value = purchase.total_amount or 0 %}
-        {% set amount_currency = tenant_default_currency or get_system_default_currency() %}
-      </div>
-      {% include 'partials/print_unified_amount_qr.html' %}
-    </div>
-
-    <div class="footer">
-      <p>{{ t('Thank_You_For_Your_Business') }}</p>
-      {% if settings and settings.bank_name %}
-      <div style="font-size:8px;margin-top:5px;">
-        <strong>🏦 {{ settings.bank_name }}</strong> |
-        IBAN: {{ settings.iban or '-' }} |
-        SWIFT: {{ settings.swift_code or '-' }}
-      </div>
-      {% endif %}
-      {% include 'partials/print_developer_footer.html' %}
+{% block content %}
+  <div class="purchase-header">
+    {% include 'partials/print_tenant_logo.html' %}
+    <div class="company-name">{{ settings.company_name_ar or tenant_name_ar or company_name_ar }}</div>
+    <div class="company-info">
+      <div>{{ settings.address_ar or tenant_address or '' }}</div>
+      <div>📞 {{ settings.phone_1 or tenant_phone or '' }} {% if settings.email %} | 📧 {{ settings.email }}{% endif %}</div>
+      {% if settings and settings.tax_number %}<div>{{ t('Tax_Number') }}: {{ settings.tax_number }}</div>{% endif %}
+      {% if purchase.branch %}<div>🏢 {{ t('Branch') }}: {{ purchase.branch.name }}{% if purchase.branch.code %} ({{ purchase.branch.code }}){% endif %}</div>{% endif %}
     </div>
   </div>
-{% include 'partials/print_meta_line.html' %}
-</body>
-</html>
+
+  <div class="doc-title-bar">
+    <h2>🧾 {{ t('Purchase_Invoice') }}</h2>
+    <div style="font-size:8px;color:#666;margin-top:4px;">
+      {{ t('Invoice_Number') }}: <strong>{{ purchase.purchase_number }}</strong> |
+      {{ t('Date') }}: <strong>{{ format_date(purchase.purchase_date) if purchase.purchase_date else '' }}</strong>
+    </div>
+  </div>
+
+  <div class="info-grid">
+    <div class="info-box">
+      <h3>🏢 {{ t('Supplier_Data') }}</h3>
+      <p><strong>{{ t('Supplier') }}:</strong> {{ purchase.supplier.name if purchase.supplier else purchase.supplier_name }}</p>
+      {% if purchase.supplier and purchase.supplier.phone %}<p><strong>{{ t('Phone') }}:</strong> {{ purchase.supplier.phone }}</p>{% endif %}
+      {% if purchase.supplier and purchase.supplier.address %}<p><strong>{{ t('Address') }}:</strong> {{ purchase.supplier.address }}</p>{% endif %}
+    </div>
+    <div class="info-box">
+      <h3>📅 {{ t('Invoice_Info') }}</h3>
+      <p><strong>{{ t('User') }}:</strong> {{ print_user_name or (purchase.user.full_name if purchase.user else '-') }}</p>
+      <p><strong>{{ t('Status') }}:</strong> {{ t('Confirmed') }}</p>
+    </div>
+  </div>
+
+  <table class="purchase-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>{{ t('Product') }}</th>
+        <th>{{ t('Quantity') }}</th>
+        <th>{{ t('Unit_Price') }}</th>
+        <th>{{ t('Total') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for line in purchase.lines %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ line.product.name if line.product else '-' }}</td>
+        <td class="amount-cell">{{ format_number(line.quantity, 3) }}</td>
+        <td class="amount-cell">{{ format_currency(line.unit_cost) }}</td>
+        <td class="amount-cell">{{ format_currency(line.line_total) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="total-section">
+    <div class="total-row"><span>{{ t('Total') }}:</span> <strong class="amount">{{ format_currency(purchase.subtotal) }}</strong></div>
+    {% if purchase.tax_amount and purchase.tax_amount > 0 %}
+    <div class="total-row"><span>{{ t('Tax') }}:</span> <strong class="amount">{{ format_currency(purchase.tax_amount) }}</strong></div>
+    {% endif %}
+    {% if purchase.discount_amount and purchase.discount_amount > 0 %}
+    <div class="total-row"><span>{{ t('Discount') }}:</span> <strong class="amount" style="color:#15803d;">-{{ format_currency(purchase.discount_amount) }}</strong></div>
+    {% endif %}
+    <div class="total-row final">
+      <span>{{ t('Final') }}:</span>
+      <strong class="amount">{{ format_currency(purchase.total_amount) }}</strong>
+    </div>
+  </div>
+
+  {% if purchase.notes %}
+  <div class="print-notes-block">
+    💬 {{ purchase.notes }}
+  </div>
+  {% endif %}
+
+  {% include 'partials/print_unified_amount_qr.html' %}
+
+  {{ render_signatures([t('المستلم'), t('المورد')]) }}
+
+  <div class="footer-block">
+    <p>{{ t('Thank_You_For_Your_Business') }}</p>
+    {% if settings and settings.bank_name %}
+    <div style="margin-top:5px;">
+      <strong>🏦 {{ settings.bank_name }}</strong> |
+      IBAN: {{ settings.iban or '-' }} |
+      SWIFT: {{ settings.swift_code or '-' }}
+    </div>
+    {% endif %}
+  </div>
+
+  {% include 'partials/print_developer_footer.html' %}
+{% endblock %}

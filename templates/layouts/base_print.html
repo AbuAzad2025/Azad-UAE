@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
+  {% include 'partials/print_styles.html' %}
+  <style>
+    /* ── Base Print Reset ── */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Tajawal', 'Arial', sans-serif;
+      font-size: 9px;
+      line-height: 1.6;
+      color: #1f2937;
+      background: #fff;
+      padding: 0;
+      margin: 0;
+    }
+
+    /* ── Strict Bidi / RTL number mechanics ── */
+    .number, .amount, .currency, .date, .code, .phone, .invoice-number, .document-number {
+      direction: ltr !important;
+      unicode-bidi: embed !important;
+      display: inline-block;
+    }
+
+    .amount-cell {
+      direction: ltr !important;
+      unicode-bidi: embed !important;
+      text-align: right !important;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    /* ─@page rules ── */
+    @page {
+      size: A4 portrait;
+      margin: 12mm 10mm 12mm 10mm;
+    }
+
+    @media print {
+      .no-print { display: none !important; }
+      html, body {
+        width: auto !important;
+        height: auto !important;
+        overflow: visible !important;
+        background: #fff !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      * { overflow: visible !important; }
+    }
+
+    /* ── Print container ── */
+    .print-root {
+      max-width: 210mm;
+      margin: 0 auto;
+      background: #fff;
+      padding: 8px;
+    }
+
+    /* ── Universal table styles ── */
+    table.print-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 8px;
+      margin: 10px 0;
+    }
+
+    table.print-table th,
+    table.print-table td {
+      padding: 6px 8px;
+      border: 0.5pt solid #94a3b8;
+      text-align: right;
+      vertical-align: middle;
+    }
+
+    table.print-table thead th {
+      background: #f1f5f9;
+      color: #0f172a;
+      font-weight: 700;
+      font-size: 8px;
+      white-space: nowrap;
+    }
+
+    table.print-table tbody tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    /* ── Header banner ── */
+    .print-header-banner {
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .print-header-banner .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .print-header-banner .brand img.logo {
+      height: 40px;
+      max-width: 120px;
+      object-fit: contain;
+    }
+
+    .print-header-banner .brand .company-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .print-header-banner .brand .company-meta {
+      font-size: 7px;
+      color: #475569;
+      line-height: 1.5;
+    }
+
+    .print-header-banner .doc-identity {
+      text-align: left;
+    }
+
+    .print-header-banner .doc-identity .doc-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .print-header-banner .doc-identity .doc-meta {
+      font-size: 8px;
+      color: #475569;
+    }
+
+    /* ── Partner card ── */
+    .print-partner-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+    }
+
+    .print-partner-card .partner-label {
+      font-size: 7px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      letter-spacing: 0.3px;
+    }
+
+    .print-partner-card .partner-name {
+      font-size: 10px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .print-partner-card .partner-meta {
+      font-size: 8px;
+      color: #475569;
+      line-height: 1.5;
+    }
+
+    .print-partner-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    /* ── Financial summary ── */
+    .print-financial-summary {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin: 12px 0;
+    }
+
+    .print-financial-summary .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      border-bottom: 1px dashed #cbd5e1;
+      font-size: 9px;
+    }
+
+    .print-financial-summary .summary-row:last-child {
+      border-bottom: none;
+    }
+
+    .print-financial-summary .summary-row .label {
+      color: #475569;
+    }
+
+    .print-financial-summary .summary-row .value {
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .print-financial-summary .summary-row.total {
+      font-size: 11px;
+      font-weight: 700;
+      color: #0f172a;
+      border-top: 2px solid #0f172a;
+      border-bottom: 3px double #0f172a;
+      margin-top: 4px;
+      padding-top: 8px;
+    }
+
+    .print-tafqeet-box {
+      margin-top: 10px;
+      padding: 8px 10px;
+      background: #fff;
+      border-right: 4px solid #64748b;
+      border-radius: 4px;
+      font-size: 9px;
+      color: #1f2937;
+      font-weight: 500;
+    }
+
+    /* ── Signature block ── */
+    .print-signatures {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 40px;
+      gap: 20px;
+    }
+
+    .print-sig-box {
+      text-align: center;
+      flex: 1;
+      max-width: 160px;
+    }
+
+    .print-sig-box .sig-line {
+      border-top: 1px solid #0f172a;
+      margin-top: 40px;
+      padding-top: 5px;
+      font-size: 8px;
+      color: #0f172a;
+      font-weight: 600;
+    }
+
+    /* ── KPI Cards (for statements) ── */
+    .print-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .print-kpi-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .print-kpi-card .kpi-label {
+      font-size: 7px;
+      font-weight: 700;
+      color: #64748b;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+    }
+
+    .print-kpi-card .kpi-value {
+      font-size: 11px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .print-kpi-card.kpi-positive .kpi-value { color: #15803d; }
+    .print-kpi-card.kpi-negative .kpi-value { color: #b91c1c; }
+
+    /* ── Voucher amount box ── */
+    .print-voucher-amount {
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      border: 2px solid #0f172a;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      margin: 16px 0;
+    }
+
+    .print-voucher-amount .amount-label {
+      font-size: 9px;
+      font-weight: 700;
+      color: #475569;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    .print-voucher-amount .amount-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 8px 0;
+    }
+
+    .print-voucher-amount .amount-words {
+      font-size: 9px;
+      color: #475569;
+      font-weight: 500;
+    }
+
+    /* ── Notes / reason block ── */
+    .print-notes-block {
+      background: #fffbeb;
+      border: 1px solid #fcd34d;
+      border-radius: 4px;
+      padding: 8px 10px;
+      margin: 10px 0;
+      font-size: 8px;
+      color: #78350f;
+    }
+
+    .print-notes-block strong {
+      color: #92400e;
+    }
+
+    /* ── Footer ── */
+    .print-footer {
+      margin-top: 20px;
+      padding-top: 10px;
+      border-top: 1px solid #e2e8f0;
+      text-align: center;
+      font-size: 8px;
+      color: #64748b;
+    }
+
+    /* ── Utility ── */
+    .text-center { text-align: center; }
+    .text-left { text-align: left; }
+    .text-right { text-align: right; }
+    .font-bold { font-weight: 700; }
+    .mt-1 { margin-top: 4px; }
+    .mt-2 { margin-top: 8px; }
+    .mb-1 { margin-bottom: 4px; }
+    .mb-2 { margin-bottom: 8px; }
+
+    @media print {
+      .print-kpi-grid { grid-template-columns: repeat(4, 1fr) !important; }
+      .print-partner-grid { grid-template-columns: 1fr 1fr !important; }
+      .print-signatures { display: flex !important; }
+    }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body class="invoice-print">
+  {% include 'partials/print_action_bar.html' %}
+
+  <div class="print-root">
+    {% block content %}{% endblock %}
+  </div>
+
+  {% include 'partials/print_meta_line.html' %}
+  {% include 'partials/print_handlers.html' %}
+  {% block extra_js %}{% endblock %}
+</body>
+</html>
