@@ -211,7 +211,20 @@ def scan_file(filepath):
     in_trans = False  # inside a multi-line translation call string e.g. {{ _('...') }}
     in_trans_quote = None
     in_jinja_block = False  # inside {% set %} / {% macro %} / {% call %} / {% filter %}
+    in_comment_block = False  # inside a multi-line {# ... #} Jinja comment block
     for lineno, line in enumerate(lines, 1):
+        # Multi-line Jinja comment blocks ({# ... #}) are developer comments,
+        # never user-facing text. Track the block so its inner lines (e.g.
+        # macro docstrings with example strings) are not scanned as literals.
+        if ext == ".html":
+            if not in_comment_block:
+                if re.search(r"{#", line) and not re.search(r"#}", line):
+                    in_comment_block = True
+                    continue
+            else:
+                if re.search(r"#}", line):
+                    in_comment_block = False
+                continue
         # Track multi-line Jinja *statement* blocks ({% set %}, {% macro %},
         # {% call %}, {% filter %}). Their bodies are code/data definitions,
         # not literal user-facing markup, so string literals inside are
