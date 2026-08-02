@@ -491,8 +491,10 @@ def print_statement(**kwargs):
 
     def _sort_key(t):
         d = t.get("date")
-        if d is None: return datetime.min
-        if isinstance(d, datetime): return d.replace(tzinfo=None) if d.tzinfo else d
+        if d is None:
+            return datetime.min
+        if isinstance(d, datetime):
+            return d.replace(tzinfo=None) if d.tzinfo else d
         return datetime(d.year, d.month, d.day)
     transactions.sort(key=_sort_key)
 

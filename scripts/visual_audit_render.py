@@ -3,11 +3,17 @@ Visual Render & PDF Export Audit Script
 Renders all invoice/receipt templates with realistic Arabic dummy data
 for manual visual inspection in a browser.
 """
+
 import os
 import sys
 from datetime import datetime, timezone
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
+
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+
+from utils.i18n import t
+from utils.helpers import format_currency, format_date, format_datetime, format_time, format_number
 
 # ── Setup paths ──
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -16,17 +22,12 @@ sys.path.insert(0, project_root)
 os.makedirs("audit_output", exist_ok=True)
 
 # ── Create Jinja2 environment directly (no Flask routing needed) ──
-from jinja2 import Environment, FileSystemLoader, select_autoescape
-
 jinja_env = Environment(
     loader=FileSystemLoader(os.path.join(project_root, "templates")),
     autoescape=select_autoescape(["html", "xml"]),
 )
 
 # Register template globals / filters
-from utils.i18n import t, is_rtl, get_current_language
-from utils.helpers import format_currency, format_date, format_datetime, format_time, format_number
-
 jinja_env.globals["t"] = t
 jinja_env.globals["current_user"] = MagicMock(is_authenticated=False)
 jinja_env.globals["url_for"] = lambda endpoint, **kwargs: f"/static/{kwargs.get('filename', '')}" if endpoint == "static" else f"/{endpoint}"
@@ -253,6 +254,7 @@ for tmpl_name in INVOICE_TEMPLATES:
         print(f"  ✓ invoices/{tmpl_name}.html  →  {out_path}")
     except Exception as e:
         import traceback
+
         print(f"  ✗ invoices/{tmpl_name}.html  ERROR: {e}")
         traceback.print_exc()
         print()
@@ -271,10 +273,11 @@ for tmpl_name in RECEIPT_TEMPLATES:
         print(f"  ✓ receipts/{tmpl_name}.html  →  {out_path}")
     except Exception as e:
         import traceback
+
         print(f"  ✗ receipts/{tmpl_name}.html  ERROR: {e}")
         traceback.print_exc()
         print()
 
 print("\n=== AUDIT COMPLETE ===")
-print(f"Open the files in audit_output/ in your browser for visual inspection.")
-print(f"Absolute path: {os.path.abspath('audit_output')}")
+print("Open the files in audit_output/ in your browser for visual inspection.")
+print("Absolute path:", os.path.abspath("audit_output"))
