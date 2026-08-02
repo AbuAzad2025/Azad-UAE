@@ -8,3 +8,4 @@ exclude = [
 
 [lint.per-file-ignores]
 "tests/unit/test_grimoire_compliance.py" = ["E402"]
+"scripts/visual_audit_render.py" = ["E402"]
