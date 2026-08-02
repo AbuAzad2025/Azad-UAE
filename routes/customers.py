@@ -530,10 +530,42 @@ def print_statement(**kwargs):
 
     opening_balance = 0.0
     if date_from:
-        pre_sales = float(Sale.query.filter(Sale.customer_id==record_id,Sale.status=="confirmed",Sale.tenant_id==tid,func.date(Sale.sale_date)<date_from).with_entities(func.coalesce(func.sum(Sale.amount_aed),0)).scalar() or 0)
-        pre_pay = sum((float(p.amount_aed or 0) if p.direction=="incoming" else -float(p.amount_aed or 0)) for p in Payment.query.filter(Payment.customer_id==record_id,Payment.tenant_id==tid,func.date(Payment.payment_date)<date_from).all() if p.payment_confirmed or (p.payment_method=="cheque" and not p.rejection_reason))
-        pre_receipt = sum(float(r.amount_aed or 0) for r in Receipt.query.filter(Receipt.customer_id==record_id,Receipt.tenant_id==tid,func.date(Receipt.receipt_date)<date_from).all() if r.payment_confirmed or (r.payment_method=="cheque" and not r.rejection_reason))
-        pre_return = float(ProductReturn.query.filter(ProductReturn.customer_id==record_id,ProductReturn.status=="approved",ProductReturn.tenant_id==tid,func.date(ProductReturn.return_date)<date_from).with_entities(func.coalesce(func.sum(ProductReturn.amount_aed),0)).scalar() or 0)
+        pre_sales = float(
+            Sale.query.filter(
+                Sale.customer_id == record_id,
+                Sale.status == "confirmed",
+                Sale.tenant_id == tid,
+                func.date(Sale.sale_date) < date_from,
+            )
+            .with_entities(func.coalesce(func.sum(Sale.amount_aed), 0))
+            .scalar()
+            or 0
+        )
+        pre_pay = sum(
+            (float(p.amount_aed or 0) if p.direction == "incoming" else -float(p.amount_aed or 0))
+            for p in Payment.query.filter(
+                Payment.customer_id == record_id, Payment.tenant_id == tid, func.date(Payment.payment_date) < date_from
+            ).all()
+            if p.payment_confirmed or (p.payment_method == "cheque" and not p.rejection_reason)
+        )
+        pre_receipt = sum(
+            float(r.amount_aed or 0)
+            for r in Receipt.query.filter(
+                Receipt.customer_id == record_id, Receipt.tenant_id == tid, func.date(Receipt.receipt_date) < date_from
+            ).all()
+            if r.payment_confirmed or (r.payment_method == "cheque" and not r.rejection_reason)
+        )
+        pre_return = float(
+            ProductReturn.query.filter(
+                ProductReturn.customer_id == record_id,
+                ProductReturn.status == "approved",
+                ProductReturn.tenant_id == tid,
+                func.date(ProductReturn.return_date) < date_from,
+            )
+            .with_entities(func.coalesce(func.sum(ProductReturn.amount_aed), 0))
+            .scalar()
+            or 0
+        )
         opening_balance = (pre_pay + pre_receipt + pre_return) - pre_sales
         sales_q = sales_q.filter(func.date(Sale.sale_date) >= date_from)
         payments_q = payments_q.filter(func.date(Payment.payment_date) >= date_from)
@@ -547,22 +579,78 @@ def print_statement(**kwargs):
 
     transactions = []
     for s in sales_q.order_by(Sale.sale_date).all():
-        transactions.append({"date": s.sale_date, "type": "sale", "reference": s.sale_number, "debit": float(s.amount_aed or 0), "credit": 0, "description": gettext("فاتورة بيع")})
+        transactions.append(
+            {
+                "date": s.sale_date,
+                "type": "sale",
+                "reference": s.sale_number,
+                "debit": float(s.amount_aed or 0),
+                "credit": 0,
+                "description": gettext("فاتورة بيع"),
+            }
+        )
     for p in payments_q.order_by(Payment.payment_date).all():
         amt = float(p.amount_aed or 0)
         if p.direction == "incoming":
-            transactions.append({"date": p.payment_date, "type": "payment", "reference": p.payment_number or p.reference_number or "", "debit": 0, "credit": amt, "description": gettext("دفعة")})
+            transactions.append(
+                {
+                    "date": p.payment_date,
+                    "type": "payment",
+                    "reference": p.payment_number or p.reference_number or "",
+                    "debit": 0,
+                    "credit": amt,
+                    "description": gettext("دفعة"),
+                }
+            )
         else:
-            transactions.append({"date": p.payment_date, "type": "payment", "reference": p.payment_number or p.reference_number or "", "debit": amt, "credit": 0, "description": gettext("استرداد")})
+            transactions.append(
+                {
+                    "date": p.payment_date,
+                    "type": "payment",
+                    "reference": p.payment_number or p.reference_number or "",
+                    "debit": amt,
+                    "credit": 0,
+                    "description": gettext("استرداد"),
+                }
+            )
     for r in receipts_q.order_by(Receipt.receipt_date).all():
-        transactions.append({"date": r.receipt_date, "type": "receipt", "reference": r.receipt_number, "debit": 0, "credit": float(r.amount_aed or 0), "description": gettext("سند قبض")})
+        transactions.append(
+            {
+                "date": r.receipt_date,
+                "type": "receipt",
+                "reference": r.receipt_number,
+                "debit": 0,
+                "credit": float(r.amount_aed or 0),
+                "description": gettext("سند قبض"),
+            }
+        )
     for ret in returns_q.order_by(ProductReturn.return_date).all():
-        transactions.append({"date": ret.return_date, "type": "return", "reference": ret.return_number, "debit": 0, "credit": float(ret.amount_aed or 0), "description": gettext("مرتجع مبيعات")})
+        transactions.append(
+            {
+                "date": ret.return_date,
+                "type": "return",
+                "reference": ret.return_number,
+                "debit": 0,
+                "credit": float(ret.amount_aed or 0),
+                "description": gettext("مرتجع مبيعات"),
+            }
+        )
 
     transactions.sort(key=lambda x: x["date"] or datetime.min)
 
     if date_from:
-        transactions.insert(0, {"date": date_from, "type": "opening", "reference": "", "debit": 0, "credit": 0, "balance": opening_balance, "description": gettext("الرصيد الافتتاحي")})
+        transactions.insert(
+            0,
+            {
+                "date": date_from,
+                "type": "opening",
+                "reference": "",
+                "debit": 0,
+                "credit": 0,
+                "balance": opening_balance,
+                "description": gettext("الرصيد الافتتاحي"),
+            },
+        )
 
     running = opening_balance if date_from else 0
     for t in transactions:
@@ -572,6 +660,7 @@ def print_statement(**kwargs):
 
     from utils.tenant_branding import get_print_header_context
     from models.invoice_settings import InvoiceSettings
+
     tenant, settings, company = InvoiceSettings.company_print_context(tid)
     branding = get_print_header_context(tid)
     return render_template(

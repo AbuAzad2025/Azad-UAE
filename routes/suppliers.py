@@ -458,15 +458,32 @@ def print_statement(**kwargs):
     opening_balance = 0.0
     if date_from:
         opening_balance = float(
-            Purchase.query.filter(Purchase.supplier_id==record_id,Purchase.status=="confirmed",Purchase.tenant_id==tid,func.date(Purchase.purchase_date)<date_from)
-            .with_entities(func.coalesce(func.sum(Purchase.amount_aed),0)).scalar() or 0
+            Purchase.query.filter(
+                Purchase.supplier_id == record_id,
+                Purchase.status == "confirmed",
+                Purchase.tenant_id == tid,
+                func.date(Purchase.purchase_date) < date_from,
+            )
+            .with_entities(func.coalesce(func.sum(Purchase.amount_aed), 0))
+            .scalar()
+            or 0
         )
-        for pm in Payment.query.filter(Payment.supplier_id==record_id,Payment.tenant_id==tid,func.date(Payment.payment_date)<date_from).all():
-            if pm.payment_confirmed or (pm.payment_method=="cheque" and not pm.rejection_reason):
-                opening_balance += float(pm.amount_aed or 0) if pm.direction=="incoming" else -float(pm.amount_aed or 0)
+        for pm in Payment.query.filter(
+            Payment.supplier_id == record_id, Payment.tenant_id == tid, func.date(Payment.payment_date) < date_from
+        ).all():
+            if pm.payment_confirmed or (pm.payment_method == "cheque" and not pm.rejection_reason):
+                opening_balance += (
+                    float(pm.amount_aed or 0) if pm.direction == "incoming" else -float(pm.amount_aed or 0)
+                )
         opening_balance -= float(
-            PurchaseReturn.query.filter(PurchaseReturn.supplier_id==record_id,PurchaseReturn.tenant_id==tid,func.date(PurchaseReturn.return_date)<date_from)
-            .with_entities(func.coalesce(func.sum(PurchaseReturn.amount_aed),0)).scalar() or 0
+            PurchaseReturn.query.filter(
+                PurchaseReturn.supplier_id == record_id,
+                PurchaseReturn.tenant_id == tid,
+                func.date(PurchaseReturn.return_date) < date_from,
+            )
+            .with_entities(func.coalesce(func.sum(PurchaseReturn.amount_aed), 0))
+            .scalar()
+            or 0
         )
         purchases_q = purchases_q.filter(func.date(Purchase.purchase_date) >= date_from)
         payments_q = payments_q.filter(func.date(Payment.payment_date) >= date_from)
@@ -478,16 +495,52 @@ def print_statement(**kwargs):
 
     transactions = []
     for p_ in purchases_q.order_by(Purchase.purchase_date.asc()).all():
-        transactions.append({"date": p_.purchase_date, "type": "purchase", "reference": p_.purchase_number, "debit": float(p_.amount_aed or 0), "credit": 0, "description": gettext("فاتورة شراء")})
+        transactions.append(
+            {
+                "date": p_.purchase_date,
+                "type": "purchase",
+                "reference": p_.purchase_number,
+                "debit": float(p_.amount_aed or 0),
+                "credit": 0,
+                "description": gettext("فاتورة شراء"),
+            }
+        )
     for pm in payments_q.order_by(Payment.payment_date.asc()).all():
         amt = float(pm.amount_aed or 0)
         if pm.payment_confirmed or (pm.payment_method == "cheque" and not pm.rejection_reason):
             if pm.direction == "incoming":
-                transactions.append({"date": pm.payment_date, "type": "refund", "reference": pm.payment_number or "", "debit": amt, "credit": 0, "description": gettext("استرداد من المورد")})
+                transactions.append(
+                    {
+                        "date": pm.payment_date,
+                        "type": "refund",
+                        "reference": pm.payment_number or "",
+                        "debit": amt,
+                        "credit": 0,
+                        "description": gettext("استرداد من المورد"),
+                    }
+                )
             else:
-                transactions.append({"date": pm.payment_date, "type": "payment", "reference": pm.payment_number or "", "debit": 0, "credit": amt, "description": gettext("دفعة")})
+                transactions.append(
+                    {
+                        "date": pm.payment_date,
+                        "type": "payment",
+                        "reference": pm.payment_number or "",
+                        "debit": 0,
+                        "credit": amt,
+                        "description": gettext("دفعة"),
+                    }
+                )
     for pr in returns_q.order_by(PurchaseReturn.return_date.asc()).all():
-        transactions.append({"date": pr.return_date, "type": "return", "reference": pr.return_number, "debit": 0, "credit": float(pr.amount_aed or 0), "description": gettext("مرتجع مشتريات")})
+        transactions.append(
+            {
+                "date": pr.return_date,
+                "type": "return",
+                "reference": pr.return_number,
+                "debit": 0,
+                "credit": float(pr.amount_aed or 0),
+                "description": gettext("مرتجع مشتريات"),
+            }
+        )
 
     def _sort_key(t):
         d = t.get("date")
@@ -496,10 +549,22 @@ def print_statement(**kwargs):
         if isinstance(d, datetime):
             return d.replace(tzinfo=None) if d.tzinfo else d
         return datetime(d.year, d.month, d.day)
+
     transactions.sort(key=_sort_key)
 
     if date_from:
-        transactions.insert(0, {"date": date_from, "type": "opening", "reference": "", "debit": 0, "credit": 0, "balance": opening_balance, "description": gettext("الرصيد الافتتاحي")})
+        transactions.insert(
+            0,
+            {
+                "date": date_from,
+                "type": "opening",
+                "reference": "",
+                "debit": 0,
+                "credit": 0,
+                "balance": opening_balance,
+                "description": gettext("الرصيد الافتتاحي"),
+            },
+        )
 
     running = opening_balance if date_from else 0
     for t in transactions:
@@ -509,6 +574,7 @@ def print_statement(**kwargs):
 
     from utils.tenant_branding import get_print_header_context
     from models.invoice_settings import InvoiceSettings
+
     tenant, settings, company = InvoiceSettings.company_print_context(tid)
     branding = get_print_header_context(tid)
     return render_template(

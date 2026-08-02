@@ -529,7 +529,9 @@ def print_payment(**kwargs):
     }
 
     ctx["available_templates"] = sorted(PrintService.RECEIPT_TEMPLATES)
-    ctx["current_template"] = requested_template or (settings.active_template if settings and settings.active_template else "modern")
+    ctx["current_template"] = requested_template or (
+        settings.active_template if settings and settings.active_template else "modern"
+    )
 
     try:
         return render_template(template_path, **ctx)
@@ -1269,7 +1271,8 @@ def print_receipt(**kwargs):
         "print_branding": print_branding,
         "print_tenant_id": tid,
         "available_templates": sorted(PrintService.RECEIPT_TEMPLATES),
-        "current_template": requested_template or (settings.active_template if settings and settings.active_template else "modern"),
+        "current_template": requested_template
+        or (settings.active_template if settings and settings.active_template else "modern"),
     }
 
     try:

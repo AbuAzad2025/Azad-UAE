@@ -100,7 +100,7 @@ class PrintService:
         from models.invoice_settings import InvoiceSettings
 
         settings = InvoiceSettings.get_active(tenant_id) if tenant_id else None
-        active = (settings.active_template if settings and settings.active_template else "modern")
+        active = settings.active_template if settings and settings.active_template else "modern"
 
         if doc_type == "sale":
             chosen = requested_template if requested_template in PrintService.INVOICE_TEMPLATES else active

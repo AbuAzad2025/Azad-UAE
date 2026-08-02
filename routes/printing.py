@@ -102,7 +102,9 @@ def print_document(doc_type, **kwargs):
         template,
         {
             entry["context_key"]: doc,
-            "available_templates": sorted(PrintService.INVOICE_TEMPLATES if doc_type == "sale" else PrintService.RECEIPT_TEMPLATES),
+            "available_templates": sorted(
+                PrintService.INVOICE_TEMPLATES if doc_type == "sale" else PrintService.RECEIPT_TEMPLATES
+            ),
             "current_template": current_template,
         },
         tenant_id=eff_tid,

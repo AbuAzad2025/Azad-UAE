@@ -30,7 +30,9 @@ jinja_env = Environment(
 # Register template globals / filters
 jinja_env.globals["t"] = t
 jinja_env.globals["current_user"] = MagicMock(is_authenticated=False)
-jinja_env.globals["url_for"] = lambda endpoint, **kwargs: f"/static/{kwargs.get('filename', '')}" if endpoint == "static" else f"/{endpoint}"
+jinja_env.globals["url_for"] = lambda endpoint, **kwargs: (
+    f"/static/{kwargs.get('filename', '')}" if endpoint == "static" else f"/{endpoint}"
+)
 
 # Flask config mock for standalone rendering
 jinja_env.globals["config"] = MagicMock(
