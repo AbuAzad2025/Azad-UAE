@@ -243,9 +243,10 @@
           {{ (settings.address_ar if settings and settings.address_ar else none) or tenant_address or company_address }}<br>
           📞 {{ (settings.phone_1 if settings and settings.phone_1 else none) or tenant_phone or company_phone }} | 📧 {{ (settings.email if settings and settings.email else none) or tenant_email or company_email }}<br>
           {% if settings and settings.website and settings.website != 'None' %}🌐 {{ settings.website }}{% endif %}
-          {% if print_branch %}
-          <br>🏢 {{ t('Branch') }}: {{ print_branch.name }}{% if print_branch.code %} ({{ print_branch.code }}){% endif %}
-          {% if print_branch.address %}<br>📍 {{ t('Address_2') }} {{ t('Branch') }}: {{ print_branch.address }}{% endif %}
+          {% if print_branch or receipt.branch %}
+          {% set header_branch = print_branch or receipt.branch %}
+          <br>🏢 {{ t('Branch') }}: {{ header_branch.name }}{% if header_branch.code %} ({{ header_branch.code }}){% endif %}
+          {% if header_branch.address %}<br>📍 {{ t('Address_2') }} {{ t('Branch') }}: {{ header_branch.address }}{% endif %}
           {% endif %}
         </div>
       </div>
@@ -265,9 +266,9 @@
       <div class="section-title">{{ t('Info_2') }} {{ t('Customer') }}</div>
       <div class="info-row">
         <label>{{ t('Name') }}:</label>
-        <span class="value-text">{{ receipt.customer.name }}</span>
+        <span class="value-text">{{ receipt.customer.name if receipt.customer else '-' }}</span>
       </div>
-      {% if receipt.customer.phone %}
+      {% if receipt.customer and receipt.customer.phone %}
       <div class="info-row">
         <label>{{ t('Phone') }}:</label>
         <span class="value-text">{{ receipt.customer.phone }}</span>
@@ -321,6 +322,8 @@
           </div>
         </div>
       </div>
+      {% elif receipt.reference_number %}
+      <p style="margin-top:6px;font-size:8px;"><strong>{{ t('رقم') }} {{ t('المرجع') }}:</strong> {{ receipt.reference_number }}</p>
       {% endif %}
     </div>
 
@@ -337,7 +340,7 @@
           <span class="ic-7">{{ source_info.date }}</span>
         </div>
         <div class="ic-8">
-          {{ format_currency(receipt.amount) }}
+          {{ format_currency(receipt.amount, receipt.currency) }}
         </div>
       </div>
     </div>
@@ -367,7 +370,7 @@
   <div class="footer">
     {% if settings and ((settings.bank_name and settings.bank_name != 'None') or (settings.iban and settings.iban != 'None') or (settings.swift_code and settings.swift_code != 'None')) %}
     <div class="erp-receipt-bank-box" style="border-inline-start: 3px solid {{ settings.header_color or '#2c3e50' }};">
-      <div class="erp-receipt-bank-title" style="color: {{ settings.header_color or '#2c3e50' }};">🏦 Bank Details</div>
+      <div class="erp-receipt-bank-title" style="color: {{ settings.header_color or '#2c3e50' }};">🏦 {{ t('Info_2') }} {{ t('Transfer_2') }} {{ t('Bank_4') }}</div>
       <div class="ic-10">
         {% if settings.bank_name and settings.bank_name != 'None' %}{{ settings.bank_name }}{% if settings.iban and settings.iban != 'None' %} • {% endif %}{% endif %}
         {% if settings.iban and settings.iban != 'None' %}IBAN: {{ settings.iban }}{% endif %}

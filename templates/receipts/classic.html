@@ -260,9 +260,9 @@
   <div class="info-section">
     <div class="info-box">
       <h3>{{ t('Data_2') }} {{ t('Customer') }}</h3>
-      <p><strong>{{ t('Name') }}:</strong> {{ receipt.customer.name }}</p>
-      {% if receipt.customer.phone %}<p><strong>{{ t('Phone') }}:</strong> {{ receipt.customer.phone }}</p>{% endif %}
-      {% if receipt.customer.email %}<p><strong>{{ t('Email_2') }}:</strong> {{ receipt.customer.email }}</p>{% endif %}
+      {% if receipt.customer %}<p><strong>{{ t('Name') }}:</strong> {{ receipt.customer.name }}</p>{% else %}<p>-</p>{% endif %}
+      {% if receipt.customer and receipt.customer.phone %}<p><strong>{{ t('Phone') }}:</strong> {{ receipt.customer.phone }}</p>{% endif %}
+      {% if receipt.customer and receipt.customer.email %}<p><strong>{{ t('Email_2') }}:</strong> {{ receipt.customer.email }}</p>{% endif %}
     </div>
     <div class="info-box">
       <h3>{{ t('Data_2') }} {{ t('Voucher') }}</h3>
@@ -332,13 +332,14 @@
   {% include 'partials/print_unified_amount_qr.html' %}
 
   <div class="receipt-footer">
-    {% if settings and (settings.bank_name or settings.iban) %}
+    {% if settings and ((settings.bank_name and settings.bank_name != 'None') or (settings.iban and settings.iban != 'None') or (settings.swift_code and settings.swift_code != 'None')) %}
     <div class="ic-8">
       <p class="ic-9">🏦 {{ t('Info_2') }} {{ t('Transfer_2') }}</p>
       <div class="ic-10">
         {% if settings.bank_name and settings.bank_name != 'None' %}{{ settings.bank_name }}{% endif %}
         {% if settings.bank_name and settings.iban %} - {% endif %}
         {% if settings.iban and settings.iban != 'None' %}{{ settings.iban }}{% endif %}
+        {% if settings.swift_code and settings.swift_code != 'None' %}<br>SWIFT: {{ settings.swift_code }}{% endif %}
       </div>
     </div>
     {% endif %}

@@ -167,7 +167,7 @@
        <td><strong>{{ t('Date') }}:</strong> {{ format_date(receipt.receipt_date) }}</td>
     </tr>
     <tr>
-               <td><strong>{{ t('Received_From') }}:</strong> {{ receipt.customer.name if receipt.customer else receipt.customer_name }}</td>
+               <td><strong>{{ t('Received_From') }}:</strong> {{ receipt.customer.name if receipt.customer else (receipt.customer_name or '-') }}</td>
        <td><strong>{{ t('User') }}:</strong> {{ print_user_name or (receipt.user.full_name if receipt.user else t('System')) }}</td>
     </tr>
     <tr>
@@ -186,6 +186,12 @@
         {{ t('رقم') }} {{ receipt.cheque_number }} •
           {{ t('Due_Date') }} {{ format_date(receipt.cheque_date) if receipt.cheque_date else '-' }}
         {% if receipt.bank_name %} • {{ t('Bank_2') }} {{ receipt.bank_name }}{% endif %}
+      </td>
+    </tr>
+    {% elif receipt.reference_number %}
+    <tr>
+      <td colspan="2">
+        <strong>{{ t('رقم') }} {{ t('المرجع') }}:</strong> {{ receipt.reference_number }}
       </td>
     </tr>
     {% endif %}
@@ -256,11 +262,7 @@
 
      <div class="ic-10">{{ t('Thank_You') }}</div>
 
-    {% if settings and (settings.facebook_url or settings.instagram_url or settings.whatsapp_number) %}
-    <div class="ic-11">
-      {% if settings.whatsapp_number %}<span>📱 {{ settings.whatsapp_number }}</span>{% endif %}
-    </div>
-    {% endif %}
+    {% if settings and settings.whatsapp_number %}<span>📱 {{ settings.whatsapp_number }}</span>{% endif %}
   </div>
 
   {{ render_signatures([t('المحصل'), t('العميل')]) }}

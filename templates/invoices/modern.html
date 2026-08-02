@@ -113,9 +113,10 @@
       <div>{{ (settings.address_ar if settings and settings.address_ar else none) or tenant_address or company_address }}</div>
       <div>📞 {{ (settings.phone_1 if settings and settings.phone_1 else none) or tenant_phone or company_phone }} | 📧 {{ (settings.email if settings and settings.email else none) or tenant_email or company_email }}</div>
       {% if settings and settings.tax_number and settings.tax_number != 'None' %}<div>{{ t('Tax_Register_Number') }}: {{ settings.tax_number }}</div>{% endif %}
-      {% if print_branch %}
-      <div>🏢 {{ t('Branch') }}: {{ print_branch.name }}{% if print_branch.code %} ({{ print_branch.code }}){% endif %}</div>
-      {% if print_branch.address %}<div>📍 {{ t('Address_2') }} {{ t('Branch') }}: {{ print_branch.address }}</div>{% endif %}
+      {% if print_branch or sale.branch %}
+      {% set header_branch = print_branch or sale.branch %}
+      <div>🏢 {{ t('Branch') }}: {{ header_branch.name }}{% if header_branch.code %} ({{ header_branch.code }}){% endif %}</div>
+      {% if header_branch.address %}<div>📍 {{ t('Address_2') }} {{ t('Branch') }}: {{ header_branch.address }}</div>{% endif %}
       {% endif %}
     </div>
   </div>

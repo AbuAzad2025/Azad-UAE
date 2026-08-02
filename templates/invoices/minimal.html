@@ -182,9 +182,10 @@
         📞 {{ (settings.phone_1 if settings and settings.phone_1 else none) or tenant_phone or company_phone }} | 📧 {{ (settings.email if settings and settings.email else none) or tenant_email or company_email }}<br>
         {% if settings and settings.website and settings.website != 'None' %}🌐 {{ settings.website }}<br>{% endif %}
         {% if settings and settings.tax_number and settings.tax_number != 'None' %}{{ t('Tax_Register_Short') }}: {{ settings.tax_number }}{% endif %}
-        {% if print_branch %}
-        <br>🏢 {{ t('Branch') }}: {{ print_branch.name }}{% if print_branch.code %} ({{ print_branch.code }}){% endif %}
-        {% if print_branch.address %}<br>📍 {{ t('Address_2') }} {{ t('Branch') }}: {{ print_branch.address }}{% endif %}
+        {% if print_branch or sale.branch %}
+        {% set header_branch = print_branch or sale.branch %}
+        <br>🏢 {{ t('Branch') }}: {{ header_branch.name }}{% if header_branch.code %} ({{ header_branch.code }}){% endif %}
+        {% if header_branch.address %}<br>📍 {{ t('Address_2') }} {{ t('Branch') }}: {{ header_branch.address }}{% endif %}
         {% endif %}
       </div>
     </div>
@@ -255,7 +256,7 @@
     {% endif %}
     {% if sale.tax_amount > 0 %}
     <div class="total-row">
-      <span>{{ t('Tax') }}:</span>
+      <span>{{ t('Tax') }} ({{ sale.tax_rate }}%):</span>
       <strong>{{ format_currency(sale.tax_amount, sale.currency) }}</strong>
     </div>
     {% endif %}

@@ -269,8 +269,14 @@
   </div>
   {% endif %}
 
+  {% if sale.notes %}
+  <div class="notes-section">
+    <strong>📝 {{ t('Notes') }}:</strong> {{ sale.notes }}
+  </div>
+  {% endif %}
+
   <div class="footer">
-    {% if settings and (settings.bank_name or settings.iban) %}
+    {% if settings and ((settings.bank_name and settings.bank_name != 'None') or (settings.iban and settings.iban != 'None') or (settings.swift_code and settings.swift_code != 'None')) %}
     <div class="bank-info">
       <strong>{{ t('Info_2') }} {{ t('Transfer_2') }}:</strong><br>
       {% if settings.bank_name and settings.bank_name != 'None' %}{{ t('Bank') }}: {{ settings.bank_name }} • {% endif %}
@@ -280,11 +286,11 @@
     </div>
     {% endif %}
 
-    {% if settings and (settings.tax_number or settings.commercial_register) %}
+    {% if settings and ((settings.commercial_register and settings.commercial_register != 'None') or (settings.license_number and settings.license_number != 'None')) %}
     <div class="ic-7">
-      {% if settings.tax_number %}{{ t('Tax_Register_Short') }}: {{ settings.tax_number }}{% endif %}
-      {% if settings.tax_number and settings.commercial_register %} • {% endif %}
       {% if settings.commercial_register and settings.commercial_register != 'None' %}{{ t('Commercial_Register_Short') }}: {{ settings.commercial_register }}{% endif %}
+      {% if settings.commercial_register and settings.license_number %} • {% endif %}
+      {% if settings.license_number and settings.license_number != 'None' %}{{ t('License') }}: {{ settings.license_number }}{% endif %}
     </div>
     {% endif %}
 
