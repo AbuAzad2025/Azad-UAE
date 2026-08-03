@@ -13,7 +13,7 @@ def _product(pid=1, **kwargs):
     p.name_ar = kwargs.get("name_ar", "أداة")
     p.sku = kwargs.get("sku", "SKU-1")
     p.barcode = kwargs.get("barcode", "1234567890")
-    p.sale_price = kwargs.get("sale_price", Decimal("99.00"))
+    p.regular_price = kwargs.get("regular_price", Decimal("99.00"))
     p.cost_price = kwargs.get("cost_price", Decimal("50.00"))
     p.category = kwargs.get("category", MagicMock(name="Electronics"))
     return p
@@ -159,8 +159,8 @@ class TestSingleLabelHtml:
 
         assert _products_from_render(mock_render)[0]["cost"] == Decimal("12.00")
 
-    def test_zero_sale_price_fallback(self, app, mocker):
-        product = _product(sale_price=None, cost_price=None)
+    def test_zero_price_fallback(self, app, mocker):
+        product = _product(regular_price=None, cost_price=None)
         mock_render = mocker.patch(
             "services.print_service.PrintService.render_print",
             return_value="ok",
