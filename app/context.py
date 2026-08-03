@@ -29,6 +29,11 @@ def register_context_processors(app):
     # register them as real filters so `value|format_currency` compiles too.
     from utils.helpers import format_currency, timeago, format_date, format_number, format_time, format_datetime
 
+    # Imported Jinja2 macros run in their own namespace and cannot see the
+    # context-processor globals above — register format_currency as a real
+    # environment global too so print macros (invoices/*, receipts/*,
+    # customers/suppliers statement_print) can render currency amounts.
+    app.jinja_env.globals.setdefault("format_currency", format_currency)
     app.jinja_env.filters.setdefault("format_currency", format_currency)
     app.jinja_env.filters.setdefault("format_date", format_date)
     app.jinja_env.filters.setdefault("format_datetime", format_datetime)

@@ -19,7 +19,7 @@ def _build_label_context(product, branch_id=None):
         "name_ar": product.name_ar or "",
         "sku": product.sku or "",
         "barcode": product.barcode or "",
-        "price": product.sale_price or Decimal("0"),
+        "price": product.regular_price or Decimal("0"),
         "cost": cost,
         "category": product.category.name if product.category else "",
     }

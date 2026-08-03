@@ -191,6 +191,22 @@ class PrintService:
             return html.encode("utf-8")
 
     @staticmethod
+    def _json_safe(value):
+        """Recursively convert Decimal/datetime values to JSON-serializable primitives."""
+        from datetime import date, datetime
+        from decimal import Decimal
+
+        if isinstance(value, Decimal):
+            return float(value)
+        if isinstance(value, (datetime, date)):
+            return value.isoformat()
+        if isinstance(value, dict):
+            return {k: PrintService._json_safe(v) for k, v in value.items()}
+        if isinstance(value, (list, tuple)):
+            return [PrintService._json_safe(v) for v in value]
+        return value
+
+    @staticmethod
     def create_snapshot(tenant_id, document_type, document_id, reason="print", document=None):
         """Capture an immutable snapshot of a document at print/finalize/amend time."""
         from utils.tenant_branding import resolve_tenant_branding
@@ -232,8 +248,8 @@ class PrintService:
                 tenant_id=effective_tenant_id,
                 document_type=document_type,
                 document_id=document_id,
-                snapshot_data=snapshot_data,
-                branding_snapshot=branding,
+                snapshot_data=PrintService._json_safe(snapshot_data),
+                branding_snapshot=PrintService._json_safe(branding),
                 snapshot_reason=reason,
                 created_by=PrintService._user_context().get("print_user_id"),
             )

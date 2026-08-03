@@ -340,7 +340,7 @@ $(document).on('click', '[data-action="delete-supplier"]', function() {
 function deleteSupplier(id) {
   if (confirm({{ t('confirm_delete_supplier') | tojson }})) {
     $.ajax({
-      url: '{{ url_for("suppliers.delete", id="__ID__") }}'.replace('__ID__', id),
+      url: '{{ url_for("suppliers.delete", id=0) }}'.replace('/0/delete', '/' + id + '/delete'),
       method: 'POST',
       headers: {
         'X-CSRFToken': $('input[name="csrf_token"]').val()
