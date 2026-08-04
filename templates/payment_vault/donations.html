@@ -66,7 +66,7 @@
             </div>
             
             <div class="stat-box success">
-                <div class="stat-number text-success">{{ donor.currency or 'AED' }}{{ total_amount|default(0) }}</div>
+                <div class="stat-number text-success">${{ total_amount|default(0) }}</div>
                 <div class="stat-label">{{ _('Amount') }} {{ _('Total_3') }}</div>
             </div>
             
@@ -152,7 +152,7 @@
                                         {{ donation.donor_name or _('مجهول') }}<br>
                                         <small class="text-muted">{{ donation.donor_email or '-' }}</small>
                                     </td>
-                                    <td><strong class="text-primary">{{ donor.currency or 'AED' }}{{ donation.amount_usd }}</strong></td>
+                                    <td><strong class="text-primary">${{ donation.amount_usd }}</strong></td>
                                     <td>
                                         <span class="badge badge-info">{{ donation.crypto_type|upper }}</span>
                                     </td>

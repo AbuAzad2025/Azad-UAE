@@ -387,12 +387,12 @@
                         </div>
                         <div class="mb-3">
                             <strong>{{ _('Last Access') }}:</strong>
-                            <br>{{ vault.last_access.strftime('%Y-%m-%d %H:%M:%S') }}
+                            <br>{% if vault.last_access %}{{ vault.last_access.strftime('%Y-%m-%d %H:%M:%S') }}{% else %}{{ _('Never') }}{% endif %}
                         </div>
                         <div class="mb-3">
                             <strong>{{ _('Failed Attempts') }}:</strong>
-                            <span class="badge badge-{% if vault.failed_attempts > 0 %}warning{% else %}success{% endif %}">
-                                {{ vault.failed_attempts }}/{{ vault.max_failed_attempts }}
+                            <span class="badge badge-{% if (vault.failed_attempts or 0) > 0 %}warning{% else %}success{% endif %}">
+                                {{ vault.failed_attempts or 0 }}/{{ vault.max_failed_attempts or 3 }}
                             </span>
                         </div>
                         <div class="mb-3">

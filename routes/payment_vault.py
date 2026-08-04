@@ -390,6 +390,26 @@ def dashboard():
 
     package_performance = AnalyticsService.get_package_performance()
 
+    chart_data = {
+        "labels": monthly_labels,
+        "datasets": [
+            {
+                "label": gettext("مشتريات"),
+                "data": monthly_purchases,
+                "borderColor": "rgba(102, 126, 234, 1)",
+                "backgroundColor": "rgba(102, 126, 234, 0.2)",
+                "fill": True,
+            },
+            {
+                "label": gettext("تبرعات"),
+                "data": monthly_donations,
+                "borderColor": "rgba(40, 167, 69, 1)",
+                "backgroundColor": "rgba(40, 167, 69, 0.2)",
+                "fill": True,
+            },
+        ],
+    }
+
     return render_template(
         "payment_vault/dashboard.html",
         vault=vault,
@@ -403,6 +423,7 @@ def dashboard():
         payment_methods_stats=payment_methods_stats,
         customer_behavior=customer_behavior,
         package_performance=package_performance,
+        chart_data=chart_data,
     )
 
 
@@ -1443,6 +1464,42 @@ def purchase_detail(**kwargs):
     return render_template("payment_vault/purchase_detail.html", purchase=purchase)
 
 
+@payment_vault_bp.route("/purchase/<int:id>/send-email", methods=["POST"])
+@owner_only
+def send_email(id):
+    """إرسال إيصال الشراء إلى البريد الإلكتروني للعميل"""
+    vault = _get_vault_for_current_tenant()
+    if not vault or vault.is_locked:
+        return jsonify({"success": False, "error": gettext("الخزينة مقفلة")}), 403
+
+    purchase = PackagePurchase.query.get_or_404(id)
+    if not purchase.customer_email:
+        return jsonify({"success": False, "error": gettext("لا يوجد بريد إلكتروني للعميل")}), 400
+
+    try:
+        from flask_mail import Message
+
+        from extensions import mail
+
+        package = purchase.package
+        package_name = package.name_ar or package.name_en if package else None
+        msg = Message(
+            subject=gettext(f"إيصال شراء باقة #{purchase.id}"),
+            recipients=[purchase.customer_email],
+            body=gettext(
+                f"مرحباً {purchase.customer_name or ''},\n"
+                f"شكراً لشرائكم {package_name or 'الباقة'}.\n"
+                f"المبلغ: {purchase.amount_paid} {purchase.currency}\n"
+                f"حالة الدفع: {purchase.payment_status}"
+            ),
+        )
+        mail.send(msg)
+        return jsonify({"success": True})
+    except Exception as exc:
+        logger.error("Failed to send purchase receipt email: %s", exc)
+        return jsonify({"success": False, "error": gettext("فشل إرسال البريد")}), 500
+
+
 @payment_vault_bp.route("/purchase/<int:id>/activate", methods=["POST"])
 @owner_only
 def activate_purchase(**kwargs):
@@ -1579,6 +1636,40 @@ def reject_donation(donation_id):
         flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
 
     return redirect(url_for("payment_vault.donations"))
+
+
+@payment_vault_bp.route("/donation/<int:donation_id>/send-thank-you", methods=["POST"])
+@owner_only
+def send_donation_thank_you(donation_id):
+    """إرسال رسالة شكر إلى البريد الإلكتروني للمتبرع"""
+    vault = _get_vault_for_current_tenant()
+    if not vault or vault.is_locked:
+        return jsonify({"success": False, "error": gettext("الخزينة مقفلة")}), 403
+
+    donation = Donation.query.filter_by(id=donation_id).first_or_404()
+    if not donation.donor_email:
+        return jsonify({"success": False, "error": gettext("لا يوجد بريد إلكتروني للمتبرع")}), 400
+
+    try:
+        from flask_mail import Message
+
+        from extensions import mail
+
+        donor_name = donation.donor_name or gettext("متبرع")
+        msg = Message(
+            subject=gettext(f"شكراً لتبرعكم - {donation.amount_usd} USD"),
+            recipients=[donation.donor_email],
+            body=gettext(
+                f"عزيزنا {donor_name},\n"
+                f"نشكركم جزيل الشكر على تبرعكم الكريم بقيمة {donation.amount_usd} USD.\n"
+                f"دعمكم يساهم في إنجاح رسالتنا."
+            ),
+        )
+        mail.send(msg)
+        return jsonify({"success": True})
+    except Exception as exc:
+        logger.error("Failed to send donation thank-you email: %s", exc)
+        return jsonify({"success": False, "error": gettext("فشل إرسال البريد")}), 500
 
 
 @payment_vault_bp.route("/auto-approve", methods=["POST"])

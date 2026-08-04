@@ -139,7 +139,7 @@
             </div>
             <div class="col-md-3">
                 <div class="stat-box">
-                    <div class="stat-number text-success">{{ donor.currency or 'AED' }}{{ total_amount|default(0) }}</div>
+                    <div class="stat-number text-success">${{ total_amount|default(0) }}</div>
                     <div class="stat-label">{{ _('Amount') }} {{ _('Total_3') }}</div>
                 </div>
             </div>
@@ -208,7 +208,7 @@
                                     {% endif %}
                                     <tr>
                                         <td><strong>{{ _('Amount') }}:</strong></td>
-                                        <td><strong class="text-success">{{ donor.currency or 'AED' }}{{ card.amount }}</strong></td>
+                                        <td><strong class="text-success">${{ card.amount }}</strong></td>
                                     </tr>
                                     <tr>
                                         <td><strong>{{ _('Date') }}:</strong></td>
