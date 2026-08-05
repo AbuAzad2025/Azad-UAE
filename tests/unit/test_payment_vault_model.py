@@ -45,8 +45,6 @@ class TestIsVaultAccessible:
 
     def test_stale_last_access_auto_locks(self):
         vault = _make_vault(auto_lock_minutes=30)
-        vault.last_access = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(
-            minutes=60
-        )
+        vault.last_access = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(minutes=60)
         assert vault.is_vault_accessible() is False
         assert vault.is_locked is True

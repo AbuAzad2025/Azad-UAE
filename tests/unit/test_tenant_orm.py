@@ -52,9 +52,7 @@ class TestPlatformOwnerCriteria:
         from utils.tenant_orm import _criteria_for_model
 
         crit = _criteria_for_model(None)
-        stmt = select(_GuardVault).options(
-            with_loader_criteria(_GuardVault, crit, include_aliases=True)
-        )
+        stmt = select(_GuardVault).options(with_loader_criteria(_GuardVault, crit, include_aliases=True))
         compiled = str(stmt.compile(compile_kwargs={"literal_binds": True}))
         assert "tenant_id = 0" not in compiled
         assert "WHERE true" in compiled
@@ -63,9 +61,7 @@ class TestPlatformOwnerCriteria:
         from utils.tenant_orm import _criteria_for_model
 
         crit = _criteria_for_model(None)
-        scoped = select(_GuardVault).options(
-            with_loader_criteria(_GuardVault, crit, include_aliases=True)
-        )
+        scoped = select(_GuardVault).options(with_loader_criteria(_GuardVault, crit, include_aliases=True))
         engine = create_engine("sqlite:///:memory:")
         _GuardBase.metadata.create_all(engine)
         with Session(engine) as s:

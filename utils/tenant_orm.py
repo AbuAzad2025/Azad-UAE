@@ -200,14 +200,17 @@ def _criteria_for_model(tid: int | None):
     # hiding every ``tenant_id IS NULL`` platform row. Returning a
     # branch-specific closure keeps the generated SQL correct.
     if effective_tid == -1:
+
         def _criteria(cls):
             if not hasattr(cls, "tenant_id"):
                 return sql_true()
             return cls.tenant_id < 0
     elif effective_tid == 0:
+
         def _criteria(cls):
             return sql_true()
     else:
+
         def _criteria(cls):
             if not hasattr(cls, "tenant_id"):
                 return sql_true()

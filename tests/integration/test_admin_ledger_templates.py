@@ -236,9 +236,7 @@ class TestAdminLedgerTemplates:
         resp = self.client.get(f"/admin/ledger{path}", follow_redirects=True)
         expected = EXPECTED_TEMPLATES[f"/admin/ledger{path}"]
         assert resp.status_code == 200, f"{path} -> {resp.status_code}"
-        assert expected in rendered_templates, (
-            f"{path} did not render {expected}; rendered={rendered_templates}"
-        )
+        assert expected in rendered_templates, f"{path} did not render {expected}; rendered={rendered_templates}"
 
     def test_edit_account_renders(self, rendered_templates):
         path = f"/admin/ledger/accounts/{self.data['asset_id']}/edit"
