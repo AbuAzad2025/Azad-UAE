@@ -133,8 +133,7 @@ def store_ready(db_session, sample_tenant):
 @pytest.fixture
 def shop_storefront(db_session, sample_tenant, sample_branch, sample_warehouse):
     """A live storefront: enabled tenant store, global ecommerce on, product."""
-    from models import Product, SystemSettings, TenantStore
-    from services.store_service import StoreService
+    from models import SystemSettings, TenantStore
 
     slug = f"test-store-{uuid.uuid4().hex[:8]}"
     store = TenantStore(
