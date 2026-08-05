@@ -357,10 +357,11 @@ def _ensure_fk_anchor_user():
 def _ensure_mock_fk_anchors():
     """Create committed anchor rows for hardcoded mock IDs (42, 2).
 
-    Route unit tests use ``mock_user`` (id=42) and payment payloads with
-    ``supplier_id=2``.  When those tests trigger real DB inserts via services,
-    PostgreSQL rejects the FK unless the referenced rows exist.  Seed them
-    once per session alongside the existing ``users.id=1`` anchor.
+    Route unit tests use ``mock_user`` (id=42), payment payloads with
+    ``supplier_id=2``, and HR workflows with ``manager_id=2``.
+    When those tests trigger real DB inserts via services, PostgreSQL
+    rejects the FK unless the referenced rows exist.  Seed them once per
+    session alongside the existing ``users.id=1`` anchor.
     """
     from sqlalchemy.exc import IntegrityError
 
@@ -414,6 +415,34 @@ def _ensure_mock_fk_anchors():
             )
             user.set_password("password123")
             db.session.add(user)
+            db.session.flush()
+            db.session.execute(
+                sa_text("SELECT setval('users_id_seq', (SELECT MAX(id) FROM users))")
+            )
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+
+    # User id=2 (hardcoded manager_id in HR service tests)
+    user2 = db.session.get(User, 2)
+    if user2 is None:
+        role2 = db.session.query(Role).filter_by(slug="fk-anchor").first()
+        if role2 is None:
+            role2 = Role(name="FK Anchor", slug="fk-anchor", is_active=True)
+            db.session.add(role2)
+            db.session.flush()
+        try:
+            user2 = User(
+                id=2,
+                username="mock-user-2",
+                email="mock-user-2@test.local",
+                full_name="Mock User 2",
+                tenant_id=tenant.id,
+                role_id=role2.id,
+                branch_id=None,
+            )
+            user2.set_password("password123")
+            db.session.add(user2)
             db.session.flush()
             db.session.execute(
                 sa_text("SELECT setval('users_id_seq', (SELECT MAX(id) FROM users))")
