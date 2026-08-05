@@ -302,7 +302,9 @@ class TestMiscTenantRoutes:
         ("entity_type", "key"),
         [("customer", "customer"), ("supplier", "supplier")],
     )
-    def test_entity_report_fragment_renders(self, auth_client, granted_permissions, sample_customer, sample_supplier, entity_type, key):
+    def test_entity_report_fragment_renders(
+        self, auth_client, granted_permissions, sample_customer, sample_supplier, entity_type, key
+    ):
         record = sample_customer if key == "customer" else sample_supplier
         resp = auth_client.get(f"/reports/entity_report_fragment/{entity_type}/{record.id}")
         assert resp.status_code in (200, 404, 403), resp.status_code
@@ -428,9 +430,7 @@ class TestDirectTemplateRenders:
                 active_template=name,
                 enable_qr_code=False,
             )
-            print_branch = (
-                db.session.get(Branch, sample_sale.branch_id) if sample_sale.branch_id else None
-            )
+            print_branch = db.session.get(Branch, sample_sale.branch_id) if sample_sale.branch_id else None
             render_template(
                 f"invoices/{name}.html",
                 sale=sample_sale,
@@ -548,12 +548,8 @@ class TestDirectTemplateRenders:
         with app.test_request_context():
             store = StoreService.get_store_by_slug(shop_storefront["slug"])
             ctx = _store_context(store)
-            render_template(
-                "shop/account_orders.html", orders=[], payment_methods={}, noindex=True, **ctx
-            )
-            render_template(
-                "shop/saved_payments.html", payments=[], noindex=True, **ctx
-            )
+            render_template("shop/account_orders.html", orders=[], payment_methods={}, noindex=True, **ctx)
+            render_template("shop/saved_payments.html", payments=[], noindex=True, **ctx)
             render_template("shop/wishlist.html", wishlist_items=[], noindex=True, **ctx)
             render_template(
                 "shop/account_order_detail.html",
