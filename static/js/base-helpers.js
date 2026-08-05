@@ -824,3 +824,20 @@ setViewMode(currentMode);
 		});
 	} catch (_) {}
 })();
+
+// Expose a testable API surface (classic scripts still auto-init above).
+if (typeof window !== "undefined") {
+	window.AzadHelpers = {
+		azad: window.azad,
+		formatFxRate,
+		safeEval,
+		updateDateTime,
+		loadFxRates,
+		getFallbackFx,
+		populateFxDisplay,
+		getSavedViewMode,
+		setViewMode,
+		cycleViewMode,
+		initNavbarCalculator,
+	};
+}

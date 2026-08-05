@@ -309,10 +309,19 @@ class NotificationManager {
 	}
 }
 
-// Global instance
-window.notify = new NotificationManager();
+// Expose for tests + explicit init; classic scripts auto-create the global.
+if (typeof window !== "undefined") {
+	window.NotificationManager = NotificationManager;
+	window.initNotifications = () => {
+		window.notify = new NotificationManager();
+		return window.notify;
+	};
+	if (window.document) {
+		window.notify = new NotificationManager();
+	}
+}
 
 // jQuery integration
-if (typeof $ !== "undefined") {
+if (typeof $ !== "undefined" && typeof window !== "undefined" && window.notify) {
 	$.notify = (message, type = "info", title = "") => window.notify.show({ type, title, message });
 }

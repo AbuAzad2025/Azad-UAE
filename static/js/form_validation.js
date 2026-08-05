@@ -101,9 +101,18 @@
 		});
 	}
 
-	if (document.readyState === "loading") {
-		document.addEventListener("DOMContentLoaded", init);
-	} else {
-		init();
+	window.FormValidation = {
+		init,
+		validateField,
+		validateForm,
+		MSG,
+	};
+
+	if (typeof document !== "undefined") {
+		if (document.readyState === "loading") {
+			document.addEventListener("DOMContentLoaded", init);
+		} else {
+			init();
+		}
 	}
 })();
