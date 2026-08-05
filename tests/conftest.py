@@ -354,6 +354,95 @@ def _ensure_fk_anchor_user():
         db.session.rollback()
 
 
+def _ensure_mock_fk_anchors():
+    """Create committed anchor rows for hardcoded mock IDs (42, 2).
+
+    Route unit tests use ``mock_user`` (id=42) and payment payloads with
+    ``supplier_id=2``.  When those tests trigger real DB inserts via services,
+    PostgreSQL rejects the FK unless the referenced rows exist.  Seed them
+    once per session alongside the existing ``users.id=1`` anchor.
+    """
+    from sqlalchemy.exc import IntegrityError
+
+    from models import Role, Supplier, Tenant, User
+
+    db.session.rollback()
+
+    # Tenant id=1 is expected by mock_user (tenant_id=1) and hardcoded inserts
+    tenant = db.session.get(Tenant, 1)
+    if tenant is None:
+        try:
+            tenant = Tenant(
+                id=1,
+                name="Mock Anchor Tenant",
+                name_ar="مستأجر وهمي",
+                slug="mock-anchor-tenant",
+                email="mock-anchor@test.local",
+                phone_1="0500000000",
+                country="AE",
+                subscription_plan="basic",
+                default_currency="AED",
+                base_currency="AED",
+            )
+            db.session.add(tenant)
+            db.session.flush()
+            db.session.execute(
+                sa_text("SELECT setval('tenants_id_seq', (SELECT MAX(id) FROM tenants))")
+            )
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            tenant = db.session.get(Tenant, 1)
+
+    # User id=42 (mock_user.id) — used as created_by / user_id in inserts
+    user = db.session.get(User, 42)
+    if user is None:
+        role = db.session.query(Role).filter_by(slug="fk-anchor").first()
+        if role is None:
+            role = Role(name="FK Anchor", slug="fk-anchor", is_active=True)
+            db.session.add(role)
+            db.session.flush()
+        try:
+            user = User(
+                id=42,
+                username="mock-user-42",
+                email="mock-user-42@test.local",
+                full_name="Mock User 42",
+                tenant_id=tenant.id,
+                role_id=role.id,
+                branch_id=None,
+            )
+            user.set_password("password123")
+            db.session.add(user)
+            db.session.flush()
+            db.session.execute(
+                sa_text("SELECT setval('users_id_seq', (SELECT MAX(id) FROM users))")
+            )
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+
+    # Supplier id=2 (hardcoded supplier_id in payment route tests)
+    supplier = db.session.get(Supplier, 2)
+    if supplier is None:
+        try:
+            supplier = Supplier(
+                id=2,
+                tenant_id=tenant.id,
+                name="Mock Supplier 2",
+                email="mock-supplier-2@test.local",
+                phone="0500000000",
+            )
+            db.session.add(supplier)
+            db.session.flush()
+            db.session.execute(
+                sa_text("SELECT setval('suppliers_id_seq', (SELECT MAX(id) FROM suppliers))")
+            )
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+
+
 @pytest.fixture(scope="session")
 def app():
     """Create Flask app against an isolated PostgreSQL test database."""
@@ -375,6 +464,7 @@ def app():
         # which can exhaust CI PostgreSQL connections.
         db.create_all()
         _ensure_fk_anchor_user()
+        _ensure_mock_fk_anchors()
         yield _app
         try:
             db.session.remove()
