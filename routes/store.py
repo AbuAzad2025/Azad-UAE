@@ -19,7 +19,7 @@ from services.azad_platform_fee_service import AzadPlatformFeeService
 from services.stock_service import StockService
 from services.store_analytics_service import StoreAnalyticsService
 from services.store_coupon_service import StoreCouponService
-from services.store_order_service import StoreOrderService
+from services.store_order_service import STATUS_LABELS_AR, StoreOrderService
 from services.store_payment_method_service import StorePaymentMethodService
 from services.store_service import StoreService
 from utils.decorators import permission_required
@@ -313,7 +313,7 @@ def admin_orders():
         status_filter=status_filter,
         order_counts=StoreOrderService.order_counts(tenant_id),
         payment_methods=payment_methods,
-        status_labels=StoreOrderService.STATUS_LABELS_AR,
+        status_labels=STATUS_LABELS_AR,
     )
 
 

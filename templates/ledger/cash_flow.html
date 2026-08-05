@@ -62,7 +62,7 @@
       </h4>
       <div class="table-responsive"><table class="table table-bordered">
         <tbody>
-          {% for item in report.operating_activities.items %}
+          {% for item in report.operating_activities.get("items", []) %}
           <tr>
             <td style="width: 70%">{{ item.description }}</td>
             <td style="width: 30%" class="text-center {{ 'text-success' if item.type == 'inflow' else 'text-danger' }}">
@@ -89,7 +89,7 @@
       </h4>
       <div class="table-responsive"><table class="table table-bordered">
         <tbody>
-          {% for item in report.investing_activities.items %}
+          {% for item in report.investing_activities.get("items", []) %}
           {% if item.amount > 0 %}
           <tr>
             <td style="width: 70%">{{ item.description }}</td>
@@ -118,7 +118,7 @@
       </h4>
       <div class="table-responsive"><table class="table table-bordered">
         <tbody>
-          {% for item in report.financing_activities.items %}
+          {% for item in report.financing_activities.get("items", []) %}
           {% if item.amount > 0 %}
           <tr>
             <td style="width: 70%">{{ item.description }}</td>
