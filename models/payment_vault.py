@@ -139,10 +139,17 @@ class PaymentVault(db.Model):
 
         # التحقق من انتهاء صلاحية الجلسة
         if self.auto_lock_minutes > 0:
-            time_diff = _utc_now() - self.last_access
-            if time_diff.total_seconds() > (self.auto_lock_minutes * 60):
-                self.lock_vault()
-                return False
+            last = self.last_access
+            if last is not None:
+                # ``last_access`` is stored in a naive DateTime column, so a
+                # DB-loaded vault returns a naive value while ``_utc_now()``
+                # is tz-aware — normalize before subtracting.
+                if last.tzinfo is None:
+                    last = last.replace(tzinfo=timezone.utc)
+                time_diff = _utc_now() - last
+                if time_diff.total_seconds() > (self.auto_lock_minutes * 60):
+                    self.lock_vault()
+                    return False
 
         return True
 

@@ -192,14 +192,26 @@ def _criteria_for_model(tid: int | None):
     if tid is None:
         effective_tid = 0 if is_platform_owner() else -1
 
-    def _criteria(cls):
-        if not hasattr(cls, "tenant_id"):
-            return sql_true()
-        if effective_tid == -1:
+    # Resolve the branch OUTSIDE the returned lambda. SQLAlchemy's lambda
+    # tracking for ``with_loader_criteria`` instruments closure variables and
+    # mis-evaluates comparisons on them (``effective_tid == 0``), so a lambda
+    # that branches on the closure var falls through to
+    # ``cls.tenant_id == effective_tid`` and emits ``WHERE tenant_id = 0``,
+    # hiding every ``tenant_id IS NULL`` platform row. Returning a
+    # branch-specific closure keeps the generated SQL correct.
+    if effective_tid == -1:
+        def _criteria(cls):
+            if not hasattr(cls, "tenant_id"):
+                return sql_true()
             return cls.tenant_id < 0
-        if effective_tid == 0:
+    elif effective_tid == 0:
+        def _criteria(cls):
             return sql_true()
-        return cls.tenant_id == effective_tid
+    else:
+        def _criteria(cls):
+            if not hasattr(cls, "tenant_id"):
+                return sql_true()
+            return cls.tenant_id == effective_tid
 
     return _criteria
 
