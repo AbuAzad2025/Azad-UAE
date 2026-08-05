@@ -402,6 +402,8 @@ class TestTrialBalanceAndTree:
     def test_ensure_core_accounts(self, db_session, sample_tenant):
         report = GLService.ensure_core_accounts(tenant_id=sample_tenant.id)
         assert "created" in report
+        assert "accounts" in report and isinstance(report["accounts"], dict)
+        assert report["accounts"], "ensure_core_accounts should return created accounts mapping"
 
     def test_validate_account_tree(self, db_session, sample_tenant, sample_gl_accounts):
         result = GLService.validate_account_tree(tenant_id=sample_tenant.id)

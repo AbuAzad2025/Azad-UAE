@@ -527,6 +527,12 @@ class GLService:
         Args:
             tenant_id: معرف المستأجر (اختياري)
             cleanup_extra: إذا كان True، سيتم إيقاف الحسابات غير الأساسية
+
+        Returns:
+            dict: تقرير بالتغييرات التي تمت. يحتوي على مفتاح ``accounts``
+                  وهو خريطة ``{code: GLAccount}`` للحسابات التي تم إنشاؤها/استرجاعها
+                  (created/retrieved) والتي يمكن للمتصلين استهلاكها مباشرة دون
+                  إضافة استعلامات إضافية.
         """
         if tenant_id is None:
             tenant_id = gl_helpers.resolve_tenant_id()

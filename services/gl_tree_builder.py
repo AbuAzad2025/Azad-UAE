@@ -138,6 +138,9 @@ class GLTreeBuilder:
                 with atomic_transaction("gl_tree_builder_build"):
                     pass
 
+        # Expose the canonical {code: GLAccount} mapping so callers (and test
+        # fixtures) can consume the ensured accounts directly without extra queries.
+        audit_report["accounts"] = existing_accounts
         return audit_report
 
     @staticmethod
@@ -238,6 +241,7 @@ class GLTreeBuilder:
             db.session.flush()
 
             processed[code] = new_acc
+            existing_accounts[code] = new_acc
             result["action"] = "created"
             return result
 
