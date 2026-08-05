@@ -387,9 +387,7 @@ def _ensure_mock_fk_anchors():
             )
             db.session.add(tenant)
             db.session.flush()
-            db.session.execute(
-                sa_text("SELECT setval('tenants_id_seq', (SELECT MAX(id) FROM tenants))")
-            )
+            db.session.execute(sa_text("SELECT setval('tenants_id_seq', (SELECT MAX(id) FROM tenants))"))
             db.session.commit()
         except IntegrityError:
             db.session.rollback()
@@ -416,9 +414,7 @@ def _ensure_mock_fk_anchors():
             user.set_password("password123")
             db.session.add(user)
             db.session.flush()
-            db.session.execute(
-                sa_text("SELECT setval('users_id_seq', (SELECT MAX(id) FROM users))")
-            )
+            db.session.execute(sa_text("SELECT setval('users_id_seq', (SELECT MAX(id) FROM users))"))
             db.session.commit()
         except IntegrityError:
             db.session.rollback()
@@ -444,9 +440,7 @@ def _ensure_mock_fk_anchors():
             user2.set_password("password123")
             db.session.add(user2)
             db.session.flush()
-            db.session.execute(
-                sa_text("SELECT setval('users_id_seq', (SELECT MAX(id) FROM users))")
-            )
+            db.session.execute(sa_text("SELECT setval('users_id_seq', (SELECT MAX(id) FROM users))"))
             db.session.commit()
         except IntegrityError:
             db.session.rollback()
@@ -464,9 +458,7 @@ def _ensure_mock_fk_anchors():
             )
             db.session.add(supplier)
             db.session.flush()
-            db.session.execute(
-                sa_text("SELECT setval('suppliers_id_seq', (SELECT MAX(id) FROM suppliers))")
-            )
+            db.session.execute(sa_text("SELECT setval('suppliers_id_seq', (SELECT MAX(id) FROM suppliers))"))
             db.session.commit()
         except IntegrityError:
             db.session.rollback()
