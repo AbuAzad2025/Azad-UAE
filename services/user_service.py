@@ -5,7 +5,18 @@ from sqlalchemy.orm import joinedload
 
 class UserService:
     @staticmethod
-    def get_users_list_context(tenant_id=None):
+    def create_user(username: str, full_name: str, email: str = "", phone: str = "", tenant_id: int | None = None, role_id: int | None = None):
+        """Create a new user. Returns the created user (not yet committed)."""
+        from models import User
+
+        user = User(username=username, full_name=full_name, email=email, phone=phone, is_active=True)
+        if tenant_id is not None:
+            user.tenant_id = tenant_id
+        if role_id is not None:
+            user.role_id = role_id
+        user.set_password("password123")
+        db.session.add(user)
+        return user
         query = (
             scoped_user_query(exclude_owners=True)
             .options(

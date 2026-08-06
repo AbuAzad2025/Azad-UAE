@@ -14,6 +14,17 @@ class CustomerService:
     """Pure business logic for customer operations. Uses flush only — callers manage transactions."""
 
     @staticmethod
+    def create_customer(name: str, phone: str | None = None, address: str | None = None, tenant_id: int | None = None):
+        """Create a new customer. Returns the created customer (not yet committed)."""
+        from models.customer import Customer
+
+        customer = Customer(name=name, phone=phone or "", address=address or "", balance=0)
+        if tenant_id is not None:
+            customer.tenant_id = tenant_id
+        db.session.add(customer)
+        return customer
+
+    @staticmethod
     def set_balance(customer_id: int, new_balance_aed, tenant_id: int):
         """Set a customer's balance directly (correction/admin operations)."""
         from models.customer import Customer

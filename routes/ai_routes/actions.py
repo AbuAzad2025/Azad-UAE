@@ -586,17 +586,15 @@ def _process_user_action(message, user):
                 data["address"] = message.strip()
 
                 try:
-                    from models.customer import Customer
+                    from services.customer_service import CustomerService
 
-                    customer = Customer(
+                    customer = CustomerService.create_customer(
                         name=data["name"],
                         phone=data["phone"],
                         address=data["address"],
-                        balance=0,
                     )
-                    assign_tenant_id(customer)
                     with atomic_transaction("ai_create_customer"):
-                        db.session.add(customer)
+                        db.session.flush()
 
                     train_local_ai(
                         "create_customer",
@@ -736,18 +734,15 @@ def _process_user_action(message, user):
                 try:
                     data["quantity"] = float(message.strip().replace(gettext("قطعة"), "").strip())
 
-                    from models.product import Product
+                    from services.product_service import ProductService
 
-                    product = Product(
+                    product = ProductService.create_product(
                         name=data["name"],
-                        part_number=data["part_number"],
                         regular_price=data["price"],
-                        current_stock=0,
+                        part_number=data["part_number"],
                         unit=gettext("قطعة"),
                     )
-                    assign_tenant_id(product, user)
                     with atomic_transaction("ai_create_product"):
-                        db.session.add(product)
                         db.session.flush()
                         if data["quantity"] > 0:
                             StockService.add_opening_stock(
@@ -1374,30 +1369,15 @@ def _process_user_action(message, user):
                 data["category"] = message.strip()
 
                 try:
-                    from models.expense import Expense
+                    from services.expense_service import ExpenseService
 
-                    from utils.helpers import generate_number
-
-                    expense_number = generate_number(
-                        "EXP",
-                        Expense,
-                        "expense_number",
-                        branch_id=getattr(current_user, "branch_id", None),
-                    )
-                    expense = Expense(
-                        expense_number=expense_number,
-                        description=data["description"],
+                    expense = ExpenseService.create_expense(
                         amount=data["amount"],
-                        amount_aed=data["amount"],
-                        currency="AED",
-                        exchange_rate=1,
-                        expense_date=datetime.now(timezone.utc),
-                        payment_method="cash",
+                        description=data["description"],
                         user_id=user.id,
                     )
-                    assign_tenant_id(expense)
                     with atomic_transaction("ai_create_expense"):
-                        db.session.add(expense)
+                        db.session.flush()
 
                     train_local_ai(
                         "create_expense",
@@ -1534,19 +1514,15 @@ def _process_user_action(message, user):
                 data["tax_number"] = tax_number
 
                 try:
-                    from models.supplier import Supplier
+                    from services.supplier_service import SupplierService
 
-                    supplier = Supplier(
+                    supplier = SupplierService.create_supplier(
                         name=data["name"],
                         phone=data["phone"],
                         address=data["address"],
-                        tax_number=data.get("tax_number"),
-                        total_purchases_aed=data["initial_balance"],
-                        total_paid_aed=0,
                     )
-                    assign_tenant_id(supplier)
                     with atomic_transaction("ai_create_supplier"):
-                        db.session.add(supplier)
+                        db.session.flush()
 
                     train_local_ai(
                         "create_supplier",
@@ -2042,22 +2018,19 @@ def _process_user_action(message, user):
                 data["email"] = email
 
                 try:
-                    from models.user import User
-                    from werkzeug.security import generate_password_hash
-                    from utils.password_validator import PasswordValidator
+                    from services.user_service import UserService
 
                     is_valid, pwd_errors = PasswordValidator.validate(data.get("password", ""))
                     if not is_valid:
                         raise ValueError("; ".join(pwd_errors))
 
-                    new_user = User(
+                    new_user = UserService.create_user(
                         username=data["username"],
-                        password_hash=generate_password_hash(data["password"]),
-                        role=data["role"],
-                        email=data["email"],
+                        full_name=data.get("username", ""),
+                        email=data["email"] or "",
                     )
                     with atomic_transaction("ai_create_user"):
-                        db.session.add(new_user)
+                        db.session.flush()
 
                     train_local_ai("create_user", data, {"success": True, "user_id": new_user.id})
 
@@ -2501,10 +2474,15 @@ http://localhost:5000/ai/assistant
                     phone = parts[1]
                     address = parts[2] if len(parts) > 2 else ""
 
-                    customer = Customer(name=name, phone=phone, address=address, is_active=True)
-                    assign_tenant_id(customer, user)
+                    from services.customer_service import CustomerService
+
+                    customer = CustomerService.create_customer(
+                        name=name,
+                        phone=phone,
+                        address=address,
+                    )
                     with atomic_transaction("ai_quick_create_customer"):
-                        db.session.add(customer)
+                        db.session.flush()
 
                     return f"""✅ تم إنشاء العميل بنجاح!
 
@@ -2535,16 +2513,14 @@ http://localhost:5000/ai/assistant
                         else 0
                     )
 
-                    product = Product(
+                    from services.product_service import ProductService
+
+                    product = ProductService.create_product(
                         name=name,
-                        part_number=part_number,
                         regular_price=float(price_str),
-                        current_stock=0,
-                        is_active=True,
+                        part_number=part_number,
                     )
-                    assign_tenant_id(product, user)
                     with atomic_transaction("ai_quick_create_product"):
-                        db.session.add(product)
                         db.session.flush()
                         if quantity > 0:
                             StockService.add_opening_stock(
@@ -2578,16 +2554,16 @@ http://localhost:5000/ai/assistant
                     email = parts[2] if len(parts) > 2 else ""
                     address = parts[3] if len(parts) > 3 else ""
 
-                    supplier = Supplier(
+                    from services.supplier_service import SupplierService
+
+                    supplier = SupplierService.create_supplier(
                         name=name,
                         phone=phone,
                         email=email,
                         address=address,
-                        is_active=True,
                     )
-                    assign_tenant_id(supplier)
                     with atomic_transaction("ai_quick_create_supplier"):
-                        db.session.add(supplier)
+                        db.session.flush()
 
                     return f"""✅ تم إنشاء المورد بنجاح!
 
@@ -2687,28 +2663,15 @@ http://localhost:5000/ai/assistant
                     amount = float(parts[1].replace(gettext("درهم"), "").replace(gettext("د.إ"), "").strip())
                     category = parts[2] if len(parts) > 2 else gettext("عام")
 
-                    from utils.helpers import generate_number
+                    from services.expense_service import ExpenseService
 
-                    expense_number = generate_number(
-                        "EXP",
-                        Expense,
-                        "expense_number",
-                        branch_id=getattr(current_user, "branch_id", None),
-                    )
-                    expense = Expense(
-                        expense_number=expense_number,
-                        description=description,
+                    expense = ExpenseService.create_expense(
                         amount=amount,
-                        amount_aed=amount,
-                        currency="AED",
-                        exchange_rate=1,
-                        expense_date=datetime.now(timezone.utc),
-                        payment_method="cash",
+                        description=description,
                         user_id=user.id,
                     )
-                    assign_tenant_id(expense)
                     with atomic_transaction("ai_quick_create_expense"):
-                        db.session.add(expense)
+                        db.session.flush()
 
                     return f"""✅ تم إضافة المصروف بنجاح!
 
