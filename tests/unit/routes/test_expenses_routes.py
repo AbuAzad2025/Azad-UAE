@@ -228,12 +228,18 @@ class TestExpensesCreate:
             bank_name="Bank",
             supplier_name="Vendor",
             notes="n",
+            amount=Decimal("200"),
+            currency="AED",
+            exchange_rate=Decimal("1"),
         )
+        cheque_mock = MagicMock()
         with (
             _expense_patches(),
-            patch("routes.expenses.Expense", return_value=expense),
-            patch("routes.expenses.Cheque", return_value=MagicMock()),
+            patch("services.expense_service.ExpenseService.create_expense", return_value=expense),
+            patch("services.cheque_service.ChequeService.create_cheque", return_value=cheque_mock),
             patch("routes.expenses._build_expense_gl_lines", return_value=[]),
+            patch("routes.expenses.process_cheque_issue"),
+            patch("routes.expenses.post_or_fail"),
         ):
             resp = expenses_client.post(
                 "/expenses/create",

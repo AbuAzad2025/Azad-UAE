@@ -17,6 +17,8 @@ from services.exchange_rate_service import ExchangeRateService
 from services.gl_service import GLService
 from services.gl_posting import post_or_fail
 from services.cheque_service import process_cheque_issue
+from services.expense_service import ExpenseService
+from services.cheque_service import ChequeService
 from utils.decorators import permission_required, branch_scope_id
 from utils.db_safety import atomic_transaction
 from utils.branching import should_show_all_branch_columns
@@ -209,8 +211,7 @@ def create():
                         if cheque_date_str
                         else datetime.now().date()
                     )
-                    cheque = Cheque(
-                        tenant_id=getattr(current_user, "tenant_id", None),
+                    cheque = ChequeService.create_cheque(
                         cheque_number=expense.cheque_number or f"CHQ-{expense.expense_number}",
                         cheque_bank_number=expense.cheque_number or f"CHQ-{expense.expense_number}",
                         cheque_type="outgoing",
@@ -218,8 +219,6 @@ def create():
                         amount=expense.amount,
                         currency=expense.currency,
                         exchange_rate=expense.exchange_rate,
-                        amount_aed=expense.amount_aed,
-                        issue_date=datetime.now().date(),
                         due_date=cheque_date_val,
                         status="pending",
                         payee_name=expense.supplier_name or "Expense Payment",
@@ -227,8 +226,8 @@ def create():
                         notes=expense.notes,
                         user_id=current_user.id,
                         branch_id=expense.branch_id,
+                        tenant_id=getattr(current_user, "tenant_id", None),
                     )
-                    db.session.add(cheque)
                     db.session.flush()
 
                 GLService.ensure_core_accounts(
