@@ -17,6 +17,64 @@ from utils.gl_services import (
 logger = logging.getLogger(__name__)
 
 
+class ChequeService:
+    """Pure business logic for cheque operations. Uses flush only — callers manage transactions."""
+
+    @staticmethod
+    def create_cheque(
+        cheque_number: str,
+        cheque_bank_number: str,
+        cheque_type: str,
+        bank_name: str,
+        bank_branch: str,
+        account_number: str,
+        amount,
+        currency: str,
+        exchange_rate,
+        issue_date,
+        due_date,
+        drawer_name: str = "",
+        drawer_id_number: str = "",
+        payee_name: str = "",
+        customer_id: int | None = None,
+        supplier_id: int | None = None,
+        notes: str = "",
+        user_id: int | None = None,
+        branch_id: int | None = None,
+        tenant_id: int | None = None,
+    ):
+        """Create a new cheque. Returns the created cheque (not yet committed)."""
+        from models import Cheque
+        from services.cheque_service import calculate_amount_aed
+
+        cheque = Cheque(
+            cheque_number=cheque_number,
+            cheque_bank_number=cheque_bank_number,
+            cheque_type=cheque_type,
+            bank_name=bank_name,
+            bank_branch=bank_branch,
+            account_number=account_number,
+            amount=amount,
+            currency=currency,
+            exchange_rate=exchange_rate,
+            issue_date=issue_date,
+            due_date=due_date,
+            drawer_name=drawer_name,
+            drawer_id_number=drawer_id_number,
+            payee_name=payee_name,
+            customer_id=customer_id,
+            supplier_id=supplier_id,
+            notes=notes,
+            user_id=user_id,
+            branch_id=branch_id,
+            tenant_id=tenant_id,
+        )
+        calculate_amount_aed(cheque)
+        cheque.update_status_based_on_date()
+        db.session.add(cheque)
+        return cheque
+
+
 def validate_cheque(cheque):
     if not cheque.cheque_number:
         raise ValueError(gettext("رقم الشيك مطلوب"))

@@ -304,7 +304,7 @@ class TestChequesCreate:
 
     def test_create_incoming_success(self, cheques_client):
         cheque = _mock_cheque(id=20, cheque_type="incoming")
-        with _cheque_patches(), patch("routes.cheques.Cheque", return_value=cheque):
+        with _cheque_patches(), patch("services.cheque_service.ChequeService.create_cheque", return_value=cheque):
             resp = cheques_client.post(
                 "/cheques/create",
                 data={
@@ -319,7 +319,7 @@ class TestChequesCreate:
 
     def test_create_outgoing_success(self, cheques_client):
         cheque = _mock_cheque(id=21, cheque_type="outgoing")
-        with _cheque_patches(), patch("routes.cheques.Cheque", return_value=cheque):
+        with _cheque_patches(), patch("services.cheque_service.ChequeService.create_cheque", return_value=cheque):
             resp = cheques_client.post(
                 "/cheques/create",
                 data={
@@ -372,7 +372,7 @@ class TestChequesCreate:
         cheque = _mock_cheque(id=22)
         with (
             _cheque_patches(),
-            patch("routes.cheques.Cheque", return_value=cheque),
+            patch("services.cheque_service.ChequeService.create_cheque", return_value=cheque),
             patch(
                 "routes.cheques.resolve_default_currency",
                 side_effect=RuntimeError("currency fail"),
@@ -396,7 +396,7 @@ class TestChequesCreate:
         cheque = _mock_cheque(id=23)
         with (
             _cheque_patches(),
-            patch("routes.cheques.Cheque", return_value=cheque),
+            patch("services.cheque_service.ChequeService.create_cheque", return_value=cheque),
             patch(
                 "routes.cheques.resolve_default_currency",
                 side_effect=RuntimeError("currency fail"),

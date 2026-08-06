@@ -319,8 +319,9 @@ def create():
                     today=date.today(),
                 )
 
-            cheque = Cheque(
-                tenant_id=getattr(current_user, "tenant_id", None),
+            from services.cheque_service import ChequeService
+
+            cheque = ChequeService.create_cheque(
                 cheque_number=cheque_number,
                 cheque_bank_number=request.form.get("cheque_bank_number"),
                 cheque_type=cheque_type,
@@ -340,13 +341,10 @@ def create():
                 notes=request.form.get("notes"),
                 user_id=current_user.id,
                 branch_id=cheque_branch_id,
+                tenant_id=getattr(current_user, "tenant_id", None),
             )
 
-            calculate_amount_aed(cheque)
-            cheque.update_status_based_on_date()
-
             with atomic_transaction("cheque_create"):
-                db.session.add(cheque)
                 db.session.flush()
                 if cheque.cheque_type == "incoming":
                     process_cheque_receive(cheque)
