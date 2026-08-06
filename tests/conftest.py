@@ -172,7 +172,7 @@ if not getattr(NonCallableMock, "_azad_py314_name_guard", False):
     NonCallableMock.__getattr__ = _safe_mock_getattr  # type: ignore[method-assign]
     NonCallableMock._azad_py314_name_guard = True
 
-_LOGGING_CORE_METHODS = ("log_audit", "_fallback_write", "log_error", "log_security")
+_LOGGING_CORE_METHODS = ("log_audit", "_fallback_write", "log_error", "log_security", "log_frontend_error")
 _LOGGING_CORE_ORIGINALS = {name: LoggingCore.__dict__[name] for name in _LOGGING_CORE_METHODS}
 
 
@@ -572,6 +572,21 @@ _POLLUTED_MODEL_SPECS = (
     ("donation", "Donation"),
     ("package", "Package"),
     ("audit", "AuditLog"),
+    ("gl", "GLJournalEntry"),
+    ("gl", "GLJournalLine"),
+    ("gl", "GLAccount"),
+    ("budget", "Budget"),
+    ("card_payment", "CardPayment"),
+    ("card_vault", "CardVault"),
+    ("branch", "Branch"),
+    ("warehouse", "Warehouse"),
+    ("tenant", "Tenant"),
+    ("tenant_store", "TenantStore"),
+    ("partner", "Partner"),
+    ("projects", "Project"),
+    ("helpdesk", "Ticket"),
+    ("payroll", "Employee"),
+    ("payroll", "PayrollTransaction"),
 )
 
 

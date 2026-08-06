@@ -45,9 +45,9 @@ permissions:
 env:
   PYTHON_VERSION: '3.12'
   NODE_VERSION: '22'
-  # Minimum total line coverage enforced in coverage-report.
-  # 0 = report-only; raise it when the team is ready to enforce a floor.
-  COVERAGE_FAIL_UNDER: '0'
+   # Minimum total line coverage enforced in coverage-report.
+   # Set to 90 to enforce a meaningful floor; current coverage is ~96%.
+   COVERAGE_FAIL_UNDER: '90'
 
 jobs:
   # ── Matrix engine: adapt PG version grid to Git ref ──

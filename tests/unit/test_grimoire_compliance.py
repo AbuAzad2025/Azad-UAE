@@ -82,9 +82,8 @@ def test_models_no_http_concepts():
 def test_routes_no_direct_db_queries():
     """G4: routes/ should not contain direct db.session.query() calls."""
     violations = list(check_routes_db_queries(PROJECT_ROOT))
-    # Warnings only — not a hard failure, but should be tracked
     if violations:
-        pytest.skip("db.session.query() in routes/ (warnings):\n" + _format_violations(violations))
+        pytest.xfail("db.session.query() in routes/ (warnings):\n" + _format_violations(violations))
 
 
 def test_no_bare_except_pass():
@@ -98,16 +97,15 @@ def test_no_type_ignore():
     violations = list(check_type_ignore(PROJECT_ROOT))
     if violations:
         count = len(violations)
-        pytest.skip(f"{count} '# type: ignore' found (warnings):\n" + _format_violations(violations))
+        pytest.xfail(f"{count} '# type: ignore' found (warnings):\n" + _format_violations(violations))
 
 
 def test_function_length():
     """G7: Functions should not exceed 80 lines."""
     violations = list(check_function_length(PROJECT_ROOT))
-    # Warnings — report but don't fail
     if violations:
         count = len(violations)
-        pytest.skip(f"{count} functions exceed 80 lines (warnings):\n" + _format_violations(violations))
+        pytest.xfail(f"{count} functions exceed 80 lines (warnings):\n" + _format_violations(violations))
 
 
 def test_root_cleanliness():

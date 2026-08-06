@@ -2,13 +2,11 @@ import { vi } from 'vitest';
 
 // Minimal jQuery global mock — classic scripts reference `$`/`window.$`.
 const jqueryChainable = () => {
+  const store = {};
   const api = {
     on: () => api,
     off: () => api,
     trigger: () => api,
-    attr: () => undefined,
-    val: () => '',
-    find: () => api,
     each: () => api,
     append: () => api,
     remove: () => api,
@@ -18,9 +16,45 @@ const jqueryChainable = () => {
     css: () => api,
     show: () => api,
     hide: () => api,
-    html: () => api,
-    text: () => api,
-    data: () => undefined,
+    closest: () => api,
+    find: () => api,
+    prop: () => undefined,
+    is: () => false,
+    attr: (name, val) => {
+      if (val !== undefined) {
+        store['attr:' + name] = val;
+        return api;
+      }
+      return store['attr:' + name] ?? undefined;
+    },
+    val: (val) => {
+      if (val !== undefined) {
+        store.val = val;
+        return api;
+      }
+      return store.val ?? '';
+    },
+    html: (val) => {
+      if (val !== undefined) {
+        store.html = val;
+        return api;
+      }
+      return store.html ?? '';
+    },
+    text: (val) => {
+      if (val !== undefined) {
+        store.text = val;
+        return api;
+      }
+      return store.text ?? '';
+    },
+    data: (key, val) => {
+      if (val !== undefined) {
+        store['data:' + key] = val;
+        return api;
+      }
+      return store['data:' + key] ?? undefined;
+    },
     ready: (fn) => {
       if (typeof fn === 'function') fn();
       return api;
@@ -40,9 +74,14 @@ const $ = (selector) => {
     api.ready(selector);
     return api;
   }
-  api.attr = (name) => {
+  api.attr = (name, val) => {
     if (name === 'content') return '';
-    return undefined;
+    if (val !== undefined) {
+      api.__store = api.__store || {};
+      api.__store['attr:' + name] = val;
+      return api;
+    }
+    return (api.__store && api.__store['attr:' + name]) ?? undefined;
   };
   return api;
 };
