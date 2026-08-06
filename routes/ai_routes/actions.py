@@ -212,11 +212,10 @@ def _process_user_action(message, user):
                 try:
                     new_balance = float(message.strip().replace(gettext("درهم"), "").strip())
 
-                    from models.customer import Customer
+                    from services.customer_service import CustomerService
 
-                    customer = Customer.query.filter_by(id=data["customer_id"], tenant_id=tid).first()
                     with atomic_transaction("ai_balance_update"):
-                        customer.set_balance(new_balance)
+                        CustomerService.set_balance(data["customer_id"], new_balance, tid)
 
                     train_local_ai(
                         "update_balance",
@@ -1269,11 +1268,12 @@ def _process_user_action(message, user):
                         payment_type="refund",
                     )
                     assign_tenant_id(payment)
+                    from services.customer_service import CustomerService
+
                     with atomic_transaction("ai_give_payment"):
                         db.session.add(payment)
 
-                        customer = Customer.query.filter_by(id=data["customer_id"], tenant_id=tid).first()
-                        customer.adjust_balance(data["amount"])
+                        new_balance = CustomerService.adjust_balance(data["customer_id"], data["amount"], tid)
 
                     train_local_ai(
                         "give_payment",
@@ -1291,7 +1291,7 @@ def _process_user_action(message, user):
 - العميل: {data["customer_name"]}
 - المبلغ المعطى: {data["amount"]} درهم
 - السبب: {data["reason"]}
-- الرصيد الجديد: {customer.balance} درهم
+- الرصيد الجديد: {new_balance} درهم
 - رقم الدفعة: #{payment.id}
 
 {final_options}
@@ -2801,8 +2801,10 @@ http://localhost:5000/ai/assistant
                         return gettext(f"❌ العميل '{customer_name}' غير موجود!")
 
                     old_balance = customer.balance
+                    from services.customer_service import CustomerService
+
                     with atomic_transaction("ai_adjust_balance"):
-                        customer.set_balance(new_balance)
+                        CustomerService.set_balance(customer.id, new_balance, tid)
 
                     return f"""✅ تم تعديل رصيد العميل بنجاح!
 
@@ -2944,7 +2946,10 @@ http://localhost:5000/ai/assistant
                     if not customer:
                         return gettext(f"❌ العميل '{customer_name}' غير موجود!")
 
-                    customer.adjust_balance(amount)
+                    from services.customer_service import CustomerService
+
+                    with atomic_transaction("ai_quick_adjust_balance"):
+                        CustomerService.adjust_balance(customer.id, amount, tid)
 
                     from utils.helpers import generate_number
 

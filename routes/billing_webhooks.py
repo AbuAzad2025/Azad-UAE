@@ -150,12 +150,14 @@ def generic_webhook():
     )
 
     try:
-        secret = current_app.config.get("BILLING_WEBHOOK_SECRET") or current_app.config.get("SECRET_KEY")
-        if secret:
-            provided = request.headers.get("X-Webhook-Secret", "")
-            if provided != secret:
-                logger.warning("Generic webhook rejected: invalid secret")
-                return jsonify({"error": "Forbidden"}), 403
+        secret = current_app.config.get("BILLING_WEBHOOK_SECRET")
+        if not secret:
+            logger.warning("Generic webhook rejected: BILLING_WEBHOOK_SECRET not configured")
+            return jsonify({"error": "Webhook not configured"}), 503
+        provided = request.headers.get("X-Webhook-Secret", "")
+        if provided != secret:
+            logger.warning("Generic webhook rejected: invalid secret")
+            return jsonify({"error": "Forbidden"}), 403
 
         data = request.get_json(silent=True)
         if not data:
@@ -216,9 +218,12 @@ def cron_check_subscriptions():
     from flask import abort
     from utils.billing_scheduler import run_subscription_check
 
-    cron_secret = current_app.config.get("CRON_SECRET", "")
+    cron_secret = current_app.config.get("CRON_SECRET")
+    if not cron_secret:
+        logger.critical("Cron endpoint invoked but CRON_SECRET not configured")
+        abort(503)
     provided = request.headers.get("X-Cron-Secret", "") or request.args.get("key", "")
-    if cron_secret and provided != cron_secret:
+    if provided != cron_secret:
         abort(403)
 
     try:

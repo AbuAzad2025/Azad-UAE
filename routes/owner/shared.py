@@ -107,6 +107,8 @@ _FORBIDDEN_SQL_KEYWORDS = (
     "SELECT INTO",
     "OUTFILE",
     "DUMPFILE",
+    "UNION ",
+    "UNION ALL ",
 )
 
 _EXPORT_FORMATS = frozenset({"sql", "json"})
