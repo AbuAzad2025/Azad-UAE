@@ -2434,27 +2434,22 @@ class TestGivePaymentWizardExtended:
     def test_give_full_flow(self, mock_user):
         ctx = {"last_action": "إعطاء", "option": "1", "step": 1, "data": {}}
         customer = _obj(id=1, name="GiveC", balance=Decimal("0"))
-        chain = MagicMock()
-        chain.first.return_value = customer
-        with patch("models.customer.Customer") as Customer:
-            Customer.query.filter_by.return_value = chain
+        with (
+            patch("services.customer_service.CustomerService.adjust_balance", return_value=Decimal("100")),
+            patch("models.customer.Customer"),
+        ):
             _run_action("GiveC", mock_user, ctx)
         assert ctx["step"] == 2
         _run_action("100", mock_user, ctx)
         assert ctx["step"] == 3
         payment = _obj(id=11)
-        cust2 = _obj(id=1, balance=Decimal("100"))
-        cust2.adjust_balance = MagicMock()
-        chain2 = MagicMock()
-        chain2.first.return_value = cust2
         with (
             patch("models.payment.Payment", pay_cls := MagicMock()),
-            patch("models.customer.Customer") as Customer,
+            patch("services.customer_service.CustomerService.adjust_balance", return_value=Decimal("200")),
             patch("utils.helpers.generate_number", return_value="PAY-Y"),
             patch("routes.ai_routes.create_final_options", return_value="opts"),
         ):
             pay_cls.return_value = payment
-            Customer.query.filter_by.return_value = chain2
             result = _run_action("refund", mock_user, ctx)
         assert "تم إعطاء الدفعة" in result or "دفعة" in result
 

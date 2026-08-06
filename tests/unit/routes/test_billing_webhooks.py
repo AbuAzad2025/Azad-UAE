@@ -131,7 +131,11 @@ class TestStripeWebhook:
 
 
 class TestGenericWebhook:
-    _SECRET = "test-secret-key"  # TestConfig.SECRET_KEY is the fallback secret
+    _SECRET = "test-secret-key"
+
+    @pytest.fixture(autouse=True)
+    def _configure_webhook_secret(self, app):
+        app.config["BILLING_WEBHOOK_SECRET"] = self._SECRET
 
     def test_wrong_secret_returns_403(self, client):
         resp = client.post(
@@ -216,17 +220,10 @@ class TestGenericWebhook:
 
 
 class TestCronCheckSubscriptions:
-    def test_runs_without_configured_secret(self, client, mocker):
-        run = mocker.patch(
-            "utils.billing_scheduler.run_subscription_check",
-            return_value={"checked": 5},
-        )
+    def test_missing_secret_returns_503(self, client):
+        # CRON_SECRET must be configured — endpoint refuses to run without it.
         resp = client.post("/billing-webhook/api/cron/check-subscriptions")
-        assert resp.status_code == 200
-        data = resp.get_json()
-        assert data["success"] is True
-        assert data["checked"] == 5
-        run.assert_called_once_with()
+        assert resp.status_code == 503
 
     def test_wrong_secret_aborts_403(self, client, app, monkeypatch):
         monkeypatch.setitem(app.config, "CRON_SECRET", "cron-x")
@@ -245,12 +242,16 @@ class TestCronCheckSubscriptions:
         )
         assert resp.status_code == 200
 
-    def test_check_failure_returns_500(self, client, mocker):
+    def test_check_failure_returns_500(self, client, app, monkeypatch, mocker):
+        monkeypatch.setitem(app.config, "CRON_SECRET", "cron-x")
         mocker.patch(
             "utils.billing_scheduler.run_subscription_check",
             side_effect=RuntimeError("scheduler down"),
         )
-        resp = client.post("/billing-webhook/api/cron/check-subscriptions")
+        resp = client.post(
+            "/billing-webhook/api/cron/check-subscriptions",
+            headers={"X-Cron-Secret": "cron-x"},
+        )
         assert resp.status_code == 500
 
 

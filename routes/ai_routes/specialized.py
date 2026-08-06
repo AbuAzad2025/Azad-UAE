@@ -5,7 +5,7 @@ from flask_babel import gettext
 import logging
 from flask import request, jsonify
 from flask_login import login_required, current_user
-from extensions import csrf, limiter
+from extensions import limiter
 from utils.decorators import permission_required
 from services.ai_service import AIService
 from ai_knowledge.knowledge_base import get_automotive_ecu_knowledge
@@ -102,7 +102,6 @@ def ask_genius():
 
 
 @ai_bp.route("/quick-calc", methods=["POST"])
-@csrf.exempt
 @login_required
 @limiter.limit("30 per minute")
 def quick_calc():
@@ -123,7 +122,6 @@ def quick_calc():
 
 
 @ai_bp.route("/transformers-understand", methods=["POST"])
-@csrf.exempt
 @login_required
 @limiter.limit("30 per minute")
 def transformers_understand():

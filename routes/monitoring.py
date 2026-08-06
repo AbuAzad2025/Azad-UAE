@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, render_template
 from flask_login import login_required
+from extensions import limiter
 from services.logging_core import LoggingCore
 from utils.decorators import admin_required
 
@@ -7,6 +8,7 @@ monitoring_bp = Blueprint("monitoring", __name__, url_prefix="/monitoring")
 
 
 @monitoring_bp.route("/health")
+@limiter.limit("60 per minute")
 def health():
     health_data = LoggingCore.get_system_health()
     status_code = 200 if health_data.get("status") == "healthy" else 503
