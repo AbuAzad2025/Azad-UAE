@@ -703,3 +703,14 @@ class PurchaseService:
 
         LoggingCore.log_audit("create", "purchase_returns", purchase_return.id)
         return purchase_return
+
+    @staticmethod
+    def delete_purchase(purchase, has_supplier: bool = True):
+        """Delete a purchase and its lines. Reverses supplier balance if needed."""
+        if has_supplier and purchase.supplier_id:
+            from models import Supplier
+            supplier = Supplier.query.filter_by(id=purchase.supplier_id, tenant_id=purchase.tenant_id).first()
+            if supplier:
+                supplier.apply_payment(-Decimal(str(purchase.amount_aed or 0)))
+        PurchaseLine.query.filter_by(purchase_id=purchase.id, tenant_id=purchase.tenant_id).delete()
+        db.session.delete(purchase)

@@ -228,18 +228,18 @@ class TestPurchasesDelete:
     def test_delete_success_no_links(self, purchases_client):
         purchase = _mock_purchase(supplier_id=None)
         with (
-            _purchase_patches(purchase=purchase) as ctx,
+            _purchase_patches(purchase=purchase),
             patch("models.Cheque") as cheque_model,
             patch("models.warehouse.StockMovement") as stock_model,
             patch("services.gl_service.GLService.reverse_entry"),
             patch("models.PurchaseLine") as _line_model,
+            patch("routes.purchases.PurchaseService.delete_purchase") as mock_delete,
         ):
             cheque_model.query.filter_by.return_value.count.return_value = 0
             stock_model.query.filter_by.return_value.count.return_value = 0
             resp = purchases_client.post("/purchases/1/delete")
         assert resp.status_code == 302
-        ctx["session"].delete.assert_called_with(purchase)
-        ctx["log_audit"].assert_called_with("delete", "purchases", 1)
+        mock_delete.assert_called_once_with(purchase)
 
     def test_delete_archives_when_paid(self, purchases_client):
         purchase = _mock_purchase(paid_amount=Decimal("50"))

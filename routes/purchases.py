@@ -349,8 +349,7 @@ def delete(**kwargs):
 
                         supplier.apply_payment(-Decimal(str(purchase.amount_aed or 0)))
 
-                PurchaseLine.query.filter_by(purchase_id=purchase.id, tenant_id=purchase.tenant_id).delete()
-                db.session.delete(purchase)
+                PurchaseService.delete_purchase(purchase)
                 LoggingCore.log_audit("delete", "purchases", record_id)
             flash(
                 gettext(f'✅ تم حذف فاتورة الشراء "{purchase.purchase_number}" نهائياً'),
