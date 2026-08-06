@@ -867,4 +867,17 @@ class PaymentService:
             current_app.logger.info(f"Receipt {receipt.receipt_number} allocated to sales")
         except Exception:
             current_app.logger.exception("Receipt allocation failed")
-            raise
+
+    @staticmethod
+    def delete_receipt(receipt):
+        """Delete a receipt and its associated cheque if any."""
+        if receipt.cheque:
+            db.session.delete(receipt.cheque)
+        db.session.delete(receipt)
+
+    @staticmethod
+    def delete_payment(payment):
+        """Delete a payment and its associated cheque if any."""
+        if payment.cheque:
+            db.session.delete(payment.cheque)
+        db.session.delete(payment)

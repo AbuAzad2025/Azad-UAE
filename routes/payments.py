@@ -19,6 +19,7 @@ from extensions import db
 from models import Receipt, Customer, InvoiceSettings, Supplier, Payment
 from services.payment_service import PaymentService
 from services.cheque_service import process_cheque_issue
+from services.cheque_service import ChequeService
 from services.currency_service import CurrencyService
 from services.exchange_rate_service import ExchangeRateService
 from services.gl_posting import post_or_fail
@@ -1489,10 +1490,7 @@ def delete_receipt(**kwargs):
                     tenant_id=receipt.tenant_id,
                 )
 
-                if receipt.cheque:
-                    db.session.delete(receipt.cheque)
-
-                db.session.delete(receipt)
+                PaymentService.delete_receipt(receipt)
                 LoggingCore.log_audit("delete", "receipts", record_id)
                 flash(
                     gettext(f'تم حذف سند القبض "{receipt.receipt_number}" نهائياً'),
@@ -1559,10 +1557,7 @@ def delete_payment(**kwargs):
                     if supplier:
                         supplier.apply_payment(-Decimal(str(payment.amount_aed or 0)))
 
-                if payment.cheque:
-                    db.session.delete(payment.cheque)
-
-                db.session.delete(payment)
+                PaymentService.delete_payment(payment)
                 LoggingCore.log_audit("delete", "payments", record_id)
                 flash(
                     gettext(f'تم حذف سند الصرف "{payment.payment_number}" نهائياً'),
