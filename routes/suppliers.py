@@ -205,7 +205,9 @@ def create():
                 return redirect(url_for("suppliers.create"))
 
             tid = get_active_tenant_id(current_user)
-            supplier = Supplier(
+            from services.supplier_service import SupplierService
+
+            supplier = SupplierService.create_supplier(
                 tenant_id=tid,
                 name=request.form.get("name"),
                 name_en=request.form.get("name_en"),
@@ -233,7 +235,7 @@ def create():
             )
 
             with atomic_transaction("supplier_creation"):
-                db.session.add(supplier)
+                db.session.flush()
 
                 if initial_balance and initial_balance > 0:
                     from services.gl_posting import post_or_fail

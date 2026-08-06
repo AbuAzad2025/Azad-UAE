@@ -176,7 +176,7 @@ class TestSuppliersCreate:
         supplier = _mock_supplier(id=9)
         with (
             _supplier_patches(),
-            patch("routes.suppliers.Supplier", return_value=supplier),
+            patch("services.supplier_service.SupplierService.create_supplier", return_value=supplier),
             patch("utils.field_validators.normalize_phone_optional", return_value="050"),
             patch("utils.field_validators.validate_currency_code", return_value="AED"),
             patch("utils.tenant_limits.check_suppliers_limit"),
@@ -195,7 +195,7 @@ class TestSuppliersCreate:
         supplier = _mock_supplier(id=10)
         with (
             _supplier_patches(),
-            patch("routes.suppliers.Supplier", return_value=supplier),
+            patch("services.supplier_service.SupplierService.create_supplier", return_value=supplier),
             patch("utils.field_validators.normalize_phone_optional", return_value=None),
             patch("utils.field_validators.validate_currency_code", return_value="AED"),
             patch("utils.tenant_limits.check_suppliers_limit"),
