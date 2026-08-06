@@ -328,8 +328,9 @@ def create():
                 flash(str(e), "warning")
                 return redirect(url_for("customers.create"))
 
-            customer = Customer(
-                tenant_id=get_active_tenant_id(current_user),
+            from services.customer_service import CustomerService
+
+            customer = CustomerService.create_customer(
                 name=form.name.data,
                 name_ar=form.name_ar.data,
                 customer_type=form.customer_type.data,
@@ -340,10 +341,11 @@ def create():
                 preferred_currency=validate_currency_code(form.preferred_currency.data or default_currency),
                 is_active=bool(form.is_active.data),
                 notes=form.notes.data,
+                tenant_id=get_active_tenant_id(current_user),
             )
 
             with atomic_transaction("customer_create"):
-                db.session.add(customer)
+                db.session.flush()
                 LoggingCore.log_audit("create", "customers", customer.id)
 
             flash(gettext("✅ تم إضافة الزبون بنجاح!"), "success")

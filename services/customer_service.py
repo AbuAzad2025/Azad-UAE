@@ -14,11 +14,35 @@ class CustomerService:
     """Pure business logic for customer operations. Uses flush only — callers manage transactions."""
 
     @staticmethod
-    def create_customer(name: str, phone: str | None = None, address: str | None = None, tenant_id: int | None = None):
+    def create_customer(
+        name: str,
+        name_ar: str | None = None,
+        phone: str | None = None,
+        address: str | None = None,
+        email: str | None = None,
+        tax_number: str | None = None,
+        preferred_currency: str = "AED",
+        customer_type: str = "individual",
+        is_active: bool = True,
+        notes: str | None = None,
+        tenant_id: int | None = None,
+    ):
         """Create a new customer. Returns the created customer (not yet committed)."""
         from models.customer import Customer
 
-        customer = Customer(name=name, phone=phone or "", address=address or "", balance=0)
+        customer = Customer(
+            name=name,
+            name_ar=name_ar or "",
+            phone=phone or "",
+            address=address or "",
+            email=email or "",
+            tax_number=tax_number or "",
+            preferred_currency=preferred_currency,
+            customer_type=customer_type,
+            is_active=is_active,
+            notes=notes or "",
+            balance=0,
+        )
         if tenant_id is not None:
             customer.tenant_id = tenant_id
         db.session.add(customer)
