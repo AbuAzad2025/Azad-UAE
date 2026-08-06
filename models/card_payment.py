@@ -1,19 +1,11 @@
-"""
-Card Payment Model
-نموذج حفظ معلومات البطاقات بشكل آمن ومشفر
-"""
-
 from datetime import datetime, timezone
 from extensions import db
-from flask import current_app
 from typing import Any, cast
-import base64
 import json
-import hashlib
 
 
 class _FernetStub:
-    """Dummy Fernet when cryptography is not installed — keeps Fernet always callable."""
+    """Dummy Fernet when cryptography is not installed."""
 
     def __init__(self, key: bytes):
         raise RuntimeError("cryptography module not installed")
@@ -106,33 +98,10 @@ class CardPayment(db.Model):
         """عرض معلومات البطاقة بشكل آمن"""
         return f"{self.card_type or 'Card'} ****{self.card_last_4}"
 
-    @staticmethod
-    def _get_cipher():
-        if not HAS_CRYPTO:
-            raise RuntimeError("cryptography module not installed")
-        key = current_app.config.get("CARD_ENCRYPTION_KEY")
-        if not key:
-            raise ValueError("CARD_ENCRYPTION_KEY not configured")
-        key_bytes = key.encode() if isinstance(key, str) else key
-        key_bytes = base64.urlsafe_b64encode(hashlib.sha256(key_bytes).digest())
-        return Fernet(key_bytes)
-
-    @staticmethod
-    def _encrypt(data):
-        if not data:
-            return None
-        cipher = CardPayment._get_cipher()
-        return cipher.encrypt(data.encode() if isinstance(data, str) else data)
-
-    @staticmethod
-    def _decrypt(encrypted_data):
-        if not encrypted_data:
-            return None
-        cipher = CardPayment._get_cipher()
-        return cipher.decrypt(encrypted_data).decode()
-
-    def encrypt_card_data(self, card_number, cvv, expiry):
-        """تشفير بيانات البطاقة باستخدام Fernet"""
+    def encrypt_card_data(self, card_number: str, cvv: str, expiry: str, cipher: Any = None) -> bool:
+        """تشفير بيانات البطاقة باستخدام Fernet. يتطلب cipher من CardEncryptionService."""
+        if cipher is None:
+            raise ValueError("cipher is required to encrypt card data")
         try:
             payload = json.dumps(
                 {
@@ -141,7 +110,7 @@ class CardPayment(db.Model):
                     "expiry": expiry,
                 }
             )
-            self.encrypted_data = self._encrypt(payload)
+            self.encrypted_data = cipher.encrypt(payload)
 
             self.card_last_4 = card_number[-4:] if len(card_number) >= 4 else card_number
 
@@ -159,14 +128,12 @@ class CardPayment(db.Model):
         except Exception:
             return False
 
-    def decrypt_card_data(self) -> dict[str, Any] | None:
-        """فك تشفير بيانات البطاقة (للمالك فقط) — يعيد None إذا كان ALLOW_CARD_DECRYPTION=False"""
+    def decrypt_card_data(self, cipher: Any = None) -> dict[str, Any] | None:
+        """فك تشفير بيانات البطاقة — يعيد None إذا لم يتوفر cipher"""
         try:
-            if not self.encrypted_data:
+            if not self.encrypted_data or cipher is None:
                 return None
-            if not current_app.config.get("ALLOW_CARD_DECRYPTION", False):
-                return None
-            raw: str = self._decrypt(self.encrypted_data)
+            raw: str = cipher.decrypt(self.encrypted_data)
             data = json.loads(raw)
             return {
                 "card_number": data.get("card_number"),
@@ -177,8 +144,8 @@ class CardPayment(db.Model):
         except Exception:
             return None
 
-    def to_dict(self, include_encrypted=False):
-        """تحويل إلى dictionary"""
+    def to_dict(self, cipher: Any = None) -> dict[str, Any]:
+        """تحويل إلى dictionary. يتضمن البيانات المشفرة فقط عند توفر cipher."""
         data = {
             "id": self.id,
             "customer_name": self.customer_name,
@@ -191,9 +158,8 @@ class CardPayment(db.Model):
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 
-        # فقط المالك يمكنه رؤية البيانات المشفرة
-        if include_encrypted and current_app.config.get("ALLOW_CARD_DECRYPTION"):
-            decrypted = self.decrypt_card_data()
+        if cipher is not None:
+            decrypted = self.decrypt_card_data(cipher)
             if decrypted:
                 data["decrypted"] = decrypted
 

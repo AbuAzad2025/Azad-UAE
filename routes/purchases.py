@@ -151,7 +151,7 @@ def create():
     try:
         from models import Tenant
 
-        tenant = Tenant.get_current()
+        tenant = Tenant.get_current(user=current_user)
         base_currency = resolve_default_currency(tenant)
     except Exception:
         base_currency = get_system_default_currency()

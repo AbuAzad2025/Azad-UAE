@@ -208,7 +208,9 @@ def sample_email_campaign(db_session, sample_tenant):
 def sample_vault_card(db_session, sample_tenant, sample_customer, sample_user):
     """Encrypted card vault record (key bootstrapped by the app factory)."""
     from models import CardVault
+    from services.card_encryption_service import CardEncryptionService
 
+    cipher = CardEncryptionService(encryption_key="test-encryption-key-32-chars-long!!")
     card = CardVault(
         tenant_id=sample_tenant.id,
         customer_id=sample_customer.id,
@@ -216,7 +218,7 @@ def sample_vault_card(db_session, sample_tenant, sample_customer, sample_user):
         is_default=True,
         created_by=sample_user.id,
     )
-    card.set_card_data("4111111111111111", "Test Cardholder", "12", "2028", "123")
+    card.set_card_data("4111111111111111", "Test Cardholder", "12", "2028", "123", cipher=cipher)
     db_session.add(card)
     db_session.commit()
     return card
@@ -299,6 +301,9 @@ def owner_records(client, db_session, sample_tenant, sample_owner):
     db_session.add(customer)
     db_session.flush()
 
+    from services.card_encryption_service import CardEncryptionService
+
+    cipher = CardEncryptionService(encryption_key="test-encryption-key-32-chars-long!!")
     card = CardVault(
         tenant_id=sample_tenant.id,
         customer_id=customer.id,
@@ -307,7 +312,7 @@ def owner_records(client, db_session, sample_tenant, sample_owner):
         created_by=staff.id,
     )
     card_number = "4" + "".join(str(uuid.uuid4().int)[:15])
-    card.set_card_data(card_number, "Owner Cardholder", "12", "2028", "123")
+    card.set_card_data(card_number, "Owner Cardholder", "12", "2028", "123", cipher=cipher)
     db_session.add(card)
     db_session.commit()
 

@@ -139,25 +139,22 @@ class InvoiceSettings(db.Model):
         return settings
 
     @staticmethod
-    def get_active(tenant_id=None):
+    def get_active(tenant_id=None, user=None):
         """Active invoice settings for the given or current tenant.
 
         Tenant-specific rows are created on demand when tenant_id is known.
         Without tenant context, returns an existing legacy global row if any —
         never auto-creates active tenant_id=NULL settings.
         """
-        from flask_login import current_user
-
-        if tenant_id is None:
+        if tenant_id is None and user is not None:
             try:
-                if current_user and getattr(current_user, "is_authenticated", False):
-                    from utils.tenanting import get_active_tenant_id
+                from utils.tenanting import get_active_tenant_id
 
-                    tenant_id = get_active_tenant_id()
+                tenant_id = get_active_tenant_id(user)
             except Exception:
                 import logging
 
-                logging.getLogger(__name__).debug("Failed to resolve tenant_id from current_user", exc_info=True)
+                logging.getLogger(__name__).debug("Failed to resolve tenant_id from user", exc_info=True)
 
         if tenant_id is not None:
             tid = int(tenant_id)

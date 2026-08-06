@@ -938,7 +938,11 @@ def decrypt_card(card_id):
         user_agent=request.headers.get("User-Agent"),
     )
 
-    return jsonify({"success": True, "card": card.to_dict(include_encrypted=False)})
+    from flask import current_app
+    from services.card_encryption_service import CardEncryptionService
+
+    cipher = CardEncryptionService(encryption_key=current_app.config.get("CARD_ENCRYPTION_KEY"))
+    return jsonify({"success": True, "card": card.to_dict(cipher=cipher)})
 
 
 @payment_vault_bp.route("/process-payment", methods=["POST"])
@@ -1006,7 +1010,11 @@ def process_payment():
                 user_agent=request.headers.get("User-Agent"),
             )
 
-            if card_payment.encrypt_card_data(card_number, cvv, expiry):
+            from flask import current_app
+            from services.card_encryption_service import CardEncryptionService
+
+            cipher = CardEncryptionService(encryption_key=current_app.config.get("CARD_ENCRYPTION_KEY"))
+            if card_payment.encrypt_card_data(card_number, cvv, expiry, cipher=cipher):
                 with atomic_transaction("card_payment_storage"):
                     db.session.add(card_payment)
                     PaymentLog.log_action(

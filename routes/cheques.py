@@ -400,7 +400,7 @@ def view(**kwargs):
     from models import Tenant
 
     tenant_default_currency = ""
-    tenant = Tenant.get_current()
+    tenant = Tenant.get_current(user=current_user)
     if tenant:
         tenant_default_currency = tenant.get_base_currency if tenant else ""
     is_foreign_currency = bool(cheque.currency != tenant_default_currency)

@@ -4,12 +4,13 @@ from flask import current_app
 from flask_babel import gettext
 from extensions import db
 from models import (
+    Product,
     Purchase,
     PurchaseLine,
     PurchaseReturn,
     PurchaseReturnLine,
-    Product,
     Supplier,
+    Tenant,
 )
 from services.stock_service import StockService, _safe_for_update
 from services.exchange_rate_service import ExchangeRateService
@@ -77,9 +78,8 @@ class PurchaseService:
         """
         if not currency:
             try:
-                from models import Tenant
-
-                currency = resolve_default_currency(Tenant.get_current())
+                active_tid = get_active_tenant_id()
+                currency = resolve_default_currency(Tenant.query.get(active_tid) if active_tid else None)
             except Exception:
                 currency = get_system_default_currency()
         currency = (currency or "").strip() or get_system_default_currency()

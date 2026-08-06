@@ -213,7 +213,10 @@ def bypass_owner_auth(mocker, mock_owner_user):
 def mock_owner_client(app_factory, bypass_owner_auth):
     from routes.owner import owner_bp
 
-    _app = app_factory(owner_bp)
+    _app = app_factory(
+        owner_bp,
+        config_overrides={"CARD_ENCRYPTION_KEY": "test-encryption-key-32-chars-long!!"},
+    )
     return _app.test_client()
 
 
@@ -257,7 +260,10 @@ def mock_company_admin_client(app_factory, bypass_company_admin_auth):
 def mock_vault_owner_client(app_factory, bypass_owner_auth):
     from routes.payment_vault import payment_vault_bp
 
-    _app = app_factory(payment_vault_bp)
+    _app = app_factory(
+        payment_vault_bp,
+        config_overrides={"CARD_ENCRYPTION_KEY": "test-encryption-key-32-chars-long!!"},
+    )
     return _app.test_client()
 
 

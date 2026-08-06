@@ -334,7 +334,7 @@ class TestCardVaultImportError:
             lines = f.readlines()
 
         padding = "\n" * 6
-        block = padding + "".join(lines[9:18])
+        block = padding + "".join(lines[7:16])
 
         import builtins
 
@@ -356,11 +356,8 @@ class TestCardVaultImportError:
         assert ns["HAS_CRYPTO"] is False
         assert ns["Fernet"] is None
 
-    def test_has_crypto_false_blocks_cipher(self, app):
-        import models.card_vault as cv_mod
+    def test_missing_key_raises_value_error(self, app):
+        from services.card_encryption_service import CardEncryptionService
 
-        with patch.object(cv_mod, "HAS_CRYPTO", False):
-            with app.app_context():
-                app.config["CARD_ENCRYPTION_KEY"] = "some-key"
-                with pytest.raises(RuntimeError, match="cryptography"):
-                    cv_mod.CardVault._get_cipher()
+        with pytest.raises(ValueError, match="CARD_ENCRYPTION_KEY not configured"):
+            CardEncryptionService(encryption_key="")

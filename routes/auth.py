@@ -94,7 +94,7 @@ def _login_company_display():
         try:
             from models.invoice_settings import InvoiceSettings
 
-            inv = InvoiceSettings.get_active()
+            inv = InvoiceSettings.get_active(user=current_user)
             if inv and (inv.company_name_ar or "").strip():
                 name_ar = (inv.company_name_ar or "").strip()
                 address = (inv.address_ar or inv.address_en or "").strip() or address

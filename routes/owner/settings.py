@@ -170,7 +170,7 @@ def reports():
 @owner_or_company_admin
 def company_info():
     """معلومات الشركة/الكراج"""
-    tenant = Tenant.get_current()
+    tenant = Tenant.get_current(user=current_user)
 
     if request.method == "POST":
         try:
@@ -210,7 +210,7 @@ def company_info():
                 tenant.updated_by = current_user.id
 
                 try:
-                    inv = InvoiceSettings.get_active()
+                    inv = InvoiceSettings.get_active(user=current_user)
                     if inv:
                         inv.company_name_ar = tenant.name_ar or inv.company_name_ar
                         inv.company_name_en = tenant.name_en or tenant.name or inv.company_name_en
@@ -328,7 +328,7 @@ def system_config():
                 try:
                     from models import Tenant
 
-                    tenant = Tenant.get_current()
+                    tenant = Tenant.get_current(user=current_user)
                     tenant.default_currency = default_currency
                 except Exception as exc:
                     logger.debug("tenant default_currency sync: %s", exc)
@@ -468,7 +468,7 @@ def store_payment_method_delete(method_id):
 @owner_or_company_admin
 def invoice_settings():
     """إعدادات ترويسات الفواتير وسندات القبض"""
-    settings = InvoiceSettings.get_active()
+    settings = InvoiceSettings.get_active(user=current_user)
 
     if request.method == "POST":
         try:
@@ -622,7 +622,7 @@ def preview_invoice(template):
     try:
         from models import Tenant
 
-        default_currency = resolve_default_currency(Tenant.get_current())
+        default_currency = resolve_default_currency(Tenant.get_current(user=current_user))
     except Exception:
         default_currency = get_system_default_currency()
 
@@ -745,7 +745,7 @@ def preview_receipt(template):
     try:
         from models import Tenant
 
-        default_currency = resolve_default_currency(Tenant.get_current())
+        default_currency = resolve_default_currency(Tenant.get_current(user=current_user))
     except Exception:
         default_currency = get_system_default_currency()
     from utils.number_to_arabic import number_to_arabic_words
@@ -847,7 +847,7 @@ def tax_settings():
     from decimal import Decimal
     from utils.tax_settings import VAT_COUNTRY_LABELS, suggested_rate_for_country
 
-    tenant = Tenant.get_current()
+    tenant = Tenant.get_current(user=current_user)
     if not tenant:
         flash(gettext("لا توجد شركة نشطة."), "danger")
         return redirect(url_for("owner.dashboard"))
@@ -892,7 +892,7 @@ def currency_settings():
                 try:
                     from models import Tenant
 
-                    tenant = Tenant.get_current()
+                    tenant = Tenant.get_current(user=current_user)
                     tenant.default_currency = default_currency
                 except Exception as exc:
                     logger.debug("tenant currency settings sync: %s", exc)
@@ -908,7 +908,7 @@ def currency_settings():
     try:
         from models import Tenant
 
-        default_currency = resolve_default_currency(Tenant.get_current())
+        default_currency = resolve_default_currency(Tenant.get_current(user=current_user))
     except Exception:
         default_currency = get_system_default_currency()
     rates = CurrencyService.get_all_rates(default_currency)

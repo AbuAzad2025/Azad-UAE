@@ -10,7 +10,6 @@ from decimal import Decimal, ROUND_HALF_UP
 
 from flask_babel import gettext
 from extensions import db
-from models.tenant import Tenant
 from services.gl_helpers import assert_period_open
 from services.gl_service import GLService
 from utils.currency_utils import (
@@ -114,7 +113,11 @@ def post_or_fail(
     # Resolve currency from tenant if not explicitly provided
     if currency is None:
         try:
-            t = db.session.get(Tenant, tenant_id) if tenant_id else Tenant.get_current()
+            from models import Tenant
+            from utils.tenanting import get_active_tenant_id
+
+            active_tid = get_active_tenant_id()
+            t = db.session.get(Tenant, tenant_id) or (Tenant.query.get(active_tid) if active_tid else None)
             currency = resolve_default_currency(t)
         except (LookupError, AttributeError, TypeError, ValueError):
             currency = get_system_default_currency()

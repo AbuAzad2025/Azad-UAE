@@ -146,7 +146,7 @@ def vat_report():
     from models.tenant import Tenant
     from utils.tax_settings import is_tax_enabled, vat_country as tenant_vat_country
 
-    tenant = Tenant.get_current()
+    tenant = Tenant.get_current(user=current_user)
     if tenant and not is_tax_enabled(tenant.id):
         flash(
             gettext("الضريبة غير مفعّلة لهذه الشركة. فعّلها من إعدادات الضرائب إن لزم."),

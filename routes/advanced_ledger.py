@@ -61,7 +61,7 @@ def professional_printing():
     from utils.tenant_branding import get_print_header_context
 
     print_branding = get_print_header_context()
-    settings = InvoiceSettings.get_active()
+    settings = InvoiceSettings.get_active(user=current_user)
 
     trial_balance_json = [
         {

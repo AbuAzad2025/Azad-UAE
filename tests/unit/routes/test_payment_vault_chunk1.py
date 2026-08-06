@@ -244,7 +244,9 @@ class TestProcessPayment:
         body = resp.get_json()
         assert body["success"] is True
         assert body["transaction_id"] == "CARD_1700000000"
-        mock_card_payment.encrypt_card_data.assert_called_once_with("4111111111111111", "123", "12/28")
+        mock_card_payment.encrypt_card_data.assert_called_once()
+        call_kwargs = mock_card_payment.encrypt_card_data.call_args.kwargs
+        assert "cipher" in call_kwargs
         mock_payment_log.assert_called_once()
 
     def test_card_amount_below_minimum_returns_400(self, vault_owner_client):

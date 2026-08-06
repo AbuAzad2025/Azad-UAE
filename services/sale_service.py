@@ -3,7 +3,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from flask import current_app
 from flask_babel import gettext
 from extensions import db
-from models import PartnerCommissionEntry, Sale, SaleLine, Payment
+from models import PartnerCommissionEntry, Sale, SaleLine, Payment, Tenant
 from services.stock_service import StockService
 from services.exchange_rate_service import ExchangeRateService
 from services.gl_posting import post_or_fail
@@ -77,9 +77,8 @@ class SaleService:
 
         if not currency:
             try:
-                from models import Tenant
-
-                currency = resolve_default_currency(Tenant.get_current())
+                active_tid = get_active_tenant_id()
+                currency = resolve_default_currency(Tenant.query.get(active_tid) if active_tid else None)
             except Exception:
                 currency = get_system_default_currency()
         currency = (currency or "").strip() or get_system_default_currency()

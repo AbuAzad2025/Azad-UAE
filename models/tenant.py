@@ -170,48 +170,28 @@ class Tenant(db.Model):
         return f"<Tenant {self.name}>"
 
     @staticmethod
-    def get_current():
+    def get_current(user=None):
         """Current tenant for branding/settings — never leaks another company to logged-in users.
 
-        Memoized per request (keyed by active tenant id + user id) — template
-        helpers call this per rendered row."""
-        from flask import g, has_request_context
-
-        if not has_request_context():
-            return Tenant._get_current_uncached()
-        try:
-            from flask_login import current_user
-            from utils.tenanting import get_active_tenant_id
-
-            tid = (
-                get_active_tenant_id(current_user)
-                if current_user and getattr(current_user, "is_authenticated", False)
-                else None
-            )
-        except Exception:
-            tid = "resolve-error"
-        key = f"_tenant_current_{tid}_{getattr(current_user, 'id', None)}"
-        if key in g:
-            return getattr(g, key)
-        tenant = Tenant._get_current_uncached()
-        setattr(g, key, tenant)
-        return tenant
+        Pure query — memoization belongs in the service layer.
+        Accepts optional user for tenant resolution.
+        """
+        return Tenant._get_current_uncached(user=user)
 
     @staticmethod
-    def _get_current_uncached():
+    def _get_current_uncached(user=None):
         """Current tenant for branding/settings — never leaks another company to logged-in users."""
         try:
-            from flask_login import current_user
             from utils.tenanting import get_active_tenant_id, is_platform_owner
 
-            if current_user and getattr(current_user, "is_authenticated", False):
-                active_tid = get_active_tenant_id(current_user)
+            if user and getattr(user, "is_authenticated", False):
+                active_tid = get_active_tenant_id(user)
                 if active_tid:
                     tenant = Tenant.query.filter_by(id=int(active_tid), is_active=True).first()
                     if tenant:
                         return tenant
-                if not is_platform_owner(current_user):
-                    rel = getattr(current_user, "tenant", None)
+                if not is_platform_owner(user):
+                    rel = getattr(user, "tenant", None)
                     if rel and getattr(rel, "is_active", False):
                         return rel
                     return None

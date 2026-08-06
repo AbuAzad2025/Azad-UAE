@@ -842,7 +842,10 @@ def shop_client(app_factory, bypass_shop_auth):
 def vault_owner_client(app_factory, bypass_owner_auth):
     from routes.payment_vault import payment_vault_bp
 
-    app = app_factory(payment_vault_bp)
+    app = app_factory(
+        payment_vault_bp,
+        config_overrides={"CARD_ENCRYPTION_KEY": "test-encryption-key-32-chars-long!!"},
+    )
     return app.test_client()
 
 

@@ -903,7 +903,10 @@ def owner_client(app_factory, bypass_owner_auth):
 
         app = app_factory(
             owner_bp,
-            {"SQLALCHEMY_DATABASE_URI": "postgresql://user:pass@localhost/testdb"},
+            {
+                "SQLALCHEMY_DATABASE_URI": "postgresql://user:pass@localhost/testdb",
+                "CARD_ENCRYPTION_KEY": "test-encryption-key-32-chars-long!!",
+            },
         )
         yield app.test_client()
 

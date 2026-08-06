@@ -283,7 +283,14 @@ def view_card(**kwargs):
     record_id = kwargs.pop("id")
     card = CardVault.query.get_or_404(record_id)
 
-    card_data = card.to_dict(include_sensitive=True)
+    from flask import current_app
+    from services.card_encryption_service import CardEncryptionService
+
+    cipher = CardEncryptionService(encryption_key=current_app.config.get("CARD_ENCRYPTION_KEY"))
+    try:
+        card_data = card.to_dict(cipher=cipher)
+    except Exception:
+        card_data = card.to_dict()
 
     _audit_owner_db_action(
         "view_card_vault_detail",

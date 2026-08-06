@@ -444,7 +444,7 @@ def _pos_register_context():
     warehouses = [
         w for w in get_accessible_warehouses(current_user) if w.is_active and w.warehouse_type != w.TYPE_ONLINE
     ]
-    tenant = Tenant.get_current()
+    tenant = Tenant.get_current(user=current_user)
     tenant_default_currency = resolve_default_currency(tenant) if tenant else "AED"
     branch_id = get_active_branch_id()
     return {
