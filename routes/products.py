@@ -28,6 +28,7 @@ from utils.branching import (
     should_show_all_branch_columns,
 )
 from services.logging_core import LoggingCore
+from services.product_service import ProductService
 from utils.helpers import generate_sku, generate_barcode, save_uploaded_file
 from utils.static_asset_paths import tenant_upload_dir
 from services.stock_service import StockService
@@ -524,24 +525,23 @@ def import_products():
                                 if cat:
                                     category_id = cat.id
                                 else:
-                                    new_cat = ProductCategory(name=category_name)
-                                    assign_tenant_id(new_cat, current_user)
-                                    db.session.add(new_cat)
+                                    new_cat = ProductService.create_category(
+                                        name=category_name,
+                                        tenant_id=tid,
+                                    )
                                     db.session.flush()
                                     category_id = new_cat.id
 
-                            new_product = Product(
+                            new_product = ProductService.create_product(
                                 name=name,
-                                sku=sku,
-                                barcode=barcode,
                                 regular_price=price,
                                 cost_price=cost,
-                                category_id=category_id,
+                                sku=sku,
+                                barcode=barcode,
                                 warranty_days=warranty_days,
-                                current_stock=0,
+                                category_id=category_id,
+                                tenant_id=tid,
                             )
-                            assign_tenant_id(new_product, current_user)
-                            db.session.add(new_product)
                             db.session.flush()
 
                             if stock > 0:
@@ -626,16 +626,14 @@ def import_grid():
                 if not barcode:
                     barcode = sku
 
-                new_product = Product(
+                new_product = ProductService.create_product(
                     name=name,
-                    sku=sku,
-                    barcode=barcode,
                     regular_price=price,
                     cost_price=cost,
-                    current_stock=0,
+                    sku=sku,
+                    barcode=barcode,
+                    tenant_id=tid,
                 )
-                assign_tenant_id(new_product, current_user)
-                db.session.add(new_product)
                 db.session.flush()
 
                 if stock > 0:
@@ -915,20 +913,15 @@ def create():
                     ]:
                         price_val = safe_float(request.form.get(field_name))
                         if price_val and price_val > 0:
-                            from models import ProductPriceTier
-                            from utils.currency_utils import (
-                                resolve_tenant_base_currency,
-                            )
-
+                            from utils.currency_utils import resolve_tenant_base_currency
                             tier_currency = resolve_tenant_base_currency(tenant_id=product.tenant_id)
-                            tier = ProductPriceTier(
-                                tenant_id=product.tenant_id,
+                            ProductService.create_price_tier(
                                 product_id=product.id,
                                 tier_code=tier_code,
                                 price=price_val,
                                 currency=tier_currency,
+                                tenant_id=product.tenant_id,
                             )
-                            db.session.add(tier)
                     if partner_rows:
                         for row in partner_rows:
                             partner_row = ProductPartner(
@@ -1214,13 +1207,12 @@ def edit(**kwargs):
                         if existing:
                             existing.price = price_val
                         else:
-                            tier = ProductPriceTier(
-                                tenant_id=product.tenant_id,
+                            ProductService.create_price_tier(
                                 product_id=product.id,
                                 tier_code=tier_code,
                                 price=price_val,
+                                tenant_id=product.tenant_id,
                             )
-                            db.session.add(tier)
                     elif existing:
                         existing.is_active = False
                 if new_stock is not None and abs(new_stock - old_stock) > 1e-6:
@@ -1319,7 +1311,7 @@ def delete(**kwargs):
                 product.is_active = False
                 LoggingCore.log_audit("deactivate", "products", record_id)
             else:
-                db.session.delete(product)
+                ProductService.delete_product(product, has_sales=sales_count > 0, has_purchases=purchases_count > 0)
                 LoggingCore.log_audit("delete", "products", record_id)
 
         if sales_count > 0 or purchases_count > 0:
@@ -1449,16 +1441,15 @@ def create_category():
             flash(message, "warning")
             return redirect(url_for("products.categories"))
 
-        category = ProductCategory(
-            tenant_id=tid,
+        category = ProductService.create_category(
             name=name,
             name_ar=name_ar,
             description=description,
-            is_active=True,
+            tenant_id=tid,
         )
 
         with atomic_transaction("product_category_create"):
-            db.session.add(category)
+            db.session.flush()
 
         if request.is_json:
             return jsonify(
