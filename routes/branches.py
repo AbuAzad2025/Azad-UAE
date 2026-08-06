@@ -57,18 +57,19 @@ def create():
             flash(gettext("الكود مستخدم مسبقاً"), "danger")
             return redirect(url_for("branches.create"))
 
-        branch = Branch(
-            tenant_id=get_active_tenant_id(current_user),
+        from services.branch_service import BranchService
+
+        branch = BranchService.create_branch(
             name=name,
             code=code,
             city=city,
             address=address,
             phone=phone,
             is_main=is_main,
+            tenant_id=get_active_tenant_id(current_user),
         )
 
         with atomic_transaction("branch_create"):
-            db.session.add(branch)
             db.session.flush()
             _sync_branch_financial_accounts(branch.tenant_id)
 
