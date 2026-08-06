@@ -6,7 +6,7 @@ Card Payment Model
 from datetime import datetime, timezone
 from extensions import db
 from flask import current_app
-from typing import Any
+from typing import Any, cast
 import base64
 import json
 import hashlib
@@ -30,7 +30,7 @@ try:
 
     HAS_CRYPTO = True
 except ImportError:
-    Fernet = _FernetStub  # type: ignore[misc,assignment]
+    Fernet = cast(type, _FernetStub)
     HAS_CRYPTO = False
 
 

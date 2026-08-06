@@ -17,7 +17,7 @@ try:
 
     COMPRESS_AVAILABLE = True
 except ImportError:
-    Compress = None  # type: ignore[misc,assignment]
+    Compress: type | None = None
     COMPRESS_AVAILABLE = False
     logging.warning("Flask-Compress not available - install with: pip install Flask-Compress Brotli")
 

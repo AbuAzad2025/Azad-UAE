@@ -123,7 +123,7 @@ def admin_settings():
 
                 min_raw = (request.form.get("min_order_amount") or "").strip()
                 if min_raw:
-                    store.min_order_amount = Decimal(min_raw)
+                    store.min_order_amount = Decimal(str(min_raw))
                 else:
                     store.min_order_amount = None
                 dc_raw = (request.form.get("display_currency") or "").strip().upper()[:3]
@@ -141,7 +141,7 @@ def admin_settings():
                 store.notify_email_on_order = request.form.get("notify_email_on_order") == "on"
 
                 threshold_raw = (request.form.get("low_stock_threshold") or "").strip()
-                store.low_stock_threshold = Decimal(threshold_raw) if threshold_raw else Decimal("5")
+                store.low_stock_threshold = Decimal(str(threshold_raw)) if threshold_raw else Decimal("5")
 
                 subdomain_raw = (request.form.get("subdomain") or "").strip()
                 if subdomain_raw:

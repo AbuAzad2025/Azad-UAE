@@ -23,9 +23,7 @@ if __name__ == "__main__":
         from services.backup_service import BackupService
 
         print("Before BackupService.initialize")
-        print("Before BackupService.initialize")
         BackupService.initialize()
-        print("After BackupService.initialize")
         print("After BackupService.initialize")
 
         try:

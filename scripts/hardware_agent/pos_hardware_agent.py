@@ -213,7 +213,7 @@ class AgentHandler(BaseHTTPRequestHandler):
                 self._send_json(404, {"error": "not found"})
         except AgentError as exc:
             self._send_json(422, {"success": False, "error": str(exc)})
-        except Exception:  # noqa: BLE001 — agent must never wedge the register
+        except Exception:
             logger.exception("Unhandled agent failure on %s", self.path)
             self._send_json(500, {"success": False, "error": "خطأ داخلي في وكيل الأجهزة."})
 
@@ -232,11 +232,9 @@ class AgentHandler(BaseHTTPRequestHandler):
 
 
 def _serial_available() -> bool:
-    try:
-        import serial  # noqa: F401
-    except ImportError:
-        return False
-    return True
+    import importlib.util
+
+    return importlib.util.find_spec("serial") is not None
 
 
 def main() -> None:

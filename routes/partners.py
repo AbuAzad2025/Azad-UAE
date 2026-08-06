@@ -100,12 +100,12 @@ def create():
                 email=request.form.get("email", "").strip() or None,
                 address=request.form.get("address", "").strip() or None,
                 id_number=request.form.get("id_number", "").strip() or None,
-                investment_amount=Decimal(request.form.get("investment_amount", "0") or "0"),
-                share_percentage=Decimal(request.form.get("share_percentage", "0") or "0"),
-                fixed_monthly_amount=Decimal(request.form.get("fixed_monthly_amount", "0") or "0"),
-                expense_share_percentage=Decimal(request.form.get("expense_share_percentage", "0") or "0"),
-                loss_share_percentage=Decimal(request.form.get("loss_share_percentage", "0") or "0"),
-                min_profit_threshold=Decimal(request.form.get("min_profit_threshold", "0") or "0"),
+                investment_amount=Decimal(str(request.form.get("investment_amount", "0") or "0")),
+                share_percentage=Decimal(str(request.form.get("share_percentage", "0") or "0")),
+                fixed_monthly_amount=Decimal(str(request.form.get("fixed_monthly_amount", "0") or "0")),
+                expense_share_percentage=Decimal(str(request.form.get("expense_share_percentage", "0") or "0")),
+                loss_share_percentage=Decimal(str(request.form.get("loss_share_percentage", "0") or "0")),
+                min_profit_threshold=Decimal(str(request.form.get("min_profit_threshold", "0") or "0")),
                 notes=request.form.get("notes", "").strip() or None,
                 is_active=True,
             )
@@ -179,12 +179,12 @@ def edit(**kwargs):
             partner.email = request.form.get("email", "").strip() or None
             partner.address = request.form.get("address", "").strip() or None
             partner.id_number = request.form.get("id_number", "").strip() or None
-            partner.investment_amount = Decimal(request.form.get("investment_amount", "0") or "0")
-            partner.share_percentage = Decimal(request.form.get("share_percentage", "0") or "0")
-            partner.fixed_monthly_amount = Decimal(request.form.get("fixed_monthly_amount", "0") or "0")
-            partner.expense_share_percentage = Decimal(request.form.get("expense_share_percentage", "0") or "0")
-            partner.loss_share_percentage = Decimal(request.form.get("loss_share_percentage", "0") or "0")
-            partner.min_profit_threshold = Decimal(request.form.get("min_profit_threshold", "0") or "0")
+            partner.investment_amount = Decimal(str(request.form.get("investment_amount", "0") or "0"))
+            partner.share_percentage = Decimal(str(request.form.get("share_percentage", "0") or "0"))
+            partner.fixed_monthly_amount = Decimal(str(request.form.get("fixed_monthly_amount", "0") or "0"))
+            partner.expense_share_percentage = Decimal(str(request.form.get("expense_share_percentage", "0") or "0"))
+            partner.loss_share_percentage = Decimal(str(request.form.get("loss_share_percentage", "0") or "0"))
+            partner.min_profit_threshold = Decimal(str(request.form.get("min_profit_threshold", "0") or "0"))
             partner.is_active = request.form.get("is_active") == "on"
             partner.notes = request.form.get("notes", "").strip() or None
             partner.updated_at = datetime.now(timezone.utc)
@@ -316,7 +316,7 @@ def add_transaction(**kwargs):
     record_id = kwargs.pop("id")
     try:
         tx_type = request.form.get("transaction_type")
-        amount = Decimal(request.form.get("amount", "0") or "0")
+        amount = Decimal(str(request.form.get("amount", "0") or "0"))
         notes = request.form.get("notes", "").strip()
 
         if tx_type == "withdrawal":

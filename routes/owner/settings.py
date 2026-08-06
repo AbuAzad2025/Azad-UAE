@@ -303,19 +303,19 @@ def system_config():
                     logger.exception("Failed to parse azad_platform_fee_rate from form data")
                 try:
                     settings.subscription_monthly_fee_aed = Decimal(
-                        request.form.get("subscription_monthly_fee_aed", "0") or "0"
+                        str(request.form.get("subscription_monthly_fee_aed", "0") or "0")
                     ).quantize(Decimal("0.001"))
                 except Exception:
                     logger.exception("Failed to parse subscription_monthly_fee_aed from form data")
                 try:
                     settings.subscription_yearly_fee_aed = Decimal(
-                        request.form.get("subscription_yearly_fee_aed", "0") or "0"
+                        str(request.form.get("subscription_yearly_fee_aed", "0") or "0")
                     ).quantize(Decimal("0.001"))
                 except Exception:
                     logger.exception("Failed to parse subscription_yearly_fee_aed from form data")
                 try:
                     settings.subscription_perpetual_fee_aed = Decimal(
-                        request.form.get("subscription_perpetual_fee_aed", "0") or "0"
+                        str(request.form.get("subscription_perpetual_fee_aed", "0") or "0")
                     ).quantize(Decimal("0.001"))
                 except Exception:
                     logger.exception("Failed to parse subscription_perpetual_fee_aed from form data")

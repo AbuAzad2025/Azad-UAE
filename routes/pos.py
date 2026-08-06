@@ -1564,7 +1564,7 @@ def api_fast_cash():
     if not total_raw:
         return jsonify({"success": False, "error": gettext("الإجمالي مطلوب.")}), 400
     try:
-        total = Decimal(total_raw)
+        total = Decimal(str(total_raw))
     except InvalidOperation:
         return jsonify({"success": False, "error": gettext("الإجمالي غير صالح.")}), 400
     if total < 0:
