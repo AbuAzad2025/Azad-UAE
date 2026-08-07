@@ -11,7 +11,6 @@ class TestTenantModel:
         from models.tenant import Tenant
 
         tenant = MagicMock(id=3, is_active=True)
-        mocker.patch("flask_login.utils._get_user")
         user = MagicMock(is_authenticated=True)
         mocker.patch("flask_login.current_user", user)
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=3)
@@ -19,7 +18,7 @@ class TestTenantModel:
         mock_q.filter_by.return_value.first.return_value = tenant
         mocker.patch.object(Tenant, "query", mock_q)
         with app.test_request_context("/"):
-            assert Tenant.get_current() is tenant
+            assert Tenant.get_current(user=user) is tenant
 
     def test_get_current_company_user_via_relationship(self, app, mocker):
         from models.tenant import Tenant
@@ -30,7 +29,7 @@ class TestTenantModel:
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=None)
         mocker.patch("utils.tenanting.is_platform_owner", return_value=False)
         with app.test_request_context("/"):
-            assert Tenant.get_current() is rel
+            assert Tenant.get_current(user=user) is rel
 
     def test_get_current_inactive_tenant_relationship_returns_none(self, app, mocker):
         from models.tenant import Tenant

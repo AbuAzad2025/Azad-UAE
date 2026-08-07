@@ -54,6 +54,10 @@ class PosShift(db.Model):
     status = db.Column(db.String(20), default="open", nullable=False, index=True)
     notes = db.Column(db.Text)
 
+    SHIFT_OPEN = "open"
+    SHIFT_RECONCILED = "reconciled"
+    SHIFT_CLOSED = "closed"
+
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = db.Column(
         db.DateTime,

@@ -96,6 +96,7 @@ class TestInvoiceSettingsModel:
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=5)
         mock_q = MagicMock()
         mock_q.filter_by.return_value.first.return_value = existing
+        mock_q.filter_by.return_value.filter.return_value.first.return_value = existing
         mocker.patch.object(InvoiceSettings, "query", mock_q)
         with app.app_context():
             assert InvoiceSettings.get_active() is existing

@@ -587,6 +587,8 @@ _POLLUTED_MODEL_SPECS = (
     ("helpdesk", "Ticket"),
     ("payroll", "Employee"),
     ("payroll", "PayrollTransaction"),
+    ("invoice_settings", "InvoiceSettings"),
+    ("tenant", "Tenant"),
     ("pos_order_type", "PosOrderType"),
     ("pos_floor", "PosFloor"),
     ("pos_floor", "PosTable"),
