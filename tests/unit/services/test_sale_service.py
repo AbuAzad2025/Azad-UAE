@@ -218,6 +218,9 @@ class TestSaleServiceCreate:
                                                 mock_line.return_value = line_instance
                                                 result = SaleService.create_sale(customer, seller, lines)
                                                 assert result is not None
+                                                assert result.total_amount == Decimal("200")
+                                                assert result.customer_id == 1
+                                                assert result.seller_id == 2
 
     def test_create_sale_with_discount(self, app):
         from services.sale_service import SaleService

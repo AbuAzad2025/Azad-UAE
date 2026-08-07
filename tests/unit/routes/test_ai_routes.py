@@ -182,6 +182,10 @@ class TestAnalyzeCustomer:
         mock_ai_service.analyze_customer_behavior.return_value = self.ANALYSIS
         resp = ai_client.get("/ai/analyze-customer/42")
         assert resp.status_code == 200
+        data = resp.get_json()
+        assert data["customer_name"] == "c1"
+        assert data["risk_level"] == "low"
+        mock_ai_service.analyze_customer_behavior.assert_called_once_with(42)
         assert resp.get_json()["customer_name"] == "c1"
 
     def test_not_found_404(self, ai_client, mock_ai_service):
