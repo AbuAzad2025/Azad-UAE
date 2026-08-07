@@ -341,6 +341,99 @@ class PaymentService:
             raise
 
     @staticmethod
+    def create_supplier_refund(
+        supplier_id: int,
+        amount,
+        currency: str,
+        payment_method: str,
+        notes: str = "",
+        cheque_number: str = "",
+        cheque_date=None,
+        bank_name: str = "",
+        branch_id: int | None = None,
+    ):
+        """Create incoming payment (refund from supplier) with GL posting."""
+        from models import Supplier, Payment
+        from services.gl_service import GLService
+
+        supplier = db.session.get(Supplier, supplier_id)
+        if not supplier:
+            raise ValueError(gettext("المورد غير موجود"))
+
+        tenant_id = getattr(supplier, "tenant_id", None) or get_active_tenant_id(current_user)
+
+        payment_number = generate_number(
+            "PAY",
+            Payment,
+            "payment_number",
+            branch_id=branch_id,
+            tenant_id=tenant_id,
+        )
+
+        exchange_rate = PaymentService._resolve_transaction_rate(currency)
+        amount_decimal = Decimal(str(amount))
+        amount_aed = convert_and_quantize_aed(amount_decimal, currency, exchange_rate, tenant_id=tenant_id)
+
+        payment = Payment(
+            tenant_id=tenant_id,
+            payment_number=payment_number,
+            payment_type="refund",
+            direction="incoming",
+            supplier_id=supplier.id,
+            supplier_name=supplier.name,
+            amount=amount_decimal,
+            currency=currency,
+            exchange_rate=exchange_rate,
+            amount_aed=amount_aed,
+            payment_method=payment_method,
+            notes=notes,
+            cheque_number=(cheque_number if payment_method == "cheque" else None),
+            cheque_date=cheque_date if payment_method == "cheque" else None,
+            bank_name=bank_name if payment_method == "cheque" else None,
+            user_id=(current_user.id if current_user and current_user.is_authenticated else 1),
+            branch_id=branch_id,
+        )
+
+        db.session.add(payment)
+        db.session.flush()
+
+        # GL Entries for refund: Debit cash/bank, Credit AP (2110)
+        GLService.ensure_core_accounts(tenant_id=tenant_id)
+        credit_account = GLService.get_payment_debit_account(
+            payment_method,
+            branch_id=payment.branch_id,
+            tenant_id=tenant_id,
+        )
+        post_or_fail(
+            [
+                {
+                    "account": credit_account,
+                    "concept_code": GLService.get_payment_debit_concept(payment_method),
+                    "debit": payment.amount,
+                    "description": gettext(f"استرداد من مورد {supplier.name}"),
+                },
+                {
+                    "account": "2110",
+                    "concept_code": "AP",
+                    "credit": payment.amount,
+                    "description": gettext(f"سند قبض {payment.payment_number}"),
+                },
+            ],
+            description=f"Supplier refund {payment.payment_number}",
+            reference_type=GLRef.PAYMENT,
+            reference_id=payment.id,
+            currency=currency,
+            exchange_rate=exchange_rate,
+            branch_id=payment.branch_id,
+            tenant_id=tenant_id,
+        )
+
+        # Refund reduces supplier's cached paid total
+        supplier.apply_payment(-Decimal(str(payment.amount_aed or 0)))
+
+        return payment
+
+    @staticmethod
     def create_receipt(payment_data):
         """
         Create receipt from payment data dict

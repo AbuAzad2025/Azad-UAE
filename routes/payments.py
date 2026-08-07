@@ -839,68 +839,17 @@ def create_voucher_submit():
                     return redirect(url_for("payments.create_voucher"))
                 tenant_id = getattr(supplier, "tenant_id", None) or get_active_tenant_id(current_user)
                 with atomic_transaction("supplier_refund_creation"):
-                    payment = Payment(
-                        tenant_id=tenant_id,
-                        payment_number=generate_number(
-                            "PAY",
-                            Payment,
-                            "payment_number",
-                            branch_id=branch_id,
-                            tenant_id=tenant_id,
-                        ),
-                        payment_type="refund",
-                        direction="incoming",
+                    payment = PaymentService.create_supplier_refund(
                         supplier_id=supplier.id,
-                        supplier_name=supplier.name,
                         amount=amount_decimal,
                         currency=currency,
-                        exchange_rate=exchange_rate,
-                        amount_aed=amount_aed,
                         payment_method=payment_method,
                         notes=notes,
-                        cheque_number=(cheque_number if payment_method == "cheque" else None),
-                        cheque_date=cheque_date if payment_method == "cheque" else None,
-                        bank_name=bank_name if payment_method == "cheque" else None,
-                        user_id=current_user.id,
+                        cheque_number=cheque_number,
+                        cheque_date=cheque_date,
+                        bank_name=bank_name,
                         branch_id=branch_id,
                     )
-                    db.session.add(payment)
-                    db.session.flush()
-                    from services.gl_service import GLService
-
-                    GLService.ensure_core_accounts(tenant_id=tenant_id)
-                    credit_account = GLService.get_payment_debit_account(
-                        payment_method,
-                        branch_id=payment.branch_id,
-                        tenant_id=tenant_id,
-                    )
-                    post_or_fail(
-                        [
-                            {
-                                "account": credit_account,
-                                "concept_code": GLService.get_payment_debit_concept(payment_method),
-                                "debit": payment.amount,
-                                "description": gettext(f"استرداد من مورد {supplier.name}"),
-                            },
-                            {
-                                "account": "2110",
-                                "concept_code": "AP",
-                                "credit": payment.amount,
-                                "description": gettext(f"سند قبض {payment.payment_number}"),
-                            },
-                        ],
-                        description=f"Supplier refund {payment.payment_number}",
-                        reference_type=GLRef.PAYMENT,
-                        reference_id=payment.id,
-                        currency=currency,
-                        exchange_rate=exchange_rate,
-                        branch_id=payment.branch_id,
-                        tenant_id=tenant_id,
-                    )
-                    # A refund received from the supplier offsets AP (the GL
-                    # entry above credits AP). Reduce the cached paid total so
-                    # the supplier balance and statement reflect the refund.
-                    supplier.apply_payment(-Decimal(str(payment.amount_aed or 0)))
                 flash(gettext("تم إنشاء سند قبض من مورد بنجاح"), "success")
                 return redirect(url_for("payments.receipts"))
 
@@ -921,106 +870,18 @@ def create_voucher_submit():
                     return redirect(url_for("payments.create_voucher"))
                 tenant_id = getattr(supplier, "tenant_id", None) or get_active_tenant_id(current_user)
                 with atomic_transaction("supplier_payment_creation"):
-                    payment = Payment(
-                        tenant_id=tenant_id,
-                        payment_number=generate_number(
-                            "PAY",
-                            Payment,
-                            "payment_number",
-                            branch_id=branch_id,
-                            tenant_id=tenant_id,
-                        ),
-                        payment_type="bill_payment",
-                        direction="outgoing",
-                        supplier_id=supplier.id,
-                        supplier_name=supplier.name,
-                        amount=amount_decimal,
-                        currency=currency,
-                        exchange_rate=exchange_rate,
-                        amount_aed=amount_aed,
-                        payment_method=payment_method,
-                        notes=notes,
-                        cheque_number=(cheque_number if payment_method == "cheque" else None),
-                        cheque_date=cheque_date if payment_method == "cheque" else None,
-                        bank_name=bank_name if payment_method == "cheque" else None,
-                        user_id=current_user.id,
-                        branch_id=branch_id,
-                    )
-                    db.session.add(payment)
-                    db.session.flush()  # Flush to get ID
-
-                    if payment_method == "cheque" and cheque_number:
-                        from models import Cheque
-
-                        cheque = Cheque(
-                            tenant_id=tenant_id,
-                            cheque_number=cheque_number,
-                            cheque_bank_number=cheque_number,
-                            cheque_type="outgoing",
-                            supplier_id=supplier.id,
-                            payment_id=payment.id,
-                            amount=payment.amount,
-                            currency=payment.currency,
-                            exchange_rate=payment.exchange_rate,
-                            amount_aed=payment.amount_aed,
-                            issue_date=(
-                                datetime.strptime(date_str, "%Y-%m-%d").date() if date_str else datetime.now().date()
-                            ),
-                            due_date=(
-                                datetime.strptime(cheque_date, "%Y-%m-%d").date()
-                                if cheque_date
-                                else datetime.now().date()
-                            ),
-                            bank_name=bank_name,
-                            payee_name=supplier.name,
-                            status="pending",
-                            notes=notes,
-                            user_id=current_user.id,
-                            branch_id=branch_id,
-                        )
-                        db.session.add(cheque)
-                        db.session.flush()
-                        payment.cheque_id = cheque.id
-                        payment.payment_confirmed = False
-
-                        process_cheque_issue(cheque)
-
-                    else:
-                        from services.gl_service import GLService
-
-                        GLService.ensure_core_accounts(tenant_id=tenant_id)
-                        credit_account = GLService.get_payment_credit_account(
-                            payment_method,
-                            branch_id=payment.branch_id,
-                            tenant_id=tenant_id,
-                        )
-                        lines = [
-                            {
-                                "account": "2110",
-                                "concept_code": "AP",
-                                "debit": payment.amount,
-                                "description": gettext(f"سداد للمورد {payment.supplier_name}"),
-                            },
-                            {
-                                "account": credit_account,
-                                "concept_code": GLService.get_payment_credit_concept(payment_method),
-                                "credit": payment.amount,
-                                "description": gettext(f"سند صرف {payment.payment_number}"),
-                            },
-                        ]
-                        post_or_fail(
-                            lines,
-                            description=f"Payment {payment.payment_number}",
-                            reference_type=GLRef.PAYMENT,
-                            reference_id=payment.id,
-                            currency=currency,
-                            exchange_rate=exchange_rate,
-                            branch_id=payment.branch_id,
-                            tenant_id=tenant_id,
-                        )
-
-                    supplier.apply_payment(Decimal(str(payment.amount_aed or 0)))
-
+                    payment = PaymentService.create_payment({
+                        "supplier_id": supplier.id,
+                        "amount": amount_decimal,
+                        "currency": currency,
+                        "payment_method": payment_method,
+                        "notes": notes,
+                        "cheque_number": cheque_number,
+                        "cheque_date": cheque_date,
+                        "bank_name": bank_name,
+                        "branch_id": branch_id,
+                        "user_exchange_rate": user_exchange_rate,
+                    })
                 flash(gettext("تم إنشاء سند صرف لمورد بنجاح"), "success")
                 return redirect(url_for("payments.receipts"))
 
