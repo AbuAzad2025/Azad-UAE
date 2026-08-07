@@ -561,7 +561,7 @@ class SemanticMatcher:
     def _build_vocabulary(self) -> set:
         """بناء قاموس الكلمات"""
         vocab = set()
-        for intent, examples in self.intents_db.items():
+        for _intent, examples in self.intents_db.items():
             for example in examples:
                 words = self._tokenize(example)
                 vocab.update(words)
@@ -594,7 +594,7 @@ class SemanticMatcher:
 
         # حساب عدد الوثائق التي تحتوي على كل كلمة
         word_doc_count: Counter[str] = Counter()
-        for intent, examples in self.intents_db.items():
+        for _intent, examples in self.intents_db.items():
             for example in examples:
                 words = set(self._tokenize(example))
                 word_doc_count.update(words)
@@ -713,10 +713,7 @@ class SemanticMatcher:
 
         for i in range(1, len1 + 1):
             for j in range(1, len2 + 1):
-                if word1[i - 1] == word2[j - 1]:
-                    cost = 0
-                else:
-                    cost = 1
+                cost = 0 if word1[i - 1] == word2[j - 1] else 1
 
                 matrix[i][j] = min(
                     matrix[i - 1][j] + 1,  # deletion

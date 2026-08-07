@@ -29,10 +29,7 @@ class AutoRetrainingScheduler:
         if current_count >= last_count + 100:
             return True
 
-        if days_since >= 7 and current_count >= last_count + 50:
-            return True
-
-        return False
+        return bool(days_since >= 7 and current_count >= last_count + 50)
 
     @staticmethod
     def trigger_retraining():

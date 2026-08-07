@@ -1749,10 +1749,7 @@ class AzadNeuralEngine:
         ordering_cost = 100  # تكلفة الطلب (افتراضية)
         holding_cost = float(product_data.cost_price or 0) * 0.25  # 25% of cost
 
-        if holding_cost > 0:
-            eoq = np.sqrt((2 * annual_demand * ordering_cost) / holding_cost)
-        else:
-            eoq = sales_rate * 30
+        eoq = np.sqrt(2 * annual_demand * ordering_cost / holding_cost) if holding_cost > 0 else sales_rate * 30
 
         # التوصية
         if product_data.current_stock < optimal_reorder:
@@ -1838,7 +1835,7 @@ class AzadNeuralEngine:
         y = []
 
         # لكل منتج له بيانات كافية
-        for product_id, demands in product_demand.items():
+        for _product_id, demands in product_demand.items():
             if len(demands) < 10:
                 continue
 

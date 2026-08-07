@@ -251,10 +251,9 @@ def _process_user_action(message, user):
                 gettext("إضافة عميل"),
                 gettext("إنشاء عميل"),
             ]
-        ):
-            if ":" not in message:
-                ctx = {"last_action": gettext("عميل"), "step": 0}
-                return """🤖 فهمت! تريد إضافة عميل جديد. إليك الخيارات:
+        ) and ":" not in message:
+            ctx = {"last_action": gettext("عميل"), "step": 0}
+            return """🤖 فهمت! تريد إضافة عميل جديد. إليك الخيارات:
 
 📋 **ما الذي تريد فعله؟**
 1️⃣ **إضافة عميل جديد**
@@ -273,10 +272,9 @@ def _process_user_action(message, user):
                 gettext("إضافة منتج"),
                 gettext("إنشاء منتج"),
             ]
-        ):
-            if ":" not in message:
-                ctx = {"last_action": gettext("منتج"), "step": 0}
-                return """🤖 فهمت! تريد إضافة منتج جديد. إليك الخيارات:
+        ) and ":" not in message:
+            ctx = {"last_action": gettext("منتج"), "step": 0}
+            return """🤖 فهمت! تريد إضافة منتج جديد. إليك الخيارات:
 
 📋 **ما الذي تريد فعله؟**
 1️⃣ **إضافة منتج جديد**
@@ -296,10 +294,9 @@ def _process_user_action(message, user):
                 gettext("مبيعات"),
                 gettext("إنشاء فاتورة"),
             ]
-        ):
-            if ":" not in message:
-                ctx = {"last_action": gettext("فاتورة"), "step": 0}
-                return """🤖 فهمت! تريد إنشاء فاتورة مبيعات. إليك الخيارات:
+        ) and ":" not in message:
+            ctx = {"last_action": gettext("فاتورة"), "step": 0}
+            return """🤖 فهمت! تريد إنشاء فاتورة مبيعات. إليك الخيارات:
 
 📋 **ما الذي تريد فعله؟**
 1️⃣ **إنشاء فاتورة جديدة**
@@ -310,10 +307,14 @@ def _process_user_action(message, user):
 
 🤖 مثال: اكتب "1" لإنشاء فاتورة جديدة"""
 
-        if any(word in msg_lower for word in [gettext("استلام"), gettext("استلم"), gettext("دفعة من")]):
-            if ":" not in message:
-                ctx = {"last_action": gettext("استلام"), "step": 0}
-                return """🤖 فهمت! تريد استلام دفعة من عميل. إليك الخيارات:
+        _receive_keywords = [
+            gettext("استلام"),
+            gettext("استلم"),
+            gettext("دفعة من"),
+        ]
+        if any(word in msg_lower for word in _receive_keywords) and ":" not in message:
+            ctx = {"last_action": gettext("استلام"), "step": 0}
+            return """🤖 فهمت! تريد استلام دفعة من عميل. إليك الخيارات:
 
 📋 **ما الذي تريد فعله؟**
 1️⃣ **استلام دفعة من عميل**
@@ -332,10 +333,9 @@ def _process_user_action(message, user):
                 gettext("دفعة لل"),
                 gettext("دفعة ل"),
             ]
-        ):
-            if ":" not in message:
-                ctx = {"last_action": gettext("إعطاء"), "step": 0}
-                return """🤖 فهمت! تريد إعطاء دفعة للعميل. إليك الخيارات:
+        ) and ":" not in message:
+            ctx = {"last_action": gettext("إعطاء"), "step": 0}
+            return """🤖 فهمت! تريد إعطاء دفعة للعميل. إليك الخيارات:
 
 📋 **ما الذي تريد فعله؟**
 1️⃣ **إعطاء دفعة للعميل**
@@ -353,10 +353,9 @@ def _process_user_action(message, user):
                 gettext("إضافة مصروف"),
                 gettext("إنشاء مصروف"),
             ]
-        ):
-            if ":" not in message:
-                ctx = {"last_action": gettext("مصروف"), "step": 0}
-                return """🤖 فهمت! تريد إضافة مصروف. إليك الخيارات:
+        ) and ":" not in message:
+            ctx = {"last_action": gettext("مصروف"), "step": 0}
+            return """🤖 فهمت! تريد إضافة مصروف. إليك الخيارات:
 
 📋 **ما الذي تريد فعله؟**
 1️⃣ **إضافة مصروف جديد**
@@ -375,10 +374,9 @@ def _process_user_action(message, user):
                 gettext("إضافة مورد"),
                 gettext("إنشاء مورد"),
             ]
-        ):
-            if ":" not in message:
-                ctx = {"last_action": gettext("مورد"), "step": 0}
-                return """🤖 فهمت! تريد إضافة مورد جديد. إليك الخيارات:
+        ) and ":" not in message:
+            ctx = {"last_action": gettext("مورد"), "step": 0}
+            return """🤖 فهمت! تريد إضافة مورد جديد. إليك الخيارات:
 
 📋 **ما الذي تريد فعله؟**
 1️⃣ **إضافة مورد جديد**
@@ -397,10 +395,9 @@ def _process_user_action(message, user):
                 gettext("إضافة مشتريات"),
                 gettext("إنشاء مشتريات"),
             ]
-        ):
-            if ":" not in message:
-                ctx = {"last_action": gettext("مشتريات"), "step": 0}
-                return """🤖 فهمت! تريد إضافة مشتريات. إليك الخيارات:
+        ) and ":" not in message:
+            ctx = {"last_action": gettext("مشتريات"), "step": 0}
+            return """🤖 فهمت! تريد إضافة مشتريات. إليك الخيارات:
 
 📋 **ما الذي تريد فعله؟**
 1️⃣ **إضافة مشتريات جديدة**
@@ -419,10 +416,9 @@ def _process_user_action(message, user):
                 gettext("إضافة شيك"),
                 gettext("إنشاء شيك"),
             ]
-        ):
-            if ":" not in message:
-                ctx = {"last_action": gettext("شيك"), "step": 0}
-                return """🤖 فهمت! تريد إضافة شيك. إليك الخيارات:
+        ) and ":" not in message:
+            ctx = {"last_action": gettext("شيك"), "step": 0}
+            return """🤖 فهمت! تريد إضافة شيك. إليك الخيارات:
 
 📋 **ما الذي تريد فعله؟**
 1️⃣ **إضافة شيك جديد**
@@ -441,10 +437,9 @@ def _process_user_action(message, user):
                 gettext("دفتر استاذ"),
                 gettext("قيد"),
             ]
-        ):
-            if ":" not in message:
-                ctx = {"last_action": gettext("دفتر"), "step": 0}
-                return """🤖 فهمت! تريد التعامل مع دفتر الأستاذ. إليك الخيارات:
+        ) and ":" not in message:
+            ctx = {"last_action": gettext("دفتر"), "step": 0}
+            return """🤖 فهمت! تريد التعامل مع دفتر الأستاذ. إليك الخيارات:
 
 📋 **ما الذي تريد فعله؟**
 1️⃣ **عرض دفتر الأستاذ**
@@ -462,10 +457,9 @@ def _process_user_action(message, user):
                 gettext("مخزون"),
                 gettext("إدارة مستودعات"),
             ]
-        ):
-            if ":" not in message:
-                ctx = {"last_action": gettext("مستودع"), "step": 0}
-                return """🤖 فهمت! تريد إدارة المستودعات. إليك الخيارات:
+        ) and ":" not in message:
+            ctx = {"last_action": gettext("مستودع"), "step": 0}
+            return """🤖 فهمت! تريد إدارة المستودعات. إليك الخيارات:
 
 📋 **ما الذي تريد فعله؟**
 1️⃣ **عرض جميع المستودعات**
@@ -484,10 +478,9 @@ def _process_user_action(message, user):
                 gettext("إضافة مستخدم"),
                 gettext("إنشاء مستخدم"),
             ]
-        ):
-            if ":" not in message:
-                ctx = {"last_action": gettext("مستخدم"), "step": 0}
-                return """🤖 فهمت! تريد إدارة المستخدمين. إليك الخيارات:
+        ) and ":" not in message:
+            ctx = {"last_action": gettext("مستخدم"), "step": 0}
+            return """🤖 فهمت! تريد إدارة المستخدمين. إليك الخيارات:
 
 📋 **ما الذي تريد فعله؟**
 1️⃣ **إضافة مستخدم جديد**
@@ -2723,7 +2716,8 @@ http://localhost:5000/ai/assistant
                     payments_info = gettext("\n\n📋 **آخر 5 دفعات:**\n")
                     for payment in recent_payments:
                         payments_info += gettext(
-                            f"• {payment.payment_date.strftime('%Y-%m-%d')}: {payment.amount_aed} درهم ({payment.payment_method})\n"
+                            f"• {payment.payment_date.strftime('%Y-%m-%d')}: "
+                            f"{payment.amount_aed} درهم ({payment.payment_method})\n"
                         )
 
                 return f"""✅ رصيد العميل:

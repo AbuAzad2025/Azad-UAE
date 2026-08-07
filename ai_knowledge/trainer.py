@@ -503,7 +503,7 @@ class Trainer:
             .group_by(AiMemory.category)
             .all()
         )
-        categories = {c: n for c, n in cat_rows}
+        categories = dict(cat_rows)
         return {
             "total_qa": total,
             "categories": categories,

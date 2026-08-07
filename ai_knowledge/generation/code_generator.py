@@ -119,7 +119,7 @@ def {function_name}():
                 table_name = _ident(table)
                 if filters and filters.get("values") and filters.get("columns"):
                     col_names = [_ident(c) for c in filters["columns"]]
-                    row = dict(zip(col_names, filters["values"]))
+                    row = dict(zip(col_names, filters["values"], strict=False))
                     # Build a lightweight table carrying exactly the declared
                     # columns so the Core construct can render without touching
                     # the live schema (this is display SQL for an AI assistant).

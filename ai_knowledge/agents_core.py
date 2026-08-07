@@ -237,7 +237,7 @@ def ask_azad_enhanced(question: str, context: dict | None = None, user_id: int |
         from ai_knowledge.system_knowledge import FAQ, search_knowledge
 
         q_lower = question.lower()
-        for role_key, faqs in FAQ.items():
+        for _role_key, faqs in FAQ.items():
             for faq in faqs:
                 if any(word in q_lower for word in faq["q"].split() if len(word) > 2):
                     result["answer"] = faq["a"]

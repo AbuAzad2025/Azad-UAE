@@ -162,7 +162,7 @@ class TransformersBrain:
         heads_output = []
 
         # كل رأس يطبق self-attention منفصلة
-        for head in range(self.n_heads):
+        for _head in range(self.n_heads):
             head_output = self.self_attention(query, key, value)
             heads_output.extend(head_output)
 
@@ -172,7 +172,7 @@ class TransformersBrain:
     @staticmethod
     def _dot_product(vec1: list[float], vec2: list[float]) -> float:
         """حساب الضرب النقطي"""
-        return sum(a * b for a, b in zip(vec1, vec2))
+        return sum(a * b for a, b in zip(vec1, vec2, strict=False))
 
     @staticmethod
     def _softmax(scores: list[float]) -> list[float]:
@@ -241,13 +241,13 @@ class TransformersBrain:
         attention_output = self.multi_head_attention(x, x, x)
 
         # Residual Connection + Layer Norm
-        x_norm = self._layer_norm([a + b for a, b in zip(x, attention_output)])
+        x_norm = self._layer_norm([a + b for a, b in zip(x, attention_output, strict=False)])
 
         # Feed-Forward
         ff_output = self.feed_forward(x_norm)
 
         # Residual Connection + Layer Norm
-        final_output = self._layer_norm([a + b for a, b in zip(x_norm, ff_output)])
+        final_output = self._layer_norm([a + b for a, b in zip(x_norm, ff_output, strict=False)])
 
         return final_output
 
@@ -347,7 +347,7 @@ class TransformersBrain:
         pos_enc = self.positional_encoding(position, self.d_model)
 
         # الجمع
-        combined = [w + p for w, p in zip(word_emb, pos_enc)]
+        combined = [w + p for w, p in zip(word_emb, pos_enc, strict=False)]
 
         return combined
 
@@ -406,7 +406,7 @@ class TransformersBrain:
         for i, token in enumerate(tokens):
             # حساب الانتباه لكل كلمة أخرى
             attention_scores = []
-            for j, other_token in enumerate(tokens):
+            for j, _other_token in enumerate(tokens):
                 # المسافة بين الكلمات
                 distance = abs(i - j)
                 # الانتباه يقل مع المسافة

@@ -658,9 +658,9 @@ class MasterBrain:
     def explain(self, concept: str) -> str:
         """شرح مفهوم بسرعة"""
         # البحث في قاعدة المعرفة
-        for domain_name, domain_data in self.knowledge_base.items():
+        for _domain_name, domain_data in self.knowledge_base.items():
             if isinstance(domain_data, dict):
-                for key, value in domain_data.items():
+                for _key, value in domain_data.items():
                     if isinstance(value, dict):
                         for sub_key, sub_value in value.items():
                             if concept.lower() in sub_key.lower():

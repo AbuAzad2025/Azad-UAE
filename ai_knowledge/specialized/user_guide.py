@@ -287,7 +287,7 @@ def get_help_for_task(task):
     task = task.lower()
 
     # بحث في كل الأدلة
-    for guide_name, content in USER_GUIDE.items():
+    for _guide_name, content in USER_GUIDE.items():
         if task in content.lower():
             return content
 

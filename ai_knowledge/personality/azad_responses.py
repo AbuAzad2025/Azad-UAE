@@ -1086,7 +1086,7 @@ class AzadResponses:
             words = message.split()
             sale_id = None
 
-            for i, word in enumerate(words):
+            for _i, word in enumerate(words):
                 if word.isdigit():
                     sale_id = int(word)
                     break
@@ -1106,7 +1106,7 @@ class AzadResponses:
             words = message.split()
             sale_id = None
 
-            for i, word in enumerate(words):
+            for _i, word in enumerate(words):
                 if word.isdigit():
                     sale_id = int(word)
                     break

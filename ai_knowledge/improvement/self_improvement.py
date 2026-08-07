@@ -298,7 +298,7 @@ class AzadSelfImprovement:
 
         # تحسين عشوائي لمجال آخر
         available_areas = [
-            area for area in self.improvement_areas.keys() if area not in [w["area"] for w in weaknesses[:2]]
+            area for area in self.improvement_areas if area not in [w["area"] for w in weaknesses[:2]]
         ]
 
         if available_areas:
@@ -371,7 +371,7 @@ class AzadSelfImprovement:
         total_progress = 0
         total_areas = len(self.improvement_areas)
 
-        for area, config in self.improvement_areas.items():
+        for _area, config in self.improvement_areas.items():
             progress = (config["current_score"] / config["target_score"]) * 100
             total_progress += progress
 

@@ -391,16 +391,15 @@ class GlobalExpertiseUpdater:
                         }
                     )
 
-        elif area == "tax_regulations":
-            if global_insights["tax_updates"]["success"]:
-                recommendations.append(
-                    {
-                        "topic": "التحديثات الضريبية",
-                        "priority": "عالي",
-                        "reason": "تغييرات في الأنظمة",
-                        "action": "تابع التحديثات الضريبية الجديدة",
-                    }
-                )
+        elif area == "tax_regulations" and global_insights["tax_updates"]["success"]:
+            recommendations.append(
+                {
+                    "topic": "التحديثات الضريبية",
+                    "priority": "عالي",
+                    "reason": "تغييرات في الأنظمة",
+                    "action": "تابع التحديثات الضريبية الجديدة",
+                }
+            )
 
         return recommendations
 
