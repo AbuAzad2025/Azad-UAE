@@ -13,8 +13,8 @@ from utils.constants import (
     SALE_PAYMENT_STATUSES,
     STOCK_MOVEMENT_TYPES,
 )
-from utils.payment_constants import normalize_payment_method_code
 from utils.gl_reference_types import LEGACY_REF_MAP, normalize_ref_type
+from utils.payment_constants import normalize_payment_method_code
 
 _CURRENCY_RE = re.compile(r"^[A-Z]{3}$")
 _PHONE_MAX_LEN = 50

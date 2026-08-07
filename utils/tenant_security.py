@@ -58,10 +58,9 @@ def validate_tenant_ownership(model_class):
                     if resource_id is not None:
                         break
 
-            if resource_id is None:
+            if resource_id is None and param_names:
                 # Fallback: try first parameter if no _id suffix found
-                if param_names:
-                    resource_id = kwargs.get(param_names[0])
+                resource_id = kwargs.get(param_names[0])
 
             if resource_id is None:
                 abort(400, description="Missing required resource ID parameter")
