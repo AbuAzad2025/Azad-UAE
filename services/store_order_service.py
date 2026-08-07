@@ -9,7 +9,7 @@ from extensions import db
 from models import Sale
 from services.sale_service import SaleService
 from services.stock_service import StockService
-from utils.constants import normalize_payment_method_code
+from utils.payment_constants import normalize_payment_method_code
 
 STATUS_LABELS_AR = {
     "pending": gettext("بانتظار التأكيد"),

@@ -9,7 +9,7 @@ from flask_babel import gettext
 from flask_login import current_user, login_required
 
 from extensions import db, limiter
-from routes.ai_routes import ai_bp
+from .blueprint import ai_bp
 from routes.ai_routes.actions import _process_user_action, _user_can_ai_execute_actions
 from routes.ai_routes.shared import _sanitize_ai_prompt, _stream_ai_response
 from services.ai_service import AIService

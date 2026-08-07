@@ -7,7 +7,7 @@ from flask_login import login_required
 
 from ai_knowledge.analytics.data_analyzer import data_analyzer
 from ai_knowledge.core.system_integration import system_integrator
-from routes.ai_routes import ai_bp
+from .blueprint import ai_bp
 from utils.decorators import permission_required
 
 logger = logging.getLogger(__name__)

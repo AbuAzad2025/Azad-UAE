@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 
 from flask_babel import gettext
 
-from routes.owner import (
+from .common import (
     APIKey,
     LoginHistory,
     SecurityAlert,
@@ -23,7 +23,7 @@ from routes.owner import (
     safe_redirect_target,
     url_for,
 )
-from routes.owner.shared import (
+from .shared import (
     _invalidate_owner_changes,
     _mask_api_key,
     _owner_branch_scope,

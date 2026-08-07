@@ -12,7 +12,7 @@ from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
 
 from extensions import db
-from routes.ai_routes import ai_bp
+from .blueprint import ai_bp
 from services.stock_service import StockService
 from utils.ai_access import get_ai_access_state
 from utils.db_safety import atomic_transaction

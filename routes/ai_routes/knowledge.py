@@ -10,7 +10,7 @@ from ai_knowledge.core.learning_system import learning_system
 from ai_knowledge.expansion.global_knowledge import expertise_updater, global_connector
 from ai_knowledge.expansion.knowledge_expansion import knowledge_expander
 from ai_knowledge.improvement.self_improvement import self_improvement
-from routes.ai_routes import ai_bp
+from .blueprint import ai_bp
 from services.ai_service import AIService
 from utils.decorators import admin_required, permission_required
 

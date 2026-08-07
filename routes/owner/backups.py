@@ -5,7 +5,7 @@ import os
 
 from flask_babel import gettext
 
-from routes.owner import (
+from .common import (
     abort,
     current_user,
     flash,
@@ -18,7 +18,7 @@ from routes.owner import (
     safe_redirect_target,
     url_for,
 )
-from routes.owner.shared import (
+from .shared import (
     _audit_owner_db_action,
     _backup_created_by_payload,
     _owner_backup_filename,

@@ -4,7 +4,7 @@ import logging
 
 from flask_babel import gettext
 
-from routes.owner import (
+from .common import (
     CardVault,
     company_admin_required,
     current_app,
@@ -21,7 +21,7 @@ from routes.owner import (
     request,
     url_for,
 )
-from routes.owner.shared import (
+from .shared import (
     _audit_owner_db_action,
     _mask_db_uri,
     _owner_branch_scope,

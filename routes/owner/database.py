@@ -7,7 +7,7 @@ from datetime import UTC, datetime, timedelta
 
 from flask_babel import gettext
 
-from routes.owner import (
+from .common import (
     ArchivedRecord,
     AuditLog,
     current_app,
@@ -24,7 +24,7 @@ from routes.owner import (
     text,
     url_for,
 )
-from routes.owner.shared import (
+from .shared import (
     _audit_owner_db_action,
     _inspector_column_names,
     _invalidate_owner_changes,

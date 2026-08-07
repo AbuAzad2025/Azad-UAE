@@ -5,7 +5,7 @@ import logging
 from flask import jsonify, request
 from flask_login import login_required
 
-from routes.ai_routes import ai_bp
+from .blueprint import ai_bp
 from services.ai_service import AIService
 from utils.decorators import permission_required
 

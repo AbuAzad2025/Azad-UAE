@@ -6,7 +6,7 @@ from decimal import Decimal
 
 from flask_babel import gettext
 
-from routes.owner import (
+from .common import (
     IntegrationSettings,
     InvoiceSettings,
     SystemSettings,

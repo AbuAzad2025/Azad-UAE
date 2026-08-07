@@ -2,7 +2,7 @@
 
 from flask_babel import gettext
 
-from routes.owner import (
+from .common import (
     company_admin_required,
     current_app,
     jsonify,

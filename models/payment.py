@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
 from extensions import db
-from utils.constants import normalize_payment_method_code
+from utils.payment_utils import normalize_payment_method_code
 from utils.currency_utils import context_aware_default_currency
 
 

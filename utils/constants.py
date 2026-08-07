@@ -167,14 +167,6 @@ PAYMENT_METHOD_ALIASES = {
 DIRECTION_VALUES = ("incoming", "outgoing")
 
 
-def normalize_payment_method_code(method):
-    """Normalize legacy payment method codes to canonical values."""
-    if method is None:
-        return method
-    value = str(method).strip().lower()
-    return PAYMENT_METHOD_ALIASES.get(value, value)
-
-
 ROLE_LEVELS = {
     RoleEnum.SELLER.value: 10,
     RoleEnum.ACCOUNTANT.value: 15,

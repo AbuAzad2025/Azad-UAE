@@ -5,7 +5,7 @@ from datetime import UTC, date, datetime
 
 from flask_babel import gettext
 
-from routes.owner import (
+from .common import (
     Tenant,
     User,
     db,
@@ -21,7 +21,7 @@ from routes.owner import (
     set_tenant_ai_level,
     url_for,
 )
-from routes.owner.shared import _audit_owner_db_action, _invalidate_owner_changes
+from .shared import _audit_owner_db_action, _invalidate_owner_changes
 from services.logging_core import LoggingCore
 from services.saas_provisioning_service import SaaSProvisioningService
 from utils.db_safety import atomic_transaction

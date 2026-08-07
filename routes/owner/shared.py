@@ -6,7 +6,7 @@ import re
 from flask_babel import gettext
 from sqlalchemy import inspect
 
-from routes.owner import (
+from .common import (
     SystemSettings,
     current_app,
     current_user,

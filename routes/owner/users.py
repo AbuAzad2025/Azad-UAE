@@ -4,7 +4,7 @@ import logging
 
 from flask_babel import gettext
 
-from routes.owner import (
+from .common import (
     AuditLog,
     Branch,
     Tenant,
@@ -24,7 +24,7 @@ from routes.owner import (
     role_level_for_user,
     url_for,
 )
-from routes.owner.shared import _invalidate_owner_changes
+from .shared import _invalidate_owner_changes
 from utils.db_safety import atomic_transaction
 
 logger = logging.getLogger(__name__)

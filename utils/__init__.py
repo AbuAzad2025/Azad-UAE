@@ -22,6 +22,7 @@ from .helpers import (
     save_uploaded_file,
     timeago,
 )
+from .payment_utils import normalize_payment_method_code
 
 __all__ = [
     "permission_required",
@@ -42,4 +43,5 @@ __all__ = [
     "STOCK_MOVEMENT_TYPES",
     "USER_ROLES",
     "CURRENCIES",
+    "normalize_payment_method_code",
 ]
