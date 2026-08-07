@@ -38,7 +38,6 @@ class PosSessionService:
 
         shift = PosShift(
             tenant_id=tenant_id,
-            branch_id=branch_id,
             user_id=user_id,
             starting_cash=starting_cash,
             is_open=True,
