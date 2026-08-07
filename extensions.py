@@ -12,12 +12,13 @@ from flask_limiter.util import get_remote_address
 from flask_mail import Mail
 from flask_babel import Babel
 
+Compress: Any
 try:
     from flask_compress import Compress
 
     COMPRESS_AVAILABLE = True
 except ImportError:
-    Compress: type | None = None
+    Compress = None
     COMPRESS_AVAILABLE = False
     logging.warning("Flask-Compress not available - install with: pip install Flask-Compress Brotli")
 

@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from extensions import db
-from typing import Any, cast
+from typing import Any
 import json
 
 
@@ -17,12 +17,13 @@ class _FernetStub:
         raise RuntimeError("cryptography module not installed")
 
 
+Fernet: Any
 try:
     from cryptography.fernet import Fernet
 
     HAS_CRYPTO = True
 except ImportError:
-    Fernet = cast(type, _FernetStub)
+    Fernet = _FernetStub
     HAS_CRYPTO = False
 
 
