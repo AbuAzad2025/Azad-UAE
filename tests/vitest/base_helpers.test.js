@@ -86,4 +86,40 @@ describe('base-helpers.js (azad object)', () => {
     expect(helpers.formatFxRate(3.672)).toBe('3.672');
     expect(helpers.formatFxRate(0.1234)).toBe('0.1234');
   });
+
+  it('getFallbackFx returns static fallback rates', async () => {
+    const helpers = await loadModule();
+    const fallback = helpers.getFallbackFx();
+    expect(fallback.ok).toBe(false);
+    expect(fallback.source).toBe('fallback_static');
+    expect(fallback.rates.AED).toBe(3.67);
+    expect(fallback.rates.USD).toBe(1.0);
+  });
+
+  it('populateFxDisplay renders rates into tbody', async () => {
+    const helpers = await loadModule();
+    // Create DOM elements manually to avoid innerHTML clearing issues
+    const tbody = document.createElement('tbody');
+    tbody.id = 'fx-rates-body';
+    document.body.appendChild(tbody);
+    helpers.populateFxDisplay({
+      ok: true,
+      base: 'USD',
+      rates: { AED: 3.67, EUR: 0.92 },
+      source: 'api',
+      stale: false,
+      last_updated: '2026-01-01T12:00:00Z',
+    });
+    expect(tbody.innerHTML).toContain('3.67');
+  });
+
+  it('updateDateTime updates time and date displays', async () => {
+    document.body.innerHTML = '<span id="time-display"></span><span id="date-display"></span>';
+    const helpers = await loadModule();
+    helpers.updateDateTime();
+    const timeDisplay = document.getElementById('time-display');
+    const dateDisplay = document.getElementById('date-display');
+    expect(timeDisplay.textContent).not.toBe('');
+    expect(dateDisplay.textContent).not.toBe('');
+  });
 });
