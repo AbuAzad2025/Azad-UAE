@@ -31,6 +31,8 @@ class PosShift(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True)
     shift_number = db.Column(db.String(50), nullable=False, index=True)
 
+    session = db.relationship("PosSession", backref="shifts")
+
     opened_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     closed_at = db.Column(db.DateTime, nullable=True)
 
@@ -59,9 +61,10 @@ class PosShift(db.Model):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    SHIFT_OPEN = "open"
-    SHIFT_RECONCILED = "reconciled"
-    SHIFT_CLOSED = "closed"
+    @property
+    def branch_id(self):
+        """Branch ID via the parent session (PosShift has no direct branch_id column)."""
+        return getattr(self.session, "branch_id", None) if self.session else None
 
     def compute_expected_cash(self) -> Decimal:
         """Expected drawer = starting + cash tendered − change − cash refunds + pay-ins − pay-outs."""
