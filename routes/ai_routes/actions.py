@@ -104,18 +104,15 @@ def _process_user_action(message, user):
                 del ctx
                 return f"🚫 ليس لديك صلاحية '{_needed}' للقيام بهذه العملية. يرجى التواصل مع المسؤول."
 
-        if any(
-            word in msg_lower
-            for word in [
-                gettext("رصيد"),
-                gettext("رصيد العميل"),
-                gettext("رصيد عميل"),
-                gettext("تعديل رصيد"),
-            ]
-        ):
-            if ":" not in message:
-                ctx = {"last_action": gettext("رصيد"), "step": 0}
-                return """🤖 فهمت! تريد التعامل مع رصيد العميل. إليك الخيارات:
+        _balance_keywords = [
+            gettext("رصيد"),
+            gettext("رصيد العميل"),
+            gettext("رصيد عميل"),
+            gettext("تعديل رصيد"),
+        ]
+        if any(word in msg_lower for word in _balance_keywords) and ":" not in message:
+            ctx = {"last_action": gettext("رصيد"), "step": 0}
+            return """🤖 فهمت! تريد التعامل مع رصيد العميل. إليك الخيارات:
 
 📋 **ما الذي تريد فعله؟**
 1️⃣ **تعديل رصيد العميل**

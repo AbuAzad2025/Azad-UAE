@@ -2,6 +2,7 @@
 SQLAlchemy Event Listeners - thin registrations delegating to service layer
 """
 
+import contextlib
 import logging
 import warnings
 from datetime import UTC
@@ -71,10 +72,8 @@ def register_sale_listeners():
     def _h(mapper, connection, target):
         if not target.is_active or target.status == "cancelled":
             return
-        try:
+        with contextlib.suppress(Exception):
             logger.debug(f"Sale {target.sale_number} changed for customer {target.customer_id}")
-        except Exception:
-            pass
 
     @event.listens_for(Sale, "after_delete")
     def _h2(mapper, connection, target):
@@ -93,7 +92,10 @@ def register_receipt_listeners():
     def _h(mapper, connection, target):
         try:
             logger.info(
-                f"Receipt {target.receipt_number} created - amount: {target.amount_aed} AED for customer {target.customer_id}"
+                "Receipt %s created - amount: %s AED for customer %s",
+                target.receipt_number,
+                target.amount_aed,
+                target.customer_id,
             )
         except Exception as e:
             logger.warning(f"Failed to log receipt: {e}")
@@ -113,10 +115,8 @@ def register_purchase_listeners():
     def _h(mapper, connection, target):
         if target.status == "cancelled":
             return
-        try:
+        with contextlib.suppress(Exception):
             logger.debug(f"Purchase {target.purchase_number} changed for supplier {target.supplier_id}")
-        except Exception:
-            pass
 
 
 def register_payment_listeners():
@@ -128,8 +128,9 @@ def register_payment_listeners():
     def _h(mapper, connection, target):
         try:
             if hasattr(target, "supplier_id") and target.supplier_id:
+                pn = getattr(target, "payment_number", target.id)
                 logger.info(
-                    f"Payment {getattr(target, 'payment_number', target.id)} created - amount: {target.amount_aed} AED to supplier {target.supplier_id}"
+                    f"Payment {pn} created - amount: {target.amount_aed} AED to supplier {target.supplier_id}"
                 )
         except Exception as e:
             logger.warning(f"Failed to log payment: {e}")
@@ -162,7 +163,12 @@ def register_stock_movement_listeners():
             }.get(target.movement_type, target.movement_type)
             quantity_change = target.quantity or Decimal("0")
             logger.info(
-                f"Stock Movement: {movement_type_ar} | Product #{target.product_id} | Qty: {abs(quantity_change)} | Ref: {target.reference_type}-{target.reference_id}"
+                "Stock Movement: %s | Product #%s | Qty: %s | Ref: %s-%s",
+                movement_type_ar,
+                target.product_id,
+                abs(quantity_change),
+                target.reference_type,
+                target.reference_id,
             )
         except Exception as e:
             logger.error(f"Failed to log stock movement: {e}")
@@ -266,7 +272,8 @@ def register_automatic_gl_listeners():
 def register_advanced_sale_listener():
     if not _ADVANCED_SALE_LISTENER_ALLOWED:
         logger.warning(
-            "register_advanced_sale_listener() is legacy/disabled; use sale_service / payment_service for balance updates."
+            "register_advanced_sale_listener() is legacy/disabled; "
+            "use sale_service / payment_service for balance updates."
         )
         return
     from datetime import datetime
@@ -295,6 +302,6 @@ def register_advanced_sale_listener():
                 .where(Customer.id == target.customer_id)
                 .values(balance=new_balance, updated_at=datetime.now(UTC))
             )
-            logger.info(f"Auto-updated customer {target.customer_id} balance to {new_balance} AED")
+            logger.info("Auto-updated customer %s balance to %s AED", target.customer_id, new_balance)
         except Exception as e:
             logger.error(f"Failed to auto-update customer balance: {e}")

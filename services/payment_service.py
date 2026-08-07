@@ -58,9 +58,11 @@ class PaymentService:
         scoped_branch_id = branch_scope_id_for(user or current_user)
         if scoped_branch_id:
             return scoped_branch_id
-        if user is not None and (user.branch_id if user is not None else None):
+        if user is not None and user.branch_id:
             return user.branch_id
-        return (current_user.branch_id if current_user is not None else None) if getattr(current_user, "is_authenticated", False) else None
+        if current_user is not None and getattr(current_user, "is_authenticated", False):
+            return current_user.branch_id
+        return None
 
     @staticmethod
     def _post_supplier_fx_gain_loss(payment, purchase, tenant_id):
@@ -259,7 +261,8 @@ class PaymentService:
                     currency=currency,
                     exchange_rate=exchange_rate,
                     amount_aed=convert_and_quantize_aed(
-                        amount, currency, exchange_rate, tenant_id=(supplier.tenant_id if supplier is not None else None)
+                        amount, currency, exchange_rate,
+                        tenant_id=supplier.tenant_id if supplier is not None else None
                     ),
                     issue_date=datetime.now(UTC).date(),
                     due_date=cheque_date or datetime.now(UTC).date(),
@@ -528,8 +531,8 @@ class PaymentService:
 
             try:
                 cheque_date = datetime.strptime(cheque_date, "%Y-%m-%d").date()
-            except ValueError:
-                raise ValueError(gettext("تاريخ الشيك غير صالح"))
+            except ValueError as e:
+                raise ValueError(gettext("تاريخ الشيك غير صالح")) from e
 
         customer = db.session.get(Customer, customer_id)
         if not customer:
@@ -793,13 +796,16 @@ class PaymentService:
                     from models import Payment
 
                     sale_payment = Payment(
-                        tenant_id=(sale.tenant_id if sale is not None else None) or (customer.tenant_id if customer is not None else None),
+                        tenant_id=(
+                            sale.tenant_id if sale is not None else customer.tenant_id
+                            if customer is not None else None
+                        ),
                         payment_number=generate_number(
                             "PAY-S",
                             Payment,
                             "payment_number",
                             branch_id=sale.branch_id,
-                            tenant_id=(sale.tenant_id if sale is not None else None),
+                            tenant_id=sale.tenant_id if sale is not None else None,
                         ),
                         payment_type="sale_payment",
                         direction="incoming",
@@ -1099,7 +1105,10 @@ class PaymentService:
                 from models import Payment
 
                 sale_payment = Payment(
-                    tenant_id=(sale.tenant_id if sale is not None else None) or (customer.tenant_id if customer is not None else None),
+                    tenant_id=(
+                        sale.tenant_id if sale is not None else customer.tenant_id
+                        if customer is not None else None
+                    ),
                     payment_number=generate_number(
                         "PAY-S",
                         Payment,
