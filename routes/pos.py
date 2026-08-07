@@ -1228,7 +1228,6 @@ def api_checkout():
 
             kds_enabled = bool(ot.kds_enabled) if ot else (order_type in ("dine_in", "takeaway", "delivery"))
             if kds_enabled:
-                from models import PosKdsOrder
                 from services.pos_write_service import PosWriteService
 
                 kds_order = PosWriteService.create_kds_order(
@@ -3045,8 +3044,6 @@ def api_tables():
 @login_required
 @permission_required("manage_sales")
 def api_floor_create():
-    from models import PosFloor
-
     payload = request.get_json(silent=True) or {}
     name = (payload.get("name") or "").strip()
     name_ar = (payload.get("name_ar") or "").strip()
@@ -3090,7 +3087,7 @@ def api_floor_tables(floor_id):
 @login_required
 @permission_required("manage_sales")
 def api_table_create():
-    from models import PosFloor, PosTable
+    from models import PosFloor
 
     payload = request.get_json(silent=True) or {}
     floor_id = payload.get("floor_id")
@@ -3137,7 +3134,7 @@ def api_table_update_status(table_id):
 @login_required
 @permission_required("manage_sales")
 def api_table_assign(table_id):
-    from models import PosTable, PosTableOrder
+    from models import PosTable
 
     tid = get_active_tenant_id(current_user)
     table = tenant_query(PosTable).filter_by(id=table_id).first()
@@ -3153,7 +3150,7 @@ def api_table_assign(table_id):
     if sale is None:
         return jsonify({"error": gettext("الفاتورة غير موجودة")}), 404
     from services.pos_write_service import PosWriteService
-    torder = PosWriteService.create_table_order_model(
+    PosWriteService.create_table_order_model(
         tenant_id=tid,
         table_id=table_id,
         sale_id=sale.id,

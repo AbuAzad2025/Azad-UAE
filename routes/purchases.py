@@ -268,7 +268,7 @@ def edit(**kwargs):
 def delete(**kwargs):
     """حذف (أرشفة) فاتورة شراء"""
     from services.archive_service import ArchiveService
-    from models import Cheque, PurchaseLine
+    from models import Cheque
 
     record_id = kwargs.pop("id")
     purchase = tenant_get_or_404(Purchase, record_id)

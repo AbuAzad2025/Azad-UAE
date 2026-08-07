@@ -19,7 +19,6 @@ from extensions import db
 from models import Receipt, Customer, InvoiceSettings, Supplier, Payment
 from services.payment_service import PaymentService
 from services.cheque_service import process_cheque_issue
-from services.cheque_service import ChequeService
 from services.currency_service import CurrencyService
 from services.exchange_rate_service import ExchangeRateService
 from services.gl_posting import post_or_fail

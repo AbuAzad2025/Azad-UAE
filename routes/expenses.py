@@ -11,13 +11,12 @@ from flask import (
 )
 from flask_login import login_required, current_user
 from extensions import db, limiter
-from models import Expense, ExpenseCategory, Cheque
+from models import Expense, ExpenseCategory
 from services.currency_service import CurrencyService
 from services.exchange_rate_service import ExchangeRateService
 from services.gl_service import GLService
 from services.gl_posting import post_or_fail
 from services.cheque_service import process_cheque_issue
-from services.expense_service import ExpenseService
 from services.cheque_service import ChequeService
 from utils.decorators import permission_required, branch_scope_id
 from utils.db_safety import atomic_transaction

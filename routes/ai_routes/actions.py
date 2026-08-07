@@ -63,10 +63,8 @@ def _process_user_action(message, user):
             Customer,
             Product,
             Sale,
-            SaleLine,
             Supplier,
             Purchase,
-            PurchaseLine,
             Payment,
             Expense,
             Cheque,
@@ -74,7 +72,6 @@ def _process_user_action(message, user):
         )
         from extensions import db
         from datetime import datetime, timezone
-        from utils.gl_reference_types import GLRef
         import re
 
         msg_lower = message.lower()
@@ -941,17 +938,7 @@ def _process_user_action(message, user):
             elif step == 3:
                 try:
                     data["quantity"] = float(message.strip())
-                    total_amount = data["product_price"] * data["quantity"]
 
-                    from models.sale import Sale, SaleLine
-                    from utils.helpers import generate_number
-
-                    sale_number = generate_number(
-                        "S",
-                        Sale,
-                        "sale_number",
-                        branch_id=getattr(current_user, "branch_id", None),
-                    )
                     from services.sale_service import SaleService
 
                     with atomic_transaction("ai_create_sale"):
@@ -976,7 +963,7 @@ def _process_user_action(message, user):
 - المنتج: {data["product_name"]}
 - الكمية: {data["quantity"]}
 - السعر: {data["product_price"]} درهم
-- المجموع: {total_amount} درهم
+- المجموع: {data["product_price"] * data["quantity"]} درهم
 - رقم الفاتورة: #{sale.id}
 
 {final_options}
@@ -1620,18 +1607,7 @@ def _process_user_action(message, user):
             elif step == 4:
                 try:
                     data["unit_price"] = float(message.strip().replace(gettext("درهم"), "").strip())
-                    total_amount = data["unit_price"] * data["quantity"]
 
-                    from models.purchase import Purchase, PurchaseLine
-                    from models.product import Product
-                    from utils.helpers import generate_number
-
-                    purchase_number = generate_number(
-                        "P",
-                        Purchase,
-                        "purchase_number",
-                        branch_id=getattr(current_user, "branch_id", None),
-                    )
                     from services.purchase_service import PurchaseService
                     with atomic_transaction("ai_create_purchase"):
                         purchase = PurchaseService.create_quick_purchase(
@@ -1658,7 +1634,7 @@ def _process_user_action(message, user):
 - المنتج: {data["product_name"]}
 - الكمية: {data["quantity"]}
 - سعر الشراء: {data["unit_price"]} درهم
-- المجموع: {total_amount} درهم
+- المجموع: {data["unit_price"] * data["quantity"]} درهم
 - رقم المشتريات: #{purchase.id}
 
 💡 **ماذا تريد أن تفعل الآن؟**
@@ -1953,6 +1929,7 @@ def _process_user_action(message, user):
 
                 try:
                     from services.user_service import UserService
+                    from utils.password_validator import PasswordValidator
 
                     is_valid, pwd_errors = PasswordValidator.validate(data.get("password", ""))
                     if not is_valid:
@@ -2155,7 +2132,6 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
 
         if msg_lower.strip() == "2" and ctx.get("last_action") == gettext("مستخدم"):
-            from models.user import User
             from utils.tenanting import scoped_user_query
 
             users = scoped_user_query(active_only=True).all()
