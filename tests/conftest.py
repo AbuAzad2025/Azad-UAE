@@ -587,6 +587,15 @@ _POLLUTED_MODEL_SPECS = (
     ("helpdesk", "Ticket"),
     ("payroll", "Employee"),
     ("payroll", "PayrollTransaction"),
+    ("pos_order_type", "PosOrderType"),
+    ("pos_floor", "PosFloor"),
+    ("pos_floor", "PosTable"),
+    ("pos_floor", "PosTableOrder"),
+    ("pos_kds_order", "PosKdsOrder"),
+    ("pos_printer", "PosPrinter"),
+    ("pos_shift", "PosShift"),
+    ("pos_session", "PosSession"),
+    ("product_price_tier", "ProductPriceTier"),
 )
 
 
