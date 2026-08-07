@@ -705,6 +705,49 @@ class PurchaseService:
         return purchase_return
 
     @staticmethod
+    def create_quick_purchase(supplier_id: int, product_id: int, quantity: float, unit_cost,
+                              tenant_id: int | None = None, user_id: int | None = None):
+        """Create a quick purchase with single line item (for AI wizard flows).
+        Returns the created purchase with stock addition."""
+        from models import Purchase, PurchaseLine, Warehouse
+
+        purchase = Purchase(
+            supplier_id=supplier_id,
+            total_amount=Decimal(str(unit_cost)) * Decimal(str(quantity)),
+            amount=Decimal(str(unit_cost)) * Decimal(str(quantity)),
+            amount_aed=Decimal(str(unit_cost)) * Decimal(str(quantity)),
+            currency="AED",
+            exchange_rate=1,
+            user_id=user_id,
+        )
+        if tenant_id:
+            purchase.tenant_id = tenant_id
+        db.session.add(purchase)
+        db.session.flush()
+
+        purchase_line = PurchaseLine(
+            purchase_id=purchase.id,
+            product_id=product_id,
+            quantity=quantity,
+            unit_cost=Decimal(str(unit_cost)),
+            total=Decimal(str(unit_cost)) * Decimal(str(quantity)),
+        )
+        db.session.add(purchase_line)
+        db.session.flush()
+
+        wh = Warehouse.query.filter_by(tenant_id=tenant_id, is_active=True).first() if tenant_id else None
+        if wh:
+            StockService.add_stock(
+                product_id=product_id,
+                quantity=quantity,
+                reference_type=GLRef.PURCHASE,
+                reference_id=purchase.id,
+                warehouse_id=wh.id,
+            )
+
+        return purchase
+
+    @staticmethod
     def delete_purchase(purchase, has_supplier: bool = True):
         """Delete a purchase and its lines. Reverses supplier balance if needed."""
         if has_supplier and purchase.supplier_id:

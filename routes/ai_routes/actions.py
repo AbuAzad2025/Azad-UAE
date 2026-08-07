@@ -1072,37 +1072,18 @@ def _process_user_action(message, user):
                 data["payment_method"] = message.strip()
 
                 try:
-                    from models.payment import Payment
                     from models.customer import Customer
-
-                    from utils.helpers import generate_number
-
-                    payment_number = generate_number(
-                        "PAY",
-                        Payment,
-                        "payment_number",
-                        branch_id=getattr(current_user, "branch_id", None),
-                    )
-                    payment = Payment(
-                        payment_number=payment_number,
-                        customer_id=data["customer_id"],
-                        amount=data["amount"],
-                        amount_aed=data["amount"],
-                        currency="AED",
-                        exchange_rate=1,
-                        payment_date=datetime.now(timezone.utc),
-                        payment_method=data["payment_method"],
-                        user_id=user.id,
-                        direction="incoming",
-                        payment_type="customer_payment",
-                    )
-                    assign_tenant_id(payment)
+                    from services.payment_service import PaymentService
                     with atomic_transaction("ai_receive_payment"):
-                        db.session.add(payment)
+                        payment = PaymentService.create_customer_payment(
+                            customer_id=data["customer_id"],
+                            amount=data["amount"],
+                            payment_method=data["payment_method"],
+                            tenant_id=tid,
+                            user_id=user.id,
+                        )
 
-                        customer = Customer.query.filter_by(id=data["customer_id"], tenant_id=tid).first()
-                        customer.apply_receipt(data["amount"])
-
+                    customer = Customer.query.filter_by(id=data["customer_id"], tenant_id=tid).first()
                     train_local_ai(
                         "receive_payment",
                         data,
@@ -1651,38 +1632,15 @@ def _process_user_action(message, user):
                         "purchase_number",
                         branch_id=getattr(current_user, "branch_id", None),
                     )
-                    purchase = Purchase(
-                        purchase_number=purchase_number,
-                        supplier_id=data["supplier_id"],
-                        supplier_name=data.get("supplier_name", ""),
-                        total_amount=total_amount,
-                        amount=total_amount,
-                        amount_aed=total_amount,
-                        currency="AED",
-                        exchange_rate=1,
-                        user_id=user.id,
-                    )
-                    assign_tenant_id(purchase)
+                    from services.purchase_service import PurchaseService
                     with atomic_transaction("ai_create_purchase"):
-                        db.session.add(purchase)
-                        db.session.flush()
-
-                        purchase_line = PurchaseLine(
-                            purchase_id=purchase.id,
+                        purchase = PurchaseService.create_quick_purchase(
+                            supplier_id=data["supplier_id"],
                             product_id=data["product_id"],
                             quantity=data["quantity"],
                             unit_cost=data["unit_price"],
-                            total=total_amount,
-                        )
-                        db.session.add(purchase_line)
-
-                        wh = Warehouse.query.filter_by(tenant_id=tid, is_active=True).first()
-                        StockService.add_stock(
-                            product_id=data["product_id"],
-                            quantity=data["quantity"],
-                            reference_type=GLRef.PURCHASE,
-                            reference_id=purchase.id,
-                            warehouse_id=wh.id if wh else None,
+                            tenant_id=tid,
+                            user_id=user.id,
                         )
 
                     train_local_ai(
@@ -1805,21 +1763,20 @@ def _process_user_action(message, user):
 
             elif step == 4:
                 try:
-                    from models.cheque import Cheque
                     from datetime import datetime as dt
 
                     due_date = dt.strptime(message.strip(), "%Y-%m-%d")
 
-                    cheque = Cheque(
-                        cheque_number=data["cheque_number"],
-                        amount=data["amount"],
-                        due_date=due_date,
-                        cheque_type=data["cheque_type"],
-                        status="pending",
-                        user_id=user.id,
-                    )
+                    from services.cheque_service import ChequeService
                     with atomic_transaction("ai_create_cheque"):
-                        db.session.add(cheque)
+                        cheque = ChequeService.create_cheque(
+                            cheque_number=data["cheque_number"],
+                            amount=data["amount"],
+                            due_date=due_date,
+                            cheque_type=data["cheque_type"],
+                            user_id=user.id,
+                            tenant_id=tid,
+                        )
 
                     train_local_ai("create_cheque", data, {"success": True, "cheque_id": cheque.id})
 
@@ -2650,32 +2607,15 @@ http://localhost:5000/ai/assistant
                     if not customer:
                         return gettext(f"❌ العميل '{customer_name}' غير موجود!")
 
-                    from utils.helpers import generate_number
-
-                    payment_number = generate_number(
-                        "PAY",
-                        Payment,
-                        "payment_number",
-                        branch_id=getattr(current_user, "branch_id", None),
-                    )
-                    payment = Payment(
-                        payment_number=payment_number,
-                        customer_id=customer.id,
-                        amount=amount,
-                        amount_aed=amount,
-                        currency="AED",
-                        exchange_rate=1,
-                        payment_date=datetime.now(timezone.utc),
-                        payment_method=payment_method,
-                        user_id=user.id,
-                        direction="incoming",
-                        payment_type="customer_payment",
-                    )
-                    assign_tenant_id(payment)
+                    from services.payment_service import PaymentService
                     with atomic_transaction("ai_quick_payment"):
-                        db.session.add(payment)
-
-                        customer.apply_receipt(amount)
+                        payment = PaymentService.create_customer_payment(
+                            customer_id=customer.id,
+                            amount=amount,
+                            payment_method=payment_method,
+                            tenant_id=tid,
+                            user_id=user.id,
+                        )
 
                     return f"""✅ تم تسجيل الدفعة بنجاح!
 

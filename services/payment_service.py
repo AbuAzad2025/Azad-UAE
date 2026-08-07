@@ -833,6 +833,121 @@ class PaymentService:
             raise
 
     @staticmethod
+    def create_customer_refund(
+        customer_id: int,
+        amount,
+        currency: str,
+        exchange_rate,
+        amount_aed,
+        payment_method: str,
+        notes: str = "",
+        cheque_number: str = "",
+        cheque_date=None,
+        bank_name: str = "",
+        date_str: str = "",
+        branch_id: int | None = None,
+        tenant_id: int | None = None,
+    ):
+        """Create outgoing payment (refund to customer) with GL posting and optional cheque."""
+        from models import Customer, Payment
+        from utils.helpers import generate_number
+
+        customer = db.session.get(Customer, customer_id)
+        if not customer:
+            raise ValueError(gettext("العميل غير موجود"))
+
+        payment_number = generate_number(
+            "PAY",
+            Payment,
+            "payment_number",
+            branch_id=branch_id,
+            tenant_id=tenant_id,
+        )
+        payment = Payment(
+            tenant_id=tenant_id,
+            payment_number=payment_number,
+            payment_type="refund",
+            direction="outgoing",
+            customer_id=customer.id,
+            amount=amount,
+            currency=currency,
+            exchange_rate=exchange_rate,
+            amount_aed=amount_aed,
+            payment_method=payment_method,
+            notes=notes,
+            cheque_number=(cheque_number if payment_method == "cheque" else None),
+            cheque_date=cheque_date if payment_method == "cheque" else None,
+            bank_name=bank_name if payment_method == "cheque" else None,
+            user_id=(current_user.id if current_user and current_user.is_authenticated else None),
+            branch_id=branch_id,
+        )
+        db.session.add(payment)
+        db.session.flush()
+
+        if payment_method == "cheque" and cheque_number:
+            from models import Cheque
+            from services.cheque_service import process_cheque_issue
+
+            cheque = ChequeService.create_cheque(
+                cheque_number=cheque_number,
+                cheque_bank_number=cheque_number,
+                cheque_type="outgoing",
+                customer_id=customer.id,
+                payment_id=payment.id,
+                amount=payment.amount,
+                currency=payment.currency,
+                exchange_rate=payment.exchange_rate,
+                due_date=cheque_date or datetime.now().date(),
+                bank_name=bank_name,
+                payee_name=customer.name,
+                notes=notes,
+                branch_id=branch_id,
+                tenant_id=tenant_id,
+            )
+            payment.cheque_id = cheque.id
+            payment.payment_confirmed = False
+            process_cheque_issue(cheque)
+        else:
+            from services.gl_service import GLService
+
+            GLService.ensure_core_accounts(tenant_id=tenant_id)
+            credit_account = GLService.get_payment_credit_account(
+                payment_method,
+                branch_id=payment.branch_id,
+                tenant_id=tenant_id,
+            )
+            debit_account = GLService.get_customer_credit_account(
+                customer,
+                branch_id=payment.branch_id,
+                tenant_id=tenant_id,
+            )
+            post_or_fail(
+                [
+                    {
+                        "account": debit_account,
+                        "concept_code": GLService.get_customer_credit_concept(customer),
+                        "debit": payment.amount,
+                        "description": gettext(f"سداد/سحب {customer.name}"),
+                    },
+                    {
+                        "account": credit_account,
+                        "concept_code": GLService.get_payment_credit_concept(payment_method),
+                        "credit": payment.amount,
+                        "description": gettext(f"سند صرف {payment.payment_number}"),
+                    },
+                ],
+                description=f"Customer refund {payment.payment_number}",
+                reference_type=GLRef.PAYMENT,
+                reference_id=payment.id,
+                currency=currency,
+                exchange_rate=exchange_rate,
+                branch_id=payment.branch_id,
+                tenant_id=tenant_id,
+            )
+
+        return payment
+
+    @staticmethod
     def get_customer_balance_aed(customer):
         """مصدر واحد لرصيد العميل بالدرهم - يستخدم نموذج العميل."""
         return Decimal(str(customer.get_balance_aed() or 0))
