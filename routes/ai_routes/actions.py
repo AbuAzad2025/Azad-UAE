@@ -18,7 +18,6 @@ import logging
 from datetime import UTC
 
 from flask_babel import gettext
-from flask_login import current_user
 
 from routes.ai_routes.shared import (
     _conversation_ctx,
@@ -1072,6 +1071,7 @@ def _process_user_action(message, user):
                             payment_method=data["payment_method"],
                             tenant_id=tid,
                             user_id=user.id,
+                            branch_id=getattr(user, "branch_id", None),
                         )
 
                     customer = Customer.query.filter_by(id=data["customer_id"], tenant_id=tid).first()
@@ -1195,7 +1195,7 @@ def _process_user_action(message, user):
                         "PAY",
                         Payment,
                         "payment_number",
-                        branch_id=getattr(current_user, "branch_id", None),
+                        branch_id=getattr(user, "branch_id", None),
                     )
                     payment = Payment(
                         payment_number=payment_number,
@@ -2679,6 +2679,7 @@ http://localhost:5000/ai/assistant
                             payment_method=payment_method,
                             tenant_id=tid,
                             user_id=user.id,
+                            branch_id=getattr(user, "branch_id", None),
                         )
 
                     return f"""✅ تم استلام الدفعة بنجاح!
@@ -2776,7 +2777,7 @@ http://localhost:5000/ai/assistant
                         "PAY",
                         Payment,
                         "payment_number",
-                        branch_id=getattr(current_user, "branch_id", None),
+                        branch_id=getattr(user, "branch_id", None),
                     )
                     payment = Payment(
                         payment_number=payment_number,

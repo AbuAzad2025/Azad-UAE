@@ -445,6 +445,7 @@ class PaymentService:
         notes: str = "",
         tenant_id: int | None = None,
         user_id: int | None = None,
+        branch_id: int | None = None,
     ):
         """Create incoming payment (receipt from customer). Updates customer balance."""
         from datetime import datetime
@@ -456,11 +457,18 @@ class PaymentService:
         if not customer:
             raise ValueError(gettext("العميل غير موجود"))
 
+        resolved_branch_id = branch_id
+        if resolved_branch_id is None and user_id is not None:
+            from models import User
+            user = db.session.get(User, user_id)
+            if user:
+                resolved_branch_id = user.branch_id
+
         payment_number = generate_number(
             "PAY",
             Payment,
             "payment_number",
-            branch_id=(current_user.branch_id if current_user is not None else None),
+            branch_id=resolved_branch_id,
             tenant_id=tenant_id or (customer.tenant_id if customer is not None else None),
         )
         payment = Payment(
