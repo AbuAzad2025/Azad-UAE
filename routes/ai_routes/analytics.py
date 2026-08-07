@@ -1,11 +1,13 @@
 """AI analytics and prediction routes."""
 
 import logging
-from flask import request, jsonify
+
+from flask import jsonify, request
 from flask_login import login_required
-from utils.decorators import permission_required
-from services.ai_service import AIService
+
 from routes.ai_routes import ai_bp
+from services.ai_service import AIService
+from utils.decorators import permission_required
 
 logger = logging.getLogger(__name__)
 

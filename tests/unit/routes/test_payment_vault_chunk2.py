@@ -1,7 +1,7 @@
 """tests/unit/test_payment_vault_chunk2.py — Webhook replay protection,
 Idempotency-Key caching, X-API-Key scoping, and signature validation."""
 
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
 import pytest
@@ -16,12 +16,12 @@ class TestReplayProtection:
 
     def test_valid_recent_timestamp_returns_none(self, app_factory):
         from routes.payment_vault import (
-            payment_vault_bp,
             _reject_stale_webhook_timestamp,
+            payment_vault_bp,
         )
 
         app = app_factory(payment_vault_bp)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         payload = {"timestamp": now.isoformat(), "payment_id": "123"}
         with app.app_context():
             result = _reject_stale_webhook_timestamp(payload)
@@ -29,12 +29,12 @@ class TestReplayProtection:
 
     def test_stale_timestamp_older_than_5min_returns_401(self, app_factory):
         from routes.payment_vault import (
-            payment_vault_bp,
             _reject_stale_webhook_timestamp,
+            payment_vault_bp,
         )
 
         app = app_factory(payment_vault_bp)
-        old = datetime.now(timezone.utc) - timedelta(minutes=10)
+        old = datetime.now(UTC) - timedelta(minutes=10)
         payload = {"timestamp": old.isoformat(), "payment_id": "123"}
         with app.app_context():
             resp, code = _reject_stale_webhook_timestamp(payload)
@@ -43,12 +43,12 @@ class TestReplayProtection:
 
     def test_future_timestamp_returns_401(self, app_factory):
         from routes.payment_vault import (
-            payment_vault_bp,
             _reject_stale_webhook_timestamp,
+            payment_vault_bp,
         )
 
         app = app_factory(payment_vault_bp)
-        future = datetime.now(timezone.utc) + timedelta(hours=1)
+        future = datetime.now(UTC) + timedelta(hours=1)
         payload = {"timestamp": future.isoformat()}
         with app.app_context():
             _resp, code = _reject_stale_webhook_timestamp(payload)
@@ -56,12 +56,12 @@ class TestReplayProtection:
 
     def test_numeric_timestamp_accepted(self, app_factory):
         from routes.payment_vault import (
-            payment_vault_bp,
             _reject_stale_webhook_timestamp,
+            payment_vault_bp,
         )
 
         app = app_factory(payment_vault_bp)
-        now_ts = datetime.now(timezone.utc).timestamp()
+        now_ts = datetime.now(UTC).timestamp()
         payload = {"timestamp": now_ts}
         with app.app_context():
             result = _reject_stale_webhook_timestamp(payload)
@@ -69,8 +69,8 @@ class TestReplayProtection:
 
     def test_missing_timestamp_graceful_degradation(self, app_factory):
         from routes.payment_vault import (
-            payment_vault_bp,
             _reject_stale_webhook_timestamp,
+            payment_vault_bp,
         )
 
         app = app_factory(payment_vault_bp)
@@ -81,12 +81,12 @@ class TestReplayProtection:
 
     def test_created_at_fallback(self, app_factory):
         from routes.payment_vault import (
-            payment_vault_bp,
             _reject_stale_webhook_timestamp,
+            payment_vault_bp,
         )
 
         app = app_factory(payment_vault_bp)
-        old = datetime.now(timezone.utc) - timedelta(minutes=10)
+        old = datetime.now(UTC) - timedelta(minutes=10)
         payload = {"created_at": old.isoformat()}
         with app.app_context():
             _resp, code = _reject_stale_webhook_timestamp(payload)
@@ -108,7 +108,7 @@ class TestIdempotencyKey:
         _idempotency_store.clear()
 
     def test_cache_miss_returns_none(self, app_factory, mocker):
-        from routes.payment_vault import payment_vault_bp, _check_idempotency_key
+        from routes.payment_vault import _check_idempotency_key, payment_vault_bp
 
         app = app_factory(payment_vault_bp)
         self._reset_store()
@@ -120,9 +120,9 @@ class TestIdempotencyKey:
 
     def test_cache_hit_returns_cached_response(self, app_factory, mocker):
         from routes.payment_vault import (
-            payment_vault_bp,
             _check_idempotency_key,
             _save_idempotency_key,
+            payment_vault_bp,
         )
 
         app = app_factory(payment_vault_bp)
@@ -136,7 +136,7 @@ class TestIdempotencyKey:
         assert resp.get_json()["success"] is True
 
     def test_no_key_header_returns_none(self, app_factory, mocker):
-        from routes.payment_vault import payment_vault_bp, _check_idempotency_key
+        from routes.payment_vault import _check_idempotency_key, payment_vault_bp
 
         app = app_factory(payment_vault_bp)
         self._reset_store()
@@ -146,9 +146,9 @@ class TestIdempotencyKey:
 
     def test_different_keys_independent(self, app_factory, mocker):
         from routes.payment_vault import (
-            payment_vault_bp,
             _check_idempotency_key,
             _save_idempotency_key,
+            payment_vault_bp,
         )
 
         app = app_factory(payment_vault_bp)
@@ -179,7 +179,7 @@ class TestApiKeyValidation:
         _idempotency_store.clear()
 
     def test_missing_key_returns_401(self, app_factory, mock_db, mocker):
-        from routes.payment_vault import payment_vault_bp, _validate_api_key
+        from routes.payment_vault import _validate_api_key, payment_vault_bp
 
         app = app_factory(payment_vault_bp)
         with app.test_request_context():
@@ -188,7 +188,7 @@ class TestApiKeyValidation:
         assert "API key" in resp.get_json()["error"]
 
     def test_invalid_key_returns_403(self, app_factory, mock_db, mocker):
-        from routes.payment_vault import payment_vault_bp, _validate_api_key
+        from routes.payment_vault import _validate_api_key, payment_vault_bp
 
         app = app_factory(payment_vault_bp)
 
@@ -204,7 +204,7 @@ class TestApiKeyValidation:
         assert "Invalid" in resp.get_json()["error"]
 
     def test_read_only_key_blocked_on_write(self, app_factory, mock_db, mocker):
-        from routes.payment_vault import payment_vault_bp, _validate_api_key
+        from routes.payment_vault import _validate_api_key, payment_vault_bp
 
         app = app_factory(payment_vault_bp)
         mock_key = MagicMock()
@@ -225,7 +225,7 @@ class TestApiKeyValidation:
         assert "Read-only" in resp.get_json()["error"]
 
     def test_valid_write_key_passes(self, app_factory, mock_db, mocker):
-        from routes.payment_vault import payment_vault_bp, _validate_api_key
+        from routes.payment_vault import _validate_api_key, payment_vault_bp
 
         app = app_factory(payment_vault_bp)
         mock_key = MagicMock()

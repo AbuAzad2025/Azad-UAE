@@ -13,6 +13,7 @@ class TestTenantScopeEnabled:
 
     def test_false_when_skip_flag_on_g(self, app):
         from flask import g
+
         from utils.tenant_orm import tenant_scope_enabled
 
         with app.test_request_context("/"):
@@ -167,7 +168,7 @@ class TestDiscoveryAndRegistration:
     def test_shims_delegate(self, mocker):
         mocker.patch("utils.tenanting.tenant_query", return_value="q")
         mocker.patch("utils.tenanting.model_has_tenant", return_value=True)
-        from utils.tenant_orm import tenant_query, model_has_tenant
+        from utils.tenant_orm import model_has_tenant, tenant_query
 
         assert tenant_query("Model") == "q"
         assert model_has_tenant("Model") is True

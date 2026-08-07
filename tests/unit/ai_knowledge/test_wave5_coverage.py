@@ -528,19 +528,18 @@ class TestReasoningEngineWave5:
 class TestActionDispatcherWave5:
     def test_tenant_and_permission_helpers(self):
         from ai_knowledge.action_dispatcher import (
+            _audit,
             _get_active_tenant_id,
             _has_permission,
             _is_owner,
-            _audit,
         )
 
         with patch(
             "ai_knowledge.action_dispatcher.current_user",
             SimpleNamespace(is_authenticated=False),
-        ):
-            with patch("flask.g", create=True) as g:
-                g.active_tenant_id = 3
-                assert _get_active_tenant_id() == 3
+        ), patch("flask.g", create=True) as g:
+            g.active_tenant_id = 3
+            assert _get_active_tenant_id() == 3
         anon = SimpleNamespace(is_authenticated=False)
         with (
             patch("flask.g", create=True) as g,
@@ -744,10 +743,10 @@ class TestActionDispatcherWave5:
 class TestAnalyticsWave5:
     def test_sales_analytics_branches(self):
         from ai_knowledge.analytics.analytics_predictions import (
-            SalesAnalytics,
+            CashFlowAnalytics,
             InventoryAnalytics,
             ProfitAnalytics,
-            CashFlowAnalytics,
+            SalesAnalytics,
         )
 
         assert SalesAnalytics.predict_next_month_sales([100, 200])["confidence"] == "low"
@@ -803,7 +802,7 @@ class TestAnalyticsWave5:
             assert analyzer.analyze_customer_debt(1)["success"] is False
         sale = MagicMock(total_amount=Decimal("500"), created_at=datetime.now())
         with patch("models.Sale") as MockSale:
-            setattr(MockSale, "created_at", _Col())
+            MockSale.created_at = _Col()
             MockSale.query.filter = MagicMock(return_value=MagicMock(all=MagicMock(return_value=[sale] * 10)))
             perf = analyzer.analyze_sales_performance(30)
             assert perf["success"] is True
@@ -1152,7 +1151,7 @@ class TestIntelligentAssistantWave5:
                     q.first.return_value = customer
                     model.query = q
                     if model is Sale:
-                        setattr(model, "sale_date", _Col())
+                        model.sale_date = _Col()
                     if model is Product:
                         for attr in ("is_active", "current_stock", "min_stock_alert"):
                             setattr(model, attr, _Col())
@@ -1244,8 +1243,8 @@ class TestSecondarySweepWave5:
         assert filtered["password"] == "*** محمي ***"
 
     def test_trainer_and_multi_agent(self, knowledge_path):
-        from ai_knowledge.trainer import Trainer
         from ai_knowledge.agents.multi_agent_system import MultiAgentCoordinator
+        from ai_knowledge.trainer import Trainer
 
         trainer = Trainer()
         trainer.learn_from_interaction("q", "a")
@@ -1261,8 +1260,8 @@ class TestSecondarySweepWave5:
 
     def test_parts_knowledge_search(self):
         from ai_knowledge.knowledge.parts_knowledge import (
-            search_parts,
             get_compatible_parts,
+            search_parts,
         )
 
         assert isinstance(search_parts("filter"), list)

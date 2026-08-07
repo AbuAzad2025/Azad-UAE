@@ -64,8 +64,9 @@ def _assert_cheque_bucket_math(report):
 
 def _assert_export_route_security():
     """Export route must contain branch security checks."""
-    from routes.treasury import treasury_export
     import inspect
+
+    from routes.treasury import treasury_export
 
     source = inspect.getsource(treasury_export)
     required = ["report_branch_scope_id", "user_can_access_branch"]

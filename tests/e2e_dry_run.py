@@ -6,10 +6,10 @@ verifies balanced GL journal entries, reconciles/closes the shift, and
 runs the subscription scheduler to verify expiry detection.
 """
 
+import logging
 import sys
 import uuid
-import logging
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ def _setup():
 
 
 def _seed_tenant(db):
-    from models import Tenant, Branch, Warehouse, Role, User, Customer, Product
+    from models import Branch, Customer, Product, Role, Tenant, User, Warehouse
     from models.system_settings import SystemSettings
 
     uid = uuid.uuid4().hex[:8]
@@ -45,7 +45,7 @@ def _seed_tenant(db):
         is_suspended=False,
         subscription_plan="pro",
         subscription_plan_duration="monthly",
-        subscription_end=datetime.now(timezone.utc) + timedelta(days=2),
+        subscription_end=datetime.now(UTC) + timedelta(days=2),
         max_users=10,
         max_branches=5,
         max_products=1000,
@@ -270,7 +270,7 @@ def _run_subscription_scheduler(_db, _ctx):
 
 
 def _verify_tenant_limits(db, ctx):
-    from models import User, Branch
+    from models import Branch, User
     from models.tenant import Tenant
 
     tid = ctx["tenant"].id
@@ -283,8 +283,8 @@ def _verify_tenant_limits(db, ctx):
 
 
 def _cleanup(db, _ctx):
-    from models.pos_shift import PosShift
     from models import PosSession, Sale
+    from models.pos_shift import PosShift
 
     db.session.query(PosShift).delete()
     db.session.query(PosSession).delete()

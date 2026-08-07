@@ -8,8 +8,9 @@ from decimal import Decimal
 
 class TestPaymentsListPage:
     def test_receipts_list_page_renders(self, app, db_session, client):
-        from models import Tenant, Branch, User, Role, Customer, Receipt, Payment
         from datetime import date
+
+        from models import Branch, Customer, Payment, Receipt, Role, Tenant, User
 
         tid = str(uuid.uuid4())[:8]
         tenant = Tenant(

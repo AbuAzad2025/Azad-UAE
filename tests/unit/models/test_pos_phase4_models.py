@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC
 from decimal import Decimal
 
 from models.pos_session import PosSession
@@ -60,10 +61,10 @@ class TestShiftExpectedCashWithRefunds:
         assert self._shift(total_cash_refunds=50).compute_expected_cash() == Decimal("240")
 
     def test_to_dict_exposes_refunds_only_when_sensitive(self):
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         shift = self._shift(total_cash_refunds=50)
-        shift.opened_at = datetime.now(timezone.utc)
+        shift.opened_at = datetime.now(UTC)
         full = shift.to_dict(include_sensitive=True)
         blind = shift.to_dict(include_sensitive=False)
         assert full["total_cash_refunds"] == 50.0

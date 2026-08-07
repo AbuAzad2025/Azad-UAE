@@ -1,8 +1,8 @@
-from flask_babel import gettext
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import requests
 from flask import current_app
+from flask_babel import gettext
 from flask_mail import Message
 
 from extensions import mail
@@ -57,7 +57,7 @@ class IntegrationService:
     def _record_test_result(integration, ok, message):
         """تسجيل نتيجة الاختبار في السجل — كتابة واحدة ذرية."""
         with atomic_transaction(f"integration_test_{integration.service_name}"):
-            integration.last_tested_at = datetime.now(timezone.utc)
+            integration.last_tested_at = datetime.now(UTC)
             integration.last_test_status = "success" if ok else "failed"
             integration.last_test_message = message
 

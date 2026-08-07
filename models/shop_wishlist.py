@@ -1,5 +1,6 @@
+from datetime import UTC, datetime
+
 from extensions import db
-from datetime import datetime, timezone
 
 
 class ShopWishlist(db.Model):
@@ -22,7 +23,7 @@ class ShopWishlist(db.Model):
         db.DateTime,
         nullable=False,
         index=True,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
     )
     __table_args__ = (db.UniqueConstraint("account_id", "product_id", name="uq_wishlist_account_product"),)
     account = db.relationship("ShopCustomerAccount", backref=db.backref("wishlist_items", lazy="dynamic"))

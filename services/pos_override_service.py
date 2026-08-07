@@ -14,7 +14,7 @@ Writes here only flush; the route owns the transaction boundary.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from flask_babel import gettext
 
@@ -22,6 +22,7 @@ from extensions import db
 from models import PosOverrideToken, User
 from models.enums import PermissionEnum
 from services.logging_core import LoggingCore
+from utils.logger import log_security
 from utils.pos_security import (
     OVERRIDE_ACTION_PERMISSIONS,
     OVERRIDE_TOKEN_TTL_SECONDS,
@@ -29,7 +30,6 @@ from utils.pos_security import (
     verify_override_token_signature,
 )
 from utils.tenanting import get_active_tenant_id, scoped_user_query, tenant_query
-from utils.logger import log_security
 
 
 class PosOverrideError(Exception):
@@ -37,7 +37,7 @@ class PosOverrideError(Exception):
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class PosOverrideService:

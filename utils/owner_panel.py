@@ -4,17 +4,19 @@ Owner / company admin panel data builders — display-only, no schema changes.
 
 from __future__ import annotations
 
+import logging
 import os
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 from sqlalchemy import func
 
+logger = logging.getLogger(__name__)
+
 from extensions import db
 from models import Branch, User, Warehouse
 from models.tenant import Tenant
-from utils.tenant_branding import resolve_tenant_branding, branding_path_warnings
-
+from utils.tenant_branding import branding_path_warnings, resolve_tenant_branding
 
 # Platform-level monthly price per subscription plan (telemetry only, not
 # tenant business data). Used to derive indicative MRR for the owner plane.
@@ -51,6 +53,7 @@ def _latest_backup_by_tenant(backups: list) -> dict[int, dict]:
         try:
             tid = int(tid)
         except (TypeError, ValueError):
+            logger.debug("Skipping backup with non-numeric tenant_id: %r", tid, exc_info=True)
             continue
         if tid not in by_tid:
             by_tid[tid] = meta
@@ -125,7 +128,7 @@ def build_platform_overview(backups: list | None = None) -> dict:
 
 def build_platform_telemetry() -> dict:
     """Owner-plane-only telemetry: SaaS growth, subscription lifecycle, MRR, health."""
-    today = datetime.now(timezone.utc).date()
+    today = datetime.now(UTC).date()
     month_start = today.replace(day=1)
     week_start = today - timedelta(days=today.weekday())
     day_start = today
@@ -288,7 +291,7 @@ def build_company_dashboard_context(tenant_id: int, branch_id: int | None = None
     if not (branding.get("logo_url") or tenant.logo_url):
         readiness.append("No tenant logo configured")
 
-    today = datetime.now(timezone.utc).date()
+    today = datetime.now(UTC).date()
     month_start = today.replace(day=1)
 
     sales_q = db.session.query(

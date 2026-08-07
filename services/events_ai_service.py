@@ -1,6 +1,6 @@
-import logging
 import json
-from datetime import datetime, timezone, timedelta
+import logging
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 logger = logging.getLogger(__name__)
@@ -275,8 +275,9 @@ def _learn_expense_patterns(mapper, connection, target):
 
 def _learn_accounting_entries(mapper, connection, target):
     try:
-        from ai_knowledge.core.learning_system import AzadLearningSystem
         from sqlalchemy import inspect
+
+        from ai_knowledge.core.learning_system import AzadLearningSystem
 
         lines_count = 0
         ins = inspect(target)
@@ -361,7 +362,7 @@ def _predict_future_sales(mapper, connection, target):
     try:
         from models import Sale
 
-        thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
+        thirty_days_ago = datetime.now(UTC) - timedelta(days=30)
         recent_sales = connection.execute(
             Sale.__table__.select().where(Sale.sale_date >= thirty_days_ago, Sale.status == "confirmed")
         ).fetchall()
@@ -381,7 +382,7 @@ def _predict_stockout(mapper, connection, target):
         from models import StockMovement
 
         if target.current_stock and target.current_stock < target.min_stock_alert:
-            thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
+            thirty_days_ago = datetime.now(UTC) - timedelta(days=30)
             movements = connection.execute(
                 StockMovement.__table__.select().where(
                     StockMovement.product_id == target.id,
@@ -419,10 +420,9 @@ def _predict_customer_churn(mapper, connection, target):
         if last_sale:
             sale_date = last_sale.sale_date
             if sale_date.tzinfo is None:
-                from datetime import timezone as tz
 
-                sale_date = sale_date.replace(tzinfo=tz.utc)
-            days_since_purchase = (datetime.now(timezone.utc) - sale_date).days
+                sale_date = sale_date.replace(tzinfo=UTC)
+            days_since_purchase = (datetime.now(UTC) - sale_date).days
             if days_since_purchase > 90:
                 churn_risk = "high"
                 logger.warning(
@@ -448,9 +448,10 @@ def _predict_customer_churn(mapper, connection, target):
 
 def _neural_auto_retrain(mapper, connection, target):
     try:
-        from models import Sale
-        from ai_knowledge.learning.auto_retraining import AutoRetrainingScheduler
         from flask import current_app
+
+        from ai_knowledge.learning.auto_retraining import AutoRetrainingScheduler
+        from models import Sale
 
         total_sales = connection.execute(Sale.__table__.select().where(Sale.status == "confirmed")).fetchall()
         sales_count = len(total_sales)
@@ -578,8 +579,9 @@ def _intelligent_inventory_alert(mapper, connection, target):
 
 
 def register_ai_event_listeners():
-    from models import Sale, Customer, Product, GLJournalEntry, Purchase, Expense
     from sqlalchemy import event
+
+    from models import Customer, Expense, GLJournalEntry, Product, Purchase, Sale
 
     @event.listens_for(Sale, "after_insert")
     def _h1(mapper, connection, target):
@@ -659,8 +661,9 @@ def register_ai_event_listeners():
 
 
 def register_neural_event_listeners():
-    from models import Sale, Customer, Product
     from sqlalchemy import event
+
+    from models import Customer, Product, Sale
 
     @event.listens_for(Sale, "after_insert")
     def _h1(mapper, connection, target):

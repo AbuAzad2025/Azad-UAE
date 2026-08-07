@@ -11,6 +11,7 @@ from utils.sanitizer import InputSanitizer, sanitize_form_data
 class TestSanitizeHtml:
     def test_resolve_bleach_success(self):
         import sys
+
         from utils.sanitizer import _resolve_bleach
 
         stub = MagicMock(name="bleach_module")
@@ -58,9 +59,9 @@ class TestSanitizeHtml:
         assert "&lt;i&gt;" in str(result)
 
     def test_bleach_import_error_sets_unavailable_flag(self):
-        from utils.sanitizer import _resolve_bleach
-
         import builtins
+
+        from utils.sanitizer import _resolve_bleach
 
         real_import = builtins.__import__
 

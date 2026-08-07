@@ -28,9 +28,8 @@ class TestFeatureRequired:
         def _view():
             return "ok"
 
-        with app.test_request_context("/payroll/"):
-            with _patch_tenant(sample_tenant.id):
-                assert _view() == "ok"
+        with app.test_request_context("/payroll/"), _patch_tenant(sample_tenant.id):
+            assert _view() == "ok"
 
     def test_locked_feature_web_aborts_403(self, app, db_session, sample_tenant):
         sample_tenant.enable_payroll = False
@@ -40,9 +39,8 @@ class TestFeatureRequired:
         def _view():
             return "ok"
 
-        with app.test_request_context("/payroll/"):
-            with _patch_tenant(sample_tenant.id), pytest.raises(Forbidden):
-                _view()
+        with app.test_request_context("/payroll/"), _patch_tenant(sample_tenant.id), pytest.raises(Forbidden):
+            _view()
 
     def test_locked_feature_api_returns_json_403(self, app, db_session, sample_tenant):
         sample_tenant.enable_cheques = False
@@ -63,18 +61,16 @@ class TestFeatureRequired:
         def _view():
             return "ok"
 
-        with app.test_request_context("/payroll/"):
-            with _patch_tenant(None):
-                assert _view() == "ok"
+        with app.test_request_context("/payroll/"), _patch_tenant(None):
+            assert _view() == "ok"
 
     def test_missing_flag_column_defaults_enabled(self, app, db_session, sample_tenant):
         @feature_required("nonexistent_feature")
         def _view():
             return "ok"
 
-        with app.test_request_context("/x/"):
-            with _patch_tenant(sample_tenant.id):
-                assert _view() == "ok"
+        with app.test_request_context("/x/"), _patch_tenant(sample_tenant.id):
+            assert _view() == "ok"
 
 
 class TestInstallFeatureGate:
@@ -91,9 +87,8 @@ class TestInstallFeatureGate:
 
         with _patch_tenant(sample_tenant.id):
             # Web request → 403 abort.
-            with app.test_request_context("/gate-test/"):
-                with pytest.raises(Forbidden):
-                    hook()
+            with app.test_request_context("/gate-test/"), pytest.raises(Forbidden):
+                hook()
             # API request → JSON FEATURE_LOCKED.
             with app.test_request_context("/gate-test/api/items", headers={"Accept": "application/json"}):
                 resp, status = hook()

@@ -12,7 +12,7 @@ from utils.gl_reference_types import GLRef
 class TestExpensesCreate:
     def test_create_expense_creates_gl_entry(self, app, db_session, client):
         tid = str(uuid.uuid4())[:8]
-        from models import Tenant, Branch, User, Role, ExpenseCategory
+        from models import Branch, ExpenseCategory, Role, Tenant, User
 
         tenant = Tenant(
             name=f"EXP {tid}",

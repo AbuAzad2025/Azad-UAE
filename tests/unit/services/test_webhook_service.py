@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -81,7 +81,7 @@ def _store_sale(db_session, sample_tenant, sample_customer, sample_user, **kwarg
         sale_number=f"STORE-{uuid.uuid4().hex[:6]}",
         customer_id=sample_customer.id,
         seller_id=sample_user.id,
-        sale_date=datetime.now(timezone.utc),
+        sale_date=datetime.now(UTC),
         subtotal=Decimal("100"),
         total_amount=Decimal("100"),
         amount=Decimal("100"),

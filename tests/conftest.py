@@ -2,17 +2,19 @@
 Pytest configuration and shared fixtures for the Azad UAE ERP test suite.
 """
 
+import json
 import os
 import shutil
 import sys
-import json
+from datetime import UTC
+from unittest.mock import MagicMock, NonCallableMock
+from urllib.parse import urlparse, urlunparse
 
 import dotenv
 import pytest
-from sqlalchemy import create_engine, text as sa_text
+from sqlalchemy import create_engine
+from sqlalchemy import text as sa_text
 from sqlalchemy.pool import NullPool
-from urllib.parse import urlparse, urlunparse
-from unittest.mock import MagicMock, NonCallableMock
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
 sys.path.insert(0, PROJECT_ROOT)
@@ -713,9 +715,9 @@ def _resync_service_db_bindings():
             continue
         if mod is None or not hasattr(mod, "db"):
             continue
-        bound = getattr(mod, "db")
+        bound = mod.db
         if bound is not real_db or isinstance(bound, polluted_types):
-            setattr(mod, "db", real_db)
+            mod.db = real_db
 
 
 def _restore_polluted_service_class_methods():
@@ -906,6 +908,7 @@ def runner(app):
 @pytest.fixture
 def sample_tenant(db_session):
     import uuid
+
     from models import Tenant
 
     unique = str(uuid.uuid4())[:8]
@@ -985,8 +988,9 @@ def sample_role(db_session, sample_permissions):
 @pytest.fixture
 def sample_branch(db_session, sample_tenant):
     """Creates a sample branch for a tenant."""
-    from models import Branch
     import uuid
+
+    from models import Branch
 
     unique = str(uuid.uuid4())[:8]
     branch = Branch(
@@ -1004,6 +1008,7 @@ def sample_branch(db_session, sample_tenant):
 @pytest.fixture
 def sample_user(db_session, sample_tenant, sample_role, sample_branch):
     import uuid
+
     from models import User
 
     unique = str(uuid.uuid4())[:8]
@@ -1026,7 +1031,8 @@ def sample_user(db_session, sample_tenant, sample_role, sample_branch):
 @pytest.fixture
 def sample_owner(db_session):
     import uuid
-    from models import Tenant, Role, User
+
+    from models import Role, Tenant, User
 
     unique = str(uuid.uuid4())[:8]
     tenant = Tenant(
@@ -1121,8 +1127,9 @@ def sample_customer(db_session, sample_tenant):
 
 @pytest.fixture
 def sample_purchase(db_session, sample_tenant, sample_supplier, sample_user):
+    from datetime import datetime
     from decimal import Decimal
-    from datetime import datetime, timezone
+
     from models import Purchase
 
     p = Purchase(
@@ -1130,7 +1137,7 @@ def sample_purchase(db_session, sample_tenant, sample_supplier, sample_user):
         purchase_number="PUR-TEST-001",
         supplier_id=sample_supplier.id,
         supplier_name="Test Supplier",
-        purchase_date=datetime.now(timezone.utc),
+        purchase_date=datetime.now(UTC),
         user_id=sample_user.id,
         subtotal=Decimal("100.000"),
         total_amount=Decimal("105.000"),
@@ -1155,8 +1162,9 @@ def sample_expense_category(db_session, sample_tenant):
 
 @pytest.fixture
 def sample_expense(db_session, sample_tenant, sample_expense_category, sample_user):
-    from datetime import datetime, timezone
+    from datetime import datetime
     from decimal import Decimal
+
     from models import Expense
 
     e = Expense(
@@ -1164,7 +1172,7 @@ def sample_expense(db_session, sample_tenant, sample_expense_category, sample_us
         expense_number="EXP-TEST-001",
         category_id=sample_expense_category.id,
         description="Test expense",
-        expense_date=datetime.now(timezone.utc),
+        expense_date=datetime.now(UTC),
         user_id=sample_user.id,
         amount=Decimal("500.000"),
         amount_aed=Decimal("500.000"),
@@ -1192,6 +1200,7 @@ def sample_employee(db_session, sample_tenant):
 @pytest.fixture
 def sample_payroll_transaction(db_session, sample_tenant, sample_employee):
     from decimal import Decimal
+
     from models import PayrollTransaction
 
     pt = PayrollTransaction(
@@ -1212,6 +1221,7 @@ def sample_payroll_transaction(db_session, sample_tenant, sample_employee):
 def sample_cheque(db_session, sample_tenant):
     from datetime import date
     from decimal import Decimal
+
     from models import Cheque
 
     ch = Cheque(
@@ -1232,8 +1242,9 @@ def sample_cheque(db_session, sample_tenant):
 
 @pytest.fixture
 def sample_sale(db_session, sample_tenant, sample_customer, sample_user):
-    from datetime import datetime, timezone
+    from datetime import datetime
     from decimal import Decimal
+
     from models import Sale
 
     s = Sale(
@@ -1241,7 +1252,7 @@ def sample_sale(db_session, sample_tenant, sample_customer, sample_user):
         sale_number="SAL-TEST-001",
         customer_id=sample_customer.id,
         seller_id=sample_user.id,
-        sale_date=datetime.now(timezone.utc),
+        sale_date=datetime.now(UTC),
         subtotal=Decimal("200.000"),
         total_amount=Decimal("210.000"),
         amount=Decimal("210.000"),
@@ -1273,6 +1284,7 @@ def sample_warehouse(db_session, sample_tenant, sample_branch):
 @pytest.fixture
 def sample_product(db_session, sample_tenant, sample_warehouse):
     from decimal import Decimal
+
     from models import Product
 
     p = Product(
@@ -1292,6 +1304,7 @@ def sample_product(db_session, sample_tenant, sample_warehouse):
 def sample_product_with_stock(db_session, sample_tenant, sample_warehouse):
     """Create a product with real stock via StockService."""
     from decimal import Decimal
+
     from models import Product
     from services.stock_service import StockService
 
@@ -1313,8 +1326,8 @@ def sample_product_with_stock(db_session, sample_tenant, sample_warehouse):
 @pytest.fixture
 def sample_gl_accounts(db_session, sample_tenant, app):
     """Ensure core chart of accounts exists for the tenant."""
-    from services.gl_service import GLService
     from services.gl_accounting_setup import GLAccountingSetupService
+    from services.gl_service import GLService
 
     with app.app_context():
         GLService.ensure_core_accounts(tenant_id=sample_tenant.id)

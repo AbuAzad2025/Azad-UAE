@@ -1,8 +1,9 @@
-from flask import Flask
-from flask_socketio import SocketIO, emit, join_room, leave_room
-from flask_login import current_user
 import logging
 from datetime import datetime
+
+from flask import Flask
+from flask_login import current_user
+from flask_socketio import SocketIO, emit, join_room, leave_room
 
 logger = logging.getLogger(__name__)
 

@@ -1,5 +1,5 @@
 import pytest
-from sqlalchemy import create_engine, insert, MetaData, Table, Column, Integer, String
+from sqlalchemy import Column, Integer, MetaData, String, Table, create_engine, insert
 
 from utils.safe_sql import (
     assert_known_column,

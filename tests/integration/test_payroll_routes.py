@@ -9,7 +9,7 @@ from decimal import Decimal
 class TestPayrollProcess:
     def test_process_payroll_creates_transaction_and_gl(self, app, db_session, client):
         tid = str(uuid.uuid4())[:8]
-        from models import Tenant, Branch, User, Role, Employee
+        from models import Branch, Employee, Role, Tenant, User
         from services.gl_service import GLService
 
         tenant = Tenant(

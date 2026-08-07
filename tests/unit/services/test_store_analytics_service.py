@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 from models import Product, Sale, SaleLine
@@ -31,7 +31,7 @@ class TestOrderStats:
             total_amount=Decimal("250"),
             amount=Decimal("250"),
             amount_aed=Decimal("250"),
-            sale_date=datetime.now(timezone.utc),
+            sale_date=datetime.now(UTC),
             checkout_payment_method="card",
         )
         cancelled = Sale(
@@ -47,7 +47,7 @@ class TestOrderStats:
             total_amount=Decimal("50"),
             amount=Decimal("50"),
             amount_aed=Decimal("50"),
-            sale_date=datetime.now(timezone.utc),
+            sale_date=datetime.now(UTC),
             checkout_payment_method="cod",
         )
         db_session.add_all([confirmed, cancelled])
@@ -91,7 +91,7 @@ class TestTopProducts:
             total_amount=Decimal("200"),
             amount=Decimal("200"),
             amount_aed=Decimal("200"),
-            sale_date=datetime.now(timezone.utc),
+            sale_date=datetime.now(UTC),
         )
         db_session.add(sale)
         db_session.flush()
@@ -117,7 +117,7 @@ class TestLowStockProducts:
         mocker.patch.object(
             StoreAnalyticsService,
             "_since",
-            return_value=datetime.now(timezone.utc) - timedelta(days=1),
+            return_value=datetime.now(UTC) - timedelta(days=1),
         )
         mocker.patch(
             "services.store_analytics_service.StoreService.get_tenant_store",
@@ -150,7 +150,7 @@ class TestLowStockProducts:
 
 class TestDailyOrdersChart:
     def test_groups_by_day(self, db_session, sample_tenant, sample_user, sample_customer, online_warehouse):
-        day = datetime.now(timezone.utc).replace(hour=12, minute=0, second=0, microsecond=0)
+        day = datetime.now(UTC).replace(hour=12, minute=0, second=0, microsecond=0)
         for i in range(2):
             sale = Sale(
                 tenant_id=sample_tenant.id,

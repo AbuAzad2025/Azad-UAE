@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from extensions import db
 
@@ -49,14 +49,14 @@ class AzadSubscriptionFee(db.Model):
 
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])

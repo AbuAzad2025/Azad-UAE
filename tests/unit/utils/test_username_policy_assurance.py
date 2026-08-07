@@ -6,8 +6,8 @@ import pytest
 
 from utils.username_policy import (
     PLATFORM_RESERVED,
-    build_company_username,
     branch_key,
+    build_company_username,
     is_platform_reserved,
     is_platform_user,
     normalize_username,

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -111,7 +111,7 @@ def _product_rows(count=25, high_usage=False):
         row.sales_count = 60 if high_usage else (20 if i % 2 == 0 else 3)
         row.total_sold = Decimal("100")
         row.avg_quantity = Decimal("2")
-        row.last_sale_date = datetime.now(timezone.utc) - timedelta(days=7)
+        row.last_sale_date = datetime.now(UTC) - timedelta(days=7)
         rows.append(row)
     return rows
 
@@ -648,8 +648,8 @@ class TestSpecializedWave7:
             assert SecurityRules.is_owner() is False
 
     def test_system_knowledge_root_and_nested(self):
-        import ai_knowledge.system_knowledge as sk_root
         import ai_knowledge.knowledge.system_knowledge as sk_nested
+        import ai_knowledge.system_knowledge as sk_root
 
         assert sk_root.get_model_info("Customer") or sk_root.get_model_info("missing") is None
         assert sk_root.get_permission_info("manage_inventory") or sk_root.get_permission_info("x") is None
@@ -680,11 +680,11 @@ class TestMiscWave7:
         assert "prediction" in pred or "forecast" in pred or isinstance(pred, dict)
 
     def test_dialects_and_personality(self):
+        from ai_knowledge.personality.azad_personality import AzadPersonality
         from ai_knowledge.personality.dialects import (
             apply_dialect,
             get_dialectal_greeting,
         )
-        from ai_knowledge.personality.azad_personality import AzadPersonality
 
         assert apply_dialect("مرحبا", "palestinian")
         assert get_dialectal_greeting("gulf")
@@ -852,12 +852,12 @@ class TestWave8FinalPush:
             assert "نشط" in self._safe_smart(responses, "أداء performance تقدم progress شبكات neural")
 
     def test_semantic_arabic_intents_and_agents(self):
-        from ai_knowledge.neural.semantic_matcher import SemanticMatcher
         from ai_knowledge.agents.multi_agent_system import (
-            SalesAgent,
             AccountingAgent,
             InventoryAgent,
+            SalesAgent,
         )
+        from ai_knowledge.neural.semantic_matcher import SemanticMatcher
 
         matcher = SemanticMatcher()
         intents = list(matcher.intents_db.keys())
@@ -884,10 +884,10 @@ class TestWave8FinalPush:
         assert isinstance(inv.execute("مخزون stock", {}), dict)
 
     def test_security_vision_code_neural(self, knowledge_path, tmp_path):
-        from ai_knowledge.specialized.security_rules import SecurityRules
-        from ai_knowledge.neural.vision_processor import VisionProcessor
         from ai_knowledge.generation.code_generator import CodeGenerator
         from ai_knowledge.neural.neural_engine import AzadNeuralEngine
+        from ai_knowledge.neural.vision_processor import VisionProcessor
+        from ai_knowledge.specialized.security_rules import SecurityRules
 
         user = MagicMock(is_authenticated=True, is_owner=True, username="owner")
         with patch("ai_knowledge.specialized.security_rules.current_user", user):
@@ -935,10 +935,10 @@ class TestWave9PushTo99:
 
     def test_analytics_remaining_branches(self):
         from ai_knowledge.analytics.analytics_predictions import (
-            SalesAnalytics,
+            CashFlowAnalytics,
             InventoryAnalytics,
             ProfitAnalytics,
-            CashFlowAnalytics,
+            SalesAnalytics,
         )
 
         volatile = SalesAnalytics.predict_next_month_sales([100, 10, 200, 5, 300, 8, 400, 12])

@@ -11,9 +11,9 @@
 """
 
 import logging
-from datetime import datetime
 from collections import defaultdict
-from typing import Any, List
+from datetime import datetime
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -136,7 +136,7 @@ class SelfReflectionEngine:
 
         logger.warning(f"🔴 Error logged: {error_type} - {error_message[:50]}")
 
-    def suggest_improvements(self) -> List[str]:
+    def suggest_improvements(self) -> list[str]:
         """
         اقتراح تحسينات بناءً على التأمل
 

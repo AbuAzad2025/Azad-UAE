@@ -18,7 +18,7 @@ from __future__ import annotations
 import os
 import subprocess  # nosec B404 -- audited chokepoint: only this module may import subprocess (shell=False + argv[0] allowlist enforced)
 import sys
-from typing import List, Mapping, Optional, Sequence
+from collections.abc import Mapping, Sequence
 
 # Executables permitted by basename (OS-agnostic: .exe appended automatically
 # on Windows).  Anything not in these sets is rejected before execution.
@@ -61,9 +61,9 @@ class SecureSubprocess:
         argv: Sequence[str],
         *,
         allowed_basenames: frozenset[str],
-        env: Optional[Mapping[str, str]] = None,
+        env: Mapping[str, str] | None = None,
         timeout: int = 600,
-        cwd: Optional[str] = None,
+        cwd: str | None = None,
         encoding: str = "utf-8",
         errors: str = "replace",
     ) -> subprocess.CompletedProcess:
@@ -75,7 +75,7 @@ class SecureSubprocess:
         if not argv:
             raise ValueError("argv required")
         _validate_basename_allowlist(argv[0], allowed_basenames)
-        cmd: List[str] = [str(x) for x in argv]
+        cmd: list[str] = [str(x) for x in argv]
         return subprocess.run(  # nosec B603 -- shell=False is mandatory and argv[0] is allowlisted by basename above
             cmd,
             shell=False,
@@ -92,9 +92,9 @@ class SecureSubprocess:
     def run_pg_tool(
         argv: Sequence[str],
         *,
-        env: Optional[Mapping[str, str]] = None,
+        env: Mapping[str, str] | None = None,
         timeout: int = 3600,
-        cwd: Optional[str] = None,
+        cwd: str | None = None,
     ) -> subprocess.CompletedProcess:
         """Run a PostgreSQL client tool (allowlisted basenames)."""
         return SecureSubprocess.run(
@@ -109,7 +109,7 @@ class SecureSubprocess:
     def run_git(
         argv: Sequence[str],
         *,
-        cwd: Optional[str] = None,
+        cwd: str | None = None,
         timeout: int = 15,
     ) -> subprocess.CompletedProcess:
         """Run the git CLI (allowlisted basename)."""
@@ -127,8 +127,8 @@ class SecureSubprocess:
         script_rel_path: str,
         args: Sequence[str],
         *,
-        cwd: Optional[str] = None,
-        env: Optional[Mapping[str, str]] = None,
+        cwd: str | None = None,
+        env: Mapping[str, str] | None = None,
         timeout: int = 600,
     ) -> subprocess.CompletedProcess:
         """Run a ``.py`` file under the repo root (path-traversal guarded)."""
@@ -152,8 +152,8 @@ class SecureSubprocess:
         module: str,
         args: Sequence[str],
         *,
-        cwd: Optional[str] = None,
-        env: Optional[Mapping[str, str]] = None,
+        cwd: str | None = None,
+        env: Mapping[str, str] | None = None,
         timeout: int = 600,
     ) -> subprocess.CompletedProcess:
         """Run ``python -m <module>`` with the current interpreter."""

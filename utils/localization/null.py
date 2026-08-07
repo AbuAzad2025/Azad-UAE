@@ -3,6 +3,7 @@ NullStrategy — Returns zero tax / empty reports for unsupported countries.
 """
 
 from decimal import Decimal
+
 from .engine import LocalizationStrategy
 
 

@@ -2,14 +2,16 @@
 
 import re
 from datetime import datetime
+from typing import Any
+
 from flask import current_app
 from flask_login import current_user
+
 from services.logging_core import LoggingCore
-from typing import Any
 from utils.currency_utils import (
-    get_system_default_currency,
-    get_currency_symbol,
     get_currency_name_ar,
+    get_currency_symbol,
+    get_system_default_currency,
 )
 
 
@@ -27,7 +29,7 @@ def register_context_processors(app):
 
     # The same helpers are injected per-request as callable globals below; also
     # register them as real filters so `value|format_currency` compiles too.
-    from utils.helpers import format_currency, timeago, format_date, format_number, format_time, format_datetime
+    from utils.helpers import format_currency, format_date, format_datetime, format_number, format_time, timeago
 
     # Imported Jinja2 macros run in their own namespace and cannot see the
     # context-processor globals above — register format_currency as a real
@@ -57,12 +59,12 @@ def register_context_processors(app):
 
     @app.context_processor
     def utility_processor() -> dict[str, Any]:
-        from utils.helpers import format_currency, timeago, format_date, format_number, format_time, format_datetime
+        from utils.helpers import format_currency, format_date, format_datetime, format_number, format_time, timeago
+        from utils.i18n import get_current_language, is_rtl, t
         from utils.number_to_arabic import number_to_arabic_words
-        from utils.i18n import t, is_rtl, get_current_language
         from utils.report_registry import (
-            REPORT_REGISTRY,
             REPORT_CATEGORIES,
+            REPORT_REGISTRY,
             get_reports_by_category,
         )
 
@@ -134,7 +136,7 @@ def register_context_processors(app):
                         source="app.context_processor.tenant_settings",
                     )
                 except Exception:
-                    pass
+                    current_app.logger.debug("LoggingCore inner guard failed", exc_info=True)
 
         try:
             from models.system_settings import SystemSettings
@@ -194,7 +196,7 @@ def register_context_processors(app):
                         source="app.context_processor.system_settings",
                     )
                 except Exception:
-                    pass
+                    current_app.logger.debug("LoggingCore inner guard failed", exc_info=True)
             developer_name_ar = app.config.get("DEVELOPER_NAME_AR", "")
             developer_name = app.config.get("DEVELOPER_NAME", "")
             developer_credit = app.config.get("DEVELOPER_CREDIT", "")
@@ -220,16 +222,16 @@ def register_context_processors(app):
 
         developer_whatsapp_link = _normalize_whatsapp_link(developer_whatsapp or developer_phone)
 
+        from utils.branching import get_active_branch, get_active_branch_mode
         from utils.constants import (
-            PERMISSIONS,
-            PERMISSION_CODES,
             CUSTOMER_TYPES,
-            PAYMENT_STATUSES,
-            SALE_STATUSES,
             PAYMENT_METHODS,
+            PAYMENT_STATUSES,
+            PERMISSION_CODES,
+            PERMISSIONS,
+            SALE_STATUSES,
             USER_ROLES,
         )
-        from utils.branching import get_active_branch, get_active_branch_mode
 
         current_user_permissions = []
         if current_user.is_authenticated and getattr(current_user, "has_permission", None):
@@ -267,7 +269,7 @@ def register_context_processors(app):
                         source="app.context_processor.available_tenants",
                     )
                 except Exception:
-                    pass
+                    current_app.logger.debug("LoggingCore inner guard failed", exc_info=True)
         app_enums = {
             "permissions": PERMISSIONS,
             "permission_codes": PERMISSION_CODES,
@@ -286,17 +288,20 @@ def register_context_processors(app):
         tenant_subscription = {}
         wa_upgrade_link = ""
         try:
+            from sqlalchemy import func, select
+
+            from extensions import db
+            from models import (
+                Branch,
+                Customer,
+                Product,
+                Supplier,
+                User,
+                Warehouse,
+            )
             from models import (
                 Tenant as Tn,
-                User,
-                Branch,
-                Warehouse,
-                Product,
-                Customer,
-                Supplier,
             )
-            from sqlalchemy import func, select
-            from extensions import db
 
             _t = Tn.get_current()
             if _t:
@@ -344,7 +349,7 @@ def register_context_processors(app):
                     source="app.context_processor.whatsapp_link",
                 )
             except Exception:
-                pass
+                current_app.logger.debug("LoggingCore inner guard failed (whatsapp_link)", exc_info=True)
 
         return {
             "format_currency": format_currency,

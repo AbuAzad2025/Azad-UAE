@@ -3,9 +3,8 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-
-from services.gl_provisioning_service import GLProvisioningService, ProvisionResult
 from models.gl_account_registry import BASE_ACCOUNTS, GLAccountTemplate
+from services.gl_provisioning_service import GLProvisioningService, ProvisionResult
 
 
 class TestProvisionResult:

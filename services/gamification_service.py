@@ -1,6 +1,7 @@
 from decimal import Decimal
-from typing import Dict, List, Optional
+
 from flask_babel import gettext
+
 from extensions import db
 
 
@@ -26,7 +27,7 @@ class GamificationService:
     }
 
     @staticmethod
-    def award_points(user_id: int, action: str, metadata: Optional[Dict] = None) -> Dict:
+    def award_points(user_id: int, action: str, metadata: dict | None = None) -> dict:
         from models import User
 
         user = db.session.get(User, user_id)
@@ -63,7 +64,7 @@ class GamificationService:
         }
 
     @staticmethod
-    def get_user_badge(points: int) -> Dict:
+    def get_user_badge(points: int) -> dict:
         for badge_key in reversed(list(GamificationService.BADGES.keys())):
             badge = GamificationService.BADGES[badge_key]
             if points >= badge["points"]:  # type: ignore[operator]
@@ -76,7 +77,7 @@ class GamificationService:
         return GamificationService.BADGES["newbie"]
 
     @staticmethod
-    def get_leaderboard(limit: int = 10) -> List[Dict]:
+    def get_leaderboard(limit: int = 10) -> list[dict]:
         from models import User
         from utils.tenanting import scoped_user_query
 
@@ -106,8 +107,8 @@ class GamificationService:
         return leaderboard
 
     @staticmethod
-    def get_user_stats(user_id: int) -> Dict:
-        from models import User, Sale
+    def get_user_stats(user_id: int) -> dict:
+        from models import Sale, User
 
         user = db.session.get(User, user_id)
         if not user:

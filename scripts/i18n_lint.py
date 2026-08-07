@@ -44,7 +44,6 @@ EXCLUDED_MIXED = {
     "PWA",
     "IBAN",
     "SWIFT",
-    "VAT",
 }
 
 
@@ -53,7 +52,7 @@ def main() -> int:
     if callable(reconfigure):
         reconfigure(encoding="utf-8")
     path = str(Path(__file__).resolve().parent.parent / "utils" / "i18n.py")
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         source = f.read()
 
     # 1. AST parse

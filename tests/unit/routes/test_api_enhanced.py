@@ -9,6 +9,7 @@ ordering, and service-call argument passthrough.
 from __future__ import annotations
 
 import uuid
+from datetime import UTC
 
 import pytest
 
@@ -43,7 +44,7 @@ def no_perm_client(client, db_session, sample_tenant):
 @pytest.fixture
 def foreign_sale(db_session):
     """A sale belonging to a different tenant (IDOR probe)."""
-    from datetime import datetime, timezone
+    from datetime import datetime
     from decimal import Decimal
 
     from flask import g
@@ -80,7 +81,7 @@ def foreign_sale(db_session):
             sale_number=f"FOREIGN-{unique}",
             customer_id=customer.id,
             seller_id=user.id,
-            sale_date=datetime.now(timezone.utc),
+            sale_date=datetime.now(UTC),
             subtotal=Decimal("50"),
             total_amount=Decimal("50"),
             amount=Decimal("50"),

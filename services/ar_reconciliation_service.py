@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from flask_babel import lazy_gettext
 from sqlalchemy import func
 
-from flask_babel import lazy_gettext
 from extensions import db
 from models import Customer, GLAccount, GLJournalEntry, GLJournalLine, Sale
 from services.gl_service import GL_ACCOUNTS

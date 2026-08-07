@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 
@@ -33,7 +33,7 @@ class TestAuditServiceGetLogs:
     """get_audit_logs_data — pagination, filters, tenant isolation."""
 
     def test_returns_items_pagination_stats_users(self, mocker):
-        log1 = MagicMock(action="create", user_id=1, created_at=datetime.now(timezone.utc))
+        log1 = MagicMock(action="create", user_id=1, created_at=datetime.now(UTC))
         _build_audit_mocks(mocker, [log1])
 
         from services.audit_service import AuditService

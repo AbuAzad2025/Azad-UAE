@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
@@ -16,10 +16,10 @@ def _entry(**kwargs):
     e.description = "Test entry"
     e.total_debit = Decimal("1000")
     e.entry_type = "manual"
-    e.entry_date = datetime(2026, 1, 15, tzinfo=timezone.utc)
+    e.entry_date = datetime(2026, 1, 15, tzinfo=UTC)
     e.is_posted = kwargs.get("is_posted", False)
     e.is_reversed = kwargs.get("is_reversed", False)
-    e.updated_at = datetime(2026, 6, 1, tzinfo=timezone.utc)
+    e.updated_at = datetime(2026, 6, 1, tzinfo=UTC)
     return e
 
 
@@ -262,7 +262,7 @@ class TestAccountHandler:
         account.code = "1100"
         account.full_name = "Cash"
         account.get_balance.return_value = Decimal("150000")
-        account.updated_at = datetime.now(timezone.utc)
+        account.updated_at = datetime.now(UTC)
         RealTimeAccountingListeners._on_account_updated(account)
         assert "رصيد عالي" in capsys.readouterr().out
 
@@ -296,7 +296,7 @@ class TestChequeHandler:
         cheque.status_ar = status
         cheque.amount_aed = Decimal("500")
         cheque.cheque_type = "incoming"
-        cheque.updated_at = datetime.now(timezone.utc)
+        cheque.updated_at = datetime.now(UTC)
         RealTimeAccountingListeners._on_cheque_updated(cheque)
         assert cheque.cheque_bank_number in capsys.readouterr().out
 

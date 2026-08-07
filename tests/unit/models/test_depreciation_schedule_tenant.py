@@ -2,7 +2,8 @@
 
 from datetime import date
 from decimal import Decimal
-from models.fixed_asset import FixedAsset, DepreciationSchedule
+
+from models.fixed_asset import DepreciationSchedule, FixedAsset
 from models.gl import GLAccount
 
 

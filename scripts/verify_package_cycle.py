@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.factory import create_app
 from extensions import db
-from models.package import Package, TENANT_FLAG_COLUMNS, TENANT_LIMIT_COLUMNS
+from models.package import TENANT_FLAG_COLUMNS, TENANT_LIMIT_COLUMNS, Package
 from models.tenant import Tenant
 from services.saas_provisioning_service import SaaSProvisioningService, seed_packages
 
@@ -82,8 +82,8 @@ with app.app_context():
         print(f"    {'PASS' if tenant.max_sales_per_month == 300 else 'FAIL'}  sales/mo={tenant.max_sales_per_month}")
 
         # 6) Feature gate + monthly quota helpers see the downgraded tenant
-        from utils.tenant_limits import get_tenant_usage_summary
         from utils.pos_features import plan_meets
+        from utils.tenant_limits import get_tenant_usage_summary
 
         usage = {row["key"]: row for row in get_tenant_usage_summary(tenant)}
         print("[6] derived views on basic:")

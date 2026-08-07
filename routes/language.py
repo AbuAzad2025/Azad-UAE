@@ -2,9 +2,9 @@
 Language Routes - تبديل اللغة
 """
 
+from flask import Blueprint, flash, redirect, request, session
 from flask_babel import gettext
 
-from flask import Blueprint, request, redirect, session, flash
 from utils.safe_redirect import safe_redirect_target
 
 language_bp = Blueprint("language", __name__, url_prefix="/language")

@@ -22,7 +22,6 @@ from __future__ import annotations
 import uuid
 from decimal import Decimal
 
-
 from extensions import db
 
 CASH_ACCT = "1110"

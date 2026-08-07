@@ -1,31 +1,33 @@
-from flask_babel import gettext
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
+
 from flask import (
     Blueprint,
-    render_template,
-    redirect,
-    url_for,
-    flash,
-    request,
     current_app,
+    flash,
+    redirect,
+    render_template,
+    request,
+    url_for,
 )
-from flask_login import login_required, current_user
+from flask_babel import gettext
+from flask_login import current_user, login_required
+
 from extensions import db, limiter
 from models import Purchase, PurchaseReturn, PurchaseReturnLine
 from services.currency_service import CurrencyService
+from services.logging_core import LoggingCore
 from services.purchase_service import PurchaseService
-from utils.decorators import permission_required
 from utils.branching import (
     ensure_warehouse_access,
     get_accessible_warehouses,
-    should_show_all_branch_columns,
     get_active_branch_id,
+    should_show_all_branch_columns,
 )
-from services.logging_core import LoggingCore
-from utils.currency_utils import resolve_default_currency, get_system_default_currency
-from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
-from utils.tenanting import tenant_query, tenant_get_or_404, get_active_tenant_id
+from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
+from utils.decorators import permission_required
 from utils.gl_reference_types import GLRef
+from utils.tenanting import get_active_tenant_id, tenant_get_or_404, tenant_query
 
 purchases_bp = Blueprint("purchases", __name__, url_prefix="/purchases")
 
@@ -200,8 +202,8 @@ def print_purchase(**kwargs):
     if scoped_branch_id is not None and purchase.branch_id != scoped_branch_id:
         return render_template("errors/403.html"), 403
     from models.invoice_settings import InvoiceSettings
-    from utils.tenant_branding import get_print_header_context
     from utils.qr_generator import generate_qr_data_url
+    from utils.tenant_branding import get_print_header_context
 
     tid = purchase.tenant_id
     tenant, settings, company = InvoiceSettings.company_print_context(tid)
@@ -267,8 +269,8 @@ def edit(**kwargs):
 @permission_required("manage_purchases")
 def delete(**kwargs):
     """حذف (أرشفة) فاتورة شراء"""
-    from services.archive_service import ArchiveService
     from models import Cheque
+    from services.archive_service import ArchiveService
 
     record_id = kwargs.pop("id")
     purchase = tenant_get_or_404(Purchase, record_id)
@@ -489,6 +491,7 @@ def api_calculate_purchase_totals():
                     line_total = line_subtotal - line_discount
                     subtotal += line_total
             except (ValueError, TypeError, KeyError, InvalidOperation):
+                current_app.logger.debug("Skipping invalid purchase line: %r", line, exc_info=True)
                 continue
 
         freight = Decimal(str(data.get("freight", 0) or 0))
@@ -518,6 +521,7 @@ def api_calculate_purchase_totals():
                 if Decimal(str(line.get("quantity", 0))) > 0:
                     positive_lines += 1
             except (ValueError, TypeError, InvalidOperation):
+                current_app.logger.debug("Skipping invalid quantity line: %r", line, exc_info=True)
                 continue
 
         return (

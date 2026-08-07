@@ -5,9 +5,9 @@ Integration tests for dashboard isolation and feature injection across three pan
 3. Super Admin Dashboard (owner dashboard)
 """
 
-from decimal import Decimal
-from datetime import datetime, timezone
 import uuid
+from datetime import UTC, datetime
+from decimal import Decimal
 
 
 def _make_tenant(db_session, name, slug, currency="ILS", piv=False, tax_rate=Decimal("5.00")):
@@ -59,7 +59,7 @@ def _make_warehouse(db_session, tenant_id, branch_id, allow_neg=False):
 
 
 def _make_user(db_session, tenant_id, branch_id=None, role_slug="seller", is_owner=False):
-    from models import User, Role
+    from models import Role, User
 
     suffix = str(uuid.uuid4())[:8]
     unique_slug = f"{role_slug}_{suffix}"
@@ -94,7 +94,7 @@ def _make_customer(db_session, tenant_id):
 
 
 def _make_sale(db_session, tenant_id, branch_id, user_id, amount=Decimal("100.000")):
-    from models import Sale, Customer
+    from models import Customer, Sale
 
     c = Customer.query.filter_by(tenant_id=tenant_id).first()
     if not c:
@@ -105,7 +105,7 @@ def _make_sale(db_session, tenant_id, branch_id, user_id, amount=Decimal("100.00
         customer_id=c.id,
         sale_number=f"SAL-{uuid.uuid4().hex[:8].upper()}",
         seller_id=user_id,
-        sale_date=datetime.now(timezone.utc),
+        sale_date=datetime.now(UTC),
         subtotal=amount,
         total_amount=amount,
         amount=amount,
@@ -147,7 +147,7 @@ def _make_sale_line(
 
 def _make_manager_user(db_session, tenant_id, branch_id):
     """Create a user with super_admin role for company_admin_required endpoints."""
-    from models import User, Role
+    from models import Role, User
 
     suffix = str(uuid.uuid4())[:8]
     role = Role.query.filter_by(slug="super_admin").first()
@@ -288,7 +288,7 @@ class TestTenantDashboardStats:
 
 class TestDashboardPermissions:
     def test_cashier_cannot_apply_discount(self, db_session):
-        from models import User, Role, Tenant
+        from models import Role, Tenant, User
 
         suffix = str(uuid.uuid4())[:8]
         t = Tenant(
@@ -319,7 +319,7 @@ class TestDashboardPermissions:
         assert u.can_apply_discount() is True
 
     def test_cashier_edit_price_false(self, db_session):
-        from models import User, Role, Tenant
+        from models import Role, Tenant, User
 
         suffix = str(uuid.uuid4())[:8]
         t = Tenant(name=f"EdP_CT_{suffix}", name_ar=f"EdP_CT_{suffix}", slug=f"edp_ct_{suffix}")
@@ -340,7 +340,7 @@ class TestDashboardPermissions:
         assert not u.can_edit_price()
 
     def test_manager_can_edit_price(self, db_session):
-        from models import User, Role, Tenant
+        from models import Role, Tenant, User
 
         suffix = str(uuid.uuid4())[:8]
         t = Tenant(
@@ -375,7 +375,7 @@ class TestDashboardPermissions:
         assert u.can_edit_price() is True
 
     def test_seller_cannot_apply_discount(self, db_session):
-        from models import User, Role, Tenant
+        from models import Role, Tenant, User
 
         suffix = str(uuid.uuid4())[:8]
         t = Tenant(
@@ -561,7 +561,7 @@ class TestWarehouseNegativeToggle:
 class TestSupervisorOverride:
     @staticmethod
     def _make_supervisor(db_session, tenant_id, branch_id):
-        from models import User, Role
+        from models import Role, User
 
         suffix = str(uuid.uuid4())[:8]
         role = Role.query.filter_by(slug="super_admin").first()
@@ -663,7 +663,7 @@ class TestSuperAdminEndpoints:
     @staticmethod
     def _make_global_owner(db_session):
         """Create a platform owner user with tenant_id=None (global)."""
-        from models import User, Role
+        from models import Role, User
 
         suffix = str(uuid.uuid4())[:8]
         role = Role.query.filter_by(slug="developer").first()

@@ -1,6 +1,7 @@
-from models.dashboard import DashboardWidget, UserDashboardLayout
-from extensions import db
 from sqlalchemy.exc import IntegrityError
+
+from extensions import db
+from models.dashboard import DashboardWidget, UserDashboardLayout
 
 
 class DashboardService:

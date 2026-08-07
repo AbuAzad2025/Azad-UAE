@@ -1,27 +1,30 @@
-from utils.tenanting import get_active_tenant_id
-from decimal import Decimal, ROUND_HALF_UP
+from datetime import UTC
+from decimal import ROUND_HALF_UP, Decimal
+
 from flask import current_app
-from flask_login import current_user
 from flask_babel import gettext
+from flask_login import current_user
+
 from extensions import db
 from models import Receipt, Sale
-from services.exchange_rate_service import ExchangeRateService
-from services.gl_service import GLService
-from services.gl_posting import post_or_fail, GlPostingError
 from services.cheque_service import process_cheque_receive
-from utils.gl_reference_types import GLRef
-from utils.helpers import generate_number
+from services.exchange_rate_service import ExchangeRateService
+from services.gl_posting import GlPostingError, post_or_fail
+from services.gl_service import GLService
 from utils.branching import branch_scope_id_for
 from utils.currency_utils import (
+    convert_and_quantize_aed,
     get_system_default_currency,
     resolve_tenant_base_currency,
-    convert_and_quantize_aed,
 )
 from utils.field_validators import (
     canonical_payment_type,
     validate_currency_code,
     validate_payment_method,
 )
+from utils.gl_reference_types import GLRef
+from utils.helpers import generate_number
+from utils.tenanting import get_active_tenant_id
 
 
 class PaymentService:
@@ -50,14 +53,14 @@ class PaymentService:
     def _resolve_branch_id(explicit_branch_id=None, *, user=None, sale=None):
         if explicit_branch_id:
             return explicit_branch_id
-        if sale and getattr(sale, "branch_id", None):
+        if sale and (sale.branch_id if sale is not None else None):
             return sale.branch_id
         scoped_branch_id = branch_scope_id_for(user or current_user)
         if scoped_branch_id:
             return scoped_branch_id
-        if user is not None and getattr(user, "branch_id", None):
+        if user is not None and (user.branch_id if user is not None else None):
             return user.branch_id
-        return getattr(current_user, "branch_id", None) if getattr(current_user, "is_authenticated", False) else None
+        return (current_user.branch_id if current_user is not None else None) if getattr(current_user, "is_authenticated", False) else None
 
     @staticmethod
     def _post_supplier_fx_gain_loss(payment, purchase, tenant_id):
@@ -175,7 +178,7 @@ class PaymentService:
                 ...
             }
         """
-        from models import Supplier, Payment
+        from models import Payment, Supplier
 
         supplier_id = payment_data.get("supplier_id")
         amount = payment_data.get("amount")
@@ -202,15 +205,15 @@ class PaymentService:
                 Payment,
                 "payment_number",
                 branch_id=branch_id,
-                tenant_id=getattr(supplier, "tenant_id", None),
+                tenant_id=(supplier.tenant_id if supplier is not None else None),
             )
 
             exchange_rate = PaymentService._resolve_transaction_rate(currency, user_exchange_rate)
 
             payment = Payment(
-                tenant_id=getattr(supplier, "tenant_id", None)
+                tenant_id=(supplier.tenant_id if supplier is not None else None)
                 or (
-                    getattr(current_user, "tenant_id", None)
+                    (current_user.tenant_id if current_user is not None else None)
                     if current_user and getattr(current_user, "is_authenticated", False)
                     else None
                 ),
@@ -223,7 +226,7 @@ class PaymentService:
                 currency=currency,
                 exchange_rate=exchange_rate,
                 amount_aed=convert_and_quantize_aed(
-                    amount, currency, exchange_rate, tenant_id=getattr(supplier, "tenant_id", None)
+                    amount, currency, exchange_rate, tenant_id=(supplier.tenant_id if supplier is not None else None)
                 ),
                 payment_method=payment_method,
                 reference_number=reference_number,
@@ -237,13 +240,14 @@ class PaymentService:
             db.session.flush()
 
             if payment_method == "cheque" and cheque_number:
-                from datetime import datetime, timezone
+                from datetime import datetime
+
                 from models import Cheque
 
                 cheque = Cheque(
-                    tenant_id=getattr(supplier, "tenant_id", None)
+                    tenant_id=(supplier.tenant_id if supplier is not None else None)
                     or (
-                        getattr(current_user, "tenant_id", None)
+                        (current_user.tenant_id if current_user is not None else None)
                         if current_user and getattr(current_user, "is_authenticated", False)
                         else None
                     ),
@@ -255,10 +259,10 @@ class PaymentService:
                     currency=currency,
                     exchange_rate=exchange_rate,
                     amount_aed=convert_and_quantize_aed(
-                        amount, currency, exchange_rate, tenant_id=getattr(supplier, "tenant_id", None)
+                        amount, currency, exchange_rate, tenant_id=(supplier.tenant_id if supplier is not None else None)
                     ),
-                    issue_date=datetime.now(timezone.utc).date(),
-                    due_date=cheque_date or datetime.now(timezone.utc).date(),
+                    issue_date=datetime.now(UTC).date(),
+                    due_date=cheque_date or datetime.now(UTC).date(),
                     bank_name=bank_name,
                     status="pending",
                     notes=notes,
@@ -276,8 +280,8 @@ class PaymentService:
                 supplier.apply_payment(_D(str(payment.amount_aed or 0)))
 
             # GL Entries
-            tenant_id = getattr(supplier, "tenant_id", None) or (
-                getattr(current_user, "tenant_id", None)
+            tenant_id = (supplier.tenant_id if supplier is not None else None) or (
+                (current_user.tenant_id if current_user is not None else None)
                 if current_user and getattr(current_user, "is_authenticated", False)
                 else None
             )
@@ -353,14 +357,14 @@ class PaymentService:
         branch_id: int | None = None,
     ):
         """Create incoming payment (refund from supplier) with GL posting."""
-        from models import Supplier, Payment
+        from models import Payment, Supplier
         from services.gl_service import GLService
 
         supplier = db.session.get(Supplier, supplier_id)
         if not supplier:
             raise ValueError(gettext("المورد غير موجود"))
 
-        tenant_id = getattr(supplier, "tenant_id", None) or get_active_tenant_id(current_user)
+        tenant_id = (supplier.tenant_id if supplier is not None else None) or get_active_tenant_id(current_user)
 
         payment_number = generate_number(
             "PAY",
@@ -443,9 +447,10 @@ class PaymentService:
         user_id: int | None = None,
     ):
         """Create incoming payment (receipt from customer). Updates customer balance."""
+        from datetime import datetime
+
         from models import Customer, Payment
         from utils.helpers import generate_number
-        from datetime import datetime, timezone
 
         customer = db.session.get(Customer, customer_id)
         if not customer:
@@ -455,8 +460,8 @@ class PaymentService:
             "PAY",
             Payment,
             "payment_number",
-            branch_id=getattr(current_user, "branch_id", None),
-            tenant_id=tenant_id or getattr(customer, "tenant_id", None),
+            branch_id=(current_user.branch_id if current_user is not None else None),
+            tenant_id=tenant_id or (customer.tenant_id if customer is not None else None),
         )
         payment = Payment(
             payment_number=payment_number,
@@ -465,12 +470,12 @@ class PaymentService:
             amount_aed=Decimal(str(amount)),
             currency="AED",
             exchange_rate=1,
-            payment_date=datetime.now(timezone.utc),
+            payment_date=datetime.now(UTC),
             payment_method=payment_method,
             user_id=user_id or (current_user.id if current_user and current_user.is_authenticated else None),
             direction="incoming",
             payment_type="customer_payment",
-            tenant_id=tenant_id or getattr(customer, "tenant_id", None),
+            tenant_id=tenant_id or (customer.tenant_id if customer is not None else None),
         )
         db.session.add(payment)
         db.session.flush()
@@ -522,8 +527,8 @@ class PaymentService:
         if not customer:
             raise ValueError("Customer not found.")
 
-        tenant_id = getattr(customer, "tenant_id", None) or (
-            getattr(current_user, "tenant_id", None)
+        tenant_id = (customer.tenant_id if customer is not None else None) or (
+            (current_user.tenant_id if current_user is not None else None)
             if current_user and getattr(current_user, "is_authenticated", False)
             else None
         )
@@ -585,9 +590,9 @@ class PaymentService:
                 from models import Cheque
 
                 cheque = Cheque(
-                    tenant_id=getattr(customer, "tenant_id", None)
+                    tenant_id=(customer.tenant_id if customer is not None else None)
                     or (
-                        getattr(current_user, "tenant_id", None)
+                        (current_user.tenant_id if current_user is not None else None)
                         if current_user and getattr(current_user, "is_authenticated", False)
                         else None
                     ),
@@ -624,16 +629,16 @@ class PaymentService:
             else:
                 # GL Entry for Standard Receipt (Cash/Bank)
                 try:
-                    GLService.ensure_core_accounts(tenant_id=getattr(receipt, "tenant_id", None))
+                    GLService.ensure_core_accounts(tenant_id=(receipt.tenant_id if receipt is not None else None))
                     payment_account = GLService.get_payment_debit_account(
                         receipt.payment_method,
                         branch_id=receipt.branch_id,
-                        tenant_id=getattr(receipt, "tenant_id", None),
+                        tenant_id=(receipt.tenant_id if receipt is not None else None),
                     )
                     credit_account = GLService.get_customer_credit_account(
                         customer,
                         branch_id=receipt.branch_id,
-                        tenant_id=getattr(receipt, "tenant_id", None),
+                        tenant_id=(receipt.tenant_id if receipt is not None else None),
                     )
 
                     # Create GL entries
@@ -780,13 +785,13 @@ class PaymentService:
                     from models import Payment
 
                     sale_payment = Payment(
-                        tenant_id=getattr(sale, "tenant_id", None) or getattr(customer, "tenant_id", None),
+                        tenant_id=(sale.tenant_id if sale is not None else None) or (customer.tenant_id if customer is not None else None),
                         payment_number=generate_number(
                             "PAY-S",
                             Payment,
                             "payment_number",
                             branch_id=sale.branch_id,
-                            tenant_id=getattr(sale, "tenant_id", None),
+                            tenant_id=(sale.tenant_id if sale is not None else None),
                         ),
                         payment_type="sale_payment",
                         direction="incoming",
@@ -1086,13 +1091,13 @@ class PaymentService:
                 from models import Payment
 
                 sale_payment = Payment(
-                    tenant_id=getattr(sale, "tenant_id", None) or getattr(customer, "tenant_id", None),
+                    tenant_id=(sale.tenant_id if sale is not None else None) or (customer.tenant_id if customer is not None else None),
                     payment_number=generate_number(
                         "PAY-S",
                         Payment,
                         "payment_number",
                         branch_id=sale.branch_id,
-                        tenant_id=getattr(sale, "tenant_id", None),
+                        tenant_id=(sale.tenant_id if sale is not None else None),
                     ),
                     payment_type="sale_payment",
                     direction="incoming",

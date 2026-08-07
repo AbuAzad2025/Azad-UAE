@@ -421,8 +421,7 @@ class TestOnlineWarehouseIsolation:
     """Queries scoped to 'online' warehouses must NOT leak physical stock."""
 
     def test_online_warehouse_filter_excludes_physical_stock(self, mocker, app_factory):
-        from routes.products import products_bp
-        from routes.products import _get_alternative_warehouses
+        from routes.products import _get_alternative_warehouses, products_bp
 
         app = app_factory(products_bp)
 

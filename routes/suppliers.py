@@ -3,31 +3,30 @@
 إدارة الموردين: عرض، إضافة، تعديل، تقارير
 """
 
-from flask_babel import gettext
-
 from flask import (
     Blueprint,
-    render_template,
-    redirect,
-    url_for,
-    flash,
-    request,
-    jsonify,
     current_app,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
 )
-from flask_login import login_required, current_user
-from sqlalchemy import select
+from flask_babel import gettext
+from flask_login import current_user, login_required
+from sqlalchemy import desc, func, select
+
 from extensions import db, limiter
-from models import Supplier, Purchase, Payment, PurchaseReturn
-from utils.decorators import permission_required, admin_required, branch_scope_id
-from utils.branching import should_show_all_branch_columns
+from models import Payment, Purchase, PurchaseReturn, Supplier
 from services.logging_core import LoggingCore
-from utils.currency_utils import resolve_default_currency, get_system_default_currency
-from utils.tenanting import tenant_query, tenant_get_or_404, get_active_tenant_id
-from sqlalchemy import func, desc
+from utils.branching import should_show_all_branch_columns
+from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
-from utils.structured_logging import log_mutation
+from utils.decorators import admin_required, branch_scope_id, permission_required
 from utils.error_messages import ErrorMessages
+from utils.structured_logging import log_mutation
+from utils.tenanting import get_active_tenant_id, tenant_get_or_404, tenant_query
 
 suppliers_bp = Blueprint("suppliers", __name__, url_prefix="/suppliers")
 
@@ -196,7 +195,7 @@ def create():
             initial_balance = request.form.get("initial_balance", type=float, default=0)
 
             # Check tenant supplier limit
-            from utils.tenant_limits import check_suppliers_limit, TenantLimitError
+            from utils.tenant_limits import TenantLimitError, check_suppliers_limit
 
             try:
                 check_suppliers_limit()
@@ -438,6 +437,7 @@ def delete(**kwargs):
 def print_statement(**kwargs):
     """طباعة كشف حساب المورد"""
     from datetime import datetime
+
     from sqlalchemy import func
 
     record_id = kwargs.pop("id")
@@ -574,8 +574,8 @@ def print_statement(**kwargs):
             running += t["credit"] - t["debit"]
         t["balance"] = running
 
-    from utils.tenant_branding import get_print_header_context
     from models.invoice_settings import InvoiceSettings
+    from utils.tenant_branding import get_print_header_context
 
     tenant, settings, company = InvoiceSettings.company_print_context(tid)
     branding = get_print_header_context(tid)

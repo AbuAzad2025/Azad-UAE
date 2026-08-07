@@ -2,15 +2,16 @@
 Advanced Monitoring and Logging System
 """
 
-import time
-import logging
 import json
-from datetime import datetime, timezone
+import logging
+import time
+from datetime import UTC, datetime
 from functools import wraps
-from flask import request, g, current_app
-from extensions import db
+
+from flask import current_app, g, request
 from sqlalchemy import text
 
+from extensions import db
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ class PerformanceMonitor:
             elapsed = time.time() - g.start_time
 
             log_data = {
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "request_id": getattr(g, "request_id", "N/A"),
                 "method": request.method,
                 "path": request.path,
@@ -88,7 +89,7 @@ class ErrorLogger:
     def log_error(error, context=None):
         """Log error with context"""
         error_data = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "error_type": type(error).__name__,
             "error_message": str(error),
             "request_id": getattr(g, "request_id", "N/A"),
@@ -121,7 +122,7 @@ class MetricsCollector:
     def record_metric(metric_name, value, tags=None):
         """Record a metric"""
         metric_data = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "metric": metric_name,
             "value": value,
             "tags": tags or {},
@@ -207,7 +208,7 @@ class HealthCheck:
 
         return {
             "status": "healthy" if overall_healthy else "unhealthy",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "checks": checks,
         }
 
@@ -258,7 +259,7 @@ def setup_advanced_logging(app):
             return jsonify({"error": "Unauthorized"}), 403
 
         metrics_data = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "health": HealthCheck.get_health_status(),
             "app_info": {
                 "version": app.config.get("APP_VERSION"),

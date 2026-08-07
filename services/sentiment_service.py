@@ -1,5 +1,5 @@
+
 from flask_babel import gettext
-from typing import Dict
 
 
 class SentimentAnalyzer:
@@ -75,7 +75,7 @@ class SentimentAnalyzer:
     ]
 
     @staticmethod
-    def analyze(text: str) -> Dict:
+    def analyze(text: str) -> dict:
         if not text:
             return {
                 "polarity": 0.0,
@@ -121,7 +121,7 @@ class SentimentAnalyzer:
         }
 
     @staticmethod
-    def analyze_customer_feedback(customer_id: int) -> Dict:
+    def analyze_customer_feedback(customer_id: int) -> dict:
         from models import Sale
 
         sales = Sale.query.filter_by(customer_id=customer_id).all()

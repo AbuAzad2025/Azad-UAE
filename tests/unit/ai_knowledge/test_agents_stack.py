@@ -116,27 +116,24 @@ class TestIntelligentAssistant:
         with patch(
             "ai_knowledge.learning.quick_learner.quick_learner.get_answer",
             return_value=None,
+        ), patch(
+            "ai_knowledge.neural.semantic_matcher.understand_message",
+            side_effect=RuntimeError(),
         ):
-            with patch(
-                "ai_knowledge.neural.semantic_matcher.understand_message",
-                side_effect=RuntimeError(),
-            ):
-                result = assistant.process("x", user_id=1, context={})
-                assert result.get("method") == "help" or "response" in result
+            result = assistant.process("x", user_id=1, context={})
+            assert result.get("method") == "help" or "response" in result
 
     def test_greeting_response(self, assistant):
         with patch(
             "ai_knowledge.learning.quick_learner.quick_learner.get_answer",
             return_value=None,
-        ):
-            with patch(
-                "ai_knowledge.neural.semantic_matcher.understand_message",
-                return_value={"intent": "greeting", "confidence": 0.9},
-            ):
-                with patch.object(assistant, "_collect_real_data", return_value={}):
-                    with patch.object(assistant, "_analyze_and_reason", return_value={}):
-                        result = assistant.process("مرحبا", user_id=1, context={})
-                        assert "response" in result
+        ), patch(
+            "ai_knowledge.neural.semantic_matcher.understand_message",
+            return_value={"intent": "greeting", "confidence": 0.9},
+        ), patch.object(assistant, "_collect_real_data", return_value={}):
+            with patch.object(assistant, "_analyze_and_reason", return_value={}):
+                result = assistant.process("مرحبا", user_id=1, context={})
+                assert "response" in result
 
     def test_intelligent_response_helper(self):
         with patch(

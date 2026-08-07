@@ -2,8 +2,9 @@
 XSS Prevention & Input Sanitization
 """
 
-from markupsafe import escape
 import re
+
+from markupsafe import escape
 
 
 def _resolve_bleach():

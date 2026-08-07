@@ -9,7 +9,7 @@ real through the fake stripe module.
 from __future__ import annotations
 
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 import pytest
@@ -43,7 +43,7 @@ def _checkout_event(**overrides):
         "type": "checkout.session.completed",
         "data": {
             "object": {
-                "created": int(datetime.now(timezone.utc).timestamp()),
+                "created": int(datetime.now(UTC).timestamp()),
                 "metadata": {
                     "tenant_id": "3",
                     "package_id": "4",
@@ -123,7 +123,7 @@ class TestStripeWebhook:
 
     def test_stale_event_rejected(self, client, stripe_secret, mocker):
         event = _checkout_event()
-        event["data"]["object"]["created"] = int(datetime.now(timezone.utc).timestamp()) - 600
+        event["data"]["object"]["created"] = int(datetime.now(UTC).timestamp()) - 600
         _fake_stripe(mocker, event=event)
         resp = client.post("/billing-webhook/stripe", data=b"payload")
         assert resp.status_code == 400
@@ -211,7 +211,7 @@ class TestGenericWebhook:
                 "event": "payment_succeeded",
                 "tenant_id": 3,
                 "package_id": 4,
-                "timestamp": int(datetime.now(timezone.utc).timestamp()) - 600,
+                "timestamp": int(datetime.now(UTC).timestamp()) - 600,
             },
             headers={"X-Webhook-Secret": self._SECRET},
         )
@@ -262,13 +262,13 @@ class TestHelpers:
         assert _reject_stale_timestamp(None) is None
         assert _reject_stale_timestamp({}) is None
         assert _reject_stale_timestamp({"created": "not-a-number"}) is None
-        fresh = {"created": int(datetime.now(timezone.utc).timestamp())}
+        fresh = {"created": int(datetime.now(UTC).timestamp())}
         assert _reject_stale_timestamp(fresh) is None
 
     def test_reject_stale_timestamp_old_event(self, app):
         from routes.billing_webhooks import _reject_stale_timestamp
 
-        old = {"timestamp": int(datetime.now(timezone.utc).timestamp()) - 600}
+        old = {"timestamp": int(datetime.now(UTC).timestamp()) - 600}
         with app.test_request_context():
             body, status = _reject_stale_timestamp(old)
         assert status == 400

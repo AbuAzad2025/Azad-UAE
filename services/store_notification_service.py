@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from flask import current_app
-
 from flask_babel import gettext
+
 from models import TenantStore
 
 
@@ -69,6 +69,7 @@ class StoreNotificationService:
 
         try:
             from flask_mail import Message
+
             from extensions import mail
 
             admin_url = None

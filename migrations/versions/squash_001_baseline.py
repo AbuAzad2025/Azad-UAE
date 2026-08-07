@@ -11,8 +11,8 @@ explicit downgrade. NO tenant data is seeded here -- tenants (e.g. demo) are
 provisioned by the dedicated seed commands at runtime.
 """
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy import text
 
 revision = "squash_001"

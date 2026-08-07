@@ -1,7 +1,6 @@
 """User management routes — list, create, edit, activate, delete."""
 
 from __future__ import annotations
-from flask_babel import gettext
 
 from flask import (
     Blueprint,
@@ -13,6 +12,7 @@ from flask import (
     request,
     url_for,
 )
+from flask_babel import gettext
 from flask_login import current_user, login_required
 
 from extensions import db, limiter

@@ -16,7 +16,7 @@ from services.document_verification_service import (
 
 class TestVerifiableTypes:
     def test_expected_types(self):
-        assert VERIFIABLE_TYPES == {"sale", "payment", "receipt", "purchase", "expense"}
+        assert {"sale", "payment", "receipt", "purchase", "expense"} == VERIFIABLE_TYPES
 
 
 class TestResolveVerificationUrl:

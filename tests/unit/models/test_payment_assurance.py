@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import MagicMock
@@ -22,7 +22,7 @@ def _payment_stub(**kwargs):
         amount = kwargs.get("amount", Decimal("100"))
         amount_aed = kwargs.get("amount_aed", Decimal("100"))
         currency = kwargs.get("currency", "AED")
-        payment_date = kwargs.get("payment_date", datetime.now(timezone.utc))
+        payment_date = kwargs.get("payment_date", datetime.now(UTC))
         cheque_id = kwargs.get("cheque_id")
         sale = kwargs.get("sale")
         sale_id = kwargs.get("sale_id")
@@ -56,7 +56,7 @@ def _receipt_stub(**kwargs):
         amount = kwargs.get("amount", Decimal("200"))
         amount_aed = kwargs.get("amount_aed", Decimal("200"))
         currency = kwargs.get("currency", "AED")
-        receipt_date = kwargs.get("receipt_date", datetime.now(timezone.utc))
+        receipt_date = kwargs.get("receipt_date", datetime.now(UTC))
         cheque_id = kwargs.get("cheque_id", 5)
         customer = kwargs.get("customer", SimpleNamespace(name="Customer"))
 

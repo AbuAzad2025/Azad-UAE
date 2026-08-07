@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -319,7 +319,7 @@ class TestClosePosSession:
 
     def test_close_posts_shortage_gl(self, mocker):
         session = self._session()
-        session.closed_at = datetime.now(timezone.utc)
+        session.closed_at = datetime.now(UTC)
 
         def _close(closing, notes):
             session.difference = Decimal("-5")
@@ -352,7 +352,7 @@ class TestClosePosSession:
 
     def test_close_posts_overage_gl(self, mocker):
         session = self._session()
-        session.closed_at = datetime.now(timezone.utc)
+        session.closed_at = datetime.now(UTC)
 
         def _close(closing, notes):
             session.difference = Decimal("8")
@@ -385,7 +385,7 @@ class TestClosePosSession:
 
     def test_close_header_cash_account_fallback(self, mocker):
         session = self._session()
-        session.closed_at = datetime.now(timezone.utc)
+        session.closed_at = datetime.now(UTC)
 
         def _close(closing, notes):
             session.difference = Decimal("-2")

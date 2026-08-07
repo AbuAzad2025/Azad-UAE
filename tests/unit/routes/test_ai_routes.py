@@ -559,10 +559,9 @@ class TestChatEndpoint:
         with patch(
             "routes.ai_routes.shared._get_conversation_context",
             return_value={"last_action": "عميل", "option": "1", "step": 1},
-        ):
-            with patch("ai_knowledge.action_dispatcher.action_dispatcher") as ad:
-                ad.parse_chat_action.return_value = None
-                resp = ai_client.post("/ai/chat", json={"message": "مساعدة"})
+        ), patch("ai_knowledge.action_dispatcher.action_dispatcher") as ad:
+            ad.parse_chat_action.return_value = None
+            resp = ai_client.post("/ai/chat", json={"message": "مساعدة"})
         assert "مساعدة" in resp.get_json()["response"]
 
 
@@ -819,10 +818,9 @@ class TestProcessUserActionDirect:
         with patch(
             "routes.ai_routes.actions._conversation_ctx",
             return_value={"last_action": "رصيد"},
-        ):
-            with patch("models.customer.Customer") as Customer:
-                Customer.query.filter_by.return_value = chain
-                result = _process_user_action("4", mock_user)
+        ), patch("models.customer.Customer") as Customer:
+            Customer.query.filter_by.return_value = chain
+            result = _process_user_action("4", mock_user)
         assert "Ali" in result
 
     def test_rasid_option_4_no_customers(self, mock_user):
@@ -833,10 +831,9 @@ class TestProcessUserActionDirect:
         with patch(
             "routes.ai_routes.actions._conversation_ctx",
             return_value={"last_action": "رصيد"},
-        ):
-            with patch("models.customer.Customer") as Customer:
-                Customer.query.filter_by.return_value = chain
-                result = _process_user_action("4", mock_user)
+        ), patch("models.customer.Customer") as Customer:
+            Customer.query.filter_by.return_value = chain
+            result = _process_user_action("4", mock_user)
         assert "لا يوجد عملاء" in result
 
     def test_customer_step1_prompt(self, mock_user):
@@ -1025,20 +1022,17 @@ class TestProcessExcelIntelligently:
         df = pd.DataFrame({"name": ["Prod"], "part": ["PN1"], "price": [10]})
         warehouse = _obj(name="Main", id=1)
         file_obj = MagicMock()
-        with patch("routes.ai_routes.assistant.pd.read_excel", return_value=df):
-            with patch(
-                "routes.ai_routes._intelligent_column_detector",
-                return_value={"name": "name", "part_number": "part", "price": "price"},
-            ):
-                with patch("models.Warehouse") as Warehouse:
-                    with patch("models.Product") as Product:
-                        with patch("routes.ai_routes.assistant.db"):
-                            with patch("routes.ai_routes.actions.assign_tenant_id"):
-                                with patch("routes.ai_routes.assistant.StockService"):
-                                    with patch("routes.ai_routes._train_ai_from_excel"):
-                                        Warehouse.query.filter_by.return_value.first.return_value = warehouse
-                                        Product.query.filter_by.return_value.first.return_value = None
-                                        result = _process_excel_intelligently(file_obj, 1, mock_user)
+        with patch("routes.ai_routes.assistant.pd.read_excel", return_value=df), patch(
+            "routes.ai_routes._intelligent_column_detector",
+            return_value={"name": "name", "part_number": "part", "price": "price"},
+        ), patch("models.Warehouse") as Warehouse, patch("models.Product") as Product:
+            with patch("routes.ai_routes.assistant.db"):
+                with patch("routes.ai_routes.actions.assign_tenant_id"):
+                    with patch("routes.ai_routes.assistant.StockService"):
+                        with patch("routes.ai_routes._train_ai_from_excel"):
+                            Warehouse.query.filter_by.return_value.first.return_value = warehouse
+                            Product.query.filter_by.return_value.first.return_value = None
+                            result = _process_excel_intelligently(file_obj, 1, mock_user)
         assert result["success"] is True
 
     def test_unknown_structure(self, mock_user):
@@ -1047,23 +1041,20 @@ class TestProcessExcelIntelligently:
         with patch(
             "routes.ai_routes.assistant.pd.read_excel",
             return_value=pd.DataFrame({"x": [1]}),
-        ):
-            with patch("routes.ai_routes._intelligent_column_detector", return_value=None):
-                result = _process_excel_intelligently(MagicMock(), 1, mock_user)
+        ), patch("routes.ai_routes._intelligent_column_detector", return_value=None):
+            result = _process_excel_intelligently(MagicMock(), 1, mock_user)
         assert result["success"] is False
 
     def test_missing_warehouse(self, mock_user):
         from routes.ai_routes import _process_excel_intelligently
 
         df = pd.DataFrame({"name": ["A"], "part": ["P"], "price": [1]})
-        with patch("routes.ai_routes.assistant.pd.read_excel", return_value=df):
-            with patch(
-                "routes.ai_routes._intelligent_column_detector",
-                return_value={"name": "name", "part_number": "part", "price": "price"},
-            ):
-                with patch("models.Warehouse") as Warehouse:
-                    Warehouse.query.filter_by.return_value.first.return_value = None
-                    result = _process_excel_intelligently(MagicMock(), 99, mock_user)
+        with patch("routes.ai_routes.assistant.pd.read_excel", return_value=df), patch(
+            "routes.ai_routes._intelligent_column_detector",
+            return_value={"name": "name", "part_number": "part", "price": "price"},
+        ), patch("models.Warehouse") as Warehouse:
+            Warehouse.query.filter_by.return_value.first.return_value = None
+            result = _process_excel_intelligently(MagicMock(), 99, mock_user)
         assert "غير موجود" in result["error"]
 
     def test_updates_existing_product(self, mock_user):
@@ -1072,18 +1063,15 @@ class TestProcessExcelIntelligently:
         df = pd.DataFrame({"name": ["A"], "part": ["P1"], "price": [20]})
         warehouse = _obj(name="W")
         existing = MagicMock(id=5)
-        with patch("routes.ai_routes.assistant.pd.read_excel", return_value=df):
-            with patch(
-                "routes.ai_routes._intelligent_column_detector",
-                return_value={"name": "name", "part_number": "part", "price": "price"},
-            ):
-                with patch("models.Warehouse") as Warehouse:
-                    with patch("models.Product") as Product:
-                        with patch("routes.ai_routes.assistant.db"):
-                            with patch("routes.ai_routes._train_ai_from_excel"):
-                                Warehouse.query.filter_by.return_value.first.return_value = warehouse
-                                Product.query.filter_by.return_value.first.return_value = existing
-                                result = _process_excel_intelligently(MagicMock(), 1, mock_user)
+        with patch("routes.ai_routes.assistant.pd.read_excel", return_value=df), patch(
+            "routes.ai_routes._intelligent_column_detector",
+            return_value={"name": "name", "part_number": "part", "price": "price"},
+        ), patch("models.Warehouse") as Warehouse, patch("models.Product") as Product:
+            with patch("routes.ai_routes.assistant.db"):
+                with patch("routes.ai_routes._train_ai_from_excel"):
+                    Warehouse.query.filter_by.return_value.first.return_value = warehouse
+                    Product.query.filter_by.return_value.first.return_value = existing
+                    result = _process_excel_intelligently(MagicMock(), 1, mock_user)
         assert result["success"] is True
         assert result["details"]["updated"] == 1
 
@@ -1267,9 +1255,8 @@ class TestAssistant:
         with patch(
             "utils.branching.get_accessible_warehouses",
             side_effect=RuntimeError("fail"),
-        ):
-            with patch("routes.ai_routes.assistant.render_template", return_value="err") as rt:
-                resp = ai_client.get("/ai/assistant")
+        ), patch("routes.ai_routes.assistant.render_template", return_value="err") as rt:
+            resp = ai_client.get("/ai/assistant")
         assert resp.status_code == 500
         rt.assert_called_with("errors/500.html")
 
@@ -1394,17 +1381,15 @@ class TestLearningRoutes:
         assert resp.status_code == 500
 
     def test_evolve_ok(self, ai_client):
-        with _admin_patch():
-            with patch("routes.ai_routes.knowledge.learning_system") as ls:
-                ls.evolve_knowledge.return_value = {"evolved": True}
-                resp = ai_client.post("/ai/learning/evolve")
+        with _admin_patch(), patch("routes.ai_routes.knowledge.learning_system") as ls:
+            ls.evolve_knowledge.return_value = {"evolved": True}
+            resp = ai_client.post("/ai/learning/evolve")
         assert resp.status_code == 200
 
     def test_evolve_error(self, ai_client):
-        with _admin_patch():
-            with patch("routes.ai_routes.knowledge.learning_system") as ls:
-                ls.evolve_knowledge.side_effect = RuntimeError("x")
-                resp = ai_client.post("/ai/learning/evolve")
+        with _admin_patch(), patch("routes.ai_routes.knowledge.learning_system") as ls:
+            ls.evolve_knowledge.side_effect = RuntimeError("x")
+            resp = ai_client.post("/ai/learning/evolve")
         assert resp.status_code == 500
 
     def test_evolve_requires_admin(self, ai_client, mock_user):
@@ -1429,17 +1414,15 @@ class TestImprovementRoutes:
         assert resp.status_code == 500
 
     def test_auto_improve_ok(self, ai_client):
-        with _admin_patch():
-            with patch("routes.ai_routes.knowledge.self_improvement") as si:
-                si.auto_improve.return_value = ["fix1"]
-                resp = ai_client.post("/ai/improvement/auto-improve")
+        with _admin_patch(), patch("routes.ai_routes.knowledge.self_improvement") as si:
+            si.auto_improve.return_value = ["fix1"]
+            resp = ai_client.post("/ai/improvement/auto-improve")
         assert resp.status_code == 200
 
     def test_auto_improve_error(self, ai_client):
-        with _admin_patch():
-            with patch("routes.ai_routes.knowledge.self_improvement") as si:
-                si.auto_improve.side_effect = RuntimeError("e")
-                resp = ai_client.post("/ai/improvement/auto-improve")
+        with _admin_patch(), patch("routes.ai_routes.knowledge.self_improvement") as si:
+            si.auto_improve.side_effect = RuntimeError("e")
+            resp = ai_client.post("/ai/improvement/auto-improve")
         assert resp.status_code == 500
 
     def test_progress_ok(self, ai_client):
@@ -1455,13 +1438,12 @@ class TestImprovementRoutes:
         assert resp.status_code == 500
 
     def test_set_goal_ok(self, ai_client):
-        with _admin_patch():
-            with patch("routes.ai_routes.knowledge.self_improvement") as si:
-                si.set_improvement_goal.return_value = {"ok": True}
-                resp = ai_client.post(
-                    "/ai/improvement/set-goal",
-                    json={"area": "speed", "target_score": 95},
-                )
+        with _admin_patch(), patch("routes.ai_routes.knowledge.self_improvement") as si:
+            si.set_improvement_goal.return_value = {"ok": True}
+            resp = ai_client.post(
+                "/ai/improvement/set-goal",
+                json={"area": "speed", "target_score": 95},
+            )
         assert resp.status_code == 200
 
     def test_set_goal_missing_fields_400(self, ai_client):
@@ -1470,10 +1452,9 @@ class TestImprovementRoutes:
         assert resp.status_code == 400
 
     def test_set_goal_error(self, ai_client):
-        with _admin_patch():
-            with patch("routes.ai_routes.knowledge.self_improvement") as si:
-                si.set_improvement_goal.side_effect = RuntimeError("e")
-                resp = ai_client.post("/ai/improvement/set-goal", json={"area": "a", "target_score": 1})
+        with _admin_patch(), patch("routes.ai_routes.knowledge.self_improvement") as si:
+            si.set_improvement_goal.side_effect = RuntimeError("e")
+            resp = ai_client.post("/ai/improvement/set-goal", json={"area": "a", "target_score": 1})
         assert resp.status_code == 500
 
 
@@ -1491,17 +1472,15 @@ class TestGlobalRoutes:
         assert resp.status_code == 500
 
     def test_expertise_update_ok(self, ai_client):
-        with _admin_patch():
-            with patch("routes.ai_routes.knowledge.expertise_updater") as eu:
-                eu.update_expertise.return_value = {"updated": 1}
-                resp = ai_client.get("/ai/global/expertise-update")
+        with _admin_patch(), patch("routes.ai_routes.knowledge.expertise_updater") as eu:
+            eu.update_expertise.return_value = {"updated": 1}
+            resp = ai_client.get("/ai/global/expertise-update")
         assert resp.status_code == 200
 
     def test_expertise_update_error(self, ai_client):
-        with _admin_patch():
-            with patch("routes.ai_routes.knowledge.expertise_updater") as eu:
-                eu.update_expertise.side_effect = RuntimeError("e")
-                resp = ai_client.get("/ai/global/expertise-update")
+        with _admin_patch(), patch("routes.ai_routes.knowledge.expertise_updater") as eu:
+            eu.update_expertise.side_effect = RuntimeError("e")
+            resp = ai_client.get("/ai/global/expertise-update")
         assert resp.status_code == 500
 
 
@@ -1644,10 +1623,9 @@ class TestDataRoutes:
 
 class TestKnowledgeRoutes:
     def test_add_website_ok(self, ai_client):
-        with _admin_patch():
-            with patch("routes.ai_routes.knowledge.knowledge_expander") as ke:
-                ke.add_website.return_value = {"success": True}
-                resp = ai_client.post("/ai/knowledge/add-website", json={"url": "https://example.com"})
+        with _admin_patch(), patch("routes.ai_routes.knowledge.knowledge_expander") as ke:
+            ke.add_website.return_value = {"success": True}
+            resp = ai_client.post("/ai/knowledge/add-website", json={"url": "https://example.com"})
         assert resp.status_code == 200
 
     def test_add_website_missing_url_400(self, ai_client):
@@ -1656,17 +1634,15 @@ class TestKnowledgeRoutes:
         assert resp.status_code == 400
 
     def test_add_website_error(self, ai_client):
-        with _admin_patch():
-            with patch("routes.ai_routes.knowledge.knowledge_expander") as ke:
-                ke.add_website.side_effect = RuntimeError("e")
-                resp = ai_client.post("/ai/knowledge/add-website", json={"url": "https://x.com"})
+        with _admin_patch(), patch("routes.ai_routes.knowledge.knowledge_expander") as ke:
+            ke.add_website.side_effect = RuntimeError("e")
+            resp = ai_client.post("/ai/knowledge/add-website", json={"url": "https://x.com"})
         assert resp.status_code == 500
 
     def test_add_document_ok(self, ai_client):
-        with _admin_patch():
-            with patch("routes.ai_routes.knowledge.knowledge_expander") as ke:
-                ke.add_document.return_value = {"success": True}
-                resp = ai_client.post("/ai/knowledge/add-document", json={"title": "T", "content": "C"})
+        with _admin_patch(), patch("routes.ai_routes.knowledge.knowledge_expander") as ke:
+            ke.add_document.return_value = {"success": True}
+            resp = ai_client.post("/ai/knowledge/add-document", json={"title": "T", "content": "C"})
         assert resp.status_code == 200
 
     def test_add_document_missing_400(self, ai_client):
@@ -1675,10 +1651,9 @@ class TestKnowledgeRoutes:
         assert resp.status_code == 400
 
     def test_add_document_error(self, ai_client):
-        with _admin_patch():
-            with patch("routes.ai_routes.knowledge.knowledge_expander") as ke:
-                ke.add_document.side_effect = RuntimeError("e")
-                resp = ai_client.post("/ai/knowledge/add-document", json={"title": "T", "content": "C"})
+        with _admin_patch(), patch("routes.ai_routes.knowledge.knowledge_expander") as ke:
+            ke.add_document.side_effect = RuntimeError("e")
+            resp = ai_client.post("/ai/knowledge/add-document", json={"title": "T", "content": "C"})
         assert resp.status_code == 500
 
     def test_search_ok(self, ai_client):

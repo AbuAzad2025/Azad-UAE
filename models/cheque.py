@@ -3,10 +3,11 @@
 إدارة شاملة للشيكات الواردة والصادرة
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from decimal import Decimal
+
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
-from decimal import Decimal
 
 
 class Cheque(db.Model):
@@ -107,11 +108,11 @@ class Cheque(db.Model):
     archive_reason = db.Column(db.String(500))
 
     # Meta
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
 
@@ -155,7 +156,7 @@ class Cheque(db.Model):
     def archive(self, reason=None):
         """أرشفة الشيك - إخفاء إداري فقط، دون عكس القيد"""
         self.is_active = False
-        self.archived_at = datetime.now(timezone.utc)
+        self.archived_at = datetime.now(UTC)
         if reason:
             self.archive_reason = reason
 

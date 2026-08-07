@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import os
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 from services.monitoring_service import MonitoringService
 

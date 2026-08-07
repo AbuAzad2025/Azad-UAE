@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -325,14 +325,13 @@ class TestAzadResponsesWave4:
                 "ai_knowledge.personality.azad_responses.CUSTOMER_SERVICE",
                 {"principles": ["p1"]},
                 create=True,
-            ),
+            ),patch(
+            "ai_knowledge.specialized.customer_service.CUSTOMER_SERVICE",
+            {"principles": ["p1", "p2"]},
+        )
         ):
-            with patch(
-                "ai_knowledge.specialized.customer_service.CUSTOMER_SERVICE",
-                {"principles": ["p1", "p2"]},
-            ):
-                assert "tip" in responses.smart_response("نصiحة تعامل مع عميل customer")
-                assert "p1" in responses.smart_response("عميل customer زبون")
+            assert "tip" in responses.smart_response("نصiحة تعامل مع عميل customer")
+            assert "p1" in responses.smart_response("عميل customer زبون")
         with (
             self._safe_mocks(),
             patch(
@@ -683,11 +682,11 @@ class TestAzadResponsesWave4:
         assert "/sales/create" in responses._show_system_quick_links()
 
     def test_smart_sales_analysis_trends(self, responses):
-        sale7 = MagicMock(amount_aed=700, status="confirmed", sale_date=datetime.now(timezone.utc))
+        sale7 = MagicMock(amount_aed=700, status="confirmed", sale_date=datetime.now(UTC))
         sale30 = MagicMock(
             amount_aed=100,
             status="confirmed",
-            sale_date=datetime.now(timezone.utc) - timedelta(days=10),
+            sale_date=datetime.now(UTC) - timedelta(days=10),
         )
         with patch("models.Sale") as MockSale:
             MockSale.sale_date = _Col()
@@ -1397,9 +1396,9 @@ class TestSecondaryWave4:
 
     def test_knowledge_base_ecu_and_search(self):
         from ai_knowledge.knowledge_base import (
-            search_parts,
-            get_compatible_parts,
             get_automotive_ecu_knowledge,
+            get_compatible_parts,
+            search_parts,
         )
 
         hits = search_parts("محرك engine")
@@ -1907,11 +1906,11 @@ class TestWave4Extended:
             assert integrator.get_customer_sales_summary(1)["success"] is False
 
     def test_knowledge_expansion_and_global(self, knowledge_path):
-        from ai_knowledge.expansion.knowledge_expansion import KnowledgeExpander
         from ai_knowledge.expansion.global_knowledge import (
-            GlobalKnowledgeConnector,
             GlobalExpertiseUpdater,
+            GlobalKnowledgeConnector,
         )
+        from ai_knowledge.expansion.knowledge_expansion import KnowledgeExpander
 
         expander = KnowledgeExpander()
         with patch("builtins.open", side_effect=OSError("read fail")):
@@ -1951,9 +1950,9 @@ class TestWave4Extended:
 
     def test_action_dispatcher_remaining(self, mock_ai_user):
         from ai_knowledge.action_dispatcher import (
-            action_dispatcher,
             _get_active_tenant_id,
             _log_ai_error,
+            action_dispatcher,
         )
 
         with patch("flask.g", create=True) as g:
@@ -1997,9 +1996,9 @@ class TestWave4Extended:
 
     def test_analytics_and_learning_gaps(self):
         from ai_knowledge.analytics.analytics_predictions import (
-            SalesAnalytics,
             InventoryAnalytics,
             ProfitAnalytics,
+            SalesAnalytics,
         )
         from ai_knowledge.analytics.data_analyzer import DataAnalyzer
 

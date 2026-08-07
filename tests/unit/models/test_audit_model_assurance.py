@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 from models.audit import AuditLog
@@ -32,7 +32,7 @@ class TestAuditLogModel:
         log.action = "login"
         log.table_name = "users"
         log.record_id = 5
-        log.created_at = datetime(2025, 6, 1, tzinfo=timezone.utc)
+        log.created_at = datetime(2025, 6, 1, tzinfo=UTC)
         log.ip_address = "127.0.0.1"
         log.user = None
         data = log.to_dict()
@@ -46,7 +46,7 @@ class TestAuditLogModel:
         log.action = "export"
         log.table_name = "reports"
         log.record_id = None
-        log.created_at = datetime(2025, 6, 2, tzinfo=timezone.utc)
+        log.created_at = datetime(2025, 6, 2, tzinfo=UTC)
         log.ip_address = None
         log.user = MagicMock(username="admin")
         assert log.to_dict()["user"] == "admin"

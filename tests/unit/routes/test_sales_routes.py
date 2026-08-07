@@ -196,8 +196,8 @@ def _sales_patches(**kwargs):
 
 @pytest.fixture
 def sales_client(app_factory, bypass_permission_auth):
-    from routes.sales import sales_bp
     from routes.public import public_bp
+    from routes.sales import sales_bp
 
     app = app_factory(sales_bp, public_bp)
     return app.test_client()
@@ -205,8 +205,8 @@ def sales_client(app_factory, bypass_permission_auth):
 
 @pytest.fixture
 def sales_owner_client(app_factory, bypass_owner_auth):
-    from routes.sales import sales_bp
     from routes.public import public_bp
+    from routes.sales import sales_bp
 
     app = app_factory(sales_bp, public_bp)
     return app.test_client()

@@ -280,9 +280,8 @@ class TestAdjustStock:
         mock_logger = mocker.patch("services.stock_service.current_app.logger")
         from services.stock_service import StockService
 
-        with app.app_context():
-            with pytest.raises(RuntimeError, match="fail"):
-                StockService.adjust_stock(1, Decimal("1"))
+        with app.app_context(), pytest.raises(RuntimeError, match="fail"):
+            StockService.adjust_stock(1, Decimal("1"))
         mock_logger.error.assert_called_once()
 
 
@@ -397,9 +396,8 @@ class TestCreateMovement:
         mocker.patch("services.stock_service.current_user", MagicMock(is_authenticated=False))
         from services.stock_service import StockService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="المنتج غير موجود"):
-                StockService.create_movement(999, Decimal("1"), "purchase", warehouse_id=5)
+        with app.app_context(), pytest.raises(ValueError, match="المنتج غير موجود"):
+            StockService.create_movement(999, Decimal("1"), "purchase", warehouse_id=5)
 
     def test_invalid_warehouse_raises(self, mocker, app):
         product = _product()
@@ -408,9 +406,8 @@ class TestCreateMovement:
         _patch_warehouse_query(mocker, warehouse=None)
         from services.stock_service import StockService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="المستودع"):
-                StockService.create_movement(1, Decimal("1"), "purchase", warehouse_id=99)
+        with app.app_context(), pytest.raises(ValueError, match="المستودع"):
+            StockService.create_movement(1, Decimal("1"), "purchase", warehouse_id=99)
 
     def test_cross_tenant_warehouse_raises(self, mocker, app):
         product = _product(tenant_id=1)
@@ -420,9 +417,8 @@ class TestCreateMovement:
         _patch_warehouse_query(mocker, warehouse=foreign_wh)
         from services.stock_service import StockService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="لا ينتمي"):
-                StockService.create_movement(1, Decimal("1"), "purchase", warehouse_id=9)
+        with app.app_context(), pytest.raises(ValueError, match="لا ينتمي"):
+            StockService.create_movement(1, Decimal("1"), "purchase", warehouse_id=9)
 
     def test_auto_creates_warehouse_when_missing(self, mocker, app):
         product = _product(tenant_id=1)
@@ -500,9 +496,8 @@ class TestCreateMovement:
         mocker.patch("services.stock_service.StockMovement", return_value=MagicMock())
         from services.stock_service import StockService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="المخزون غير كاف"):
-                StockService.create_movement(1, Decimal("-5"), "sale", warehouse_id=5)
+        with app.app_context(), pytest.raises(ValueError, match="المخزون غير كاف"):
+            StockService.create_movement(1, Decimal("-5"), "sale", warehouse_id=5)
 
     def test_insufficient_new_pws_raises(self, mocker, app):
         product = _product(current_stock=Decimal("0"))
@@ -514,9 +509,8 @@ class TestCreateMovement:
         mocker.patch("services.stock_service.StockMovement", return_value=MagicMock())
         from services.stock_service import StockService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="أضف مخزوناً"):
-                StockService.create_movement(1, Decimal("-1"), "sale", warehouse_id=5)
+        with app.app_context(), pytest.raises(ValueError, match="أضف مخزوناً"):
+            StockService.create_movement(1, Decimal("-1"), "sale", warehouse_id=5)
 
     def test_global_stock_insufficient_raises(self, mocker, app):
         product = _product(current_stock=Decimal("1"))
@@ -530,9 +524,8 @@ class TestCreateMovement:
         mocker.patch("services.stock_service.StockMovement", return_value=MagicMock())
         from services.stock_service import StockService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="المخزون غير كاف"):
-                StockService.create_movement(1, Decimal("-5"), "sale", warehouse_id=5)
+        with app.app_context(), pytest.raises(ValueError, match="المخزون غير كاف"):
+            StockService.create_movement(1, Decimal("-5"), "sale", warehouse_id=5)
 
     def test_current_user_resolution_failure(self, mocker, app):
         product = _product()
@@ -582,9 +575,8 @@ class TestCreateMovement:
         mocker.patch("services.stock_service.current_user", MagicMock(is_authenticated=False))
         from services.stock_service import StockService
 
-        with app.app_context():
-            with pytest.raises(RuntimeError, match="no lock"):
-                StockService.create_movement(1, Decimal("1"), "purchase", warehouse_id=5)
+        with app.app_context(), pytest.raises(RuntimeError, match="no lock"):
+            StockService.create_movement(1, Decimal("1"), "purchase", warehouse_id=5)
 
     def test_warehouse_tenant_backfill(self, mocker, app):
         product = _product(tenant_id=1)

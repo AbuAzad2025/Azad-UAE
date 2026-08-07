@@ -1,19 +1,20 @@
 import logging
-from decimal import Decimal, ROUND_HALF_UP
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 
 from flask_babel import gettext
+
 from extensions import db
 from models import GLAccount, GLJournalEntry, GLJournalLine
-from models.tenant import Tenant
 from models._constants import (
     GL_CONCEPT_REGISTRY,
-    RESOLUTION_MODE_MAPPING,
     RESOLUTION_MODE_LIQUIDITY,
-    RESOLUTION_MODE_RECORD,
+    RESOLUTION_MODE_MAPPING,
     RESOLUTION_MODE_NON_POSTING,
+    RESOLUTION_MODE_RECORD,
 )
+from models.tenant import Tenant
 from services import gl_helpers
 from services.gl_account_resolver import (
     GLMappingError,
@@ -246,29 +247,29 @@ class GLService:
                 # For record mode: account.branch_id is None or equals branch_id
                 # For liquidity mode: account.branch_id must equal branch_id exactly
                 if resolution_mode == RESOLUTION_MODE_RECORD:
-                    if getattr(acct, "branch_id", None) is not None and getattr(acct, "branch_id", None) != branch_id:
+                    if acct.branch_id is not None and acct.branch_id != branch_id:
                         raise GLMappingError(
                             tenant_id=tenant_id,
                             concept_code=concept_code or "EXPLICIT_ACCOUNT",
                             branch_id=branch_id,
-                            issue=f"Account {acct.code} branch_id {getattr(acct, 'branch_id', None)} does not match required branch_id {branch_id} for record mode.",
+                            issue=f"Account {acct.code} branch_id {acct.branch_id} does not match required branch_id {branch_id} for record mode.",
                         )
                 elif resolution_mode == RESOLUTION_MODE_LIQUIDITY:
-                    if getattr(acct, "branch_id", None) != branch_id:
+                    if acct.branch_id != branch_id:
                         raise GLMappingError(
                             tenant_id=tenant_id,
                             concept_code=concept_code or "EXPLICIT_ACCOUNT",
                             branch_id=branch_id,
-                            issue=f"Account {acct.code} branch_id {getattr(acct, 'branch_id', None)} does not match required branch_id {branch_id} for liquidity mode.",
+                            issue=f"Account {acct.code} branch_id {acct.branch_id} does not match required branch_id {branch_id} for liquidity mode.",
                         )
             else:
                 # Without branch_id: account.branch_id must be None exactly
-                if getattr(acct, "branch_id", None) is not None:
+                if acct.branch_id is not None:
                     raise GLMappingError(
                         tenant_id=tenant_id,
                         concept_code=concept_code or "EXPLICIT_ACCOUNT",
                         branch_id=branch_id,
-                        issue=f"Account {acct.code} has branch_id {getattr(acct, 'branch_id', None)} but branch_id is required to be None.",
+                        issue=f"Account {acct.code} has branch_id {acct.branch_id} but branch_id is required to be None.",
                     )
 
             return acct
@@ -388,11 +389,11 @@ class GLService:
         gl_helpers.assert_period_open(date, tenant_id)
         entry_number = gl_helpers.next_entry_number(tenant_id, date)
 
+        from models import Branch
         from utils.field_validators import (
             validate_gl_line_sides,
             validate_reference_type_write,
         )
-        from models import Branch
 
         # Validate tenant/branch isolation at journal-entry boundary
         if branch_id is not None:
@@ -418,6 +419,7 @@ class GLService:
                 tenant = db.session.get(Tenant, tenant_id)
                 currency = resolve_tenant_base_currency(tenant)
             except Exception:
+                logger.debug("Tenant-scoped currency resolution failed; retrying by tenant id", exc_info=True)
                 currency = resolve_tenant_base_currency(tenant_id=tenant_id)
         if exchange_rate is None:
             exchange_rate = Decimal("1")
@@ -648,7 +650,7 @@ class GLService:
                     "partner_id": line.get("partner_id"),
                 }
             )
-        entry_date = date or datetime.now(timezone.utc)
+        entry_date = date or datetime.now(UTC)
         entry = GLService.create_journal_entry(
             entry_date,
             description,
@@ -668,6 +670,7 @@ class GLService:
     def get_vat_report(date_from=None, date_to=None, branch_id=None, tenant_id=None):
         """VAT summary: output (2121 credits) vs input (2122 debits). Includes posted entries only."""
         from sqlalchemy import func
+
         from utils.tax_settings import is_tax_enabled
 
         tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id)
@@ -856,7 +859,7 @@ class GLService:
         """إنشاء قيد يدوي — يستخدم post_entry بعد التحقق من الحسابات."""
         from flask_login import current_user
 
-        entry_date = entry_date or datetime.now(timezone.utc)
+        entry_date = entry_date or datetime.now(UTC)
 
         if not branch_id:
             if created_by:
@@ -1210,8 +1213,9 @@ class GLService:
     @staticmethod
     def get_trial_balance(date_from=None, date_to=None, branch_id=None, tenant_id=None):
         """ميزان المراجعة - يستخدم استعلاماً مجمعاً لتحسين الأداء."""
-        from sqlalchemy import func
         from decimal import Decimal
+
+        from sqlalchemy import func
 
         tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id)
 
@@ -1302,8 +1306,9 @@ class GLService:
         Header accounts are computed by summing their (transitive) leaf children
         in Python — no extra SQL per header.
         """
-        from sqlalchemy import func
         from collections import defaultdict
+
+        from sqlalchemy import func
 
         tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id)
         end = end_date or as_of_date
@@ -1402,7 +1407,7 @@ class GLService:
                 if account:
                     return account.code
             except GLMappingError:
-                pass
+                logger.debug("No dynamic GL mapping for concept %s; trying static fallback", concept_code, exc_info=True)
         if fallback_key and fallback_key in GL_ACCOUNTS:
             return GL_ACCOUNTS[fallback_key]
         raise GLMappingError(
@@ -1431,8 +1436,10 @@ class GLService:
 
     @staticmethod
     def _reconciliation_concept_balance(concept_code, tenant_id=None, branch_id=None):
-        from sqlalchemy import func
         from decimal import Decimal
+
+        from sqlalchemy import func
+
         from services.gl_account_resolver import is_dynamic_gl_mapping_enabled
 
         tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id)

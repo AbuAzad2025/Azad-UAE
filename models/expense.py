@@ -1,4 +1,5 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
 
@@ -18,7 +19,7 @@ class ExpenseCategory(db.Model):
     name_ar = db.Column(db.String(100))
     gl_account_code = db.Column(db.String(20))
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
 
     expenses = db.relationship("Expense", back_populates="category", lazy="dynamic")
     tenant = db.relationship("Tenant", backref="expense_categories", foreign_keys=[tenant_id])
@@ -62,7 +63,7 @@ class Expense(db.Model):
 
     expense_date = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
@@ -84,7 +85,7 @@ class Expense(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True)
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )

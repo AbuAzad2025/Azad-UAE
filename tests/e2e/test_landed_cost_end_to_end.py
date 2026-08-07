@@ -9,31 +9,33 @@ End-to-end Landed Cost test:
 
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 
 def main():
+    from decimal import ROUND_HALF_UP, Decimal
+
+    import sqlalchemy as sa
+
     from app import create_app
     from extensions import db
     from models import (
-        Tenant,
+        Customer,
         Product,
-        Warehouse,
-        ProductWarehouseCost,
         ProductCostHistory,
+        ProductWarehouseCost,
         Purchase,
         PurchaseLine,
         Sale,
         SaleLine,
-        Supplier,
-        Customer,
         StockMovement,
+        Supplier,
+        Tenant,
+        Warehouse,
     )
     from services.stock_service import StockService
-    from decimal import Decimal, ROUND_HALF_UP
-    import sqlalchemy as sa
 
     app = create_app()
 
@@ -92,7 +94,7 @@ def main():
                 db.session.add(supplier)
                 db.session.flush()
 
-            test_id = str(int(datetime.now(timezone.utc).timestamp()))
+            test_id = str(int(datetime.now(UTC).timestamp()))
 
             # Purchase with landed costs
             fob_unit_cost = Decimal("200.00")

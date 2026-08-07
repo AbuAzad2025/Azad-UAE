@@ -1,6 +1,7 @@
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_babel import gettext
-from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import login_required, current_user
+from flask_login import current_user, login_required
+
 from services.email_marketing_service import EmailMarketingService
 from utils.decorators import permission_required
 

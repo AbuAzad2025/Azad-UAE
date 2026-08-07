@@ -1,5 +1,6 @@
+from datetime import UTC, datetime
+
 from extensions import db
-from datetime import datetime, timezone
 
 
 class ShopStockAlert(db.Model):
@@ -24,7 +25,7 @@ class ShopStockAlert(db.Model):
         db.DateTime,
         nullable=False,
         index=True,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
     )
 
     __table_args__ = (db.UniqueConstraint("email", "product_id", name="uq_stock_alert_email_product"),)

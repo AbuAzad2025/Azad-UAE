@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-
 from flask import current_app
+from flask_babel import gettext
 
 from extensions import db
 from models import Sale
 from services.sale_service import SaleService
 from services.stock_service import StockService
 from utils.constants import normalize_payment_method_code
-from flask_babel import gettext
 
 STATUS_LABELS_AR = {
     "pending": gettext("بانتظار التأكيد"),

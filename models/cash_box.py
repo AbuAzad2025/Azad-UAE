@@ -3,7 +3,8 @@
 Phase 8: Treasury & Cash Position
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
 
@@ -61,14 +62,14 @@ class CashBox(db.Model):
     # Audit
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     tenant = db.relationship("Tenant", backref="cash_boxes", foreign_keys=[tenant_id])

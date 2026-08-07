@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from decimal import Decimal
+import logging
+
 from utils.regional_defaults import FALLBACK_VAT_COUNTRY
 
 VAT_RATES_BY_COUNTRY = {
@@ -20,8 +22,8 @@ VAT_COUNTRY_LABELS = {
 
 def _resolve_tenant(tenant_id=None):
     if tenant_id is not None:
-        from models.tenant import Tenant
         from extensions import db
+        from models.tenant import Tenant
 
         return db.session.get(Tenant, int(tenant_id))
     try:
@@ -29,6 +31,7 @@ def _resolve_tenant(tenant_id=None):
 
         return Tenant.get_current()
     except Exception:
+        logging.getLogger(__name__).debug("Tenant.get_current() failed; no current tenant", exc_info=True)
         return None
 
 
@@ -79,8 +82,8 @@ def get_prices_include_vat(tenant_id=None, branch_id=None) -> bool:
       3. False (default)
     """
     if branch_id is not None:
-        from models.branch import Branch
         from extensions import db
+        from models.branch import Branch
 
         branch = db.session.get(Branch, int(branch_id))
         if branch and branch.prices_include_vat is not None:

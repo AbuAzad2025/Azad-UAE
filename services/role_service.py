@@ -1,6 +1,7 @@
 from flask_babel import gettext
-from models import Role, Permission, User
 from sqlalchemy.orm import joinedload
+
+from models import Permission, Role, User
 
 
 class RoleService:

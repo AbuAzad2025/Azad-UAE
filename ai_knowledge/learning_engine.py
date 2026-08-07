@@ -4,7 +4,6 @@ Re-exports from ai_knowledge.learning sub-package (single source of truth).
 """
 
 import logging
-from typing import Optional
 
 from ai_knowledge.learning.auto_retraining import (
     AutoRetrainingScheduler,
@@ -13,13 +12,13 @@ from ai_knowledge.learning.auto_retraining import (
 from ai_knowledge.learning.continuous_learner import (
     ContinuousLearner,
     continuous_learner,
-    get_continuous_learner,
     evaluate_and_learn,
+    get_continuous_learner,
 )
 from ai_knowledge.learning.external_learning import (
+    LEARNING_SOURCES_CATALOG,
     ExternalLearningSystem,
     get_external_learning,
-    LEARNING_SOURCES_CATALOG,
 )
 
 logger = logging.getLogger(__name__)
@@ -45,11 +44,11 @@ class QuickLearner:
         question: str,
         answer: str,
         category: str = "general",
-        tenant_id: Optional[int] = None,
+        tenant_id: int | None = None,
     ):
         return self._impl().learn(question, answer, category, tenant_id)
 
-    def get_answer(self, question: str, tenant_id: Optional[int] = None):
+    def get_answer(self, question: str, tenant_id: int | None = None):
         return self._impl().get_answer(question, tenant_id)
 
     def save_knowledge(self):

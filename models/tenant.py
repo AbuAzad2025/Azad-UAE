@@ -3,7 +3,9 @@ Tenant Model - Multi-Tenant System
 نموذج المستأجر - نظام متعدد المستأجرين
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from decimal import Decimal
+
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
 from utils.regional_defaults import (
@@ -12,7 +14,6 @@ from utils.regional_defaults import (
     FALLBACK_TIMEZONE,
     FALLBACK_VAT_COUNTRY,
 )
-from decimal import Decimal
 
 
 class Tenant(db.Model):
@@ -143,14 +144,14 @@ class Tenant(db.Model):
     # Meta
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
     created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=True, index=True)
 
@@ -217,8 +218,8 @@ class Tenant(db.Model):
         end = self.subscription_end
         if end:
             if end.tzinfo is None:
-                end = end.replace(tzinfo=timezone.utc)
-            return datetime.now(timezone.utc) < end
+                end = end.replace(tzinfo=UTC)
+            return datetime.now(UTC) < end
         return True
 
     def get_remaining_days(self):
@@ -227,8 +228,8 @@ class Tenant(db.Model):
         end = self.subscription_end
         if end:
             if end.tzinfo is None:
-                end = end.replace(tzinfo=timezone.utc)
-            delta = end - datetime.now(timezone.utc)
+                end = end.replace(tzinfo=UTC)
+            delta = end - datetime.now(UTC)
             return max(0, delta.days)
         return 9999
 
@@ -248,13 +249,13 @@ class Tenant(db.Model):
 
         if days == 0:
             return self
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         base = self.subscription_end
         if not isinstance(base, datetime):
             base = now
         else:
             if base.tzinfo is None:
-                base = base.replace(tzinfo=timezone.utc)
+                base = base.replace(tzinfo=UTC)
             if base < now:
                 base = now
         self.subscription_end = base + timedelta(days=days)
@@ -273,7 +274,7 @@ class Tenant(db.Model):
             self.subscription_end = _dt.fromisoformat(end_value)
         else:
             self.subscription_end = end_value
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(UTC)
         return self
 
     def apply_subscription_plan(
@@ -292,7 +293,7 @@ class Tenant(db.Model):
             self.subscription_plan_duration = duration
         if is_trial is not None:
             self.is_trial = bool(is_trial)
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(UTC)
         return self
 
     def to_dict(self):

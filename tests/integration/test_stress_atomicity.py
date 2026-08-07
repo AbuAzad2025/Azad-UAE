@@ -3,9 +3,11 @@ Integration Stress Test: Atomic Transaction Enforcement
 Verifies that mid-transaction failures fully roll back all partial writes.
 """
 
-import pytest
 from decimal import Decimal
 from unittest.mock import patch
+
+import pytest
+
 from extensions import db
 
 
@@ -94,7 +96,7 @@ class TestPosCheckoutAtomicity:
 
     def test_checkout_rolls_back_on_commit_failure(self, app, logged_in_client, pos_setup):
         """commit() failure rolls back sale, stock, and KDS order."""
-        from models import Sale, PosKdsOrder
+        from models import PosKdsOrder, Sale
 
         setup = pos_setup
         sale_count_before = Sale.query.count()
@@ -121,7 +123,7 @@ class TestPosCheckoutAtomicity:
 
     def test_checkout_rolls_back_mid_block_after_flush(self, app, logged_in_client, pos_setup):
         """Failure inside atomic block after flush rolls back via atomic_transaction rollback()."""
-        from models import Sale, PosKdsOrder, GLJournalEntry
+        from models import GLJournalEntry, PosKdsOrder, Sale
 
         setup = pos_setup
         sale_count_before = Sale.query.count()
@@ -231,9 +233,10 @@ class TestPurchaseDeleteAtomicity:
 
     def test_purchase_archive_fallback_atomicity(self, app, logged_in_client, sample_purchase):
         """Purchase archive fallback wraps in atomic, rolls back on flush failure."""
+        from decimal import Decimal
+
         from models import StockMovement
         from utils.gl_reference_types import GLRef
-        from decimal import Decimal
 
         sm = StockMovement(
             tenant_id=sample_purchase.tenant_id,

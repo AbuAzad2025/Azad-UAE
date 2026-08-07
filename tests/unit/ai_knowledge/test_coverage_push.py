@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import os
 import tempfile
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
@@ -33,7 +33,7 @@ class TestNeuralEngineCoverage:
         row.total_purchases = total
         row.sales_count = 8
         row.avg_order_value = Decimal("1200")
-        row.last_purchase = datetime.now(timezone.utc) - timedelta(days=days_ago)
+        row.last_purchase = datetime.now(UTC) - timedelta(days=days_ago)
         return row
 
     @staticmethod
@@ -228,8 +228,9 @@ class TestNeuralEngineCoverage:
 
 class TestVisionProcessorCoverage:
     def test_analyze_part_image_success(self):
-        from ai_knowledge.neural.vision_processor import VisionProcessor
         from PIL import Image
+
+        from ai_knowledge.neural.vision_processor import VisionProcessor
 
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
             Image.new("RGB", (20, 20), color="blue").save(f.name)
@@ -884,6 +885,7 @@ class TestLearningSystemCoverage:
 
     def test_enhanced_response_with_strategy(self, knowledge_path):
         from collections import Counter
+
         from ai_knowledge.core.learning_system import AzadLearningSystem
 
         sys = AzadLearningSystem()

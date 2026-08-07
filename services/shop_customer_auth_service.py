@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import logging
 import re
+from datetime import UTC, datetime
 
-from datetime import datetime, timezone
+from flask_babel import gettext
 
 from extensions import db
 from models import Customer
 from models.shop_customer_account import ShopCustomerAccount
 from utils.currency_utils import resolve_default_currency
-from flask_babel import gettext
 
 logger = logging.getLogger(__name__)
 
@@ -125,9 +125,9 @@ class ShopCustomerAuthService:
         account = ShopCustomerAccount.query.filter_by(tenant_id=int(tenant_id), email=email, is_active=True).first()
         if not account or not account.check_password(password):
             raise ValueError(gettext("بيانات الدخول غير صحيحة."))
-        from datetime import datetime, timezone
+        from datetime import datetime
 
-        account.last_login_at = datetime.now(timezone.utc)
+        account.last_login_at = datetime.now(UTC)
         try:
             db.session.flush()
         except Exception:
@@ -147,7 +147,7 @@ class ShopCustomerAuthService:
             return None
 
         account.password_reset_token = secrets.token_urlsafe(32)
-        account.password_reset_expires_at = datetime.now(timezone.utc) + timedelta(hours=2)
+        account.password_reset_expires_at = datetime.now(UTC) + timedelta(hours=2)
         try:
             db.session.flush()
         except Exception:
@@ -172,7 +172,7 @@ class ShopCustomerAuthService:
         if not account:
             raise ValueError(gettext("رمز الاستعادة غير صالح أو منتهٍ."))
         expires = account.password_reset_expires_at
-        if not expires or expires.replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
+        if not expires or expires.replace(tzinfo=UTC) < datetime.now(UTC):
             raise ValueError(gettext("انتهت صلاحية رابط الاستعادة — اطلب رابطاً جديداً."))
 
         account.set_password(new_password)
@@ -194,6 +194,7 @@ class ShopCustomerAuthService:
             return False
         try:
             from flask_mail import Message
+
             from extensions import mail
 
             msg = Message(

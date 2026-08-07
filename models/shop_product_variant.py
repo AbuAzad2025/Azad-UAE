@@ -1,5 +1,6 @@
+from datetime import UTC, datetime
+
 from extensions import db
-from datetime import datetime, timezone
 
 
 class ShopProductVariant(db.Model):
@@ -29,7 +30,7 @@ class ShopProductVariant(db.Model):
         db.DateTime,
         nullable=False,
         index=True,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
     )
 
     def get_display_name(self, lang="ar"):

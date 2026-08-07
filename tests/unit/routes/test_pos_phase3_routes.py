@@ -5,7 +5,7 @@ blind-close response gating. Mocked at the route boundary per convention.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -45,7 +45,7 @@ def _override_token_row():
     row.action = "pay_out"
     row.cashier_user_id = 42
     row.supervisor_user_id = 7
-    row.expires_at = datetime.now(timezone.utc) + timedelta(seconds=60)
+    row.expires_at = datetime.now(UTC) + timedelta(seconds=60)
     return row
 
 

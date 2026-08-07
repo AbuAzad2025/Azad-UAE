@@ -43,21 +43,20 @@ class TestStockSyncService:
     def test_process_payload_missing_idempotency(self, app):
         from services.stock_sync_service import StockSyncService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="idempotency_key is required"):
-                StockSyncService.process_sync_payload({"movements": []})
+        with app.app_context(), pytest.raises(ValueError, match="idempotency_key is required"):
+            StockSyncService.process_sync_payload({"movements": []})
 
     def test_process_payload_missing_tenant_id(self, app):
         from services.stock_sync_service import StockSyncService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="tenant_id is required"):
-                StockSyncService.process_sync_payload({"idempotency_key": "k1", "movements": []})
+        with app.app_context(), pytest.raises(ValueError, match="tenant_id is required"):
+            StockSyncService.process_sync_payload({"idempotency_key": "k1", "movements": []})
 
     def test_idempotency_caching(self, app, client):
+        import uuid
+
         from extensions import db
         from models import SyncBatch, Tenant
-        import uuid
 
         with app.app_context():
             uniq = str(uuid.uuid4())[:8]

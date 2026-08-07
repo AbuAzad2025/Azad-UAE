@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 import pytest
@@ -129,19 +129,19 @@ def _mock_journal_query(mocker, latest_entry):
 class TestNextEntryNumber:
     def test_first_entry_of_year(self, mocker, sample_tenant):
         _mock_journal_query(mocker, None)
-        num = next_entry_number(sample_tenant.id, entry_date=datetime(2026, 1, 1, tzinfo=timezone.utc))
+        num = next_entry_number(sample_tenant.id, entry_date=datetime(2026, 1, 1, tzinfo=UTC))
         assert num == "JE-2026-0001"
 
     def test_increments_from_latest(self, mocker, sample_tenant):
         latest = MagicMock(entry_number="JE-2025-0005")
         _mock_journal_query(mocker, latest)
-        num = next_entry_number(sample_tenant.id, entry_date=datetime(2025, 6, 15, tzinfo=timezone.utc))
+        num = next_entry_number(sample_tenant.id, entry_date=datetime(2025, 6, 15, tzinfo=UTC))
         assert num == "JE-2025-0006"
 
     def test_unparseable_entry_number_defaults(self, mocker, sample_tenant):
         latest = MagicMock(entry_number="CORRUPT")
         _mock_journal_query(mocker, latest)
-        num = next_entry_number(sample_tenant.id, entry_date=datetime(2025, 7, 1, tzinfo=timezone.utc))
+        num = next_entry_number(sample_tenant.id, entry_date=datetime(2025, 7, 1, tzinfo=UTC))
         assert num == "JE-2025-0001"
 
     def test_unparseable_entry_logging_core_failure(self, mocker, sample_tenant):
@@ -151,22 +151,22 @@ class TestNextEntryNumber:
             "services.logging_core.LoggingCore.log_error",
             side_effect=RuntimeError("log sink down"),
         )
-        num = next_entry_number(sample_tenant.id, entry_date=datetime(2025, 7, 1, tzinfo=timezone.utc))
+        num = next_entry_number(sample_tenant.id, entry_date=datetime(2025, 7, 1, tzinfo=UTC))
         assert num == "JE-2025-0001"
 
     def test_without_tenant_id(self, mocker):
         latest = MagicMock(entry_number="JE-2025-0010")
         _mock_journal_query(mocker, latest)
-        num = next_entry_number(None, entry_date=datetime(2025, 8, 1, tzinfo=timezone.utc))
+        num = next_entry_number(None, entry_date=datetime(2025, 8, 1, tzinfo=UTC))
         assert num == "JE-2025-0011"
 
 
 class TestAssertPeriodOpen:
     def test_open_period_passes(self, sample_tenant):
-        assert_period_open(datetime(2025, 6, 15, tzinfo=timezone.utc), sample_tenant.id)
+        assert_period_open(datetime(2025, 6, 15, tzinfo=UTC), sample_tenant.id)
 
     def test_none_tenant_skips(self):
-        assert_period_open(datetime(2025, 6, 15, tzinfo=timezone.utc), None)
+        assert_period_open(datetime(2025, 6, 15, tzinfo=UTC), None)
 
     def test_closed_period_raises(self, db_session, sample_tenant):
         period = GLPeriod(
@@ -178,4 +178,4 @@ class TestAssertPeriodOpen:
         db_session.add(period)
         db_session.flush()
         with pytest.raises(ValueError, match="2025-06"):
-            assert_period_open(datetime(2025, 6, 15, tzinfo=timezone.utc), sample_tenant.id)
+            assert_period_open(datetime(2025, 6, 15, tzinfo=UTC), sample_tenant.id)

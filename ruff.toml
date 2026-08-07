@@ -6,6 +6,21 @@ exclude = [
     ".ci-repro2",
 ]
 
+[lint]
+select = [
+    "E",    # pycodestyle errors
+    "F",    # pyflakes
+    "I",    # isort
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "C4",   # flake8-comprehensions
+    "SIM",  # flake8-simplify
+    "TID",  # flake8-tidy-imports
+    "S110", # try-except-pass
+    "S112", # try-except-continue
+    "E722", # bare except
+]
+
 [lint.per-file-ignores]
 "tests/unit/test_grimoire_compliance.py" = ["E402"]
 "scripts/visual_audit_render.py" = ["E402"]

@@ -4,11 +4,11 @@ import json
 from unittest.mock import MagicMock
 
 from utils.structured_logging import (
+    _get_request_context,
+    _get_user_context,
     log_data_access,
     log_mutation,
     log_security_event,
-    _get_request_context,
-    _get_user_context,
 )
 
 

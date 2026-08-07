@@ -15,11 +15,10 @@
 شركة أزاد للأنظمة الذكية
 """
 
-import logging
 import json
-from datetime import datetime
-from typing import List
+import logging
 import os
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -293,7 +292,7 @@ class ExternalLearningSystem:
 
         if os.path.exists(learned_file):
             try:
-                with open(learned_file, "r", encoding="utf-8") as f:
+                with open(learned_file, encoding="utf-8") as f:
                     return json.load(f)
             except (json.JSONDecodeError, OSError) as exc:
                 logger.debug("Could not load external learned data: %s", exc)
@@ -404,7 +403,7 @@ class ExternalLearningSystem:
         except Exception as e:
             logger.error(f"Failed to save learned data: {e}")
 
-    def get_knowledge_sources_list(self) -> List[dict]:
+    def get_knowledge_sources_list(self) -> list[dict]:
         """الحصول على قائمة المصادر المتاحة"""
         sources_list = []
 

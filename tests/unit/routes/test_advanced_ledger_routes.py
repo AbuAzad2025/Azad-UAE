@@ -301,10 +301,9 @@ class TestAdvancedLedgerPages:
         assert resp.status_code == 302
 
     def test_add_advanced_expense_get(self, advanced_ledger_client):
-        with _advanced_ledger_patches(categories=[MagicMock(id=1)]):
-            with patch("models.Supplier.query") as sup_q:
-                sup_q.filter_by.return_value.with_entities.return_value.all.return_value = []
-                resp = advanced_ledger_client.get("/ledger/advanced/advanced-expenses/add")
+        with _advanced_ledger_patches(categories=[MagicMock(id=1)]), patch("models.Supplier.query") as sup_q:
+            sup_q.filter_by.return_value.with_entities.return_value.all.return_value = []
+            resp = advanced_ledger_client.get("/ledger/advanced/advanced-expenses/add")
         assert resp.status_code == 200
 
     def test_journal_management(self, advanced_ledger_client):

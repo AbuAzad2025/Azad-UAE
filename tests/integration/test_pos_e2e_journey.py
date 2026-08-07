@@ -11,9 +11,11 @@ from __future__ import annotations
 
 import threading
 import uuid
+from datetime import UTC
 from decimal import Decimal
 
 import pytest
+
 from extensions import db
 
 
@@ -161,10 +163,11 @@ class TestPosE2EJourney:
             env["product"],
         )
 
-        from models.campaign import Campaign
-        from datetime import datetime, timedelta, timezone
+        from datetime import datetime, timedelta
 
-        now = datetime.now(timezone.utc)
+        from models.campaign import Campaign
+
+        now = datetime.now(UTC)
         campaign = Campaign(
             tenant_id=tenant.id,
             name="E2E 10%",
@@ -288,7 +291,7 @@ class TestPosE2EJourney:
 
     def test_evaluate_endpoint_matches_checkout_discount(self, app, db_session, client):
         """The register's live evaluate preview must match checkout reality."""
-        from datetime import datetime, timedelta, timezone
+        from datetime import datetime, timedelta
 
         from models.campaign import Campaign
 
@@ -299,7 +302,7 @@ class TestPosE2EJourney:
             env["warehouse"],
             env["product"],
         )
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         db_session.add(
             Campaign(
                 tenant_id=tenant.id,

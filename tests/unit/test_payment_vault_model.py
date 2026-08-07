@@ -7,7 +7,7 @@ Guards against the offset-naive/aware ``TypeError`` crash that occurred when
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from models.payment_vault import PaymentVault
 
@@ -25,12 +25,12 @@ def _make_vault(**kwargs):
 class TestIsVaultAccessible:
     def test_naive_last_access_does_not_raise(self):
         vault = _make_vault(auto_lock_minutes=30)
-        vault.last_access = datetime.now(timezone.utc).replace(tzinfo=None)
+        vault.last_access = datetime.now(UTC).replace(tzinfo=None)
         assert vault.is_vault_accessible() is True
 
     def test_aware_last_access_does_not_raise(self):
         vault = _make_vault(auto_lock_minutes=30)
-        vault.last_access = datetime.now(timezone.utc)
+        vault.last_access = datetime.now(UTC)
         assert vault.is_vault_accessible() is True
 
     def test_none_last_access_is_safe(self):
@@ -45,6 +45,6 @@ class TestIsVaultAccessible:
 
     def test_stale_last_access_auto_locks(self):
         vault = _make_vault(auto_lock_minutes=30)
-        vault.last_access = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(minutes=60)
+        vault.last_access = datetime.now(UTC).replace(tzinfo=None) - timedelta(minutes=60)
         assert vault.is_vault_accessible() is False
         assert vault.is_locked is True

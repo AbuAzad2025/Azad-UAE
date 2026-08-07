@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
@@ -281,7 +281,7 @@ class TestSaleHelpers:
         sale.sale_number = "S-001"
         sale.customer = MagicMock(name="Ali")
         sale.seller = MagicMock(username="seller")
-        sale.sale_date = datetime(2025, 6, 1, tzinfo=timezone.utc)
+        sale.sale_date = datetime(2025, 6, 1, tzinfo=UTC)
         sale.total_amount = Decimal("100")
         sale.paid_amount = Decimal("50")
         sale.balance_due = Decimal("50")

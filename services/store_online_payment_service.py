@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-import requests
 from decimal import Decimal
 
+import requests
 from flask import current_app
+from flask_babel import gettext
 
 from extensions import db
 from models.payment_vault import PaymentVault
 from utils.currency_utils import get_system_default_currency
 from utils.nowpayments_ipn import get_nowpayments_ipn_url
-from flask_babel import gettext
 
 
 class StoreOnlinePaymentService:

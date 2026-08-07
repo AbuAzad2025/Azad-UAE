@@ -1,6 +1,6 @@
 """Online store settings — one store per tenant, bound to one online warehouse."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from extensions import db
 
@@ -51,14 +51,14 @@ class TenantStore(db.Model):
 
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     tenant = db.relationship("Tenant", backref=db.backref("store", uselist=False), foreign_keys=[tenant_id])

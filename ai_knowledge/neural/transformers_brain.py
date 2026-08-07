@@ -19,9 +19,10 @@
 """
 
 import logging
-import numpy as np
-from typing import Any, List, Dict
 from datetime import datetime
+from typing import Any
+
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -123,7 +124,7 @@ class TransformersBrain:
     # Self-Attention Mechanism - آلية الانتباه الذاتي
     # ========================================================================
 
-    def self_attention(self, query: List[float], key: List[float], value: List[float]) -> List[float]:
+    def self_attention(self, query: list[float], key: list[float], value: list[float]) -> list[float]:
         """
         آلية الانتباه الذاتي
 
@@ -152,7 +153,7 @@ class TransformersBrain:
 
         return output
 
-    def multi_head_attention(self, query: List[float], key: List[float], value: List[float]) -> List[float]:
+    def multi_head_attention(self, query: list[float], key: list[float], value: list[float]) -> list[float]:
         """
         الانتباه متعدد الرؤوس
 
@@ -169,12 +170,12 @@ class TransformersBrain:
         return heads_output[: self.d_model]  # تقليم للحجم الصحيح
 
     @staticmethod
-    def _dot_product(vec1: List[float], vec2: List[float]) -> float:
+    def _dot_product(vec1: list[float], vec2: list[float]) -> float:
         """حساب الضرب النقطي"""
         return sum(a * b for a, b in zip(vec1, vec2))
 
     @staticmethod
-    def _softmax(scores: List[float]) -> List[float]:
+    def _softmax(scores: list[float]) -> list[float]:
         """دالة Softmax"""
         exp_scores = [np.exp(s) for s in scores]
         sum_exp = sum(exp_scores)
@@ -185,7 +186,7 @@ class TransformersBrain:
     # ========================================================================
 
     @staticmethod
-    def positional_encoding(position: int, d_model: int) -> List[float]:
+    def positional_encoding(position: int, d_model: int) -> list[float]:
         """
         ترميز الموضع
 
@@ -209,7 +210,7 @@ class TransformersBrain:
     # Feed-Forward Network - الشبكة الأمامية
     # ========================================================================
 
-    def feed_forward(self, x: List[float]) -> List[float]:
+    def feed_forward(self, x: list[float]) -> list[float]:
         """
         الشبكة الأمامية
 
@@ -227,7 +228,7 @@ class TransformersBrain:
     # Transformer Block - كتلة المحول
     # ========================================================================
 
-    def transformer_block(self, x: List[float], position: int) -> List[float]:
+    def transformer_block(self, x: list[float], position: int) -> list[float]:
         """
         كتلة محول كاملة
 
@@ -251,7 +252,7 @@ class TransformersBrain:
         return final_output
 
     @staticmethod
-    def _layer_norm(x: List[float]) -> List[float]:
+    def _layer_norm(x: list[float]) -> list[float]:
         """
         تطبيع الطبقة
 
@@ -316,7 +317,7 @@ class TransformersBrain:
         }
 
     @staticmethod
-    def _tokenize(text: str) -> List[str]:
+    def _tokenize(text: str) -> list[str]:
         """تجزئة النص لكلمات"""
         # تنظيف النص
         text = text.strip()
@@ -326,7 +327,7 @@ class TransformersBrain:
 
         return tokens
 
-    def _get_embedding(self, token: str, position: int) -> List[float]:
+    def _get_embedding(self, token: str, position: int) -> list[float]:
         """
         الحصول على embedding للكلمة
 
@@ -351,7 +352,7 @@ class TransformersBrain:
         return combined
 
     @staticmethod
-    def _extract_intent(text: str, representation: List[float]) -> str:
+    def _extract_intent(text: str, representation: list[float]) -> str:
         """استخراج النية من النص"""
         text_lower = text.lower()
 
@@ -368,7 +369,7 @@ class TransformersBrain:
             return "statement"
 
     @staticmethod
-    def _extract_entities(text: str, tokens: List[str]) -> Dict[str, List[str]]:
+    def _extract_entities(text: str, tokens: list[str]) -> dict[str, list[str]]:
         """استخراج الكيانات المسماة"""
         entities: dict[str, list[str]] = {
             "numbers": [],
@@ -394,7 +395,7 @@ class TransformersBrain:
 
         return entities
 
-    def _build_attention_map(self, tokens: List[str]) -> Dict[str, List[float]]:
+    def _build_attention_map(self, tokens: list[str]) -> dict[str, list[float]]:
         """
         بناء خريطة الانتباه
 

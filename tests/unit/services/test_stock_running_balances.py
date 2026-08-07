@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 from models import Product, StockMovement, Tenant, Warehouse
 from services.stock_service import StockService
 
-_BASE_TIME = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+_BASE_TIME = datetime(2026, 1, 1, 12, 0, 0, tzinfo=UTC)
 
 
 def _add_movement(db_session, tenant_id, product_id, warehouse_id, movement_type, quantity, minutes):

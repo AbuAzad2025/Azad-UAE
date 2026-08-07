@@ -10,7 +10,7 @@ postable GLAccount or raises GLMappingError.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional, cast
+from typing import cast
 
 from flask import current_app, has_app_context
 
@@ -240,7 +240,7 @@ def _validated_account(
                 issue="Branch override belongs to a different tenant.",
             )
 
-    account = cast(Optional[GLAccount], mapping.gl_account)
+    account = cast(GLAccount | None, mapping.gl_account)
     if account is None:
         raise GLMappingError(
             tenant_id=tenant_id,

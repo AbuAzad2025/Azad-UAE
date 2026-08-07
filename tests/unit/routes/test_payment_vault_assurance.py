@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
 import pytest
@@ -77,7 +77,7 @@ def vault_anon_client(app_factory, mocker):
 
 class TestProtectOwnerVaultPages:
     def test_non_owner_redirects_to_dashboard(self, app_factory, mocker):
-        from routes.payment_vault import payment_vault_bp, _protect_owner_vault_pages
+        from routes.payment_vault import _protect_owner_vault_pages, payment_vault_bp
 
         user = MagicMock(is_authenticated=True, is_owner=False)
         mocker.patch("routes.payment_vault.current_user", user)
@@ -90,7 +90,7 @@ class TestProtectOwnerVaultPages:
         assert resp.location.endswith("/main/dashboard")
 
     def test_unauthenticated_redirects_to_login(self, app_factory, mocker):
-        from routes.payment_vault import payment_vault_bp, _protect_owner_vault_pages
+        from routes.payment_vault import _protect_owner_vault_pages, payment_vault_bp
 
         user = MagicMock(is_authenticated=False, is_owner=False)
         mocker.patch("routes.payment_vault.current_user", user)
@@ -117,7 +117,7 @@ class TestProtectOwnerVaultPages:
 
 class TestSecurityHelperGaps:
     def test_is_production_env_default_app_env(self, app_factory, monkeypatch):
-        from routes.payment_vault import payment_vault_bp, _is_production_env
+        from routes.payment_vault import _is_production_env, payment_vault_bp
 
         monkeypatch.delenv("APP_ENV", raising=False)
         monkeypatch.delenv("DEBUG", raising=False)
@@ -126,7 +126,7 @@ class TestSecurityHelperGaps:
             assert _is_production_env() is True
 
     def test_is_production_env_development(self, app_factory, monkeypatch):
-        from routes.payment_vault import payment_vault_bp, _is_production_env
+        from routes.payment_vault import _is_production_env, payment_vault_bp
 
         monkeypatch.setenv("APP_ENV", "development")
         monkeypatch.delenv("DEBUG", raising=False)
@@ -136,8 +136,8 @@ class TestSecurityHelperGaps:
 
     def test_trusted_origins_production_empty_base_url(self, app_factory, monkeypatch):
         from routes.payment_vault import (
-            payment_vault_bp,
             _payment_vault_trusted_origins,
+            payment_vault_bp,
         )
 
         monkeypatch.setenv("APP_ENV", "production")
@@ -153,7 +153,7 @@ class TestSecurityHelperGaps:
         assert _origin_from_referer("http://localhost:5000/x") is None
 
     def test_validate_public_api_origin_trusted_origin_header(self, app_factory, mocker):
-        from routes.payment_vault import payment_vault_bp, _validate_public_api_origin
+        from routes.payment_vault import _validate_public_api_origin, payment_vault_bp
 
         mocker.patch(
             "routes.payment_vault._payment_vault_trusted_origins",
@@ -164,7 +164,7 @@ class TestSecurityHelperGaps:
             assert _validate_public_api_origin() is None
 
     def test_validate_public_api_origin_untrusted_referer(self, app_factory, mocker):
-        from routes.payment_vault import payment_vault_bp, _validate_public_api_origin
+        from routes.payment_vault import _validate_public_api_origin, payment_vault_bp
 
         mocker.patch(
             "routes.payment_vault._payment_vault_trusted_origins",
@@ -177,7 +177,7 @@ class TestSecurityHelperGaps:
         assert "Referer" in resp.get_json()["error"]
 
     def test_validate_api_key_commit_rollback(self, app_factory, mock_db, mocker):
-        from routes.payment_vault import payment_vault_bp, _validate_api_key
+        from routes.payment_vault import _validate_api_key, payment_vault_bp
 
         mock_key = MagicMock(scope="write", last_used=None, usage_count=0)
         mock_query = MagicMock()
@@ -192,12 +192,12 @@ class TestSecurityHelperGaps:
 
     def test_reject_stale_webhook_created_at_with_app(self, app_factory):
         from routes.payment_vault import (
-            payment_vault_bp,
             _reject_stale_webhook_timestamp,
+            payment_vault_bp,
         )
 
         app = app_factory(payment_vault_bp)
-        old = (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat()
+        old = (datetime.now(UTC) - timedelta(minutes=10)).isoformat()
         with app.app_context():
             resp, code = _reject_stale_webhook_timestamp({"created_at": old})
         assert code == 401
@@ -335,7 +335,7 @@ class TestWebhookEdgePaths:
     def test_nowpayments_stale_timestamp_rejected(self, vault_owner_client, mock_unlocked_vault, mocker):
         mocker.patch("routes.payment_vault._is_duplicate_webhook", return_value=False)
         mocker.patch("utils.nowpayments_ipn.resolve_nowpayments_ipn_secret", return_value="sec")
-        old = (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat()
+        old = (datetime.now(UTC) - timedelta(minutes=10)).isoformat()
         payload = f'{{"payment_id":"np-old","timestamp":"{old}"}}'.encode()
         resp = vault_owner_client.post(
             "/payment-vault/webhook/nowpayments",
@@ -694,7 +694,7 @@ class TestStripeWebhookStale:
 
     def test_stripe_stale_timestamp_rejected(self, vault_owner_client, mock_unlocked_vault, mocker):
         mocker.patch("routes.payment_vault._is_duplicate_webhook", return_value=False)
-        old = (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat()
+        old = (datetime.now(UTC) - timedelta(minutes=10)).isoformat()
         payload = f'{{"id":"evt_stale","timestamp":"{old}"}}'.encode()
         resp = vault_owner_client.post(
             "/payment-vault/webhook/stripe",

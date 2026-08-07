@@ -17,9 +17,10 @@
 """
 
 import logging
-from datetime import datetime
-from typing import List, Any, Optional, Tuple, Callable
 import re
+from collections.abc import Callable
+from datetime import datetime
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -284,8 +285,8 @@ class MasterBrain:
     def ask(
         self,
         question: str,
-        context: Optional[dict] = None,
-        user_id: Optional[int] = None,
+        context: dict | None = None,
+        user_id: int | None = None,
     ) -> dict:
         """
         الدالة الرئيسية الموحدة - اسأل العقل الخارق!
@@ -368,7 +369,7 @@ class MasterBrain:
             }
 
     @staticmethod
-    def _analyze_question(question: str) -> Tuple[str, str, dict]:
+    def _analyze_question(question: str) -> tuple[str, str, dict]:
         """تحليل السؤال بذكاء خارق"""
         q_lower = question.lower()
 
@@ -449,7 +450,7 @@ class MasterBrain:
         return {"steps": steps, "confidence": 0.9}
 
     @staticmethod
-    def _use_neural_if_needed(intent: str, context: dict) -> Optional[dict]:
+    def _use_neural_if_needed(intent: str, context: dict) -> dict | None:
         """استخدام النماذج العصبية عند الحاجة"""
         # استيراد كسول (lazy import) للسرعة
         if intent in ["prediction", "pricing", "classification"]:
@@ -584,7 +585,7 @@ class MasterBrain:
             self.unified_memory["conversations"] = self.unified_memory["conversations"][-100:]
 
     @staticmethod
-    def _generate_smart_suggestions(_intent: str, domain: str) -> List[str]:
+    def _generate_smart_suggestions(_intent: str, domain: str) -> list[str]:
         """توليد اقتراحات ذكية"""
         suggestions = {
             "accounting": [
@@ -706,7 +707,7 @@ def get_master_brain():
 # ============================================================================
 
 
-def ask_azad(question: str, context: Optional[dict] = None, user_id: Optional[int] = None) -> dict:
+def ask_azad(question: str, context: dict | None = None, user_id: int | None = None) -> dict:
     """
     اسأل أزاد - الواجهة البسيطة
 

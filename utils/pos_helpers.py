@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
-from decimal import Decimal, InvalidOperation, ROUND_CEILING, ROUND_HALF_UP
+from decimal import ROUND_CEILING, ROUND_HALF_UP, Decimal, InvalidOperation
+
 from extensions import db
 from models import Customer, PosSession, Product
 from services.stock_service import StockService
 from utils.branching import (
     get_accessible_warehouse_ids,
-    get_branch_stock_map,
     get_active_branch_id,
+    get_branch_stock_map,
 )
 from utils.currency_utils import convert_and_quantize_aed
 from utils.helpers import generate_number
@@ -78,7 +79,7 @@ def payment_amount_base(payment, tenant_id: int | None = None) -> Decimal:
 def resolve_pos_cash_account_code(tenant_id: int, branch_id: int) -> str:
     """Postable branch cash account code (single source for POS GL cash legs)."""
     from services import gl_helpers
-    from services.gl_service import GLService, GL_ACCOUNTS
+    from services.gl_service import GL_ACCOUNTS, GLService
     from services.gl_tree_builder import GLTreeBuilder
 
     GLService.ensure_core_accounts(tenant_id=tenant_id)

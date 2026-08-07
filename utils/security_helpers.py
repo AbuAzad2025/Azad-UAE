@@ -1,10 +1,13 @@
 """Security Helpers - مساعدات الأمان"""
 
 import ipaddress
+import logging
 import os
-
-from flask import request, abort
 from functools import wraps
+
+from flask import abort, request
+
+logger = logging.getLogger(__name__)
 
 
 def _owner_allowlist():
@@ -34,6 +37,7 @@ def _ip_allowed(client_ip: str | None, allowlist) -> bool:
             elif ip == ipaddress.ip_address(item):
                 return True
         except ValueError:
+            logger.warning("Ignoring invalid owner IP allowlist entry: %r", item)
             continue
     return False
 

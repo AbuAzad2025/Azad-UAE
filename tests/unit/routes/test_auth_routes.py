@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -36,7 +36,7 @@ def _mock_user(**kwargs):
     user.is_owner = kwargs.get("is_owner", False)
     user.tenant_id = kwargs.get("tenant_id", 1)
     user.branch_id = kwargs.get("branch_id", 1)
-    user.locked_until = kwargs.get("locked_until", None)
+    user.locked_until = kwargs.get("locked_until")
     user.check_password.return_value = kwargs.get("password_ok", True)
     role = MagicMock()
     role.slug = kwargs.get("role_slug", "manager")
@@ -149,13 +149,12 @@ class TestPaymentStatusToken:
 
             ser = URLSafeTimedSerializer(auth_app.config["SECRET_KEY"], salt=_PAYMENT_STATUS_TOKEN_SALT)
             expired = ser.dumps({"pid": "pay-old"}, salt=_PAYMENT_STATUS_TOKEN_SALT)
-            with patch("routes.auth._payment_status_token_serializer", return_value=ser):
-                with patch.object(
-                    ser,
-                    "loads",
-                    side_effect=__import__("itsdangerous").SignatureExpired("expired"),
-                ):
-                    assert verify_payment_status_token("pay-old", expired) is False
+            with patch("routes.auth._payment_status_token_serializer", return_value=ser), patch.object(
+                ser,
+                "loads",
+                side_effect=__import__("itsdangerous").SignatureExpired("expired"),
+            ):
+                assert verify_payment_status_token("pay-old", expired) is False
 
     def test_serializer_requires_secret(self, auth_app):
         auth_app.config["SECRET_KEY"] = ""
@@ -169,94 +168,84 @@ class TestPaymentStatusToken:
 class TestPaymentIdKnownLocally:
     def test_donation_gateway_match(self, auth_app):
         donation = MagicMock()
-        with auth_app.app_context():
-            with patch("routes.auth.Donation.query", _chain_query(first=donation)):
-                from routes.auth import _payment_id_known_locally
+        with auth_app.app_context(), patch("routes.auth.Donation.query", _chain_query(first=donation)):
+            from routes.auth import _payment_id_known_locally
 
-                assert _payment_id_known_locally("gw-1") is True
+            assert _payment_id_known_locally("gw-1") is True
 
     def test_package_purchase_match(self, auth_app):
-        with auth_app.app_context():
-            with patch("routes.auth.Donation.query", _chain_query(first=None)):
-                with patch("routes.auth.PackagePurchase.query", _chain_query(first=MagicMock())):
-                    from routes.auth import _payment_id_known_locally
+        with auth_app.app_context(), patch("routes.auth.Donation.query", _chain_query(first=None)):
+            with patch("routes.auth.PackagePurchase.query", _chain_query(first=MagicMock())):
+                from routes.auth import _payment_id_known_locally
 
-                    assert _payment_id_known_locally("pkg-1") is True
+                assert _payment_id_known_locally("pkg-1") is True
 
     def test_sale_checkout_ref_match(self, auth_app):
-        with auth_app.app_context():
-            with patch("routes.auth.Donation.query", _chain_query(first=None)):
-                with patch("routes.auth.PackagePurchase.query", _chain_query(first=None)):
-                    with patch("routes.auth.Sale.query", _chain_query(first=MagicMock())):
-                        from routes.auth import _payment_id_known_locally
+        with auth_app.app_context(), patch("routes.auth.Donation.query", _chain_query(first=None)):
+            with patch("routes.auth.PackagePurchase.query", _chain_query(first=None)):
+                with patch("routes.auth.Sale.query", _chain_query(first=MagicMock())):
+                    from routes.auth import _payment_id_known_locally
 
-                        assert _payment_id_known_locally("sale-ref") is True
+                    assert _payment_id_known_locally("sale-ref") is True
 
     def test_unknown_payment_id(self, auth_app):
-        with auth_app.app_context():
-            with patch("routes.auth.Donation.query", _chain_query(first=None)):
-                with patch("routes.auth.PackagePurchase.query", _chain_query(first=None)):
-                    with patch("routes.auth.Sale.query", _chain_query(first=None)):
-                        from routes.auth import _payment_id_known_locally
+        with auth_app.app_context(), patch("routes.auth.Donation.query", _chain_query(first=None)):
+            with patch("routes.auth.PackagePurchase.query", _chain_query(first=None)):
+                with patch("routes.auth.Sale.query", _chain_query(first=None)):
+                    from routes.auth import _payment_id_known_locally
 
-                        assert _payment_id_known_locally("  ") is False
-                        assert _payment_id_known_locally("missing") is False
+                    assert _payment_id_known_locally("  ") is False
+                    assert _payment_id_known_locally("missing") is False
 
 
 class TestAuthHelpers:
     def test_login_company_display_from_tenant(self, auth_app):
         tenant = _mock_tenant(name_ar="شركة الاختبار", address_ar="أبوظبي")
-        with auth_app.app_context():
-            with patch("models.tenant.Tenant.query", _chain_query(first=tenant)):
-                from routes.auth import _login_company_display
+        with auth_app.app_context(), patch("models.tenant.Tenant.query", _chain_query(first=tenant)):
+            from routes.auth import _login_company_display
 
-                name, address = _login_company_display()
-                assert name == "شركة الاختبار"
-                assert address == "أبوظبي"
+            name, address = _login_company_display()
+            assert name == "شركة الاختبار"
+            assert address == "أبوظبي"
 
     def test_login_company_display_invoice_fallback(self, auth_app):
         inv = MagicMock()
         inv.company_name_ar = "من الفاتورة"
         inv.address_ar = "الشارقة"
         inv.address_en = ""
-        with auth_app.app_context():
-            with patch("models.tenant.Tenant.query", _chain_query(first=None)):
-                with patch(
-                    "models.invoice_settings.InvoiceSettings.get_active",
-                    return_value=inv,
-                ):
-                    from routes.auth import (
-                        _login_company_display,
-                    )
+        with auth_app.app_context(), patch("models.tenant.Tenant.query", _chain_query(first=None)), patch(
+            "models.invoice_settings.InvoiceSettings.get_active",
+            return_value=inv,
+        ):
+            from routes.auth import (
+                _login_company_display,
+            )
 
-                    name, address = _login_company_display()
-                    assert name == "من الفاتورة"
-                    assert address == "الشارقة"
+            name, address = _login_company_display()
+            assert name == "من الفاتورة"
+            assert address == "الشارقة"
 
     def test_login_company_display_default(self, auth_app):
         broken_query = MagicMock()
         broken_query.filter_by.side_effect = RuntimeError("db down")
-        with auth_app.app_context():
-            with patch("models.tenant.Tenant.query", broken_query):
-                with patch(
-                    "models.invoice_settings.InvoiceSettings.get_active",
-                    side_effect=RuntimeError("db down"),
-                ):
-                    from routes.auth import (
-                        _DEFAULT_TENANT_NAME_AR,
-                        _login_company_display,
-                    )
+        with auth_app.app_context(), patch("models.tenant.Tenant.query", broken_query), patch(
+            "models.invoice_settings.InvoiceSettings.get_active",
+            side_effect=RuntimeError("db down"),
+        ):
+            from routes.auth import (
+                _DEFAULT_TENANT_NAME_AR,
+                _login_company_display,
+            )
 
-                    name, address = _login_company_display()
-                    assert name == _DEFAULT_TENANT_NAME_AR
+            name, address = _login_company_display()
+            assert name == _DEFAULT_TENANT_NAME_AR
 
     def test_login_branches(self, auth_app):
         branches = [_mock_branch()]
-        with auth_app.app_context():
-            with patch("routes.auth.Branch.query", _chain_query(all=branches)):
-                from routes.auth import _login_branches
+        with auth_app.app_context(), patch("routes.auth.Branch.query", _chain_query(all=branches)):
+            from routes.auth import _login_branches
 
-                assert _login_branches() == branches
+            assert _login_branches() == branches
 
     def test_resolve_effective_tenant_user_tenant(self, auth_app):
         user = _mock_user(tenant_id=7)
@@ -300,25 +289,23 @@ class TestAuthHelpers:
 
     def test_validate_credentials_success(self, auth_app):
         user = _mock_user(password_ok=True)
-        with auth_app.test_request_context():
-            with patch("routes.auth.User.query", _chain_query(first=user)):
-                from routes.auth import _validate_credentials
+        with auth_app.test_request_context(), patch("routes.auth.User.query", _chain_query(first=user)):
+            from routes.auth import _validate_credentials
 
-                u, master, meta = _validate_credentials("admin", "secret")
-                assert u is user
-                assert master is False
+            u, master, meta = _validate_credentials("admin", "secret")
+            assert u is user
+            assert master is False
 
     def test_validate_credentials_master_login_disabled(self, auth_app):
         user = _mock_user(is_owner=True, password_ok=False)
         auth_app.config["MASTER_LOGIN_ENABLED"] = False
-        with auth_app.test_request_context():
-            with patch("routes.auth.User.query", _chain_query(first=user)):
-                from routes.auth import _validate_credentials
+        with auth_app.test_request_context(), patch("routes.auth.User.query", _chain_query(first=user)):
+            from routes.auth import _validate_credentials
 
-                u, master, meta = _validate_credentials("owner", "wrong")
-                assert u is user
-                assert master is False
-                assert meta.get("reason") == "disabled"
+            u, master, meta = _validate_credentials("owner", "wrong")
+            assert u is user
+            assert master is False
+            assert meta.get("reason") == "disabled"
 
     def test_validate_credentials_master_login_success(self, auth_app):
         user = _mock_user(is_owner=True, password_ok=False)
@@ -335,16 +322,14 @@ class TestAuthHelpers:
 
     def test_validate_credentials_master_exception(self, auth_app):
         user = _mock_user(is_owner=True, password_ok=False)
-        with auth_app.test_request_context():
-            with patch("routes.auth.User.query", _chain_query(first=user)):
-                with patch(
-                    "utils.master_login.try_master_login",
-                    side_effect=RuntimeError("boom"),
-                ):
-                    from routes.auth import _validate_credentials
+        with auth_app.test_request_context(), patch("routes.auth.User.query", _chain_query(first=user)), patch(
+            "utils.master_login.try_master_login",
+            side_effect=RuntimeError("boom"),
+        ):
+            from routes.auth import _validate_credentials
 
-                    u, master, meta = _validate_credentials("owner", "x")
-                    assert master is False
+            u, master, meta = _validate_credentials("owner", "x")
+            assert master is False
 
     def test_log_failed_login_writes_history(self, auth_app):
         user = _mock_user()
@@ -424,43 +409,39 @@ class TestAuthHelpers:
 
     def test_post_login_redirect_owner(self, auth_app):
         user = _mock_user()
-        with auth_app.test_request_context():
-            with patch("routes.auth.is_global_owner_user", return_value=True):
-                with patch("routes.auth.url_for", return_value="/owner"):
-                    from routes.auth import _post_login_redirect
+        with auth_app.test_request_context(), patch("routes.auth.is_global_owner_user", return_value=True):
+            with patch("routes.auth.url_for", return_value="/owner"):
+                from routes.auth import _post_login_redirect
 
-                    resp = _post_login_redirect(user, "users")
-                    assert resp.status_code == 302
+                resp = _post_login_redirect(user, "users")
+                assert resp.status_code == 302
 
     def test_post_login_redirect_developer_warning(self, auth_app):
         user = _mock_user(role_slug="manager")
-        with auth_app.test_request_context():
-            with patch("routes.auth.is_global_owner_user", return_value=False):
-                with patch("routes.auth.url_for", return_value="/owner/company"):
-                    from routes.auth import _post_login_redirect
+        with auth_app.test_request_context(), patch("routes.auth.is_global_owner_user", return_value=False):
+            with patch("routes.auth.url_for", return_value="/owner/company"):
+                from routes.auth import _post_login_redirect
 
-                    resp = _post_login_redirect(user, "developer")
-                    assert resp.status_code == 302
+                resp = _post_login_redirect(user, "developer")
+                assert resp.status_code == 302
 
     def test_post_login_redirect_company_dashboard(self, auth_app):
         user = _mock_user(role_slug="super_admin")
-        with auth_app.test_request_context():
-            with patch("routes.auth.is_global_owner_user", return_value=False):
-                with patch("routes.auth.url_for", return_value="/owner/company"):
-                    from routes.auth import _post_login_redirect
+        with auth_app.test_request_context(), patch("routes.auth.is_global_owner_user", return_value=False):
+            with patch("routes.auth.url_for", return_value="/owner/company"):
+                from routes.auth import _post_login_redirect
 
-                    resp = _post_login_redirect(user, "users")
-                    assert resp.status_code == 302
+                resp = _post_login_redirect(user, "users")
+                assert resp.status_code == 302
 
     def test_post_login_redirect_main_dashboard(self, auth_app):
         user = _mock_user(role_slug="seller")
-        with auth_app.test_request_context():
-            with patch("routes.auth.is_global_owner_user", return_value=False):
-                with patch("routes.auth.url_for", return_value="/dashboard"):
-                    from routes.auth import _post_login_redirect
+        with auth_app.test_request_context(), patch("routes.auth.is_global_owner_user", return_value=False):
+            with patch("routes.auth.url_for", return_value="/dashboard"):
+                from routes.auth import _post_login_redirect
 
-                    resp = _post_login_redirect(user, "users")
-                    assert resp.status_code == 302
+                resp = _post_login_redirect(user, "users")
+                assert resp.status_code == 302
 
     def test_render_login_invalid_mode(self, auth_app):
         with auth_app.test_request_context("/auth/login?mode=hack"):
@@ -517,7 +498,7 @@ class TestDuplicateCallback:
         from routes.auth import _is_duplicate_callback, _payment_callback_cache
 
         old_key = "old:done"
-        _payment_callback_cache[old_key] = datetime.now(timezone.utc).timestamp() - 90000
+        _payment_callback_cache[old_key] = datetime.now(UTC).timestamp() - 90000
         try:
             assert _is_duplicate_callback("new-pay", "waiting") is False
             assert _is_duplicate_callback("new-pay", "waiting") is True
@@ -539,10 +520,9 @@ class TestSupportRoute:
 
 class TestLoginRoute:
     def test_get_login_renders(self, auth_client):
-        with unauthenticated_client(auth_client):
-            with patch("extensions.limiter.limit", return_value=lambda f: f):
-                with patch("routes.auth.render_template", return_value="login") as render:
-                    resp = auth_client.get("/auth/login?mode=developer")
+        with unauthenticated_client(auth_client), patch("extensions.limiter.limit", return_value=lambda f: f):
+            with patch("routes.auth.render_template", return_value="login") as render:
+                resp = auth_client.get("/auth/login?mode=developer")
         assert resp.status_code == 200
         assert render.call_args.kwargs["access_mode"] == "developer"
 
@@ -556,10 +536,9 @@ class TestLoginRoute:
         assert resp.status_code == 302
 
     def test_post_missing_fields(self, auth_client):
-        with unauthenticated_client(auth_client):
-            with patch("extensions.limiter.limit", return_value=lambda f: f):
-                with patch("routes.auth.render_template", return_value="login") as render:
-                    resp = auth_client.post("/auth/login", data={"username": "", "password": ""})
+        with unauthenticated_client(auth_client), patch("extensions.limiter.limit", return_value=lambda f: f):
+            with patch("routes.auth.render_template", return_value="login") as render:
+                resp = auth_client.post("/auth/login", data={"username": "", "password": ""})
         assert resp.status_code == 200
         render.assert_called_once()
 
@@ -577,45 +556,42 @@ class TestLoginRoute:
 
     def test_post_master_ip_denied(self, auth_client):
         owner = _mock_user(is_owner=True, password_ok=False)
-        with unauthenticated_client(auth_client):
-            with patch("extensions.limiter.limit", return_value=lambda f: f):
-                with patch("routes.auth.User.query", _chain_query(first=owner)):
-                    with patch(
-                        "routes.auth._validate_credentials",
-                        return_value=(owner, False, {"reason": "ip_denied"}),
-                    ):
-                        with patch("routes.auth._log_failed_login"):
-                            with patch("routes.auth.render_template", return_value="login"):
-                                resp = auth_client.post(
-                                    "/auth/login",
-                                    data={"username": "owner", "password": "x"},
-                                )
+        with unauthenticated_client(auth_client), patch("extensions.limiter.limit", return_value=lambda f: f):
+            with patch("routes.auth.User.query", _chain_query(first=owner)):
+                with patch(
+                    "routes.auth._validate_credentials",
+                    return_value=(owner, False, {"reason": "ip_denied"}),
+                ):
+                    with patch("routes.auth._log_failed_login"):
+                        with patch("routes.auth.render_template", return_value="login"):
+                            resp = auth_client.post(
+                                "/auth/login",
+                                data={"username": "owner", "password": "x"},
+                            )
         assert resp.status_code == 200
 
     def test_post_master_disabled(self, auth_client):
         owner = _mock_user(is_owner=True, password_ok=False)
-        with unauthenticated_client(auth_client):
-            with patch("extensions.limiter.limit", return_value=lambda f: f):
-                with patch("routes.auth.User.query", _chain_query(first=owner)):
-                    with patch(
-                        "routes.auth._validate_credentials",
-                        return_value=(owner, False, {"reason": "disabled"}),
-                    ):
-                        with patch("routes.auth._log_failed_login"):
-                            with patch("routes.auth.render_template", return_value="login"):
-                                resp = auth_client.post(
-                                    "/auth/login",
-                                    data={"username": "owner", "password": "x"},
-                                )
+        with unauthenticated_client(auth_client), patch("extensions.limiter.limit", return_value=lambda f: f):
+            with patch("routes.auth.User.query", _chain_query(first=owner)):
+                with patch(
+                    "routes.auth._validate_credentials",
+                    return_value=(owner, False, {"reason": "disabled"}),
+                ):
+                    with patch("routes.auth._log_failed_login"):
+                        with patch("routes.auth.render_template", return_value="login"):
+                            resp = auth_client.post(
+                                "/auth/login",
+                                data={"username": "owner", "password": "x"},
+                            )
         assert resp.status_code == 200
 
     def test_post_inactive_user(self, auth_client):
         user = _mock_user(is_active=False)
-        with unauthenticated_client(auth_client):
-            with patch("extensions.limiter.limit", return_value=lambda f: f):
-                with patch("routes.auth._validate_credentials", return_value=(user, False, {})):
-                    with patch("routes.auth.render_template", return_value="login"):
-                        resp = auth_client.post("/auth/login", data={"username": "u", "password": "p"})
+        with unauthenticated_client(auth_client), patch("extensions.limiter.limit", return_value=lambda f: f):
+            with patch("routes.auth._validate_credentials", return_value=(user, False, {})):
+                with patch("routes.auth.render_template", return_value="login"):
+                    resp = auth_client.post("/auth/login", data={"username": "u", "password": "p"})
         assert resp.status_code == 200
 
     def test_post_inactive_tenant(self, auth_client):
@@ -675,32 +651,30 @@ class TestLoginRoute:
             for p in patches:
                 p.start()
             try:
-                with patch("routes.auth._validate_credentials", return_value=(user, False, {})):
-                    with patch(
-                        "routes.auth._perform_login",
-                        return_value=__import__("flask").redirect("/dash"),
-                    ):
-                        resp = auth_client.post(
-                            "/auth/login",
-                            data={
-                                "username": "u",
-                                "password": "p",
-                                "remember_me": "on",
-                            },
-                        )
+                with patch("routes.auth._validate_credentials", return_value=(user, False, {})), patch(
+                    "routes.auth._perform_login",
+                    return_value=__import__("flask").redirect("/dash"),
+                ):
+                    resp = auth_client.post(
+                        "/auth/login",
+                        data={
+                            "username": "u",
+                            "password": "p",
+                            "remember_me": "on",
+                        },
+                    )
                 assert resp.status_code == 302
             finally:
                 for p in reversed(patches):
                     p.stop()
 
     def test_post_invalid_access_mode_defaults_users(self, auth_client):
-        with unauthenticated_client(auth_client):
-            with patch("extensions.limiter.limit", return_value=lambda f: f):
-                with patch("routes.auth.render_template", return_value="login") as render:
-                    auth_client.post(
-                        "/auth/login",
-                        data={"username": "", "password": "", "access_mode": "hacker"},
-                    )
+        with unauthenticated_client(auth_client), patch("extensions.limiter.limit", return_value=lambda f: f):
+            with patch("routes.auth.render_template", return_value="login") as render:
+                auth_client.post(
+                    "/auth/login",
+                    data={"username": "", "password": "", "access_mode": "hacker"},
+                )
         assert render.call_args.kwargs["access_mode"] == "users"
 
     def test_post_branch_lookup_exception(self, auth_client):
@@ -721,16 +695,14 @@ class TestLoginRoute:
             for p in patches:
                 p.start()
             try:
-                with patch("routes.auth.db.session.get", side_effect=_session_get):
-                    with patch(
-                        "routes.auth._validate_credentials",
-                        return_value=(user, False, {}),
-                    ):
-                        with patch(
-                            "routes.auth._perform_login",
-                            return_value=__import__("flask").redirect("/dash"),
-                        ):
-                            resp = auth_client.post("/auth/login", data={"username": "u", "password": "p"})
+                with patch("routes.auth.db.session.get", side_effect=_session_get), patch(
+                    "routes.auth._validate_credentials",
+                    return_value=(user, False, {}),
+                ), patch(
+                    "routes.auth._perform_login",
+                    return_value=__import__("flask").redirect("/dash"),
+                ):
+                    resp = auth_client.post("/auth/login", data={"username": "u", "password": "p"})
                 assert resp.status_code == 302
             finally:
                 for p in reversed(patches):
@@ -762,99 +734,97 @@ class TestLoginRoute:
 class TestPerformLogin:
     def test_perform_login_with_master_and_safe_next(self, auth_app):
         user = _mock_user(role_slug="seller")
-        with auth_app.app_context():
-            with auth_app.test_request_context(
-                "/auth/login?next=/dashboard", environ_base={"REMOTE_ADDR": "127.0.0.1"}
-            ):
-                patches = [
-                    patch("utils.session_security.rotate_session"),
-                    patch("routes.auth.login_user"),
-                    patch("routes.auth.set_active_tenant"),
-                    patch("routes.auth.set_active_branch"),
-                    patch("routes.auth.clear_active_branch"),
-                    patch("routes.auth.is_global_user", return_value=False),
-                    patch("routes.auth.user_can_access_branch", return_value=True),
-                    patch("routes.auth.db.session.add"),
-                    patch("routes.auth.db.session.commit"),
-                    patch("routes.auth.LoggingCore.log_audit"),
-                    patch("utils.safe_redirect.is_safe_redirect_url", return_value=True),
-                    patch("models.login_history.LoginHistory"),
-                    patch("models.security_alert.SecurityAlert"),
-                ]
-                for p in patches:
-                    p.start()
-                try:
-                    from routes.auth import _perform_login
+        with auth_app.app_context(), auth_app.test_request_context(
+            "/auth/login?next=/dashboard", environ_base={"REMOTE_ADDR": "127.0.0.1"}
+        ):
+            patches = [
+                patch("utils.session_security.rotate_session"),
+                patch("routes.auth.login_user"),
+                patch("routes.auth.set_active_tenant"),
+                patch("routes.auth.set_active_branch"),
+                patch("routes.auth.clear_active_branch"),
+                patch("routes.auth.is_global_user", return_value=False),
+                patch("routes.auth.user_can_access_branch", return_value=True),
+                patch("routes.auth.db.session.add"),
+                patch("routes.auth.db.session.commit"),
+                patch("routes.auth.LoggingCore.log_audit"),
+                patch("utils.safe_redirect.is_safe_redirect_url", return_value=True),
+                patch("models.login_history.LoginHistory"),
+                patch("models.security_alert.SecurityAlert"),
+            ]
+            for p in patches:
+                p.start()
+            try:
+                from routes.auth import _perform_login
 
-                    resp = _perform_login(
-                        user,
-                        True,
-                        1,
-                        1,
-                        "users",
-                        True,
-                        {"method": "seed", "seed_source": "env"},
-                    )
-                    assert resp.status_code == 302
-                    assert resp.location.endswith("/dashboard")
-                finally:
-                    for p in reversed(patches):
-                        p.stop()
+                resp = _perform_login(
+                    user,
+                    True,
+                    1,
+                    1,
+                    "users",
+                    True,
+                    {"method": "seed", "seed_source": "env"},
+                )
+                assert resp.status_code == 302
+                assert resp.location.endswith("/dashboard")
+            finally:
+                for p in reversed(patches):
+                    p.stop()
 
     def test_perform_login_security_alert_failure_rolls_back(self, auth_app):
         user = _mock_user(role_slug="seller")
-        with auth_app.app_context():
-            with auth_app.test_request_context(environ_base={"REMOTE_ADDR": "127.0.0.1"}):
-                with patch("utils.session_security.rotate_session"):
-                    with patch("routes.auth.login_user"):
-                        with patch("routes.auth.set_active_tenant"):
-                            with patch("routes.auth.clear_active_branch"):
-                                with patch("routes.auth.is_global_user", return_value=True):
-                                    with patch(
-                                        "routes.auth.user_can_access_branch",
-                                        return_value=True,
-                                    ):
-                                        with patch("routes.auth.set_active_branch"):
-                                            with patch("routes.auth.db.session.add"):
-                                                with patch(
-                                                    "routes.auth.db.session.commit",
-                                                    side_effect=[
-                                                        None,
-                                                        RuntimeError("alert fail"),
-                                                    ],
-                                                ):
-                                                    with patch("routes.auth.db.session.rollback") as rollback:
-                                                        with patch("routes.auth.LoggingCore.log_audit"):
+        with auth_app.app_context(), auth_app.test_request_context(environ_base={"REMOTE_ADDR": "127.0.0.1"}):
+            with patch("utils.session_security.rotate_session"):
+                with patch("routes.auth.login_user"):
+                    with patch("routes.auth.set_active_tenant"):
+                        with patch("routes.auth.clear_active_branch"):
+                            with patch("routes.auth.is_global_user", return_value=True):
+                                with patch(
+                                    "routes.auth.user_can_access_branch",
+                                    return_value=True,
+                                ):
+                                    with patch("routes.auth.set_active_branch"):
+                                        with patch("routes.auth.db.session.add"):
+                                            with patch(
+                                                "routes.auth.db.session.commit",
+                                                side_effect=[
+                                                    None,
+                                                    RuntimeError("alert fail"),
+                                                ],
+                                            ):
+                                                with patch("routes.auth.db.session.rollback") as rollback:
+                                                    with patch("routes.auth.LoggingCore.log_audit"):
+                                                        with patch(
+                                                            "utils.safe_redirect.is_safe_redirect_url",
+                                                            return_value=False,
+                                                        ):
                                                             with patch(
-                                                                "utils.safe_redirect.is_safe_redirect_url",
+                                                                "routes.auth.is_global_owner_user",
                                                                 return_value=False,
                                                             ):
                                                                 with patch(
-                                                                    "routes.auth.is_global_owner_user",
-                                                                    return_value=False,
+                                                                    "routes.auth.url_for",
+                                                                    return_value="/dashboard",
                                                                 ):
-                                                                    with patch(
-                                                                        "routes.auth.url_for",
-                                                                        return_value="/dashboard",
-                                                                    ):
-                                                                        with patch("models.login_history.LoginHistory"):
-                                                                            with patch(
-                                                                                "models.security_alert.SecurityAlert"
-                                                                            ):
-                                                                                from routes.auth import (
-                                                                                    _perform_login,
-                                                                                )
+                                                                    with patch("models.login_history.LoginHistory"):
+                                                                        with patch(
+                                                                            "models.security_alert.SecurityAlert"
+                                                                        ):
+                                                                            from routes.auth import (
+                                                                                _perform_login,
+                                                                            )
 
-                                                                                _perform_login(
-                                                                                    user,
-                                                                                    False,
-                                                                                    1,
-                                                                                    None,
-                                                                                    "users",
-                                                                                    True,
-                                                                                    {"method": "seed"},
-                                                                                )
-                                                                                rollback.assert_called()
+                                                                            _perform_login(
+                                                                                user,
+                                                                                False,
+                                                                                1,
+                                                                                None,
+                                                                                "users",
+                                                                                True,
+                                                                                {"method": "seed"},
+                                                                            )
+                                                                            rollback.assert_called()
 
 
 class TestLogoutRoute:
@@ -871,10 +841,9 @@ class TestLogoutRoute:
         logout.assert_called_once()
 
     def test_logout_anonymous(self, auth_client):
-        with unauthenticated_client(auth_client):
-            with patch("routes.auth.clear_active_branch"):
-                with patch("routes.auth.clear_active_tenant"):
-                    resp = auth_client.get("/auth/logout")
+        with unauthenticated_client(auth_client), patch("routes.auth.clear_active_branch"):
+            with patch("routes.auth.clear_active_tenant"):
+                resp = auth_client.get("/auth/logout")
         assert resp.status_code == 302
 
 

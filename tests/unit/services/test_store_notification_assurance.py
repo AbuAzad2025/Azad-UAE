@@ -136,6 +136,7 @@ class TestEmailDispatch:
         )
 
         from flask import current_app
+
         from services.store_notification_service import StoreNotificationService
 
         with app.app_context():

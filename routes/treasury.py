@@ -3,15 +3,16 @@ Treasury Routes - مسارات المركز المالي والخزينة
 Phase 8: Treasury & Cash Position Reporting
 """
 
-from flask_babel import gettext
-
 from datetime import datetime
-from extensions import db
+
 from flask import Blueprint, render_template, request, send_file
-from flask_login import login_required, current_user
+from flask_babel import gettext
+from flask_login import current_user, login_required
+
+from extensions import db
+from utils.branching import get_accessible_branches, user_can_access_branch
 from utils.decorators import permission_required, report_branch_scope_id
 from utils.tenanting import get_active_tenant_id
-from utils.branching import get_accessible_branches, user_can_access_branch
 
 treasury_bp = Blueprint("treasury", __name__, url_prefix="/reports")
 
@@ -27,9 +28,7 @@ def treasury():
 
     if branch_id is None:
         branch_id = scoped_branch_id
-    elif scoped_branch_id is not None and branch_id != scoped_branch_id:
-        return render_template("errors/403.html"), 403
-    elif scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
+    elif scoped_branch_id is not None and branch_id != scoped_branch_id or scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
         return render_template("errors/403.html"), 403
 
     tenant_id = get_active_tenant_id(current_user)
@@ -50,8 +49,8 @@ def treasury():
 @login_required
 @permission_required("view_reports")
 def treasury_export():
-    from services.treasury_service import TreasuryService
     from services.export_service import ExportService
+    from services.treasury_service import TreasuryService
 
     fmt = (request.args.get("format") or "xlsx").strip().lower()
     branch_id = request.args.get("branch_id", type=int)
@@ -59,9 +58,7 @@ def treasury_export():
 
     if branch_id is None:
         branch_id = scoped_branch_id
-    elif scoped_branch_id is not None and branch_id != scoped_branch_id:
-        return render_template("errors/403.html"), 403
-    elif scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
+    elif scoped_branch_id is not None and branch_id != scoped_branch_id or scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
         return render_template("errors/403.html"), 403
 
     tenant_id = get_active_tenant_id(current_user)
@@ -120,8 +117,9 @@ def vat_return():
 @login_required
 @permission_required("view_reports")
 def wps_export():
-    from utils.localization import get_strategy
     from flask import Response
+
+    from utils.localization import get_strategy
 
     tenant_id = get_active_tenant_id(current_user)
     from models import Tenant

@@ -3,7 +3,8 @@
 Phase 3: Moving Weighted Average Cost Data Model
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
 
@@ -46,7 +47,7 @@ class ProductWarehouseCost(db.Model):
     )  # TODO: use Config.DEFAULT_CURRENCY
 
     # Lock to prevent concurrent WAC updates
-    last_updated = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    last_updated = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
     updated_by_movement_id = db.Column(
         db.Integer, db.ForeignKey("stock_movements.id", ondelete="RESTRICT"), nullable=True, index=True
     )
@@ -54,14 +55,14 @@ class ProductWarehouseCost(db.Model):
     # Audit
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     product = db.relationship("Product", backref="warehouse_costs")

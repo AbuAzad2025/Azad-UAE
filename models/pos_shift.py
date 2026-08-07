@@ -1,6 +1,6 @@
 """Cashier shift model — tracks per-cashier shift lifecycle within a POS session."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from extensions import db
@@ -33,7 +33,7 @@ class PosShift(db.Model):
 
     session = db.relationship("PosSession", backref="shifts")
 
-    opened_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    opened_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
     closed_at = db.Column(db.DateTime, nullable=True)
 
     starting_cash = db.Column(db.Numeric(15, 3), default=Decimal("0"), nullable=False)
@@ -58,11 +58,11 @@ class PosShift(db.Model):
     SHIFT_RECONCILED = "reconciled"
     SHIFT_CLOSED = "closed"
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     @property
@@ -90,16 +90,16 @@ class PosShift(db.Model):
 
     def close(self):
         self.status = self.SHIFT_CLOSED
-        self.closed_at = datetime.now(timezone.utc)
+        self.closed_at = datetime.now(UTC)
 
     @property
     def duration_minutes(self):
-        end = self.closed_at or datetime.now(timezone.utc)
+        end = self.closed_at or datetime.now(UTC)
         start = self.opened_at
         if start.tzinfo is None:
-            start = start.replace(tzinfo=timezone.utc)
+            start = start.replace(tzinfo=UTC)
         if end.tzinfo is None:
-            end = end.replace(tzinfo=timezone.utc)
+            end = end.replace(tzinfo=UTC)
         return int((end - start).total_seconds() / 60)
 
     def to_dict(self, include_sensitive: bool = True):

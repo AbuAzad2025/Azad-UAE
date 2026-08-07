@@ -3,7 +3,6 @@ from __future__ import annotations
 import uuid
 from unittest.mock import MagicMock
 
-
 from models import GLAccountMapping, Tenant
 from models._constants import (
     GL_CONCEPT_AR,

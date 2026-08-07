@@ -1,6 +1,7 @@
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestPurchaseServiceValidations:
@@ -54,13 +55,11 @@ class TestPurchaseServiceValidations:
                 with patch(
                     "services.purchase_service.validate_currency_code",
                     return_value="AED",
-                ):
-                    with patch(
-                        "services.purchase_service.generate_number",
-                        return_value="P-001",
-                    ):
-                        with pytest.raises(ValueError, match="يجب إضافة منتج"):
-                            PurchaseService.create_purchase(user, {"supplier_name": "Test"}, lines, warehouse_id=1)
+                ), patch(
+                    "services.purchase_service.generate_number",
+                    return_value="P-001",
+                ), pytest.raises(ValueError, match="يجب إضافة منتج"):
+                    PurchaseService.create_purchase(user, {"supplier_name": "Test"}, lines, warehouse_id=1)
 
 
 class TestPurchaseServiceCreate:
@@ -88,36 +87,34 @@ class TestPurchaseServiceCreate:
                 with patch(
                     "services.purchase_service.validate_currency_code",
                     return_value="AED",
-                ):
-                    with patch(
-                        "services.purchase_service.generate_number",
-                        return_value="P-2024-001",
-                    ):
-                        with patch("services.purchase_service.db.session") as mock_db:
-                            mock_db.add = MagicMock()
-                            mock_db.flush = MagicMock()
-                            mock_db.commit = MagicMock()
-                            with patch("services.purchase_service.PurchaseLine") as mock_line:
-                                line_instance = MagicMock()
-                                line_instance.line_total = Decimal("100")
-                                mock_line.return_value = line_instance
-                                with patch("services.purchase_service.Product"):
-                                    patch(
-                                        "services.purchase_service.db.session.get",
-                                        return_value=product,
-                                    ).start()
-                                    with patch(
-                                        "services.purchase_service.post_or_fail",
-                                        return_value=None,
-                                    ):
-                                        result = PurchaseService.create_purchase(
-                                            user,
-                                            {"supplier_name": "Test Supplier"},
-                                            lines,
-                                            warehouse_id=1,
-                                            currency="AED",
-                                        )
-                                    assert result is not None
+                ), patch(
+                    "services.purchase_service.generate_number",
+                    return_value="P-2024-001",
+                ), patch("services.purchase_service.db.session") as mock_db:
+                    mock_db.add = MagicMock()
+                    mock_db.flush = MagicMock()
+                    mock_db.commit = MagicMock()
+                    with patch("services.purchase_service.PurchaseLine") as mock_line:
+                        line_instance = MagicMock()
+                        line_instance.line_total = Decimal("100")
+                        mock_line.return_value = line_instance
+                        with patch("services.purchase_service.Product"):
+                            patch(
+                                "services.purchase_service.db.session.get",
+                                return_value=product,
+                            ).start()
+                            with patch(
+                                "services.purchase_service.post_or_fail",
+                                return_value=None,
+                            ):
+                                result = PurchaseService.create_purchase(
+                                    user,
+                                    {"supplier_name": "Test Supplier"},
+                                    lines,
+                                    warehouse_id=1,
+                                    currency="AED",
+                                )
+                            assert result is not None
 
     def test_create_purchase_with_serial_numbers(self, app):
         from services.purchase_service import PurchaseService
@@ -150,38 +147,35 @@ class TestPurchaseServiceCreate:
                 with patch(
                     "services.purchase_service.validate_currency_code",
                     return_value="AED",
-                ):
-                    with patch(
-                        "services.purchase_service.generate_number",
-                        return_value="P-001",
-                    ):
-                        with patch("services.purchase_service.db.session") as mock_db:
-                            mock_db.add = MagicMock()
-                            mock_db.flush = MagicMock()
-                            mock_db.commit = MagicMock()
-                            with patch("services.purchase_service.PurchaseLine") as mock_line:
-                                line_instance = MagicMock()
-                                line_instance.line_total = Decimal("100")
-                                mock_line.return_value = line_instance
-                                with patch("services.purchase_service.Product"):
-                                    patch(
-                                        "services.purchase_service.db.session.get",
-                                        return_value=product,
-                                    ).start()
-                                    with patch(
-                                        "services.purchase_service.post_or_fail",
-                                        return_value=None,
-                                    ):
-                                        with patch("models.product_serial.ProductSerial") as mock_sn:
-                                            mock_sn.query.filter_by.return_value.first.return_value = None
-                                            mock_sn.query.filter.return_value.count.return_value = 0
-                                            result = PurchaseService.create_purchase(
-                                                user,
-                                                {"supplier_name": "Test Supplier"},
-                                                lines,
-                                                warehouse_id=1,
-                                                currency="AED",
-                                            )
+                ), patch(
+                    "services.purchase_service.generate_number",
+                    return_value="P-001",
+                ), patch("services.purchase_service.db.session") as mock_db:
+                    mock_db.add = MagicMock()
+                    mock_db.flush = MagicMock()
+                    mock_db.commit = MagicMock()
+                    with patch("services.purchase_service.PurchaseLine") as mock_line:
+                        line_instance = MagicMock()
+                        line_instance.line_total = Decimal("100")
+                        mock_line.return_value = line_instance
+                        with patch("services.purchase_service.Product"):
+                            patch(
+                                "services.purchase_service.db.session.get",
+                                return_value=product,
+                            ).start()
+                            with patch(
+                                "services.purchase_service.post_or_fail",
+                                return_value=None,
+                            ), patch("models.product_serial.ProductSerial") as mock_sn:
+                                mock_sn.query.filter_by.return_value.first.return_value = None
+                                mock_sn.query.filter.return_value.count.return_value = 0
+                                result = PurchaseService.create_purchase(
+                                    user,
+                                    {"supplier_name": "Test Supplier"},
+                                    lines,
+                                    warehouse_id=1,
+                                    currency="AED",
+                                )
         assert result is not None
 
 
@@ -262,42 +256,40 @@ class TestPurchaseServiceTenantIsolation:
                     with patch(
                         "services.purchase_service.validate_currency_code",
                         return_value="AED",
-                    ):
-                        with patch(
-                            "services.purchase_service.generate_number",
-                            return_value="P-001",
-                        ):
-                            with patch("services.purchase_service.db.session") as mock_db:
-                                mock_db.add = MagicMock()
-                                mock_db.flush = MagicMock()
-                                mock_db.commit = MagicMock()
-                                with patch("services.purchase_service.PurchaseLine") as mock_line:
-                                    line_instance = MagicMock()
-                                    line_instance.line_total = 100
-                                    mock_line.return_value = line_instance
-                                    with patch("services.purchase_service.Product"):
-                                        patch(
-                                            "services.purchase_service.db.session.get",
-                                            return_value=product,
-                                        ).start()
-                                        with patch(
-                                            "services.purchase_service.post_or_fail",
-                                            return_value=None,
-                                        ):
-                                            result = PurchaseService.create_purchase(
-                                                user,
-                                                {"supplier_id": 2},
-                                                [
-                                                    {
-                                                        "product_id": 1,
-                                                        "quantity": 5,
-                                                        "unit_cost": 20,
-                                                    }
-                                                ],
-                                                warehouse_id=1,
-                                                currency="AED",
-                                            )
-                                            assert result is not None
+                    ), patch(
+                        "services.purchase_service.generate_number",
+                        return_value="P-001",
+                    ), patch("services.purchase_service.db.session") as mock_db:
+                        mock_db.add = MagicMock()
+                        mock_db.flush = MagicMock()
+                        mock_db.commit = MagicMock()
+                        with patch("services.purchase_service.PurchaseLine") as mock_line:
+                            line_instance = MagicMock()
+                            line_instance.line_total = 100
+                            mock_line.return_value = line_instance
+                            with patch("services.purchase_service.Product"):
+                                patch(
+                                    "services.purchase_service.db.session.get",
+                                    return_value=product,
+                                ).start()
+                                with patch(
+                                    "services.purchase_service.post_or_fail",
+                                    return_value=None,
+                                ):
+                                    result = PurchaseService.create_purchase(
+                                        user,
+                                        {"supplier_id": 2},
+                                        [
+                                            {
+                                                "product_id": 1,
+                                                "quantity": 5,
+                                                "unit_cost": 20,
+                                            }
+                                        ],
+                                        warehouse_id=1,
+                                        currency="AED",
+                                    )
+                                    assert result is not None
 
     def test_create_purchase_manual_supplier_name_unchanged(self, app):
         """No supplier_id, valid supplier_name, valid warehouse -> success (existing behavior)."""
@@ -326,42 +318,40 @@ class TestPurchaseServiceTenantIsolation:
                 with patch(
                     "services.purchase_service.validate_currency_code",
                     return_value="AED",
-                ):
-                    with patch(
-                        "services.purchase_service.generate_number",
-                        return_value="P-001",
-                    ):
-                        with patch("services.purchase_service.db.session") as mock_db:
-                            mock_db.add = MagicMock()
-                            mock_db.flush = MagicMock()
-                            mock_db.commit = MagicMock()
-                            with patch("services.purchase_service.PurchaseLine") as mock_line:
-                                line_instance = MagicMock()
-                                line_instance.line_total = 100
-                                mock_line.return_value = line_instance
-                                with patch("services.purchase_service.Product"):
-                                    patch(
-                                        "services.purchase_service.db.session.get",
-                                        return_value=product,
-                                    ).start()
-                                    with patch(
-                                        "services.purchase_service.post_or_fail",
-                                        return_value=None,
-                                    ):
-                                        result = PurchaseService.create_purchase(
-                                            user,
-                                            {"supplier_name": "Manual Supplier Name"},
-                                            [
-                                                {
-                                                    "product_id": 1,
-                                                    "quantity": 5,
-                                                    "unit_cost": 20,
-                                                }
-                                            ],
-                                            warehouse_id=1,
-                                            currency="AED",
-                                        )
-                                        assert result is not None
+                ), patch(
+                    "services.purchase_service.generate_number",
+                    return_value="P-001",
+                ), patch("services.purchase_service.db.session") as mock_db:
+                    mock_db.add = MagicMock()
+                    mock_db.flush = MagicMock()
+                    mock_db.commit = MagicMock()
+                    with patch("services.purchase_service.PurchaseLine") as mock_line:
+                        line_instance = MagicMock()
+                        line_instance.line_total = 100
+                        mock_line.return_value = line_instance
+                        with patch("services.purchase_service.Product"):
+                            patch(
+                                "services.purchase_service.db.session.get",
+                                return_value=product,
+                            ).start()
+                            with patch(
+                                "services.purchase_service.post_or_fail",
+                                return_value=None,
+                            ):
+                                result = PurchaseService.create_purchase(
+                                    user,
+                                    {"supplier_name": "Manual Supplier Name"},
+                                    [
+                                        {
+                                            "product_id": 1,
+                                            "quantity": 5,
+                                            "unit_cost": 20,
+                                        }
+                                    ],
+                                    warehouse_id=1,
+                                    currency="AED",
+                                )
+                                assert result is not None
 
     def test_create_purchase_serial_count_mismatch(self, app):
         from services.purchase_service import PurchaseService
@@ -387,31 +377,28 @@ class TestPurchaseServiceTenantIsolation:
                 with patch(
                     "services.purchase_service.validate_currency_code",
                     return_value="AED",
-                ):
-                    with patch(
-                        "services.purchase_service.generate_number",
-                        return_value="P-001",
-                    ):
-                        with patch("services.purchase_service.db.session") as mock_db:
-                            mock_db.add = MagicMock()
-                            mock_db.flush = MagicMock()
-                            with patch("services.purchase_service.PurchaseLine") as mock_line:
-                                line_instance = MagicMock()
-                                line_instance.line_total = Decimal("100")
-                                line_instance.id = 1
-                                mock_line.return_value = line_instance
-                                with patch(
-                                    "services.purchase_service.db.session.get",
-                                    return_value=product,
-                                ):
-                                    with pytest.raises(ValueError, match="يتطلب"):
-                                        PurchaseService.create_purchase(
-                                            user,
-                                            {"supplier_name": "Test"},
-                                            lines,
-                                            warehouse_id=1,
-                                            currency="AED",
-                                        )
+                ), patch(
+                    "services.purchase_service.generate_number",
+                    return_value="P-001",
+                ), patch("services.purchase_service.db.session") as mock_db:
+                    mock_db.add = MagicMock()
+                    mock_db.flush = MagicMock()
+                    with patch("services.purchase_service.PurchaseLine") as mock_line:
+                        line_instance = MagicMock()
+                        line_instance.line_total = Decimal("100")
+                        line_instance.id = 1
+                        mock_line.return_value = line_instance
+                        with patch(
+                            "services.purchase_service.db.session.get",
+                            return_value=product,
+                        ), pytest.raises(ValueError, match="يتطلب"):
+                            PurchaseService.create_purchase(
+                                user,
+                                {"supplier_name": "Test"},
+                                lines,
+                                warehouse_id=1,
+                                currency="AED",
+                            )
 
     def test_create_purchase_with_currency_conversion(self, app):
         from services.purchase_service import PurchaseService
@@ -437,33 +424,31 @@ class TestPurchaseServiceTenantIsolation:
                 with patch(
                     "services.purchase_service.validate_currency_code",
                     return_value="USD",
-                ):
-                    with patch(
-                        "services.purchase_service.generate_number",
-                        return_value="P-001",
-                    ):
-                        with patch("services.purchase_service.db.session") as mock_db:
-                            mock_db.add = MagicMock()
-                            mock_db.flush = MagicMock()
-                            mock_db.commit = MagicMock()
-                            with patch("services.purchase_service.PurchaseLine") as mock_line:
-                                line_instance = MagicMock()
-                                line_instance.line_total = Decimal("100")
-                                mock_line.return_value = line_instance
-                                with patch("services.purchase_service.Product"):
-                                    patch(
-                                        "services.purchase_service.db.session.get",
-                                        return_value=product,
-                                    ).start()
-                                    with patch(
-                                        "services.purchase_service.post_or_fail",
-                                        return_value=None,
-                                    ):
-                                        result = PurchaseService.create_purchase(
-                                            user,
-                                            {"supplier_name": "Test"},
-                                            lines,
-                                            warehouse_id=1,
-                                            currency="USD",
-                                        )
-                                        assert result is not None
+                ), patch(
+                    "services.purchase_service.generate_number",
+                    return_value="P-001",
+                ), patch("services.purchase_service.db.session") as mock_db:
+                    mock_db.add = MagicMock()
+                    mock_db.flush = MagicMock()
+                    mock_db.commit = MagicMock()
+                    with patch("services.purchase_service.PurchaseLine") as mock_line:
+                        line_instance = MagicMock()
+                        line_instance.line_total = Decimal("100")
+                        mock_line.return_value = line_instance
+                        with patch("services.purchase_service.Product"):
+                            patch(
+                                "services.purchase_service.db.session.get",
+                                return_value=product,
+                            ).start()
+                            with patch(
+                                "services.purchase_service.post_or_fail",
+                                return_value=None,
+                            ):
+                                result = PurchaseService.create_purchase(
+                                    user,
+                                    {"supplier_name": "Test"},
+                                    lines,
+                                    warehouse_id=1,
+                                    currency="USD",
+                                )
+                                assert result is not None

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -123,7 +123,7 @@ class TestDonationAnalytics:
         donation = MagicMock(
             transaction_type="purchase",
             amount_usd=50,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
             status="completed",
         )
         mocker.patch("services.analytics_service._db_session").return_value.query.return_value.all.return_value = [
@@ -145,7 +145,7 @@ class TestDonationAnalytics:
         donation = MagicMock(
             transaction_type="donation",
             amount_usd=20,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
             status="completed",
         )
         mocker.patch(
@@ -177,7 +177,7 @@ class TestDonationAnalytics:
         donation = MagicMock(
             transaction_type="donation",
             amount_usd=15,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
             status="completed",
         )
         mocker.patch(
@@ -327,7 +327,7 @@ class TestDonationAnalytics:
         assert data["donations"] == [0]
 
     def test_revenue_by_period_counts_in_window(self, mocker):
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         purchase = MagicMock(
             transaction_type="purchase",
             amount_usd=40,

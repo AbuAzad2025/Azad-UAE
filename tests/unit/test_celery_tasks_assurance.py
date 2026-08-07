@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -115,8 +115,9 @@ class TestInventoryReconciliationTask:
         mock_db = mocker.patch("extensions.db")
         mock_db.session.query.return_value.distinct.return_value.order_by.return_value.all.return_value = [(1,)]
 
-        from services.celery_tasks import run_inventory_reconciliation
         import logging
+
+        from services.celery_tasks import run_inventory_reconciliation
 
         with caplog.at_level(logging.WARNING):
             result = run_inventory_reconciliation()
@@ -223,7 +224,7 @@ class TestAbandonedCartReminders:
     """send_abandoned_cart_reminders — first/second pass, rollback on failure."""
 
     def test_first_reminder_updates_cart(self, mocker):
-        _now = datetime.now(timezone.utc)
+        _now = datetime.now(UTC)
         cart = MagicMock(tenant_id=1, reminder_count=0)
         mock_q = MagicMock()
         mock_q.filter.return_value.all.side_effect = [[cart], []]

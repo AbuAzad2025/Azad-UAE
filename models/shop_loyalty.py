@@ -1,5 +1,6 @@
+from datetime import UTC, datetime
+
 from extensions import db
-from datetime import datetime, timezone
 
 
 class ShopLoyalty(db.Model):
@@ -24,8 +25,8 @@ class ShopLoyalty(db.Model):
     updated_at = db.Column(
         db.DateTime,
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     account = db.relationship("ShopCustomerAccount", backref=db.backref("loyalty", uselist=False))
@@ -54,5 +55,5 @@ class ShopLoyaltyTransaction(db.Model):
         db.DateTime,
         nullable=False,
         index=True,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
     )

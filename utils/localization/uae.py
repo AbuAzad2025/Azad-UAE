@@ -3,6 +3,7 @@ UAEStrategy — 5% VAT, AED-only for tax reporting, FTA XML + QR.
 """
 
 from decimal import Decimal
+
 from .engine import LocalizationStrategy
 
 

@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import os
 
-
 from ai_knowledge.agents.intelligent_assistant import intelligent_assistant
 from ai_knowledge.core.learning_system import learning_system
 

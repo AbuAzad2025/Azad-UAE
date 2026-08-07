@@ -3,7 +3,8 @@ DocumentSnapshot — لقطة المستند
 Immutable snapshot of document state at print/finalize/amend time.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from extensions import db
 
 
@@ -32,7 +33,7 @@ class DocumentSnapshot(db.Model):
     snapshot_reason = db.Column(db.String(20), nullable=False, default="print")
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )

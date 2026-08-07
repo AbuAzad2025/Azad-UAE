@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
+from flask_babel import gettext
 
 from extensions import db
-from flask_babel import gettext
 from models import (
     CampaignLog,
     EmailCampaign,
@@ -103,7 +104,7 @@ class EmailMarketingService:
                 EmailSubscriber.list_id == EmailList.id,
             ).filter(EmailList.tenant_id == int(tenant_id))
         subs = query.all()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         for sub in subs:
             sub.status = "unsubscribed"
             sub.unsubscribed_at = now
@@ -213,7 +214,7 @@ class EmailMarketingService:
                     campaign_id=campaign.id,
                     subscriber_id=sub.id,
                     status="sent",
-                    sent_at=datetime.now(timezone.utc),
+                    sent_at=datetime.now(UTC),
                 )
                 db.session.add(log)
                 sent += 1
@@ -227,7 +228,7 @@ class EmailMarketingService:
                 )
                 db.session.add(log)
         campaign.status = "sent"
-        campaign.sent_date = datetime.now(timezone.utc)
+        campaign.sent_date = datetime.now(UTC)
         campaign.sent_count = sent
         campaign.bounce_count = len(subscribers) - sent
         try:

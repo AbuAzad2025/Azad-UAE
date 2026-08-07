@@ -21,12 +21,12 @@ Exit codes:
 from __future__ import annotations
 
 import ast
-import sys
 import json
 import os
+import sys
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterator, Callable
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 

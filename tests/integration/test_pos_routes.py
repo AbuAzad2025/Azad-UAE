@@ -10,7 +10,7 @@ from decimal import Decimal
 class TestPOSSession:
     def test_pos_session_start_creates_session(self, app, db_session, client):
         """POST /pos/api/session/open creates a POS session with opening balance."""
-        from models import Tenant, Branch, Role, User, Permission, SystemSettings
+        from models import Branch, Permission, Role, SystemSettings, Tenant, User
 
         tid = uuid.uuid4().hex[:4]
         tenant = Tenant(
@@ -91,8 +91,7 @@ class TestPOSSession:
 
     def test_pos_checkout_creates_sale_and_reduces_stock(self, app, db_session, client):
         """POST /pos/api/checkout creates sale, records payment, decreases stock."""
-        from models import Tenant, Branch, Role, User, Permission, SystemSettings
-        from models import Warehouse, Product, ProductCategory
+        from models import Branch, Permission, Product, ProductCategory, Role, SystemSettings, Tenant, User, Warehouse
         from services.stock_service import StockService
 
         tid = uuid.uuid4().hex[:4]
@@ -223,7 +222,7 @@ class TestPOSSession:
         sale_id = data["sale_id"]
         assert data["sale_number"] is not None
 
-        from models import Sale, Payment
+        from models import Payment, Sale
 
         sale = db_session.get(Sale, sale_id)
         assert sale is not None
@@ -247,8 +246,7 @@ class TestPOSSession:
 
     def test_pos_session_close_reconciles_cash(self, app, db_session, client):
         """POST /pos/api/session/close reconciles actual vs expected cash."""
-        from models import Tenant, Branch, Role, User, Permission, SystemSettings
-        from models import Warehouse, Product, ProductCategory
+        from models import Branch, Permission, Product, ProductCategory, Role, SystemSettings, Tenant, User, Warehouse
         from services.stock_service import StockService
 
         tid = uuid.uuid4().hex[:4]
@@ -401,8 +399,7 @@ class TestPOSSession:
 
     def test_pos_session_close_overage_posts_gl(self, app, db_session, client):
         """Cash overage (actual > expected) posts a balanced GL entry."""
-        from models import Tenant, Branch, Role, User, Permission, SystemSettings
-        from models import Warehouse, Product, ProductCategory
+        from models import Branch, Permission, Product, ProductCategory, Role, SystemSettings, Tenant, User, Warehouse
         from services.stock_service import StockService
         from utils.gl_reference_types import GLRef
 
@@ -564,8 +561,7 @@ class TestPOSSession:
 
     def test_pos_checkout_with_price_override_permission(self, app, db_session, client):
         """Price override without permission must be blocked."""
-        from models import Tenant, Branch, Role, User, Permission, SystemSettings
-        from models import Warehouse, Product, ProductCategory
+        from models import Branch, Permission, Product, ProductCategory, Role, SystemSettings, Tenant, User, Warehouse
         from services.stock_service import StockService
 
         tid = uuid.uuid4().hex[:4]
@@ -689,8 +685,18 @@ class TestPOSSession:
 
     def test_pos_sale_on_customer_credit(self, app, db_session, client):
         """POS sale on credit defers payment — sale has balance_due > 0."""
-        from models import Tenant, Branch, Role, User, Permission, SystemSettings
-        from models import Warehouse, Product, ProductCategory, Customer
+        from models import (
+            Branch,
+            Customer,
+            Permission,
+            Product,
+            ProductCategory,
+            Role,
+            SystemSettings,
+            Tenant,
+            User,
+            Warehouse,
+        )
         from services.stock_service import StockService
 
         tid = uuid.uuid4().hex[:4]
@@ -835,7 +841,7 @@ class TestPOSSession:
 
     def test_pos_drawer_isolation_per_session(self, app, db_session):
         """Two cashiers have separate drawers/sessions in the same branch."""
-        from models import Tenant, Branch, Role, User, Permission, SystemSettings
+        from models import Branch, Permission, Role, SystemSettings, Tenant, User
 
         tid = uuid.uuid4().hex[:4]
         tenant = Tenant(
@@ -916,7 +922,7 @@ class TestPOSSession:
 
     def test_pos_walkin_customer_auto_created(self, app, db_session, client):
         """GET /pos/api/walkin-customer returns/creates a tenant-scoped walk-in customer."""
-        from models import Tenant, Branch, Role, User, Permission, SystemSettings
+        from models import Branch, Permission, Role, SystemSettings, Tenant, User
 
         tid = uuid.uuid4().hex[:4]
         tenant = Tenant(

@@ -5,7 +5,7 @@ import json
 import logging
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -15,14 +15,14 @@ from services import logging_core
 from services.logging_core import (
     LoggingCore,
     _ColorFormatter,
-    _JsonFormatter,
-    _RateMonitor,
-    _RequestIdFilter,
-    _SafeLogRecordFilter,
     _ensure_utf8_stream,
     _get_request_context,
     _get_request_id,
+    _JsonFormatter,
     _make_fingerprint,
+    _RateMonitor,
+    _RequestIdFilter,
+    _SafeLogRecordFilter,
     _sanitize_dict,
 )
 
@@ -237,7 +237,7 @@ class TestErrorQueries:
         log.level = "ERROR"
         log.category = "BACKEND"
         log.source = "s"
-        log.created_at = datetime.now(timezone.utc)
+        log.created_at = datetime.now(UTC)
         log.message = "m"
         log.stack_trace = "trace"
         q = MagicMock()

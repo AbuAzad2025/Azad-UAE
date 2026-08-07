@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
@@ -25,7 +25,7 @@ def _product_rows(count=25):
         row.current_stock = Decimal("10")
         row.sales_count = 20 if i % 2 == 0 else 5
         row.total_sold = Decimal("100")
-        row.last_sale_date = datetime.now(timezone.utc) - timedelta(days=7)
+        row.last_sale_date = datetime.now(UTC) - timedelta(days=7)
         rows.append(row)
     return rows
 
@@ -82,14 +82,14 @@ class TestConsolidatedImports:
         assert data_analyzer is not None
 
     def test_learning_and_expansion_reexports(self):
+        from ai_knowledge.expansion_core import KnowledgeExpander, global_connector
+        from ai_knowledge.generation_core import CodeGenerator
+        from ai_knowledge.improvement_core import AzadSelfImprovement
         from ai_knowledge.learning_engine import (
             ContinuousLearner,
             QuickLearner,
             evaluate_and_learn,
         )
-        from ai_knowledge.expansion_core import KnowledgeExpander, global_connector
-        from ai_knowledge.generation_core import CodeGenerator
-        from ai_knowledge.improvement_core import AzadSelfImprovement
 
         assert ContinuousLearner() is not None
         assert QuickLearner() is not None
@@ -478,13 +478,13 @@ class TestContinuousLearnerWave2:
 
 class TestCoreEngineLazyAttrs:
     def test_memory_and_conversation_singletons(self, knowledge_path):
-        import ai_knowledge.core.memory_system as ms
         import ai_knowledge.core.conversation_manager as cm
+        import ai_knowledge.core.memory_system as ms
         import ai_knowledge.core_engine as ce
 
         ms._memory_instance = None
         cm._conversation_manager_instance = None
-        from ai_knowledge.core_engine import get_memory_system, get_conversation_manager
+        from ai_knowledge.core_engine import get_conversation_manager, get_memory_system
 
         assert get_memory_system() is ce.get_memory_system()
         assert get_conversation_manager() is ce.get_conversation_manager()

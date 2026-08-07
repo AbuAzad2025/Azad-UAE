@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 import pytest
@@ -182,7 +182,7 @@ class TestSubscribe:
         lst = _email_list(db_session, sample_tenant.id)
         email = "back@example.com"
         existing = _subscriber(db_session, lst, email=email, status="unsubscribed")
-        existing.unsubscribed_at = datetime.now(timezone.utc)
+        existing.unsubscribed_at = datetime.now(UTC)
         db_session.flush()
         sub = EmailMarketingService.subscribe(lst.id, email, user=tenant_user)
         assert sub.id == existing.id
@@ -455,7 +455,7 @@ class TestGetCampaignStats:
             campaign_id=camp.id,
             subscriber_id=sub.id,
             status="sent",
-            sent_at=datetime.now(timezone.utc),
+            sent_at=datetime.now(UTC),
         )
         db_session.add(sent_log)
         db_session.flush()

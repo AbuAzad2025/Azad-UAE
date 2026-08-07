@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import patch
 
@@ -37,7 +37,7 @@ def _add_sale(
 ):
     from models import Sale
 
-    when = sale_date or datetime.now(timezone.utc)
+    when = sale_date or datetime.now(UTC)
     amt = Decimal(str(amount))
     sale = Sale(
         tenant_id=tenant_id,
@@ -89,7 +89,7 @@ class TestCustomerInsightsIntegration:
         from models import Customer
         from services.analytics_service import AnalyticsService
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         with app.app_context():
             for i in range(55):
                 customer = _add_customer(
@@ -200,7 +200,7 @@ class TestSalesInsightsIntegration:
     ):
         from services.analytics_service import AnalyticsService
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         with app.app_context():
             sale = _add_sale(
                 db_session,
@@ -313,7 +313,7 @@ class TestProductPerformanceIntegration:
         from models import Product
         from services.analytics_service import AnalyticsService
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         with app.app_context():
             low = Product(
                 tenant_id=sample_tenant.id,
@@ -377,7 +377,7 @@ class TestProductPerformanceIntegration:
         from models import Branch
         from services.analytics_service import AnalyticsService
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         with app.app_context():
             empty_branch = Branch(
                 tenant_id=sample_tenant.id,
@@ -429,7 +429,7 @@ class TestForecastingAndPackagesIntegration:
     ):
         from services.analytics_service import AnalyticsService
 
-        base = datetime.now(timezone.utc).replace(day=15)
+        base = datetime.now(UTC).replace(day=15)
         with app.app_context():
             for month_offset, revenue in enumerate(
                 [100, 500, 50, 400, 80, 450, 60, 420, 70, 410, 90, 430],

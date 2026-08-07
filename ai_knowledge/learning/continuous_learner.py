@@ -12,12 +12,13 @@
 شركة أزاد للأنظمة الذكية
 """
 
-import logging
 import json
+import logging
 import os
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any
 from urllib.parse import quote
+
 import requests
 from requests.adapters import HTTPAdapter
 
@@ -81,13 +82,13 @@ class ContinuousLearner:
 
         return session
 
-    def _load_history(self) -> List[dict]:
+    def _load_history(self) -> list[dict]:
         """تحميل سجل التعلم"""
         history_file = os.path.join(self.knowledge_dir, "learning_history.json")
 
         if os.path.exists(history_file):
             try:
-                with open(history_file, "r", encoding="utf-8") as f:
+                with open(history_file, encoding="utf-8") as f:
                     return json.load(f)
             except (json.JSONDecodeError, OSError) as e:
                 logger.debug(f"Could not load history: {e}")
@@ -287,7 +288,7 @@ def evaluate_and_learn(qa_tests: list, ai_service=None):
     except ImportError:
         default_ai_service = None
     svc = ai_service or default_ai_service
-    results: List[Dict[str, Any]] = []
+    results: list[dict[str, Any]] = []
     if not svc:
         return results
     try:

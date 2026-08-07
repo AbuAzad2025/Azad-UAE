@@ -1,6 +1,4 @@
-from flask_babel import gettext
 from decimal import Decimal
-
 
 from flask import (
     Blueprint,
@@ -12,24 +10,25 @@ from flask import (
     request,
     url_for,
 )
+from flask_babel import gettext
 from flask_login import current_user, login_required
 
-from models import Product, Sale, TenantStore, ShopCustomerAccount
+from models import Product, Sale, ShopCustomerAccount, TenantStore
 from services.azad_platform_fee_service import AzadPlatformFeeService
+from services.logging_core import LoggingCore
 from services.stock_service import StockService
 from services.store_analytics_service import StoreAnalyticsService
 from services.store_coupon_service import StoreCouponService
 from services.store_order_service import STATUS_LABELS_AR, StoreOrderService
 from services.store_payment_method_service import StorePaymentMethodService
 from services.store_service import StoreService
-from utils.decorators import permission_required
-from utils.error_messages import ErrorMessages
-from services.logging_core import LoggingCore
-from utils.helpers import save_uploaded_file
-from utils.tenanting import get_active_tenant_id
 from utils.branching import get_branch_stock_map
 from utils.db_safety import atomic_transaction
+from utils.decorators import permission_required
+from utils.error_messages import ErrorMessages
 from utils.feature_guards import install_feature_gate
+from utils.helpers import save_uploaded_file
+from utils.tenanting import get_active_tenant_id
 
 store_bp = Blueprint("store", __name__, url_prefix="/store")
 install_feature_gate(store_bp, "store")

@@ -1,5 +1,5 @@
-import hashlib
 import gzip
+import hashlib
 import os
 import shutil
 from typing import Any
@@ -52,7 +52,7 @@ def _process_file(src_path: str) -> dict[str, Any] | None:
     dir_name = os.path.dirname(src_path)
     base_name = os.path.basename(src_path)
     stem = os.path.splitext(base_name)[0]
-    with open(src_path, "r", encoding="utf-8") as f:
+    with open(src_path, encoding="utf-8") as f:
         original = f.read()
     minified_bytes = _minify(original, ext)
     hash_min_name = f"{stem}.min{ext}"

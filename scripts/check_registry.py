@@ -1,5 +1,6 @@
-from extensions import db
 from flask import Flask
+
+from extensions import db
 from tests.conftest import TestConfig
 
 app = Flask(__name__)

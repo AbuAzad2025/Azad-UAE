@@ -8,7 +8,7 @@ import uuid
 class TestTrialBalance:
     def test_trial_balance_returns_equal_debits_and_credits(self, app, db_session, client):
         tid = str(uuid.uuid4())[:8]
-        from models import Tenant, Branch, User, Role
+        from models import Branch, Role, Tenant, User
         from services.gl_service import GLService
 
         tenant = Tenant(

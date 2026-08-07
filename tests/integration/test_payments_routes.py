@@ -7,11 +7,12 @@ import uuid
 
 class TestPaymentsVoucher:
     def test_create_receipt_reduces_customer_balance(self, app, db_session, client):
-        from models import Tenant, Branch, User, Role, Customer, Sale
-        from services.gl_service import GLService
-        from models.gl import GLJournalEntry
-        from utils.gl_reference_types import GLRef
         from decimal import Decimal
+
+        from models import Branch, Customer, Role, Sale, Tenant, User
+        from models.gl import GLJournalEntry
+        from services.gl_service import GLService
+        from utils.gl_reference_types import GLRef
 
         tid = str(uuid.uuid4())[:8]
         tenant = Tenant(
@@ -116,11 +117,12 @@ class TestPaymentsVoucher:
             assert total_debit == total_credit, f"GL unbalanced: debit={total_debit} credit={total_credit}"
 
     def test_create_payment_to_supplier_reduces_ap(self, app, db_session, client):
-        from models import Tenant, Branch, User, Role, Supplier, Purchase
-        from services.gl_service import GLService
-        from models.gl import GLJournalEntry
-        from utils.gl_reference_types import GLRef
         from decimal import Decimal
+
+        from models import Branch, Purchase, Role, Supplier, Tenant, User
+        from models.gl import GLJournalEntry
+        from services.gl_service import GLService
+        from utils.gl_reference_types import GLRef
 
         tid = str(uuid.uuid4())[:8]
         tenant = Tenant(

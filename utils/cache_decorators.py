@@ -1,9 +1,11 @@
-import logging
-from functools import wraps
-from flask import current_app, g, has_request_context
-from extensions import cache
 import hashlib
 import json
+import logging
+from functools import wraps
+
+from flask import current_app, g, has_request_context
+
+from extensions import cache
 
 logger = logging.getLogger(__name__)
 

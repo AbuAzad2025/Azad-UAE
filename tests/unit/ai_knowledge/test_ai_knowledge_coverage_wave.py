@@ -624,7 +624,7 @@ class TestSelfReflectionCovWave:
 class TestKnowledgeBaseCovWave:
     def test_search_parts_match(self):
         """Line 795: search_parts finds match."""
-        from ai_knowledge.knowledge_base import search_parts, PARTS_DATABASE
+        from ai_knowledge.knowledge_base import PARTS_DATABASE, search_parts
 
         if PARTS_DATABASE:
             first_key = next(iter(PARTS_DATABASE))

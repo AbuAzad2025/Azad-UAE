@@ -1,39 +1,42 @@
-from flask_babel import gettext
+from datetime import UTC
+
 from flask import (
     Blueprint,
-    render_template,
-    redirect,
-    url_for,
-    flash,
-    request,
-    jsonify,
     current_app,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
 )
-from flask_login import login_required, current_user
+from flask_babel import gettext
+from flask_login import current_user, login_required
+
 from extensions import db, limiter
-from models import Sale, Customer, Product, InvoiceSettings
+from models import Customer, InvoiceSettings, Product, Sale
+from services.logging_core import LoggingCore
 from services.sale_service import SaleService
 from services.stock_service import StockService
-from utils.decorators import permission_required, enforce_resource_limit
-from utils.tenant_limits import TenantLimitError
+from services.store_service import StoreService
 from utils.branching import (
     ensure_warehouse_access,
     get_accessible_warehouses,
     should_show_all_branch_columns,
 )
-from services.logging_core import LoggingCore
-from utils.currency_utils import resolve_default_currency, get_system_default_currency
-from utils.tenanting import (
-    tenant_query,
-    tenant_get_or_404,
-    tenant_get,
-    get_active_tenant_id,
-)
+from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
-from services.store_service import StoreService
+from utils.decorators import enforce_resource_limit, permission_required
 from utils.gl_reference_types import GLRef
 from utils.number_to_arabic import number_to_arabic_words
 from utils.qr_generator import generate_qr_data_url
+from utils.tenant_limits import TenantLimitError
+from utils.tenanting import (
+    get_active_tenant_id,
+    tenant_get,
+    tenant_get_or_404,
+    tenant_query,
+)
 
 sales_bp = Blueprint("sales", __name__, url_prefix="/sales")
 
@@ -50,8 +53,9 @@ def index():
 
     query = tenant_query(Sale)
 
-    from models import ArchivedRecord
     from sqlalchemy import select
+
+    from models import ArchivedRecord
 
     tid = get_active_tenant_id(current_user)
     archived_filter = ArchivedRecord.table_name == "sales"
@@ -149,6 +153,7 @@ def create():
                             )
                 except (ValueError, TypeError):
                     # Skip invalid lines
+                    current_app.logger.debug("Skipping invalid sale line: %r", line, exc_info=True)
                     continue
 
             if not lines_data:
@@ -384,9 +389,9 @@ def print_invoice(**kwargs):
 
     template = settings.active_template if settings and settings.active_template else "modern"
     template_path = f"invoices/{template}.html"
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    printed_at = datetime.now(timezone.utc)
+    printed_at = datetime.now(UTC)
 
     try:
         return render_template(
@@ -543,9 +548,9 @@ def api_get_price():
 @permission_required("manage_sales")
 def archived():
     """عرض المبيعات المؤرشفة"""
-    from models import ArchivedRecord
     from datetime import datetime
 
+    from models import ArchivedRecord
     from utils.tenanting import get_active_tenant_id
 
     tenant_id = get_active_tenant_id(current_user)
@@ -595,8 +600,8 @@ def delete(**kwargs):
         flash(ErrorMessages.permission_denied(gettext("حذف الفواتير")), "danger")
         return redirect(url_for("sales.index"))
 
+    from models import Cheque, Payment
     from services.archive_service import ArchiveService
-    from models import Payment, Cheque
     from services.sale_service import SaleService
 
     sale = tenant_get_or_404(Sale, record_id)
@@ -712,7 +717,7 @@ def restore(**kwargs):
 def api_calculate_sale_totals():
     """API لحساب إجماليات فاتورة المبيعات - Backend Calculation"""
     try:
-        from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
+        from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
         data = request.get_json(silent=True)
         if not data:
@@ -740,6 +745,7 @@ def api_calculate_sale_totals():
                     line_total = line_subtotal - line_discount
                     subtotal += line_total
             except (ValueError, TypeError, KeyError, InvalidOperation):
+                current_app.logger.debug("Skipping invalid line in totals calc: %r", line, exc_info=True)
                 continue
 
         after_discount = subtotal - discount_amount + shipping_cost
@@ -770,6 +776,7 @@ def api_calculate_sale_totals():
                 if Decimal(str(line.get("quantity", 0))) > 0:
                     positive_lines += 1
             except (InvalidOperation, ValueError, TypeError):
+                current_app.logger.debug("Skipping invalid quantity line: %r", line, exc_info=True)
                 continue
         return (
             jsonify(

@@ -8,10 +8,9 @@
 - Intent Detection الذكي
 """
 
-import re
-from typing import List, Tuple, Dict
-from collections import Counter
 import math
+import re
+from collections import Counter
 
 
 class SemanticMatcher:
@@ -24,7 +23,7 @@ class SemanticMatcher:
         self.idf_scores = self._calculate_idf()
 
     @staticmethod
-    def _build_intents_database() -> Dict[str, List[str]]:
+    def _build_intents_database() -> dict[str, list[str]]:
         """بناء قاعدة بيانات النوايا مع أمثلة متعددة - شاملة لكل المعرفة"""
         return {
             # === النظام الأساسي ===
@@ -569,7 +568,7 @@ class SemanticMatcher:
         return vocab
 
     @staticmethod
-    def _tokenize(text: str) -> List[str]:
+    def _tokenize(text: str) -> list[str]:
         """تقسيم النص لكلمات"""
         # إزالة علامات الترقيم والتشكيل
         text = re.sub(r"[^\w\s]", " ", text)
@@ -582,13 +581,13 @@ class SemanticMatcher:
         return words
 
     @staticmethod
-    def _calculate_tf(words: List[str]) -> Dict[str, float]:
+    def _calculate_tf(words: list[str]) -> dict[str, float]:
         """حساب Term Frequency"""
         word_count = Counter(words)
         total_words = len(words)
         return {word: count / total_words for word, count in word_count.items()}
 
-    def _calculate_idf(self) -> Dict[str, float]:
+    def _calculate_idf(self) -> dict[str, float]:
         """حساب Inverse Document Frequency"""
         # عدد الوثائق (الأمثلة) الكلي
         total_docs = sum(len(examples) for examples in self.intents_db.values())
@@ -610,7 +609,7 @@ class SemanticMatcher:
 
         return idf
 
-    def _calculate_tfidf(self, words: List[str]) -> Dict[str, float]:
+    def _calculate_tfidf(self, words: list[str]) -> dict[str, float]:
         """حساب TF-IDF"""
         tf = self._calculate_tf(words)
         tfidf = {}
@@ -622,7 +621,7 @@ class SemanticMatcher:
         return tfidf
 
     @staticmethod
-    def _cosine_similarity(vec1: Dict[str, float], vec2: Dict[str, float]) -> float:
+    def _cosine_similarity(vec1: dict[str, float], vec2: dict[str, float]) -> float:
         """حساب التشابه بين متجهين باستخدام Cosine Similarity"""
         # الكلمات المشتركة
         common_words = set(vec1.keys()) & set(vec2.keys())
@@ -644,7 +643,7 @@ class SemanticMatcher:
 
     def find_best_intent(
         self, user_message: str, threshold: float = 0.3
-    ) -> Tuple[str | None, float, List[Tuple[str, float]]]:
+    ) -> tuple[str | None, float, list[tuple[str, float]]]:
         """
         إيجاد أفضل نية (intent) للرسالة
 
@@ -732,7 +731,7 @@ class SemanticMatcher:
         similarity = 1 - (distance / max_len)
         return similarity
 
-    def smart_match(self, user_message: str) -> Dict:
+    def smart_match(self, user_message: str) -> dict:
         """
         مطابقة ذكية شاملة
 
@@ -847,7 +846,7 @@ semantic_matcher = SemanticMatcher()
 # ===== دوال مساعدة سريعة =====
 
 
-def understand_message(message: str) -> Dict:
+def understand_message(message: str) -> dict:
     """فهم رسالة المستخدم بذكاء"""
     return semantic_matcher.smart_match(message)
 

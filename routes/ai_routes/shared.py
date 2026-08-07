@@ -1,23 +1,28 @@
 """Shared helpers and sanitization utilities for AI routes."""
 
-from flask_babel import gettext
-
 import logging
 import re
+from datetime import UTC, datetime
+
 from flask import jsonify
+from flask_babel import gettext
 from flask_login import current_user
-from extensions import db
-from utils.sanitizer import InputSanitizer
-from services.ai_service import AIService
+
 from ai_knowledge.core.conversation_store import (
-    get_context as _get_conversation_context,
-    set_context as _set_conversation_context,
     clear_context as _clear_conversation_context,
 )
-from utils.context_managers import AutoSaveCtx as _AutoSaveCtx
+from ai_knowledge.core.conversation_store import (
+    get_context as _get_conversation_context,
+)
+from ai_knowledge.core.conversation_store import (
+    set_context as _set_conversation_context,
+)
+from extensions import db
+from services.ai_service import AIService
 from utils.ai_access import get_ai_access_state
-from datetime import datetime, timezone
+from utils.context_managers import AutoSaveCtx as _AutoSaveCtx
 from utils.db_safety import atomic_transaction
+from utils.sanitizer import InputSanitizer
 
 logger = logging.getLogger(__name__)
 
@@ -73,16 +78,17 @@ def train_local_ai(action, data, result):
             "action": action,
             "input_data": data,
             "result": result,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         import json
         import os
+
         from ai_knowledge import get_knowledge_path
 
         training_file = get_knowledge_path("local_training.json")
         if os.path.exists(training_file):
-            with open(training_file, "r", encoding="utf-8") as f:
+            with open(training_file, encoding="utf-8") as f:
                 training_history = json.load(f)
         else:
             training_history = []
@@ -96,8 +102,8 @@ def train_local_ai(action, data, result):
             json.dump(training_history, f, ensure_ascii=False, indent=2)
 
         return True
-    except Exception as e:
-        print(f"Training error: {e}")
+    except Exception:
+        logger.exception("Training history write failed")
         return False
 
 
@@ -278,8 +284,8 @@ def _stream_ai_response(message, context, ai_mode):
     then emits the final JSON payload (same contract as before, with the
     full ``response`` text). Falls back gracefully on any failure.
     """
-    import time
     import json as json_module
+    import time
 
     t0 = time.time()
     final_response = None
@@ -291,6 +297,7 @@ def _stream_ai_response(message, context, ai_mode):
             else:
                 final_response = text
     except Exception as e:
+        logger.exception("AI stream failed")
         elapsed_ms = int((time.time() - t0) * 1000)
         payload = json_module.dumps(
             {

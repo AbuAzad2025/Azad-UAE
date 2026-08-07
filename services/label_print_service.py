@@ -1,4 +1,5 @@
 from decimal import Decimal
+
 from services.print_service import PrintService
 from utils.tenanting import tenant_get_or_404
 

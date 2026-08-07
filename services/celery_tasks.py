@@ -1,7 +1,10 @@
-from celery import Celery
-from flask_babel import gettext
-from flask import current_app
 import os
+from datetime import UTC
+
+from celery import Celery
+from flask import current_app
+from flask_babel import gettext
+
 from utils.db_safety import atomic_transaction
 
 celery = Celery(
@@ -33,11 +36,12 @@ celery.conf.update(
 @celery.task
 def run_inventory_reconciliation(tenant_id: int | None = None):
     """Scheduled inventory reconciliation — logs mismatches for admin review."""
+    import logging
+
     from app import create_app
-    from services.inventory_reconciliation_service import InventoryReconciliationService
     from extensions import db
     from models import ProductWarehouseCost
-    import logging
+    from services.inventory_reconciliation_service import InventoryReconciliationService
 
     logger = logging.getLogger(__name__)
     app = create_app()
@@ -146,10 +150,11 @@ def generate_monthly_report(month: int, year: int):
 
 @celery.task
 def send_invoice_email(sale_id: int):
-    from app import create_app
-    from models import Sale
     from flask_mail import Message
+
+    from app import create_app
     from extensions import mail
+    from models import Sale
 
     app = create_app()
     with app.app_context():
@@ -189,8 +194,9 @@ def update_exchange_rates():
 
 @celery.task
 def train_neural_models():
-    from app import create_app
     from ai_knowledge.neural_engine import get_neural_engine
+
+    from app import create_app
 
     app = create_app()
     with app.app_context():
@@ -201,10 +207,11 @@ def train_neural_models():
 
 @celery.task
 def send_payment_reminders():
+    from decimal import Decimal
+
     from app import create_app
     from models import Customer
     from services.whatsapp_service import WhatsAppService
-    from decimal import Decimal
 
     app = create_app()
     with app.app_context():
@@ -232,12 +239,13 @@ def send_payment_reminders():
 @celery.task
 def send_abandoned_cart_reminders():
     """Send reminders for abandoned carts (1h and 24h after creation)."""
-    from datetime import datetime, timedelta, timezone
+    from datetime import datetime, timedelta
+
+    from extensions import db
     from models.shop_abandoned_cart import ShopAbandonedCart
     from services.store_service import StoreService
-    from extensions import db
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     first_reminder = ShopAbandonedCart.query.filter(
         ShopAbandonedCart.reminder_sent_at.is_(None),

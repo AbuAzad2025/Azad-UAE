@@ -33,18 +33,20 @@ import sys
 import time
 import traceback
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from functools import wraps
 from logging.handlers import RotatingFileHandler
 from typing import Any
 from urllib.parse import urlparse
 
-from flask import g, has_request_context, current_app
+from flask import current_app, g, has_request_context
 from flask_babel import gettext
+
 from utils.db_safety import atomic_transaction
 
 try:
-    from colorama import init as colorama_init, Fore, Style
+    from colorama import Fore, Style
+    from colorama import init as colorama_init
 
     colorama_init(autoreset=True)
 except ImportError:
@@ -308,7 +310,7 @@ class _JsonFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         entry = {
-            "timestamp": datetime.fromtimestamp(record.created, tz=timezone.utc).isoformat(),
+            "timestamp": datetime.fromtimestamp(record.created, tz=UTC).isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "module": record.module,
@@ -834,8 +836,9 @@ class LoggingCore:
         stack_trace: str | None = None,
         extra: dict[str, Any] | None = None,
     ) -> int | None:
-        from extensions import db
         from flask import request
+
+        from extensions import db
 
         # Request context — explicit params WIN over context resolution so
         # callers outside a request (or reporting for another tenant) keep
@@ -936,7 +939,7 @@ class LoggingCore:
             "user_id": _user_id,
             "tenant_id": _tenant_id,
             "request_data": (json.dumps(request_data, ensure_ascii=False, default=str) if request_data else None),
-            "now": datetime.now(timezone.utc),
+            "now": datetime.now(UTC),
         }
 
         # Exponential backoff on DB failure (up to _DB_RETRY_MAX_SECONDS total)
@@ -968,11 +971,12 @@ class LoggingCore:
 
     @classmethod
     def _find_duplicate(cls, fingerprint: str) -> int | None:
-        from extensions import db
         from sqlalchemy import text
 
+        from extensions import db
+
         try:
-            cutoff = datetime.now(timezone.utc) - timedelta(minutes=_DEDUP_WINDOW_MINUTES)
+            cutoff = datetime.now(UTC) - timedelta(minutes=_DEDUP_WINDOW_MINUTES)
             sql = text("""
                 SELECT id FROM error_audit_logs
                 WHERE fingerprint = :fp AND is_resolved = false AND last_seen_at > :cutoff
@@ -982,12 +986,14 @@ class LoggingCore:
                 row = conn.execute(sql, {"fp": fingerprint, "cutoff": cutoff}).fetchone()
                 return row[0] if row else None
         except Exception:
+            logger.exception("LoggingCore occurrence query failed")
             return None
 
     @classmethod
     def _bump_duplicate(cls, log_id: int, new_message: str, new_trace: str | None) -> int | None:
-        from extensions import db
         from sqlalchemy import text
+
+        from extensions import db
 
         try:
             sql = text("""
@@ -1003,7 +1009,7 @@ class LoggingCore:
                 result = conn.execute(
                     sql,
                     {
-                        "now": datetime.now(timezone.utc),
+                        "now": datetime.now(UTC),
                         "message": (new_message or "")[:_MAX_MESSAGE_LEN],
                         "stack_trace": ((new_trace or "")[:_MAX_TRACE_LEN] if new_trace else None),
                         "log_id": log_id,
@@ -1013,6 +1019,7 @@ class LoggingCore:
                 row = result.fetchone()
                 return row[0] if row else None
         except Exception:
+            logger.exception("LoggingCore dedup query failed")
             return None
 
     @classmethod
@@ -1039,8 +1046,8 @@ class LoggingCore:
         page: int = 1,
         per_page: int = 50,
     ):
-        from models.error_audit_log import ErrorAuditLog
         from extensions import db
+        from models.error_audit_log import ErrorAuditLog
 
         query = ErrorAuditLog.query
         if category:
@@ -1109,8 +1116,9 @@ class LoggingCore:
         search: str = "",
         fmt: str = "json",
     ):
-        from models.error_audit_log import ErrorAuditLog
         from io import StringIO
+
+        from models.error_audit_log import ErrorAuditLog
 
         query = ErrorAuditLog.query
         if category:
@@ -1165,7 +1173,7 @@ class LoggingCore:
 
         buf = StringIO()
         buf.write("=" * 80 + "\nError Audit Logs Export\n")
-        buf.write(f"Generated: {datetime.now(timezone.utc).isoformat()}\n")
+        buf.write(f"Generated: {datetime.now(UTC).isoformat()}\n")
         buf.write(f"Count: {len(logs)}\n" + "=" * 80 + "\n\n")
         for log in logs:
             buf.write(f"ID: {log.id} | Level: {log.level} | Category: {log.category}\n")
@@ -1189,11 +1197,12 @@ class LoggingCore:
                 log = ErrorAuditLog.query.filter_by(id=log_id).first()
                 if log:
                     log.is_resolved = True
-                    log.resolved_at = datetime.now(timezone.utc)
+                    log.resolved_at = datetime.now(UTC)
                     log.resolved_by = user_id
                     log.resolution_note = note[:500]
             return True
         except Exception:
+            logger.exception("Error log resolve failed")
             return False
 
     # ──────────────────────────────────────────────────────────────
@@ -1215,8 +1224,8 @@ class LoggingCore:
           - utils/helpers.py → create_audit_log()
           - utils/advanced_audit.py → log_sensitive_action()
         """
-        from models.audit import AuditLog
         from extensions import db
+        from models.audit import AuditLog
 
         ctx = _get_request_context()
         try:
@@ -1248,9 +1257,9 @@ class LoggingCore:
         action: str = "",
         user_id: int | None = None,
     ):
+        from extensions import db
         from models.audit import AuditLog
         from models.user import User
-        from extensions import db
 
         query = AuditLog.query
         if tenant_id:
@@ -1308,8 +1317,8 @@ class LoggingCore:
         )
 
         try:
-            from models.security_alert import SecurityAlert
             from extensions import db
+            from models.security_alert import SecurityAlert
 
             alert = SecurityAlert(
                 alert_type=event_type,
@@ -1360,8 +1369,9 @@ class LoggingCore:
 
     @classmethod
     def _check_db(cls) -> dict:
-        from extensions import db
         from sqlalchemy import text
+
+        from extensions import db
 
         try:
             db.session.execute(text("SELECT 1"))
@@ -1463,7 +1473,7 @@ class LoggingCore:
         perf_file = os.path.join(_LOGS_DIR, "performance.log")
         slow = []
         if os.path.exists(perf_file):
-            with open(perf_file, "r", encoding="utf-8") as f:
+            with open(perf_file, encoding="utf-8") as f:
                 for line in f.readlines()[-200:]:
                     if "SLOW" in line:
                         slow.append(line.strip())
@@ -1479,7 +1489,7 @@ class LoggingCore:
 
         Replaces services/monitoring_service.py → get_application_metrics()
         """
-        from models import Sale, Customer, Product
+        from models import Customer, Product, Sale
 
         try:
             return {
@@ -1499,8 +1509,9 @@ class LoggingCore:
     @classmethod
     def check_database(cls) -> dict:
         try:
-            from extensions import db
             from sqlalchemy import text
+
+            from extensions import db
 
             db.session.execute(text("SELECT 1"))
             return {"status": "connected", "healthy": True}
@@ -1555,7 +1566,7 @@ class LoggingCore:
     @classmethod
     def get_system_health(cls) -> dict:
         return {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "database": cls.check_database(),
             "disk": cls.get_disk_usage(),
             "memory": cls.get_memory_usage(),
@@ -1588,8 +1599,9 @@ class LoggingCore:
 
     @classmethod
     def _resolve_table_name(cls, table_name: str) -> str | None:
-        from extensions import db
         from sqlalchemy import inspect
+
+        from extensions import db
 
         if not table_name:
             return None
@@ -1605,8 +1617,9 @@ class LoggingCore:
 
         Replaces services/monitoring_service.py → get_system_stats_context()
         """
-        from extensions import db
         from sqlalchemy import text
+
+        from extensions import db
         from utils.safe_sql import count_query
 
         db_stats: dict[str, int] = {}
@@ -1651,7 +1664,7 @@ class LoggingCore:
         )
 
         active_users = User.query.filter(
-            User.last_seen >= datetime.now(timezone.utc) - timedelta(minutes=30),
+            User.last_seen >= datetime.now(UTC) - timedelta(minutes=30),
             User.is_active,
             User.tenant_id == tenant_id,
         ).all()
@@ -1660,7 +1673,7 @@ class LoggingCore:
             recent_sales = []
         else:
             recent_sales = Sale.query.filter(
-                Sale.created_at >= datetime.now(timezone.utc) - timedelta(hours=24),
+                Sale.created_at >= datetime.now(UTC) - timedelta(hours=24),
                 Sale.tenant_id == tenant_id,
             )
             if branch_id is not None:
@@ -1692,7 +1705,7 @@ class LoggingCore:
         slow_queries: list[str] = []
 
         if os.path.exists(perf_file):
-            with open(perf_file, "r", encoding="utf-8") as f:
+            with open(perf_file, encoding="utf-8") as f:
                 for line in f.readlines()[-200:]:
                     if "SLOW" in line:
                         slow_queries.append(line.strip())
@@ -1748,18 +1761,18 @@ class LoggingCore:
 
         Replaces utils/advanced_audit.py → track_login_attempt()
         """
-        from models import User
         from extensions import db
+        from models import User
 
         user = User.query.filter_by(username=username).first()
         if user:
             if success:
                 user.login_attempts = 0
-                user.last_login = datetime.now(timezone.utc)
+                user.last_login = datetime.now(UTC)
             else:
                 user.login_attempts = (user.login_attempts or 0) + 1
                 if user.login_attempts >= 5:
-                    user.locked_until = datetime.now(timezone.utc) + timedelta(minutes=15)
+                    user.locked_until = datetime.now(UTC) + timedelta(minutes=15)
             with atomic_transaction("track_login_attempt"):
                 db.session.flush()
 
@@ -1769,12 +1782,13 @@ class LoggingCore:
 
         Replaces utils/advanced_audit.py → get_security_events()
         """
-        from models import AuditLog
         from datetime import timedelta
+
+        from models import AuditLog
         from utils.tenanting import get_active_tenant_id
 
         tid = tenant_id if tenant_id is not None else get_active_tenant_id()
-        since = datetime.now(timezone.utc) - timedelta(days=days)
+        since = datetime.now(UTC) - timedelta(days=days)
         query = AuditLog.query.filter(AuditLog.created_at >= since)
         if tid is not None:
             query = query.filter(AuditLog.tenant_id == tid)
@@ -1803,8 +1817,9 @@ class LoggingCore:
 
         Returns a dict of table → deleted_count.
         """
-        from extensions import db
         from sqlalchemy import text
+
+        from extensions import db
 
         results: dict[str, Any] = {}
 
@@ -1849,7 +1864,7 @@ class LoggingCore:
 
         for table, sql_text in cleanup_sql.items():
             try:
-                cutoff = datetime.now(timezone.utc) - timedelta(days=retain_map[table])
+                cutoff = datetime.now(UTC) - timedelta(days=retain_map[table])
                 with db.engine.connect() as conn:
                     result = conn.execute(text(sql_text), {"cutoff": cutoff})
                     conn.commit()

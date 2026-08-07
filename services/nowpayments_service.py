@@ -2,19 +2,19 @@
 
 import hashlib
 import hmac
-
-from flask_babel import gettext
 import json
-from datetime import datetime, timezone
+import logging
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import requests
 from flask import current_app
+from flask_babel import gettext
 
 from extensions import db
-from utils.db_safety import atomic_transaction
 from models import Donation
 from services.payments.nowpayments_provider import NowPaymentsProvider
+from utils.db_safety import atomic_transaction
 from utils.nowpayments_ipn import get_nowpayments_ipn_url
 
 
@@ -243,6 +243,7 @@ class NOWPaymentsService:
             return hmac.compare_digest(signature, expected_signature)
 
         except Exception:
+            logging.getLogger(__name__).warning("NOWPayments signature verification failed", exc_info=True)
             return False
 
     @staticmethod
@@ -271,7 +272,7 @@ class NOWPaymentsService:
 
             if status == "finished":
                 donation.status = "completed"
-                donation.completed_at = datetime.now(timezone.utc)
+                donation.completed_at = datetime.now(UTC)
             elif status == "failed":
                 donation.status = "failed"
             elif status == "refunded":

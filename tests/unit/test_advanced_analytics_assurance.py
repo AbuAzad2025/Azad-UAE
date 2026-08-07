@@ -302,8 +302,9 @@ class TestAccountTypeBalance:
         lines_q.filter.return_value = lines_q
         lines_q.all.return_value = [line]
         mocker.patch("models.GLJournalLine.query", lines_q)
-        from services.advanced_analytics import AdvancedFinancialAnalytics
         from datetime import date
+
+        from services.advanced_analytics import AdvancedFinancialAnalytics
 
         total = AdvancedFinancialAnalytics._calculate_account_type_balance(
             "expense",
@@ -323,8 +324,9 @@ class TestAccountTypeBalance:
         lines_q.filter.return_value = lines_q
         lines_q.all.return_value = [line]
         mocker.patch("models.GLJournalLine.query", lines_q)
-        from services.advanced_analytics import AdvancedFinancialAnalytics
         from datetime import date
+
+        from services.advanced_analytics import AdvancedFinancialAnalytics
 
         total = AdvancedFinancialAnalytics._calculate_balance_by_prefix(
             "5",

@@ -5,7 +5,6 @@ This module never touches the database — it is pure configuration.
 """
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -16,10 +15,10 @@ class GLAccountTemplate:
     type: str
     level: int = 0
     is_header: bool = False
-    parent_code: Optional[str] = None
-    industry_code: Optional[str] = None
-    module_code: Optional[str] = None
-    description: Optional[str] = None
+    parent_code: str | None = None
+    industry_code: str | None = None
+    module_code: str | None = None
+    description: str | None = None
 
 
 @dataclass(frozen=True)
@@ -33,7 +32,7 @@ class GLConceptMappingTemplate:
 class GLModuleDefinition:
     module_code: str
     required: bool
-    feature_flag: Optional[str] = None
+    feature_flag: str | None = None
     accounts: list = field(default_factory=list)
     mappings: list = field(default_factory=list)
 

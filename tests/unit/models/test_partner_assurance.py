@@ -17,7 +17,7 @@ def _partner_stub(**kwargs):
         total_profit_received = kwargs.get("total_profit_received", 3000)
         total_loss_borne = kwargs.get("total_loss_borne", 200)
         scope_type = kwargs.get("scope_type", "company")
-        scope_id = kwargs.get("scope_id", None)
+        scope_id = kwargs.get("scope_id")
         partner_type = kwargs.get("partner_type", "investor")
         share_percentage = kwargs.get("share_percentage", 25)
         name = kwargs.get("name", "Test Partner")

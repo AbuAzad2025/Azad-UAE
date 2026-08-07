@@ -30,7 +30,7 @@ the report routes deterministic.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -46,10 +46,11 @@ def committed_ledger_data(app):
     so the committed ``tenant_id`` values are preserved. The committed Tenant row
     also satisfies the ``gl_accounts.tenant_id -> tenants.id`` foreign key.
     """
+    import uuid
+
     from extensions import db
     from models import GLAccount, GLJournalEntry, GLJournalLine, Tenant
     from utils.db_safety import atomic_transaction
-    import uuid
 
     unique = uuid.uuid4().hex[:8]
 
@@ -107,7 +108,7 @@ def committed_ledger_data(app):
             entry = GLJournalEntry(
                 tenant_id=tenant_id,
                 entry_number=f"GL-LEDGER-{unique}",
-                entry_date=datetime.now(timezone.utc),
+                entry_date=datetime.now(UTC),
                 description="Admin ledger coverage fixture entry",
                 reference_type="manual",
                 entry_type="manual",

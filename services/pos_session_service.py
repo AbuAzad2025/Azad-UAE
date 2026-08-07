@@ -24,6 +24,7 @@ class PosSessionService:
     ):
         """Update session totals after a sale."""
         from decimal import Decimal
+
         from utils.currency_utils import convert_and_quantize_aed
 
         session.total_sales = Decimal(str(session.total_sales or 0)) + Decimal(str(sale.total_amount or 0))
@@ -57,6 +58,7 @@ class PosSessionService:
 def _accumulate_session_tender(session, tender_chunk, tenant_id=None):
     """Accumulate tender amounts into session totals."""
     from decimal import Decimal
+
     from utils.currency_utils import convert_and_quantize_aed
 
     method = tender_chunk.get("payment_method", "cash")

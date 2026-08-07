@@ -8,7 +8,6 @@ import os
 import sys
 from logging.handlers import RotatingFileHandler
 
-
 _logger = logging.getLogger(__name__)
 
 

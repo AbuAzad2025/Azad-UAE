@@ -17,6 +17,10 @@ Stateless by design (GRIMOIRE utils layer) — the caller supplies the tenant.
 
 from __future__ import annotations
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 POS_SUBFEATURES = frozenset(
     {
         "pos_promotions",
@@ -45,7 +49,7 @@ def _db_tier_level(plan_slug: str) -> int | None:
             return pkg.tier_level
     except Exception:
         # No app context / no DB / table missing — fall through to fallback.
-        pass
+        logger.debug("Plan tier lookup failed for %r; using fallback", plan_slug, exc_info=True)
     return None
 
 

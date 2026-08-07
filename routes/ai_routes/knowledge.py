@@ -1,17 +1,18 @@
 """AI learning, improvement, and knowledge management routes."""
 
-from flask_babel import gettext
-
 import logging
-from flask import request, jsonify
-from flask_login import login_required, current_user
-from utils.decorators import admin_required, permission_required
-from services.ai_service import AIService
+
+from flask import jsonify, request
+from flask_babel import gettext
+from flask_login import current_user, login_required
+
 from ai_knowledge.core.learning_system import learning_system
-from ai_knowledge.expansion.global_knowledge import global_connector, expertise_updater
+from ai_knowledge.expansion.global_knowledge import expertise_updater, global_connector
 from ai_knowledge.expansion.knowledge_expansion import knowledge_expander
 from ai_knowledge.improvement.self_improvement import self_improvement
 from routes.ai_routes import ai_bp
+from services.ai_service import AIService
+from utils.decorators import admin_required, permission_required
 
 logger = logging.getLogger(__name__)
 

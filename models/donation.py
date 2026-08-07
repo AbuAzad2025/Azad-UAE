@@ -3,7 +3,8 @@ Donation Model
 نموذج التبرعات والدعم المالي
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from extensions import db
 
 
@@ -70,7 +71,7 @@ class Donation(db.Model):
 
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
@@ -78,8 +79,8 @@ class Donation(db.Model):
     completed_at = db.Column(db.DateTime)  # وقت الاكتمال
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     # Notes - ملاحظات

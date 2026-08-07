@@ -1,5 +1,6 @@
-from datetime import datetime, timezone
-from decimal import Decimal, ROUND_HALF_UP
+from datetime import UTC, datetime
+from decimal import ROUND_HALF_UP, Decimal
+
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
 
@@ -29,7 +30,7 @@ class Purchase(db.Model):
 
     purchase_date = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
@@ -88,14 +89,14 @@ class Purchase(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True)
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     user = db.relationship("User", foreign_keys=[user_id])
@@ -117,10 +118,12 @@ class Purchase(db.Model):
 
     def get_paid_amount(self, as_of_date=None):
         """حساب المبلغ المدفوع المؤكد لهذه الفاتورة."""
-        from models import Payment
-        from sqlalchemy import func
-        from decimal import Decimal
         from datetime import date
+        from decimal import Decimal
+
+        from sqlalchemy import func
+
+        from models import Payment
 
         if as_of_date is None:
             as_of_date = date.today()

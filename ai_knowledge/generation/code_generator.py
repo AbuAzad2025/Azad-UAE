@@ -13,9 +13,10 @@
 
 import logging
 import re
-from typing import Any, List, Optional
+from typing import Any
 
-from sqlalchemy import and_, column, insert, select, table as sa_table, update
+from sqlalchemy import and_, column, insert, select, update
+from sqlalchemy import table as sa_table
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ def _col(table_name: str, col_name: str):
     return column(col_name)
 
 
-def _build_where(table_name: str, filters: Optional[dict], prefix: str):
+def _build_where(table_name: str, filters: dict | None, prefix: str):
     """Build an SQLAlchemy boolean expression for a WHERE clause (literal values).
 
     Values are embedded as SQL literals (this helper produces display SQL for an
@@ -83,7 +84,7 @@ def {function_name}():
         }
 
     @staticmethod
-    def generate_sql_query(intent: str, table: str, filters: Optional[dict] = None) -> str:
+    def generate_sql_query(intent: str, table: str, filters: dict | None = None) -> str:
         """
         توليد SQL query تلقائياً
 
@@ -152,7 +153,7 @@ def {function_name}():
             return f"-- Error: {e}"
 
     @staticmethod
-    def generate_python_function(function_name: str, purpose: str, params: Optional[List[str]] = None) -> str:
+    def generate_python_function(function_name: str, purpose: str, params: list[str] | None = None) -> str:
         """
         توليد دالة Python
 
@@ -211,7 +212,7 @@ def {function_name}():
             return f"# Error: {e}"
 
     @staticmethod
-    def generate_report_query(report_type: str, date_range: Optional[dict] = None) -> str:
+    def generate_report_query(report_type: str, date_range: dict | None = None) -> str:
         """
         توليد query لتقرير محدد
 

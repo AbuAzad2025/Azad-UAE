@@ -1,8 +1,10 @@
-from functools import wraps
-from flask import request, jsonify
-from flask_login import current_user
-from extensions import cache
 from datetime import datetime
+from functools import wraps
+
+from flask import jsonify, request
+from flask_login import current_user
+
+from extensions import cache
 
 
 def smart_rate_limit(max_requests: int, window_seconds: int = 60):

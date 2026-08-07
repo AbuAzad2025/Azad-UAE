@@ -15,7 +15,7 @@ so extending it here is safe.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -96,7 +96,7 @@ def sample_gl_journal(db_session, sample_tenant, sample_gl_accounts, sample_user
     entry = GLJournalEntry(
         tenant_id=sample_tenant.id,
         entry_number="GL-TEST-001",
-        entry_date=datetime.now(timezone.utc),
+        entry_date=datetime.now(UTC),
         description="Test journal entry",
         reference_type="manual",
         entry_type="manual",
@@ -157,7 +157,7 @@ def sample_receipt(db_session, sample_tenant, sample_customer, sample_user, samp
         payment_method="cash",
         branch_id=sample_branch.id,
         user_id=sample_user.id,
-        receipt_date=datetime.now(timezone.utc),
+        receipt_date=datetime.now(UTC),
     )
     db_session.add(receipt)
     db_session.commit()

@@ -22,14 +22,14 @@ def _add_initial_stock(db_session, product_id, warehouse_id, tenant_id, quantity
 
 def _setup_tenant(db_session):
     from models import (
-        Tenant,
         Branch,
-        User,
-        Role,
         Customer,
         Product,
-        Warehouse,
         ProductWarehouseStock,
+        Role,
+        Tenant,
+        User,
+        Warehouse,
     )
     from services.gl_service import GLService
 
@@ -117,7 +117,7 @@ def _setup_tenant(db_session):
 
 
 def _create_sale(db_session, ctx, quantity=3, unit_price=100, tax_rate=0):
-    from models import Sale, SaleLine, ProductWarehouseStock
+    from models import ProductWarehouseStock, Sale, SaleLine
     from utils.helpers import generate_number
 
     sale_number = generate_number("S", Sale, "sale_number", branch_id=ctx["branch"].id, tenant_id=ctx["tenant"].id)
@@ -189,9 +189,8 @@ def _create_sale(db_session, ctx, quantity=3, unit_price=100, tax_rate=0):
 
 class TestReturnsApiCreate:
     def test_return_reverses_stock_and_creates_gl(self, app, db_session, client):
-        from models import ProductWarehouseStock
+        from models import Customer, ProductReturn, ProductReturnLine, ProductWarehouseStock
         from models.gl import GLJournalEntry
-        from models import ProductReturn, ProductReturnLine, Customer
 
         ctx = _setup_tenant(db_session)
         sale, sale_line = _create_sale(db_session, ctx, quantity=3, unit_price=100)
@@ -260,8 +259,8 @@ class TestReturnsApiCreate:
         assert customer_after.balance is not None
 
     def test_return_with_vat_reverses_tax_and_gl(self, app, db_session, client):
-        from models.gl import GLJournalEntry, GLJournalLine
         from models import ProductReturn, ProductReturnLine
+        from models.gl import GLJournalEntry, GLJournalLine
 
         ctx = _setup_tenant(db_session)
         sale, sale_line = _create_sale(db_session, ctx, quantity=2, unit_price=100, tax_rate=5)

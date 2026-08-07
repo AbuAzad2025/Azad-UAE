@@ -1,29 +1,31 @@
-from flask_babel import gettext
+from datetime import UTC, date, datetime, timedelta
+from decimal import Decimal
+
 from flask import (
     Blueprint,
+    abort,
+    current_app,
+    flash,
+    jsonify,
+    redirect,
     render_template,
     request,
-    jsonify,
-    flash,
-    redirect,
     url_for,
-    current_app,
-    abort,
 )
-from flask_login import login_required, current_user
-from sqlalchemy import func, desc
+from flask_babel import gettext
+from flask_login import current_user, login_required
+from sqlalchemy import desc, func
+
 from extensions import db
-from models import GLAccount, GLJournalEntry, GLJournalLine, Cheque, PaymentVault
-from services.gl_service import GLService
-from services.cash_flow_service import CashFlowService
+from models import Cheque, GLAccount, GLJournalEntry, GLJournalLine, PaymentVault
 from services.aging_analysis_service import AgingAnalysisService
-from utils.branching import get_accessible_branches, user_can_access_branch
-from utils.decorators import admin_required, permission_required, branch_scope_id
+from services.cash_flow_service import CashFlowService
+from services.gl_service import GLService
 from services.logging_core import LoggingCore
-from utils.currency_utils import resolve_default_currency, get_system_default_currency
-from decimal import Decimal
-from datetime import datetime, date, timedelta
+from utils.branching import get_accessible_branches, user_can_access_branch
+from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
+from utils.decorators import admin_required, branch_scope_id, permission_required
 
 ledger_bp = Blueprint("ledger", __name__, url_prefix="/ledger")
 
@@ -144,7 +146,8 @@ def journal_entries():
 @permission_required("view_ledger")
 def vat_report():
     from models.tenant import Tenant
-    from utils.tax_settings import is_tax_enabled, vat_country as tenant_vat_country
+    from utils.tax_settings import is_tax_enabled
+    from utils.tax_settings import vat_country as tenant_vat_country
 
     tenant = Tenant.get_current(user=current_user)
     if tenant and not is_tax_enabled(tenant.id):
@@ -174,9 +177,10 @@ def vat_report():
 @login_required
 @permission_required("view_ledger")
 def gl_periods():
+    from datetime import datetime
+
     from models.gl import GLPeriod
     from utils.tenanting import require_active_tenant_id
-    from datetime import datetime, timezone
 
     tenant_id = require_active_tenant_id()
     if request.method == "POST":
@@ -191,7 +195,7 @@ def gl_periods():
                 period = GLPeriod(tenant_id=tenant_id, year=year, month=month)
                 db.session.add(period)
             period.is_closed = action == "close"
-            period.closed_at = datetime.now(timezone.utc) if period.is_closed else None
+            period.closed_at = datetime.now(UTC) if period.is_closed else None
             period.closed_by = current_user.id if period.is_closed else None
         flash(gettext("تم تحديث حالة الفترة المحاسبية."), "success")
         return redirect(url_for("ledger.gl_periods"))
@@ -875,7 +879,7 @@ def admin_accounts():
 @admin_required
 def admin_add_account():
     """إضافة حساب محاسبي جديد"""
-    from utils.gl_tenant import gl_account_query, active_tenant_id
+    from utils.gl_tenant import active_tenant_id, gl_account_query
 
     if request.method == "POST":
         try:
@@ -995,8 +999,8 @@ def admin_trial_balance():
         current_app.logger.warning("Invalid date format in trial balance, falling back to today")
         date_from = date_to = date.today()
 
-    from utils.gl_tenant import gl_account_query
     from services.gl_service import GLService
+    from utils.gl_tenant import gl_account_query
 
     accounts = gl_account_query().filter_by(is_active=True, is_header=False).order_by(GLAccount.code).all()
     _all_balances = GLService.get_all_account_balances(start_date=date_from, end_date=date_to)
@@ -1040,8 +1044,8 @@ def admin_balance_sheet():
         current_app.logger.warning("Invalid date format in balance sheet, falling back to today")
         as_of_date = date.today()
 
-    from utils.gl_tenant import gl_account_query
     from services.gl_service import GLService
+    from utils.gl_tenant import gl_account_query
 
     _all_balances = GLService.get_all_account_balances(as_of_date=as_of_date)
 
@@ -1139,8 +1143,8 @@ def admin_income_statement():
         date_from = date.today() - timedelta(days=30)
         date_to = date.today()
 
-    from utils.gl_tenant import gl_account_query
     from services.gl_service import GLService
+    from utils.gl_tenant import gl_account_query
 
     _all_balances = GLService.get_all_account_balances(start_date=date_from, end_date=date_to)
 

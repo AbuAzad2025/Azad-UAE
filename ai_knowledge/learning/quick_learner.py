@@ -4,8 +4,8 @@
 """
 
 import difflib
-from typing import Optional
 import logging
+from datetime import UTC
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ class QuickLearner:
         question: str,
         answer: str,
         category: str = "general",
-        tenant_id: Optional[int] = None,
+        tenant_id: int | None = None,
     ):
         """تعلم معلومة جديدة وحفظها في قاعدة البيانات."""
         from extensions import db
@@ -45,7 +45,7 @@ class QuickLearner:
         db.session.flush()
         return True
 
-    def get_answer(self, question: str, tenant_id: Optional[int] = None) -> Optional[str]:
+    def get_answer(self, question: str, tenant_id: int | None = None) -> str | None:
         """البحث عن إجابة — مطابقة تامة أو جزئية أو ضبابية مع عزل حسب المستأجر."""
         from extensions import db
         from models.ai import AiMemory
@@ -90,9 +90,9 @@ class QuickLearner:
         from extensions import db
 
         row.access_count = (row.access_count or 0) + 1
-        from datetime import datetime, timezone
+        from datetime import datetime
 
-        row.last_accessed = datetime.now(timezone.utc)
+        row.last_accessed = datetime.now(UTC)
         db.session.flush()
 
 

@@ -7,30 +7,32 @@ End-to-end MWAC test:
 
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 
 def main():
+    from decimal import Decimal
+
+    import sqlalchemy as sa
+
     from app import create_app
     from extensions import db
     from models import (
-        Tenant,
+        Customer,
         Product,
-        Warehouse,
-        ProductWarehouseCost,
         ProductCostHistory,
+        ProductWarehouseCost,
         Purchase,
         PurchaseLine,
         Sale,
         SaleLine,
         Supplier,
-        Customer,
+        Tenant,
+        Warehouse,
     )
     from services.stock_service import StockService
-    from decimal import Decimal
-    import sqlalchemy as sa
 
     app = create_app()
 
@@ -81,7 +83,7 @@ def main():
             # Create purchase manually
             new_unit_cost = Decimal("250.00")  # different from current cost
             purchase_qty = Decimal("20")
-            test_id = str(int(datetime.now(timezone.utc).timestamp()))
+            test_id = str(int(datetime.now(UTC).timestamp()))
 
             purchase = Purchase(
                 tenant_id=tid,

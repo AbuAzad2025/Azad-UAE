@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from io import BytesIO
 from unittest.mock import MagicMock
 
@@ -49,6 +49,7 @@ class TestXlsxExport:
 
     def test_sheet_name_truncated_to_31_chars(self):
         from openpyxl import load_workbook
+
         from services.export_service import ExportService
 
         buf = ExportService.export_to_xlsx(
@@ -99,7 +100,7 @@ class TestDomainExports:
             amount_paid=99.0,
             payment_method="card",
             payment_status="completed",
-            created_at=datetime(2025, 6, 1, 12, 0, tzinfo=timezone.utc),
+            created_at=datetime(2025, 6, 1, 12, 0, tzinfo=UTC),
         )
         from services.export_service import ExportService
 

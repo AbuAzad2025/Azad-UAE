@@ -8,7 +8,7 @@ from decimal import Decimal
 
 
 def _active_tid():
-    from flask import has_request_context, g
+    from flask import g, has_request_context
 
     if has_request_context():
         return getattr(g, "active_tenant_id", None)
@@ -78,7 +78,7 @@ class SystemIntegrator:
     def get_supplier_balance(supplier_name_or_id):
         """الحصول على رصيد المورد - ✅ جديد 2025-10-19"""
         try:
-            from models import Supplier, Purchase
+            from models import Purchase, Supplier
 
             tid = _active_tid()
             if str(supplier_name_or_id).isdigit():
@@ -178,8 +178,8 @@ class SystemIntegrator:
     def add_customer(customer_data):
         """إضافة عميل جديد"""
         try:
-            from models import Customer
             from extensions import db
+            from models import Customer
 
             # التحقق من البيانات المطلوبة
             required_fields = ["name", "customer_type"]
@@ -270,7 +270,7 @@ class SystemIntegrator:
     def get_system_summary():
         """ملخص النظام الشامل"""
         try:
-            from models import Customer, Sale, Product, Payment
+            from models import Customer, Payment, Product, Sale
 
             base_c = _maybe_tenant_query(Customer)
             base_s = _maybe_tenant_query(Sale)
@@ -338,8 +338,8 @@ class SystemIntegrator:
     def get_financial_summary():
         """ملخص مالي شامل"""
         try:
-            from models import Sale, Payment
             from extensions import db
+            from models import Payment, Sale
 
             tid = _active_tid()
             base_sale_q = db.session.query(db.func.sum(Sale.total_amount))

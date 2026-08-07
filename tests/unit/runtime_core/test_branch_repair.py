@@ -3,8 +3,8 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 import pytest
-import models
 
+import models
 from app.runtime.branch_repair import (
     _ensure_column,
     _ensure_index,

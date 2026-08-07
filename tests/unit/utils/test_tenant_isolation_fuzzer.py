@@ -9,15 +9,14 @@ Usage:
 """
 
 import uuid
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from datetime import datetime, timezone, timedelta
 
 import pytest
 
 from extensions import db
-from utils.tenanting import tenant_query
 from utils.db_safety import atomic_transaction
-
+from utils.tenanting import tenant_query
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -27,7 +26,7 @@ from utils.db_safety import atomic_transaction
 @pytest.fixture(scope="module")
 def _tenants(app):
     """Create two completely isolated tenants with identical schemas."""
-    from models import Tenant, Branch, Warehouse, Customer
+    from models import Branch, Customer, Tenant, Warehouse
 
     uid_a = uuid.uuid4().hex[:8]
     uid_b = uuid.uuid4().hex[:8]
@@ -46,7 +45,7 @@ def _tenants(app):
             is_suspended=False,
             subscription_plan="pro",
             subscription_plan_duration="monthly",
-            subscription_end=datetime.now(timezone.utc) + timedelta(days=30),
+            subscription_end=datetime.now(UTC) + timedelta(days=30),
             max_users=10,
             max_branches=2,
         )
@@ -63,7 +62,7 @@ def _tenants(app):
             is_suspended=False,
             subscription_plan="pro",
             subscription_plan_duration="monthly",
-            subscription_end=datetime.now(timezone.utc) + timedelta(days=30),
+            subscription_end=datetime.now(UTC) + timedelta(days=30),
             max_users=10,
             max_branches=2,
         )
@@ -111,8 +110,9 @@ class TestTenantQueryBoundary:
     """tenant_query() must never return rows from a different tenant."""
 
     def test_customer_isolation(self, app, _tenants):
-        from models import Customer
         from flask import g
+
+        from models import Customer
 
         with app.test_request_context():
             g.active_tenant_id = _tenants["tenant_a"].id
@@ -134,8 +134,9 @@ class TestTenantQueryBoundary:
                 assert row.tenant_id == _tenants["tenant_b"].id
 
     def test_tenant_query_no_tenant_unscoped(self, app, _tenants):
-        from models import Customer
         from flask import g
+
+        from models import Customer
 
         # Production contract: tenant_query() does NOT raise when no tenant is
         # resolved.  It returns an *unscoped* result set — which is precisely
@@ -160,8 +161,9 @@ class TestTenantQueryBoundary:
                 pytest.fail("customer_b has wrong tenant_id")
 
     def test_balance_not_exposed(self, app, _tenants):
-        from models import Customer
         from flask import g
+
+        from models import Customer
 
         with app.test_request_context():
             g.active_tenant_id = _tenants["tenant_a"].id

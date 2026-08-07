@@ -1,9 +1,9 @@
 from .auth import LoginForm
 from .customer import CustomerForm
-from .product import ProductForm, ProductCategoryForm
-from .sale import SaleForm
-from .purchase import PurchaseForm
 from .payment import ReceiptForm
+from .product import ProductCategoryForm, ProductForm
+from .purchase import PurchaseForm
+from .sale import SaleForm
 
 __all__ = [
     "LoginForm",

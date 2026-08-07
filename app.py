@@ -9,8 +9,8 @@ All application logic lives in app/factory.py and supporting modules:
 
 import os
 
-from config import _init_env
 from app.factory import create_app
+from config import _init_env
 
 _init_env()
 

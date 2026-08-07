@@ -4,8 +4,8 @@
 """
 
 from extensions import db
-from utils.constants import ROLE_LEVELS
 from models.enums import RoleEnum
+from utils.constants import ROLE_LEVELS
 
 
 def role_level_for(slug):

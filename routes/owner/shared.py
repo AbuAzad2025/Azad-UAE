@@ -1,17 +1,18 @@
 """Shared helper functions for the owner blueprint."""
 
+import logging
+import re
+
 from flask_babel import gettext
+from sqlalchemy import inspect
 
 from routes.owner import (
+    SystemSettings,
     current_app,
     current_user,
     db,
-    SystemSettings,
 )
 from services.logging_core import LoggingCore
-from sqlalchemy import inspect
-import logging
-import re
 
 logger = logging.getLogger(__name__)
 

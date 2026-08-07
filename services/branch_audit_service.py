@@ -1,4 +1,5 @@
 import logging
+
 from sqlalchemy import text
 
 logger = logging.getLogger(__name__)
@@ -61,8 +62,9 @@ def ensure_branch_liquidity_account(connection, branch, parent_code, liquidity_k
 
 
 def register_branch_event_listeners():
-    from models import Branch
     from sqlalchemy import event
+
+    from models import Branch
 
     @event.listens_for(Branch, "after_insert")
     @event.listens_for(Branch, "after_update")

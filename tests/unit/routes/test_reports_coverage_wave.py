@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import io
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -181,7 +181,7 @@ class TestSalesBranchScopeWave:
         sale.id = 2
         sale.amount_aed = Decimal("100")
         sale.sale_number = "S-1"
-        sale.sale_date = datetime(2025, 1, 15, tzinfo=timezone.utc)
+        sale.sale_date = datetime(2025, 1, 15, tzinfo=UTC)
         sale.customer = MagicMock(name="C")
         sale.seller = MagicMock()
         sale.seller.get_display_name.return_value = "Seller"
@@ -238,7 +238,7 @@ class TestPurchasesBranchScopeWave:
         _configure_user(mock_user)
         purchase = MagicMock()
         purchase.purchase_number = "PO-1"
-        purchase.purchase_date = datetime(2025, 2, 1, tzinfo=timezone.utc)
+        purchase.purchase_date = datetime(2025, 2, 1, tzinfo=UTC)
         purchase.supplier = MagicMock(name="Sup")
         purchase.branch = MagicMock(name="B")
         purchase.warehouse = MagicMock(name="W", name_ar="م")
@@ -375,7 +375,7 @@ class TestReceivablesWave:
 
     def test_receivables_export_all_buckets(self, reports_client, mock_user):
         _configure_user(mock_user)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         sales = []
         for days, num in ((10, "S1"), (45, "S2"), (75, "S3"), (100, "S4"), (150, "S5")):
             s = MagicMock()
@@ -624,14 +624,14 @@ class TestEntityFragmentWave:
         purchase = MagicMock()
         purchase.id = 1
         purchase.purchase_number = "PO-1"
-        purchase.purchase_date = datetime(2025, 1, 10, tzinfo=timezone.utc)
+        purchase.purchase_date = datetime(2025, 1, 10, tzinfo=UTC)
         purchase.status = "confirmed"
         purchase.amount_aed = Decimal("1000")
         payment = MagicMock()
         payment.purchase_id = 1
         payment.amount_aed = Decimal("600")
         payment.payment_number = "PAY-1"
-        payment.payment_date = datetime(2025, 1, 15, tzinfo=timezone.utc)
+        payment.payment_date = datetime(2025, 1, 15, tzinfo=UTC)
         payment.payment_method = "bank"
         payment.direction = "outgoing"
         payment.payment_confirmed = True
@@ -719,19 +719,19 @@ class TestEntityFragmentWave:
         entity.customer_type = "regular"
         sale = MagicMock()
         sale.sale_number = "INV-1"
-        sale.sale_date = datetime(2025, 3, 1, tzinfo=timezone.utc)
+        sale.sale_date = datetime(2025, 3, 1, tzinfo=UTC)
         sale.status = "confirmed"
         sale.amount_aed = Decimal("500")
         sale.paid_amount_aed = Decimal("200")
         receipt = MagicMock()
         receipt.receipt_number = "R-1"
-        receipt.receipt_date = datetime(2025, 3, 5, tzinfo=timezone.utc)
+        receipt.receipt_date = datetime(2025, 3, 5, tzinfo=UTC)
         receipt.amount_aed = Decimal("200")
         receipt.payment_method = "cash"
         receipt.payment_confirmed = True
         payment = MagicMock()
         payment.payment_number = "P-1"
-        payment.payment_date = datetime(2025, 3, 10, tzinfo=timezone.utc)
+        payment.payment_date = datetime(2025, 3, 10, tzinfo=UTC)
         payment.amount_aed = Decimal("50")
         payment.payment_method = "bank"
         payment.direction = "outgoing"
@@ -780,7 +780,7 @@ class TestEntityFragmentWave:
             percentage=Decimal("15"),
             qty=Decimal("3"),
             total_sales=Decimal("300"),
-            last_date=datetime(2025, 1, 1, tzinfo=timezone.utc),
+            last_date=datetime(2025, 1, 1, tzinfo=UTC),
         )
         qc = {"n": 0}
 
@@ -882,7 +882,7 @@ class TestEntityFragmentDirectCall:
         purchase_b = MagicMock(
             id=2,
             purchase_number="P2",
-            purchase_date=datetime(2025, 2, 1, tzinfo=timezone.utc),
+            purchase_date=datetime(2025, 2, 1, tzinfo=UTC),
             status="confirmed",
             amount_aed=Decimal("500"),
         )
@@ -918,20 +918,20 @@ class TestEntityFragmentDirectCall:
         entity = SimpleNamespace(id=40, name="Buyer", customer_type="regular")
         sale = MagicMock(
             sale_number="INV-40",
-            sale_date=datetime(2025, 4, 1, tzinfo=timezone.utc),
+            sale_date=datetime(2025, 4, 1, tzinfo=UTC),
             status="confirmed",
             amount_aed=Decimal("800"),
             paid_amount_aed=Decimal("300"),
         )
         receipt = MagicMock(
             receipt_number="R-40",
-            receipt_date=datetime(2025, 4, 2, tzinfo=timezone.utc),
+            receipt_date=datetime(2025, 4, 2, tzinfo=UTC),
             amount_aed=Decimal("300"),
             payment_method="cash",
         )
         payment = MagicMock(
             payment_number="P-40",
-            payment_date=datetime(2025, 4, 3, tzinfo=timezone.utc),
+            payment_date=datetime(2025, 4, 3, tzinfo=UTC),
             amount_aed=Decimal("100"),
             payment_method="bank",
             notes="draw",
@@ -991,7 +991,7 @@ class TestEntityFragmentDirectCall:
             merchant_share=35,
             qty=Decimal("2"),
             total_sales=Decimal("400"),
-            last_date=datetime(2025, 3, 1, tzinfo=timezone.utc),
+            last_date=datetime(2025, 3, 1, tzinfo=UTC),
         )
         sale_q = MagicMock()
         sale_q.filter_by.return_value = sale_q
@@ -1067,20 +1067,20 @@ class TestEntityFragmentDirectCall:
         entity = SimpleNamespace(id=55, name="Branch Cust", customer_type="regular")
         sale = MagicMock(
             sale_number="S55",
-            sale_date=datetime(2025, 5, 1, tzinfo=timezone.utc),
+            sale_date=datetime(2025, 5, 1, tzinfo=UTC),
             status="confirmed",
             amount_aed=Decimal("400"),
             paid_amount_aed=Decimal("100"),
         )
         receipt = MagicMock(
             receipt_number="R55",
-            receipt_date=datetime(2025, 5, 2, tzinfo=timezone.utc),
+            receipt_date=datetime(2025, 5, 2, tzinfo=UTC),
             amount_aed=Decimal("100"),
             payment_method="cash",
         )
         payment = MagicMock(
             payment_number="P55",
-            payment_date=datetime(2025, 5, 3, tzinfo=timezone.utc),
+            payment_date=datetime(2025, 5, 3, tzinfo=UTC),
             amount_aed=Decimal("50"),
             payment_method="bank",
             notes="ref",
@@ -1138,7 +1138,7 @@ class TestEntityFragmentDirectCall:
             percentage=Decimal("20"),
             qty=Decimal("1"),
             total_sales=Decimal("250"),
-            last_date=datetime(2025, 1, 1, tzinfo=timezone.utc),
+            last_date=datetime(2025, 1, 1, tzinfo=UTC),
         )
         sale_q = MagicMock()
         sale_q.filter_by.return_value = sale_q
@@ -1609,18 +1609,18 @@ class TestCustomerFragmentFullWave:
         entity = SimpleNamespace(id=40, name="Full Customer", customer_type="regular")
         sale = MagicMock()
         sale.sale_number = "INV-40"
-        sale.sale_date = datetime(2025, 4, 1, tzinfo=timezone.utc)
+        sale.sale_date = datetime(2025, 4, 1, tzinfo=UTC)
         sale.status = "confirmed"
         sale.amount_aed = Decimal("800")
         sale.paid_amount_aed = Decimal("300")
         receipt = MagicMock()
         receipt.receipt_number = "R-40"
-        receipt.receipt_date = datetime(2025, 4, 2, tzinfo=timezone.utc)
+        receipt.receipt_date = datetime(2025, 4, 2, tzinfo=UTC)
         receipt.amount_aed = Decimal("300")
         receipt.payment_method = "cash"
         payment = MagicMock()
         payment.payment_number = "P-40"
-        payment.payment_date = datetime(2025, 4, 3, tzinfo=timezone.utc)
+        payment.payment_date = datetime(2025, 4, 3, tzinfo=UTC)
         payment.amount_aed = Decimal("100")
         payment.payment_method = "bank"
         payment.notes = "draw"
@@ -1676,11 +1676,11 @@ class TestCustomerFragmentFullWave:
             percentage=Decimal("20"),
             qty=Decimal("2"),
             total_sales=Decimal("500"),
-            last_date=datetime(2025, 2, 1, tzinfo=timezone.utc),
+            last_date=datetime(2025, 2, 1, tzinfo=UTC),
         )
         sale = MagicMock(
             sale_number="S50",
-            sale_date=datetime(2025, 2, 1, tzinfo=timezone.utc),
+            sale_date=datetime(2025, 2, 1, tzinfo=UTC),
             status="confirmed",
             amount_aed=Decimal("500"),
             paid_amount_aed=Decimal("0"),
@@ -1732,11 +1732,11 @@ class TestCustomerFragmentFullWave:
             merchant_share=35,
             qty=Decimal("3"),
             total_sales=Decimal("600"),
-            last_date=datetime(2025, 3, 1, tzinfo=timezone.utc),
+            last_date=datetime(2025, 3, 1, tzinfo=UTC),
         )
         sale = MagicMock(
             sale_number="S51",
-            sale_date=datetime(2025, 3, 1, tzinfo=timezone.utc),
+            sale_date=datetime(2025, 3, 1, tzinfo=UTC),
             status="confirmed",
             amount_aed=Decimal("600"),
             paid_amount_aed=Decimal("100"),

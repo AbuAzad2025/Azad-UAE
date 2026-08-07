@@ -1,5 +1,6 @@
+from datetime import UTC, datetime
+
 from extensions import db
-from datetime import datetime, timezone
 
 
 class PayrollSettings(db.Model):
@@ -28,8 +29,8 @@ class PayrollSettings(db.Model):
 
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
         nullable=False,
     )
 

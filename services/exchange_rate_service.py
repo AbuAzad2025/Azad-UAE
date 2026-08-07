@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import logging
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -41,7 +41,7 @@ try:
     import requests
 
     REQUESTS_AVAILABLE = True
-except Exception:
+except ImportError:
     REQUESTS_AVAILABLE = False
 
 
@@ -279,7 +279,7 @@ class ExchangeRateService:
                 "rates": cached["rates"].copy(),
                 "source": "stale_cache" if cached.get("stale") else "online",
                 "provider": cached.get("provider", "cache"),
-                "last_updated": cached.get("last_updated", datetime.now(timezone.utc).isoformat()),
+                "last_updated": cached.get("last_updated", datetime.now(UTC).isoformat()),
                 "stale": cached.get("stale", False),
             }
 
@@ -324,7 +324,7 @@ class ExchangeRateService:
                     # Simpler: just copy from fallback if available
                     rates[sym] = ExchangeRateService.DISPLAY_FALLBACK.get(sym, 1.0)
 
-        last_updated = datetime.now(timezone.utc).isoformat()
+        last_updated = datetime.now(UTC).isoformat()
 
         ExchangeRateService._display_cache[cache_key] = {
             "timestamp": now,
@@ -423,7 +423,7 @@ class ExchangeRateService:
                         "note": "User-provided rate. Caller MUST store in document on save and then treat as frozen.",
                     }
             except (ValueError, TypeError):
-                pass
+                logger.debug("Ignoring unparseable manual rate input", exc_info=True)
 
         # 3. Same currency → parity
         if from_currency == to_currency:
@@ -497,8 +497,9 @@ class ExchangeRateService:
         """Lookup manager's manual rate in exchange_rate_records for today (or given date).
         Returns a Decimal-safe string representation (e.g. "3.672500") or None."""
         try:
-            from models import ExchangeRateRecord
             from datetime import date
+
+            from models import ExchangeRateRecord
 
             target_date = effective_date or date.today().isoformat()
             record = (
@@ -644,9 +645,10 @@ class ExchangeRateService:
     ) -> None:
         """Save a rate record to exchange_rate_records (idempotent for same day)."""
         try:
-            from models import ExchangeRateRecord
-            from extensions import db
             from datetime import date
+
+            from extensions import db
+            from models import ExchangeRateRecord
 
             today = date.today().isoformat()
             with atomic_transaction("save_rate_record"):
@@ -698,6 +700,7 @@ class ExchangeRateService:
             )
             return {"ok": True, "message": "Rate saved successfully"}
         except Exception as e:
+            logger.exception("Failed to save manual exchange rate")
             return {"ok": False, "error": str(e)}
 
     @staticmethod

@@ -248,8 +248,8 @@ class TestMemorySystem:
         import ai_knowledge.core.memory_system as ms
 
         ms._memory_instance = None
-        from ai_knowledge.core_engine import LongTermMemory, get_memory_system
         import ai_knowledge.core_engine as ce
+        from ai_knowledge.core_engine import LongTermMemory, get_memory_system
 
         mem = LongTermMemory()
         mem.remember_conversation(2, "مرحبا", "أهلا")
@@ -277,8 +277,9 @@ class TestExpansionCore:
         assert KnowledgeExpander().add_website("")["success"] is False
 
     def test_knowledge_expander_fetch_failure(self, knowledge_path):
-        from ai_knowledge.expansion_core import KnowledgeExpander
         import requests
+
+        from ai_knowledge.expansion_core import KnowledgeExpander
 
         with patch(
             "ai_knowledge.expansion.knowledge_expansion.requests.get",
@@ -774,9 +775,9 @@ class TestActionDispatcherHandlers:
 
     def test_create_user_and_helpers(self, permitted, mock_ai_user):
         from ai_knowledge.action_dispatcher import (
-            action_dispatcher,
             _get_active_tenant_id,
             _is_owner,
+            action_dispatcher,
         )
 
         with patch(

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -102,7 +102,7 @@ class TestSupplierStatistics:
         purchase = MagicMock(
             status="confirmed",
             amount_aed=Decimal("300"),
-            purchase_date=datetime(2025, 1, 1, tzinfo=timezone.utc),
+            purchase_date=datetime(2025, 1, 1, tzinfo=UTC),
         )
         purchases = MagicMock()
         purchases.filter_by.return_value.all.return_value = [purchase]

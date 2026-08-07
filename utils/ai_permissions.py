@@ -11,7 +11,6 @@ from __future__ import annotations
 
 from flask_login import current_user
 
-
 # Mapping: ai_action_type -> (base_erp_permission, ai_specific_permission)
 _AI_PERM_MAP: dict[str, tuple[str, str]] = {
     "create_customer": ("manage_customers", "ai:manage_customers"),

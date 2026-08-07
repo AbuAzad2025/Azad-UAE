@@ -29,7 +29,7 @@ import json
 import logging
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from logging.handlers import RotatingFileHandler
 
 TELEMETRY_LOGGER_NAME = "azad.telemetry"
@@ -85,7 +85,7 @@ class _TelemetryEventFormatter(logging.Formatter):
                 duration_ms = round((time.monotonic() - float(start)) * 1000, 2)
 
         entry = {
-            "timestamp": datetime.fromtimestamp(record.created, tz=timezone.utc).isoformat(),
+            "timestamp": datetime.fromtimestamp(record.created, tz=UTC).isoformat(),
             "level": record.levelname,
             "category": payload.get("category"),
             "message": record.getMessage(),
@@ -238,7 +238,7 @@ def _bridge_to_error_log(category, message, *, event_level, bridge_level, except
         )
     except Exception:
         # Observability must never break control flow — not even its own bridge.
-        pass
+        logging.getLogger(__name__).debug("Telemetry bridge to error log failed", exc_info=True)
     finally:
         _in_bridge.reset(token)
 
@@ -312,7 +312,7 @@ def log_event(
         _get_logger().log(level_no, message, extra={"telemetry_event": payload})
     except Exception:
         # Observability must never break control flow.
-        pass
+        logging.getLogger(__name__).debug("Telemetry log call failed", exc_info=True)
     if _bridge:
         event_level = level if isinstance(level, str) else logging.getLevelName(level_no)
         _bridge_to_error_log(
@@ -346,7 +346,7 @@ def log_exception(
     try:
         _get_logger().log(level_no, message, exc_info=exc_info, extra={"telemetry_event": payload})
     except Exception:
-        pass
+        logging.getLogger(__name__).debug("Exception telemetry log call failed", exc_info=True)
     if _bridge:
         _bridge_to_error_log(
             CATEGORY_SOFTWARE_EXCEPTION,

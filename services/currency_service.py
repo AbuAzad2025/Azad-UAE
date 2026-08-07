@@ -14,7 +14,7 @@ when a system rate is needed. Do NOT call it directly from routes/forms.
 
 import logging
 import time
-from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Any
 
 from utils.currency_utils import get_system_default_currency
@@ -136,10 +136,12 @@ class CurrencyService:
                 try:
                     rates[str(code).upper()] = Decimal(str(rate))
                 except Exception:
+                    logger.debug("Skipping unparseable rate entry: %r", code, exc_info=True)
                     continue
             rates[base] = Decimal("1.00")
             return rates
         except Exception:
+            logger.warning("Exchange rate fetch failed", exc_info=True)
             return {}
 
     @staticmethod
@@ -265,7 +267,7 @@ class CurrencyService:
                         "age_seconds": 0,
                     }
             except (ValueError, TypeError, InvalidOperation):
-                pass
+                logger.debug("Ignoring unparseable manual rate", exc_info=True)
 
         if from_currency == to_currency:
             return {

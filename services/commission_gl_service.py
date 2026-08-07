@@ -6,6 +6,7 @@ import logging
 from decimal import Decimal
 
 from flask_babel import gettext
+
 from models import PartnerCommissionEntry
 from services.gl_posting import post_or_fail
 from services.gl_service import GL_ACCOUNTS, GLService

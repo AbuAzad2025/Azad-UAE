@@ -1017,14 +1017,13 @@ class TestImportProductsDirect:
 
         file_mock = MagicMock()
         file_mock.filename = "notes.txt"
-        with _products_patches():
-            with products_import_app.test_request_context("/products/import", method="POST"):
-                with patch("routes.products.request") as req:
-                    req.method = "POST"
-                    req.files = {"file": file_mock}
-                    req.form = {}
-                    req.url = "/products/import"
-                    resp = import_products()
+        with _products_patches(), products_import_app.test_request_context("/products/import", method="POST"):
+            with patch("routes.products.request") as req:
+                req.method = "POST"
+                req.files = {"file": file_mock}
+                req.form = {}
+                req.url = "/products/import"
+                resp = import_products()
         assert resp.status_code == 302
         assert resp.location.endswith("/products/import")
 

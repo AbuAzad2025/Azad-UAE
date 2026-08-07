@@ -7,15 +7,14 @@ Integration tests for end-to-end dynamic integration:
 - Actual Purchase and Sale creation with server-verified totals
 """
 
-import pytest
+import uuid
 from decimal import Decimal
 
-
-import uuid
+import pytest
 
 
 def _make_user(db_session, tenant_id, username, branch_id=None, role_slug="admin"):
-    from models import User, Role
+    from models import Role, User
 
     suffix = str(uuid.uuid4())[:8]
     role_name = f"Role_{suffix}"
@@ -40,7 +39,7 @@ def _make_user(db_session, tenant_id, username, branch_id=None, role_slug="admin
 
 def _make_admin_user(db_session, tenant_id, username, branch_id=None):
     """Create a user with super_admin role for admin-only routes."""
-    from models import User, Role
+    from models import Role, User
 
     suffix = str(uuid.uuid4())[:8]
     role = Role.query.filter_by(slug="super_admin").first()
@@ -804,8 +803,9 @@ class TestSecurityAuditFixes:
 
     def test_tenant_suspend_page_public_no_auth(self, client, db_session):
         """tenant_suspend_page must be accessible without authentication."""
-        from models import Tenant
         import uuid
+
+        from models import Tenant
 
         suffix = str(uuid.uuid4())[:8]
         t = Tenant(
@@ -823,8 +823,9 @@ class TestSecurityAuditFixes:
 
     def test_print_settings_rejects_cashier(self, app, db_session):
         """print_settings must reject non-admin users (e.g., cashier)."""
-        from models import Tenant, Branch, Role, User
         import uuid
+
+        from models import Branch, Role, Tenant, User
 
         suffix = str(uuid.uuid4())[:8]
         t = Tenant(
@@ -855,18 +856,18 @@ class TestSecurityAuditFixes:
         db_session.add(u)
         db_session.flush()
         db_session.commit()
-        with app.test_client() as client:
-            with app.app_context():
-                from flask_login import login_user
+        with app.test_client() as client, app.app_context():
+            from flask_login import login_user
 
-                login_user(u)
-                resp = client.get("/printing/settings")
+            login_user(u)
+            resp = client.get("/printing/settings")
         assert resp.status_code == 403
 
     def test_api_product_info_rejects_cross_warehouse(self, app, db_session):
         """api_product_info must reject warehouse_id outside user's accessible scope."""
-        from models import Tenant, Branch, Warehouse, Product, Role, User
         import uuid
+
+        from models import Branch, Product, Role, Tenant, User, Warehouse
 
         suffix = str(uuid.uuid4())[:8]
         t = Tenant(
@@ -923,23 +924,23 @@ class TestSecurityAuditFixes:
         db_session.add(u)
         db_session.flush()
         db_session.commit()
-        with app.test_client() as client:
-            with app.app_context():
-                from flask_login import login_user
+        with app.test_client() as client, app.app_context():
+            from flask_login import login_user
 
-                login_user(u)
-                with client.session_transaction() as sess:
-                    sess["active_tenant_id"] = t.id
-                # User has branch b1, so wh1 is accessible, wh2 is NOT
-                resp_ok = client.get(f"/api/products/{p.id}/info?warehouse_id={wh1.id}")
-                assert resp_ok.status_code == 200
-                resp_forbidden = client.get(f"/api/products/{p.id}/info?warehouse_id={wh2.id}")
-                assert resp_forbidden.status_code == 403
+            login_user(u)
+            with client.session_transaction() as sess:
+                sess["active_tenant_id"] = t.id
+            # User has branch b1, so wh1 is accessible, wh2 is NOT
+            resp_ok = client.get(f"/api/products/{p.id}/info?warehouse_id={wh1.id}")
+            assert resp_ok.status_code == 200
+            resp_forbidden = client.get(f"/api/products/{p.id}/info?warehouse_id={wh2.id}")
+            assert resp_forbidden.status_code == 403
 
     def test_user_edit_requires_manage_users_permission(self, app, db_session):
         """User edit and toggle-active must require manage_users permission."""
-        from models import Tenant, Branch, Role, User
         import uuid
+
+        from models import Branch, Role, Tenant, User
 
         suffix = str(uuid.uuid4())[:8]
         t = Tenant(
@@ -985,17 +986,16 @@ class TestSecurityAuditFixes:
         db_session.add(cashier)
         db_session.flush()
         db_session.commit()
-        with app.test_client() as client:
-            with app.app_context():
-                from flask_login import login_user
+        with app.test_client() as client, app.app_context():
+            from flask_login import login_user
 
-                login_user(cashier)
-                with client.session_transaction() as sess:
-                    sess["active_tenant_id"] = t.id
-                resp_edit = client.get(f"/users/{target.id}/edit")
-                assert resp_edit.status_code == 403
-                resp_toggle = client.post(f"/users/{target.id}/toggle-active")
-                assert resp_toggle.status_code == 403
+            login_user(cashier)
+            with client.session_transaction() as sess:
+                sess["active_tenant_id"] = t.id
+            resp_edit = client.get(f"/users/{target.id}/edit")
+            assert resp_edit.status_code == 403
+            resp_toggle = client.post(f"/users/{target.id}/toggle-active")
+            assert resp_toggle.status_code == 403
 
 
 class TestInvoicePrintEngineIsolation:
@@ -1044,13 +1044,12 @@ class TestInvoicePrintEngineIsolation:
             db_session.flush()
         u2.role.permissions.append(perm)
         db_session.flush()
-        with app.test_client() as client:
-            with app.app_context():
-                from flask_login import login_user
+        with app.test_client() as client, app.app_context():
+            from flask_login import login_user
 
-                login_user(u2)
-                resp = client.get(f"/sales/{sale.id}/print")
-                assert resp.status_code == 404
+            login_user(u2)
+            resp = client.get(f"/sales/{sale.id}/print")
+            assert resp.status_code == 404
 
     def test_print_invoice_uses_dynamic_template_from_settings(self, app, db_session):
         from models import (
@@ -1101,19 +1100,18 @@ class TestInvoicePrintEngineIsolation:
             shipping_cost=0,
         )
         db_session.flush()
-        with app.test_client() as client:
-            with app.app_context():
-                from flask_login import login_user
+        with app.test_client() as client, app.app_context():
+            from flask_login import login_user
 
-                login_user(seller)
-                resp = client.get(f"/sales/{sale.id}/print")
-                assert resp.status_code == 200
-                # The template name should be in the rendered HTML (or at least not fail)
-                # We can't assert exact template easily, but we can check for the template's unique structure
-                # Minimal template uses 'minimal-invoice' class or specific structure
-                html = resp.data.decode("utf-8")
-                # Verify it rendered successfully with no hardcoded company name fallback
-                assert "نظام المحاسبة" not in html
+            login_user(seller)
+            resp = client.get(f"/sales/{sale.id}/print")
+            assert resp.status_code == 200
+            # The template name should be in the rendered HTML (or at least not fail)
+            # We can't assert exact template easily, but we can check for the template's unique structure
+            # Minimal template uses 'minimal-invoice' class or specific structure
+            html = resp.data.decode("utf-8")
+            # Verify it rendered successfully with no hardcoded company name fallback
+            assert "نظام المحاسبة" not in html
 
     def test_print_invoice_shows_correct_currency_not_hardcoded_aed(self, app, db_session):
 
@@ -1153,22 +1151,21 @@ class TestInvoicePrintEngineIsolation:
             shipping_cost=0,
         )
         db_session.flush()
-        with app.test_client() as client:
-            with app.app_context():
-                from flask_login import login_user
+        with app.test_client() as client, app.app_context():
+            from flask_login import login_user
 
-                login_user(seller)
-                resp = client.get(f"/sales/{sale.id}/print")
-                assert resp.status_code == 200
-                html = resp.data.decode("utf-8")
-                # The invoice should show USD, not hardcoded AED/درهم
-                # It's acceptable if it shows 'USD' or '$' or the currency symbol
-                # But it should NOT show 'AED' when the sale is in USD
-                # However, subtotal/total lines should be in sale.currency (USD)
-                # We look for the total amount row and check currency context
-                assert "AED" not in html or html.count("USD") > html.count("AED")
-                # Also check no hardcoded Arabic currency name for AED
-                assert "درهم" not in html or html.count("USD") > html.count("درهم")
+            login_user(seller)
+            resp = client.get(f"/sales/{sale.id}/print")
+            assert resp.status_code == 200
+            html = resp.data.decode("utf-8")
+            # The invoice should show USD, not hardcoded AED/درهم
+            # It's acceptable if it shows 'USD' or '$' or the currency symbol
+            # But it should NOT show 'AED' when the sale is in USD
+            # However, subtotal/total lines should be in sale.currency (USD)
+            # We look for the total amount row and check currency context
+            assert "AED" not in html or html.count("USD") > html.count("AED")
+            # Also check no hardcoded Arabic currency name for AED
+            assert "درهم" not in html or html.count("USD") > html.count("درهم")
 
     def test_tenant_branding_no_azad_logo_fallback(self, app, db_session):
         from utils.tenant_branding import (
@@ -1211,8 +1208,9 @@ class TestVoucherPaymentIsolation:
         seller.role.permissions.append(perm)
         db_session.commit()
         # Create receipt for t1
-        from services.payment_service import PaymentService
         from decimal import Decimal
+
+        from services.payment_service import PaymentService
 
         receipt = PaymentService.create_receipt(
             {
@@ -1229,16 +1227,15 @@ class TestVoucherPaymentIsolation:
         perm2 = Permission.query.filter_by(code="manage_payments").first()
         u2.role.permissions.append(perm2)
         db_session.flush()
-        with app.test_client() as client:
-            with app.app_context():
-                from flask_login import login_user
+        with app.test_client() as client, app.app_context():
+            from flask_login import login_user
 
-                login_user(u2)
-                resp = client.get(f"/payments/receipts/{receipt.id}/print")
-                assert resp.status_code == 404
+            login_user(u2)
+            resp = client.get(f"/payments/receipts/{receipt.id}/print")
+            assert resp.status_code == 404
 
     def test_payment_print_rejects_cross_branch(self, app, db_session):
-        from models import Supplier, Permission
+        from models import Permission, Supplier
 
         t = _make_tenant(db_session, "TPB", "tpb", "AED")
         b1 = _make_branch(db_session, t.id, "B1", "B1")
@@ -1278,8 +1275,9 @@ class TestVoucherPaymentIsolation:
         db_session.add(u)
         db_session.commit()
         # Create payment for b2 (different branch from user)
-        from services.payment_service import PaymentService
         from decimal import Decimal
+
+        from services.payment_service import PaymentService
 
         payment = PaymentService.create_payment(
             {
@@ -1291,14 +1289,13 @@ class TestVoucherPaymentIsolation:
             }
         )
         db_session.flush()
-        with app.test_client() as client:
-            with app.app_context():
-                from flask_login import login_user
+        with app.test_client() as client, app.app_context():
+            from flask_login import login_user
 
-                login_user(u)
-                resp = client.get(f"/payments/payments/{payment.id}/print")
-                # Should get 403 because user is scoped to b1 and payment is in b2
-                assert resp.status_code == 403
+            login_user(u)
+            resp = client.get(f"/payments/payments/{payment.id}/print")
+            # Should get 403 because user is scoped to b1 and payment is in b2
+            assert resp.status_code == 403
 
 
 class TestPayrollIsolation:
@@ -1429,8 +1426,9 @@ class TestFxGainLossAutoPosting:
         seller.role.permissions.append(perm)
         db_session.flush()
         # Create sale in USD with exchange rate 3.65 (1 USD = 3.65 AED)
-        from services.sale_service import SaleService
         from decimal import Decimal
+
+        from services.sale_service import SaleService
 
         sale = SaleService.create_sale(
             customer=c,
@@ -1491,11 +1489,11 @@ class TestFxGainLossAutoPosting:
 
 class TestPOSSessionAndDrawerIsolation:
     def test_pos_session_isolation_tenant_branch(self, app, db_session):
-        from models import Tenant, Branch, User, Role
+        from models import Branch, Role, Tenant, User
         from utils.pos_helpers import (
+            close_pos_session,
             create_pos_session,
             get_active_session,
-            close_pos_session,
         )
 
         t = Tenant(
@@ -1579,8 +1577,8 @@ class TestPOSSessionAndDrawerIsolation:
         assert total_debit == Decimal("100")
 
     def test_pos_session_overage_gl_posted(self, app, db_session):
-        from models import Tenant, Branch, User, Role
-        from utils.pos_helpers import create_pos_session, close_pos_session
+        from models import Branch, Role, Tenant, User
+        from utils.pos_helpers import close_pos_session, create_pos_session
 
         t = Tenant(
             name="POS-TO-" + str(uuid.uuid4())[:4],
@@ -1636,18 +1634,18 @@ class TestPOSSessionAndDrawerIsolation:
 
     def test_pos_checkout_warehouse_isolation(self, app, db_session):
         from models import (
-            Tenant,
             Branch,
-            User,
-            Role,
-            Warehouse,
+            Customer,
             Product,
             ProductCategory,
-            Customer,
+            Role,
+            Tenant,
+            User,
+            Warehouse,
         )
-        from utils.pos_helpers import create_pos_session
         from services.sale_service import SaleService
         from services.stock_service import StockService
+        from utils.pos_helpers import create_pos_session
 
         t = Tenant(
             name="POS-WH-" + str(uuid.uuid4())[:4],
@@ -1761,18 +1759,18 @@ class TestPOSSessionAndDrawerIsolation:
 
     def test_pos_checkout_negative_inventory_allowed(self, app, db_session):
         from models import (
-            Tenant,
             Branch,
-            User,
-            Role,
-            Warehouse,
+            Customer,
             Product,
             ProductCategory,
-            Customer,
+            Role,
+            Tenant,
+            User,
+            Warehouse,
         )
-        from utils.pos_helpers import create_pos_session
         from services.sale_service import SaleService
         from services.stock_service import StockService
+        from utils.pos_helpers import create_pos_session
 
         t = Tenant(
             name="POS-NEG-" + str(uuid.uuid4())[:4],

@@ -1,11 +1,12 @@
+import json
 import logging
+import os
 import platform
 import socket
-import requests
-import json
-import os
 from datetime import datetime
 from threading import Thread
+
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -65,11 +66,12 @@ def has_reported_before(signature):
         if not os.path.exists(TOKEN_FILE):
             return False
 
-        with open(TOKEN_FILE, "r", encoding="utf-8") as f:
+        with open(TOKEN_FILE, encoding="utf-8") as f:
             stored_signature = f.read().strip()
 
         return stored_signature == signature
     except Exception:
+        logger.debug("Telemetry token verification failed", exc_info=True)
         return False
 
 
@@ -149,6 +151,7 @@ def send_formsubmit(subject, fields, to_email=None):
         response = requests.post(url, data=payload, headers=headers, timeout=2)
         return response.status_code == 200
     except Exception:
+        logger.debug("Telemetry report send failed", exc_info=True)
         return False
 
 

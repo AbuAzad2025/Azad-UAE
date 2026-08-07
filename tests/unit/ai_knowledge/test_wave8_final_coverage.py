@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -112,10 +112,9 @@ class TestWave8ActionDispatcher:
         with patch(
             "ai_knowledge.action_dispatcher.current_user",
             SimpleNamespace(is_authenticated=False),
-        ):
-            with patch("flask.g", create=True) as g:
-                g.active_tenant_id = 7
-                assert ad._get_active_tenant_id() == 7
+        ), patch("flask.g", create=True) as g:
+            g.active_tenant_id = 7
+            assert ad._get_active_tenant_id() == 7
         with (
             patch("ai_knowledge.action_dispatcher.db.session") as sess,
             patch("models.ErrorAuditLog"),
@@ -441,7 +440,7 @@ class TestWave8Analytics:
 
         analyzer = DataAnalyzer()
         sales = []
-        base = datetime.now(timezone.utc) - timedelta(days=14)
+        base = datetime.now(UTC) - timedelta(days=14)
         for i in range(14):
             sale = MagicMock()
             sale.created_at = base + timedelta(days=i)
@@ -594,9 +593,9 @@ class TestWave8AgentsAndCore:
             assert agent.execute("سعر price", {"product_id": 1})["confidence"] > 0
 
     def test_context_conversation_learning(self, knowledge_path):
+        from ai_knowledge.core import conversation_store
         from ai_knowledge.core.context_engine import ContextEngine
         from ai_knowledge.core.conversation_manager import ConversationManager
-        from ai_knowledge.core import conversation_store
         from ai_knowledge.core.learning_system import AzadLearningSystem
         from ai_knowledge.core.memory_system import LongTermMemory
         from ai_knowledge.core.reasoning_engine import ReasoningEngine
@@ -612,8 +611,8 @@ class TestWave8AgentsAndCore:
         mgr.end_conversation(99)
         mem_row = MagicMock(
             value='{"x":1}',
-            last_accessed=datetime.now(timezone.utc),
-            created_at=datetime.now(timezone.utc),
+            last_accessed=datetime.now(UTC),
+            created_at=datetime.now(UTC),
             is_active=True,
             access_count=0,
         )
@@ -623,7 +622,7 @@ class TestWave8AgentsAndCore:
         ):
             AiMemory.query.filter_by.return_value.first.return_value = mem_row
             assert conversation_store.get_context(1, tenant_id=1) == {"x": 1}
-            old = datetime.now(timezone.utc) - timedelta(hours=3)
+            old = datetime.now(UTC) - timedelta(hours=3)
             mem_row.last_accessed = old
             mem_row.created_at = old
             assert conversation_store.get_context(1, tenant_id=1) is None
@@ -646,11 +645,11 @@ class TestWave8RemainingModules:
         from ai_knowledge.generation.document_generator import DocumentGenerator
         from ai_knowledge.improvement.self_improvement import AzadSelfImprovement
         from ai_knowledge.improvement.self_reflection import SelfReflectionEngine
+        from ai_knowledge.knowledge_base import search_knowledge as kb_search
         from ai_knowledge.learning.auto_retraining import AutoRetrainingScheduler
         from ai_knowledge.learning.continuous_learner import ContinuousLearner
         from ai_knowledge.learning.external_learning import ExternalLearningSystem
         from ai_knowledge.learning.quick_learner import QuickLearner
-        from ai_knowledge.knowledge_base import search_knowledge as kb_search
         from ai_knowledge.neural.semantic_matcher import SemanticMatcher
         from ai_knowledge.neural.transformers_brain import TransformersBrain
         from ai_knowledge.personality.dialects import apply_dialect
@@ -705,8 +704,9 @@ class TestWave8RemainingModules:
 
 class TestWave8ExtraPush:
     def test_flask_g_runtime_import_error(self):
-        from ai_knowledge import action_dispatcher as ad
         import builtins
+
+        from ai_knowledge import action_dispatcher as ad
 
         real_import = builtins.__import__
 
@@ -833,7 +833,7 @@ class TestWave8ExtraPush:
 
         analyzer = DataAnalyzer()
         sales = []
-        base = datetime.now(timezone.utc) - timedelta(days=14)
+        base = datetime.now(UTC) - timedelta(days=14)
         for i in range(14):
             sale = MagicMock()
             sale.created_at = base + timedelta(days=i)
@@ -880,15 +880,15 @@ class TestWave8ExtraPush:
             assert a[key] or a.get("recommendations")
 
     def test_core_modules_extra(self, knowledge_path):
-        from ai_knowledge.core.context_engine import ContextEngine
-        from ai_knowledge.core.conversation_manager import ConversationManager
-        from ai_knowledge.core.learning_system import AzadLearningSystem
-        from ai_knowledge.core.reasoning_engine import ReasoningEngine
         from ai_knowledge.agents.multi_agent_system import (
             AccountingAgent,
             InventoryAgent,
             MaintenanceAgent,
         )
+        from ai_knowledge.core.context_engine import ContextEngine
+        from ai_knowledge.core.conversation_manager import ConversationManager
+        from ai_knowledge.core.learning_system import AzadLearningSystem
+        from ai_knowledge.core.reasoning_engine import ReasoningEngine
 
         with (
             patch("ai_knowledge.core.context_engine.data_analyzer") as da,

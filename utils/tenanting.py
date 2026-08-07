@@ -6,12 +6,11 @@ Only platform owners (is_owner) may switch tenants via session.
 
 from __future__ import annotations
 
+import logging
 from contextlib import contextmanager
 
 from flask import abort, g, has_request_context, session
 from flask_login import current_user
-
-import logging
 
 from extensions import db
 from utils.logger import log_security
@@ -26,7 +25,7 @@ def _resolve_user(user=None):
         return user
     try:
         candidate = current_user._get_current_object()
-    except Exception:
+    except RuntimeError:
         return None
     return candidate if getattr(candidate, "is_authenticated", False) else None
 
@@ -66,7 +65,7 @@ def get_active_tenant_id(user=None) -> int | None:
         return None
 
     if not is_platform_owner(user):
-        tid = getattr(user, "tenant_id", None)
+        tid = (user.tenant_id if user is not None else None)
         return int(tid or 0) if tid else None
 
     if has_request_context():
@@ -75,9 +74,9 @@ def get_active_tenant_id(user=None) -> int | None:
             try:
                 return int(raw)
             except (TypeError, ValueError):
-                pass
+                logger.debug("Ignoring non-numeric active tenant session value: %r", raw)
 
-    tid2 = getattr(user, "tenant_id", None)
+    tid2 = (user.tenant_id if user is not None else None)
     return int(tid2 or 0) if tid2 else None
 
 
@@ -113,7 +112,7 @@ def assert_tenant_record(record, *, user=None, or_404: bool = True) -> bool:
         return False
 
     tid = get_active_tenant_id(user)
-    rec_tid = getattr(record, "tenant_id", None)
+    rec_tid = (record.tenant_id if record is not None else None)
 
     if rec_tid is None:
         if is_platform_owner(user):
@@ -157,7 +156,7 @@ def tenant_get_or_404(model, pk, user=None):
 
 
 def assign_tenant_id(record, user=None):
-    if getattr(record, "tenant_id", None):
+    if (record.tenant_id if record is not None else None):
         return record
     record.tenant_id = require_active_tenant_id(user)
     return record
@@ -211,7 +210,7 @@ def set_active_tenant(tenant_id, user=None):
         pass  # Allow platform owner to set any tenant
     else:
         # Normal user may only set their own user.tenant_id
-        user_tenant_id = getattr(user, "tenant_id", None)
+        user_tenant_id = (user.tenant_id if user is not None else None)
         if user_tenant_id is None:
             raise ValueError("Normal users must have a tenant_id")
         try:

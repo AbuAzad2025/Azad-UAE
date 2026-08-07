@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 
@@ -34,7 +34,7 @@ def _rate_stub(**kwargs):
         is_manual = kwargs.get("is_manual", True)
         valid_from = kwargs.get(
             "valid_from",
-            datetime.now(timezone.utc) - timedelta(days=1),
+            datetime.now(UTC) - timedelta(days=1),
         )
         valid_until = kwargs.get("valid_until")
         currency = kwargs.get("currency", _currency_stub())
@@ -76,7 +76,7 @@ class TestExchangeRate:
         assert r.is_valid() is True
 
     def test_is_valid_within_window(self):
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         r = _rate_stub(
             valid_from=now - timedelta(hours=1),
             valid_until=now + timedelta(hours=1),
@@ -84,7 +84,7 @@ class TestExchangeRate:
         assert r.is_valid() is True
 
     def test_is_valid_expired(self):
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         r = _rate_stub(
             valid_from=now - timedelta(days=2),
             valid_until=now - timedelta(days=1),

@@ -3,7 +3,7 @@ PalestineStrategy — 16% VAT, multi-currency (ILS/JOD/USD), PMA XML, WPS SIF.
 """
 
 import re
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 
 from .engine import LocalizationStrategy, coerce_decimal
 

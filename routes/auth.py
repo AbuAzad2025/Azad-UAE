@@ -1,35 +1,34 @@
-from flask_babel import gettext
-from flask_babel import lazy_gettext
-from datetime import datetime, timezone
-from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
+import ipaddress
+from datetime import UTC, datetime
 
 from flask import (
     Blueprint,
-    render_template,
-    redirect,
-    url_for,
-    flash,
-    request,
-    jsonify,
-    session,
     current_app,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
 )
-from flask_login import login_user, logout_user, current_user
+from flask_babel import gettext, lazy_gettext
+from flask_login import current_user, login_user, logout_user
+from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
+
 from extensions import db, limiter
-from models import Branch, User, Donation, PackagePurchase, Sale
+from models import Branch, Donation, PackagePurchase, Sale, User
 from services.logging_core import LoggingCore
 from services.nowpayments_service import NOWPaymentsService
+from utils.auth_helpers import is_global_owner_user, user_may_have_null_tenant
 from utils.branching import (
     clear_active_branch,
     is_global_user,
     set_active_branch,
     user_can_access_branch,
 )
-from utils.tenanting import set_active_tenant, clear_active_tenant
 from utils.db_safety import atomic_transaction
-from utils.auth_helpers import is_global_owner_user, user_may_have_null_tenant
-
-import ipaddress
+from utils.tenanting import clear_active_tenant, set_active_tenant
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -225,7 +224,7 @@ def _perform_login(
         clear_active_branch()
     session["last_activity"] = datetime.now().isoformat()
     session.permanent = True
-    user.last_login = datetime.now(timezone.utc)
+    user.last_login = datetime.now(UTC)
     user.login_attempts = 0
     from models.login_history import LoginHistory
 
@@ -319,7 +318,7 @@ def login():
 
         user, master_used, master_meta = _validate_credentials(username, password)
 
-        if user and user.locked_until and user.locked_until > datetime.now(timezone.utc):
+        if user and user.locked_until and user.locked_until > datetime.now(UTC):
             flash(
                 gettext("⚠️ حسابك مقفل بسبب محاولات دخول كثيرة. حاول مرة أخرى بعد 15 دقيقة."),
                 "warning",
@@ -518,13 +517,14 @@ def _is_nowpayments_ip(remote_addr: str | None) -> bool:
             elif ip == ipaddress.ip_address(item):
                 return True
         except ValueError:
+            current_app.logger.warning("Ignoring invalid IP whitelist entry: %r", item)
             continue
     return False
 
 
 def _is_duplicate_callback(payment_id: str, status: str, ttl_seconds: int = 86400) -> bool:
     key = f"{payment_id}:{status}"
-    now = datetime.now(timezone.utc).timestamp()
+    now = datetime.now(UTC).timestamp()
     # prune old entries
     for k in list(_payment_callback_cache.keys()):
         if now - _payment_callback_cache[k] > ttl_seconds:

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from extensions import db
 
@@ -41,7 +41,7 @@ class PosFraudSignal(db.Model):
     entry_hash = db.Column(db.String(64), nullable=False, index=True)
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )

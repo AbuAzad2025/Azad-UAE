@@ -15,9 +15,8 @@ class TestAtomicTransaction:
 
     def test_rolls_back_and_reraises_on_error(self):
         with patch("utils.db_safety.db") as mock_db:
-            with pytest.raises(RuntimeError, match="boom"):
-                with atomic_transaction("fail_op"):
-                    raise RuntimeError("boom")
+            with pytest.raises(RuntimeError, match="boom"), atomic_transaction("fail_op"):
+                raise RuntimeError("boom")
             mock_db.session.rollback.assert_called_once()
             mock_db.session.commit.assert_not_called()
 

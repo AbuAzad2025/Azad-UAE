@@ -2,12 +2,13 @@
 Package model for system packages
 """
 
+from datetime import UTC, datetime
+
 from extensions import db
-from datetime import datetime, timezone
 
 
 def _utc_now():
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 # Limit columns copied from a package onto the tenant on activation / plan sync.

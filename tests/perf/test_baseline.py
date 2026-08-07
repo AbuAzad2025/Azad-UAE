@@ -14,7 +14,7 @@ improvement with numbers instead of guessing.
 from __future__ import annotations
 
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from sqlalchemy import event
@@ -61,7 +61,7 @@ def _seed_bulk(db_session, tenant, user):
     db_session.add_all(products)
     db_session.flush()
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     sales = [
         Sale(
             tenant_id=tenant.id,

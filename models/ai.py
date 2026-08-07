@@ -1,6 +1,7 @@
 """AI system models — memories, interactions, expertise with tenant isolation."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from extensions import db
 
 
@@ -25,10 +26,10 @@ class AiMemory(db.Model):
     created_at = db.Column(
         db.DateTime,
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         index=True,
     )
-    updated_at = db.Column(db.DateTime, nullable=True, onupdate=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, nullable=True, onupdate=lambda: datetime.now(UTC))
     tenant = db.relationship("Tenant", backref="ai_memories", foreign_keys=[tenant_id])
 
     def to_dict(self):
@@ -73,7 +74,7 @@ class AiInteraction(db.Model):
     created_at = db.Column(
         db.DateTime,
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         index=True,
     )
     tenant = db.relationship("Tenant", backref="ai_interactions", foreign_keys=[tenant_id])
@@ -114,7 +115,7 @@ class AiExpertise(db.Model):
     created_at = db.Column(
         db.DateTime,
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         index=True,
     )
     tenant = db.relationship("Tenant", backref="ai_expertise", foreign_keys=[tenant_id])

@@ -8,7 +8,7 @@ from decimal import Decimal
 
 class TestLedgerJournalList:
     def test_journal_list_page_renders(self, app, db_session, client):
-        from models import Tenant, Branch, User, Role
+        from models import Branch, Role, Tenant, User
         from models.gl import GLJournalEntry
 
         tid = str(uuid.uuid4())[:8]

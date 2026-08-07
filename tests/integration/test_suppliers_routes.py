@@ -3,14 +3,14 @@ Integration tests: Supplier routes — purchases, payables, cheques, ageing.
 """
 
 import uuid
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from datetime import datetime, timezone, timedelta
 
 
 class TestSupplierCreate:
     def test_supplier_create_auto_linked_to_tenant(self, app, db_session, client):
         """New supplier must be auto-linked to the active tenant."""
-        from models import Tenant, Branch, Role, User, Supplier
+        from models import Branch, Role, Supplier, Tenant, User
 
         tid = uuid.uuid4().hex[:12]
         tenant = Tenant(
@@ -78,7 +78,7 @@ class TestSupplierCreate:
 class TestSupplierBranchIsolation:
     def test_supplier_branch_isolation(self, app, db_session, client):
         """Supplier visible only in the branch where it has a Purchase."""
-        from models import Tenant, Branch, Role, User, Supplier, Purchase
+        from models import Branch, Purchase, Role, Supplier, Tenant, User
         from services.gl_service import GLService
 
         tid = uuid.uuid4().hex[:12]
@@ -171,7 +171,7 @@ class TestSupplierBranchIsolation:
 
     def test_supplier_branch_isolation_reverse(self, app, db_session, client):
         """Supplier in Branch 2 must NOT appear in Branch 1's list."""
-        from models import Tenant, Branch, Role, User, Supplier, Purchase
+        from models import Branch, Purchase, Role, Supplier, Tenant, User
         from services.gl_service import GLService
 
         tid = uuid.uuid4().hex[:12]
@@ -266,7 +266,7 @@ class TestSupplierBranchIsolation:
 class TestSupplierStatement:
     def test_statement_shows_purchases_and_payments(self, app, db_session, client):
         """Supplier statement must show purchases (debit) and payments (credit)."""
-        from models import Tenant, Branch, Role, User, Supplier, Purchase, Payment
+        from models import Branch, Payment, Purchase, Role, Supplier, Tenant, User
 
         tid = uuid.uuid4().hex[:12]
         tenant = Tenant(
@@ -359,7 +359,7 @@ class TestSupplierStatement:
 class TestPayablesReport:
     def test_purchases_report_shows_supplier_balances(self, app, db_session, client):
         """Purchases report must list suppliers with their payable balances."""
-        from models import Tenant, Branch, Role, User, Supplier, Purchase
+        from models import Branch, Purchase, Role, Supplier, Tenant, User
         from services.gl_service import GLService
 
         tid = uuid.uuid4().hex[:12]
@@ -438,14 +438,14 @@ class TestSupplierChequeReport:
     def test_statement_shows_cheque_payments(self, app, db_session, client):
         """Supplier statement must show payments linked to outgoing cheques."""
         from models import (
-            Tenant,
             Branch,
-            Role,
-            User,
-            Supplier,
-            Purchase,
-            Payment,
             Cheque,
+            Payment,
+            Purchase,
+            Role,
+            Supplier,
+            Tenant,
+            User,
         )
 
         tid = uuid.uuid4().hex[:12]
@@ -513,8 +513,8 @@ class TestSupplierChequeReport:
             amount_aed=Decimal("2500"),
             currency="AED",
             status="pending",
-            issue_date=datetime.now(timezone.utc).date(),
-            due_date=datetime.now(timezone.utc).date() + timedelta(days=30),
+            issue_date=datetime.now(UTC).date(),
+            due_date=datetime.now(UTC).date() + timedelta(days=30),
         )
         db_session.add(cheque)
         db_session.commit()
@@ -558,7 +558,7 @@ class TestSupplierChequeReport:
 class TestSupplierAgeing:
     def test_purchases_report_shows_ageing_data(self, app, db_session, client):
         """Purchases report must show older purchases with their payable balances."""
-        from models import Tenant, Branch, Role, User, Supplier, Purchase
+        from models import Branch, Purchase, Role, Supplier, Tenant, User
         from services.gl_service import GLService
 
         tid = uuid.uuid4().hex[:12]
@@ -612,7 +612,7 @@ class TestSupplierAgeing:
             amount=Decimal("5000"),
             amount_aed=Decimal("5000"),
             currency="AED",
-            purchase_date=datetime.now(timezone.utc) - timedelta(days=100),
+            purchase_date=datetime.now(UTC) - timedelta(days=100),
         )
         db_session.add(old_purchase)
         db_session.commit()
@@ -638,7 +638,7 @@ class TestSupplierAgeing:
 class TestSupplierDelete:
     def test_delete_supplier_with_purchases_soft_deletes(self, app, db_session, client):
         """Supplier with purchases must be soft-deleted (is_active=False)."""
-        from models import Tenant, Branch, Role, User, Supplier, Purchase
+        from models import Branch, Purchase, Role, Supplier, Tenant, User
         from services.gl_service import GLService
 
         tid = uuid.uuid4().hex[:12]
@@ -717,7 +717,7 @@ class TestSupplierDelete:
 
     def test_delete_supplier_without_links_hard_deletes(self, app, db_session, client):
         """Supplier with NO linked records must be hard-deleted."""
-        from models import Tenant, Branch, Role, User, Supplier
+        from models import Branch, Role, Supplier, Tenant, User
 
         tid = uuid.uuid4().hex[:12]
         tenant = Tenant(
@@ -779,7 +779,7 @@ class TestSupplierDelete:
 class TestSupplierSearch:
     def test_supplier_search_by_name(self, app, db_session, client):
         """Searching suppliers by name must return matching results."""
-        from models import Tenant, Branch, Role, User, Supplier, Purchase
+        from models import Branch, Purchase, Role, Supplier, Tenant, User
         from services.gl_service import GLService
 
         tid = uuid.uuid4().hex[:12]
@@ -857,7 +857,7 @@ class TestSupplierSearch:
 class TestSupplierCrossTenant:
     def test_supplier_cross_tenant_isolation(self, app, db_session, client):
         """Suppliers from different tenants must be completely isolated."""
-        from models import Tenant, Branch, Role, User, Supplier, Purchase
+        from models import Branch, Purchase, Role, Supplier, Tenant, User
         from services.gl_service import GLService
 
         tid = uuid.uuid4().hex[:12]
@@ -951,7 +951,7 @@ class TestSupplierCrossTenant:
 class TestSupplierCreditLimit:
     def test_supplier_credit_limit_tracks_purchases(self, app, db_session, client):
         """Supplier credit_limit must not prevent showing total_purchases_aed."""
-        from models import Tenant, Branch, Role, User, Supplier, Purchase
+        from models import Branch, Purchase, Role, Supplier, Tenant, User
         from services.gl_service import GLService
 
         tid = uuid.uuid4().hex[:12]

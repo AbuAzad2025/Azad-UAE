@@ -1,11 +1,12 @@
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from flask_babel import gettext
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
-from flask_login import login_required, current_user
+from flask_login import current_user, login_required
+
 from models import CRMStage, CRMTeam, Customer, User
 from services.crm_lead_service import CRMLeadService
+from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
 from utils.tenanting import get_active_tenant_id
-from utils.db_safety import atomic_transaction
 
 crm_bp = Blueprint("crm", __name__, url_prefix="/crm")
 

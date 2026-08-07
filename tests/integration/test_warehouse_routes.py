@@ -23,16 +23,16 @@ def _add_initial_stock(db_session, product_id, warehouse_id, tenant_id, quantity
 class TestWarehouseAddStock:
     def test_add_stock_increases_stock_and_creates_gl(self, app, db_session, client):
         from models import (
-            Tenant,
             Branch,
-            User,
-            Role,
             Product,
-            Warehouse,
             ProductWarehouseStock,
+            Role,
+            Tenant,
+            User,
+            Warehouse,
         )
-        from services.gl_service import GLService
         from models.gl import GLJournalEntry
+        from services.gl_service import GLService
 
         tid = str(uuid.uuid4())[:8]
         tenant = Tenant(
@@ -156,16 +156,16 @@ class TestWarehouseAddStock:
 
     def test_add_stock_calculates_gl_from_cost_price(self, app, db_session, client):
         from models import (
-            Tenant,
             Branch,
-            User,
-            Role,
             Product,
-            Warehouse,
             ProductWarehouseStock,
+            Role,
+            Tenant,
+            User,
+            Warehouse,
         )
-        from services.gl_service import GLService
         from models.gl import GLJournalEntry, GLJournalLine
+        from services.gl_service import GLService
 
         tid = str(uuid.uuid4())[:8]
         tenant = Tenant(
@@ -300,7 +300,8 @@ class TestWarehouseAddStock:
 class TestWarehouseCreate:
     def test_create_warehouse_persists_and_lists(self, app, db_session, client):
         import uuid
-        from models import Tenant, Branch, User, Role, Warehouse
+
+        from models import Branch, Role, Tenant, User, Warehouse
 
         tid = str(uuid.uuid4())[:8]
         tenant = Tenant(

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone, timedelta
-from decimal import Decimal, ROUND_HALF_UP
+from datetime import UTC, datetime, timedelta
+from decimal import ROUND_HALF_UP, Decimal
 
 from flask import current_app
 
@@ -33,7 +33,7 @@ class AzadSubscriptionFeeService:
     @staticmethod
     def _period_dates(fee_type: str, billing_date=None):
         """Return (start, end) for the subscription period."""
-        start = billing_date or datetime.now(timezone.utc).date()
+        start = billing_date or datetime.now(UTC).date()
         if fee_type == "monthly":
             end = start + timedelta(days=30)
         elif fee_type == "yearly":
@@ -110,7 +110,7 @@ class AzadSubscriptionFeeService:
             tenant_id=int(tenant_id),
         )
         fee.gl_posted = True
-        fee.gl_posted_at = datetime.now(timezone.utc)
+        fee.gl_posted_at = datetime.now(UTC)
         current_app.logger.info(
             "Subscription fee accrued: tenant=%s type=%s amount=%s",
             tenant_id,
@@ -184,7 +184,7 @@ class AzadSubscriptionFeeService:
         )
 
         fee.status = "paid"
-        fee.paid_at = datetime.now(timezone.utc)
+        fee.paid_at = datetime.now(UTC)
         fee.paid_amount_aed = amount
         fee.payment_method = payment_method
         fee.payment_reference = payment_reference

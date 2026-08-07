@@ -1,5 +1,5 @@
-from flask_babel import gettext
 from flask import Blueprint, abort, flash, redirect, request
+from flask_babel import gettext
 from flask_login import current_user, login_required
 
 from extensions import db

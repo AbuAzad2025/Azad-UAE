@@ -2,7 +2,8 @@
 نموذج مراكز الربح - Profit Centers Model
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from extensions import db
 
 
@@ -40,14 +41,14 @@ class ProfitCenter(db.Model):
     # Meta
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     parent = db.relationship("ProfitCenter", remote_side=[id], backref="children")

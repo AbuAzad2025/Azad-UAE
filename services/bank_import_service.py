@@ -1,5 +1,6 @@
 import hashlib
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from extensions import db
 from models.bank_reconciliation import BankStatementLine
 
@@ -96,7 +97,7 @@ class BankImportService:
             return False
         line.status = "matched"
         line.matched_journal_entry_id = journal_entry_id
-        line.matched_at = datetime.now(timezone.utc)
+        line.matched_at = datetime.now(UTC)
         line.matched_by = user_id
         db.session.flush()
         return True

@@ -3,9 +3,10 @@ Integration Settings Model
 نموذج إعدادات التكاملات الخارجية (WhatsApp, Email, Redis, APIs)
 """
 
-from datetime import datetime, timezone
-from extensions import db
 import json
+from datetime import UTC, datetime
+
+from extensions import db
 
 
 class IntegrationSettings(db.Model):
@@ -37,11 +38,11 @@ class IntegrationSettings(db.Model):
     last_test_message = db.Column(db.Text)  # رسالة الاختبار
 
     # Meta
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
     updated_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
 
@@ -79,7 +80,7 @@ class IntegrationSettings(db.Model):
         if self.config_data:
             try:
                 return json.loads(self.config_data)
-            except Exception:
+            except (TypeError, ValueError):
                 return {}
         return {}
 

@@ -203,7 +203,7 @@ def _in_jinja_expr_spans(text, pos):
 
 def scan_file(filepath):
     issues = []
-    with open(filepath, "r", encoding="utf-8", errors="replace") as f:
+    with open(filepath, encoding="utf-8", errors="replace") as f:
         lines = f.readlines()
     ext = os.path.splitext(filepath)[1].lower()
     _IN_TRIPLE[""] = None
@@ -335,9 +335,7 @@ def main():
         if os.path.basename(p) in skip_dirs and os.path.isdir(os.path.join(REPO_ROOT, p)):
             continue
         full = os.path.join(REPO_ROOT, p)
-        if os.path.isdir(full):
-            scan_dirs.append(full)
-        elif os.path.isfile(full):
+        if os.path.isdir(full) or os.path.isfile(full):
             scan_dirs.append(full)
 
     all_issues = []

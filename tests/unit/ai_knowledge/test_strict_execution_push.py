@@ -242,8 +242,9 @@ class TestConversationManagerPush:
         assert get_conversation_manager() is not None
 
     def test_greeting_morning_and_evening(self):
-        from ai_knowledge.core.conversation_manager import ConversationManager
         from datetime import datetime
+
+        from ai_knowledge.core.conversation_manager import ConversationManager
 
         mgr = ConversationManager()
         with patch("ai_knowledge.core.conversation_manager.datetime") as dt:
@@ -300,6 +301,7 @@ class TestContinuousLearnerExtended:
 
     def test_evaluate_and_learn_no_service(self):
         import builtins
+
         from ai_knowledge.learning.continuous_learner import evaluate_and_learn
 
         real_import = builtins.__import__

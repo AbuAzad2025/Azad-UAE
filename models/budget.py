@@ -2,9 +2,10 @@
 نموذج الموازنة التخطيطية - Budget Model
 """
 
-from datetime import datetime, timezone
-from extensions import db
+from datetime import UTC, datetime
 from decimal import Decimal
+
+from extensions import db
 
 
 class Budget(db.Model):
@@ -51,14 +52,14 @@ class Budget(db.Model):
     )  # New Branch ID
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
     approved_at = db.Column(db.DateTime)
 
@@ -86,7 +87,8 @@ class Budget(db.Model):
     def update_actuals(self):
         """تحديث الأرقام الفعلية من دفتر الأستاذ"""
         from sqlalchemy import func
-        from models import GLJournalLine, GLJournalEntry
+
+        from models import GLJournalEntry, GLJournalLine
 
         total_actual = Decimal("0")
         total_variance = Decimal("0")

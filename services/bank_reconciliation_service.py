@@ -3,21 +3,23 @@
 """
 
 import logging
-from decimal import Decimal
 from datetime import timedelta
+from decimal import Decimal
+
 from flask_babel import gettext
+
 from extensions import db
 from models import (
     BankReconciliation,
     BankReconciliationItem,
     BankStatementLine,
+    Cheque,
     GLAccount,
     GLJournalEntry,
     GLJournalLine,
-    Cheque,
 )
-from utils.helpers import generate_number
 from utils.gl_reference_types import GLRef
+from utils.helpers import generate_number
 
 logger = logging.getLogger(__name__)
 
@@ -511,8 +513,9 @@ class BankReconciliationService:
         Returns a list of dicts ``{statement_line_id, suspense_entry_id}``.
         """
         from decimal import Decimal as _D
-        from services.gl_posting import post_or_fail, UnbalancedJournalEntryError
+
         from models import GLAccount
+        from services.gl_posting import UnbalancedJournalEntryError, post_or_fail
 
         orphans = BankStatementLine.query.filter(
             BankStatementLine.tenant_id == tenant_id,

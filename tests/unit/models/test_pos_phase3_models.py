@@ -7,7 +7,7 @@ Pure model logic: no DB access except the head-scan test (filesystem only).
 from __future__ import annotations
 
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -127,7 +127,7 @@ class TestPosShiftExpectedCash:
             shift_number="SHF-T1",
             starting_cash=Decimal("200"),
             status=PosShift.SHIFT_OPEN,
-            opened_at=datetime.now(timezone.utc),
+            opened_at=datetime.now(UTC),
         )
         for key, value in overrides.items():
             setattr(shift, key, value)

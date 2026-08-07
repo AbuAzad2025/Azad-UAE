@@ -6,8 +6,8 @@
 import json
 import logging
 import os
-from datetime import datetime
 import secrets
+from datetime import datetime
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -66,7 +66,7 @@ class AzadSelfImprovement:
         """تحميل بيانات التحسين"""
         if os.path.exists(self.improvement_file):
             try:
-                with open(self.improvement_file, "r", encoding="utf-8") as f:
+                with open(self.improvement_file, encoding="utf-8") as f:
                     return json.load(f)
             except (json.JSONDecodeError, OSError) as exc:
                 logger.debug("Could not load improvement data: %s", exc)
@@ -82,7 +82,7 @@ class AzadSelfImprovement:
         """تحميل مقاييس الأداء"""
         if os.path.exists(self.performance_file):
             try:
-                with open(self.performance_file, "r", encoding="utf-8") as f:
+                with open(self.performance_file, encoding="utf-8") as f:
                     return json.load(f)
             except (json.JSONDecodeError, OSError) as exc:
                 logger.debug("Could not load performance metrics: %s", exc)
@@ -97,7 +97,7 @@ class AzadSelfImprovement:
         """تحميل أهداف التحسين"""
         if os.path.exists(self.goals_file):
             try:
-                with open(self.goals_file, "r", encoding="utf-8") as f:
+                with open(self.goals_file, encoding="utf-8") as f:
                     return json.load(f)
             except (json.JSONDecodeError, OSError) as exc:
                 logger.debug("Could not load improvement goals: %s", exc)

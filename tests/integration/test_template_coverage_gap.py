@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import contextlib
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -170,7 +170,7 @@ def platform_vault(db_session):
         donation_page_enabled=True,
         min_donation_amount=Decimal("10.00"),
         max_donation_amount=Decimal("10000.00"),
-        last_access=datetime.now(timezone.utc),
+        last_access=datetime.now(UTC),
         failed_attempts=0,
         max_failed_attempts=3,
         auto_lock_minutes=30,
@@ -442,7 +442,7 @@ class TestDirectTemplateRenders:
                 qr_data_url="",
                 print_branding=get_print_header_context(sample_tenant.id),
                 print_tenant_id=sample_tenant.id,
-                printed_at=datetime.now(timezone.utc),
+                printed_at=datetime.now(UTC),
             )
 
     def test_payments_create_receipt_renders(self, app, sample_user, sample_purchase):
@@ -472,7 +472,7 @@ class TestDirectTemplateRenders:
                 amount_aed=Decimal("100.000"),
                 currency="AED",
                 payment_method="cash",
-                payment_date=datetime.now(timezone.utc),
+                payment_date=datetime.now(UTC),
                 notes="Test payment",
             )
             render_template(
@@ -564,7 +564,7 @@ class TestDirectTemplateRenders:
                 sale=sample_sale,
                 status_label="pending",
                 pay_method=None,
-                printed_at=datetime.now(timezone.utc),
+                printed_at=datetime.now(UTC),
                 **ctx,
             )
             render_template("shop/order_success.html", sale=sample_sale, **ctx)

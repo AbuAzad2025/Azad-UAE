@@ -174,6 +174,7 @@ class TestAuthenticatedApi:
 
     def test_warehouses_with_injected_helper(self, app, auth_client, mocker):
         from types import SimpleNamespace
+
         import routes.api as api_module
 
         wh = SimpleNamespace(id=1, name="Main WH")

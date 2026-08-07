@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 from sqlalchemy import func
@@ -15,13 +15,13 @@ from services.store_service import StoreService
 class StoreAnalyticsService:
     @staticmethod
     def _since(days: int) -> datetime:
-        return datetime.now(timezone.utc) - timedelta(days=days)
+        return datetime.now(UTC) - timedelta(days=days)
 
     @staticmethod
     def order_stats(tenant_id: int) -> dict:
         tid = int(tenant_id)
         base = Sale.query.filter_by(tenant_id=tid, source="online_store")
-        today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        today_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
         week_start = StoreAnalyticsService._since(7)
         month_start = StoreAnalyticsService._since(30)
 

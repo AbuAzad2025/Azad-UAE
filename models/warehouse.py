@@ -1,4 +1,5 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from extensions import db
 
 
@@ -35,7 +36,7 @@ class Warehouse(db.Model):
     is_active = db.Column(db.Boolean, default=True, index=True)
     is_main = db.Column(db.Boolean, default=False)
     allow_negative_inventory = db.Column(db.Boolean, default=False, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
 
     extra_fields = db.Column(db.JSON, default=dict)
 
@@ -91,8 +92,8 @@ class ProductWarehouseStock(db.Model):
 
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     product = db.relationship("Product", back_populates="warehouse_stocks")
@@ -136,7 +137,7 @@ class StockMovement(db.Model):
 
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )

@@ -5,7 +5,8 @@ This table is NOT tenant-scoped; it stores tenant_id as metadata only
 so errors can be traced to the tenant where they occurred.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from extensions import db
 
 
@@ -21,13 +22,13 @@ class ErrorAuditLog(db.Model):
     occurrence_count = db.Column(db.Integer, nullable=False, default=1)
     first_seen_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     last_seen_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
@@ -73,7 +74,7 @@ class ErrorAuditLog(db.Model):
 
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )

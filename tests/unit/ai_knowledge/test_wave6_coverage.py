@@ -159,8 +159,9 @@ class TestLearningSystemWave6:
 
 class TestActionDispatcherWave6:
     def test_runtime_error_paths(self):
-        from ai_knowledge import action_dispatcher as ad
         import builtins
+
+        from ai_knowledge import action_dispatcher as ad
 
         real_import = builtins.__import__
 
@@ -515,11 +516,11 @@ class TestSystemIntegrationWave6:
             patch("models.Product") as Product,
             patch("models.Payment") as Payment,
         ):
-            setattr(Customer, "customer_type", _Col())
-            setattr(Sale, "created_at", _Col())
-            setattr(Product, "current_stock", _Col())
-            setattr(Product, "min_stock_alert", _Col())
-            setattr(Payment, "created_at", _Col())
+            Customer.customer_type = _Col()
+            Sale.created_at = _Col()
+            Product.current_stock = _Col()
+            Product.min_stock_alert = _Col()
+            Payment.created_at = _Col()
             Customer.query.count.return_value = 5
             Customer.query.filter.return_value.count.return_value = 1
             recent_c = MagicMock(
@@ -544,8 +545,8 @@ class TestSystemIntegrationWave6:
             patch("models.Sale") as Sale,
             patch("models.Payment") as Payment,
         ):
-            setattr(Sale, "created_at", _Col())
-            setattr(Payment, "created_at", _Col())
+            Sale.created_at = _Col()
+            Payment.created_at = _Col()
             mock_db.func.sum.return_value = MagicMock()
             q = MagicMock()
             q.scalar.return_value = Decimal("0")
@@ -960,8 +961,8 @@ class TestSecondaryModulesWave6:
 
     def test_self_improvement_and_learner(self, knowledge_path):
         from ai_knowledge.improvement.self_improvement import AzadSelfImprovement
-        from ai_knowledge.learning.continuous_learner import ContinuousLearner
         from ai_knowledge.learning.auto_retraining import AutoRetrainingScheduler
+        from ai_knowledge.learning.continuous_learner import ContinuousLearner
 
         ai = AzadSelfImprovement()
         ai.improvement_areas["response_quality"]["current_score"] = 9.5
@@ -1271,11 +1272,11 @@ class TestWave6FinalPush:
             assert "لا توجد" in empty_msg
 
     def test_neural_semantic_batch(self, knowledge_path):
+        from ai_knowledge.neural.neural_engine import AzadNeuralEngine
         from ai_knowledge.neural.semantic_matcher import (
             SemanticMatcher,
             understand_message,
         )
-        from ai_knowledge.neural.neural_engine import AzadNeuralEngine
 
         matcher = SemanticMatcher()
         for msg in (
@@ -1298,9 +1299,9 @@ class TestWave6FinalPush:
             engine.train_sales_forecaster(from_app_context=ctx)
 
     def test_learning_and_context_remaining(self, knowledge_path):
-        from ai_knowledge.core.learning_system import AzadLearningSystem
         from ai_knowledge.core.context_engine import ContextEngine
         from ai_knowledge.core.conversation_manager import ConversationManager
+        from ai_knowledge.core.learning_system import AzadLearningSystem
         from ai_knowledge.improvement.self_improvement import AzadSelfImprovement
 
         ls = AzadLearningSystem()
@@ -1317,7 +1318,7 @@ class TestWave6FinalPush:
         ai.auto_improve()
 
     def test_action_tenant_guard_direct(self):
-        from ai_knowledge.action_dispatcher import _tenant_guard, _require_tenant
+        from ai_knowledge.action_dispatcher import _require_tenant, _tenant_guard
 
         with patch("ai_knowledge.action_dispatcher._get_active_tenant_id", return_value=None):
             tid, guard = _tenant_guard()

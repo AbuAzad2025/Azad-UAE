@@ -4,7 +4,8 @@ Inspired by Odoo's account.fiscal.position
 Maps taxes and accounts based on customer type/location.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from extensions import db
 
 
@@ -37,11 +38,11 @@ class FiscalPosition(db.Model):
     is_active = db.Column(db.Boolean, nullable=False, default=True)
     notes = db.Column(db.Text)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     tenant = db.relationship("Tenant", backref="fiscal_positions", foreign_keys=[tenant_id])

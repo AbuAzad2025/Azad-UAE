@@ -63,8 +63,9 @@ class TestGlServiceWrappers:
     def test_gl_resolve_exchange_rate(self, mocker):
         svc = mocker.patch("services.exchange_rate_service.ExchangeRateService")
         mocker.patch("utils.currency_utils.get_system_default_currency", return_value="AED")
-        from utils.gl_services import gl_resolve_exchange_rate
         from datetime import date
+
+        from utils.gl_services import gl_resolve_exchange_rate
 
         gl_resolve_exchange_rate(date.today(), "USD", tenant_id=1)
         svc.resolve_exchange_rate_for_transaction.assert_called_once()

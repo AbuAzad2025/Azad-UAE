@@ -6,11 +6,12 @@ Called by AIService._execute_ai_action (Groq path) and by enhanced ActionDispatc
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from flask_babel import gettext
 from flask_login import current_user as flask_user
+
 from extensions import db
 from utils.tenanting import get_active_tenant_id
 
@@ -514,7 +515,7 @@ class AIExecutor:
 
     def create_purchase(self, supplier_name: str, product_lines: list[dict], notes: str = "") -> dict:
         self._require_tenant()
-        from models import Supplier, Product, Warehouse
+        from models import Product, Supplier, Warehouse
         from services.purchase_service import PurchaseService
 
         supplier = Supplier.query.filter_by(tenant_id=self.tenant_id, name=supplier_name, is_active=True).first()
@@ -564,8 +565,9 @@ class AIExecutor:
 
     def sales_summary(self) -> dict:
         self._require_tenant()
-        from models import Sale
         from sqlalchemy import func
+
+        from models import Sale
 
         total = (
             db.session.query(func.coalesce(func.sum(Sale.total_amount), 0))
@@ -588,8 +590,9 @@ class AIExecutor:
 
     def profit_summary(self) -> dict:
         self._require_tenant()
-        from models import Sale, SaleLine, Product
         from sqlalchemy import func
+
+        from models import Product, Sale, SaleLine
 
         total_revenue = (
             db.session.query(func.coalesce(func.sum(Sale.total_amount), 0))
@@ -642,7 +645,7 @@ class AIExecutor:
         except Exception:
             import secrets
 
-            return f"{prefix}-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}-{secrets.randbelow(900) + 100}"
+            return f"{prefix}-{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}-{secrets.randbelow(900) + 100}"
 
 
 # Convenience singleton-pattern factory

@@ -466,6 +466,7 @@ class TestChequeStateTransitions:
 class TestChequeEventListeners:
     def test_overdue_warning_and_status_log(self, mocker):
         import importlib
+
         import services.cheque_service as cs
 
         importlib.reload(cs)
@@ -473,8 +474,9 @@ class TestChequeEventListeners:
         info = mocker.patch.object(cs.logger, "info", side_effect=[None, RuntimeError("log fail")])
         err = mocker.patch.object(cs.logger, "error")
         cs.register_cheque_event_listeners()
-        from models import Cheque
         from sqlalchemy import event
+
+        from models import Cheque
 
         before = list(event.registry._key_to_collection.get((Cheque, "before_insert"), []))
         after = list(event.registry._key_to_collection.get((Cheque, "after_update"), []))

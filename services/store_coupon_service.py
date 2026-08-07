@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
+
+from flask_babel import gettext
 
 from extensions import db
 from models.store_coupon import StoreCoupon
-from flask_babel import gettext
 
 
 class StoreCouponService:

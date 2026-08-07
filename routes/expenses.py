@@ -1,40 +1,40 @@
-from flask_babel import gettext
+from datetime import UTC, datetime
+from decimal import Decimal
+
 from flask import (
     Blueprint,
-    render_template,
-    redirect,
-    url_for,
-    flash,
-    request,
-    jsonify,
     current_app,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
 )
-from flask_login import login_required, current_user
+from flask_babel import gettext
+from flask_login import current_user, login_required
+
 from extensions import db, limiter
 from models import Expense, ExpenseCategory
+from services.cheque_service import ChequeService, process_cheque_issue
 from services.currency_service import CurrencyService
 from services.exchange_rate_service import ExchangeRateService
-from services.gl_service import GLService
 from services.gl_posting import post_or_fail
-from services.cheque_service import process_cheque_issue
-from services.cheque_service import ChequeService
-from utils.decorators import permission_required, branch_scope_id
-from utils.db_safety import atomic_transaction
-from utils.branching import should_show_all_branch_columns
+from services.gl_service import GLService
 from services.logging_core import LoggingCore
-from utils.helpers import generate_number
-from utils.currency_utils import resolve_default_currency, get_system_default_currency, convert_and_quantize_aed
-from utils.tenanting import (
-    tenant_query,
-    tenant_get_or_404,
-    require_active_tenant_id,
-    get_active_tenant_id,
-)
-from utils.gl_reference_types import GLRef
-from decimal import Decimal
-from datetime import datetime
-
+from utils.branching import should_show_all_branch_columns
+from utils.currency_utils import convert_and_quantize_aed, get_system_default_currency, resolve_default_currency
+from utils.db_safety import atomic_transaction
+from utils.decorators import branch_scope_id, permission_required
 from utils.feature_guards import install_feature_gate
+from utils.gl_reference_types import GLRef
+from utils.helpers import generate_number
+from utils.tenanting import (
+    get_active_tenant_id,
+    require_active_tenant_id,
+    tenant_get_or_404,
+    tenant_query,
+)
 
 expenses_bp = Blueprint("expenses", __name__, url_prefix="/expenses")
 install_feature_gate(expenses_bp, "expenses")
@@ -108,8 +108,9 @@ def index():
 
     query = tenant_query(Expense).filter_by(status="confirmed")
 
-    from models import ArchivedRecord
     from sqlalchemy import select
+
+    from models import ArchivedRecord
     from utils.tenanting import get_active_tenant_id
 
     _tid = get_active_tenant_id(current_user)
@@ -297,13 +298,12 @@ def print_expense(**kwargs):
     if not _expense_in_scope(expense):
         return render_template("errors/403.html"), 403
     tid = getattr(expense, "tenant_id", None)
-    from datetime import timezone
 
     from services.print_service import PrintService
 
     ctx = PrintService._get_tenant_context(tid)
     ctx.update(PrintService._user_context())
-    ctx["printed_at"] = datetime.now(timezone.utc)
+    ctx["printed_at"] = datetime.now(UTC)
     return render_template("expenses/print.html", expense=expense, **ctx)
 
 

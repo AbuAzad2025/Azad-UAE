@@ -60,7 +60,7 @@ def default_report_date_range(days=90):
 
 
 def scoped_model_query(model, user=None, tenant_id=None):
-    from utils.tenanting import tenant_query, model_has_tenant
+    from utils.tenanting import model_has_tenant, tenant_query
 
     if model_has_tenant(model):
         return tenant_query(model, user)

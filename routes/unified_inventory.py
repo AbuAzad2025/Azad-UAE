@@ -1,12 +1,14 @@
-from datetime import datetime, timezone, timedelta
-from flask import Blueprint, render_template, request, flash, redirect, url_for
-from flask_login import login_required, current_user
+from datetime import UTC, datetime, timedelta
+
+from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask_login import current_user, login_required
+
 from extensions import db
-from models import Campaign, WarrantyClaim, Shipment
-from utils.decorators import permission_required
-from utils.tenanting import get_active_tenant_id
+from models import Campaign, Shipment, WarrantyClaim
 from services.logging_core import LoggingCore
 from utils.db_safety import atomic_transaction
+from utils.decorators import permission_required
+from utils.tenanting import get_active_tenant_id
 
 uinv_bp = Blueprint("unified_inventory", __name__, url_prefix="/uinv")
 
@@ -39,8 +41,8 @@ def campaigns_create():
             coupon_code=request.form.get("coupon_code"),
             discount_value=float(request.form.get("discount_value", 0)),
             min_order_amount=float(request.form.get("min_order_amount", 0)),
-            start_date=datetime.now(timezone.utc),
-            end_date=datetime.now(timezone.utc) + timedelta(days=30),
+            start_date=datetime.now(UTC),
+            end_date=datetime.now(UTC) + timedelta(days=30),
             is_active=True,
         )
         with atomic_transaction("campaign_create"):

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import MagicMock
@@ -27,7 +27,7 @@ class TestSaleLearning:
             subtotal=Decimal("0"),
             discount_amount=Decimal("0"),
             payment_status="paid",
-            sale_date=datetime(2025, 6, 1, 10, 0, tzinfo=timezone.utc),
+            sale_date=datetime(2025, 6, 1, 10, 0, tzinfo=UTC),
             lines=[],
         )
         from services.events_ai_service import _learn_sale_patterns
@@ -395,7 +395,7 @@ class TestPredictionHandlers:
 
     def test_predict_customer_churn_high_risk(self, mocker):
         ls = _mock_learning(mocker)
-        old = datetime(2020, 1, 1, tzinfo=timezone.utc)
+        old = datetime(2020, 1, 1, tzinfo=UTC)
         conn = MagicMock()
         conn.execute.return_value.first.return_value = SimpleNamespace(sale_date=old)
         target = SimpleNamespace(id=20)
@@ -406,7 +406,7 @@ class TestPredictionHandlers:
 
     def test_predict_customer_churn_medium_risk(self, mocker):
         _mock_learning(mocker)
-        old = datetime.now(timezone.utc) - __import__("datetime").timedelta(days=70)
+        old = datetime.now(UTC) - __import__("datetime").timedelta(days=70)
         conn = MagicMock()
         conn.execute.return_value.first.return_value = SimpleNamespace(sale_date=old)
         from services.events_ai_service import _predict_customer_churn
@@ -735,7 +735,7 @@ class TestHandlerExceptions:
             subtotal=Decimal("10"),
             discount_amount=Decimal("0"),
             payment_status="paid",
-            sale_date=datetime.now(timezone.utc),
+            sale_date=datetime.now(UTC),
             lines=[],
             status="confirmed",
             is_active=True,
@@ -800,7 +800,7 @@ class TestHandlerExceptions:
 
     def test_churn_low_risk_branch(self, mocker):
         _mock_learning(mocker)
-        recent = datetime.now(timezone.utc) - __import__("datetime").timedelta(days=10)
+        recent = datetime.now(UTC) - __import__("datetime").timedelta(days=10)
         conn = MagicMock()
         conn.execute.return_value.first.return_value = SimpleNamespace(sale_date=recent)
         from services.events_ai_service import _predict_customer_churn

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -117,9 +117,8 @@ class TestRecordStoreOnlineFee:
 
         from services.azad_platform_fee_service import AzadPlatformFeeService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="Platform vault"):
-                AzadPlatformFeeService.record_store_online_fee(_online_sale())
+        with app.app_context(), pytest.raises(ValueError, match="Platform vault"):
+            AzadPlatformFeeService.record_store_online_fee(_online_sale())
 
     def test_accrues_fee_and_posts_gl(self, app, mocker):
         mock_q = MagicMock()
@@ -173,8 +172,8 @@ class TestPlatformFeeReporting:
 
         from services.azad_platform_fee_service import AzadPlatformFeeService
 
-        dt_from = datetime(2026, 1, 1, tzinfo=timezone.utc)
-        dt_to = datetime(2026, 6, 1, tzinfo=timezone.utc)
+        dt_from = datetime(2026, 1, 1, tzinfo=UTC)
+        dt_to = datetime(2026, 6, 1, tzinfo=UTC)
         report = AzadPlatformFeeService.get_settlement_report(tenant_id=1, date_from=dt_from, date_to=dt_to)
         assert report["count"] == 1
         assert report["total_fee_aed"] == Decimal("10.000")
@@ -186,18 +185,16 @@ class TestPlatformFeeReporting:
 
         from services.azad_platform_fee_service import AzadPlatformFeeService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="No settled fees"):
-                AzadPlatformFeeService.confirm_settlement_paid([1])
+        with app.app_context(), pytest.raises(ValueError, match="No settled fees"):
+            AzadPlatformFeeService.confirm_settlement_paid([1])
 
     def test_missing_tenant_id_raises(self, app):
         from services.azad_platform_fee_service import AzadPlatformFeeService
 
         sale = _online_sale()
         sale.tenant_id = None
-        with app.app_context():
-            with pytest.raises(ValueError, match="tenant_id"):
-                AzadPlatformFeeService.record_store_online_fee(sale)
+        with app.app_context(), pytest.raises(ValueError, match="tenant_id"):
+            AzadPlatformFeeService.record_store_online_fee(sale)
 
     def test_zero_fee_amount_skips(self, app, mocker):
         mock_q = MagicMock()
@@ -282,9 +279,8 @@ class TestPlatformFeeReporting:
         )
         from services.azad_platform_fee_service import AzadPlatformFeeService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="zero"):
-                AzadPlatformFeeService.confirm_settlement_paid(1)
+        with app.app_context(), pytest.raises(ValueError, match="zero"):
+            AzadPlatformFeeService.confirm_settlement_paid(1)
 
     def test_confirm_settlement_paid_missing_vault(self, app, mocker):
         fee = MagicMock(fee_amount_aed=Decimal("10"), status="settled")
@@ -297,6 +293,5 @@ class TestPlatformFeeReporting:
         )
         from services.azad_platform_fee_service import AzadPlatformFeeService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="Platform vault"):
-                AzadPlatformFeeService.confirm_settlement_paid(1)
+        with app.app_context(), pytest.raises(ValueError, match="Platform vault"):
+            AzadPlatformFeeService.confirm_settlement_paid(1)

@@ -1,13 +1,13 @@
 from flask_wtf import FlaskForm
 from wtforms import (
-    SelectField,
-    DecimalField,
-    StringField,
     DateField,
-    TextAreaField,
+    DecimalField,
+    SelectField,
+    StringField,
     SubmitField,
+    TextAreaField,
 )
-from wtforms.validators import DataRequired, Optional, NumberRange
+from wtforms.validators import DataRequired, NumberRange, Optional
 
 
 class ReceiptForm(FlaskForm):

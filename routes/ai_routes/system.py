@@ -1,12 +1,14 @@
 """AI system data query routes (customer, product, sales lookups)."""
 
 import logging
-from flask import request, jsonify
+
+from flask import jsonify, request
 from flask_login import login_required
-from utils.decorators import permission_required
-from ai_knowledge.core.system_integration import system_integrator
+
 from ai_knowledge.analytics.data_analyzer import data_analyzer
+from ai_knowledge.core.system_integration import system_integrator
 from routes.ai_routes import ai_bp
+from utils.decorators import permission_required
 
 logger = logging.getLogger(__name__)
 

@@ -1,10 +1,10 @@
+import gzip
+import logging
 import os
 import shutil
-import gzip
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-import logging
 
 logger = logging.getLogger(__name__)
 

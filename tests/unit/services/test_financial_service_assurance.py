@@ -260,8 +260,9 @@ class TestSumFiltersExtended:
         mocker.patch(
             "services.financial_service.datetime",
         )
-        import services.financial_service as fs_mod
         from datetime import datetime as real_dt
+
+        import services.financial_service as fs_mod
 
         dec_today = real_dt(2025, 12, 15).date()
         mocker.patch.object(fs_mod, "datetime")

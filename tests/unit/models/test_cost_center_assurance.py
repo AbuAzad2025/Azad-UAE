@@ -22,7 +22,7 @@ class _Col:
 
 @pytest.fixture
 def mock_gl_journal_columns(monkeypatch):
-    from models import GLJournalLine, GLJournalEntry
+    from models import GLJournalEntry, GLJournalLine
 
     monkeypatch.setattr(GLJournalLine, "credit", _Col())
     monkeypatch.setattr(GLJournalLine, "debit", _Col())

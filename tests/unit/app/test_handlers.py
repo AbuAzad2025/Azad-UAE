@@ -97,11 +97,10 @@ class TestWantsJsonErrorResponse:
 
 class TestCsrfHandler:
     def test_csrf_json(self, app_with_handlers):
-        with patch("app.handlers.LoggingCore.log_error"):
-            with app_with_handlers.test_request_context(
-                "/api/data", method="POST", headers={"Accept": "application/json"}
-            ):
-                resp = _invoke(app_with_handlers, CSRFError("bad token"))
+        with patch("app.handlers.LoggingCore.log_error"), app_with_handlers.test_request_context(
+            "/api/data", method="POST", headers={"Accept": "application/json"}
+        ):
+            resp = _invoke(app_with_handlers, CSRFError("bad token"))
         assert resp.status_code == 400
         assert resp.get_json()["success"] is False
 
@@ -111,10 +110,9 @@ class TestCsrfHandler:
         with (
             patch("app.handlers.LoggingCore.log_error"),
             patch("app.handlers.current_user", anon),
-            patch("app.handlers.url_for", return_value="/login"),
+            patch("app.handlers.url_for", return_value="/login"),app_with_handlers.test_request_context("/page")
         ):
-            with app_with_handlers.test_request_context("/page"):
-                resp = _invoke(app_with_handlers, CSRFError("bad token"))
+            resp = _invoke(app_with_handlers, CSRFError("bad token"))
         assert resp.status_code in (302, 400)
 
     def test_csrf_authenticated_html(self, app_with_handlers):
@@ -134,31 +132,28 @@ class TestHttpErrorHandlers:
     def test_handle_500_production(self, app_with_handlers):
         with (
             patch("app.handlers.LoggingCore.log_error"),
-            patch("app.handlers.render_template", return_value="error"),
+            patch("app.handlers.render_template", return_value="error"),app_with_handlers.test_request_context("/page")
         ):
-            with app_with_handlers.test_request_context("/page"):
-                resp = _invoke(app_with_handlers, Exception("fail"))
+            resp = _invoke(app_with_handlers, Exception("fail"))
         assert resp.status_code == 500
 
     def test_handle_500_debug_reraises(self):
         app = Flask(__name__)
         app.config["DEBUG"] = True
         register_error_handlers(app)
-        with patch("app.handlers.LoggingCore.log_error"):
-            with app.test_request_context("/"):
-                handler = _handler(app, Exception("fail"))
-                with pytest.raises(Exception, match="fail"):
-                    handler(Exception("fail"))
+        with patch("app.handlers.LoggingCore.log_error"), app.test_request_context("/"):
+            handler = _handler(app, Exception("fail"))
+            with pytest.raises(Exception, match="fail"):
+                handler(Exception("fail"))
 
     def test_handle_500_production_direct(self, app_with_handlers):
         from werkzeug.exceptions import InternalServerError
 
         with (
             patch("app.handlers.LoggingCore.log_error"),
-            patch("app.handlers.render_template", return_value="error"),
+            patch("app.handlers.render_template", return_value="error"),app_with_handlers.test_request_context("/page")
         ):
-            with app_with_handlers.test_request_context("/page"):
-                resp = _invoke(app_with_handlers, InternalServerError())
+            resp = _invoke(app_with_handlers, InternalServerError())
         assert resp.status_code == 500
 
     def test_handle_500_debug_reraises_direct(self):
@@ -168,33 +163,30 @@ class TestHttpErrorHandlers:
         register_error_handlers(app)
         from werkzeug.exceptions import InternalServerError
 
-        with patch("app.handlers.LoggingCore.log_error"):
-            with app.test_request_context("/"):
-                handler = _handler(app, InternalServerError())
-                with pytest.raises(InternalServerError):
-                    handler(InternalServerError())
+        with patch("app.handlers.LoggingCore.log_error"), app.test_request_context("/"):
+            handler = _handler(app, InternalServerError())
+            with pytest.raises(InternalServerError):
+                handler(InternalServerError())
 
     def test_handle_404_debug_reraises(self):
         app = Flask(__name__)
         app.config["DEBUG"] = True
         app.config["TESTING"] = True
         register_error_handlers(app)
-        with patch("app.handlers.LoggingCore.log_error"):
-            with app.test_request_context("/missing"):
-                handler = _handler(app, NotFound())
-                with pytest.raises(NotFound):
-                    handler(NotFound())
+        with patch("app.handlers.LoggingCore.log_error"), app.test_request_context("/missing"):
+            handler = _handler(app, NotFound())
+            with pytest.raises(NotFound):
+                handler(NotFound())
 
     def test_handle_403_debug_reraises(self):
         app = Flask(__name__)
         app.config["DEBUG"] = True
         app.config["TESTING"] = True
         register_error_handlers(app)
-        with patch("app.handlers.LoggingCore.log_error"):
-            with app.test_request_context("/secret"):
-                handler = _handler(app, Forbidden())
-                with pytest.raises(Forbidden):
-                    handler(Forbidden())
+        with patch("app.handlers.LoggingCore.log_error"), app.test_request_context("/secret"):
+            handler = _handler(app, Forbidden())
+            with pytest.raises(Forbidden):
+                handler(Forbidden())
 
     def test_generic_handler_http_exception_passthrough(self, app_with_handlers):
         spec = app_with_handlers.error_handler_spec.get(None, {})
@@ -256,9 +248,8 @@ class TestHttpErrorHandlers:
         assert resp.status_code == 500
 
     def test_handle_http_exception_html_returns_exc(self, app_with_handlers):
-        with patch("app.handlers.LoggingCore.log_error"):
-            with app_with_handlers.test_request_context("/page"):
-                result = _handler(app_with_handlers, BadRequest("bad input"))(BadRequest("bad input"))
+        with patch("app.handlers.LoggingCore.log_error"), app_with_handlers.test_request_context("/page"):
+            result = _handler(app_with_handlers, BadRequest("bad input"))(BadRequest("bad input"))
         assert result.code == 400
 
     def test_handle_404_via_client(self, app_with_handlers):
@@ -285,18 +276,16 @@ class TestHandle403Standardization:
         assert "permission" in body["message"].lower()
 
     def test_api_403_includes_custom_description(self, app_with_handlers):
-        with patch("app.handlers.LoggingCore.log_error"):
-            with app_with_handlers.test_request_context("/api/v1/gl"):
-                resp = _invoke(app_with_handlers, Forbidden("Requires manage_ledger"))
+        with patch("app.handlers.LoggingCore.log_error"), app_with_handlers.test_request_context("/api/v1/gl"):
+            resp = _invoke(app_with_handlers, Forbidden("Requires manage_ledger"))
         assert resp.status_code == 403
         assert resp.get_json()["message"] == "Requires manage_ledger"
 
     def test_xhr_403_returns_json(self, app_with_handlers):
-        with patch("app.handlers.LoggingCore.log_error"):
-            with app_with_handlers.test_request_context(
-                "/payments/delete/5", headers={"X-Requested-With": "XMLHttpRequest"}
-            ):
-                resp = _invoke(app_with_handlers, Forbidden())
+        with patch("app.handlers.LoggingCore.log_error"), app_with_handlers.test_request_context(
+            "/payments/delete/5", headers={"X-Requested-With": "XMLHttpRequest"}
+        ):
+            resp = _invoke(app_with_handlers, Forbidden())
         assert resp.status_code == 403
         assert resp.get_json()["error"] == "PERMISSION_DENIED"
 

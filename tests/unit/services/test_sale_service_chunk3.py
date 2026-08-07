@@ -162,23 +162,22 @@ class TestCreateSaleSerialBranches:
             {"serials": ["SN-NEW"]},
             allow_serial_on_sale=True,
             expect_error=True,
-        ) as (svc, _, db_sess, _):
-            with patch("models.ProductSerial") as sn_mod:
-                sn_mod.query.filter_by.return_value.first.side_effect = [None, created]
-                sn_mod.return_value = created
-                svc.create_sale(
-                    customer,
-                    seller,
-                    [
-                        {
-                            "product": product,
-                            "quantity": 1,
-                            "unit_price": 100,
-                            "serials": ["SN-NEW"],
-                        }
-                    ],
-                    currency="AED",
-                )
+        ) as (svc, _, db_sess, _), patch("models.ProductSerial") as sn_mod:
+            sn_mod.query.filter_by.return_value.first.side_effect = [None, created]
+            sn_mod.return_value = created
+            svc.create_sale(
+                customer,
+                seller,
+                [
+                    {
+                        "product": product,
+                        "quantity": 1,
+                        "unit_price": 100,
+                        "serials": ["SN-NEW"],
+                    }
+                ],
+                currency="AED",
+            )
         sn_mod.assert_called_once()
         assert created.status == "sold"
         assert created.sale_line_id is not None
@@ -282,24 +281,23 @@ class TestCreateSaleCommissionAndOptions:
 
     def test_currency_fallback_on_tenant_error(self, app):
         customer, seller, product = _actors()
-        with _create_ctx(customer, seller, product, expect_error=True) as (
+        with (
+            _create_ctx(customer, seller, product, expect_error=True) as (
             svc,
             _,
             _,
             _,
+        ), patch("models.Tenant.get_current", side_effect=Exception("no tenant")),
+            patch(
+                "services.sale_service.resolve_default_currency",
+                side_effect=Exception("fallback"),
+            ),
         ):
-            with (
-                patch("models.Tenant.get_current", side_effect=Exception("no tenant")),
-                patch(
-                    "services.sale_service.resolve_default_currency",
-                    side_effect=Exception("fallback"),
-                ),
-            ):
-                svc.create_sale(
-                    customer,
-                    seller,
-                    [{"product": product, "quantity": 1, "unit_price": 100}],
-                )
+            svc.create_sale(
+                customer,
+                seller,
+                [{"product": product, "quantity": 1, "unit_price": 100}],
+            )
 
     def test_defer_fulfillment_commits_without_fulfill(self, app):
         from services.sale_service import SaleService
@@ -310,17 +308,16 @@ class TestCreateSaleCommissionAndOptions:
             _,
             db_sess,
             _,
-        ):
-            with patch.object(SaleService, "fulfill_sale") as fulfill:
-                sale = svc.create_sale(
-                    customer,
-                    seller,
-                    [{"product": product, "quantity": 1, "unit_price": 100}],
-                    defer_fulfillment=True,
-                    currency="AED",
-                )
-                fulfill.assert_not_called()
-                db_sess.flush.assert_called()
+        ), patch.object(SaleService, "fulfill_sale") as fulfill:
+            sale = svc.create_sale(
+                customer,
+                seller,
+                [{"product": product, "quantity": 1, "unit_price": 100}],
+                defer_fulfillment=True,
+                currency="AED",
+            )
+            fulfill.assert_not_called()
+            db_sess.flush.assert_called()
         assert sale is not None
 
     def test_sale_status_and_checkout_method(self, app):
@@ -347,25 +344,24 @@ class TestCreateSaleCommissionAndOptions:
             _,
             _,
             _,
-        ):
-            with patch.object(SaleService, "fulfill_sale"):
-                sale = MagicMock()
-                sale.sale_number = "S-CH3"
-                sale.amount_aed = Decimal("100")
-                sale.notes = ""
-                sale.paid_amount = Decimal("0")
-                sale.paid_amount_aed = Decimal("0")
-                sale.prices_include_vat = False
-                sale.tax_rate = Decimal("0")
-                sale.calculate_totals = MagicMock()
-                with patch("services.sale_service.Sale", return_value=sale):
-                    svc.create_sale(
-                        customer,
-                        seller,
-                        [{"product": product, "quantity": 1, "unit_price": 100}],
-                        payment_data=payment_data,
-                        currency="AED",
-                    )
+        ), patch.object(SaleService, "fulfill_sale"):
+            sale = MagicMock()
+            sale.sale_number = "S-CH3"
+            sale.amount_aed = Decimal("100")
+            sale.notes = ""
+            sale.paid_amount = Decimal("0")
+            sale.paid_amount_aed = Decimal("0")
+            sale.prices_include_vat = False
+            sale.tax_rate = Decimal("0")
+            sale.calculate_totals = MagicMock()
+            with patch("services.sale_service.Sale", return_value=sale):
+                svc.create_sale(
+                    customer,
+                    seller,
+                    [{"product": product, "quantity": 1, "unit_price": 100}],
+                    payment_data=payment_data,
+                    currency="AED",
+                )
         assert "دفع زائد" in (sale.notes or "")
 
     def test_explicit_warehouse_id(self, app):

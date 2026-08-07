@@ -44,9 +44,8 @@ class TestRequireTenantContext:
         def view():
             return "ok"
 
-        with patch("utils.tenant_security.current_user", _user(is_owner=False)):
-            with pytest.raises(Forbidden):
-                view()
+        with patch("utils.tenant_security.current_user", _user(is_owner=False)), pytest.raises(Forbidden):
+            view()
 
     def test_passes_without_tenant_for_platform_owner(self, request_ctx):
         from utils.tenant_security import require_tenant_context
@@ -93,9 +92,8 @@ class TestValidateTenantOwnership:
         def view(product_id):
             return "ok"
 
-        with patch("utils.tenant_security.current_user", _user(is_owner=False)):
-            with pytest.raises(NotFound):
-                view(product_id=sample_product.id)
+        with patch("utils.tenant_security.current_user", _user(is_owner=False)), pytest.raises(NotFound):
+            view(product_id=sample_product.id)
 
     def test_aborts_404_for_missing_resource(self, request_ctx, sample_tenant):
         from models import Product
@@ -133,9 +131,8 @@ class TestValidateTenantOwnership:
         def view(product_id):
             return "ok"
 
-        with patch("utils.tenant_security.current_user", _user(is_owner=False)):
-            with pytest.raises(NotFound):
-                view(product_id=sample_product.id)
+        with patch("utils.tenant_security.current_user", _user(is_owner=False)), pytest.raises(NotFound):
+            view(product_id=sample_product.id)
 
     def test_unscoped_resource_requires_owner(self, request_ctx, sample_tenant):
         # Tenant itself has no tenant_id attribute → platform-owner only.
@@ -148,9 +145,8 @@ class TestValidateTenantOwnership:
         def view(id):
             return "ok"
 
-        with patch("utils.tenant_security.current_user", _user(is_owner=False)):
-            with pytest.raises(NotFound):
-                view(id=sample_tenant.id)
+        with patch("utils.tenant_security.current_user", _user(is_owner=False)), pytest.raises(NotFound):
+            view(id=sample_tenant.id)
 
         with patch("utils.tenant_security.current_user", _user(is_owner=True)):
             assert view(id=sample_tenant.id) == "ok"

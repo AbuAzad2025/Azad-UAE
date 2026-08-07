@@ -2,17 +2,18 @@
 Integration test: GL posting must reject unbalanced journal entries.
 """
 
-import pytest
-from decimal import Decimal
 import uuid
+from decimal import Decimal
+
+import pytest
 
 
 class TestGLPostingBalancing:
     def test_gl_posting_rejects_unbalanced_entries(self, app, db_session):
-        from models import Tenant, Branch
-        from services.gl_posting import assert_balanced_lines, GlPostingError
-        from services.gl_service import GLService
+        from models import Branch, Tenant
         from services.gl_helpers import get_account
+        from services.gl_posting import GlPostingError, assert_balanced_lines
+        from services.gl_service import GLService
 
         tid = str(uuid.uuid4())[:8]
         tenant = Tenant(
@@ -82,7 +83,7 @@ class TestGLPostingBalancing:
         assert entry.is_balanced()
 
     def test_gl_posting_rejects_empty_lines(self, app, db_session):
-        from services.gl_posting import post_or_fail, GlPostingError
+        from services.gl_posting import GlPostingError, post_or_fail
 
         with pytest.raises(GlPostingError, match="بدون سطور قيد"):
             post_or_fail(

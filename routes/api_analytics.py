@@ -1,12 +1,14 @@
-from flask import Blueprint, jsonify, request
-from flask_login import login_required, current_user
-from extensions import limiter
-from utils.decorators import permission_required
-from utils.cache_decorators import cached_query
-from utils.tenanting import get_active_tenant_id
-from utils.branching import branch_scope_id_for
 from datetime import datetime, timedelta
 from decimal import Decimal
+
+from flask import Blueprint, jsonify, request
+from flask_login import current_user, login_required
+
+from extensions import limiter
+from utils.branching import branch_scope_id_for
+from utils.cache_decorators import cached_query
+from utils.decorators import permission_required
+from utils.tenanting import get_active_tenant_id
 
 api_analytics_bp = Blueprint("api_analytics", __name__, url_prefix="/api/analytics")
 
@@ -52,8 +54,8 @@ def overdue_payments():
 @permission_required("view_reports")
 @cached_query(timeout=60, key_prefix="daily_stats")
 def daily_stats():
-    from models import Sale, Payment
     from extensions import db
+    from models import Payment, Sale
 
     today = datetime.now().date()
 
@@ -155,9 +157,10 @@ def low_stock_products():
 @permission_required("view_reports")
 @cached_query(timeout=300, key_prefix="revenue_trend")
 def revenue_trend():
-    from models import Sale
     from sqlalchemy import func
+
     from extensions import db
+    from models import Sale
 
     days = request.args.get("days", 30, type=int)
     since = datetime.now() - timedelta(days=days)

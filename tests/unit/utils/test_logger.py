@@ -9,6 +9,7 @@ import time
 import pytest
 from flask import Flask
 
+from services.logging_core import LoggingCore
 from utils import logger as telemetry
 from utils.logger import (
     CATEGORY_CRITICAL_FINANCIAL,
@@ -26,7 +27,6 @@ from utils.logger import (
     log_hardware,
     log_security,
 )
-from services.logging_core import LoggingCore
 
 
 class _CaptureHandler(logging.Handler):

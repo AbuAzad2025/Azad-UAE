@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-from typing import Dict
 
 import requests
 from flask_babel import gettext
@@ -30,7 +29,7 @@ class WhatsAppService:
         )
 
     @staticmethod
-    def send_invoice(phone: str, invoice_number: str, pdf_url: str | None = None) -> Dict:
+    def send_invoice(phone: str, invoice_number: str, pdf_url: str | None = None) -> dict:
         if not WhatsAppService.is_enabled():
             return {"success": False, "error": "WhatsApp not configured"}
 
@@ -74,7 +73,7 @@ class WhatsAppService:
             return {"success": False, "error": str(e)}
 
     @staticmethod
-    def send_payment_reminder(phone: str, customer_name: str, amount_due: float) -> Dict:
+    def send_payment_reminder(phone: str, customer_name: str, amount_due: float) -> dict:
         if not WhatsAppService.is_enabled():
             return {"success": False, "error": "WhatsApp not configured"}
 
@@ -108,7 +107,7 @@ class WhatsAppService:
             return {"success": False, "error": str(e)}
 
     @staticmethod
-    def send_custom_message(phone: str, message: str) -> Dict:
+    def send_custom_message(phone: str, message: str) -> dict:
         if not WhatsAppService.is_enabled():
             return {"success": False, "error": "WhatsApp not configured"}
 

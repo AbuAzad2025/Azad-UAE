@@ -1,7 +1,7 @@
-from datetime import datetime
-import logging
 import json
+import logging
 import os
+from datetime import datetime
 
 from ai_knowledge import get_knowledge_path
 
@@ -61,7 +61,7 @@ class AutoRetrainingScheduler:
     def get_last_training_info():
         try:
             if os.path.exists(AutoRetrainingScheduler.TRAINING_LOG_FILE):
-                with open(AutoRetrainingScheduler.TRAINING_LOG_FILE, "r") as f:
+                with open(AutoRetrainingScheduler.TRAINING_LOG_FILE) as f:
                     history = json.load(f)
                     if history:
                         return history[-1]
@@ -73,7 +73,7 @@ class AutoRetrainingScheduler:
         try:
             history = []
             if os.path.exists(AutoRetrainingScheduler.TRAINING_LOG_FILE):
-                with open(AutoRetrainingScheduler.TRAINING_LOG_FILE, "r") as f:
+                with open(AutoRetrainingScheduler.TRAINING_LOG_FILE) as f:
                     history = json.load(f)
 
             history.append(

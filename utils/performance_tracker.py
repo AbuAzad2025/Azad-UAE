@@ -1,6 +1,7 @@
-import time
 import logging
+import time
 from functools import wraps
+
 from flask import g
 
 logger = logging.getLogger(__name__)

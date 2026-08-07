@@ -1,9 +1,10 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
 from utils.gl_services import (
-    gl_get_default_liquidity_account,
     gl_create_manual_entry,
+    gl_get_default_liquidity_account,
 )
 
 
@@ -32,11 +33,11 @@ class CustomsTax(db.Model):
     effective_from = db.Column(db.Date, nullable=False)
     effective_to = db.Column(db.Date)
     description = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     gl_account = db.relationship("GLAccount")
@@ -127,14 +128,14 @@ class AdvancedExpense(db.Model):
 
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     # العلاقات
@@ -201,7 +202,7 @@ class AdvancedExpense(db.Model):
             raise ValueError("المصروف معكوس مسبقاً")
 
         self.is_reversed = True
-        self.reversed_at = datetime.now(timezone.utc)
+        self.reversed_at = datetime.now(UTC)
         self.reversed_by = reversed_by_user.id
         self.reversal_reason = reason
 
@@ -258,7 +259,7 @@ class TaxCalculationRule(db.Model):
     tax_id = db.Column(db.Integer, db.ForeignKey("customs_taxes.id", ondelete="RESTRICT"), nullable=False, index=True)
     priority = db.Column(db.Integer, default=0)  # أولوية التطبيق
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
 
     tax = db.relationship("CustomsTax")
     tenant = db.relationship("Tenant")

@@ -1,5 +1,6 @@
+from datetime import UTC, datetime
+
 from extensions import db
-from datetime import datetime, timezone
 
 
 class ShopAbandonedCart(db.Model):
@@ -27,7 +28,7 @@ class ShopAbandonedCart(db.Model):
         db.DateTime,
         nullable=False,
         index=True,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
     )
 
     tenant = db.relationship("Tenant", backref=db.backref("abandoned_carts", lazy="dynamic"))

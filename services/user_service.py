@@ -1,6 +1,7 @@
+from sqlalchemy.orm import joinedload
+
 from extensions import db
 from models import Role, Tenant, User
-from sqlalchemy.orm import joinedload
 from utils.tenanting import scoped_user_query
 
 

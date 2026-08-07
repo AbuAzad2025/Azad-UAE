@@ -37,12 +37,12 @@ def ensure_branch_isolation_schema_and_data():
         Expense,
         GLJournalEntry,
         Payment,
-        Receipt,
         Purchase,
+        Receipt,
         Sale,
+        Tenant,
         User,
         Warehouse,
-        Tenant,
     )
     from utils.branching import GLOBAL_ROLE_SLUGS
 

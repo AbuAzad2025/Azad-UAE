@@ -1,21 +1,22 @@
 import logging
-from decimal import Decimal, ROUND_HALF_UP
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from decimal import ROUND_HALF_UP, Decimal
+
 from flask import current_app
+from flask_babel import gettext
 from flask_login import current_user
 from sqlalchemy.exc import OperationalError
 
 from extensions import db
 from models import (
     Product,
+    ProductCostHistory,
+    ProductWarehouseCost,
     StockMovement,
     Warehouse,
-    ProductWarehouseCost,
-    ProductCostHistory,
 )
 from models.warehouse import ProductWarehouseStock
 from services.stock_batch_service import StockBatchService
-from flask_babel import gettext
 from utils.branching import get_accessible_warehouse_ids, get_branch_stock_map
 from utils.gl_reference_types import GLRef
 from utils.logger import log_financial
@@ -75,11 +76,11 @@ class _MWACHelper:
 
 
 def _resolve_gl_concept_account(concept_code, fallback_account_code, tenant_id=None):
-    from services.gl_service import GL_ACCOUNTS, GL_ACCOUNT_CONCEPTS
     from services.gl_account_resolver import (
-        resolve_gl_account,
         is_dynamic_gl_mapping_enabled,
+        resolve_gl_account,
     )
+    from services.gl_service import GL_ACCOUNT_CONCEPTS, GL_ACCOUNTS
 
     if is_dynamic_gl_mapping_enabled() and tenant_id:
         try:
@@ -155,7 +156,7 @@ class StockService:
         warehouse = (
             db.session.get(Warehouse, movement.warehouse_id) if getattr(movement, "warehouse_id", None) else None
         )
-        tenant_id = getattr(movement, "tenant_id", None) or getattr(product, "tenant_id", None)
+        tenant_id = (movement.tenant_id if movement is not None else None) or (product.tenant_id if product is not None else None)
         loss_account = _resolve_gl_concept_account("INVENTORY_ADJUSTMENT_LOSS", "5150", tenant_id)
         asset_account = _resolve_gl_concept_account("INVENTORY_ASSET", "1140", tenant_id)
         gain_account = _resolve_gl_concept_account("INVENTORY_ADJUSTMENT_GAIN", "5150", tenant_id)
@@ -240,16 +241,16 @@ class StockService:
             warehouse_id=warehouse_id,
             reference_type=GLRef.PRODUCT_CREATION,
         )
+        from models import Product, Warehouse
         from services.gl_posting import post_or_fail
         from services.gl_service import GLService
-        from models import Product, Warehouse
 
         product = db.session.get(Product, product_id)
         warehouse = db.session.get(Warehouse, warehouse_id) if warehouse_id else None
         if product and product.cost_price:
             cost_value = Decimal(str(quantity)) * Decimal(str(product.cost_price))
             if cost_value > 0:
-                tenant_id = getattr(product, "tenant_id", None)
+                tenant_id = (product.tenant_id if product is not None else None)
                 asset_account = _resolve_gl_concept_account("INVENTORY_ASSET", "1140", tenant_id)
                 equity_account = _resolve_gl_concept_account("OPENING_BALANCE_EQUITY", "3130", tenant_id)
                 GLService.ensure_core_accounts(tenant_id=tenant_id)
@@ -306,7 +307,7 @@ class StockService:
                 current_app.logger.debug("Could not resolve current_user.id for stock movement")
                 user_id = None
 
-            tenant_id = getattr(product, "tenant_id", None)
+            tenant_id = (product.tenant_id if product is not None else None)
 
             # تحديد المستودع
             if warehouse_id:
@@ -315,7 +316,7 @@ class StockService:
                     raise ValueError(gettext(f"⚠️ المستودع المحدد غير موجود أو غير نشط (ID: {warehouse_id})."))
                 if (
                     tenant_id is not None
-                    and getattr(warehouse, "tenant_id", None) is not None
+                    and (warehouse.tenant_id if warehouse is not None else None) is not None
                     and warehouse.tenant_id != tenant_id
                 ):
                     raise ValueError(gettext(f"⚠️ المستودع (ID: {warehouse_id}) لا ينتمي لنفس شركة المنتج."))
@@ -335,7 +336,7 @@ class StockService:
                     db.session.add(warehouse)
                     db.session.flush()
 
-            if getattr(warehouse, "tenant_id", None) is None and tenant_id is not None:
+            if (warehouse.tenant_id if warehouse is not None else None) is None and tenant_id is not None:
                 warehouse.tenant_id = tenant_id
 
             movement = StockMovement(
@@ -380,7 +381,7 @@ class StockService:
                         )
                     )
                 pws.quantity = new_qty_pws
-                pws.updated_at = datetime.now(timezone.utc)
+                pws.updated_at = datetime.now(UTC)
             else:
                 if qty < 0 and not warehouse.allow_negative_inventory:
                     log_financial(
@@ -456,7 +457,7 @@ class StockService:
                     }
                 )
             except Exception:
-                pass
+                current_app.logger.debug("Stock alert broadcast failed (best-effort)", exc_info=True)
 
             return movement
 
@@ -474,7 +475,7 @@ class StockService:
         product = db.session.get(Product, product_id)
         if not product:
             raise ValueError(gettext("المنتج غير موجود."))
-        tenant_id = getattr(product, "tenant_id", None)
+        tenant_id = (product.tenant_id if product is not None else None)
 
         from_wh = Warehouse.query.filter_by(id=int(from_warehouse_id), is_active=True).first()
         to_wh = Warehouse.query.filter_by(id=int(to_warehouse_id), is_active=True).first()
@@ -486,8 +487,8 @@ class StockService:
         # التحقق من التينانت
         if tenant_id is not None:
             wh_tenant_ids = [
-                getattr(from_wh, "tenant_id", None),
-                getattr(to_wh, "tenant_id", None),
+                (from_wh.tenant_id if from_wh is not None else None),
+                (to_wh.tenant_id if to_wh is not None else None),
             ]
             if tenant_id not in wh_tenant_ids:
                 raise ValueError(gettext("المنتج لا ينتمي إلى نفس المستودع (تعارض في التينانت)."))
@@ -561,7 +562,7 @@ class StockService:
                 quantity=line.quantity,
                 reference_type=GLRef.SALE,
                 reference_id=sale.id,
-                notes="بيع: {}".format(sale.sale_number),
+                notes=f"بيع: {sale.sale_number}",
                 warehouse_id=warehouse_id,  # ← تمرير المستودع
             )
 
@@ -618,12 +619,12 @@ class StockService:
           even if quantity goes negative. This preserves the cost for future
           retrospective adjustment when the purchase arrives.
         """
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         if not warehouse_id and hasattr(sale, "warehouse_id"):
             warehouse_id = sale.warehouse_id
 
-        tenant_id = getattr(sale, "tenant_id", None)
+        tenant_id = (sale.tenant_id if sale is not None else None)
         mwac_enabled = current_app.config.get("ENABLE_MWAC", False)
         total_cogs = Decimal("0")
 
@@ -665,7 +666,7 @@ class StockService:
                 pwc.total_quantity = new_qty
                 pwc.total_value = new_value
                 pwc.average_cost = new_avg.quantize(Decimal("0.0001"))
-                pwc.last_updated = datetime.now(timezone.utc)
+                pwc.last_updated = datetime.now(UTC)
                 pch = ProductCostHistory(
                     tenant_id=tenant_id,
                     product_id=line.product_id,
@@ -710,7 +711,7 @@ class StockService:
                     pwc.total_quantity = new_qty
                     pwc.total_value = new_value
                     pwc.average_cost = new_avg.quantize(Decimal("0.0001"))
-                    pwc.last_updated = datetime.now(timezone.utc)
+                    pwc.last_updated = datetime.now(UTC)
                 else:
                     # Create PWC with negative quantity (first negative sale for this product+warehouse)
                     old_qty = Decimal("0")
@@ -772,7 +773,7 @@ class StockService:
         if not warehouse_id and hasattr(purchase, "warehouse_id"):
             warehouse_id = purchase.warehouse_id
 
-        tenant_id = getattr(purchase, "tenant_id", None)
+        tenant_id = (purchase.tenant_id if purchase is not None else None)
         mwac_enabled = current_app.config.get("ENABLE_MWAC", False)
         processed_product_ids = set()
 
@@ -952,7 +953,7 @@ class StockService:
         reference_id,
     ):
         """Recalculate MWAC when stock is received. Must run inside an existing transaction."""
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         query = ProductWarehouseCost.query.filter_by(
             tenant_id=tenant_id,
@@ -970,7 +971,7 @@ class StockService:
             pwc.total_quantity = new_qty
             pwc.total_value = new_value
             pwc.average_cost = new_avg.quantize(Decimal("0.0001"))
-            pwc.last_updated = datetime.now(timezone.utc)
+            pwc.last_updated = datetime.now(UTC)
 
             # Retrospective cost adjustment for negative stock
             had_negative_stock = old_qty < 0
@@ -1039,10 +1040,10 @@ class StockService:
     @staticmethod
     def reverse_sale(sale):
         """إلغاء بيع - إرجاع للمستودع الأصلي مع عكس MWAC"""
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         warehouse_id = getattr(sale, "warehouse_id", None)
-        tenant_id = getattr(sale, "tenant_id", None)
+        tenant_id = (sale.tenant_id if sale is not None else None)
         mwac_enabled = current_app.config.get("ENABLE_MWAC", False)
 
         for line in sale.lines:
@@ -1102,7 +1103,7 @@ class StockService:
                     pwc.total_quantity = new_qty
                     pwc.total_value = new_value
                     pwc.average_cost = new_avg.quantize(Decimal("0.0001"))
-                    pwc.last_updated = datetime.now(timezone.utc)
+                    pwc.last_updated = datetime.now(UTC)
 
                     # سجل تدقيق عكس التكلفة
                     pch = ProductCostHistory(
@@ -1138,10 +1139,10 @@ class StockService:
     @staticmethod
     def reverse_purchase(purchase):
         """إلغاء شراء - حذف المخزون مع عكس MWAC واستخدام التكلفة الأصلية من سجل التدقيق"""
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         warehouse_id = getattr(purchase, "warehouse_id", None)
-        tenant_id = getattr(purchase, "tenant_id", None)
+        tenant_id = (purchase.tenant_id if purchase is not None else None)
         mwac_enabled = current_app.config.get("ENABLE_MWAC", False)
 
         for line in purchase.lines:
@@ -1202,7 +1203,7 @@ class StockService:
                         if new_qty > 0
                         else (original_unit_cost or new_avg).quantize(Decimal("0.0001"))
                     )
-                    pwc.last_updated = datetime.now(timezone.utc)
+                    pwc.last_updated = datetime.now(UTC)
 
                     pch = ProductCostHistory(
                         tenant_id=tenant_id,
@@ -1333,8 +1334,9 @@ class StockService:
         """Sync ProductWarehouseStock with aggregated StockMovement data
         and update Product.current_stock from PWS sums.
         Returns dict with reconciliation stats."""
+        from datetime import datetime
+
         from sqlalchemy import func
-        from datetime import datetime, timezone
 
         query = db.session.query(
             ProductWarehouseStock.tenant_id,
@@ -1353,7 +1355,7 @@ class StockService:
             movement_totals = movement_totals.filter(StockMovement.tenant_id == tenant_id)
         movement_totals = movement_totals.group_by(StockMovement.product_id, StockMovement.warehouse_id).all()
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         created = 0
         updated = 0
         errors = 0
@@ -1416,6 +1418,7 @@ class StockService:
             try:
                 db.session.flush()
             except Exception:
+                current_app.logger.error("Stock reconcile flush failed", exc_info=True)
                 errors += 1
         else:
             db.session.flush()

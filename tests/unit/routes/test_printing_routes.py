@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -190,7 +190,7 @@ class TestPackingSlip:
         customer.phone = "+971500000000"
         sale.customer = customer
         sale.lines = []
-        sale.sale_date = datetime.now(timezone.utc)
+        sale.sale_date = datetime.now(UTC)
         mocks = printing_client._printing_mocks
         sale_q = MagicMock()
         sale_q.filter_by.return_value = sale_q
@@ -353,7 +353,7 @@ class TestPrintApiHistory:
         record.document_type = "purchase"
         record.document_id = 5
         record.action = "print"
-        record.created_at = datetime(2025, 6, 1, 12, 0, 0, tzinfo=timezone.utc)
+        record.created_at = datetime(2025, 6, 1, 12, 0, 0, tzinfo=UTC)
         record.user = MagicMock(full_name="Tester")
         hist_q = MagicMock()
         hist_q.filter_by.return_value = hist_q
@@ -477,7 +477,7 @@ class TestPrintingCoverageGaps:
         sale = _doc_mock(id=22, sale_number="S-102", branch_id=1)
         sale.customer = None
         sale.lines = []
-        sale.sale_date = datetime.now(timezone.utc)
+        sale.sale_date = datetime.now(UTC)
         sale_q = MagicMock()
         sale_q.filter_by.return_value = sale_q
         sale_q.filter.return_value = sale_q

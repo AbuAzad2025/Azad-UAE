@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -87,7 +87,7 @@ class TestPaymentHelperAssurance:
         assert _pm()._receipt_item_status({"payment_confirmed": True}) == "COMPLETED"
 
     def test_build_receipts_json_outgoing_totals(self, app_factory):
-        from routes.payments import payments_bp, _build_receipts_json_response
+        from routes.payments import _build_receipts_json_response, payments_bp
 
         app = app_factory(payments_bp)
         items = [
@@ -110,7 +110,7 @@ class TestPaymentHelperAssurance:
                 "id": 2,
                 "type": "receipt",
                 "number": "R1",
-                "date": datetime(2026, 3, 1, tzinfo=timezone.utc),
+                "date": datetime(2026, 3, 1, tzinfo=UTC),
                 "amount": Decimal("20"),
                 "currency": "AED",
                 "payment_method": "cash",
@@ -477,7 +477,7 @@ class TestArchiveRestoreDeleteAssurance:
             record_id=1,
             data={
                 "receipt_number": "R1",
-                "receipt_date": datetime(2026, 1, 1, tzinfo=timezone.utc),
+                "receipt_date": datetime(2026, 1, 1, tzinfo=UTC),
                 "amount": "50",
                 "currency": "AED",
                 "amount_aed": "50",
@@ -485,12 +485,12 @@ class TestArchiveRestoreDeleteAssurance:
                 "source_type": "manual",
                 "branch_id": 1,
             },
-            archived_at=datetime.now(timezone.utc),
+            archived_at=datetime.now(UTC),
         )
         out_scope = MagicMock(
             record_id=2,
             data={"branch_id": 99, "receipt_number": "R2", "amount": "10"},
-            archived_at=datetime.now(timezone.utc),
+            archived_at=datetime.now(UTC),
         )
         q = MagicMock()
         q.filter.return_value = q
@@ -880,7 +880,7 @@ class TestPaymentsGapCoverage:
                 "payment_type": "supplier",
                 "branch_id": 99,
             },
-            archived_at=datetime(2026, 1, 2, tzinfo=timezone.utc),
+            archived_at=datetime(2026, 1, 2, tzinfo=UTC),
         )
         q = MagicMock()
         q.filter.return_value = q
@@ -953,18 +953,17 @@ class TestCreateFromSaleCurrencyFallback:
             "services.logging_core.LoggingCore.log_error",
             side_effect=RuntimeError("log fail"),
         )
-        with payments_client.application.test_request_context(
+        with (
+            payments_client.application.test_request_context(
             "/payments/create_from_sale/5",
             method="POST",
             data={"amount": "40", "payment_method": "cash"},
+        ), patch("utils.decorators.branch_scope_id", return_value=None),
+            patch("routes.payments.CurrencyService.get_all_rates", return_value={}),
         ):
-            with (
-                patch("utils.decorators.branch_scope_id", return_value=None),
-                patch("routes.payments.CurrencyService.get_all_rates", return_value={}),
-            ):
-                from routes.payments import create_from_sale
+            from routes.payments import create_from_sale
 
-                resp = create_from_sale(5)
+            resp = create_from_sale(5)
         assert resp.status_code == 302
 
 
@@ -1013,7 +1012,7 @@ class TestArchivedPaymentsInScope:
                 "payment_type": "supplier",
                 "branch_id": 1,
             },
-            archived_at=datetime(2026, 1, 2, tzinfo=timezone.utc),
+            archived_at=datetime(2026, 1, 2, tzinfo=UTC),
         )
         q = MagicMock()
         q.filter.return_value = q
@@ -1080,19 +1079,18 @@ class TestPaymentsFinalGaps:
             "services.logging_core.LoggingCore.log_error",
             side_effect=RuntimeError("log fail"),
         )
-        with payments_client.application.test_request_context(
+        with (
+            payments_client.application.test_request_context(
             "/payments/create_from_sale/5",
             method="POST",
             data={"amount": "40", "payment_method": "cash"},
+        ), patch("routes.payments.tenant_get_or_404", return_value=sale),
+            patch("utils.decorators.branch_scope_id", return_value=None),
+            patch("routes.payments.CurrencyService.get_all_rates", return_value={}),
         ):
-            with (
-                patch("routes.payments.tenant_get_or_404", return_value=sale),
-                patch("utils.decorators.branch_scope_id", return_value=None),
-                patch("routes.payments.CurrencyService.get_all_rates", return_value={}),
-            ):
-                from routes.payments import create_from_sale
+            from routes.payments import create_from_sale
 
-                resp = create_from_sale(5)
+            resp = create_from_sale(5)
         assert resp.status_code == 302
 
     def test_create_payment_currency_log_error_inner_except(self, payments_client, mocker):

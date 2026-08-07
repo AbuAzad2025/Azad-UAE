@@ -9,6 +9,7 @@ class TestGenerateQrDataUrl:
     def test_returns_empty_when_qrcode_missing(self):
         with patch.dict("sys.modules", {"qrcode": None}):
             import importlib
+
             import utils.qr_generator as mod
 
             importlib.reload(mod)

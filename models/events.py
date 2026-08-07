@@ -2,9 +2,12 @@
 SQLAlchemy Event Listeners - thin registrations delegating to service layer
 """
 
-from sqlalchemy import event
 import logging
 import warnings
+from datetime import UTC
+
+from sqlalchemy import event
+
 from config import ai_orm_listeners_enabled
 
 logger = logging.getLogger(__name__)
@@ -71,10 +74,7 @@ def register_sale_listeners():
         try:
             logger.debug(f"Sale {target.sale_number} changed for customer {target.customer_id}")
         except Exception:
-            try:
-                logger.debug("Sale after_insert event listener failed", exc_info=True)
-            except Exception:
-                pass
+            logger.debug("Sale after_insert event listener failed", exc_info=True)
 
     @event.listens_for(Sale, "after_delete")
     def _h2(mapper, connection, target):
@@ -116,10 +116,7 @@ def register_purchase_listeners():
         try:
             logger.debug(f"Purchase {target.purchase_number} changed for supplier {target.supplier_id}")
         except Exception:
-            try:
-                logger.debug("Purchase after_insert event listener failed", exc_info=True)
-            except Exception:
-                pass
+            logger.debug("Purchase after_insert event listener failed", exc_info=True)
 
 
 def register_payment_listeners():
@@ -149,8 +146,9 @@ def register_branch_listeners():
 def register_stock_movement_listeners():
     if not _mark("stock_movement"):
         return
-    from models import StockMovement
     from decimal import Decimal
+
+    from models import StockMovement
 
     @event.listens_for(StockMovement, "after_insert")
     def _h(mapper, connection, target):
@@ -226,7 +224,7 @@ def register_validation_listeners():
 def register_audit_listeners():
     if not _mark("audit"):
         return
-    from models import Sale, Purchase, Receipt, Payment
+    from models import Payment, Purchase, Receipt, Sale
 
     @event.listens_for(Sale, "after_delete")
     def _h1(mapper, connection, target):
@@ -271,9 +269,10 @@ def register_advanced_sale_listener():
             "register_advanced_sale_listener() is legacy/disabled; use sale_service / payment_service for balance updates."
         )
         return
+    from datetime import datetime
     from decimal import Decimal
-    from datetime import datetime, timezone
-    from models import Sale, Customer
+
+    from models import Customer, Sale
 
     @event.listens_for(Sale, "after_insert")
     @event.listens_for(Sale, "after_update")
@@ -294,7 +293,7 @@ def register_advanced_sale_listener():
             connection.execute(
                 Customer.__table__.update()
                 .where(Customer.id == target.customer_id)
-                .values(balance=new_balance, updated_at=datetime.now(timezone.utc))
+                .values(balance=new_balance, updated_at=datetime.now(UTC))
             )
             logger.info(f"Auto-updated customer {target.customer_id} balance to {new_balance} AED")
         except Exception as e:

@@ -15,10 +15,10 @@ from services import logging_core as logging_core_module
 from services.logging_core import (
     LoggingCore,
     _ColorFormatter,
-    _RateMonitor,
     _ensure_utf8_stream,
     _get_request_context,
     _get_request_id,
+    _RateMonitor,
     _sanitize_dict,
 )
 
@@ -246,9 +246,8 @@ class TestSetupSecondPass:
         handler = MagicMock(spec=RotatingFileHandler)
         handler.baseFilename = os.path.join(tmp_path, "nested", "missing.log")
         LoggingCore._handlers = {"app": handler}
-        with patch("os.path.exists", return_value=False):
-            with patch("os.access", return_value=False):
-                LoggingCore._run_self_diagnostics(app)
+        with patch("os.path.exists", return_value=False), patch("os.access", return_value=False):
+            LoggingCore._run_self_diagnostics(app)
 
     def test_self_diagnostics_check_failed(self, tmp_path, monkeypatch):
         from logging.handlers import RotatingFileHandler

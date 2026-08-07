@@ -96,12 +96,16 @@ Avoiding One-Off Seed Behaviour
 
 from __future__ import annotations
 
+import logging
 from dataclasses import asdict, dataclass
 
 from flask_babel import gettext
+
 from extensions import db
-from utils.db_safety import atomic_transaction
 from models import Tenant
+from utils.db_safety import atomic_transaction
+
+logger = logging.getLogger(__name__)
 from models.gl import GLAccount, GLAccountMapping
 
 # ---------------------------------------------------------------------------
@@ -927,7 +931,7 @@ class GLAccountingSetupService:
                 try:
                     suffixes.append(int(parts[1][1:]))
                 except ValueError:
-                    pass
+                    logger.debug("Non-numeric branch suffix in account code %r", acc.code, exc_info=True)
         next_num = max(suffixes, default=0) + 1
         return f"{parent_code}-B{next_num}"
 

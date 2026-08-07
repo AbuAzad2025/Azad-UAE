@@ -5,15 +5,15 @@ from __future__ import annotations
 import hashlib
 import hmac
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
+from flask_babel import gettext
 from sqlalchemy import or_
 
 from extensions import db
-from utils.db_safety import atomic_transaction
 from models import Donation, PackagePurchase
 from services.notification_service import NotificationService
-from flask_babel import gettext
+from utils.db_safety import atomic_transaction
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +80,7 @@ class WebhookService:
         if payment_status == "finished":
             purchase.payment_status = "completed"
             purchase.activation_status = "activated"
-            purchase.activation_date = datetime.now(timezone.utc)
+            purchase.activation_date = datetime.now(UTC)
 
             NotificationService.notify_purchase_activated(
                 purchase.package.name_ar if purchase.package else "N/A",
@@ -122,7 +122,7 @@ class WebhookService:
 
         if payment_status == "finished":
             donation.status = "completed"
-            donation.completed_at = datetime.now(timezone.utc)
+            donation.completed_at = datetime.now(UTC)
 
             NotificationService.notify_payment_received(
                 float(donation.amount_usd),

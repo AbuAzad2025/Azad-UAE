@@ -1,6 +1,7 @@
-from extensions import db
-from datetime import datetime, timezone
 import secrets
+from datetime import UTC, datetime
+
+from extensions import db
 
 
 class APIKey(db.Model):
@@ -13,7 +14,7 @@ class APIKey(db.Model):
     service = db.Column(db.String(50), nullable=False)
     scope = db.Column(db.String(20), default="write", index=True)  # 'read' | 'write'
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
     last_used = db.Column(db.DateTime)
     usage_count = db.Column(db.Integer, default=0)
     tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=True, index=True)

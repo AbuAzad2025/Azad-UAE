@@ -13,13 +13,13 @@ import os
 import re
 from typing import Any
 
-from utils.static_asset_paths import AZAD_LOGO, AZAD_FAVICON
 from utils.cache_decorators import cached_query
 from utils.regional_defaults import (
     FALLBACK_CURRENCY,
     FALLBACK_TIMEZONE,
     FALLBACK_VAT_COUNTRY,
 )
+from utils.static_asset_paths import AZAD_FAVICON, AZAD_LOGO
 
 _WINDOWS_ABS = re.compile(r"^[A-Za-z]:[\\/]")
 _POWERED_BY = "Powered by AZAD Intelligent Systems"

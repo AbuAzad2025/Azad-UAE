@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from models.store_coupon import StoreCoupon
 
@@ -22,7 +22,7 @@ class TestStoreCouponValidation:
             tenant_id=1,
             code="FUTURE",
             is_active=True,
-            valid_from=datetime.now(timezone.utc) + timedelta(days=1),
+            valid_from=datetime.now(UTC) + timedelta(days=1),
         )
         assert coupon.is_valid_now() is False
 
@@ -31,7 +31,7 @@ class TestStoreCouponValidation:
             tenant_id=1,
             code="OLD",
             is_active=True,
-            valid_until=datetime.now(timezone.utc) - timedelta(hours=1),
+            valid_until=datetime.now(UTC) - timedelta(hours=1),
         )
         assert coupon.is_valid_now() is False
 

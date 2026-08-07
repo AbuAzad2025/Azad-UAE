@@ -3,10 +3,11 @@
 نموذج منفصل لإدارة الموردين مع تتبع المشتريات والأرصدة
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from decimal import Decimal
+
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
-from decimal import Decimal
 
 
 class Supplier(db.Model):
@@ -84,14 +85,14 @@ class Supplier(db.Model):
 
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
     created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=True, index=True)
 

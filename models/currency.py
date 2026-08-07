@@ -1,4 +1,5 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from extensions import db
 
 
@@ -14,11 +15,11 @@ class Currency(db.Model):
     is_base = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True, index=True)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     exchange_rates = db.relationship("ExchangeRate", back_populates="currency", lazy="dynamic")
@@ -71,7 +72,7 @@ class ExchangeRate(db.Model):
 
     valid_from = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
@@ -79,7 +80,7 @@ class ExchangeRate(db.Model):
 
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
@@ -91,7 +92,7 @@ class ExchangeRate(db.Model):
         return f"<ExchangeRate {self.currency.code if self.currency else '?'} = {self.rate}>"
 
     def is_valid(self):
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         if self.valid_until:
             return self.valid_from <= now <= self.valid_until
         return self.valid_from <= now

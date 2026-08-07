@@ -1,15 +1,17 @@
+from datetime import UTC, datetime
+
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_babel import gettext
-from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import login_required, current_user
+from flask_login import current_user, login_required
+
 from extensions import db
-from models import Employee, SalaryAdvance, PayrollTransaction, Branch
+from models import Branch, Employee, PayrollTransaction, SalaryAdvance
 from services.payroll_service import PayrollService
-from datetime import datetime
-from utils.decorators import branch_scope_id, permission_required
 from utils.branching import should_show_all_branch_columns
-from utils.tenanting import get_active_tenant_id
 from utils.db_safety import atomic_transaction
+from utils.decorators import branch_scope_id, permission_required
 from utils.feature_guards import install_feature_gate
+from utils.tenanting import get_active_tenant_id
 
 payroll_bp = Blueprint("payroll", __name__, url_prefix="/payroll")
 install_feature_gate(payroll_bp, "payroll")
@@ -232,13 +234,12 @@ def salary_slip(**kwargs):
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is not None and transaction.branch_id != scoped_branch_id:
         return render_template("errors/403.html"), 403
-    from datetime import timezone
 
     from services.print_service import PrintService
 
     ctx = PrintService._get_tenant_context(transaction.tenant_id or tid)
     ctx.update(PrintService._user_context())
-    ctx["printed_at"] = datetime.now(timezone.utc)
+    ctx["printed_at"] = datetime.now(UTC)
     return render_template("payroll/slip.html", slip=transaction, **ctx)
 
 

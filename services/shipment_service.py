@@ -1,3 +1,5 @@
+from datetime import UTC
+
 from extensions import db
 
 
@@ -27,14 +29,15 @@ class ShipmentService:
 
     @staticmethod
     def update_status(shipment_id, status):
+        from datetime import datetime
+
         from models.shipment import Shipment
-        from datetime import datetime, timezone
 
         shipment = Shipment.query.get(shipment_id)
         if shipment:
             shipment.status = status
             if status == "delivered":
-                shipment.actual_delivery = datetime.now(timezone.utc)
+                shipment.actual_delivery = datetime.now(UTC)
 
     @staticmethod
     def get_shipments_for_sale(sale_id):

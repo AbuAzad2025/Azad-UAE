@@ -3,7 +3,6 @@ Password Validation - التحقق من قوة كلمات المرور
 """
 
 import re
-from typing import Tuple, List
 
 
 class PasswordValidator:
@@ -18,7 +17,7 @@ class PasswordValidator:
     SPECIAL_CHARS = r"!@#$%^&*()_+-=[]{}|;:,.<>?"
 
     @classmethod
-    def validate(cls, password: str) -> Tuple[bool, List[str]]:
+    def validate(cls, password: str) -> tuple[bool, list[str]]:
         """
         التحقق من كلمة المرور
 
@@ -105,7 +104,7 @@ class PasswordValidator:
         return min(max(score, 0), 100)
 
     @classmethod
-    def get_strength_label(cls, score: int) -> Tuple[str, str]:
+    def get_strength_label(cls, score: int) -> tuple[str, str]:
         """
         الحصول على تصنيف القوة
 
@@ -148,7 +147,7 @@ class PasswordValidator:
                 return password
 
 
-def validate_password_with_helpful_message(password: str) -> Tuple[bool, str]:
+def validate_password_with_helpful_message(password: str) -> tuple[bool, str]:
     """
     دالة مساعدة للتحقق مع رسالة واضحة
 

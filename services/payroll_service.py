@@ -1,19 +1,14 @@
 from datetime import datetime
-
 from decimal import Decimal
 
 from flask_babel import gettext
 
 from extensions import db
-
-from models import Employee, SalaryAdvance, PayrollTransaction
-
-from services.gl_service import GLService
-
+from models import Employee, PayrollTransaction, SalaryAdvance
 from services.gl_posting import post_or_fail
-
-from utils.gl_reference_types import GLRef
+from services.gl_service import GLService
 from utils.field_validators import normalize_phone_optional
+from utils.gl_reference_types import GLRef
 
 
 class PayrollService:

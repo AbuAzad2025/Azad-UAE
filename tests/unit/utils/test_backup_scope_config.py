@@ -4,7 +4,7 @@ configuration and scoped database export (no Flask, no real DB).
 """
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 import pytest
@@ -61,7 +61,7 @@ def test_sanitize_slug(slug, expected):
     "item,expected_key,expected_val",
     [
         (
-            {"dt": datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)},
+            {"dt": datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)},
             "dt",
             "2024-01-01T12:00:00+00:00",
         ),

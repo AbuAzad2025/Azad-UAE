@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import logging
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from flask_babel import gettext
+
 from extensions import db
 from models import GLAccount, GLJournalEntry
 
@@ -104,7 +105,7 @@ def get_account(code, tenant_id=None):
 
 
 def next_entry_number(tenant_id, entry_date=None):
-    entry_date = entry_date or datetime.now(timezone.utc)
+    entry_date = entry_date or datetime.now(UTC)
     y = entry_date.strftime("%Y")
     query = GLJournalEntry.query.filter(GLJournalEntry.entry_number.like(f"JE-{y}-%"))
     if tenant_id is not None:
@@ -143,7 +144,7 @@ def next_entry_number(tenant_id, entry_date=None):
 def assert_period_open(entry_date, tenant_id):
     if tenant_id is None:
         return
-    dt = entry_date if isinstance(entry_date, datetime) else datetime.now(timezone.utc)
+    dt = entry_date if isinstance(entry_date, datetime) else datetime.now(UTC)
     from models.gl import GLPeriod
 
     closed = GLPeriod.query.filter_by(

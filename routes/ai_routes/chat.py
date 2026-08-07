@@ -1,22 +1,22 @@
 """Chat and quick-query AI routes."""
 
-from flask_babel import gettext
+import logging
+from collections.abc import Iterator
+from typing import cast
 
-from flask import request, jsonify, Response, stream_with_context, g
-from flask_login import login_required, current_user
+from flask import Response, g, jsonify, request, stream_with_context
+from flask_babel import gettext
+from flask_login import current_user, login_required
+
+from extensions import db, limiter
+from routes.ai_routes import ai_bp
+from routes.ai_routes.actions import _process_user_action, _user_can_ai_execute_actions
+from routes.ai_routes.shared import _sanitize_ai_prompt, _stream_ai_response
+from services.ai_service import AIService
+from utils.ai_access import ai_level_allows, get_ai_access_state
+from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
 from utils.tenanting import get_active_tenant_id
-from utils.ai_access import get_ai_access_state, ai_level_allows
-from extensions import db, limiter
-from services.ai_service import AIService
-from routes.ai_routes import ai_bp
-from routes.ai_routes.shared import _sanitize_ai_prompt, _stream_ai_response
-from routes.ai_routes.actions import _process_user_action, _user_can_ai_execute_actions
-from utils.db_safety import atomic_transaction
-
-import logging
-from typing import cast
-from collections.abc import Iterator
 
 logger = logging.getLogger(__name__)
 

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import textwrap
 
-
 from services.error_log_service import ErrorLogService
 
 SAMPLE_LOG = textwrap.dedent("""\

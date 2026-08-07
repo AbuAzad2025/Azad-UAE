@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 
@@ -19,7 +19,7 @@ class TestPermissionModel:
 
 class TestRoleModel:
     def test_repr_has_permission_and_to_dict(self):
-        from models.user import Role, Permission
+        from models.user import Permission, Role
 
         role = Role(name="Manager", slug="manager")
         p1 = Permission(code="view_reports")
@@ -35,7 +35,7 @@ class TestRoleModel:
 class TestUserModel:
     @staticmethod
     def _user(**kwargs):
-        from models.user import User, Role
+        from models.user import Role, User
 
         user = User(username="alice", email="alice@test.com")
         user.id = 1
@@ -45,7 +45,7 @@ class TestUserModel:
         user.is_owner = kwargs.get("is_owner", False)
         user.email_verified = True
         user.login_attempts = 0
-        user.created_at = datetime(2025, 1, 1, tzinfo=timezone.utc)
+        user.created_at = datetime(2025, 1, 1, tzinfo=UTC)
         slug = kwargs.get("role_slug", "seller")
         user.role = Role(name=slug.title(), slug=slug, permissions=[])
         if kwargs.get("permissions"):
@@ -107,7 +107,7 @@ class TestUserModel:
         assert owner.can_edit_price() is True
 
         user = self._user()
-        user.last_login = datetime(2025, 6, 1, tzinfo=timezone.utc)
+        user.last_login = datetime(2025, 6, 1, tzinfo=UTC)
         data = user.to_dict(viewer=user, include_sensitive=True)
         assert data["email_verified"] is True
         assert "last_login" in data

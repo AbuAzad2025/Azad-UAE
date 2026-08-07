@@ -23,15 +23,15 @@
 شركة أزاد للأنظمة الذكية
 """
 
-import numpy as np
-from sklearn.neural_network import MLPRegressor, MLPClassifier
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-import joblib
-import os
 import logging
-from datetime import datetime, timedelta, timezone
+import os
 from collections import defaultdict
-from typing import Dict
+from datetime import UTC, datetime, timedelta
+
+import joblib
+import numpy as np
+from sklearn.neural_network import MLPClassifier, MLPRegressor
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sqlalchemy import func
 
 logger = logging.getLogger(__name__)
@@ -206,9 +206,10 @@ class AzadNeuralEngine:
 
     def _train_maintenance_internal(self):
         """التدريب الداخلي لنموذج الصيانة"""
-        from models import Product, Sale, SaleLine
-        from extensions import db
         from sqlalchemy import func
+
+        from extensions import db
+        from models import Product, Sale, SaleLine
 
         # جمع بيانات استخدام المنتجات
         products = (
@@ -242,7 +243,7 @@ class AzadNeuralEngine:
         for product in products:
             # الميزات
             days_since_sale = (
-                (datetime.now(timezone.utc).date() - product.last_sale_date.date()).days
+                (datetime.now(UTC).date() - product.last_sale_date.date()).days
                 if product.last_sale_date
                 else 365
             )
@@ -316,8 +317,8 @@ class AzadNeuralEngine:
 
     def _predict_maintenance_internal(self, product_id):
         """التوقع الداخلي لاحتياجات الصيانة"""
-        from models import Product, Sale, SaleLine
         from extensions import db
+        from models import Product, Sale, SaleLine
 
         # تحميل النموذج
         if not self._load_model("maintenance_predictor"):
@@ -348,7 +349,7 @@ class AzadNeuralEngine:
 
         # تحضير الميزات
         days_since_sale = (
-            (datetime.now(timezone.utc).date() - product_data.last_sale_date.date()).days
+            (datetime.now(UTC).date() - product_data.last_sale_date.date()).days
             if product_data.last_sale_date
             else 365
         )
@@ -559,9 +560,10 @@ class AzadNeuralEngine:
 
     def _train_financial_internal(self):
         """التدريب الداخلي للمخطط المالي"""
-        from models import Sale, Purchase, Expense, Receipt
-        from extensions import db
         from sqlalchemy import func
+
+        from extensions import db
+        from models import Expense, Purchase, Receipt, Sale
         from utils.tenanting import get_active_tenant_id
 
         tid = get_active_tenant_id()
@@ -570,8 +572,8 @@ class AzadNeuralEngine:
         monthly_data = []
 
         for month_offset in range(12):  # آخر 12 شهر
-            start_date = datetime.now(timezone.utc) - timedelta(days=30 * (month_offset + 1))
-            end_date = datetime.now(timezone.utc) - timedelta(days=30 * month_offset)
+            start_date = datetime.now(UTC) - timedelta(days=30 * (month_offset + 1))
+            end_date = datetime.now(UTC) - timedelta(days=30 * month_offset)
 
             # المبيعات
             sales = (
@@ -694,9 +696,10 @@ class AzadNeuralEngine:
 
     def _predict_cash_flow_internal(self, months_ahead):
         """التوقع الداخلي للتدفق النقدي"""
-        from models import Sale, Purchase, Expense, Receipt
-        from extensions import db
         from sqlalchemy import func
+
+        from extensions import db
+        from models import Expense, Purchase, Receipt, Sale
         from utils.tenanting import get_active_tenant_id
 
         tid = get_active_tenant_id()
@@ -705,7 +708,7 @@ class AzadNeuralEngine:
             return {"predictions": [], "trend": "unknown", "error": "Model not trained"}
 
         # الحصول على البيانات الحالية
-        current_month = datetime.now(timezone.utc)
+        current_month = datetime.now(UTC)
         start_month = current_month - timedelta(days=30)
 
         sales = (
@@ -831,8 +834,8 @@ class AzadNeuralEngine:
 
     def _train_price_internal(self):
         """التدريب الداخلي لمحسن الأسعار"""
-        from models import Sale, SaleLine, Product, Customer
         from extensions import db
+        from models import Customer, Product, Sale, SaleLine
 
         # جمع بيانات التسعير الناجحة
         sales_data = (
@@ -1035,8 +1038,8 @@ class AzadNeuralEngine:
 
     def _train_sales_internal(self):
         """التدريب الداخلي لمتنبئ المبيعات"""
-        from models import Sale
         from extensions import db
+        from models import Sale
 
         # جمع المبيعات اليومية
         daily_sales = (
@@ -1047,7 +1050,7 @@ class AzadNeuralEngine:
             )
             .filter(
                 Sale.status == "confirmed",
-                Sale.sale_date >= datetime.now(timezone.utc) - timedelta(days=90),
+                Sale.sale_date >= datetime.now(UTC) - timedelta(days=90),
             )
             .group_by(func.date(Sale.sale_date))
             .all()
@@ -1126,9 +1129,10 @@ class AzadNeuralEngine:
 
     def _forecast_sales_internal(self, days_ahead):
         """التوقع الداخلي للمبيعات"""
-        from models import Sale
-        from extensions import db
         from sqlalchemy import func
+
+        from extensions import db
+        from models import Sale
 
         if not self._load_model("sales_forecaster"):
             return {"forecast": [], "total_expected": 0, "error": "Model not trained"}
@@ -1141,7 +1145,7 @@ class AzadNeuralEngine:
             )
             .filter(
                 Sale.status == "confirmed",
-                Sale.sale_date >= datetime.now(timezone.utc) - timedelta(days=7),
+                Sale.sale_date >= datetime.now(UTC) - timedelta(days=7),
             )
             .group_by(func.date(Sale.sale_date))
             .order_by(func.date(Sale.sale_date).desc())
@@ -1164,7 +1168,7 @@ class AzadNeuralEngine:
         total_expected = 0
 
         for day in range(days_ahead):
-            future_date = datetime.now(timezone.utc).date() + timedelta(days=day + 1)
+            future_date = datetime.now(UTC).date() + timedelta(days=day + 1)
 
             # الميزات
             features = last_7_days.copy()
@@ -1246,9 +1250,10 @@ class AzadNeuralEngine:
 
     def _train_customer_internal(self):
         """التدريب الداخلي لمصنف العملاء"""
-        from models import Customer, Sale
-        from extensions import db
         from sqlalchemy import func
+
+        from extensions import db
+        from models import Customer, Sale
 
         # جمع بيانات العملاء
         customers_data = (
@@ -1275,7 +1280,7 @@ class AzadNeuralEngine:
         for customer in customers_data:
             # الميزات
             days_since_purchase = (
-                (datetime.now(timezone.utc).date() - customer.last_purchase.date()).days
+                (datetime.now(UTC).date() - customer.last_purchase.date()).days
                 if customer.last_purchase
                 else 365
             )
@@ -1336,9 +1341,10 @@ class AzadNeuralEngine:
 
     def _classify_customer_internal(self, customer_id):
         """التصنيف الداخلي للعميل"""
-        from models import Customer, Sale
-        from extensions import db
         from sqlalchemy import func
+
+        from extensions import db
+        from models import Customer, Sale
 
         # الحصول على بيانات العميل
         customer_data = (
@@ -1359,7 +1365,7 @@ class AzadNeuralEngine:
 
         # تحضير الميزات
         days_since_purchase = (
-            (datetime.now(timezone.utc).date() - customer_data.last_purchase.date()).days
+            (datetime.now(UTC).date() - customer_data.last_purchase.date()).days
             if customer_data.last_purchase
             else 365
         )
@@ -1448,8 +1454,8 @@ class AzadNeuralEngine:
 
     def _train_fraud_internal(self):
         """التدريب الداخلي لكاشف الاحتيال"""
-        from models import Sale, Customer
         from extensions import db
+        from models import Customer, Sale
 
         # جمع المعاملات
         sales = (
@@ -1609,9 +1615,10 @@ class AzadNeuralEngine:
 
     def _train_inventory_internal(self):
         """التدريب الداخلي لمحسن المخزون"""
-        from models import Product, SaleLine
-        from extensions import db
         from sqlalchemy import func
+
+        from extensions import db
+        from models import Product, SaleLine
 
         # جمع بيانات المخزون والمبيعات
         products_data = (
@@ -1693,9 +1700,10 @@ class AzadNeuralEngine:
 
     def _optimize_stock_internal(self, product_id):
         """التحسين الداخلي للمخزون"""
-        from models import Product, SaleLine
-        from extensions import db
         from sqlalchemy import func
+
+        from extensions import db
+        from models import Product, SaleLine
 
         # بيانات المنتج
         product_data = (
@@ -1794,9 +1802,10 @@ class AzadNeuralEngine:
 
     def _train_demand_internal(self):
         """التدريب الداخلي لمتنبئ الطلب"""
-        from models import SaleLine, Sale
-        from extensions import db
         from sqlalchemy import func
+
+        from extensions import db
+        from models import Sale, SaleLine
 
         # جمع البيانات اليومية لكل منتج
         daily_demand = (
@@ -1808,7 +1817,7 @@ class AzadNeuralEngine:
             .join(Sale)
             .filter(
                 Sale.status == "confirmed",
-                Sale.sale_date >= datetime.now(timezone.utc) - timedelta(days=90),
+                Sale.sale_date >= datetime.now(UTC) - timedelta(days=90),
             )
             .group_by(func.date(Sale.sale_date), SaleLine.product_id)
             .all()
@@ -1892,9 +1901,10 @@ class AzadNeuralEngine:
 
     def _predict_demand_internal(self, product_id, days_ahead):
         """التوقع الداخلي للطلب"""
-        from models import SaleLine, Sale
-        from extensions import db
         from sqlalchemy import func
+
+        from extensions import db
+        from models import Sale, SaleLine
 
         if not self._load_model("demand_predictor"):
             return {"forecast": [], "total_expected": 0, "error": "Model not trained"}
@@ -1909,7 +1919,7 @@ class AzadNeuralEngine:
             .filter(
                 SaleLine.product_id == product_id,
                 Sale.status == "confirmed",
-                Sale.sale_date >= datetime.now(timezone.utc) - timedelta(days=7),
+                Sale.sale_date >= datetime.now(UTC) - timedelta(days=7),
             )
             .group_by(func.date(Sale.sale_date))
             .order_by(func.date(Sale.sale_date).desc())
@@ -2000,8 +2010,8 @@ class AzadNeuralEngine:
 
     def _train_profit_internal(self):
         """التدريب الداخلي لمحسن الربح"""
-        from models import Sale, SaleLine
         from extensions import db
+        from models import Sale, SaleLine
 
         # جمع بيانات الربح
         sales = (
@@ -2085,9 +2095,10 @@ class AzadNeuralEngine:
 
     def _train_churn_internal(self):
         """التدريب الداخلي لمتنبئ الخسارة"""
-        from models import Customer, Sale
-        from extensions import db
         from sqlalchemy import func
+
+        from extensions import db
+        from models import Customer, Sale
 
         # جمع بيانات العملاء
         customers = (
@@ -2112,7 +2123,7 @@ class AzadNeuralEngine:
         for customer in customers:
             # الميزات
             days_since = (
-                (datetime.now(timezone.utc).date() - customer.last_purchase.date()).days
+                (datetime.now(UTC).date() - customer.last_purchase.date()).days
                 if customer.last_purchase
                 else 365
             )
@@ -2198,6 +2209,7 @@ class AzadNeuralEngine:
             # محاولة التحميل
             return self._load_model(model_name)
         except Exception:
+            logger.debug("Model load check failed for %s", model_name, exc_info=True)
             return False
 
     def load_all_models(self):
@@ -2290,7 +2302,7 @@ class AzadNeuralEngine:
 
         return status
 
-    def understand_intent(self, message: str) -> Dict:
+    def understand_intent(self, message: str) -> dict:
         """
         فهم النية باستخدام الشبكات العصبية
 
@@ -2355,7 +2367,7 @@ class AzadNeuralEngine:
             return {"intent": None, "confidence": 0, "features": {}}
 
     @staticmethod
-    def _extract_text_features(text: str) -> Dict:
+    def _extract_text_features(text: str) -> dict:
         """استخراج ميزات من النص"""
         return {
             "length": len(text),

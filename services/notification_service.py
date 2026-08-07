@@ -3,9 +3,10 @@ Notification Service - خدمة الإشعارات
 إرسال إشعارات فورية للمستخدمين
 """
 
-from flask_babel import gettext
-from datetime import datetime, timezone
 import logging
+from datetime import UTC, datetime
+
+from flask_babel import gettext
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +34,7 @@ class NotificationService:
             "message": message,
             "type": notification_type,
             "data": data or {},
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "read": False,
         }
 
@@ -152,12 +153,12 @@ class SecurityService:
         if ip_address not in SecurityService._failed_attempts:
             SecurityService._failed_attempts[ip_address] = {
                 "count": 0,
-                "first_attempt": datetime.now(timezone.utc),
+                "first_attempt": datetime.now(UTC),
                 "last_attempt": None,
             }
 
         SecurityService._failed_attempts[ip_address]["count"] += 1
-        SecurityService._failed_attempts[ip_address]["last_attempt"] = datetime.now(timezone.utc)
+        SecurityService._failed_attempts[ip_address]["last_attempt"] = datetime.now(UTC)
 
     @staticmethod
     def reset_failed_attempts(ip_address):

@@ -1,7 +1,9 @@
-from datetime import datetime, timezone
-from decimal import Decimal, ROUND_HALF_UP
+from datetime import UTC, datetime
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
+
 from flask import current_app
 from flask_babel import gettext
+
 from extensions import db
 from models import (
     Product,
@@ -12,18 +14,18 @@ from models import (
     Supplier,
     Tenant,
 )
-from services.stock_service import StockService, _safe_for_update
 from services.exchange_rate_service import ExchangeRateService
-from services.gl_service import GLService, GL_ACCOUNTS
 from services.gl_posting import post_or_fail
-from utils.gl_reference_types import GLRef
-from utils.branching import ensure_warehouse_access
-from utils.helpers import generate_number
+from services.gl_service import GL_ACCOUNTS, GLService
 from services.logging_core import LoggingCore
-from utils.tenanting import get_active_tenant_id
-from utils.currency_utils import resolve_default_currency, get_system_default_currency
+from services.stock_service import StockService, _safe_for_update
+from utils.branching import ensure_warehouse_access
+from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.field_validators import validate_currency_code
+from utils.gl_reference_types import GLRef
+from utils.helpers import generate_number
 from utils.tax_settings import normalize_tax_rate, should_post_vat_gl
+from utils.tenanting import get_active_tenant_id
 
 
 def resolve_tenant_base_currency(tenant_id=None, tenant=None):
@@ -81,6 +83,7 @@ class PurchaseService:
                 active_tid = get_active_tenant_id()
                 currency = resolve_default_currency(Tenant.query.get(active_tid) if active_tid else None)
             except Exception:
+                current_app.logger.warning("Tenant currency resolution failed; using system default", exc_info=True)
                 currency = get_system_default_currency()
         currency = (currency or "").strip() or get_system_default_currency()
         currency = validate_currency_code(currency)
@@ -123,7 +126,7 @@ class PurchaseService:
 
         # Resolve tenant from warehouse (validated above) or active context
         tenant_id = (
-            get_active_tenant_id(user) or getattr(user, "tenant_id", None) or getattr(warehouse, "tenant_id", None)
+            get_active_tenant_id(user) or (user.tenant_id if user is not None else None) or (warehouse.tenant_id if warehouse is not None else None)
         )
 
         # Generate Number
@@ -431,7 +434,7 @@ class PurchaseService:
                 reference_type=GLRef.PURCHASE,
                 reference_id=purchase.id,
                 description=f"Reverse Purchase {purchase.purchase_number} (Cancelled)",
-                tenant_id=getattr(purchase, "tenant_id", None),
+                tenant_id=(purchase.tenant_id if purchase is not None else None),
             )
 
         purchase.status = "cancelled"
@@ -447,8 +450,9 @@ class PurchaseService:
     @staticmethod
     def create_purchase_return(purchase, user, lines_data, reason=None, notes=None):
         """إنشاء مرتجع مشتريات - عكس المخزون والقيد المحاسبي ورصيد المورد."""
-        from models.product_serial import ProductSerial
         from decimal import Decimal as _D
+
+        from models.product_serial import ProductSerial
 
         if purchase.status == "cancelled":
             raise ValueError(gettext("لا يمكن عمل مرتجع لفاتورة شراء ملغاة"))
@@ -456,9 +460,9 @@ class PurchaseService:
         if not lines_data:
             raise ValueError(gettext("يجب إرجاع منتج واحد على الأقل"))
 
-        tenant_id = getattr(purchase, "tenant_id", None)
+        tenant_id = (purchase.tenant_id if purchase is not None else None)
         warehouse_id = getattr(purchase, "warehouse_id", None)
-        branch_id = getattr(purchase, "branch_id", None)
+        branch_id = (purchase.branch_id if purchase is not None else None)
 
         capitalized = current_app.config.get("ENABLE_LANDED_COST_CAPITALIZATION", True)
         mwac = current_app.config.get("ENABLE_MWAC", False)
@@ -543,8 +547,8 @@ class PurchaseService:
 
             # عكس MWAC
             if mwac and tenant_id and warehouse_id:
-                from models.product_warehouse_cost import ProductWarehouseCost
                 from models.product_cost_history import ProductCostHistory
+                from models.product_warehouse_cost import ProductWarehouseCost
 
                 pwc = _safe_for_update(
                     ProductWarehouseCost.query.filter_by(
@@ -580,7 +584,7 @@ class PurchaseService:
                     pwc.total_quantity = new_qty if new_qty >= 0 else _D("0")
                     pwc.total_value = new_value if new_value >= 0 else _D("0")
                     pwc.average_cost = new_avg.quantize(_D("0.0001")) if new_qty > 0 else _D("0")
-                    pwc.last_updated = datetime.now(timezone.utc)
+                    pwc.last_updated = datetime.now(UTC)
 
                     pch = ProductCostHistory(
                         tenant_id=tenant_id,
@@ -621,7 +625,8 @@ class PurchaseService:
             _tr = purchase.tax_rate
             try:
                 tax_rate = Decimal(str(_tr)) if _tr is not None else Decimal("0")
-            except Exception:
+            except (InvalidOperation, TypeError, ValueError):
+                current_app.logger.warning("Unparseable purchase tax_rate %r; using 0", _tr, exc_info=True)
                 tax_rate = Decimal("0")
             if tax_rate > 0:
                 inventory_credit = (subtotal / (Decimal("1") + (tax_rate / Decimal("100")))).quantize(

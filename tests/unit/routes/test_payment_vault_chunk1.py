@@ -1,6 +1,6 @@
 """tests/unit/test_payment_vault_chunk1.py — Payment-vault API-heavy write endpoints."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 import pytest
@@ -81,7 +81,7 @@ def mock_donation(mocker):
     don.status = "pending"
     don.donor_name = "Ali"
     don.donor_email = "ali@test.com"
-    don.created_at = datetime(2024, 6, 1, tzinfo=timezone.utc)
+    don.created_at = datetime(2024, 6, 1, tzinfo=UTC)
     don.transaction_type = "donation"
     mocker.patch("routes.payment_vault.Donation")
     from routes.payment_vault import Donation as DMod
@@ -501,7 +501,7 @@ class TestV2Donations:
                 amount_usd=50.0,
                 payment_method="card",
                 status="pending",
-                created_at=datetime(2024, 6, 1, tzinfo=timezone.utc),
+                created_at=datetime(2024, 6, 1, tzinfo=UTC),
                 isoformat=lambda: "2024-06-01T00:00:00+00:00",
             )
         ]

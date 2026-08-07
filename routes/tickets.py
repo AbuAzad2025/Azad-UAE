@@ -1,7 +1,8 @@
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_babel import gettext
-from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import login_required, current_user
-from models import TicketCategory, TicketPriority, Customer, User
+from flask_login import current_user, login_required
+
+from models import Customer, TicketCategory, TicketPriority, User
 from services.ticket_service import TicketService
 from utils.decorators import permission_required
 from utils.tenanting import get_active_tenant_id

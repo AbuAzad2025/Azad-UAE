@@ -85,9 +85,8 @@ class TestDisplayPrice:
         )
         from services.store_pricing_service import StorePricingService
 
-        with caplog.at_level("WARNING", logger="services.store_pricing_service"):
-            with app.app_context():
-                price = StorePricingService.resolve_display_price(_product("100"), _tenant(base="ILS"), "USD")
+        with caplog.at_level("WARNING", logger="services.store_pricing_service"), app.app_context():
+            price = StorePricingService.resolve_display_price(_product("100"), _tenant(base="ILS"), "USD")
         assert price == Decimal("100.00")
         assert any("NO rate" in rec.message for rec in caplog.records)
 

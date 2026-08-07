@@ -2,20 +2,21 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date
 
 from flask_babel import gettext
+
 from extensions import db
-from utils.db_safety import atomic_transaction
 from models.fixed_asset import FixedAsset
+from utils.db_safety import atomic_transaction
 
 
 class DepreciationService:
     @staticmethod
     def run_monthly(tenant_id=None, *, period_year=None, period_month=None):
-        from datetime import datetime, timezone
+        from datetime import datetime
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         period_year = period_year or now.year
         period_month = period_month or now.month
         period_date = date(period_year, period_month, 1)

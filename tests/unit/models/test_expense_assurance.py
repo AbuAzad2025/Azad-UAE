@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -26,7 +26,7 @@ class TestExpenseModel:
         exp.amount = Decimal("100")
         exp.currency = "AED"
         exp.amount_aed = Decimal("100")
-        exp.expense_date = datetime(2025, 6, 1, tzinfo=timezone.utc)
+        exp.expense_date = datetime(2025, 6, 1, tzinfo=UTC)
         exp.payment_method = "cash"
         exp.status = "confirmed"
         d = exp.to_dict()

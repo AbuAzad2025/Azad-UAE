@@ -1,31 +1,32 @@
-from flask_babel import gettext
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
-from flask import Blueprint, render_template, request, jsonify
-from flask_login import login_required, current_user
+from flask import Blueprint, jsonify, render_template, request
+from flask_babel import gettext
+from flask_login import current_user, login_required
 from sqlalchemy import func, select
+
 from extensions import db
 from models import (
+    Customer,
     PartnerCommissionEntry,
+    Product,
+    ProductPartner,
+    Purchase,
     Sale,
     SaleLine,
-    Purchase,
-    Product,
-    Customer,
-    ProductPartner,
 )
 from models.payment import payment_affects_balance
+from utils.cache_decorators import cached_query
 from utils.decorators import permission_required, report_branch_scope_id
+from utils.feature_guards import install_feature_gate
 from utils.tenanting import (
     get_active_tenant_id,
-    tenant_query,
     require_report_tenant_id,
     tenant_get_or_404,
+    tenant_query,
 )
-from utils.cache_decorators import cached_query
-from utils.feature_guards import install_feature_gate
 
 reports_bp = Blueprint("reports", __name__, url_prefix="/reports")
 install_feature_gate(reports_bp, "reports")
@@ -540,6 +541,7 @@ def sales():
 @permission_required("view_reports")
 def sales_export():
     from flask import send_file
+
     from services.export_service import ExportService
 
     fmt = (request.args.get("format") or "csv").strip().lower()
@@ -636,6 +638,7 @@ def purchases():
         return render_template("errors/403.html"), 403
 
     from decimal import Decimal
+
     from utils.gl_tenant import default_report_date_range
 
     date_from = request.args.get("start_date", "", type=str)
@@ -742,6 +745,7 @@ def purchases():
 @permission_required("view_reports")
 def purchases_export():
     from flask import send_file
+
     from services.export_service import ExportService
 
     if current_user.is_seller():
@@ -832,9 +836,7 @@ def ar_reconciliation():
     scoped_branch_id = report_branch_scope_id()
     if branch_id is None:
         branch_id = scoped_branch_id
-    elif scoped_branch_id is not None and branch_id != scoped_branch_id:
-        return render_template("errors/403.html"), 403
-    elif scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
+    elif scoped_branch_id is not None and branch_id != scoped_branch_id or scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
         return render_template("errors/403.html"), 403
 
     tenant_id = get_active_tenant_id(current_user)
@@ -852,13 +854,13 @@ def ar_reconciliation():
 @login_required
 @permission_required("view_reports")
 def inventory_reconciliation():
+    from models import Warehouse as WarehouseModel
     from services.inventory_reconciliation_service import InventoryReconciliationService
     from utils.branching import (
         get_accessible_branches,
         get_accessible_warehouse_ids,
         user_can_access_branch,
     )
-    from models import Warehouse as WarehouseModel
 
     branch_id = request.args.get("branch_id", type=int)
     warehouse_id = request.args.get("warehouse_id", type=int)
@@ -868,9 +870,7 @@ def inventory_reconciliation():
 
     if branch_id is None:
         branch_id = scoped_branch_id
-    elif scoped_branch_id is not None and branch_id != scoped_branch_id:
-        return render_template("errors/403.html"), 403
-    elif scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
+    elif scoped_branch_id is not None and branch_id != scoped_branch_id or scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
         return render_template("errors/403.html"), 403
 
     tenant_id = get_active_tenant_id(current_user)
@@ -914,11 +914,12 @@ def inventory_reconciliation():
 @login_required
 @permission_required("view_reports")
 def inventory_reconciliation_export():
-    from services.inventory_reconciliation_service import InventoryReconciliationService
-    from services.export_service import ExportService
     from flask import send_file
-    from utils.branching import get_accessible_warehouse_ids, user_can_access_branch
+
     from models import Warehouse as WarehouseModel
+    from services.export_service import ExportService
+    from services.inventory_reconciliation_service import InventoryReconciliationService
+    from utils.branching import get_accessible_warehouse_ids, user_can_access_branch
 
     fmt = (request.args.get("format") or "xlsx").strip().lower()
     branch_id = request.args.get("branch_id", type=int)
@@ -929,9 +930,7 @@ def inventory_reconciliation_export():
 
     if branch_id is None:
         branch_id = scoped_branch_id
-    elif scoped_branch_id is not None and branch_id != scoped_branch_id:
-        return render_template("errors/403.html"), 403
-    elif scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
+    elif scoped_branch_id is not None and branch_id != scoped_branch_id or scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
         return render_template("errors/403.html"), 403
 
     tenant_id = get_active_tenant_id(current_user)
@@ -1010,7 +1009,7 @@ def inventory_reconciliation_export():
 @login_required
 @permission_required("view_reports")
 def receivables():
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     all_sales = tenant_query(Sale).filter(Sale.status == "confirmed")
     scoped_branch_id = report_branch_scope_id()
@@ -1040,7 +1039,7 @@ def receivables():
     for sale in all_sales:
         sale_date = sale.sale_date
         if sale_date.tzinfo is None:
-            sale_date = sale_date.replace(tzinfo=timezone.utc)
+            sale_date = sale_date.replace(tzinfo=UTC)
         days_old = (now - sale_date).days
         balance = (sale.amount_aed or Decimal("0")) - (sale.paid_amount_aed or Decimal("0"))
 
@@ -1096,12 +1095,13 @@ def receivables():
 @permission_required("view_reports")
 def receivables_export():
     from flask import send_file
+
     from services.export_service import ExportService
 
     fmt = (request.args.get("format") or "csv").strip().lower()
     customer_id = request.args.get("customer", type=int)
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     all_sales = tenant_query(Sale).filter(Sale.status == "confirmed")
     scoped_branch_id = report_branch_scope_id()
     tenant_id = get_active_tenant_id(current_user)
@@ -1144,7 +1144,7 @@ def receivables_export():
     for sale in all_sales:
         sale_date = sale.sale_date
         if sale_date and sale_date.tzinfo is None:
-            sale_date = sale_date.replace(tzinfo=timezone.utc)
+            sale_date = sale_date.replace(tzinfo=UTC)
         days_old = (now - sale_date).days if sale_date else 0
         balance = (sale.amount_aed or Decimal("0")) - (sale.paid_amount_aed or Decimal("0"))
         data.append(
@@ -1186,9 +1186,9 @@ def receivables_export():
 def inventory():
     from models import StockMovement, Warehouse
     from utils.branching import (
-        user_can_access_branch,
         get_accessible_branches,
         get_accessible_warehouse_ids,
+        user_can_access_branch,
     )
 
     category_id = request.args.get("category", type=int)
@@ -1208,9 +1208,7 @@ def inventory():
     scoped_branch_id = report_branch_scope_id()
     if branch_id is None:
         branch_id = scoped_branch_id
-    elif scoped_branch_id is not None and branch_id != scoped_branch_id:
-        return render_template("errors/403.html"), 403
-    elif scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
+    elif scoped_branch_id is not None and branch_id != scoped_branch_id or scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
         return render_template("errors/403.html"), 403
 
     tenant_id = get_active_tenant_id(current_user)
@@ -1368,12 +1366,13 @@ def inventory():
 @permission_required("view_reports")
 def inventory_export():
     from flask import send_file
+
     from models import StockMovement, Warehouse
-    from utils.branching import (
-        user_can_access_branch,
-        get_accessible_warehouse_ids,
-    )
     from services.export_service import ExportService
+    from utils.branching import (
+        get_accessible_warehouse_ids,
+        user_can_access_branch,
+    )
 
     fmt = (request.args.get("format") or "csv").strip().lower()
     category_id = request.args.get("category", type=int)
@@ -1393,9 +1392,7 @@ def inventory_export():
     scoped_branch_id = report_branch_scope_id()
     if branch_id is None:
         branch_id = scoped_branch_id
-    elif scoped_branch_id is not None and branch_id != scoped_branch_id:
-        return render_template("errors/403.html"), 403
-    elif scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
+    elif scoped_branch_id is not None and branch_id != scoped_branch_id or scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
         return render_template("errors/403.html"), 403
 
     tenant_id = get_active_tenant_id(current_user)
@@ -1680,7 +1677,7 @@ def api_entity_search():
 def entity_report_fragment(entity_type, **kwargs):
     record_id = kwargs.pop("id")
     try:
-        from models import Receipt, Payment, PurchaseLine, Supplier
+        from models import Payment, PurchaseLine, Receipt, Supplier
 
         scoped_branch_id = report_branch_scope_id()
         tenant_id = get_active_tenant_id(current_user)

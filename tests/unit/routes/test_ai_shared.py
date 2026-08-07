@@ -12,15 +12,15 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from routes.ai_routes.shared import (
+    _compile_injection_patterns,
     _conversation_clear,
-    _conversation_set,
     _conversation_ctx,
+    _conversation_set,
     _sanitize_ai_prompt,
-    smart_listener,
     apply_smart_listeners,
     create_final_options,
+    smart_listener,
     train_local_ai,
-    _compile_injection_patterns,
 )
 
 

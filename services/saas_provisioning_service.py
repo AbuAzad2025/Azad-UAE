@@ -5,9 +5,10 @@ SaaS Provisioning Service — activates a purchased package onto a tenant.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 
 from flask_babel import gettext
+
 from extensions import db
 from utils.db_safety import atomic_transaction
 
@@ -182,7 +183,7 @@ class SaaSProvisioningService:
         if not package or not package.is_active:
             raise SaaSProvisioningError(f"Package {package_id} not found or inactive")
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         if duration_type == "lifetime":
             subscription_end = None

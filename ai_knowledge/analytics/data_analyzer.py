@@ -3,9 +3,9 @@
 أزاد يحلل البيانات بدقة عالية
 """
 
+import statistics
 from datetime import datetime, timedelta
 from decimal import Decimal
-import statistics
 
 
 class DataAnalyzer:
@@ -18,8 +18,8 @@ class DataAnalyzer:
     def analyze_customer_debt(customer_id):
         """تحليل ديون العميل بالتفصيل"""
         try:
-            from models import Customer, Sale
             from extensions import db
+            from models import Customer, Sale
 
             customer = db.session.get(Customer, customer_id)
             if not customer:
@@ -164,7 +164,7 @@ class DataAnalyzer:
     def analyze_product_performance(product_id=None):
         """تحليل أداء المنتجات"""
         try:
-            from models import Product, SaleLine, Sale
+            from models import Product, Sale, SaleLine
 
             if product_id:
                 # تحليل منتج محدد
@@ -321,8 +321,8 @@ class DataAnalyzer:
     def get_financial_ratios():
         """الحصول على النسب المالية"""
         try:
-            from models import Sale, Payment, Customer, Product
             from extensions import db
+            from models import Customer, Payment, Product, Sale
 
             # المبيعات
             total_sales = db.session.query(db.func.sum(Sale.total_amount)).scalar() or Decimal("0")

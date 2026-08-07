@@ -1,8 +1,8 @@
-from datetime import datetime, timezone
+import hashlib
+from datetime import UTC, datetime
 from typing import Any
 
 from extensions import db
-import hashlib
 
 Fernet: Any
 try:
@@ -49,7 +49,7 @@ class CardVault(db.Model):
 
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
@@ -135,7 +135,7 @@ class CardVault(db.Model):
 
     def mark_used(self):
         self.usage_count += 1
-        self.last_used = datetime.now(timezone.utc)
+        self.last_used = datetime.now(UTC)
 
     def to_dict(self, cipher: Any = None) -> dict[str, Any]:
         """Serialize. Only includes decrypted data when cipher is provided."""

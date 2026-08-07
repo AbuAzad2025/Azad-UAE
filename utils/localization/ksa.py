@@ -5,7 +5,7 @@ KSAStrategy — 15% VAT (configurable), ZATCA Phase 2 simplified invoice QR.
 import base64
 import hashlib
 import re
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 
 from .engine import LocalizationStrategy, coerce_decimal
 

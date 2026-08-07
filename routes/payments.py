@@ -1,42 +1,42 @@
-from flask_babel import gettext
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from flask import (
     Blueprint,
-    render_template,
-    redirect,
-    url_for,
-    flash,
-    request,
-    current_app,
-    jsonify,
     abort,
+    current_app,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
 )
-from flask_login import login_required, current_user
+from flask_babel import gettext
+from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from extensions import db
-from models import Receipt, Customer, InvoiceSettings, Supplier, Payment
-from services.payment_service import PaymentService
+from models import Customer, InvoiceSettings, Payment, Receipt, Supplier
 from services.cheque_service import process_cheque_issue
 from services.currency_service import CurrencyService
 from services.exchange_rate_service import ExchangeRateService
 from services.gl_posting import post_or_fail
-from utils.gl_reference_types import GLRef
-from utils.decorators import permission_required
-from utils.branching import should_show_all_branch_columns
-from utils.currency_utils import resolve_default_currency, get_system_default_currency
-from utils.tenanting import get_active_tenant_id
 from services.logging_core import LoggingCore
+from services.payment_service import PaymentService
+from utils.branching import should_show_all_branch_columns
+from utils.currency_utils import get_system_default_currency, resolve_default_currency
+from utils.db_safety import atomic_transaction
+from utils.decorators import permission_required
+from utils.gl_reference_types import GLRef
 from utils.number_to_arabic import number_to_arabic_words
 from utils.qr_generator import generate_qr_data_url
 from utils.tenanting import (
-    tenant_query,
-    tenant_get_or_404,
-    tenant_get,
     assert_tenant_record,
+    get_active_tenant_id,
+    tenant_get,
+    tenant_get_or_404,
+    tenant_query,
 )
-from utils.db_safety import atomic_transaction
 
 payments_bp = Blueprint("payments", __name__, url_prefix="/payments")
 
@@ -63,6 +63,7 @@ def _current_branch_id(default=None):
 
 def _resolve_transaction_rate(currency, user_rate=None):
     from decimal import Decimal
+
     from utils.currency_utils import resolve_tenant_base_currency
     from utils.tenanting import get_active_tenant_id
 
@@ -823,8 +824,9 @@ def create_voucher_submit():
                 return redirect(url_for("payments.receipts"))
 
             elif party_type == "supplier":
-                from utils.helpers import generate_number
                 from decimal import Decimal
+
+                from utils.helpers import generate_number
 
                 exchange_rate = _resolve_transaction_rate(currency, user_exchange_rate)
                 amount_decimal = Decimal(str(amount))
@@ -853,8 +855,9 @@ def create_voucher_submit():
                 return redirect(url_for("payments.receipts"))
 
         elif direction == "outgoing":
-            from utils.helpers import generate_number
             from decimal import Decimal
+
+            from utils.helpers import generate_number
 
             exchange_rate = _resolve_transaction_rate(currency, user_exchange_rate)
             amount_decimal = Decimal(str(amount))
@@ -1372,6 +1375,7 @@ def delete_receipt(**kwargs):
 def delete_payment(**kwargs):
     """حذف أو أرشفة سند صرف"""
     from decimal import Decimal
+
     from models import Payment
     from services.archive_service import ArchiveService
 
@@ -1438,9 +1442,10 @@ def delete_payment(**kwargs):
 @permission_required("manage_payments")
 def create_payment(purchase_id):
     """إنشاء سند صرف لفاتورة مشتريات"""
-    from models import Purchase, Payment, Supplier
-    from utils.helpers import generate_number
     from sqlalchemy import func
+
+    from models import Payment, Purchase, Supplier
+    from utils.helpers import generate_number
 
     purchase = tenant_get_or_404(Purchase, purchase_id)
     if not _in_scope_branch(purchase.branch_id):
@@ -1608,7 +1613,7 @@ def create_payment(purchase_id):
                         currency=currency,
                         exchange_rate=exchange_rate_decimal,
                         amount_aed=amount_aed,
-                        issue_date=datetime.now(timezone.utc).date(),
+                        issue_date=datetime.now(UTC).date(),
                         due_date=cheque_date if cheque_date else None,
                         bank_name=bank_name,
                         status="pending",

@@ -144,7 +144,7 @@ class TestNormalizeTaxRate:
 
 class TestSuggestedRate:
     def test_known_country(self):
-        from utils.tax_settings import suggested_rate_for_country, VAT_RATES_BY_COUNTRY
+        from utils.tax_settings import VAT_RATES_BY_COUNTRY, suggested_rate_for_country
 
         assert suggested_rate_for_country("AE") == VAT_RATES_BY_COUNTRY["AE"]
 

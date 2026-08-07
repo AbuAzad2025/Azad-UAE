@@ -13,13 +13,12 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
 
 from extensions import db
-
 
 # ───────────────────────── helpers ─────────────────────────
 
@@ -163,36 +162,36 @@ class TestCustomerStatement:
         cid = sample_customer.id
         uid = sample_user.id
         # قبل الفترة
-        s_old = _sale(tid, cid, uid, "SAL-OLD-1", 500, datetime(2026, 4, 10, tzinfo=timezone.utc))
+        s_old = _sale(tid, cid, uid, "SAL-OLD-1", 500, datetime(2026, 4, 10, tzinfo=UTC))
         _payment(
             tid,
             "PAY-OLD-1",
             200,
-            datetime(2026, 4, 15, tzinfo=timezone.utc),
+            datetime(2026, 4, 15, tzinfo=UTC),
             customer_id=cid,
             direction="incoming",
             user_id=uid,
         )
         # داخل الفترة
-        s_new = _sale(tid, cid, uid, "SAL-NEW-1", 1000, datetime(2026, 5, 10, tzinfo=timezone.utc))
+        s_new = _sale(tid, cid, uid, "SAL-NEW-1", 1000, datetime(2026, 5, 10, tzinfo=UTC))
         _payment(
             tid,
             "PAY-NEW-1",
             400,
-            datetime(2026, 5, 15, tzinfo=timezone.utc),
+            datetime(2026, 5, 15, tzinfo=UTC),
             customer_id=cid,
             direction="incoming",
             user_id=uid,
         )
-        _sale_return(tid, s_new, "RET-NEW-1", 150, datetime(2026, 5, 20, tzinfo=timezone.utc))
+        _sale_return(tid, s_new, "RET-NEW-1", 150, datetime(2026, 5, 20, tzinfo=UTC))
         # مرتجع مرفوض — لا أثر له
-        _sale_return(tid, s_new, "RET-REJ-1", 999, datetime(2026, 5, 21, tzinfo=timezone.utc), status="rejected")
+        _sale_return(tid, s_new, "RET-REJ-1", 999, datetime(2026, 5, 21, tzinfo=UTC), status="rejected")
         # شيك وارد معلق — يؤثر فوراً (قيد الاستلام Dr CUC / Cr AR يخفض الذمة)
         _payment(
             tid,
             "PAY-PEND-1",
             777,
-            datetime(2026, 5, 22, tzinfo=timezone.utc),
+            datetime(2026, 5, 22, tzinfo=UTC),
             customer_id=cid,
             direction="incoming",
             confirmed=False,
@@ -226,13 +225,13 @@ class TestCustomerStatement:
         tid = sample_tenant.id
         cid = sample_customer.id
         uid = sample_user.id
-        s = _sale(tid, cid, uid, "SAL-X-1", 300, datetime(2026, 5, 5, tzinfo=timezone.utc))
-        _sale_return(tid, s, "RET-X-REJ", 100, datetime(2026, 5, 6, tzinfo=timezone.utc), status="rejected")
+        s = _sale(tid, cid, uid, "SAL-X-1", 300, datetime(2026, 5, 5, tzinfo=UTC))
+        _sale_return(tid, s, "RET-X-REJ", 100, datetime(2026, 5, 6, tzinfo=UTC), status="rejected")
         _payment(
             tid,
             "PAY-X-CHQ",
             120,
-            datetime(2026, 5, 7, tzinfo=timezone.utc),
+            datetime(2026, 5, 7, tzinfo=UTC),
             customer_id=cid,
             confirmed=False,
             method="cheque",
@@ -253,18 +252,18 @@ class TestSupplierStatement:
         tid = sample_tenant.id
         sid = sample_supplier.id
         uid = sample_user.id
-        p_old = _purchase(tid, sid, uid, "PUR-OLD-1", 800, datetime(2026, 4, 5, tzinfo=timezone.utc))
+        p_old = _purchase(tid, sid, uid, "PUR-OLD-1", 800, datetime(2026, 4, 5, tzinfo=UTC))
         _payment(
             tid,
             "SPAY-OLD-1",
             300,
-            datetime(2026, 4, 10, tzinfo=timezone.utc),
+            datetime(2026, 4, 10, tzinfo=UTC),
             supplier_id=sid,
             direction="outgoing",
             user_id=uid,
         )
-        p_new = _purchase(tid, sid, uid, "PUR-NEW-1", 600, datetime(2026, 5, 5, tzinfo=timezone.utc))
-        _purchase_return(tid, p_new, "PRET-NEW-1", 100, datetime(2026, 5, 8, tzinfo=timezone.utc))
+        p_new = _purchase(tid, sid, uid, "PUR-NEW-1", 600, datetime(2026, 5, 5, tzinfo=UTC))
+        _purchase_return(tid, p_new, "PRET-NEW-1", 100, datetime(2026, 5, 8, tzinfo=UTC))
         db_session.commit()
         return p_old
 
@@ -305,23 +304,23 @@ def _post_entry(entry_id, *, user_id=1):
 
 class TestGLStatement:
     def test_opening_counts_posted_only(self, db_session, sample_tenant, sample_gl_accounts, mocker):
-        from services.gl_service import GLService
         from models import GLAccount
+        from services.gl_service import GLService
 
         mocker.patch("services.gl_helpers.assert_period_open")
         tid = sample_tenant.id
         cash = GLAccount.query.filter_by(tenant_id=tid, code="1111").first()
 
         posted_old = GLService.create_journal_entry(
-            datetime(2026, 4, 10, tzinfo=timezone.utc), "posted old", _balanced_lines(200), tenant_id=tid
+            datetime(2026, 4, 10, tzinfo=UTC), "posted old", _balanced_lines(200), tenant_id=tid
         )
         _post_entry(posted_old.id)
         # مسودة قبل الفترة — يجب ألا تدخل الرصيد الافتتاحي
         GLService.create_journal_entry(
-            datetime(2026, 4, 15, tzinfo=timezone.utc), "draft old", _balanced_lines(999), tenant_id=tid
+            datetime(2026, 4, 15, tzinfo=UTC), "draft old", _balanced_lines(999), tenant_id=tid
         )
         posted_new = GLService.create_journal_entry(
-            datetime(2026, 5, 5, tzinfo=timezone.utc), "posted new", _balanced_lines(150), tenant_id=tid
+            datetime(2026, 5, 5, tzinfo=UTC), "posted new", _balanced_lines(150), tenant_id=tid
         )
         _post_entry(posted_new.id)
         db_session.commit()
@@ -334,14 +333,14 @@ class TestGLStatement:
         assert len(stmt["transactions"]) == 1
 
     def test_no_date_from_no_doubling(self, db_session, sample_tenant, sample_gl_accounts, mocker):
-        from services.gl_service import GLService
         from models import GLAccount
+        from services.gl_service import GLService
 
         mocker.patch("services.gl_helpers.assert_period_open")
         tid = sample_tenant.id
         cash = GLAccount.query.filter_by(tenant_id=tid, code="1111").first()
         entry = GLService.create_journal_entry(
-            datetime(2026, 6, 10, tzinfo=timezone.utc), "no doubling", _balanced_lines(500), tenant_id=tid
+            datetime(2026, 6, 10, tzinfo=UTC), "no doubling", _balanced_lines(500), tenant_id=tid
         )
         _post_entry(entry.id)
         db_session.commit()
@@ -352,13 +351,13 @@ class TestGLStatement:
         assert stmt["closing_balance"] == pytest.approx(500.0)
 
     def test_same_day_deterministic_order(self, db_session, sample_tenant, sample_gl_accounts, mocker):
-        from services.gl_service import GLService
         from models import GLAccount
+        from services.gl_service import GLService
 
         mocker.patch("services.gl_helpers.assert_period_open")
         tid = sample_tenant.id
         cash = GLAccount.query.filter_by(tenant_id=tid, code="1111").first()
-        same_day = datetime(2026, 6, 15, 10, 0, tzinfo=timezone.utc)
+        same_day = datetime(2026, 6, 15, 10, 0, tzinfo=UTC)
         ids = []
         for amt in (100, 50, 25):
             e = GLService.create_journal_entry(same_day, f"e{amt}", _balanced_lines(amt), tenant_id=tid)
@@ -379,7 +378,7 @@ class TestGLStatement:
 
 class TestPayrollStatement:
     def test_advance_deduction_not_double_counted(self, db_session, auth_client, sample_tenant, sample_employee):
-        from models import SalaryAdvance, PayrollTransaction
+        from models import PayrollTransaction, SalaryAdvance
 
         tid = sample_tenant.id
         eid = sample_employee.id

@@ -1,8 +1,9 @@
 """Persist conversation context in DB instead of a global dict."""
 
-from datetime import datetime, timezone, timedelta
 import json
-from typing import Optional
+import logging
+from datetime import UTC, datetime, timedelta
+
 from extensions import db
 from models.ai import AiMemory
 
@@ -11,7 +12,7 @@ def _get_ctx_key(user_id: int) -> str:
     return f"conversation_context:{user_id}"
 
 
-def get_context(user_id: int, tenant_id: Optional[int] = None):
+def get_context(user_id: int, tenant_id: int | None = None):
     """Retrieve saved conversation context from DB."""
     mem = AiMemory.query.filter_by(
         key=_get_ctx_key(user_id),
@@ -24,10 +25,10 @@ def get_context(user_id: int, tenant_id: Optional[int] = None):
     try:
         data = json.loads(mem.value)
         updated = mem.last_accessed or mem.created_at
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         if updated:
             if updated.tzinfo is None:
-                updated = updated.replace(tzinfo=timezone.utc)
+                updated = updated.replace(tzinfo=UTC)
             if now - updated > timedelta(hours=2):
                 mem.is_active = False
                 db.session.flush()
@@ -37,10 +38,11 @@ def get_context(user_id: int, tenant_id: Optional[int] = None):
         db.session.flush()
         return data
     except Exception:
+        logging.getLogger(__name__).debug("AI memory read failed", exc_info=True)
         return None
 
 
-def set_context(user_id: int, data: dict, tenant_id: Optional[int] = None):
+def set_context(user_id: int, data: dict, tenant_id: int | None = None):
     """Persist conversation context in DB."""
     key = _get_ctx_key(user_id)
     mem = AiMemory.query.filter_by(
@@ -51,7 +53,7 @@ def set_context(user_id: int, data: dict, tenant_id: Optional[int] = None):
     if mem:
         mem.value = json.dumps(data, ensure_ascii=False)
         mem.is_active = True
-        mem.updated_at = datetime.now(timezone.utc)
+        mem.updated_at = datetime.now(UTC)
     else:
         mem = AiMemory(
             key=key,
@@ -66,7 +68,7 @@ def set_context(user_id: int, data: dict, tenant_id: Optional[int] = None):
     db.session.flush()
 
 
-def clear_context(user_id: int, tenant_id: Optional[int] = None):
+def clear_context(user_id: int, tenant_id: int | None = None):
     """Expire conversation context."""
     key = _get_ctx_key(user_id)
     mem = AiMemory.query.filter_by(
@@ -76,5 +78,5 @@ def clear_context(user_id: int, tenant_id: Optional[int] = None):
     ).first()
     if mem:
         mem.is_active = False
-        mem.updated_at = datetime.now(timezone.utc)
+        mem.updated_at = datetime.now(UTC)
         db.session.flush()

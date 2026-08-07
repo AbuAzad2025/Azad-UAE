@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
 import pytest
@@ -70,7 +70,7 @@ def mock_analytics(mocker):
 
 class TestVaultSecurityHelpers:
     def test_is_production_env_true(self, app_factory, monkeypatch):
-        from routes.payment_vault import payment_vault_bp, _is_production_env
+        from routes.payment_vault import _is_production_env, payment_vault_bp
 
         monkeypatch.setenv("APP_ENV", "production")
         monkeypatch.delenv("DEBUG", raising=False)
@@ -79,7 +79,7 @@ class TestVaultSecurityHelpers:
             assert _is_production_env() is True
 
     def test_is_production_env_false_when_debug(self, app_factory, monkeypatch):
-        from routes.payment_vault import payment_vault_bp, _is_production_env
+        from routes.payment_vault import _is_production_env, payment_vault_bp
 
         monkeypatch.setenv("APP_ENV", "production")
         monkeypatch.setenv("DEBUG", "1")
@@ -116,8 +116,8 @@ class TestVaultSecurityHelpers:
 
     def test_trusted_origins_from_config(self, app_factory):
         from routes.payment_vault import (
-            payment_vault_bp,
             _payment_vault_trusted_origins,
+            payment_vault_bp,
         )
 
         app = app_factory(
@@ -130,8 +130,8 @@ class TestVaultSecurityHelpers:
 
     def test_trusted_origins_production_base_url(self, app_factory, monkeypatch):
         from routes.payment_vault import (
-            payment_vault_bp,
             _payment_vault_trusted_origins,
+            payment_vault_bp,
         )
 
         monkeypatch.setenv("APP_ENV", "production")
@@ -143,9 +143,9 @@ class TestVaultSecurityHelpers:
 
     def test_trusted_origins_dev_defaults(self, app_factory, monkeypatch):
         from routes.payment_vault import (
-            payment_vault_bp,
-            _payment_vault_trusted_origins,
             _DEV_VAULT_ORIGINS,
+            _payment_vault_trusted_origins,
+            payment_vault_bp,
         )
 
         monkeypatch.setenv("APP_ENV", "development")
@@ -164,7 +164,7 @@ class TestVaultSecurityHelpers:
         assert _origin_from_referer("not-a-url") is None
 
     def test_validate_public_api_origin_no_trusted(self, app_factory, mocker):
-        from routes.payment_vault import payment_vault_bp, _validate_public_api_origin
+        from routes.payment_vault import _validate_public_api_origin, payment_vault_bp
 
         mocker.patch(
             "routes.payment_vault._payment_vault_trusted_origins",
@@ -176,7 +176,7 @@ class TestVaultSecurityHelpers:
         assert code == 503
 
     def test_validate_public_api_origin_bad_origin(self, app_factory, mocker):
-        from routes.payment_vault import payment_vault_bp, _validate_public_api_origin
+        from routes.payment_vault import _validate_public_api_origin, payment_vault_bp
 
         mocker.patch(
             "routes.payment_vault._payment_vault_trusted_origins",
@@ -188,7 +188,7 @@ class TestVaultSecurityHelpers:
         assert code == 403
 
     def test_validate_public_api_origin_good_referer(self, app_factory, mocker):
-        from routes.payment_vault import payment_vault_bp, _validate_public_api_origin
+        from routes.payment_vault import _validate_public_api_origin, payment_vault_bp
 
         mocker.patch(
             "routes.payment_vault._payment_vault_trusted_origins",
@@ -199,7 +199,7 @@ class TestVaultSecurityHelpers:
             assert _validate_public_api_origin() is None
 
     def test_validate_public_api_origin_missing_headers(self, app_factory, mocker):
-        from routes.payment_vault import payment_vault_bp, _validate_public_api_origin
+        from routes.payment_vault import _validate_public_api_origin, payment_vault_bp
 
         mocker.patch(
             "routes.payment_vault._payment_vault_trusted_origins",
@@ -217,11 +217,11 @@ class TestVaultSecurityHelpers:
 
     def test_reject_stale_webhook_old_timestamp(self, app_factory):
         from routes.payment_vault import (
-            payment_vault_bp,
             _reject_stale_webhook_timestamp,
+            payment_vault_bp,
         )
 
-        old = (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat()
+        old = (datetime.now(UTC) - timedelta(minutes=10)).isoformat()
         app = app_factory(payment_vault_bp)
         with app.app_context():
             resp, code = _reject_stale_webhook_timestamp({"timestamp": old})
@@ -229,11 +229,11 @@ class TestVaultSecurityHelpers:
 
     def test_reject_stale_webhook_future_timestamp(self, app_factory):
         from routes.payment_vault import (
-            payment_vault_bp,
             _reject_stale_webhook_timestamp,
+            payment_vault_bp,
         )
 
-        future = (datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat()
+        future = (datetime.now(UTC) + timedelta(minutes=5)).isoformat()
         app = app_factory(payment_vault_bp)
         with app.app_context():
             resp, code = _reject_stale_webhook_timestamp({"timestamp": future})
@@ -242,13 +242,13 @@ class TestVaultSecurityHelpers:
     def test_reject_stale_webhook_fresh(self):
         from routes.payment_vault import _reject_stale_webhook_timestamp
 
-        fresh = datetime.now(timezone.utc).isoformat()
+        fresh = datetime.now(UTC).isoformat()
         assert _reject_stale_webhook_timestamp({"timestamp": fresh}) is None
 
     def test_reject_stale_webhook_numeric_timestamp(self):
         from routes.payment_vault import _reject_stale_webhook_timestamp
 
-        ts = datetime.now(timezone.utc).timestamp()
+        ts = datetime.now(UTC).timestamp()
         assert _reject_stale_webhook_timestamp({"timestamp": ts}) is None
 
     def test_reject_stale_webhook_bad_timestamp(self):

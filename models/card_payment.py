@@ -1,7 +1,9 @@
-from datetime import datetime, timezone
-from extensions import db
-from typing import Any
 import json
+import logging
+from datetime import UTC, datetime
+from typing import Any
+
+from extensions import db
 
 
 class _FernetStub:
@@ -75,15 +77,15 @@ class CardPayment(db.Model):
 
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     completed_at = db.Column(db.DateTime)
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     # ملاحظات
@@ -127,6 +129,7 @@ class CardPayment(db.Model):
             self.card_bin = card_number[:6] if len(card_number) >= 6 else None
             return True
         except Exception:
+            logging.getLogger(__name__).warning("Card data encryption failed", exc_info=True)
             return False
 
     def decrypt_card_data(self, cipher: Any = None) -> dict[str, Any] | None:
@@ -143,6 +146,7 @@ class CardPayment(db.Model):
                 "display": f"{self.card_type} {data.get('card_number', '')[:4]}****{self.card_last_4}",
             }
         except Exception:
+            logging.getLogger(__name__).warning("Card data decryption failed", exc_info=True)
             return None
 
     def to_dict(self, cipher: Any = None) -> dict[str, Any]:

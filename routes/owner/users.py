@@ -1,31 +1,31 @@
 """User management and roles/permissions routes for the owner blueprint."""
 
+import logging
+
 from flask_babel import gettext
 
 from routes.owner import (
-    render_template,
-    request,
-    flash,
-    redirect,
-    url_for,
-    current_user,
-    func,
-    db,
-    limiter,
-    User,
+    AuditLog,
     Branch,
     Tenant,
-    AuditLog,
+    User,
+    current_user,
+    db,
+    flash,
+    func,
+    get_active_tenant_id,
+    limiter,
+    owner_bp,
     owner_required,
+    redirect,
+    render_template,
+    request,
     role_level_for,
     role_level_for_user,
-    get_active_tenant_id,
+    url_for,
 )
-from routes.owner import owner_bp
 from routes.owner.shared import _invalidate_owner_changes
 from utils.db_safety import atomic_transaction
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -53,12 +53,12 @@ def users_list():
 @limiter.limit("5 per minute", methods=["POST"])
 def create_user():
     """إضافة مستخدم جديد"""
-    from models import Role
     from werkzeug.security import generate_password_hash
-    from utils.password_validator import PasswordValidator
 
-    from utils.tenanting import get_active_tenant_id
+    from models import Role
     from utils.auth_helpers import is_global_owner_user, user_may_have_null_tenant
+    from utils.password_validator import PasswordValidator
+    from utils.tenanting import get_active_tenant_id
 
     current_level = role_level_for_user(current_user)
     roles = Role.query.filter_by(is_active=True).all()
@@ -82,12 +82,11 @@ def create_user():
             return values
 
         try:
-            from utils.sanitizer import InputSanitizer
-
             from utils.field_validators import (
                 FieldValidationError,
                 normalize_user_email_required,
             )
+            from utils.sanitizer import InputSanitizer
 
             username = str(InputSanitizer.sanitize_text(request.form.get("username", ""), max_length=20)).strip()
             try:
@@ -246,8 +245,9 @@ def create_user():
 @limiter.limit("10 per minute", methods=["POST"])
 def edit_user(user_id):
     """تعديل مستخدم"""
-    from models import Role
     from werkzeug.security import generate_password_hash
+
+    from models import Role
 
     user = User.query.get_or_404(user_id)
     current_level = role_level_for_user(current_user)
@@ -275,11 +275,11 @@ def edit_user(user_id):
                 flash(gettext("⚠️ لا يمكنك تعيين دور أعلى من دورك."), "danger")
                 return render_template("owner/edit_user.html", user=user, roles=roles, branches=branches)
 
-            from utils.sanitizer import InputSanitizer
             from utils.field_validators import (
                 FieldValidationError,
                 normalize_user_email_required,
             )
+            from utils.sanitizer import InputSanitizer
 
             user.username = str(InputSanitizer.sanitize_text(request.form.get("username", ""), max_length=20)).strip()
             try:
@@ -321,7 +321,7 @@ def user_profile(user_id):
     user = User.query.get_or_404(user_id)
     tid = get_active_tenant_id(current_user)
 
-    from models import Sale, Payment
+    from models import Payment, Sale
 
     # Sale/Payment stats scoped by tenant for security
     sale_q = Sale.query.filter_by(seller_id=user_id, tenant_id=tid) if tid else Sale.query.filter_by(seller_id=user_id)

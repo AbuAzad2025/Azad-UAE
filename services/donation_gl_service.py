@@ -4,16 +4,16 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from flask_babel import gettext
 from flask import current_app
+from flask_babel import gettext
 
 from extensions import db
-from models.donation import Donation
 from models import GLAccount
+from models.donation import Donation
 from models.payment_vault import PaymentVault
 from services.exchange_rate_service import ExchangeRateService
-from services.gl_service import GLService
 from services.gl_posting import post_or_fail
+from services.gl_service import GLService
 from utils.gl_reference_types import GLRef
 
 

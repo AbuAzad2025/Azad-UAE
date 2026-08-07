@@ -44,7 +44,7 @@ def _mock_user_entity(**kwargs):
     user.is_active = kwargs.get("is_active", True)
     user.tenant_id = kwargs.get("tenant_id", 1)
     user.role_id = kwargs.get("role_id", 2)
-    user.branch_id = kwargs.get("branch_id", None)
+    user.branch_id = kwargs.get("branch_id")
     user.is_manager.return_value = kwargs.get("is_manager", True)
     user.is_admin.return_value = kwargs.get("is_admin", True)
     user.check_password.return_value = kwargs.get("password_ok", True)
@@ -2002,10 +2002,9 @@ class TestOwnerExtendedCoverage:
             patch(
                 "utils.security_helpers.enforce_owner_ip_if_needed",
                 side_effect=RuntimeError("blocked"),
-            ),
+            ),pytest.raises(RuntimeError)
         ):
-            with pytest.raises(RuntimeError):
-                app.test_client().get("/owner/dashboard")
+            app.test_client().get("/owner/dashboard")
 
     def test_restore_backup_target_system(self, owner_client):
         with (
@@ -2384,11 +2383,11 @@ class TestOwnerHelpers:
 
     def test_resolve_tables_and_sql_validation(self, owner_client):
         from routes.owner import (
+            _is_sensitive_stats_table,
+            _resolve_browsable_table,
             _resolve_known_table,
             _resolve_truncatable_table,
-            _resolve_browsable_table,
             _validate_select_only_sql,
-            _is_sensitive_stats_table,
         )
 
         with patch("routes.owner._known_tables_map", return_value={"customers": "customers"}):
@@ -3558,7 +3557,7 @@ class TestOwnerGapClosure:
 
 class TestOwnerDirectCalls:
     def test_database_tools_table_inspection(self, app_factory, bypass_owner_auth):
-        from routes.owner import owner_bp, database_tools
+        from routes.owner import database_tools, owner_bp
 
         app = app_factory(owner_bp)
         inspector = _inspector()
@@ -3567,14 +3566,13 @@ class TestOwnerDirectCalls:
         exec_result.scalar.return_value = 4
         with (
             _owner_route_patches(),
-            patch("sqlalchemy.inspect", return_value=inspector),
+            patch("sqlalchemy.inspect", return_value=inspector),app.test_request_context("/owner/database-tools")
         ):
-            with app.test_request_context("/owner/database-tools"):
-                result = database_tools()
+            result = database_tools()
         assert result is not None
 
     def test_create_scoped_backup_system_denied(self, app_factory, bypass_owner_auth):
-        from routes.owner import owner_bp, create_scoped_backup
+        from routes.owner import create_scoped_backup, owner_bp
 
         app = app_factory(owner_bp)
         with (
@@ -3586,21 +3584,19 @@ class TestOwnerDirectCalls:
                     create_scoped_backup()
 
     def test_create_scoped_backup_tenant_mismatch(self, app_factory, bypass_owner_auth):
-        from routes.owner import owner_bp, create_scoped_backup
+        from routes.owner import create_scoped_backup, owner_bp
 
         app = app_factory(owner_bp)
         with (
             _owner_route_patches(),
             patch("utils.auth_helpers.is_global_owner_user", return_value=False),
-            patch("routes.owner.get_active_tenant_id", return_value=1),
+            patch("routes.owner.get_active_tenant_id", return_value=1),app.test_request_context(
+            "/owner/backups/create",
+            method="POST",
+            data={"scope": "tenant", "tenant_id": "99"},
+        ), pytest.raises(Exception)
         ):
-            with app.test_request_context(
-                "/owner/backups/create",
-                method="POST",
-                data={"scope": "tenant", "tenant_id": "99"},
-            ):
-                with pytest.raises(Exception):
-                    create_scoped_backup()
+            create_scoped_backup()
 
     def test_restore_backup_target_not_authorized(self, app_factory, bypass_owner_auth):
         from routes.owner import owner_bp, restore_backup_target
@@ -3608,18 +3604,17 @@ class TestOwnerDirectCalls:
         app = app_factory(owner_bp)
         with (
             _owner_route_patches(),
-            patch("utils.auth_helpers.is_global_owner_user", return_value=False),
+            patch("utils.auth_helpers.is_global_owner_user", return_value=False),app.test_request_context(
+            "/owner/backups/restore-target/x.sql.gz",
+            method="POST",
+            data={"target_database_url": "postgresql://u:p@localhost/db"},
+        )
         ):
-            with app.test_request_context(
-                "/owner/backups/restore-target/x.sql.gz",
-                method="POST",
-                data={"target_database_url": "postgresql://u:p@localhost/db"},
-            ):
-                result = restore_backup_target("x.sql.gz")
+            result = restore_backup_target("x.sql.gz")
         assert result.status_code in (302, 303)
 
     def test_edit_table_data_exception_direct(self, app_factory, bypass_owner_auth):
-        from routes.owner import owner_bp, edit_table_data
+        from routes.owner import edit_table_data, owner_bp
 
         app = app_factory(owner_bp)
         with _owner_route_patches(), patch("routes.owner.database.db") as mock_db:
@@ -3629,8 +3624,9 @@ class TestOwnerDirectCalls:
         assert result.status_code in (302, 303)
 
     def test_invoice_settings_logo_upload_direct(self, app_factory, bypass_owner_auth, tmp_path):
-        from routes.owner import owner_bp, invoice_settings
         from io import BytesIO
+
+        from routes.owner import invoice_settings, owner_bp
 
         app = app_factory(owner_bp)
         settings = MagicMock()
@@ -3640,28 +3636,26 @@ class TestOwnerDirectCalls:
             patch("routes.owner.InvoiceSettings", inv_cls),
             patch("models.invoice_settings.InvoiceSettings", inv_cls),
             patch("os.makedirs"),
-            patch("os.path.join", side_effect=lambda *a: str(tmp_path) + "/" + a[-1]),
+            patch("os.path.join", side_effect=lambda *a: str(tmp_path) + "/" + a[-1]),app.test_request_context(
+            "/owner/invoice-settings",
+            method="POST",
+            data={
+                "company_name_ar": "شركة",
+                "company_logo": (BytesIO(b"png"), "logo.png"),
+                "watermark_image": (BytesIO(b"png"), "wm.png"),
+            },
+            content_type="multipart/form-data",
+        )
         ):
-            with app.test_request_context(
-                "/owner/invoice-settings",
-                method="POST",
-                data={
-                    "company_name_ar": "شركة",
-                    "company_logo": (BytesIO(b"png"), "logo.png"),
-                    "watermark_image": (BytesIO(b"png"), "wm.png"),
-                },
-                content_type="multipart/form-data",
-            ):
-                result = invoice_settings()
+            result = invoice_settings()
         assert result is not None
 
     def test_known_tables_map_direct(self, app_factory, bypass_owner_auth):
-        from routes.owner import owner_bp, _known_tables_map
+        from routes.owner import _known_tables_map, owner_bp
 
         app = app_factory(owner_bp)
-        with _owner_route_patches():
-            with app.app_context():
-                tables = _known_tables_map()
+        with _owner_route_patches(), app.app_context():
+            tables = _known_tables_map()
         assert "customers" in tables
 
 
@@ -3722,23 +3716,20 @@ class TestOwnerFinalGaps:
             with patch(
                 "services.store_service.StoreService.set_platform_disabled",
                 side_effect=RuntimeError("fail"),
+            ), app.test_request_context(
+                "/owner/tenant-stores/1/platform-toggle",
+                method="POST",
+                data={"platform_disabled": "1"},
             ):
-                with app.test_request_context(
-                    "/owner/tenant-stores/1/platform-toggle",
-                    method="POST",
-                    data={"platform_disabled": "1"},
-                ):
-                    tenant_store_platform_toggle(1)
+                tenant_store_platform_toggle(1)
 
     def test_store_payment_method_errors(self, app_factory, bypass_owner_auth):
         from routes.owner import (
             owner_bp,
             store_payment_method_create,
-            store_payment_method_edit,
-        )
-        from routes.owner import (
-            store_payment_method_toggle,
             store_payment_method_delete,
+            store_payment_method_edit,
+            store_payment_method_toggle,
         )
 
         app = app_factory(owner_bp)
@@ -3746,23 +3737,21 @@ class TestOwnerFinalGaps:
             with patch(
                 "services.store_payment_method_service.StorePaymentMethodService.create_method",
                 side_effect=ValueError("dup"),
+            ), app.test_request_context(
+                "/owner/store-payment-methods/create",
+                method="POST",
+                data={"code": "x"},
             ):
-                with app.test_request_context(
-                    "/owner/store-payment-methods/create",
-                    method="POST",
-                    data={"code": "x"},
-                ):
-                    store_payment_method_create()
+                store_payment_method_create()
             with patch(
                 "services.store_payment_method_service.StorePaymentMethodService.create_method",
                 side_effect=RuntimeError("fail"),
+            ), app.test_request_context(
+                "/owner/store-payment-methods/create",
+                method="POST",
+                data={"code": "x"},
             ):
-                with app.test_request_context(
-                    "/owner/store-payment-methods/create",
-                    method="POST",
-                    data={"code": "x"},
-                ):
-                    store_payment_method_create()
+                store_payment_method_create()
             with patch("routes.owner.db") as mock_db:
                 mock_db.session.get.return_value = None
                 with app.test_request_context("/owner/store-payment-methods/1/edit"):
@@ -3787,22 +3776,20 @@ class TestOwnerFinalGaps:
             with patch(
                 "services.store_payment_method_service.StorePaymentMethodService.toggle_enabled",
                 side_effect=ValueError("bad"),
+            ), app.test_request_context(
+                "/owner/store-payment-methods/1/toggle",
+                method="POST",
+                data={"is_enabled": "1"},
             ):
-                with app.test_request_context(
-                    "/owner/store-payment-methods/1/toggle",
-                    method="POST",
-                    data={"is_enabled": "1"},
-                ):
-                    store_payment_method_toggle(1)
+                store_payment_method_toggle(1)
             with patch(
                 "services.store_payment_method_service.StorePaymentMethodService.delete_method",
                 side_effect=ValueError("bad"),
-            ):
-                with app.test_request_context("/owner/store-payment-methods/1/delete", method="POST"):
-                    store_payment_method_delete(1)
+            ), app.test_request_context("/owner/store-payment-methods/1/delete", method="POST"):
+                store_payment_method_delete(1)
 
     def test_export_database_json_direct(self, app_factory, bypass_owner_auth, tmp_path):
-        from routes.owner import owner_bp, export_database
+        from routes.owner import export_database, owner_bp
 
         app = app_factory(owner_bp)
         exec_result = _execute_result(rows=[(1, "n")], columns=["id", "name"])
@@ -3819,7 +3806,7 @@ class TestOwnerFinalGaps:
                 export_database()
 
     def test_convert_database_empty_target(self, app_factory, bypass_owner_auth):
-        from routes.owner import owner_bp, convert_database
+        from routes.owner import convert_database, owner_bp
 
         app = app_factory(owner_bp)
         with _owner_route_patches():
@@ -3847,7 +3834,7 @@ class TestOwnerFinalGaps:
                 system_config()
 
     def test_create_user_company_tenant_path(self, app_factory, bypass_owner_auth):
-        from routes.owner import owner_bp, create_user
+        from routes.owner import create_user, owner_bp
 
         bypass_owner_auth.is_owner = False
         bypass_owner_auth.tenant_id = 1
@@ -3874,9 +3861,9 @@ class TestOwnerFinalGaps:
 
     def test_api_company_admin_paths(self, app_factory, mock_user):
         from routes.owner import (
-            owner_bp,
-            api_update_tenant_settings,
             api_toggle_warehouse_negative,
+            api_update_tenant_settings,
+            owner_bp,
         )
 
         mock_user.is_super_admin.return_value = True
@@ -3911,16 +3898,15 @@ class TestOwnerFinalGaps:
                     api_update_tenant_settings()
             wh_cls = _model_class()
             wh_cls.query.filter_by.return_value.first.return_value = None
-            with patch("routes.owner.Warehouse", wh_cls):
-                with app.test_request_context(
-                    "/owner/api/toggle-warehouse-negative",
-                    method="POST",
-                    json={"warehouse_id": 1},
-                ):
-                    api_toggle_warehouse_negative()
+            with patch("routes.owner.Warehouse", wh_cls), app.test_request_context(
+                "/owner/api/toggle-warehouse-negative",
+                method="POST",
+                json={"warehouse_id": 1},
+            ):
+                api_toggle_warehouse_negative()
 
     def test_api_tenant_toggle_activate_path(self, app_factory, bypass_owner_auth):
-        from routes.owner import owner_bp, api_tenant_toggle_status
+        from routes.owner import api_tenant_toggle_status, owner_bp
 
         tenant = _mock_tenant(id=2)
         tenant.is_active = False
@@ -3931,7 +3917,7 @@ class TestOwnerFinalGaps:
                 api_tenant_toggle_status(2)
 
     def test_api_tenant_package_not_found(self, app_factory, bypass_owner_auth):
-        from routes.owner import owner_bp, api_tenant_update_package
+        from routes.owner import api_tenant_update_package, owner_bp
 
         app = app_factory(owner_bp)
         with _owner_route_patches(), patch("routes.owner.db") as mock_db:
@@ -3944,16 +3930,15 @@ class TestOwnerFinalGaps:
                 api_tenant_update_package(9)
 
     def test_supervisor_override_missing_credentials(self, app_factory, bypass_owner_auth):
-        from routes.owner import owner_bp, api_supervisor_override
+        from routes.owner import api_supervisor_override, owner_bp
 
         app = app_factory(owner_bp)
-        with _owner_route_patches():
-            with app.test_request_context(
-                "/owner/api/supervisor-override",
-                method="POST",
-                json={"supervisor_id": 1},
-            ):
-                resp = api_supervisor_override()
+        with _owner_route_patches(), app.test_request_context(
+            "/owner/api/supervisor-override",
+            method="POST",
+            json={"supervisor_id": 1},
+        ):
+            resp = api_supervisor_override()
         assert _status_code(resp) == 400
 
     def test_database_optimize_vacuum_fail_only(self, owner_client):
@@ -3989,31 +3974,29 @@ class TestOwnerFinalGaps:
             patch(
                 "services.store_payment_method_service.StorePaymentMethodService.delete_method",
                 side_effect=RuntimeError("del"),
-            ),
+            ),app.test_request_context("/owner/store-payment-methods/1/delete", method="POST")
         ):
-            with app.test_request_context("/owner/store-payment-methods/1/delete", method="POST"):
-                store_payment_method_delete(1)
+            store_payment_method_delete(1)
 
     def test_scoped_backup_no_active_tenant_direct(self, app_factory, bypass_owner_auth):
-        from routes.owner import owner_bp, create_scoped_backup
         from werkzeug.exceptions import Forbidden
+
+        from routes.owner import create_scoped_backup, owner_bp
 
         app = app_factory(owner_bp)
         with (
             _owner_route_patches(),
             patch("utils.auth_helpers.is_global_owner_user", return_value=False),
-            patch("utils.tenanting.get_active_tenant_id", return_value=None),
+            patch("utils.tenanting.get_active_tenant_id", return_value=None),app.test_request_context(
+            "/owner/backups/create",
+            method="POST",
+            data={"scope": "tenant", "tenant_id": "1"},
+        ), pytest.raises(Forbidden)
         ):
-            with app.test_request_context(
-                "/owner/backups/create",
-                method="POST",
-                data={"scope": "tenant", "tenant_id": "1"},
-            ):
-                with pytest.raises(Forbidden):
-                    create_scoped_backup()
+            create_scoped_backup()
 
     def test_export_json_lines_direct(self, app_factory, bypass_owner_auth, tmp_path):
-        from routes.owner import owner_bp, export_database
+        from routes.owner import export_database, owner_bp
 
         app = app_factory(owner_bp)
         export_file = str(tmp_path / "out.json")
@@ -4060,20 +4043,19 @@ class TestOwnerFinalGaps:
 
 class TestOwnerLastMile:
     def test_database_tools_skips_sensitive_table(self, app_factory, bypass_owner_auth):
-        from routes.owner import owner_bp, database_tools
+        from routes.owner import database_tools, owner_bp
 
         app = app_factory(owner_bp)
         inspector = _inspector()
         inspector.get_table_names.return_value = ["users"]
         with (
             _owner_route_patches(),
-            patch("sqlalchemy.inspect", return_value=inspector),
+            patch("sqlalchemy.inspect", return_value=inspector),app.test_request_context("/owner/database-tools")
         ):
-            with app.test_request_context("/owner/database-tools"):
-                database_tools()
+            database_tools()
 
     def test_export_sql_full_success(self, app_factory, bypass_owner_auth, tmp_path):
-        from routes.owner import owner_bp, export_database
+        from routes.owner import export_database, owner_bp
 
         app = app_factory(owner_bp)
         export_file = str(tmp_path / "db_export.sql")
@@ -4138,35 +4120,34 @@ class TestOwnerLastMile:
         from routes.owner import owner_bp, system_config
 
         app = app_factory(owner_bp)
-        with _owner_route_patches():
-            with app.test_request_context(
-                "/owner/system-config",
-                method="POST",
-                data={
-                    "default_currency": "INVALID",
-                    "azad_platform_fee_rate": "not-decimal",
-                },
-            ):
-                system_config()
+        with _owner_route_patches(), app.test_request_context(
+            "/owner/system-config",
+            method="POST",
+            data={
+                "default_currency": "INVALID",
+                "azad_platform_fee_rate": "not-decimal",
+            },
+        ):
+            system_config()
 
     def test_create_scoped_backup_branch_missing_id(self, app_factory, bypass_owner_auth):
-        from routes.owner import owner_bp, create_scoped_backup
+        from routes.owner import create_scoped_backup, owner_bp
 
         app = app_factory(owner_bp)
         with (
             _owner_route_patches(),
-            patch("utils.auth_helpers.is_global_owner_user", return_value=True),
+            patch("utils.auth_helpers.is_global_owner_user", return_value=True),app.test_request_context(
+            "/owner/backups/create",
+            method="POST",
+            data={"scope": "branch", "tenant_id": "1"},
+        )
         ):
-            with app.test_request_context(
-                "/owner/backups/create",
-                method="POST",
-                data={"scope": "branch", "tenant_id": "1"},
-            ):
-                create_scoped_backup()
+            create_scoped_backup()
 
     def test_create_scoped_backup_branch_denied_direct(self, app_factory, bypass_owner_auth):
-        from routes.owner import owner_bp, create_scoped_backup
         from werkzeug.exceptions import Forbidden
+
+        from routes.owner import create_scoped_backup, owner_bp
 
         user = MagicMock()
         user.is_authenticated = True
@@ -4178,18 +4159,16 @@ class TestOwnerLastMile:
             _owner_route_patches(),
             patch("flask_login.utils._get_user", return_value=user),
             patch("utils.auth_helpers.is_global_owner_user", return_value=False),
-            patch("routes.owner.get_active_tenant_id", return_value=1),
+            patch("routes.owner.get_active_tenant_id", return_value=1),app.test_request_context(
+            "/owner/backups/create",
+            method="POST",
+            data={"scope": "branch", "tenant_id": "1", "branch_id": "9"},
+        ), pytest.raises(Forbidden)
         ):
-            with app.test_request_context(
-                "/owner/backups/create",
-                method="POST",
-                data={"scope": "branch", "tenant_id": "1", "branch_id": "9"},
-            ):
-                with pytest.raises(Forbidden):
-                    create_scoped_backup()
+            create_scoped_backup()
 
     def test_api_update_tenant_not_json(self, app_factory, mock_user):
-        from routes.owner import owner_bp, api_update_tenant_settings
+        from routes.owner import api_update_tenant_settings, owner_bp
 
         mock_user.is_super_admin.return_value = True
         app = app_factory(owner_bp)
@@ -4204,7 +4183,7 @@ class TestOwnerLastMile:
         assert _status_code(resp) == 400
 
     def test_api_toggle_warehouse_not_json(self, app_factory, mock_user):
-        from routes.owner import owner_bp, api_toggle_warehouse_negative
+        from routes.owner import api_toggle_warehouse_negative, owner_bp
 
         mock_user.is_super_admin.return_value = True
         app = app_factory(owner_bp)
@@ -4219,7 +4198,7 @@ class TestOwnerLastMile:
         assert _status_code(resp) == 400
 
     def test_api_tenant_toggle_default_protected(self, app_factory, bypass_owner_auth):
-        from routes.owner import owner_bp, api_tenant_toggle_status
+        from routes.owner import api_tenant_toggle_status, owner_bp
 
         tenant = _mock_tenant(id=1)
         app = app_factory(owner_bp)
@@ -4239,7 +4218,7 @@ class TestOwnerLastMile:
             pass
 
     def test_convert_empty_row_columns(self, app_factory, bypass_owner_auth):
-        from routes.owner import owner_bp, convert_database
+        from routes.owner import convert_database, owner_bp
 
         mock_engine = MagicMock()
         mock_conn = MagicMock()
@@ -4285,8 +4264,9 @@ class TestOwnerLastMile:
         assert resp.status_code == 200
 
     def test_invoice_settings_saves_upload_files(self, app_factory, bypass_owner_auth, tmp_path):
-        from routes.owner import owner_bp, invoice_settings
         from io import BytesIO
+
+        from routes.owner import invoice_settings, owner_bp
 
         app = app_factory(owner_bp)
         settings = MagicMock()
@@ -4297,22 +4277,21 @@ class TestOwnerLastMile:
             patch("routes.owner.InvoiceSettings", inv_cls),
             patch("models.invoice_settings.InvoiceSettings", inv_cls),
             patch("os.makedirs"),
-            patch("os.path.join", side_effect=lambda *a: str(tmp_path) + "/" + a[-1]),
+            patch("os.path.join", side_effect=lambda *a: str(tmp_path) + "/" + a[-1]),app.test_request_context(
+            "/owner/invoice-settings",
+            method="POST",
+            data={
+                "company_name_ar": "شركة",
+                "company_logo": (BytesIO(b"png"), "logo.png"),
+                "watermark_image": (BytesIO(b"wm"), "wm.png"),
+            },
+            content_type="multipart/form-data",
+        )
         ):
-            with app.test_request_context(
-                "/owner/invoice-settings",
-                method="POST",
-                data={
-                    "company_name_ar": "شركة",
-                    "company_logo": (BytesIO(b"png"), "logo.png"),
-                    "watermark_image": (BytesIO(b"wm"), "wm.png"),
-                },
-                content_type="multipart/form-data",
-            ):
-                invoice_settings()
+            invoice_settings()
 
     def test_export_paths_via_service_patch(self, app_factory, bypass_owner_auth, tmp_path):
-        from routes.owner import owner_bp, export_database
+        from routes.owner import export_database, owner_bp
 
         app = app_factory(owner_bp)
         export_sql = str(tmp_path / "export.sql")
@@ -4352,7 +4331,7 @@ class TestOwnerLastMile:
                     export_database()
 
     def test_database_tools_restricted_only(self, app_factory, bypass_owner_auth):
-        from routes.owner import owner_bp, database_tools
+        from routes.owner import database_tools, owner_bp
 
         app = app_factory(owner_bp)
         inspector = _inspector()
@@ -4363,10 +4342,9 @@ class TestOwnerLastMile:
                 "routes.owner._known_tables_map",
                 return_value={"users": "users", "payment_vault": "payment_vault"},
             ),
-            patch("sqlalchemy.inspect", return_value=inspector),
+            patch("sqlalchemy.inspect", return_value=inspector),app.test_request_context("/owner/database-tools")
         ):
-            with app.test_request_context("/owner/database-tools"):
-                database_tools()
+            database_tools()
 
     def test_tenant_ai_toggle_commits(self, app_factory, bypass_owner_auth):
         from routes.owner import owner_bp, tenant_ai_toggle
@@ -4400,7 +4378,7 @@ class TestOwnerLastMile:
             owner_client.post("/owner/database-optimize", follow_redirects=False)
 
     def test_create_user_non_global_tenant_id(self, app_factory, bypass_owner_auth):
-        from routes.owner import owner_bp, create_user
+        from routes.owner import create_user, owner_bp
 
         bypass_owner_auth.is_owner = False
         bypass_owner_auth.tenant_id = 1
@@ -4456,7 +4434,7 @@ class TestOwnerHundredPercent:
         assert resp.status_code in (302, 303)
 
     def test_export_sql_pg_dump_unavailable(self, app_factory, bypass_owner_auth):
-        from routes.owner import owner_bp, export_database
+        from routes.owner import export_database, owner_bp
 
         app = app_factory(owner_bp)
         with (
@@ -4465,14 +4443,13 @@ class TestOwnerHundredPercent:
             patch(
                 "services.backup_service.BackupService._resolve_pg_tool",
                 return_value=None,
-            ),
+            ),app.test_request_context("/owner/export-database", method="POST", data={"format": "sql"})
         ):
-            with app.test_request_context("/owner/export-database", method="POST", data={"format": "sql"}):
-                result = export_database()
+            result = export_database()
         assert result.status_code in (302, 303)
 
     def test_export_sql_pg_dump_nonzero_exit(self, app_factory, bypass_owner_auth, tmp_path):
-        from routes.owner import owner_bp, export_database
+        from routes.owner import export_database, owner_bp
 
         app = app_factory(owner_bp)
         export_file = str(tmp_path / "db_export.sql")
@@ -4501,7 +4478,7 @@ class TestOwnerHundredPercent:
                 export_database()
 
     def test_export_sql_pg_dump_success(self, app_factory, bypass_owner_auth, tmp_path):
-        from routes.owner import owner_bp, export_database
+        from routes.owner import export_database, owner_bp
 
         app = app_factory(owner_bp)
         export_file = str(tmp_path / "db_export.sql")
@@ -4532,7 +4509,7 @@ class TestOwnerHundredPercent:
         assert run_tool.call_args.kwargs["env"].get("PGPASSWORD") == "secret"
 
     def test_export_json_writes_tables(self, app_factory, bypass_owner_auth, tmp_path):
-        from routes.owner import owner_bp, export_database
+        from routes.owner import export_database, owner_bp
 
         app = app_factory(owner_bp)
         export_file = str(tmp_path / "export.json")
@@ -4553,7 +4530,7 @@ class TestOwnerHundredPercent:
             assert export_file.endswith(".json")
 
     def test_convert_database_skips_when_no_allowed_columns(self, app_factory, bypass_owner_auth):
-        from routes.owner import owner_bp, convert_database
+        from routes.owner import convert_database, owner_bp
 
         mock_engine = MagicMock()
         mock_conn = MagicMock()
@@ -4596,14 +4573,13 @@ class TestOwnerHundredPercent:
         with (
             _owner_route_patches(),
             patch("routes.owner.SystemSettings", settings_cls),
-            patch("routes.owner.Tenant.get_current", side_effect=RuntimeError("no tenant")),
+            patch("routes.owner.Tenant.get_current", side_effect=RuntimeError("no tenant")),app.test_request_context(
+            "/owner/system-config",
+            method="POST",
+            data={"default_currency": "AED", "items_per_page": "25"},
+        )
         ):
-            with app.test_request_context(
-                "/owner/system-config",
-                method="POST",
-                data={"default_currency": "AED", "items_per_page": "25"},
-            ):
-                system_config()
+            system_config()
 
     def test_tenant_ai_toggle_success_with_audit(self, app_factory, bypass_owner_auth):
         from routes.owner import owner_bp, tenant_ai_toggle
@@ -4678,7 +4654,7 @@ class TestOwnerHundredPercent:
         assert settings.watermark_image_path
 
     def test_api_toggle_warehouse_missing_id(self, app_factory, mock_user):
-        from routes.owner import owner_bp, api_toggle_warehouse_negative
+        from routes.owner import api_toggle_warehouse_negative, owner_bp
 
         mock_user.is_super_admin.return_value = True
         app = app_factory(owner_bp)
@@ -4686,12 +4662,11 @@ class TestOwnerHundredPercent:
             _owner_route_patches(),
             patch("flask_login.utils._get_user", return_value=mock_user),
             patch("utils.decorators.is_global_owner_user", return_value=False),
-            patch("extensions.limiter.limit", return_value=lambda f: f),
+            patch("extensions.limiter.limit", return_value=lambda f: f),app.test_request_context(
+            "/owner/api/toggle-warehouse-negative",
+            method="POST",
+            json={"warehouse_id": None},
+        )
         ):
-            with app.test_request_context(
-                "/owner/api/toggle-warehouse-negative",
-                method="POST",
-                json={"warehouse_id": None},
-            ):
-                resp = api_toggle_warehouse_negative()
+            resp = api_toggle_warehouse_negative()
         assert _status_code(resp) == 400

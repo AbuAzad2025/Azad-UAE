@@ -48,6 +48,7 @@ def _redis_client():
             candidate.ping()
             _client = candidate
         except Exception:
+            logger.warning("SSE backplane Redis connection failed", exc_info=True)
             _client_failed = True
             return None
     return _client
@@ -66,7 +67,7 @@ def publish(channel: str, payload: dict) -> bool:
         return False
 
 
-def subscribe(channel: str, target_queue: "queue.Queue"):
+def subscribe(channel: str, target_queue: queue.Queue):
     """Feed messages from a Redis channel into a local queue.
 
     Returns an unsubscribe callable, or None when Redis is unavailable — the
@@ -107,7 +108,7 @@ def subscribe(channel: str, target_queue: "queue.Queue"):
             try:
                 pubsub.close()
             except Exception:
-                pass
+                logger.debug("SSE pubsub close failed", exc_info=True)
 
     thread = threading.Thread(target=_reader, name=f"sse-backplane-{channel}", daemon=True)
     thread.start()

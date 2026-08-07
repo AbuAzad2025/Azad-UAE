@@ -5,7 +5,8 @@ All mutations (create, update, delete) are logged with context.
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from flask import has_request_context, request
 from flask_login import current_user
 
@@ -77,7 +78,7 @@ def log_mutation(
     resolved_id = _resolve_id(entity_id)
 
     log_entry = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "event_type": "mutation",
         "action": action,
         "entity_type": entity_type or "",
@@ -94,7 +95,7 @@ def log_mutation(
 def log_security_event(event_type: str, description: str, severity: str = "info", extra: dict | None = None):
     """Log security-related events (login attempts, permission denials, etc.)."""
     log_entry = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "event_type": "security",
         "security_event": event_type,
         "description": description,
@@ -116,7 +117,7 @@ def log_data_access(
 ):
     """Log sensitive data access (for compliance auditing)."""
     log_entry = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "event_type": "data_access",
         "access_type": access_type,
         "entity_type": entity_type,

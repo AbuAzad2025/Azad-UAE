@@ -53,28 +53,27 @@ class TestFactoryRoutes:
 
     def test_storefront_redirect_skips_admin_paths(self, monkeypatch):
         monkeypatch.setenv("SKIP_SYSTEM_INTEGRITY", "1")
-        with _minimal_app() as app:
-            with app.test_request_context("/admin/dashboard"):
-                for func in app.before_request_funcs[None]:
-                    assert func() is None
+        with _minimal_app() as app, app.test_request_context("/admin/dashboard"):
+            for func in app.before_request_funcs[None]:
+                assert func() is None
 
     def test_security_headers_on_response(self, monkeypatch):
         monkeypatch.setenv("SKIP_SYSTEM_INTEGRITY", "1")
-        from flask import make_response, g
+        from flask import g, make_response
 
-        with _minimal_app() as app:
-            with app.test_request_context("/"):
-                g.request_id = "req-1"
-                resp = make_response("ok")
-                resp.content_type = "text/html"
-                for func in app.after_request_funcs[None]:
-                    resp = func(resp)
-                assert resp.headers.get("X-Content-Type-Options") == "nosniff"
-                assert resp.headers.get("X-Request-Id") == "req-1"
+        with _minimal_app() as app, app.test_request_context("/"):
+            g.request_id = "req-1"
+            resp = make_response("ok")
+            resp.content_type = "text/html"
+            for func in app.after_request_funcs[None]:
+                resp = func(resp)
+            assert resp.headers.get("X-Content-Type-Options") == "nosniff"
+            assert resp.headers.get("X-Request-Id") == "req-1"
 
     def test_is_migration_command(self):
-        from app.integrity import _is_migration_command
         import sys
+
+        from app.integrity import _is_migration_command
 
         with patch.object(sys, "argv", ["flask", "db", "upgrade"]):
             assert _is_migration_command() is True
@@ -85,9 +84,8 @@ class TestFactoryRoutes:
 
         with _minimal_app() as app:
             handler = app.login_manager.unauthorized_callback
-            with app.test_request_context("/owner/dashboard"):
-                with pytest.raises(NotFound):
-                    handler()
+            with app.test_request_context("/owner/dashboard"), pytest.raises(NotFound):
+                handler()
 
     def test_storefront_custom_domain_redirect(self, monkeypatch):
         monkeypatch.setenv("SKIP_SYSTEM_INTEGRITY", "1")
@@ -103,12 +101,11 @@ class TestFactoryRoutes:
             ),
             patch("flask.url_for", return_value="/s/shop-1"),
         ]
-        with _minimal_app(extras) as app:
-            with app.test_request_context("/catalog"):
-                for func in app.before_request_funcs[None]:
-                    if func.__name__ == "storefront_custom_domain_redirect":
-                        resp = func()
-                        assert resp is not None
+        with _minimal_app(extras) as app, app.test_request_context("/catalog"):
+            for func in app.before_request_funcs[None]:
+                if func.__name__ == "storefront_custom_domain_redirect":
+                    resp = func()
+                    assert resp is not None
 
     def test_cli_commands_registration_warning(self, monkeypatch):
         monkeypatch.setenv("SKIP_SYSTEM_INTEGRITY", "1")
@@ -124,7 +121,7 @@ class TestFactoryRoutes:
 
     def test_production_hsts_header(self, monkeypatch):
         monkeypatch.setenv("SKIP_SYSTEM_INTEGRITY", "1")
-        from flask import make_response, g
+        from flask import g, make_response
 
         with _minimal_app() as app:
             app.config["APP_ENV"] = "production"
@@ -169,11 +166,10 @@ class TestFactoryRoutes:
                 return_value=False,
             ),
         ]
-        with _minimal_app(extras) as app:
-            with app.test_request_context("/catalog"):
-                for func in app.before_request_funcs[None]:
-                    if func.__name__ == "storefront_custom_domain_redirect":
-                        assert func() is None
+        with _minimal_app(extras) as app, app.test_request_context("/catalog"):
+            for func in app.before_request_funcs[None]:
+                if func.__name__ == "storefront_custom_domain_redirect":
+                    assert func() is None
 
     def test_before_request_tenant_suspended(self, monkeypatch):
         monkeypatch.setenv("SKIP_SYSTEM_INTEGRITY", "1")

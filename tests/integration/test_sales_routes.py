@@ -24,17 +24,17 @@ def _add_initial_stock(db_session, product_id, warehouse_id, tenant_id, quantity
 class TestSalesCreate:
     def test_create_invoice_creates_gl_and_reduces_stock(self, app, db_session, client):
         from models import (
-            Tenant,
             Branch,
-            User,
-            Role,
             Customer,
             Product,
-            Warehouse,
             ProductWarehouseStock,
+            Role,
+            Tenant,
+            User,
+            Warehouse,
         )
-        from services.gl_service import GLService
         from models.gl import GLJournalEntry
+        from services.gl_service import GLService
 
         tid = str(uuid.uuid4())[:8]
         tenant = Tenant(
@@ -157,18 +157,19 @@ class TestSalesCreate:
         assert stock_after.quantity == Decimal("95"), f"Expected 95, got {stock_after.quantity}"
 
     def test_create_invoice_with_tax_calculates_vat_correctly(self, app, db_session, client):
+        from decimal import Decimal
+
         from models import (
-            Tenant,
             Branch,
-            User,
-            Role,
             Customer,
             Product,
-            Warehouse,
             ProductWarehouseStock,
+            Role,
+            Tenant,
+            User,
+            Warehouse,
         )
         from services.gl_service import GLService
-        from decimal import Decimal
 
         tid = str(uuid.uuid4())[:8]
         tenant = Tenant(

@@ -9,14 +9,13 @@ module exists only to expose the backup-specific entry points.
 
 from __future__ import annotations
 
-from typing import Mapping, Optional, Sequence
-
-from utils.secure_subprocess import SecureSubprocess
+from collections.abc import Mapping, Sequence
 
 # Re-export the allowlist names for callers that validate independently.
 from utils.secure_subprocess import (  # noqa: F401
     _GIT_BASENAMES,
     _PG_TOOL_BASENAMES,
+    SecureSubprocess,
 )
 
 
@@ -33,9 +32,9 @@ def validate_pg_executable(executable: str) -> str:
 def run_pg_tool(
     argv: Sequence[str],
     *,
-    env: Optional[Mapping[str, str]] = None,
+    env: Mapping[str, str] | None = None,
     timeout: int = 3600,
-    cwd: Optional[str] = None,
+    cwd: str | None = None,
 ):
     """Run a PostgreSQL CLI tool. argv[0] must be allowlisted; never uses shell=True."""
     return SecureSubprocess.run_pg_tool(argv, env=env, timeout=timeout, cwd=cwd)
@@ -44,7 +43,7 @@ def run_pg_tool(
 def run_git(
     argv: Sequence[str],
     *,
-    cwd: Optional[str] = None,
+    cwd: str | None = None,
     timeout: int = 15,
 ):
     """Run the git CLI (allowlisted basename)."""
@@ -55,8 +54,8 @@ def run_repo_python_script(
     script_rel_path: str,
     args: Sequence[str],
     *,
-    cwd: Optional[str] = None,
-    env: Optional[Mapping[str, str]] = None,
+    cwd: str | None = None,
+    env: Mapping[str, str] | None = None,
     timeout: int = 600,
 ):
     """Run a .py file under the repo root (no shell)."""
@@ -67,8 +66,8 @@ def run_python_module(
     module: str,
     args: Sequence[str],
     *,
-    cwd: Optional[str] = None,
-    env: Optional[Mapping[str, str]] = None,
+    cwd: str | None = None,
+    env: Mapping[str, str] | None = None,
     timeout: int = 600,
 ):
     """Run `python -m <module>` with the current interpreter (no shell)."""

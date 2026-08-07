@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-
 from typing import cast
 
-from extensions import db
-from utils.db_safety import atomic_transaction
-from models.store_payment_method import StorePaymentMethod
 from flask_babel import gettext
+
+from extensions import db
+from models.store_payment_method import StorePaymentMethod
+from utils.db_safety import atomic_transaction
 
 DEFAULT_METHODS = (
     {

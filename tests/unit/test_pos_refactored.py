@@ -1,4 +1,5 @@
 import os
+
 import pytest
 
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "templates")
@@ -15,7 +16,7 @@ def _static_path(*parts):
 
 def test_no_inline_script_in_pos():
     path = _template_path("pos", "index.html")
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         content = f.read()
     lines = content.splitlines()
     for i, line in enumerate(lines, 1):

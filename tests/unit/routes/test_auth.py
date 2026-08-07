@@ -1,3 +1,4 @@
+from datetime import UTC
 from unittest.mock import patch
 
 
@@ -15,10 +16,11 @@ class TestPaymentCallbackIPWhitelist:
 
 class TestPaymentCallbackDuplicate:
     def test_payment_callback_rejects_duplicate(self, client):
-        from datetime import datetime, timezone
+        from datetime import datetime
+
         from routes.auth import _payment_callback_cache
 
-        _payment_callback_cache["123:finished"] = datetime.now(timezone.utc).timestamp()
+        _payment_callback_cache["123:finished"] = datetime.now(UTC).timestamp()
 
         try:
             with patch("routes.auth._is_nowpayments_ip", return_value=True):

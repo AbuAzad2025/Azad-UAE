@@ -77,8 +77,8 @@ def _purchase_patches(
 
 @pytest.fixture
 def purchases_client(app_factory, bypass_permission_auth):
-    from routes.purchases import purchases_bp
     from routes.public import public_bp
+    from routes.purchases import purchases_bp
 
     app = app_factory(purchases_bp, public_bp)
     return app.test_client()

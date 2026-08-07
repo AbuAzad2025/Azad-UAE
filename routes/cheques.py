@@ -3,43 +3,43 @@
 إدارة الشيكات الواردة والصادرة
 """
 
-from flask_babel import gettext
+from datetime import date, datetime
+from decimal import Decimal
 
 from flask import (
     Blueprint,
-    render_template,
-    redirect,
-    url_for,
-    flash,
-    request,
-    jsonify,
     current_app,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
 )
-from flask_login import login_required, current_user
+from flask_babel import gettext
+from flask_login import current_user, login_required
+
 from extensions import db, limiter
-from models import Cheque, Customer, Supplier, Sale, Receipt
-from services.currency_service import CurrencyService
-from services.exchange_rate_service import ExchangeRateService
+from models import Cheque, Customer, Receipt, Sale, Supplier
 from services.cheque_service import (
     calculate_amount_aed,
-    process_cheque_receive,
-    process_cheque_issue,
-    process_cheque_deposit,
-    process_cheque_clear,
     process_cheque_bounce,
     process_cheque_cancel,
+    process_cheque_clear,
+    process_cheque_deposit,
+    process_cheque_issue,
+    process_cheque_receive,
 )
-from utils.db_safety import atomic_transaction
-from utils.decorators import admin_required, permission_required, branch_scope_id
-from utils.tenanting import get_active_tenant_id
-from utils.branching import should_show_all_branch_columns
+from services.currency_service import CurrencyService
+from services.exchange_rate_service import ExchangeRateService
 from services.logging_core import LoggingCore
-from utils.helpers import generate_number
-from utils.currency_utils import resolve_default_currency, get_system_default_currency
-from datetime import datetime, date
-from decimal import Decimal
-
+from utils.branching import should_show_all_branch_columns
+from utils.currency_utils import get_system_default_currency, resolve_default_currency
+from utils.db_safety import atomic_transaction
+from utils.decorators import admin_required, branch_scope_id, permission_required
 from utils.feature_guards import install_feature_gate
+from utils.helpers import generate_number
+from utils.tenanting import get_active_tenant_id
 
 cheques_bp = Blueprint("cheques", __name__, url_prefix="/cheques")
 install_feature_gate(cheques_bp, "cheques")
@@ -80,8 +80,9 @@ def _resolve_transaction_rate(currency, user_rate=None):
 
 
 def _scoped_customers_query():
-    from models import Payment
     from sqlalchemy import select
+
+    from models import Payment
 
     tid = get_active_tenant_id(current_user)
     scoped_branch_id = branch_scope_id()
@@ -107,8 +108,9 @@ def _scoped_customers_query():
 
 
 def _scoped_suppliers_query():
-    from models import Payment, Purchase
     from sqlalchemy import select
+
+    from models import Payment, Purchase
 
     tid = get_active_tenant_id(current_user)
     scoped_branch_id = branch_scope_id()
@@ -360,8 +362,9 @@ def create():
 
         except Exception as e:
             current_app.logger.error(f"Error in cheque operation: {e}")
-            from utils.error_messages import ErrorMessages
             import uuid as _uuid
+
+            from utils.error_messages import ErrorMessages
 
             flash(ErrorMessages.unexpected_error(error_id=_uuid.uuid4().hex[:8]), "danger")
 
@@ -493,8 +496,9 @@ def edit(**kwargs):
 
         except Exception as e:
             current_app.logger.error(f"Error in cheque operation: {e}")
-            from utils.error_messages import ErrorMessages
             import uuid as _uuid
+
+            from utils.error_messages import ErrorMessages
 
             flash(ErrorMessages.unexpected_error(error_id=_uuid.uuid4().hex[:8]), "danger")
 

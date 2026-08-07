@@ -12,7 +12,6 @@
 
 import logging
 import os
-from typing import List
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -107,7 +106,7 @@ class VisionProcessor:
         return 0.0
 
     @staticmethod
-    def _extract_items(_image) -> List[dict]:
+    def _extract_items(_image) -> list[dict]:
         """استخراج قائمة المنتجات"""
         # محاكاة
         return []

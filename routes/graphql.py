@@ -1,14 +1,10 @@
 import os
-
 import re
 
-
-from flask import Blueprint, request, jsonify, abort, current_app
-
-from flask_login import login_required, current_user
+from flask import Blueprint, abort, current_app, jsonify, request
+from flask_login import current_user, login_required
 
 from extensions import limiter
-
 from services.graphql_service import build_schema
 
 graphql_bp = Blueprint("graphql", __name__, url_prefix="/graphql")

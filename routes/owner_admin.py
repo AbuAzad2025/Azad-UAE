@@ -4,14 +4,15 @@ import logging
 
 from flask import (
     Blueprint,
-    render_template,
-    request,
     flash,
     redirect,
+    render_template,
+    request,
     url_for,
 )
 from flask_login import current_user
 from sqlalchemy import func
+
 from extensions import db
 from utils.decorators import owner_required
 from utils.security_helpers import enforce_owner_ip_if_needed
@@ -35,10 +36,10 @@ def index():
 @owner_admin_bp.route("/dashboard")
 @owner_required
 def dashboard():
-    from models.tenant import Tenant
-    from models.user import User, Role
     from models.branch import Branch
     from models.package import Package
+    from models.tenant import Tenant
+    from models.user import Role, User
 
     tenants = db.session.query(Tenant).order_by(Tenant.id.asc()).all()
 
@@ -111,12 +112,12 @@ _DURATION_LABELS = {
 @owner_admin_bp.route("/activate-subscription", methods=["POST"])
 @owner_required
 def activate_subscription():
-    from services.saas_provisioning_service import (
-        SaaSProvisioningService,
-        SaaSProvisioningError,
-    )
-    from models.tenant import Tenant
     from models.package import Package
+    from models.tenant import Tenant
+    from services.saas_provisioning_service import (
+        SaaSProvisioningError,
+        SaaSProvisioningService,
+    )
 
     tenant_id = request.form.get("tenant_id", type=int)
     package_id = request.form.get("package_id", type=int)

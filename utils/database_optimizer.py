@@ -1,6 +1,8 @@
-from extensions import db
-from sqlalchemy import text
 import logging
+
+from sqlalchemy import text
+
+from extensions import db
 
 logger = logging.getLogger(__name__)
 

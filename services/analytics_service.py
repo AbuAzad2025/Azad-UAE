@@ -3,11 +3,13 @@ Analytics Service - خدمة التحليلات
 تحليلات متقدمة للمدفوعات والعملاء
 """
 
-from datetime import datetime, timezone, timedelta
-from flask_babel import gettext
-import models
-from sqlalchemy import func, desc
 import logging
+from datetime import UTC, datetime, timedelta
+
+from flask_babel import gettext
+from sqlalchemy import desc, func
+
+import models
 
 logger = logging.getLogger(__name__)
 
@@ -263,7 +265,7 @@ class AnalyticsService:
         from utils.tenanting import get_active_tenant_id
 
         tid = tenant_id or get_active_tenant_id()
-        end_date = datetime.now(timezone.utc)
+        end_date = datetime.now(UTC)
         start_date = end_date - timedelta(days=30 * months)
 
         # جلب جميع المعاملات المكتملة للمستأجر
@@ -460,7 +462,7 @@ class AnalyticsService:
         # توقع الأشهر القادمة
         predictions = []
         for i in range(1, months + 1):
-            month = datetime.now(timezone.utc) + timedelta(days=30 * i)
+            month = datetime.now(UTC) + timedelta(days=30 * i)
             # إضافة نمو 5% افتراضياً
             predicted = avg_monthly * (1.05**i)
             predictions.append(
@@ -482,7 +484,7 @@ class AnalyticsService:
         from utils.tenanting import get_active_tenant_id
 
         tid = tenant_id or get_active_tenant_id()
-        today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        today_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
 
         query = _db_session().query(models.Donation).filter(models.Donation.created_at >= today_start)
         if tid:

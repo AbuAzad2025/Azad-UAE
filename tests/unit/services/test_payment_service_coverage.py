@@ -29,10 +29,9 @@ class TestPaymentServiceHelpers:
             patch(
                 "services.payment_service.ExchangeRateService.resolve_exchange_rate_for_transaction",
                 return_value={"rate_mode": "needs_input"},
-            ),
+            ),pytest.raises(ValueError, match="سعر الصرف")
         ):
-            with pytest.raises(ValueError, match="سعر الصرف"):
-                PaymentService._resolve_transaction_rate("USD")
+            PaymentService._resolve_transaction_rate("USD")
 
     def test_resolve_branch_id_explicit(self):
         from services.payment_service import PaymentService
@@ -917,8 +916,8 @@ class TestPaymentServicePaymentCommitFailure:
 
 class TestPaymentServiceChequeAndFxLoss:
     def test_create_receipt_cheque_gl_failure(self, app):
-        from services.payment_service import PaymentService
         from services.gl_posting import GlPostingError
+        from services.payment_service import PaymentService
 
         customer = MagicMock(id=1, tenant_id=1, name="Cust")
         receipt = MagicMock(

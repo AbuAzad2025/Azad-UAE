@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -150,7 +150,7 @@ class StockSyncService:
                 )
 
             batch.status = "completed"
-            batch.processed_at = datetime.now(timezone.utc)
+            batch.processed_at = datetime.now(UTC)
             db.session.flush()
 
         return {

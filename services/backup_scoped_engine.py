@@ -14,15 +14,16 @@ import tarfile
 from dataclasses import dataclass, field
 from datetime import date, datetime, time
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from sqlalchemy import func, select, text
+
 from utils.safe_sql import (
+    _table,
     delete_where_query,
     insert_query,
     nextval_query,
-    _table,
 )
 
 if TYPE_CHECKING:
@@ -34,9 +35,9 @@ from services.backup_scope_config import (
     SCOPE_TENANT,
     TABLE_EXPORT_ORDER,
     export_scoped_database,
+    normalize_row_to_target,
     read_data_directory,
     table_exists,
-    normalize_row_to_target,
 )
 
 logger = logging.getLogger(__name__)
@@ -44,7 +45,7 @@ logger = logging.getLogger(__name__)
 ROOT = os.path.abspath(os.path.join(os.path.dirname(str(__file__)), os.pardir))
 
 # FK columns to remap per table (column -> referenced table for id_map lookup)
-TABLE_FK_REMAP: Dict[str, Dict[str, str]] = {
+TABLE_FK_REMAP: dict[str, dict[str, str]] = {
     "tenants": {},
     "branches": {"tenant_id": "tenants"},
     "users": {"tenant_id": "tenants", "branch_id": "branches"},
@@ -130,16 +131,16 @@ TABLE_FK_REMAP: Dict[str, Dict[str, str]] = {
 
 @dataclass
 class ExportResult:
-    tables: Dict[str, List[Dict[str, Any]]]
-    row_counts: Dict[str, int]
-    included: List[str]
-    skipped: List[str]
-    dependency_order: List[str]
-    unresolved: List[str] = field(default_factory=list)
+    tables: dict[str, list[dict[str, Any]]]
+    row_counts: dict[str, int]
+    included: list[str]
+    skipped: list[str]
+    dependency_order: list[str]
+    unresolved: list[str] = field(default_factory=list)
     scope: str = ""
-    tenant_id: Optional[int] = None
-    branch_id: Optional[int] = None
-    store_id: Optional[int] = None
+    tenant_id: int | None = None
+    branch_id: int | None = None
+    store_id: int | None = None
 
 
 def _json_default(val: Any) -> Any:
@@ -154,18 +155,18 @@ def _json_default(val: Any) -> Any:
     return str(val)
 
 
-def write_jsonl(path: str, rows: List[Dict[str, Any]]) -> None:
+def write_jsonl(path: str, rows: list[dict[str, Any]]) -> None:
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         for row in rows:
             f.write(json.dumps(row, ensure_ascii=False, default=_json_default) + "\n")
 
 
-def read_jsonl(path: str) -> List[Dict[str, Any]]:
-    rows: List[Dict[str, Any]] = []
+def read_jsonl(path: str) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
     if not os.path.isfile(path):
         return rows
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if line:
@@ -177,10 +178,10 @@ def write_data_bundle(
     data_dir: str,
     export: ExportResult,
     conn,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Write data/*.jsonl + schema_meta.json; return metadata for manifest."""
     os.makedirs(data_dir, exist_ok=True)
-    schema_meta: Dict[str, Any] = {}
+    schema_meta: dict[str, Any] = {}
     for table in export.dependency_order:
         rows = export.tables.get(table) or []
         if not rows:
@@ -217,8 +218,8 @@ def write_data_bundle(
     return {"export_meta_path": meta_path, "schema_meta": schema_meta}
 
 
-def write_checksums_file(work_dir: str, rel_paths: List[str]) -> str:
-    lines: List[str] = []
+def write_checksums_file(work_dir: str, rel_paths: list[str]) -> str:
+    lines: list[str] = []
     for rel in sorted(rel_paths):
         full = os.path.join(work_dir, rel)
         if os.path.isfile(full):
@@ -238,8 +239,8 @@ def export_scope(
     scope: str,
     *,
     tenant_id: int,
-    branch_id: Optional[int] = None,
-    store_id: Optional[int] = None,
+    branch_id: int | None = None,
+    store_id: int | None = None,
 ) -> ExportResult:
     tables, counts, included, skipped, unresolved = export_scoped_database(
         conn,
@@ -275,12 +276,12 @@ def _new_id(conn, table: str) -> int:
 
 
 def _remap_row(
-    row: Dict[str, Any],
+    row: dict[str, Any],
     table: str,
-    id_maps: Dict[str, Dict[int, int]],
+    id_maps: dict[str, dict[int, int]],
     *,
-    force_tenant_id: Optional[int] = None,
-) -> Dict[str, Any]:
+    force_tenant_id: int | None = None,
+) -> dict[str, Any]:
     out = dict(row)
     pk = out.get("id")
     if pk is not None and table in id_maps and int(pk or 0) in id_maps[table]:
@@ -299,7 +300,7 @@ def _remap_row(
     return out
 
 
-def ensure_target_schema(target_database_url: str) -> Tuple[bool, str]:
+def ensure_target_schema(target_database_url: str) -> tuple[bool, str]:
     """Apply schema to empty target DB via schema-only pg_dump from source (preferred) or flask db upgrade."""
     from services.backup_service import BackupService
 
@@ -360,7 +361,7 @@ def ensure_target_schema(target_database_url: str) -> Tuple[bool, str]:
                 try:
                     os.remove(schema_file)
                 except OSError:
-                    pass
+                    logger.debug("Could not remove temp schema file %s", schema_file, exc_info=True)
                 if proc2.returncode == 0:
                     return True, ""
                 # pg_restore may warn on existing objects; check alembic table
@@ -410,20 +411,20 @@ def ensure_target_schema(target_database_url: str) -> Tuple[bool, str]:
 
 def restore_scoped_to_target(
     extract_dir: str,
-    manifest: Dict[str, Any],
+    manifest: dict[str, Any],
     target_database_url: str,
     *,
     confirmation: str = "",
     remap: bool = False,
-    target_tenant_id: Optional[int] = None,
-    target_branch_id: Optional[int] = None,
-    target_store_id: Optional[int] = None,
-    restore_uploads_dir: Optional[str] = None,
-    base_dir: Optional[str] = None,
+    target_tenant_id: int | None = None,
+    target_branch_id: int | None = None,
+    target_store_id: int | None = None,
+    restore_uploads_dir: str | None = None,
+    base_dir: str | None = None,
     dry_run: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Restore tenant/branch/store JSONL bundle into target DB (must differ from live URL)."""
-    outcome: Dict[str, Any] = {"ok": False, "errors": [], "warnings": [], "id_maps": {}}
+    outcome: dict[str, Any] = {"ok": False, "errors": [], "warnings": [], "id_maps": {}}
     scope = str(manifest.get("backup_scope") or "")
     if scope not in (SCOPE_TENANT, SCOPE_BRANCH, SCOPE_STORE):
         outcome["errors"].append(f"restore_scoped only for scoped backups, got {scope}")
@@ -457,7 +458,7 @@ def restore_scoped_to_target(
         tables_data, export_meta = read_data_directory(data_dir)
         dependency_order = export_meta.get("table_order") or list(tables_data.keys())
     elif os.path.isfile(legacy_export):
-        with open(legacy_export, "r", encoding="utf-8") as f:
+        with open(legacy_export, encoding="utf-8") as f:
             doc = json.load(f)
         tables_data = doc.get("tables") or {}
         dependency_order = [t for t in TABLE_EXPORT_ORDER if t in tables_data] + [
@@ -467,8 +468,8 @@ def restore_scoped_to_target(
         outcome["errors"].append("no data/schema_meta.json or tenant_export.json")
         return outcome
 
-    id_maps: Dict[str, Dict[int, int]] = {}
-    force_tid: Optional[int] = None
+    id_maps: dict[str, dict[int, int]] = {}
+    force_tid: int | None = None
 
     engine = create_engine(target_database_url)
     with engine.connect() as conn:
@@ -615,14 +616,14 @@ def _restore_scoped_table(
     conn: Connection,
     *,
     table: str,
-    rows: List[Dict[str, Any]],
+    rows: list[dict[str, Any]],
     scope: str,
     remap: bool,
     src_tid: int,
-    id_maps: Dict[str, Dict[int, int]],
-    force_tid: Optional[int],
-    manifest: Dict[str, Any],
-    outcome: Dict[str, Any],
+    id_maps: dict[str, dict[int, int]],
+    force_tid: int | None,
+    manifest: dict[str, Any],
+    outcome: dict[str, Any],
 ) -> None:
     """Insert one table's rows (within the caller's transaction)."""
     outcome.setdefault("inserted", {})
@@ -702,9 +703,9 @@ def _restore_scoped_table(
         logger.debug("session_replication_role default: %s", exc)
 
 
-def verify_scoped_isolation(manifest: Dict[str, Any], extract_dir: str) -> Dict[str, Any]:
+def verify_scoped_isolation(manifest: dict[str, Any], extract_dir: str) -> dict[str, Any]:
     """Post-restore or pre-restore archive checks for scope boundaries."""
-    out: Dict[str, Any] = {"ok": True, "errors": []}
+    out: dict[str, Any] = {"ok": True, "errors": []}
     scope = str(manifest.get("backup_scope") or "")
     tid = manifest.get("tenant_id")
     bid = manifest.get("branch_id")
@@ -712,11 +713,11 @@ def verify_scoped_isolation(manifest: Dict[str, Any], extract_dir: str) -> Dict[
 
     data_dir = os.path.join(extract_dir, "data")
     legacy = os.path.join(extract_dir, "tenant_export.json")
-    tables: Dict[str, List[Dict[str, Any]]] = {}
+    tables: dict[str, list[dict[str, Any]]] = {}
     if os.path.isdir(data_dir):
         tables, _meta = read_data_directory(data_dir)
     elif os.path.isfile(legacy):
-        with open(legacy, "r", encoding="utf-8") as f:
+        with open(legacy, encoding="utf-8") as f:
             tables = json.load(f).get("tables") or {}
 
     if scope == SCOPE_TENANT and tid is not None:

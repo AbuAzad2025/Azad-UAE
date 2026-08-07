@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from utils.error_messages import ErrorMessages, error, warning, hint, success
+from utils.error_messages import ErrorMessages, error, hint, success, warning
 
 
 class TestUserMessages:

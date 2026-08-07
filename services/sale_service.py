@@ -1,27 +1,29 @@
-from datetime import datetime, timedelta, timezone
-from decimal import Decimal, ROUND_HALF_UP
+from datetime import UTC, datetime, timedelta
+from decimal import ROUND_HALF_UP, Decimal
+
 from flask import current_app
 from flask_babel import gettext
+
 from extensions import db
-from models import PartnerCommissionEntry, Sale, SaleLine, Payment, Tenant
-from services.stock_service import StockService
+from models import PartnerCommissionEntry, Payment, Sale, SaleLine, Tenant
+from services.commission_gl_service import post_sale_commissions
 from services.exchange_rate_service import ExchangeRateService
 from services.gl_posting import post_or_fail
-from utils.gl_reference_types import GLRef
-from services.commission_gl_service import post_sale_commissions
 from services.gl_service import GLService
 from services.promotion_service import PromotionService
+from services.stock_service import StockService
 from utils.branching import ensure_warehouse_access
-from utils.currency_utils import resolve_default_currency, get_system_default_currency, convert_and_quantize_aed
+from utils.currency_utils import convert_and_quantize_aed, get_system_default_currency, resolve_default_currency
 from utils.field_validators import (
     canonical_payment_type,
     validate_currency_code,
     validate_payment_method,
     validate_sale_status,
 )
+from utils.gl_reference_types import GLRef
 from utils.helpers import generate_number
-from utils.tenanting import get_active_tenant_id
 from utils.tax_settings import normalize_tax_rate, should_post_vat_gl
+from utils.tenanting import get_active_tenant_id
 
 
 class SaleService:
@@ -37,6 +39,7 @@ class SaleService:
                 tenant_id=tenant_id,
             )
         except Exception:
+            current_app.logger.warning("Commission base currency conversion failed; using raw margin", exc_info=True)
             return profit_margin
 
     @staticmethod
@@ -80,6 +83,7 @@ class SaleService:
                 active_tid = get_active_tenant_id()
                 currency = resolve_default_currency(Tenant.query.get(active_tid) if active_tid else None)
             except Exception:
+                current_app.logger.warning("Tenant currency resolution failed; using system default", exc_info=True)
                 currency = get_system_default_currency()
         currency = (currency or "").strip() or get_system_default_currency()
         currency = validate_currency_code(currency)
@@ -106,11 +110,11 @@ class SaleService:
         from models import Warehouse
 
         tenant_id = (
-            get_active_tenant_id(seller) or getattr(seller, "tenant_id", None) or getattr(customer, "tenant_id", None)
+            get_active_tenant_id(seller) or (seller.tenant_id if seller is not None else None) or (customer.tenant_id if customer is not None else None)
         )
         if not warehouse_id:
             warehouse = None
-            seller_branch_id = getattr(seller, "branch_id", None)
+            seller_branch_id = (seller.branch_id if seller is not None else None)
             warehouse_query = Warehouse.query.filter_by(is_active=True)
             if tenant_id is not None:
                 warehouse_query = warehouse_query.filter_by(tenant_id=tenant_id)
@@ -287,7 +291,7 @@ class SaleService:
                     except (ValueError, TypeError):
                         current_app.logger.warning("Invalid warranty dates ignored for product %s", product.id)
                 elif getattr(product, "warranty_days", 0) and int(product.warranty_days) > 0:
-                    _w_start = sale.sale_date or datetime.now(timezone.utc)
+                    _w_start = sale.sale_date or datetime.now(UTC)
                     line.warranty_start_date = _w_start
                     line.warranty_end_date = _w_start + timedelta(days=int(product.warranty_days))
 
@@ -315,6 +319,11 @@ class SaleService:
                         line_cost_price=line.cost_price,
                     )
                 except Exception:
+                    current_app.logger.warning(
+                        "COGS resolution failed for product %s; falling back to line cost price",
+                        product.id,
+                        exc_info=True,
+                    )
                     unit_cost = Decimal(str(line.cost_price)) if line.cost_price else Decimal("0")
 
                 qty_dec = Decimal(str(line.quantity)) if line.quantity else Decimal("0")
@@ -427,7 +436,7 @@ class SaleService:
                     paid_amount,
                     payment_currency,
                     payment_exchange_decimal,
-                    tenant_id=getattr(sale, "tenant_id", None),
+                    tenant_id=(sale.tenant_id if sale is not None else None),
                 )
 
                 # Validate payment amount (in AED)
@@ -501,7 +510,7 @@ class SaleService:
             raise ValueError(gettext("العميل غير موجود"))
 
         warehouse_id = sale.warehouse_id
-        tenant_id = getattr(sale, "tenant_id", None)
+        tenant_id = (sale.tenant_id if sale is not None else None)
 
         if SaleService.has_inventory_posted(sale):
             raise ValueError(gettext("تم تنفيذ المخزون لهذه الفاتورة مسبقاً"))
@@ -570,13 +579,13 @@ class SaleService:
                 from utils.helpers import generate_number
 
                 prepayment = Payment(
-                    tenant_id=getattr(sale, "tenant_id", None),
+                    tenant_id=(sale.tenant_id if sale is not None else None),
                     payment_number=generate_number(
                         "PRE",
                         Payment,
                         "payment_number",
                         branch_id=sale.branch_id,
-                        tenant_id=getattr(sale, "tenant_id", None),
+                        tenant_id=(sale.tenant_id if sale is not None else None),
                     ),
                     payment_type="prepayment",
                     direction="incoming",
@@ -846,7 +855,7 @@ class SaleService:
             reference_id=sale.id,
             movement_type="sale",
         )
-        tenant_id = getattr(sale, "tenant_id", None)
+        tenant_id = (sale.tenant_id if sale is not None else None)
         if tenant_id is not None:
             query = query.filter(StockMovement.tenant_id == tenant_id)
         return query.first() is not None
@@ -945,13 +954,13 @@ class SaleService:
         from utils.helpers import generate_number
 
         prepayment = Payment(
-            tenant_id=getattr(sale, "tenant_id", None),
+            tenant_id=(sale.tenant_id if sale is not None else None),
             payment_number=generate_number(
                 "PRE",
                 Payment,
                 "payment_number",
                 branch_id=sale.branch_id,
-                tenant_id=getattr(sale, "tenant_id", None),
+                tenant_id=(sale.tenant_id if sale is not None else None),
             ),
             payment_type="prepayment",
             direction="incoming",
@@ -987,8 +996,9 @@ class SaleService:
         Create a payment for a sale with proper validations
         Uses Decimal for accurate financial calculations
         """
-        from utils.helpers import generate_number
         from datetime import datetime
+
+        from utils.helpers import generate_number
 
         # Validate payment amount
         amount_decimal = Decimal(str(amount))
@@ -1021,17 +1031,17 @@ class SaleService:
             Payment,
             "payment_number",
             branch_id=sale.branch_id,
-            tenant_id=getattr(sale, "tenant_id", None),
+            tenant_id=(sale.tenant_id if sale is not None else None),
         )
 
         # Calculate AED amount using centralized utility
         exchange_rate_decimal = Decimal(str(exchange_rate))
         amount_aed = convert_and_quantize_aed(
-            amount_decimal, currency, exchange_rate_decimal, tenant_id=getattr(sale, "tenant_id", None)
+            amount_decimal, currency, exchange_rate_decimal, tenant_id=(sale.tenant_id if sale is not None else None)
         )
 
         payment = Payment(
-            tenant_id=getattr(sale, "tenant_id", None),
+            tenant_id=(sale.tenant_id if sale is not None else None),
             payment_number=payment_number,
             payment_type=canonical_payment_type("sale_payment"),
             sale_id=sale.id,
@@ -1042,7 +1052,7 @@ class SaleService:
             amount_aed=amount_aed,
             payment_method=payment_method,
             payment_confirmed=(payment_method != "cheque"),
-            confirmation_date=(None if payment_method == "cheque" else datetime.now(timezone.utc)),
+            confirmation_date=(None if payment_method == "cheque" else datetime.now(UTC)),
             reference_number=reference_number,
             cheque_number=cheque_number,
             cheque_date=cheque_date,
@@ -1060,7 +1070,7 @@ class SaleService:
             from models import Cheque
 
             cheque = Cheque(
-                tenant_id=getattr(sale, "tenant_id", None),
+                tenant_id=(sale.tenant_id if sale is not None else None),
                 branch_id=sale.branch_id,
                 cheque_number=cheque_number,
                 cheque_bank_number=cheque_number,  # نفس رقم الشيك
@@ -1084,13 +1094,13 @@ class SaleService:
 
         # GL Integration for Payment
         try:
-            GLService.ensure_core_accounts(tenant_id=getattr(sale, "tenant_id", None))
+            GLService.ensure_core_accounts(tenant_id=(sale.tenant_id if sale is not None else None))
 
             if payment_method == "cheque":
                 debit_account = GLService.get_account_code_for_concept(
                     "CHEQUES_UNDER_COLLECTION",
                     branch_id=sale.branch_id,
-                    tenant_id=getattr(sale, "tenant_id", None),
+                    tenant_id=(sale.tenant_id if sale is not None else None),
                     fallback_key="cheques_under_collection",
                 )
                 debit_concept = "CHEQUES_UNDER_COLLECTION"
@@ -1098,13 +1108,13 @@ class SaleService:
                 debit_account = GLService.get_payment_debit_account(
                     payment_method,
                     branch_id=sale.branch_id,
-                    tenant_id=getattr(sale, "tenant_id", None),
+                    tenant_id=(sale.tenant_id if sale is not None else None),
                 )
                 debit_concept = GLService.get_payment_debit_concept(payment_method)
             credit_account = GLService.get_customer_credit_account(
                 sale.customer,
                 branch_id=sale.branch_id,
-                tenant_id=getattr(sale, "tenant_id", None),
+                tenant_id=(sale.tenant_id if sale is not None else None),
             )
 
             post_or_fail(
@@ -1128,7 +1138,7 @@ class SaleService:
                 currency=currency,
                 exchange_rate=exchange_rate_decimal,
                 branch_id=sale.branch_id,
-                tenant_id=getattr(sale, "tenant_id", None),
+                tenant_id=(sale.tenant_id if sale is not None else None),
             )
         except Exception as e:
             current_app.logger.error(f"GL posting failed for payment: {e}")
@@ -1149,7 +1159,7 @@ class SaleService:
             if sale_currency == pay_currency:
                 if sale_rate != exchange_rate_decimal:
                     expected_aed = convert_and_quantize_aed(
-                        amount_decimal, currency, sale_rate, tenant_id=getattr(sale, "tenant_id", None)
+                        amount_decimal, currency, sale_rate, tenant_id=(sale.tenant_id if sale is not None else None)
                     )
             else:
                 # تسوية متقاطعة العملات: لا فروقات على الدفعات الجزئية — الفرق
@@ -1182,7 +1192,7 @@ class SaleService:
                                     "account": GLService.get_account_code_for_concept(
                                         "AR",
                                         branch_id=sale.branch_id,
-                                        tenant_id=getattr(sale, "tenant_id", None),
+                                        tenant_id=(sale.tenant_id if sale is not None else None),
                                         fallback_key="receivable",
                                     ),
                                     "concept_code": "AR",
@@ -1193,7 +1203,7 @@ class SaleService:
                                     "account": GLService.get_account_code_for_concept(
                                         "FX_GAIN",
                                         branch_id=sale.branch_id,
-                                        tenant_id=getattr(sale, "tenant_id", None),
+                                        tenant_id=(sale.tenant_id if sale is not None else None),
                                         fallback_key="fx_gain",
                                     ),
                                     "concept_code": "FX_GAIN",
@@ -1207,7 +1217,7 @@ class SaleService:
                                     "account": GLService.get_account_code_for_concept(
                                         "FX_LOSS",
                                         branch_id=sale.branch_id,
-                                        tenant_id=getattr(sale, "tenant_id", None),
+                                        tenant_id=(sale.tenant_id if sale is not None else None),
                                         fallback_key="fx_loss",
                                     ),
                                     "concept_code": "FX_LOSS",
@@ -1218,7 +1228,7 @@ class SaleService:
                                     "account": GLService.get_account_code_for_concept(
                                         "AR",
                                         branch_id=sale.branch_id,
-                                        tenant_id=getattr(sale, "tenant_id", None),
+                                        tenant_id=(sale.tenant_id if sale is not None else None),
                                         fallback_key="receivable",
                                     ),
                                     "concept_code": "AR",
@@ -1234,7 +1244,7 @@ class SaleService:
                             currency=get_system_default_currency(),
                             exchange_rate=1.0,
                             branch_id=sale.branch_id,
-                            tenant_id=getattr(sale, "tenant_id", None),
+                            tenant_id=(sale.tenant_id if sale is not None else None),
                         )
                     except Exception as fx_err:
                         current_app.logger.exception(
@@ -1267,8 +1277,8 @@ class SaleService:
         ).all()
         for pmt in pending_payments:
             if pmt.cheque_id:
-                from services.cheque_service import process_cheque_cancel
                 from models import Cheque
+                from services.cheque_service import process_cheque_cancel
 
                 cheque = db.session.get(Cheque, pmt.cheque_id)
                 if cheque and cheque.status not in ["cancelled", "bounced"]:
@@ -1297,13 +1307,13 @@ class SaleService:
                     reference_type=GLRef.SALE,
                     reference_id=sale.id,
                     description=f"Reverse Sale {sale.sale_number} (Cancelled)",
-                    tenant_id=getattr(sale, "tenant_id", None),
+                    tenant_id=(sale.tenant_id if sale is not None else None),
                 )
                 GLService.reverse_entry(
                     reference_type=GLRef.SALE_COGS,
                     reference_id=sale.id,
                     description=f"Reverse COGS {sale.sale_number} (Cancelled)",
-                    tenant_id=getattr(sale, "tenant_id", None),
+                    tenant_id=(sale.tenant_id if sale is not None else None),
                 )
             except Exception as _e:
                 current_app.logger.exception("GL reversal failed for cancelled sale %s", sale.sale_number)

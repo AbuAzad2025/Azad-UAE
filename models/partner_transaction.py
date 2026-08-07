@@ -11,7 +11,8 @@ Tracks every financial movement with a partner:
   • adjustment          — تسوية يدوية
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
 
@@ -53,12 +54,12 @@ class PartnerTransaction(db.Model):
     reference_type = db.Column(db.String(30))  # payment_voucher | journal_entry | manual
     reference_id = db.Column(db.Integer, nullable=True)
 
-    transaction_date = db.Column(db.Date, nullable=False, default=lambda: datetime.now(timezone.utc).date())
+    transaction_date = db.Column(db.Date, nullable=False, default=lambda: datetime.now(UTC).date())
 
     notes = db.Column(db.Text)
 
     created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     distribution = db.relationship("PartnerProfitDistribution", foreign_keys=[distribution_id])

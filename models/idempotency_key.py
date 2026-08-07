@@ -7,7 +7,7 @@ retried request (same tenant + endpoint + key) replays the original response
 without re-executing the business write.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from extensions import db
 
@@ -40,7 +40,7 @@ class IdempotencyKey(db.Model):
     response_status = db.Column(db.Integer, nullable=True)
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )

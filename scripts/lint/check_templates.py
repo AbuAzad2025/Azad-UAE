@@ -28,7 +28,7 @@ def main() -> int:
         sys.stdout.reconfigure(encoding="utf-8")
 
     env = Environment(extensions=["jinja2.ext.i18n"], autoescape=True)
-    getattr(env, "install_null_translations")()
+    env.install_null_translations()
 
     templates = sorted(TEMPLATES_DIR.rglob("*.html"))
     failures: list[tuple[str, int, str]] = []

@@ -1,28 +1,30 @@
-from flask_babel import gettext
+from datetime import datetime
+from decimal import Decimal
+
 from flask import (
     Blueprint,
-    render_template,
-    redirect,
-    url_for,
-    flash,
-    request,
-    jsonify,
     current_app,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
     send_file,
+    url_for,
 )
-from flask_login import login_required, current_user
+from flask_babel import gettext
+from flask_login import current_user, login_required
 from sqlalchemy import select
+
 from extensions import db, limiter
 from models import Customer, Sale
-from utils.decorators import permission_required, branch_scope_id
-from utils.branching import should_show_all_branch_columns
 from services.logging_core import LoggingCore
 from services.payment_service import PaymentService
-from decimal import Decimal
-from datetime import datetime
-from utils.tenanting import get_active_tenant_id, tenant_query, tenant_get_or_404
-from utils.currency_utils import resolve_default_currency, get_system_default_currency
+from utils.branching import should_show_all_branch_columns
+from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
+from utils.decorators import branch_scope_id, permission_required
+from utils.tenanting import get_active_tenant_id, tenant_get_or_404, tenant_query
 
 customers_bp = Blueprint("customers", __name__, url_prefix="/customers")
 
@@ -82,7 +84,7 @@ def _attach_customer_branch_labels(customers):
     if not customers:
         return
 
-    from models import Payment, Receipt, Branch
+    from models import Branch, Payment, Receipt
 
     customer_ids = [c.id for c in customers]
     branch_map = {cid: set() for cid in customer_ids}
@@ -170,8 +172,8 @@ def index():
 @login_required
 @permission_required("manage_customers")
 def export():
-    from services.export_service import ExportService
     from models import Payment, Receipt
+    from services.export_service import ExportService
 
     fmt = (request.args.get("format") or "csv").strip().lower()
     search = request.args.get("search", "", type=str)
@@ -320,7 +322,7 @@ def create():
                 default_currency = get_system_default_currency()
 
             # Check tenant customer limit
-            from utils.tenant_limits import check_customers_limit, TenantLimitError
+            from utils.tenant_limits import TenantLimitError, check_customers_limit
 
             try:
                 check_customers_limit()
@@ -517,6 +519,7 @@ def print_statement(**kwargs):
     date_to = request.args.get("date_to", type=str)
 
     from sqlalchemy import func
+
     from models import Payment, ProductReturn, Receipt
 
     tid = get_active_tenant_id(current_user)
@@ -660,8 +663,8 @@ def print_statement(**kwargs):
             running += t["credit"] - t["debit"]
         t["balance"] = running
 
-    from utils.tenant_branding import get_print_header_context
     from models.invoice_settings import InvoiceSettings
+    from utils.tenant_branding import get_print_header_context
 
     tenant, settings, company = InvoiceSettings.company_print_context(tid)
     branding = get_print_header_context(tid)
@@ -698,6 +701,7 @@ def statement(**kwargs):
     transaction_type = request.args.get("transaction_type", "all")
 
     from sqlalchemy import func
+
     from models import Payment, ProductReturn, Receipt
 
     tid = get_active_tenant_id(current_user)

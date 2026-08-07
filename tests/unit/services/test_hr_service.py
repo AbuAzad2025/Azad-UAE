@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -10,9 +10,9 @@ from extensions import db
 from models import Attendance, LeaveType
 from services.hr_service import (
     HRService,
-    PayrollService,
-    PayrollBatch,
     ImmutableRecordError,
+    PayrollBatch,
+    PayrollService,
 )
 
 
@@ -109,7 +109,7 @@ class TestAttendanceQueries:
         att = Attendance(
             tenant_id=sample_tenant.id,
             user_id=hr_user.id,
-            check_in=datetime(2026, 6, 1, 9, 0, tzinfo=timezone.utc),
+            check_in=datetime(2026, 6, 1, 9, 0, tzinfo=UTC),
             state="validated",
         )
         db_session.add(att)
@@ -125,7 +125,7 @@ class TestAttendanceQueries:
             tenant_id=sample_tenant.id,
             branch_id=sample_branch.id,
             user_id=hr_user.id,
-            check_in=datetime(2026, 6, 1, 9, 0, tzinfo=timezone.utc),
+            check_in=datetime(2026, 6, 1, 9, 0, tzinfo=UTC),
         )
         db_session.add(att)
         db_session.commit()
@@ -288,9 +288,8 @@ class TestDepartmentsAndContracts:
 class TestPayrollApproveBatch:
     def test_approve_empty_batch_raises(self, app):
         batch = PayrollBatch([], status="draft", tenant_id=1, branch_id=1, month=6, year=2026)
-        with app.app_context():
-            with pytest.raises(ValueError, match="لا توجد معاملات"):
-                PayrollService.approve_batch(batch, user_id=1)
+        with app.app_context(), pytest.raises(ValueError, match="لا توجد معاملات"):
+            PayrollService.approve_batch(batch, user_id=1)
 
     def test_approve_batch_posts_gl(self, app, sample_tenant, sample_branch, sample_gl_accounts, mocker):
         tx = MagicMock()
@@ -360,8 +359,8 @@ class TestPayrollEngineInService:
 
     def test_assert_batch_mutable_locked(self):
         from services.hr_service import (
-            PayrollService,
             PayrollBatch,
+            PayrollService,
         )
 
         batch = PayrollBatch([], status="paid")
@@ -634,8 +633,8 @@ class TestPayrollEngineCoverageGaps:
 
     def test_update_allowances_locked_batch_raises(self):
         from services.hr_service import (
-            PayrollService,
             PayrollBatch,
+            PayrollService,
         )
 
         batch = PayrollBatch([], status="approved")
@@ -645,8 +644,8 @@ class TestPayrollEngineCoverageGaps:
 
     def test_delete_transaction_locked_batch_raises(self):
         from services.hr_service import (
-            PayrollService,
             PayrollBatch,
+            PayrollService,
         )
 
         batch = PayrollBatch([], status="paid")

@@ -2,20 +2,22 @@
 خدمة تحليل العمر - Aging Analysis Service
 """
 
+from datetime import date, datetime
 from decimal import Decimal
-from datetime import datetime, date
 from typing import Any
+
 from sqlalchemy import func
+
 from extensions import db
 from models import (
     Customer,
-    Supplier,
-    Sale,
-    Purchase,
-    Payment,
-    GLJournalLine,
-    GLJournalEntry,
     GLAccount,
+    GLJournalEntry,
+    GLJournalLine,
+    Payment,
+    Purchase,
+    Sale,
+    Supplier,
 )
 from utils.constants import SALE_PAYMENT_STATUSES
 

@@ -18,7 +18,7 @@ def _user(**kwargs):
 
 class TestTenantResolution:
     def test_platform_owner_detection(self):
-        from utils.tenanting import is_platform_owner, is_global_tenant_user
+        from utils.tenanting import is_global_tenant_user, is_platform_owner
 
         assert is_platform_owner(_user(is_owner=True)) is True
         assert is_global_tenant_user(_user(is_owner=True)) is True
@@ -35,7 +35,7 @@ class TestTenantResolution:
         assert get_active_tenant_id(_user(is_authenticated=False)) is None
 
     def test_owner_session_tenant(self, app, mocker):
-        from utils.tenanting import get_active_tenant_id, ACTIVE_TENANT_SESSION_KEY
+        from utils.tenanting import ACTIVE_TENANT_SESSION_KEY, get_active_tenant_id
 
         with app.test_request_context():
             from flask import session
@@ -44,7 +44,7 @@ class TestTenantResolution:
             assert get_active_tenant_id(_user(is_owner=True, tenant_id=None)) == 12
 
     def test_owner_invalid_session_falls_back(self, app):
-        from utils.tenanting import get_active_tenant_id, ACTIVE_TENANT_SESSION_KEY
+        from utils.tenanting import ACTIVE_TENANT_SESSION_KEY, get_active_tenant_id
 
         with app.test_request_context():
             from flask import session
@@ -55,9 +55,8 @@ class TestTenantResolution:
     def test_require_active_tenant_id_aborts(self, app):
         from utils.tenanting import require_active_tenant_id
 
-        with app.test_request_context():
-            with pytest.raises(Forbidden):
-                require_active_tenant_id(_user(is_authenticated=False))
+        with app.test_request_context(), pytest.raises(Forbidden):
+            require_active_tenant_id(_user(is_authenticated=False))
 
 
 class _Col:
@@ -110,18 +109,16 @@ class TestTenantRecordGuards:
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=1)
         from utils.tenanting import assert_tenant_record
 
-        with app.test_request_context():
-            with pytest.raises(NotFound):
-                assert_tenant_record(None)
+        with app.test_request_context(), pytest.raises(NotFound):
+            assert_tenant_record(None)
 
     def test_assert_cross_tenant_404(self, app, mocker):
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=1)
         record = MagicMock(tenant_id=2)
         from utils.tenanting import assert_tenant_record
 
-        with app.test_request_context():
-            with pytest.raises(NotFound):
-                assert_tenant_record(record)
+        with app.test_request_context(), pytest.raises(NotFound):
+            assert_tenant_record(record)
 
     def test_assert_owner_no_tenant_on_record(self, app, mocker):
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=1)
@@ -167,7 +164,7 @@ class TestScopedUserQuery:
 
 class TestSetActiveTenant:
     def test_clear_active_tenant(self, app):
-        from utils.tenanting import set_active_tenant, ACTIVE_TENANT_SESSION_KEY
+        from utils.tenanting import ACTIVE_TENANT_SESSION_KEY, set_active_tenant
 
         with app.test_request_context():
             from flask import session
@@ -179,21 +176,19 @@ class TestSetActiveTenant:
     def test_unauthenticated_rejected(self, app):
         from utils.tenanting import set_active_tenant
 
-        with app.test_request_context():
-            with pytest.raises(ValueError, match="Unauthenticated"):
-                set_active_tenant(1, _user(is_authenticated=False))
+        with app.test_request_context(), pytest.raises(ValueError, match="Unauthenticated"):
+            set_active_tenant(1, _user(is_authenticated=False))
 
     def test_normal_user_wrong_tenant(self, app):
         from utils.tenanting import set_active_tenant
 
-        with app.test_request_context():
-            with pytest.raises(ValueError, match="own tenant"):
-                set_active_tenant(99, _user(tenant_id=1))
+        with app.test_request_context(), pytest.raises(ValueError, match="own tenant"):
+            set_active_tenant(99, _user(tenant_id=1))
 
     def test_owner_sets_active_tenant(self, app, mocker):
         tenant = MagicMock(is_active=True, is_suspended=False)
         mocker.patch("utils.tenanting.db.session.get", return_value=tenant)
-        from utils.tenanting import set_active_tenant, ACTIVE_TENANT_SESSION_KEY
+        from utils.tenanting import ACTIVE_TENANT_SESSION_KEY, set_active_tenant
 
         with app.test_request_context():
             from flask import session
@@ -205,9 +200,8 @@ class TestSetActiveTenant:
         mocker.patch("utils.tenanting.db.session.get", return_value=MagicMock(is_active=False))
         from utils.tenanting import set_active_tenant
 
-        with app.test_request_context():
-            with pytest.raises(ValueError, match="not active"):
-                set_active_tenant(1, _user(is_owner=True))
+        with app.test_request_context(), pytest.raises(ValueError, match="not active"):
+            set_active_tenant(1, _user(is_owner=True))
 
     def test_without_tenant_scope_flag(self, app):
         from utils.tenanting import without_tenant_scope
@@ -265,18 +259,16 @@ class TestTenantingExtended:
         mocker.patch("utils.tenanting.is_platform_owner", return_value=False)
         from utils.tenanting import assert_tenant_record
 
-        with app.test_request_context():
-            with pytest.raises(NotFound):
-                assert_tenant_record(MagicMock(tenant_id=None))
+        with app.test_request_context(), pytest.raises(NotFound):
+            assert_tenant_record(MagicMock(tenant_id=None))
 
     def test_assert_no_active_tenant_owner(self, app, mocker):
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=None)
         mocker.patch("utils.tenanting.is_platform_owner", return_value=True)
         from utils.tenanting import assert_tenant_record
 
-        with app.test_request_context():
-            with pytest.raises(Forbidden):
-                assert_tenant_record(MagicMock(tenant_id=1))
+        with app.test_request_context(), pytest.raises(Forbidden):
+            assert_tenant_record(MagicMock(tenant_id=1))
 
     def test_assert_cross_tenant_or_404_false(self, app, mocker):
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=1)
@@ -320,20 +312,18 @@ class TestTenantingExtended:
     def test_set_active_tenant_invalid_id(self, app):
         from utils.tenanting import set_active_tenant
 
-        with app.test_request_context():
-            with pytest.raises(ValueError, match="Invalid"):
-                set_active_tenant("bad", _user(is_owner=True))
+        with app.test_request_context(), pytest.raises(ValueError, match="Invalid"):
+            set_active_tenant("bad", _user(is_owner=True))
 
     def test_set_active_tenant_invalid_user_tenant_id(self, app):
         user = _user(tenant_id="bad")
         from utils.tenanting import set_active_tenant
 
-        with app.test_request_context():
-            with pytest.raises(ValueError, match="valid integer"):
-                set_active_tenant(1, user)
+        with app.test_request_context(), pytest.raises(ValueError, match="valid integer"):
+            set_active_tenant(1, user)
 
     def test_clear_active_tenant_helper(self, app):
-        from utils.tenanting import clear_active_tenant, ACTIVE_TENANT_SESSION_KEY
+        from utils.tenanting import ACTIVE_TENANT_SESSION_KEY, clear_active_tenant
 
         with app.test_request_context():
             from flask import session
@@ -344,6 +334,7 @@ class TestTenantingExtended:
 
     def test_resolve_user_current_user_failure(self, app):
         from unittest.mock import MagicMock, patch
+
         import utils.tenanting as tenanting
 
         proxy = MagicMock()
@@ -383,9 +374,8 @@ class TestTenantingExtended:
         mocker.patch("utils.tenanting.db.session.get", return_value=None)
         from utils.tenanting import tenant_get_or_404
 
-        with app.test_request_context():
-            with pytest.raises(NotFound):
-                tenant_get_or_404(MagicMock, 1)
+        with app.test_request_context(), pytest.raises(NotFound):
+            tenant_get_or_404(MagicMock, 1)
 
     def test_scoped_user_query_no_tenant_non_owner(self, mocker):
         user_model = MagicMock()
@@ -403,17 +393,15 @@ class TestTenantingExtended:
     def test_set_active_tenant_missing_user_tenant_id(self, app):
         from utils.tenanting import set_active_tenant
 
-        with app.test_request_context():
-            with pytest.raises(ValueError, match="must have a tenant_id"):
-                set_active_tenant(1, _user(tenant_id=None))
+        with app.test_request_context(), pytest.raises(ValueError, match="must have a tenant_id"):
+            set_active_tenant(1, _user(tenant_id=None))
 
     def test_set_active_tenant_not_found(self, app, mocker):
         mocker.patch("utils.tenanting.db.session.get", return_value=None)
         from utils.tenanting import set_active_tenant
 
-        with app.test_request_context():
-            with pytest.raises(ValueError, match="not found"):
-                set_active_tenant(1, _user(is_owner=True))
+        with app.test_request_context(), pytest.raises(ValueError, match="not found"):
+            set_active_tenant(1, _user(is_owner=True))
 
     def test_get_tenant_status_active(self, mocker):
         tenant = MagicMock(is_active=True, is_suspended=False)

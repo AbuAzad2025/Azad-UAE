@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import re
 from decimal import Decimal
-from typing import Optional
 
 from utils.constants import (
     PAYMENT_METHOD_CODES,
@@ -40,7 +39,7 @@ class FieldValidationError(ValueError):
     """Invalid user/service input for a canonical field."""
 
 
-def validate_currency_code(value: Optional[str], *, field_label: str = "currency") -> str:
+def validate_currency_code(value: str | None, *, field_label: str = "currency") -> str:
     if value is None or not str(value).strip():
         raise FieldValidationError(f"{field_label}: العملة مطلوبة.")
     code = str(value).strip().upper()
@@ -49,7 +48,7 @@ def validate_currency_code(value: Optional[str], *, field_label: str = "currency
     return code
 
 
-def normalize_user_email_required(value: Optional[str]) -> str:
+def normalize_user_email_required(value: str | None) -> str:
     if value is None or not str(value).strip():
         raise FieldValidationError("البريد الإلكتروني مطلوب. / Email is required.\nمثال: ahmed@example.com")
     email = str(value).strip().lower()
@@ -60,7 +59,7 @@ def normalize_user_email_required(value: Optional[str]) -> str:
     return email
 
 
-def normalize_phone_optional(value: Optional[str], *, field_label: str = "phone") -> Optional[str]:
+def normalize_phone_optional(value: str | None, *, field_label: str = "phone") -> str | None:
     if value is None:
         return None
     text = str(value).strip()
@@ -73,7 +72,7 @@ def normalize_phone_optional(value: Optional[str], *, field_label: str = "phone"
     return text
 
 
-def validate_sale_status(value: Optional[str], *, allow_none: bool = False) -> Optional[str]:
+def validate_sale_status(value: str | None, *, allow_none: bool = False) -> str | None:
     if value is None or not str(value).strip():
         if allow_none:
             return None
@@ -84,7 +83,7 @@ def validate_sale_status(value: Optional[str], *, allow_none: bool = False) -> O
     return status
 
 
-def validate_sale_payment_status(value: Optional[str]) -> str:
+def validate_sale_payment_status(value: str | None) -> str:
     if value is None or not str(value).strip():
         raise FieldValidationError("حالة الدفع غير صالحة.")
     status = str(value).strip().lower()
@@ -93,7 +92,7 @@ def validate_sale_payment_status(value: Optional[str]) -> str:
     return status
 
 
-def canonical_payment_type(value: Optional[str], *, for_new: bool = True) -> str:
+def canonical_payment_type(value: str | None, *, for_new: bool = True) -> str:
     """Map legacy 'sale' to sale_payment on new writes; accept both when reading."""
     raw = (value or "").strip()
     if not raw:
@@ -105,14 +104,14 @@ def canonical_payment_type(value: Optional[str], *, for_new: bool = True) -> str
     return raw
 
 
-def validate_payment_method(value: Optional[str]) -> str:
+def validate_payment_method(value: str | None) -> str:
     method = normalize_payment_method_code(value)
     if not method or method not in PAYMENT_METHOD_CODES:
         raise FieldValidationError(f"طريقة الدفع غير مدعومة: {value}")
     return method
 
 
-def validate_stock_movement_type(value: Optional[str]) -> str:
+def validate_stock_movement_type(value: str | None) -> str:
     if value is None or not str(value).strip():
         raise FieldValidationError("نوع حركة المخزون مطلوب.")
     mtype = str(value).strip().lower()
@@ -121,7 +120,7 @@ def validate_stock_movement_type(value: Optional[str]) -> str:
     return mtype
 
 
-def validate_reference_type_write(value: Optional[str]) -> Optional[str]:
+def validate_reference_type_write(value: str | None) -> str | None:
     if value is None or not str(value).strip():
         return value
     normalized = normalize_ref_type(str(value).strip()) or str(value).strip()

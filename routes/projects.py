@@ -1,7 +1,8 @@
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from flask_babel import gettext
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
-from flask_login import login_required, current_user
-from models import TaskStage, Task, ProjectMember, Customer, User
+from flask_login import current_user, login_required
+
+from models import Customer, ProjectMember, Task, TaskStage, User
 from services.project_service import ProjectService
 from utils.decorators import permission_required
 from utils.tenanting import get_active_tenant_id, tenant_query

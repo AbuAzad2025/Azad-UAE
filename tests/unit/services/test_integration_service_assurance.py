@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 
@@ -117,7 +117,7 @@ class TestIntegrationSettingsModel:
             enabled=True,
             config_data=json.dumps({"smtp_host": "smtp.example.com"}),
             last_test_status="success",
-            last_tested_at=datetime(2025, 6, 1, tzinfo=timezone.utc),
+            last_tested_at=datetime(2025, 6, 1, tzinfo=UTC),
         )
         d = row.to_dict()
         assert d["enabled"] is True

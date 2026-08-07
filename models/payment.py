@@ -1,7 +1,8 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from extensions import db
-from utils.currency_utils import context_aware_default_currency
 from utils.constants import normalize_payment_method_code
+from utils.currency_utils import context_aware_default_currency
 
 
 def payment_affects_balance(model):
@@ -83,7 +84,7 @@ class Payment(db.Model):
 
     payment_date = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
@@ -92,7 +93,7 @@ class Payment(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=True, index=True)
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
@@ -124,7 +125,7 @@ class Payment(db.Model):
         """تأكيد الدفعة (بعد صرف الشيك)"""
         if not self.payment_confirmed:
             self.payment_confirmed = True
-            self.confirmation_date = datetime.now(timezone.utc)
+            self.confirmation_date = datetime.now(UTC)
 
             # تحديث حالة الفاتورة
             if self.sale:
@@ -233,7 +234,7 @@ class Receipt(db.Model):
 
     receipt_date = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
@@ -242,7 +243,7 @@ class Receipt(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=True, index=True)
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
@@ -271,7 +272,7 @@ class Receipt(db.Model):
         """تأكيد السند (بعد صرف الشيك)"""
         if not self.payment_confirmed:
             self.payment_confirmed = True
-            self.confirmation_date = datetime.now(timezone.utc)
+            self.confirmation_date = datetime.now(UTC)
 
     def reject_receipt(self, reason):
         """رفض السند (شيك مرتد) - يعكس التوزيع على فواتير البيع"""

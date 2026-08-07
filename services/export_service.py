@@ -3,11 +3,12 @@ Export Service - خدمة التصدير
 تصدير التقارير إلى PDF, Excel, CSV
 """
 
-from flask_babel import gettext
-from datetime import datetime, timezone
-from io import BytesIO, StringIO
 import csv
 import logging
+from datetime import UTC, datetime
+from io import BytesIO, StringIO
+
+from flask_babel import gettext
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +68,7 @@ class ExportService:
                     if len(v) > max_len:
                         max_len = len(v)
                 except Exception:
+                    logger.debug("Skipping unreadable cell in column %s", col_idx, exc_info=True)
                     continue
             ws.column_dimensions[get_column_letter(col_idx)].width = min(max(max_len + 2, 10), 60)
 
@@ -245,7 +247,7 @@ class ExportService:
         </head>
         <body>
             <h1>{title}</h1>
-            <p><strong>تاريخ التقرير:</strong> {datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")}</p>
+            <p><strong>تاريخ التقرير:</strong> {datetime.now(UTC).strftime("%Y-%m-%d %H:%M")}</p>
             
             <div class="stats">
                 {ExportService._generate_stats_html(data.get("stats", {}))}

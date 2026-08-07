@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, render_template
 from flask_login import login_required
+
 from extensions import limiter
 from services.logging_core import LoggingCore
 from utils.decorators import admin_required

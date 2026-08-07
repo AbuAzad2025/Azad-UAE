@@ -3,31 +3,29 @@ Printing Routes — Unified Professional Printing
 طباعة احترافية مع دعم PDF ومعاينة وطباعة جماعية
 """
 
-from flask_babel import gettext
-
 from io import BytesIO
 
 from flask import (
     Blueprint,
+    current_app,
+    flash,
+    jsonify,
+    redirect,
     render_template,
     request,
-    jsonify,
     send_file,
     url_for,
-    flash,
-    redirect,
-    current_app,
 )
-from flask_login import login_required, current_user
-from utils.decorators import admin_required
+from flask_babel import gettext
+from flask_login import current_user, login_required
 
-from models.print_history import PrintHistory
 from models.invoice_settings import InvoiceSettings
+from models.print_history import PrintHistory
 from services.print_service import PrintService
-from utils.decorators import permission_required
-from utils.tenanting import get_active_tenant_id
 from utils.branching import branch_scope_id
 from utils.db_safety import atomic_transaction
+from utils.decorators import admin_required, permission_required
+from utils.tenanting import get_active_tenant_id
 
 printing_bp = Blueprint("printing", __name__, url_prefix="/printing")
 

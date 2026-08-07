@@ -1,4 +1,5 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
 
@@ -59,7 +60,7 @@ class PartnerCommissionEntry(db.Model):
     def commission_amount_base(self, value):
         self.commission_amount_aed = value
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     branch = db.relationship("Branch", foreign_keys=[branch_id])

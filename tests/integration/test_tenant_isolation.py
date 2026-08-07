@@ -7,10 +7,10 @@ import uuid
 
 class TestTenantIsolation:
     def test_cross_tenant_access_is_blocked(self, app, db_session):
-        from models import Tenant, Customer
-        from utils.tenanting import tenant_query, get_active_tenant_id
         from flask_login import login_user, logout_user
-        from models import User, Role, Branch
+
+        from models import Branch, Customer, Role, Tenant, User
+        from utils.tenanting import get_active_tenant_id, tenant_query
 
         # --- Setup Tenant A ---
         ta_id = str(uuid.uuid4())[:8]

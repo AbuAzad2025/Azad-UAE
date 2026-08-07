@@ -1,26 +1,24 @@
 """AI assistant pages and Excel upload routes."""
 
-from flask_babel import gettext
-
-import os
-
 import logging
+import os
+from datetime import datetime
 from typing import cast
 
-from datetime import datetime
-from flask import render_template, request, jsonify, current_app
-from flask_login import login_required, current_user
-from utils.decorators import owner_required, permission_required
-from utils.tenanting import get_active_tenant_id, assign_tenant_id
-from utils.ai_access import get_ai_access_state
-from werkzeug.utils import secure_filename
-from extensions import db
-from services.stock_service import StockService
-from utils.gl_reference_types import GLRef
-from routes.ai_routes import ai_bp
-from utils.db_safety import atomic_transaction
-
 import pandas as pd
+from flask import current_app, jsonify, render_template, request
+from flask_babel import gettext
+from flask_login import current_user, login_required
+from werkzeug.utils import secure_filename
+
+from extensions import db
+from routes.ai_routes import ai_bp
+from services.stock_service import StockService
+from utils.ai_access import get_ai_access_state
+from utils.db_safety import atomic_transaction
+from utils.decorators import owner_required, permission_required
+from utils.gl_reference_types import GLRef
+from utils.tenanting import assign_tenant_id, get_active_tenant_id
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +71,7 @@ def config():
             env_file = base_env_path
 
             if env_file.exists():
-                with open(env_file, "r", encoding="utf-8") as f:
+                with open(env_file, encoding="utf-8") as f:
                     lines = f.readlines()
             else:
                 lines = []

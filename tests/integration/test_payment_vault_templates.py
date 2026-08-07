@@ -25,7 +25,7 @@ this session key after login so the owner sees platform-level data.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from types import SimpleNamespace
 
@@ -72,7 +72,7 @@ def committed_platform_data(app):
                 tenant_id=None,
                 vault_name="Test Payment Vault",
                 is_locked=False,
-                last_access=datetime.now(timezone.utc),
+                last_access=datetime.now(UTC),
                 failed_attempts=0,
                 max_failed_attempts=3,
                 auto_lock_minutes=30,
@@ -119,7 +119,7 @@ def committed_platform_data(app):
                 currency="USD",
                 transaction_id=f"TXN-{unique}",
                 activation_status="activated",
-                activation_date=datetime.now(timezone.utc),
+                activation_date=datetime.now(UTC),
             )
             db.session.add(purchase)
             db.session.flush()

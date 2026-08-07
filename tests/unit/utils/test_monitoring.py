@@ -78,10 +78,9 @@ class TestPerformanceMonitor:
 
         with (
             flask_app.app_context(),
-            patch("utils.monitoring.time.time", side_effect=[0.0, 0.2]),
+            patch("utils.monitoring.time.time", side_effect=[0.0, 0.2]),pytest.raises(ValueError, match="fail")
         ):
-            with pytest.raises(ValueError, match="fail"):
-                boom()
+            boom()
         flask_app.logger.error.assert_called()
 
 
@@ -110,12 +109,11 @@ class TestErrorLogger:
     def test_log_error_persists_audit_entry(self, flask_app):
         session = MagicMock()
         audit_entry = MagicMock()
-        with flask_app.test_request_context("/save", method="PUT"):
-            with (
-                patch("utils.monitoring.db.session", session),
-                patch("models.audit.AuditLog", return_value=audit_entry),
-            ):
-                ErrorLogger.log_error(RuntimeError("boom"))
+        with (
+            flask_app.test_request_context("/save", method="PUT"), patch("utils.monitoring.db.session", session),
+            patch("models.audit.AuditLog", return_value=audit_entry),
+        ):
+            ErrorLogger.log_error(RuntimeError("boom"))
         session.add.assert_called_once_with(audit_entry)
         session.flush.assert_called_once()
 

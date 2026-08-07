@@ -1,11 +1,13 @@
-from datetime import datetime, timezone
+import json
+from datetime import UTC, datetime
+
 from flask_babel import gettext
-from extensions import db
 from sqlalchemy import event
-from models.gl import GLJournalEntry, GLJournalLine, GLAccount
+
+from extensions import db
 from models.advanced_accounting import AdvancedExpense
 from models.cheque import Cheque
-import json
+from models.gl import GLAccount, GLJournalEntry, GLJournalLine
 
 
 class RealTimeAccountingListeners:
@@ -280,7 +282,7 @@ class RealTimeAccountingListeners:
                 "posted_entries": posted_entries,
                 "reversed_entries": reversed_entries,
                 "pending_entries": total_entries - posted_entries,
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(UTC).isoformat(),
             }
 
             print(f"📊 إحصائيات محدثة: {json.dumps(stats, ensure_ascii=False)}")
@@ -326,7 +328,7 @@ class AccountingEventStream:
         """إرسال حدث لجميع المستمعين"""
         event = {
             "id": len(self.events) + 1,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "type": event_type,
             "data": data,
         }

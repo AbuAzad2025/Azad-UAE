@@ -1,57 +1,61 @@
 """AI Routes Package — Modular sub-blueprint structure."""
 
-from flask_babel import gettext
-
 from flask import (
+    flash,
+    g,
+    jsonify,
+    redirect,
     render_template,
     request,
-    jsonify,
-    g,
-    flash,
-    redirect,
     url_for,
 )
+from flask_babel import gettext
 from flask_login import current_user
-from extensions import db, limiter
-from services.logging_core import LoggingCore
-from services.ai_service import AIService
-from services.stock_service import StockService
-from utils.ai_access import get_ai_access_state, ai_level_allows
-from utils.tenanting import get_active_tenant_id, assign_tenant_id
-
-from .blueprint import ai_bp
 
 from ai_knowledge.core.conversation_store import (
-    get_context as _get_conversation_context,
-    set_context as _set_conversation_context,
     clear_context as _clear_conversation_context,
 )
+from ai_knowledge.core.conversation_store import (
+    get_context as _get_conversation_context,
+)
+from ai_knowledge.core.conversation_store import (
+    set_context as _set_conversation_context,
+)
+from extensions import db, limiter
+from services.ai_service import AIService
+from services.logging_core import LoggingCore
+from services.stock_service import StockService
+from utils.ai_access import ai_level_allows, get_ai_access_state
 from utils.context_managers import AutoSaveCtx as _AutoSaveCtx
+from utils.tenanting import assign_tenant_id, get_active_tenant_id
 
 # ── Sub-module imports ───────────────────────────────────────────
 # Each sub-module registers its routes on the shared ai_bp.
-from . import shared  # helpers loaded first
-from . import chat
-from . import actions
-from . import assistant
-from . import analytics
-from . import knowledge
-from . import system
-from . import specialized
-
-# Re-export symbols for backward compatibility with routes.ai namespace
-from .shared import (
-    smart_listener,
-    train_local_ai,
-    apply_smart_listeners,
-    create_final_options,
-    _conversation_ctx,
+from . import (
+    actions,
+    analytics,
+    assistant,
+    chat,
+    knowledge,
+    shared,  # helpers loaded first
+    specialized,
+    system,
 )
 from .actions import _process_user_action, _user_can_ai_execute_actions
 from .assistant import (
     _intelligent_column_detector,
     _process_excel_intelligently,
     _train_ai_from_excel,
+)
+from .blueprint import ai_bp
+
+# Re-export symbols for backward compatibility with routes.ai namespace
+from .shared import (
+    _conversation_ctx,
+    apply_smart_listeners,
+    create_final_options,
+    smart_listener,
+    train_local_ai,
 )
 
 _conversation_set = _set_conversation_context

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import MagicMock
@@ -61,7 +61,7 @@ class TestQueryResolvers:
             total_amount=Decimal("100"),
             amount_aed=Decimal("100"),
             status="confirmed",
-            created_at=datetime(2025, 1, 1, tzinfo=timezone.utc),
+            created_at=datetime(2025, 1, 1, tzinfo=UTC),
         )
 
     def test_resolve_all_sales(self, mocker):
@@ -222,9 +222,8 @@ class TestCreateSaleMutation:
         session.flush.side_effect = RuntimeError("commit failed")
         from services.graphql_service import CreateSale
 
-        with app.app_context():
-            with pytest.raises(RuntimeError, match="commit failed"):
-                CreateSale.mutate(None, customer_id=1, total_amount=10.0)
+        with app.app_context(), pytest.raises(RuntimeError, match="commit failed"):
+            CreateSale.mutate(None, customer_id=1, total_amount=10.0)
 
 
 class TestBuildSchema:

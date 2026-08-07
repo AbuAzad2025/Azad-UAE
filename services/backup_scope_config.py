@@ -10,10 +10,12 @@ import json
 import logging
 import os
 import re
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple
+from datetime import UTC
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import Text, func, select, text
-from utils.safe_sql import assert_known_column, _table
+
+from utils.safe_sql import _table, assert_known_column
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +45,7 @@ SCOPED_BACKUP_EXCLUDED_TABLES = frozenset(
 )
 
 # Dependency-safe export order (parents before children).
-TABLE_EXPORT_ORDER: Tuple[str, ...] = (
+TABLE_EXPORT_ORDER: tuple[str, ...] = (
     "tenants",
     "roles",
     "branches",
@@ -78,7 +80,7 @@ TABLE_EXPORT_ORDER: Tuple[str, ...] = (
 )
 
 # (table, WHERE with bind params)
-TENANT_TABLE_FILTERS: Tuple[Tuple[str, str], ...] = tuple(
+TENANT_TABLE_FILTERS: tuple[tuple[str, str], ...] = tuple(
     (t, "tenant_id = :tid") if t != "tenants" else (t, "id = :tid")
     for t in TABLE_EXPORT_ORDER
     if t not in SCOPED_BACKUP_EXCLUDED_TABLES
@@ -97,14 +99,14 @@ TENANT_TABLE_FILTERS = tuple(
 )
 
 # Child rows filtered via parent IDs (table, parent_table, parent_pk_col, child_fk_col)
-CHILD_VIA_PARENT: Tuple[Tuple[str, str, str, str], ...] = (
+CHILD_VIA_PARENT: tuple[tuple[str, str, str, str], ...] = (
     ("sale_lines", "sales", "id", "sale_id"),
     ("azad_platform_fees", "sales", "id", "sale_id"),
     ("purchase_lines", "purchases", "id", "purchase_id"),
     ("gl_journal_lines", "gl_journal_entries", "id", "entry_id"),
 )
 
-BRANCH_DIRECT_FILTERS: Tuple[Tuple[str, str], ...] = (
+BRANCH_DIRECT_FILTERS: tuple[tuple[str, str], ...] = (
     ("tenants", "id = :tid"),
     ("branches", "id = :bid AND tenant_id = :tid"),
     (
@@ -126,7 +128,7 @@ BRANCH_DIRECT_FILTERS: Tuple[Tuple[str, str], ...] = (
     ("fixed_assets", "tenant_id = :tid AND branch_id = :bid"),
 )
 
-BRANCH_TENANT_MASTERS: Tuple[Tuple[str, str], ...] = (
+BRANCH_TENANT_MASTERS: tuple[tuple[str, str], ...] = (
     ("product_categories", "tenant_id = :tid"),
     ("products", "tenant_id = :tid"),
     ("product_partners", "tenant_id = :tid"),
@@ -136,7 +138,7 @@ BRANCH_TENANT_MASTERS: Tuple[Tuple[str, str], ...] = (
     ("invoice_settings", "tenant_id = :tid"),
 )
 
-STORE_TABLE_FILTERS: Tuple[Tuple[str, str], ...] = (
+STORE_TABLE_FILTERS: tuple[tuple[str, str], ...] = (
     ("tenants", "id = :tid"),
     (
         "tenant_stores",
@@ -157,7 +159,7 @@ STORE_TABLE_FILTERS: Tuple[Tuple[str, str], ...] = (
 SLUG_SAFE_RE = re.compile(r"[^a-z0-9_-]+", re.IGNORECASE)
 
 
-def sanitize_slug(slug: Optional[str], fallback: str = "tenant") -> str:
+def sanitize_slug(slug: str | None, fallback: str = "tenant") -> str:
     if not slug:
         return fallback[:32]
     cleaned = SLUG_SAFE_RE.sub("_", str(slug).strip().lower()).strip("_")
@@ -175,7 +177,7 @@ def table_exists(conn: Connection, table: str) -> bool:
     )
 
 
-def column_metadata(conn: Connection, table: str) -> List[Dict[str, Any]]:
+def column_metadata(conn: Connection, table: str) -> list[dict[str, Any]]:
     """Return [{name, data_type, is_nullable, default}] for a target table."""
     from sqlalchemy import text
 
@@ -193,7 +195,7 @@ def column_metadata(conn: Connection, table: str) -> List[Dict[str, Any]]:
     return [{"name": r[0], "data_type": r[1], "is_nullable": r[2], "default": r[3]} for r in rows]
 
 
-def _default_for_type(data_type: Optional[str]) -> Any:
+def _default_for_type(data_type: str | None) -> Any:
     """Typed fallback for a NOT NULL column that has no DB default."""
     dt = (data_type or "").lower()
     if "boolean" in dt:
@@ -203,9 +205,9 @@ def _default_for_type(data_type: Optional[str]) -> Any:
     if "json" in dt:
         return {}
     if any(k in dt for k in ("timestamp", "date", "time")):
-        from datetime import datetime, timezone
+        from datetime import datetime
 
-        return datetime.now(timezone.utc)
+        return datetime.now(UTC)
     if "uuid" in dt:
         import uuid
 
@@ -213,7 +215,7 @@ def _default_for_type(data_type: Optional[str]) -> Any:
     return ""
 
 
-def normalize_row_to_target(conn: Connection, table: str, row: Dict[str, Any]) -> Dict[str, Any]:
+def normalize_row_to_target(conn: Connection, table: str, row: dict[str, Any]) -> dict[str, Any]:
     """Make a backup row safe to INSERT into the *current* target schema.
 
     Handles schema drift in both directions:
@@ -236,7 +238,7 @@ def normalize_row_to_target(conn: Connection, table: str, row: Dict[str, Any]) -
     return out
 
 
-def _serialize_row(item: Dict[str, Any]) -> Dict[str, Any]:
+def _serialize_row(item: dict[str, Any]) -> dict[str, Any]:
     for key, val in list(item.items()):
         if hasattr(val, "isoformat"):
             item[key] = val.isoformat()
@@ -245,7 +247,7 @@ def _serialize_row(item: Dict[str, Any]) -> Dict[str, Any]:
     return item
 
 
-def _fetch_rows(conn, table: str, where_sql: str, params: Dict[str, Any]) -> List[Dict[str, Any]]:
+def _fetch_rows(conn, table: str, where_sql: str, params: dict[str, Any]) -> list[dict[str, Any]]:
     from sqlalchemy import text
 
     tbl = _table(conn, table)
@@ -265,8 +267,8 @@ def _fetch_child_rows(
     parent_table: str,
     parent_pk: str,
     child_fk: str,
-    parent_ids: List[Any],
-) -> List[Dict[str, Any]]:
+    parent_ids: list[Any],
+) -> list[dict[str, Any]]:
     if not parent_ids:
         return []
     if not table_exists(conn, child_table):
@@ -279,16 +281,16 @@ def _fetch_child_rows(
 
 def _merge_product_customer_dependencies(
     conn,
-    tables_out: Dict[str, List[Dict[str, Any]]],
-    row_counts: Dict[str, int],
-    included: List[str],
+    tables_out: dict[str, list[dict[str, Any]]],
+    row_counts: dict[str, int],
+    included: list[str],
     tenant_id: int,
-    unresolved: List[str],
+    unresolved: list[str],
 ) -> None:
     """Ensure customers referenced by products/product_partners are in the export."""
     if not table_exists(conn, "customers"):
         return
-    needed: Set[int] = set()
+    needed: set[int] = set()
     for product in tables_out.get("products") or []:
         mid = product.get("merchant_customer_id")
         if mid is not None:
@@ -331,20 +333,20 @@ def export_scoped_database(
     scope: str,
     *,
     tenant_id: int,
-    branch_id: Optional[int] = None,
-    store_id: Optional[int] = None,
-) -> Tuple[Dict[str, List[Dict[str, Any]]], Dict[str, int], List[str], List[str], List[str]]:
+    branch_id: int | None = None,
+    store_id: int | None = None,
+) -> tuple[dict[str, list[dict[str, Any]]], dict[str, int], list[str], list[str], list[str]]:
     """
     Export scoped rows.
     Returns tables, row_counts, included, skipped, unresolved_references.
     """
-    included: List[str] = []
-    skipped: List[str] = []
-    tables_out: Dict[str, List[Dict[str, Any]]] = {}
-    row_counts: Dict[str, int] = {}
-    unresolved: List[str] = []
+    included: list[str] = []
+    skipped: list[str] = []
+    tables_out: dict[str, list[dict[str, Any]]] = {}
+    row_counts: dict[str, int] = {}
+    unresolved: list[str] = []
 
-    params: Dict[str, Any] = {"tid": tenant_id}
+    params: dict[str, Any] = {"tid": tenant_id}
     if branch_id is not None:
         params["bid"] = branch_id
     if store_id is not None:
@@ -462,7 +464,7 @@ def export_scoped_database(
 def export_tenant_database(
     conn,
     tenant_id: int,
-) -> Tuple[Dict[str, List[Dict[str, Any]]], Dict[str, int], List[str], List[str]]:
+) -> tuple[dict[str, list[dict[str, Any]]], dict[str, int], list[str], list[str]]:
     """Backward-compatible tenant export (no unresolved list)."""
     tables, counts, included, skipped, _ = export_scoped_database(conn, SCOPE_TENANT, tenant_id=tenant_id)
     return tables, counts, included, skipped
@@ -470,13 +472,13 @@ def export_tenant_database(
 
 def write_data_directory(
     data_dir: str,
-    tables: Dict[str, List[Dict[str, Any]]],
+    tables: dict[str, list[dict[str, Any]]],
     *,
     scope: str,
     tenant_id: int,
-    branch_id: Optional[int] = None,
-    store_id: Optional[int] = None,
-) -> Dict[str, Any]:
+    branch_id: int | None = None,
+    store_id: int | None = None,
+) -> dict[str, Any]:
     """Write data/*.jsonl + schema_meta.json; return metadata."""
     os.makedirs(data_dir, exist_ok=True)
     order = [t for t in TABLE_EXPORT_ORDER if t in tables]
@@ -484,7 +486,7 @@ def write_data_directory(
         if t not in order:
             order.append(t)
 
-    meta: Dict[str, Any] = {
+    meta: dict[str, Any] = {
         "backup_version": BACKUP_VERSION,
         "scope": scope,
         "tenant_id": tenant_id,
@@ -508,14 +510,14 @@ def write_data_directory(
 
 def read_data_directory(
     data_dir: str,
-) -> Tuple[Dict[str, List[Dict[str, Any]]], Dict[str, Any]]:
+) -> tuple[dict[str, list[dict[str, Any]]], dict[str, Any]]:
     meta_path = os.path.join(data_dir, "schema_meta.json")
-    meta: Dict[str, Any] = {}
+    meta: dict[str, Any] = {}
     if os.path.isfile(meta_path):
-        with open(meta_path, "r", encoding="utf-8") as f:
+        with open(meta_path, encoding="utf-8") as f:
             meta = json.load(f)
     order = meta.get("table_order") or []
-    tables: Dict[str, List[Dict[str, Any]]] = {}
+    tables: dict[str, list[dict[str, Any]]] = {}
     if not order:
         for fn in sorted(os.listdir(data_dir)):
             if fn.endswith(".jsonl"):
@@ -524,8 +526,8 @@ def read_data_directory(
         path = os.path.join(data_dir, f"{table}.jsonl")
         if not os.path.isfile(path):
             continue
-        rows: List[Dict[str, Any]] = []
-        with open(path, "r", encoding="utf-8") as f:
+        rows: list[dict[str, Any]] = []
+        with open(path, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line:
@@ -534,7 +536,7 @@ def read_data_directory(
     return tables, meta
 
 
-def _path_from_urlish(value: str, base_dir: str) -> Optional[str]:
+def _path_from_urlish(value: str, base_dir: str) -> str | None:
     if not value or not isinstance(value, str):
         return None
     v = value.strip().replace("\\", "/")
@@ -565,16 +567,16 @@ def collect_scoped_upload_paths(
     tenant_id: int,
     base_dir: str,
     *,
-    branch_id: Optional[int] = None,
-    store_id: Optional[int] = None,
-) -> Tuple[List[str], List[str]]:
+    branch_id: int | None = None,
+    store_id: int | None = None,
+) -> tuple[list[str], list[str]]:
     """Resolve upload files for scoped backup."""
     from sqlalchemy import text as sa_text
 
-    resolved: Set[str] = set()
-    unresolved: List[str] = []
+    resolved: set[str] = set()
+    unresolved: list[str] = []
 
-    def add_column(table: str, column: str, where: str, bind_config: Dict[str, Any]) -> None:
+    def add_column(table: str, column: str, where: str, bind_config: dict[str, Any]) -> None:
         if not table_exists(conn, table):
             return
         cols = {
@@ -610,7 +612,7 @@ def collect_scoped_upload_paths(
             except Exception as rb_exc:
                 logger.debug("rollback after upload path: %s", rb_exc)
 
-    bind: Dict[str, Any] = {"tid": tenant_id}
+    bind: dict[str, Any] = {"tid": tenant_id}
     if branch_id is not None:
         bind["bid"] = branch_id
     if store_id is not None:
@@ -634,11 +636,11 @@ def collect_tenant_upload_paths(
     conn,
     tenant_id: int,
     base_dir: str,
-) -> Tuple[List[str], List[str]]:
+) -> tuple[list[str], list[str]]:
     return collect_scoped_upload_paths(conn, SCOPE_TENANT, tenant_id, base_dir)
 
 
-def build_tenant_uploads_archive(file_paths: List[str], dest_path: str, base_dir: str) -> Dict[str, Any]:
+def build_tenant_uploads_archive(file_paths: list[str], dest_path: str, base_dir: str) -> dict[str, Any]:
     import tarfile
 
     packed = 0
@@ -655,8 +657,8 @@ def build_tenant_uploads_archive(file_paths: List[str], dest_path: str, base_dir
 def scope_filter_summary(
     scope: str,
     tenant_id: int,
-    branch_id: Optional[int] = None,
-    store_id: Optional[int] = None,
+    branch_id: int | None = None,
+    store_id: int | None = None,
 ) -> str:
     if scope == SCOPE_TENANT:
         return f"tenant_id={tenant_id} only; users exclude global/platform owners"

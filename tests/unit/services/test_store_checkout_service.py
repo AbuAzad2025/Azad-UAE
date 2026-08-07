@@ -27,9 +27,8 @@ class TestOrderTokens:
             app.config["DEBUG"] = False
             app.config["APP_ENV"] = "production"
             app.config["SECRET_KEY"] = None
-            with app.app_context():
-                with pytest.raises(ValueError, match="SECRET_KEY"):
-                    StoreCheckoutService.make_order_token(1, 1)
+            with app.app_context(), pytest.raises(ValueError, match="SECRET_KEY"):
+                StoreCheckoutService.make_order_token(1, 1)
         finally:
             app.config["SECRET_KEY"] = old_secret
 
@@ -471,16 +470,15 @@ class TestCreateWebOrder:
         mocker.patch("extensions.db.session.flush", side_effect=RuntimeError("flush fail"))
         rollback = mocker.patch("extensions.db.session.rollback")
         sample_user.is_owner = True
-        with pytest.raises(RuntimeError):
-            with atomic_transaction("test_coupon_fail"):
-                StoreCheckoutService.create_web_order(
-                    tenant_store,
-                    {str(sample_product_with_stock.id): 1},
-                    "Coupon Fail",
-                    "05088887777",
-                    "Addr",
-                    coupon_code="FAIL10",
-                )
+        with pytest.raises(RuntimeError), atomic_transaction("test_coupon_fail"):
+            StoreCheckoutService.create_web_order(
+                tenant_store,
+                {str(sample_product_with_stock.id): 1},
+                "Coupon Fail",
+                "05088887777",
+                "Addr",
+                coupon_code="FAIL10",
+            )
         rollback.assert_called()
 
     def test_get_or_create_customer_sets_address_when_empty(self, db_session, sample_tenant):
@@ -543,7 +541,8 @@ class TestCreateWebOrder:
         mocker.patch("services.store_notification_service.StoreNotificationService.notify_new_order")
 
         def get_side_effect(model, pk):
-            from models import Warehouse as WH, Customer as C
+            from models import Customer as C
+            from models import Warehouse as WH
 
             if model is WH:
                 return online_warehouse

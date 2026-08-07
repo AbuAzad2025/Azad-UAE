@@ -1,14 +1,14 @@
+from flask import Blueprint, abort, current_app, jsonify, render_template, request
 from flask_babel import gettext
-from flask import Blueprint, request, jsonify, render_template, current_app, abort
-from flask_login import login_required, current_user
+from flask_login import current_user, login_required
 
 from extensions import limiter
-from services.return_service import ReturnService
-from models import Sale, ProductReturn
-from utils.decorators import permission_required, branch_scope_id
-from utils.db_safety import atomic_transaction
-from utils.branching import should_show_all_branch_columns
+from models import ProductReturn, Sale
 from services.logging_core import LoggingCore
+from services.return_service import ReturnService
+from utils.branching import should_show_all_branch_columns
+from utils.db_safety import atomic_transaction
+from utils.decorators import branch_scope_id, permission_required
 from utils.tenanting import get_active_tenant_id, is_platform_owner
 
 returns_bp = Blueprint("returns", __name__, url_prefix="/returns")

@@ -1,8 +1,8 @@
 """Platform-wide payment methods for tenant online stores."""
 
-from datetime import datetime, timezone
 import json
 import re
+from datetime import UTC, datetime
 
 from extensions import db
 
@@ -25,14 +25,14 @@ class StorePaymentMethod(db.Model):
     config_json = db.Column(db.Text)
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     def get_config(self) -> dict:

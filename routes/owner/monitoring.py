@@ -1,35 +1,35 @@
 """Monitoring, analytics, and error audit routes for the owner blueprint."""
 
+import logging
+from datetime import UTC, datetime
+
 from flask_babel import gettext
 
-from datetime import datetime, timezone
 from routes.owner import (
-    render_template,
-    request,
-    flash,
-    redirect,
-    url_for,
-    current_user,
-    db,
-    User,
+    APIKey,
     LoginHistory,
     SecurityAlert,
-    APIKey,
     SystemSettings,
-    owner_required,
+    User,
+    current_user,
+    db,
+    flash,
     get_active_tenant_id,
+    owner_bp,
+    owner_required,
+    redirect,
+    render_template,
+    request,
     safe_redirect_target,
+    url_for,
 )
-from services.logging_core import LoggingCore
-from routes.owner import owner_bp
 from routes.owner.shared import (
     _invalidate_owner_changes,
-    _owner_branch_scope,
     _mask_api_key,
+    _owner_branch_scope,
 )
+from services.logging_core import LoggingCore
 from utils.db_safety import atomic_transaction
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +99,7 @@ def login_history():
         "total_logins": base_stats.filter(LoginHistory.success).count(),
         "failed_logins": base_stats.filter(LoginHistory.success.is_(False)).count(),
         "today_logins": base_stats.filter(
-            LoginHistory.login_time >= datetime.now(timezone.utc).replace(hour=0, minute=0)
+            LoginHistory.login_time >= datetime.now(UTC).replace(hour=0, minute=0)
         ).count(),
     }
 
@@ -162,7 +162,7 @@ def resolve_alert(**kwargs):
     try:
         with atomic_transaction("resolve_alert"):
             alert.is_resolved = True
-            alert.resolved_at = datetime.now(timezone.utc)
+            alert.resolved_at = datetime.now(UTC)
             alert.resolved_by = current_user.id
     except Exception as e:
         flash(gettext(f"❌ خطأ في حل التنبيه: {str(e)}"), "danger")

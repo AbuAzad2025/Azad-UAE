@@ -1,32 +1,31 @@
 """Flask application factory for Azad Intelligent Systems ERP."""
 
 import os
-import uuid
 import time
+import uuid
+from typing import Any, cast
 
 from flask import (
     Flask,
-    request,
-    g,
-    redirect,
-    url_for,
-    flash,
     abort,
+    flash,
+    g,
     jsonify,
+    redirect,
+    request,
     send_from_directory,
+    url_for,
 )
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 import config
-from config import Config, ensure_runtime_dirs, assert_production_sanity
+from app.context import register_context_processors
+from app.handlers import register_error_handlers
+from app.integrity import run_system_integrity_check
+from config import Config, assert_production_sanity, ensure_runtime_dirs
 from extensions import db, init_extensions
 from services.logging_core import LoggingCore
-from typing import cast, Any
-from werkzeug.middleware.proxy_fix import ProxyFix
 from utils import bootstrap_keys
-
-from app.handlers import register_error_handlers
-from app.context import register_context_processors
-from app.integrity import run_system_integrity_check
 
 try:
     from flask_compress import Compress  # noqa: F401
@@ -105,7 +104,7 @@ def create_app(config_class=Config) -> Flask:
         try:
             from services.maintenance_service import run_default_tenant_maintenance_api  # type: ignore[assignment]
         except ImportError:
-            pass
+            app.logger.debug("maintenance_service unavailable", exc_info=True)
 
         if run_default_tenant_maintenance_api is not None:
             with app.app_context():
@@ -184,8 +183,9 @@ def create_app(config_class=Config) -> Flask:
         g.rtl = is_rtl()
 
         from flask_login import current_user as _cu
-        from utils.tenanting import get_active_tenant_id, get_tenant_status
+
         from utils.auth_helpers import is_global_owner_user
+        from utils.tenanting import get_active_tenant_id, get_tenant_status
 
         g.active_tenant_id = None
         if _cu.is_authenticated:
@@ -211,6 +211,7 @@ def create_app(config_class=Config) -> Flask:
 
                 if g.active_tenant_id is not None and not is_global_owner_user(_cu) and _bp not in _skip:
                     from flask import render_template as _rt
+
                     from models.tenant import Tenant as _Tn
 
                     _tenant = db.session.get(_Tn, int(g.active_tenant_id))
@@ -224,10 +225,10 @@ def create_app(config_class=Config) -> Flask:
                         )
 
                 if g.active_tenant_id is not None and not is_global_owner_user(_cu):
+                    from models.tenant import Tenant as _Tn
                     from services.saas_provisioning_service import (
                         SaaSProvisioningService,
                     )
-                    from models.tenant import Tenant as _Tn
 
                     _t = db.session.get(_Tn, int(g.active_tenant_id)) if g.active_tenant_id else None
                     if _t and SaaSProvisioningService.is_demo_tenant(_t) and _bp in ("owner", "payment_vault"):
@@ -271,7 +272,7 @@ def create_app(config_class=Config) -> Flask:
     try:
         from models.events import register_all_listeners  # type: ignore[assignment]
     except ImportError:
-        pass
+        app.logger.debug("models.events unavailable", exc_info=True)
 
     if register_all_listeners is not None:
         try:
@@ -318,7 +319,7 @@ def create_app(config_class=Config) -> Flask:
     try:
         from cli_commands import register_cli_commands  # type: ignore[assignment]
     except ImportError:
-        pass
+        app.logger.debug("cli_commands unavailable", exc_info=True)
 
     if register_cli_commands is not None:
         try:

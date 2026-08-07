@@ -1,5 +1,6 @@
-from datetime import datetime, timezone
-from decimal import Decimal, ROUND_HALF_UP
+from datetime import UTC, datetime
+from decimal import ROUND_HALF_UP, Decimal
+
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
 
@@ -31,7 +32,7 @@ class ProductReturn(db.Model):
 
     return_date = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
@@ -62,7 +63,7 @@ class ProductReturn(db.Model):
     processed_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )

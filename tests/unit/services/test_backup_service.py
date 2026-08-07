@@ -8,19 +8,19 @@ import json
 import os
 import subprocess
 import tarfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 
-from services.backup_service import BACKUP_VERSION, BackupService
 from services.backup_scope_config import (
     SCOPE_BRANCH,
     SCOPE_STORE,
     SCOPE_SYSTEM,
     SCOPE_TENANT,
 )
+from services.backup_service import BACKUP_VERSION, BackupService
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -93,7 +93,7 @@ def _make_system_archive(
             "backup_version": BACKUP_VERSION,
             "format": "azad_tar_v1",
             "backup_scope": "system",
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
             "sha256": {},
         }
     manifest.setdefault("sha256", {})
@@ -134,7 +134,7 @@ def _make_tenant_archive(archive_path, tenant_id=7, branch_id=None, store_id=Non
         "store_id": store_id,
         "row_counts_per_table": {k: len(v) for k, v in tables.items()},
         "sha256": {},
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(UTC).isoformat(),
     }
 
     work = archive_path.parent / "_twork"

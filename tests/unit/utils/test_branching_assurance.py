@@ -95,7 +95,7 @@ class TestBranchAccess:
 
     def test_set_active_branch_all_mode(self, app, mocker):
         mocker.patch("utils.branching.is_global_user", return_value=True)
-        from utils.branching import set_active_branch, ACTIVE_BRANCH_MODE_SESSION_KEY
+        from utils.branching import ACTIVE_BRANCH_MODE_SESSION_KEY, set_active_branch
 
         with app.test_request_context():
             from flask import session
@@ -107,12 +107,11 @@ class TestBranchAccess:
         mocker.patch("utils.branching.user_can_access_branch", return_value=False)
         from utils.branching import set_active_branch
 
-        with app.test_request_context():
-            with pytest.raises(ValueError):
-                set_active_branch(99, user=_user())
+        with app.test_request_context(), pytest.raises(ValueError):
+            set_active_branch(99, user=_user())
 
     def test_clear_active_branch(self, app):
-        from utils.branching import clear_active_branch, ACTIVE_BRANCH_SESSION_KEY
+        from utils.branching import ACTIVE_BRANCH_SESSION_KEY, clear_active_branch
 
         with app.test_request_context():
             from flask import session
@@ -225,7 +224,7 @@ class TestBranchingExtended:
         mocker.patch("utils.branching.is_global_user", return_value=True)
         mocker.patch("utils.branching.get_active_branch_mode", return_value="single")
         mocker.patch("utils.branching.user_can_access_branch", return_value=True)
-        from utils.branching import get_active_branch_id, ACTIVE_BRANCH_SESSION_KEY
+        from utils.branching import ACTIVE_BRANCH_SESSION_KEY, get_active_branch_id
 
         with app.test_request_context():
             from flask import session
@@ -245,7 +244,7 @@ class TestBranchingExtended:
     def test_set_active_branch_for_regular_user(self, app, mocker):
         mocker.patch("utils.branching.is_global_user", return_value=False)
         mocker.patch("utils.branching.user_can_access_branch", return_value=True)
-        from utils.branching import set_active_branch, ACTIVE_BRANCH_SESSION_KEY
+        from utils.branching import ACTIVE_BRANCH_SESSION_KEY, set_active_branch
 
         with app.test_request_context():
             from flask import session
@@ -317,6 +316,7 @@ class TestBranchingExtended:
 class TestBranchingExtendedCoverage:
     def test_resolve_user_exception(self, app):
         from unittest.mock import MagicMock, patch
+
         import utils.branching as branching
 
         proxy = MagicMock()
@@ -427,7 +427,7 @@ class TestBranchingExtendedCoverage:
 
     def test_set_active_branch_global_clear(self, app, mocker):
         mocker.patch("utils.branching.is_global_user", return_value=True)
-        from utils.branching import set_active_branch, ACTIVE_BRANCH_MODE_SESSION_KEY
+        from utils.branching import ACTIVE_BRANCH_MODE_SESSION_KEY, set_active_branch
 
         with app.test_request_context():
             from flask import session
@@ -517,7 +517,7 @@ class TestBranchingExtendedCoverage:
 
     def test_get_active_branch_id_regular_user_session_match(self, app, mocker):
         mocker.patch("utils.branching.is_global_user", return_value=False)
-        from utils.branching import get_active_branch_id, ACTIVE_BRANCH_SESSION_KEY
+        from utils.branching import ACTIVE_BRANCH_SESSION_KEY, get_active_branch_id
 
         with app.test_request_context():
             from flask import session
@@ -535,7 +535,7 @@ class TestBranchingExtendedCoverage:
     def test_set_active_branch_non_global_uses_user_branch(self, app, mocker):
         mocker.patch("utils.branching.is_global_user", return_value=False)
         mocker.patch("utils.branching.user_can_access_branch", return_value=True)
-        from utils.branching import set_active_branch, ACTIVE_BRANCH_SESSION_KEY
+        from utils.branching import ACTIVE_BRANCH_SESSION_KEY, set_active_branch
 
         with app.test_request_context():
             from flask import session

@@ -12,7 +12,7 @@
 
 import logging
 from datetime import datetime
-from typing import List, Optional, Any
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ class ConversationManager:
             "simple": "بسيط ومباشر",
         }
 
-    def start_conversation(self, user_id: int, user_info: Optional[dict] = None) -> dict:
+    def start_conversation(self, user_id: int, user_info: dict | None = None) -> dict:
         """بدء محادثة جديدة"""
         self.active_conversations[user_id] = {
             "user_id": user_id,
@@ -243,7 +243,7 @@ class ConversationManager:
         return {"text": response_text, "confidence": confidence, "style": style}
 
     @staticmethod
-    def _generate_suggestions(intent: str, _entities: dict) -> List[str]:
+    def _generate_suggestions(intent: str, _entities: dict) -> list[str]:
         """توليد اقتراحات للمتابعة"""
         suggestions = []
 
@@ -285,7 +285,7 @@ class ConversationManager:
         except Exception as e:
             logger.error(f"Failed to save to long-term memory: {e}")
 
-    def get_conversation_history(self, user_id: int, limit: int = 10) -> List[dict]:
+    def get_conversation_history(self, user_id: int, limit: int = 10) -> list[dict]:
         """الحصول على تاريخ المحادثة"""
         if user_id not in self.active_conversations:
             return []

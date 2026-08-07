@@ -1,10 +1,12 @@
-from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, Optional, Tuple
 import logging
-import psutil
 import os
 import re
+from datetime import UTC, datetime, timedelta
+from typing import Any
+
+import psutil
 from sqlalchemy import text
+
 from extensions import db
 from models import AuditLog, Sale, User
 from utils.safe_sql import count_query
@@ -57,7 +59,7 @@ class MonitoringService:
         db.session.flush()
 
     @staticmethod
-    def get_system_stats_context(resolve_table_fn, is_sensitive_table_fn) -> Tuple[Dict[str, int], int]:
+    def get_system_stats_context(resolve_table_fn, is_sensitive_table_fn) -> tuple[dict[str, int], int]:
         db_stats = {}
         restricted_count = 0
 
@@ -80,17 +82,17 @@ class MonitoringService:
         return db_stats, restricted_count
 
     @staticmethod
-    def get_activity_monitor_context(tid, scoped_branch_id) -> Dict[str, Any]:
+    def get_activity_monitor_context(tid, scoped_branch_id) -> dict[str, Any]:
         recent_audits = AuditLog.query.filter_by(tenant_id=tid).order_by(AuditLog.created_at.desc()).limit(100).all()
 
         active_users = User.query.filter(
-            User.last_seen >= datetime.now(timezone.utc) - timedelta(minutes=30),
+            User.last_seen >= datetime.now(UTC) - timedelta(minutes=30),
             User.is_active,
             User.tenant_id == tid,
         ).all()
 
         recent_sales = Sale.query.filter(
-            Sale.created_at >= datetime.now(timezone.utc) - timedelta(hours=24),
+            Sale.created_at >= datetime.now(UTC) - timedelta(hours=24),
             Sale.tenant_id == tid,
         )
         if scoped_branch_id is not None:
@@ -111,13 +113,13 @@ class MonitoringService:
         }
 
     @staticmethod
-    def get_performance_metrics_data() -> Dict[str, Any]:
+    def get_performance_metrics_data() -> dict[str, Any]:
         basedir = os.path.abspath(os.path.join(os.path.dirname(str(__file__)), os.pardir))
         performance_file = os.path.join(basedir, "logs", "performance.log")
         slow_queries = []
 
         if os.path.exists(performance_file):
-            with open(performance_file, "r", encoding="utf-8") as f:
+            with open(performance_file, encoding="utf-8") as f:
                 for line in f.readlines()[-200:]:
                     if "SLOW" in line:
                         slow_queries.append(line.strip())
@@ -128,7 +130,7 @@ class MonitoringService:
         }
 
     @staticmethod
-    def check_database() -> Dict:
+    def check_database() -> dict:
         try:
             db.session.execute(text("SELECT 1"))
             return {"status": "connected", "healthy": True}
@@ -136,7 +138,7 @@ class MonitoringService:
             return {"status": "error", "healthy": False, "error": str(e)}
 
     @staticmethod
-    def get_disk_usage() -> Dict:
+    def get_disk_usage() -> dict:
         try:
             disk = psutil.disk_usage("/")
             return {
@@ -150,7 +152,7 @@ class MonitoringService:
             return {"healthy": True, "error": "unavailable"}
 
     @staticmethod
-    def get_memory_usage() -> Dict:
+    def get_memory_usage() -> dict:
         try:
             memory = psutil.virtual_memory()
             return {
@@ -163,7 +165,7 @@ class MonitoringService:
             return {"healthy": True, "error": "unavailable"}
 
     @staticmethod
-    def get_system_health() -> Dict:
+    def get_system_health() -> dict:
         return {
             "timestamp": datetime.now().isoformat(),
             "database": MonitoringService.check_database(),
@@ -174,7 +176,7 @@ class MonitoringService:
         }
 
     @staticmethod
-    def get_cpu_usage() -> Dict:
+    def get_cpu_usage() -> dict:
         try:
             cpu_percent = psutil.cpu_percent(interval=1)
             return {
@@ -186,8 +188,8 @@ class MonitoringService:
             return {"healthy": True, "error": "unavailable"}
 
     @staticmethod
-    def get_application_metrics() -> Dict:
-        from models import Sale, Customer, Product
+    def get_application_metrics() -> dict:
+        from models import Customer, Product, Sale
 
         try:
             return {
@@ -201,7 +203,7 @@ class MonitoringService:
             return {"error": str(e)}
 
     @staticmethod
-    def log_performance_metric(metric_name: str, value: float, tags: Optional[Dict] = None):
+    def log_performance_metric(metric_name: str, value: float, tags: dict | None = None):
         try:
             basedir = os.path.abspath(os.path.join(os.path.dirname(str(__file__)), os.pardir))
             logs_dir = os.path.join(basedir, "logs")

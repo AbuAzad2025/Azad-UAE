@@ -84,9 +84,8 @@ class TestCreatePayment:
 
         from services.store_online_payment_service import StoreOnlinePaymentService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="الحد الأدنى"):
-                StoreOnlinePaymentService.create_payment_for_sale(sale, store)
+        with app.app_context(), pytest.raises(ValueError, match="الحد الأدنى"):
+            StoreOnlinePaymentService.create_payment_for_sale(sale, store)
 
     def test_gateway_failure_raises(self, app, mocker):
         sale = MagicMock(
@@ -111,9 +110,8 @@ class TestCreatePayment:
 
         from services.store_online_payment_service import StoreOnlinePaymentService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="فشل إنشاء الدفع"):
-                StoreOnlinePaymentService.create_payment_for_sale(sale, store)
+        with app.app_context(), pytest.raises(ValueError, match="فشل إنشاء الدفع"):
+            StoreOnlinePaymentService.create_payment_for_sale(sale, store)
 
     def test_success_commits_gateway_ref(self, app, mocker):
         sale = MagicMock(
@@ -173,6 +171,5 @@ class TestCreatePayment:
 
         from services.store_online_payment_service import StoreOnlinePaymentService
 
-        with app.app_context():
-            with pytest.raises(RuntimeError):
-                StoreOnlinePaymentService.create_payment_for_sale(sale, store)
+        with app.app_context(), pytest.raises(RuntimeError):
+            StoreOnlinePaymentService.create_payment_for_sale(sale, store)

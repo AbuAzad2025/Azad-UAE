@@ -143,9 +143,8 @@ class TestDepreciationRunMonthly:
 
         from services.depreciation_service import DepreciationService
 
-        with app.app_context():
-            with pytest.raises(RuntimeError, match="commit failed"):
-                DepreciationService.run_monthly()
+        with app.app_context(), pytest.raises(RuntimeError, match="commit failed"):
+            DepreciationService.run_monthly()
         mock_session.rollback.assert_called()
 
     def test_post_depreciation_posts_balanced_gl(self, app, mocker):
@@ -241,9 +240,8 @@ class TestFixedAssetModelCoverage:
 
     def test_post_depreciation_inactive_raises(self, app):
         asset = self._asset(status="disposed")
-        with app.app_context():
-            with pytest.raises(ValueError, match="غير نشط"):
-                asset.post_depreciation()
+        with app.app_context(), pytest.raises(ValueError, match="غير نشط"):
+            asset.post_depreciation()
 
     def test_post_depreciation_duplicate_period(self, app, mocker):
         asset = self._asset()
@@ -252,9 +250,8 @@ class TestFixedAssetModelCoverage:
         mocker.patch(
             "models.fixed_asset.DepreciationSchedule.query"
         ).filter_by.return_value.first.return_value = MagicMock()
-        with app.app_context():
-            with pytest.raises(ValueError, match="مسبقاً"):
-                asset.post_depreciation(period_date=date(2026, 3, 1))
+        with app.app_context(), pytest.raises(ValueError, match="مسبقاً"):
+            asset.post_depreciation(period_date=date(2026, 3, 1))
 
     def test_post_depreciation_zero_amount_returns_none(self, app, mocker):
         asset = self._asset(category="land")
@@ -296,9 +293,8 @@ class TestFixedAssetModelCoverage:
 
     def test_dispose_already_disposed_raises(self, app):
         asset = self._asset(status="sold")
-        with app.app_context():
-            with pytest.raises(ValueError, match="مسبقاً"):
-                asset.dispose(date(2026, 1, 1), 0)
+        with app.app_context(), pytest.raises(ValueError, match="مسبقاً"):
+            asset.dispose(date(2026, 1, 1), 0)
 
     def test_declining_balance_positive_monthly(self):
         asset = self._asset(

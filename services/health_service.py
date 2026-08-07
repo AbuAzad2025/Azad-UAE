@@ -3,17 +3,16 @@ Health Check Service - خدمة فحص صحة النظام
 مراقبة صحة النظام والخدمات المختلفة
 """
 
-from datetime import datetime, timedelta, timezone
-from typing import Any
-
 import logging
 import os
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import psutil
 from flask import current_app
+from flask_babel import gettext
 from sqlalchemy import func
 
-from flask_babel import gettext
 from extensions import db
 from models import PaymentVault
 
@@ -107,7 +106,7 @@ class HealthCheckService:
     def get_system_metrics():
         """الحصول على مقاييس النظام"""
         try:
-            from models import Donation, PackagePurchase, CardPayment
+            from models import CardPayment, Donation, PackagePurchase
 
             # إحصائيات قاعدة البيانات
             total_donations = Donation.query.count()
@@ -132,7 +131,7 @@ class HealthCheckService:
                         (datetime.now() - datetime.fromtimestamp(process.create_time())).total_seconds()
                     ),
                 },
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
         except Exception as e:
             logger.error(f"Failed to get system metrics: {str(e)}")
@@ -161,7 +160,7 @@ class HealthCheckService:
         return {
             "overall_status": overall_status,
             "checks": checks,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
     @staticmethod
@@ -234,7 +233,7 @@ class HealthCheckService:
             active_users = (
                 db.session.query(func.count(User.id))
                 .filter(
-                    User.last_seen >= datetime.now(timezone.utc) - timedelta(minutes=30),
+                    User.last_seen >= datetime.now(UTC) - timedelta(minutes=30),
                     User.is_active,
                 )
                 .scalar()

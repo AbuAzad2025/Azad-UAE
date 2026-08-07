@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
-from decimal import Decimal
-from typing import List, Optional
-
 import logging
+from datetime import UTC, date, datetime
+from decimal import Decimal
 
-from sqlalchemy import func
-from extensions import db
 from flask_babel import gettext
+from sqlalchemy import func
+
+from extensions import db
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +21,7 @@ class PartnerService:
         period_start: date,
         period_end: date,
         scope_type: str = "company",
-        scope_id: Optional[int] = None,
+        scope_id: int | None = None,
     ) -> Decimal:
         from models import Sale
 
@@ -60,9 +59,9 @@ class PartnerService:
         period_start: date,
         period_end: date,
         scope_type: str = "company",
-        scope_id: Optional[int] = None,
+        scope_id: int | None = None,
     ) -> Decimal:
-        from models import SaleLine, Sale
+        from models import Sale, SaleLine
 
         q = (
             db.session.query(func.sum(SaleLine.quantity * func.coalesce(SaleLine.cost_price, 0)))
@@ -87,7 +86,7 @@ class PartnerService:
         period_start: date,
         period_end: date,
         scope_type: str = "company",
-        scope_id: Optional[int] = None,
+        scope_id: int | None = None,
     ) -> Decimal:
         from models import Expense
 
@@ -111,7 +110,7 @@ class PartnerService:
         period_start: date,
         period_end: date,
         scope_type: str = "company",
-        scope_id: Optional[int] = None,
+        scope_id: int | None = None,
     ) -> dict:
         """Return full P&L for a scope."""
         revenue = PartnerService.get_scope_revenue(tenant_id, period_start, period_end, scope_type, scope_id)
@@ -134,8 +133,8 @@ class PartnerService:
         tenant_id: int,
         period_start: date,
         period_end: date,
-        created_by: Optional[int] = None,
-    ) -> List[int]:
+        created_by: int | None = None,
+    ) -> list[int]:
         """Create draft distributions for ALL active partners for the period.
 
         Validates:
@@ -248,8 +247,8 @@ class PartnerService:
     # ── Distribution lifecycle ──────────────────────────────────
 
     @staticmethod
-    def approve_distribution(dist_id: int, approved_by: int, tenant_id: Optional[int] = None) -> bool:
-        from models import PartnerProfitDistribution, PartnerTransaction, Partner
+    def approve_distribution(dist_id: int, approved_by: int, tenant_id: int | None = None) -> bool:
+        from models import Partner, PartnerProfitDistribution, PartnerTransaction
 
         dist = db.session.get(PartnerProfitDistribution, dist_id)
         if not dist or dist.status != "draft":
@@ -259,7 +258,7 @@ class PartnerService:
 
         dist.status = "approved"
         dist.approved_by = approved_by
-        dist.approved_at = datetime.now(timezone.utc)
+        dist.approved_at = datetime.now(UTC)
         net = float(dist.net_due)
         if net != 0:
             tx_type = "profit_share" if net > 0 else "loss_share"
@@ -296,10 +295,10 @@ class PartnerService:
         return True
 
     @staticmethod
-    def pay_distribution(dist_id: int, tenant_id: Optional[int] = None) -> bool:
+    def pay_distribution(dist_id: int, tenant_id: int | None = None) -> bool:
         from models import PartnerProfitDistribution
-        from services.gl_service import GLService, GL_ACCOUNTS
         from services.gl_posting import post_or_fail
+        from services.gl_service import GL_ACCOUNTS, GLService
         from utils.gl_reference_types import GLRef
 
         dist = db.session.get(PartnerProfitDistribution, dist_id)
@@ -365,10 +364,10 @@ class PartnerService:
         currency: str | None = None,
         exchange_rate: Decimal = Decimal("1"),
         notes: str = "",
-        created_by: Optional[int] = None,
+        created_by: int | None = None,
         reference_number: str = "",
-        tenant_id: Optional[int] = None,
-    ) -> Optional[int]:
+        tenant_id: int | None = None,
+    ) -> int | None:
         from models import Partner, PartnerTransaction
         from utils.currency_utils import get_system_default_currency
 
@@ -405,8 +404,8 @@ class PartnerService:
         elif transaction_type == "additional_investment":
             partner.total_additional_investment = Decimal(str(partner.total_additional_investment or 0)) + amount_base
         if amount_base != 0:
-            from services.gl_service import GLService, GL_ACCOUNTS
             from services.gl_posting import post_or_fail
+            from services.gl_service import GL_ACCOUNTS, GLService
             from utils.gl_reference_types import GLRef
             from utils.tax_settings import _resolve_main_branch
 

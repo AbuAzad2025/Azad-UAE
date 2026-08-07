@@ -9,8 +9,8 @@ restricted to the owning cashier (``user_id``) and their open session.
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
-from decimal import Decimal, ROUND_HALF_UP
+from datetime import UTC, datetime
+from decimal import ROUND_HALF_UP, Decimal
 
 from flask_babel import gettext
 
@@ -108,7 +108,7 @@ class PosCartService:
             cart.session_id = session.id
             cart.status = PosCart.STATUS_PARKED
             cart.resumed_at = None
-            cart.parked_at = datetime.now(timezone.utc)
+            cart.parked_at = datetime.now(UTC)
             db.session.flush()
             return cart
 
@@ -166,7 +166,7 @@ class PosCartService:
         if cart.status != PosCart.STATUS_PARKED:
             raise PosCartConflictError(gettext("تم استرجاع هذه السلة مسبقاً أو انتهت صلاحيتها."))
         cart.status = PosCart.STATUS_RESUMED
-        cart.resumed_at = datetime.now(timezone.utc)
+        cart.resumed_at = datetime.now(UTC)
         db.session.flush()
         return cart
 

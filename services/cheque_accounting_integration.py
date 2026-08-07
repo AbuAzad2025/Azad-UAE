@@ -1,20 +1,22 @@
-from extensions import db
-from flask_babel import gettext
 from typing import Any
+
+from flask_babel import gettext
+
+from extensions import db
 from models.cheque import Cheque
 from models.gl import GLJournalEntry
 from services.cheque_service import (
-    process_cheque_receive,
-    process_cheque_issue,
-    process_cheque_clear,
     process_cheque_bounce,
+    process_cheque_clear,
+    process_cheque_issue,
+    process_cheque_receive,
 )
 from utils.currency_utils import get_system_default_currency
 from utils.gl_reference_types import GLRef
 from utils.gl_tenant import (
-    scope_journal_entries,
-    get_gl_account_by_code,
     active_tenant_id,
+    get_gl_account_by_code,
+    scope_journal_entries,
 )
 
 

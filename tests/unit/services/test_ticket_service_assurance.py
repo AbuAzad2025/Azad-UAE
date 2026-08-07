@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 import pytest
@@ -51,9 +51,8 @@ class TestCreateTicket:
 
         from services.ticket_service import TicketService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="عنوان"):
-                TicketService.create_ticket({}, MagicMock())
+        with app.app_context(), pytest.raises(ValueError, match="عنوان"):
+            TicketService.create_ticket({}, MagicMock())
 
     def test_creates_with_sla_from_priority(self, app, mocker):
         mocker.patch("services.ticket_service.get_active_tenant_id", return_value=1)
@@ -127,8 +126,8 @@ class TestStateTransitions:
     def test_reopen_clears_resolution(self, app, mocker):
         ticket = self._ticket()
         ticket.status = "closed"
-        ticket.resolved_at = datetime.now(timezone.utc)
-        ticket.closed_at = datetime.now(timezone.utc)
+        ticket.resolved_at = datetime.now(UTC)
+        ticket.closed_at = datetime.now(UTC)
         mock_session = mocker.patch("services.ticket_service.db.session")
         mock_session.get.return_value = ticket
         mocker.patch("services.ticket_service.get_active_tenant_id", return_value=1)
@@ -152,9 +151,8 @@ class TestCommentsAndSearch:
 
         from services.ticket_service import TicketService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="نص التعليق"):
-                TicketService.add_comment(1, {}, MagicMock(id=2))
+        with app.app_context(), pytest.raises(ValueError, match="نص التعليق"):
+            TicketService.add_comment(1, {}, MagicMock(id=2))
 
     def test_search_filters_by_tenant(self, app, mocker):
         from models import Ticket
@@ -196,9 +194,8 @@ class TestTicketEdgeCases:
         mocker.patch("services.ticket_service.is_global_owner_user", return_value=False)
         from services.ticket_service import TicketService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="شركة نشطة"):
-                TicketService.create_ticket({"subject": "x"}, MagicMock())
+        with app.app_context(), pytest.raises(ValueError, match="شركة نشطة"):
+            TicketService.create_ticket({"subject": "x"}, MagicMock())
 
     def test_create_ticket_commit_failure(self, app, mocker):
         mocker.patch("services.ticket_service.get_active_tenant_id", return_value=1)
@@ -211,18 +208,16 @@ class TestTicketEdgeCases:
         mock_session.flush.side_effect = RuntimeError("db")
         from services.ticket_service import TicketService
 
-        with app.app_context():
-            with pytest.raises(RuntimeError, match="db"):
-                TicketService.create_ticket({"subject": "x"}, MagicMock())
+        with app.app_context(), pytest.raises(RuntimeError, match="db"):
+            TicketService.create_ticket({"subject": "x"}, MagicMock())
 
     def test_assign_missing_ticket(self, app, mocker):
         mock_session = mocker.patch("services.ticket_service.db.session")
         mock_session.get.return_value = None
         from services.ticket_service import TicketService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="غير موجودة"):
-                TicketService.assign_ticket(1, 2, MagicMock())
+        with app.app_context(), pytest.raises(ValueError, match="غير موجودة"):
+            TicketService.assign_ticket(1, 2, MagicMock())
 
     def test_get_ticket(self, app, mocker):
         ticket = MagicMock(tenant_id=1)
@@ -287,6 +282,5 @@ class TestTicketEdgeCases:
             "reopen_ticket": (1, MagicMock()),
             "add_comment": (1, {"body": "x"}, MagicMock(id=1)),
         }[method_name]
-        with app.app_context():
-            with pytest.raises(RuntimeError, match="db fail"):
-                getattr(TicketService, method_name)(*args)
+        with app.app_context(), pytest.raises(RuntimeError, match="db fail"):
+            getattr(TicketService, method_name)(*args)

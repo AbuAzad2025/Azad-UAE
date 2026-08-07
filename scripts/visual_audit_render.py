@@ -6,7 +6,7 @@ for manual visual inspection in a browser.
 
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -16,8 +16,8 @@ sys.path.insert(0, project_root)
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
+from utils.helpers import format_currency, format_date, format_datetime, format_number, format_time
 from utils.i18n import t
-from utils.helpers import format_currency, format_date, format_datetime, format_time, format_number
 
 os.makedirs("audit_output", exist_ok=True)
 
@@ -94,11 +94,11 @@ def _make_user():
 def _make_payment():
     p = MagicMock()
     p.payment_number = "PAY-2026-001"
-    p.payment_date = datetime(2026, 8, 2, 14, 30, tzinfo=timezone.utc)
+    p.payment_date = datetime(2026, 8, 2, 14, 30, tzinfo=UTC)
     p.amount_aed = Decimal("1250.500")
     p.payment_method = "cheque"
     p.cheque_number = "CHK-884422"
-    p.cheque_date = datetime(2026, 8, 15, tzinfo=timezone.utc).date()
+    p.cheque_date = datetime(2026, 8, 15, tzinfo=UTC).date()
     p.bank_name = "بنك الإمارات دبي الوطني"
     p.reference_number = "REF-9911"
     p.currency = "AED"
@@ -141,7 +141,7 @@ def _make_sale():
     sale = MagicMock()
     sale.id = 1
     sale.sale_number = "INV-2026-00842"
-    sale.sale_date = datetime(2026, 8, 2, 10, 15, tzinfo=timezone.utc)
+    sale.sale_date = datetime(2026, 8, 2, 10, 15, tzinfo=UTC)
     sale.currency = "ILS"
     sale.subtotal = Decimal("4850.000")
     sale.discount_amount = Decimal("350.000")
@@ -184,14 +184,14 @@ def _make_receipt():
     r = MagicMock()
     r.id = 1
     r.receipt_number = "RCV-2026-00156"
-    r.receipt_date = datetime(2026, 8, 2, 11, 45, tzinfo=timezone.utc)
+    r.receipt_date = datetime(2026, 8, 2, 11, 45, tzinfo=UTC)
     r.amount = Decimal("3500.000")
     r.base_amount = Decimal("3500.000")
     r.amount_aed = Decimal("3500.000")
     r.currency = "AED"
     r.payment_method = "cheque"
     r.cheque_number = "CHK-442211"
-    r.cheque_date = datetime(2026, 8, 20, tzinfo=timezone.utc).date()
+    r.cheque_date = datetime(2026, 8, 20, tzinfo=UTC).date()
     r.bank_name = "بنك دبي الإسلامي"
     r.reference_number = "REF-5566"
     r.notes = "دفعة جزئية على فاتورة INV-2026-00842"

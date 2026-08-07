@@ -4,7 +4,7 @@ Inspired by Odoo's account.fiscal.position
 """
 
 from extensions import db
-from models import FiscalPosition, FiscalPositionTaxRule, Customer, TaxCalculationRule
+from models import Customer, FiscalPosition, FiscalPositionTaxRule, TaxCalculationRule
 
 
 class FiscalPositionService:

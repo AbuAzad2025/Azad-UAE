@@ -118,9 +118,8 @@ class TestConfirmOrder:
             return_value=True,
         )
         mocker.patch.object(db.session, "flush", side_effect=RuntimeError("db"))
-        with app.app_context():
-            with pytest.raises(RuntimeError):
-                StoreOrderService.confirm_order(online_sale)
+        with app.app_context(), pytest.raises(RuntimeError):
+            StoreOrderService.confirm_order(online_sale)
 
     def test_award_loyalty_skips_without_customer(self, mocker):
         earn = mocker.patch("services.store_service.StoreService.earn_loyalty_points")
@@ -227,16 +226,14 @@ class TestCancelCommitFailures:
         mocker.patch("services.store_order_service.SaleService.cancel_sale")
         mocker.patch("services.store_coupon_service.StoreCouponService.release_use")
         mocker.patch.object(db.session, "flush", side_effect=RuntimeError("db"))
-        with app.app_context():
-            with pytest.raises(RuntimeError):
-                StoreOrderService.cancel_order(online_sale)
+        with app.app_context(), pytest.raises(RuntimeError):
+            StoreOrderService.cancel_order(online_sale)
 
     def test_cancel_pending_commit_failure(self, mocker, online_sale, app):
         mocker.patch("services.store_coupon_service.StoreCouponService.release_use")
         mocker.patch.object(db.session, "flush", side_effect=RuntimeError("db"))
-        with app.app_context():
-            with pytest.raises(RuntimeError):
-                StoreOrderService.cancel_order(online_sale)
+        with app.app_context(), pytest.raises(RuntimeError):
+            StoreOrderService.cancel_order(online_sale)
 
 
 class TestValidateStock:

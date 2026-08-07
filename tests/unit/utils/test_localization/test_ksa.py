@@ -101,9 +101,8 @@ class TestKSAEInvoice:
             strategy,
             "sign_zatca_payload",
             side_effect=ConnectionError("ZATCA portal unreachable"),
-        ):
-            with pytest.raises(ConnectionError, match="ZATCA portal"):
-                strategy.generate_einvoice(sale)
+        ), pytest.raises(ConnectionError, match="ZATCA portal"):
+            strategy.generate_einvoice(sale)
 
     def test_amount_aed_fallback(self, strategy):
         sale = MagicMock(spec=["id", "amount_aed"])

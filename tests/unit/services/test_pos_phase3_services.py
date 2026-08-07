@@ -10,7 +10,7 @@ provides the app context.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import MagicMock
@@ -31,7 +31,6 @@ from utils.pos_security import (
     verify_override_token_signature,
     verify_pos_session_token,
 )
-
 
 # ─── Session tokens ───
 
@@ -207,7 +206,7 @@ class TestConsumeOverrideToken:
 
     def test_expired_token_rejected(self, db_session, sample_tenant, sample_user):
         token_row, token, _ = self._issue(db_session, sample_tenant, sample_user)
-        token_row.expires_at = datetime.now(timezone.utc) - timedelta(seconds=1)
+        token_row.expires_at = datetime.now(UTC) - timedelta(seconds=1)
         db_session.flush()
         with pytest.raises(PosOverrideError, match="صلاحية"):
             PosOverrideService.consume_override_token(token_str=token, action="pay_out", user=sample_user)
@@ -393,7 +392,7 @@ class TestClosePosSessionPhase3:
     def test_difference_gl_lines_balanced_correct_sign(self, mocker):
         """Shortage posts Dr difference / Cr cash with equal amounts."""
         session = self._session()
-        session.closed_at = datetime.now(timezone.utc)
+        session.closed_at = datetime.now(UTC)
 
         def _close(closing, notes):
             session.difference = Decimal("-7.500")

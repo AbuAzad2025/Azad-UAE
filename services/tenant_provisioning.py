@@ -14,16 +14,15 @@ No NOT NULL constraints are added at the database level.
 
 from __future__ import annotations
 
-from typing import Optional
-
 from flask_babel import gettext
+
 from services.industry_service import (
     VALID_BUSINESS_TYPES,
     get_pos_profile,
 )
 
 
-def validate_tenant_industry(business_type: Optional[str], industry: Optional[str] = None):
+def validate_tenant_industry(business_type: str | None, industry: str | None = None):
     """Application-level enforcement for new tenant creation.
 
     Raises ValueError if a mandatory field is missing. Unknown (legacy) codes

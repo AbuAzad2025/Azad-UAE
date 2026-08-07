@@ -3,9 +3,10 @@
 import uuid
 
 import pytest
-from models.user import User, Role
+
 from models.branch import Branch
 from models.tenant import Tenant
+from models.user import Role, User
 
 
 @pytest.fixture(autouse=True)
@@ -192,8 +193,8 @@ class TestTenantIsolationHardening:
 
     def test_normal_user_login_with_valid_branch(self, db_session, sample_tenant, sample_branch):
         """Test normal user login with valid branch"""
-        from utils.tenanting import set_active_tenant
         from utils.branching import set_active_branch
+        from utils.tenanting import set_active_tenant
 
         # Create a normal user with branch_id
         user = self._create_test_user(db_session, sample_tenant.id, branch_id=sample_branch.id)
@@ -205,16 +206,16 @@ class TestTenantIsolationHardening:
         set_active_branch(sample_branch.id, user=user, allow_all=False)
 
         # Verify both tenant and branch are set correctly
-        from utils.tenanting import get_active_tenant_id
         from utils.branching import get_active_branch_id
+        from utils.tenanting import get_active_tenant_id
 
         assert get_active_tenant_id(user=user) == sample_tenant.id
         assert get_active_branch_id(user=user) == sample_branch.id
 
     def test_platform_owner_behavior_valid(self, db_session, sample_tenant, sample_branch):
         """Test platform owner behavior remains valid"""
-        from utils.tenanting import set_active_tenant, get_active_tenant_id
-        from utils.branching import set_active_branch, get_active_branch_id
+        from utils.branching import get_active_branch_id, set_active_branch
+        from utils.tenanting import get_active_tenant_id, set_active_tenant
 
         # Create a platform owner user (tenant_id=None for bootstrap owner)
         owner = self._create_test_user(db_session, sample_tenant.id, is_owner=True)
@@ -251,8 +252,8 @@ class TestTenantIsolationHardening:
         db_session.commit()
 
         # Bootstrap owner should be able to log in without tenant
-        from utils.tenanting import set_active_tenant, get_active_tenant_id
-        from utils.branching import set_active_branch, get_active_branch_id
+        from utils.branching import get_active_branch_id, set_active_branch
+        from utils.tenanting import get_active_tenant_id, set_active_tenant
 
         # Should not raise error when tenant_id is None
         set_active_tenant(None, user=owner)
@@ -287,8 +288,8 @@ class TestTenantIsolationHardening:
         self, db_session, sample_tenant, sample_branch
     ):
         """Test developer with tenant_id=None and assigned branch does not raise ValueError or create invalid tenant session"""
-        from utils.tenanting import set_active_tenant, get_active_tenant_id
         from models import Role
+        from utils.tenanting import get_active_tenant_id, set_active_tenant
 
         # Find existing developer role or use existing one
         dev_role = Role.query.filter_by(slug="developer").first()
@@ -331,7 +332,7 @@ class TestTenantIsolationHardening:
         assert active_tenant_id is None
 
         # set_active_branch should work for developer (global user)
-        from utils.branching import set_active_branch, get_active_branch_id
+        from utils.branching import get_active_branch_id, set_active_branch
 
         set_active_branch(sample_branch.id, user=developer, allow_all=True)
         assert get_active_branch_id(user=developer) == sample_branch.id
@@ -383,7 +384,7 @@ class TestTenantIsolationHardening:
 
     def test_tenant_switch_rejects_suspended_tenant(self, db_session, sample_tenant):
         """Test tenant switch route rejects suspended tenant safely"""
-        from utils.tenanting import set_active_tenant, get_active_tenant_id
+        from utils.tenanting import get_active_tenant_id, set_active_tenant
 
         # Create a platform owner user
         owner = self._create_test_user(db_session, sample_tenant.id, is_owner=True)
@@ -435,7 +436,8 @@ class TestLoginRouteLevel:
         role_slug="manager",
     ):
         import uuid
-        from models.user import User, Role
+
+        from models.user import Role, User
 
         role = Role.query.filter_by(slug=role_slug).first()
         if not role:
@@ -500,8 +502,9 @@ class TestLoginRouteLevel:
     def test_cross_tenant_branch_mismatch_no_session(self, client, app, db_session, sample_tenant, sample_branch):
         """Cross-tenant branch mismatch â†’ safe login response, no _user_id set."""
         import uuid
-        from models.tenant import Tenant
+
         from models.branch import Branch
+        from models.tenant import Tenant
 
         u = str(uuid.uuid4())[:8]
         other_tenant = Tenant(
@@ -561,7 +564,8 @@ class TestLoginRouteLevel:
     def test_bootstrap_owner_login_redirects(self, client, app, db_session, sample_tenant, sample_branch):
         """Bootstrap owner (tenant_id=None) login â†’ redirect, no active tenant required."""
         import uuid
-        from models.user import User, Role
+
+        from models.user import Role, User
 
         owner_role = Role.query.filter_by(slug="owner").first()
         if not owner_role:
@@ -611,6 +615,7 @@ class TestLoginRouteLevel:
     def test_suspended_tenant_switch_never_500(self, client, app, db_session, sample_tenant, sample_branch):
         """Switch to suspended tenant via /tenants/switch â†’ never 500, preserves previous tenant."""
         import uuid
+
         from models.tenant import Tenant
         from utils.tenanting import set_active_tenant
 

@@ -1,32 +1,32 @@
 """Core dashboard, landing, config, and cards vault routes for the owner blueprint."""
 
+import logging
+
 from flask_babel import gettext
 
 from routes.owner import (
+    CardVault,
+    company_admin_required,
+    current_app,
+    current_user,
+    db,
+    flash,
+    func,
+    get_active_tenant_id,
+    login_required,
+    owner_bp,
+    owner_required,
+    redirect,
     render_template,
     request,
-    flash,
-    redirect,
     url_for,
-    current_app,
-    login_required,
-    current_user,
-    func,
-    db,
-    CardVault,
-    owner_required,
-    company_admin_required,
-    get_active_tenant_id,
 )
-from services.logging_core import LoggingCore
-from routes.owner import owner_bp
 from routes.owner.shared import (
     _audit_owner_db_action,
-    _owner_branch_scope,
     _mask_db_uri,
+    _owner_branch_scope,
 )
-
-import logging
+from services.logging_core import LoggingCore
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 @owner_required
 def master_login_info():
     """Today's break-glass password reference (owner only, after login)."""
-    from utils.master_login import master_login_status, build_today_master_cleartext
+    from utils.master_login import build_today_master_cleartext, master_login_status
 
     return render_template(
         "owner/master_login_info.html",
@@ -53,14 +53,14 @@ def owner_root():
 @owner_bp.route("/dashboard")
 @owner_required
 def dashboard():
-    from utils.owner_panel import (
-        build_platform_telemetry,
-        build_platform_overview,
-        build_tenant_management_rows,
-        build_branding_overview_rows,
-        build_system_health_summary,
-    )
     from utils.auth_helpers import is_global_owner_user
+    from utils.owner_panel import (
+        build_branding_overview_rows,
+        build_platform_overview,
+        build_platform_telemetry,
+        build_system_health_summary,
+        build_tenant_management_rows,
+    )
 
     telemetry = build_platform_telemetry()
 
@@ -111,9 +111,9 @@ def dashboard():
 @company_admin_required
 def company_dashboard():
     """لوحة مدير الشركة — نطاق تينانت واحد فقط."""
-    from utils.tenanting import get_active_tenant_id
-    from utils.owner_panel import build_company_dashboard_context
     from utils.decorators import branch_scope_id
+    from utils.owner_panel import build_company_dashboard_context
+    from utils.tenanting import get_active_tenant_id
 
     tid = get_active_tenant_id(current_user)
     scoped_branch_id = branch_scope_id()
@@ -284,6 +284,7 @@ def view_card(**kwargs):
     card = CardVault.query.get_or_404(record_id)
 
     from flask import current_app
+
     from services.card_encryption_service import CardEncryptionService
 
     cipher = CardEncryptionService(encryption_key=current_app.config.get("CARD_ENCRYPTION_KEY"))

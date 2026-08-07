@@ -1,5 +1,6 @@
+from datetime import UTC, datetime
+
 from extensions import db
-from datetime import datetime, timezone
 
 
 class LoginHistory(db.Model):
@@ -11,7 +12,7 @@ class LoginHistory(db.Model):
     username = db.Column(db.String(50), nullable=False)
     ip_address = db.Column(db.String(50))
     user_agent = db.Column(db.String(500))
-    login_time = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    login_time = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
     logout_time = db.Column(db.DateTime)
     success = db.Column(db.Boolean, default=True)
     failure_reason = db.Column(db.String(200))

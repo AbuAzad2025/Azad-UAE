@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -117,7 +117,7 @@ class TestPostOrFail:
                 lines,
                 description="Wrapped",
                 tenant_id=1,
-                date=datetime(2026, 1, 15, tzinfo=timezone.utc),
+                date=datetime(2026, 1, 15, tzinfo=UTC),
             )
 
 

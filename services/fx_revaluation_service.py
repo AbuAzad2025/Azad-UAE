@@ -11,19 +11,19 @@ Design:
 """
 
 import logging
-from datetime import datetime, timezone
-from decimal import Decimal, ROUND_HALF_UP
+from datetime import UTC, datetime
+from decimal import ROUND_HALF_UP, Decimal
 
 from extensions import db
-from utils.db_safety import atomic_transaction
-from utils.currency_utils import (
-    resolve_tenant_base_currency,
-    convert_and_quantize_aed,
-)
-from utils.gl_reference_types import GLRef
-from services.gl_service import GLService
-from services.gl_posting import post_or_fail
 from services.exchange_rate_service import ExchangeRateService
+from services.gl_posting import post_or_fail
+from services.gl_service import GLService
+from utils.currency_utils import (
+    convert_and_quantize_aed,
+    resolve_tenant_base_currency,
+)
+from utils.db_safety import atomic_transaction
+from utils.gl_reference_types import GLRef
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +98,7 @@ def revaluate_open_items(tenant_id: int | None = None) -> dict:
     entry_ids.
     """
     base_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     period = now.strftime("%Y-%m")
     summary = {
         "ar_count": 0,

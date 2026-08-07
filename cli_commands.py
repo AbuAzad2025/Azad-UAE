@@ -63,8 +63,10 @@ def register_reset_platform_db_command(app):
         if not yes:
             raise click.ClickException("Refusing to wipe DB without --yes")
 
+        from sqlalchemy import inspect as sa_inspect
+        from sqlalchemy import text
+
         from extensions import db
-        from sqlalchemy import inspect as sa_inspect, text
 
         click.echo("Dropping all tables...")
         engine = db.engine
@@ -114,30 +116,32 @@ def register_seed_demo_command(app):
 
 
 def _do_seed_demo(_app):
-    from extensions import db
     from decimal import Decimal
+
     from sqlalchemy import text
-    from models.tenant import Tenant
+
+    from extensions import db
+    from models import PosOrderType, ensure_default_pos_order_types
     from models.branch import Branch
-    from models.warehouse import Warehouse
     from models.cash_box import CashBox
-    from models.user import User, Role, Permission
     from models.customer import Customer
-    from models.supplier import Supplier
-    from models.partner import Partner
-    from models.product import Product, ProductCategory
-    from models.tenant_store import TenantStore
-    from models.payroll import Employee, PayrollTransaction, SalaryAdvance
-    from models.product_return import ProductReturn, ProductReturnLine
-    from models.pos_session import PosSession
-    from models.sale import Sale
     from models.expense import Expense, ExpenseCategory
-    from services.tenant_provisioning import (
-        validate_tenant_industry,
-        provision_tenant_gl,
-    )
+    from models.partner import Partner
+    from models.payroll import Employee, PayrollTransaction, SalaryAdvance
+    from models.pos_session import PosSession
+    from models.product import Product, ProductCategory
+    from models.product_return import ProductReturn, ProductReturnLine
+    from models.sale import Sale
+    from models.supplier import Supplier
+    from models.tenant import Tenant
+    from models.tenant_store import TenantStore
+    from models.user import Permission, Role, User
+    from models.warehouse import Warehouse
     from services.document_sequence_service import DocumentSequenceService
-    from models import ensure_default_pos_order_types, PosOrderType
+    from services.tenant_provisioning import (
+        provision_tenant_gl,
+        validate_tenant_industry,
+    )
 
     # Ensure the (new) pos_order_types table exists before we seed into it.
     # Done on a fresh connection at the very start so it is not blocked by any
@@ -713,8 +717,8 @@ def _do_seed_demo(_app):
         )
 
     # 16. Purchases (via PurchaseService so GL, supplier balance, and stock are posted)
-    from services.purchase_service import PurchaseService
     from services.payment_service import PaymentService
+    from services.purchase_service import PurchaseService
 
     suppliers = Supplier.query.filter_by(tenant_id=tid).limit(3).all()
     purch_products = Product.query.filter_by(tenant_id=tid).limit(6).all()
@@ -883,6 +887,7 @@ def register_sanitize_command(app):
         Dry run by default — nothing is written until --commit is supplied.
         """
         from sqlalchemy import text
+
         from extensions import db
         from models.tenant import Tenant
         from services.tenant_provisioning import provision_tenant_gl

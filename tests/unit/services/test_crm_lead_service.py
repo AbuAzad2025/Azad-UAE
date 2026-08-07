@@ -1,10 +1,10 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock
 
 import pytest
 
-from models import CRMLead, CRMStage, User, Role
+from models import CRMLead, CRMStage, Role, User
 from services.crm_lead_service import CRMLeadService
 from utils.tenanting import set_active_tenant
 
@@ -100,6 +100,7 @@ def crm_lead(db_session, sample_tenant, sample_branch, crm_stage, sample_user):
 @pytest.fixture
 def other_tenant_stage(db_session):
     import uuid
+
     from models import Tenant
 
     slug = f"other-{uuid.uuid4().hex[:6]}"
@@ -181,8 +182,9 @@ class TestCreateLead:
 
     def test_create_lead_cross_tenant_branch(self, sample_user, sample_tenant, db_session):
         import uuid
-        from models import Tenant, Branch
         from unittest.mock import patch
+
+        from models import Branch, Tenant
 
         other = Tenant(
             name="X",
@@ -297,6 +299,7 @@ class TestSearchLeads:
 
     def test_search_branch_scoped(self, scoped_user, crm_lead, db_session, sample_tenant, sample_branch, crm_stage):
         import uuid
+
         from models import Branch
 
         set_active_tenant(sample_tenant.id, user=scoped_user)
@@ -377,8 +380,8 @@ class TestConversionKpi:
 
     def test_compute_conversion_kpi_with_period(self, sample_user, crm_lead):
         set_active_tenant(crm_lead.tenant_id, user=sample_user)
-        start = datetime(2020, 1, 1, tzinfo=timezone.utc)
-        end = datetime(2030, 1, 1, tzinfo=timezone.utc)
+        start = datetime(2020, 1, 1, tzinfo=UTC)
+        end = datetime(2030, 1, 1, tzinfo=UTC)
         kpi = CRMLeadService.compute_conversion_kpi(sample_user, period_start=start, period_end=end)
         assert "conversion_rate" in kpi
 
@@ -418,8 +421,9 @@ class TestAddActivity:
         set_active_tenant(crm_lead.tenant_id, user=scoped_user)
         scoped_user.branch_id = crm_lead.branch_id
         # Create a real branch from a different tenant to avoid FK violation
-        from models import Branch
         import uuid
+
+        from models import Branch
 
         other_branch = Branch(
             tenant_id=sample_tenant.id,

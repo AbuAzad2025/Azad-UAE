@@ -9,7 +9,7 @@ class ErrorLogService:
         parsed_errors = []
 
         if os.path.exists(error_file):
-            with open(error_file, "r", encoding="utf-8") as f:
+            with open(error_file, encoding="utf-8") as f:
                 raw = f.read()
 
             entries = re.split(r"\n(?:\s*\n)+", raw)

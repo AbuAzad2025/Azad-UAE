@@ -1,6 +1,7 @@
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 def make_sync_logger_mock(name="logger"):
@@ -55,20 +56,19 @@ class TestSaleServiceValidations:
         product = MagicMock()
         product.name = "Test"
         lines = [{"product": product, "quantity": 0}]
-        with patch("services.sale_service.StockService"):
-            with patch("models.Warehouse"):
-                with patch("services.sale_service.ensure_warehouse_access"):
-                    with patch("services.sale_service.generate_number", return_value="S-001"):
-                        with patch("services.sale_service.ExchangeRateService") as mock_ex:
-                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
-                            with patch("services.sale_service.db.session.add"):
-                                with patch("services.sale_service.db.session.flush"):
-                                    with patch("services.sale_service.db.session.commit"):
-                                        with pytest.raises(
-                                            ValueError,
-                                            match="الكمية يجب أن تكون أكبر من صفر",
-                                        ):
-                                            SaleService.create_sale(customer, seller, lines)
+        with patch("services.sale_service.StockService"), patch("models.Warehouse"):
+            with patch("services.sale_service.ensure_warehouse_access"):
+                with patch("services.sale_service.generate_number", return_value="S-001"):
+                    with patch("services.sale_service.ExchangeRateService") as mock_ex:
+                        mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
+                        with patch("services.sale_service.db.session.add"):
+                            with patch("services.sale_service.db.session.flush"):
+                                with patch("services.sale_service.db.session.commit"):
+                                    with pytest.raises(
+                                        ValueError,
+                                        match="الكمية يجب أن تكون أكبر من صفر",
+                                    ):
+                                        SaleService.create_sale(customer, seller, lines)
 
     def test_create_sale_rejects_zero_unit_price(self, app):
         from services.sale_service import SaleService
@@ -84,19 +84,18 @@ class TestSaleServiceValidations:
         lines = [{"product": product, "quantity": 1}]
         with patch("services.sale_service.StockService") as mock_stock:
             mock_stock.check_availability_in_warehouse.return_value = (True, "")
-            with patch("models.Warehouse"):
-                with patch("services.sale_service.ensure_warehouse_access"):
-                    with patch("services.sale_service.generate_number", return_value="S-001"):
-                        with patch("services.sale_service.ExchangeRateService") as mock_ex:
-                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
-                            with patch("services.sale_service.db.session.add"):
-                                with patch("services.sale_service.db.session.flush"):
-                                    with patch("services.sale_service.db.session.commit"):
-                                        with pytest.raises(
-                                            ValueError,
-                                            match="السعر يجب أن يكون أكبر من صفر",
-                                        ):
-                                            SaleService.create_sale(customer, seller, lines)
+            with patch("models.Warehouse"), patch("services.sale_service.ensure_warehouse_access"):
+                with patch("services.sale_service.generate_number", return_value="S-001"):
+                    with patch("services.sale_service.ExchangeRateService") as mock_ex:
+                        mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
+                        with patch("services.sale_service.db.session.add"):
+                            with patch("services.sale_service.db.session.flush"):
+                                with patch("services.sale_service.db.session.commit"):
+                                    with pytest.raises(
+                                        ValueError,
+                                        match="السعر يجب أن يكون أكبر من صفر",
+                                    ):
+                                        SaleService.create_sale(customer, seller, lines)
 
     def test_create_sale_rejects_negative_discount(self, app):
         from services.sale_service import SaleService
@@ -105,14 +104,13 @@ class TestSaleServiceValidations:
         customer.is_active = True
         seller = MagicMock()
         seller.is_active = True
-        with patch("models.Warehouse"):
-            with pytest.raises(ValueError, match="الخصم لا يمكن أن تكون سالبة"):
-                SaleService.create_sale(
-                    customer,
-                    seller,
-                    [{"product": MagicMock(), "quantity": 1}],
-                    discount_amount=-10,
-                )
+        with patch("models.Warehouse"), pytest.raises(ValueError, match="الخصم لا يمكن أن تكون سالبة"):
+            SaleService.create_sale(
+                customer,
+                seller,
+                [{"product": MagicMock(), "quantity": 1}],
+                discount_amount=-10,
+            )
 
     def test_create_sale_rejects_negative_shipping(self, app):
         from services.sale_service import SaleService
@@ -121,14 +119,13 @@ class TestSaleServiceValidations:
         customer.is_active = True
         seller = MagicMock()
         seller.is_active = True
-        with patch("models.Warehouse"):
-            with pytest.raises(ValueError, match="الشحن لا يمكن أن تكون سالبة"):
-                SaleService.create_sale(
-                    customer,
-                    seller,
-                    [{"product": MagicMock(), "quantity": 1}],
-                    shipping_cost=-10,
-                )
+        with patch("models.Warehouse"), pytest.raises(ValueError, match="الشحن لا يمكن أن تكون سالبة"):
+            SaleService.create_sale(
+                customer,
+                seller,
+                [{"product": MagicMock(), "quantity": 1}],
+                shipping_cost=-10,
+            )
 
     def test_create_sale_rejects_invalid_discount_percent(self, app):
         from services.sale_service import SaleService
@@ -149,19 +146,18 @@ class TestSaleServiceValidations:
         ]
         with patch("services.sale_service.StockService") as mock_stock:
             mock_stock.check_availability_in_warehouse.return_value = (True, "")
-            with patch("models.Warehouse"):
-                with patch("services.sale_service.ensure_warehouse_access"):
-                    with patch("services.sale_service.generate_number", return_value="S-001"):
-                        with patch("services.sale_service.ExchangeRateService") as mock_ex:
-                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
-                            with patch("services.sale_service.db.session.add"):
-                                with patch("services.sale_service.db.session.flush"):
-                                    with patch("services.sale_service.db.session.commit"):
-                                        with pytest.raises(
-                                            ValueError,
-                                            match="نسبة الخصم يجب أن تكون بين 0 و 100",
-                                        ):
-                                            SaleService.create_sale(customer, seller, lines)
+            with patch("models.Warehouse"), patch("services.sale_service.ensure_warehouse_access"):
+                with patch("services.sale_service.generate_number", return_value="S-001"):
+                    with patch("services.sale_service.ExchangeRateService") as mock_ex:
+                        mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
+                        with patch("services.sale_service.db.session.add"):
+                            with patch("services.sale_service.db.session.flush"):
+                                with patch("services.sale_service.db.session.commit"):
+                                    with pytest.raises(
+                                        ValueError,
+                                        match="نسبة الخصم يجب أن تكون بين 0 و 100",
+                                    ):
+                                        SaleService.create_sale(customer, seller, lines)
 
 
 class TestSaleServiceCreate:
@@ -196,31 +192,29 @@ class TestSaleServiceCreate:
                 wh.branch_id = 1
                 mock_wh.query.filter_by.return_value = mock_wh.query
                 mock_wh.query.first.return_value = wh
-                with patch("services.sale_service.ensure_warehouse_access", return_value=wh):
-                    with patch(
-                        "services.sale_service.generate_number",
-                        return_value="S-2024-001",
-                    ):
-                        with patch("services.sale_service.ExchangeRateService") as mock_ex:
-                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
-                            with patch("services.sale_service.db.session.add"):
-                                with patch("services.sale_service.db.session.flush"):
-                                    with patch("services.sale_service.db.session.commit"):
-                                        with patch("services.sale_service.SaleService.fulfill_sale"):
-                                            with patch("services.sale_service.SaleLine") as mock_line:
-                                                line_instance = MagicMock()
-                                                line_instance.line_total = Decimal("200")
-                                                line_instance.quantity = 2
-                                                line_instance.cost_price = Decimal("50")
-                                                line_instance.id = 1
-                                                line_instance.product_id = 1
-                                                line_instance.calculate_line_total = MagicMock()
-                                                mock_line.return_value = line_instance
-                                                result = SaleService.create_sale(customer, seller, lines)
-                                                assert result is not None
-                                                assert result.total_amount == Decimal("200")
-                                                assert result.customer_id == 1
-                                                assert result.seller_id == 2
+                with patch("services.sale_service.ensure_warehouse_access", return_value=wh), patch(
+                    "services.sale_service.generate_number",
+                    return_value="S-2024-001",
+                ), patch("services.sale_service.ExchangeRateService") as mock_ex:
+                    mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
+                    with patch("services.sale_service.db.session.add"):
+                        with patch("services.sale_service.db.session.flush"):
+                            with patch("services.sale_service.db.session.commit"):
+                                with patch("services.sale_service.SaleService.fulfill_sale"):
+                                    with patch("services.sale_service.SaleLine") as mock_line:
+                                        line_instance = MagicMock()
+                                        line_instance.line_total = Decimal("200")
+                                        line_instance.quantity = 2
+                                        line_instance.cost_price = Decimal("50")
+                                        line_instance.id = 1
+                                        line_instance.product_id = 1
+                                        line_instance.calculate_line_total = MagicMock()
+                                        mock_line.return_value = line_instance
+                                        result = SaleService.create_sale(customer, seller, lines)
+                                        assert result is not None
+                                        assert result.total_amount == Decimal("200")
+                                        assert result.customer_id == 1
+                                        assert result.seller_id == 2
 
     def test_create_sale_with_discount(self, app):
         from services.sale_service import SaleService
@@ -417,16 +411,15 @@ class TestSaleServiceCreate:
         lines = [{"product": product, "quantity": 2, "unit_price": 100, "serials": ["SN001"]}]
         with patch("services.sale_service.StockService") as mock_stock:
             mock_stock.check_availability_in_warehouse.return_value = (True, "")
-            with patch("models.Warehouse"):
-                with patch("services.sale_service.ensure_warehouse_access"):
-                    with patch("services.sale_service.generate_number", return_value="S-001"):
-                        with patch("services.sale_service.ExchangeRateService") as mock_ex:
-                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
-                            with patch("services.sale_service.db.session.add"):
-                                with patch("services.sale_service.db.session.flush"):
-                                    with patch("services.sale_service.db.session.commit"):
-                                        with pytest.raises(ValueError, match="يتطلب"):
-                                            SaleService.create_sale(customer, seller, lines)
+            with patch("models.Warehouse"), patch("services.sale_service.ensure_warehouse_access"):
+                with patch("services.sale_service.generate_number", return_value="S-001"):
+                    with patch("services.sale_service.ExchangeRateService") as mock_ex:
+                        mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
+                        with patch("services.sale_service.db.session.add"):
+                            with patch("services.sale_service.db.session.flush"):
+                                with patch("services.sale_service.db.session.commit"):
+                                    with pytest.raises(ValueError, match="يتطلب"):
+                                        SaleService.create_sale(customer, seller, lines)
 
     def test_create_sale_stock_unavailable(self, app):
         from services.sale_service import SaleService
@@ -443,16 +436,15 @@ class TestSaleServiceCreate:
                 False,
                 "Stock not available",
             )
-            with patch("models.Warehouse"):
-                with patch("services.sale_service.ensure_warehouse_access"):
-                    with patch("services.sale_service.generate_number", return_value="S-001"):
-                        with patch("services.sale_service.ExchangeRateService") as mock_ex:
-                            mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
-                            with patch("services.sale_service.db.session.add"):
-                                with patch("services.sale_service.db.session.flush"):
-                                    with patch("services.sale_service.db.session.commit"):
-                                        with pytest.raises(ValueError, match="Stock not available"):
-                                            SaleService.create_sale(customer, seller, lines)
+            with patch("models.Warehouse"), patch("services.sale_service.ensure_warehouse_access"):
+                with patch("services.sale_service.generate_number", return_value="S-001"):
+                    with patch("services.sale_service.ExchangeRateService") as mock_ex:
+                        mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
+                        with patch("services.sale_service.db.session.add"):
+                            with patch("services.sale_service.db.session.flush"):
+                                with patch("services.sale_service.db.session.commit"):
+                                    with pytest.raises(ValueError, match="Stock not available"):
+                                        SaleService.create_sale(customer, seller, lines)
 
     def test_create_sale_with_currency_conversion(self, app):
         from services.sale_service import SaleService

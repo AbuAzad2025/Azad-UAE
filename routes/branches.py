@@ -1,11 +1,12 @@
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_babel import gettext
-from flask import Blueprint, render_template, redirect, url_for, flash, request
-from flask_login import login_required, current_user
+from flask_login import current_user, login_required
+
 from extensions import db
 from models import Branch
-from utils.decorators import admin_required
-from utils.tenanting import get_active_tenant_id, tenant_query, tenant_get_or_404
 from utils.db_safety import atomic_transaction
+from utils.decorators import admin_required
+from utils.tenanting import get_active_tenant_id, tenant_get_or_404, tenant_query
 
 branches_bp = Blueprint("branches", __name__, url_prefix="/branches")
 
@@ -45,7 +46,7 @@ def create():
             return redirect(url_for("branches.create"))
 
         # Check tenant branch limit
-        from utils.tenant_limits import check_branches_limit, TenantLimitError
+        from utils.tenant_limits import TenantLimitError, check_branches_limit
 
         try:
             check_branches_limit()

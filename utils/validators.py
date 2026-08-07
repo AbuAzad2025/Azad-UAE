@@ -3,9 +3,8 @@ Unified Input Validation Layer
 Centralized validation to ensure data integrity across all endpoints.
 """
 
-from typing import Optional, Tuple
-from datetime import datetime
 import re
+from datetime import datetime
 
 
 class ValidationError(Exception):
@@ -55,7 +54,7 @@ def validate_percentage(value, field_name: str = "percentage") -> float:
 # ==================== String Validators ====================
 
 
-def validate_required_string(value: Optional[str], field_name: str, max_length: int = 255) -> str:
+def validate_required_string(value: str | None, field_name: str, max_length: int = 255) -> str:
     """Validate a required string field."""
     if not value or not str(value).strip():
         raise ValidationError(f"{field_name} is required")
@@ -68,7 +67,7 @@ def validate_required_string(value: Optional[str], field_name: str, max_length: 
     return text
 
 
-def validate_email(value: Optional[str]) -> Optional[str]:
+def validate_email(value: str | None) -> str | None:
     """Validate email format if provided."""
     if not value:
         return None
@@ -81,7 +80,7 @@ def validate_email(value: Optional[str]) -> Optional[str]:
     return email
 
 
-def validate_phone(value: Optional[str]) -> Optional[str]:
+def validate_phone(value: str | None) -> str | None:
     """Validate phone number format if provided."""
     if not value:
         return None
@@ -95,8 +94,8 @@ def validate_phone(value: Optional[str]) -> Optional[str]:
 
 
 def validate_date_range(
-    date_from: Optional[str], date_to: Optional[str]
-) -> Tuple[Optional[datetime], Optional[datetime]]:
+    date_from: str | None, date_to: str | None
+) -> tuple[datetime | None, datetime | None]:
     """Validate a date range."""
     from_date = None
     to_date = None
@@ -135,7 +134,7 @@ def validate_id(value, field_name: str = "id") -> int:
     return id_val
 
 
-def validate_optional_id(value, field_name: str = "id") -> Optional[int]:
+def validate_optional_id(value, field_name: str = "id") -> int | None:
     """Validate an optional database ID."""
     if value is None or value == "":
         return None
@@ -145,7 +144,7 @@ def validate_optional_id(value, field_name: str = "id") -> Optional[int]:
 # ==================== Collection Validators ====================
 
 
-def validate_pagination(page: int, per_page: int, max_per_page: int = 100) -> Tuple[int, int]:
+def validate_pagination(page: int, per_page: int, max_per_page: int = 100) -> tuple[int, int]:
     """Validate and normalize pagination parameters."""
     if page < 1:
         page = 1

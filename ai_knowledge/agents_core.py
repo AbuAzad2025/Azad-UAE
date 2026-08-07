@@ -5,7 +5,9 @@ Imports from individual agent modules and adds enhanced AI capabilities.
 
 import logging
 import os
-from typing import Any, Optional
+from datetime import UTC
+from typing import Any
+
 from ai_knowledge.agents.intelligent_assistant import (
     intelligent_assistant,
 )
@@ -44,7 +46,7 @@ def load_env_cached() -> None:
 # ============================================================================
 
 
-def intelligent_response(message: str, user_id: Optional[int] = None, context: Optional[dict] = None) -> str:
+def intelligent_response(message: str, user_id: int | None = None, context: dict | None = None) -> str:
     """Get AI response - tries action dispatch first, then local intelligence."""
     try:
         from ai_knowledge.trainer import trainer
@@ -62,9 +64,9 @@ def intelligent_response(message: str, user_id: Optional[int] = None, context: O
                 if action_type == "help":
                     return action_dispatcher.format_help()
                 name = args.get("name", "")
-                from datetime import datetime, timezone
+                from datetime import datetime
 
-                h = datetime.now(timezone.utc).hour
+                h = datetime.now(UTC).hour
                 greeting = "صباح الخير" if 5 <= h < 12 else "مساء الخير" if 12 <= h < 18 else "مساء النور"
                 return f"{greeting} {'👤 ' + name if name else ''}! 🌟 أنا أزاد، مساعدك الذكي. اسألني عن أي شيء!\n\n{action_dispatcher.format_help()}"
             result = action_dispatcher.dispatch(action_type, args)
@@ -178,7 +180,7 @@ def _get_llm_response(system_prompt: str, user_message: str) -> str | None:
 
 def _build_system_prompt(question: str, user_role: str = "user") -> str:
     """Build a system prompt with system knowledge context for the LLM."""
-    from ai_knowledge.system_knowledge import search_knowledge, SYSTEM_INFO
+    from ai_knowledge.system_knowledge import SYSTEM_INFO, search_knowledge
 
     results = search_knowledge(question)
     context_parts = [f"أنت أزاد، المساعد الذكي لنظام {SYSTEM_INFO['name_ar']} (v{SYSTEM_INFO['version']})."]
@@ -216,7 +218,7 @@ def _build_system_prompt(question: str, user_role: str = "user") -> str:
     return "\n".join(context_parts)
 
 
-def ask_azad_enhanced(question: str, context: Optional[dict] = None, user_id: Optional[int] = None) -> dict:
+def ask_azad_enhanced(question: str, context: dict | None = None, user_id: int | None = None) -> dict:
     """
     Enhanced ask_azad with LLM chain-of-thought and system knowledge.
     Uses Groq/Gemini for complex questions, falls back to local MasterBrain.
@@ -232,7 +234,7 @@ def ask_azad_enhanced(question: str, context: Optional[dict] = None, user_id: Op
 
     # Step 1: Check system knowledge first
     try:
-        from ai_knowledge.system_knowledge import search_knowledge, FAQ
+        from ai_knowledge.system_knowledge import FAQ, search_knowledge
 
         q_lower = question.lower()
         for role_key, faqs in FAQ.items():

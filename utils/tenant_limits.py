@@ -7,11 +7,12 @@ Usage in routes before db.session.add() / db.session.commit().
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from flask_login import current_user
-from extensions import db
 import logging
+from datetime import UTC, datetime
 
+from flask_login import current_user
+
+from extensions import db
 from utils.tenanting import get_active_tenant_id
 
 logger = logging.getLogger(__name__)
@@ -64,7 +65,7 @@ def _active_tenant():
 
 
 def _month_start():
-    return datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    return datetime.now(UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
 
 def check_limit(

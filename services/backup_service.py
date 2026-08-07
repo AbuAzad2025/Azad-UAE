@@ -21,14 +21,15 @@ import shutil
 import sys
 import tarfile
 import tempfile
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import UTC, datetime
+from typing import Any
 from urllib.parse import urlparse
-from models.tenant import Tenant
+
 from models.branch import Branch
+from models.tenant import Tenant
 from models.tenant_store import TenantStore
-from utils.tenanting import get_active_tenant_id
 from utils.auth_helpers import is_global_owner_user
+from utils.tenanting import get_active_tenant_id
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +59,7 @@ class BackupService:
     LEGACY_AUTO_PREFIX = "auto_backup_"
 
     @classmethod
-    def get_list_backups_context(cls, user) -> Dict[str, Any]:
+    def get_list_backups_context(cls, user) -> dict[str, Any]:
         is_owner = is_global_owner_user(user)
         if is_owner:
             backups = cls.list_backups()
@@ -106,11 +107,11 @@ class BackupService:
         return os.path.join(cls._BASEDIR, "instance", "backup_state.json")
 
     @classmethod
-    def _load_json_file(cls, file_path: str) -> Optional[Dict]:
+    def _load_json_file(cls, file_path: str) -> dict | None:
         try:
             if not os.path.exists(file_path):
                 return None
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 return json.load(f)
         except Exception as e:
             import sys
@@ -137,7 +138,7 @@ class BackupService:
             return None
 
     @classmethod
-    def _write_json_file(cls, file_path: str, data: Dict) -> bool:
+    def _write_json_file(cls, file_path: str, data: dict) -> bool:
         try:
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
             with open(file_path, "w", encoding="utf-8") as f:
@@ -168,7 +169,7 @@ class BackupService:
             return False
 
     @classmethod
-    def get_schedule_settings(cls) -> Dict:
+    def get_schedule_settings(cls) -> dict:
         settings = cls._load_json_file(cls._schedule_settings_path()) or {}
         return {
             "enabled": bool(settings.get("enabled", True)),
@@ -178,7 +179,7 @@ class BackupService:
         }
 
     @classmethod
-    def save_schedule_settings(cls, settings: Dict) -> bool:
+    def save_schedule_settings(cls, settings: dict) -> bool:
         normalized = {
             "enabled": bool(settings.get("enabled", True)),
             "frequency": str(settings.get("frequency", "daily")),
@@ -188,7 +189,7 @@ class BackupService:
         return cls._write_json_file(cls._schedule_settings_path(), normalized)
 
     @classmethod
-    def get_schedule_state(cls) -> Dict:
+    def get_schedule_state(cls) -> dict:
         state = cls._load_json_file(cls._schedule_state_path()) or {}
         return {
             "last_run_at": state.get("last_run_at"),
@@ -206,7 +207,7 @@ class BackupService:
         cls._write_json_file(cls._schedule_state_path(), state)
 
     @classmethod
-    def get_backup_stats(cls) -> Dict:
+    def get_backup_stats(cls) -> dict:
         try:
             backups = cls.list_backups()
             total_size_bytes = sum(int(b.get("size", 0) or 0) for b in backups)
@@ -241,10 +242,10 @@ class BackupService:
             return False
 
     @classmethod
-    def list_backups(cls, auto_only: bool = False) -> List[Dict]:
+    def list_backups(cls, auto_only: bool = False) -> list[dict]:
         """Return all backups sorted newest-first."""
         cls.initialize()
-        results: List[Dict] = []
+        results: list[dict] = []
         if not os.path.isdir(cls.BACKUP_DIR):
             return results
         for name in os.listdir(cls.BACKUP_DIR):
@@ -265,7 +266,7 @@ class BackupService:
         return results
 
     @classmethod
-    def pg_tools_status(cls) -> Dict[str, Any]:
+    def pg_tools_status(cls) -> dict[str, Any]:
         dump = cls._resolve_pg_tool("pg_dump", "PG_DUMP_PATH")
         restore = cls._resolve_pg_tool("pg_restore", "PG_RESTORE_PATH")
         version = None
@@ -285,7 +286,7 @@ class BackupService:
         }
 
     @classmethod
-    def _parse_db_url(cls, url: Optional[str] = None) -> Optional[Dict[str, str]]:
+    def _parse_db_url(cls, url: str | None = None) -> dict[str, str] | None:
         try:
             if url:
                 from sqlalchemy.engine.url import make_url
@@ -323,7 +324,7 @@ class BackupService:
         return "***"
 
     @classmethod
-    def _normalize_db_identity(cls, params: Dict[str, str]) -> str:
+    def _normalize_db_identity(cls, params: dict[str, str]) -> str:
         return "|".join(
             [
                 params.get("host", ""),
@@ -338,7 +339,7 @@ class BackupService:
         return os.name == "nt"
 
     @classmethod
-    def _which(cls, exe_name: str) -> Optional[str]:
+    def _which(cls, exe_name: str) -> str | None:
         exe = str(exe_name)
         path_env = os.environ.get("PATH") or ""
         exts = (("",) + tuple(os.environ.get("PATHEXT", "").split(os.pathsep))) if cls._is_windows() else ("",)
@@ -352,7 +353,7 @@ class BackupService:
         return None
 
     @classmethod
-    def _resolve_pg_tool(cls, exe_name: str, env_var: str) -> Optional[str]:
+    def _resolve_pg_tool(cls, exe_name: str, env_var: str) -> str | None:
         value = (os.environ.get(env_var) or "").strip().strip('"')
         if value and os.path.isfile(value):
             return value
@@ -361,7 +362,7 @@ class BackupService:
             return found
         if not cls._is_windows():
             return None
-        candidates: List[str] = []
+        candidates: list[str] = []
         for pf in filter(None, [os.environ.get("ProgramFiles"), os.environ.get("ProgramFiles(x86)")]):
             candidates.extend(glob.glob(os.path.join(pf, "PostgreSQL", "*", "bin", exe_name)))
             candidates.extend(glob.glob(os.path.join(pf, "PostgreSQL", "*", "bin", exe_name + ".exe")))
@@ -397,7 +398,7 @@ class BackupService:
         return "unknown"
 
     @classmethod
-    def _git_branch(cls) -> Optional[str]:
+    def _git_branch(cls) -> str | None:
         try:
             from services.backup_exec import run_git
 
@@ -414,7 +415,7 @@ class BackupService:
         return None
 
     @classmethod
-    def _alembic_info(cls) -> Tuple[Optional[str], Optional[str]]:
+    def _alembic_info(cls) -> tuple[str | None, str | None]:
         try:
             from sqlalchemy import create_engine, text
 
@@ -425,10 +426,11 @@ class BackupService:
                 cur = conn.execute(text("SELECT version_num FROM alembic_version LIMIT 1")).scalar()
             return str(cur) if cur else None, str(cur) if cur else None
         except Exception:
+            logger.debug("Alembic version probe failed", exc_info=True)
             return None, None
 
     @classmethod
-    def _upload_roots(cls) -> List[str]:
+    def _upload_roots(cls) -> list[str]:
         roots = [os.path.join(cls._BASEDIR, "static", "uploads")]
         try:
             from flask import current_app
@@ -443,7 +445,7 @@ class BackupService:
         return [r for r in roots if os.path.isdir(r)]
 
     @classmethod
-    def _build_uploads_archive(cls, dest_path: str) -> Dict[str, Any]:
+    def _build_uploads_archive(cls, dest_path: str) -> dict[str, Any]:
         file_count = 0
         with tarfile.open(dest_path, "w:gz") as tar:
             for root_dir in cls._upload_roots():
@@ -463,7 +465,7 @@ class BackupService:
         return {"upload_roots": cls._upload_roots(), "files_packed": file_count}
 
     @classmethod
-    def _build_env_redacted(cls) -> Dict[str, str]:
+    def _build_env_redacted(cls) -> dict[str, str]:
         keys = [
             "DATABASE_URL",
             "SQLALCHEMY_DATABASE_URI",
@@ -474,14 +476,12 @@ class BackupService:
             "BACKUP_RETENTION_COUNT",
             "TARGET_TEST_DATABASE_URL",
         ]
-        out: Dict[str, str] = {}
+        out: dict[str, str] = {}
         for key in keys:
             val = os.environ.get(key)
             if val is None:
                 continue
-            if key in ("DATABASE_URL", "SQLALCHEMY_DATABASE_URI", "REDIS_URL"):
-                out[key] = "***masked***"
-            elif key == "SECRET_KEY":
+            if key in ("DATABASE_URL", "SQLALCHEMY_DATABASE_URI", "REDIS_URL") or key == "SECRET_KEY":
                 out[key] = "***masked***"
             elif key == "BASE_URL":
                 out[key] = val.split("?")[0][:120]
@@ -490,8 +490,8 @@ class BackupService:
         return out
 
     @classmethod
-    def _pre_backup_checks_summary(cls) -> Dict[str, Any]:
-        summary: Dict[str, Any] = {"checks": []}
+    def _pre_backup_checks_summary(cls) -> dict[str, Any]:
+        summary: dict[str, Any] = {"checks": []}
         params = cls._parse_db_url()
         if not params:
             summary["checks"].append("postgresql_url: FAIL")
@@ -536,7 +536,7 @@ class BackupService:
         return summary
 
     @classmethod
-    def _run_pg_dump_custom(cls, params: Dict[str, str], dest_file: str) -> Tuple[bool, str]:
+    def _run_pg_dump_custom(cls, params: dict[str, str], dest_file: str) -> tuple[bool, str]:
         pg_dump = cls._resolve_pg_tool("pg_dump", "PG_DUMP_PATH")
         if not pg_dump:
             return (
@@ -572,11 +572,11 @@ class BackupService:
         return True, ""
 
     @classmethod
-    def sanitize_filename(cls, filename: str) -> Optional[str]:
+    def sanitize_filename(cls, filename: str) -> str | None:
         return cls._safe_filename(filename)
 
     @classmethod
-    def _safe_filename(cls, filename: str) -> Optional[str]:
+    def _safe_filename(cls, filename: str) -> str | None:
         if not filename or ".." in filename or "/" in filename or "\\" in filename:
             return None
         base = os.path.basename(filename)
@@ -590,9 +590,9 @@ class BackupService:
         scope: str,
         timestamp: str,
         short_sha: str,
-        tenant_slug: Optional[str] = None,
-        branch_id: Optional[int] = None,
-        store_id: Optional[int] = None,
+        tenant_slug: str | None = None,
+        branch_id: int | None = None,
+        store_id: int | None = None,
     ) -> str:
         from services.backup_scope_config import SCOPE_SYSTEM, sanitize_slug
 
@@ -609,7 +609,7 @@ class BackupService:
         return f"{cls.BACKUP_PREFIX}{label}_{timestamp}_{short_sha}.tar.gz"
 
     @classmethod
-    def _backup_path(cls, filename: str) -> Optional[str]:
+    def _backup_path(cls, filename: str) -> str | None:
         safe = cls._safe_filename(filename)
         if not safe:
             return None
@@ -624,30 +624,30 @@ class BackupService:
         *,
         scope: str,
         short_sha: str,
-        alembic_current: Optional[str],
-        alembic_heads: Optional[str],
-        params: Dict[str, str],
-        pre_checks: Dict[str, Any],
+        alembic_current: str | None,
+        alembic_heads: str | None,
+        params: dict[str, str],
+        pre_checks: dict[str, Any],
         approx_rows: int,
-        file_hashes: Dict[str, str],
-        tools: Dict[str, Any],
-        uploads_meta: Dict[str, Any],
+        file_hashes: dict[str, str],
+        tools: dict[str, Any],
+        uploads_meta: dict[str, Any],
         manual: bool,
         description: str,
-        created_by: Optional[Dict[str, Any]],
-        tables_included: List[str],
-        tables_excluded: List[str],
-        row_counts_per_table: Dict[str, int],
+        created_by: dict[str, Any] | None,
+        tables_included: list[str],
+        tables_excluded: list[str],
+        row_counts_per_table: dict[str, int],
         allowed_restore_scope: str,
-        tenant_id: Optional[int] = None,
-        tenant_slug: Optional[str] = None,
-        tenant_name: Optional[str] = None,
-        branch_id: Optional[int] = None,
-        store_id: Optional[int] = None,
-        data_filter_summary: Optional[str] = None,
-        uploads_unresolved: Optional[List[str]] = None,
-        extra_includes: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+        tenant_id: int | None = None,
+        tenant_slug: str | None = None,
+        tenant_name: str | None = None,
+        branch_id: int | None = None,
+        store_id: int | None = None,
+        data_filter_summary: str | None = None,
+        uploads_unresolved: list[str] | None = None,
+        extra_includes: list[str] | None = None,
+    ) -> dict[str, Any]:
         includes = list(extra_includes or ["manifest", "env.example.redacted", "README_RESTORE.txt"])
         return {
             "app_name": "Azad-UAE",
@@ -659,7 +659,7 @@ class BackupService:
             "tenant_name": tenant_name,
             "branch_id": branch_id,
             "store_id": store_id,
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
             "created_by_user_id": (created_by or {}).get("user_id"),
             "created_by_role": (created_by or {}).get("role"),
             "git_commit": short_sha,
@@ -696,14 +696,14 @@ class BackupService:
         cls,
         archive_name: str,
         archive_path: str,
-        manifest: Dict[str, Any],
+        manifest: dict[str, Any],
         timestamp: str,
         size: int,
         short_sha: str,
-        alembic_current: Optional[str],
+        alembic_current: str | None,
         manual: bool,
         description: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         return {
             "filename": archive_name,
             "path": archive_path,
@@ -723,7 +723,7 @@ class BackupService:
         }
 
     @classmethod
-    def _fetch_tenant_row(cls, tenant_id: int) -> Optional[Dict[str, Any]]:
+    def _fetch_tenant_row(cls, tenant_id: int) -> dict[str, Any] | None:
         from sqlalchemy import create_engine, text
 
         url = os.environ.get("DATABASE_URL") or os.environ.get("SQLALCHEMY_DATABASE_URI")
@@ -744,8 +744,8 @@ class BackupService:
             }
 
     @classmethod
-    def _write_checksums_file(cls, work_dir: str, members: List[str]) -> str:
-        lines: List[str] = []
+    def _write_checksums_file(cls, work_dir: str, members: list[str]) -> str:
+        lines: list[str] = []
         for member in members:
             path = os.path.join(work_dir, member)
             if os.path.isfile(path):
@@ -766,12 +766,12 @@ class BackupService:
         scope: str,
         tenant_id: int,
         *,
-        branch_id: Optional[int] = None,
-        store_id: Optional[int] = None,
+        branch_id: int | None = None,
+        store_id: int | None = None,
         manual: bool = True,
         description: str = "",
-        created_by: Optional[Dict[str, Any]] = None,
-    ) -> Optional[Dict[str, Any]]:
+        created_by: dict[str, Any] | None = None,
+    ) -> dict[str, Any] | None:
         from services.backup_scope_config import (
             SCOPE_BRANCH,
             SCOPE_STORE,
@@ -787,7 +787,7 @@ class BackupService:
         tenant = cls._fetch_tenant_row(tenant_id)
         if not tenant:
             cls._set_schedule_state(
-                last_run_at=datetime.now(timezone.utc).isoformat(),
+                last_run_at=datetime.now(UTC).isoformat(),
                 last_error=f"tenant_id {tenant_id} not found",
                 last_action="create_backup",
             )
@@ -862,7 +862,7 @@ class BackupService:
             ]
             cls._write_checksums_file(work_dir, archive_members)
 
-            file_hashes: Dict[str, str] = {}
+            file_hashes: dict[str, str] = {}
             for member in archive_members + ["checksums.sha256"]:
                 p = os.path.join(work_dir, member)
                 if os.path.isfile(p):
@@ -942,8 +942,8 @@ class BackupService:
 
             cls._apply_retention()
             cls._set_schedule_state(
-                last_run_at=datetime.now(timezone.utc).isoformat(),
-                last_success_at=datetime.now(timezone.utc).isoformat(),
+                last_run_at=datetime.now(UTC).isoformat(),
+                last_success_at=datetime.now(UTC).isoformat(),
                 last_error=None,
                 last_filename=archive_name,
                 last_manual=bool(manual),
@@ -952,7 +952,7 @@ class BackupService:
             return sidecar
         except Exception as e:
             cls._set_schedule_state(
-                last_run_at=datetime.now(timezone.utc).isoformat(),
+                last_run_at=datetime.now(UTC).isoformat(),
                 last_error=str(e)[:800],
                 last_action=f"{scope}_backup",
             )
@@ -962,7 +962,7 @@ class BackupService:
             shutil.rmtree(work_dir, ignore_errors=True)
 
     @classmethod
-    def list_backups_for_user(cls, user) -> List[Dict]:
+    def list_backups_for_user(cls, user) -> list[dict]:
         """Filter backups by scope permissions."""
         from utils.auth_helpers import is_global_owner_user
         from utils.tenanting import get_active_tenant_id
@@ -1018,11 +1018,11 @@ class BackupService:
         manual: bool = True,
         description: str = "",
         scope: str = "system",
-        tenant_id: Optional[int] = None,
-        branch_id: Optional[int] = None,
-        store_id: Optional[int] = None,
-        created_by: Optional[Dict[str, Any]] = None,
-    ) -> Optional[Dict[str, Any]]:
+        tenant_id: int | None = None,
+        branch_id: int | None = None,
+        store_id: int | None = None,
+        created_by: dict[str, Any] | None = None,
+    ) -> dict[str, Any] | None:
         """Create scoped backup archive (system full DB or tenant-scoped export)."""
         from services.backup_scope_config import (
             SCOPE_BRANCH,
@@ -1037,7 +1037,7 @@ class BackupService:
         if scope_n == SCOPE_TENANT:
             if not tenant_id:
                 cls._set_schedule_state(
-                    last_run_at=datetime.now(timezone.utc).isoformat(),
+                    last_run_at=datetime.now(UTC).isoformat(),
                     last_error="tenant_id required for tenant backup",
                     last_action="create_backup",
                 )
@@ -1052,7 +1052,7 @@ class BackupService:
         if scope_n == SCOPE_BRANCH:
             if not tenant_id or not branch_id:
                 cls._set_schedule_state(
-                    last_run_at=datetime.now(timezone.utc).isoformat(),
+                    last_run_at=datetime.now(UTC).isoformat(),
                     last_error="tenant_id and branch_id required for branch backup",
                     last_action="create_backup",
                 )
@@ -1068,7 +1068,7 @@ class BackupService:
         if scope_n == SCOPE_STORE:
             if not tenant_id or not store_id:
                 cls._set_schedule_state(
-                    last_run_at=datetime.now(timezone.utc).isoformat(),
+                    last_run_at=datetime.now(UTC).isoformat(),
                     last_error="tenant_id and store_id required for store backup",
                     last_action="create_backup",
                 )
@@ -1082,7 +1082,7 @@ class BackupService:
                 created_by=created_by,
             )
         cls._set_schedule_state(
-            last_run_at=datetime.now(timezone.utc).isoformat(),
+            last_run_at=datetime.now(UTC).isoformat(),
             last_error=f"unknown backup scope: {scope_n}",
             last_action="create_backup",
         )
@@ -1093,8 +1093,8 @@ class BackupService:
         cls,
         manual: bool,
         description: str,
-        created_by: Optional[Dict[str, Any]] = None,
-    ) -> Optional[Dict[str, Any]]:
+        created_by: dict[str, Any] | None = None,
+    ) -> dict[str, Any] | None:
         """Full PostgreSQL custom dump + all uploads."""
         from services.backup_scope_config import SCOPE_SYSTEM
 
@@ -1102,7 +1102,7 @@ class BackupService:
         params = cls._parse_db_url()
         if not params:
             cls._set_schedule_state(
-                last_run_at=datetime.now(timezone.utc).isoformat(),
+                last_run_at=datetime.now(UTC).isoformat(),
                 last_error="PostgreSQL DATABASE_URL required",
                 last_action="create_backup",
             )
@@ -1111,7 +1111,7 @@ class BackupService:
         tools = cls.pg_tools_status()
         if not tools.get("pg_dump"):
             cls._set_schedule_state(
-                last_run_at=datetime.now(timezone.utc).isoformat(),
+                last_run_at=datetime.now(UTC).isoformat(),
                 last_error="pg_dump not found. Set PG_DUMP_PATH.",
                 last_action="create_backup",
             )
@@ -1128,7 +1128,7 @@ class BackupService:
             ok, err = cls._run_pg_dump_custom(params, db_dump_path)
             if not ok:
                 cls._set_schedule_state(
-                    last_run_at=datetime.now(timezone.utc).isoformat(),
+                    last_run_at=datetime.now(UTC).isoformat(),
                     last_error=err,
                     last_action="create_backup",
                 )
@@ -1221,8 +1221,8 @@ class BackupService:
 
             cls._apply_retention()
             cls._set_schedule_state(
-                last_run_at=datetime.now(timezone.utc).isoformat(),
-                last_success_at=datetime.now(timezone.utc).isoformat(),
+                last_run_at=datetime.now(UTC).isoformat(),
+                last_success_at=datetime.now(UTC).isoformat(),
                 last_error=None,
                 last_filename=archive_name,
                 last_manual=bool(manual),
@@ -1232,7 +1232,7 @@ class BackupService:
             return sidecar
         except Exception as e:
             cls._set_schedule_state(
-                last_run_at=datetime.now(timezone.utc).isoformat(),
+                last_run_at=datetime.now(UTC).isoformat(),
                 last_error=str(e)[:800],
                 last_action="create_backup",
             )
@@ -1241,7 +1241,7 @@ class BackupService:
                 try:
                     os.remove(archive_path)
                 except OSError:
-                    pass
+                    logger.debug("Could not remove failed archive %s", archive_path, exc_info=True)
             return None
         finally:
             shutil.rmtree(work_dir, ignore_errors=True)
@@ -1279,9 +1279,9 @@ This archive does NOT include secrets, .env, or AI runtime memory.
             cls.delete_backup(b["filename"])
 
     @classmethod
-    def auto_backup_daily(cls) -> Optional[Dict]:
+    def auto_backup_daily(cls) -> dict | None:
         settings = cls.get_schedule_settings()
-        now_iso = datetime.now(timezone.utc).isoformat()
+        now_iso = datetime.now(UTC).isoformat()
         cls._set_schedule_state(last_run_at=now_iso, last_action="auto_backup")
         if not settings.get("enabled", True):
             return None
@@ -1314,15 +1314,15 @@ This archive does NOT include secrets, .env, or AI runtime memory.
         return result
 
     @classmethod
-    def get_backup_info(cls, filename: str) -> Optional[Dict[str, Any]]:
+    def get_backup_info(cls, filename: str) -> dict[str, Any] | None:
         path = cls._backup_path(filename)
         if not path or not os.path.exists(path):
             return None
-        info: Dict[str, Any] = {"filename": os.path.basename(path), "path": path}
+        info: dict[str, Any] = {"filename": os.path.basename(path), "path": path}
         sidecar = path + ".meta.json"
         if os.path.exists(sidecar):
             try:
-                with open(sidecar, "r", encoding="utf-8") as f:
+                with open(sidecar, encoding="utf-8") as f:
                     info["sidecar"] = json.load(f)
             except Exception as exc:
                 logging.getLogger(__name__).debug("backup sidecar: %s", exc)
@@ -1338,9 +1338,9 @@ This archive does NOT include secrets, .env, or AI runtime memory.
         return info
 
     @classmethod
-    def verify_backup(cls, filename: str) -> Dict[str, Any]:
+    def verify_backup(cls, filename: str) -> dict[str, Any]:
         """Verify archive integrity; returns structured result."""
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "valid": False,
             "filename": filename,
             "errors": [],
@@ -1357,7 +1357,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
         sidecar_path = path + ".meta.json"
         if os.path.exists(sidecar_path):
             try:
-                with open(sidecar_path, "r", encoding="utf-8") as f:
+                with open(sidecar_path, encoding="utf-8") as f:
                     sidecar = json.load(f)
                 stored = sidecar.get("checksum")
                 if stored and stored != cls._sha256_file(path):
@@ -1392,6 +1392,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
                     f.read(1024)
                 return True
             except Exception:
+                logger.debug("gzip integrity probe failed for %s", path, exc_info=True)
                 return False
         if filename.endswith(".dump"):
             pg_restore = cls._resolve_pg_tool("pg_restore", "PG_RESTORE_PATH")
@@ -1404,7 +1405,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
         return False
 
     @classmethod
-    def _verify_modern_archive(cls, path: str, result: Dict[str, Any]) -> Dict[str, Any]:
+    def _verify_modern_archive(cls, path: str, result: dict[str, Any]) -> dict[str, Any]:
         work = tempfile.mkdtemp(prefix="azad_verify_")
         try:
             with tarfile.open(path, "r:gz") as tar:
@@ -1414,7 +1415,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
                     return result
                 tar.extract("manifest.json", work, filter="data")
             manifest_path = os.path.join(work, "manifest.json")
-            with open(manifest_path, "r", encoding="utf-8") as f:
+            with open(manifest_path, encoding="utf-8") as f:
                 manifest = json.load(f)
             result["manifest"] = manifest
             scope = manifest.get("backup_scope") or "system"
@@ -1489,10 +1490,10 @@ This archive does NOT include secrets, .env, or AI runtime memory.
             shutil.rmtree(work, ignore_errors=True)
 
     @classmethod
-    def _verify_tenant_export(cls, export_path: str, manifest: Dict[str, Any]) -> Dict[str, Any]:
-        out: Dict[str, Any] = {"ok": True, "errors": []}
+    def _verify_tenant_export(cls, export_path: str, manifest: dict[str, Any]) -> dict[str, Any]:
+        out: dict[str, Any] = {"ok": True, "errors": []}
         try:
-            with open(export_path, "r", encoding="utf-8") as f:
+            with open(export_path, encoding="utf-8") as f:
                 doc = json.load(f)
         except Exception as e:
             return {"ok": False, "errors": [f"tenant_export unreadable: {e}"]}
@@ -1565,10 +1566,10 @@ This archive does NOT include secrets, .env, or AI runtime memory.
     def prepare_restore(
         cls,
         filename: str,
-        target_database_url: Optional[str] = None,
-        target_tenant_id: Optional[int] = None,
+        target_database_url: str | None = None,
+        target_tenant_id: int | None = None,
         remap: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Prepare restore plan/commands (system DB restore or tenant verify-only)."""
         return cls.prepare_restore_command(
             filename,
@@ -1581,10 +1582,10 @@ This archive does NOT include secrets, .env, or AI runtime memory.
     def prepare_restore_command(
         cls,
         filename: str,
-        target_database_url: Optional[str] = None,
-        target_tenant_id: Optional[int] = None,
+        target_database_url: str | None = None,
+        target_tenant_id: int | None = None,
         remap: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Return safe pg_restore instructions (never restores in-place)."""
         info = cls.get_backup_info(filename)
         if not info:
@@ -1661,12 +1662,12 @@ This archive does NOT include secrets, .env, or AI runtime memory.
         *,
         confirmation: str = "",
         restore_uploads: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Restore db.dump to target_database_url only if it differs from current DATABASE_URL.
         Requires confirmation text RESTORE CONFIRM unless ALLOW_DESTRUCTIVE_RESTORE=1.
         """
-        outcome: Dict[str, Any] = {"ok": False, "errors": [], "warnings": []}
+        outcome: dict[str, Any] = {"ok": False, "errors": [], "warnings": []}
         if confirmation.strip() != "RESTORE CONFIRM":
             outcome["errors"].append("Typed confirmation RESTORE CONFIRM required")
             return outcome
@@ -1767,11 +1768,11 @@ This archive does NOT include secrets, .env, or AI runtime memory.
         *,
         confirmation: str = "",
         remap: bool = False,
-        target_tenant_id: Optional[int] = None,
+        target_tenant_id: int | None = None,
         restore_uploads: bool = False,
-        uploads_dest_root: Optional[str] = None,
+        uploads_dest_root: str | None = None,
         dry_run: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         import shutil
         import tempfile
 
@@ -1830,7 +1831,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
             shutil.rmtree(work, ignore_errors=True)
 
     @classmethod
-    def write_restore_proof(cls, backup_filename: str, payload: Dict[str, Any]) -> str:
+    def write_restore_proof(cls, backup_filename: str, payload: dict[str, Any]) -> str:
         cls.initialize()
         base = backup_filename.replace(".tar.gz", "")
         path = os.path.join(cls.BACKUP_DIR, f"{base}.restore_proof.json")
@@ -1857,7 +1858,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
         return False
 
     @classmethod
-    def restore_custom_tables(cls, backup_filename: str, tables: List[str]) -> bool:
+    def restore_custom_tables(cls, backup_filename: str, tables: list[str]) -> bool:
         logger.warning("restore_custom_tables blocked for production safety")
         return False
 

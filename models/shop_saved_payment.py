@@ -1,5 +1,6 @@
+from datetime import UTC, datetime
+
 from extensions import db
-from datetime import datetime, timezone
 
 
 class ShopSavedPayment(db.Model):
@@ -26,7 +27,7 @@ class ShopSavedPayment(db.Model):
         db.DateTime,
         nullable=False,
         index=True,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
     )
 
     account = db.relationship("ShopCustomerAccount", backref=db.backref("saved_payments", lazy="dynamic"))

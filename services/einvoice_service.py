@@ -12,9 +12,9 @@ class EInvoiceService:
         """
         توليد فاتورة إلكترونية لعملية البيع.
         """
+        from models import Tenant
         from utils.localization import get_strategy
         from utils.tenanting import get_active_tenant_id
-        from models import Tenant
 
         if country_code is None:
             tenant_id = getattr(sale, "tenant_id", None) or get_active_tenant_id()

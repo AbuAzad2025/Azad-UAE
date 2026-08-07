@@ -16,7 +16,8 @@ class TestOwnerDashboardAccess:
     def test_owner_dashboard_returns_404_for_non_owner(self, client, db_session):
         _clean_db(db_session)
         import uuid
-        from models import User, Role, Tenant
+
+        from models import Role, Tenant, User
 
         uid = str(uuid.uuid4())[:8]
         tenant = Tenant(
@@ -65,7 +66,8 @@ class TestOwnerDashboardAccess:
     def test_owner_dashboard_renders_for_platform_owner(self, client, db_session):
         _clean_db(db_session)
         import uuid
-        from models import User, Role, Tenant
+
+        from models import Role, Tenant, User
         from models.invoice_settings import InvoiceSettings
 
         uid = str(uuid.uuid4())[:8]

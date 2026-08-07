@@ -6,9 +6,10 @@ purchased packages onto verified tenants.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, current_app, jsonify, request
+
 from extensions import limiter
 
 logger = logging.getLogger(__name__)
@@ -25,8 +26,8 @@ def _reject_stale_timestamp(data: dict | None):
     if ts is None:
         return None
     try:
-        event_time = datetime.fromtimestamp(int(ts or 0), tz=timezone.utc)
-        if (datetime.now(timezone.utc) - event_time).total_seconds() > _WEBHOOK_MAX_AGE:
+        event_time = datetime.fromtimestamp(int(ts or 0), tz=UTC)
+        if (datetime.now(UTC) - event_time).total_seconds() > _WEBHOOK_MAX_AGE:
             logger.warning("Billing webhook rejected: stale timestamp %s", ts)
             return jsonify({"error": "Stale event"}), 400
     except (ValueError, TypeError):
@@ -96,8 +97,8 @@ def stripe_webhook():
                 return jsonify({"error": "Missing metadata"}), 400
 
             from services.saas_provisioning_service import (
-                SaaSProvisioningService,
                 SaaSProvisioningError,
+                SaaSProvisioningService,
             )
 
             try:
@@ -145,8 +146,8 @@ def generic_webhook():
         }
     """
     from services.saas_provisioning_service import (
-        SaaSProvisioningService,
         SaaSProvisioningError,
+        SaaSProvisioningService,
     )
 
     try:
@@ -216,6 +217,7 @@ def generic_webhook():
 def cron_check_subscriptions():
     """Subscription lifecycle cron — detects expiring tenants, sends WhatsApp reminders, suspends expired ones."""
     from flask import abort
+
     from utils.billing_scheduler import run_subscription_check
 
     cron_secret = current_app.config.get("CRON_SECRET")

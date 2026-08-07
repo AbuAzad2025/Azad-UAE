@@ -1,7 +1,9 @@
-from datetime import datetime, timezone, timedelta
-from extensions import db
-from models import Sale, Purchase, Receipt, Expense
+from datetime import UTC, datetime, timedelta
+
 from sqlalchemy import func
+
+from extensions import db
+from models import Expense, Purchase, Receipt, Sale
 
 
 class FinancialService:
@@ -63,7 +65,7 @@ class FinancialService:
     def financial_overview(period, tid, scoped_branch_id):
         """Tenant-scoped or platform-wide financial overview.
         If tid is None -> platform-wide (all tenants)."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         if period == "today":
             start_date = now.date()
         elif period == "week":

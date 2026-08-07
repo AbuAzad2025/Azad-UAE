@@ -197,7 +197,7 @@ class TestImmutablePayrollLock:
         PayrollEngine.assert_mutable(tx)
 
     def test_approved_status_raises(self):
-        from services.hr_service import PayrollEngine, ImmutableRecordError
+        from services.hr_service import ImmutableRecordError, PayrollEngine
 
         tx = MagicMock()
         tx.status = "approved"
@@ -205,7 +205,7 @@ class TestImmutablePayrollLock:
             PayrollEngine.assert_mutable(tx)
 
     def test_paid_status_raises(self):
-        from services.hr_service import PayrollEngine, ImmutableRecordError
+        from services.hr_service import ImmutableRecordError, PayrollEngine
 
         tx = MagicMock()
         tx.status = "paid"
@@ -231,9 +231,9 @@ class TestLockedModificationAttempt:
 
     def test_allowance_edit_fails_on_approved_batch(self, app):
         from services.hr_service import (
-            PayrollService,
-            PayrollBatch,
             ImmutableRecordError,
+            PayrollBatch,
+            PayrollService,
         )
 
         tx = MagicMock()
@@ -241,15 +241,14 @@ class TestLockedModificationAttempt:
         tx.allowances = Decimal("500")
         batch = PayrollBatch([tx], status="approved", tenant_id=1, branch_id=1, month=6, year=2026)
 
-        with app.app_context():
-            with pytest.raises(ImmutableRecordError, match="لا يمكن تعديل دفعة"):
-                PayrollService.update_allowances(tx, Decimal("800"), batch=batch)
+        with app.app_context(), pytest.raises(ImmutableRecordError, match="لا يمكن تعديل دفعة"):
+            PayrollService.update_allowances(tx, Decimal("800"), batch=batch)
 
     def test_delete_fails_on_paid_batch(self, app, mocker):
         from services.hr_service import (
-            PayrollService,
-            PayrollBatch,
             ImmutableRecordError,
+            PayrollBatch,
+            PayrollService,
         )
 
         tx = MagicMock()
@@ -257,12 +256,11 @@ class TestLockedModificationAttempt:
         batch = PayrollBatch([tx], status="paid", tenant_id=1, branch_id=1, month=6, year=2026)
         mocker.patch("services.hr_service.db.session.delete")
 
-        with app.app_context():
-            with pytest.raises(ImmutableRecordError, match="لا يمكن تعديل دفعة"):
-                PayrollService.delete_transaction(tx, batch=batch)
+        with app.app_context(), pytest.raises(ImmutableRecordError, match="لا يمكن تعديل دفعة"):
+            PayrollService.delete_transaction(tx, batch=batch)
 
     def test_draft_batch_allows_allowance_edit(self, app):
-        from services.hr_service import PayrollService, PayrollBatch
+        from services.hr_service import PayrollBatch, PayrollService
 
         tx = MagicMock()
         tx.status = "draft"
@@ -274,14 +272,13 @@ class TestLockedModificationAttempt:
         assert tx.allowances == Decimal("1200")
 
     def test_locked_transaction_blocks_direct_edit(self, app):
-        from services.hr_service import PayrollService, ImmutableRecordError
+        from services.hr_service import ImmutableRecordError, PayrollService
 
         tx = MagicMock()
         tx.status = "approved"
 
-        with app.app_context():
-            with pytest.raises(ImmutableRecordError, match="لا يمكن تعديل معاملة"):
-                PayrollService.update_allowances(tx, Decimal("100"))
+        with app.app_context(), pytest.raises(ImmutableRecordError, match="لا يمكن تعديل معاملة"):
+            PayrollService.update_allowances(tx, Decimal("100"))
 
 
 # ---------------------------------------------------------------------------
@@ -363,7 +360,7 @@ class TestPayrollBatchGLApproval:
         return tx
 
     def test_approve_batch_posts_balanced_gl(self, app, mocker):
-        from services.hr_service import PayrollService, PayrollBatch
+        from services.hr_service import PayrollBatch, PayrollService
 
         mock_post = mocker.patch("services.gl_posting.post_or_fail", return_value=MagicMock(id=99))
         mocker.patch("services.gl_service.GLService.ensure_core_accounts")
@@ -395,16 +392,15 @@ class TestPayrollBatchGLApproval:
 
     def test_approve_locked_batch_raises(self, app):
         from services.hr_service import (
-            PayrollService,
-            PayrollBatch,
             ImmutableRecordError,
+            PayrollBatch,
+            PayrollService,
         )
 
         batch = PayrollBatch([], status="paid", tenant_id=1, branch_id=1, month=6, year=2026)
 
-        with app.app_context():
-            with pytest.raises(ImmutableRecordError, match="لا يمكن تعديل دفعة"):
-                PayrollService.approve_batch(batch, user_id=1)
+        with app.app_context(), pytest.raises(ImmutableRecordError, match="لا يمكن تعديل دفعة"):
+            PayrollService.approve_batch(batch, user_id=1)
 
     def test_normal_salary_cycle_full_additions(self):
         from services.hr_service import PayrollEngine

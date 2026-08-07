@@ -1,9 +1,10 @@
+import sys
 import warnings
 from contextlib import ExitStack, contextmanager
 from datetime import datetime
 from decimal import Decimal
-import sys
 from unittest.mock import MagicMock, patch
+
 import pytest
 from flask import Flask
 
@@ -43,6 +44,7 @@ def pytest_configure(config):
     if not config.pluginmanager.hasplugin("_cov"):
         return
     import importlib
+
     import sqlalchemy.orm.dependency as _dep
 
     if not hasattr(_dep, "_direction_to_processor"):
@@ -60,7 +62,7 @@ def _create_test_user(
     permissions=None,
 ):
     """Create a real user in the test database."""
-    from models import User, Tenant, Role, Permission, Branch
+    from models import Branch, Permission, Role, Tenant, User
 
     tenant = db_session.get(Tenant, tenant_id)
     if not tenant:
@@ -328,8 +330,9 @@ class TestFactory:
             tenant_id: Optional tenant_id override for cross-tenant testing
             **kwargs: Additional Customer fields
         """
-        from models import Customer, Tenant
         from flask import g
+
+        from models import Customer, Tenant
 
         kwargs.pop("branch_id", None)  # Customer model doesn't have branch_id
         actual_tenant_id = tenant_id if tenant_id is not None else self.user.tenant_id
@@ -526,9 +529,8 @@ def unauthenticated_client(client):
     login_manager = MagicMock()
     login_manager.unauthorized.return_value = Response("unauthorized", status=401)
     client.application.login_manager = login_manager
-    with client.application.app_context():
-        with patch("flask_login.utils._get_user", return_value=_anon_user()):
-            yield
+    with client.application.app_context(), patch("flask_login.utils._get_user", return_value=_anon_user()):
+        yield
 
 
 @pytest.fixture
@@ -886,13 +888,13 @@ def customers_client(app_factory, bypass_customers_auth):
 @pytest.fixture
 def app_factory():
     def _create_app(*blueprints, config_overrides=None):
-        import sys
         import os
+        import sys
 
         project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
         sys.path.insert(0, project_root)
-        from tests.conftest import TestConfig
         from extensions import db
+        from tests.conftest import TestConfig
 
         app = Flask(__name__, template_folder=os.path.join(project_root, "templates"))
         app.config.from_object(TestConfig)

@@ -12,7 +12,7 @@ import json
 import os
 import sys
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
@@ -38,7 +38,7 @@ def _setup():
 
 
 def _seed(db):
-    from models import Tenant, Branch, Warehouse, Role, User
+    from models import Branch, Role, Tenant, User, Warehouse
 
     uid = uuid.uuid4().hex[:8]
 
@@ -55,7 +55,7 @@ def _seed(db):
         is_suspended=False,
         subscription_plan="pro",
         subscription_plan_duration="monthly",
-        subscription_end=datetime.now(timezone.utc) + timedelta(days=30),
+        subscription_end=datetime.now(UTC) + timedelta(days=30),
         max_users=50,
         max_branches=5,
     )

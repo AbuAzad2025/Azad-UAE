@@ -5,7 +5,8 @@ Represents one distribution period for one partner.
 Created per period (monthly / quarterly) by PartnerService.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from extensions import db
 
 
@@ -61,11 +62,11 @@ class PartnerProfitDistribution(db.Model):
 
     notes = db.Column(db.Text)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])

@@ -2,13 +2,12 @@ import tempfile
 from contextlib import ExitStack, contextmanager
 from decimal import Decimal
 from io import BytesIO
-from urllib.parse import urlparse
 from unittest.mock import MagicMock, patch
+from urllib.parse import urlparse
 
 import pytest
 
 import routes.products as products_mod
-
 from tests.unit.routes.conftest import _chain_query, unauthenticated_client
 
 
@@ -231,6 +230,7 @@ def _run_import_post(
     os_remove_side_effect=None,
 ):
     from contextlib import ExitStack
+
     from routes.products import import_products
 
     file_mock = MagicMock()
@@ -238,26 +238,25 @@ def _run_import_post(
     file_mock.save = MagicMock()
     wh_query = warehouse_query or _warehouse_query_mock()
 
-    with app.test_request_context("/products/import", method="POST"):
-        with ExitStack() as stack:
-            stack.enter_context(patch("routes.products._read_import_dataframe", return_value=df))
-            stack.enter_context(patch("models.Warehouse.query", wh_query))
-            if os_remove_side_effect is not None:
-                stack.enter_context(patch("os.remove", side_effect=os_remove_side_effect))
-            else:
-                stack.enter_context(patch("os.remove"))
-            stack.enter_context(patch("os.path.exists", return_value=True))
-            with _products_patches() as ctx:
-                inner = MagicMock()
-                inner.filter.return_value = inner
-                inner.first.return_value = existing_product
-                ctx["product_query"].filter.return_value = inner
-                with patch("routes.products.request") as req:
-                    req.method = "POST"
-                    req.files = {"file": file_mock}
-                    req.form = {"update_existing": "1"} if update_existing else {}
-                    req.url = "/products/import"
-                    return import_products()
+    with app.test_request_context("/products/import", method="POST"), ExitStack() as stack:
+        stack.enter_context(patch("routes.products._read_import_dataframe", return_value=df))
+        stack.enter_context(patch("models.Warehouse.query", wh_query))
+        if os_remove_side_effect is not None:
+            stack.enter_context(patch("os.remove", side_effect=os_remove_side_effect))
+        else:
+            stack.enter_context(patch("os.remove"))
+        stack.enter_context(patch("os.path.exists", return_value=True))
+        with _products_patches() as ctx:
+            inner = MagicMock()
+            inner.filter.return_value = inner
+            inner.first.return_value = existing_product
+            ctx["product_query"].filter.return_value = inner
+            with patch("routes.products.request") as req:
+                req.method = "POST"
+                req.files = {"file": file_mock}
+                req.form = {"update_existing": "1"} if update_existing else {}
+                req.url = "/products/import"
+                return import_products()
 
 
 class TestProductsAuth:
@@ -1486,7 +1485,7 @@ class TestProductsExtendedCoverage:
         assert _annotate_branch_and_warehouse_info([], [1]) == []
 
     def test_get_alternative_warehouses(self, app_factory, bypass_permission_auth):
-        from routes.products import products_bp, _get_alternative_warehouses
+        from routes.products import _get_alternative_warehouses, products_bp
 
         app = app_factory(products_bp)
         wh = _warehouse(2, name="Alt")

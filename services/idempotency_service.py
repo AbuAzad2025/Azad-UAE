@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from extensions import db
@@ -54,8 +54,8 @@ def _is_expired(record: IdempotencyKey) -> bool:
     if created is None:
         return False
     if created.tzinfo is None:
-        created = created.replace(tzinfo=timezone.utc)
-    return datetime.now(timezone.utc) - created > IDEMPOTENCY_TTL
+        created = created.replace(tzinfo=UTC)
+    return datetime.now(UTC) - created > IDEMPOTENCY_TTL
 
 
 class IdempotencyService:
@@ -135,5 +135,5 @@ class IdempotencyService:
         record.status = IdempotencyKey.STATUS_COMPLETED
         record.response_body = json.dumps(response_payload, ensure_ascii=False, default=str)
         record.response_status = int(status_code)
-        record.completed_at = datetime.now(timezone.utc)
+        record.completed_at = datetime.now(UTC)
         db.session.flush()

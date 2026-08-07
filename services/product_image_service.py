@@ -1,7 +1,9 @@
 import os
-from datetime import datetime, timezone
-from extensions import db
+from datetime import UTC, datetime
+
 from flask import current_app
+
+from extensions import db
 
 
 class ProductImageService:
@@ -17,7 +19,7 @@ class ProductImageService:
             str(product.tenant_id),
         )
         os.makedirs(upload_dir, exist_ok=True)
-        filename: str = f"{product.id}_{image_type}_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}.{str(file.filename or '').rsplit('.', 1)[-1].lower()}"
+        filename: str = f"{product.id}_{image_type}_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}.{str(file.filename or '').rsplit('.', 1)[-1].lower()}"
         filepath: str = os.path.join(upload_dir, filename)
         file.save(filepath)
         image_url = f"/static/uploads/products/{product.tenant_id}/{filename}"

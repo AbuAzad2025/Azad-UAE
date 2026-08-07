@@ -1,10 +1,12 @@
 import logging
 import os
 import sys
+
 from flask import g, has_request_context
 
 try:
-    from colorama import init as colorama_init, Fore, Style
+    from colorama import Fore, Style
+    from colorama import init as colorama_init
 
     colorama_init(autoreset=True)
 except ImportError:
@@ -76,11 +78,11 @@ def setup_logging(app):
 
         if hasattr(sys.stdout, "buffer") and not getattr(sys.stdout, "_azad_utf8_wrapped", False):
             wrapped_out = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
-            setattr(wrapped_out, "_azad_utf8_wrapped", True)
+            wrapped_out._azad_utf8_wrapped = True
             sys.stdout = wrapped_out
         if hasattr(sys.stderr, "buffer") and not getattr(sys.stderr, "_azad_utf8_wrapped", False):
             wrapped_err = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
-            setattr(wrapped_err, "_azad_utf8_wrapped", True)
+            wrapped_err._azad_utf8_wrapped = True
             sys.stderr = wrapped_err
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(level)

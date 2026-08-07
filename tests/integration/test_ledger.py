@@ -7,9 +7,9 @@ import uuid
 
 class TestLedgerManualEntry:
     def test_ledger_journal_entry_creates_balanced_gl(self, app, db_session, client):
-        from models import Tenant, Branch, User, Role, Permission
-        from services.gl_service import GLService
+        from models import Branch, Permission, Role, Tenant, User
         from services.gl_helpers import get_account
+        from services.gl_service import GLService
 
         tid = str(uuid.uuid4())[:8]
         tenant = Tenant(
@@ -103,8 +103,9 @@ class TestLedgerManualEntry:
 
     def test_ledger_unauthorized_user_cannot_post(self, app, db_session):
         """User without manage_ledger permission gets 403."""
-        from models import Tenant, Branch, User, Role
         import uuid
+
+        from models import Branch, Role, Tenant, User
 
         tid = str(uuid.uuid4())[:8]
         tenant = Tenant(

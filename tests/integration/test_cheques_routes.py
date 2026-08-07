@@ -3,13 +3,13 @@ Integration tests: Cheques routes — full lifecycle (create, deposit, clear, bo
 """
 
 import uuid
-from decimal import Decimal
 from datetime import date, timedelta
+from decimal import Decimal
 
 
 class TestChequesCreate:
     def test_create_incoming_cheque_gl_balanced(self, app, db_session, client):
-        from models import Tenant, Branch, User, Role, Customer
+        from models import Branch, Customer, Role, Tenant, User
         from models.cheque import Cheque
         from models.gl import GLJournalEntry, GLJournalLine
         from models.sale import Sale
@@ -127,7 +127,7 @@ class TestChequesCreate:
         assert has_ar, f"Expected Cr AR, got {accounts}"
 
     def test_create_outgoing_cheque_gl_balanced(self, app, db_session, client):
-        from models import Tenant, Branch, User, Role, Supplier
+        from models import Branch, Role, Supplier, Tenant, User
         from models.cheque import Cheque
         from models.gl import GLJournalEntry, GLJournalLine
         from models.purchase import Purchase
@@ -247,7 +247,7 @@ class TestChequesCreate:
 
 class TestChequesLifecycle:
     def test_incoming_cheque_full_lifecycle_gl_balanced(self, app, db_session, client):
-        from models import Tenant, Branch, User, Role, Customer
+        from models import Branch, Customer, Role, Tenant, User
         from models.cheque import Cheque
         from models.gl import GLJournalEntry
         from models.sale import Sale
@@ -378,7 +378,7 @@ class TestChequesLifecycle:
         assert clearing_entry.total_debit == Decimal("8000.00")
 
     def test_incoming_cheque_bounce_reverses_gl(self, app, db_session, client):
-        from models import Tenant, Branch, User, Role, Customer
+        from models import Branch, Customer, Role, Tenant, User
         from models.cheque import Cheque
         from models.gl import GLJournalEntry, GLJournalLine
         from models.sale import Sale
@@ -511,7 +511,7 @@ class TestChequesLifecycle:
 
 class TestChequesViewEdit:
     def test_cheque_list_page_renders(self, app, db_session, client):
-        from models import Tenant, Branch, User, Role
+        from models import Branch, Role, Tenant, User
 
         tid = uuid.uuid4().hex[:12]
         tenant = Tenant(
@@ -551,10 +551,10 @@ class TestChequesViewEdit:
             )
             resp = client.get("/cheques/")
         assert resp.status_code == 200
-        assert b"cheque" in resp.data.lower() or b"chq" in resp.data.lower() or "شيك".encode("utf-8") in resp.data
+        assert b"cheque" in resp.data.lower() or b"chq" in resp.data.lower() or "شيك".encode() in resp.data
 
     def test_cheque_create_page_renders(self, app, db_session, client):
-        from models import Tenant, Branch, User, Role
+        from models import Branch, Role, Tenant, User
 
         tid = uuid.uuid4().hex[:12]
         tenant = Tenant(
@@ -596,7 +596,7 @@ class TestChequesViewEdit:
         assert resp.status_code == 200
 
     def test_cheque_view_page_renders(self, app, db_session, client):
-        from models import Tenant, Branch, User, Role
+        from models import Branch, Role, Tenant, User
         from models.cheque import Cheque
 
         tid = uuid.uuid4().hex[:12]
@@ -660,7 +660,7 @@ class TestChequesViewEdit:
         assert b"BNK-V-" in resp.data or b"1000" in resp.data or b"John" in resp.data
 
     def test_edit_cheque_updates_cheque(self, app, db_session, client):
-        from models import Tenant, Branch, User, Role
+        from models import Branch, Role, Tenant, User
         from models.cheque import Cheque
 
         tid = uuid.uuid4().hex[:12]
@@ -741,7 +741,7 @@ class TestChequesViewEdit:
 
 class TestChequesDelete:
     def test_archive_cheque_with_links_soft_deletes(self, app, db_session, client):
-        from models import Tenant, Branch, User, Role
+        from models import Branch, Role, Tenant, User
         from models.cheque import Cheque
         from services.gl_service import GLService
 
@@ -827,7 +827,7 @@ class TestChequesDelete:
 
 class TestChequesApi:
     def test_api_stats_returns_json(self, app, db_session, client):
-        from models import Tenant, Branch, User, Role
+        from models import Branch, Role, Tenant, User
 
         tid = uuid.uuid4().hex[:12]
         tenant = Tenant(

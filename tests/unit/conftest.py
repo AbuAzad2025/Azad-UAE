@@ -70,9 +70,10 @@ __all__ = [
     "sample_warehouse",
 ]
 
+from unittest.mock import MagicMock
+
 import pytest
 from flask import Flask
-from unittest.mock import MagicMock
 
 # Python 3.14 + pytest-cov can import SQLAlchemy twice; tolerate duplicate inspect registration.
 try:
@@ -118,8 +119,8 @@ def pytest_configure(config):
 @pytest.fixture
 def app_factory():
     def _create_app(blueprint, config_overrides=None):
-        import sys
         import os
+        import sys
 
         project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         sys.path.insert(0, project_root)
@@ -129,7 +130,7 @@ def app_factory():
         _app.config.from_object(TestConfig)
         if config_overrides:
             _app.config.update(config_overrides)
-        from extensions import db, babel, get_locale
+        from extensions import babel, db, get_locale
 
         db.init_app(_app)
         babel.init_app(_app, locale_selector=get_locale)

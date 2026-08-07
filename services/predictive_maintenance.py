@@ -1,12 +1,12 @@
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Dict, Optional
+
 from extensions import db
 
 
 class PredictiveMaintenanceService:
     @staticmethod
-    def predict_next_maintenance(product_id: int) -> Optional[Dict]:
+    def predict_next_maintenance(product_id: int) -> dict | None:
         from models import Sale, SaleLine
 
         sales_history = (
@@ -69,7 +69,7 @@ class PredictiveMaintenanceService:
         return sorted(alerts, key=lambda x: x["days_until_maintenance"])
 
     @staticmethod
-    def analyze_product_lifecycle(product_id: int) -> Dict:
+    def analyze_product_lifecycle(product_id: int) -> dict:
         from models import Sale, SaleLine
 
         sales = (

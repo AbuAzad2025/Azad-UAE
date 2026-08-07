@@ -1,9 +1,9 @@
 import graphene
 from flask_login import current_user
 
-from models import Sale, Customer, Product
 from extensions import db
-from utils.tenanting import tenant_query, assign_tenant_id
+from models import Customer, Product, Sale
+from utils.tenanting import assign_tenant_id, tenant_query
 
 
 def _require_permission(permission_code):
@@ -146,8 +146,9 @@ class CreateSale(graphene.Mutation):
     @staticmethod
     def mutate(info, **data):
         _require_permission("manage_sales")
-        from utils.helpers import generate_number
         from decimal import Decimal
+
+        from utils.helpers import generate_number
 
         seller_id = current_user.id if current_user.is_authenticated else None
         if not seller_id:

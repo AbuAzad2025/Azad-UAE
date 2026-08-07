@@ -1,19 +1,20 @@
 """AI specialized routes — automotive, external sources, genius queries."""
 
-from flask_babel import gettext
-
 import logging
-from flask import request, jsonify
-from flask_login import login_required, current_user
-from extensions import limiter
-from utils.decorators import permission_required
-from services.ai_service import AIService
+
+from flask import jsonify, request
+from flask_babel import gettext
+from flask_login import current_user, login_required
+
 from ai_knowledge.knowledge_base import get_automotive_ecu_knowledge
 from ai_knowledge.learning.external_learning import (
-    get_external_learning,
     LEARNING_SOURCES_CATALOG,
+    get_external_learning,
 )
+from extensions import limiter
 from routes.ai_routes import ai_bp
+from services.ai_service import AIService
+from utils.decorators import permission_required
 
 logger = logging.getLogger(__name__)
 

@@ -1,10 +1,11 @@
+from datetime import UTC, datetime
 from decimal import Decimal
-from datetime import datetime, timezone
 
 
 class TestPaymentsReceipts:
     def test_receipts_list_returns_200(self, auth_client, db_session, sample_tenant, sample_customer):
         import uuid
+
         from models import Receipt
 
         receipt = Receipt(
@@ -15,7 +16,7 @@ class TestPaymentsReceipts:
             currency="AED",
             amount_aed=Decimal("100.000"),
             payment_method="cash",
-            receipt_date=datetime.now(timezone.utc),
+            receipt_date=datetime.now(UTC),
         )
         db_session.add(receipt)
         db_session.commit()
@@ -27,9 +28,10 @@ class TestPaymentsReceipts:
         self, auth_client, db_session, sample_tenant, sample_customer, sample_branch
     ):
         import uuid
-        from models import Receipt
+        from datetime import datetime
         from decimal import Decimal
-        from datetime import datetime, timezone
+
+        from models import Receipt
 
         receipt = Receipt(
             tenant_id=sample_tenant.id,
@@ -40,7 +42,7 @@ class TestPaymentsReceipts:
             amount_aed=Decimal("100.000"),
             payment_method="cash",
             branch_id=sample_branch.id,
-            receipt_date=datetime.now(timezone.utc),
+            receipt_date=datetime.now(UTC),
         )
         db_session.add(receipt)
         db_session.commit()

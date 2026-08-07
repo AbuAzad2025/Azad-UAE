@@ -6,6 +6,7 @@ for the target role.
 
 import json
 import os
+
 import pytest
 
 BASE_URL = os.environ.get("PLAYWRIGHT_BASE_URL", "http://localhost:5000")
@@ -16,7 +17,7 @@ def _load_state(role_slug):
     path = os.path.join(STATE_DIR, f"{role_slug}_state.json")
     if not os.path.exists(path):
         pytest.skip(f"Auth state file not found: {path}. Run: python scripts/auth/setup_test_users.py")
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 

@@ -209,9 +209,9 @@ class PrintService:
     @staticmethod
     def create_snapshot(tenant_id, document_type, document_id, reason="print", document=None):
         """Capture an immutable snapshot of a document at print/finalize/amend time."""
-        from utils.tenant_branding import resolve_tenant_branding
-        from models.document_snapshot import DocumentSnapshot
         from extensions import db
+        from models.document_snapshot import DocumentSnapshot
+        from utils.tenant_branding import resolve_tenant_branding
 
         try:
             entry = PrintService.PRINTABLE_DOCUMENTS.get(document_type)
@@ -269,8 +269,8 @@ class PrintService:
     ):
         """Record print action in audit log (flush-based for transaction safety)."""
         try:
-            from models.print_history import PrintHistory
             from extensions import db
+            from models.print_history import PrintHistory
 
             record = PrintHistory(
                 tenant_id=tenant_id,

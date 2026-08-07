@@ -1,60 +1,67 @@
-from flask_babel import gettext
-from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+import contextlib
 import json
+import os as _os
+import queue as _queue
+import time
+from datetime import UTC
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
+import requests
 from flask import (
     Blueprint,
+    abort,
+    current_app,
+    flash,
+    g,
     jsonify,
+    redirect,
     render_template,
     request,
-    current_app,
-    redirect,
     url_for,
-    flash,
-    abort,
-    g,
 )
+from flask_babel import gettext
 from flask_login import current_user, login_required
+from sqlalchemy.exc import IntegrityError
+
 from extensions import db
-from models import Customer, PosSession, Product, PosOrderType, PosPrinter
+from models import Customer, PosOrderType, PosPrinter, PosSession, Product
 from models.enums import PermissionEnum
 from models.pos_shift import PosShift
 from models.system_settings import SystemSettings
 from models.tenant import Tenant
-from services.pos_cash_service import PosCashMovementService
-from services.pos_override_service import PosOverrideError, PosOverrideService
-from services.pos_rma_service import PosRmaService
 from services.idempotency_service import (
     IdempotencyHashMismatchError,
     IdempotencyInFlightError,
     IdempotencyService,
     hash_request_payload,
 )
+from services.logging_core import LoggingCore
+from services.pos_cart_service import PosCartConflictError, PosCartService
+from services.pos_cash_service import PosCashMovementService
+from services.pos_override_service import PosOverrideError, PosOverrideService
+from services.pos_rma_service import PosRmaService
 from services.pricing_service import PricingService
 from services.promotion_service import PromotionService
-from services.pos_cart_service import PosCartConflictError, PosCartService
 from services.sale_service import SaleService
+from utils import sse_backplane
 from utils.branching import (
     ensure_warehouse_access,
     get_accessible_warehouses,
     get_active_branch_id,
 )
-from utils.decorators import permission_required
+from utils.currency_utils import context_aware_default_currency, convert_and_quantize_aed
 from utils.db_safety import atomic_transaction
+from utils.decorators import permission_required
 from utils.helpers import generate_number
 from utils.logger import log_hardware, log_security
-from utils.tenant_limits import TenantLimitError
-import queue as _queue
-import time
-import os as _os
-import requests
+from utils.pos_features import pos_feature_enabled
 from utils.pos_helpers import (
     POS_QA_MARKER,
     build_cfd_order_payload,
     build_print_tickets,
+    close_pos_session,
     compute_fast_cash_options,
     create_pos_session,
-    close_pos_session,
     get_active_session,
     get_paused_session,
     get_pos_walkin_customer,
@@ -78,13 +85,9 @@ from utils.pos_security import (
     verify_customer_display_token,
     verify_pos_session_token,
 )
-from utils.pos_features import pos_feature_enabled
-from sqlalchemy.exc import IntegrityError
 from utils.structured_logging import log_mutation
-from services.logging_core import LoggingCore
-from utils.tenanting import tenant_get, tenant_query, get_active_tenant_id
-from utils import sse_backplane
-from utils.currency_utils import context_aware_default_currency, convert_and_quantize_aed
+from utils.tenant_limits import TenantLimitError
+from utils.tenanting import get_active_tenant_id, tenant_get, tenant_query
 
 pos_bp = Blueprint("pos", __name__, url_prefix="/pos")
 
@@ -437,9 +440,9 @@ def _paused_session_error_response():
 
 
 def _pos_register_context():
-    from utils.tax_settings import get_prices_include_vat
-    from utils.currency_utils import resolve_default_currency
     from services.industry_service import get_pos_profile
+    from utils.currency_utils import resolve_default_currency
+    from utils.tax_settings import get_prices_include_vat
 
     warehouses = [
         w for w in get_accessible_warehouses(current_user) if w.is_active and w.warehouse_type != w.TYPE_ONLINE
@@ -2705,8 +2708,9 @@ def kds_orders():
 @login_required
 @permission_required("view_kds")
 def kds_update_status(order_id):
+    from datetime import datetime
+
     from models import PosKdsOrder
-    from datetime import datetime, timezone
 
     tid = get_active_tenant_id(current_user)
     order = tenant_query(PosKdsOrder).filter_by(id=order_id).first()
@@ -2719,8 +2723,8 @@ def kds_update_status(order_id):
     with atomic_transaction("pos_kds_status"):
         order.status = new_status
         if new_status in ("served", "cancelled"):
-            order.completed_at = datetime.now(timezone.utc)
-        order.updated_at = datetime.now(timezone.utc)
+            order.completed_at = datetime.now(UTC)
+        order.updated_at = datetime.now(UTC)
     _notify_kds(
         {
             "type": "status_update",
@@ -2793,11 +2797,9 @@ def customer_display_stream(session_id):
                 # Push-responsive wait: drain refresh messages (in-process or
                 # Redis backplane) every 0.1s, full DB re-poll every ~3s.
                 for _ in range(30):
-                    try:
+                    with contextlib.suppress(_queue.Empty):
                         while True:
                             q.get_nowait()
-                    except _queue.Empty:
-                        pass
                     time.sleep(0.1)
         finally:
             if subscriber in _CFD_SUBSCRIBERS:

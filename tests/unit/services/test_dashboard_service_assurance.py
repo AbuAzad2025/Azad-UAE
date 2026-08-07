@@ -131,9 +131,8 @@ class TestLayoutPersistence:
     def test_rejects_empty_string_layout(self, app):
         from services.dashboard_service import DashboardService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="Invalid layout"):
-                DashboardService.save_user_layout(1, 1, "")
+        with app.app_context(), pytest.raises(ValueError, match="Invalid layout"):
+            DashboardService.save_user_layout(1, 1, "")
 
     def test_update_existing_without_add(self, app, mocker):
         from models.dashboard import UserDashboardLayout
@@ -175,9 +174,8 @@ class TestLayoutPersistence:
 
         from services.dashboard_service import DashboardService
 
-        with app.app_context():
-            with pytest.raises(IntegrityError):
-                DashboardService.save_user_layout(1, 1, {"widgets": []})
+        with app.app_context(), pytest.raises(IntegrityError):
+            DashboardService.save_user_layout(1, 1, {"widgets": []})
 
 
 class TestWidgetCatalog:

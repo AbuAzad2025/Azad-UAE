@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
@@ -158,9 +158,9 @@ class TestAiModelToDict:
             mem.confidence = Decimal("0.95")
             mem.source = "user"
             mem.access_count = 3
-            mem.last_accessed = datetime(2025, 6, 1, tzinfo=timezone.utc)
+            mem.last_accessed = datetime(2025, 6, 1, tzinfo=UTC)
             mem.is_active = True
-            mem.created_at = datetime(2025, 1, 1, tzinfo=timezone.utc)
+            mem.created_at = datetime(2025, 1, 1, tzinfo=UTC)
 
             d = mem.to_dict()
             assert d["id"] == 1
@@ -205,7 +205,7 @@ class TestAiModelToDict:
             inter.was_successful = True
             inter.response_time_ms = 42
             inter.is_training_sample = False
-            inter.created_at = datetime(2025, 3, 1, tzinfo=timezone.utc)
+            inter.created_at = datetime(2025, 3, 1, tzinfo=UTC)
 
             d = inter.to_dict()
             assert d["id"] == 10
@@ -245,7 +245,7 @@ class TestAiModelToDict:
             exp.priority = 3
             exp.usage_count = 10
             exp.is_active = True
-            exp.created_at = datetime(2025, 5, 1, tzinfo=timezone.utc)
+            exp.created_at = datetime(2025, 5, 1, tzinfo=UTC)
 
             d = exp.to_dict()
             assert d["domain"] == "sales"
@@ -304,7 +304,7 @@ class TestArchivedRecordToDict:
             rec.id = 1
             rec.table_name = "customers"
             rec.record_id = 42
-            rec.archived_at = datetime(2025, 6, 15, 10, 0, 0, tzinfo=timezone.utc)
+            rec.archived_at = datetime(2025, 6, 15, 10, 0, 0, tzinfo=UTC)
             rec.can_restore = True
 
             d = rec.to_dict()

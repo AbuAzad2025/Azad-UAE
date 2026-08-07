@@ -1,12 +1,14 @@
 import logging
-from datetime import datetime, timezone, date
+from datetime import UTC, date, datetime
 from decimal import Decimal
+
 from flask_babel import gettext
+
 from extensions import db
-from models import Project, TaskStage, Task, Timesheet, ProjectMember
-from utils.tenanting import get_active_tenant_id
-from utils.branching import branch_scope_id_for
+from models import Project, ProjectMember, Task, TaskStage, Timesheet
 from utils.auth_helpers import is_global_owner_user
+from utils.branching import branch_scope_id_for
+from utils.tenanting import get_active_tenant_id
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +87,7 @@ class ProjectService:
             project.date_end = datetime.fromisoformat(data["date_end"]) if data["date_end"] else None
         if "customer_id" in data:
             project.customer_id = int(data["customer_id"]) if data["customer_id"] else None
-        project.updated_at = datetime.now(timezone.utc)
+        project.updated_at = datetime.now(UTC)
         try:
             db.session.flush()
         except Exception:
@@ -145,7 +147,7 @@ class ProjectService:
         if not stage or int(stage.project_id) != int(task.project_id):
             raise ValueError(gettext("المرحلة غير صالحة لهذا المشروع."))
         task.stage_id = int(stage_id)
-        task.updated_at = datetime.now(timezone.utc)
+        task.updated_at = datetime.now(UTC)
         try:
             db.session.flush()
         except Exception:

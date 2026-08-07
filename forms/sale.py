@@ -1,7 +1,8 @@
 from decimal import Decimal
+
 from flask_wtf import FlaskForm
-from wtforms import SelectField, DecimalField, TextAreaField, SubmitField
-from wtforms.validators import DataRequired, Optional, NumberRange
+from wtforms import DecimalField, SelectField, SubmitField, TextAreaField
+from wtforms.validators import DataRequired, NumberRange, Optional
 
 
 class SaleForm(FlaskForm):

@@ -1,8 +1,11 @@
 import os
+from datetime import UTC
+
 from flask import current_app
-from extensions import db
-from models import User, Role, Permission
 from sqlalchemy import and_
+
+from extensions import db
+from models import Permission, Role, User
 from utils.db_safety import atomic_transaction
 
 
@@ -273,7 +276,8 @@ def _ensure_platform_reference_data():
     """Platform-wide reference data only — no tenant, branch, or warehouse."""
     with atomic_transaction("ensure_platform_reference_data"):
         from decimal import Decimal
-        from models import Currency, SystemSettings, ExchangeRate
+
+        from models import Currency, ExchangeRate, SystemSettings
 
         settings = SystemSettings.get_current()
         if settings.system_name in ("Azad Garage System", "Garage Management System"):
@@ -524,12 +528,13 @@ def _ensure_owner_user(role):
 
 def _record_server_activation(owner_user, owner_created: bool):
     try:
-        from datetime import datetime, timezone
         import json
-        from models import SystemSettings, SecurityAlert
-        from utils.telemetry import get_machine_signature
-        import socket
         import platform
+        import socket
+        from datetime import datetime
+
+        from models import SecurityAlert, SystemSettings
+        from utils.telemetry import get_machine_signature
 
         settings = SystemSettings.get_current()
         signature = get_machine_signature()
@@ -566,7 +571,7 @@ def _record_server_activation(owner_user, owner_created: bool):
             "signature": signature,
             "previous_signature": stored_signature,
             "owner_created": bool(owner_created),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         description = json.dumps(details, ensure_ascii=False, indent=2)
@@ -598,6 +603,7 @@ def _record_server_activation(owner_user, owner_created: bool):
             return
 
         from flask_mail import Message
+
         from extensions import mail
 
         msg = Message(

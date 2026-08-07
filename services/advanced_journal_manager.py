@@ -1,6 +1,8 @@
-from datetime import datetime, timezone
 import json
+from datetime import UTC, datetime
+
 from flask_babel import gettext
+
 from extensions import db
 from models.gl import GLJournalEntry
 from models.journal_entry_audit import JournalEntryAudit
@@ -24,7 +26,8 @@ class AdvancedJournalEntryManager:
     @staticmethod
     def _entry_or_404(entry_id, tenant_id=None):
         from werkzeug.exceptions import NotFound
-        from utils.gl_tenant import gl_entry_query, active_tenant_id
+
+        from utils.gl_tenant import active_tenant_id, gl_entry_query
 
         tid = tenant_id if tenant_id is not None else active_tenant_id()
         entry = gl_entry_query(tenant_id=tid).filter_by(id=entry_id).first()
@@ -46,8 +49,8 @@ class AdvancedJournalEntryManager:
             entry.is_reversed = True
         if new_status == "posted":
             entry.is_posted = True
-            entry.validated_at = entry.validated_at or datetime.now(timezone.utc)
-        entry.updated_at = datetime.now(timezone.utc)
+            entry.validated_at = entry.validated_at or datetime.now(UTC)
+        entry.updated_at = datetime.now(UTC)
 
     # ── Validate ─────────────────────────────────────────────────────────
 
@@ -89,7 +92,7 @@ class AdvancedJournalEntryManager:
                 errors.append(f"Header account used: {line.account.full_name}")
 
         entry.validated_by = validated_by
-        entry.validated_at = datetime.now(timezone.utc)
+        entry.validated_at = datetime.now(UTC)
 
         if errors:
             entry.status = "error"
@@ -117,6 +120,7 @@ class AdvancedJournalEntryManager:
     def create_entry_with_validation(description, lines, entry_date=None, notes=None, created_by=None, **kwargs):
         """إنشاء قيد — defaults to 'draft' so it must be validated before posting."""
         from decimal import Decimal
+
         from services.gl_service import GLService
 
         # Inline balance check (fast-fail before DB round-trip)
@@ -129,7 +133,7 @@ class AdvancedJournalEntryManager:
         for line in lines:
             account_code = line.get("account_code")
             if account_code:
-                from utils.gl_tenant import get_gl_account_by_code, active_tenant_id
+                from utils.gl_tenant import active_tenant_id, get_gl_account_by_code
 
                 account = get_gl_account_by_code(
                     account_code,
@@ -190,7 +194,7 @@ class AdvancedJournalEntryManager:
             if abs(total_debit - total_credit) > 0.01:
                 raise ValueError(gettext(f"القيد غير متوازن بعد التحديث: المدين {total_debit} ≠ الدائن {total_credit}"))
 
-        entry.updated_at = datetime.now(timezone.utc)
+        entry.updated_at = datetime.now(UTC)
         AdvancedJournalEntryManager._log_audit(
             entry_id,
             "update",
@@ -365,7 +369,7 @@ class AdvancedJournalEntryManager:
         Returns:
             List of JournalEntryAudit records ordered by performed_at desc.
         """
-        from utils.gl_tenant import gl_entry_query, active_tenant_id
+        from utils.gl_tenant import active_tenant_id, gl_entry_query
 
         tid = tenant_id if tenant_id is not None else active_tenant_id()
         entry = gl_entry_query(tenant_id=tid).filter_by(id=entry_id).first()
@@ -401,7 +405,7 @@ class AdvancedJournalEntryManager:
             new_values=str(new_values) if new_values else None,
             reason=reason,
             performed_by=user_id,
-            performed_at=datetime.now(timezone.utc),
+            performed_at=datetime.now(UTC),
         )
         db.session.add(audit)
 

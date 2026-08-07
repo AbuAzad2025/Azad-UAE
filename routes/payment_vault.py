@@ -3,33 +3,34 @@ Payment Vault Routes - مسارات الخزينة السرية
 مسارات محمية بكلمة مرور منفصلة للدفع والتبرعات
 """
 
-from flask_babel import gettext
-
-from datetime import datetime, timezone
+import logging
+import os
+import re
+import secrets
+import threading
+from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from urllib.parse import urlparse
+
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
+from flask_babel import gettext
 from flask_login import current_user
-from extensions import db, limiter, csrf
+
+from extensions import csrf, db, limiter
 from models import (
-    PaymentVault,
-    PaymentLog,
-    Donation,
     CardPayment,
+    Donation,
     Package,
     PackagePurchase,
+    PaymentLog,
+    PaymentVault,
 )
 from models.package import TENANT_FLAG_COLUMNS, TENANT_LIMIT_COLUMNS
-from services.nowpayments_service import NOWPaymentsService
 from services.logging_core import LoggingCore
-from utils.decorators import owner_only
+from services.nowpayments_service import NOWPaymentsService
 from utils.db_safety import atomic_transaction
-from utils.tenanting import tenant_query, tenant_get_or_404
-import secrets
-import logging
-import re
-import os
-from urllib.parse import urlparse
-import threading
+from utils.decorators import owner_only
+from utils.tenanting import tenant_get_or_404, tenant_query
 
 payment_vault_bp = Blueprint("payment_vault", __name__, url_prefix="/payment-vault")
 logger = logging.getLogger(__name__)
@@ -97,7 +98,7 @@ def _origin_from_referer(referer: str) -> str | None:
         parsed = urlparse(referer)
         if parsed.scheme and parsed.netloc:
             return f"{parsed.scheme}://{parsed.netloc}".rstrip("/")
-    except Exception:
+    except (TypeError, ValueError):
         return None
     return None
 
@@ -147,10 +148,10 @@ def _reject_stale_webhook_timestamp(data: dict | None) -> tuple | None:
         return None
     try:
         if isinstance(ts_str, (int, float)):
-            ts = datetime.fromtimestamp(ts_str, tz=timezone.utc)
+            ts = datetime.fromtimestamp(ts_str, tz=UTC)
         else:
             ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
-        age = (datetime.now(timezone.utc) - ts).total_seconds()
+        age = (datetime.now(UTC) - ts).total_seconds()
         if age > _WEBHOOK_MAX_AGE:
             logger.warning("Webhook replay blocked: age=%.0fs", age)
             return jsonify({"error": "Stale webhook — timestamp too old"}), 401
@@ -228,7 +229,7 @@ def _validate_api_key(*, required_scope: str = "write") -> tuple | None:
     # Track usage
     try:
         with atomic_transaction("api_key_usage_tracking"):
-            api_key.last_used = datetime.now(timezone.utc)
+            api_key.last_used = datetime.now(UTC)
             api_key.usage_count = (api_key.usage_count or 0) + 1
     except Exception:
         from flask import current_app
@@ -446,7 +447,7 @@ def settings():
                 if s == "":
                     return float(default)
                 return float(s)
-            except Exception:
+            except (TypeError, ValueError, AttributeError):
                 return float(default)
 
         def _as_int(value, default):
@@ -457,7 +458,7 @@ def settings():
                 if s == "":
                     return int(default)
                 return int(s)
-            except Exception:
+            except (TypeError, ValueError, AttributeError):
                 return int(default)
 
         vault.nowpayments_api_key = request.form.get("nowpayments_api_key", vault.nowpayments_api_key)
@@ -501,7 +502,7 @@ def settings():
         vault.auto_lock_minutes = _as_int(request.form.get("auto_lock_minutes"), vault.auto_lock_minutes)
         vault.max_failed_attempts = _as_int(request.form.get("max_failed_attempts"), vault.max_failed_attempts)
 
-        vault.updated_at = datetime.now(timezone.utc)
+        vault.updated_at = datetime.now(UTC)
 
         with atomic_transaction("vault_settings_update"):
             PaymentLog.log_action(
@@ -632,13 +633,13 @@ def create_package():
     def _as_float(value, default=0):
         try:
             return float(str(value).strip() or default)
-        except Exception:
+        except (TypeError, ValueError, AttributeError):
             return float(default)
 
     def _as_int(value, default=0):
         try:
             return int(str(value).strip() or default)
-        except Exception:
+        except (TypeError, ValueError, AttributeError):
             return int(default)
 
     try:
@@ -691,6 +692,7 @@ def create_package():
 
         flash(gettext("✅ تم إنشاء الباقة بنجاح"), "success")
     except Exception as e:
+        logger.exception("Package creation failed")
         flash(gettext(f"❌ خطأ أثناء إنشاء الباقة: {str(e)}"), "danger")
 
     return redirect(url_for("payment_vault.packages_management"))
@@ -718,7 +720,7 @@ def edit_package(package_id):
                     if s == "":
                         return float(default)
                     return float(s)
-                except Exception:
+                except (TypeError, ValueError, AttributeError):
                     return float(default)
 
             def _as_int(value, default):
@@ -729,7 +731,7 @@ def edit_package(package_id):
                     if s == "":
                         return int(default)
                     return int(s)
-                except Exception:
+                except (TypeError, ValueError, AttributeError):
                     return int(default)
 
             package.name_ar = request.form.get("name_ar", package.name_ar).strip()
@@ -761,6 +763,7 @@ def edit_package(package_id):
             flash(gettext("✅ تم تحديث الباقة بنجاح!"), "success")
             return redirect(url_for("payment_vault.packages_management"))
         except Exception as e:
+            logger.exception("Package update failed")
             flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
 
     return render_template("payment_vault/edit_package.html", package=package)
@@ -939,6 +942,7 @@ def decrypt_card(card_id):
     )
 
     from flask import current_app
+
     from services.card_encryption_service import CardEncryptionService
 
     cipher = CardEncryptionService(encryption_key=current_app.config.get("CARD_ENCRYPTION_KEY"))
@@ -1011,6 +1015,7 @@ def process_payment():
             )
 
             from flask import current_app
+
             from services.card_encryption_service import CardEncryptionService
 
             cipher = CardEncryptionService(encryption_key=current_app.config.get("CARD_ENCRYPTION_KEY"))
@@ -1080,7 +1085,7 @@ def change_password():
             return render_template("payment_vault/change_password.html")
 
         vault.set_vault_password(new_password)
-        vault.updated_at = datetime.now(timezone.utc)
+        vault.updated_at = datetime.now(UTC)
 
         with atomic_transaction("vault_password_change"):
             PaymentLog.log_action(
@@ -1517,7 +1522,7 @@ def activate_purchase(**kwargs):
 
     try:
         purchase.activation_status = "activated"
-        purchase.activation_date = datetime.now(timezone.utc)
+        purchase.activation_date = datetime.now(UTC)
         purchase.payment_status = "completed"
 
         tid = None
@@ -1528,12 +1533,13 @@ def activate_purchase(**kwargs):
         ).first()
         if donation:
             donation.status = "completed"
-            donation.completed_at = datetime.now(timezone.utc)
+            donation.completed_at = datetime.now(UTC)
 
         with atomic_transaction("purchase_activate"):
             pass
         flash(gettext("✅ تم تفعيل الباقة"), "success")
     except Exception as e:
+        logger.exception("Purchase activation failed")
         flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
 
     return redirect(url_for("payment_vault.purchase_detail", id=record_id))
@@ -1605,7 +1611,7 @@ def approve_donation(donation_id):
 
     try:
         donation.status = "completed"
-        donation.completed_at = datetime.now(timezone.utc)
+        donation.completed_at = datetime.now(UTC)
         from services.donation_gl_service import DonationGLService
 
         DonationGLService.post_completed_donation(donation)
@@ -1618,6 +1624,7 @@ def approve_donation(donation_id):
 
         flash(gettext("✅ تم قبول التبرع"), "success")
     except Exception as e:
+        logger.exception("Donation approval failed")
         flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
 
     return redirect(url_for("payment_vault.donations"))
@@ -1641,6 +1648,7 @@ def reject_donation(donation_id):
 
         flash(gettext("✅ تم رفض التبرع"), "warning")
     except Exception as e:
+        logger.exception("Donation rejection failed")
         flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
 
     return redirect(url_for("payment_vault.donations"))
@@ -1733,7 +1741,7 @@ def api_live_stats():
             "daily_transactions": daily_stats["today_transactions"],
             "pending_count": pending_count,
             "security_level": security_status["security_level"],
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
     )
 
@@ -1742,8 +1750,9 @@ def api_live_stats():
 @owner_only
 def export_purchases():
     """تصدير المشتريات إلى CSV"""
-    from services.export_service import ExportService
     from flask import send_file
+
+    from services.export_service import ExportService
 
     purchases = PackagePurchase.query.order_by(PackagePurchase.created_at.desc()).all()
     csv_file = ExportService.export_purchases_to_csv(purchases)
@@ -1760,8 +1769,9 @@ def export_purchases():
 @owner_only
 def export_donations():
     """تصدير التبرعات إلى CSV"""
-    from services.export_service import ExportService
     from flask import send_file
+
+    from services.export_service import ExportService
 
     tid = None
     donation_list = (
@@ -1781,8 +1791,9 @@ def export_donations():
 @owner_only
 def export_cards():
     """تصدير البطاقات إلى CSV"""
-    from services.export_service import ExportService
     from flask import send_file
+
+    from services.export_service import ExportService
 
     card_list = tenant_query(CardPayment).order_by(CardPayment.created_at.desc()).all()
     csv_file = ExportService.export_cards_to_csv(card_list)
@@ -2109,6 +2120,6 @@ def api_v2_stats():
                 "packages": package_performance,
                 "security": security_status,
             },
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
         }
     )

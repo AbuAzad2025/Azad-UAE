@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -96,7 +96,7 @@ class TestExpiry:
     def test_expired_completed_key_allows_fresh_execution(self, db_session, sample_tenant):
         record, _ = _begin(sample_tenant.id)
         IdempotencyService.complete(record, {"success": True, "sale_id": 9}, 200)
-        record.created_at = datetime.now(timezone.utc) - IDEMPOTENCY_TTL - timedelta(hours=1)
+        record.created_at = datetime.now(UTC) - IDEMPOTENCY_TTL - timedelta(hours=1)
         db_session.flush()
 
         record2, stored = _begin(sample_tenant.id)
@@ -107,7 +107,7 @@ class TestExpiry:
     def test_fresh_completed_key_not_expired(self, db_session, sample_tenant):
         record, _ = _begin(sample_tenant.id)
         IdempotencyService.complete(record, {"success": True}, 200)
-        record.created_at = datetime.now(timezone.utc) - timedelta(hours=1)
+        record.created_at = datetime.now(UTC) - timedelta(hours=1)
         db_session.flush()
         _, stored = _begin(sample_tenant.id)
         assert stored == ({"success": True}, 200)

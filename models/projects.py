@@ -1,4 +1,5 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from extensions import db
 
 
@@ -27,11 +28,11 @@ class Project(db.Model):
     date_end = db.Column(db.DateTime, nullable=True)
     color = db.Column(db.String(7), default="#10b981")
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
@@ -75,7 +76,7 @@ class TaskStage(db.Model):
     sequence = db.Column(db.Integer, default=0)
     is_closed = db.Column(db.Boolean, default=False)
     color = db.Column(db.String(7), default="#6b7280")
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     project = db.relationship("Project", back_populates="stages", foreign_keys=[project_id])
@@ -127,11 +128,11 @@ class Task(db.Model):
     effective_hours = db.Column(db.Numeric(8, 2), default=0)
     sort_order = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
@@ -177,7 +178,7 @@ class Timesheet(db.Model):
     date = db.Column(db.Date, nullable=False, index=True)
     hours = db.Column(db.Numeric(8, 2), nullable=False)
     description = db.Column(db.String(500))
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     branch = db.relationship("Branch", foreign_keys=[branch_id])
@@ -211,7 +212,7 @@ class ProjectMember(db.Model):
         index=True,
     )
     role = db.Column(db.String(30), default="member")
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     project = db.relationship("Project", back_populates="members", foreign_keys=[project_id])

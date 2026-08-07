@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from sqlalchemy.exc import IntegrityError
@@ -81,7 +81,7 @@ class TestPosKdsOrderConstraints:
 class TestPosKdsOrderLifecycle:
     def test_completion_persists(self, db_session, kds_order):
         kds_order.status = "done"
-        kds_order.completed_at = datetime.now(timezone.utc)
+        kds_order.completed_at = datetime.now(UTC)
         db_session.commit()
         db_session.expire_all()
 

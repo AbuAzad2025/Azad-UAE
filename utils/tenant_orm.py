@@ -6,14 +6,14 @@ Automatic ORM-level tenant isolation:
 
 from __future__ import annotations
 
-
+import logging
 from typing import Any, cast
 
 from flask import g, has_request_context, request
-from sqlalchemy import event, inspect as sa_inspect, true as sql_true
+from sqlalchemy import event
+from sqlalchemy import inspect as sa_inspect
+from sqlalchemy import true as sql_true
 from sqlalchemy.orm import Session, with_loader_criteria
-
-import logging
 
 from extensions import db
 
@@ -154,7 +154,7 @@ def tenant_scope_enabled() -> bool:
 
         if not getattr(current_user, "is_authenticated", False):
             return False
-    except Exception:
+    except RuntimeError:
         return False
     return True
 
@@ -238,7 +238,7 @@ def _get_criteria(tid: int | None):
             cached = _criteria_for_model(tid)
             cache[key] = cached
         return cached
-    except Exception:
+    except (RuntimeError, AttributeError, TypeError, ValueError):
         # Outside request context: fall back to a plain (uncached) build.
         return _criteria_for_model(tid)
 
@@ -253,7 +253,7 @@ def _validate_instance_tenant(obj) -> bool:
         return True
 
     tid = _active_tenant_for_orm()
-    rec_tid = getattr(obj, "tenant_id", None)
+    rec_tid = (obj.tenant_id if obj is not None else None)
     if rec_tid is None:
         from utils.tenanting import is_platform_owner
 
@@ -349,7 +349,7 @@ def _inject_tenant_write_guard(session, flush_context, instances):
         mapper = sa_inspect(obj.__class__, raiseerr=False)
         if mapper is None or "tenant_id" not in mapper.columns:
             continue
-        obj_tid = getattr(obj, "tenant_id", None)
+        obj_tid = (obj.tenant_id if obj is not None else None)
         if obj_tid is None:
             if tid is not None:
                 obj.tenant_id = tid
@@ -366,7 +366,7 @@ def _inject_tenant_write_guard(session, flush_context, instances):
         mapper = sa_inspect(obj.__class__, raiseerr=False)
         if mapper is None or "tenant_id" not in mapper.columns:
             continue
-        obj_tid = getattr(obj, "tenant_id", None)
+        obj_tid = (obj.tenant_id if obj is not None else None)
         if obj_tid is None:
             continue
         if tid is not None and int(obj_tid or 0) != int(tid or 0):
@@ -382,7 +382,7 @@ def _inject_tenant_write_guard(session, flush_context, instances):
         mapper = sa_inspect(obj.__class__, raiseerr=False)
         if mapper is None or "tenant_id" not in mapper.columns:
             continue
-        obj_tid = getattr(obj, "tenant_id", None)
+        obj_tid = (obj.tenant_id if obj is not None else None)
         if obj_tid is None:
             continue
         if tid is not None and int(obj_tid or 0) != int(tid or 0):

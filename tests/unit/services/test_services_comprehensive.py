@@ -2,9 +2,10 @@
 Comprehensive smoke tests for core services.
 """
 
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 
 class TestPrintService:
@@ -46,15 +47,14 @@ class TestPrintService:
                 "print_branding": {},
                 "print_tenant_id": 1,
             },
+        ), patch.object(
+            PrintService,
+            "_user_context",
+            return_value={"print_user_name": "test", "print_user_id": 1},
         ):
-            with patch.object(
-                PrintService,
-                "_user_context",
-                return_value={"print_user_name": "test", "print_user_id": 1},
-            ):
-                result = PrintService.render_print("print/test.html")
-                assert result == "<html>printed</html>"
-                mock_render.assert_called_once()
+            result = PrintService.render_print("print/test.html")
+            assert result == "<html>printed</html>"
+            mock_render.assert_called_once()
 
     @patch("flask.render_template", return_value="<html>with-extra</html>")
     def test_render_print_with_extra_context(self, mock_render):
@@ -70,16 +70,15 @@ class TestPrintService:
                 "print_branding": {},
                 "print_tenant_id": 1,
             },
+        ), patch.object(
+            PrintService,
+            "_user_context",
+            return_value={"print_user_name": "test", "print_user_id": 1},
         ):
-            with patch.object(
-                PrintService,
-                "_user_context",
-                return_value={"print_user_name": "test", "print_user_id": 1},
-            ):
-                result = PrintService.render_print("print/test.html", extra_context={"doc_id": 42})
-                assert result == "<html>with-extra</html>"
-                args, kwargs = mock_render.call_args
-                assert "doc_id" in kwargs
+            result = PrintService.render_print("print/test.html", extra_context={"doc_id": 42})
+            assert result == "<html>with-extra</html>"
+            args, kwargs = mock_render.call_args
+            assert "doc_id" in kwargs
 
     def test_audit_print_creates_record(self, app):
         from services.print_service import PrintService
@@ -363,36 +362,33 @@ class TestStockService:
     def test_resolve_cogs_raises_when_no_data(self, app):
         from services.stock_service import StockService
 
-        with app.app_context():
-            with (
-                patch("services.stock_service.ProductWarehouseCost.query") as pwc_q,
-                patch("services.stock_service.ProductCostHistory.query") as pch_q,
-            ):
-                pwc_q.filter_by.return_value.first.return_value = None
-                pch_q.filter_by.return_value.order_by.return_value.first.return_value = None
-                with pytest.raises(ValueError, match="لا يمكن تحديد تكلفة"):
-                    StockService._resolve_cogs_unit_cost(999, 999, 1, line_cost_price=None)
+        with (
+            app.app_context(), patch("services.stock_service.ProductWarehouseCost.query") as pwc_q,
+            patch("services.stock_service.ProductCostHistory.query") as pch_q,
+        ):
+            pwc_q.filter_by.return_value.first.return_value = None
+            pch_q.filter_by.return_value.order_by.return_value.first.return_value = None
+            with pytest.raises(ValueError, match="لا يمكن تحديد تكلفة"):
+                StockService._resolve_cogs_unit_cost(999, 999, 1, line_cost_price=None)
 
     def test_resolve_cogs_from_cost_price(self, app):
         from services.stock_service import StockService
 
-        with app.app_context():
-            with patch("services.stock_service.ProductWarehouseCost.query") as pwc_q:
-                pwc_q.filter_by.return_value.first.return_value = None
-                cost, source = StockService._resolve_cogs_unit_cost(999, 999, 1, line_cost_price=Decimal("150"))
-                assert cost == Decimal("150")
-                assert source == "cost_price"
+        with app.app_context(), patch("services.stock_service.ProductWarehouseCost.query") as pwc_q:
+            pwc_q.filter_by.return_value.first.return_value = None
+            cost, source = StockService._resolve_cogs_unit_cost(999, 999, 1, line_cost_price=Decimal("150"))
+            assert cost == Decimal("150")
+            assert source == "cost_price"
 
     def test_resolve_cogs_from_mwac(self, app):
         from services.stock_service import StockService
 
-        with app.app_context():
-            with patch("services.stock_service.ProductWarehouseCost.query") as pwc_q:
-                pwc = MagicMock(total_quantity=Decimal("10"), average_cost=Decimal("45.5000"))
-                pwc_q.filter_by.return_value.first.return_value = pwc
-                cost, source = StockService._resolve_cogs_unit_cost(999, 999, 1, line_cost_price=None)
-                assert cost == Decimal("45.5000")
-                assert source == "mwac"
+        with app.app_context(), patch("services.stock_service.ProductWarehouseCost.query") as pwc_q:
+            pwc = MagicMock(total_quantity=Decimal("10"), average_cost=Decimal("45.5000"))
+            pwc_q.filter_by.return_value.first.return_value = pwc
+            cost, source = StockService._resolve_cogs_unit_cost(999, 999, 1, line_cost_price=None)
+            assert cost == Decimal("45.5000")
+            assert source == "mwac"
 
 
 class TestPurchaseService:
@@ -415,8 +411,8 @@ class TestPurchaseService:
             )
 
     def test_cancel_purchase_already_cancelled(self, app, db_session):
-        from services.purchase_service import PurchaseService
         from models import Purchase
+        from services.purchase_service import PurchaseService
 
         with app.app_context():
             p = Purchase(status="cancelled")
@@ -424,8 +420,8 @@ class TestPurchaseService:
                 PurchaseService.cancel_purchase(p)
 
     def test_create_purchase_return_needs_lines(self, app):
-        from services.purchase_service import PurchaseService
         from models import Purchase
+        from services.purchase_service import PurchaseService
 
         with app.app_context():
             p = Purchase(status="received", id=1)
@@ -503,20 +499,18 @@ class TestSaleService:
     def test_has_inventory_posted_no_records(self, app):
         from services.sale_service import SaleService
 
-        with app.app_context():
-            with patch("models.warehouse.StockMovement") as mock_sm:
-                mock_sm.query.filter_by.return_value.first.return_value = None
-                sale = MagicMock(id=99999, tenant_id=None)
-                assert SaleService.has_inventory_posted(sale) is False
+        with app.app_context(), patch("models.warehouse.StockMovement") as mock_sm:
+            mock_sm.query.filter_by.return_value.first.return_value = None
+            sale = MagicMock(id=99999, tenant_id=None)
+            assert SaleService.has_inventory_posted(sale) is False
 
     def test_has_inventory_posted_with_records(self, app):
         from services.sale_service import SaleService
 
-        with app.app_context():
-            with patch("models.warehouse.StockMovement") as mock_sm:
-                mock_sm.query.filter_by.return_value.first.return_value = MagicMock()
-                sale = MagicMock(id=1)
-                assert SaleService.has_inventory_posted(sale) is True
+        with app.app_context(), patch("models.warehouse.StockMovement") as mock_sm:
+            mock_sm.query.filter_by.return_value.first.return_value = MagicMock()
+            sale = MagicMock(id=1)
+            assert SaleService.has_inventory_posted(sale) is True
 
     def test_update_payment_status(self, app):
         from services.sale_service import SaleService

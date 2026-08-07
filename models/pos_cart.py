@@ -5,7 +5,7 @@ parked carts linked to the cashier's open PosSession, so a cart can be
 parked on one terminal and resumed on another exactly once.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from extensions import db
 
@@ -50,14 +50,14 @@ class PosCart(db.Model):
     total_estimate = db.Column(db.Numeric(15, 3), default=0, nullable=False)
     currency = db.Column(db.String(3), nullable=True)
 
-    parked_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    parked_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
     resumed_at = db.Column(db.DateTime, nullable=True)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     session = db.relationship("PosSession", foreign_keys=[session_id])

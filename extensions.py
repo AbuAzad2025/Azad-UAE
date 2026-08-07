@@ -1,16 +1,17 @@
 import logging
 import os
 from typing import Any
+
 from flask import session
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from flask_login import LoginManager
-from flask_wtf import CSRFProtect
+from flask_babel import Babel
 from flask_caching import Cache
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_login import LoginManager
 from flask_mail import Mail
-from flask_babel import Babel
+from flask_migrate import Migrate
+from flask_sqlalchemy import SQLAlchemy
+from flask_wtf import CSRFProtect
 
 Compress: Any
 try:
@@ -25,10 +26,12 @@ except ImportError:
 
 def get_locale():
     try:
-        if "language" in session:
+        from flask import has_request_context
+
+        if has_request_context() and "language" in session:
             return session.get("language", "ar")
     except RuntimeError:
-        pass
+        logging.getLogger(__name__).debug("get_locale called outside request context", exc_info=True)
     return "ar"
 
 
@@ -65,7 +68,7 @@ class TenantAwareCache:
                 if tid is not None:
                     return f"t:{tid}:{key}"
         except Exception:
-            pass
+            logging.getLogger(__name__).debug("Tenant cache key resolution failed", exc_info=True)
         return key
 
     def get(self, key):

@@ -3,7 +3,9 @@ Enhanced Redis Caching Utilities
 """
 
 from functools import wraps
+
 from flask import current_app
+
 from extensions import cache
 
 

@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 """Test login flow."""
 
-import requests
 import re
+
+import requests
 
 s = requests.Session()
 r = s.get("http://localhost:5000/auth/login")

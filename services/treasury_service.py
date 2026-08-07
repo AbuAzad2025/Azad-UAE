@@ -3,9 +3,11 @@ Treasury & Cash Position Service
 Phase 8: Multi-branch bank, cashier, and post-dated cheque position tracking.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
+
 from flask_babel import gettext
+
 from utils.currency_utils import get_system_default_currency
 
 
@@ -151,7 +153,7 @@ class TreasuryService:
         cheques = query.order_by(Cheque.due_date.asc()).all()
 
         # Compute days_until_due locally without mutating ORM objects (read-only report)
-        today = datetime.now(timezone.utc).date()
+        today = datetime.now(UTC).date()
         cheque_meta = {}
         for c in cheques:
             if c.due_date:
@@ -248,5 +250,5 @@ class TreasuryService:
             "liquidity": liquidity,
             "cheques": cheques,
             "reconciliations": reconciliations,
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
         }

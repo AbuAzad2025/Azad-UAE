@@ -47,9 +47,8 @@ class TestCreateSubscriptionFee:
     def test_rejects_invalid_fee_type(self, app):
         from services.azad_subscription_fee_service import AzadSubscriptionFeeService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="Invalid subscription fee_type"):
-                AzadSubscriptionFeeService.create_subscription_fee(1, "weekly")
+        with app.app_context(), pytest.raises(ValueError, match="Invalid subscription fee_type"):
+            AzadSubscriptionFeeService.create_subscription_fee(1, "weekly")
 
     def test_skips_when_no_amount_configured(self, app, mocker):
         settings = MagicMock(
@@ -96,9 +95,8 @@ class TestRecordPayment:
 
         from services.azad_subscription_fee_service import AzadSubscriptionFeeService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="not found"):
-                AzadSubscriptionFeeService.record_payment(99)
+        with app.app_context(), pytest.raises(ValueError, match="not found"):
+            AzadSubscriptionFeeService.record_payment(99)
 
     def test_rejects_non_accrued_status(self, app, mocker):
         fee = MagicMock(status="paid", amount_aed=Decimal("100"), tenant_id=1)
@@ -106,9 +104,8 @@ class TestRecordPayment:
 
         from services.azad_subscription_fee_service import AzadSubscriptionFeeService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="must be accrued"):
-                AzadSubscriptionFeeService.record_payment(1)
+        with app.app_context(), pytest.raises(ValueError, match="must be accrued"):
+            AzadSubscriptionFeeService.record_payment(1)
 
     def test_records_payment_and_posts_gl(self, app, mocker):
         fee = MagicMock(
@@ -224,6 +221,5 @@ class TestWaiveFeeErrors:
         mocker.patch("services.azad_subscription_fee_service.db.session.get", return_value=None)
         from services.azad_subscription_fee_service import AzadSubscriptionFeeService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="not found"):
-                AzadSubscriptionFeeService.waive_fee(404)
+        with app.app_context(), pytest.raises(ValueError, match="not found"):
+            AzadSubscriptionFeeService.waive_fee(404)

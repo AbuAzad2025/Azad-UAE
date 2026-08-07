@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from datetime import UTC
 from decimal import Decimal
+
 import pytest
 
 
@@ -102,7 +104,8 @@ class TestEnhancedAnalytics:
         sample_branch,
         sample_customer,
     ):
-        from datetime import datetime, timezone
+        from datetime import datetime
+
         from models import Sale
 
         sale = Sale(
@@ -115,7 +118,7 @@ class TestEnhancedAnalytics:
             total_amount=Decimal("100"),
             amount=Decimal("100"),
             amount_aed=Decimal("100"),
-            sale_date=datetime.now(timezone.utc),
+            sale_date=datetime.now(UTC),
             is_active=True,
         )
         db_session.add(sale)

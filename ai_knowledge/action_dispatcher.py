@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 import re
 from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -653,7 +653,7 @@ class ActionDispatcher:
                     amount=amount,
                     currency="AED",
                     amount_aed=amount,
-                    expense_date=datetime.now(timezone.utc),
+                    expense_date=datetime.now(UTC),
                     payment_method=args.get("method", "cash"),
                     category_id=category_id,
                     branch_id=args.get("branch_id"),
@@ -870,8 +870,9 @@ class ActionDispatcher:
             if not username or not password:
                 return ActionResult(False, "يرجى إدخال اسم المستخدم وكلمة المرور")
             try:
-                from models import Role, User
                 from werkzeug.security import generate_password_hash
+
+                from models import Role, User
 
                 tid, guard = _tenant_guard()
                 if guard:

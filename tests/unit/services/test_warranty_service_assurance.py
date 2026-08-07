@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
 
@@ -10,7 +10,7 @@ class TestCreateClaim:
     """create_claim — warranty window from sale date + product days."""
 
     def test_sets_end_date_from_product_warranty_days(self, app, mocker):
-        sale_date = datetime(2025, 1, 1, tzinfo=timezone.utc)
+        sale_date = datetime(2025, 1, 1, tzinfo=UTC)
         product = MagicMock(id=7, warranty_days=365)
         sale = MagicMock(id=100, tenant_id=1, sale_date=sale_date)
         line = MagicMock(product=product, sale=sale)
@@ -27,7 +27,7 @@ class TestCreateClaim:
         mock_session.add.assert_called_once()
 
     def test_zero_warranty_days_same_day_expiry(self, app, mocker):
-        sale_date = datetime(2025, 6, 1, tzinfo=timezone.utc)
+        sale_date = datetime(2025, 6, 1, tzinfo=UTC)
         product = MagicMock(id=1, warranty_days=0)
         sale = MagicMock(id=2, tenant_id=1, sale_date=sale_date)
         line = MagicMock(product=product, sale=sale)

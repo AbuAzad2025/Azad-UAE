@@ -1,7 +1,9 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
+
 from flask import current_app
 from flask_login import current_user
+
 from extensions import db
 from models import ArchivedRecord
 from utils.db_safety import atomic_transaction
@@ -74,6 +76,7 @@ class ArchiveService:
 
             # Tenant scope check
             from flask_login import current_user
+
             from utils.tenanting import get_active_tenant_id
 
             tid = get_active_tenant_id(current_user)
@@ -98,7 +101,7 @@ class ArchiveService:
 
     @staticmethod
     def _init_archive_model_map():
-        from models import Sale, Purchase, Payment, Receipt, Cheque, Expense
+        from models import Cheque, Expense, Payment, Purchase, Receipt, Sale
 
         ArchiveService.ARCHIVE_MODEL_MAP.update(
             {
@@ -131,7 +134,7 @@ class ArchiveService:
     def cleanup_old_archives(days=365):
         from datetime import timedelta
 
-        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        cutoff = datetime.now(UTC) - timedelta(days=days)
 
         old_archives = ArchivedRecord.query.filter(
             ArchivedRecord.archived_at < cutoff, ArchivedRecord.can_restore.is_(False)

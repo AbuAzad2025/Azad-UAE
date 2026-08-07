@@ -5,7 +5,9 @@ Provides internal API endpoints for the Owner Dashboard database maintenance too
 """
 
 import os
-from sqlalchemy import create_engine, func, select, text, update, Table, MetaData
+
+from sqlalchemy import MetaData, Table, create_engine, func, select, text, update
+
 from utils.safe_sql import assert_known_column
 
 
@@ -235,6 +237,7 @@ class MaintenanceService:
     def regenerate_default_backup(dry_run: bool = False) -> str:
         """Create a fresh, schema-current scoped backup of the default tenant."""
         from flask import current_app
+
         from services.backup_service import BackupService
 
         app = current_app._get_current_object() if current_app else None  # type: ignore[attr-defined]

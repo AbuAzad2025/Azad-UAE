@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 
 def _claim_stub(**kwargs):
@@ -28,9 +28,9 @@ class TestWarrantyClaim:
         assert _claim_stub().remaining_days == 0
 
     def test_remaining_days_future(self):
-        end = datetime.now(timezone.utc) + timedelta(days=15)
+        end = datetime.now(UTC) + timedelta(days=15)
         assert _claim_stub(warranty_end_date=end).remaining_days >= 14
 
     def test_remaining_days_past_clamped(self):
-        end = datetime.now(timezone.utc) - timedelta(days=3)
+        end = datetime.now(UTC) - timedelta(days=3)
         assert _claim_stub(warranty_end_date=end).remaining_days == 0

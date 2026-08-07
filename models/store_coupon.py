@@ -1,6 +1,6 @@
 """Storefront discount coupons — per tenant."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from extensions import db
 
@@ -28,7 +28,7 @@ class StoreCoupon(db.Model):
     valid_until = db.Column(db.DateTime)
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
@@ -42,10 +42,10 @@ class StoreCoupon(db.Model):
     def is_valid_now(self) -> bool:
         if not self.is_active:
             return False
-        now = datetime.now(timezone.utc)
-        if self.valid_from and self.valid_from.replace(tzinfo=timezone.utc) > now:
+        now = datetime.now(UTC)
+        if self.valid_from and self.valid_from.replace(tzinfo=UTC) > now:
             return False
-        if self.valid_until and self.valid_until.replace(tzinfo=timezone.utc) < now:
+        if self.valid_until and self.valid_until.replace(tzinfo=UTC) < now:
             return False
         if self.max_uses is not None and int(self.used_count or 0) >= int(self.max_uses):
             return False

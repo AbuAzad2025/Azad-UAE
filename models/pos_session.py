@@ -1,6 +1,8 @@
-from datetime import datetime, timezone
-from decimal import Decimal, ROUND_HALF_UP
+from datetime import UTC, datetime
+from decimal import ROUND_HALF_UP, Decimal
+
 from sqlalchemy import text
+
 from extensions import db
 
 _AED_QUANTUM = Decimal("0.001")
@@ -52,7 +54,7 @@ class PosSession(db.Model):
     # open (see utils/pos_security.py).
     terminal_id = db.Column(db.String(100), nullable=True)
 
-    opened_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    opened_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
     paused_at = db.Column(db.DateTime, nullable=True)
     closed_at = db.Column(db.DateTime, nullable=True)
 
@@ -77,11 +79,11 @@ class PosSession(db.Model):
     status = db.Column(db.String(20), default="open", index=True)
     notes = db.Column(db.Text)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     user = db.relationship("User", foreign_keys=[user_id])
@@ -95,7 +97,7 @@ class PosSession(db.Model):
 
     def pause(self):
         self._transition(self.STATUS_PAUSED)
-        self.paused_at = datetime.now(timezone.utc)
+        self.paused_at = datetime.now(UTC)
 
     def resume(self):
         self._transition(self.STATUS_OPEN)
@@ -121,7 +123,7 @@ class PosSession(db.Model):
         self.expected_balance = self.compute_expected_balance()
         self.difference = (closing_cash - self.expected_balance).quantize(_AED_QUANTUM, rounding=ROUND_HALF_UP)
         self._transition(self.STATUS_CLOSED)
-        self.closed_at = datetime.now(timezone.utc)
+        self.closed_at = datetime.now(UTC)
         if notes:
             self.notes = notes
 
@@ -129,12 +131,12 @@ class PosSession(db.Model):
     def duration_minutes(self):
         opened = self.opened_at
         if opened and opened.tzinfo is None:
-            opened = opened.replace(tzinfo=timezone.utc)
+            opened = opened.replace(tzinfo=UTC)
         if not self.closed_at:
-            return int((datetime.now(timezone.utc) - opened).total_seconds() / 60)
+            return int((datetime.now(UTC) - opened).total_seconds() / 60)
         closed = self.closed_at
         if closed and closed.tzinfo is None:
-            closed = closed.replace(tzinfo=timezone.utc)
+            closed = closed.replace(tzinfo=UTC)
         return int((closed - opened).total_seconds() / 60)
 
     def __repr__(self):

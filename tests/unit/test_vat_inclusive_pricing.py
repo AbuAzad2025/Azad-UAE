@@ -20,7 +20,8 @@ Author  : Azad Intelligent Systems
 Date    : 2026-06-21
 """
 
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
+
 import pytest
 from sqlalchemy import text
 
@@ -177,8 +178,9 @@ def sample_supplier_vat(db_session, sample_tenant):
 @pytest.fixture
 def sample_user_vat(db_session, sample_tenant, sample_role, sample_branch):
     """User for VAT pricing tests."""
-    from models import User
     import uuid
+
+    from models import User
 
     unique = str(uuid.uuid4())[:8]
     u = User(
@@ -612,6 +614,7 @@ class TestSaleGlVatExclusive:
     ):
         """Sale GL: revenue credit = taxable_amount, not subtotal."""
         from decimal import Decimal
+
         from models import Product
         from services.sale_service import SaleService
 
@@ -652,6 +655,7 @@ class TestSaleGlVatExclusive:
     ):
         """Sale GL with discount: discount_debit must also be VAT-exclusive."""
         from decimal import Decimal
+
         from models import Product
         from services.sale_service import SaleService
 
@@ -701,6 +705,7 @@ class TestPurchaseGlVatExclusive:
     ):
         """Purchase GL: inventory_debit = taxable_amount (VAT-excluded), not subtotal."""
         from decimal import Decimal
+
         from models import Product
         from services.purchase_service import PurchaseService
 
@@ -743,6 +748,7 @@ class TestPurchaseGlVatExclusive:
     ):
         """Landed costs are capitalized into inventory (added to VAT-excluded base)."""
         from decimal import Decimal
+
         from models import Product
         from services.purchase_service import PurchaseService
 
@@ -792,6 +798,7 @@ class TestPurchaseReturnVatExclusive:
     ):
         """Return inventory_credit = subtotal_return / (1 + tax_rate/100)."""
         from decimal import Decimal
+
         from models import Product
         from services.purchase_service import PurchaseService
 
@@ -893,6 +900,7 @@ class TestMwacVatCompatibility:
     ):
         """After purchase with inclusive VAT, MWAC average cost must be VAT-free."""
         from decimal import Decimal
+
         from models import Product, ProductWarehouseCost
         from services.purchase_service import PurchaseService
 
@@ -943,6 +951,7 @@ class TestMwacVatCompatibility:
     ):
         """MWAC includes landed costs but still excludes VAT."""
         from decimal import Decimal
+
         from models import Product, ProductWarehouseCost
         from services.purchase_service import PurchaseService
 

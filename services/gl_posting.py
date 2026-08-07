@@ -5,10 +5,11 @@ Mandatory GL posting — no financial document commits without a balanced journa
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
-from decimal import Decimal, ROUND_HALF_UP
+from datetime import UTC, datetime
+from decimal import ROUND_HALF_UP, Decimal
 
 from flask_babel import gettext
+
 from extensions import db
 from services.gl_helpers import assert_period_open
 from services.gl_service import GLService
@@ -127,7 +128,7 @@ def post_or_fail(
 
     assert_balanced_lines(lines, currency=currency)
 
-    entry_date = date or datetime.now(timezone.utc)
+    entry_date = date or datetime.now(UTC)
     assert_period_open(entry_date, tenant_id)
 
     # The GL is stored in the tenant base currency only: convert and quantize

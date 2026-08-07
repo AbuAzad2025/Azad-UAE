@@ -2,14 +2,13 @@
 Integration test: Sale creates balanced GL entries and records stock movements.
 """
 
-from decimal import Decimal
 import uuid
+from decimal import Decimal
 
 
 class TestSaleGlIntegration:
     def test_sale_creates_balanced_gl_entries(self, app, db_session):
-        from models import Tenant, Branch, Warehouse, Product, Customer, User, Role
-        from models import GLJournalEntry, StockMovement
+        from models import Branch, Customer, GLJournalEntry, Product, Role, StockMovement, Tenant, User, Warehouse
         from services.sale_service import SaleService
         from utils.gl_reference_types import GLRef
 

@@ -1,28 +1,29 @@
 """Tenant management routes for the owner blueprint."""
 
+import logging
+from datetime import UTC, date, datetime
+
 from flask_babel import gettext
 
 from routes.owner import (
-    render_template,
-    request,
-    jsonify,
-    flash,
-    redirect,
-    url_for,
-    db,
     Tenant,
     User,
-    owner_required,
+    db,
+    flash,
     get_system_default_currency,
     get_tenant_ai_level,
+    jsonify,
+    owner_bp,
+    owner_required,
+    redirect,
+    render_template,
+    request,
     set_tenant_ai_level,
+    url_for,
 )
+from routes.owner.shared import _audit_owner_db_action, _invalidate_owner_changes
 from services.logging_core import LoggingCore
 from services.saas_provisioning_service import SaaSProvisioningService
-import logging
-from datetime import date, datetime, timezone
-from routes.owner import owner_bp
-from routes.owner.shared import _invalidate_owner_changes, _audit_owner_db_action
 from utils.db_safety import atomic_transaction
 
 logger = logging.getLogger(__name__)
@@ -32,8 +33,8 @@ logger = logging.getLogger(__name__)
 @owner_required
 def tenant_stores():
     """التحكم الهرمي بمتاجر التينانتس — قفل/فك قفل من مالك المنصة."""
-    from models.tenant_store import TenantStore
     from models.tenant import Tenant
+    from models.tenant_store import TenantStore
     from services.store_service import StoreService
 
     stores = (
@@ -308,7 +309,7 @@ def tenant_suspend(tenant_id):
             tenant.is_active = False
             tenant.is_suspended = True
             tenant.suspension_reason = reason or "Suspended by owner"
-            tenant.updated_at = datetime.now(timezone.utc)
+            tenant.updated_at = datetime.now(UTC)
     except Exception as e:
         flash(gettext(f"خطأ في تعليق التينانت: {str(e)}"), "danger")
         return redirect(url_for("owner.tenants_list"))
@@ -332,7 +333,7 @@ def tenant_activate(tenant_id):
             tenant.is_active = True
             tenant.is_suspended = False
             tenant.suspension_reason = None
-            tenant.updated_at = datetime.now(timezone.utc)
+            tenant.updated_at = datetime.now(UTC)
     except Exception as e:
         flash(gettext(f"خطأ في تفعيل التينانت: {str(e)}"), "danger")
         return redirect(url_for("owner.tenants_list"))
@@ -414,7 +415,7 @@ def tenant_edit(tenant_id):
                 tenant.enable_pos_multi_tender = _tristate("enable_pos_multi_tender", tenant.enable_pos_multi_tender)
                 tenant.enable_pos_returns = _tristate("enable_pos_returns", tenant.enable_pos_returns)
                 tenant.enable_pos_shifts = _tristate("enable_pos_shifts", tenant.enable_pos_shifts)
-                tenant.updated_at = datetime.now(timezone.utc)
+                tenant.updated_at = datetime.now(UTC)
             _invalidate_owner_changes()
             _audit_owner_db_action("tenant_edit", {"tenant_id": tenant_id})
             flash(
@@ -453,7 +454,7 @@ def tenant_delete(tenant_id):
             tenant.is_active = False
             tenant.is_suspended = True
             tenant.suspension_reason = "Deleted by owner"
-            tenant.updated_at = datetime.now(timezone.utc)
+            tenant.updated_at = datetime.now(UTC)
     except Exception as e:
         flash(gettext(f"خطأ في حذف التينانت: {str(e)}"), "danger")
         return redirect(url_for("owner.tenants_list"))
@@ -490,7 +491,7 @@ def api_tenant_toggle_status(tenant_id):
                 tenant.suspension_reason = "Disabled via API"
             else:
                 tenant.suspension_reason = None
-            tenant.updated_at = datetime.now(timezone.utc)
+            tenant.updated_at = datetime.now(UTC)
         _invalidate_owner_changes()
         _audit_owner_db_action(
             "api_tenant_toggle_status",
@@ -539,7 +540,7 @@ def api_tenant_update_package(tenant_id):
             return jsonify({"success": False, "error": "Invalid integer value"}), 400
         with atomic_transaction("api_tenant_update_package"):
             setattr(tenant, field, val)
-            tenant.updated_at = datetime.now(timezone.utc)
+            tenant.updated_at = datetime.now(UTC)
         _invalidate_owner_changes()
         _audit_owner_db_action(
             "api_tenant_update_package",

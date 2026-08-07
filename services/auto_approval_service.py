@@ -3,13 +3,15 @@ Auto Approval Service
 خدمة القبول التلقائي للتبرعات والمشتريات بعد ساعة
 """
 
-from datetime import datetime, timezone, timedelta
+import logging
+from datetime import UTC, datetime, timedelta
+
 from flask_babel import gettext
+
 from extensions import db
-from utils.db_safety import atomic_transaction
 from models import Donation, PackagePurchase
 from services.logging_core import LoggingCore
-import logging
+from utils.db_safety import atomic_transaction
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +31,7 @@ class AutoApprovalService:
             dict: نتائج العملية
         """
         try:
-            threshold_time = datetime.now(timezone.utc) - timedelta(hours=hours_threshold)
+            threshold_time = datetime.now(UTC) - timedelta(hours=hours_threshold)
 
             # جلب التبرعات المعلقة الأقدم من ساعة
             pending_donations = Donation.query.filter(
@@ -43,7 +45,7 @@ class AutoApprovalService:
 
             for donation in pending_donations:
                 donation.status = "completed"
-                donation.completed_at = datetime.now(timezone.utc)
+                donation.completed_at = datetime.now(UTC)
 
                 # تسجيل في Audit Log
                 LoggingCore.log_audit(
@@ -89,7 +91,7 @@ class AutoApprovalService:
             dict: نتائج العملية
         """
         try:
-            threshold_time = datetime.now(timezone.utc) - timedelta(hours=hours_threshold)
+            threshold_time = datetime.now(UTC) - timedelta(hours=hours_threshold)
 
             # جلب المشتريات المعلقة الأقدم من ساعة
             pending_purchases = PackagePurchase.query.filter(
@@ -103,7 +105,7 @@ class AutoApprovalService:
             for purchase in pending_purchases:
                 purchase.payment_status = "completed"
                 purchase.activation_status = "activated"
-                purchase.activation_date = datetime.now(timezone.utc)
+                purchase.activation_date = datetime.now(UTC)
 
                 # تحديث التبرع المرتبط
                 related_donation = Donation.query.filter(
@@ -114,7 +116,7 @@ class AutoApprovalService:
 
                 if related_donation and related_donation.status == "pending":
                     related_donation.status = "completed"
-                    related_donation.completed_at = datetime.now(timezone.utc)
+                    related_donation.completed_at = datetime.now(UTC)
 
                 # تسجيل
                 LoggingCore.log_audit(

@@ -5,18 +5,19 @@ from __future__ import annotations
 import logging
 import os
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-
-from sqlalchemy import func, or_
-from sqlalchemy.orm import joinedload
 from typing import TYPE_CHECKING, Any
 
 from flask_babel import gettext, lazy_gettext
+from sqlalchemy import func, or_
+from sqlalchemy.orm import joinedload
+
 from extensions import db
 
 if TYPE_CHECKING:
     pass
+from ai_knowledge.analytics import get_market_insights
 from ai_knowledge.knowledge import (
     COMPANY_INFO,
     get_automotive_ecu_knowledge,
@@ -28,11 +29,12 @@ from ai_knowledge.knowledge import (
 from ai_knowledge.specialized import (
     get_customer_service_tip,
     get_guide,
-    get_system_guide as lookup_system_guide,
     get_tax_advice,
 )
+from ai_knowledge.specialized import (
+    get_system_guide as lookup_system_guide,
+)
 from ai_knowledge.specialized_knowledge import AdvancedLaws
-from ai_knowledge.analytics import get_market_insights
 from utils.tenanting import get_active_tenant_id
 
 logger = logging.getLogger(__name__)
@@ -447,7 +449,7 @@ class AIService:
     @staticmethod
     def recommend_price(product_id, customer_id):
         """توصية السعر الذكي حسب نوع العميل والسجل"""
-        from models import Product, Customer, Sale, SaleLine
+        from models import Customer, Product, Sale, SaleLine
 
         product = AIService._get_model(Product, product_id)
         customer = AIService._get_model(Customer, customer_id)
@@ -526,15 +528,15 @@ class AIService:
 
     @staticmethod
     def _perform_analysis(customer):
-        from models import Sale, Payment
+        from models import Payment, Sale
 
-        last_90_days = datetime.now(timezone.utc) - timedelta(days=90)
+        last_90_days = datetime.now(UTC) - timedelta(days=90)
 
         def _normalize_datetime(value):
             if value is None:
                 return None
             if value.tzinfo is None:
-                return value.replace(tzinfo=timezone.utc)
+                return value.replace(tzinfo=UTC)
             return value
 
         session = db.session
@@ -585,6 +587,7 @@ class AIService:
                     try:
                         delay = (first_payment_dt - sale_created_at).days
                     except TypeError:
+                        logger.debug("Skipping payment with incompatible datetime", exc_info=True)
                         continue
                     pay_delays.append(delay)
 
@@ -640,7 +643,7 @@ class AIService:
         recent_sales = recent_sales.order_by(Sale.created_at.desc()).limit(10).all()
 
         if recent_sales:
-            avg_rate = sum((s.exchange_rate for s in recent_sales)) / len(recent_sales)
+            avg_rate = sum(s.exchange_rate for s in recent_sales) / len(recent_sales)
             latest_rate = recent_sales[0].exchange_rate
 
             return {
@@ -668,7 +671,7 @@ class AIService:
 
         tid = get_active_tenant_id()
 
-        last_30_days = datetime.now(timezone.utc) - timedelta(days=30)
+        last_30_days = datetime.now(UTC) - timedelta(days=30)
         sales = db.session.query(Sale).filter(Sale.sale_date >= last_30_days, Sale.status == "confirmed")
         if tid is not None:
             sales = sales.filter(Sale.tenant_id == tid)
@@ -738,7 +741,7 @@ class AIService:
 
         tid = get_active_tenant_id()
 
-        last_30_days = datetime.now(timezone.utc) - timedelta(days=30)
+        last_30_days = datetime.now(UTC) - timedelta(days=30)
         sales = db.session.query(Sale).filter(Sale.sale_date >= last_30_days, Sale.status == "confirmed")
         if tid is not None:
             sales = sales.filter(Sale.tenant_id == tid)
@@ -808,7 +811,7 @@ class AIService:
 
         tid = get_active_tenant_id()
 
-        last_90_days = datetime.now(timezone.utc) - timedelta(days=90)
+        last_90_days = datetime.now(UTC) - timedelta(days=90)
         sales = db.session.query(Sale).filter(Sale.sale_date >= last_90_days, Sale.status == "confirmed")
         if tid is not None:
             sales = sales.filter(Sale.tenant_id == tid)
@@ -1237,6 +1240,7 @@ class AIService:
                 try:
                     chunk = _json.loads(data)
                 except Exception:
+                    logger.debug("Skipping unparseable SSE chunk", exc_info=True)
                     continue
                 choices = chunk.get("choices") or []
                 if not choices:
@@ -1419,21 +1423,23 @@ class AIService:
     def _gather_relevant_knowledge(message, local_result):
         """جمع بيانات شاملة من جميع جداول النظام"""
         try:
-            from models import (
-                Sale,
-                Customer,
-                Product,
-                Payment,
-                Expense,
-                Purchase,
-                Supplier,
-                Cheque,
-            )
-            from extensions import db
             from datetime import datetime, timedelta
+
             from flask import current_app
             from flask_login import current_user as flask_current_user
             from sqlalchemy import func
+
+            from extensions import db
+            from models import (
+                Cheque,
+                Customer,
+                Expense,
+                Payment,
+                Product,
+                Purchase,
+                Sale,
+                Supplier,
+            )
             from utils.tenanting import scoped_user_query
 
             data_parts = []
@@ -1564,9 +1570,10 @@ class AIService:
     def generate_business_insights():
         """توليد رؤى الأعمال التلقائية"""
         try:
-            from models import Sale, Customer, Product
-            from extensions import db
             from datetime import datetime
+
+            from extensions import db
+            from models import Customer, Product, Sale
 
             tid = get_active_tenant_id()
 
@@ -1646,8 +1653,8 @@ class AIService:
     def optimize_inventory_levels():
         """تحسين مستويات المخزون"""
         try:
-            from models import Product
             from extensions import db
+            from models import Product
 
             products_to_order = []
 
@@ -1747,15 +1754,17 @@ class AIService:
                 "currency": "AED",
             }
         except Exception:
+            logger.debug("Promotion preview calc failed", exc_info=True)
             return None
 
     @staticmethod
     def predict_customer_churn():
         """توقع فقدان العملاء"""
         try:
-            from models import Customer, Sale
             from datetime import datetime, timedelta
+
             from extensions import db
+            from models import Customer, Sale
 
             tid = get_active_tenant_id()
 
@@ -1870,7 +1879,7 @@ class AIService:
 
             tid = get_active_tenant_id()
 
-            last_90_days = datetime.now(timezone.utc) - timedelta(days=90)
+            last_90_days = datetime.now(UTC) - timedelta(days=90)
             sales_q = db.session.query(Sale).filter(Sale.sale_date >= last_90_days)
             if tid is not None:
                 sales_q = sales_q.filter(Sale.tenant_id == tid)
@@ -2090,7 +2099,7 @@ class AIService:
         دقة عالية جداً (95%+)
         """
         try:
-            from models import Product, Customer
+            from models import Customer, Product
 
             product = AIService._get_model(Product, product_id)
             customer = AIService._get_model(Customer, customer_id)
@@ -2323,6 +2332,7 @@ class AIService:
             return conversations
 
         except Exception:
+            logger.warning("recall_conversations failed", exc_info=True)
             return []
 
     @staticmethod
@@ -2353,6 +2363,7 @@ class AIService:
             return assessment
 
         except Exception:
+            logger.warning("reflect_on_performance failed", exc_info=True)
             return {}
 
     @staticmethod
@@ -2634,6 +2645,7 @@ class AIService:
             }
 
         except Exception:
+            logger.warning("Attention-map build failed", exc_info=True)
             return {}
 
     # ========================================================================
@@ -2689,6 +2701,7 @@ class AIService:
             return info
 
         except Exception:
+            logger.warning("get_ecu_info failed", exc_info=True)
             return {}
 
     # ========================================================================

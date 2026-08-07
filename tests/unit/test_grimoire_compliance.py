@@ -19,18 +19,18 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.ops.enforce_grimoire import (
-    run_all_checks,
-    check_atomicity,
-    check_input_validation,
-    check_decimal_guard,
-    check_service_imports,
-    check_model_imports,
-    check_routes_db_queries,
-    check_function_length,
-    check_bare_except,
-    check_type_ignore,
-    check_root_cleanliness,
     Violation,
+    check_atomicity,
+    check_bare_except,
+    check_decimal_guard,
+    check_function_length,
+    check_input_validation,
+    check_model_imports,
+    check_root_cleanliness,
+    check_routes_db_queries,
+    check_service_imports,
+    check_type_ignore,
+    run_all_checks,
 )
 
 

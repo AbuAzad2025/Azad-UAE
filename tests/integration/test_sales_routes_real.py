@@ -8,7 +8,7 @@ from decimal import Decimal
 
 class TestSalesListPage:
     def test_sales_list_page_renders(self, app, db_session, client):
-        from models import Tenant, Branch, User, Role, Customer, Sale
+        from models import Branch, Customer, Role, Sale, Tenant, User
 
         tid = str(uuid.uuid4())[:8]
         tenant = Tenant(
@@ -80,7 +80,7 @@ class TestSalesListPage:
         assert sale.sale_number.encode() in resp.data
 
     def test_sales_create_page_renders(self, app, db_session, client):
-        from models import Tenant, Branch, User, Role, Customer, Product
+        from models import Branch, Customer, Product, Role, Tenant, User
 
         tid = str(uuid.uuid4())[:8]
         tenant = Tenant(

@@ -1,4 +1,5 @@
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
+
 from extensions import db
 
 
@@ -27,7 +28,7 @@ class WarrantyService:
     def get_active_warranties(tenant_id):
         from models.warranty_claim import WarrantyClaim
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         return (
             WarrantyClaim.query.filter(
                 WarrantyClaim.tenant_id == tenant_id,
@@ -43,7 +44,7 @@ class WarrantyService:
         from models.warranty_claim import WarrantyClaim
         from utils.tenanting import get_active_tenant_id
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         end = now + timedelta(days=days)
         tid = tenant_id if tenant_id is not None else get_active_tenant_id()
         return (

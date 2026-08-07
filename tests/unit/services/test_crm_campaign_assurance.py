@@ -126,7 +126,7 @@ class TestLeadConversion:
         mocker.patch("services.crm_lead_service.is_global_user", return_value=False)
         mocker.patch("services.crm_lead_service.branch_scope_id_for", return_value=1)
 
-        from services.crm_lead_service import CRMLeadService, CRMLead, Customer
+        from services.crm_lead_service import CRMLead, CRMLeadService, Customer
 
         result = CRMLeadService.convert_to_customer(1, mock_user)
         assert result.id == 99

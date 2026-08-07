@@ -1,16 +1,18 @@
 import logging
 from datetime import datetime
 from decimal import Decimal
-from extensions import db
+
 from flask_babel import gettext
-from utils.gl_reference_types import GLRef
+
+from extensions import db
 from services.gl_service import GLService
+from utils.gl_reference_types import GLRef
 from utils.gl_services import (
-    gl_post_or_fail,
     gl_ensure_core_accounts,
     gl_get_customer_credit_account,
     gl_get_customer_credit_concept,
     gl_get_default_liquidity_account,
+    gl_post_or_fail,
     gl_resolve_exchange_rate,
 )
 
@@ -99,7 +101,7 @@ def validate_cheque(cheque):
 
 
 def calculate_amount_aed(cheque):
-    from utils.currency_utils import get_system_default_currency, convert_and_quantize_aed
+    from utils.currency_utils import convert_and_quantize_aed, get_system_default_currency
 
     base_currency = get_system_default_currency()
     cheque.amount_aed = convert_and_quantize_aed(
@@ -107,7 +109,7 @@ def calculate_amount_aed(cheque):
         cheque.currency,
         cheque.exchange_rate,
         base_currency=base_currency,
-        tenant_id=getattr(cheque, "tenant_id", None),
+        tenant_id=(cheque.tenant_id if cheque is not None else None),
     )
 
 
@@ -115,7 +117,7 @@ def _post_gl(cheque, lines, description, reference_type):
     from utils.currency_utils import get_system_default_currency
 
     base_currency = get_system_default_currency()
-    gl_ensure_core_accounts(tenant_id=getattr(cheque, "tenant_id", None))
+    gl_ensure_core_accounts(tenant_id=(cheque.tenant_id if cheque is not None else None))
     return gl_post_or_fail(
         lines=lines,
         description=description,
@@ -124,7 +126,7 @@ def _post_gl(cheque, lines, description, reference_type):
         currency=base_currency,
         exchange_rate=1.0,
         branch_id=cheque.branch_id,
-        tenant_id=getattr(cheque, "tenant_id", None),
+        tenant_id=(cheque.tenant_id if cheque is not None else None),
     )
 
 
@@ -138,7 +140,7 @@ def _existing_posted_entry(cheque, reference_type):
         GLJournalEntry.reference_id == cheque.id,
         GLJournalEntry.status == "posted",
     )
-    tid = getattr(cheque, "tenant_id", None)
+    tid = (cheque.tenant_id if cheque is not None else None)
     if tid is not None:
         q = q.filter(GLJournalEntry.tenant_id == tid)
     return q.order_by(GLJournalEntry.id.desc()).first()
@@ -161,13 +163,13 @@ def process_cheque_receive(cheque):
         gl_get_customer_credit_account(
             cheque.customer,
             branch_id=cheque.branch_id,
-            tenant_id=getattr(cheque, "tenant_id", None),
+            tenant_id=(cheque.tenant_id if cheque is not None else None),
         )
         if cheque.customer_id
         else GLService.get_account_code_for_concept(
             "AR",
             branch_id=cheque.branch_id,
-            tenant_id=getattr(cheque, "tenant_id", None),
+            tenant_id=(cheque.tenant_id if cheque is not None else None),
             fallback_key="receivable",
         )
     )
@@ -177,7 +179,7 @@ def process_cheque_receive(cheque):
             "account": GLService.get_account_code_for_concept(
                 "CHEQUES_UNDER_COLLECTION",
                 branch_id=cheque.branch_id,
-                tenant_id=getattr(cheque, "tenant_id", None),
+                tenant_id=(cheque.tenant_id if cheque is not None else None),
                 fallback_key="cheques_under_collection",
             ),
             "concept_code": "CHEQUES_UNDER_COLLECTION",
@@ -217,7 +219,7 @@ def process_cheque_issue(cheque):
         debit_account = GLService.get_account_code_for_concept(
             "AP",
             branch_id=cheque.branch_id,
-            tenant_id=getattr(cheque, "tenant_id", None),
+            tenant_id=(cheque.tenant_id if cheque is not None else None),
             fallback_key="payable",
         )
         debit_concept = "AP"
@@ -225,14 +227,14 @@ def process_cheque_issue(cheque):
         debit_account = gl_get_customer_credit_account(
             cheque.customer,
             branch_id=cheque.branch_id,
-            tenant_id=getattr(cheque, "tenant_id", None),
+            tenant_id=(cheque.tenant_id if cheque is not None else None),
         )
         debit_concept = gl_get_customer_credit_concept(cheque.customer)
     else:
         debit_account = GLService.get_account_code_for_concept(
             "AP",
             branch_id=cheque.branch_id,
-            tenant_id=getattr(cheque, "tenant_id", None),
+            tenant_id=(cheque.tenant_id if cheque is not None else None),
             fallback_key="payable",
         )
         debit_concept = "AP"
@@ -248,7 +250,7 @@ def process_cheque_issue(cheque):
             "account": GLService.get_account_code_for_concept(
                 "DEFERRED_CHEQUES_PAYABLE",
                 branch_id=cheque.branch_id,
-                tenant_id=getattr(cheque, "tenant_id", None),
+                tenant_id=(cheque.tenant_id if cheque is not None else None),
                 fallback_key="deferred_cheques",
             ),
             "concept_code": "DEFERRED_CHEQUES_PAYABLE",
@@ -271,7 +273,7 @@ def _create_clearing_journal_entry(cheque):
     bank_account = gl_get_default_liquidity_account(
         "bank",
         branch_id=cheque.branch_id,
-        tenant_id=getattr(cheque, "tenant_id", None),
+        tenant_id=(cheque.tenant_id if cheque is not None else None),
     )
     lines = []
     if cheque.cheque_type == "incoming":
@@ -289,7 +291,7 @@ def _create_clearing_journal_entry(cheque):
                 "account": GLService.get_account_code_for_concept(
                     "CHEQUES_UNDER_COLLECTION",
                     branch_id=cheque.branch_id,
-                    tenant_id=getattr(cheque, "tenant_id", None),
+                    tenant_id=(cheque.tenant_id if cheque is not None else None),
                     fallback_key="cheques_under_collection",
                 ),
                 "concept_code": "CHEQUES_UNDER_COLLECTION",
@@ -305,7 +307,7 @@ def _create_clearing_journal_entry(cheque):
                         "account": GLService.get_account_code_for_concept(
                             "FX_GAIN",
                             branch_id=cheque.branch_id,
-                            tenant_id=getattr(cheque, "tenant_id", None),
+                            tenant_id=(cheque.tenant_id if cheque is not None else None),
                             fallback_key="fx_gain",
                         ),
                         "concept_code": "FX_GAIN",
@@ -320,7 +322,7 @@ def _create_clearing_journal_entry(cheque):
                         "account": GLService.get_account_code_for_concept(
                             "FX_LOSS",
                             branch_id=cheque.branch_id,
-                            tenant_id=getattr(cheque, "tenant_id", None),
+                            tenant_id=(cheque.tenant_id if cheque is not None else None),
                             fallback_key="fx_loss",
                         ),
                         "concept_code": "FX_LOSS",
@@ -335,7 +337,7 @@ def _create_clearing_journal_entry(cheque):
                 "account": GLService.get_account_code_for_concept(
                     "DEFERRED_CHEQUES_PAYABLE",
                     branch_id=cheque.branch_id,
-                    tenant_id=getattr(cheque, "tenant_id", None),
+                    tenant_id=(cheque.tenant_id if cheque is not None else None),
                     fallback_key="deferred_cheques",
                 ),
                 "concept_code": "DEFERRED_CHEQUES_PAYABLE",
@@ -360,7 +362,7 @@ def _create_clearing_journal_entry(cheque):
                         "account": GLService.get_account_code_for_concept(
                             "FX_LOSS",
                             branch_id=cheque.branch_id,
-                            tenant_id=getattr(cheque, "tenant_id", None),
+                            tenant_id=(cheque.tenant_id if cheque is not None else None),
                             fallback_key="fx_loss",
                         ),
                         "concept_code": "FX_LOSS",
@@ -375,7 +377,7 @@ def _create_clearing_journal_entry(cheque):
                         "account": GLService.get_account_code_for_concept(
                             "FX_GAIN",
                             branch_id=cheque.branch_id,
-                            tenant_id=getattr(cheque, "tenant_id", None),
+                            tenant_id=(cheque.tenant_id if cheque is not None else None),
                             fallback_key="fx_gain",
                         ),
                         "concept_code": "FX_GAIN",
@@ -407,23 +409,24 @@ def process_cheque_clear(cheque, clearance_date=None, clearance_exchange_rate=No
                     cheque.issue_date,
                     cheque.currency,
                     "AED",
-                    getattr(cheque, "tenant_id", None),
+                    (cheque.tenant_id if cheque is not None else None),
                 )
                 cheque.clearance_exchange_rate = Decimal(str(rate_info["rate"]))
             except Exception:
+                logger.warning("Clearance rate resolution failed; using issue rate", exc_info=True)
                 cheque.clearance_exchange_rate = Decimal(str(cheque.exchange_rate))
         else:
             cheque.clearance_exchange_rate = Decimal("1.0")
         from utils.currency_utils import convert_and_quantize_aed as _cq
 
         cheque.actual_amount_aed = _cq(
-            cheque.amount, cheque.currency, cheque.clearance_exchange_rate, tenant_id=getattr(cheque, "tenant_id", None)
+            cheque.amount, cheque.currency, cheque.clearance_exchange_rate, tenant_id=(cheque.tenant_id if cheque is not None else None)
         )
         cheque.currency_gain_loss = cheque.actual_amount_aed - cheque.amount_aed
         _create_clearing_journal_entry(cheque)
         from models.payment import Payment, Receipt
 
-        tid = getattr(cheque, "tenant_id", None)
+        tid = (cheque.tenant_id if cheque is not None else None)
 
         # تأكيد الدفعات/السندات المرتبطة
         pmt_q = Payment.query.filter_by(cheque_id=cheque.id)
@@ -451,13 +454,13 @@ def _create_bounce_journal_entry(cheque):
             gl_get_customer_credit_account(
                 cheque.customer,
                 branch_id=cheque.branch_id,
-                tenant_id=getattr(cheque, "tenant_id", None),
+                tenant_id=(cheque.tenant_id if cheque is not None else None),
             )
             if cheque.customer_id
             else GLService.get_account_code_for_concept(
                 "AR",
                 branch_id=cheque.branch_id,
-                tenant_id=getattr(cheque, "tenant_id", None),
+                tenant_id=(cheque.tenant_id if cheque is not None else None),
                 fallback_key="receivable",
             )
         )
@@ -476,7 +479,7 @@ def _create_bounce_journal_entry(cheque):
                 "account": GLService.get_account_code_for_concept(
                     "CHEQUES_UNDER_COLLECTION",
                     branch_id=cheque.branch_id,
-                    tenant_id=getattr(cheque, "tenant_id", None),
+                    tenant_id=(cheque.tenant_id if cheque is not None else None),
                     fallback_key="cheques_under_collection",
                 ),
                 "concept_code": "CHEQUES_UNDER_COLLECTION",
@@ -491,7 +494,7 @@ def _create_bounce_journal_entry(cheque):
                 "account": GLService.get_account_code_for_concept(
                     "DEFERRED_CHEQUES_PAYABLE",
                     branch_id=cheque.branch_id,
-                    tenant_id=getattr(cheque, "tenant_id", None),
+                    tenant_id=(cheque.tenant_id if cheque is not None else None),
                     fallback_key="deferred_cheques",
                 ),
                 "concept_code": "DEFERRED_CHEQUES_PAYABLE",
@@ -510,7 +513,7 @@ def _create_bounce_journal_entry(cheque):
                 else GLService.get_account_code_for_concept(
                     "MISC_EXPENSE",
                     branch_id=cheque.branch_id,
-                    tenant_id=getattr(cheque, "tenant_id", None),
+                    tenant_id=(cheque.tenant_id if cheque is not None else None),
                     fallback_key="misc_expense",
                 )
             )
@@ -519,7 +522,7 @@ def _create_bounce_journal_entry(cheque):
             credit_account = GLService.get_account_code_for_concept(
                 "AP",
                 branch_id=cheque.branch_id,
-                tenant_id=getattr(cheque, "tenant_id", None),
+                tenant_id=(cheque.tenant_id if cheque is not None else None),
                 fallback_key="payable",
             )
             credit_concept = "AP"
@@ -527,14 +530,14 @@ def _create_bounce_journal_entry(cheque):
             credit_account = gl_get_customer_credit_account(
                 cheque.customer,
                 branch_id=cheque.branch_id,
-                tenant_id=getattr(cheque, "tenant_id", None),
+                tenant_id=(cheque.tenant_id if cheque is not None else None),
             )
             credit_concept = gl_get_customer_credit_concept(cheque.customer)
         else:
             credit_account = GLService.get_account_code_for_concept(
                 "AP",
                 branch_id=cheque.branch_id,
-                tenant_id=getattr(cheque, "tenant_id", None),
+                tenant_id=(cheque.tenant_id if cheque is not None else None),
                 fallback_key="payable",
             )
             credit_concept = "AP"
@@ -580,13 +583,13 @@ def process_cheque_bounce(cheque, reason, bounce_fee=None):
                 expense_account = GLService.get_account_code_for_concept(
                     "MISC_EXPENSE",
                     branch_id=cheque.branch_id,
-                    tenant_id=getattr(cheque, "tenant_id", None),
+                    tenant_id=(cheque.tenant_id if cheque is not None else None),
                     fallback_key="misc_expense",
                 )
                 bank_account = gl_get_default_liquidity_account(
                     "bank",
                     branch_id=cheque.branch_id,
-                    tenant_id=getattr(cheque, "tenant_id", None),
+                    tenant_id=(cheque.tenant_id if cheque is not None else None),
                 )
                 fee_lines = [
                     {
@@ -610,7 +613,7 @@ def process_cheque_bounce(cheque, reason, bounce_fee=None):
                     reference_type=GLRef.CHEQUE_BOUNCE,
                     reference_id=cheque.id,
                     branch_id=cheque.branch_id,
-                    tenant_id=getattr(cheque, "tenant_id", None),
+                    tenant_id=(cheque.tenant_id if cheque is not None else None),
                 )
             except Exception as fee_err:
                 logger.error(f"Failed to post bounce fee for cheque {cheque.id}: {fee_err}")
@@ -621,7 +624,7 @@ def process_cheque_bounce(cheque, reason, bounce_fee=None):
                 logger.error(f"Failed to adjust customer balance on bounce cheque {cheque.id}: {cust_err}")
         from models.payment import Payment, Receipt
 
-        tid = getattr(cheque, "tenant_id", None)
+        tid = (cheque.tenant_id if cheque is not None else None)
         pmt_q = Payment.query.filter_by(cheque_id=cheque.id)
         if tid:
             pmt_q = pmt_q.filter(Payment.tenant_id == tid)
@@ -655,13 +658,13 @@ def _create_cancel_journal_entry(cheque):
             gl_get_customer_credit_account(
                 cheque.customer,
                 branch_id=cheque.branch_id,
-                tenant_id=getattr(cheque, "tenant_id", None),
+                tenant_id=(cheque.tenant_id if cheque is not None else None),
             )
             if cheque.customer_id
             else GLService.get_account_code_for_concept(
                 "AR",
                 branch_id=cheque.branch_id,
-                tenant_id=getattr(cheque, "tenant_id", None),
+                tenant_id=(cheque.tenant_id if cheque is not None else None),
                 fallback_key="receivable",
             )
         )
@@ -678,7 +681,7 @@ def _create_cancel_journal_entry(cheque):
                 "account": GLService.get_account_code_for_concept(
                     "CHEQUES_UNDER_COLLECTION",
                     branch_id=cheque.branch_id,
-                    tenant_id=getattr(cheque, "tenant_id", None),
+                    tenant_id=(cheque.tenant_id if cheque is not None else None),
                     fallback_key="cheques_under_collection",
                 ),
                 "concept_code": "CHEQUES_UNDER_COLLECTION",
@@ -699,7 +702,7 @@ def _create_cancel_journal_entry(cheque):
                 credit_account = GLService.get_account_code_for_concept(
                     "MISC_EXPENSE",
                     branch_id=cheque.branch_id,
-                    tenant_id=getattr(cheque, "tenant_id", None),
+                    tenant_id=(cheque.tenant_id if cheque is not None else None),
                     fallback_key="misc_expense",
                 )
                 credit_concept = "MISC_EXPENSE"
@@ -707,7 +710,7 @@ def _create_cancel_journal_entry(cheque):
             credit_account = GLService.get_account_code_for_concept(
                 "AP",
                 branch_id=cheque.branch_id,
-                tenant_id=getattr(cheque, "tenant_id", None),
+                tenant_id=(cheque.tenant_id if cheque is not None else None),
                 fallback_key="payable",
             )
             credit_concept = "AP"
@@ -715,14 +718,14 @@ def _create_cancel_journal_entry(cheque):
             credit_account = gl_get_customer_credit_account(
                 cheque.customer,
                 branch_id=cheque.branch_id,
-                tenant_id=getattr(cheque, "tenant_id", None),
+                tenant_id=(cheque.tenant_id if cheque is not None else None),
             )
             credit_concept = gl_get_customer_credit_concept(cheque.customer)
         else:
             credit_account = GLService.get_account_code_for_concept(
                 "AP",
                 branch_id=cheque.branch_id,
-                tenant_id=getattr(cheque, "tenant_id", None),
+                tenant_id=(cheque.tenant_id if cheque is not None else None),
                 fallback_key="payable",
             )
             credit_concept = "AP"
@@ -731,7 +734,7 @@ def _create_cancel_journal_entry(cheque):
                 "account": GLService.get_account_code_for_concept(
                     "DEFERRED_CHEQUES_PAYABLE",
                     branch_id=cheque.branch_id,
-                    tenant_id=getattr(cheque, "tenant_id", None),
+                    tenant_id=(cheque.tenant_id if cheque is not None else None),
                     fallback_key="deferred_cheques",
                 ),
                 "concept_code": "DEFERRED_CHEQUES_PAYABLE",
@@ -772,7 +775,7 @@ def process_cheque_cancel(cheque, reason=None, *, create_gl=True):
     if create_gl and not skip_gl:
         _create_cancel_journal_entry(cheque)
 
-    tid = getattr(cheque, "tenant_id", None)
+    tid = (cheque.tenant_id if cheque is not None else None)
     pmt_q = Payment.query.filter_by(cheque_id=cheque.id)
     if tid:
         pmt_q = pmt_q.filter(Payment.tenant_id == tid)
@@ -789,7 +792,7 @@ def process_cheque_cancel(cheque, reason=None, *, create_gl=True):
     if create_gl and cheque.cheque_type == "outgoing" and cheque.supplier_id and not cheque.expense_id:
         from models.supplier import Supplier
 
-        tid = getattr(cheque, "tenant_id", None)
+        tid = (cheque.tenant_id if cheque is not None else None)
         supplier_q = Supplier.query.filter_by(id=cheque.supplier_id)
         if tid:
             supplier_q = supplier_q.filter(Supplier.tenant_id == tid)
@@ -799,9 +802,11 @@ def process_cheque_cancel(cheque, reason=None, *, create_gl=True):
 
 
 def register_cheque_event_listeners():
-    from models import Cheque
-    from sqlalchemy import event
     from datetime import date
+
+    from sqlalchemy import event
+
+    from models import Cheque
 
     @event.listens_for(Cheque, "before_insert")
     @event.listens_for(Cheque, "before_update")

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 import subprocess
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -261,7 +261,7 @@ class TestAIServiceGetModelGaps:
 
 class TestAnalyticsServiceDonationGaps:
     def test_revenue_by_period_monthly_buckets(self, mocker):
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         donation = MagicMock(transaction_type="donation", amount_usd=Decimal("50"), created_at=now)
         purchase = MagicMock(transaction_type="purchase", amount_usd=Decimal("20"), created_at=now)
         bad = MagicMock(transaction_type="donation", amount_usd=Decimal("1"), created_at=None)
@@ -318,9 +318,8 @@ class TestArchiveServiceGaps:
         mocker.patch("services.archive_service.current_app").logger = MagicMock()
         from services.archive_service import ArchiveService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="Model not found"):
-                ArchiveService.restore_record(archived)
+        with app.app_context(), pytest.raises(ValueError, match="Model not found"):
+            ArchiveService.restore_record(archived)
 
     def test_restore_record_not_found_raises(self, app, mocker):
         archived = MagicMock(table_name="sales", tenant_id=1, record_id=99)
@@ -336,9 +335,8 @@ class TestArchiveServiceGaps:
         mocker.patch("services.archive_service.current_app").logger = MagicMock()
         from services.archive_service import ArchiveService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="Cannot restore"):
-                ArchiveService.restore_record(archived)
+        with app.app_context(), pytest.raises(ValueError, match="Cannot restore"):
+            ArchiveService.restore_record(archived)
 
     def test_init_archive_model_map_populates(self, mocker):
         mocker.patch("services.archive_service.ArchiveService.ARCHIVE_MODEL_MAP", {})
@@ -382,9 +380,8 @@ class TestArchiveServiceGaps:
         mocker.patch("services.archive_service.current_app").logger = MagicMock()
         from services.archive_service import ArchiveService
 
-        with app.app_context():
-            with pytest.raises(RuntimeError):
-                ArchiveService.cleanup_old_archives(days=30)
+        with app.app_context(), pytest.raises(RuntimeError):
+            ArchiveService.cleanup_old_archives(days=30)
 
 
 # ---------------------------------------------------------------------------
@@ -689,8 +686,8 @@ class TestChequeServiceProcessGaps:
         process_cheque_cancel(cheque, reason="void")
 
     def test_write_data_bundle_skips_empty_row_list(self, mocker, tmp_path, mock_db_connection):
-        from services.backup_scoped_engine import ExportResult, write_data_bundle
         from services.backup_scope_config import SCOPE_TENANT
+        from services.backup_scoped_engine import ExportResult, write_data_bundle
 
         mocker.patch("services.backup_scoped_engine.table_exists", return_value=True)
         mocker.patch("services.backup_scoped_engine.write_jsonl")
@@ -713,8 +710,9 @@ class TestChequeServiceProcessGaps:
 
     def test_verify_branch_row_isolation_failure(self, tmp_path):
         import json
-        from services.backup_scoped_engine import verify_scoped_isolation
+
         from services.backup_scope_config import SCOPE_BRANCH
+        from services.backup_scoped_engine import verify_scoped_isolation
 
         data_dir = tmp_path / "data"
         data_dir.mkdir()
@@ -736,8 +734,8 @@ class TestChequeServiceProcessGaps:
         assert any("branch row isolation" in e for e in result["errors"])
 
     def test_verify_skips_zero_expected_and_missing_jsonl(self, tmp_path):
-        from services.backup_scoped_engine import verify_scoped_isolation
         from services.backup_scope_config import SCOPE_TENANT
+        from services.backup_scoped_engine import verify_scoped_isolation
 
         data_dir = tmp_path / "data"
         data_dir.mkdir()

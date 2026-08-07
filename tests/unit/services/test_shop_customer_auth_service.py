@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
 import pytest
@@ -172,7 +172,7 @@ class TestPasswordReset:
     def test_reset_password_success(self, db_session, sample_tenant):
         account = _account(db_session, sample_tenant.id, email="tok@shop.test")
         account.password_reset_token = "valid-token"
-        account.password_reset_expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
+        account.password_reset_expires_at = datetime.now(UTC) + timedelta(hours=1)
         db.session.commit()
         result = ShopCustomerAuthService.reset_password(sample_tenant.id, "valid-token", "newpass99")
         assert result.password_reset_token is None
@@ -181,7 +181,7 @@ class TestPasswordReset:
     def test_reset_password_expired_token(self, db_session, sample_tenant):
         account = _account(db_session, sample_tenant.id, email="exp@shop.test")
         account.password_reset_token = "expired-token"
-        account.password_reset_expires_at = datetime.now(timezone.utc) - timedelta(hours=1)
+        account.password_reset_expires_at = datetime.now(UTC) - timedelta(hours=1)
         db.session.commit()
         with pytest.raises(ValueError, match="انتهت"):
             ShopCustomerAuthService.reset_password(sample_tenant.id, "expired-token", "newpass99")

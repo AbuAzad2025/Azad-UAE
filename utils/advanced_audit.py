@@ -1,9 +1,11 @@
-from datetime import datetime, timezone
+import hashlib
+from datetime import UTC, datetime
+
 from flask import request
 from flask_login import current_user
+
 from extensions import db
 from utils.db_safety import atomic_transaction
-import hashlib
 
 
 def generate_device_fingerprint() -> str:
@@ -63,23 +65,24 @@ def track_login_attempt(username: str, success: bool, ip_address: str):
     if user:
         if success:
             user.login_attempts = 0
-            user.last_login = datetime.now(timezone.utc)
+            user.last_login = datetime.now(UTC)
         else:
             user.login_attempts = (user.login_attempts or 0) + 1
 
             if user.login_attempts >= 5:
                 from datetime import timedelta
 
-                user.locked_until = datetime.now(timezone.utc) + timedelta(minutes=15)
+                user.locked_until = datetime.now(UTC) + timedelta(minutes=15)
 
         db.session.flush()
 
 
 def get_security_events(user_id: int | None = None, days: int = 30):
-    from models import AuditLog
     from datetime import timedelta
 
-    since = datetime.now(timezone.utc) - timedelta(days=days)
+    from models import AuditLog
+
+    since = datetime.now(UTC) - timedelta(days=days)
 
     query = AuditLog.query.filter(AuditLog.created_at >= since)
 

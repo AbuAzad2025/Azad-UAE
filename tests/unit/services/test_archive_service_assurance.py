@@ -46,9 +46,8 @@ class TestArchiveRecord:
 
         from services.archive_service import ArchiveService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="no tenant_id"):
-                ArchiveService.archive_record("sales", record)
+        with app.app_context(), pytest.raises(ValueError, match="no tenant_id"):
+            ArchiveService.archive_record("sales", record)
 
     def test_commit_failure_rolls_back(self, app, mocker):
         record = MagicMock(id=2, tenant_id=1)
@@ -60,9 +59,8 @@ class TestArchiveRecord:
 
         from services.archive_service import ArchiveService
 
-        with app.app_context():
-            with pytest.raises(RuntimeError):
-                ArchiveService.archive_record("sales", record)
+        with app.app_context(), pytest.raises(RuntimeError):
+            ArchiveService.archive_record("sales", record)
         mock_session.flush.assert_called()
 
     def test_deferred_commit_flushes_only(self, app, mocker):
@@ -101,9 +99,8 @@ class TestDeletePaths:
 
         from services.archive_service import ArchiveService
 
-        with app.app_context():
-            with pytest.raises(RuntimeError):
-                ArchiveService.soft_delete(record)
+        with app.app_context(), pytest.raises(RuntimeError):
+            ArchiveService.soft_delete(record)
         mock_session.flush.assert_called_once()
 
     def test_hard_delete_archives_then_deletes(self, app, mocker):
@@ -131,9 +128,8 @@ class TestDeletePaths:
 
         from services.archive_service import ArchiveService
 
-        with app.app_context():
-            with pytest.raises(RuntimeError):
-                ArchiveService.hard_delete("sales", record)
+        with app.app_context(), pytest.raises(RuntimeError):
+            ArchiveService.hard_delete("sales", record)
         mock_session.flush.assert_called()
 
 
@@ -154,9 +150,8 @@ class TestRestoreAndQuery:
 
         from services.archive_service import ArchiveService
 
-        with app.app_context():
-            with pytest.raises(PermissionError, match="tenant mismatch"):
-                ArchiveService.restore_record(archived)
+        with app.app_context(), pytest.raises(PermissionError, match="tenant mismatch"):
+            ArchiveService.restore_record(archived)
 
     def test_restore_reactivates_existing_row(self, app, mocker):
         archived = MagicMock(table_name="sales", tenant_id=1, record_id=50)
@@ -258,9 +253,8 @@ class TestRestoreAndQuery:
         mocker.patch("services.archive_service.current_app").logger = MagicMock()
         from services.archive_service import ArchiveService
 
-        with app.app_context():
-            with pytest.raises(RuntimeError):
-                ArchiveService.archive_record("sales", record)
+        with app.app_context(), pytest.raises(RuntimeError):
+            ArchiveService.archive_record("sales", record)
         mock_session.add.assert_not_called()
 
     def test_restore_unknown_table_raises(self, app, mocker):
@@ -271,9 +265,8 @@ class TestRestoreAndQuery:
         mocker.patch("services.archive_service.current_app").logger = MagicMock()
         from services.archive_service import ArchiveService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="Model not found"):
-                ArchiveService.restore_record(archived)
+        with app.app_context(), pytest.raises(ValueError, match="Model not found"):
+            ArchiveService.restore_record(archived)
 
     def test_restore_missing_row_raises(self, app, mocker):
         archived = MagicMock(table_name="sales", tenant_id=1, record_id=404)
@@ -289,14 +282,13 @@ class TestRestoreAndQuery:
         mocker.patch("services.archive_service.current_app").logger = MagicMock()
         from services.archive_service import ArchiveService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="Record not found"):
-                ArchiveService.restore_record(archived)
+        with app.app_context(), pytest.raises(ValueError, match="Record not found"):
+            ArchiveService.restore_record(archived)
 
     def test_init_archive_model_map_populates(self, app):
         from services.archive_service import ArchiveService
 
-        ArchiveService.ARCHIVE_MODEL_MAP = {k: None for k in ArchiveService.ARCHIVE_MODEL_MAP}
+        ArchiveService.ARCHIVE_MODEL_MAP = dict.fromkeys(ArchiveService.ARCHIVE_MODEL_MAP)
         with app.app_context():
             ArchiveService._init_archive_model_map()
         assert ArchiveService.ARCHIVE_MODEL_MAP["sales"] is not None
@@ -335,7 +327,6 @@ class TestRestoreAndQuery:
         mocker.patch("services.archive_service.current_app").logger = MagicMock()
         from services.archive_service import ArchiveService
 
-        with app.app_context():
-            with pytest.raises(RuntimeError):
-                ArchiveService.cleanup_old_archives(days=30)
+        with app.app_context(), pytest.raises(RuntimeError):
+            ArchiveService.cleanup_old_archives(days=30)
         mock_session.rollback.assert_called()

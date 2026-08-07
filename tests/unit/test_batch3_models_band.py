@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import MagicMock
@@ -153,6 +154,7 @@ class TestBankReconciliationModel:
 
     def test_calculate_reconciliation_balanced(self):
         from decimal import Decimal
+
         from models.bank_reconciliation import BankReconciliation
 
         br = BankReconciliation(
@@ -189,6 +191,7 @@ class TestBankReconciliationModel:
 class TestCashBoxModel:
     def test_repr_and_full_name(self):
         from decimal import Decimal
+
         from models.cash_box import CashBox
 
         box = CashBox(code="C01", name_ar="صندوق", box_type="cash", current_balance=Decimal("500"))
@@ -230,12 +233,13 @@ class TestCRMReprCoverage:
         assert data["stage_name"] == "مرحلة"
 
     def test_lead_to_dict_without_stage(self):
-        from datetime import datetime, timezone
+        from datetime import datetime
+
         from models.crm import CRMLead
 
         lead = CRMLead(
             name="Solo",
-            created_at=datetime(2025, 3, 1, tzinfo=timezone.utc),
+            created_at=datetime(2025, 3, 1, tzinfo=UTC),
         )
         lead.id = 5
         data = lead.to_dict()
@@ -272,12 +276,13 @@ class TestIndustryFieldDefinition:
 
 class TestLoginHistoryModel:
     def test_to_dict(self):
-        from datetime import datetime, timezone
+        from datetime import datetime
+
         from models.login_history import LoginHistory
 
         row = LoginHistory(
             username="admin",
-            login_time=datetime(2025, 1, 1, tzinfo=timezone.utc),
+            login_time=datetime(2025, 1, 1, tzinfo=UTC),
             success=True,
         )
         data = row.to_dict()
@@ -309,6 +314,7 @@ class TestPartnerDistributionAndTransaction:
     def test_distribution_repr_and_status_label(self):
         from datetime import date
         from decimal import Decimal
+
         from models.partner_profit_distribution import PartnerProfitDistribution
 
         dist = PartnerProfitDistribution(
@@ -324,6 +330,7 @@ class TestPartnerDistributionAndTransaction:
 
     def test_transaction_labels_and_credit_debit(self):
         from decimal import Decimal
+
         from models.partner_transaction import PartnerTransaction
 
         tx = PartnerTransaction(
@@ -350,11 +357,12 @@ class TestPayrollEmployee:
 
 class TestPosSessionModel:
     def test_close_and_duration(self):
-        from datetime import datetime, timedelta, timezone
+        from datetime import datetime, timedelta
         from decimal import Decimal
+
         from models.pos_session import PosSession
 
-        opened = datetime.now(timezone.utc) - timedelta(minutes=30)
+        opened = datetime.now(UTC) - timedelta(minutes=30)
         session = PosSession(
             session_number="POS-1",
             opening_balance_cash=Decimal("100"),
@@ -368,18 +376,20 @@ class TestPosSessionModel:
         assert session.duration_minutes >= 29
 
     def test_duration_naive_datetimes(self):
-        from datetime import datetime, timedelta, timezone
+        from datetime import datetime, timedelta
+
         from models.pos_session import PosSession
 
-        opened = datetime.now(timezone.utc) - timedelta(minutes=5)
+        opened = datetime.now(UTC) - timedelta(minutes=5)
         session = PosSession(session_number="POS-3", opened_at=opened)
-        session.closed_at = datetime.now(timezone.utc)
+        session.closed_at = datetime.now(UTC)
         assert session.duration_minutes >= 4
 
-        from datetime import datetime, timezone
+        from datetime import datetime
+
         from models.pos_session import PosSession
 
-        session = PosSession(session_number="POS-2", opened_at=datetime.now(timezone.utc))
+        session = PosSession(session_number="POS-2", opened_at=datetime.now(UTC))
         assert session.duration_minutes >= 0
         assert "POS-2" in repr(session)
 
@@ -387,6 +397,7 @@ class TestPosSessionModel:
 class TestProductWarehouseCostModel:
     def test_repr_and_is_empty(self):
         from decimal import Decimal
+
         from models.product_warehouse_cost import ProductWarehouseCost
 
         pwc = ProductWarehouseCost(product_id=1, warehouse_id=2, average_cost=Decimal("10"))
@@ -416,8 +427,9 @@ class TestFiscalPositionTaxRuleRepr:
 
 class TestWarehouseModels:
     def test_warehouse_repr_and_type_labels(self):
-        from datetime import datetime, timezone
-        from models.warehouse import Warehouse, ProductWarehouseStock, StockMovement
+        from datetime import datetime
+
+        from models.warehouse import ProductWarehouseStock, StockMovement, Warehouse
 
         wh = Warehouse(name="Main", warehouse_type=Warehouse.TYPE_ONLINE)
         assert "Main" in repr(wh)
@@ -435,7 +447,7 @@ class TestWarehouseModels:
         mv.product = MagicMock(name="Widget")
         mv.reference_type = "sale"
         mv.reference_id = 9
-        mv.created_at = datetime(2025, 6, 1, tzinfo=timezone.utc)
+        mv.created_at = datetime(2025, 6, 1, tzinfo=UTC)
         d = mv.to_dict()
         assert d["movement_type"] == "sale"
         assert "sale #9" in d["reference"]

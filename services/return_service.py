@@ -1,26 +1,26 @@
 import logging
-from decimal import Decimal, ROUND_HALF_UP
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from decimal import ROUND_HALF_UP, Decimal
 
 from flask import current_app
 
 from extensions import db
 from models import (
-    Sale,
-    SaleLine,
+    Product,
     ProductReturn,
     ProductReturnLine,
-    Product,
     ProductSerial,
+    Sale,
+    SaleLine,
 )
-from services.stock_service import StockService
-from services.gl_service import GLService
 from services.gl_posting import post_or_fail
-from utils.helpers import generate_number
+from services.gl_service import GLService
+from services.stock_service import StockService
+from utils.branching import branch_scope_id_for
 from utils.gl_reference_types import GLRef
+from utils.helpers import generate_number
 from utils.tax_settings import should_post_vat_gl
 from utils.tenanting import get_active_tenant_id, is_platform_owner
-from utils.branching import branch_scope_id_for
 
 logger = logging.getLogger(__name__)
 
@@ -384,7 +384,7 @@ class ReturnService:
                                 pwc.total_quantity = new_qty
                                 pwc.total_value = new_value
                                 pwc.average_cost = new_avg
-                                pwc.last_updated = datetime.now(timezone.utc)
+                                pwc.last_updated = datetime.now(UTC)
                                 from models import ProductCostHistory
 
                                 pch = ProductCostHistory(

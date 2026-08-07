@@ -20,16 +20,17 @@ import json
 import logging
 import traceback
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
+from io import StringIO
 from typing import Any
 from urllib.parse import urlparse
 
 from flask import current_app, g, has_request_context
 from flask_login import current_user
 from sqlalchemy import text
-from models.error_audit_log import ErrorAuditLog
-from io import StringIO
+
 from extensions import db
+from models.error_audit_log import ErrorAuditLog
 
 logger = logging.getLogger(__name__)
 
@@ -116,7 +117,7 @@ class ErrorAuditService:
         buf = StringIO()
         buf.write("=" * 80 + "\n")
         buf.write("Error Audit Logs Export\n")
-        buf.write("Generated: " + datetime.now(timezone.utc).isoformat() + "\n")
+        buf.write("Generated: " + datetime.now(UTC).isoformat() + "\n")
         buf.write("Count: " + str(len(logs)) + "\n")
         buf.write("=" * 80 + "\n\n")
 
@@ -233,7 +234,7 @@ class ErrorAuditService:
                 conn.execute(
                     sql,
                     {
-                        "now": datetime.now(timezone.utc),
+                        "now": datetime.now(UTC),
                         "user_id": user_id,
                         "note": note[:500],
                         "log_id": log_id,
@@ -242,6 +243,7 @@ class ErrorAuditService:
                 conn.commit()
             return True
         except Exception:
+            logger.exception("Error-audit write failed")
             return False
 
     # ── Request ID ──────────────────────────────────────────────
@@ -393,7 +395,7 @@ class ErrorAuditService:
             "user_id": user_id,
             "tenant_id": tenant_id,
             "request_data": (json.dumps(request_data, ensure_ascii=False, default=str) if request_data else None),
-            "now": datetime.now(timezone.utc),
+            "now": datetime.now(UTC),
         }
 
         try:
@@ -429,7 +431,7 @@ class ErrorAuditService:
     def _find_duplicate(fingerprint: str) -> int | None:
         """Look for an existing unresolved record with same fingerprint within dedup window."""
         try:
-            cutoff = datetime.now(timezone.utc) - timedelta(minutes=_DEDUP_WINDOW_MINUTES)
+            cutoff = datetime.now(UTC) - timedelta(minutes=_DEDUP_WINDOW_MINUTES)
             sql = text("""
                 SELECT id FROM error_audit_logs
                 WHERE fingerprint = :fp
@@ -443,6 +445,7 @@ class ErrorAuditService:
                 row = result.fetchone()
                 return row[0] if row else None
         except Exception:
+            logger.exception("Error-audit occurrence query failed")
             return None
 
     @staticmethod
@@ -461,7 +464,7 @@ class ErrorAuditService:
                 conn.execute(
                     sql,
                     {
-                        "now": datetime.now(timezone.utc),
+                        "now": datetime.now(UTC),
                         "message": (new_message or "")[:_MAX_MESSAGE_LEN],
                         "stack_trace": ((new_trace or "")[:_MAX_TRACE_LEN] if new_trace else None),
                         "log_id": log_id,
@@ -470,6 +473,7 @@ class ErrorAuditService:
                 conn.commit()
             return True
         except Exception:
+            logger.exception("Error-audit write failed")
             return False
 
     # ── Sanitization helpers ──────────────────────────────────────

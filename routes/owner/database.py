@@ -1,25 +1,44 @@
 """Database tools, SQL console, and maintenance routes for the owner blueprint."""
 
+import json
+import logging
+import os
+from datetime import UTC, datetime, timedelta
+
 from flask_babel import gettext
 
 from routes.owner import (
-    render_template,
-    request,
-    jsonify,
-    flash,
-    redirect,
-    url_for,
+    ArchivedRecord,
+    AuditLog,
     current_app,
     current_user,
-    text,
-    inspect,
     db,
-    AuditLog,
-    ArchivedRecord,
+    flash,
+    inspect,
+    jsonify,
+    owner_bp,
     owner_required,
+    redirect,
+    render_template,
+    request,
+    text,
+    url_for,
+)
+from routes.owner.shared import (
+    _audit_owner_db_action,
+    _inspector_column_names,
+    _invalidate_owner_changes,
+    _is_blocked_table,
+    _is_sensitive_stats_table,
+    _known_tables_map,
+    _mask_db_uri,
+    _resolve_browsable_table,
+    _resolve_known_table,
+    _resolve_truncatable_table,
+    _validate_postgresql_uri,
+    _validate_select_only_sql,
 )
 from services.logging_core import LoggingCore
-from routes.owner import owner_bp
 from utils.db_safety import atomic_transaction
 from utils.safe_sql import (
     count_query,
@@ -28,25 +47,6 @@ from utils.safe_sql import (
     select_all_query,
     update_row_query,
 )
-from routes.owner.shared import (
-    _invalidate_owner_changes,
-    _audit_owner_db_action,
-    _mask_db_uri,
-    _validate_select_only_sql,
-    _resolve_browsable_table,
-    _resolve_truncatable_table,
-    _resolve_known_table,
-    _known_tables_map,
-    _is_sensitive_stats_table,
-    _inspector_column_names,
-    _validate_postgresql_uri,
-    _is_blocked_table,
-)
-
-import logging
-import os
-import json
-from datetime import datetime, timezone, timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -373,8 +373,8 @@ def export_database():
         if export_format == "sql":
             filename = f"db_export_{timestamp}.sql"
             filepath = os.path.join(backup_dir, filename)
-            from services.backup_service import BackupService
             from services.backup_exec import run_pg_tool
+            from services.backup_service import BackupService
 
             params = BackupService._parse_db_url()
             pg_dump = BackupService._resolve_pg_tool("pg_dump", "PG_DUMP_PATH")
@@ -575,15 +575,15 @@ def data_cleanup():
             flash(gettext("⚠️ يرجى اختيار نوع البيانات للحذف."), "warning")
             stats = {
                 "old_logs": AuditLog.query.filter(
-                    AuditLog.created_at < datetime.now(timezone.utc) - timedelta(days=90)
+                    AuditLog.created_at < datetime.now(UTC) - timedelta(days=90)
                 ).count(),
                 "old_archived": ArchivedRecord.query.filter(
-                    ArchivedRecord.archived_at < datetime.now(timezone.utc) - timedelta(days=180)
+                    ArchivedRecord.archived_at < datetime.now(UTC) - timedelta(days=180)
                 ).count(),
             }
             return render_template("owner/data_cleanup.html", stats=stats)
 
-        cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
+        cutoff_date = datetime.now(UTC) - timedelta(days=days)
         deleted_count = 0
 
         try:
@@ -601,10 +601,10 @@ def data_cleanup():
 
     stats = {
         "old_logs": AuditLog.query.filter(
-            AuditLog.created_at < datetime.now(timezone.utc) - timedelta(days=90)
+            AuditLog.created_at < datetime.now(UTC) - timedelta(days=90)
         ).count(),
         "old_archived": ArchivedRecord.query.filter(
-            ArchivedRecord.archived_at < datetime.now(timezone.utc) - timedelta(days=180)
+            ArchivedRecord.archived_at < datetime.now(UTC) - timedelta(days=180)
         ).count(),
     }
 
@@ -638,8 +638,9 @@ def export_excel(table_name):
 @owner_required
 def api_recent_audit_logs():
     """API endpoint for maintenance audit log display."""
-    from models import AuditLog
     from sqlalchemy import desc
+
+    from models import AuditLog
 
     logs = (
         AuditLog.query.filter(AuditLog.action.in_(["fix_cost_centers", "rebuild_gl_tree"]))

@@ -54,7 +54,7 @@ class TestEscposBuilder:
 
     def test_unknown_encoding_falls_back_utf8(self):
         payload = agent.escpos_line("نص", encoding="cp999")
-        assert "نص".encode("utf-8") in payload
+        assert "نص".encode() in payload
 
 
 class TestResolvePrinter:

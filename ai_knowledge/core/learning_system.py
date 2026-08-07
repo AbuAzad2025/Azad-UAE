@@ -6,8 +6,8 @@
 import json
 import logging
 import os
+from collections import Counter, defaultdict
 from datetime import datetime
-from collections import defaultdict, Counter
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -119,7 +119,7 @@ class AzadLearningSystem:
         """تحميل المعرفة المكتسبة"""
         if os.path.exists(self.knowledge_file):
             try:
-                with open(self.knowledge_file, "r", encoding="utf-8") as f:
+                with open(self.knowledge_file, encoding="utf-8") as f:
                     return self._normalize_loaded_data(json.load(f))
             except (json.JSONDecodeError, OSError) as exc:
                 logger.debug("Could not load knowledge file: %s", exc)
@@ -129,7 +129,7 @@ class AzadLearningSystem:
         """تحميل سجل التفاعلات"""
         if os.path.exists(self.interactions_file):
             try:
-                with open(self.interactions_file, "r", encoding="utf-8") as f:
+                with open(self.interactions_file, encoding="utf-8") as f:
                     return json.load(f)
             except (json.JSONDecodeError, OSError) as exc:
                 logger.debug("Could not load interactions file: %s", exc)
@@ -139,7 +139,7 @@ class AzadLearningSystem:
         """تحميل الأنماط المكتشفة"""
         if os.path.exists(self.patterns_file):
             try:
-                with open(self.patterns_file, "r", encoding="utf-8") as f:
+                with open(self.patterns_file, encoding="utf-8") as f:
                     result = self._patterns_from_storage(json.load(f))
                     if isinstance(result, dict):
                         return result
@@ -151,7 +151,7 @@ class AzadLearningSystem:
         """تحميل سجل التقييمات"""
         if os.path.exists(self.feedback_file):
             try:
-                with open(self.feedback_file, "r", encoding="utf-8") as f:
+                with open(self.feedback_file, encoding="utf-8") as f:
                     return json.load(f)
             except (json.JSONDecodeError, OSError) as exc:
                 logger.debug("Could not load feedback file: %s", exc)

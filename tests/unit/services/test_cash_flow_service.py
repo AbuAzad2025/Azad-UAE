@@ -1,19 +1,19 @@
 """Unit tests for CashFlowService — operating, investing, financing, cash balance."""
 
-from datetime import date, datetime, timezone
-from decimal import Decimal
 import uuid
+from datetime import UTC, date, datetime
+from decimal import Decimal
 
 import pytest
 
 from models import (
+    Branch,
+    Expense,
     GLAccount,
     GLJournalEntry,
     GLJournalLine,
     Payment,
     Receipt,
-    Expense,
-    Branch,
 )
 from services.cash_flow_service import CashFlowService
 from services.gl_tree_builder import GLTreeBuilder
@@ -89,7 +89,7 @@ def cf_seed(
             tenant_id=tid,
             branch_id=bid,
             entry_number=entry_number,
-            entry_date=datetime.combine(entry_date, datetime.min.time(), tzinfo=timezone.utc),
+            entry_date=datetime.combine(entry_date, datetime.min.time(), tzinfo=UTC),
             description=f"CF test {entry_number}",
             is_posted=True,
             total_debit=sum(d for _, d, _c in lines),
@@ -191,7 +191,7 @@ def cf_seed(
         ],
     )
 
-    in_period_dt = datetime.combine(IN_PERIOD, datetime.min.time(), tzinfo=timezone.utc)
+    in_period_dt = datetime.combine(IN_PERIOD, datetime.min.time(), tzinfo=UTC)
 
     db_session.add(
         Receipt(
@@ -389,7 +389,7 @@ class TestCashFlowBalance:
             tenant_id=tid,
             branch_id=bid,
             entry_number=f"JE-CF-END-{uid}",
-            entry_date=datetime.combine(IN_PERIOD, datetime.min.time(), tzinfo=timezone.utc),
+            entry_date=datetime.combine(IN_PERIOD, datetime.min.time(), tzinfo=UTC),
             description="In-period cash deposit",
             is_posted=True,
             total_debit=Decimal("500"),
@@ -471,7 +471,7 @@ class TestGenerateCashFlow:
                 amount_aed=Decimal("5000"),
                 payment_method="cash",
                 payment_confirmed=True,
-                receipt_date=datetime.combine(IN_PERIOD, datetime.min.time(), tzinfo=timezone.utc),
+                receipt_date=datetime.combine(IN_PERIOD, datetime.min.time(), tzinfo=UTC),
             )
         )
         db_session.commit()

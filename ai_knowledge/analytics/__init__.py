@@ -1,13 +1,13 @@
 """Analytics & predictions."""
 
-from ai_knowledge.analytics.data_analyzer import data_analyzer
 from ai_knowledge.analytics.analytics_predictions import (
-    SalesAnalytics,
+    CashFlowAnalytics,
     InventoryAnalytics,
     ProfitAnalytics,
-    CashFlowAnalytics,
+    SalesAnalytics,
     get_analytics,
 )
+from ai_knowledge.analytics.data_analyzer import data_analyzer
 from ai_knowledge.analytics.market_insights import get_market_insights
 
 __all__ = [

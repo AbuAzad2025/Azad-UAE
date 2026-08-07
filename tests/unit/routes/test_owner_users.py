@@ -9,7 +9,6 @@ from __future__ import annotations
 from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
 
-
 from routes.owner import owner_bp
 from tests.unit.routes.conftest import _chain_query
 
@@ -31,7 +30,7 @@ def _mock_user_entity(**kwargs):
     user.is_active = kwargs.get("is_active", True)
     user.tenant_id = kwargs.get("tenant_id", 1)
     user.role_id = kwargs.get("role_id", 2)
-    user.branch_id = kwargs.get("branch_id", None)
+    user.branch_id = kwargs.get("branch_id")
     return user
 
 

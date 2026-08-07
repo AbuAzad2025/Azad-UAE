@@ -1,33 +1,34 @@
-from flask_babel import gettext
+from decimal import Decimal
+
 from flask import (
     Blueprint,
-    render_template,
-    request,
-    redirect,
-    url_for,
+    abort,
+    current_app,
     flash,
     jsonify,
-    current_app,
+    redirect,
+    render_template,
+    request,
+    url_for,
 )
-from flask_login import login_required, current_user
+from flask_babel import gettext
+from flask_login import current_user, login_required
+
 from extensions import db
-from models import Product, StockMovement, Warehouse, Branch
+from models import Branch, Product, StockMovement, Warehouse
 from services.stock_service import StockService
-from utils.decorators import permission_required, admin_required, branch_scope_id
-from utils.error_messages import ErrorMessages
-from flask import abort
-from decimal import Decimal
 from utils.branching import (
+    ensure_warehouse_access,
     get_accessible_branches_query,
     get_accessible_warehouse_ids,
     get_branch_stock_map,
-    ensure_warehouse_access,
     should_show_all_branch_columns,
 )
-from utils.tenanting import tenant_get_or_404, tenant_query
-from utils.tenanting import scoped_user_query, get_active_tenant_id
 from utils.db_safety import atomic_transaction
+from utils.decorators import admin_required, branch_scope_id, permission_required
+from utils.error_messages import ErrorMessages
 from utils.structured_logging import log_mutation
+from utils.tenanting import get_active_tenant_id, scoped_user_query, tenant_get_or_404, tenant_query
 
 warehouse_bp = Blueprint("warehouse", __name__, url_prefix="/warehouse")
 
@@ -419,7 +420,7 @@ def create_warehouse():
                     )
 
             # Check tenant warehouse limit
-            from utils.tenant_limits import check_warehouses_limit, TenantLimitError
+            from utils.tenant_limits import TenantLimitError, check_warehouses_limit
 
             try:
                 check_warehouses_limit()

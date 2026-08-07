@@ -103,9 +103,8 @@ class TestHelpers:
 
     def test_validate_user_branch_missing_role(self, app):
         users_routes = _users_routes()
-        with app.app_context():
-            with pytest.raises(ValueError, match="الدور"):
-                users_routes._validate_user_branch(None, None)
+        with app.app_context(), pytest.raises(ValueError, match="الدور"):
+            users_routes._validate_user_branch(None, None)
 
     def test_validate_user_branch_requires_branch(self, app, db_session, users_manager, sample_branch):
         users_routes = _users_routes()
@@ -638,6 +637,7 @@ class TestDelete:
 
     def test_delete_deactivates_when_has_sales(self, users_client, db_session, sample_tenant, sample_branch, mocker):
         from unittest.mock import MagicMock
+
         from models import Role, User
 
         role = Role.query.filter_by(slug="seller").first()
@@ -666,6 +666,7 @@ class TestDelete:
 
     def test_delete_hard_when_no_sales(self, users_client, db_session, sample_tenant, sample_branch, mocker):
         from unittest.mock import MagicMock
+
         from models import Role, User
 
         role = Role.query.filter_by(slug="seller").first()

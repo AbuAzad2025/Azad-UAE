@@ -2,20 +2,24 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from decimal import Decimal
 
 from flask import current_app
-from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 
 from extensions import db
+
+logger = logging.getLogger(__name__)
+from flask_babel import gettext
+
 from models import Customer, Product, Sale, User, Warehouse
 from services.sale_service import SaleService
-from utils.currency_utils import resolve_default_currency
 from services.stock_service import StockService
-from services.store_service import StoreService
 from services.store_payment_method_service import StorePaymentMethodService
-from flask_babel import gettext
+from services.store_service import StoreService
+from utils.currency_utils import resolve_default_currency
 
 
 class StoreCheckoutService:
@@ -135,6 +139,7 @@ class StoreCheckoutService:
                 product_id = int(pid_raw)
                 qty = Decimal(str(qty_raw))
             except (TypeError, ValueError):
+                logger.debug("Skipping invalid cart item %r=%r", pid_raw, qty_raw, exc_info=True)
                 continue
             if qty <= 0:
                 continue

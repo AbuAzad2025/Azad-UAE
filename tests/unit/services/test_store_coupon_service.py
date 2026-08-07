@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -75,7 +75,7 @@ class TestValidateForCheckout:
         row = _coupon(
             db_session,
             sample_tenant.id,
-            valid_until=datetime.now(timezone.utc) - timedelta(days=1),
+            valid_until=datetime.now(UTC) - timedelta(days=1),
         )
         with pytest.raises(ValueError, match="منتهٍ"):
             StoreCouponService.validate_for_checkout(sample_tenant.id, row.code, Decimal("100"))

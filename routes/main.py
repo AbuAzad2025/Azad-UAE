@@ -1,26 +1,28 @@
-from flask_babel import gettext
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
+
 from flask import (
     Blueprint,
-    render_template,
     current_app,
-    redirect,
-    url_for,
-    request,
     flash,
+    redirect,
+    render_template,
+    request,
+    url_for,
 )
-from flask_login import login_required, current_user
+from flask_babel import gettext
+from flask_login import current_user, login_required
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
+
 from extensions import db
-from models import Sale, SaleLine, Customer, Product, GLAccount, GLJournalLine, User
+from models import Customer, GLAccount, GLJournalLine, Product, Sale, SaleLine, User
 from services.stock_service import StockService
-from utils.decorators import branch_scope_id
 from utils.branching import get_visible_products_query
-from utils.tenanting import get_active_tenant_id
-from utils.gl_tenant import get_gl_account_by_code
 from utils.db_safety import atomic_transaction
+from utils.decorators import branch_scope_id
+from utils.gl_tenant import get_gl_account_by_code
+from utils.tenanting import get_active_tenant_id
 
 main_bp = Blueprint("main", __name__)
 
@@ -40,7 +42,7 @@ def index():
 def dashboard():
     # Dashboard route with error handling
     try:
-        today = datetime.now(timezone.utc).date()
+        today = datetime.now(UTC).date()
         month_start = today.replace(day=1)
 
         stats = {}
@@ -256,7 +258,7 @@ def my_profile():
     tenant = db.session.get(Tenant, user.tenant_id) if user.tenant_id else None
 
     # Personal stats
-    today = datetime.now(timezone.utc).date()
+    today = datetime.now(UTC).date()
     month_start = today.replace(day=1)
 
     stats = {}
@@ -325,7 +327,8 @@ def my_profile():
 @login_required
 def my_profile_update():
     """Update own profile — strict whitelist of allowed fields."""
-    from werkzeug.security import generate_password_hash, check_password_hash
+    from werkzeug.security import check_password_hash, generate_password_hash
+
     from utils.sanitizer import InputSanitizer
 
     user = current_user
@@ -415,8 +418,8 @@ def my_profile_update():
 @main_bp.route("/tenant/<slug>")
 def tenant_public_profile(slug):
     """Public company profile page — no login required."""
-    from models.tenant import Tenant
     from models.branch import Branch
+    from models.tenant import Tenant
 
     tenant = Tenant.query.filter_by(slug=slug).first_or_404()
 
@@ -435,6 +438,7 @@ def tenant_public_profile(slug):
 
     # Determine if viewer is owner (for edit/delete buttons)
     from flask_login import current_user as _current_user
+
     from utils.auth_helpers import is_global_owner_user
 
     is_owner_viewer = _current_user.is_authenticated and is_global_owner_user(_current_user)

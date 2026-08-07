@@ -10,6 +10,8 @@ from ai_knowledge.knowledge import (
     get_customs_advice,
     get_part_info,
     get_tax_info,
+)
+from ai_knowledge.knowledge import (
     search_knowledge as kb_search,
 )
 from ai_knowledge.specialized import (

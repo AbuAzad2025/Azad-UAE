@@ -1,19 +1,21 @@
 import logging
-from datetime import datetime, timezone, date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any
-from extensions import db
+
 from flask_babel import gettext
+
+from extensions import db
 from models import (
+    Attendance,
     Department,
     HRContract,
-    Attendance,
-    LeaveType,
     LeaveRequest,
+    LeaveType,
 )
-from utils.tenanting import get_active_tenant_id
-from utils.branching import branch_scope_id_for
 from utils.auth_helpers import is_global_owner_user
+from utils.branching import branch_scope_id_for
+from utils.tenanting import get_active_tenant_id
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +40,7 @@ class HRService:
     @staticmethod
     def clock_in(user, branch_id=None):
         tid = HRService._tid(user)
-        today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        today_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
         existing = Attendance.query.filter(
             Attendance.user_id == user.id,
             Attendance.check_in >= today_start,
@@ -52,7 +54,7 @@ class HRService:
             tenant_id=int(tid) if tid else 0,
             branch_id=int(branch_id) if branch_id else None,
             user_id=user.id,
-            check_in=datetime.now(timezone.utc),
+            check_in=datetime.now(UTC),
             state="draft",
         )
         db.session.add(att)
@@ -65,7 +67,7 @@ class HRService:
 
     @staticmethod
     def clock_out(user):
-        today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        today_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
         att = (
             Attendance.query.filter(
                 Attendance.user_id == user.id,
@@ -77,10 +79,10 @@ class HRService:
         )
         if not att:
             raise ValueError(gettext("لا يوجد تسجيل حضور مفتوح اليوم."))
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         check_in = att.check_in
         if check_in.tzinfo is None:
-            check_in = check_in.replace(tzinfo=timezone.utc)
+            check_in = check_in.replace(tzinfo=UTC)
         delta = now - check_in
         hours = Decimal(str(round(delta.total_seconds() / 3600, 2)))
         att.check_out = now
@@ -169,7 +171,7 @@ class HRService:
             raise ValueError(gettext("يمكن الموافقة على الطلبات في حالة المسودة فقط."))
         leave.state = "approved"
         leave.manager_id = manager.id
-        leave.updated_at = datetime.now(timezone.utc)
+        leave.updated_at = datetime.now(UTC)
         try:
             db.session.flush()
         except Exception:
@@ -187,7 +189,7 @@ class HRService:
         leave.state = "refused"
         leave.manager_id = manager.id
         leave.rejected_reason = reason
-        leave.updated_at = datetime.now(timezone.utc)
+        leave.updated_at = datetime.now(UTC)
         try:
             db.session.flush()
         except Exception:
@@ -293,7 +295,7 @@ class PayrollEngine:
             "month": month,
             "year": year,
             "reason": reason,
-            "registered_at": datetime.now(timezone.utc),
+            "registered_at": datetime.now(UTC),
         }
         PayrollEngine._debt_registry.append(entry)
         logger.warning(
@@ -390,9 +392,7 @@ class PayrollEngine:
         ).all()
         total_days = 0
         for leave in leaves:
-            if leave.start_date.year == year and leave.start_date.month == month:
-                total_days += leave.days_taken
-            elif leave.end_date.year == year and leave.end_date.month == month:
+            if leave.start_date.year == year and leave.start_date.month == month or leave.end_date.year == year and leave.end_date.month == month:
                 total_days += leave.days_taken
         return total_days
 

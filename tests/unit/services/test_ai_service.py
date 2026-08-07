@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import MagicMock
@@ -77,6 +77,7 @@ def _mock_sale_query(mocker, *, filter_all=None, filter_count=0):
 def _mock_gather_knowledge_queries(mocker, *, sum_scalar=100, counts=None):
     """Patch db.session.query for _gather_relevant_knowledge stats."""
     import inspect
+
     from models import (
         Cheque,
         Customer,
@@ -237,16 +238,18 @@ class TestUserInfoForOwner:
         assert AIService._escape_ilike("a%b_c") == r"a\%b\_c"
 
     def test_ilike_contains_skips_escape_for_plain_terms(self):
-        from models import User
         from sqlalchemy.dialects import postgresql
+
+        from models import User
 
         clause = AIService._ilike_contains(User.username, "testuser-abc")
         sql = str(clause.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
         assert "ESCAPE" not in sql.upper()
 
     def test_ilike_contains_uses_escape_for_metacharacters(self):
-        from models import User
         from sqlalchemy.dialects import postgresql
+
+        from models import User
 
         clause = AIService._ilike_contains(User.username, "a%b")
         sql = str(clause.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
@@ -297,8 +300,8 @@ class TestRecommendPrice:
             sale_number=f"S-{uuid.uuid4().hex[:6]}",
             customer_id=sample_customer.id,
             seller_id=sample_user.id,
-            sale_date=datetime.now(timezone.utc),
-            created_at=datetime.now(timezone.utc),
+            sale_date=datetime.now(UTC),
+            created_at=datetime.now(UTC),
             subtotal=Decimal("100"),
             total_amount=Decimal("100"),
             amount=Decimal("100"),
@@ -361,13 +364,13 @@ class TestCustomerAnalysis:
         sample_customer.get_balance_aed = MagicMock(return_value=Decimal("1000"))
         sale = MagicMock(
             total_amount=Decimal("100"),
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
             customer=sample_customer,
             lines=[],
         )
         payment = MagicMock(
             amount=Decimal("50"),
-            created_at=datetime.now(timezone.utc) + timedelta(days=2),
+            created_at=datetime.now(UTC) + timedelta(days=2),
             customer_id=sample_customer.id,
         )
         _mock_session_get(mocker, {(Customer, sample_customer.id): sample_customer})
@@ -383,7 +386,7 @@ class TestCustomerAnalysis:
         assert result["risk_level"] == "low"
 
     def test_perform_analysis_type_error_on_delay(self, mocker, sample_customer):
-        sale_dt = datetime.now(timezone.utc)
+        sale_dt = datetime.now(UTC)
         sale = MagicMock(
             total_amount=Decimal("100"),
             created_at=sale_dt,
@@ -407,8 +410,8 @@ class TestExchangeRate:
             sale_number=f"USD-{uuid.uuid4().hex[:6]}",
             customer_id=sample_customer.id,
             seller_id=sample_user.id,
-            sale_date=datetime.now(timezone.utc),
-            created_at=datetime.now(timezone.utc),
+            sale_date=datetime.now(UTC),
+            created_at=datetime.now(UTC),
             subtotal=Decimal("100"),
             total_amount=Decimal("100"),
             amount=Decimal("100"),
@@ -433,7 +436,7 @@ class TestExchangeRate:
 
 
 def _confirmed_sale(db_session, sample_tenant, sample_customer, sample_user, **kwargs):
-    day = kwargs.get("sale_date", datetime.now(timezone.utc))
+    day = kwargs.get("sale_date", datetime.now(UTC))
     sale = Sale(
         tenant_id=sample_tenant.id,
         sale_number=f"S-{uuid.uuid4().hex[:6]}",
@@ -462,7 +465,7 @@ class TestSalesTrend:
         for i in range(3):
             sales.append(
                 MagicMock(
-                    sale_date=datetime.now(timezone.utc) - timedelta(days=i),
+                    sale_date=datetime.now(UTC) - timedelta(days=i),
                     amount_aed=Decimal("100"),
                     status="confirmed",
                 )
@@ -476,7 +479,7 @@ class TestSalesTrend:
         for i in range(10):
             sales.append(
                 MagicMock(
-                    sale_date=datetime.now(timezone.utc) - timedelta(days=i),
+                    sale_date=datetime.now(UTC) - timedelta(days=i),
                     amount_aed=Decimal(str(100 + i * 5)),
                     status="confirmed",
                 )
@@ -517,7 +520,7 @@ class TestSalesPatterns:
         assert AIService.detect_sales_patterns()["success"] is False
 
     def test_patterns(self, db_session, sample_tenant, sample_customer, sample_user):
-        base = datetime.now(timezone.utc)
+        base = datetime.now(UTC)
         for i in range(12):
             _confirmed_sale(
                 db_session,
@@ -1259,7 +1262,7 @@ class TestCoverageGaps:
         )
         payment = MagicMock(
             amount=Decimal("200"),
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         _mock_customer_analysis_queries(mocker, sales=[sale], payments=[payment])
         sample_customer.get_balance_aed = MagicMock(return_value=Decimal("300"))
@@ -1273,7 +1276,7 @@ class TestCoverageGaps:
             customer=sample_customer,
             lines=[],
         )
-        payment = MagicMock(amount=Decimal("10"), created_at=datetime.now(timezone.utc))
+        payment = MagicMock(amount=Decimal("10"), created_at=datetime.now(UTC))
         _mock_customer_analysis_queries(mocker, sales=[sale], payments=[payment])
         sample_customer.get_balance_aed = MagicMock(return_value=Decimal("0"))
         assert AIService._perform_analysis(sample_customer)["avg_payment_delay_days"] == 0
@@ -1281,7 +1284,7 @@ class TestCoverageGaps:
     def test_perform_analysis_payment_without_created_at(self, mocker, sample_customer):
         sale = MagicMock(
             total_amount=Decimal("100"),
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
             customer=sample_customer,
             lines=[],
         )
@@ -1588,7 +1591,7 @@ class TestCoverageGaps:
         assert "عالي" in AIService._get_risk_recommendation("high")
 
     def test_normalize_timezone_aware_datetime(self, mocker, sample_customer):
-        aware = datetime.now(timezone.utc)
+        aware = datetime.now(UTC)
         sale = MagicMock(
             total_amount=Decimal("100"),
             created_at=aware,

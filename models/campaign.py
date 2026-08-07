@@ -1,4 +1,5 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from extensions import db
 
 
@@ -42,7 +43,7 @@ class Campaign(db.Model):
     )
     rule_config = db.Column(db.JSON, default=dict)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     branch = db.relationship("Branch", foreign_keys=[branch_id])
@@ -74,7 +75,7 @@ class SaleCampaign(db.Model):
         index=True,
     )
     discount_amount = db.Column(db.Numeric(15, 3), nullable=False)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     campaign = db.relationship("Campaign", foreign_keys=[campaign_id])

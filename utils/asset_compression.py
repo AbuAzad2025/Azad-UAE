@@ -2,9 +2,9 @@
 Asset Compression and Minification Utilities
 """
 
-import os
 import gzip
 import hashlib
+import os
 from pathlib import Path
 
 import click
@@ -45,9 +45,8 @@ class AssetCompressor:
     def gzip_file(file_path):
         gz_path = f"{file_path}.gz"
 
-        with open(file_path, "rb") as f_in:
-            with gzip.open(gz_path, "wb", compresslevel=9) as f_out:
-                f_out.writelines(f_in)
+        with open(file_path, "rb") as f_in, gzip.open(gz_path, "wb", compresslevel=9) as f_out:
+            f_out.writelines(f_in)
 
         return gz_path
 
@@ -69,7 +68,7 @@ class AssetCompressor:
                 continue
 
             try:
-                with open(css_file, "r", encoding="utf-8") as f:
+                with open(css_file, encoding="utf-8") as f:
                     content = f.read()
 
                 minified = cls.minify_css(content)
@@ -117,7 +116,7 @@ class AssetCompressor:
                 continue
 
             try:
-                with open(js_file, "r", encoding="utf-8") as f:
+                with open(js_file, encoding="utf-8") as f:
                     content = f.read()
 
                 minified = cls.minify_js(content)

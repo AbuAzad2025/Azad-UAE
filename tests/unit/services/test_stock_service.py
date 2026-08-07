@@ -301,9 +301,8 @@ class TestAdjustAndOpeningStock:
 
     def test_adjust_stock_rollback_on_error(self, db_session, sample_product, mocker, app):
         mocker.patch.object(StockService, "create_movement", side_effect=RuntimeError("fail"))
-        with pytest.raises(RuntimeError):
-            with app.app_context():
-                StockService.adjust_stock(sample_product.id, Decimal("1"))
+        with pytest.raises(RuntimeError), app.app_context():
+            StockService.adjust_stock(sample_product.id, Decimal("1"))
 
     def test_post_adjustment_gl_skips_no_cost(self, db_session, sample_tenant, sample_warehouse):
         product = Product(

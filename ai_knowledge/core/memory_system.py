@@ -11,10 +11,10 @@
 """
 
 import json
-import os
-from datetime import datetime, timedelta
-from collections import defaultdict
 import logging
+import os
+from collections import defaultdict
+from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ class LongTermMemory:
 
         if os.path.exists(file_path):
             try:
-                with open(file_path, "r", encoding="utf-8") as f:
+                with open(file_path, encoding="utf-8") as f:
                     data = json.load(f)
                 if memory_type != "preferences" and not isinstance(data.get("memories"), list):
                     return default

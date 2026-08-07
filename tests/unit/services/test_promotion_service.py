@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -13,7 +13,7 @@ from services.promotion_service import PromotionService
 
 
 def _window(days_back=1, days_fwd=30):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     return now - timedelta(days=days_back), now + timedelta(days=days_fwd)
 
 
@@ -448,7 +448,7 @@ class TestBestCombination:
 
 class TestValidityAndIsolation:
     def test_expired_campaign_not_applied(self, db_session, sample_tenant):
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         make_campaign(
             db_session,
             sample_tenant.id,
@@ -461,7 +461,7 @@ class TestValidityAndIsolation:
         assert result["total_discount"] == Decimal("0.000")
 
     def test_future_campaign_not_applied(self, db_session, sample_tenant):
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         make_campaign(
             db_session,
             sample_tenant.id,

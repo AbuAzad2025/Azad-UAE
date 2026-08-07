@@ -1,6 +1,6 @@
+import logging
 import os
 import secrets
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +12,7 @@ def ensure_secret_key(instance_dir: str, env_value: str | None = None) -> str:
     secret_file = os.path.join(instance_dir, "secret_key")
     if os.path.exists(secret_file):
         try:
-            with open(secret_file, "r", encoding="utf-8") as f:
+            with open(secret_file, encoding="utf-8") as f:
                 key = (f.read() or "").strip() or None
         except Exception:
             key = None
@@ -39,7 +39,7 @@ def ensure_card_encryption_key(instance_dir: str, env_value: str | None = None) 
     key_path = os.path.join(instance_dir, ".card_encryption_key")
     try:
         if os.path.exists(key_path):
-            with open(key_path, "r", encoding="utf-8") as f:
+            with open(key_path, encoding="utf-8") as f:
                 key = (f.read() or "").strip() or None
     except Exception:
         key = None

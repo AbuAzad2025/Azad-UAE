@@ -3,7 +3,8 @@
 Inspired by Odoo's ir.sequence
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from extensions import db
 
 
@@ -39,11 +40,11 @@ class DocumentSequence(db.Model):
     is_active = db.Column(db.Boolean, nullable=False, default=True)
 
     # Meta
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     tenant = db.relationship("Tenant", backref="document_sequences", foreign_keys=[tenant_id])
@@ -57,7 +58,7 @@ class DocumentSequence(db.Model):
         Must be called inside a transaction with SELECT FOR UPDATE on this row.
         """
 
-        date = date or datetime.now(timezone.utc)
+        date = date or datetime.now(UTC)
 
         # Determine if counter should reset
         last_reset = self._get_last_reset_date()

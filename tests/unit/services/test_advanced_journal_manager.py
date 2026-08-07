@@ -7,11 +7,11 @@ from unittest.mock import MagicMock, patch
 import pytest
 from werkzeug.exceptions import NotFound
 
+from models.gl import GLJournalEntry
 from services.advanced_journal_manager import (
     AdvancedJournalEntryManager,
     add_helper_methods,
 )
-from models.gl import GLJournalEntry
 
 
 def _mock_entry(**kwargs):
@@ -27,10 +27,10 @@ def _mock_entry(**kwargs):
     entry.status = kwargs.get("status", "draft")
     entry.is_posted = kwargs.get("is_posted", entry.status in ("posted", "reversed"))
     entry.is_reversed = kwargs.get("is_reversed", entry.status == "reversed")
-    entry.reversed_entry_id = kwargs.get("reversed_entry_id", None)
-    entry.validation_errors = kwargs.get("validation_errors", None)
-    entry.validated_at = kwargs.get("validated_at", None)
-    entry.validated_by = kwargs.get("validated_by", None)
+    entry.reversed_entry_id = kwargs.get("reversed_entry_id")
+    entry.validation_errors = kwargs.get("validation_errors")
+    entry.validated_at = kwargs.get("validated_at")
+    entry.validated_by = kwargs.get("validated_by")
     entry.notes = kwargs.get("notes", "")
     line = MagicMock()
     line.account.code = "1100"

@@ -1,6 +1,7 @@
 import logging
 from decimal import Decimal
 from typing import Any
+
 from flask_babel import gettext
 
 logger = logging.getLogger(__name__)
@@ -68,8 +69,9 @@ def register_gl_event_listeners():
 
 
 def register_validation_event_listeners():
-    from models import Sale, Purchase, Receipt, Payment, Product
     from sqlalchemy import event
+
+    from models import Payment, Product, Purchase, Receipt, Sale
 
     @event.listens_for(Sale, "before_insert")
     @event.listens_for(Sale, "before_update")

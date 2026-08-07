@@ -1,44 +1,44 @@
 """Settings, configuration, and communication routes for the owner blueprint."""
 
+import logging
+from datetime import UTC, datetime
+from decimal import Decimal
+
 from flask_babel import gettext
 
-from decimal import Decimal
 from routes.owner import (
-    render_template,
-    request,
-    jsonify,
-    flash,
-    redirect,
-    url_for,
-    current_app,
-    abort,
-    login_required,
-    current_user,
-    db,
-    Tenant,
-    SystemSettings,
     IntegrationSettings,
     InvoiceSettings,
+    SystemSettings,
+    Tenant,
     User,
     Warehouse,
-    owner_required,
-    owner_or_company_admin,
+    abort,
     company_admin_required,
+    current_app,
+    current_user,
+    db,
+    flash,
     get_active_tenant_id,
     get_system_default_currency,
+    jsonify,
+    login_required,
+    owner_bp,
+    owner_or_company_admin,
+    owner_required,
+    redirect,
+    render_template,
+    request,
     resolve_default_currency,
+    url_for,
 )
-from services.logging_core import LoggingCore
-from routes.owner import owner_bp
 from routes.owner.shared import (
-    _invalidate_owner_changes,
     _audit_owner_db_action,
     _get_developer_from_settings,
+    _invalidate_owner_changes,
 )
+from services.logging_core import LoggingCore
 from utils.db_safety import atomic_transaction
-
-import logging
-from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +105,7 @@ def update_integration(service):
         with atomic_transaction("update_integration"):
             integration.set_config(config_data)
             integration.updated_by = current_user.id
-            integration.updated_at = datetime.now(timezone.utc)
+            integration.updated_at = datetime.now(UTC)
         _invalidate_owner_changes()
         flash(gettext(f"✅ تم حفظ إعدادات {service} بنجاح!"), "success")
 
@@ -139,8 +139,8 @@ def test_integration(service):
 @owner_required
 def reports():
     """Platform telemetry only — the owner plane never exposes tenant business data."""
-    from utils.owner_panel import build_platform_telemetry
     from models import PaymentVault
+    from utils.owner_panel import build_platform_telemetry
 
     telemetry = build_platform_telemetry()
     vault = PaymentVault.get_platform_vault()
@@ -550,6 +550,7 @@ def invoice_settings():
                     logo_file = request.files["company_logo"]
                     if logo_file and logo_file.filename:
                         import os
+
                         from werkzeug.utils import secure_filename
 
                         filename = secure_filename(logo_file.filename)
@@ -569,6 +570,7 @@ def invoice_settings():
                     watermark_file = request.files["watermark_image"]
                     if watermark_file and watermark_file.filename:
                         import os
+
                         from werkzeug.utils import secure_filename
 
                         filename = secure_filename(watermark_file.filename)
@@ -600,9 +602,9 @@ def invoice_settings():
 def preview_invoice(template):
     """معاينة قالب الفاتورة"""
     from models.invoice_settings import InvoiceSettings
+    from utils.auth_helpers import is_global_owner_user
     from utils.tenant_branding import get_print_header_context
     from utils.tenanting import get_active_tenant_id
-    from utils.auth_helpers import is_global_owner_user
 
     tid = request.args.get("tenant_id", type=int) or get_active_tenant_id(current_user)
     if request.args.get("tenant_id") and not is_global_owner_user(current_user):
@@ -726,9 +728,9 @@ def preview_invoice(template):
 def preview_receipt(template):
     """معاينة قالب سند القبض"""
     from models.invoice_settings import InvoiceSettings
+    from utils.auth_helpers import is_global_owner_user
     from utils.tenant_branding import get_print_header_context
     from utils.tenanting import get_active_tenant_id
-    from utils.auth_helpers import is_global_owner_user
 
     tid = request.args.get("tenant_id", type=int) or get_active_tenant_id(current_user)
     if request.args.get("tenant_id") and not is_global_owner_user(current_user):
@@ -845,6 +847,7 @@ def preview_receipt(template):
 @owner_required
 def tax_settings():
     from decimal import Decimal
+
     from utils.tax_settings import VAT_COUNTRY_LABELS, suggested_rate_for_country
 
     tenant = Tenant.get_current(user=current_user)
@@ -922,9 +925,10 @@ def currency_settings():
 @owner_required
 def exchange_rates():
     """إدارة أسعار الصرف — Manual rate entry and history."""
-    from services.exchange_rate_service import ExchangeRateService
-    from models import ExchangeRateRecord
     from datetime import date
+
+    from models import ExchangeRateRecord
+    from services.exchange_rate_service import ExchangeRateService
 
     today = date.today().isoformat()
     tenant_id = getattr(current_user, "tenant_id", None)
@@ -1148,7 +1152,7 @@ def api_update_tenant_settings():
                     tenant.prices_include_vat = bool(value)
                 elif field == "logo_url":
                     tenant.logo_url = str(value).strip()
-                tenant.updated_at = datetime.now(timezone.utc)
+                tenant.updated_at = datetime.now(UTC)
         _invalidate_owner_changes()
         _audit_owner_db_action("api_update_tenant_settings", {"field": field, "tenant_id": tenant.id})
         return jsonify({"success": True, "message": gettext(f"تم تحديث {field} بنجاح")})

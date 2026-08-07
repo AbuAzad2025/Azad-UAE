@@ -3,14 +3,15 @@
 أزاد يضيف مصادر معرفة جديدة
 """
 
-import requests
-from bs4 import BeautifulSoup
 import json
 import logging
 import os
 from datetime import datetime
-from urllib.parse import urlparse
 from typing import Any
+from urllib.parse import urlparse
+
+import requests
+from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ class KnowledgeExpander:
         """تحميل مصادر المعرفة"""
         if os.path.exists(self.sources_file):
             try:
-                with open(self.sources_file, "r", encoding="utf-8") as f:
+                with open(self.sources_file, encoding="utf-8") as f:
                     result = json.load(f)
                     if isinstance(result, dict):
                         return result
@@ -210,7 +211,7 @@ class KnowledgeExpander:
                 if filename:
                     filepath = os.path.join(self.knowledge_dir, filename)
                     if os.path.exists(filepath):
-                        with open(filepath, "r", encoding="utf-8") as f:
+                        with open(filepath, encoding="utf-8") as f:
                             data = json.load(f)
 
                             if (
@@ -236,7 +237,7 @@ class KnowledgeExpander:
                 if filename:
                     filepath = os.path.join(self.knowledge_dir, filename)
                     if os.path.exists(filepath):
-                        with open(filepath, "r", encoding="utf-8") as f:
+                        with open(filepath, encoding="utf-8") as f:
                             data = json.load(f)
 
                             if (

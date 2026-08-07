@@ -1,7 +1,8 @@
-from extensions import db
-from models import Tenant, User, Branch
-from models.tenant_store import TenantStore
 from sqlalchemy import func
+
+from extensions import db
+from models import Branch, Tenant, User
+from models.tenant_store import TenantStore
 
 
 class TenantService:

@@ -3,14 +3,16 @@ Payment Vault Model - وحدة الدفع السرية
 نموذج محمي بكلمة مرور منفصلة للدفع والتبرعات
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
-from werkzeug.security import generate_password_hash, check_password_hash
+
+from werkzeug.security import check_password_hash, generate_password_hash
+
 from extensions import db
 
 
 def _utc_now():
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class PaymentVault(db.Model):
@@ -145,7 +147,7 @@ class PaymentVault(db.Model):
                 # DB-loaded vault returns a naive value while ``_utc_now()``
                 # is tz-aware — normalize before subtracting.
                 if last.tzinfo is None:
-                    last = last.replace(tzinfo=timezone.utc)
+                    last = last.replace(tzinfo=UTC)
                 time_diff = _utc_now() - last
                 if time_diff.total_seconds() > (self.auto_lock_minutes * 60):
                     self.lock_vault()

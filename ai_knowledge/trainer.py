@@ -7,7 +7,6 @@ import glob
 import json
 import logging
 import os
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -411,7 +410,7 @@ class Trainer:
                 "ai_training",
             )
             for path in glob.glob(os.path.join(training_dir, "GLOBAL", "expertise", "*.json")):
-                with open(path, "r", encoding="utf-8") as f:
+                with open(path, encoding="utf-8") as f:
                     data = json.load(f)
                 areas = data.get("expertise_areas", []) if isinstance(data, dict) else data
                 for area in areas:
@@ -434,7 +433,7 @@ class Trainer:
         answer: str,
         user_id: int | None = None,
         success: bool = True,
-        feedback: Optional[str] = None,
+        feedback: str | None = None,
         tenant_id: int | None = None,
     ):
         """Learn from a real user interaction."""

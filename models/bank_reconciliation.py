@@ -2,9 +2,10 @@
 نموذج مطابقة البنك - Bank Reconciliation Model
 """
 
-from datetime import datetime, timezone
-from extensions import db
+from datetime import UTC, datetime
 from decimal import Decimal
+
+from extensions import db
 
 
 class BankReconciliation(db.Model):
@@ -63,14 +64,14 @@ class BankReconciliation(db.Model):
     approved_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
     approved_at = db.Column(db.DateTime)
 
@@ -124,7 +125,7 @@ class BankReconciliation(db.Model):
 
         self.status = "approved"
         self.approved_by = user_id
-        self.approved_at = datetime.now(timezone.utc)
+        self.approved_at = datetime.now(UTC)
 
 
 class BankReconciliationItem(db.Model):
@@ -210,7 +211,7 @@ class BankStatementLine(db.Model):
     )
     statement_date = db.Column(db.Date, nullable=False, index=True)
     source_filename = db.Column(db.String(255))
-    imported_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    imported_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
     created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
 
     transaction_date = db.Column(db.Date, nullable=False, index=True)
@@ -237,7 +238,7 @@ class BankStatementLine(db.Model):
     # Raw import data
     raw_data = db.Column(db.Text)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
 
     tenant = db.relationship("Tenant", backref="bank_statement_lines", foreign_keys=[tenant_id])
     bank_account = db.relationship("GLAccount", foreign_keys=[bank_account_id])

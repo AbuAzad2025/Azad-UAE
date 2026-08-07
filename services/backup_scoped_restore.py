@@ -8,7 +8,7 @@ import logging
 import os
 import tarfile
 import tempfile
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 from services.backup_scope_config import (
     SCOPE_BRANCH,
@@ -32,8 +32,8 @@ def _required_confirmation(remap: bool) -> str:
     return REMAP_CONFIRM if remap else RESTORE_CONFIRM
 
 
-def extract_scoped_bundle(archive_path: str, work_dir: str) -> Dict[str, Any]:
-    out: Dict[str, Any] = {}
+def extract_scoped_bundle(archive_path: str, work_dir: str) -> dict[str, Any]:
+    out: dict[str, Any] = {}
     with tarfile.open(archive_path, "r:gz") as tar:
         names = set(tar.getnames())
         if "manifest.json" not in names:
@@ -52,7 +52,7 @@ def extract_scoped_bundle(archive_path: str, work_dir: str) -> Dict[str, Any]:
     manifest_path = os.path.join(work_dir, "manifest.json")
     import json
 
-    with open(manifest_path, "r", encoding="utf-8") as f:
+    with open(manifest_path, encoding="utf-8") as f:
         out["manifest"] = json.load(f)
     data_dir = os.path.join(work_dir, "data")
     if os.path.isdir(data_dir):
@@ -60,21 +60,21 @@ def extract_scoped_bundle(archive_path: str, work_dir: str) -> Dict[str, Any]:
         out["tables"] = tables
         out["data_meta"] = meta
     elif out.get("legacy_tenant_export"):
-        with open(out["legacy_tenant_export"], "r", encoding="utf-8") as f:
+        with open(out["legacy_tenant_export"], encoding="utf-8") as f:
             doc = json.load(f)
         out["tables"] = doc.get("tables") or {}
     return out
 
 
 def _build_id_remap(
-    tables: Dict[str, List[Dict[str, Any]]],
+    tables: dict[str, list[dict[str, Any]]],
     *,
     new_tenant_id: int,
-    new_branch_id: Optional[int] = None,
-    new_store_id: Optional[int] = None,
-) -> Dict[str, Dict[Any, Any]]:
+    new_branch_id: int | None = None,
+    new_store_id: int | None = None,
+) -> dict[str, dict[Any, Any]]:
     """Map old PK -> new PK per table when restoring as new tenant/branch/store."""
-    id_maps: Dict[str, Dict[Any, Any]] = {}
+    id_maps: dict[str, dict[Any, Any]] = {}
     tenants = tables.get("tenants") or []
     if tenants:
         tenants[0].get("id")
@@ -128,17 +128,17 @@ def _build_id_remap(
 
 
 def _apply_row_remap(
-    row: Dict[str, Any],
+    row: dict[str, Any],
     table: str,
-    id_maps: Dict[str, Dict[Any, Any]],
+    id_maps: dict[str, dict[Any, Any]],
     *,
     new_tenant_id: int,
-    old_tenant_id: Optional[int],
+    old_tenant_id: int | None,
     scope: str,
     remap: bool = False,
-    new_branch_id: Optional[int] = None,
-    new_store_id: Optional[int] = None,
-) -> Dict[str, Any]:
+    new_branch_id: int | None = None,
+    new_store_id: int | None = None,
+) -> dict[str, Any]:
     out = dict(row)
     if "tenant_id" in out and old_tenant_id is not None:
         out["tenant_id"] = new_tenant_id
@@ -179,7 +179,7 @@ def _apply_row_remap(
     return out
 
 
-def _delete_tenant_scoped_data(conn: Connection, tenant_id: int, branch_id: Optional[int] = None) -> None:
+def _delete_tenant_scoped_data(conn: Connection, tenant_id: int, branch_id: int | None = None) -> None:
     from sqlalchemy import text
 
     from services.backup_scope_config import TABLE_EXPORT_ORDER, table_exists
@@ -213,17 +213,17 @@ def _delete_tenant_scoped_data(conn: Connection, tenant_id: int, branch_id: Opti
 
 def _run_import(
     conn: Connection,
-    tables: Dict[str, List[Dict[str, Any]]],
+    tables: dict[str, list[dict[str, Any]]],
     *,
     scope: str,
     source_tenant_id: int,
-    target_tenant_id: Optional[int],
-    id_maps: Dict[str, Dict[Any, Any]],
+    target_tenant_id: int | None,
+    id_maps: dict[str, dict[Any, Any]],
     remap: bool,
-    new_branch_id: Optional[int],
-    new_store_id: Optional[int],
-    source_branch_id: Optional[int],
-    result: Dict[str, Any],
+    new_branch_id: int | None,
+    new_store_id: int | None,
+    source_branch_id: int | None,
+    result: dict[str, Any],
 ) -> None:
     """Execute the scoped delete + insert loop against ``conn`` (no commit)."""
     tgt_tid = target_tenant_id if target_tenant_id is not None else source_tenant_id
@@ -279,23 +279,23 @@ def _run_import(
 
 def import_scoped_tables(
     target_url: str,
-    tables: Dict[str, List[Dict[str, Any]]],
+    tables: dict[str, list[dict[str, Any]]],
     *,
     scope: str,
     source_tenant_id: int,
-    target_tenant_id: Optional[int] = None,
+    target_tenant_id: int | None = None,
     remap: bool = False,
-    new_branch_id: Optional[int] = None,
-    new_store_id: Optional[int] = None,
-    source_branch_id: Optional[int] = None,
+    new_branch_id: int | None = None,
+    new_store_id: int | None = None,
+    source_branch_id: int | None = None,
     dry_run: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     from sqlalchemy import create_engine
 
-    result: Dict[str, Any] = {"ok": True, "inserted": {}, "errors": []}
+    result: dict[str, Any] = {"ok": True, "inserted": {}, "errors": []}
     tgt_tid = target_tenant_id if target_tenant_id is not None else source_tenant_id
 
-    id_maps: Dict[str, Dict[Any, Any]] = {}
+    id_maps: dict[str, dict[Any, Any]] = {}
     if remap:
         id_maps = _build_id_remap(
             tables,
@@ -382,16 +382,16 @@ def _table_has_column(conn, table: str, column: str) -> bool:
 
 def verify_scoped_restore(
     target_url: str,
-    manifest: Dict[str, Any],
+    manifest: dict[str, Any],
     *,
     expected_tenant_id: int,
     scope: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     from sqlalchemy import create_engine, text
 
     from services.backup_scope_config import table_exists
 
-    out: Dict[str, Any] = {"ok": True, "errors": [], "warnings": [], "counts": {}}
+    out: dict[str, Any] = {"ok": True, "errors": [], "warnings": [], "counts": {}}
     row_counts = manifest.get("row_counts_per_table") or {}
     core_tables = (
         "tenants",
@@ -473,15 +473,15 @@ def restore_scoped_backup(
     *,
     confirmation: str = "",
     remap: bool = False,
-    target_tenant_id: Optional[int] = None,
-    new_branch_id: Optional[int] = None,
-    new_store_id: Optional[int] = None,
+    target_tenant_id: int | None = None,
+    new_branch_id: int | None = None,
+    new_store_id: int | None = None,
     restore_uploads: bool = False,
-    uploads_dest_root: Optional[str] = None,
+    uploads_dest_root: str | None = None,
     dry_run: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Restore scoped backup to target DB (never current DATABASE_URL)."""
-    outcome: Dict[str, Any] = {"ok": False, "errors": [], "warnings": []}
+    outcome: dict[str, Any] = {"ok": False, "errors": [], "warnings": []}
     required = _required_confirmation(remap)
     if confirmation.strip() != required:
         outcome["errors"].append(f"Typed confirmation {required!r} required")

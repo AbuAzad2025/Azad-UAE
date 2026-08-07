@@ -18,7 +18,6 @@ import uuid
 from types import SimpleNamespace
 from unittest.mock import patch
 
-
 PRODUCT_NAME = "زيت زيتون 1 لتر"
 CUSTOMER_NAME = "أحمد المحمود"
 STOCK_BASELINE = 50

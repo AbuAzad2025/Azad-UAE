@@ -3,9 +3,11 @@
 Odoo-style ir.sequence for Azadexa
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from flask import current_app
 from sqlalchemy.exc import OperationalError
+
 from extensions import db
 from models import DocumentSequence
 
@@ -99,7 +101,7 @@ class DocumentSequenceService:
         if not seq.is_active:
             raise ValueError(f"Sequence {code} is inactive.")
 
-        date = date or datetime.now(timezone.utc)
+        date = date or datetime.now(UTC)
 
         # Lock the sequence row with retry logic
         locked = _safe_for_update(
@@ -118,7 +120,7 @@ class DocumentSequenceService:
     def preview(tenant_id, code, branch_code=None, date=None):
         """Preview next number without consuming the counter."""
         seq = DocumentSequenceService.get_or_create(tenant_id, code)
-        date = date or datetime.now(timezone.utc)
+        date = date or datetime.now(UTC)
         # Simulate without incrementing
         ctx = {
             "prefix": seq.prefix,

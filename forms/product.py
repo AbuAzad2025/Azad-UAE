@@ -1,7 +1,8 @@
 from decimal import Decimal
+
 from flask_wtf import FlaskForm
-from wtforms import StringField, DecimalField, SelectField, TextAreaField, SubmitField
-from wtforms.validators import DataRequired, Optional, NumberRange
+from wtforms import DecimalField, SelectField, StringField, SubmitField, TextAreaField
+from wtforms.validators import DataRequired, NumberRange, Optional
 
 
 class ProductForm(FlaskForm):

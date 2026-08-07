@@ -197,27 +197,24 @@ class TestCreateReturn:
         session.get.return_value = None
         from services.return_service import ReturnService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="not found"):
-                ReturnService.create_return(999, [], user=_user())
+        with app.app_context(), pytest.raises(ValueError, match="not found"):
+            ReturnService.create_return(999, [], user=_user())
 
     def test_cancelled_sale_rejected(self, app, mocker):
         session = mocker.patch("services.return_service.db.session")
         session.get.return_value = _sale(status="cancelled")
         from services.return_service import ReturnService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="cancelled"):
-                ReturnService.create_return(100, [], user=_user())
+        with app.app_context(), pytest.raises(ValueError, match="cancelled"):
+            ReturnService.create_return(100, [], user=_user())
 
     def test_pending_sale_rejected(self, app, mocker):
         session = mocker.patch("services.return_service.db.session")
         session.get.return_value = _sale(status="pending")
         from services.return_service import ReturnService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="pending"):
-                ReturnService.create_return(100, [], user=_user())
+        with app.app_context(), pytest.raises(ValueError, match="pending"):
+            ReturnService.create_return(100, [], user=_user())
 
     def test_happy_path_good_condition(self, app, mocker):
         sale = _sale()
@@ -246,9 +243,8 @@ class TestCreateReturn:
         mocker.patch("services.return_service.branch_scope_id_for", return_value=None)
         from services.return_service import ReturnService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="At least one"):
-                ReturnService.create_return(sale.id, [{"sale_line_id": 1, "quantity": 0}], user=_user())
+        with app.app_context(), pytest.raises(ValueError, match="At least one"):
+            ReturnService.create_return(sale.id, [{"sale_line_id": 1, "quantity": 0}], user=_user())
 
     def test_sale_line_not_found(self, app, mocker):
         sale = _sale()
@@ -260,9 +256,8 @@ class TestCreateReturn:
         mocker.patch("services.return_service.branch_scope_id_for", return_value=None)
         from services.return_service import ReturnService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="Sale line"):
-                ReturnService.create_return(sale.id, [{"sale_line_id": 999, "quantity": 1}], user=_user())
+        with app.app_context(), pytest.raises(ValueError, match="Sale line"):
+            ReturnService.create_return(sale.id, [{"sale_line_id": 999, "quantity": 1}], user=_user())
 
     def test_wrong_sale_line_sale(self, app, mocker):
         sale = _sale()
@@ -275,9 +270,8 @@ class TestCreateReturn:
         mocker.patch("services.return_service.branch_scope_id_for", return_value=None)
         from services.return_service import ReturnService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="does not belong"):
-                ReturnService.create_return(sale.id, [{"sale_line_id": line.id, "quantity": 1}], user=_user())
+        with app.app_context(), pytest.raises(ValueError, match="does not belong"):
+            ReturnService.create_return(sale.id, [{"sale_line_id": line.id, "quantity": 1}], user=_user())
 
     def test_cross_tenant_line(self, app, mocker):
         sale = _sale(tenant_id=1)
@@ -290,9 +284,8 @@ class TestCreateReturn:
         mocker.patch("services.return_service.branch_scope_id_for", return_value=None)
         from services.return_service import ReturnService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="outside tenant"):
-                ReturnService.create_return(sale.id, [{"sale_line_id": line.id, "quantity": 1}], user=_user())
+        with app.app_context(), pytest.raises(ValueError, match="outside tenant"):
+            ReturnService.create_return(sale.id, [{"sale_line_id": line.id, "quantity": 1}], user=_user())
 
     def test_serial_product_validation(self, app, mocker):
         sale = _sale()
@@ -363,13 +356,12 @@ class TestCreateReturn:
         )
         from services.return_service import ReturnService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="does not use serial"):
-                ReturnService.create_return(
-                    sale.id,
-                    [{"sale_line_id": line.id, "quantity": 1, "serials": ["SN1"]}],
-                    user=_user(),
-                )
+        with app.app_context(), pytest.raises(ValueError, match="does not use serial"):
+            ReturnService.create_return(
+                sale.id,
+                [{"sale_line_id": line.id, "quantity": 1, "serials": ["SN1"]}],
+                user=_user(),
+            )
 
     def test_manual_refund_override(self, app, mocker):
         sale = _sale(tax_rate=Decimal("5"))
@@ -415,13 +407,12 @@ class TestCreateReturn:
         session.flush.side_effect = RuntimeError("db fail")
         from services.return_service import ReturnService
 
-        with app.app_context():
-            with pytest.raises(RuntimeError, match="db fail"):
-                ReturnService.create_return(
-                    sale.id,
-                    [{"sale_line_id": line.id, "quantity": 1}],
-                    user=_user(),
-                )
+        with app.app_context(), pytest.raises(RuntimeError, match="db fail"):
+            ReturnService.create_return(
+                sale.id,
+                [{"sale_line_id": line.id, "quantity": 1}],
+                user=_user(),
+            )
 
     def test_mwac_update_path(self, app, mocker):
         sale = _sale()
@@ -485,9 +476,8 @@ class TestCreateReturn:
         mocker.patch("services.return_service.branch_scope_id_for", return_value=None)
         from services.return_service import ReturnService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="Invalid return quantity"):
-                ReturnService.create_return(sale.id, [{"sale_line_id": 1, "quantity": "bad"}], user=_user())
+        with app.app_context(), pytest.raises(ValueError, match="Invalid return quantity"):
+            ReturnService.create_return(sale.id, [{"sale_line_id": 1, "quantity": "bad"}], user=_user())
 
     def test_excess_return_quantity(self, app, mocker):
         sale = _sale()
@@ -505,9 +495,8 @@ class TestCreateReturn:
         mocker.patch("services.return_service.branch_scope_id_for", return_value=None)
         from services.return_service import ReturnService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="Cannot return"):
-                ReturnService.create_return(sale.id, [{"sale_line_id": line.id, "quantity": 1}], user=_user())
+        with app.app_context(), pytest.raises(ValueError, match="Cannot return"):
+            ReturnService.create_return(sale.id, [{"sale_line_id": line.id, "quantity": 1}], user=_user())
 
     def test_product_cost_fallback(self, app, mocker):
         sale = _sale()

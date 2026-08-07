@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from types import SimpleNamespace
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -24,7 +24,7 @@ def _mock_receipt(**kwargs):
     r = MagicMock()
     r.id = kwargs.get("id", 1)
     r.receipt_number = kwargs.get("receipt_number", "REC-001")
-    r.receipt_date = kwargs.get("receipt_date", datetime.now(timezone.utc))
+    r.receipt_date = kwargs.get("receipt_date", datetime.now(UTC))
     r.amount = kwargs.get("amount", Decimal("100"))
     r.currency = kwargs.get("currency", "AED")
     r.amount_aed = kwargs.get("amount_aed", Decimal("100"))
@@ -50,7 +50,7 @@ def _mock_payment(**kwargs):
     p = MagicMock()
     p.id = kwargs.get("id", 2)
     p.payment_number = kwargs.get("payment_number", "PAY-001")
-    p.payment_date = kwargs.get("payment_date", datetime.now(timezone.utc))
+    p.payment_date = kwargs.get("payment_date", datetime.now(UTC))
     p.amount = kwargs.get("amount", Decimal("200"))
     p.currency = "AED"
     p.amount_aed = Decimal("200")
@@ -180,7 +180,7 @@ class TestPaymentHelpers:
         assert _pm()._archived_item_branch_id(MagicMock(data=None)) is None
 
     def test_build_receipts_json_response(self, app_factory):
-        from routes.payments import payments_bp, _build_receipts_json_response
+        from routes.payments import _build_receipts_json_response, payments_bp
 
         app = app_factory(payments_bp)
         items = [
@@ -188,7 +188,7 @@ class TestPaymentHelpers:
                 "id": 1,
                 "type": "receipt",
                 "number": "R1",
-                "date": datetime(2026, 1, 1, tzinfo=timezone.utc),
+                "date": datetime(2026, 1, 1, tzinfo=UTC),
                 "amount": Decimal("100"),
                 "currency": "AED",
                 "payment_method": "cash",
@@ -306,7 +306,7 @@ class TestViewAndPrint:
         payment = _mock_payment(branch_id=1)
         payment.amount = Decimal("100")
         payment.currency = "AED"
-        payment.payment_date = datetime.now(timezone.utc)
+        payment.payment_date = datetime.now(UTC)
         settings = MagicMock(enable_qr_code=True, active_template="modern")
         tenant = MagicMock(name_ar="Co")
         with (
@@ -582,7 +582,7 @@ class TestArchivedAndRestore:
                 "customer_name": "X",
                 "source_type": "manual",
             },
-            archived_at=datetime.now(timezone.utc),
+            archived_at=datetime.now(UTC),
         )
         q = MagicMock()
         q.filter.return_value = q
@@ -761,7 +761,7 @@ class TestPaymentsExtendedCoverage:
                 "supplier_name": "Sup",
                 "payment_type": "bill",
             },
-            archived_at=datetime.now(timezone.utc),
+            archived_at=datetime.now(UTC),
         )
         q = MagicMock()
         q.filter.return_value = q
@@ -1376,7 +1376,7 @@ class TestPaymentsDeepCoverage:
         payment = _mock_payment(branch_id=1)
         payment.amount = Decimal("50")
         payment.currency = "AED"
-        payment.payment_date = datetime.now(timezone.utc)
+        payment.payment_date = datetime.now(UTC)
         settings = MagicMock(enable_qr_code=False, active_template="modern")
         tenant = MagicMock(name_ar="Co")
         with (

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone, date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -9,7 +9,7 @@ import pytest
 from extensions import db
 from models import GLAccount, GLJournalLine
 from services.gl_account_resolver import GLMappingError
-from services.gl_service import GLService, GL_ACCOUNTS
+from services.gl_service import GL_ACCOUNTS, GLService
 
 
 def _balanced_lines(amount=Decimal("100")):
@@ -123,7 +123,7 @@ class TestCreateJournalEntry:
     def test_balanced_entry_created(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch("services.gl_helpers.assert_period_open")
         entry = GLService.create_journal_entry(
-            datetime(2026, 6, 15, tzinfo=timezone.utc),
+            datetime(2026, 6, 15, tzinfo=UTC),
             "Test entry",
             _balanced_lines(),
             tenant_id=sample_tenant.id,
@@ -145,14 +145,14 @@ class TestCreateJournalEntry:
         ]
         with pytest.raises(UnbalancedJournalEntryError):
             GLService.create_journal_entry(
-                datetime(2026, 6, 15, tzinfo=timezone.utc),
+                datetime(2026, 6, 15, tzinfo=UTC),
                 "Bad",
                 bad_lines,
                 tenant_id=sample_tenant.id,
             )
 
     def test_wrong_branch_tenant_raises(self, db_session, sample_tenant, sample_branch, sample_gl_accounts, mocker):
-        from models import Tenant, Branch
+        from models import Branch, Tenant
 
         other = Tenant(
             name="Other",
@@ -170,7 +170,7 @@ class TestCreateJournalEntry:
         mocker.patch("services.gl_helpers.assert_period_open")
         with pytest.raises(GLMappingError, match="belongs to tenant"):
             GLService.create_journal_entry(
-                datetime(2026, 6, 1, tzinfo=timezone.utc),
+                datetime(2026, 6, 1, tzinfo=UTC),
                 "Cross tenant",
                 _balanced_lines(),
                 tenant_id=sample_tenant.id,
@@ -207,7 +207,7 @@ class TestVatReport:
         mocker.patch("services.gl_helpers.assert_period_open")
         mocker.patch("utils.tax_settings.is_tax_enabled", return_value=True)
         entry = GLService.create_journal_entry(
-            datetime(2026, 6, 1, tzinfo=timezone.utc),
+            datetime(2026, 6, 1, tzinfo=UTC),
             "VAT out",
             [
                 {"account": "2121", "debit": Decimal("0"), "credit": Decimal("50")},
@@ -224,7 +224,7 @@ class TestReverseEntry:
     def test_reverse_by_reference(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch("services.gl_helpers.assert_period_open")
         GLService.create_journal_entry(
-            datetime(2026, 6, 1, tzinfo=timezone.utc),
+            datetime(2026, 6, 1, tzinfo=UTC),
             "Reversible",
             _balanced_lines(Decimal("75")),
             tenant_id=sample_tenant.id,
@@ -305,7 +305,7 @@ class TestBalancesAndStatements:
         mocker.patch("services.gl_helpers.assert_period_open")
         cash = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="1111").first()
         entry = GLService.create_journal_entry(
-            datetime(2026, 6, 1, tzinfo=timezone.utc),
+            datetime(2026, 6, 1, tzinfo=UTC),
             "Balance test",
             _balanced_lines(Decimal("200")),
             tenant_id=sample_tenant.id,
@@ -322,7 +322,7 @@ class TestBalancesAndStatements:
         mocker.patch("services.gl_helpers.assert_period_open")
         cash = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="1111").first()
         entry = GLService.create_journal_entry(
-            datetime(2026, 6, 10, tzinfo=timezone.utc),
+            datetime(2026, 6, 10, tzinfo=UTC),
             "Statement",
             _balanced_lines(Decimal("150")),
             tenant_id=sample_tenant.id,
@@ -340,7 +340,7 @@ class TestBalancesAndStatements:
     def test_general_ledger(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch("services.gl_helpers.assert_period_open")
         entry = GLService.create_journal_entry(
-            datetime(2026, 6, 5, tzinfo=timezone.utc),
+            datetime(2026, 6, 5, tzinfo=UTC),
             "GL",
             _balanced_lines(),
             tenant_id=sample_tenant.id,
@@ -371,7 +371,7 @@ class TestBalancesAndStatements:
             {"account": "4101", "debit": Decimal("0"), "credit": Decimal("50")},
         ]
         entry = GLService.create_journal_entry(
-            datetime(2026, 6, 8, tzinfo=timezone.utc),
+            datetime(2026, 6, 8, tzinfo=UTC),
             "Partner",
             lines,
             tenant_id=sample_tenant.id,
@@ -386,7 +386,7 @@ class TestTrialBalanceAndTree:
     def test_trial_balance(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch("services.gl_helpers.assert_period_open")
         entry = GLService.create_journal_entry(
-            datetime(2026, 6, 1, tzinfo=timezone.utc),
+            datetime(2026, 6, 1, tzinfo=UTC),
             "TB",
             _balanced_lines(Decimal("300")),
             tenant_id=sample_tenant.id,
@@ -505,7 +505,7 @@ class TestVatAndTrialFilters:
         mocker.patch("services.gl_helpers.assert_period_open")
         mocker.patch("utils.tax_settings.is_tax_enabled", return_value=True)
         entry = GLService.create_journal_entry(
-            datetime(2026, 6, 2, tzinfo=timezone.utc),
+            datetime(2026, 6, 2, tzinfo=UTC),
             "Branch VAT",
             [
                 {"account": "2121", "debit": Decimal("0"), "credit": Decimal("20")},
@@ -521,7 +521,7 @@ class TestVatAndTrialFilters:
     def test_trial_balance_with_date_range(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch("services.gl_helpers.assert_period_open")
         entry = GLService.create_journal_entry(
-            datetime(2026, 5, 1, tzinfo=timezone.utc),
+            datetime(2026, 5, 1, tzinfo=UTC),
             "Dated TB",
             _balanced_lines(Decimal("40")),
             tenant_id=sample_tenant.id,
@@ -752,7 +752,7 @@ class TestGlServiceCoverageGaps:
         sample_branch,
         mocker,
     ):
-        from models import Tenant, Branch
+        from models import Branch, Tenant
 
         mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
         other = Tenant(
@@ -921,7 +921,7 @@ class TestGlServiceCoverageGaps:
         mocker.patch("services.gl_helpers.assert_period_open")
         with pytest.raises(GLMappingError, match="does not exist"):
             GLService.create_journal_entry(
-                datetime(2026, 6, 1, tzinfo=timezone.utc),
+                datetime(2026, 6, 1, tzinfo=UTC),
                 "No branch",
                 _balanced_lines(),
                 tenant_id=sample_tenant.id,
@@ -945,7 +945,7 @@ class TestGlServiceCoverageGaps:
         mocker.patch("services.gl_service.db.session.get", side_effect=_get)
         mocker.patch("services.gl_service.resolve_tenant_base_currency", return_value="AED")
         entry = GLService.create_journal_entry(
-            datetime(2026, 6, 1, tzinfo=timezone.utc),
+            datetime(2026, 6, 1, tzinfo=UTC),
             "Currency fallback",
             _balanced_lines(),
             tenant_id=sample_tenant.id,
@@ -960,7 +960,7 @@ class TestGlServiceCoverageGaps:
         sample_gl_accounts,
         mocker,
     ):
-        from models import Tenant, Branch
+        from models import Branch, Tenant
 
         mocker.patch("services.gl_helpers.assert_period_open")
         other = Tenant(
@@ -987,7 +987,7 @@ class TestGlServiceCoverageGaps:
         ]
         with pytest.raises(GLMappingError, match="Line branch"):
             GLService.create_journal_entry(
-                datetime(2026, 6, 1, tzinfo=timezone.utc),
+                datetime(2026, 6, 1, tzinfo=UTC),
                 "Bad line branch",
                 lines_missing,
                 tenant_id=sample_tenant.id,
@@ -1003,7 +1003,7 @@ class TestGlServiceCoverageGaps:
         ]
         with pytest.raises(GLMappingError, match="belongs to tenant"):
             GLService.create_journal_entry(
-                datetime(2026, 6, 1, tzinfo=timezone.utc),
+                datetime(2026, 6, 1, tzinfo=UTC),
                 "Cross line branch",
                 lines_cross,
                 tenant_id=sample_tenant.id,
@@ -1040,7 +1040,7 @@ class TestGlServiceCoverageGaps:
         mocker.patch("services.gl_helpers.assert_period_open")
         mocker.patch("utils.tax_settings.is_tax_enabled", return_value=True)
         entry = GLService.create_journal_entry(
-            datetime(2026, 6, 3, tzinfo=timezone.utc),
+            datetime(2026, 6, 3, tzinfo=UTC),
             "VAT dated",
             [
                 {"account": "2121", "debit": Decimal("0"), "credit": Decimal("15")},
@@ -1069,7 +1069,7 @@ class TestGlServiceCoverageGaps:
         mocker.patch("services.gl_helpers.assert_period_open")
         mocker.patch("services.gl_helpers.resolve_tenant_id", return_value=sample_tenant.id)
         GLService.create_journal_entry(
-            datetime(2026, 6, 1, tzinfo=timezone.utc),
+            datetime(2026, 6, 1, tzinfo=UTC),
             "Rev",
             _balanced_lines(Decimal("30")),
             tenant_id=sample_tenant.id,
@@ -1150,7 +1150,7 @@ class TestGlServiceCoverageGaps:
         mocker.patch("services.gl_helpers.assert_period_open")
         payable = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="2111").first()
         entry = GLService.create_journal_entry(
-            datetime(2026, 6, 4, tzinfo=timezone.utc),
+            datetime(2026, 6, 4, tzinfo=UTC),
             "Payable",
             [
                 {"account": "2111", "debit": Decimal("0"), "credit": Decimal("100")},
@@ -1175,7 +1175,7 @@ class TestGlServiceCoverageGaps:
         mocker.patch("services.gl_helpers.assert_period_open")
         payable = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="2111").first()
         entry = GLService.create_journal_entry(
-            datetime(2026, 6, 6, tzinfo=timezone.utc),
+            datetime(2026, 6, 6, tzinfo=UTC),
             "Stmt payable",
             [
                 {"account": "2111", "debit": Decimal("0"), "credit": Decimal("60")},
@@ -1204,7 +1204,7 @@ class TestGlServiceCoverageGaps:
     ):
         mocker.patch("services.gl_helpers.assert_period_open")
         entry = GLService.create_journal_entry(
-            datetime(2026, 6, 7, tzinfo=timezone.utc),
+            datetime(2026, 6, 7, tzinfo=UTC),
             "GL branch",
             _balanced_lines(Decimal("45")),
             tenant_id=sample_tenant.id,
@@ -1232,7 +1232,7 @@ class TestGlServiceCoverageGaps:
         db_session.add(partner)
         db_session.flush()
         entry = GLService.create_journal_entry(
-            datetime(2026, 6, 9, tzinfo=timezone.utc),
+            datetime(2026, 6, 9, tzinfo=UTC),
             "Partner filt",
             [
                 {
@@ -1266,7 +1266,7 @@ class TestGlServiceCoverageGaps:
     ):
         mocker.patch("services.gl_helpers.assert_period_open")
         entry = GLService.create_journal_entry(
-            datetime(2026, 6, 11, tzinfo=timezone.utc),
+            datetime(2026, 6, 11, tzinfo=UTC),
             "TB branch",
             _balanced_lines(Decimal("55")),
             tenant_id=sample_tenant.id,

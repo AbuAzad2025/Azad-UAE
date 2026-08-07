@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
@@ -93,10 +93,9 @@ class TestGenerateNumberAndSave:
         save = MagicMock(side_effect=IntegrityError("dup", {}, None))
         with (
             patch("utils.helpers.generate_number", return_value="N-1"),
-            patch("utils.helpers.db.session.rollback"),
+            patch("utils.helpers.db.session.rollback"),pytest.raises(RuntimeError)
         ):
-            with pytest.raises(RuntimeError):
-                h.generate_number_and_save("P", MagicMock(), "num", save, max_attempts=2)
+            h.generate_number_and_save("P", MagicMock(), "num", save, max_attempts=2)
 
 
 class TestGetNextNumber:
@@ -207,23 +206,23 @@ class TestTimeago:
         assert h.timeago(datetime(1800, 1, 1)) == ""
 
     def test_moments(self):
-        now = datetime.now(timezone.utc) - timedelta(seconds=30)
+        now = datetime.now(UTC) - timedelta(seconds=30)
         assert h.timeago(now) == "منذ لحظات"
 
     def test_minutes(self):
-        now = datetime.now(timezone.utc) - timedelta(minutes=5)
+        now = datetime.now(UTC) - timedelta(minutes=5)
         assert "دقيقة" in h.timeago(now)
 
     def test_hours(self):
-        now = datetime.now(timezone.utc) - timedelta(hours=2)
+        now = datetime.now(UTC) - timedelta(hours=2)
         assert "ساعة" in h.timeago(now)
 
     def test_days(self):
-        now = datetime.now(timezone.utc) - timedelta(days=2)
+        now = datetime.now(UTC) - timedelta(days=2)
         assert "يوم" in h.timeago(now)
 
     def test_weeks_fallback_date(self):
-        now = datetime.now(timezone.utc) - timedelta(days=10)
+        now = datetime.now(UTC) - timedelta(days=10)
         assert h.timeago(now).count("-") == 2
 
     def test_naive_datetime(self):
@@ -232,7 +231,7 @@ class TestTimeago:
 
     def test_exception_returns_str(self):
         class BadDate:
-            tzinfo = timezone.utc
+            tzinfo = UTC
 
             def __sub__(self, other):
                 raise TypeError("bad")
@@ -348,18 +347,16 @@ class TestSaveUploadedFile:
         f.filename = "big.png"
         f.tell.side_effect = [10 * 1024 * 1024 + 1, 0]
         f.read.return_value = b"\x89PNG"
-        with app.app_context():
-            with pytest.raises(ValueError, match="size"):
-                h.save_uploaded_file(f, allowed_extensions={".png"})
+        with app.app_context(), pytest.raises(ValueError, match="size"):
+            h.save_uploaded_file(f, allowed_extensions={".png"})
 
     def test_rejects_executable_header(self, app):
         f = MagicMock()
         f.filename = "fake.png"
         f.tell.side_effect = [100, 0]
         f.read.return_value = b"MZ" + b"\x00" * 510
-        with app.app_context():
-            with pytest.raises(ValueError, match="Executable"):
-                h.save_uploaded_file(f, allowed_extensions={".png"})
+        with app.app_context(), pytest.raises(ValueError, match="Executable"):
+            h.save_uploaded_file(f, allowed_extensions={".png"})
 
     def test_saves_valid_file(self, app, tmp_path):
         f = MagicMock()

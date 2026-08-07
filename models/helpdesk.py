@@ -1,4 +1,5 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from extensions import db
 
 
@@ -19,7 +20,7 @@ class TicketCategory(db.Model):
         db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     auto_assign_user = db.relationship("User", foreign_keys=[auto_assign_user_id])
@@ -44,7 +45,7 @@ class TicketPriority(db.Model):
     color = db.Column(db.String(7), default="#6b7280")
     sla_hours = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
 
@@ -95,11 +96,11 @@ class Ticket(db.Model):
     resolved_at = db.Column(db.DateTime, nullable=True)
     closed_at = db.Column(db.DateTime, nullable=True)
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
@@ -147,7 +148,7 @@ class TicketComment(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     body = db.Column(db.Text, nullable=False)
     is_internal = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     ticket = db.relationship("Ticket", back_populates="comments", foreign_keys=[ticket_id])

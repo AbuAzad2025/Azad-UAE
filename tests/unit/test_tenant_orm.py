@@ -9,10 +9,9 @@ NULL`` platform row) instead of the intended ``WHERE true``.
 
 from __future__ import annotations
 
+import pytest
 from sqlalchemy import Column, Integer, create_engine, select
 from sqlalchemy.orm import DeclarativeBase, Session, with_loader_criteria
-
-import pytest
 
 
 class _StubModel:

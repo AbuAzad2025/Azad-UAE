@@ -12,26 +12,25 @@ Endpoints:
   • /partners/<id>/tx        — إضافة حركة يدوية
 """
 
-from flask_babel import gettext
-
-from datetime import date, datetime, timezone, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
-from extensions import db
-from utils.db_safety import atomic_transaction
 from flask import (
     Blueprint,
-    render_template,
-    redirect,
-    url_for,
     flash,
-    request,
     jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
 )
-from flask_login import login_required, current_user
+from flask_babel import gettext
+from flask_login import current_user, login_required
 
+from extensions import db
 from models import Partner, PartnerProfitDistribution, PartnerTransaction
 from services.partner_service import PartnerService
+from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
 from utils.tenanting import get_active_tenant_id, tenant_query
 
@@ -47,7 +46,7 @@ def _tenant_id():
 
 def _parse_date(s: str | None) -> date:
     if not s:
-        return datetime.now(timezone.utc).date()
+        return datetime.now(UTC).date()
     return datetime.strptime(s, "%Y-%m-%d").date()
 
 
@@ -187,7 +186,7 @@ def edit(**kwargs):
             partner.min_profit_threshold = Decimal(str(request.form.get("min_profit_threshold", "0") or "0"))
             partner.is_active = request.form.get("is_active") == "on"
             partner.notes = request.form.get("notes", "").strip() or None
-            partner.updated_at = datetime.now(timezone.utc)
+            partner.updated_at = datetime.now(UTC)
 
             with atomic_transaction("partner_edit"):
                 db.session.flush()
@@ -263,7 +262,7 @@ def distribute():
         except Exception as e:
             flash(gettext(f"❌ خطأ: {e}"), "danger")
 
-    today = datetime.now(timezone.utc).date()
+    today = datetime.now(UTC).date()
     last_month_end = today.replace(day=1) - timedelta(days=1)
     last_month_start = last_month_end.replace(day=1)
     return render_template(

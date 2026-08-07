@@ -4,37 +4,39 @@ AZAD Super Smart Responses Module with Self-Learning + Semantic Understanding + 
 """
 
 import logging
-from ai_knowledge.knowledge.company_info import get_welcome_message
-from ai_knowledge.knowledge.system_knowledge import search_knowledge
-from ai_knowledge.knowledge.tax_customs_knowledge import get_tax_info, get_customs_info
-from ai_knowledge.knowledge.parts_knowledge import get_part_info, search_parts
-from ai_knowledge.specialized.user_guide import get_help_for_task
-from ai_knowledge.analytics.analytics_predictions import SalesAnalytics
-from ai_knowledge.expansion.knowledge_sources import (
-    knowledge_manager,
-    recommend_sources_for_query,
-    SOURCES_GUIDE,
-)
-from ai_knowledge.personality.dialects import apply_dialect, get_dialectal_greeting
-from ai_knowledge.personality.beginners_mode import beginners_guide, BEGINNERS_TUTORIALS
-from ai_knowledge.specialized.tax_system import get_tax_advice
-from ai_knowledge.specialized.customer_service import get_customer_service_tip
-from ai_knowledge.specialized.system_guide import get_system_guide
-from ai_knowledge.analytics.market_insights import get_market_insights
-from ai_knowledge.core.learning_system import learning_system
-from ai_knowledge.improvement.self_improvement import self_improvement
-from ai_knowledge.core.system_integration import system_integrator
-from ai_knowledge.analytics.data_analyzer import data_analyzer
-from ai_knowledge.expansion.knowledge_expansion import knowledge_expander
-from ai_knowledge.personality.azad_personality import azad_personality
-from ai_knowledge.generation.document_generator import document_generator
-from ai_knowledge.specialized.advanced_laws import advanced_laws
-from ai_knowledge.neural.semantic_matcher import (
-    understand_message,
-)
+from datetime import UTC
+
 from ai_knowledge.agents.intelligent_assistant import (
     intelligent_assistant,
 )
+from ai_knowledge.analytics.analytics_predictions import SalesAnalytics
+from ai_knowledge.analytics.data_analyzer import data_analyzer
+from ai_knowledge.analytics.market_insights import get_market_insights
+from ai_knowledge.core.learning_system import learning_system
+from ai_knowledge.core.system_integration import system_integrator
+from ai_knowledge.expansion.knowledge_expansion import knowledge_expander
+from ai_knowledge.expansion.knowledge_sources import (
+    SOURCES_GUIDE,
+    knowledge_manager,
+    recommend_sources_for_query,
+)
+from ai_knowledge.generation.document_generator import document_generator
+from ai_knowledge.improvement.self_improvement import self_improvement
+from ai_knowledge.knowledge.company_info import get_welcome_message
+from ai_knowledge.knowledge.parts_knowledge import get_part_info, search_parts
+from ai_knowledge.knowledge.system_knowledge import search_knowledge
+from ai_knowledge.knowledge.tax_customs_knowledge import get_customs_info, get_tax_info
+from ai_knowledge.neural.semantic_matcher import (
+    understand_message,
+)
+from ai_knowledge.personality.azad_personality import azad_personality
+from ai_knowledge.personality.beginners_mode import BEGINNERS_TUTORIALS, beginners_guide
+from ai_knowledge.personality.dialects import apply_dialect, get_dialectal_greeting
+from ai_knowledge.specialized.advanced_laws import advanced_laws
+from ai_knowledge.specialized.customer_service import get_customer_service_tip
+from ai_knowledge.specialized.system_guide import get_system_guide
+from ai_knowledge.specialized.tax_system import get_tax_advice
+from ai_knowledge.specialized.user_guide import get_help_for_task
 
 logger = logging.getLogger(__name__)
 
@@ -457,10 +459,12 @@ class AzadResponses:
             # استخدام النظام المتقدم
             try:
                 # جمع البيانات التاريخية
-                from models import Sale
-                from extensions import db
-                from sqlalchemy import func, extract
                 from datetime import datetime, timedelta
+
+                from sqlalchemy import extract, func
+
+                from extensions import db
+                from models import Sale
 
                 # آخر 12 شهر
                 monthly_sales = (
@@ -729,10 +733,7 @@ class AzadResponses:
 
         # البحث عن كلمات تشير للعميل
         for i, word in enumerate(words):
-            if word.lower() in ["عميل", "زبون", "customer"] and i + 1 < len(words):
-                customer_name = words[i + 1]
-                break
-            elif word.lower() in ["على", "لـ", "for"] and i + 1 < len(words):
+            if word.lower() in ["عميل", "زبون", "customer"] and i + 1 < len(words) or word.lower() in ["على", "لـ", "for"] and i + 1 < len(words):
                 customer_name = words[i + 1]
                 break
 
@@ -858,10 +859,7 @@ class AzadResponses:
         product_name = None
 
         for i, word in enumerate(words):
-            if word.lower() in ["منتج", "product", "قطعة", "part"] and i + 1 < len(words):
-                product_name = words[i + 1]
-                break
-            elif word.lower() in ["اسمه", "اسم", "name"] and i + 1 < len(words):
+            if word.lower() in ["منتج", "product", "قطعة", "part"] and i + 1 < len(words) or word.lower() in ["اسمه", "اسم", "name"] and i + 1 < len(words):
                 product_name = words[i + 1]
                 break
 
@@ -1463,12 +1461,13 @@ class AzadResponses:
     @staticmethod
     def _smart_sales_analysis(context):
         """تحليل مبيعات ذكي"""
-        from models import Sale
-        from datetime import datetime, timedelta, timezone
+        from datetime import datetime, timedelta
         from decimal import Decimal
 
-        last_7_days = datetime.now(timezone.utc) - timedelta(days=7)
-        last_30_days = datetime.now(timezone.utc) - timedelta(days=30)
+        from models import Sale
+
+        last_7_days = datetime.now(UTC) - timedelta(days=7)
+        last_30_days = datetime.now(UTC) - timedelta(days=30)
 
         sales_7d = Sale.query.filter(Sale.sale_date >= last_7_days, Sale.status == "confirmed").all()
         sales_30d = Sale.query.filter(Sale.sale_date >= last_30_days, Sale.status == "confirmed").all()
@@ -1581,6 +1580,7 @@ class AzadResponses:
                 return handler()
             except Exception:
                 # في حال حدوث خطأ، نرجع None ليكمل النظام التقليدي
+                logger.debug("Intent handler failed; falling back to classic flow", exc_info=True)
                 return None
 
         return None
@@ -1742,8 +1742,8 @@ class AzadResponses:
     @staticmethod
     def _handle_suppliers_query(message):
         """🏪 معالجة استفسارات الموردين"""
-        from models import Supplier
         from extensions import db
+        from models import Supplier
 
         message.lower()
 

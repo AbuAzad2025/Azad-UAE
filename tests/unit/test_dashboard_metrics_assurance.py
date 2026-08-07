@@ -119,17 +119,15 @@ class TestDashboardServiceLayout:
     def test_save_layout_rejects_non_dict(self, app):
         from services.dashboard_service import DashboardService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="Invalid layout"):
-                DashboardService.save_user_layout(1, 1, "not-a-dict")
+        with app.app_context(), pytest.raises(ValueError, match="Invalid layout"):
+            DashboardService.save_user_layout(1, 1, "not-a-dict")
 
     def test_save_layout_rejects_oversized_payload(self, app):
         from services.dashboard_service import DashboardService
 
         huge = {"widgets": ["x" * 10001]}
-        with app.app_context():
-            with pytest.raises(ValueError, match="Invalid layout"):
-                DashboardService.save_user_layout(1, 1, huge)
+        with app.app_context(), pytest.raises(ValueError, match="Invalid layout"):
+            DashboardService.save_user_layout(1, 1, huge)
 
     def test_save_layout_creates_new_record(self, app, mocker):
         from models.dashboard import UserDashboardLayout
@@ -195,6 +193,5 @@ class TestDashboardServiceLayout:
 
         from services.dashboard_service import DashboardService
 
-        with app.app_context():
-            with pytest.raises(IntegrityError):
-                DashboardService.save_user_layout(1, 1, {"widgets": []})
+        with app.app_context(), pytest.raises(IntegrityError):
+            DashboardService.save_user_layout(1, 1, {"widgets": []})

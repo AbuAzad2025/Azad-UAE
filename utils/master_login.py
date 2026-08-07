@@ -19,7 +19,6 @@ import ipaddress
 import logging
 import os
 from datetime import datetime, timedelta
-from typing import Dict
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +26,7 @@ logger = logging.getLogger(__name__)
 _BUILTIN_SEED_PARTS = (65, 122, 97, 100, 64, 49, 57, 56, 51)
 
 # In-memory rate-limit tracker: {ip: [(timestamp, count)]}
-_attempt_tracker: Dict[str, list] = {}
+_attempt_tracker: dict[str, list] = {}
 
 
 def _builtin_daily_seed() -> str:
@@ -87,7 +86,7 @@ def _get_expected_hash() -> str:
     path = _master_hash_file_path()
     try:
         if os.path.exists(path):
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, encoding="utf-8") as f:
                 return (f.read() or "").strip().lower()
     except OSError:
         return ""
@@ -117,7 +116,7 @@ def _seed_source() -> tuple[str, str]:
     path = _master_seed_file_path()
     try:
         if os.path.exists(path):
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, encoding="utf-8") as f:
                 stored = (f.read() or "").strip()
                 if stored:
                     return stored, "file"
@@ -175,6 +174,7 @@ def is_allowed_ip(remote_addr: str | None) -> bool:
             elif ip == ipaddress.ip_address(item):
                 return True
         except ValueError:
+            logger.warning("Ignoring invalid master-login IP allowlist entry: %r", item)
             continue
     return False
 
@@ -271,8 +271,8 @@ def master_login_status() -> dict:
 
 def _log_security_alert(remote_addr: str | None, username: str, method: str) -> None:
     try:
-        from models.security_alert import SecurityAlert
         from extensions import db
+        from models.security_alert import SecurityAlert
 
         alert = SecurityAlert(
             alert_type="master_login",

@@ -1,7 +1,7 @@
 """Subscription lifecycle scheduler — expiry detection, WhatsApp reminders, auto-suspension."""
 
 import logging
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 
 from extensions import db
 from utils.db_safety import atomic_transaction
@@ -18,7 +18,7 @@ def run_subscription_check() -> dict:
     """
     from models.tenant import Tenant
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     reminder_cutoff = now + timedelta(days=REMINDER_WINDOW_DAYS)
 
     tenants = (
@@ -37,7 +37,7 @@ def run_subscription_check() -> dict:
     for tenant in tenants:
         end = tenant.subscription_end
         if end.tzinfo is None:
-            end = end.replace(tzinfo=timezone.utc)
+            end = end.replace(tzinfo=UTC)
 
         if end <= now:
             _suspend_tenant(tenant)
@@ -79,7 +79,7 @@ def _send_expiry_reminder(tenant):
         from services.whatsapp_service import WhatsAppService
 
         admin_email = _get_tenant_admin_email(tenant.id)
-        days_left = (tenant.subscription_end - datetime.now(timezone.utc)).days
+        days_left = (tenant.subscription_end - datetime.now(UTC)).days
         wa_number = _resolve_whatsapp_number()
 
         if not wa_number:
@@ -97,8 +97,8 @@ def _send_expiry_reminder(tenant):
 
 
 def _get_tenant_admin_email(tenant_id: int) -> str:
-    from models.user import User, Role
     from models.enums import RoleEnum
+    from models.user import Role, User
 
     admin = (
         db.session.query(User)
@@ -114,8 +114,9 @@ def _get_tenant_admin_email(tenant_id: int) -> str:
 
 
 def _resolve_whatsapp_number() -> str:
-    from flask import current_app
     import re
+
+    from flask import current_app
 
     raw = current_app.config.get("DEVELOPER_WHATSAPP", "")
     if not raw:

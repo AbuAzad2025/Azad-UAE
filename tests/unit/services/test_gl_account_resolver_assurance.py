@@ -9,13 +9,13 @@ from config import Config
 from models._constants import GL_CONCEPT_CASH
 from services.gl_account_resolver import (
     GLMappingError,
-    is_dynamic_gl_mapping_enabled,
-    resolve_gl_account,
-    _normalize_concept_code,
     _find_active_mapping,
+    _normalize_concept_code,
     _one_or_error,
     _raise_missing_or_inactive_mapping,
     _validated_account,
+    is_dynamic_gl_mapping_enabled,
+    resolve_gl_account,
 )
 
 
@@ -108,8 +108,8 @@ class TestFindActiveMapping:
 class TestRaiseMissingOrInactive:
     @staticmethod
     def _inactive_mapping(db_session, sample_tenant, sample_branch, branch_id):
-        from models.gl import GLAccount, GLAccountMapping
         from models._constants import GL_CONCEPT_CASH
+        from models.gl import GLAccount, GLAccountMapping
 
         account = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="1111").first()
         if account is None:
@@ -150,9 +150,8 @@ class TestRaiseMissingOrInactive:
                 _raise_missing_or_inactive_mapping(sample_tenant.id, GL_CONCEPT_CASH, None)
 
     def test_no_mapping_raises(self, app, sample_tenant):
-        with app.app_context():
-            with pytest.raises(GLMappingError, match="No active GL account mapping"):
-                _raise_missing_or_inactive_mapping(sample_tenant.id, "CASH", None)
+        with app.app_context(), pytest.raises(GLMappingError, match="No active GL account mapping"):
+            _raise_missing_or_inactive_mapping(sample_tenant.id, "CASH", None)
 
 
 class TestValidatedAccount:
@@ -238,6 +237,5 @@ class TestResolveDynamic:
             "services.gl_account_resolver._raise_missing_or_inactive_mapping",
             side_effect=GLMappingError(1, "CASH", None, "missing"),
         )
-        with app.app_context():
-            with pytest.raises(GLMappingError):
-                resolve_gl_account(1, GL_CONCEPT_CASH)
+        with app.app_context(), pytest.raises(GLMappingError):
+            resolve_gl_account(1, GL_CONCEPT_CASH)

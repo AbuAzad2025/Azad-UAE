@@ -44,7 +44,6 @@ ATTR_DENYLIST = {
     "onblur",
     "onsubmit",
     "for",
-    "method",
     "enctype",
     "step",
     "min",
@@ -242,7 +241,7 @@ class Wrapper(HTMLParser):
 
 
 def transform(path):
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         raw = f.read()
     p = Wrapper()
     p.feed(raw)

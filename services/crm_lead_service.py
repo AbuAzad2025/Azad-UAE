@@ -1,11 +1,13 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
-from extensions import db
+
 from flask_babel import gettext
-from models import CRMLead, CRMStage, CRMActivity, Customer
-from utils.tenanting import get_active_tenant_id
-from utils.branching import branch_scope_id_for, is_global_user
+
+from extensions import db
+from models import CRMActivity, CRMLead, CRMStage, Customer
 from utils.auth_helpers import is_global_owner_user
+from utils.branching import branch_scope_id_for, is_global_user
+from utils.tenanting import get_active_tenant_id
 
 
 class CRMLeadService:
@@ -97,11 +99,11 @@ class CRMLeadService:
             lead.stage_id = int(data["stage_id"])
             if stage and stage.is_won:
                 lead.status = "won"
-                lead.closed_at = datetime.now(timezone.utc)
+                lead.closed_at = datetime.now(UTC)
             elif stage and stage.is_lost:
                 lead.status = "lost"
-                lead.closed_at = datetime.now(timezone.utc)
-        lead.updated_at = datetime.now(timezone.utc)
+                lead.closed_at = datetime.now(UTC)
+        lead.updated_at = datetime.now(UTC)
         try:
             db.session.flush()
         except Exception:
@@ -121,13 +123,13 @@ class CRMLeadService:
         lead.stage_id = int(stage_id)
         if stage.is_won:
             lead.status = "won"
-            lead.closed_at = datetime.now(timezone.utc)
+            lead.closed_at = datetime.now(UTC)
         elif stage.is_lost:
             lead.status = "lost"
-            lead.closed_at = datetime.now(timezone.utc)
+            lead.closed_at = datetime.now(UTC)
         else:
             lead.status = "open"
-        lead.updated_at = datetime.now(timezone.utc)
+        lead.updated_at = datetime.now(UTC)
         try:
             db.session.flush()
         except Exception:
@@ -248,8 +250,8 @@ class CRMLeadService:
         db.session.flush()
         lead.customer_id = customer.id
         lead.status = "won"
-        lead.closed_at = datetime.now(timezone.utc)
-        lead.updated_at = datetime.now(timezone.utc)
+        lead.closed_at = datetime.now(UTC)
+        lead.updated_at = datetime.now(UTC)
         activity = CRMActivity(
             tenant_id=tenant_id,
             lead_id=lead.id,

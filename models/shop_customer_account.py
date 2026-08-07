@@ -1,9 +1,10 @@
 """Registered storefront customer — scoped per tenant, linked to CRM Customer."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from extensions import db
-from werkzeug.security import check_password_hash, generate_password_hash
 
 
 class ShopCustomerAccount(db.Model):
@@ -29,7 +30,7 @@ class ShopCustomerAccount(db.Model):
     password_reset_expires_at = db.Column(db.DateTime)
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )

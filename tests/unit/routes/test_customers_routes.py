@@ -109,8 +109,9 @@ class TestCustomersCrud:
         print(f"DEBUG: created customer id={customer.id}, tenant_id={customer.tenant_id}")
 
         # Check branch scope
-        from utils.decorators import branch_scope_id
         from flask import current_app
+
+        from utils.decorators import branch_scope_id
 
         with current_app.test_request_context():
             from flask_login import login_user
@@ -459,8 +460,8 @@ class TestCustomersScopedHelpers:
         assert _customer_in_scope(customer.id) is True
 
     def test_attach_customer_branch_labels(self, auth_client, db_session, test_factory, sample_user):
-        from routes.customers import _attach_customer_branch_labels
         from models import Branch
+        from routes.customers import _attach_customer_branch_labels
 
         _client = auth_client
         user = sample_user

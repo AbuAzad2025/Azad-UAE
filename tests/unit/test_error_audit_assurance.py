@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC
 from unittest.mock import MagicMock
 
 
@@ -17,7 +18,8 @@ class TestErrorAuditLogModel:
         assert "API" in repr(row)
 
     def test_to_dict(self):
-        from datetime import datetime, timezone
+        from datetime import datetime
+
         from models.error_audit_log import ErrorAuditLog
 
         row = ErrorAuditLog(
@@ -26,9 +28,9 @@ class TestErrorAuditLogModel:
             category="DATABASE",
             level="ERROR",
             source="db.pool",
-            first_seen_at=datetime(2025, 1, 1, tzinfo=timezone.utc),
-            last_seen_at=datetime(2025, 1, 2, tzinfo=timezone.utc),
-            created_at=datetime(2025, 1, 1, tzinfo=timezone.utc),
+            first_seen_at=datetime(2025, 1, 1, tzinfo=UTC),
+            last_seen_at=datetime(2025, 1, 2, tzinfo=UTC),
+            created_at=datetime(2025, 1, 1, tzinfo=UTC),
         )
         row.id = 1
         data = row.to_dict()
@@ -254,14 +256,14 @@ class TestQueryFilters:
 
 class TestExportText:
     def test_export_txt_payload(self, mocker):
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         log = MagicMock()
         log.id = 1
         log.level = "ERROR"
         log.category = "BACKEND"
         log.source = "svc"
-        log.created_at = datetime(2025, 6, 1, tzinfo=timezone.utc)
+        log.created_at = datetime(2025, 6, 1, tzinfo=UTC)
         log.url = "http://x"
         log.user_id = 2
         log.tenant_id = 3
@@ -429,6 +431,7 @@ class TestPersistPaths:
 
     def test_get_or_create_request_id_reuses_g(self, app):
         from flask import g
+
         from services.error_audit_service import ErrorAuditService
 
         with app.test_request_context():
@@ -476,6 +479,7 @@ class TestSanitizeAdvanced:
 class TestRequestId:
     def test_generates_and_stores_request_id(self, app):
         from flask import g
+
         from services.error_audit_service import ErrorAuditService
 
         with app.test_request_context("/new"):
@@ -604,6 +608,7 @@ class TestRequestId:
 
     def test_get_or_create_request_id_sets_g(self, app):
         from flask import g
+
         from services.error_audit_service import ErrorAuditService
 
         with app.test_request_context("/"):
@@ -612,6 +617,7 @@ class TestRequestId:
 
     def test_get_or_create_request_id_returns_existing(self, app):
         from flask import g
+
         from services.error_audit_service import ErrorAuditService
 
         with app.test_request_context("/"):

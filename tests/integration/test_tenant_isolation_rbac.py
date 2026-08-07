@@ -3,14 +3,15 @@ Audit tests: Tenant Isolation + RBAC + User Uniqueness.
 Verifies the actual implemented behaviors discovered via code inspection.
 """
 
-import pytest
 import uuid
 from decimal import Decimal
+
+import pytest
 
 
 class TestUserUniqueness:
     def test_username_is_globally_unique(self, app, db_session):
-        from models import Tenant, User, Role
+        from models import Role, Tenant, User
 
         t1 = Tenant(
             name=f"UQ1 {uuid.uuid4().hex[:4]}",
@@ -64,7 +65,7 @@ class TestUserUniqueness:
         db_session.rollback()
 
     def test_email_is_globally_unique(self, app, db_session):
-        from models import Tenant, User, Role
+        from models import Role, Tenant, User
 
         t1 = Tenant(
             name=f"UQ3 {uuid.uuid4().hex[:4]}",
@@ -120,7 +121,7 @@ class TestUserUniqueness:
 
 class TestTenantIsolation:
     def test_tenant_isolation_enforced_via_orm_scope(self, app, db_session, client):
-        from models import Tenant, Branch, User, Role, Customer
+        from models import Branch, Customer, Role, Tenant, User
         from services.gl_service import GLService
 
         tid1 = uuid.uuid4().hex[:4]
@@ -217,7 +218,7 @@ class TestTenantIsolation:
 
 class TestBranchIsolation:
     def test_branch_scope_filters_by_user_branch(self, app, db_session, client):
-        from models import Tenant, Branch, User, Role, Customer
+        from models import Branch, Customer, Role, Tenant, User
 
         tid = uuid.uuid4().hex[:4]
         t = Tenant(
@@ -330,7 +331,7 @@ class TestBranchIsolation:
 
 class TestOwnerAccess:
     def test_global_owner_can_access_owner_dashboard(self, app, db_session, client):
-        from models import User, Role
+        from models import Role, User
 
         r = Role(
             name=f"Owner-{uuid.uuid4().hex[:4]}",
@@ -363,7 +364,7 @@ class TestOwnerAccess:
 
 class TestRoleHierarchy:
     def test_seller_cannot_access_owner_pages(self, app, db_session, client):
-        from models import Tenant, User, Role
+        from models import Role, Tenant, User
 
         t = Tenant(
             name=f"RH {uuid.uuid4().hex[:4]}",

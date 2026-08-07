@@ -3,8 +3,9 @@
 Knowledge Sources - External Resources for Continuous Learning
 """
 
-import requests
 from datetime import datetime, timedelta
+
+import requests
 
 # مصادر المعرفة المنظمة
 KNOWLEDGE_SOURCES = {

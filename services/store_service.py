@@ -2,16 +2,20 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from decimal import Decimal
 
 from extensions import db
-from utils.db_safety import atomic_transaction
-from models import Product, Tenant, TenantStore, Warehouse, Branch
-from models.system_settings import SystemSettings
-from utils.branching import get_branch_stock_map, get_accessible_warehouses
-from utils.tenanting import require_active_tenant_id
+
+logger = logging.getLogger(__name__)
 from flask_babel import gettext
+
+from models import Branch, Product, Tenant, TenantStore, Warehouse
+from models.system_settings import SystemSettings
+from utils.branching import get_accessible_warehouses, get_branch_stock_map
+from utils.db_safety import atomic_transaction
+from utils.tenanting import require_active_tenant_id
 
 
 class StoreService:
@@ -211,6 +215,7 @@ class StoreService:
             settings = SystemSettings.get_current()
             return bool(getattr(settings, "enable_ecommerce", False))
         except Exception:
+            logger.debug("Store availability check failed; treating as disabled", exc_info=True)
             return False
 
     @staticmethod
@@ -220,17 +225,17 @@ class StoreService:
         db.session.flush()
 
     @staticmethod
-    def is_platform_locked(store: "TenantStore | None") -> bool:
+    def is_platform_locked(store: TenantStore | None) -> bool:
         """True when the platform owner has force-disabled this tenant store."""
         return bool(store and getattr(store, "platform_disabled", False))
 
     @staticmethod
-    def effective_enabled(store: "TenantStore | None") -> bool:
+    def effective_enabled(store: TenantStore | None) -> bool:
         """Tenant store is effectively on only if enabled and not platform-locked."""
         return bool(store and store.is_enabled and not StoreService.is_platform_locked(store))
 
     @staticmethod
-    def set_platform_disabled(store: "TenantStore", disabled: bool):
+    def set_platform_disabled(store: TenantStore, disabled: bool):
         """Platform-owner only: hard force-OFF lock. Tenant cannot re-enable while locked."""
         with atomic_transaction("set_platform_disabled"):
             store.platform_disabled = bool(disabled)
@@ -308,6 +313,7 @@ class StoreService:
                 if q > 0:
                     cleaned[str(int(k))] = q
             except (TypeError, ValueError):
+                logger.debug("Skipping invalid cart entry %r=%r", k, v, exc_info=True)
                 continue
         return cleaned
 
@@ -402,7 +408,7 @@ class StoreService:
         subtotal = Decimal("0")
         display_subtotal = Decimal("0")
         tenant = db.session.get(Tenant, int(tenant_id))
-        stock_map = StoreService.online_stock_map(tenant_id, [int(k) for k in cart.keys()] if cart else None)
+        stock_map = StoreService.online_stock_map(tenant_id, [int(k) for k in cart] if cart else None)
         for pid, qty_raw in cart.items():
             product = Product.query.filter_by(id=int(pid), tenant_id=int(tenant_id), is_active=True).first()
             if not product:

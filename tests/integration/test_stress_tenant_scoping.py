@@ -5,8 +5,10 @@ Simulates: Sale → GL Posting → Payment → Verify tenant_id consistency
 Run: pytest tests/integration/stress_test_tenant_scoping.py -v -s
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
+
 from extensions import db
 
 TENANT_A = 1
@@ -82,7 +84,7 @@ class TestFullBusinessCycleTenantScoping:
 
     @staticmethod
     def _create_sale(data):
-        from models import Sale, SaleLine, Customer, Product, Warehouse
+        from models import Customer, Product, Sale, SaleLine, Warehouse
 
         tid = data["tenant_id"]
         total = data["price"] * data["qty"]
@@ -203,7 +205,7 @@ class TestFullBusinessCycleTenantScoping:
 
     def test_payment_transaction_log_tenant_id(self, mocker):
         """Verify PaymentTransaction and PaymentLog accept/forward tenant_id."""
-        from models.payment_vault import PaymentTransaction, PaymentLog, PaymentVault
+        from models.payment_vault import PaymentLog, PaymentTransaction, PaymentVault
 
         # Mock vault
         vault = PaymentVault(id=1, tenant_id=TENANT_A)

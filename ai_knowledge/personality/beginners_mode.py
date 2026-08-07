@@ -219,13 +219,11 @@ class BeginnersGuide:
             "create_report",
         ]
 
-        try:
+        if current_step in steps_order:
             current_index = steps_order.index(current_step)
             if current_index < len(steps_order) - 1:
                 next_step = steps_order[current_index + 1]
                 return BEGINNERS_TUTORIALS.get(next_step)
-        except ValueError:
-            pass
 
         return "🎉 أحسنت! أصبحت محترفاً! الآن جرب باقي المميزات!"
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
@@ -77,7 +77,7 @@ class TestAnalyticsEndpoints:
         assert isinstance(resp.get_json()["data"], list)
 
     def test_revenue_trend_with_sales(self, app, auth_client, db_session, sample_tenant, sample_user, sample_branch):
-        from models import Sale, Customer
+        from models import Customer, Sale
 
         cust = Customer(tenant_id=sample_tenant.id, name="Analytics Cust", phone="050111")
         db_session.add(cust)
@@ -92,7 +92,7 @@ class TestAnalyticsEndpoints:
             total_amount=Decimal("250"),
             amount=Decimal("250"),
             amount_aed=Decimal("250"),
-            sale_date=datetime.now(timezone.utc),
+            sale_date=datetime.now(UTC),
         )
         db_session.add(sale)
         db_session.commit()
@@ -108,8 +108,7 @@ class TestAnalyticsEndpoints:
         mock_query = MagicMock()
         mock_model = MagicMock()
         mock_model.branch_id = MagicMock()
-        with app.app_context():
-            with patch("routes.api_analytics.branch_scope_id_for", return_value=5):
-                result = _apply_branch_scope(mock_query, mock_model)
+        with app.app_context(), patch("routes.api_analytics.branch_scope_id_for", return_value=5):
+            result = _apply_branch_scope(mock_query, mock_model)
         mock_query.filter.assert_called_once()
         assert result is mock_query.filter.return_value

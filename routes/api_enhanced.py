@@ -1,5 +1,6 @@
-from flask import Blueprint, request, jsonify
-from flask_login import login_required, current_user
+from flask import Blueprint, jsonify, request
+from flask_login import current_user, login_required
+
 from extensions import limiter
 from utils.cache_decorators import cached_query
 from utils.decorators import permission_required
@@ -97,8 +98,9 @@ def get_customers():
 @permission_required("manage_products")
 @limiter.limit("200 per minute")
 def search_products():
-    from models import Product
     from sqlalchemy import or_
+
+    from models import Product
 
     query_text = request.args.get("q", "")
     limit = request.args.get("limit", 20, type=int)

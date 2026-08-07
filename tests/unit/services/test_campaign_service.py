@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -13,7 +13,7 @@ from services.campaign_service import CampaignService
 
 @pytest.fixture
 def active_campaign(db_session, sample_tenant):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     campaign = Campaign(
         tenant_id=sample_tenant.id,
         name="Summer Sale",
@@ -33,7 +33,7 @@ def active_campaign(db_session, sample_tenant):
 
 @pytest.fixture
 def fixed_campaign(db_session, sample_tenant):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     campaign = Campaign(
         tenant_id=sample_tenant.id,
         name="Fixed Off",
@@ -71,8 +71,8 @@ class TestCampaignROI:
             name="Used",
             campaign_type="fixed",
             discount_value=Decimal("20"),
-            start_date=datetime.now(timezone.utc),
-            end_date=datetime.now(timezone.utc) + timedelta(days=5),
+            start_date=datetime.now(UTC),
+            end_date=datetime.now(UTC) + timedelta(days=5),
             usage_count=5,
         )
         db_session.add(campaign)
@@ -198,7 +198,7 @@ class TestApplyCampaigns:
     def test_bundle_campaign_type(self, db_session, sample_tenant, sample_customer, sample_user):
         from models import Sale
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         bundle = Campaign(
             tenant_id=sample_tenant.id,
             name="Bundle",

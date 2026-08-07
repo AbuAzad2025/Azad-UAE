@@ -6,7 +6,7 @@ semantics. The token string itself is ``<id>.<nonce>.<hmac>`` — signed via
 ``utils/pos_security.sign_override_token``.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from extensions import db
 
@@ -34,17 +34,17 @@ class PosOverrideToken(db.Model):
     expires_at = db.Column(db.DateTime, nullable=False)
     used_at = db.Column(db.DateTime, nullable=True)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
 
     cashier = db.relationship("User", foreign_keys=[cashier_user_id])
     supervisor = db.relationship("User", foreign_keys=[supervisor_user_id])
     session = db.relationship("PosSession", foreign_keys=[session_id])
 
     def is_expired(self, now: datetime | None = None) -> bool:
-        now = now or datetime.now(timezone.utc)
+        now = now or datetime.now(UTC)
         expires = self.expires_at
         if expires and expires.tzinfo is None:
-            expires = expires.replace(tzinfo=timezone.utc)
+            expires = expires.replace(tzinfo=UTC)
         return expires is None or now >= expires
 
     def __repr__(self):

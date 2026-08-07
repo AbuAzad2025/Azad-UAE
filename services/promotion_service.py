@@ -49,13 +49,16 @@ fractional remainders keep their unit price and never qualify.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from decimal import Decimal, ROUND_HALF_UP
+import logging
+from datetime import UTC, datetime
+from decimal import ROUND_HALF_UP, Decimal
 
 from flask_babel import gettext
 
 from extensions import db
 from utils.tenanting import tenant_query
+
+logger = logging.getLogger(__name__)
 
 RULE_BUNDLE = "bundle"
 RULE_TIERED = "tiered"
@@ -101,6 +104,7 @@ class PromotionService:
             try:
                 out.append(int(value))
             except (TypeError, ValueError):
+                logger.debug("Skipping non-numeric campaign id: %r", value, exc_info=True)
                 continue
         return out
 
@@ -116,7 +120,7 @@ class PromotionService:
         """Active, in-window POS campaigns for the tenant (+ optional branch)."""
         from models.campaign import Campaign
 
-        now = now or datetime.now(timezone.utc)
+        now = now or datetime.now(UTC)
         query = tenant_query(Campaign).filter(
             Campaign.tenant_id == int(tenant_id),
             Campaign.is_active.is_(True),

@@ -117,10 +117,9 @@ class TestEnforceOwnerIp:
         with (
             patch("flask_login.current_user", user),
             patch("flask.current_app", app),
-            patch.object(sh.request, "remote_addr", "203.0.113.99"),
+            patch.object(sh.request, "remote_addr", "203.0.113.99"),pytest.raises(Forbidden)
         ):
-            with pytest.raises(Forbidden):
-                sh.enforce_owner_ip_if_needed()
+            sh.enforce_owner_ip_if_needed()
 
 
 class TestOwnerIpDecorator:

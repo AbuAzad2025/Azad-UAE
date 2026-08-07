@@ -5,10 +5,11 @@ non_posting) dispatch correctly and that stale legacy mappings are harmless.
 """
 
 import uuid
-import pytest
-from unittest.mock import MagicMock
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
+from unittest.mock import MagicMock
+
+import pytest
 
 # ---------------------------------------------------------------------------
 # Module-level: reuse session app; enable dynamic GL mapping for this module
@@ -43,7 +44,7 @@ class TestProvisioningScope:
 
     def test_provision_creates_no_liquidity_record_nonposting_mappings(self, app):
         from extensions import db
-        from models import Tenant, Branch, GLAccountMapping
+        from models import Branch, GLAccountMapping, Tenant
         from services.gl_provisioning_service import GLProvisioningService
 
         with app.app_context():
@@ -93,7 +94,7 @@ class TestProvisioningScope:
 
     def test_no_mapping_targets_header_inactive_foreign(self, app):
         from extensions import db
-        from models import Tenant, GLAccountMapping, GLAccount
+        from models import GLAccount, GLAccountMapping, Tenant
         from services.gl_provisioning_service import GLProvisioningService
 
         with app.app_context():
@@ -131,7 +132,7 @@ class TestLiquidityMode:
     @staticmethod
     def _setup_tenant_branch(app, name):
         from extensions import db
-        from models import Tenant, Branch
+        from models import Branch, Tenant
 
         tenant = Tenant(
             name=f"{name}-{uuid.uuid4().hex[:6]}",
@@ -150,7 +151,7 @@ class TestLiquidityMode:
     @staticmethod
     def _create_stale_mapping(app, tenant, concept_code):
         from extensions import db
-        from models import GLAccountMapping, GLAccount
+        from models import GLAccount, GLAccountMapping
 
         header = GLAccount.query.filter_by(tenant_id=tenant.id, is_header=True).first()
         if not header:
@@ -170,8 +171,8 @@ class TestLiquidityMode:
         from extensions import db
         from models import GLAccount, GLJournalLine
         from services.gl_provisioning_service import GLProvisioningService
-        from services.gl_tree_builder import GLTreeBuilder
         from services.gl_service import GLService
+        from services.gl_tree_builder import GLTreeBuilder
 
         with app.app_context():
             tenant, branch = self._setup_tenant_branch(app, "LiqCash")
@@ -188,7 +189,7 @@ class TestLiquidityMode:
             db.session.commit()
 
             entry = GLService.create_journal_entry(
-                date=datetime(2026, 6, 1, tzinfo=timezone.utc),
+                date=datetime(2026, 6, 1, tzinfo=UTC),
                 description="Test cash",
                 lines=[
                     {
@@ -220,8 +221,8 @@ class TestLiquidityMode:
         from extensions import db
         from models import GLAccount, GLJournalLine
         from services.gl_provisioning_service import GLProvisioningService
-        from services.gl_tree_builder import GLTreeBuilder
         from services.gl_service import GLService
+        from services.gl_tree_builder import GLTreeBuilder
 
         with app.app_context():
             tenant, branch = self._setup_tenant_branch(app, "LiqBank")
@@ -238,7 +239,7 @@ class TestLiquidityMode:
             db.session.commit()
 
             entry = GLService.create_journal_entry(
-                date=datetime(2026, 6, 1, tzinfo=timezone.utc),
+                date=datetime(2026, 6, 1, tzinfo=UTC),
                 description="Test bank",
                 lines=[
                     {
@@ -268,8 +269,8 @@ class TestLiquidityMode:
 
     def test_liquidity_requires_account_code(self, app):
         from extensions import db
-        from services.gl_service import GLService
         from services.gl_account_resolver import GLMappingError
+        from services.gl_service import GLService
 
         with app.app_context():
             tenant, branch = self._setup_tenant_branch(app, "LiqReq")
@@ -280,7 +281,7 @@ class TestLiquidityMode:
 
             with pytest.raises(GLMappingError, match="requires an explicit GL account code"):
                 GLService.create_journal_entry(
-                    date=datetime(2026, 6, 1, tzinfo=timezone.utc),
+                    date=datetime(2026, 6, 1, tzinfo=UTC),
                     description="No account code",
                     lines=[
                         {
@@ -305,10 +306,11 @@ class TestRecordMode:
 
     @staticmethod
     def _setup_asset(app, tenant, branch, asset_number, purchase_price=10000):
+        from decimal import Decimal
+
         from extensions import db
         from models import GLAccount
         from models.fixed_asset import FixedAsset
-        from decimal import Decimal
 
         asset_acc = GLAccount.query.filter_by(tenant_id=tenant.id, code="1111").first()
         dep_exp_acc = GLAccount.query.filter_by(tenant_id=tenant.id, code="6300").first()
@@ -338,7 +340,7 @@ class TestRecordMode:
         from services.gl_tree_builder import GLTreeBuilder
 
         with app.app_context():
-            from models import Tenant, Branch
+            from models import Branch, Tenant
 
             tenant = Tenant(
                 name=f"RecDepr-{uuid.uuid4().hex[:6]}",
@@ -375,13 +377,13 @@ class TestRecordMode:
 
     def test_disposal_posts_to_exact_asset_account(self, app):
         from extensions import db
-        from models import GLAccount, GLAccountMapping, GLJournalLine, GLJournalEntry
+        from models import GLAccount, GLAccountMapping, GLJournalEntry, GLJournalLine
         from services.gl_provisioning_service import GLProvisioningService
         from services.gl_tree_builder import GLTreeBuilder
         from utils.gl_reference_types import GLRef
 
         with app.app_context():
-            from models import Tenant, Branch
+            from models import Branch, Tenant
 
             tenant = Tenant(
                 name=f"RecDis-{uuid.uuid4().hex[:6]}",
@@ -446,11 +448,11 @@ class TestRecordMode:
 
     def test_record_requires_explicit_account_allowed(self, app):
         from extensions import db
-        from services.gl_service import GLService
         from services.gl_account_resolver import GLMappingError
+        from services.gl_service import GLService
 
         with app.app_context():
-            from models import Tenant, Branch
+            from models import Branch, Tenant
             from services.gl_provisioning_service import GLProvisioningService
 
             tenant = Tenant(
@@ -470,7 +472,7 @@ class TestRecordMode:
 
             with pytest.raises(GLMappingError, match="requires explicit_account_allowed=True"):
                 GLService.create_journal_entry(
-                    date=datetime(2026, 6, 1, tzinfo=timezone.utc),
+                    date=datetime(2026, 6, 1, tzinfo=UTC),
                     description="No explicit flag",
                     lines=[
                         {
@@ -496,7 +498,7 @@ class TestMappingMode:
 
     def test_gain_loss_mappings_exist_and_are_valid(self, app):
         from extensions import db
-        from models import Tenant, GLAccountMapping, GLAccount
+        from models import GLAccount, GLAccountMapping, Tenant
         from services.gl_provisioning_service import GLProvisioningService
 
         with app.app_context():
@@ -543,9 +545,9 @@ class TestMappingMode:
 
     def test_gain_loss_resolves_through_resolver(self, app):
         from extensions import db
-        from models import Tenant, GLAccountMapping, GLAccount
-        from services.gl_provisioning_service import GLProvisioningService
+        from models import GLAccount, GLAccountMapping, Tenant
         from services.gl_account_resolver import resolve_gl_account
+        from services.gl_provisioning_service import GLProvisioningService
 
         with app.app_context():
             tenant = Tenant(
@@ -601,9 +603,9 @@ class TestStaleMappings:
 
     def test_stale_mappings_are_warnings_not_errors(self, app):
         from extensions import db
-        from models import Tenant, GLAccount, GLAccountMapping
-        from services.gl_provisioning_service import GLProvisioningService
+        from models import GLAccount, GLAccountMapping, Tenant
         from services.gl_mapping_validation import GLMappingValidationService
+        from services.gl_provisioning_service import GLProvisioningService
 
         with app.app_context():
             tenant = Tenant(
@@ -669,12 +671,12 @@ class TestStaleMappings:
         """Test that provisioning service rejects header account targets for mapping-owned concepts."""
         from extensions import db
         from models import Tenant
-        from services.gl_provisioning_service import GLProvisioningService
         from models.gl_account_registry import (
             GL_MODULE_DEFINITIONS,
-            GLModuleDefinition,
             GLConceptMappingTemplate,
+            GLModuleDefinition,
         )
+        from services.gl_provisioning_service import GLProvisioningService
 
         with app.app_context():
             tenant = Tenant(
@@ -739,8 +741,8 @@ class TestTenantBranchIsolation:
     def test_entry_branch_from_another_tenant_is_rejected(self, app):
         """Entry branch from another tenant should be rejected."""
         from extensions import db
-        from models import Tenant, Branch
-        from services.gl_service import GLService, GLMappingError
+        from models import Branch, Tenant
+        from services.gl_service import GLMappingError, GLService
 
         with app.app_context():
             # Create two tenants
@@ -779,7 +781,7 @@ class TestTenantBranchIsolation:
                 match=f"Branch {branch2.id} belongs to tenant {tenant2.id}, not tenant {tenant1.id}",
             ):
                 GLService.create_journal_entry(
-                    date=datetime(2026, 6, 1, tzinfo=timezone.utc),
+                    date=datetime(2026, 6, 1, tzinfo=UTC),
                     description="Test entry with wrong branch",
                     lines=[
                         {
@@ -802,8 +804,8 @@ class TestTenantBranchIsolation:
     def test_line_branch_from_another_tenant_is_rejected(self, app):
         """Line branch from another tenant should be rejected."""
         from extensions import db
-        from models import Tenant, Branch
-        from services.gl_service import GLService, GLMappingError
+        from models import Branch, Tenant
+        from services.gl_service import GLMappingError, GLService
 
         with app.app_context():
             # Create two tenants
@@ -842,7 +844,7 @@ class TestTenantBranchIsolation:
                 match=f"Line branch {branch2.id} belongs to tenant {tenant2.id}, not tenant {tenant1.id}",
             ):
                 GLService.create_journal_entry(
-                    date=datetime(2026, 6, 1, tzinfo=timezone.utc),
+                    date=datetime(2026, 6, 1, tzinfo=UTC),
                     description="Test entry with wrong line branch",
                     lines=[
                         {
@@ -867,9 +869,9 @@ class TestTenantBranchIsolation:
     def test_valid_same_tenant_different_line_branch_is_allowed(self, app):
         """Valid same-tenant different line branch should be allowed."""
         from extensions import db
-        from models import Tenant, Branch
-        from services.gl_service import GLService
+        from models import Branch, Tenant
         from services.gl_provisioning_service import GLProvisioningService
+        from services.gl_service import GLService
         from services.gl_tree_builder import GLTreeBuilder
 
         with app.app_context():
@@ -898,7 +900,7 @@ class TestTenantBranchIsolation:
             # This should work - same tenant, different branches for entry and line
             # Both journal lines explicitly use branch2; entry branch is branch1
             entry = GLService.create_journal_entry(
-                date=datetime(2026, 6, 1, tzinfo=timezone.utc),
+                date=datetime(2026, 6, 1, tzinfo=UTC),
                 description="Test entry with same tenant different branches",
                 lines=[
                     {
@@ -945,10 +947,10 @@ class TestAuthorityModelEdgeCases:
     def test_ar_concept_code_case_insensitive(self, app):
         """' ar ' (with spaces, lowercase) resolves to same account as 'AR'."""
         from extensions import db
-        from models import Tenant, Branch
+        from models import Branch, Tenant
+        from services.gl_account_resolver import resolve_gl_account
         from services.gl_provisioning_service import GLProvisioningService
         from services.gl_tree_builder import GLTreeBuilder
-        from services.gl_account_resolver import resolve_gl_account
 
         with app.app_context():
             tenant = Tenant(
@@ -980,10 +982,10 @@ class TestAuthorityModelEdgeCases:
     def test_unknown_concept_raises_glmappingerror(self, app):
         """Unknown non-empty concept raises GLMappingError containing 'Unknown GL concept'."""
         from extensions import db
-        from models import Tenant, Branch
+        from models import Branch, Tenant
+        from services.gl_account_resolver import GLMappingError, resolve_gl_account
         from services.gl_provisioning_service import GLProvisioningService
         from services.gl_tree_builder import GLTreeBuilder
-        from services.gl_account_resolver import resolve_gl_account, GLMappingError
 
         with app.app_context():
             tenant = Tenant(
@@ -1013,11 +1015,11 @@ class TestAuthorityModelEdgeCases:
     def test_branch_a_cash_rejected_when_resolved_with_branch_b(self, app):
         """Branch A CASH account is rejected when entry branch is B but account is from A."""
         from extensions import db
-        from models import Tenant, Branch, GLAccount
-        from services.gl_provisioning_service import GLProvisioningService
-        from services.gl_tree_builder import GLTreeBuilder
-        from services.gl_service import GLService
+        from models import Branch, GLAccount, Tenant
         from services.gl_account_resolver import GLMappingError
+        from services.gl_provisioning_service import GLProvisioningService
+        from services.gl_service import GLService
+        from services.gl_tree_builder import GLTreeBuilder
 
         with app.app_context():
             tenant = Tenant(
@@ -1046,7 +1048,7 @@ class TestAuthorityModelEdgeCases:
 
             # Create a balanced entry with branch_a using branch A's CASH account - should work
             entry_a = GLService.create_journal_entry(
-                date=datetime(2026, 6, 1, tzinfo=timezone.utc),
+                date=datetime(2026, 6, 1, tzinfo=UTC),
                 description="Test cash branch A",
                 lines=[
                     {
@@ -1074,7 +1076,7 @@ class TestAuthorityModelEdgeCases:
             # This should be rejected because entry branch B doesn't match account's branch A
             with pytest.raises(GLMappingError, match="does not match required branch_id"):
                 GLService.create_journal_entry(
-                    date=datetime(2026, 6, 1, tzinfo=timezone.utc),
+                    date=datetime(2026, 6, 1, tzinfo=UTC),
                     description="Test cash branch B rejection",
                     lines=[
                         {
@@ -1100,11 +1102,11 @@ class TestAuthorityModelEdgeCases:
     def test_branch_a_bank_rejected_when_resolved_with_branch_b(self, app):
         """Branch A BANK account is rejected when entry branch is B but account is from A."""
         from extensions import db
-        from models import Tenant, Branch, GLAccount
-        from services.gl_provisioning_service import GLProvisioningService
-        from services.gl_tree_builder import GLTreeBuilder
-        from services.gl_service import GLService
+        from models import Branch, GLAccount, Tenant
         from services.gl_account_resolver import GLMappingError
+        from services.gl_provisioning_service import GLProvisioningService
+        from services.gl_service import GLService
+        from services.gl_tree_builder import GLTreeBuilder
 
         with app.app_context():
             tenant = Tenant(
@@ -1133,7 +1135,7 @@ class TestAuthorityModelEdgeCases:
 
             # Create a balanced entry with branch_a using branch A's BANK account - should work
             entry_a = GLService.create_journal_entry(
-                date=datetime(2026, 6, 1, tzinfo=timezone.utc),
+                date=datetime(2026, 6, 1, tzinfo=UTC),
                 description="Test bank branch A",
                 lines=[
                     {
@@ -1161,7 +1163,7 @@ class TestAuthorityModelEdgeCases:
             # This should be rejected because entry branch B doesn't match account's branch A
             with pytest.raises(GLMappingError, match="does not match required branch_id"):
                 GLService.create_journal_entry(
-                    date=datetime(2026, 6, 1, tzinfo=timezone.utc),
+                    date=datetime(2026, 6, 1, tzinfo=UTC),
                     description="Test bank branch B rejection",
                     lines=[
                         {
@@ -1187,11 +1189,11 @@ class TestAuthorityModelEdgeCases:
     def test_landed_cost_raises_with_dynamic_mapping_disabled(self, app, monkeypatch):
         """With ENABLE_DYNAMIC_GL_MAPPING=False, LANDED_COST still raises GLMappingError via GLService."""
         from extensions import db
-        from models import Tenant, Branch
-        from services.gl_provisioning_service import GLProvisioningService
-        from services.gl_tree_builder import GLTreeBuilder
-        from services.gl_service import GLService
+        from models import Branch, Tenant
         from services.gl_account_resolver import GLMappingError
+        from services.gl_provisioning_service import GLProvisioningService
+        from services.gl_service import GLService
+        from services.gl_tree_builder import GLTreeBuilder
 
         with app.app_context():
             # Disable dynamic GL mapping
@@ -1226,9 +1228,9 @@ class TestAuthorityModelEdgeCases:
     def test_cash_bank_readiness_before_build(self, app):
         """Before GLTreeBuilder.build(), dry_run reports critical CASH_READINESS and BANK_READINESS."""
         from extensions import db
-        from models import Tenant, Branch
-        from services.gl_provisioning_service import GLProvisioningService
+        from models import Branch, Tenant
         from services.gl_mapping_validation import GLMappingValidationService
+        from services.gl_provisioning_service import GLProvisioningService
 
         with app.app_context():
             tenant = Tenant(
@@ -1261,10 +1263,10 @@ class TestAuthorityModelEdgeCases:
     def test_cash_bank_readiness_after_build(self, app):
         """After GLTreeBuilder.build(), CASH_READINESS and BANK_READINESS rows are absent."""
         from extensions import db
-        from models import Tenant, Branch
+        from models import Branch, Tenant
+        from services.gl_mapping_validation import GLMappingValidationService
         from services.gl_provisioning_service import GLProvisioningService
         from services.gl_tree_builder import GLTreeBuilder
-        from services.gl_mapping_validation import GLMappingValidationService
 
         with app.app_context():
             tenant = Tenant(
@@ -1389,9 +1391,8 @@ class TestGLModelUnitCoverage:
         from models.gl import GLJournalEntry
 
         entry = GLJournalEntry(is_reversed=True)
-        with app.app_context():
-            with pytest.raises(ValueError, match="مسبقاً"):
-                entry.reverse_entry()
+        with app.app_context(), pytest.raises(ValueError, match="مسبقاً"):
+            entry.reverse_entry()
 
     def test_reverse_entry_creates_mirror(self, app, mocker):
         from models.gl import GLJournalEntry, GLJournalLine
@@ -1438,8 +1439,7 @@ class TestGLModelUnitCoverage:
         from services.gl_posting import UnbalancedJournalEntryError
 
         entry = GLJournalEntry(entry_number="BAD", total_debit=Decimal("100"), total_credit=Decimal("0"))
-        with app.app_context():
-            with pytest.raises(UnbalancedJournalEntryError):
-                db = __import__("extensions").db
-                db.session.add(entry)
-                db.session.flush()
+        with app.app_context(), pytest.raises(UnbalancedJournalEntryError):
+            db = __import__("extensions").db
+            db.session.add(entry)
+            db.session.flush()

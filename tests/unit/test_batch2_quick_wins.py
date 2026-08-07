@@ -5,11 +5,11 @@ from __future__ import annotations
 import importlib
 import subprocess
 import sys
+from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
-from decimal import Decimal
 
 from models import Product
 from services.ai_service import AIService

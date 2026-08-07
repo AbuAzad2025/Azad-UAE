@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
@@ -22,7 +22,7 @@ def _customer_row(total, days_ago=5, sales_count=8):
     row.total_purchases = total
     row.sales_count = sales_count
     row.avg_order_value = Decimal("1200")
-    row.last_purchase = datetime.now(timezone.utc) - timedelta(days=days_ago)
+    row.last_purchase = datetime.now(UTC) - timedelta(days=days_ago)
     return row
 
 
@@ -310,9 +310,9 @@ class TestAnalyticsEngineConsolidated:
 
     def test_sales_analytics_from_analytics_engine(self):
         from ai_knowledge.analytics_engine import (
-            SalesAnalytics,
             InventoryAnalytics,
             ProfitAnalytics,
+            SalesAnalytics,
             get_analytics,
         )
 
@@ -718,8 +718,8 @@ class TestKnowledgeBaseFinal:
     def test_module_help_and_search(self):
         from ai_knowledge.knowledge_base import (
             get_module_help,
-            search_knowledge,
             get_welcome_message,
+            search_knowledge,
         )
 
         assert "المبيعات" in get_module_help("sales")
@@ -733,9 +733,9 @@ class TestKnowledgeBaseFinal:
 class TestSystemKnowledgeFinal:
     def test_role_info_and_search_edge_cases(self):
         from ai_knowledge.system_knowledge import (
+            get_permission_info,
             get_role_info,
             search_knowledge,
-            get_permission_info,
         )
 
         assert get_role_info("manager")["name_ar"] == "مدير"

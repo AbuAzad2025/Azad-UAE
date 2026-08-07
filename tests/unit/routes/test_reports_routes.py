@@ -1,6 +1,6 @@
 import io
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
@@ -869,7 +869,7 @@ class TestReportsReceivablesDeep:
         sale = MagicMock()
         sale.amount_aed = Decimal("1000")
         sale.paid_amount_aed = Decimal("200")
-        sale.sale_date = datetime.now(timezone.utc)
+        sale.sale_date = datetime.now(UTC)
         sale_query = _chain_query_stub(all=[sale])
         with (
             patch("routes.reports.tenant_query", return_value=sale_query),
@@ -1142,14 +1142,14 @@ class TestEntityFragmentPurchases:
 class TestReceivablesAgingBuckets:
     def test_receivables_aging_30_60_90(self, reports_client, mock_user):
         _configure_user(mock_user)
-        from datetime import datetime, timedelta, timezone
+        from datetime import datetime, timedelta
 
         sales = []
         for days in (10, 45, 75, 100, 150):
             s = MagicMock()
             s.amount_aed = Decimal("1000")
             s.paid_amount_aed = Decimal("100")
-            s.sale_date = datetime.now(timezone.utc) - timedelta(days=days)
+            s.sale_date = datetime.now(UTC) - timedelta(days=days)
             sales.append(s)
         sq = _chain_query_stub(all=sales)
         with (
@@ -1651,7 +1651,7 @@ class TestReportsReceivablesExportDeep:
         sale = MagicMock()
         sale.amount_aed = Decimal("500")
         sale.paid_amount_aed = Decimal("100")
-        sale.sale_date = datetime.now(timezone.utc) - timedelta(days=45)
+        sale.sale_date = datetime.now(UTC) - timedelta(days=45)
         sale.customer = MagicMock(name="C")
         sq = _chain_query_stub(all=[sale])
         with (
@@ -1799,14 +1799,14 @@ class TestReportsSupplierFragmentDeep:
         purchase = MagicMock()
         purchase.id = 1
         purchase.purchase_number = "P-100"
-        purchase.purchase_date = datetime(2025, 3, 1, tzinfo=timezone.utc)
+        purchase.purchase_date = datetime(2025, 3, 1, tzinfo=UTC)
         purchase.status = "confirmed"
         purchase.amount_aed = Decimal("500")
         payment = MagicMock()
         payment.purchase_id = 1
         payment.amount_aed = Decimal("200")
         payment.payment_number = "PAY-1"
-        payment.payment_date = datetime(2025, 3, 5, tzinfo=timezone.utc)
+        payment.payment_date = datetime(2025, 3, 5, tzinfo=UTC)
         payment.payment_method = "bank"
         payment.direction = "outgoing"
         payment.payment_confirmed = True
@@ -1849,7 +1849,7 @@ class TestReportsSupplierFragmentDeep:
         purchase = MagicMock()
         purchase.id = 2
         purchase.purchase_number = "P-200"
-        purchase.purchase_date = datetime(2025, 4, 1, tzinfo=timezone.utc)
+        purchase.purchase_date = datetime(2025, 4, 1, tzinfo=UTC)
         purchase.status = "confirmed"
         purchase.amount_aed = Decimal("300")
         purchase_q = MagicMock()

@@ -1,5 +1,6 @@
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
+
 from models import GLAccount, GLJournalEntry, GLJournalLine
 
 
@@ -84,7 +85,7 @@ class AdvancedFinancialAnalytics:
         """
         حساب رصيد الحسابات التي تبدأ برمز معين
         """
-        from utils.gl_tenant import scope_gl_accounts, active_tenant_id
+        from utils.gl_tenant import active_tenant_id, scope_gl_accounts
 
         tenant_id = tenant_id if tenant_id is not None else active_tenant_id()
         query = scope_gl_accounts(
@@ -146,7 +147,7 @@ class AdvancedFinancialAnalytics:
     @staticmethod
     def _calculate_account_type_balance(account_type, date_from=None, date_to=None, tenant_id=None):
         """حساب رصيد نوع حساب معين"""
-        from utils.gl_tenant import scope_gl_accounts, active_tenant_id
+        from utils.gl_tenant import active_tenant_id, scope_gl_accounts
 
         tenant_id = tenant_id if tenant_id is not None else active_tenant_id()
         accounts = scope_gl_accounts(
@@ -269,8 +270,8 @@ class AdvancedFinancialAnalytics:
     @staticmethod
     def get_expense_breakdown(tenant_id=None):
         """تحليل تفصيلي للمصروفات — batch query"""
-        from utils.gl_tenant import scope_gl_accounts, active_tenant_id
         from services.gl_service import GLService
+        from utils.gl_tenant import active_tenant_id, scope_gl_accounts
 
         tenant_id = tenant_id if tenant_id is not None else active_tenant_id()
         expense_accounts = scope_gl_accounts(
@@ -310,8 +311,8 @@ class AdvancedFinancialAnalytics:
     @staticmethod
     def get_revenue_breakdown(tenant_id=None):
         """تحليل تفصيلي للإيرادات — batch query"""
-        from utils.gl_tenant import scope_gl_accounts, active_tenant_id
         from services.gl_service import GLService
+        from utils.gl_tenant import active_tenant_id, scope_gl_accounts
 
         tenant_id = tenant_id if tenant_id is not None else active_tenant_id()
         revenue_accounts = scope_gl_accounts(

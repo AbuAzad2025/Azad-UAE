@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, render_template
-from flask_login import login_required, current_user
+from flask_login import current_user, login_required
+
 from services.gamification_service import GamificationService
 
 gamification_bp = Blueprint("gamification", __name__, url_prefix="/gamification")

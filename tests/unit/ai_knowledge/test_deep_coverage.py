@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
@@ -40,7 +40,7 @@ class TestNeuralEngineDeep:
         row.total_purchases = total
         row.sales_count = 8
         row.avg_order_value = 1200
-        row.last_purchase = datetime.now(timezone.utc) - timedelta(days=days_ago)
+        row.last_purchase = datetime.now(UTC) - timedelta(days=days_ago)
         return row
 
     def test_classify_vip_fallback(self, knowledge_path):
@@ -200,7 +200,7 @@ class TestConversationStoreDeep:
     def _mem(value='{"topic":"sales"}', hours_ago=0):
         mem = MagicMock()
         mem.value = value
-        mem.last_accessed = datetime.now(timezone.utc) - timedelta(hours=hours_ago)
+        mem.last_accessed = datetime.now(UTC) - timedelta(hours=hours_ago)
         mem.created_at = mem.last_accessed
         mem.access_count = 1
         mem.is_active = True

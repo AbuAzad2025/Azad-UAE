@@ -1,6 +1,5 @@
-from flask_babel import gettext
+from datetime import UTC
 from decimal import Decimal
-
 
 from flask import (
     Blueprint,
@@ -14,29 +13,21 @@ from flask import (
     session,
     url_for,
 )
-
+from flask_babel import gettext
 
 from extensions import db, limiter
-
 from models import Product, ProductCategory, Sale, Tenant
 from models.sale import SaleLine
-
-from models.shop_wishlist import ShopWishlist
 from models.shop_review import ShopReview
-
+from models.shop_wishlist import ShopWishlist
 from services.shop_customer_auth_service import ShopCustomerAuthService
-
 from services.store_checkout_service import StoreCheckoutService
-
 from services.store_order_service import StoreOrderService
-
 from services.store_payment_method_service import StorePaymentMethodService
-
 from services.store_service import StoreService
-
 from utils.db_safety import atomic_transaction
-from utils.shop_i18n import shop_lang, t
 from utils.safe_redirect import is_safe_redirect_url, safe_redirect_target
+from utils.shop_i18n import shop_lang, t
 
 shop_bp = Blueprint("shop", __name__, url_prefix="/s")
 
@@ -1060,9 +1051,9 @@ def quick_view(slug, product_id):
 @shop_bp.route("/<slug>/sitemap.xml")
 def store_sitemap(slug):
 
-    from flask import Response
+    from datetime import datetime
 
-    from datetime import datetime, timezone
+    from flask import Response
 
     store = _resolve_store(slug)
 
@@ -1079,7 +1070,7 @@ def store_sitemap(slug):
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
     ]
 
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today = datetime.now(UTC).strftime("%Y-%m-%d")
 
     xml.append(f"  <url><loc>{base}/s/{store.store_slug}</loc><lastmod>{today}</lastmod><priority>1.0</priority></url>")
 
@@ -1275,9 +1266,9 @@ def order_invoice(slug, sale_id):
         status_label=StoreOrderService.status_label(sale.status, ctx.get("lang", "")),
         pay_method=pay_method,
     )
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    ctx["printed_at"] = datetime.now(timezone.utc)
+    ctx["printed_at"] = datetime.now(UTC)
     return render_template("shop/order_invoice.html", sale=sale, **ctx)
 
 

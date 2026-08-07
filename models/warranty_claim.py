@@ -1,4 +1,5 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from extensions import db
 
 
@@ -30,7 +31,7 @@ class WarrantyClaim(db.Model):
         nullable=False,
         index=True,
     )
-    claim_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    claim_date = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
     claim_type = db.Column(db.String(20), nullable=False)
     description = db.Column(db.Text)
     status = db.Column(db.String(20), default="open", index=True)
@@ -48,9 +49,9 @@ class WarrantyClaim(db.Model):
     @property
     def remaining_days(self):
         if self.warranty_end_date:
-            from datetime import datetime, timezone
+            from datetime import datetime
 
-            delta = self.warranty_end_date - datetime.now(timezone.utc)
+            delta = self.warranty_end_date - datetime.now(UTC)
             return max(0, delta.days)
         return 0
 

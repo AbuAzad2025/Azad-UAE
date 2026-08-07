@@ -1,25 +1,26 @@
-import pytest
 from decimal import Decimal
 
+import pytest
+
 from models import (
-    Tenant,
     Branch,
-    Warehouse,
-    Product,
+    Currency,
     Customer,
-    User,
-    Role,
     GLAccount,
     GLJournalEntry,
     GLJournalLine,
-    ProductWarehouseStock,
+    Product,
     ProductWarehouseCost,
-    Currency,
+    ProductWarehouseStock,
+    Role,
+    Tenant,
+    User,
+    Warehouse,
 )
-from services.sale_service import SaleService
+from services.gl_accounting_setup import GLAccountingSetupService
 from services.gl_service import GLService
 from services.gl_tree_builder import GLTreeBuilder
-from services.gl_accounting_setup import GLAccountingSetupService
+from services.sale_service import SaleService
 
 
 @pytest.fixture

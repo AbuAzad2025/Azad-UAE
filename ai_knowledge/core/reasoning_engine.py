@@ -14,7 +14,7 @@
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import List, Any, Tuple, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class ReasoningEngine:
             "technical": [],
         }
 
-    def think(self, problem: str, context: Optional[dict] = None) -> dict:
+    def think(self, problem: str, context: dict | None = None) -> dict:
         """
         التفكير العميق في مشكلة
 
@@ -115,7 +115,7 @@ class ReasoningEngine:
             }
 
     @staticmethod
-    def _analyze_problem(problem: str, _context: dict) -> Tuple[str, List[str]]:
+    def _analyze_problem(problem: str, _context: dict) -> tuple[str, list[str]]:
         """تحليل نوع المشكلة واستخراج العناصر الرئيسية"""
         problem_lower = problem.lower()
 
@@ -153,7 +153,7 @@ class ReasoningEngine:
         return problem_type, key_elements
 
     @staticmethod
-    def _decompose_problem(problem: str, _key_elements: List[str]) -> List[str]:
+    def _decompose_problem(problem: str, _key_elements: list[str]) -> list[str]:
         """تفكيك المشكلة إلى خطوات فرعية"""
         sub_problems = []
 
@@ -236,7 +236,7 @@ class ReasoningEngine:
         return {"solution": solution, "reasoning": reasoning, "confidence": confidence}
 
     @staticmethod
-    def _combine_solutions(partial_solutions: List, problem_type: str) -> Any:
+    def _combine_solutions(partial_solutions: list, problem_type: str) -> Any:
         """دمج الحلول الجزئية"""
         if problem_type == "pricing":
             # دمج خطوات التسعير
@@ -286,7 +286,7 @@ class ReasoningEngine:
         }
 
     @staticmethod
-    def _generate_alternatives(_problem: str, _context: dict, main_solution: Any) -> List[dict]:
+    def _generate_alternatives(_problem: str, _context: dict, main_solution: Any) -> list[dict]:
         """توليد حلول بديلة"""
         alternatives = []
 
@@ -312,7 +312,7 @@ class ReasoningEngine:
 
         return alternatives
 
-    def chain_of_thought(self, question: str, data: Optional[dict] = None) -> dict:
+    def chain_of_thought(self, question: str, data: dict | None = None) -> dict:
         """
         Chain of Thought Reasoning (طريقة DeepSeek)
 

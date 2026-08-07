@@ -1,5 +1,7 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from sqlalchemy import Index, text
+
 from extensions import db
 
 
@@ -20,7 +22,7 @@ class ProductCategory(db.Model):
     parent_id = db.Column(db.Integer, db.ForeignKey("product_categories.id", ondelete="RESTRICT"), index=True)
     sort_order = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
 
     parent = db.relationship("ProductCategory", remote_side=[id], backref="subcategories")
     products = db.relationship("Product", back_populates="category", lazy="dynamic")
@@ -58,7 +60,7 @@ class ProductPartner(db.Model):
     percentage = db.Column(db.Numeric(5, 2), nullable=False, default=0)
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
@@ -170,14 +172,14 @@ class Product(db.Model):
 
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     sale_lines = db.relationship("SaleLine", back_populates="product", lazy="dynamic")

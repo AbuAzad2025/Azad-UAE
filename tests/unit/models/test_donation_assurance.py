@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from models.donation import Donation
@@ -36,7 +36,7 @@ class TestDonationInstance:
         assert pending.is_completed is False
 
     def test_to_dict_with_dates(self, sample_tenant):
-        now = datetime(2025, 6, 1, 12, 0, tzinfo=timezone.utc)
+        now = datetime(2025, 6, 1, 12, 0, tzinfo=UTC)
         d = Donation(
             tenant_id=sample_tenant.id,
             amount_usd=Decimal("50.00"),
@@ -77,14 +77,14 @@ class TestDonationAggregates:
                 amount_usd=Decimal("100"),
                 payment_method="card",
                 status="completed",
-                completed_at=datetime(2025, 6, 2, tzinfo=timezone.utc),
+                completed_at=datetime(2025, 6, 2, tzinfo=UTC),
             ),
             Donation(
                 tenant_id=tenant_id,
                 amount_usd=Decimal("50"),
                 payment_method="crypto",
                 status="completed",
-                completed_at=datetime(2025, 6, 1, tzinfo=timezone.utc),
+                completed_at=datetime(2025, 6, 1, tzinfo=UTC),
             ),
             Donation(
                 tenant_id=tenant_id,
@@ -100,7 +100,7 @@ class TestDonationAggregates:
                     amount_usd=Decimal("999"),
                     payment_method="card",
                     status="completed",
-                    completed_at=datetime(2025, 6, 3, tzinfo=timezone.utc),
+                    completed_at=datetime(2025, 6, 3, tzinfo=UTC),
                 )
             )
         db_session.add_all(rows)
@@ -108,6 +108,7 @@ class TestDonationAggregates:
 
     def test_get_total_donations_all_tenants(self, db_session, sample_tenant):
         import uuid
+
         from models import Tenant
 
         suffix = uuid.uuid4().hex[:8]

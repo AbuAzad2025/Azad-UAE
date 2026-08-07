@@ -1,10 +1,12 @@
 # User, Role, and Permission models
 
-from datetime import datetime, timezone
-from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import UTC, datetime
+
 from flask_login import UserMixin
+from werkzeug.security import check_password_hash, generate_password_hash
+
 from extensions import db
-from models.enums import RoleEnum, PermissionEnum
+from models.enums import PermissionEnum, RoleEnum
 
 role_permissions = db.Table(
     "role_permissions",
@@ -24,7 +26,7 @@ class Permission(db.Model):
     name_ar = db.Column(db.String(100))  # Arabic name
     description = db.Column(db.String(255))
     category = db.Column(db.String(50))  # Group permissions: 'sales', 'products', 'reports', etc.
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
 
     def __repr__(self):
         return f"<Permission {self.code}>"
@@ -50,11 +52,11 @@ class Role(db.Model):
     slug = db.Column(db.String(50), unique=True, nullable=False, index=True)  # e.g., 'super_admin'
     description = db.Column(db.String(255))
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     permissions = db.relationship("Permission", secondary=role_permissions, backref="roles", lazy="joined")
@@ -120,11 +122,11 @@ class User(UserMixin, db.Model):
     login_attempts = db.Column(db.Integer, default=0)
     locked_until = db.Column(db.DateTime)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     sales = db.relationship("Sale", back_populates="seller", lazy="dynamic", foreign_keys="Sale.seller_id")

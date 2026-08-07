@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -57,9 +57,8 @@ class TestTenantLimits:
     def test_check_limit_disabled_feature(self):
         tenant = MagicMock(id=1, max_users=0)
         model = type("User", (), {"tenant_id": _Col()})
-        with patch("utils.tenant_limits._active_tenant", return_value=tenant):
-            with pytest.raises(TenantLimitError):
-                check_limit("users", model=model, error_if_disabled=True)
+        with patch("utils.tenant_limits._active_tenant", return_value=tenant), pytest.raises(TenantLimitError):
+            check_limit("users", model=model, error_if_disabled=True)
 
     def test_check_monthly_limit_raises(self):
         tenant = MagicMock(id=1, max_sales_per_month=1)
@@ -68,7 +67,7 @@ class TestTenantLimits:
             patch("utils.tenant_limits._active_tenant", return_value=tenant),
             patch(
                 "utils.tenant_limits._month_start",
-                return_value=datetime(2025, 1, 1, tzinfo=timezone.utc),
+                return_value=datetime(2025, 1, 1, tzinfo=UTC),
             ),
             patch("utils.tenant_limits.db") as mock_db,
         ):
@@ -82,9 +81,8 @@ class TestTenantLimits:
 
     def test_enforce_feature_disabled(self):
         tenant = MagicMock(enable_pos=False)
-        with patch("utils.tenant_limits._active_tenant", return_value=tenant):
-            with pytest.raises(TenantLimitError):
-                enforce_feature("enable_pos", "نقطة البيع")
+        with patch("utils.tenant_limits._active_tenant", return_value=tenant), pytest.raises(TenantLimitError):
+            enforce_feature("enable_pos", "نقطة البيع")
 
     def test_check_users_limit_delegates(self):
         with patch("utils.tenant_limits.check_limit") as chk:
@@ -179,7 +177,7 @@ class TestTenantLimits:
             patch("utils.tenant_limits._active_tenant", return_value=tenant),
             patch(
                 "utils.tenant_limits._month_start",
-                return_value=datetime(2025, 1, 1, tzinfo=timezone.utc),
+                return_value=datetime(2025, 1, 1, tzinfo=UTC),
             ),
             patch("utils.tenant_limits.db") as mock_db,
         ):

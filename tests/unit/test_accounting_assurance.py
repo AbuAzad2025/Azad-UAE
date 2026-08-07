@@ -34,8 +34,8 @@ class TestGLDoubleEntryBalance:
 
     def test_assert_balanced_lines_rejects_debit_skew(self):
         from services.gl_posting import (
-            assert_balanced_lines,
             UnbalancedJournalEntryError,
+            assert_balanced_lines,
         )
 
         lines = [
@@ -47,8 +47,8 @@ class TestGLDoubleEntryBalance:
 
     def test_assert_balanced_lines_rejects_credit_skew(self):
         from services.gl_posting import (
-            assert_balanced_lines,
             UnbalancedJournalEntryError,
+            assert_balanced_lines,
         )
 
         lines = [
@@ -59,7 +59,7 @@ class TestGLDoubleEntryBalance:
             assert_balanced_lines(lines, currency="AED")
 
     def test_post_or_fail_rejects_unbalanced_with_app_context(self, app):
-        from services.gl_posting import post_or_fail, UnbalancedJournalEntryError
+        from services.gl_posting import UnbalancedJournalEntryError, post_or_fail
 
         unbalanced = [
             {"debit": Decimal("300"), "credit": Decimal("0")},
@@ -436,13 +436,13 @@ class TestGLConceptRegistry:
     """SUSPENSE concept was added to the registry."""
 
     def test_suspense_concept_in_registry(self):
-        from models._constants import GL_CONCEPT_SUSPENSE, GL_CONCEPT_REGISTRY
+        from models._constants import GL_CONCEPT_REGISTRY, GL_CONCEPT_SUSPENSE
 
         assert GL_CONCEPT_SUSPENSE == "SUSPENSE"
         assert GL_CONCEPT_SUSPENSE in GL_CONCEPT_REGISTRY
         assert GL_CONCEPT_REGISTRY[GL_CONCEPT_SUSPENSE]["legacy_code"] == "2999"
 
     def test_suspense_concept_in_codes(self):
-        from models._constants import GL_CONCEPT_SUSPENSE, GL_CONCEPT_CODES
+        from models._constants import GL_CONCEPT_CODES, GL_CONCEPT_SUSPENSE
 
         assert GL_CONCEPT_SUSPENSE in GL_CONCEPT_CODES

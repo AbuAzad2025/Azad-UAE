@@ -1,9 +1,10 @@
+import logging
 import os
 import re
-import logging
 import socket
 from datetime import timedelta
 from typing import Any
+
 from dotenv import load_dotenv
 
 from utils.regional_defaults import (
@@ -30,7 +31,7 @@ def _redis_available(host: str = "localhost", port: int = 6379, timeout: float =
             sock.sendall(b"PING\r\n")
             response = sock.recv(1024)
             return b"PONG" in response or b"+PONG" in response
-    except Exception:
+    except OSError:
         return False
 
 

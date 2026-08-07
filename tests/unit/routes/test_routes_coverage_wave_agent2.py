@@ -12,11 +12,11 @@ Targets the residual uncovered branches not exercised by the existing suites
   colon-syntax commands, and the Excel import/training helpers.
 """
 
+import io
 from contextlib import ExitStack, contextmanager
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-import io
 import numpy as np
 import pandas as pd
 
@@ -165,7 +165,7 @@ class TestAiAccessPolicy:
 
     def test_after_request_non_ai_endpoint(self, app_factory):
         """endpoint not starting with 'ai.' -> after_request passthrough (99)."""
-        from routes.ai_routes import ai_bp, _audit_ai_requests
+        from routes.ai_routes import _audit_ai_requests, ai_bp
 
         app = app_factory(ai_bp)
         with app.test_request_context("/"):

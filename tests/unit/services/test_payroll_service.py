@@ -95,10 +95,9 @@ class TestCreateAdvance:
             patch(
                 "utils.branching.branch_scope_id_for",
                 return_value=sample_branch.id + 99,
-            ),
+            ),pytest.raises(ValueError, match="فرع")
         ):
-            with pytest.raises(ValueError, match="فرع"):
-                PayrollService.create_advance(emp.id, "100", "x", user_id=1, actor_user=actor)
+            PayrollService.create_advance(emp.id, "100", "x", user_id=1, actor_user=actor)
 
     def test_create_advance_tenant_mismatch(self, db_session, sample_branch, sample_tenant):
         emp = _employee(db_session, sample_branch, sample_tenant)
@@ -109,10 +108,9 @@ class TestCreateAdvance:
             patch(
                 "utils.tenanting.get_active_tenant_id",
                 return_value=sample_tenant.id + 50,
-            ),
+            ),pytest.raises(ValueError, match="شركتك")
         ):
-            with pytest.raises(ValueError, match="شركتك"):
-                PayrollService.create_advance(emp.id, "100", "x", user_id=1, actor_user=actor)
+            PayrollService.create_advance(emp.id, "100", "x", user_id=1, actor_user=actor)
 
     def test_create_advance_commit_failure(self, db_session, sample_branch, sample_tenant):
         emp = _employee(db_session, sample_branch, sample_tenant)
@@ -127,10 +125,9 @@ class TestCreateAdvance:
             patch(
                 "services.payroll_service.db.session.flush",
                 side_effect=RuntimeError("fail"),
-            ),
+            ),pytest.raises(RuntimeError)
         ):
-            with pytest.raises(RuntimeError):
-                PayrollService.create_advance(emp.id, "50", "x", user_id=1)
+            PayrollService.create_advance(emp.id, "50", "x", user_id=1)
 
 
 class TestProcessPayroll:
@@ -354,10 +351,9 @@ class TestProcessPayroll:
         actor = MagicMock()
         with (
             patch("utils.auth_helpers.is_global_owner_user", return_value=False),
-            patch("utils.branching.branch_scope_id_for", return_value=999),
+            patch("utils.branching.branch_scope_id_for", return_value=999),pytest.raises(ValueError, match="فرع")
         ):
-            with pytest.raises(ValueError, match="فرع"):
-                self._run_payroll(emp, actor_user=actor)
+            self._run_payroll(emp, actor_user=actor)
 
     def test_process_actor_tenant_mismatch(self, db_session, sample_branch, sample_tenant):
         emp = _employee(db_session, sample_branch, sample_tenant)
@@ -368,10 +364,9 @@ class TestProcessPayroll:
             patch(
                 "utils.tenanting.get_active_tenant_id",
                 return_value=sample_tenant.id + 99,
-            ),
+            ),pytest.raises(ValueError, match="شركتك")
         ):
-            with pytest.raises(ValueError, match="شركتك"):
-                self._run_payroll(emp, actor_user=actor)
+            self._run_payroll(emp, actor_user=actor)
 
     def test_process_advance_fallback_remaining(self, db_session, sample_branch, sample_tenant, sample_user):
         emp = _employee(db_session, sample_branch, sample_tenant, basic_salary="2000")
@@ -426,10 +421,9 @@ class TestProcessPayroll:
             patch(
                 "services.payroll_service.db.session.flush",
                 side_effect=RuntimeError("db"),
-            ),
+            ),pytest.raises(RuntimeError)
         ):
-            with pytest.raises(RuntimeError):
-                PayrollService.process_payroll(emp.id, 9, 2026, 0, 0, 0, user_id=1)
+            PayrollService.process_payroll(emp.id, 9, 2026, 0, 0, 0, user_id=1)
 
     def test_process_accrual_warning_logged(self, db_session, sample_branch, sample_tenant, app):
         emp = _employee(db_session, sample_branch, sample_tenant)

@@ -24,6 +24,7 @@ import uuid
 from decimal import Decimal
 
 import pytest
+
 from extensions import db
 from models import Product, StockMovement
 from models.gl import GLJournalEntry
@@ -218,9 +219,8 @@ class TestMultiWarehouseInventoryIsolation:
         wh1, _wh2 = env["warehouses"]
         product = env["product"]
 
-        with app.app_context():
-            with pytest.raises(ValueError):
-                StockService.transfer_stock(product.id, wh1.id, fwh.id, Decimal("5"), user=env["user"])
+        with app.app_context(), pytest.raises(ValueError):
+            StockService.transfer_stock(product.id, wh1.id, fwh.id, Decimal("5"), user=env["user"])
         db.session.expire_all()
         movements = StockMovement.query.filter(
             StockMovement.product_id == product.id,
@@ -235,9 +235,8 @@ class TestMultiWarehouseInventoryIsolation:
         _, fwh = _make_foreign_warehouse(db_session)
         product = env["product"]
 
-        with app.app_context():
-            with pytest.raises(ValueError):
-                StockService.transfer_stock(product.id, fwh.id, fwh.id, Decimal("5"), user=env["user"])
+        with app.app_context(), pytest.raises(ValueError):
+            StockService.transfer_stock(product.id, fwh.id, fwh.id, Decimal("5"), user=env["user"])
 
     def test_create_movement_rejects_foreign_warehouse(self, app, db_session):
         from services.stock_service import StockService
@@ -246,14 +245,13 @@ class TestMultiWarehouseInventoryIsolation:
         _, fwh = _make_foreign_warehouse(db_session)
         product = env["product"]
 
-        with app.app_context():
-            with pytest.raises(ValueError):
-                StockService.create_movement(
-                    product_id=product.id,
-                    quantity=Decimal("5"),
-                    movement_type="adjustment",
-                    warehouse_id=fwh.id,
-                )
+        with app.app_context(), pytest.raises(ValueError):
+            StockService.create_movement(
+                product_id=product.id,
+                quantity=Decimal("5"),
+                movement_type="adjustment",
+                warehouse_id=fwh.id,
+            )
 
     def test_transfer_is_net_zero_and_conserves_total(self, app, db_session):
         from models import StockMovement

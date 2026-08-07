@@ -5,8 +5,8 @@ from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 import pytest
-import models
 
+import models
 from services.partner_service import PartnerService
 
 

@@ -7,8 +7,9 @@ not create, update, delete, seed, backfill, or resolve posting accounts.
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
-from typing import Any, Iterable
+from typing import Any
 
 import sqlalchemy as sa
 
@@ -17,8 +18,8 @@ from models import Branch, GLAccountMapping, Tenant
 from models._constants import (
     GL_CONCEPT_REGISTRY,
     REQUIRED_GL_CONCEPTS,
-    VALID_GL_CONCEPT_CODES,
     RESOLUTION_MODE_MAPPING,
+    VALID_GL_CONCEPT_CODES,
 )
 from models.gl import GLAccount
 

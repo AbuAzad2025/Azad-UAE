@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -99,7 +99,7 @@ def _product_rows(count=25, high_usage=False):
         row.current_stock = Decimal("10")
         row.sales_count = 60 if high_usage else (20 if i % 2 == 0 else 3)
         row.total_sold = Decimal("100")
-        row.last_sale_date = datetime.now(timezone.utc) - timedelta(days=7)
+        row.last_sale_date = datetime.now(UTC) - timedelta(days=7)
         rows.append(row)
     return rows
 
@@ -140,7 +140,7 @@ def _customer_rows(count=30):
         row.total_purchases = Decimal(str(10000 + i * 1000))
         row.customer_classification = "vip" if i < 5 else "regular"
         row.sales_count = 10
-        row.last_purchase = datetime.now(timezone.utc) - timedelta(days=30)
+        row.last_purchase = datetime.now(UTC) - timedelta(days=30)
         row.avg_order_value = Decimal("500")
         rows.append(row)
     return rows
@@ -225,7 +225,7 @@ class TestNeuralEngineWave3:
                 current_stock=Decimal("10"),
                 sales_count=60,
                 total_sold=Decimal("100"),
-                last_sale_date=datetime.now(timezone.utc) - timedelta(days=5),
+                last_sale_date=datetime.now(UTC) - timedelta(days=5),
             )
             chain.first.return_value = product_data
             result = engine._predict_maintenance_internal(1)
@@ -329,7 +329,7 @@ class TestNeuralEngineWave3:
             row = MagicMock(
                 total_purchases=Decimal("80000"),
                 sales_count=20,
-                last_purchase=datetime.now(timezone.utc) - timedelta(days=10),
+                last_purchase=datetime.now(UTC) - timedelta(days=10),
                 avg_order_value=Decimal("2000"),
             )
             chain.first.return_value = row
@@ -1063,10 +1063,9 @@ class TestAgentsCoreWave3:
                 assert ac._get_llm_response("sys", "user") == "ok"
         gem_resp = MagicMock(status_code=200)
         gem_resp.json.return_value = {"candidates": [{"content": {"parts": [{"text": "gem"}]}}]}
-        with patch.dict("os.environ", {}, clear=True):
-            with patch.dict("os.environ", {"GEMINI_API_KEY": "g"}):
-                with patch("requests.post", return_value=gem_resp):
-                    assert ac._get_llm_response("sys", "user") == "gem"
+        with patch.dict("os.environ", {}, clear=True), patch.dict("os.environ", {"GEMINI_API_KEY": "g"}):
+            with patch("requests.post", return_value=gem_resp):
+                assert ac._get_llm_response("sys", "user") == "gem"
 
     def test_build_prompt_with_results(self):
         from ai_knowledge.agents_core import _build_system_prompt
@@ -1188,9 +1187,9 @@ class TestActionDispatcherWave3:
 
 class TestCoreEngineWave3:
     def test_getattr_lazy_imports(self, knowledge_path):
-        import ai_knowledge.core_engine as ce
         import ai_knowledge.core.conversation_manager as cm
         import ai_knowledge.core.memory_system as ms
+        import ai_knowledge.core_engine as ce
 
         cm._conversation_manager_instance = None
         ms._memory_instance = None

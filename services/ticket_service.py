@@ -1,10 +1,12 @@
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
+
+from flask_babel import gettext
+
 from extensions import db
 from models import Ticket, TicketComment, TicketPriority
-from utils.tenanting import get_active_tenant_id
-from utils.branching import branch_scope_id_for
 from utils.auth_helpers import is_global_owner_user
-from flask_babel import gettext
+from utils.branching import branch_scope_id_for
+from utils.tenanting import get_active_tenant_id
 
 
 class TicketService:
@@ -47,7 +49,7 @@ class TicketService:
         if priority_id:
             priority = db.session.get(TicketPriority, int(priority_id))
             if priority and priority.sla_hours > 0:
-                sla_deadline = datetime.now(timezone.utc) + timedelta(hours=priority.sla_hours)
+                sla_deadline = datetime.now(UTC) + timedelta(hours=priority.sla_hours)
         ticket = Ticket(
             tenant_id=int(tid) if tid else 0,
             number=TicketService._next_number(int(tid)) if tid else None,
@@ -75,7 +77,7 @@ class TicketService:
             raise ValueError(gettext("التذكرة غير موجودة."))
         TicketService._validate_tenant(ticket, current_user)
         ticket.assigned_user_id = int(user_id) if user_id else None
-        ticket.updated_at = datetime.now(timezone.utc)
+        ticket.updated_at = datetime.now(UTC)
         try:
             db.session.flush()
         except Exception:
@@ -89,8 +91,8 @@ class TicketService:
             raise ValueError(gettext("التذكرة غير موجودة."))
         TicketService._validate_tenant(ticket, current_user)
         ticket.status = "resolved"
-        ticket.resolved_at = datetime.now(timezone.utc)
-        ticket.updated_at = datetime.now(timezone.utc)
+        ticket.resolved_at = datetime.now(UTC)
+        ticket.updated_at = datetime.now(UTC)
         try:
             db.session.flush()
         except Exception:
@@ -104,8 +106,8 @@ class TicketService:
             raise ValueError(gettext("التذكرة غير موجودة."))
         TicketService._validate_tenant(ticket, current_user)
         ticket.status = "closed"
-        ticket.closed_at = datetime.now(timezone.utc)
-        ticket.updated_at = datetime.now(timezone.utc)
+        ticket.closed_at = datetime.now(UTC)
+        ticket.updated_at = datetime.now(UTC)
         try:
             db.session.flush()
         except Exception:
@@ -121,7 +123,7 @@ class TicketService:
         ticket.status = "open"
         ticket.resolved_at = None
         ticket.closed_at = None
-        ticket.updated_at = datetime.now(timezone.utc)
+        ticket.updated_at = datetime.now(UTC)
         try:
             db.session.flush()
         except Exception:
@@ -145,7 +147,7 @@ class TicketService:
         )
         db.session.add(comment)
         if ticket.status == "open":
-            ticket.updated_at = datetime.now(timezone.utc)
+            ticket.updated_at = datetime.now(UTC)
         try:
             db.session.flush()
         except Exception:

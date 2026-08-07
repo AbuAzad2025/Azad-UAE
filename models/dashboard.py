@@ -1,6 +1,8 @@
-from datetime import datetime, timezone
-from extensions import db
+from datetime import UTC, datetime
+
 from sqlalchemy.dialects.postgresql import JSONB
+
+from extensions import db
 
 
 class DashboardWidget(db.Model):
@@ -47,11 +49,11 @@ class UserDashboardLayout(db.Model):
 
     layout_json = db.Column(JSONB, nullable=False)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
         nullable=False,
     )
 

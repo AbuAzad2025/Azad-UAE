@@ -54,9 +54,8 @@ class TestRequireEnabled:
         )
         from services.feature_flag_service import FeatureFlagService
 
-        with app.app_context():
-            with pytest.raises(RuntimeError, match="ENABLE_TREASURY"):
-                FeatureFlagService.require_enabled("ENABLE_TREASURY", tenant_id=3)
+        with app.app_context(), pytest.raises(RuntimeError, match="ENABLE_TREASURY"):
+            FeatureFlagService.require_enabled("ENABLE_TREASURY", tenant_id=3)
 
     def test_get_all_flags_resolves_known_keys(self, app, mocker):
         mocker.patch(

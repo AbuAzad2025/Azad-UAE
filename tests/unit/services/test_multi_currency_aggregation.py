@@ -6,7 +6,7 @@ mixed currencies never sees cross-currency sums.
 """
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -23,7 +23,7 @@ def _make_sale(db_session, tenant, customer, seller, *, currency, total, rate, b
         customer_id=customer.id,
         seller_id=seller.id,
         status="confirmed",
-        sale_date=datetime.now(timezone.utc),
+        sale_date=datetime.now(UTC),
         subtotal=Decimal(str(total)),
         total_amount=Decimal(str(total)),
         amount=Decimal(str(total)),

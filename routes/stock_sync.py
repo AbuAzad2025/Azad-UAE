@@ -6,10 +6,11 @@ Business logic is delegated to StockSyncService; this module contains
 HTTP-layer code only (validation, JSON response, status mapping).
 """
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, jsonify, request
+
 from extensions import csrf
-from utils.decorators import api_key_required
 from services.stock_sync_service import StockSyncService
+from utils.decorators import api_key_required
 
 stock_sync_bp = Blueprint("stock_sync", __name__, url_prefix="/api/v2/stock")
 

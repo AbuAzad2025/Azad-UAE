@@ -6,8 +6,8 @@ This module consolidates multiple small files into one.
 Old import paths still work via backward-compatible shims in the original files.
 """
 
-import os
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 

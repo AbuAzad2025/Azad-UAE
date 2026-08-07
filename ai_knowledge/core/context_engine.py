@@ -5,10 +5,11 @@
 
 import logging
 
-from .system_integration import system_integrator
 from ai_knowledge.analytics.data_analyzer import data_analyzer
-from .learning_system import learning_system
 from ai_knowledge.expansion.knowledge_expansion import knowledge_expander
+
+from .learning_system import learning_system
+from .system_integration import system_integrator
 
 logger = logging.getLogger(__name__)
 

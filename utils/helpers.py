@@ -1,11 +1,13 @@
 import logging
 import os
-import uuid
 import re
-from datetime import datetime, timezone
+import uuid
+from datetime import UTC, datetime
 from decimal import Decimal
-from werkzeug.utils import secure_filename
+
 from flask import current_app, request
+from werkzeug.utils import secure_filename
+
 from extensions import db
 
 logger = logging.getLogger(__name__)
@@ -113,6 +115,7 @@ def generate_number_and_save(
         try:
             return save_func(number)
         except IntegrityError:
+            logger.debug("Number collision for %r; retrying (%s)", number, max_attempts, exc_info=True)
             continue
     raise RuntimeError(f"Could not generate unique number after {max_attempts} attempts")
 
@@ -188,8 +191,8 @@ def format_currency(amount, currency=None, lang="ar"):
         settings_currency, settings_symbol, settings_position, settings_decimals = _resolve_format_currency_settings()
 
         from utils.currency_utils import (
-            get_system_default_currency,
             get_currency_symbol,
+            get_system_default_currency,
         )
 
         currency = (currency or settings_currency or get_system_default_currency()).upper()
@@ -222,11 +225,11 @@ def timeago(date):
         return ""
 
     try:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         if date.tzinfo is None:
             if date.year < 1970:
                 return ""
-            date = date.replace(tzinfo=timezone.utc)
+            date = date.replace(tzinfo=UTC)
 
         diff = now - date
         seconds = diff.total_seconds()
@@ -261,9 +264,7 @@ def create_audit_log(action, table_name=None, record_id=None, changes=None):
     try:
         user_id = None
         if current_user:
-            if hasattr(current_user, "is_authenticated") and current_user.is_authenticated:
-                user_id = current_user.id
-            elif hasattr(current_user, "id"):  # In case we mocked it with a simple object
+            if hasattr(current_user, "is_authenticated") and current_user.is_authenticated or hasattr(current_user, "id"):
                 user_id = current_user.id
 
         log = AuditLog(

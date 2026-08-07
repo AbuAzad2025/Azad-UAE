@@ -1,6 +1,7 @@
+from flask import Blueprint, flash, jsonify, request
 from flask_babel import gettext
-from flask import Blueprint, request, jsonify, flash
 from flask_login import current_user, login_required
+
 from services.whatsapp_service import WhatsAppService
 from utils.decorators import admin_required, permission_required
 

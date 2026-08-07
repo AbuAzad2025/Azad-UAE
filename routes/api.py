@@ -1,13 +1,14 @@
-from flask_babel import gettext
-from datetime import datetime, timezone
-from urllib.parse import urlparse
 import os
+from datetime import UTC, datetime
+from urllib.parse import urlparse
 
-from flask import Blueprint, jsonify, request, make_response, current_app, abort
-from flask_login import login_required, current_user
+from flask import Blueprint, abort, current_app, jsonify, make_response, request
+from flask_babel import gettext
+from flask_login import current_user, login_required
 from sqlalchemy import select
-from extensions import db, limiter, csrf
-from models import Customer, Supplier, Product, User
+
+from extensions import csrf, db, limiter
+from models import Customer, Product, Supplier, User
 from services.logging_core import LoggingCore
 from services.payment_service import PaymentService
 from services.stock_service import StockService
@@ -56,7 +57,7 @@ def _origin_from_referer(referer: str) -> str | None:
         parsed = urlparse(referer or "")
         if parsed.scheme and parsed.netloc:
             return f"{parsed.scheme}://{parsed.netloc}".rstrip("/")
-    except Exception:
+    except (TypeError, ValueError):
         return None
     return None
 
@@ -323,7 +324,7 @@ def currency_rate(from_currency, to_currency):
             "source": details.get("source", "unknown"),
             "cached": bool(details.get("cached", False)),
             "age_seconds": int(details.get("age_seconds") or 0),
-            "fetched_at": datetime.now(timezone.utc).isoformat(),
+            "fetched_at": datetime.now(UTC).isoformat(),
         }
         resp = make_response(jsonify(payload), 200)
         resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
@@ -795,6 +796,7 @@ def ingest_telemetry_logs():
             accepted += 1
         except Exception:
             # One poisoned event must not kill the batch — never 500 on client data.
+            current_app.logger.warning("Dropped malformed client telemetry event", exc_info=True)
             continue
 
     return jsonify({"success": True, "accepted": accepted}), 202

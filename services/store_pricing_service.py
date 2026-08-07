@@ -19,7 +19,7 @@ Fallback policy (fixes audit issue D4 — no more silent rate=1):
 from __future__ import annotations
 
 import logging
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 
 logger = logging.getLogger(__name__)
 

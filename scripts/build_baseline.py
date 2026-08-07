@@ -24,20 +24,20 @@ The generator emits:
 """
 
 import os
-import sys
 import re
+import sys
 from typing import Any
 
 sys.path.insert(0, os.path.dirname(__file__))
 
 
 def _load_data_constants():
+    from models._constants import GL_CONCEPT_REGISTRY, RESOLUTION_MODE_MAPPING
     from models.gl_account_registry import (
         BASE_ACCOUNTS,
-        INDUSTRY_EXTENSIONS,
         GL_MODULE_DEFINITIONS,
+        INDUSTRY_EXTENSIONS,
     )
-    from models._constants import GL_CONCEPT_REGISTRY, RESOLUTION_MODE_MAPPING
 
     return (
         BASE_ACCOUNTS,

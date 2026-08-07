@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import MagicMock
@@ -121,7 +121,7 @@ class TestCardPaymentToDict:
             card_type="Visa",
             card_last_4="4242",
             amount=None,
-            created_at=datetime(2025, 6, 1, tzinfo=timezone.utc),
+            created_at=datetime(2025, 6, 1, tzinfo=UTC),
         )
         data = cp.to_dict()
         assert data["amount"] == 0

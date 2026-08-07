@@ -3,8 +3,9 @@
 أزاد يتصل بالعالم ويتعلم من المصادر العالمية
 """
 
-import requests
 from datetime import datetime
+
+import requests
 
 
 class GlobalKnowledgeConnector:

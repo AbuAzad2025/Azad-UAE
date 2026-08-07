@@ -11,9 +11,9 @@ class TaxService:
 
     @staticmethod
     def _get_strategy(tenant_id=None):
+        from models import Tenant
         from utils.localization import get_strategy
         from utils.tenanting import get_active_tenant_id
-        from models import Tenant
 
         if tenant_id is None:
             tenant_id = get_active_tenant_id()

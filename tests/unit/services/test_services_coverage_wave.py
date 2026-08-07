@@ -5,7 +5,7 @@ from __future__ import annotations
 import builtins
 import importlib
 import sys
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
@@ -28,9 +28,8 @@ class TestTicketServiceGaps:
         mock_session.get.return_value = None
         from services.ticket_service import TicketService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="غير موجودة"):
-                getattr(TicketService, method_name)(*args)
+        with app.app_context(), pytest.raises(ValueError, match="غير موجودة"):
+            getattr(TicketService, method_name)(*args)
 
 
 class TestTreasuryServiceGaps:
@@ -219,7 +218,7 @@ class TestShopCustomerAuthGaps:
 
             acc = _account(db_session, sample_tenant.id, email="c4@shop.test")
             acc.password_reset_token = "tok"
-            acc.password_reset_expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
+            acc.password_reset_expires_at = datetime.now(UTC) + timedelta(hours=1)
             db_session.commit()
 
         mocker.patch(
@@ -283,9 +282,8 @@ class TestStoreOnlinePaymentGaps:
 
         from services.store_online_payment_service import StoreOnlinePaymentService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="رابط الدفع"):
-                StoreOnlinePaymentService.create_payment_for_sale(sale, store)
+        with app.app_context(), pytest.raises(ValueError, match="رابط الدفع"):
+            StoreOnlinePaymentService.create_payment_for_sale(sale, store)
 
 
 class TestStoreCheckoutGaps:
@@ -307,9 +305,8 @@ class TestStoreCheckoutGaps:
 
         from services.store_checkout_service import StoreCheckoutService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="الهاتف"):
-                StoreCheckoutService.build_lines_from_cart(1, {1: 1}, online_warehouse_id=1)
+        with app.app_context(), pytest.raises(ValueError, match="الهاتف"):
+            StoreCheckoutService.build_lines_from_cart(1, {1: 1}, online_warehouse_id=1)
 
     def test_stock_check_failure_message(self, app, mocker):
         product = MagicMock(id=1, name="Widget", has_serial_number=False, tenant_id=1, is_active=True)
@@ -327,9 +324,8 @@ class TestStoreCheckoutGaps:
 
         from services.store_checkout_service import StoreCheckoutService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="Widget"):
-                StoreCheckoutService.build_lines_from_cart(1, {1: 1}, online_warehouse_id=1)
+        with app.app_context(), pytest.raises(ValueError, match="Widget"):
+            StoreCheckoutService.build_lines_from_cart(1, {1: 1}, online_warehouse_id=1)
 
 
 class TestStoreOrderGaps:
@@ -365,9 +361,8 @@ class TestSaleServiceGaps:
             mock_wh.query.filter_by.return_value = mock_wh.query
             mock_wh.query.first.return_value = wh
             mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate_mode": "needs_input"}
-            with app.app_context():
-                with pytest.raises(ValueError, match="سعر الصرف"):
-                    SaleService.create_sale(customer, seller, lines, currency="USD")
+            with app.app_context(), pytest.raises(ValueError, match="سعر الصرف"):
+                SaleService.create_sale(customer, seller, lines, currency="USD")
 
     def test_create_sale_invalid_exchange_rate(self, app):
         from services.sale_service import SaleService
@@ -390,9 +385,8 @@ class TestSaleServiceGaps:
                 "rate": 0,
                 "rate_mode": "auto",
             }
-            with app.app_context():
-                with pytest.raises(ValueError, match="سعر الصرف غير صالح"):
-                    SaleService.create_sale(customer, seller, lines)
+            with app.app_context(), pytest.raises(ValueError, match="سعر الصرف غير صالح"):
+                SaleService.create_sale(customer, seller, lines)
 
     def test_create_sale_no_warehouse(self, app):
         from services.sale_service import SaleService
@@ -407,41 +401,38 @@ class TestSaleServiceGaps:
         ):
             mock_wh.query.filter_by.return_value = mock_wh.query
             mock_wh.query.first.return_value = None
-            with app.app_context():
-                with pytest.raises(ValueError, match="مستودع"):
-                    SaleService.create_sale(customer, seller, lines)
+            with app.app_context(), pytest.raises(ValueError, match="مستودع"):
+                SaleService.create_sale(customer, seller, lines)
 
     def test_add_payment_cheque_missing_bank(self, app):
         from services.sale_service import SaleService
 
         sale = MagicMock(branch_id=1, tenant_id=1)
-        with app.app_context():
-            with pytest.raises(ValueError, match="البنك"):
-                SaleService.create_payment_for_sale(
-                    sale,
-                    Decimal("10"),
-                    "cheque",
-                    currency="AED",
-                    cheque_number="123",
-                    cheque_date="2025-01-01",
-                    bank_name=None,
-                )
+        with app.app_context(), pytest.raises(ValueError, match="البنك"):
+            SaleService.create_payment_for_sale(
+                sale,
+                Decimal("10"),
+                "cheque",
+                currency="AED",
+                cheque_number="123",
+                cheque_date="2025-01-01",
+                bank_name=None,
+            )
 
     def test_add_payment_cheque_missing_date(self, app):
         from services.sale_service import SaleService
 
         sale = MagicMock(branch_id=1, tenant_id=1)
-        with app.app_context():
-            with pytest.raises(ValueError, match="تاريخ"):
-                SaleService.create_payment_for_sale(
-                    sale,
-                    Decimal("10"),
-                    "cheque",
-                    currency="AED",
-                    cheque_number="123",
-                    cheque_date=None,
-                    bank_name="Bank",
-                )
+        with app.app_context(), pytest.raises(ValueError, match="تاريخ"):
+            SaleService.create_payment_for_sale(
+                sale,
+                Decimal("10"),
+                "cheque",
+                currency="AED",
+                cheque_number="123",
+                cheque_date=None,
+                bank_name="Bank",
+            )
 
 
 class TestPaymentServiceGaps:
@@ -583,13 +574,12 @@ class TestReturnServiceGaps:
 
         from services.return_service import ReturnService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="outside tenant"):
-                ReturnService.create_return(
-                    sale.id,
-                    [{"sale_line_id": line.id, "quantity": 1}],
-                    user=_user(),
-                )
+        with app.app_context(), pytest.raises(ValueError, match="outside tenant"):
+            ReturnService.create_return(
+                sale.id,
+                [{"sale_line_id": line.id, "quantity": 1}],
+                user=_user(),
+            )
 
     def test_missing_product_on_line(self, app, mocker):
         from tests.unit.services.test_return_service_assurance import (
@@ -617,13 +607,12 @@ class TestReturnServiceGaps:
 
         from services.return_service import ReturnService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="not found"):
-                ReturnService.create_return(
-                    sale.id,
-                    [{"sale_line_id": line.id, "quantity": 1}],
-                    user=_user(),
-                )
+        with app.app_context(), pytest.raises(ValueError, match="not found"):
+            ReturnService.create_return(
+                sale.id,
+                [{"sale_line_id": line.id, "quantity": 1}],
+                user=_user(),
+            )
 
 
 class TestGlServiceGaps:
@@ -720,9 +709,8 @@ class TestStoreCheckoutRemainingGaps:
         )
         from services.store_checkout_service import StoreCheckoutService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="غير متاح"):
-                StoreCheckoutService.build_lines_from_cart(1, {1: 1}, online_warehouse_id=1)
+        with app.app_context(), pytest.raises(ValueError, match="غير متاح"):
+            StoreCheckoutService.build_lines_from_cart(1, {1: 1}, online_warehouse_id=1)
 
 
 class TestInventoryWarehouseFilter:
@@ -960,13 +948,12 @@ class TestReturnServiceRemainingGaps:
         helper._patch_common(mocker, sale, line, product)
         from services.return_service import ReturnService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="whole-number"):
-                ReturnService.create_return(
-                    sale.id,
-                    [{"sale_line_id": line.id, "quantity": 1.5}],
-                    user=_user(),
-                )
+        with app.app_context(), pytest.raises(ValueError, match="whole-number"):
+            ReturnService.create_return(
+                sale.id,
+                [{"sale_line_id": line.id, "quantity": 1.5}],
+                user=_user(),
+            )
 
     def test_serial_not_linked_to_line(self, app, mocker):
         from tests.unit.services.test_return_service_assurance import (
@@ -992,13 +979,12 @@ class TestReturnServiceRemainingGaps:
         mocker.patch("services.return_service.ProductSerial.query", serial_q)
         from services.return_service import ReturnService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="not linked"):
-                ReturnService.create_return(
-                    sale.id,
-                    [{"sale_line_id": line.id, "quantity": 1, "serials": ["SN-MISS"]}],
-                    user=_user(),
-                )
+        with app.app_context(), pytest.raises(ValueError, match="not linked"):
+            ReturnService.create_return(
+                sale.id,
+                [{"sale_line_id": line.id, "quantity": 1, "serials": ["SN-MISS"]}],
+                user=_user(),
+            )
 
     def test_serial_not_sold_status(self, app, mocker):
         from tests.unit.services.test_return_service_assurance import (
@@ -1025,17 +1011,17 @@ class TestReturnServiceRemainingGaps:
         mocker.patch("services.return_service.ProductSerial.query", serial_q)
         from services.return_service import ReturnService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="not sold"):
-                ReturnService.create_return(
-                    sale.id,
-                    [{"sale_line_id": line.id, "quantity": 1, "serials": ["SN1"]}],
-                    user=_user(),
-                )
+        with app.app_context(), pytest.raises(ValueError, match="not sold"):
+            ReturnService.create_return(
+                sale.id,
+                [{"sale_line_id": line.id, "quantity": 1, "serials": ["SN1"]}],
+                user=_user(),
+            )
 
 
 class TestReturnServiceSoldQty:
     def test_sale_line_sold_qty_zero_raises_in_create(self, app, mocker):
+        from services.return_service import ReturnService
         from tests.unit.services.test_return_service_assurance import (
             TestCreateReturn,
             _product,
@@ -1043,7 +1029,6 @@ class TestReturnServiceSoldQty:
             _sale_line,
             _user,
         )
-        from services.return_service import ReturnService
 
         sale = _sale()
         line = _sale_line(quantity=Decimal("1"))
@@ -1052,13 +1037,12 @@ class TestReturnServiceSoldQty:
         helper._patch_common(mocker, sale, line, product)
         mocker.patch.object(ReturnService, "_sale_line_sold_qty", return_value=Decimal("0"))
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="Invalid sale line quantity"):
-                ReturnService.create_return(
-                    sale.id,
-                    [{"sale_line_id": line.id, "quantity": 1}],
-                    user=_user(),
-                )
+        with app.app_context(), pytest.raises(ValueError, match="Invalid sale line quantity"):
+            ReturnService.create_return(
+                sale.id,
+                [{"sale_line_id": line.id, "quantity": 1}],
+                user=_user(),
+            )
 
 
 class TestSaleServiceRemainingGaps:
@@ -1121,8 +1105,8 @@ class TestSaleServiceRemainingGaps:
         assert db_sess.add.called
 
     def test_negative_payment_on_create_rejected(self, app):
-        from tests.unit.services.test_sale_service_chunk3 import _actors, _create_ctx
         from services.sale_service import SaleService
+        from tests.unit.services.test_sale_service_chunk3 import _actors, _create_ctx
 
         customer, seller, product = _actors()
         payment_data = {"amount": -5, "currency": "AED", "exchange_rate": 1.0}

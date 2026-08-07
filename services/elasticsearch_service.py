@@ -1,5 +1,5 @@
 import os
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class ElasticsearchService:
@@ -8,7 +8,7 @@ class ElasticsearchService:
         return bool(os.environ.get("ELASTICSEARCH_URL"))
 
     @staticmethod
-    def index_sale(sale_data: Dict) -> Dict:
+    def index_sale(sale_data: dict) -> dict:
         if not ElasticsearchService.is_enabled():
             return {"success": False, "error": "Elasticsearch not configured"}
 
@@ -25,7 +25,7 @@ class ElasticsearchService:
             return {"success": False, "error": str(e)}
 
     @staticmethod
-    def search_sales(query: str, filters: Optional[Dict] = None, limit: int = 50) -> Dict:
+    def search_sales(query: str, filters: dict | None = None, limit: int = 50) -> dict:
         if not ElasticsearchService.is_enabled():
             return ElasticsearchService._fallback_search(query, filters, limit)
 
@@ -66,9 +66,10 @@ class ElasticsearchService:
             return ElasticsearchService._fallback_search(query, filters, limit)
 
     @staticmethod
-    def _fallback_search(query: str, filters: Optional[Dict] = None, limit: int = 50) -> Dict:
-        from models import Sale
+    def _fallback_search(query: str, filters: dict | None = None, limit: int = 50) -> dict:
         from sqlalchemy import or_
+
+        from models import Sale
 
         search_query = Sale.query
 

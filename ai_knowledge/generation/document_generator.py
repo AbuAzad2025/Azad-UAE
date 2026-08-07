@@ -3,8 +3,8 @@
 أزاد يولد الفواتير والسندات والتقارير
 """
 
-import io
 import csv
+import io
 from datetime import datetime
 from decimal import Decimal
 
@@ -175,7 +175,7 @@ class DocumentGenerator:
     def export_to_excel(data_type, start_date=None, end_date=None):
         """تصدير البيانات إلى CSV (بديل Excel)"""
         try:
-            from models import Sale, Customer, Product
+            from models import Customer, Product, Sale
 
             # إنشاء البيانات حسب نوع البيانات
             if data_type == "sales":

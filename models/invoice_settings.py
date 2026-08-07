@@ -3,9 +3,10 @@ Invoice & Receipt Header Settings Model
 نموذج إعدادات ترويسات الفواتير وسندات القبض
 """
 
-from datetime import datetime, timezone
-from extensions import db
+from datetime import UTC, datetime
 from decimal import Decimal
+
+from extensions import db
 
 
 class InvoiceSettings(db.Model):
@@ -109,11 +110,11 @@ class InvoiceSettings(db.Model):
 
     # Meta
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
     updated_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
 

@@ -1,12 +1,15 @@
+import logging
+from datetime import UTC
 from functools import wraps
 from typing import Any
-from flask import abort, flash, redirect, url_for, request
+
+from flask import abort, flash, redirect, request, url_for
 from flask_login import current_user
 
 from extensions import db
-from models.enums import RoleEnum, PermissionEnum
-from utils.branching import branch_scope_id_for, report_branch_scope_id_for
+from models.enums import PermissionEnum, RoleEnum
 from utils.auth_helpers import is_admin_surface_user, is_global_owner_user
+from utils.branching import branch_scope_id_for, report_branch_scope_id_for
 from utils.pos_features import POS_SUBFEATURES, plan_meets, pos_feature_enabled
 
 
@@ -287,8 +290,8 @@ def require_subscription_feature(feature_name: str):
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            from utils.tenanting import get_active_tenant_id
             from models.tenant import Tenant
+            from utils.tenanting import get_active_tenant_id
 
             tid = get_active_tenant_id()
             if not tid:
@@ -332,11 +335,13 @@ def api_key_required(scope="read"):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            from flask import g, request, jsonify
+            from datetime import datetime
+
+            from flask import g, jsonify, request
+
             from extensions import db
-            from utils.tenanting import without_tenant_scope, get_tenant_status
             from utils.db_safety import atomic_transaction
-            from datetime import datetime, timezone
+            from utils.tenanting import get_tenant_status, without_tenant_scope
 
             raw_key = (request.headers.get("X-API-Key") or "").strip()
             raw_secret = (request.headers.get("X-API-Secret") or "").strip()
@@ -375,11 +380,11 @@ def api_key_required(scope="read"):
             # Track usage (best-effort)
             try:
                 with atomic_transaction("api_key_usage_tracking"):
-                    api_key.last_used = datetime.now(timezone.utc)
+                    api_key.last_used = datetime.now(UTC)
                     api_key.usage_count = (api_key.usage_count or 0) + 1
                     db.session.flush()
             except Exception:
-                pass
+                logging.getLogger(__name__).debug("API key usage tracking failed (best-effort)", exc_info=True)
 
             return f(*args, **kwargs)
 
@@ -406,14 +411,14 @@ def _load_limit_checkers():
     if _LIMIT_CHECKERS:
         return
     from utils.tenant_limits import (
-        check_users_limit,
         check_branches_limit,
-        check_warehouses_limit,
-        check_products_limit,
         check_customers_limit,
-        check_suppliers_limit,
-        check_sales_monthly_limit,
         check_invoices_monthly_limit,
+        check_products_limit,
+        check_sales_monthly_limit,
+        check_suppliers_limit,
+        check_users_limit,
+        check_warehouses_limit,
     )
 
     _LIMIT_CHECKERS["users"] = check_users_limit

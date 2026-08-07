@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from extensions import db
@@ -65,7 +65,7 @@ class CampaignService:
     def get_active_campaigns(tenant_id, product_ids=None, category_ids=None):
         from models.campaign import Campaign
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         query = Campaign.query.filter_by(tenant_id=tenant_id, is_active=True).filter(
             Campaign.start_date <= now,
             Campaign.end_date >= now,
@@ -99,7 +99,7 @@ class CampaignService:
         from models.campaign import SaleCampaign
 
         total_discount = Decimal("0")
-        datetime.now(timezone.utc)
+        datetime.now(UTC)
 
         for campaign in campaigns:
             if campaign.usage_limit and campaign.usage_count >= campaign.usage_limit:
@@ -112,9 +112,7 @@ class CampaignService:
                 ).quantize(Decimal("0.001"))
                 if campaign.max_discount_amount:
                     discount = min(discount, Decimal(str(campaign.max_discount_amount)))
-            elif campaign.campaign_type == "fixed":
-                discount = Decimal(str(campaign.discount_value))
-            elif campaign.campaign_type == "bundle":
+            elif campaign.campaign_type == "fixed" or campaign.campaign_type == "bundle":
                 discount = Decimal(str(campaign.discount_value))
 
             if discount > Decimal("0"):
@@ -134,7 +132,7 @@ class CampaignService:
     def validate_coupon(coupon_code, tenant_id):
         from models.campaign import Campaign
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         return (
             Campaign.query.filter_by(
                 tenant_id=tenant_id,

@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import pytest
 
+from utils.localization.ksa import KSAStrategy
 from utils.localization.null import NullStrategy
 from utils.localization.palestine import PalestineStrategy
-from utils.localization.uae import UAEStrategy
-from utils.localization.ksa import KSAStrategy
 from utils.localization.registry import get_strategy, list_supported_countries
+from utils.localization.uae import UAEStrategy
 
 
 class TestLocalizationRegistry:

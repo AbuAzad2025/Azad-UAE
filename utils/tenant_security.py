@@ -6,8 +6,10 @@ to the current tenant, preventing cross-tenant data access at the application la
 """
 
 from functools import wraps
+
 from flask import abort, g
 from flask_login import current_user
+
 from extensions import db
 
 
@@ -79,7 +81,7 @@ def validate_tenant_ownership(model_class):
                 abort(404, description=f"{model_class.__name__} not found")
 
             # Validate tenant ownership
-            resource_tenant_id = getattr(resource, "tenant_id", None)
+            resource_tenant_id = (resource.tenant_id if resource is not None else None)
             if resource_tenant_id is None:
                 # Resources without tenant_id can only be accessed by platform owners
                 from utils.tenanting import is_platform_owner

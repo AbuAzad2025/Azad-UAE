@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -197,9 +197,9 @@ class TestTrackLoginAttempt:
             user_model.query = query
             from utils.advanced_audit import track_login_attempt
 
-            before = datetime.now(timezone.utc)
+            before = datetime.now(UTC)
             track_login_attempt("carol", success=False, ip_address="5.6.7.8")
-            after = datetime.now(timezone.utc)
+            after = datetime.now(UTC)
 
         assert user.login_attempts == 5
         assert user.locked_until is not None

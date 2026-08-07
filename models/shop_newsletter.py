@@ -1,5 +1,6 @@
+from datetime import UTC, datetime
+
 from extensions import db
-from datetime import datetime, timezone
 
 
 class ShopNewsletter(db.Model):
@@ -17,6 +18,6 @@ class ShopNewsletter(db.Model):
         db.DateTime,
         nullable=False,
         index=True,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
     )
     __table_args__ = (db.UniqueConstraint("tenant_id", "email", name="uq_newsletter_tenant_email"),)

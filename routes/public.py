@@ -2,21 +2,22 @@
 Public Routes - Landing Page, Pricing, User Guide, SEO
 """
 
-from flask_babel import gettext
+from datetime import UTC, datetime
 
 from flask import (
     Blueprint,
-    render_template,
-    redirect,
-    url_for,
     Response,
-    request,
-    session,
     abort,
     current_app,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
 )
+from flask_babel import gettext
+
 from utils.db_safety import atomic_transaction
-from datetime import datetime, timezone
 
 public_bp = Blueprint("public", __name__)
 
@@ -122,7 +123,9 @@ def donate_azad():
 @public_bp.route("/donate/submit", methods=["POST"])
 def donate_azad_submit():
     from decimal import Decimal
+
     from flask import flash
+
     from extensions import db
     from models.donation import Donation
     from models.payment_vault import PaymentVault
@@ -185,7 +188,7 @@ def sitemap():
 
     base_url = request.url_root.rstrip("/")
 
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today = datetime.now(UTC).strftime("%Y-%m-%d")
     static_pages = [
         {
             "loc": f"{base_url}/",
@@ -348,7 +351,7 @@ def verify_document(token):
         doc_type=data["document_type"],
         doc_id=data["document_id"],
         doc_hash=data["document_hash"],
-        verified_at=datetime.now(timezone.utc),
+        verified_at=datetime.now(UTC),
     )
 
 

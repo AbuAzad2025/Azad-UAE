@@ -1,4 +1,5 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
 
@@ -36,7 +37,7 @@ class Employee(db.Model):
     # Leave Accrual
     annual_leave_days = db.Column(db.Integer, default=30)  # Annual leave entitlement
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
 
     branch = db.relationship("Branch", backref="employees")
     advances = db.relationship("SalaryAdvance", backref="employee", lazy="dynamic")
@@ -70,7 +71,7 @@ class EmployeeLeave(db.Model):
 
     status = db.Column(db.String(20), default="approved", index=True)  # pending, approved, rejected
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
 
 
 class SalaryAdvance(db.Model):
@@ -100,7 +101,7 @@ class SalaryAdvance(db.Model):
         db.Integer, db.ForeignKey("gl_journal_entries.id", ondelete="RESTRICT"), nullable=True, index=True
     )
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
     created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
 
 

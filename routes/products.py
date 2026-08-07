@@ -1,25 +1,27 @@
-from flask_babel import gettext
 from io import BytesIO
 from typing import cast
 
 from flask import (
     Blueprint,
-    render_template,
-    redirect,
-    url_for,
-    flash,
-    request,
-    jsonify,
-    current_app,
-    send_file,
     abort,
+    current_app,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    url_for,
 )
-from flask_login import login_required, current_user
+from flask_babel import gettext
+from flask_login import current_user, login_required
 from sqlalchemy import select
+
 from extensions import db, limiter
-from models import Product, ProductCategory, Customer, ProductPartner, StockMovement
-from utils.decorators import permission_required, any_permission_required
-from utils.decorators import branch_scope_id
+from models import Customer, Product, ProductCategory, ProductPartner, StockMovement
+from services.logging_core import LoggingCore
+from services.product_service import ProductService
+from services.stock_service import StockService
 from utils.branching import (
     ensure_warehouse_access,
     get_accessible_warehouse_ids,
@@ -27,19 +29,17 @@ from utils.branching import (
     get_branch_stock_map,
     should_show_all_branch_columns,
 )
-from services.logging_core import LoggingCore
-from services.product_service import ProductService
-from utils.helpers import generate_sku, generate_barcode, save_uploaded_file
-from utils.static_asset_paths import tenant_upload_dir
-from services.stock_service import StockService
+from utils.db_safety import atomic_transaction
+from utils.decorators import any_permission_required, branch_scope_id, permission_required
 from utils.gl_reference_types import GLRef
+from utils.helpers import generate_barcode, generate_sku, save_uploaded_file
+from utils.static_asset_paths import tenant_upload_dir
 from utils.tenanting import (
-    tenant_query,
-    tenant_get_or_404,
     assign_tenant_id,
     get_active_tenant_id,
+    tenant_get_or_404,
+    tenant_query,
 )
-from utils.db_safety import atomic_transaction
 
 products_bp = Blueprint("products", __name__, url_prefix="/products")
 
@@ -288,7 +288,7 @@ def _annotate_branch_and_warehouse_info(products, warehouse_ids):
     if not products:
         return products
 
-    from models import Warehouse, Branch
+    from models import Branch, Warehouse
 
     for product in products:
         product.visible_warehouse_names = []
@@ -378,9 +378,10 @@ def _read_import_dataframe(filepath, ext):
 @login_required
 @permission_required("manage_products")
 def import_products():
+    import os
+
     import pandas as pd
     from werkzeug.utils import secure_filename
-    import os
 
     if request.method == "POST":
         if "file" not in request.files:
@@ -453,7 +454,7 @@ def import_products():
                     )
                     return redirect(request.url)
 
-                from models import Warehouse, ProductCategory
+                from models import ProductCategory, Warehouse
 
                 tid = get_active_tenant_id(current_user)
                 warehouse = Warehouse.query.filter_by(is_active=True, is_main=True, tenant_id=tid).first()
@@ -854,7 +855,7 @@ def create():
                     warranty_days = 0
 
                 # Check tenant product limit
-                from utils.tenant_limits import check_products_limit, TenantLimitError
+                from utils.tenant_limits import TenantLimitError, check_products_limit
 
                 try:
                     check_products_limit()
@@ -1296,7 +1297,7 @@ def delete(**kwargs):
             )
             return redirect(url_for("products.view", id=record_id))
 
-        from models import SaleLine, PurchaseLine
+        from models import PurchaseLine, SaleLine
 
         tid = get_active_tenant_id(current_user)
         sales_query = SaleLine.query.filter_by(product_id=record_id)

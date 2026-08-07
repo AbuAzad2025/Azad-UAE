@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from types import SimpleNamespace
 from uuid import uuid4
@@ -161,7 +161,7 @@ class TestTelemetryInterceptsUnbalancedGL:
         ]
         with pytest.raises(UnbalancedJournalEntryError):
             GLService.create_journal_entry(
-                datetime(2026, 6, 15, tzinfo=timezone.utc),
+                datetime(2026, 6, 15, tzinfo=UTC),
                 "Unbalanced telemetry probe",
                 bad_lines,
                 tenant_id=sample_tenant.id,
@@ -405,53 +405,50 @@ def committed_tenant(app):
     inside db_session's uncommitted savepoint. Bridge DB tests therefore
     reference a truly committed tenant instead.
     """
-    from models import Tenant
     from sqlalchemy.orm import Session
 
+    from models import Tenant
+
     unique = uuid4().hex[:8]
-    with app.app_context():
-        with db.engine.begin() as conn:
-            with Session(bind=conn) as orm:
-                tenant = Tenant(
-                    name=f"Bridge Co {unique}",
-                    name_ar="شركة الجسر",
-                    slug=f"bridge-{unique}",
-                    email=f"bridge-{unique}@example.com",
-                    phone_1="0500000000",
-                    country="AE",
-                    subscription_plan="basic",
-                    default_currency="AED",
-                    base_currency="AED",
-                    is_active=True,
-                    is_suspended=False,
-                    enable_tax=True,
-                )
-                orm.add(tenant)
-                orm.flush()
-                tenant_id = tenant.id
+    with app.app_context(), db.engine.begin() as conn, Session(bind=conn) as orm:
+        tenant = Tenant(
+            name=f"Bridge Co {unique}",
+            name_ar="شركة الجسر",
+            slug=f"bridge-{unique}",
+            email=f"bridge-{unique}@example.com",
+            phone_1="0500000000",
+            country="AE",
+            subscription_plan="basic",
+            default_currency="AED",
+            base_currency="AED",
+            is_active=True,
+            is_suspended=False,
+            enable_tax=True,
+        )
+        orm.add(tenant)
+        orm.flush()
+        tenant_id = tenant.id
     yield SimpleNamespace(id=tenant_id)
-    with app.app_context():
-        with db.engine.begin() as conn:
-            conn.execute(sa_text("DELETE FROM error_audit_logs WHERE tenant_id = :t"), {"t": tenant_id})
-            conn.execute(sa_text("DELETE FROM tenants WHERE id = :t"), {"t": tenant_id})
+    with app.app_context(), db.engine.begin() as conn:
+        conn.execute(sa_text("DELETE FROM error_audit_logs WHERE tenant_id = :t"), {"t": tenant_id})
+        conn.execute(sa_text("DELETE FROM tenants WHERE id = :t"), {"t": tenant_id})
 
 
 def _error_rows(app, token):
     """Fetch error_audit_logs rows whose message carries the unique token."""
-    with app.app_context():
-        with db.engine.connect() as conn:
-            rows = (
-                conn.execute(
-                    sa_text(
-                        "SELECT category, level, source, tenant_id, user_id, request_id,"
-                        " url, stack_trace, request_data FROM error_audit_logs"
-                        " WHERE message LIKE :pat ORDER BY id"
-                    ),
-                    {"pat": f"%{token}%"},
-                )
-                .mappings()
-                .all()
+    with app.app_context(), db.engine.connect() as conn:
+        rows = (
+            conn.execute(
+                sa_text(
+                    "SELECT category, level, source, tenant_id, user_id, request_id,"
+                    " url, stack_trace, request_data FROM error_audit_logs"
+                    " WHERE message LIKE :pat ORDER BY id"
+                ),
+                {"pat": f"%{token}%"},
             )
+            .mappings()
+            .all()
+        )
     result = []
     for row in rows:
         entry = dict(row)

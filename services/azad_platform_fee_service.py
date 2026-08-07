@@ -2,17 +2,18 @@
 
 from __future__ import annotations
 
-from decimal import Decimal, ROUND_HALF_UP
+from datetime import UTC
+from decimal import ROUND_HALF_UP, Decimal
 
-from flask_babel import gettext
 from flask import current_app
+from flask_babel import gettext
 
 from extensions import db
-from utils.db_safety import atomic_transaction
 from models import AzadPlatformFee
-from models.payment_vault import PaymentVault, PaymentTransaction
+from models.payment_vault import PaymentTransaction, PaymentVault
 from services.gl_posting import post_or_fail
 from services.gl_service import GL_ACCOUNTS, GLService
+from utils.db_safety import atomic_transaction
 from utils.gl_reference_types import GLRef
 from utils.tax_settings import _resolve_main_branch
 
@@ -65,8 +66,8 @@ class AzadPlatformFeeService:
 
     @staticmethod
     def _idempotency_key(sale, payment=None, gateway_reference=None) -> str:
-        tenant_id = int(getattr(sale, "tenant_id"))
-        sale_id = int(getattr(sale, "id"))
+        tenant_id = int(sale.tenant_id)
+        sale_id = int(sale.id)
         ref = gateway_reference or getattr(sale, "checkout_gateway_ref", None) or getattr(payment, "id", None) or "sale"
         return f"store-online:{tenant_id}:{sale_id}:{ref}"
 
@@ -196,9 +197,9 @@ class AzadPlatformFeeService:
         (accounting settlement).  Use confirm_settlement_paid() for the actual
         platform-side payout confirmation.
         """
-        from datetime import datetime, timezone
+        from datetime import datetime
 
-        settlement_date = settlement_date or datetime.now(timezone.utc)
+        settlement_date = settlement_date or datetime.now(UTC)
         if isinstance(tenant_ids, int):
             tenant_ids = [tenant_ids]
         results = []

@@ -3,11 +3,12 @@ System Settings Model
 نموذج إعدادات النظام الشاملة
 """
 
-from datetime import datetime, timezone
+import json
+from datetime import UTC, datetime
+from decimal import Decimal
+
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
-from decimal import Decimal
-import json
 
 
 class SystemSettings(db.Model):
@@ -149,11 +150,11 @@ class SystemSettings(db.Model):
 
     # Meta
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
     updated_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
 

@@ -4,7 +4,6 @@ import uuid
 from datetime import date
 from decimal import Decimal
 
-
 import pytest
 
 from models import Cheque, TenantStore, Warehouse

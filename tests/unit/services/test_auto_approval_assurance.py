@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
 import pytest
@@ -17,7 +17,7 @@ class TestApprovePendingDonations:
         d.id = 1
         d.amount_usd = amount
         d.status = "pending"
-        d.created_at = datetime.now(timezone.utc) - timedelta(hours=hours_ago)
+        d.created_at = datetime.now(UTC) - timedelta(hours=hours_ago)
         return d
 
     def test_approves_donations_past_threshold(self, app, mocker):
@@ -104,7 +104,7 @@ class TestApprovePendingPurchases:
         purchase.package.slug = "gold"
         purchase.package.name_ar = "ذهبي"
         purchase.payment_status = "pending"
-        purchase.created_at = datetime.now(timezone.utc) - timedelta(hours=2)
+        purchase.created_at = datetime.now(UTC) - timedelta(hours=2)
 
         related = MagicMock()
         related.status = "pending"
@@ -179,7 +179,7 @@ class TestScheduleAutoApproval:
         purchase.package = MagicMock(slug="gold", name_ar="Gold")
         purchase.customer_email = "a@test.com"
         purchase.payment_status = "pending"
-        purchase.created_at = datetime.now(timezone.utc) - timedelta(hours=2)
+        purchase.created_at = datetime.now(UTC) - timedelta(hours=2)
         mock_q = MagicMock()
         mock_q.filter.return_value.all.return_value = [purchase]
         mocker.patch("services.auto_approval_service.PackagePurchase.query", mock_q)
@@ -222,9 +222,8 @@ class TestScheduleAutoApproval:
         from services.auto_approval_service import schedule_auto_approval
 
         schedule_auto_approval(app)
-        with app.app_context():
-            with pytest.raises(InterruptedError):
-                captured["target"]()
+        with app.app_context(), pytest.raises(InterruptedError):
+            captured["target"]()
 
     def test_scheduler_logs_errors(self, app, mocker):
         mocker.patch(
@@ -242,6 +241,5 @@ class TestScheduleAutoApproval:
         from services.auto_approval_service import schedule_auto_approval
 
         schedule_auto_approval(app)
-        with app.app_context():
-            with pytest.raises(InterruptedError):
-                captured["target"]()
+        with app.app_context(), pytest.raises(InterruptedError):
+            captured["target"]()

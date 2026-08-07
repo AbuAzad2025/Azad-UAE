@@ -2,14 +2,15 @@
 نموذج الأصول الثابتة والاستهلاك - Fixed Assets & Depreciation Model
 """
 
-from datetime import datetime, timezone, date
+from datetime import UTC, date, datetime
+from decimal import ROUND_HALF_UP, Decimal
+
 from extensions import db
-from decimal import Decimal, ROUND_HALF_UP
 from utils.gl_services import (
-    gl_post_or_fail,
     gl_ensure_core_accounts,
     gl_get_default_liquidity_account,
     gl_post_entry,
+    gl_post_or_fail,
 )
 
 
@@ -85,14 +86,14 @@ class FixedAsset(db.Model):
     created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     tenant = db.relationship("Tenant", backref="fixed_assets", foreign_keys=[tenant_id])
@@ -377,7 +378,7 @@ class DepreciationSchedule(db.Model):
 
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )

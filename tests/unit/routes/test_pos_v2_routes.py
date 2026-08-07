@@ -6,13 +6,12 @@ from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 import pytest
+from requests import exceptions as _req_exc
 
 from tests.unit.routes.conftest import (
     _chain_query,
     unauthenticated_client,
 )
-
-from requests import exceptions as _req_exc
 
 
 def _requests_response(payload, status=200):
@@ -113,144 +112,143 @@ def _pos_enabled_patches(**kwargs):
 
 @contextmanager
 def _pos_api_patches(**kwargs):
-    with _pos_enabled_patches(**kwargs) as ctx:
-        with ExitStack() as stack:
-            stack.enter_context(
-                patch(
-                    "routes.pos.get_accessible_warehouses",
-                    return_value=kwargs.get("warehouses", []),
-                )
+    with _pos_enabled_patches(**kwargs) as ctx, ExitStack() as stack:
+        stack.enter_context(
+            patch(
+                "routes.pos.get_accessible_warehouses",
+                return_value=kwargs.get("warehouses", []),
             )
-            stack.enter_context(
-                patch(
-                    "routes.pos.tenant_get",
-                    side_effect=kwargs.get("tenant_get", lambda m, i: _mock_product(i)),
-                )
+        )
+        stack.enter_context(
+            patch(
+                "routes.pos.tenant_get",
+                side_effect=kwargs.get("tenant_get", lambda m, i: _mock_product(i)),
             )
-            tenant_query_models = kwargs.get("tenant_query_models", {})
-            default_shift = kwargs.get("shift", MagicMock(status="open"))
+        )
+        tenant_query_models = kwargs.get("tenant_query_models", {})
+        default_shift = kwargs.get("shift", MagicMock(status="open"))
 
-            def _tenant_query_side_effect(model, *args, **kw):
-                key = getattr(model, "__name__", None)
-                if key in tenant_query_models:
-                    return tenant_query_models[key]
-                if key == "PosShift":
-                    return _chain_query(first=default_shift)
-                return _chain_query(
-                    all=kwargs.get("customers", []),
-                    first=kwargs.get("tenant_query_first"),
-                )
+        def _tenant_query_side_effect(model, *args, **kw):
+            key = getattr(model, "__name__", None)
+            if key in tenant_query_models:
+                return tenant_query_models[key]
+            if key == "PosShift":
+                return _chain_query(first=default_shift)
+            return _chain_query(
+                all=kwargs.get("customers", []),
+                first=kwargs.get("tenant_query_first"),
+            )
 
-            stack.enter_context(patch("routes.pos.tenant_query", side_effect=_tenant_query_side_effect))
-            stack.enter_context(
-                patch(
-                    "routes.pos.search_pos_products",
-                    return_value=kwargs.get("search_result", ([], {}, [])),
-                )
+        stack.enter_context(patch("routes.pos.tenant_query", side_effect=_tenant_query_side_effect))
+        stack.enter_context(
+            patch(
+                "routes.pos.search_pos_products",
+                return_value=kwargs.get("search_result", ([], {}, [])),
             )
-            stack.enter_context(
-                patch(
-                    "routes.pos.lookup_pos_product_exact",
-                    return_value=kwargs.get("lookup_result", (None, {})),
-                )
+        )
+        stack.enter_context(
+            patch(
+                "routes.pos.lookup_pos_product_exact",
+                return_value=kwargs.get("lookup_result", (None, {})),
             )
-            stack.enter_context(
-                patch(
-                    "routes.pos.serialize_pos_product",
-                    side_effect=lambda p, sm, **kw: {
-                        "id": p.id,
-                        "name": p.name,
-                        "stock": 1,
-                        "is_out_of_stock": False,
-                    },
-                )
+        )
+        stack.enter_context(
+            patch(
+                "routes.pos.serialize_pos_product",
+                side_effect=lambda p, sm, **kw: {
+                    "id": p.id,
+                    "name": p.name,
+                    "stock": 1,
+                    "is_out_of_stock": False,
+                },
             )
-            stack.enter_context(
-                patch(
-                    "routes.pos.get_pos_walkin_customer",
-                    return_value=kwargs.get("walkin", _walkin_customer()),
-                )
+        )
+        stack.enter_context(
+            patch(
+                "routes.pos.get_pos_walkin_customer",
+                return_value=kwargs.get("walkin", _walkin_customer()),
             )
-            stack.enter_context(
-                patch(
-                    "routes.pos.get_active_session",
-                    return_value=kwargs.get("session", _mock_session()),
-                )
+        )
+        stack.enter_context(
+            patch(
+                "routes.pos.get_active_session",
+                return_value=kwargs.get("session", _mock_session()),
             )
-            stack.enter_context(
-                patch(
-                    "routes.pos.get_paused_session",
-                    return_value=kwargs.get("paused_session", None),
-                )
+        )
+        stack.enter_context(
+            patch(
+                "routes.pos.get_paused_session",
+                return_value=kwargs.get("paused_session"),
             )
-            stack.enter_context(
-                patch(
-                    "routes.pos.create_pos_session",
-                    return_value=kwargs.get("new_session", _mock_session()),
-                )
+        )
+        stack.enter_context(
+            patch(
+                "routes.pos.create_pos_session",
+                return_value=kwargs.get("new_session", _mock_session()),
             )
-            stack.enter_context(
-                patch(
-                    "routes.pos.require_active_session",
-                    return_value=kwargs.get("session", _mock_session()),
-                )
+        )
+        stack.enter_context(
+            patch(
+                "routes.pos.require_active_session",
+                return_value=kwargs.get("session", _mock_session()),
             )
-            stack.enter_context(
-                patch(
-                    "routes.pos.close_pos_session",
-                    return_value=kwargs.get("session", _mock_session()),
-                )
+        )
+        stack.enter_context(
+            patch(
+                "routes.pos.close_pos_session",
+                return_value=kwargs.get("session", _mock_session()),
             )
-            stack.enter_context(
-                patch(
-                    "routes.pos.merge_checkout_lines",
-                    return_value=kwargs.get(
-                        "merged_lines",
-                        [
-                            {
-                                "product_id": 1,
-                                "quantity": Decimal("1"),
-                                "discount_percent": Decimal("0"),
-                                "unit_price": None,
-                            }
-                        ],
+        )
+        stack.enter_context(
+            patch(
+                "routes.pos.merge_checkout_lines",
+                return_value=kwargs.get(
+                    "merged_lines",
+                    [
+                        {
+                            "product_id": 1,
+                            "quantity": Decimal("1"),
+                            "discount_percent": Decimal("0"),
+                            "unit_price": None,
+                        }
+                    ],
+                ),
+            )
+        )
+        stack.enter_context(patch("routes.pos.ensure_warehouse_access", return_value=MagicMock(id=3)))
+        stack.enter_context(patch("routes.pos.context_aware_default_currency", return_value="AED"))
+        stack.enter_context(
+            patch(
+                "routes.pos.get_active_branch_id",
+                return_value=kwargs.get("branch_id", 2),
+            )
+        )
+        stack.enter_context(
+            patch(
+                "routes.pos.SaleService.create_sale",
+                return_value=kwargs.get(
+                    "sale",
+                    MagicMock(
+                        id=100,
+                        sale_number="S-100",
+                        tenant_id=1,
+                        total_amount=Decimal("50"),
                     ),
-                )
+                ),
             )
-            stack.enter_context(patch("routes.pos.ensure_warehouse_access", return_value=MagicMock(id=3)))
-            stack.enter_context(patch("routes.pos.context_aware_default_currency", return_value="AED"))
-            stack.enter_context(
-                patch(
-                    "routes.pos.get_active_branch_id",
-                    return_value=kwargs.get("branch_id", 2),
-                )
+        )
+        # Tier-aware pricing is exercised against the real DB in service
+        # tests; at the route boundary keep the legacy baseline semantics.
+        stack.enter_context(
+            patch(
+                "routes.pos.PricingService.get_price",
+                side_effect=lambda product, customer_type="regular", qty=1: product.get_price_for_customer(
+                    customer_type
+                ),
             )
-            stack.enter_context(
-                patch(
-                    "routes.pos.SaleService.create_sale",
-                    return_value=kwargs.get(
-                        "sale",
-                        MagicMock(
-                            id=100,
-                            sale_number="S-100",
-                            tenant_id=1,
-                            total_amount=Decimal("50"),
-                        ),
-                    ),
-                )
-            )
-            # Tier-aware pricing is exercised against the real DB in service
-            # tests; at the route boundary keep the legacy baseline semantics.
-            stack.enter_context(
-                patch(
-                    "routes.pos.PricingService.get_price",
-                    side_effect=lambda product, customer_type="regular", qty=1: product.get_price_for_customer(
-                        customer_type
-                    ),
-                )
-            )
-            stack.enter_context(patch("routes.pos.log_mutation"))
-            yield ctx
+        )
+        stack.enter_context(patch("routes.pos.log_mutation"))
+        yield ctx
 
 
 @pytest.fixture
@@ -878,6 +876,7 @@ class TestPosKds:
 
     def test_notify_kds_delivers_to_subscriber(self):
         import queue
+
         from routes import pos as pos_module
 
         q = queue.Queue()
@@ -891,6 +890,7 @@ class TestPosKds:
 
     def test_notify_kds_skips_other_tenant_subscribers(self):
         import queue
+
         from routes import pos as pos_module
 
         tenant_a = queue.Queue()
@@ -917,6 +917,7 @@ class TestPosKds:
 
     def test_kds_stream_subscribe_and_cleanup(self, pos_client, bypass_permission_auth):
         import queue
+
         from routes.pos import _KDS_SUBSCRIBERS, kds_stream
 
         real_q = queue.Queue()

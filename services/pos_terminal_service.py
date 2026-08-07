@@ -20,9 +20,8 @@ import logging
 import os
 from decimal import ROUND_HALF_UP, Decimal
 
-from flask_babel import gettext
-
 import requests
+from flask_babel import gettext
 
 logger = logging.getLogger(__name__)
 

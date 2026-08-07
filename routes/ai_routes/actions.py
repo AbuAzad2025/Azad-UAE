@@ -14,21 +14,23 @@
    (routes/ai_routes/chat.py).
 """
 
-from flask_babel import gettext
-
 import logging
+from datetime import UTC
+
+from flask_babel import gettext
 from flask_login import current_user
-from utils.tenanting import get_active_tenant_id, assign_tenant_id
-from services.logging_core import LoggingCore
-from services.stock_service import StockService
+
 from routes.ai_routes.shared import (
-    smart_listener,
-    train_local_ai,
+    _conversation_ctx,
     apply_smart_listeners,
     create_final_options,
-    _conversation_ctx,
+    smart_listener,
+    train_local_ai,
 )
+from services.logging_core import LoggingCore
+from services.stock_service import StockService
 from utils.db_safety import atomic_transaction
+from utils.tenanting import assign_tenant_id, get_active_tenant_id
 
 logger = logging.getLogger(__name__)
 
@@ -59,20 +61,21 @@ def _process_user_action(message, user):
        الأحادية تمر عبر ``action_dispatcher`` حصراً (انظر ترويسة الملف).
     """
     try:
+        import re
+        from datetime import datetime
+
+        from extensions import db
         from models import (
+            Cheque,
             Customer,
+            Expense,
+            Payment,
             Product,
+            Purchase,
             Sale,
             Supplier,
-            Purchase,
-            Payment,
-            Expense,
-            Cheque,
             Warehouse,
         )
-        from extensions import db
-        from datetime import datetime, timezone
-        import re
 
         msg_lower = message.lower()
         user_id = user.id
@@ -860,7 +863,7 @@ def _process_user_action(message, user):
                 data["customer_name"] = customer.name
                 ctx["data"] = data
                 ctx["step"] = 2
-                return """✅ **تم العثور على العميل:** {customer_name}
+                return f"""✅ **تم العثور على العميل:** {customer.name}
 
 📝 **الخطوة 2: اسم المنتج**
 اكتب اسم المنتج
@@ -868,7 +871,7 @@ def _process_user_action(message, user):
 💡 **مثال:** فلتر زيت كاتربلر
 💬 **اكتب "اعرض المنتجات" لعرض القائمة**
 
-🤖 اكتب اسم المنتج الآن...""".format(customer_name=customer.name)
+🤖 اكتب اسم المنتج الآن..."""
 
             elif step == 2:
                 if any(
@@ -925,15 +928,15 @@ def _process_user_action(message, user):
                 data["product_price"] = product.regular_price
                 ctx["data"] = data
                 ctx["step"] = 3
-                return """✅ **تم العثور على المنتج:** {product_name}
-💰 **السعر:** {product_price} درهم
+                return f"""✅ **تم العثور على المنتج:** {product.name}
+💰 **السعر:** {product.regular_price} درهم
 
 📝 **الخطوة 3: الكمية**
 اكتب الكمية المطلوبة
 
 💡 **مثال:** 2
 
-🤖 اكتب الكمية الآن...""".format(product_name=product.name, product_price=product.regular_price)
+🤖 اكتب الكمية الآن..."""
 
             elif step == 3:
                 try:
@@ -1023,15 +1026,15 @@ def _process_user_action(message, user):
                 data["current_balance"] = customer.balance
                 ctx["data"] = data
                 ctx["step"] = 2
-                return """✅ **تم العثور على العميل:** {customer_name}
-💰 **الرصيد الحالي:** {current_balance} درهم
+                return f"""✅ **تم العثور على العميل:** {customer.name}
+💰 **الرصيد الحالي:** {customer.balance} درهم
 
 📝 **الخطوة 2: مبلغ الدفعة**
 اكتب مبلغ الدفعة المستلمة
 
 💡 **مثال:** 200
 
-🤖 اكتب مبلغ الدفعة الآن...""".format(customer_name=customer.name, current_balance=customer.balance)
+🤖 اكتب مبلغ الدفعة الآن..."""
 
             elif step == 2:
                 try:
@@ -1148,15 +1151,15 @@ def _process_user_action(message, user):
                 data["current_balance"] = customer.balance
                 ctx["data"] = data
                 ctx["step"] = 2
-                return """✅ **تم العثور على العميل:** {customer_name}
-💰 **الرصيد الحالي:** {current_balance} درهم
+                return f"""✅ **تم العثور على العميل:** {customer.name}
+💰 **الرصيد الحالي:** {customer.balance} درهم
 
 📝 **الخطوة 2: مبلغ الدفعة**
 اكتب مبلغ الدفعة المعطاة للعميل
 
 💡 **مثال:** 100
 
-🤖 اكتب مبلغ الدفعة الآن...""".format(customer_name=customer.name, current_balance=customer.balance)
+🤖 اكتب مبلغ الدفعة الآن..."""
 
             elif step == 2:
                 try:
@@ -1184,9 +1187,8 @@ def _process_user_action(message, user):
                 data["reason"] = message.strip()
 
                 try:
-                    from models.payment import Payment
                     from models.customer import Customer
-
+                    from models.payment import Payment
                     from utils.helpers import generate_number
 
                     payment_number = generate_number(
@@ -1202,7 +1204,7 @@ def _process_user_action(message, user):
                         amount_aed=-data["amount"],
                         currency="AED",
                         exchange_rate=1,
-                        payment_date=datetime.now(timezone.utc),
+                        payment_date=datetime.now(UTC),
                         payment_method="refund",
                         user_id=user.id,
                         direction="outgoing",
@@ -1438,7 +1440,7 @@ def _process_user_action(message, user):
                     data["initial_balance"] = initial_balance
                     ctx["data"] = data
                     ctx["step"] = 5
-                    return """✅ **تم حفظ الرصيد الابتدائي:** {balance} درهم
+                    return f"""✅ **تم حفظ الرصيد الابتدائي:** {initial_balance} درهم
 
 📝 **الخطوة 5: الرقم الضريبي (اختياري)**
 اكتب الرقم الضريبي للمورد أو اكتب "تخطي"
@@ -1447,7 +1449,7 @@ def _process_user_action(message, user):
 
 💬 **اكتب "تخطي" إذا لم يكن متوفراً**
 
-🤖 اكتب الرقم الضريبي الآن...""".format(balance=initial_balance)
+🤖 اكتب الرقم الضريبي الآن..."""
                 except Exception:
                     return """❌ **خطأ في إدخال الرصيد!**
 
@@ -1552,14 +1554,14 @@ def _process_user_action(message, user):
                 data["supplier_name"] = supplier.name
                 ctx["data"] = data
                 ctx["step"] = 2
-                return """✅ **تم العثور على المورد:** {supplier_name}
+                return f"""✅ **تم العثور على المورد:** {supplier.name}
 
 📝 **الخطوة 2: اسم المنتج**
 اكتب اسم المنتج المشترى
 
 💡 **مثال:** فلتر زيت
 
-🤖 اكتب اسم المنتج الآن...""".format(supplier_name=supplier.name)
+🤖 اكتب اسم المنتج الآن..."""
 
             elif step == 2:
                 from models.product import Product
@@ -1576,14 +1578,14 @@ def _process_user_action(message, user):
                 data["product_name"] = product.name
                 ctx["data"] = data
                 ctx["step"] = 3
-                return """✅ **تم العثور على المنتج:** {product_name}
+                return f"""✅ **تم العثور على المنتج:** {product.name}
 
 📝 **الخطوة 3: الكمية**
 اكتب الكمية المشتراة
 
 💡 **مثال:** 50
 
-🤖 اكتب الكمية الآن...""".format(product_name=product.name)
+🤖 اكتب الكمية الآن..."""
 
             elif step == 3:
                 try:
@@ -1697,14 +1699,14 @@ def _process_user_action(message, user):
                 data["cheque_type"] = "incoming" if gettext("وارد") in cheque_type else "outgoing"
                 ctx["data"] = data
                 ctx["step"] = 2
-                return """✅ **تم حفظ نوع الشيك:** {type}
+                return f"""✅ **تم حفظ نوع الشيك:** {cheque_type}
 
 📝 **الخطوة 2: رقم الشيك**
 اكتب رقم الشيك
 
 💡 **مثال:** 123456
 
-🤖 اكتب رقم الشيك الآن...""".format(type=cheque_type)
+🤖 اكتب رقم الشيك الآن..."""
 
             elif step == 2:
                 data["cheque_number"] = message.strip()
@@ -1917,14 +1919,14 @@ def _process_user_action(message, user):
                 data["role"] = role
                 ctx["data"] = data
                 ctx["step"] = 4
-                return """✅ **تم حفظ الدور:** {role}
+                return f"""✅ **تم حفظ الدور:** {role}
 
 📝 **الخطوة 4: البريد الإلكتروني (اختياري)**
 اكتب البريد الإلكتروني أو اكتب "تخطي"
 
 💡 **مثال:** ahmed@example.com
 
-🤖 اكتب البريد الإلكتروني الآن...""".format(role=role)
+🤖 اكتب البريد الإلكتروني الآن..."""
 
             elif step == 4:
                 email = message.strip() if message.strip().lower() != gettext("تخطي") else None
@@ -2783,7 +2785,7 @@ http://localhost:5000/ai/assistant
                         amount_aed=-amount,
                         currency="AED",
                         exchange_rate=1,
-                        payment_date=datetime.now(timezone.utc),
+                        payment_date=datetime.now(UTC),
                         payment_method="refund",
                         user_id=user.id,
                         direction="outgoing",

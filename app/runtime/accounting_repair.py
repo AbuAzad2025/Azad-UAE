@@ -28,8 +28,8 @@ def repair_accounting_data():
     """
     from models import Cheque, Customer, Product
     from models.gl import GLJournalEntry, GLJournalLine
-    from services.gl_service import GLService
     from services import gl_helpers
+    from services.gl_service import GLService
     from utils.tenanting import get_active_tenant_id
 
     with atomic_transaction("accounting_repair"):

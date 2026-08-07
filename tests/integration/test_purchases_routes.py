@@ -9,17 +9,17 @@ from decimal import Decimal
 class TestPurchasesCreate:
     def test_create_purchase_increases_stock_and_creates_payable(self, app, db_session, client):
         from models import (
-            Tenant,
             Branch,
-            User,
+            Product,
+            ProductWarehouseStock,
             Role,
             Supplier,
-            Product,
+            Tenant,
+            User,
             Warehouse,
-            ProductWarehouseStock,
         )
-        from services.gl_service import GLService
         from models.gl import GLJournalEntry
+        from services.gl_service import GLService
         from utils.gl_reference_types import GLRef
 
         tid = str(uuid.uuid4())[:8]

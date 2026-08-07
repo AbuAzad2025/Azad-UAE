@@ -8,8 +8,8 @@ from extensions import db
 from models import GLAccount, Tenant
 from models.gl_account_registry import BASE_ACCOUNTS, INDUSTRY_EXTENSIONS
 from services.gl_tree_builder import (
-    GLTreeBuilder,
     CORE_ACCOUNT_CODES,
+    GLTreeBuilder,
     _get_core_account_tree,
     _get_industry_tree,
     _template_to_tuple,
@@ -443,6 +443,7 @@ class TestValidateTree:
 
     def test_validate_tree_inactive_core_and_bad_parent(self, app, db_session, sample_tenant):
         import uuid
+
         from models import Tenant
 
         with app.app_context():

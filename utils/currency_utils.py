@@ -1,5 +1,5 @@
 import logging
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 
 from extensions import db
 from utils.regional_defaults import FALLBACK_CURRENCY

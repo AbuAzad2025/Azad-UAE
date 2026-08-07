@@ -252,12 +252,13 @@ class IntelligentAssistant:
     def _collect_real_data(self, intent: str, entities: dict, _user_id: int) -> dict:
         """جمع البيانات الحقيقية من النظام"""
         try:
-            from models import Sale, Customer, Product
-            from extensions import db
-            from sqlalchemy import func
             from flask import has_request_context
-            from utils.tenanting import get_active_tenant_id
             from flask_login import current_user
+            from sqlalchemy import func
+
+            from extensions import db
+            from models import Customer, Product, Sale
+            from utils.tenanting import get_active_tenant_id
 
             tid = None
             if has_request_context():
@@ -558,8 +559,9 @@ class IntelligentAssistant:
             tenant_id = None
             try:
                 from flask import has_request_context
-                from utils.tenanting import get_active_tenant_id
                 from flask_login import current_user
+
+                from utils.tenanting import get_active_tenant_id
 
                 if has_request_context():
                     tenant_id = get_active_tenant_id(current_user)

@@ -182,9 +182,8 @@ class TestCreatePurchaseValidations:
     def test_missing_warehouse(self, app):
         from services.purchase_service import PurchaseService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="يجب اختيار المستودع"):
-                PurchaseService.create_purchase(_user(), {"supplier_name": "X"}, [])
+        with app.app_context(), pytest.raises(ValueError, match="يجب اختيار المستودع"):
+            PurchaseService.create_purchase(_user(), {"supplier_name": "X"}, [])
 
     def test_missing_supplier_name(self, app, mocker):
         mocker.patch(
@@ -193,9 +192,8 @@ class TestCreatePurchaseValidations:
         )
         from services.purchase_service import PurchaseService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="يجب إدخال اسم المورد"):
-                PurchaseService.create_purchase(_user(), {}, [], warehouse_id=3)
+        with app.app_context(), pytest.raises(ValueError, match="يجب إدخال اسم المورد"):
+            PurchaseService.create_purchase(_user(), {}, [], warehouse_id=3)
 
     def test_foreign_supplier_rejected(self, app, mocker):
         wh = _warehouse(tenant_id=1)
@@ -205,14 +203,13 @@ class TestCreatePurchaseValidations:
         mocker.patch("services.purchase_service.Supplier.query", supplier_q)
         from services.purchase_service import PurchaseService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="لا ينتمي لنفس الشركة"):
-                PurchaseService.create_purchase(
-                    _user(),
-                    {"supplier_id": 99},
-                    [_line_data()],
-                    warehouse_id=3,
-                )
+        with app.app_context(), pytest.raises(ValueError, match="لا ينتمي لنفس الشركة"):
+            PurchaseService.create_purchase(
+                _user(),
+                {"supplier_id": 99},
+                [_line_data()],
+                warehouse_id=3,
+            )
 
     def test_exchange_rate_needs_input(self, app, mocker):
         _patch_create_common(
@@ -221,27 +218,25 @@ class TestCreatePurchaseValidations:
         )
         from services.purchase_service import PurchaseService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="سعر الصرف غير متوفر"):
-                PurchaseService.create_purchase(
-                    _user(),
-                    {"supplier_name": "Local"},
-                    [_line_data()],
-                    warehouse_id=3,
-                )
+        with app.app_context(), pytest.raises(ValueError, match="سعر الصرف غير متوفر"):
+            PurchaseService.create_purchase(
+                _user(),
+                {"supplier_name": "Local"},
+                [_line_data()],
+                warehouse_id=3,
+            )
 
     def test_no_lines_rejected_before_db(self, app, mocker):
         session, _, _, _, _ = _patch_create_common(mocker)
         from services.purchase_service import PurchaseService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="يجب إضافة منتج"):
-                PurchaseService.create_purchase(
-                    _user(),
-                    {"supplier_name": "Local"},
-                    [],
-                    warehouse_id=3,
-                )
+        with app.app_context(), pytest.raises(ValueError, match="يجب إضافة منتج"):
+            PurchaseService.create_purchase(
+                _user(),
+                {"supplier_name": "Local"},
+                [],
+                warehouse_id=3,
+            )
         session.rollback.assert_not_called()
         session.flush.assert_not_called()
 
@@ -249,14 +244,13 @@ class TestCreatePurchaseValidations:
         session, _, _, _, _ = _patch_create_common(mocker)
         from services.purchase_service import PurchaseService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="يجب إضافة منتج"):
-                PurchaseService.create_purchase(
-                    _user(),
-                    {"supplier_name": "Local"},
-                    [_line_data(quantity=0)],
-                    warehouse_id=3,
-                )
+        with app.app_context(), pytest.raises(ValueError, match="يجب إضافة منتج"):
+            PurchaseService.create_purchase(
+                _user(),
+                {"supplier_name": "Local"},
+                [_line_data(quantity=0)],
+                warehouse_id=3,
+            )
         session.rollback.assert_not_called()
         session.flush.assert_not_called()
 
@@ -266,27 +260,25 @@ class TestCreatePurchaseValidations:
         session.get.side_effect = lambda model, pk: None
         from services.purchase_service import PurchaseService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="يجب إضافة منتج"):
-                PurchaseService.create_purchase(
-                    _user(),
-                    {"supplier_name": "Local"},
-                    [_line_data()],
-                    warehouse_id=3,
-                )
+        with app.app_context(), pytest.raises(ValueError, match="يجب إضافة منتج"):
+            PurchaseService.create_purchase(
+                _user(),
+                {"supplier_name": "Local"},
+                [_line_data()],
+                warehouse_id=3,
+            )
 
     def test_negative_unit_cost_rejected_before_db(self, app, mocker):
         session, _, _, _, _ = _patch_create_common(mocker)
         from services.purchase_service import PurchaseService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="يجب إضافة منتج"):
-                PurchaseService.create_purchase(
-                    _user(),
-                    {"supplier_name": "Local"},
-                    [_line_data(unit_cost=-1)],
-                    warehouse_id=3,
-                )
+        with app.app_context(), pytest.raises(ValueError, match="يجب إضافة منتج"):
+            PurchaseService.create_purchase(
+                _user(),
+                {"supplier_name": "Local"},
+                [_line_data(unit_cost=-1)],
+                warehouse_id=3,
+            )
         session.rollback.assert_not_called()
         session.flush.assert_not_called()
 
@@ -413,14 +405,13 @@ class TestCreatePurchaseSerials:
         mocker.patch("models.product_serial.ProductSerial.query", serial_q)
         from services.purchase_service import PurchaseService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="موجودة مسبقاً"):
-                PurchaseService.create_purchase(
-                    _user(),
-                    {"supplier_name": "Local"},
-                    [_line_data(quantity=1, serials=["SN-DUP"])],
-                    warehouse_id=3,
-                )
+        with app.app_context(), pytest.raises(ValueError, match="موجودة مسبقاً"):
+            PurchaseService.create_purchase(
+                _user(),
+                {"supplier_name": "Local"},
+                [_line_data(quantity=1, serials=["SN-DUP"])],
+                warehouse_id=3,
+            )
 
 
 class TestCreatePurchaseGL:
@@ -533,17 +524,15 @@ class TestCancelPurchase:
     def test_already_cancelled(self, app):
         from services.purchase_service import PurchaseService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="ملغاة بالفعل"):
-                PurchaseService.cancel_purchase(_purchase(status="cancelled"))
+        with app.app_context(), pytest.raises(ValueError, match="ملغاة بالفعل"):
+            PurchaseService.cancel_purchase(_purchase(status="cancelled"))
 
     def test_direct_payments_block_cancel(self, app, mocker):
         _patch_cancel_query(mocker, direct_paid=Decimal("100"))
         from services.purchase_service import PurchaseService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="مدفوعات مؤكدة"):
-                PurchaseService.cancel_purchase(_purchase())
+        with app.app_context(), pytest.raises(ValueError, match="مدفوعات مؤكدة"):
+            PurchaseService.cancel_purchase(_purchase())
 
     def test_supplier_adjustment_no_stock(self, app, mocker):
         session = _patch_cancel_query(mocker, direct_paid=Decimal("0"), has_stock=False)
@@ -577,9 +566,8 @@ class TestCancelPurchase:
         mock_logger = mocker.patch("services.purchase_service.current_app.logger")
         from services.purchase_service import PurchaseService
 
-        with app.app_context():
-            with pytest.raises(RuntimeError, match="commit fail"):
-                PurchaseService.cancel_purchase(_purchase())
+        with app.app_context(), pytest.raises(RuntimeError, match="commit fail"):
+            PurchaseService.cancel_purchase(_purchase())
         mock_logger.exception.assert_called()
 
 
@@ -635,40 +623,37 @@ class TestCreatePurchaseReturn:
     def test_cancelled_purchase_rejected(self, app):
         from services.purchase_service import PurchaseService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="ملغاة"):
-                PurchaseService.create_purchase_return(
-                    _purchase(status="cancelled"),
-                    _user(),
-                    [{"quantity": 1}],
-                )
+        with app.app_context(), pytest.raises(ValueError, match="ملغاة"):
+            PurchaseService.create_purchase_return(
+                _purchase(status="cancelled"),
+                _user(),
+                [{"quantity": 1}],
+            )
 
     def test_empty_lines_rejected(self, app, mocker):
         mocker.patch("services.purchase_service.generate_number", return_value="PR-001")
         from services.purchase_service import PurchaseService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="يجب إرجاع منتج"):
-                PurchaseService.create_purchase_return(_purchase(), _user(), [])
+        with app.app_context(), pytest.raises(ValueError, match="يجب إرجاع منتج"):
+            PurchaseService.create_purchase_return(_purchase(), _user(), [])
 
     def test_zero_quantity_rollback(self, app, mocker):
         session, _post = _patch_return_common(mocker, _purchase())
         from services.purchase_service import PurchaseService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="يجب إرجاع منتج"):
-                PurchaseService.create_purchase_return(
-                    _purchase(),
-                    _user(),
-                    [
-                        {
-                            "purchase_line_id": 1,
-                            "product_id": 50,
-                            "quantity": 0,
-                            "unit_cost": 10,
-                        }
-                    ],
-                )
+        with app.app_context(), pytest.raises(ValueError, match="يجب إرجاع منتج"):
+            PurchaseService.create_purchase_return(
+                _purchase(),
+                _user(),
+                [
+                    {
+                        "purchase_line_id": 1,
+                        "product_id": 50,
+                        "quantity": 0,
+                        "unit_cost": 10,
+                    }
+                ],
+            )
 
     def test_happy_path_no_tax(self, app, mocker):
         purchase = _purchase(tax_amount=None)
@@ -995,17 +980,16 @@ class TestCreatePurchaseReturn:
         mocker.patch("services.purchase_service.current_app.logger")
         from services.purchase_service import PurchaseService
 
-        with app.app_context():
-            with pytest.raises(RuntimeError, match="return commit fail"):
-                PurchaseService.create_purchase_return(
-                    purchase,
-                    _user(),
-                    [
-                        {
-                            "purchase_line_id": 1,
-                            "product_id": 50,
-                            "quantity": 1,
-                            "unit_cost": 10,
-                        }
-                    ],
-                )
+        with app.app_context(), pytest.raises(RuntimeError, match="return commit fail"):
+            PurchaseService.create_purchase_return(
+                purchase,
+                _user(),
+                [
+                    {
+                        "purchase_line_id": 1,
+                        "product_id": 50,
+                        "quantity": 1,
+                        "unit_cost": 10,
+                    }
+                ],
+            )

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from extensions import db
 
@@ -42,7 +42,7 @@ class StockBatch(db.Model):
     expiry_date = db.Column(db.Date, nullable=True, index=True)
     received_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
@@ -50,6 +50,6 @@ class StockBatch(db.Model):
     reference_id = db.Column(db.Integer, nullable=True)
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
     )

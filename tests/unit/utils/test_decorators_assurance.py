@@ -150,9 +150,8 @@ class TestAdminRequired:
         def view():
             return "ok"
 
-        with app.test_request_context("/owner/settings"):
-            with pytest.raises(NotFound):
-                view()
+        with app.test_request_context("/owner/settings"), pytest.raises(NotFound):
+            view()
 
     def test_redirects_non_owner_path(self, deco_ctx, mocker):
         mocker.patch("utils.decorators.current_user", _user(is_authenticated=False))
@@ -211,9 +210,8 @@ class TestSellerOrAbove:
         def view():
             return "ok"
 
-        with app.test_request_context("/owner/sales"):
-            with pytest.raises(NotFound):
-                view()
+        with app.test_request_context("/owner/sales"), pytest.raises(NotFound):
+            view()
 
     def test_aborts_low_role(self, deco_ctx, mocker):
         mocker.patch("utils.decorators.current_user", _user(role_slug="viewer"))
@@ -329,9 +327,8 @@ class TestCompanyAdminRequired:
         def view():
             return "ok"
 
-        with app.test_request_context("/owner/tenant"):
-            with pytest.raises(NotFound):
-                view()
+        with app.test_request_context("/owner/tenant"), pytest.raises(NotFound):
+            view()
 
     def test_wrong_role_aborts(self, deco_ctx, mocker):
         mocker.patch(
@@ -418,9 +415,8 @@ class TestOwnerOrCompanyAdmin:
         def view():
             return "ok"
 
-        with app.test_request_context("/owner/api"):
-            with pytest.raises(NotFound):
-                view()
+        with app.test_request_context("/owner/api"), pytest.raises(NotFound):
+            view()
 
     def test_global_owner_allowed(self, deco_ctx, mocker):
         mocker.patch("utils.decorators.current_user", _user())

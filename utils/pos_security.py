@@ -13,6 +13,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import secrets
+from datetime import UTC
 
 from flask import current_app
 
@@ -160,7 +161,7 @@ def log_pos_fraud_signal(
     raises on missing tenant context (returns ``None`` instead).
     """
     import json
-    from datetime import datetime, timedelta, timezone
+    from datetime import datetime, timedelta
 
     from extensions import db
     from models import PosFraudSignal
@@ -174,7 +175,7 @@ def log_pos_fraud_signal(
     except (TypeError, ValueError):
         return None
     # Naive UTC wall time — the exact value hashed is the value stored.
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = datetime.now(UTC).replace(tzinfo=None)
     window_start = now - timedelta(minutes=POS_FRAUD_REPEAT_WINDOW_MINUTES)
     repeat_count = (
         PosFraudSignal.query.filter(

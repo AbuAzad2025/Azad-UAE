@@ -22,18 +22,25 @@ never concatenated.
 from __future__ import annotations
 
 import re
-from typing import Any, Dict, List, Mapping, Optional, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from sqlalchemy import (
     column as sa_column,
+)
+from sqlalchemy import (
     delete,
     func,
     insert,
     inspect,
     select,
-    table as sa_table,
-    text as sa_text,
     update,
+)
+from sqlalchemy import (
+    table as sa_table,
+)
+from sqlalchemy import (
+    text as sa_text,
 )
 from sqlalchemy.schema import Column
 
@@ -89,7 +96,7 @@ def _table(bind: Any, name: str, columns: Sequence[str] = ()):
     that core ``insert``/``update``/``where`` can reference them.
     """
     assert_known_table(bind, name)
-    cols: List[Column] = [Column(c) for c in columns if _IDENT_RE.match(c)]
+    cols: list[Column] = [Column(c) for c in columns if _IDENT_RE.match(c)]
     return sa_table(name, *cols)
 
 
@@ -106,8 +113,8 @@ def select_all_query(
     bind: Any,
     table_name: str,
     *,
-    limit: Optional[int] = None,
-    offset: Optional[int] = None,
+    limit: int | None = None,
+    offset: int | None = None,
 ):
     """``SELECT * FROM <validated table>`` with optional LIMIT/OFFSET."""
     tbl = _table(bind, table_name)
@@ -125,7 +132,7 @@ def select_where_query(
     column_name: str,
     value: Any,
     *,
-    limit: Optional[int] = None,
+    limit: int | None = None,
 ):
     """``SELECT * FROM <validated table> WHERE <validated col> = :value``.
 
@@ -183,7 +190,7 @@ def update_row_query(
     Only validated columns are accepted; values are embedded as bound literals.
     """
     assert_known_column(bind, table_name, pk_column)
-    safe_updates: Dict[str, Any] = {}
+    safe_updates: dict[str, Any] = {}
     for col, val in updates.items():
         assert_known_column(bind, table_name, col)
         safe_updates[col] = val if val != "" else None

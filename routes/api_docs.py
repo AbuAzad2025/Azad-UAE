@@ -2,10 +2,10 @@
 API Documentation using OpenAPI/Swagger
 """
 
-import os
 import copy
+import os
 
-from flask import Blueprint, jsonify, render_template_string, current_app, abort
+from flask import Blueprint, abort, current_app, jsonify, render_template_string
 from flask_login import current_user
 
 api_docs_bp = Blueprint("api_docs", __name__, url_prefix="/api-docs")

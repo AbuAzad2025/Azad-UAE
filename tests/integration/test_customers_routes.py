@@ -3,14 +3,14 @@ Integration tests: Customers routes — real business logic via HTTP.
 """
 
 import uuid
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
-from datetime import date, datetime, timedelta, timezone
 
 
 class TestCustomerBranchIsolation:
     def test_customer_branch_isolation(self, app, db_session, client):
         """Customer in Branch 1 should NOT appear in Branch 2's list."""
-        from models import Tenant, Branch, Role, User, Customer, Sale
+        from models import Branch, Customer, Role, Sale, Tenant, User
         from services.gl_service import GLService
 
         tid = uuid.uuid4().hex[:12]
@@ -117,7 +117,7 @@ class TestCustomerBranchIsolation:
 
     def test_customer_branch_isolation_reverse(self, app, db_session, client):
         """Customer in Branch 2 should NOT appear in Branch 1's list (reverse check)."""
-        from models import Tenant, Branch, Role, User, Customer, Sale
+        from models import Branch, Customer, Role, Sale, Tenant, User
         from services.gl_service import GLService
 
         tid = uuid.uuid4().hex[:12]
@@ -210,7 +210,7 @@ class TestCustomerBranchIsolation:
 class TestCustomerStatement:
     def test_statement_shows_sales_receipts(self, app, db_session, client):
         """Customer statement must show sales and receipts."""
-        from models import Tenant, Branch, Role, User, Customer, Sale, Receipt
+        from models import Branch, Customer, Receipt, Role, Sale, Tenant, User
         from services.gl_service import GLService
 
         tid = uuid.uuid4().hex[:12]
@@ -266,7 +266,7 @@ class TestCustomerStatement:
         db_session.add(sale)
         db_session.commit()
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         receipt = Receipt(
             tenant_id=tenant.id,
             branch_id=branch.id,
@@ -301,7 +301,7 @@ class TestCustomerStatement:
 
     def test_statement_shows_payments_with_cheques(self, app, db_session, client):
         """Customer statement must show payments linked to cheques."""
-        from models import Tenant, Branch, Role, User, Customer, Sale, Payment, Cheque
+        from models import Branch, Cheque, Customer, Payment, Role, Sale, Tenant, User
         from services.gl_service import GLService
 
         tid = uuid.uuid4().hex[:12]
@@ -415,7 +415,7 @@ class TestCustomerStatement:
 class TestCustomerDelete:
     def test_delete_customer_with_sales_soft_deletes(self, app, db_session, client):
         """Customer with sales must be soft-deleted (is_active=False), not hard-deleted."""
-        from models import Tenant, Branch, Role, User, Customer, Sale
+        from models import Branch, Customer, Role, Sale, Tenant, User
         from services.gl_service import GLService
 
         tid = uuid.uuid4().hex[:12]
@@ -492,7 +492,7 @@ class TestCustomerDelete:
 
     def test_delete_customer_without_links_hard_deletes(self, app, db_session, client):
         """Customer with NO linked records should be hard-deleted."""
-        from models import Tenant, Branch, Role, User, Customer
+        from models import Branch, Customer, Role, Tenant, User
         from services.gl_service import GLService
 
         tid = uuid.uuid4().hex[:12]
@@ -557,7 +557,7 @@ class TestCustomerDelete:
 class TestCustomerView:
     def test_customer_view_shows_balance_and_unpaid_sales(self, app, db_session, client):
         """Customer view page must show balance and unpaid sales."""
-        from models import Tenant, Branch, Role, User, Customer, Sale
+        from models import Branch, Customer, Role, Sale, Tenant, User
         from services.gl_service import GLService
 
         tid = uuid.uuid4().hex[:12]
@@ -634,7 +634,7 @@ class TestCustomerView:
 class TestCustomerSearch:
     def test_customer_search_by_name(self, app, db_session, client):
         """Searching customers by name should return matching results."""
-        from models import Tenant, Branch, Role, User, Customer, Sale
+        from models import Branch, Customer, Role, Sale, Tenant, User
         from services.gl_service import GLService
 
         tid = uuid.uuid4().hex[:12]
@@ -725,7 +725,7 @@ class TestCustomerSearch:
 class TestReceivablesReport:
     def test_receivables_report_aging_buckets(self, app, db_session, client):
         """Receivables report must have correct aging buckets (0-30/31-60/61-90/90+ days)."""
-        from models import Tenant, Branch, Role, User, Customer, Sale
+        from models import Branch, Customer, Role, Sale, Tenant, User
         from services.gl_service import GLService
 
         tid = uuid.uuid4().hex[:12]
@@ -768,7 +768,7 @@ class TestReceivablesReport:
         GLService.ensure_core_accounts(tenant_id=tenant.id)
         db_session.commit()
 
-        old_date = datetime.now(timezone.utc) - timedelta(days=100)
+        old_date = datetime.now(UTC) - timedelta(days=100)
 
         sale_old = Sale(
             tenant_id=tenant.id,
@@ -802,7 +802,7 @@ class TestReceivablesReport:
 
     def test_receivables_report_totals_accurate(self, app, db_session, client):
         """Receivables report totals must match sale unpaid balances."""
-        from models import Tenant, Branch, Role, User, Customer, Sale, Payment
+        from models import Branch, Customer, Payment, Role, Sale, Tenant, User
         from services.gl_service import GLService
 
         tid = uuid.uuid4().hex[:12]
@@ -894,7 +894,7 @@ class TestReceivablesReport:
 
     def test_receivables_defaults_to_all_confirmed_sales(self, app, db_session, client):
         """Receivables report should load without a customer filter."""
-        from models import Tenant, Branch, Role, User, Customer, Sale
+        from models import Branch, Customer, Role, Sale, Tenant, User
         from services.gl_service import GLService
 
         tid = uuid.uuid4().hex[:12]
@@ -971,7 +971,7 @@ class TestReceivablesReport:
 class TestCustomerApi:
     def test_api_search_returns_json(self, app, db_session, client):
         """API search endpoint should return JSON with matching customers."""
-        from models import Tenant, Branch, Role, User, Customer, Sale
+        from models import Branch, Customer, Role, Sale, Tenant, User
         from services.gl_service import GLService
 
         tid = uuid.uuid4().hex[:12]
@@ -1046,7 +1046,7 @@ class TestCustomerApi:
 
     def test_api_balance_returns_json(self, app, db_session, client):
         """Balance API endpoint should return customer balance and unpaid sales."""
-        from models import Tenant, Branch, Role, User, Customer, Sale
+        from models import Branch, Customer, Role, Sale, Tenant, User
         from services.gl_service import GLService
 
         tid = uuid.uuid4().hex[:12]

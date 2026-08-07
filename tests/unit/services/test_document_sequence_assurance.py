@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 import pytest
@@ -63,9 +63,8 @@ class TestNextNumber:
 
         from services.document_sequence_service import DocumentSequenceService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="inactive"):
-                DocumentSequenceService.next_number(1, "invoice")
+        with app.app_context(), pytest.raises(ValueError, match="inactive"):
+            DocumentSequenceService.next_number(1, "invoice")
 
     def test_generates_number_under_lock(self, app, mocker):
         seq = MagicMock(id=5, is_active=True, code="payment")
@@ -98,9 +97,8 @@ class TestNextNumber:
 
         from services.document_sequence_service import DocumentSequenceService
 
-        with app.app_context():
-            with pytest.raises(ValueError, match="not found after lock"):
-                DocumentSequenceService.next_number(1, "receipt")
+        with app.app_context(), pytest.raises(ValueError, match="not found after lock"):
+            DocumentSequenceService.next_number(1, "receipt")
 
 
 class TestPreview:
@@ -122,7 +120,7 @@ class TestPreview:
             "services.document_sequence_service.DocumentSequenceService.get_or_create",
             return_value=seq,
         )
-        fixed_date = datetime(2026, 6, 15, tzinfo=timezone.utc)
+        fixed_date = datetime(2026, 6, 15, tzinfo=UTC)
 
         from services.document_sequence_service import DocumentSequenceService
 
@@ -167,8 +165,8 @@ class TestPreview:
             counter=1,
             counter_reset="year",
         )
-        old_date = datetime(2025, 12, 31, tzinfo=timezone.utc)
-        new_date = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        old_date = datetime(2025, 12, 31, tzinfo=UTC)
+        new_date = datetime(2026, 1, 1, tzinfo=UTC)
         seq.updated_at = old_date
         number = seq.get_next_number(date=new_date)
         assert number.startswith("SALE-2026-")
@@ -186,8 +184,8 @@ class TestPreview:
             counter=5,
             counter_reset="monthly",
         )
-        seq.updated_at = datetime(2025, 5, 31, tzinfo=timezone.utc)
-        number = seq.get_next_number(date=datetime(2025, 6, 1, tzinfo=timezone.utc))
+        seq.updated_at = datetime(2025, 5, 31, tzinfo=UTC)
+        number = seq.get_next_number(date=datetime(2025, 6, 1, tzinfo=UTC))
         assert "2025-06" in number
         assert seq.counter == 2
 
@@ -203,8 +201,8 @@ class TestPreview:
             counter=3,
             counter_reset="daily",
         )
-        seq.updated_at = datetime(2025, 6, 1, tzinfo=timezone.utc)
-        number = seq.get_next_number(date=datetime(2025, 6, 2, tzinfo=timezone.utc))
+        seq.updated_at = datetime(2025, 6, 1, tzinfo=UTC)
+        number = seq.get_next_number(date=datetime(2025, 6, 2, tzinfo=UTC))
         assert "2025-06-02" in number
         assert seq.counter == 2
 
@@ -220,8 +218,8 @@ class TestPreview:
             counter=10,
             counter_reset="never",
         )
-        seq.updated_at = datetime(2024, 1, 1, tzinfo=timezone.utc)
-        seq.get_next_number(date=datetime(2026, 1, 1, tzinfo=timezone.utc))
+        seq.updated_at = datetime(2024, 1, 1, tzinfo=UTC)
+        seq.get_next_number(date=datetime(2026, 1, 1, tzinfo=UTC))
         assert seq.counter == 11
 
     def test_unpadded_counter_placeholder(self):
@@ -254,7 +252,7 @@ class TestPreview:
         seq.updated_at = None
         seq.created_at = None
         assert seq._get_last_reset_date() == ""
-        assert seq._get_period_key(datetime(2025, 1, 1, tzinfo=timezone.utc)) == "2025"
+        assert seq._get_period_key(datetime(2025, 1, 1, tzinfo=UTC)) == "2025"
 
     def test_repr(self):
         from models.document_sequence import DocumentSequence

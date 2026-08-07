@@ -1,6 +1,8 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
+
 from sqlalchemy import event, text
+
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
 from utils.gl_services import gl_next_entry_number
@@ -47,14 +49,14 @@ class GLAccount(db.Model):
     bank_swift_code = db.Column(db.String(20), nullable=True)
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     parent = db.relationship("GLAccount", remote_side=[id], backref="children")
@@ -107,9 +109,11 @@ class GLAccount(db.Model):
         return sub_types.get(self.sub_type, self.sub_type or "")
 
     def get_balance(self, start_date=None, end_date=None, as_of_date=None, _depth=0, _visited=None):
-        from sqlalchemy import func
-        from models import GLJournalLine
         from decimal import Decimal
+
+        from sqlalchemy import func
+
+        from models import GLJournalLine
 
         if _depth > 10:
             raise RecursionError("Max depth 10 exceeded")
@@ -192,7 +196,7 @@ class GLJournalEntry(db.Model):
     entry_number = db.Column(db.String(50), nullable=False, index=True)
     entry_date = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
@@ -235,14 +239,14 @@ class GLJournalEntry(db.Model):
     created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     lines = db.relationship("GLJournalLine", back_populates="entry", lazy="dynamic")
@@ -280,7 +284,7 @@ class GLJournalEntry(db.Model):
         reversed_entry = GLJournalEntry(
             tenant_id=self.tenant_id,
             entry_number=gl_next_entry_number(self.tenant_id),
-            entry_date=datetime.now(timezone.utc),
+            entry_date=datetime.now(UTC),
             description=description or f"عكس قيد: {self.description}",
             reference_type=self.reference_type,
             reference_id=self.reference_id,
@@ -345,7 +349,7 @@ class GLPeriod(db.Model):
     notes = db.Column(db.Text)
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
@@ -415,7 +419,7 @@ class GLJournalLine(db.Model):
 
 
 def _load_gl_constants():
-    from models._constants import VALID_GL_CONCEPT_CODES, _GL_CONCEPT_CODE_CHECK
+    from models._constants import _GL_CONCEPT_CODE_CHECK, VALID_GL_CONCEPT_CODES
 
     return VALID_GL_CONCEPT_CODES, _GL_CONCEPT_CODE_CHECK
 
@@ -490,14 +494,14 @@ class GLAccountMapping(db.Model):
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     tenant = db.relationship("Tenant", backref="gl_account_mappings", foreign_keys=[tenant_id])

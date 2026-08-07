@@ -1,4 +1,5 @@
 import json
+import logging
 
 try:
     from cachelib.serializers import BaseSerializer
@@ -22,4 +23,4 @@ try:
     BaseSerializer.dumps = _patched_dumps  # type: ignore[assignment]
     BaseSerializer.loads = _patched_loads  # type: ignore[assignment]
 except ImportError:
-    pass
+    logging.getLogger(__name__).debug("cachelib not installed; serializer patch skipped", exc_info=True)
