@@ -224,7 +224,7 @@ class TestModelReprQuickWins:
 
 class TestUtilsConstants:
     def test_normalize_payment_method_code_none_passthrough(self):
-        from utils.constants import normalize_payment_method_code
+        from utils.payment_constants import normalize_payment_method_code
 
         assert normalize_payment_method_code(None) is None
 

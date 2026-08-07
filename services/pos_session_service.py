@@ -49,7 +49,7 @@ class PosSessionService:
             tenant_id=tenant_id,
             user_id=user_id,
             starting_cash=starting_cash,
-            is_open=True,
+            status=PosShift.SHIFT_OPEN,
         )
         db.session.add(shift)
         return shift
