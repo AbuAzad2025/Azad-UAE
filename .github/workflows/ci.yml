@@ -33,6 +33,7 @@ on:
       - '**.woff2'
       - '**.ttf'
       - 'static/adminlte/**'
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
