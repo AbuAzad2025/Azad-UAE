@@ -2437,7 +2437,6 @@ class TestReceivePaymentWizardExtended:
 class TestGivePaymentWizardExtended:
     def test_give_full_flow(self, mock_user):
         ctx = {"last_action": "إعطاء", "option": "1", "step": 1, "data": {}}
-        customer = _obj(id=1, name="GiveC", balance=Decimal("0"))
         with (
             patch("services.customer_service.CustomerService.adjust_balance", return_value=Decimal("100")),
             patch("models.customer.Customer"),

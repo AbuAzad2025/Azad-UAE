@@ -885,8 +885,9 @@ class PaymentService:
         db.session.flush()
 
         if payment_method == "cheque" and cheque_number:
-            from models import Cheque
-            from services.cheque_service import process_cheque_issue
+            from datetime import datetime
+
+            from services.cheque_service import ChequeService, process_cheque_issue
 
             cheque = ChequeService.create_cheque(
                 cheque_number=cheque_number,
