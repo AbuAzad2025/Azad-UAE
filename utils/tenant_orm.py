@@ -154,7 +154,7 @@ def tenant_scope_enabled() -> bool:
 
         if not getattr(current_user, "is_authenticated", False):
             return False
-    except RuntimeError:
+    except (RuntimeError, ModuleNotFoundError):
         return False
     return True
 
