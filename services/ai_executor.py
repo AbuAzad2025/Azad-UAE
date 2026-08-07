@@ -345,7 +345,8 @@ class AIExecutor:
         db.session.add(payment)
         db.session.flush()
 
-        customer.balance = (customer.balance or Decimal("0")) - amount_dec
+        from services.customer_service import CustomerService
+        CustomerService.adjust_balance(customer.id, -amount_dec, self.tenant_id)
 
         unpaid = (
             Sale.query.filter(

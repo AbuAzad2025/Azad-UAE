@@ -563,19 +563,16 @@ def order_type_settings():
                     code = (request.form.get("code") or "").strip()
                     if not code:
                         raise ValueError(gettext("يرجى إدخال رمز النوع (code)."))
-                    if PosOrderType.get_by_code(tid, code):
-                        raise ValueError(gettext("رمز النوع موجود مسبقاً."))
-                    db.session.add(
-                        PosOrderType(
-                            tenant_id=tid,
-                            code=code,
-                            name_ar=(request.form.get("name_ar") or "").strip() or code,
-                            name_en=(request.form.get("name_en") or "").strip() or None,
-                            is_active=request.form.get("is_active") == "on",
-                            sort_order=int(request.form.get("sort_order") or 0),
-                            is_default=request.form.get("is_default") == "on",
-                            kds_enabled=request.form.get("kds_enabled") == "on",
-                        )
+                    from services.pos_write_service import PosWriteService
+                    PosWriteService.create_order_type(
+                        tenant_id=tid,
+                        code=code,
+                        name_ar=request.form.get("name_ar", ""),
+                        name_en=request.form.get("name_en", ""),
+                        is_active=request.form.get("is_active") == "on",
+                        sort_order=int(request.form.get("sort_order") or 0),
+                        is_default=request.form.get("is_default") == "on",
+                        kds_enabled=request.form.get("kds_enabled") == "on",
                     )
                     flash(gettext("تمت إضافة نوع الطلب."), "success")
                 elif action == "edit":
@@ -608,7 +605,8 @@ def order_type_settings():
                         raise ValueError(gettext("نوع الطلب غير موجود."))
                     if ot.is_default:
                         raise ValueError(gettext("لا يمكن حذف النوع الافتراضي."))
-                    db.session.delete(ot)
+                    from services.pos_write_service import PosWriteService
+                    PosWriteService.delete_order_type(ot)
                     flash(gettext("تم حذف نوع الطلب."), "success")
                 else:
                     raise ValueError(gettext("إجراء غير معروف."))
@@ -660,21 +658,20 @@ def printer_settings():
                     conn = (request.form.get("connection_type") or "agent_network").strip()
                     if conn not in PosPrinter.CONNECTION_TYPES:
                         raise ValueError(gettext("نوع الاتصال غير معروف."))
-                    db.session.add(
-                        PosPrinter(
-                            tenant_id=tid,
-                            name=name,
-                            role=role,
-                            connection_type=conn,
-                            host=(request.form.get("host") or "").strip() or None,
-                            port=int(request.form.get("port") or 0) or None,
-                            serial_port=(request.form.get("serial_port") or "").strip() or None,
-                            baud_rate=int(request.form.get("baud_rate") or 0) or None,
-                            encoding=(request.form.get("encoding") or "cp864").strip() or "cp864",
-                            category_ids=_parse_category_ids(request.form.get("category_ids")),
-                            is_active=request.form.get("is_active") == "on",
-                            sort_order=int(request.form.get("sort_order") or 0),
-                        )
+                    from services.pos_write_service import PosWriteService
+                    PosWriteService.create_printer(
+                        tenant_id=tid,
+                        name=name,
+                        role=role,
+                        connection_type=conn,
+                        host=(request.form.get("host") or "").strip() or None,
+                        port=int(request.form.get("port") or 0) or None,
+                        serial_port=(request.form.get("serial_port") or "").strip() or None,
+                        baud_rate=int(request.form.get("baud_rate") or 0) or None,
+                        encoding=(request.form.get("encoding") or "cp864").strip() or "cp864",
+                        category_ids=_parse_category_ids(request.form.get("category_ids")),
+                        is_active=request.form.get("is_active") == "on",
+                        sort_order=int(request.form.get("sort_order") or 0),
                     )
                     flash(gettext("تمت إضافة الطابعة."), "success")
                 elif action == "edit":
@@ -701,7 +698,8 @@ def printer_settings():
                     printer = db.session.get(PosPrinter, int(request.form.get("printer_id") or 0))
                     if not printer or printer.tenant_id != tid:
                         raise ValueError(gettext("الطابعة غير موجودة."))
-                    db.session.delete(printer)
+                    from services.pos_write_service import PosWriteService
+                    PosWriteService.delete_printer(printer)
                     flash(gettext("تم حذف الطابعة."), "success")
                 else:
                     raise ValueError(gettext("إجراء غير معروف."))
@@ -1231,8 +1229,9 @@ def api_checkout():
             kds_enabled = bool(ot.kds_enabled) if ot else (order_type in ("dine_in", "takeaway", "delivery"))
             if kds_enabled:
                 from models import PosKdsOrder
+                from services.pos_write_service import PosWriteService
 
-                kds_order = PosKdsOrder(
+                kds_order = PosWriteService.create_kds_order(
                     tenant_id=sale.tenant_id,
                     sale_id=sale.id,
                     session_id=session.id,
@@ -1249,9 +1248,7 @@ def api_checkout():
                             for ld in lines_data
                         ]
                     ),
-                    status="pending",
                 )
-                db.session.add(kds_order)
 
             # Build the response INSIDE the transaction so the idempotency
             # ledger stores exactly what the client received for this sale.
@@ -3056,9 +3053,10 @@ def api_floor_create():
     if not name:
         return jsonify({"error": gettext("اسم الطابق مطلوب")}), 400
     tid = get_active_tenant_id(current_user)
-    floor = PosFloor(tenant_id=tid, name=name, name_ar=name_ar or None)
+    from services.pos_write_service import PosWriteService
+    floor = PosWriteService.create_floor(tenant_id=tid, name=name, name_ar=name_ar)
     with atomic_transaction("pos_floor_create"):
-        db.session.add(floor)
+        db.session.flush()
     return jsonify({"success": True, "floor_id": floor.id})
 
 
@@ -3103,17 +3101,17 @@ def api_table_create():
     floor = tenant_query(PosFloor).filter_by(id=floor_id).first()
     if not floor:
         return jsonify({"error": gettext("الطابق غير موجود")}), 404
-    table = PosTable(
+    from services.pos_write_service import PosWriteService
+    table = PosWriteService.create_table(
         tenant_id=tid,
         floor_id=floor_id,
-        label=label,
-        capacity=payload.get("capacity", 4),
+        name=label,
+        seats=payload.get("capacity", 4),
         pos_x=payload.get("pos_x", 0),
         pos_y=payload.get("pos_y", 0),
-        shape=payload.get("shape", "rectangle"),
     )
     with atomic_transaction("pos_table_create"):
-        db.session.add(table)
+        db.session.flush()
     return jsonify({"success": True, "table_id": table.id})
 
 
@@ -3154,7 +3152,8 @@ def api_table_assign(table_id):
     sale = tenant_query(Sale).filter(Sale.id == sale_id).first()
     if sale is None:
         return jsonify({"error": gettext("الفاتورة غير موجودة")}), 404
-    torder = PosTableOrder(
+    from services.pos_write_service import PosWriteService
+    torder = PosWriteService.create_table_order_model(
         tenant_id=tid,
         table_id=table_id,
         sale_id=sale.id,
@@ -3162,5 +3161,5 @@ def api_table_assign(table_id):
     )
     with atomic_transaction("pos_table_assign"):
         table.status = "occupied"
-        db.session.add(torder)
+        db.session.flush()
     return jsonify({"success": True})
