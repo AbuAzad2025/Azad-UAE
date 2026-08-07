@@ -787,6 +787,57 @@ class SaleService:
         customer.apply_sale(_D(str(sale.amount_aed or 0)))
 
     @staticmethod
+    def create_quick_sale(customer_id: int, product_id: int, quantity: float, unit_price, tenant_id: int | None = None):
+        """Create a quick sale with single product line (for AI wizard flows).
+        Returns the created sale with stock deduction."""
+        from models import Customer, Product, Sale, SaleLine, Warehouse
+
+        customer = db.session.get(Customer, customer_id) if customer_id else None
+        product = db.session.get(Product, product_id) if product_id else None
+
+        if not customer:
+            raise ValueError(gettext("العميل غير موجود"))
+        if not product:
+            raise ValueError(gettext("المنتج غير موجود"))
+
+        sale = Sale(
+            customer_id=customer.id,
+            seller_id=customer.id,
+            total_amount=Decimal(str(unit_price)) * Decimal(str(quantity)),
+            checkout_payment_method="cash",
+            amount=Decimal(str(unit_price)) * Decimal(str(quantity)),
+            amount_aed=Decimal(str(unit_price)) * Decimal(str(quantity)),
+            currency="AED",
+            exchange_rate=1,
+        )
+        if tenant_id:
+            sale.tenant_id = tenant_id
+        db.session.add(sale)
+        db.session.flush()
+
+        sale_line = SaleLine(
+            sale_id=sale.id,
+            product_id=product.id,
+            quantity=quantity,
+            unit_price=Decimal(str(unit_price)),
+            line_total=Decimal(str(unit_price)) * Decimal(str(quantity)),
+        )
+        db.session.add(sale_line)
+        db.session.flush()
+
+        wh = Warehouse.query.filter_by(tenant_id=tenant_id, is_active=True).first() if tenant_id else None
+        if wh:
+            StockService.remove_stock(
+                product_id=product.id,
+                quantity=quantity,
+                reference_type=GLRef.SALE,
+                reference_id=sale.id,
+                warehouse_id=wh.id,
+            )
+
+        return sale
+
+    @staticmethod
     def has_inventory_posted(sale):
         from models.warehouse import StockMovement
 

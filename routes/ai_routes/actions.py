@@ -952,38 +952,15 @@ def _process_user_action(message, user):
                         "sale_number",
                         branch_id=getattr(current_user, "branch_id", None),
                     )
-                    sale = Sale(
-                        sale_number=sale_number,
-                        customer_id=data["customer_id"],
-                        seller_id=user.id,
-                        total_amount=total_amount,
-                        checkout_payment_method="cash",
-                        amount=total_amount,
-                        amount_aed=total_amount,
-                        currency="AED",
-                        exchange_rate=1,
-                    )
-                    assign_tenant_id(sale)
-                    db.session.add(sale)
-                    db.session.flush()
+                    from services.sale_service import SaleService
 
-                    sale_line = SaleLine(
-                        sale_id=sale.id,
-                        product_id=data["product_id"],
-                        quantity=data["quantity"],
-                        unit_price=data["product_price"],
-                        total=total_amount,
-                    )
                     with atomic_transaction("ai_create_sale"):
-                        db.session.add(sale_line)
-
-                        wh = Warehouse.query.filter_by(tenant_id=tid, is_active=True).first()
-                        StockService.remove_stock(
+                        sale = SaleService.create_quick_sale(
+                            customer_id=data["customer_id"],
                             product_id=data["product_id"],
                             quantity=data["quantity"],
-                            reference_type=GLRef.SALE,
-                            reference_id=sale.id,
-                            warehouse_id=wh.id if wh else None,
+                            unit_price=data["product_price"],
+                            tenant_id=tid,
                         )
 
                     train_local_ai("create_sale", data, {"success": True, "sale_id": sale.id})
@@ -2599,42 +2576,15 @@ http://localhost:5000/ai/assistant
                     if not product:
                         return gettext(f"❌ المنتج '{product_name}' غير موجود. أنشئه أولاً!")
 
-                    sale = Sale(
-                        sale_number=f"INV-{datetime.now().strftime('%Y%m%d%H%M%S')}",
-                        customer_id=customer.id,
-                        seller_id=user.id,
-                        sale_date=datetime.now(timezone.utc),
-                        subtotal=product.regular_price * quantity,
-                        total_amount=product.regular_price * quantity,
-                        amount=product.regular_price * quantity,
-                        amount_aed=product.regular_price * quantity,
-                        currency="AED",
-                        exchange_rate=1,
-                        payment_status="paid" if payment_method == "cash" else "unpaid",
-                        status="confirmed",
-                    )
-                    assign_tenant_id(sale, user)
-                    db.session.add(sale)
-                    db.session.flush()
-
-                    sale_line = SaleLine(
-                        sale_id=sale.id,
-                        product_id=product.id,
-                        quantity=quantity,
-                        unit_price=product.regular_price,
-                        line_total=product.regular_price * quantity,
-                    )
-                    assign_tenant_id(sale_line, user)
-                    db.session.add(sale_line)
+                    from services.sale_service import SaleService
 
                     with atomic_transaction("ai_quick_create_sale"):
-                        wh_l3 = Warehouse.query.filter_by(tenant_id=tid, is_active=True).first()
-                        StockService.remove_stock(
+                        sale = SaleService.create_quick_sale(
+                            customer_id=customer.id,
                             product_id=product.id,
                             quantity=quantity,
-                            reference_type=GLRef.SALE,
-                            reference_id=sale.id,
-                            warehouse_id=wh_l3.id if wh_l3 else None,
+                            unit_price=product.regular_price,
+                            tenant_id=tid,
                         )
 
                     return f"""✅ تم إنشاء الفاتورة بنجاح!
@@ -2798,32 +2748,16 @@ http://localhost:5000/ai/assistant
                     if not customer:
                         return gettext(f"❌ العميل '{customer_name}' غير موجود!")
 
-                    from utils.helpers import generate_number
+                    from services.payment_service import PaymentService
 
-                    payment_number = generate_number(
-                        "PAY",
-                        Payment,
-                        "payment_number",
-                        branch_id=getattr(current_user, "branch_id", None),
-                    )
-                    payment = Payment(
-                        payment_number=payment_number,
-                        customer_id=customer.id,
-                        amount=amount,
-                        amount_aed=amount,
-                        currency="AED",
-                        exchange_rate=1,
-                        payment_date=datetime.now(timezone.utc),
-                        payment_method=payment_method,
-                        user_id=user.id,
-                        direction="incoming",
-                        payment_type="customer_payment",
-                    )
-                    assign_tenant_id(payment)
                     with atomic_transaction("ai_quick_receive_payment"):
-                        db.session.add(payment)
-
-                        customer.apply_receipt(amount)
+                        payment = PaymentService.create_customer_payment(
+                            customer_id=customer.id,
+                            amount=amount,
+                            payment_method=payment_method,
+                            tenant_id=tid,
+                            user_id=user.id,
+                        )
 
                     return f"""✅ تم استلام الدفعة بنجاح!
 

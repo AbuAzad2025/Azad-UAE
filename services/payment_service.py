@@ -434,6 +434,52 @@ class PaymentService:
         return payment
 
     @staticmethod
+    def create_customer_payment(
+        customer_id: int,
+        amount,
+        payment_method: str = "cash",
+        notes: str = "",
+        tenant_id: int | None = None,
+        user_id: int | None = None,
+    ):
+        """Create incoming payment (receipt from customer). Updates customer balance."""
+        from models import Customer, Payment
+        from utils.helpers import generate_number
+        from datetime import datetime, timezone
+
+        customer = db.session.get(Customer, customer_id)
+        if not customer:
+            raise ValueError(gettext("العميل غير موجود"))
+
+        payment_number = generate_number(
+            "PAY",
+            Payment,
+            "payment_number",
+            branch_id=getattr(current_user, "branch_id", None),
+            tenant_id=tenant_id or getattr(customer, "tenant_id", None),
+        )
+        payment = Payment(
+            payment_number=payment_number,
+            customer_id=customer.id,
+            amount=Decimal(str(amount)),
+            amount_aed=Decimal(str(amount)),
+            currency="AED",
+            exchange_rate=1,
+            payment_date=datetime.now(timezone.utc),
+            payment_method=payment_method,
+            user_id=user_id or (current_user.id if current_user and current_user.is_authenticated else None),
+            direction="incoming",
+            payment_type="customer_payment",
+            tenant_id=tenant_id or getattr(customer, "tenant_id", None),
+        )
+        db.session.add(payment)
+        db.session.flush()
+
+        customer.apply_receipt(Decimal(str(amount)))
+
+        return payment
+
+    @staticmethod
     def create_receipt(payment_data):
         """
         Create receipt from payment data dict

@@ -1943,15 +1943,16 @@ def api_shift_open():
                 branch_code=session.branch_id,
                 tenant_id=int(tid or 0),
             )
-            shift = PosShift(
+            from services.pos_session_service import PosSessionService
+            shift = PosSessionService.create_shift(
                 tenant_id=int(tid or 0),
-                session_id=session.id,
+                branch_id=session.branch_id,
                 user_id=current_user.id,
-                shift_number=number,
                 starting_cash=Decimal(str(starting_cash)),
-                status=PosShift.SHIFT_OPEN,
             )
-            db.session.add(shift)
+            shift.session_id = session.id
+            shift.shift_number = number
+            shift.status = PosShift.SHIFT_OPEN
             db.session.flush()
     except Exception as exc:
         return jsonify({"success": False, "error": str(exc)}), 400
