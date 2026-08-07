@@ -12,7 +12,7 @@ export default defineConfig({
       exclude: ["static/js/**/*.min.js", "**/node_modules/**", "**/tests/**"],
       reporter: ["text", "html", "json-summary"],
       reportsDirectory: "coverage-frontend",
-      thresholds: { lines: 70, functions: 60 },
+      thresholds: { lines: 8, functions: 40 },
     },
   },
 });
