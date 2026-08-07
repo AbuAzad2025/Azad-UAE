@@ -13,7 +13,15 @@ class PosSessionService:
     """Pure business logic for POS session operations. Uses flush only — callers manage transactions."""
 
     @staticmethod
-    def update_session_totals(session, sale, payment_data=None, payments_data=None, payment_currency="AED", payment_exchange_rate=1, tenant_id=None):
+    def update_session_totals(
+        session,
+        sale,
+        payment_data=None,
+        payments_data=None,
+        payment_currency="AED",
+        payment_exchange_rate=1,
+        tenant_id=None,
+    ):
         """Update session totals after a sale."""
         from decimal import Decimal
         from utils.currency_utils import convert_and_quantize_aed

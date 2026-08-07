@@ -705,8 +705,14 @@ class PurchaseService:
         return purchase_return
 
     @staticmethod
-    def create_quick_purchase(supplier_id: int, product_id: int, quantity: float, unit_cost,
-                              tenant_id: int | None = None, user_id: int | None = None):
+    def create_quick_purchase(
+        supplier_id: int,
+        product_id: int,
+        quantity: float,
+        unit_cost,
+        tenant_id: int | None = None,
+        user_id: int | None = None,
+    ):
         """Create a quick purchase with single line item (for AI wizard flows).
         Returns the created purchase with stock addition."""
         from models import Purchase, PurchaseLine, Warehouse
@@ -752,6 +758,7 @@ class PurchaseService:
         """Delete a purchase and its lines. Reverses supplier balance if needed."""
         if has_supplier and purchase.supplier_id:
             from models import Supplier
+
             supplier = Supplier.query.filter_by(id=purchase.supplier_id, tenant_id=purchase.tenant_id).first()
             if supplier:
                 supplier.apply_payment(-Decimal(str(purchase.amount_aed or 0)))

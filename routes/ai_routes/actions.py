@@ -1061,6 +1061,7 @@ def _process_user_action(message, user):
                 try:
                     from models.customer import Customer
                     from services.payment_service import PaymentService
+
                     with atomic_transaction("ai_receive_payment"):
                         payment = PaymentService.create_customer_payment(
                             customer_id=data["customer_id"],
@@ -1609,6 +1610,7 @@ def _process_user_action(message, user):
                     data["unit_price"] = float(message.strip().replace(gettext("درهم"), "").strip())
 
                     from services.purchase_service import PurchaseService
+
                     with atomic_transaction("ai_create_purchase"):
                         purchase = PurchaseService.create_quick_purchase(
                             supplier_id=data["supplier_id"],
@@ -1744,6 +1746,7 @@ def _process_user_action(message, user):
                     due_date = dt.strptime(message.strip(), "%Y-%m-%d")
 
                     from services.cheque_service import ChequeService
+
                     with atomic_transaction("ai_create_cheque"):
                         cheque = ChequeService.create_cheque(
                             cheque_number=data["cheque_number"],
@@ -2584,6 +2587,7 @@ http://localhost:5000/ai/assistant
                         return gettext(f"❌ العميل '{customer_name}' غير موجود!")
 
                     from services.payment_service import PaymentService
+
                     with atomic_transaction("ai_quick_payment"):
                         payment = PaymentService.create_customer_payment(
                             customer_id=customer.id,

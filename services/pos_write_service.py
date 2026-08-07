@@ -13,9 +13,16 @@ class PosWriteService:
     """Pure business logic for POS write operations. Uses flush only — callers manage transactions."""
 
     @staticmethod
-    def create_order_type(tenant_id: int, code: str, name_ar: str = "", name_en: str = "",
-                          is_active: bool = True, sort_order: int = 0, is_default: bool = False,
-                          kds_enabled: bool = False):
+    def create_order_type(
+        tenant_id: int,
+        code: str,
+        name_ar: str = "",
+        name_en: str = "",
+        is_active: bool = True,
+        sort_order: int = 0,
+        is_default: bool = False,
+        kds_enabled: bool = False,
+    ):
         """Create a new POS order type."""
         from models import PosOrderType
 
@@ -56,8 +63,7 @@ class PosWriteService:
         return floor
 
     @staticmethod
-    def create_table(tenant_id: int, floor_id: int, name: str, seats: int = 4,
-                     pos_x: int = 0, pos_y: int = 0):
+    def create_table(tenant_id: int, floor_id: int, name: str, seats: int = 4, pos_x: int = 0, pos_y: int = 0):
         """Create a new restaurant table."""
         from models import PosTable
 
@@ -88,9 +94,15 @@ class PosWriteService:
         return torder
 
     @staticmethod
-    def create_kds_order(tenant_id: int, sale_id: int, session_id: int = None,
-                        branch_id: int = None, order_number: str = "",
-                        items_json: str = "[]", notes: str = ""):
+    def create_kds_order(
+        tenant_id: int,
+        sale_id: int,
+        session_id: int = None,
+        branch_id: int = None,
+        order_number: str = "",
+        items_json: str = "[]",
+        notes: str = "",
+    ):
         """Create a new KDS (Kitchen Display System) order."""
         from models import PosKdsOrder
 
@@ -108,11 +120,20 @@ class PosWriteService:
         return kds_order
 
     @staticmethod
-    def create_printer(tenant_id: int, name: str, role: str = "customer",
-                       connection_type: str = "agent_network", host: str = None,
-                       port: int = None, serial_port: str = None, baud_rate: int = None,
-                       encoding: str = "cp864", category_ids: list = None,
-                       is_active: bool = True, sort_order: int = 0):
+    def create_printer(
+        tenant_id: int,
+        name: str,
+        role: str = "customer",
+        connection_type: str = "agent_network",
+        host: str = None,
+        port: int = None,
+        serial_port: str = None,
+        baud_rate: int = None,
+        encoding: str = "cp864",
+        category_ids: list = None,
+        is_active: bool = True,
+        sort_order: int = 0,
+    ):
         """Create a new POS printer."""
         from models import PosPrinter
 

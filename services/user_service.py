@@ -6,7 +6,14 @@ from utils.tenanting import scoped_user_query
 
 class UserService:
     @staticmethod
-    def create_user(username: str, full_name: str, email: str = "", phone: str = "", tenant_id: int | None = None, role_id: int | None = None):
+    def create_user(
+        username: str,
+        full_name: str,
+        email: str = "",
+        phone: str = "",
+        tenant_id: int | None = None,
+        role_id: int | None = None,
+    ):
         """Create a new user. Returns the created user (not yet committed)."""
         user = User(username=username, full_name=full_name, email=email, phone=phone, is_active=True)
         if tenant_id is not None:

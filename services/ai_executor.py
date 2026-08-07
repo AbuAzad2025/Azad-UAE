@@ -346,6 +346,7 @@ class AIExecutor:
         db.session.flush()
 
         from services.customer_service import CustomerService
+
         CustomerService.adjust_balance(customer.id, -amount_dec, self.tenant_id)
 
         unpaid = (

@@ -564,6 +564,7 @@ def order_type_settings():
                     if not code:
                         raise ValueError(gettext("يرجى إدخال رمز النوع (code)."))
                     from services.pos_write_service import PosWriteService
+
                     PosWriteService.create_order_type(
                         tenant_id=tid,
                         code=code,
@@ -606,6 +607,7 @@ def order_type_settings():
                     if ot.is_default:
                         raise ValueError(gettext("لا يمكن حذف النوع الافتراضي."))
                     from services.pos_write_service import PosWriteService
+
                     PosWriteService.delete_order_type(ot)
                     flash(gettext("تم حذف نوع الطلب."), "success")
                 else:
@@ -659,6 +661,7 @@ def printer_settings():
                     if conn not in PosPrinter.CONNECTION_TYPES:
                         raise ValueError(gettext("نوع الاتصال غير معروف."))
                     from services.pos_write_service import PosWriteService
+
                     PosWriteService.create_printer(
                         tenant_id=tid,
                         name=name,
@@ -699,6 +702,7 @@ def printer_settings():
                     if not printer or printer.tenant_id != tid:
                         raise ValueError(gettext("الطابعة غير موجودة."))
                     from services.pos_write_service import PosWriteService
+
                     PosWriteService.delete_printer(printer)
                     flash(gettext("تم حذف الطابعة."), "success")
                 else:
@@ -1940,6 +1944,7 @@ def api_shift_open():
                 tenant_id=int(tid or 0),
             )
             from services.pos_session_service import PosSessionService
+
             shift = PosSessionService.create_shift(
                 tenant_id=int(tid or 0),
                 branch_id=session.branch_id,
@@ -3051,6 +3056,7 @@ def api_floor_create():
         return jsonify({"error": gettext("اسم الطابق مطلوب")}), 400
     tid = get_active_tenant_id(current_user)
     from services.pos_write_service import PosWriteService
+
     floor = PosWriteService.create_floor(tenant_id=tid, name=name, name_ar=name_ar)
     with atomic_transaction("pos_floor_create"):
         db.session.flush()
@@ -3099,6 +3105,7 @@ def api_table_create():
     if not floor:
         return jsonify({"error": gettext("الطابق غير موجود")}), 404
     from services.pos_write_service import PosWriteService
+
     table = PosWriteService.create_table(
         tenant_id=tid,
         floor_id=floor_id,
@@ -3150,6 +3157,7 @@ def api_table_assign(table_id):
     if sale is None:
         return jsonify({"error": gettext("الفاتورة غير موجودة")}), 404
     from services.pos_write_service import PosWriteService
+
     PosWriteService.create_table_order_model(
         tenant_id=tid,
         table_id=table_id,

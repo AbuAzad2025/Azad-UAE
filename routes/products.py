@@ -914,6 +914,7 @@ def create():
                         price_val = safe_float(request.form.get(field_name))
                         if price_val and price_val > 0:
                             from utils.currency_utils import resolve_tenant_base_currency
+
                             tier_currency = resolve_tenant_base_currency(tenant_id=product.tenant_id)
                             ProductService.create_price_tier(
                                 product_id=product.id,

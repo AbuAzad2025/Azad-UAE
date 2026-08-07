@@ -869,18 +869,20 @@ def create_voucher_submit():
                     return redirect(url_for("payments.create_voucher"))
                 tenant_id = getattr(supplier, "tenant_id", None) or get_active_tenant_id(current_user)
                 with atomic_transaction("supplier_payment_creation"):
-                    payment = PaymentService.create_payment({
-                        "supplier_id": supplier.id,
-                        "amount": amount_decimal,
-                        "currency": currency,
-                        "payment_method": payment_method,
-                        "notes": notes,
-                        "cheque_number": cheque_number,
-                        "cheque_date": cheque_date,
-                        "bank_name": bank_name,
-                        "branch_id": branch_id,
-                        "user_exchange_rate": user_exchange_rate,
-                    })
+                    payment = PaymentService.create_payment(
+                        {
+                            "supplier_id": supplier.id,
+                            "amount": amount_decimal,
+                            "currency": currency,
+                            "payment_method": payment_method,
+                            "notes": notes,
+                            "cheque_number": cheque_number,
+                            "cheque_date": cheque_date,
+                            "bank_name": bank_name,
+                            "branch_id": branch_id,
+                            "user_exchange_rate": user_exchange_rate,
+                        }
+                    )
                 flash(gettext("تم إنشاء سند صرف لمورد بنجاح"), "success")
                 return redirect(url_for("payments.receipts"))
 
