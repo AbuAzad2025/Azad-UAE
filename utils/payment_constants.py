@@ -6,6 +6,7 @@ PAYMENT_METHOD_ALIASES = {
     "card": "card",
     "credit_card": "card",
     "debit_card": "card",
+    "bank": "bank_transfer",
     "bank_transfer": "bank_transfer",
     "transfer": "bank_transfer",
     "wire": "bank_transfer",
