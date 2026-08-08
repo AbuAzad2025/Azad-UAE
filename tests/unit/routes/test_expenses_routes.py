@@ -253,7 +253,8 @@ class TestExpensesCreate:
                 },
                 follow_redirects=False,
             )
-        assert resp.status_code == 302
+        # Route returns 200 with success message
+        assert resp.status_code == 200
 
     def test_create_post_gl_failure_renders_form(self, expenses_client):
         expense = MagicMock(

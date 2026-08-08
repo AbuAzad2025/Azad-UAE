@@ -196,8 +196,13 @@ class TestVoucherSubmitAssurance:
             "services.gl_service.GLService.get_payment_debit_concept",
             return_value="CASH",
         )
-        payment_inst = MagicMock(id=61, amount=Decimal("60"), amount_aed=Decimal("60"))
-        payment_cls = mocker.patch("routes.payments.Payment", return_value=payment_inst)
+        payment_inst = MagicMock(
+            id=61, amount=Decimal("60"), amount_aed=Decimal("60")
+        )
+        refund_mock = mocker.patch(
+            "routes.payments.PaymentService.create_supplier_refund",
+            return_value=payment_inst,
+        )
         with (
             _payments_patches(supplier=supplier),
             patch(
@@ -224,8 +229,9 @@ class TestVoucherSubmitAssurance:
                 follow_redirects=False,
             )
         assert resp.status_code == 302
-        _, kwargs = payment_cls.call_args
-        assert kwargs["cheque_number"] == "IN-CHQ-1"
+        assert refund_mock.called
+        call_kwargs = refund_mock.call_args[1]
+        assert call_kwargs["cheque_number"] == "IN-CHQ-1"
 
     def test_voucher_invalid_direction_fallback(self, payments_client):
         resp = payments_client.post(
@@ -760,7 +766,10 @@ class TestPaymentsGapCoverage:
             amount=Decimal("50"),
             amount_aed=Decimal("50"),
         )
-        payment_cls = MagicMock(return_value=payment_inst)
+        refund_mock = mocker.patch(
+            "routes.payments.PaymentService.create_supplier_refund",
+            return_value=payment_inst,
+        )
         mocker.patch("routes.payments._resolve_transaction_rate", return_value=Decimal("1"))
         mocker.patch("utils.helpers.generate_number", return_value="REC-1")
         mocker.patch("routes.payments.post_or_fail")
@@ -779,7 +788,6 @@ class TestPaymentsGapCoverage:
                 "routes.payments.atomic_transaction",
                 return_value=MagicMock(__enter__=MagicMock(), __exit__=MagicMock()),
             ),
-            patch("routes.payments.Payment", payment_cls),
             patch("routes.payments.resolve_default_currency", return_value="AED"),
             patch("routes.payments.db.session") as session,
         ):
@@ -798,8 +806,7 @@ class TestPaymentsGapCoverage:
                 follow_redirects=False,
             )
         assert resp.status_code == 302
-        payment_cls.assert_called_once()
-        supplier.apply_payment.assert_called_once()
+        refund_mock.assert_called_once()
 
     def test_create_voucher_currency_exception_fallback(self, payments_client, mocker):
         customer = MagicMock(id=1, tenant_id=1)

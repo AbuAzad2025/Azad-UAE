@@ -421,7 +421,10 @@ class TestReceiveWizardWave:
             "step": 3,
             "data": {"customer_id": 1, "customer_name": "C", "amount": 100},
         }
-        with patch("models.payment.Payment", side_effect=RuntimeError("db fail")):
+        with patch(
+            "services.payment_service.PaymentService.create_customer_payment",
+            side_effect=RuntimeError("db fail"),
+        ):
             result = _run("cash", mock_user, ctx)
         assert "خطأ في تسجيل الدفعة" in result
 
@@ -468,7 +471,10 @@ class TestGiveWizardWave:
                 "reason": "r",
             },
         }
-        with patch("models.payment.Payment", side_effect=RuntimeError("db fail")):
+        with patch(
+            "services.customer_service.CustomerService.adjust_balance",
+            side_effect=RuntimeError("db fail"),
+        ):
             result = _run("refund", mock_user, ctx)
         assert "خطأ في تسجيل الدفعة" in result
 
@@ -502,7 +508,10 @@ class TestExpenseWizardWave:
             "data": {"description": "x", "amount": 100},
         }
         with (
-            patch("models.expense.Expense", side_effect=RuntimeError("db fail")),
+            patch(
+                "services.expense_service.ExpenseService.create_expense",
+                side_effect=RuntimeError("db fail"),
+            ),
             patch("utils.helpers.generate_number", return_value="EXP-1"),
         ):
             result = _run("cat", mock_user, ctx)
@@ -568,7 +577,10 @@ class TestSupplierWizardWave:
             "step": 5,
             "data": {"name": "S", "phone": "1", "address": "A", "initial_balance": 0},
         }
-        with patch("models.supplier.Supplier", side_effect=RuntimeError("db fail")):
+        with patch(
+            "services.supplier_service.SupplierService.create_supplier",
+            side_effect=RuntimeError("db fail"),
+        ):
             result = _run("123", mock_user, ctx)
         assert "خطأ في إنشاء المورد" in result
 
