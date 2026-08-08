@@ -510,7 +510,7 @@ class AzadResponses:
             health = AIService.analyze_inventory_health()
             if health.get("success"):
                 s = health.get("summary", {})
-return f"""📦 **صحة المخزون:**
+                return f"""📦 **صحة المخزون:**
 
 **الإحصائيات:**
 • إجمالي المنتجات: {s.get("total", 0)}
