@@ -210,7 +210,7 @@ def main() -> int:
             scan_css(path, path.read_text(encoding="utf-8", errors="replace"), findings)
 
     if args.json:
-        print(json.dumps({k: v for k, v in sorted(findings.items())}, indent=2))
+        print(json.dumps(dict(sorted(findings.items())), indent=2))
     else:
         total = 0
         for rule in sorted(findings):

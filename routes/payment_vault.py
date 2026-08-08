@@ -2006,10 +2006,7 @@ def api_v2_purchases():
     # Sorting
     if hasattr(PackagePurchase, sort_by):
         column = getattr(PackagePurchase, sort_by)
-        if order == "asc":
-            query = query.order_by(column.asc())
-        else:
-            query = query.order_by(column.desc())
+        query = query.order_by(column.asc()) if order == "asc" else query.order_by(column.desc())
 
     # Pagination
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)

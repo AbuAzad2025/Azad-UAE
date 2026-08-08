@@ -108,7 +108,7 @@ class CurrencyService:
         codes = set(CurrencyService.FALLBACK_RATES.keys())
         for base in ("USD", "AED", "EUR"):
             rates = CurrencyService.get_all_rates(base)
-            codes.update(str(k).upper() for k in (rates or {}).keys())
+            codes.update(str(k).upper() for k in (rates or {}))
         codes.update(CurrencyService.COMMON_CURRENCIES)
         return sorted(c for c in codes if len(c) == 3 and c.isalpha())
 

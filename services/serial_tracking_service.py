@@ -38,9 +38,7 @@ class SerialTrackingService:
 
     @staticmethod
     def validate_imei(imei):
-        if not imei or len(imei) != 15 or not imei.isdigit():
-            return False
-        return True
+        return not (not imei or len(imei) != 15 or not imei.isdigit())
 
     @staticmethod
     def get_serial_by_serial_number(serial_number, tenant_id):

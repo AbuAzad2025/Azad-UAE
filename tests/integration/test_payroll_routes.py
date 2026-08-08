@@ -2,6 +2,7 @@
 Integration tests: Payroll routes — real business logic via POST /payroll/process.
 """
 
+import contextlib
 import uuid
 from decimal import Decimal
 
@@ -74,7 +75,7 @@ class TestPayrollProcess:
 
             # Template bug at process.html:339 (t('Print') on instance)
             # causes TypeError when DEBUG=True. Wrap in try/except.
-            try:
+            with contextlib.suppress(TypeError):
                 resp = client.post(
                     "/payroll/process",
                     data={
@@ -87,8 +88,6 @@ class TestPayrollProcess:
                     },
                     follow_redirects=False,
                 )
-            except TypeError:
-                pass
 
         tx = PayrollTransaction.query.filter_by(employee_id=employee.id, tenant_id=tenant.id).first()
         assert tx is not None, "PayrollTransaction was not created"

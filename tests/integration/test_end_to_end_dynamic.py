@@ -1750,7 +1750,7 @@ class TestPOSSessionAndDrawerIsolation:
             sale2.pos_session_id = session.id
             db_session.add(sale2)
             db_session.flush()
-            assert False, "Expected negative inventory block"
+            raise AssertionError("Expected negative inventory block")
         except ValueError as e:
             assert "المخزون غير كافٍ" in str(e) or "insufficient" in str(e).lower() or "mismatch" in str(e).lower()
 

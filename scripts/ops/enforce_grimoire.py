@@ -180,9 +180,7 @@ def _is_exempt(rel: str) -> bool:
     if rel in DRY_RUN_ROLLBACK_FILES:
         return True
     parts = rel.split("/")
-    if parts[0] in ("tests", "scripts"):
-        return True
-    return False
+    return parts[0] in ("tests", "scripts")
 
 
 # ── AST helpers ────────────────────────────────────────────────────────────
@@ -713,7 +711,7 @@ def run_all_checks(root: Path | None = None) -> CheckResult:
     result = CheckResult()
     files_scanned = 0
 
-    for path in _iter_python_files(root):
+    for _path in _iter_python_files(root):
         files_scanned += 1
 
     result.files_scanned = files_scanned

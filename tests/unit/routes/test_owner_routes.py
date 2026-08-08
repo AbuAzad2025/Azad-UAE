@@ -1,4 +1,4 @@
-from contextlib import ExitStack, contextmanager
+from contextlib import ExitStack, contextmanager, suppress
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
@@ -837,7 +837,7 @@ def _owner_route_patches(mock_db=None, **overrides):
         ("extensions.cache.clear", patch("extensions.cache.clear")),
     ]
     with ExitStack() as stack:
-        for name, p in patches:
+        for _name, p in patches:
             stack.enter_context(p)
         _patch_invoice_settings(stack, invoice_settings)
         stack.enter_context(patch("models.Role", role_cls))
@@ -4212,10 +4212,8 @@ class TestOwnerLastMile:
         from routes.owner import _mask_db_uri
 
         assert _mask_db_uri("postgresql://user@host/db")  # no colon in creds branch
-        try:
+        with suppress(Exception):
             _mask_db_uri("://bad@host")
-        except Exception:
-            pass
 
     def test_convert_empty_row_columns(self, app_factory, bypass_owner_auth):
         from routes.owner import convert_database, owner_bp

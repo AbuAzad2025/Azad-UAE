@@ -4,6 +4,8 @@ import logging
 
 from flask_babel import gettext
 
+from utils.db_safety import atomic_transaction
+
 from .common import (
     AuditLog,
     Branch,
@@ -25,7 +27,6 @@ from .common import (
     url_for,
 )
 from .shared import _invalidate_owner_changes
-from utils.db_safety import atomic_transaction
 
 logger = logging.getLogger(__name__)
 

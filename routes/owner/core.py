@@ -4,6 +4,8 @@ import logging
 
 from flask_babel import gettext
 
+from services.logging_core import LoggingCore
+
 from .common import (
     CardVault,
     company_admin_required,
@@ -26,7 +28,6 @@ from .shared import (
     _mask_db_uri,
     _owner_branch_scope,
 )
-from services.logging_core import LoggingCore
 
 logger = logging.getLogger(__name__)
 

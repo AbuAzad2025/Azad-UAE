@@ -481,10 +481,7 @@ def restore_scoped_to_target(
                     outcome["errors"].append("remap requires tenants row in export")
                     return outcome
                 old_tid = int(tenant_rows[0]["id"])
-                if target_tenant_id:
-                    new_tid = int(target_tenant_id)
-                else:
-                    new_tid = _new_id(conn, "tenants")
+                new_tid = int(target_tenant_id) if target_tenant_id else _new_id(conn, "tenants")
                 id_maps.setdefault("tenants", {})[old_tid] = new_tid
                 force_tid = new_tid
                 # slug must be unique — suffix
@@ -736,10 +733,9 @@ def verify_scoped_isolation(manifest: dict[str, Any], extract_dir: str) -> dict[
 
     if scope == SCOPE_BRANCH and bid is not None:
         for table, rows in tables.items():
-            if table == "branches":
-                if len(rows) != 1 or int(rows[0].get("id", -1) or 0) != int(bid or 0):
-                    out["ok"] = False
-                    out["errors"].append("branch row isolation failed")
+            if table == "branches" and (len(rows) != 1 or int(rows[0].get("id", -1) or 0) != int(bid or 0)):
+                out["ok"] = False
+                out["errors"].append("branch row isolation failed")
             for row in rows:
                 rb = row.get("branch_id")
                 if rb is not None and int(rb or 0) != int(bid or 0):

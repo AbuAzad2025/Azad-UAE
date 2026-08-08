@@ -86,10 +86,7 @@ class TestBundleExtraction:
     def _write_bundle(path, members):
         with tarfile.open(path, "w:gz") as tar:
             for name, content in members.items():
-                if isinstance(content, bytes):
-                    data = content
-                else:
-                    data = content.encode("utf-8")
+                data = content if isinstance(content, bytes) else content.encode("utf-8")
                 import io
 
                 info = tarfile.TarInfo(name=name)

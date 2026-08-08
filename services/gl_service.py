@@ -1384,9 +1384,8 @@ class GLService:
 
         # Apply sign convention for non-asset/expense accounts
         for a in all_accounts:
-            if a.id in balance_map and not a.is_header:
-                if a.type in ("liability", "equity", "revenue"):
-                    balance_map[a.id] = -balance_map[a.id]
+            if a.id in balance_map and not a.is_header and a.type in ("liability", "equity", "revenue"):
+                balance_map[a.id] = -balance_map[a.id]
 
         return balance_map
 

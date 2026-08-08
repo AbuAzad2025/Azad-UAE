@@ -55,7 +55,7 @@ def register_context_processors(app):
 
     @app.context_processor
     def inject_has_endpoint():
-        return dict(has_endpoint=lambda endpoint: endpoint in current_app.view_functions)
+        return {"has_endpoint": lambda endpoint: endpoint in current_app.view_functions}
 
     @app.context_processor
     def utility_processor() -> dict[str, Any]:

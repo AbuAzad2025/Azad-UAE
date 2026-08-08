@@ -102,7 +102,7 @@ def generate_number_and_save(
     """
     from sqlalchemy.exc import IntegrityError
 
-    for attempt in range(max_attempts):
+    for _attempt in range(max_attempts):
         number = generate_number(
             prefix=prefix,
             model=model,

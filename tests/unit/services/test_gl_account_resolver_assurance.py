@@ -157,15 +157,15 @@ class TestRaiseMissingOrInactive:
 class TestValidatedAccount:
     @staticmethod
     def _mapping(**kwargs):
-        defaults = dict(
-            branch_id=None,
-            branch=None,
-            gl_account=SimpleNamespace(
+        defaults = {
+            "branch_id": None,
+            "branch": None,
+            "gl_account": SimpleNamespace(
                 tenant_id=1,
                 is_active=True,
                 is_header=False,
             ),
-        )
+        }
         defaults.update(kwargs)
         return SimpleNamespace(**defaults)
 

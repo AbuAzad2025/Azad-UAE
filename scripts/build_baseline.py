@@ -289,13 +289,12 @@ phase_b = [btxt for _, btxt in batches]
 # Build FK-add pass as batch_alter_table blocks.
 fk_lines = []
 for tbl, name, local, ref_table, ref_cols, ondel in phase_c_fks:
-    local_repr = "[" + ", ".join("'%s'" % c for c in local) + "]"
-    ref_repr = "[" + ", ".join("'%s'" % c for c in ref_cols) + "]"
-    ondel_arg = ", ondelete='%s'" % ondel if ondel else ""
+    local_repr = "[" + ", ".join(f"'{c}'" for c in local) + "]"
+    ref_repr = "[" + ", ".join(f"'{c}'" for c in ref_cols) + "]"
+    ondel_arg = f", ondelete='{ondel}'" if ondel else ""
     fk_lines.append(
-        "    with op.batch_alter_table('%s'):\n"
-        "        op.create_foreign_key(%s, '%s', '%s', %s, %s%s)"
-        % (tbl, "'" + name + "'", tbl, ref_table, local_repr, ref_repr, ondel_arg)
+        "    with op.batch_alter_table('{}'):\n"
+        "        op.create_foreign_key({}, '{}', '{}', {}, {}{})".format(tbl, "'" + name + "'", tbl, ref_table, local_repr, ref_repr, ondel_arg)
     )
 
 schema_body = "\n".join(phase_a)
@@ -319,7 +318,7 @@ def py_literal_accounts():
 
 
 def py_literal_mappings():
-    items = ["    (%r, %r)," % (c, a) for (c, a) in MAPPINGS]
+    items = [f"    ({c!r}, {a!r})," for (c, a) in MAPPINGS]
     return "\n".join(items)
 
 

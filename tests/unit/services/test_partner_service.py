@@ -12,23 +12,23 @@ from services.partner_service import PartnerService
 
 def _partner(**kwargs):
     p = MagicMock()
-    defaults = dict(
-        id=1,
-        tenant_id=1,
-        is_active=True,
-        scope_type="company",
-        scope_id=None,
-        share_percentage=Decimal("50"),
-        expense_share_percentage=Decimal("10"),
-        loss_share_percentage=Decimal("0"),
-        fixed_monthly_amount=Decimal("0"),
-        min_profit_threshold=Decimal("0"),
-        current_balance=Decimal("0"),
-        total_profit_received=Decimal("0"),
-        total_loss_borne=Decimal("0"),
-        total_withdrawals=Decimal("0"),
-        total_additional_investment=Decimal("0"),
-    )
+    defaults = {
+        "id": 1,
+        "tenant_id": 1,
+        "is_active": True,
+        "scope_type": "company",
+        "scope_id": None,
+        "share_percentage": Decimal("50"),
+        "expense_share_percentage": Decimal("10"),
+        "loss_share_percentage": Decimal("0"),
+        "fixed_monthly_amount": Decimal("0"),
+        "min_profit_threshold": Decimal("0"),
+        "current_balance": Decimal("0"),
+        "total_profit_received": Decimal("0"),
+        "total_loss_borne": Decimal("0"),
+        "total_withdrawals": Decimal("0"),
+        "total_additional_investment": Decimal("0"),
+    }
     defaults.update(kwargs)
     for k, v in defaults.items():
         setattr(p, k, v)

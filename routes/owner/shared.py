@@ -6,13 +6,14 @@ import re
 from flask_babel import gettext
 from sqlalchemy import inspect
 
+from services.logging_core import LoggingCore
+
 from .common import (
     SystemSettings,
     current_app,
     current_user,
     db,
 )
-from services.logging_core import LoggingCore
 
 logger = logging.getLogger(__name__)
 

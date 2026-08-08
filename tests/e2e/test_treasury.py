@@ -38,7 +38,7 @@ def _assert_cheque_buckets_non_overlapping(report):
     for direction in ("incoming", "outgoing"):
         buckets = report["cheques"][direction]["buckets"]
         all_ids = set()
-        for key, b in buckets.items():
+        for _key, b in buckets.items():
             for item in b["items"]:
                 cid = item["id"]
                 if cid in all_ids:
@@ -79,9 +79,8 @@ def _assert_export_route_security():
 def _assert_gl_balances_sensible(report):
     """GL-derived balances should not be wildly negative for asset accounts."""
     for a in report["liquidity"]["accounts"]:
-        if a["source"] == "gl_account" and a["kind"] in ("cash", "bank"):
-            if a["balance_aed"] < -1000000:
-                raise AssertionError(f"Suspicious GL balance: {a['code']} = {a['balance_aed']}")
+        if a["source"] == "gl_account" and a["kind"] in ("cash", "bank") and a["balance_aed"] < -1000000:
+            raise AssertionError(f"Suspicious GL balance: {a['code']} = {a['balance_aed']}")
     print("  [PASS] GL balances are within sensible range")
 
 

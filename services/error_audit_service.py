@@ -300,10 +300,9 @@ class ErrorAuditService:
         user_id = None
         tenant_id = None
         try:
-            if has_request_context():
-                if getattr(current_user, "is_authenticated", False):
-                    user_id = int(current_user.get_id())
-                    tenant_id = getattr(current_user, "tenant_id", None)
+            if has_request_context() and getattr(current_user, "is_authenticated", False):
+                user_id = int(current_user.get_id())
+                tenant_id = getattr(current_user, "tenant_id", None)
         except Exception:
             logger.warning(
                 "Failed to resolve user/tenant from request context for error audit",

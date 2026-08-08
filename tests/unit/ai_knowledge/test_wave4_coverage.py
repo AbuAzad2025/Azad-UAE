@@ -547,7 +547,7 @@ class TestAzadResponsesWave4:
 
     def test_product_stock_statuses(self, responses):
         with patch("ai_knowledge.personality.azad_responses.system_integrator") as si:
-            for stock, alert, action in [
+            for stock, alert, _action in [
                 (0, 5, "عاجل"),
                 (3, 10, "قريب"),
                 (50, 10, "جيد"),

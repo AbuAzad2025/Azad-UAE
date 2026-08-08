@@ -2,6 +2,7 @@
 Pytest configuration and shared fixtures for the Azad UAE ERP test suite.
 """
 
+import contextlib
 import json
 import os
 import shutil
@@ -489,18 +490,12 @@ def app():
         _ensure_fk_anchor_user()
         _ensure_mock_fk_anchors()
         yield _app
-        try:
+        with contextlib.suppress(Exception):
             db.session.remove()
-        except Exception:
-            pass
-        try:
+        with contextlib.suppress(Exception):
             db.engine.dispose()
-        except Exception:
-            pass
-        try:
+        with contextlib.suppress(Exception):
             db.engines["reporting"].dispose()
-        except Exception:
-            pass
         try:
             from sqlalchemy.orm import close_all_sessions
 
@@ -513,10 +508,8 @@ def app():
 
     keep_db = os.environ.get("PYTEST_KEEP_TEST_DB", "").lower() in ("1", "true", "yes")
     if not keep_db:
-        try:
+        with contextlib.suppress(Exception):
             _drop_postgres_database(_TEST_DATABASE_URL)
-        except Exception:
-            pass
 
 
 # ── Template rendering coverage tracker ──────────────────────────────────
@@ -607,18 +600,12 @@ _POLLUTED_MODEL_SPECS = (
 def _cleanup_db_connections(app):
     """Dispose db connections after each test to prevent connection exhaustion."""
     yield
-    try:
+    with contextlib.suppress(Exception):
         db.session.remove()
-    except Exception:
-        pass
-    try:
+    with contextlib.suppress(Exception):
         db.engine.dispose()
-    except Exception:
-        pass
-    try:
+    with contextlib.suppress(Exception):
         db.engines["reporting"].dispose()
-    except Exception:
-        pass
 
 
 def _restore_polluted_model_queries():
@@ -777,18 +764,12 @@ def auto_cleanup_isolation(app):
     def _scrub_db():
         with app.app_context():
             _restore_real_db_session()
-            try:
+            with contextlib.suppress(Exception):
                 db.session.rollback()
-            except Exception:
-                pass
-            try:
+            with contextlib.suppress(Exception):
                 db.session.expire_all()
-            except Exception:
-                pass
-            try:
+            with contextlib.suppress(Exception):
                 db.session.remove()
-            except Exception:
-                pass
 
     def _scrub_flask_session():
         try:
@@ -826,11 +807,8 @@ def _reset_rate_limiter(app):
     from extensions import limiter
 
     def _clear():
-        with app.app_context():
-            try:
-                limiter.reset()
-            except Exception:
-                pass
+        with app.app_context(), contextlib.suppress(Exception):
+            limiter.reset()
 
     _clear()
     yield
@@ -893,10 +871,8 @@ def db_session(app):
                     nested.rollback()
             except Exception:
                 pass
-            try:
+            with contextlib.suppress(Exception):
                 session.rollback()
-            except Exception:
-                pass
             session.remove()
 
 

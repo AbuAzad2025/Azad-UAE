@@ -257,7 +257,7 @@ def _fetch_rows(conn, table: str, where_sql: str, params: dict[str, Any]) -> lis
         result = conn.execute(select(text("*")).select_from(tbl))
     rows = []
     for row in result.fetchall():
-        rows.append(_serialize_row(dict(zip(result.keys(), row))))
+        rows.append(_serialize_row(dict(zip(result.keys(), row, strict=False))))
     return rows
 
 
@@ -276,7 +276,7 @@ def _fetch_child_rows(
     assert_known_column(conn, child_table, child_fk)
     tbl = _table(conn, child_table, [child_fk])
     result = conn.execute(select(text("*")).select_from(tbl).where(tbl.c[child_fk].in_(parent_ids)))
-    return [_serialize_row(dict(zip(result.keys(), row))) for row in result.fetchall()]
+    return [_serialize_row(dict(zip(result.keys(), row, strict=False))) for row in result.fetchall()]
 
 
 def _merge_product_customer_dependencies(
@@ -310,7 +310,7 @@ def _merge_product_customer_dependencies(
         result = conn.execute(
             select(text("*")).select_from(tbl).where(tbl.c.tenant_id == tenant_id).where(tbl.c.id.in_(missing))
         )
-        extra = [_serialize_row(dict(zip(result.keys(), row))) for row in result.fetchall()]
+        extra = [_serialize_row(dict(zip(result.keys(), row, strict=False))) for row in result.fetchall()]
         found_ids = {int(r["id"]) for r in extra if r.get("id") is not None}
         if extra:
             tables_out.setdefault("customers", []).extend(extra)
@@ -445,7 +445,7 @@ def export_scoped_database(
                 result = conn.execute(
                     select(text("*")).select_from(roles_tbl).where(roles_tbl.c["id"].in_(list(role_ids)))
                 )
-                rows = [_serialize_row(dict(zip(result.keys(), row))) for row in result.fetchall()]
+                rows = [_serialize_row(dict(zip(result.keys(), row, strict=False))) for row in result.fetchall()]
                 if rows:
                     tables_out["roles"] = rows
                     row_counts["roles"] = len(rows)

@@ -47,6 +47,4 @@ class StoreCoupon(db.Model):
             return False
         if self.valid_until and self.valid_until.replace(tzinfo=UTC) < now:
             return False
-        if self.max_uses is not None and int(self.used_count or 0) >= int(self.max_uses):
-            return False
-        return True
+        return not (self.max_uses is not None and int(self.used_count or 0) >= int(self.max_uses))

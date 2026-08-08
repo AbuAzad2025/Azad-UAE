@@ -7,6 +7,16 @@ from datetime import UTC, datetime, timedelta
 
 from flask_babel import gettext
 
+from services.logging_core import LoggingCore
+from utils.db_safety import atomic_transaction
+from utils.safe_sql import (
+    count_query,
+    delete_all_query,
+    insert_query,
+    select_all_query,
+    update_row_query,
+)
+
 from .common import (
     ArchivedRecord,
     AuditLog,
@@ -37,15 +47,6 @@ from .shared import (
     _resolve_truncatable_table,
     _validate_postgresql_uri,
     _validate_select_only_sql,
-)
-from services.logging_core import LoggingCore
-from utils.db_safety import atomic_transaction
-from utils.safe_sql import (
-    count_query,
-    delete_all_query,
-    insert_query,
-    select_all_query,
-    update_row_query,
 )
 
 logger = logging.getLogger(__name__)
@@ -123,7 +124,7 @@ def execute_query():
         rows = result.fetchall()
         columns = result.keys()
 
-        data = [dict(zip(columns, row)) for row in rows]
+        data = [dict(zip(columns, row, strict=False)) for row in rows]
 
         _audit_owner_db_action("execute_query", {"query_prefix": query_text[:200], "row_count": len(data)})
 
@@ -415,7 +416,7 @@ def export_database():
                 rows = result.fetchall()
                 columns = result.keys()
 
-                export_data[table_name] = [dict(zip(columns, row)) for row in rows]
+                export_data[table_name] = [dict(zip(columns, row, strict=False)) for row in rows]
 
             with open(filepath, "w", encoding="utf-8") as f:
                 json.dump(export_data, f, ensure_ascii=False, indent=2, default=str)
@@ -481,12 +482,12 @@ def convert_database():
                     if not rows:
                         continue
 
-                    row_columns = [c for c in result.keys() if c in allowed_columns]
+                    row_columns = [c for c in result if c in allowed_columns]
                     if not row_columns:
                         continue
 
                     for row in rows:
-                        row_dict = dict(zip(result.keys(), row))
+                        row_dict = dict(zip(result.keys(), row, strict=False))
                         payload = {col: row_dict[col] for col in row_columns}
                         conn.execute(insert_query(db.engine, table_name, payload))
                         rows_copied += 1

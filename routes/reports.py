@@ -1302,10 +1302,7 @@ def inventory():
 
     if not include_zero:
         product_ids = [pid for pid, qty in stock_map.items() if (qty or 0) != 0]
-        if product_ids:
-            query = query.filter(Product.id.in_(product_ids))
-        else:
-            query = query.filter(Product.id < 0)
+        query = query.filter(Product.id.in_(product_ids)) if product_ids else query.filter(Product.id < 0)
 
     products = query.order_by(Product.name).all()
 
@@ -1488,10 +1485,7 @@ def inventory_export():
         query = query.filter_by(category_id=category_id)
     if not include_zero:
         product_ids = [pid for pid, qty in stock_map.items() if (qty or 0) != 0]
-        if product_ids:
-            query = query.filter(Product.id.in_(product_ids))
-        else:
-            query = query.filter(Product.id < 0)
+        query = query.filter(Product.id.in_(product_ids)) if product_ids else query.filter(Product.id < 0)
     products = query.order_by(Product.name).all()
 
     headers = [

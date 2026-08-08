@@ -134,10 +134,7 @@ def post_or_fail(
     # The GL is stored in the tenant base currency only: convert and quantize
     # every line at this final gateway before anything is persisted.
     base_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
-    if exchange_rate is None:
-        rate = Decimal("1")
-    else:
-        rate = Decimal(str(exchange_rate))
+    rate = Decimal("1") if exchange_rate is None else Decimal(str(exchange_rate))
     if rate <= 0:
         if (currency or "").upper() != (base_currency or "").upper():
             raise GlPostingError(gettext(f'سعر صرف غير صالح للقيد "{description}": {exchange_rate}'))

@@ -12,9 +12,10 @@ from ai_knowledge.learning.external_learning import (
     get_external_learning,
 )
 from extensions import limiter
-from .blueprint import ai_bp
 from services.ai_service import AIService
 from utils.decorators import permission_required
+
+from .blueprint import ai_bp
 
 logger = logging.getLogger(__name__)
 

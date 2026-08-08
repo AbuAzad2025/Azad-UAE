@@ -88,10 +88,7 @@ class InputSanitizer:
             return None
 
         try:
-            if allow_decimal:
-                num = float(value)
-            else:
-                num = int(value)
+            num = float(value) if allow_decimal else int(value)
 
             if not allow_negative and num < 0:
                 return None

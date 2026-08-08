@@ -71,7 +71,7 @@ def test_count_query_parameterized(engine):
 def test_select_where_query_binds_values(engine):
     with engine.connect() as conn:
         result = conn.execute(select_where_query(engine, "widgets", "tenant_id", 7))
-        rows = [dict(zip(result.keys(), r)) for r in result.fetchall()]
+        rows = [dict(zip(result.keys(), r, strict=False)) for r in result.fetchall()]
     assert len(rows) == 2
     assert {r["name"] for r in rows} == {"a", "b"}
 
@@ -79,14 +79,14 @@ def test_select_where_query_binds_values(engine):
 def test_select_in_query_binds_values(engine):
     with engine.connect() as conn:
         result = conn.execute(select_in_query(engine, "widgets", "id", [1, 3]))
-        rows = [dict(zip(result.keys(), r)) for r in result.fetchall()]
+        rows = [dict(zip(result.keys(), r, strict=False)) for r in result.fetchall()]
     assert {r["tenant_id"] for r in rows} == {7, 9}
 
 
 def test_select_all_query(engine):
     with engine.connect() as conn:
         result = conn.execute(select_all_query(engine, "widgets"))
-        rows = [dict(zip(result.keys(), r)) for r in result.fetchall()]
+        rows = [dict(zip(result.keys(), r, strict=False)) for r in result.fetchall()]
     assert len(rows) == 3
 
 
@@ -103,7 +103,7 @@ def test_update_row_query_parameterized(engine):
         conn.execute(update_row_query(engine, "widgets", "id", 1, {"name": "renamed"}))
     with engine.connect() as conn:
         result = conn.execute(select_where_query(engine, "widgets", "id", 1))
-        row = dict(zip(result.keys(), result.fetchone()))
+        row = dict(zip(result.keys(), result.fetchone(), strict=False))
     assert row["name"] == "renamed"
 
 

@@ -264,10 +264,7 @@ def export():
 
     data = []
     for c in customers:
-        if scoped_branch is not None:
-            bal = balance_map.get(c.id, Decimal("0"))
-        else:
-            bal = Decimal(str(c.balance or 0))
+        bal = balance_map.get(c.id, Decimal("0")) if scoped_branch is not None else Decimal(str(c.balance or 0))
         data.append(
             [
                 c.name,

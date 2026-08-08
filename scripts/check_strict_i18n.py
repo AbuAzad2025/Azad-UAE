@@ -151,9 +151,7 @@ def _should_skip_line(line):
     stripped = line.strip()
     if not stripped or stripped.startswith("//"):
         return True
-    if stripped.startswith("{%") or stripped.startswith("{#"):
-        return True
-    return False
+    return bool(stripped.startswith("{%") or stripped.startswith("{#"))
 
 
 def _is_translation_wrapped(text):
@@ -167,9 +165,7 @@ def _is_likely_user_facing(text):
         return False
     if re.match(r"^[a-z_][a-z0-9_]*$", text, re.IGNORECASE):
         return False
-    if "{{" in text or "{%" in text:
-        return False
-    return True
+    return not ("{{" in text or "{%" in text)
 
 
 def _extract_string_literals(line):
@@ -195,10 +191,7 @@ def _in_jinja_expr_spans(text, pos):
     Strings inside ``{{ }}`` are code (e.g. ``{{ settings.x or 'العنوان' }}``),
     not literal user-facing template text, so they must not be flagged.
     """
-    for m in re.finditer(r"\{\{.*?\}\}", text, re.DOTALL):
-        if m.start() <= pos < m.end():
-            return True
-    return False
+    return any(m.start() <= pos < m.end() for m in re.finditer(r"\{\{.*?\}\}", text, re.DOTALL))
 
 
 def scan_file(filepath):

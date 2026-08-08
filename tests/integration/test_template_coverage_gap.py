@@ -525,12 +525,10 @@ class TestDirectTemplateRenders:
             "cash_beginning": 0.0,
             "cash_ending": 0.0,
         }
-        try:
+        with contextlib.suppress(Exception):
             report = CashFlowService.generate_cash_flow(
                 "2026-01-01", "2026-01-31", branch_id=None, tenant_id=sample_tenant.id
             )
-        except Exception:
-            pass
         with _authed_render(app, sample_user):
             render_template(
                 "ledger/cash_flow.html",

@@ -102,7 +102,7 @@ class TestSecurityService:
         status = SecurityService.get_security_status()
         assert status["blacklisted_ips"] == 6
         assert status["security_level"] == "medium"
-        SecurityService._blacklist = set(f"ip{i}" for i in range(15))
+        SecurityService._blacklist = {f"ip{i}" for i in range(15)}
         assert SecurityService.get_security_status()["security_level"] == "low"
 
     def test_security_level_high(self):

@@ -6,10 +6,10 @@ All string comparisons throughout the codebase MUST reference these enum members
 instead of bare string literals.
 """
 
-from enum import Enum
+from enum import StrEnum
 
 
-class RoleEnum(str, Enum):
+class RoleEnum(StrEnum):
     OWNER = "owner"
     DEVELOPER = "developer"
     SUPER_ADMIN = "super_admin"
@@ -68,7 +68,7 @@ class RoleEnum(str, Enum):
         return tuple(r.value for r in cls.restricted_pricing())
 
 
-class PermissionEnum(str, Enum):
+class PermissionEnum(StrEnum):
     MANAGE_SALES = "manage_sales"
     MANAGE_PURCHASES = "manage_purchases"
     MANAGE_PRODUCTS = "manage_products"

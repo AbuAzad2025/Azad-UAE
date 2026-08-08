@@ -13,9 +13,7 @@ def is_safe_redirect_url(url: str | None) -> bool:
     if not url.startswith("/") or url.startswith("//"):
         return False
     parsed = urlparse(url)
-    if parsed.scheme or parsed.netloc:
-        return False
-    return True
+    return not (parsed.scheme or parsed.netloc)
 
 
 def safe_redirect_target(url: str | None, default_endpoint: str = "main.dashboard", **url_kwargs):

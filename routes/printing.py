@@ -38,9 +38,7 @@ def _normalize_doc_type(doc_type):
 def _check_branch_scope(doc):
     """Check if the document's branch_id is within the user's branch scope."""
     scoped_branch_id = branch_scope_id()
-    if scoped_branch_id is not None and getattr(doc, "branch_id", None) != scoped_branch_id:
-        return True
-    return False
+    return bool(scoped_branch_id is not None and getattr(doc, "branch_id", None) != scoped_branch_id)
 
 
 def _get_filename(entry, doc, doc_type, record_id):

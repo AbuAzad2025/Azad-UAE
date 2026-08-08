@@ -813,10 +813,7 @@ def register_cheque_event_listeners():
     def _auto_update_status(mapper, connection, target):
         try:
             if target.status == "pending" and target.due_date:
-                if isinstance(target.due_date, datetime):
-                    due = target.due_date.date()
-                else:
-                    due = target.due_date
+                due = target.due_date.date() if isinstance(target.due_date, datetime) else target.due_date
                 today = date.today()
                 days_overdue = (today - due).days
                 if days_overdue > 7:

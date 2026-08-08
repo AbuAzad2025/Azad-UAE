@@ -36,19 +36,19 @@ def _patch_gl_dependencies(mocker):
 
 
 def _minimal_cheque(**overrides):
-    base = dict(
-        cheque_number=f"CH-{uuid.uuid4().hex[:6]}",
-        cheque_bank_number=f"BNK-{uuid.uuid4().hex[:4]}",
-        bank_name="Test Bank",
-        amount=Decimal("1000"),
-        amount_aed=Decimal("1000"),
-        currency="AED",
-        exchange_rate=Decimal("1"),
-        issue_date=date.today(),
-        due_date=date.today(),
-        cheque_type="incoming",
-        status="pending",
-    )
+    base = {
+        "cheque_number": f"CH-{uuid.uuid4().hex[:6]}",
+        "cheque_bank_number": f"BNK-{uuid.uuid4().hex[:4]}",
+        "bank_name": "Test Bank",
+        "amount": Decimal("1000"),
+        "amount_aed": Decimal("1000"),
+        "currency": "AED",
+        "exchange_rate": Decimal("1"),
+        "issue_date": date.today(),
+        "due_date": date.today(),
+        "cheque_type": "incoming",
+        "status": "pending",
+    }
     base.update(overrides)
     return Cheque(**base)
 

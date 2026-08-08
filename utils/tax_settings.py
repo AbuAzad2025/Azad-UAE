@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from decimal import Decimal
 import logging
+from decimal import Decimal
 
 from utils.regional_defaults import FALLBACK_VAT_COUNTRY
 

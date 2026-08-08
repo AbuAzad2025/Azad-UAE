@@ -299,10 +299,7 @@ def log_event(
     already persists the same event through LoggingCore itself (e.g. the 500
     handlers) so exactly one error_audit_logs row exists per real event.
     """
-    if isinstance(level, str):
-        level_no = _levels.get(level.upper(), logging.INFO)
-    else:
-        level_no = int(level)
+    level_no = _levels.get(level.upper(), logging.INFO) if isinstance(level, str) else int(level)
     explicit = {"tenant_id": tenant_id, "user_id": user_id}
     for field in _CONTEXT_FIELDS:
         if field in extras:
@@ -336,10 +333,7 @@ def log_exception(
     **extras,
 ) -> None:
     """Emit a SOFTWARE_EXCEPTION event with stack info."""
-    if isinstance(level, str):
-        level_no = _levels.get(level.upper(), logging.ERROR)
-    else:
-        level_no = int(level)
+    level_no = _levels.get(level.upper(), logging.ERROR) if isinstance(level, str) else int(level)
     explicit = {"tenant_id": tenant_id}
     payload = {"category": CATEGORY_SOFTWARE_EXCEPTION, "explicit": explicit, "extras": extras}
     exc_info = (type(exception), exception, exception.__traceback__) if exception is not None else True

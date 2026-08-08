@@ -793,10 +793,7 @@ class StockService:
             processed_product_ids.add(product.id)
 
             capitalize_landed = current_app.config.get("ENABLE_LANDED_COST_CAPITALIZATION", True)
-            if capitalize_landed:
-                unit_cost_for_valuation = line.landed_inventory_unit_cost
-            else:
-                unit_cost_for_valuation = line.inventory_unit_cost
+            unit_cost_for_valuation = line.landed_inventory_unit_cost if capitalize_landed else line.inventory_unit_cost
             exchange_rate_decimal = Decimal(str(purchase.exchange_rate))
             cost_in_aed = unit_cost_for_valuation * exchange_rate_decimal
 

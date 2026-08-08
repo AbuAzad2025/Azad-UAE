@@ -1,3 +1,4 @@
+import contextlib
 import re
 from pathlib import Path
 
@@ -14,10 +15,8 @@ class TestFrontendSecurityAudit:
                 continue
             if path.name.startswith("_"):
                 continue
-            try:
+            with contextlib.suppress(UnicodeDecodeError):
                 files[path] = path.read_text(encoding="utf-8")
-            except UnicodeDecodeError:
-                pass
         return files
 
     def test_no_hardcoded_prices_in_js(self):
@@ -124,9 +123,8 @@ class TestFrontendSecurityAudit:
             except UnicodeDecodeError:
                 text = path.read_text(encoding="utf-8", errors="replace")
             # Check for unescaped user input
-            if "{{ " in text and " | " in text:
-                if "|safe" in text:
-                    rel = str(path.relative_to(templates_dir))
-                    issues.append(rel)
-                    break
+            if "{{ " in text and " | " in text and "|safe" in text:
+                rel = str(path.relative_to(templates_dir))
+                issues.append(rel)
+                break
         assert issues == [], f"Templates using |safe filter: {issues[:20]}"

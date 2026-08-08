@@ -59,10 +59,7 @@ def campaigns_create():
 @permission_required("manage_products")
 def warranty_index():
     tid = get_active_tenant_id(current_user)
-    if tid:
-        claims = WarrantyClaim.query.filter_by(tenant_id=tid).order_by(WarrantyClaim.claim_date.desc()).all()
-    else:
-        claims = []
+    claims = WarrantyClaim.query.filter_by(tenant_id=tid).order_by(WarrantyClaim.claim_date.desc()).all() if tid else []
     return render_template("unified_inventory/warranty.html", claims=claims)
 
 
@@ -98,10 +95,7 @@ def warranty_create():
 @permission_required("manage_warehouse")
 def shipments_index():
     tid = get_active_tenant_id(current_user)
-    if tid:
-        shipments = Shipment.query.filter_by(tenant_id=tid).order_by(Shipment.created_at.desc()).all()
-    else:
-        shipments = []
+    shipments = Shipment.query.filter_by(tenant_id=tid).order_by(Shipment.created_at.desc()).all() if tid else []
     return render_template("unified_inventory/shipments.html", shipments=shipments)
 
 

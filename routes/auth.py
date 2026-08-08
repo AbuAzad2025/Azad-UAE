@@ -68,9 +68,7 @@ def _payment_id_known_locally(payment_id: str) -> bool:
         return True
     if PackagePurchase.query.filter_by(transaction_id=pid).first():
         return True
-    if Sale.query.filter_by(checkout_gateway_ref=pid).first():
-        return True
-    return False
+    return bool(Sale.query.filter_by(checkout_gateway_ref=pid).first())
 
 
 _DEFAULT_TENANT_NAME_AR = lazy_gettext("نظام المحاسبة")

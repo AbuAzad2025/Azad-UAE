@@ -94,7 +94,7 @@ class TenantAwareCache:
 
     def init_app(self, app, config=None):
         cache_type = (config or app.config).get("CACHE_TYPE")
-        if cache_type in (None, "", "null") and not app.config.get("APP_ENV", "").lower() == "production":
+        if cache_type in (None, "", "null") and app.config.get("APP_ENV", "").lower() != "production":
             app.config.setdefault("CACHE_NO_NULL_WARNING", True)
         return self._cache.init_app(app, config=config)
 
@@ -162,7 +162,7 @@ def get_or_create(db_session, model, defaults=None, **kwargs):
     instance = db_session.query(model).filter_by(**kwargs).first()
     if instance:
         return instance, False
-    params = dict((k, v) for k, v in kwargs.items())
+    params = dict(kwargs.items())
     if defaults:
         params.update(defaults)
     instance = model(**params)

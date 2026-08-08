@@ -123,7 +123,7 @@ class GamificationService:
         ).scalar() or Decimal("0")
 
         next_badge = None
-        for badge_key in GamificationService.BADGES.keys():
+        for badge_key in GamificationService.BADGES:
             if GamificationService.BADGES[badge_key]["points"] > points:  # type: ignore[operator]
                 next_badge = GamificationService.BADGES[badge_key]
                 break

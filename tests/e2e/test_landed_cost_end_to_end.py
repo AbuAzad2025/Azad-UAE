@@ -7,6 +7,7 @@ End-to-end Landed Cost test:
 5. Verify GL inventory debit includes landed costs
 """
 
+import contextlib
 import os
 import sys
 from datetime import UTC, datetime
@@ -257,10 +258,8 @@ def main():
             for ref_obj in [purchase, sale]:
                 ref_id = getattr(ref_obj, "id", None)
                 if ref_id:
-                    try:
+                    with contextlib.suppress(Exception):
                         StockMovement.query.filter_by(reference_id=ref_id).delete(synchronize_session=False)
-                    except Exception:
-                        pass
 
             records = [
                 (SaleLine, {"sale_id": getattr(sale, "id", None)}),
@@ -285,10 +284,8 @@ def main():
             for model, filters in records:
                 _id = filters.get("id") or filters.get("sale_id") or filters.get("purchase_id")
                 if _id:
-                    try:
+                    with contextlib.suppress(Exception):
                         model.query.filter_by(**filters).delete(synchronize_session=False)
-                    except Exception:
-                        pass
 
             # Restore PWC
             if pwc and old_pwc_qty is not None:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import io
 import logging
 import os
@@ -231,9 +232,7 @@ class TestSetupSecondPass:
         LoggingCore._handlers = {"app": handler}
 
         def access(path, mode):
-            if path == handler.baseFilename:
-                return False
-            return True
+            return path != handler.baseFilename
 
         with patch("os.access", side_effect=access):
             LoggingCore._run_self_diagnostics(app)
@@ -649,10 +648,8 @@ class TestAutoCleanupSecondPass:
             target()
 
         thread_cls.return_value.start.side_effect = start_thread
-        try:
+        with contextlib.suppress(KeyboardInterrupt):
             LoggingCore.schedule_cleanup(app, interval_hours=1)
-        except KeyboardInterrupt:
-            pass
         cleanup.assert_called_once()
 
     def test_schedule_cleanup_worker_error_path(self, app, mocker):
@@ -669,10 +666,8 @@ class TestAutoCleanupSecondPass:
 
         def capture_and_run():
             target = thread_cls.call_args.kwargs.get("target") or thread_cls.call_args[1]["target"]
-            try:
+            with contextlib.suppress(KeyboardInterrupt):
                 target()
-            except KeyboardInterrupt:
-                pass
 
         thread_cls.return_value.start.side_effect = capture_and_run
         LoggingCore.schedule_cleanup(app, interval_hours=1)

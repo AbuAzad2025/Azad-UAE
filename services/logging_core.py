@@ -946,7 +946,7 @@ class LoggingCore:
         last_exc = None
         delay = 0.1
         total_slept = 0.0
-        for attempt in range(5):
+        for _attempt in range(5):
             try:
                 with db.engine.connect() as conn:
                     result = conn.execute(sql, params)

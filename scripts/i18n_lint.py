@@ -118,11 +118,11 @@ def main() -> int:
                         translations_dict = node.value
                         break
     if translations_dict:
-        for k, v in zip(translations_dict.keys, translations_dict.values):
+        for k, v in zip(translations_dict.keys, translations_dict.values, strict=False):
             if isinstance(k, ast.Constant) and isinstance(k.value, str):
                 key = k.value
                 if isinstance(v, ast.Dict):
-                    for sk, sv in zip(v.keys, v.values):
+                    for sk, sv in zip(v.keys, v.values, strict=False):
                         if isinstance(sk, ast.Constant) and sk.value == "ar" and isinstance(sv, ast.Constant):
                             val = sv.value
                             if isinstance(val, str) and underscore_digit_re.search(val):

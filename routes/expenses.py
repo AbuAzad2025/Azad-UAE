@@ -571,10 +571,7 @@ def _validate_gl_account_code(gl_account_code, tenant_id):
 @permission_required("manage_expenses")
 def create_category():
     try:
-        if request.is_json:
-            data = request.get_json(silent=True) or {}
-        else:
-            data = request.form
+        data = request.get_json(silent=True) or {} if request.is_json else request.form
 
         tenant_id = require_active_tenant_id(current_user)
 
@@ -623,10 +620,7 @@ def _archived_expense_row(archived):
 
     data = archived.data or {}
     raw_date = data.get("expense_date")
-    if isinstance(raw_date, str):
-        expense_date = datetime.fromisoformat(raw_date.replace("Z", "+00:00"))
-    else:
-        expense_date = raw_date
+    expense_date = datetime.fromisoformat(raw_date.replace("Z", "+00:00")) if isinstance(raw_date, str) else raw_date
     return {
         "id": archived.record_id,
         "expense_number": data.get("expense_number"),

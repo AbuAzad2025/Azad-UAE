@@ -189,10 +189,7 @@ def search_pos_products(
             .limit(5)
             .all()
         )
-        if exact:
-            products = exact
-        else:
-            products = _product_search_filters(base, q).order_by(Product.name).limit(per_page).all()
+        products = exact or _product_search_filters(base, q).order_by(Product.name).limit(per_page).all()
     else:
         products = base.order_by(Product.name).limit(per_page).all()
 
@@ -283,10 +280,7 @@ def merge_checkout_lines(raw_lines: list) -> list[dict]:
         if discount_percent < 0 or discount_percent > 100:
             raise ValueError("نسبة الخصم يجب أن تكون بين 0 و 100.")
         unit_price = row.get("unit_price", None)
-        if unit_price is not None and str(unit_price).strip() != "":
-            unit_price = Decimal(str(unit_price))
-        else:
-            unit_price = None
+        unit_price = Decimal(str(unit_price)) if unit_price is not None and str(unit_price).strip() != "" else None
 
         if product_id not in merged:
             merged[product_id] = {

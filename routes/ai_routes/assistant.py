@@ -12,13 +12,14 @@ from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
 
 from extensions import db
-from .blueprint import ai_bp
 from services.stock_service import StockService
 from utils.ai_access import get_ai_access_state
 from utils.db_safety import atomic_transaction
 from utils.decorators import owner_required, permission_required
 from utils.gl_reference_types import GLRef
 from utils.tenanting import assign_tenant_id, get_active_tenant_id
+
+from .blueprint import ai_bp
 
 logger = logging.getLogger(__name__)
 
@@ -220,10 +221,7 @@ def _process_excel_intelligently(file, warehouse_id, user):
 
                     if "quantity" in column_mapping and column_mapping["quantity"] in row:
                         quantity_val = row[column_mapping["quantity"]]
-                        if pd.isna(quantity_val) or quantity_val == "":
-                            quantity = 0
-                        else:
-                            quantity = int(float(quantity_val))
+                        quantity = 0 if pd.isna(quantity_val) or quantity_val == "" else int(float(quantity_val))
                     else:
                         quantity = 0
 

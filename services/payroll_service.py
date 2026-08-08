@@ -363,10 +363,7 @@ class PayrollService:
         basic = Decimal(str(basic_salary or 0))
         if basic <= 0:
             return Decimal("0")
-        if contract_type == "unlimited":
-            days_per_year = Decimal("30")
-        else:
-            days_per_year = Decimal("21")
+        days_per_year = Decimal("30") if contract_type == "unlimited" else Decimal("21")
         monthly = (basic / Decimal("30")) * (days_per_year / Decimal("12"))
         return monthly.quantize(Decimal("0.001"))
 

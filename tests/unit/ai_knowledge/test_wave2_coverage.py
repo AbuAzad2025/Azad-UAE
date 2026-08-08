@@ -32,7 +32,7 @@ def _product_rows(count=25):
 
 def _sale_rows(count=55):
     rows = []
-    for i in range(count):
+    for _i in range(count):
         row = MagicMock()
         row.cost_price = Decimal("50")
         row.unit_price = Decimal("75")

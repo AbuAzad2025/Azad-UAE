@@ -103,18 +103,18 @@ class TestPartnerProfitAndLossDistribution:
     @staticmethod
     def _make_partner(**kwargs):
         p = MagicMock()
-        attrs = dict(
-            id=1,
-            tenant_id=1,
-            is_active=True,
-            scope_type="company",
-            scope_id=None,
-            share_percentage=Decimal("50"),
-            expense_share_percentage=Decimal("0"),
-            loss_share_percentage=Decimal("0"),
-            fixed_monthly_amount=Decimal("0"),
-            min_profit_threshold=Decimal("0"),
-        )
+        attrs = {
+            "id": 1,
+            "tenant_id": 1,
+            "is_active": True,
+            "scope_type": "company",
+            "scope_id": None,
+            "share_percentage": Decimal("50"),
+            "expense_share_percentage": Decimal("0"),
+            "loss_share_percentage": Decimal("0"),
+            "fixed_monthly_amount": Decimal("0"),
+            "min_profit_threshold": Decimal("0"),
+        }
         attrs.update(kwargs)
         for k, v in attrs.items():
             setattr(p, k, v)

@@ -106,7 +106,7 @@ def _product_rows(count=25, high_usage=False):
 
 def _sale_line_rows(count=55):
     rows = []
-    for i in range(count):
+    for _i in range(count):
         row = MagicMock()
         row.cost_price = Decimal("50")
         row.unit_price = Decimal("75")
@@ -148,7 +148,7 @@ def _customer_rows(count=30):
 
 def _fraud_rows(count=60):
     rows = []
-    for i in range(count):
+    for _i in range(count):
         row = MagicMock()
         row.amount_aed = Decimal("5000")
         row.discount_amount = Decimal("100")

@@ -74,10 +74,7 @@ def index():
             )
         )
 
-    if status:
-        query = query.filter_by(status=status)
-    else:
-        query = query.filter_by(status="confirmed")
+    query = query.filter_by(status=status) if status else query.filter_by(status="confirmed")
 
     if payment_status:
         query = query.filter_by(payment_status=payment_status)
@@ -153,7 +150,9 @@ def create():
                             )
                 except (ValueError, TypeError):
                     # Skip invalid lines
-                    current_app.logger.debug("Skipping invalid sale line: %r", line, exc_info=True)
+                    current_app.logger.debug(
+                        "Skipping invalid sale line at index %d", i, exc_info=True
+                    )
                     continue
 
             if not lines_data:

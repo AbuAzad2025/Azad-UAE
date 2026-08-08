@@ -7561,10 +7561,7 @@ def t(key, **kwargs):
     """
     lang = get_current_language()
 
-    if key in TRANSLATIONS:
-        text = TRANSLATIONS[key].get(lang, key)
-    else:
-        text = key
+    text = TRANSLATIONS[key].get(lang, key) if key in TRANSLATIONS else key
 
     if kwargs:
         text = text.format(**kwargs)

@@ -37,10 +37,7 @@ def is_global_user(user=None):
         return True
 
     is_super_admin = getattr(user, "is_super_admin", None)
-    if callable(is_super_admin) and is_super_admin():
-        return True
-
-    return False
+    return bool(callable(is_super_admin) and is_super_admin())
 
 
 def branch_scope_id_for(user=None):

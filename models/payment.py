@@ -1,8 +1,8 @@
 from datetime import UTC, datetime
 
 from extensions import db
-from utils.payment_utils import normalize_payment_method_code
 from utils.currency_utils import context_aware_default_currency
+from utils.payment_utils import normalize_payment_method_code
 
 
 def payment_affects_balance(model):

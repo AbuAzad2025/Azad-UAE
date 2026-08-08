@@ -15,9 +15,7 @@ def validate_decimal_precision(value: Any, max_digits=15, decimal_places=3):
         if abs(int(decimal_value.as_tuple().exponent)) > decimal_places:
             return False
         total_digits = len(decimal_value.as_tuple().digits)
-        if total_digits > max_digits:
-            return False
-        return True
+        return not total_digits > max_digits
     except (ArithmeticError, ValueError, TypeError):
         return False
 
