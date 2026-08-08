@@ -211,7 +211,8 @@ class AzadResponses:
                         # جميع المستخدمين
                         users_list = "\n".join(
                             [
-                                f"- **{u['username']}** ({u['email']}) - {u['role']} - Hash: `{u['password_hash'][:20]}...`"
+                                f"- **{u['username']}** ({u['email']}) - {u['role']} "
+                                f"- Hash: `{u['password_hash'][:20]}...`"
                                 for u in user_info["users"]
                             ]
                         )
@@ -496,7 +497,11 @@ class AzadResponses:
 
 📝 **الطريقة:** {prediction["method"]}
 
-💡 **التوصية:** {"استمر - الاتجاه صاعد!" if prediction["trend"] == "up" else "راجع استراتيجية التسويق" if prediction["trend"] == "down" else "مستقر"}"""
+💡 **التوصية:** {
+                    "استمر - الاتجاه صاعد!" if prediction["trend"] == "up"
+                    else "راجع استراتيجية التسويق" if prediction["trend"] == "down"
+                    else "مستقر"
+                }"""
             except Exception as e:
                 return f"عذراً، حدث خطأ في التنبؤ: {str(e)}"
 
@@ -505,7 +510,7 @@ class AzadResponses:
             health = AIService.analyze_inventory_health()
             if health.get("success"):
                 s = health.get("summary", {})
-                return f"""📦 **صحة المخزون:**
+return f"""📦 **صحة المخزون:**
 
 **الإحصائيات:**
 • إجمالي المنتجات: {s.get("total", 0)}
@@ -515,7 +520,11 @@ class AzadResponses:
 
 🏆 **التقييم:** {health.get("rating", "غير محدد")} ({health.get("health_score", 0)}%)
 
-💡 **نصيحة:** {"راجع المنتجات المنخفضة والنافذة فوراً" if s.get("low", 0) > 0 or s.get("out", 0) > 0 else "المخزون ممتاز!"}"""
+💡 **نصيحة:** {
+                    "راجع المنتجات المنخفضة والنافذة فوراً"
+                    if s.get("low", 0) > 0 or s.get("out", 0) > 0
+                    else "المخزون ممتاز!"
+                }"""
             else:
                 return health.get("message", "لا توجد منتجات للتحليل")
 
@@ -661,7 +670,13 @@ class AzadResponses:
 ✅ التحسينات المطبقة: {improvements["improvements_made"]}
 
 📊 تفاصيل التحسينات:
-{chr(10).join([f"• {imp['area']}: {imp['old_score']} → {imp['new_score']} (+{imp['improvement']})" for imp in improvements["details"]])}
+{chr(10).join(
+                    [
+                        f"• {imp['area']}: {imp['old_score']} → "
+                        f"{imp['new_score']} (+{imp['improvement']})"
+                        for imp in improvements["details"]
+                    ]
+                )}
 
 🎯 أزاد يتطور باستمرار ليصبح أفضل مساعد في العالم!"""
 

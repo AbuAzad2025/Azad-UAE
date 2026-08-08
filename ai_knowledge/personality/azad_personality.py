@@ -160,18 +160,14 @@ class AzadPersonality:
     @staticmethod
     def add_personality_to_response(response, mood="happy"):
         """إضافة الشخصية للرد"""
-        if mood == "happy":
-            return f"{response} 😊"
-        elif mood == "excited":
-            return f"{response} 🚀"
-        elif mood == "proud":
-            return f"{response} 🌟"
-        elif mood == "smart":
-            return f"{response} 💡"
-        elif mood == "love":
-            return f"{response} 💚"
-        else:
-            return f"{response} 😄"
+        mood_emoji = {
+            "happy": "😊",
+            "excited": "🚀",
+            "proud": "🌟",
+            "smart": "💡",
+            "love": "💚",
+        }
+        return f"{response} {mood_emoji.get(mood, '😄')}"
 
     @staticmethod
     def is_inappropriate_message(message):
