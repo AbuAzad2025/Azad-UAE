@@ -48,13 +48,20 @@ class PosWriteService:
         db.session.delete(order_type)
 
     @staticmethod
-    def create_floor(tenant_id: int, name: str, name_en: str = "", sort_order: int = 0):
+    def create_floor(
+        tenant_id: int,
+        name: str,
+        name_en: str = "",
+        name_ar: str = "",
+        sort_order: int = 0,
+    ):
         """Create a new restaurant floor."""
         from models import PosFloor
 
         floor = PosFloor(
             tenant_id=tenant_id,
             name=name,
+            name_ar=name_ar or None,
             name_en=name_en or None,
             sort_order=sort_order,
             is_active=True,
