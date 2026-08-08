@@ -302,7 +302,10 @@ class TestCreatePurchaseCurrency:
 
     def test_tenant_currency_fallback_on_exception(self, app, mocker):
         _patch_create_common(mocker)
-        mocker.patch("models.Tenant.get_current", side_effect=RuntimeError("no tenant"))
+        mocker.patch(
+            "services.purchase_service.Tenant.query.get",
+            side_effect=RuntimeError("no tenant"),
+        )
         mocker.patch("services.purchase_service.get_system_default_currency", return_value="AED")
         from services.purchase_service import PurchaseService
 
