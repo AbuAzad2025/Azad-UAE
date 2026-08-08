@@ -68,7 +68,12 @@ def intelligent_response(message: str, user_id: int | None = None, context: dict
 
                 h = datetime.now(UTC).hour
                 greeting = "صباح الخير" if 5 <= h < 12 else "مساء الخير" if 12 <= h < 18 else "مساء النور"
-                return f"{greeting} {'👤 ' + name if name else ''}! 🌟 أنا أزاد، مساعدك الذكي. اسألني عن أي شيء!\n\n{action_dispatcher.format_help()}"
+                help_text = action_dispatcher.format_help()
+                return (
+                    f"{greeting} {'👤 ' + name if name else ''}! "
+                    f"🌟 أنا أزاد، مساعدك الذكي. اسألني عن أي شيء!\n\n"
+                    f"{help_text}"
+                )
             result = action_dispatcher.dispatch(action_type, args)
             if result.success:
                 # Train from successful action

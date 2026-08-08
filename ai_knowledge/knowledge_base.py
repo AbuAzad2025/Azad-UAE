@@ -1,6 +1,12 @@
 """
 Consolidated module: knowledge_base.py
-Merged: knowledge/company_info.py, knowledge/customs.py, knowledge/tax_customs_knowledge.py, knowledge/parts_knowledge.py, knowledge/automotive_ecu_knowledge.py, knowledge/system_knowledge.py
+Merged:
+    - knowledge/company_info.py
+    - knowledge/customs.py
+    - knowledge/tax_customs_knowledge.py
+    - knowledge/parts_knowledge.py
+    - knowledge/automotive_ecu_knowledge.py
+    - knowledge/system_knowledge.py
 
 This module consolidates multiple small files into one.
 Old import paths still work via backward-compatible shims in the original files.
