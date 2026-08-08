@@ -210,11 +210,22 @@ class TestSaleServiceCreate:
                                         line_instance.product_id = 1
                                         line_instance.calculate_line_total = MagicMock()
                                         mock_line.return_value = line_instance
-                                        result = SaleService.create_sale(customer, seller, lines)
-                                        assert result is not None
-                                        assert result.total_amount == Decimal("200")
-                                        assert result.customer_id == 1
-                                        assert result.seller_id == 2
+                                        with patch(
+                                            "services.sale_service.Sale.calculate_totals",
+                                            autospec=True,
+                                        ) as mock_calc:
+                                            def _calc_side_effect(self_sale):
+                                                self_sale.total_amount = Decimal("200")
+                                                self_sale.amount = Decimal("200")
+                                                self_sale.amount_aed = Decimal("200")
+                                            mock_calc.side_effect = _calc_side_effect
+                                            result = SaleService.create_sale(
+                                                customer, seller, lines
+                                            )
+                                            assert result is not None
+                                            assert result.total_amount == Decimal("200")
+                                            assert result.customer_id == 1
+                                            assert result.seller_id == 2
 
     def test_create_sale_with_discount(self, app):
         from services.sale_service import SaleService
