@@ -135,12 +135,12 @@ class DocumentGenerator:
             total_receivables = total_amount - total_paid
 
             # تقرير المبيعات
-            report_content = f"""
+            report_content = f"""  # noqa: E501
             ╔══════════════════════════════════════════════════════════════╗
             ║                تقرير المبيعات - Sales Report                   ║
             ╠══════════════════════════════════════════════════════════════╣
-            ║ الفترة: {start_date.strftime("%Y-%m-%d") if start_date else "من البداية"} - {end_date.strftime("%Y-%m-%d") if end_date else "اليوم"}    ║
-            ║ تاريخ التقرير: {datetime.now().strftime("%Y-%m-%d %H:%M")}           ║
+            ║ الفترة: {start_date.strftime("%Y-%m-%d") if start_date else "من البداية"} - {end_date.strftime("%Y-%m-%d") if end_date else "اليوم"}    ║  # noqa: E501
+            ║ تاريخ التقرير: {datetime.now().strftime("%Y-%m-%d %H:%M")}           ║  # noqa: E501
             ║                                                            ║
             ╠══════════════════════════════════════════════════════════════╣
             ║                        الإحصائيات العامة                       ║
@@ -157,7 +157,7 @@ class DocumentGenerator:
 
             # تفاصيل الفواتير
             for sale in sales[-10:]:  # آخر 10 فواتير
-                report_content += f"""
+                report_content += f"""  # noqa: E501
             ║ #{sale.id:06d} | {sale.customer.name[:20]:20} | {sale.total_amount:8.2f} AED | {sale.created_at.strftime("%Y-%m-%d")} ║"""
 
             report_content += """
@@ -303,14 +303,14 @@ class DocumentGenerator:
             sales = query.all()
 
             # كشف الحساب
-            statement_content = f"""
+            statement_content = f"""  # noqa: E501
             ╔══════════════════════════════════════════════════════════════╗
             ║                 كشف حساب العميل - Customer Statement          ║
             ╠══════════════════════════════════════════════════════════════╣
             ║ العميل: {customer.name}                                    ║
             ║ الهاتف: {customer.phone or "غير محدد"}                      ║
             ║ الإيميل: {customer.email or "غير محدد"}                     ║
-            ║ الفترة: {start_date.strftime("%Y-%m-%d") if start_date else "من البداية"} - {end_date.strftime("%Y-%m-%d") if end_date else "اليوم"}    ║
+            ║ الفترة: {start_date.strftime("%Y-%m-%d") if start_date else "من البداية"} - {end_date.strftime("%Y-%m-%d") if end_date else "اليوم"}    ║  # noqa: E501
             ║                                                            ║
             ╠══════════════════════════════════════════════════════════════╣
             ║                        حركات الحساب                           ║
@@ -320,13 +320,13 @@ class DocumentGenerator:
             balance = Decimal("0")
             for sale in sales:
                 balance += sale.total_amount
-                statement_content += f"""
+                statement_content += f"""  # noqa: E501
             ║ {sale.created_at.strftime("%Y-%m-%d")} | فاتورة #{sale.id} | {sale.total_amount:8.2f} AED | الرصيد: {balance:8.2f} AED ║"""
 
                 # المدفوعات
                 for payment in sale.payments:
                     balance -= payment.amount
-                    statement_content += f"""
+                    statement_content += f"""  # noqa: E501
             ║ {payment.created_at.strftime("%Y-%m-%d")} | دفعة #{payment.id} | -{payment.amount:8.2f} AED | الرصيد: {balance:8.2f} AED ║"""
 
             statement_content += f"""
