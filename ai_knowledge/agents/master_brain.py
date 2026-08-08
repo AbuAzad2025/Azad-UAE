@@ -509,9 +509,9 @@ class MasterBrain:
                ("ضريبة" in question.lower() or "vat" in question.lower()):
                 vat_info = knowledge.get("uae_vat", {})
                 answer_parts.append(f"💰 ضريبة القيمة المضافة في الإمارات: {vat_info.get('rate', 5)}%")
-                    answer_parts.append(f"حد التسجيل: {vat_info.get('registration_threshold', 375000):,} درهم")
-                    sources.append("قوانين الضرائب الإماراتية")
-                    confidence = 1.0
+                answer_parts.append(f"حد التسجيل: {vat_info.get('registration_threshold', 375000):,} درهم")
+                sources.append("قوانين الضرائب الإماراتية")
+                confidence = 1.0
 
             # كمبيوترات السيارات
             if "sensors" in knowledge:
