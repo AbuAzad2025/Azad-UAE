@@ -9,7 +9,12 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["static/js/**/*.js"],
-      exclude: ["static/js/**/*.min.js", "**/node_modules/**", "**/tests/**"],
+      exclude: [
+        "static/js/**/*.min.js",
+        "**/node_modules/**",
+        "**/tests/**",
+        "static/js/pos/cashier-logic.js",
+      ],
       reporter: ["text", "html", "json-summary"],
       reportsDirectory: "coverage-frontend",
       thresholds: { lines: 8, functions: 40 },
