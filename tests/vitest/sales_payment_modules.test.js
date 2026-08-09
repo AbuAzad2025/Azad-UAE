@@ -69,11 +69,24 @@ describe('sales-create.js', () => {
 describe('sales-enhanced.js', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
+    // Mock jQuery and select2
+    const jqMock = vi.fn(() => ({
+      select2: vi.fn(),
+      on: vi.fn(),
+      val: vi.fn(),
+      trigger: vi.fn(),
+      ready: vi.fn(),
+    }));
+    jqMock.fn = { select2: vi.fn() };
+    jqMock.ready = vi.fn((cb) => cb());
+    global.$ = global.jQuery = jqMock;
     vi.resetModules();
   });
 
   afterEach(() => {
     document.body.innerHTML = '';
+    delete global.$;
+    delete global.jQuery;
     vi.resetModules();
   });
 
@@ -86,11 +99,22 @@ describe('sales-enhanced.js', () => {
 describe('sales-index.js', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
+    // Mock jQuery and DataTable
+    const jqMock = vi.fn(() => ({
+      DataTable: vi.fn(),
+      on: vi.fn(),
+      val: vi.fn(),
+      ready: vi.fn(),
+    }));
+    jqMock.fn = { DataTable: { isDataTable: vi.fn(() => false) } };
+    global.$ = global.jQuery = jqMock;
     vi.resetModules();
   });
 
   afterEach(() => {
     document.body.innerHTML = '';
+    delete global.$;
+    delete global.jQuery;
     vi.resetModules();
   });
 
@@ -103,11 +127,23 @@ describe('sales-index.js', () => {
 describe('payment-fields.js', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
+    // Mock jQuery
+    const jqMock = vi.fn(() => ({
+      on: vi.fn(),
+      val: vi.fn(),
+      trigger: vi.fn(),
+      closest: vi.fn(),
+      find: vi.fn(),
+    }));
+    jqMock.fn = {};
+    global.$ = global.jQuery = jqMock;
     vi.resetModules();
   });
 
   afterEach(() => {
     document.body.innerHTML = '';
+    delete global.$;
+    delete global.jQuery;
     vi.resetModules();
   });
 
