@@ -62,7 +62,7 @@ def get_backend_coverage():
     stats = defaultdict(lambda: {"total": 0, "covered": 0, "files": 0})
 
     for cat, _ in BACKEND_CATEGORIES:
-        cat_dir = PROJECT_ROOT / cat
+        cat_dir = PROJECT_ROOT / cat.replace(".", os.sep)
         if not cat_dir.is_dir():
             continue
         for py_file in cat_dir.rglob("*.py"):
