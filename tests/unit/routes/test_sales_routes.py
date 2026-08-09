@@ -319,8 +319,8 @@ class TestSalesCreate:
                     "lines[0][quantity]": "1",
                 },
             )
-        # Route returns 200 with error message for invalid lines
-        assert resp.status_code == 200
+        # Route returns 302 redirect for invalid lines
+        assert resp.status_code == 302
 
     def test_create_post_currency_fallback(self, sales_client):
         with (
