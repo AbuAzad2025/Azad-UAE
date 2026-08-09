@@ -125,13 +125,16 @@ class TestSaleServiceCreate:
                             line_instance.product_id = 1
                             line_instance.calculate_line_total = MagicMock()
                             mock_line.return_value = line_instance
-                            with patch(
-                                "services.sale_service.validate_currency_code",
-                                return_value="AED",
-                            ), patch.object(
-                                SaleService,
-                                "fulfill_sale",
-                                return_value=None,
+                            with (
+                                patch(
+                                    "services.sale_service.validate_currency_code",
+                                    return_value="AED",
+                                ),
+                                patch.object(
+                                    SaleService,
+                                    "fulfill_sale",
+                                    return_value=None,
+                                ),
                             ):
                                 result = SaleService.create_sale(customer, seller, lines, currency="AED")
                                 assert result is not None
@@ -192,13 +195,16 @@ class TestSaleServiceCreate:
                                         sn_obj.status = "available"
                                         sn_obj.warehouse_id = None
                                         mock_sn.query.filter_by.return_value.first.return_value = sn_obj
-                                        with patch(
-                                            "services.sale_service.validate_currency_code",
-                                            return_value="AED",
-                                        ), patch.object(
-                                            SaleService,
-                                            "fulfill_sale",
-                                            return_value=None,
+                                        with (
+                                            patch(
+                                                "services.sale_service.validate_currency_code",
+                                                return_value="AED",
+                                            ),
+                                            patch.object(
+                                                SaleService,
+                                                "fulfill_sale",
+                                                return_value=None,
+                                            ),
                                         ):
                                             result = SaleService.create_sale(
                                                 customer,

@@ -52,13 +52,17 @@ class TestPurchaseServiceValidations:
             mock_wh.return_value = wh
             with patch("services.purchase_service.ExchangeRateService") as mock_ex:
                 mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
-                with patch(
-                    "services.purchase_service.validate_currency_code",
-                    return_value="AED",
-                ), patch(
-                    "services.purchase_service.generate_number",
-                    return_value="P-001",
-                ), pytest.raises(ValueError, match="يجب إضافة منتج"):
+                with (
+                    patch(
+                        "services.purchase_service.validate_currency_code",
+                        return_value="AED",
+                    ),
+                    patch(
+                        "services.purchase_service.generate_number",
+                        return_value="P-001",
+                    ),
+                    pytest.raises(ValueError, match="يجب إضافة منتج"),
+                ):
                     PurchaseService.create_purchase(user, {"supplier_name": "Test"}, lines, warehouse_id=1)
 
 
@@ -84,13 +88,17 @@ class TestPurchaseServiceCreate:
             mock_wh.return_value = wh
             with patch("services.purchase_service.ExchangeRateService") as mock_ex:
                 mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
-                with patch(
-                    "services.purchase_service.validate_currency_code",
-                    return_value="AED",
-                ), patch(
-                    "services.purchase_service.generate_number",
-                    return_value="P-2024-001",
-                ), patch("services.purchase_service.db.session") as mock_db:
+                with (
+                    patch(
+                        "services.purchase_service.validate_currency_code",
+                        return_value="AED",
+                    ),
+                    patch(
+                        "services.purchase_service.generate_number",
+                        return_value="P-2024-001",
+                    ),
+                    patch("services.purchase_service.db.session") as mock_db,
+                ):
                     mock_db.add = MagicMock()
                     mock_db.flush = MagicMock()
                     mock_db.commit = MagicMock()
@@ -144,13 +152,17 @@ class TestPurchaseServiceCreate:
             mock_wh.return_value = wh
             with patch("services.purchase_service.ExchangeRateService") as mock_ex:
                 mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
-                with patch(
-                    "services.purchase_service.validate_currency_code",
-                    return_value="AED",
-                ), patch(
-                    "services.purchase_service.generate_number",
-                    return_value="P-001",
-                ), patch("services.purchase_service.db.session") as mock_db:
+                with (
+                    patch(
+                        "services.purchase_service.validate_currency_code",
+                        return_value="AED",
+                    ),
+                    patch(
+                        "services.purchase_service.generate_number",
+                        return_value="P-001",
+                    ),
+                    patch("services.purchase_service.db.session") as mock_db,
+                ):
                     mock_db.add = MagicMock()
                     mock_db.flush = MagicMock()
                     mock_db.commit = MagicMock()
@@ -163,10 +175,13 @@ class TestPurchaseServiceCreate:
                                 "services.purchase_service.db.session.get",
                                 return_value=product,
                             ).start()
-                            with patch(
-                                "services.purchase_service.post_or_fail",
-                                return_value=None,
-                            ), patch("models.product_serial.ProductSerial") as mock_sn:
+                            with (
+                                patch(
+                                    "services.purchase_service.post_or_fail",
+                                    return_value=None,
+                                ),
+                                patch("models.product_serial.ProductSerial") as mock_sn,
+                            ):
                                 mock_sn.query.filter_by.return_value.first.return_value = None
                                 mock_sn.query.filter.return_value.count.return_value = 0
                                 result = PurchaseService.create_purchase(
@@ -253,13 +268,17 @@ class TestPurchaseServiceTenantIsolation:
                 mock_supplier_class.query.filter_by.return_value.first.return_value = supplier
                 with patch("services.purchase_service.ExchangeRateService") as mock_ex:
                     mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
-                    with patch(
-                        "services.purchase_service.validate_currency_code",
-                        return_value="AED",
-                    ), patch(
-                        "services.purchase_service.generate_number",
-                        return_value="P-001",
-                    ), patch("services.purchase_service.db.session") as mock_db:
+                    with (
+                        patch(
+                            "services.purchase_service.validate_currency_code",
+                            return_value="AED",
+                        ),
+                        patch(
+                            "services.purchase_service.generate_number",
+                            return_value="P-001",
+                        ),
+                        patch("services.purchase_service.db.session") as mock_db,
+                    ):
                         mock_db.add = MagicMock()
                         mock_db.flush = MagicMock()
                         mock_db.commit = MagicMock()
@@ -315,13 +334,17 @@ class TestPurchaseServiceTenantIsolation:
             mock_wh.return_value = warehouse
             with patch("services.purchase_service.ExchangeRateService") as mock_ex:
                 mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
-                with patch(
-                    "services.purchase_service.validate_currency_code",
-                    return_value="AED",
-                ), patch(
-                    "services.purchase_service.generate_number",
-                    return_value="P-001",
-                ), patch("services.purchase_service.db.session") as mock_db:
+                with (
+                    patch(
+                        "services.purchase_service.validate_currency_code",
+                        return_value="AED",
+                    ),
+                    patch(
+                        "services.purchase_service.generate_number",
+                        return_value="P-001",
+                    ),
+                    patch("services.purchase_service.db.session") as mock_db,
+                ):
                     mock_db.add = MagicMock()
                     mock_db.flush = MagicMock()
                     mock_db.commit = MagicMock()
@@ -374,13 +397,17 @@ class TestPurchaseServiceTenantIsolation:
             mock_wh.return_value = wh
             with patch("services.purchase_service.ExchangeRateService") as mock_ex:
                 mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
-                with patch(
-                    "services.purchase_service.validate_currency_code",
-                    return_value="AED",
-                ), patch(
-                    "services.purchase_service.generate_number",
-                    return_value="P-001",
-                ), patch("services.purchase_service.db.session") as mock_db:
+                with (
+                    patch(
+                        "services.purchase_service.validate_currency_code",
+                        return_value="AED",
+                    ),
+                    patch(
+                        "services.purchase_service.generate_number",
+                        return_value="P-001",
+                    ),
+                    patch("services.purchase_service.db.session") as mock_db,
+                ):
                     mock_db.add = MagicMock()
                     mock_db.flush = MagicMock()
                     with patch("services.purchase_service.PurchaseLine") as mock_line:
@@ -388,10 +415,13 @@ class TestPurchaseServiceTenantIsolation:
                         line_instance.line_total = Decimal("100")
                         line_instance.id = 1
                         mock_line.return_value = line_instance
-                        with patch(
-                            "services.purchase_service.db.session.get",
-                            return_value=product,
-                        ), pytest.raises(ValueError, match="يتطلب"):
+                        with (
+                            patch(
+                                "services.purchase_service.db.session.get",
+                                return_value=product,
+                            ),
+                            pytest.raises(ValueError, match="يتطلب"),
+                        ):
                             PurchaseService.create_purchase(
                                 user,
                                 {"supplier_name": "Test"},
@@ -421,13 +451,17 @@ class TestPurchaseServiceTenantIsolation:
             mock_wh.return_value = wh
             with patch("services.purchase_service.ExchangeRateService") as mock_ex:
                 mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 3.67}
-                with patch(
-                    "services.purchase_service.validate_currency_code",
-                    return_value="USD",
-                ), patch(
-                    "services.purchase_service.generate_number",
-                    return_value="P-001",
-                ), patch("services.purchase_service.db.session") as mock_db:
+                with (
+                    patch(
+                        "services.purchase_service.validate_currency_code",
+                        return_value="USD",
+                    ),
+                    patch(
+                        "services.purchase_service.generate_number",
+                        return_value="P-001",
+                    ),
+                    patch("services.purchase_service.db.session") as mock_db,
+                ):
                     mock_db.add = MagicMock()
                     mock_db.flush = MagicMock()
                     mock_db.commit = MagicMock()

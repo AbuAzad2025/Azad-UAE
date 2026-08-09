@@ -264,7 +264,11 @@ def create_audit_log(action, table_name=None, record_id=None, changes=None):
     try:
         user_id = None
         if current_user:
-            if hasattr(current_user, "is_authenticated") and current_user.is_authenticated or hasattr(current_user, "id"):
+            if (
+                hasattr(current_user, "is_authenticated")
+                and current_user.is_authenticated
+                or hasattr(current_user, "id")
+            ):
                 user_id = current_user.id
 
         log = AuditLog(

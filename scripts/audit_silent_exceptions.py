@@ -112,9 +112,13 @@ def _returns_constant(handler: ast.ExceptHandler) -> bool:
                 return True
             if isinstance(value, ast.Constant) and value.value in (None, False):
                 return True
-            if isinstance(value, (ast.List, ast.Dict, ast.Set)) and not getattr(value, "elts", getattr(value, "keys", [])):
+            if isinstance(value, (ast.List, ast.Dict, ast.Set)) and not getattr(
+                value, "elts", getattr(value, "keys", [])
+            ):
                 return True
-            if isinstance(value, ast.Tuple) and all(isinstance(e, ast.Constant) and e.value is None for e in value.elts):
+            if isinstance(value, ast.Tuple) and all(
+                isinstance(e, ast.Constant) and e.value is None for e in value.elts
+            ):
                 return True
     return False
 
@@ -153,20 +157,14 @@ def audit_file(path: Path, rel: str) -> list[str]:
                 and not stats.reraises
                 and not stats.logs
             ):
-                errors.append(
-                    f"{rel}:{node.lineno}: SE5 protected file catches Exception without logging or re-raise"
-                )
+                errors.append(f"{rel}:{node.lineno}: SE5 protected file catches Exception without logging or re-raise")
         elif (
             rel in PROTECTED_FILES
             and isinstance(node, ast.Call)
             and isinstance(node.func, ast.Name)
             and node.func.id == "getattr"
         ):
-            if (
-                len(node.args) >= 3
-                and isinstance(node.args[1], ast.Constant)
-                and node.args[1].value in SCOPING_ATTRS
-            ):
+            if len(node.args) >= 3 and isinstance(node.args[1], ast.Constant) and node.args[1].value in SCOPING_ATTRS:
                 errors.append(
                     f"{rel}:{node.lineno}: SE3 getattr(..., {node.args[1].value!r}, default) hides missing scoping attribute"
                 )
@@ -181,13 +179,17 @@ def main() -> int:
             all_errors.extend(audit_file(base, root))
         elif base.is_dir():
             for path in sorted(base.rglob("*.py")):
-                if any(part in {".venv", "node_modules", "__pycache__", ".ci-repro", ".ci-repro2"} for part in path.parts):
+                if any(
+                    part in {".venv", "node_modules", "__pycache__", ".ci-repro", ".ci-repro2"} for part in path.parts
+                ):
                     continue
                 all_errors.extend(audit_file(path, path.relative_to(ROOT).as_posix()))
     for error in all_errors:
         print(f"::error::{error}")
     if all_errors:
-        print(f"\nSilent-exception audit FAILED: {len(all_errors)} violation(s). Fix the code — this gate has no exceptions.")
+        print(
+            f"\nSilent-exception audit FAILED: {len(all_errors)} violation(s). Fix the code — this gate has no exceptions."
+        )
         return 1
     print("Silent-exception audit passed.")
     return 0

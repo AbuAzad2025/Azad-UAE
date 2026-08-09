@@ -253,7 +253,7 @@ def _validate_instance_tenant(obj) -> bool:
         return True
 
     tid = _active_tenant_for_orm()
-    rec_tid = (obj.tenant_id if obj is not None else None)
+    rec_tid = obj.tenant_id if obj is not None else None
     if rec_tid is None:
         from utils.tenanting import is_platform_owner
 
@@ -349,7 +349,7 @@ def _inject_tenant_write_guard(session, flush_context, instances):
         mapper = sa_inspect(obj.__class__, raiseerr=False)
         if mapper is None or "tenant_id" not in mapper.columns:
             continue
-        obj_tid = (obj.tenant_id if obj is not None else None)
+        obj_tid = obj.tenant_id if obj is not None else None
         if obj_tid is None:
             if tid is not None:
                 obj.tenant_id = tid
@@ -366,7 +366,7 @@ def _inject_tenant_write_guard(session, flush_context, instances):
         mapper = sa_inspect(obj.__class__, raiseerr=False)
         if mapper is None or "tenant_id" not in mapper.columns:
             continue
-        obj_tid = (obj.tenant_id if obj is not None else None)
+        obj_tid = obj.tenant_id if obj is not None else None
         if obj_tid is None:
             continue
         if tid is not None and int(obj_tid or 0) != int(tid or 0):
@@ -382,7 +382,7 @@ def _inject_tenant_write_guard(session, flush_context, instances):
         mapper = sa_inspect(obj.__class__, raiseerr=False)
         if mapper is None or "tenant_id" not in mapper.columns:
             continue
-        obj_tid = (obj.tenant_id if obj is not None else None)
+        obj_tid = obj.tenant_id if obj is not None else None
         if obj_tid is None:
             continue
         if tid is not None and int(obj_tid or 0) != int(tid or 0):

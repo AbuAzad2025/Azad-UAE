@@ -150,9 +150,7 @@ def create():
                             )
                 except (ValueError, TypeError):
                     # Skip invalid lines
-                    current_app.logger.debug(
-                        "Skipping invalid sale line at index %d", i, exc_info=True
-                    )
+                    current_app.logger.debug("Skipping invalid sale line at index %d", i, exc_info=True)
                     continue
 
             if not lines_data:

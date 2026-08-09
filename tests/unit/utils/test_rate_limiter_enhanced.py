@@ -53,7 +53,8 @@ class TestSmartRateLimit:
     def test_allows_requests_under_limit(self, flask_app):
         now = datetime(2026, 6, 1, 12, 0, 0)
         with (
-            flask_app.test_request_context("/api/test", environ_base={"REMOTE_ADDR": "10.0.0.1"}), patch(
+            flask_app.test_request_context("/api/test", environ_base={"REMOTE_ADDR": "10.0.0.1"}),
+            patch(
                 "utils.rate_limiter_enhanced.current_user",
                 MagicMock(is_authenticated=False),
             ),
@@ -70,7 +71,8 @@ class TestSmartRateLimit:
         now = datetime(2026, 6, 1, 12, 0, 0)
         recent = [now - timedelta(seconds=5), now - timedelta(seconds=10)]
         with (
-            flask_app.test_request_context("/api/test", environ_base={"REMOTE_ADDR": "10.0.0.2"}), patch(
+            flask_app.test_request_context("/api/test", environ_base={"REMOTE_ADDR": "10.0.0.2"}),
+            patch(
                 "utils.rate_limiter_enhanced.current_user",
                 MagicMock(is_authenticated=False),
             ),
@@ -86,7 +88,8 @@ class TestSmartRateLimit:
         now = datetime(2026, 6, 1, 12, 0, 0)
         stale = [now - timedelta(seconds=120)]
         with (
-            flask_app.test_request_context("/api/test", environ_base={"REMOTE_ADDR": "10.0.0.3"}), patch(
+            flask_app.test_request_context("/api/test", environ_base={"REMOTE_ADDR": "10.0.0.3"}),
+            patch(
                 "utils.rate_limiter_enhanced.current_user",
                 MagicMock(is_authenticated=False),
             ),
@@ -128,7 +131,8 @@ class TestAdaptiveRateLimit:
                 assert flask_app.view_functions["adaptive_endpoint"]() == {"ok": True}
 
         with (
-            flask_app.test_request_context("/api/adaptive"), patch("utils.rate_limiter_enhanced.current_user", manager),
+            flask_app.test_request_context("/api/adaptive"),
+            patch("utils.rate_limiter_enhanced.current_user", manager),
             patch("utils.rate_limiter_enhanced.cache.get", return_value=40),
             patch("utils.rate_limiter_enhanced.cache.set"),
         ):
@@ -136,7 +140,8 @@ class TestAdaptiveRateLimit:
 
     def test_anonymous_user_gets_reduced_limit_and_blocks(self, flask_app):
         with (
-            flask_app.test_request_context("/api/adaptive", environ_base={"REMOTE_ADDR": "8.8.8.8"}), patch(
+            flask_app.test_request_context("/api/adaptive", environ_base={"REMOTE_ADDR": "8.8.8.8"}),
+            patch(
                 "utils.rate_limiter_enhanced.current_user",
                 MagicMock(is_authenticated=False),
             ),

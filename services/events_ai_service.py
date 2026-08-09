@@ -420,7 +420,6 @@ def _predict_customer_churn(mapper, connection, target):
         if last_sale:
             sale_date = last_sale.sale_date
             if sale_date.tzinfo is None:
-
                 sale_date = sale_date.replace(tzinfo=UTC)
             days_since_purchase = (datetime.now(UTC) - sale_date).days
             if days_since_purchase > 90:

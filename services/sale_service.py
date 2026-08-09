@@ -110,11 +110,13 @@ class SaleService:
         from models import Warehouse
 
         tenant_id = (
-            get_active_tenant_id(seller) or (seller.tenant_id if seller is not None else None) or (customer.tenant_id if customer is not None else None)
+            get_active_tenant_id(seller)
+            or (seller.tenant_id if seller is not None else None)
+            or (customer.tenant_id if customer is not None else None)
         )
         if not warehouse_id:
             warehouse = None
-            seller_branch_id = (seller.branch_id if seller is not None else None)
+            seller_branch_id = seller.branch_id if seller is not None else None
             warehouse_query = Warehouse.query.filter_by(is_active=True)
             if tenant_id is not None:
                 warehouse_query = warehouse_query.filter_by(tenant_id=tenant_id)
@@ -510,7 +512,7 @@ class SaleService:
             raise ValueError(gettext("العميل غير موجود"))
 
         warehouse_id = sale.warehouse_id
-        tenant_id = (sale.tenant_id if sale is not None else None)
+        tenant_id = sale.tenant_id if sale is not None else None
 
         if SaleService.has_inventory_posted(sale):
             raise ValueError(gettext("تم تنفيذ المخزون لهذه الفاتورة مسبقاً"))
@@ -855,7 +857,7 @@ class SaleService:
             reference_id=sale.id,
             movement_type="sale",
         )
-        tenant_id = (sale.tenant_id if sale is not None else None)
+        tenant_id = sale.tenant_id if sale is not None else None
         if tenant_id is not None:
             query = query.filter(StockMovement.tenant_id == tenant_id)
         return query.first() is not None

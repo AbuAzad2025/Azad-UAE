@@ -156,7 +156,9 @@ class StockService:
         warehouse = (
             db.session.get(Warehouse, movement.warehouse_id) if getattr(movement, "warehouse_id", None) else None
         )
-        tenant_id = (movement.tenant_id if movement is not None else None) or (product.tenant_id if product is not None else None)
+        tenant_id = (movement.tenant_id if movement is not None else None) or (
+            product.tenant_id if product is not None else None
+        )
         loss_account = _resolve_gl_concept_account("INVENTORY_ADJUSTMENT_LOSS", "5150", tenant_id)
         asset_account = _resolve_gl_concept_account("INVENTORY_ASSET", "1140", tenant_id)
         gain_account = _resolve_gl_concept_account("INVENTORY_ADJUSTMENT_GAIN", "5150", tenant_id)
@@ -250,7 +252,7 @@ class StockService:
         if product and product.cost_price:
             cost_value = Decimal(str(quantity)) * Decimal(str(product.cost_price))
             if cost_value > 0:
-                tenant_id = (product.tenant_id if product is not None else None)
+                tenant_id = product.tenant_id if product is not None else None
                 asset_account = _resolve_gl_concept_account("INVENTORY_ASSET", "1140", tenant_id)
                 equity_account = _resolve_gl_concept_account("OPENING_BALANCE_EQUITY", "3130", tenant_id)
                 GLService.ensure_core_accounts(tenant_id=tenant_id)
@@ -307,7 +309,7 @@ class StockService:
                 current_app.logger.debug("Could not resolve current_user.id for stock movement")
                 user_id = None
 
-            tenant_id = (product.tenant_id if product is not None else None)
+            tenant_id = product.tenant_id if product is not None else None
 
             # تحديد المستودع
             if warehouse_id:
@@ -475,7 +477,7 @@ class StockService:
         product = db.session.get(Product, product_id)
         if not product:
             raise ValueError(gettext("المنتج غير موجود."))
-        tenant_id = (product.tenant_id if product is not None else None)
+        tenant_id = product.tenant_id if product is not None else None
 
         from_wh = Warehouse.query.filter_by(id=int(from_warehouse_id), is_active=True).first()
         to_wh = Warehouse.query.filter_by(id=int(to_warehouse_id), is_active=True).first()
@@ -624,7 +626,7 @@ class StockService:
         if not warehouse_id and hasattr(sale, "warehouse_id"):
             warehouse_id = sale.warehouse_id
 
-        tenant_id = (sale.tenant_id if sale is not None else None)
+        tenant_id = sale.tenant_id if sale is not None else None
         mwac_enabled = current_app.config.get("ENABLE_MWAC", False)
         total_cogs = Decimal("0")
 
@@ -773,7 +775,7 @@ class StockService:
         if not warehouse_id and hasattr(purchase, "warehouse_id"):
             warehouse_id = purchase.warehouse_id
 
-        tenant_id = (purchase.tenant_id if purchase is not None else None)
+        tenant_id = purchase.tenant_id if purchase is not None else None
         mwac_enabled = current_app.config.get("ENABLE_MWAC", False)
         processed_product_ids = set()
 
@@ -1040,7 +1042,7 @@ class StockService:
         from datetime import datetime
 
         warehouse_id = getattr(sale, "warehouse_id", None)
-        tenant_id = (sale.tenant_id if sale is not None else None)
+        tenant_id = sale.tenant_id if sale is not None else None
         mwac_enabled = current_app.config.get("ENABLE_MWAC", False)
 
         for line in sale.lines:
@@ -1139,7 +1141,7 @@ class StockService:
         from datetime import datetime
 
         warehouse_id = getattr(purchase, "warehouse_id", None)
-        tenant_id = (purchase.tenant_id if purchase is not None else None)
+        tenant_id = purchase.tenant_id if purchase is not None else None
         mwac_enabled = current_app.config.get("ENABLE_MWAC", False)
 
         for line in purchase.lines:

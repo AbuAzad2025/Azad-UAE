@@ -325,10 +325,11 @@ class TestAzadResponsesWave4:
                 "ai_knowledge.personality.azad_responses.CUSTOMER_SERVICE",
                 {"principles": ["p1"]},
                 create=True,
-            ),patch(
-            "ai_knowledge.specialized.customer_service.CUSTOMER_SERVICE",
-            {"principles": ["p1", "p2"]},
-        )
+            ),
+            patch(
+                "ai_knowledge.specialized.customer_service.CUSTOMER_SERVICE",
+                {"principles": ["p1", "p2"]},
+            ),
         ):
             assert "tip" in responses.smart_response("نصiحة تعامل مع عميل customer")
             assert "p1" in responses.smart_response("عميل customer زبون")

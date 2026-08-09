@@ -97,8 +97,9 @@ class TestWantsJsonErrorResponse:
 
 class TestCsrfHandler:
     def test_csrf_json(self, app_with_handlers):
-        with patch("app.handlers.LoggingCore.log_error"), app_with_handlers.test_request_context(
-            "/api/data", method="POST", headers={"Accept": "application/json"}
+        with (
+            patch("app.handlers.LoggingCore.log_error"),
+            app_with_handlers.test_request_context("/api/data", method="POST", headers={"Accept": "application/json"}),
         ):
             resp = _invoke(app_with_handlers, CSRFError("bad token"))
         assert resp.status_code == 400
@@ -110,7 +111,8 @@ class TestCsrfHandler:
         with (
             patch("app.handlers.LoggingCore.log_error"),
             patch("app.handlers.current_user", anon),
-            patch("app.handlers.url_for", return_value="/login"),app_with_handlers.test_request_context("/page")
+            patch("app.handlers.url_for", return_value="/login"),
+            app_with_handlers.test_request_context("/page"),
         ):
             resp = _invoke(app_with_handlers, CSRFError("bad token"))
         assert resp.status_code in (302, 400)
@@ -132,7 +134,8 @@ class TestHttpErrorHandlers:
     def test_handle_500_production(self, app_with_handlers):
         with (
             patch("app.handlers.LoggingCore.log_error"),
-            patch("app.handlers.render_template", return_value="error"),app_with_handlers.test_request_context("/page")
+            patch("app.handlers.render_template", return_value="error"),
+            app_with_handlers.test_request_context("/page"),
         ):
             resp = _invoke(app_with_handlers, Exception("fail"))
         assert resp.status_code == 500
@@ -151,7 +154,8 @@ class TestHttpErrorHandlers:
 
         with (
             patch("app.handlers.LoggingCore.log_error"),
-            patch("app.handlers.render_template", return_value="error"),app_with_handlers.test_request_context("/page")
+            patch("app.handlers.render_template", return_value="error"),
+            app_with_handlers.test_request_context("/page"),
         ):
             resp = _invoke(app_with_handlers, InternalServerError())
         assert resp.status_code == 500
@@ -282,8 +286,11 @@ class TestHandle403Standardization:
         assert resp.get_json()["message"] == "Requires manage_ledger"
 
     def test_xhr_403_returns_json(self, app_with_handlers):
-        with patch("app.handlers.LoggingCore.log_error"), app_with_handlers.test_request_context(
-            "/payments/delete/5", headers={"X-Requested-With": "XMLHttpRequest"}
+        with (
+            patch("app.handlers.LoggingCore.log_error"),
+            app_with_handlers.test_request_context(
+                "/payments/delete/5", headers={"X-Requested-With": "XMLHttpRequest"}
+            ),
         ):
             resp = _invoke(app_with_handlers, Forbidden())
         assert resp.status_code == 403

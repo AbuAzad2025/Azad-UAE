@@ -129,9 +129,7 @@ def register_payment_listeners():
         try:
             if hasattr(target, "supplier_id") and target.supplier_id:
                 pn = getattr(target, "payment_number", target.id)
-                logger.info(
-                    f"Payment {pn} created - amount: {target.amount_aed} AED to supplier {target.supplier_id}"
-                )
+                logger.info(f"Payment {pn} created - amount: {target.amount_aed} AED to supplier {target.supplier_id}")
         except Exception as e:
             logger.warning(f"Failed to log payment: {e}")
 

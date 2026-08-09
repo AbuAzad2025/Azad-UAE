@@ -29,7 +29,8 @@ class TestPaymentServiceHelpers:
             patch(
                 "services.payment_service.ExchangeRateService.resolve_exchange_rate_for_transaction",
                 return_value={"rate_mode": "needs_input"},
-            ),pytest.raises(ValueError, match="سعر الصرف")
+            ),
+            pytest.raises(ValueError, match="سعر الصرف"),
         ):
             PaymentService._resolve_transaction_rate("USD")
 

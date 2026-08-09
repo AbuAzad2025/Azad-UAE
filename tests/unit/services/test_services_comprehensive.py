@@ -37,20 +37,23 @@ class TestPrintService:
     def test_render_print_basic(self, mock_render):
         from services.print_service import PrintService
 
-        with patch.object(
-            PrintService,
-            "_get_tenant_context",
-            return_value={
-                "tenant": None,
-                "settings": None,
-                "company": None,
-                "print_branding": {},
-                "print_tenant_id": 1,
-            },
-        ), patch.object(
-            PrintService,
-            "_user_context",
-            return_value={"print_user_name": "test", "print_user_id": 1},
+        with (
+            patch.object(
+                PrintService,
+                "_get_tenant_context",
+                return_value={
+                    "tenant": None,
+                    "settings": None,
+                    "company": None,
+                    "print_branding": {},
+                    "print_tenant_id": 1,
+                },
+            ),
+            patch.object(
+                PrintService,
+                "_user_context",
+                return_value={"print_user_name": "test", "print_user_id": 1},
+            ),
         ):
             result = PrintService.render_print("print/test.html")
             assert result == "<html>printed</html>"
@@ -60,20 +63,23 @@ class TestPrintService:
     def test_render_print_with_extra_context(self, mock_render):
         from services.print_service import PrintService
 
-        with patch.object(
-            PrintService,
-            "_get_tenant_context",
-            return_value={
-                "tenant": None,
-                "settings": None,
-                "company": None,
-                "print_branding": {},
-                "print_tenant_id": 1,
-            },
-        ), patch.object(
-            PrintService,
-            "_user_context",
-            return_value={"print_user_name": "test", "print_user_id": 1},
+        with (
+            patch.object(
+                PrintService,
+                "_get_tenant_context",
+                return_value={
+                    "tenant": None,
+                    "settings": None,
+                    "company": None,
+                    "print_branding": {},
+                    "print_tenant_id": 1,
+                },
+            ),
+            patch.object(
+                PrintService,
+                "_user_context",
+                return_value={"print_user_name": "test", "print_user_id": 1},
+            ),
         ):
             result = PrintService.render_print("print/test.html", extra_context={"doc_id": 42})
             assert result == "<html>with-extra</html>"
@@ -363,7 +369,8 @@ class TestStockService:
         from services.stock_service import StockService
 
         with (
-            app.app_context(), patch("services.stock_service.ProductWarehouseCost.query") as pwc_q,
+            app.app_context(),
+            patch("services.stock_service.ProductWarehouseCost.query") as pwc_q,
             patch("services.stock_service.ProductCostHistory.query") as pch_q,
         ):
             pwc_q.filter_by.return_value.first.return_value = None

@@ -126,7 +126,9 @@ class PurchaseService:
 
         # Resolve tenant from warehouse (validated above) or active context
         tenant_id = (
-            get_active_tenant_id(user) or (user.tenant_id if user is not None else None) or (warehouse.tenant_id if warehouse is not None else None)
+            get_active_tenant_id(user)
+            or (user.tenant_id if user is not None else None)
+            or (warehouse.tenant_id if warehouse is not None else None)
         )
 
         # Generate Number
@@ -460,9 +462,9 @@ class PurchaseService:
         if not lines_data:
             raise ValueError(gettext("يجب إرجاع منتج واحد على الأقل"))
 
-        tenant_id = (purchase.tenant_id if purchase is not None else None)
+        tenant_id = purchase.tenant_id if purchase is not None else None
         warehouse_id = getattr(purchase, "warehouse_id", None)
-        branch_id = (purchase.branch_id if purchase is not None else None)
+        branch_id = purchase.branch_id if purchase is not None else None
 
         capitalized = current_app.config.get("ENABLE_LANDED_COST_CAPITALIZATION", True)
         mwac = current_app.config.get("ENABLE_MWAC", False)

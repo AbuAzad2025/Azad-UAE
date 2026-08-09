@@ -2002,7 +2002,8 @@ class TestOwnerExtendedCoverage:
             patch(
                 "utils.security_helpers.enforce_owner_ip_if_needed",
                 side_effect=RuntimeError("blocked"),
-            ),pytest.raises(RuntimeError)
+            ),
+            pytest.raises(RuntimeError),
         ):
             app.test_client().get("/owner/dashboard")
 
@@ -3566,7 +3567,8 @@ class TestOwnerDirectCalls:
         exec_result.scalar.return_value = 4
         with (
             _owner_route_patches(),
-            patch("sqlalchemy.inspect", return_value=inspector),app.test_request_context("/owner/database-tools")
+            patch("sqlalchemy.inspect", return_value=inspector),
+            app.test_request_context("/owner/database-tools"),
         ):
             result = database_tools()
         assert result is not None
@@ -3590,11 +3592,13 @@ class TestOwnerDirectCalls:
         with (
             _owner_route_patches(),
             patch("utils.auth_helpers.is_global_owner_user", return_value=False),
-            patch("routes.owner.get_active_tenant_id", return_value=1),app.test_request_context(
-            "/owner/backups/create",
-            method="POST",
-            data={"scope": "tenant", "tenant_id": "99"},
-        ), pytest.raises(Exception)
+            patch("routes.owner.get_active_tenant_id", return_value=1),
+            app.test_request_context(
+                "/owner/backups/create",
+                method="POST",
+                data={"scope": "tenant", "tenant_id": "99"},
+            ),
+            pytest.raises(Exception),
         ):
             create_scoped_backup()
 
@@ -3604,11 +3608,12 @@ class TestOwnerDirectCalls:
         app = app_factory(owner_bp)
         with (
             _owner_route_patches(),
-            patch("utils.auth_helpers.is_global_owner_user", return_value=False),app.test_request_context(
-            "/owner/backups/restore-target/x.sql.gz",
-            method="POST",
-            data={"target_database_url": "postgresql://u:p@localhost/db"},
-        )
+            patch("utils.auth_helpers.is_global_owner_user", return_value=False),
+            app.test_request_context(
+                "/owner/backups/restore-target/x.sql.gz",
+                method="POST",
+                data={"target_database_url": "postgresql://u:p@localhost/db"},
+            ),
         ):
             result = restore_backup_target("x.sql.gz")
         assert result.status_code in (302, 303)
@@ -3636,16 +3641,17 @@ class TestOwnerDirectCalls:
             patch("routes.owner.InvoiceSettings", inv_cls),
             patch("models.invoice_settings.InvoiceSettings", inv_cls),
             patch("os.makedirs"),
-            patch("os.path.join", side_effect=lambda *a: str(tmp_path) + "/" + a[-1]),app.test_request_context(
-            "/owner/invoice-settings",
-            method="POST",
-            data={
-                "company_name_ar": "شركة",
-                "company_logo": (BytesIO(b"png"), "logo.png"),
-                "watermark_image": (BytesIO(b"png"), "wm.png"),
-            },
-            content_type="multipart/form-data",
-        )
+            patch("os.path.join", side_effect=lambda *a: str(tmp_path) + "/" + a[-1]),
+            app.test_request_context(
+                "/owner/invoice-settings",
+                method="POST",
+                data={
+                    "company_name_ar": "شركة",
+                    "company_logo": (BytesIO(b"png"), "logo.png"),
+                    "watermark_image": (BytesIO(b"png"), "wm.png"),
+                },
+                content_type="multipart/form-data",
+            ),
         ):
             result = invoice_settings()
         assert result is not None
@@ -3713,13 +3719,16 @@ class TestOwnerFinalGaps:
                 tenant_store_platform_toggle(1)
             store = MagicMock()
             mock_db.session.get.return_value = store
-            with patch(
-                "services.store_service.StoreService.set_platform_disabled",
-                side_effect=RuntimeError("fail"),
-            ), app.test_request_context(
-                "/owner/tenant-stores/1/platform-toggle",
-                method="POST",
-                data={"platform_disabled": "1"},
+            with (
+                patch(
+                    "services.store_service.StoreService.set_platform_disabled",
+                    side_effect=RuntimeError("fail"),
+                ),
+                app.test_request_context(
+                    "/owner/tenant-stores/1/platform-toggle",
+                    method="POST",
+                    data={"platform_disabled": "1"},
+                ),
             ):
                 tenant_store_platform_toggle(1)
 
@@ -3734,22 +3743,28 @@ class TestOwnerFinalGaps:
 
         app = app_factory(owner_bp)
         with _owner_route_patches():
-            with patch(
-                "services.store_payment_method_service.StorePaymentMethodService.create_method",
-                side_effect=ValueError("dup"),
-            ), app.test_request_context(
-                "/owner/store-payment-methods/create",
-                method="POST",
-                data={"code": "x"},
+            with (
+                patch(
+                    "services.store_payment_method_service.StorePaymentMethodService.create_method",
+                    side_effect=ValueError("dup"),
+                ),
+                app.test_request_context(
+                    "/owner/store-payment-methods/create",
+                    method="POST",
+                    data={"code": "x"},
+                ),
             ):
                 store_payment_method_create()
-            with patch(
-                "services.store_payment_method_service.StorePaymentMethodService.create_method",
-                side_effect=RuntimeError("fail"),
-            ), app.test_request_context(
-                "/owner/store-payment-methods/create",
-                method="POST",
-                data={"code": "x"},
+            with (
+                patch(
+                    "services.store_payment_method_service.StorePaymentMethodService.create_method",
+                    side_effect=RuntimeError("fail"),
+                ),
+                app.test_request_context(
+                    "/owner/store-payment-methods/create",
+                    method="POST",
+                    data={"code": "x"},
+                ),
             ):
                 store_payment_method_create()
             with patch("routes.owner.db") as mock_db:
@@ -3773,19 +3788,25 @@ class TestOwnerFinalGaps:
                     data={"code": "x"},
                 ):
                     store_payment_method_edit(1)
-            with patch(
-                "services.store_payment_method_service.StorePaymentMethodService.toggle_enabled",
-                side_effect=ValueError("bad"),
-            ), app.test_request_context(
-                "/owner/store-payment-methods/1/toggle",
-                method="POST",
-                data={"is_enabled": "1"},
+            with (
+                patch(
+                    "services.store_payment_method_service.StorePaymentMethodService.toggle_enabled",
+                    side_effect=ValueError("bad"),
+                ),
+                app.test_request_context(
+                    "/owner/store-payment-methods/1/toggle",
+                    method="POST",
+                    data={"is_enabled": "1"},
+                ),
             ):
                 store_payment_method_toggle(1)
-            with patch(
-                "services.store_payment_method_service.StorePaymentMethodService.delete_method",
-                side_effect=ValueError("bad"),
-            ), app.test_request_context("/owner/store-payment-methods/1/delete", method="POST"):
+            with (
+                patch(
+                    "services.store_payment_method_service.StorePaymentMethodService.delete_method",
+                    side_effect=ValueError("bad"),
+                ),
+                app.test_request_context("/owner/store-payment-methods/1/delete", method="POST"),
+            ):
                 store_payment_method_delete(1)
 
     def test_export_database_json_direct(self, app_factory, bypass_owner_auth, tmp_path):
@@ -3898,10 +3919,13 @@ class TestOwnerFinalGaps:
                     api_update_tenant_settings()
             wh_cls = _model_class()
             wh_cls.query.filter_by.return_value.first.return_value = None
-            with patch("routes.owner.Warehouse", wh_cls), app.test_request_context(
-                "/owner/api/toggle-warehouse-negative",
-                method="POST",
-                json={"warehouse_id": 1},
+            with (
+                patch("routes.owner.Warehouse", wh_cls),
+                app.test_request_context(
+                    "/owner/api/toggle-warehouse-negative",
+                    method="POST",
+                    json={"warehouse_id": 1},
+                ),
             ):
                 api_toggle_warehouse_negative()
 
@@ -3933,10 +3957,13 @@ class TestOwnerFinalGaps:
         from routes.owner import api_supervisor_override, owner_bp
 
         app = app_factory(owner_bp)
-        with _owner_route_patches(), app.test_request_context(
-            "/owner/api/supervisor-override",
-            method="POST",
-            json={"supervisor_id": 1},
+        with (
+            _owner_route_patches(),
+            app.test_request_context(
+                "/owner/api/supervisor-override",
+                method="POST",
+                json={"supervisor_id": 1},
+            ),
         ):
             resp = api_supervisor_override()
         assert _status_code(resp) == 400
@@ -3974,7 +4001,8 @@ class TestOwnerFinalGaps:
             patch(
                 "services.store_payment_method_service.StorePaymentMethodService.delete_method",
                 side_effect=RuntimeError("del"),
-            ),app.test_request_context("/owner/store-payment-methods/1/delete", method="POST")
+            ),
+            app.test_request_context("/owner/store-payment-methods/1/delete", method="POST"),
         ):
             store_payment_method_delete(1)
 
@@ -3987,11 +4015,13 @@ class TestOwnerFinalGaps:
         with (
             _owner_route_patches(),
             patch("utils.auth_helpers.is_global_owner_user", return_value=False),
-            patch("utils.tenanting.get_active_tenant_id", return_value=None),app.test_request_context(
-            "/owner/backups/create",
-            method="POST",
-            data={"scope": "tenant", "tenant_id": "1"},
-        ), pytest.raises(Forbidden)
+            patch("utils.tenanting.get_active_tenant_id", return_value=None),
+            app.test_request_context(
+                "/owner/backups/create",
+                method="POST",
+                data={"scope": "tenant", "tenant_id": "1"},
+            ),
+            pytest.raises(Forbidden),
         ):
             create_scoped_backup()
 
@@ -4050,7 +4080,8 @@ class TestOwnerLastMile:
         inspector.get_table_names.return_value = ["users"]
         with (
             _owner_route_patches(),
-            patch("sqlalchemy.inspect", return_value=inspector),app.test_request_context("/owner/database-tools")
+            patch("sqlalchemy.inspect", return_value=inspector),
+            app.test_request_context("/owner/database-tools"),
         ):
             database_tools()
 
@@ -4120,13 +4151,16 @@ class TestOwnerLastMile:
         from routes.owner import owner_bp, system_config
 
         app = app_factory(owner_bp)
-        with _owner_route_patches(), app.test_request_context(
-            "/owner/system-config",
-            method="POST",
-            data={
-                "default_currency": "INVALID",
-                "azad_platform_fee_rate": "not-decimal",
-            },
+        with (
+            _owner_route_patches(),
+            app.test_request_context(
+                "/owner/system-config",
+                method="POST",
+                data={
+                    "default_currency": "INVALID",
+                    "azad_platform_fee_rate": "not-decimal",
+                },
+            ),
         ):
             system_config()
 
@@ -4136,11 +4170,12 @@ class TestOwnerLastMile:
         app = app_factory(owner_bp)
         with (
             _owner_route_patches(),
-            patch("utils.auth_helpers.is_global_owner_user", return_value=True),app.test_request_context(
-            "/owner/backups/create",
-            method="POST",
-            data={"scope": "branch", "tenant_id": "1"},
-        )
+            patch("utils.auth_helpers.is_global_owner_user", return_value=True),
+            app.test_request_context(
+                "/owner/backups/create",
+                method="POST",
+                data={"scope": "branch", "tenant_id": "1"},
+            ),
         ):
             create_scoped_backup()
 
@@ -4159,11 +4194,13 @@ class TestOwnerLastMile:
             _owner_route_patches(),
             patch("flask_login.utils._get_user", return_value=user),
             patch("utils.auth_helpers.is_global_owner_user", return_value=False),
-            patch("routes.owner.get_active_tenant_id", return_value=1),app.test_request_context(
-            "/owner/backups/create",
-            method="POST",
-            data={"scope": "branch", "tenant_id": "1", "branch_id": "9"},
-        ), pytest.raises(Forbidden)
+            patch("routes.owner.get_active_tenant_id", return_value=1),
+            app.test_request_context(
+                "/owner/backups/create",
+                method="POST",
+                data={"scope": "branch", "tenant_id": "1", "branch_id": "9"},
+            ),
+            pytest.raises(Forbidden),
         ):
             create_scoped_backup()
 
@@ -4275,16 +4312,17 @@ class TestOwnerLastMile:
             patch("routes.owner.InvoiceSettings", inv_cls),
             patch("models.invoice_settings.InvoiceSettings", inv_cls),
             patch("os.makedirs"),
-            patch("os.path.join", side_effect=lambda *a: str(tmp_path) + "/" + a[-1]),app.test_request_context(
-            "/owner/invoice-settings",
-            method="POST",
-            data={
-                "company_name_ar": "شركة",
-                "company_logo": (BytesIO(b"png"), "logo.png"),
-                "watermark_image": (BytesIO(b"wm"), "wm.png"),
-            },
-            content_type="multipart/form-data",
-        )
+            patch("os.path.join", side_effect=lambda *a: str(tmp_path) + "/" + a[-1]),
+            app.test_request_context(
+                "/owner/invoice-settings",
+                method="POST",
+                data={
+                    "company_name_ar": "شركة",
+                    "company_logo": (BytesIO(b"png"), "logo.png"),
+                    "watermark_image": (BytesIO(b"wm"), "wm.png"),
+                },
+                content_type="multipart/form-data",
+            ),
         ):
             invoice_settings()
 
@@ -4340,7 +4378,8 @@ class TestOwnerLastMile:
                 "routes.owner._known_tables_map",
                 return_value={"users": "users", "payment_vault": "payment_vault"},
             ),
-            patch("sqlalchemy.inspect", return_value=inspector),app.test_request_context("/owner/database-tools")
+            patch("sqlalchemy.inspect", return_value=inspector),
+            app.test_request_context("/owner/database-tools"),
         ):
             database_tools()
 
@@ -4441,7 +4480,8 @@ class TestOwnerHundredPercent:
             patch(
                 "services.backup_service.BackupService._resolve_pg_tool",
                 return_value=None,
-            ),app.test_request_context("/owner/export-database", method="POST", data={"format": "sql"})
+            ),
+            app.test_request_context("/owner/export-database", method="POST", data={"format": "sql"}),
         ):
             result = export_database()
         assert result.status_code in (302, 303)
@@ -4571,11 +4611,12 @@ class TestOwnerHundredPercent:
         with (
             _owner_route_patches(),
             patch("routes.owner.SystemSettings", settings_cls),
-            patch("routes.owner.Tenant.get_current", side_effect=RuntimeError("no tenant")),app.test_request_context(
-            "/owner/system-config",
-            method="POST",
-            data={"default_currency": "AED", "items_per_page": "25"},
-        )
+            patch("routes.owner.Tenant.get_current", side_effect=RuntimeError("no tenant")),
+            app.test_request_context(
+                "/owner/system-config",
+                method="POST",
+                data={"default_currency": "AED", "items_per_page": "25"},
+            ),
         ):
             system_config()
 
@@ -4660,11 +4701,12 @@ class TestOwnerHundredPercent:
             _owner_route_patches(),
             patch("flask_login.utils._get_user", return_value=mock_user),
             patch("utils.decorators.is_global_owner_user", return_value=False),
-            patch("extensions.limiter.limit", return_value=lambda f: f),app.test_request_context(
-            "/owner/api/toggle-warehouse-negative",
-            method="POST",
-            json={"warehouse_id": None},
-        )
+            patch("extensions.limiter.limit", return_value=lambda f: f),
+            app.test_request_context(
+                "/owner/api/toggle-warehouse-negative",
+                method="POST",
+                json={"warehouse_id": None},
+            ),
         ):
             resp = api_toggle_warehouse_negative()
         assert _status_code(resp) == 400

@@ -166,7 +166,8 @@ class TestDynamicResourceLimits:
         _create_confirmed_sale()
 
         with (
-            app.test_request_context(), patch(
+            app.test_request_context(),
+            patch(
                 "utils.tenant_limits.get_active_tenant_id",
                 return_value=sample_tenant.id,
             ),
@@ -216,7 +217,8 @@ class TestDynamicResourceLimits:
             return "ok"
 
         with (
-            app.test_request_context(), patch(
+            app.test_request_context(),
+            patch(
                 "utils.tenant_limits.get_active_tenant_id",
                 return_value=sample_tenant.id,
             ),
@@ -247,11 +249,13 @@ class TestSaleServiceMonthlyLimitEnforcement:
         seller.branch_id = None
 
         with (
-            app.test_request_context(), patch("utils.tenant_limits._active_tenant", return_value=sample_tenant),
+            app.test_request_context(),
+            patch("utils.tenant_limits._active_tenant", return_value=sample_tenant),
             patch(
                 "utils.tenant_limits.check_sales_monthly_limit",
                 side_effect=TenantLimitError("sales_per_month", 1, 1),
-            ),pytest.raises(TenantLimitError)
+            ),
+            pytest.raises(TenantLimitError),
         ):
             SaleService.create_sale(
                 customer=customer,

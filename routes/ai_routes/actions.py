@@ -243,15 +243,18 @@ def _process_user_action(message, user):
 
 🤖 أعد إدخال الرصيد..."""
 
-        if any(
-            word in msg_lower
-            for word in [
-                gettext("عميل"),
-                gettext("عميل جديد"),
-                gettext("إضافة عميل"),
-                gettext("إنشاء عميل"),
-            ]
-        ) and ":" not in message:
+        if (
+            any(
+                word in msg_lower
+                for word in [
+                    gettext("عميل"),
+                    gettext("عميل جديد"),
+                    gettext("إضافة عميل"),
+                    gettext("إنشاء عميل"),
+                ]
+            )
+            and ":" not in message
+        ):
             ctx = {"last_action": gettext("عميل"), "step": 0}
             return """🤖 فهمت! تريد إضافة عميل جديد. إليك الخيارات:
 
@@ -264,15 +267,18 @@ def _process_user_action(message, user):
 
 🤖 مثال: اكتب "1" لإضافة عميل جديد"""
 
-        if any(
-            word in msg_lower
-            for word in [
-                gettext("منتج"),
-                gettext("منتج جديد"),
-                gettext("إضافة منتج"),
-                gettext("إنشاء منتج"),
-            ]
-        ) and ":" not in message:
+        if (
+            any(
+                word in msg_lower
+                for word in [
+                    gettext("منتج"),
+                    gettext("منتج جديد"),
+                    gettext("إضافة منتج"),
+                    gettext("إنشاء منتج"),
+                ]
+            )
+            and ":" not in message
+        ):
             ctx = {"last_action": gettext("منتج"), "step": 0}
             return """🤖 فهمت! تريد إضافة منتج جديد. إليك الخيارات:
 
@@ -286,15 +292,18 @@ def _process_user_action(message, user):
 
 🤖 مثال: اكتب "1" لإضافة منتج جديد"""
 
-        if any(
-            word in msg_lower
-            for word in [
-                gettext("فاتورة"),
-                gettext("بيع"),
-                gettext("مبيعات"),
-                gettext("إنشاء فاتورة"),
-            ]
-        ) and ":" not in message:
+        if (
+            any(
+                word in msg_lower
+                for word in [
+                    gettext("فاتورة"),
+                    gettext("بيع"),
+                    gettext("مبيعات"),
+                    gettext("إنشاء فاتورة"),
+                ]
+            )
+            and ":" not in message
+        ):
             ctx = {"last_action": gettext("فاتورة"), "step": 0}
             return """🤖 فهمت! تريد إنشاء فاتورة مبيعات. إليك الخيارات:
 
@@ -325,15 +334,18 @@ def _process_user_action(message, user):
 
 🤖 مثال: اكتب "1" لاستلام دفعة من عميل"""
 
-        if any(
-            word in msg_lower
-            for word in [
-                gettext("إعطاء"),
-                gettext("أعطى"),
-                gettext("دفعة لل"),
-                gettext("دفعة ل"),
-            ]
-        ) and ":" not in message:
+        if (
+            any(
+                word in msg_lower
+                for word in [
+                    gettext("إعطاء"),
+                    gettext("أعطى"),
+                    gettext("دفعة لل"),
+                    gettext("دفعة ل"),
+                ]
+            )
+            and ":" not in message
+        ):
             ctx = {"last_action": gettext("إعطاء"), "step": 0}
             return """🤖 فهمت! تريد إعطاء دفعة للعميل. إليك الخيارات:
 
@@ -346,14 +358,17 @@ def _process_user_action(message, user):
 
 🤖 مثال: اكتب "1" لإعطاء دفعة للعميل"""
 
-        if any(
-            word in msg_lower
-            for word in [
-                gettext("مصروف"),
-                gettext("إضافة مصروف"),
-                gettext("إنشاء مصروف"),
-            ]
-        ) and ":" not in message:
+        if (
+            any(
+                word in msg_lower
+                for word in [
+                    gettext("مصروف"),
+                    gettext("إضافة مصروف"),
+                    gettext("إنشاء مصروف"),
+                ]
+            )
+            and ":" not in message
+        ):
             ctx = {"last_action": gettext("مصروف"), "step": 0}
             return """🤖 فهمت! تريد إضافة مصروف. إليك الخيارات:
 
@@ -366,15 +381,18 @@ def _process_user_action(message, user):
 
 🤖 مثال: اكتب "1" لإضافة مصروف جديد"""
 
-        if any(
-            word in msg_lower
-            for word in [
-                gettext("مورد"),
-                gettext("مورد جديد"),
-                gettext("إضافة مورد"),
-                gettext("إنشاء مورد"),
-            ]
-        ) and ":" not in message:
+        if (
+            any(
+                word in msg_lower
+                for word in [
+                    gettext("مورد"),
+                    gettext("مورد جديد"),
+                    gettext("إضافة مورد"),
+                    gettext("إنشاء مورد"),
+                ]
+            )
+            and ":" not in message
+        ):
             ctx = {"last_action": gettext("مورد"), "step": 0}
             return """🤖 فهمت! تريد إضافة مورد جديد. إليك الخيارات:
 
@@ -387,15 +405,18 @@ def _process_user_action(message, user):
 
 🤖 مثال: اكتب "1" لإضافة مورد جديد"""
 
-        if any(
-            word in msg_lower
-            for word in [
-                gettext("مشتريات"),
-                gettext("شراء"),
-                gettext("إضافة مشتريات"),
-                gettext("إنشاء مشتريات"),
-            ]
-        ) and ":" not in message:
+        if (
+            any(
+                word in msg_lower
+                for word in [
+                    gettext("مشتريات"),
+                    gettext("شراء"),
+                    gettext("إضافة مشتريات"),
+                    gettext("إنشاء مشتريات"),
+                ]
+            )
+            and ":" not in message
+        ):
             ctx = {"last_action": gettext("مشتريات"), "step": 0}
             return """🤖 فهمت! تريد إضافة مشتريات. إليك الخيارات:
 
@@ -408,15 +429,18 @@ def _process_user_action(message, user):
 
 🤖 مثال: اكتب "1" لإضافة مشتريات جديدة"""
 
-        if any(
-            word in msg_lower
-            for word in [
-                gettext("شيك"),
-                gettext("شيكات"),
-                gettext("إضافة شيك"),
-                gettext("إنشاء شيك"),
-            ]
-        ) and ":" not in message:
+        if (
+            any(
+                word in msg_lower
+                for word in [
+                    gettext("شيك"),
+                    gettext("شيكات"),
+                    gettext("إضافة شيك"),
+                    gettext("إنشاء شيك"),
+                ]
+            )
+            and ":" not in message
+        ):
             ctx = {"last_action": gettext("شيك"), "step": 0}
             return """🤖 فهمت! تريد إضافة شيك. إليك الخيارات:
 
@@ -429,15 +453,18 @@ def _process_user_action(message, user):
 
 🤖 مثال: اكتب "1" لإضافة شيك جديد"""
 
-        if any(
-            word in msg_lower
-            for word in [
-                gettext("دفتر"),
-                gettext("دفتر الأستاذ"),
-                gettext("دفتر استاذ"),
-                gettext("قيد"),
-            ]
-        ) and ":" not in message:
+        if (
+            any(
+                word in msg_lower
+                for word in [
+                    gettext("دفتر"),
+                    gettext("دفتر الأستاذ"),
+                    gettext("دفتر استاذ"),
+                    gettext("قيد"),
+                ]
+            )
+            and ":" not in message
+        ):
             ctx = {"last_action": gettext("دفتر"), "step": 0}
             return """🤖 فهمت! تريد التعامل مع دفتر الأستاذ. إليك الخيارات:
 
@@ -449,15 +476,18 @@ def _process_user_action(message, user):
 
 🤖 مثال: اكتب "1" لعرض دفتر الأستاذ"""
 
-        if any(
-            word in msg_lower
-            for word in [
-                gettext("مستودع"),
-                gettext("مستودعات"),
-                gettext("مخزون"),
-                gettext("إدارة مستودعات"),
-            ]
-        ) and ":" not in message:
+        if (
+            any(
+                word in msg_lower
+                for word in [
+                    gettext("مستودع"),
+                    gettext("مستودعات"),
+                    gettext("مخزون"),
+                    gettext("إدارة مستودعات"),
+                ]
+            )
+            and ":" not in message
+        ):
             ctx = {"last_action": gettext("مستودع"), "step": 0}
             return """🤖 فهمت! تريد إدارة المستودعات. إليك الخيارات:
 
@@ -470,15 +500,18 @@ def _process_user_action(message, user):
 
 🤖 مثال: اكتب "1" لعرض جميع المستودعات"""
 
-        if any(
-            word in msg_lower
-            for word in [
-                gettext("مستخدم"),
-                gettext("مستخدمين"),
-                gettext("إضافة مستخدم"),
-                gettext("إنشاء مستخدم"),
-            ]
-        ) and ":" not in message:
+        if (
+            any(
+                word in msg_lower
+                for word in [
+                    gettext("مستخدم"),
+                    gettext("مستخدمين"),
+                    gettext("إضافة مستخدم"),
+                    gettext("إنشاء مستخدم"),
+                ]
+            )
+            and ":" not in message
+        ):
             ctx = {"last_action": gettext("مستخدم"), "step": 0}
             return """🤖 فهمت! تريد إدارة المستخدمين. إليك الخيارات:
 

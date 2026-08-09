@@ -261,8 +261,7 @@ class PaymentService:
                     currency=currency,
                     exchange_rate=exchange_rate,
                     amount_aed=convert_and_quantize_aed(
-                        amount, currency, exchange_rate,
-                        tenant_id=supplier.tenant_id if supplier is not None else None
+                        amount, currency, exchange_rate, tenant_id=supplier.tenant_id if supplier is not None else None
                     ),
                     issue_date=datetime.now(UTC).date(),
                     due_date=cheque_date or datetime.now(UTC).date(),
@@ -463,6 +462,7 @@ class PaymentService:
         resolved_branch_id = branch_id
         if resolved_branch_id is None and user_id is not None:
             from models import User
+
             user = db.session.get(User, user_id)
             if user:
                 resolved_branch_id = user.branch_id
@@ -797,8 +797,7 @@ class PaymentService:
 
                     sale_payment = Payment(
                         tenant_id=(
-                            sale.tenant_id if sale is not None else customer.tenant_id
-                            if customer is not None else None
+                            sale.tenant_id if sale is not None else customer.tenant_id if customer is not None else None
                         ),
                         payment_number=generate_number(
                             "PAY-S",
@@ -1106,8 +1105,7 @@ class PaymentService:
 
                 sale_payment = Payment(
                     tenant_id=(
-                        sale.tenant_id if sale is not None else customer.tenant_id
-                        if customer is not None else None
+                        sale.tenant_id if sale is not None else customer.tenant_id if customer is not None else None
                     ),
                     payment_number=generate_number(
                         "PAY-S",

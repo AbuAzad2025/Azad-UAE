@@ -109,10 +109,13 @@ class TestWave8ActionDispatcher:
     def test_flask_g_tenant_and_log_success(self):
         from ai_knowledge import action_dispatcher as ad
 
-        with patch(
-            "ai_knowledge.action_dispatcher.current_user",
-            SimpleNamespace(is_authenticated=False),
-        ), patch("flask.g", create=True) as g:
+        with (
+            patch(
+                "ai_knowledge.action_dispatcher.current_user",
+                SimpleNamespace(is_authenticated=False),
+            ),
+            patch("flask.g", create=True) as g,
+        ):
             g.active_tenant_id = 7
             assert ad._get_active_tenant_id() == 7
         with (

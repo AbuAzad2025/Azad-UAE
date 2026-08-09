@@ -556,10 +556,13 @@ class TestChatEndpoint:
         mock_ai_service.chat_response.assert_called_once()
 
     def test_wizard_help_in_context(self, ai_client, mock_ai_service):
-        with patch(
-            "routes.ai_routes.shared._get_conversation_context",
-            return_value={"last_action": "عميل", "option": "1", "step": 1},
-        ), patch("ai_knowledge.action_dispatcher.action_dispatcher") as ad:
+        with (
+            patch(
+                "routes.ai_routes.shared._get_conversation_context",
+                return_value={"last_action": "عميل", "option": "1", "step": 1},
+            ),
+            patch("ai_knowledge.action_dispatcher.action_dispatcher") as ad,
+        ):
             ad.parse_chat_action.return_value = None
             resp = ai_client.post("/ai/chat", json={"message": "مساعدة"})
         assert "مساعدة" in resp.get_json()["response"]
@@ -815,10 +818,13 @@ class TestProcessUserActionDirect:
         customer = _obj(name="Ali", balance=100)
         chain = MagicMock()
         chain.all.return_value = [customer]
-        with patch(
-            "routes.ai_routes.actions._conversation_ctx",
-            return_value={"last_action": "رصيد"},
-        ), patch("models.customer.Customer") as Customer:
+        with (
+            patch(
+                "routes.ai_routes.actions._conversation_ctx",
+                return_value={"last_action": "رصيد"},
+            ),
+            patch("models.customer.Customer") as Customer,
+        ):
             Customer.query.filter_by.return_value = chain
             result = _process_user_action("4", mock_user)
         assert "Ali" in result
@@ -828,10 +834,13 @@ class TestProcessUserActionDirect:
 
         chain = MagicMock()
         chain.all.return_value = []
-        with patch(
-            "routes.ai_routes.actions._conversation_ctx",
-            return_value={"last_action": "رصيد"},
-        ), patch("models.customer.Customer") as Customer:
+        with (
+            patch(
+                "routes.ai_routes.actions._conversation_ctx",
+                return_value={"last_action": "رصيد"},
+            ),
+            patch("models.customer.Customer") as Customer,
+        ):
             Customer.query.filter_by.return_value = chain
             result = _process_user_action("4", mock_user)
         assert "لا يوجد عملاء" in result
@@ -1022,10 +1031,15 @@ class TestProcessExcelIntelligently:
         df = pd.DataFrame({"name": ["Prod"], "part": ["PN1"], "price": [10]})
         warehouse = _obj(name="Main", id=1)
         file_obj = MagicMock()
-        with patch("routes.ai_routes.assistant.pd.read_excel", return_value=df), patch(
-            "routes.ai_routes._intelligent_column_detector",
-            return_value={"name": "name", "part_number": "part", "price": "price"},
-        ), patch("models.Warehouse") as Warehouse, patch("models.Product") as Product:
+        with (
+            patch("routes.ai_routes.assistant.pd.read_excel", return_value=df),
+            patch(
+                "routes.ai_routes._intelligent_column_detector",
+                return_value={"name": "name", "part_number": "part", "price": "price"},
+            ),
+            patch("models.Warehouse") as Warehouse,
+            patch("models.Product") as Product,
+        ):
             with patch("routes.ai_routes.assistant.db"):
                 with patch("routes.ai_routes.actions.assign_tenant_id"):
                     with patch("routes.ai_routes.assistant.StockService"):
@@ -1038,10 +1052,13 @@ class TestProcessExcelIntelligently:
     def test_unknown_structure(self, mock_user):
         from routes.ai_routes import _process_excel_intelligently
 
-        with patch(
-            "routes.ai_routes.assistant.pd.read_excel",
-            return_value=pd.DataFrame({"x": [1]}),
-        ), patch("routes.ai_routes._intelligent_column_detector", return_value=None):
+        with (
+            patch(
+                "routes.ai_routes.assistant.pd.read_excel",
+                return_value=pd.DataFrame({"x": [1]}),
+            ),
+            patch("routes.ai_routes._intelligent_column_detector", return_value=None),
+        ):
             result = _process_excel_intelligently(MagicMock(), 1, mock_user)
         assert result["success"] is False
 
@@ -1049,10 +1066,14 @@ class TestProcessExcelIntelligently:
         from routes.ai_routes import _process_excel_intelligently
 
         df = pd.DataFrame({"name": ["A"], "part": ["P"], "price": [1]})
-        with patch("routes.ai_routes.assistant.pd.read_excel", return_value=df), patch(
-            "routes.ai_routes._intelligent_column_detector",
-            return_value={"name": "name", "part_number": "part", "price": "price"},
-        ), patch("models.Warehouse") as Warehouse:
+        with (
+            patch("routes.ai_routes.assistant.pd.read_excel", return_value=df),
+            patch(
+                "routes.ai_routes._intelligent_column_detector",
+                return_value={"name": "name", "part_number": "part", "price": "price"},
+            ),
+            patch("models.Warehouse") as Warehouse,
+        ):
             Warehouse.query.filter_by.return_value.first.return_value = None
             result = _process_excel_intelligently(MagicMock(), 99, mock_user)
         assert "غير موجود" in result["error"]
@@ -1063,10 +1084,15 @@ class TestProcessExcelIntelligently:
         df = pd.DataFrame({"name": ["A"], "part": ["P1"], "price": [20]})
         warehouse = _obj(name="W")
         existing = MagicMock(id=5)
-        with patch("routes.ai_routes.assistant.pd.read_excel", return_value=df), patch(
-            "routes.ai_routes._intelligent_column_detector",
-            return_value={"name": "name", "part_number": "part", "price": "price"},
-        ), patch("models.Warehouse") as Warehouse, patch("models.Product") as Product:
+        with (
+            patch("routes.ai_routes.assistant.pd.read_excel", return_value=df),
+            patch(
+                "routes.ai_routes._intelligent_column_detector",
+                return_value={"name": "name", "part_number": "part", "price": "price"},
+            ),
+            patch("models.Warehouse") as Warehouse,
+            patch("models.Product") as Product,
+        ):
             with patch("routes.ai_routes.assistant.db"):
                 with patch("routes.ai_routes._train_ai_from_excel"):
                     Warehouse.query.filter_by.return_value.first.return_value = warehouse
@@ -1252,10 +1278,13 @@ class TestAssistant:
         assert "ai_access_state" in rt.call_args[1]
 
     def test_exception_renders_500(self, ai_client):
-        with patch(
-            "utils.branching.get_accessible_warehouses",
-            side_effect=RuntimeError("fail"),
-        ), patch("routes.ai_routes.assistant.render_template", return_value="err") as rt:
+        with (
+            patch(
+                "utils.branching.get_accessible_warehouses",
+                side_effect=RuntimeError("fail"),
+            ),
+            patch("routes.ai_routes.assistant.render_template", return_value="err") as rt,
+        ):
             resp = ai_client.get("/ai/assistant")
         assert resp.status_code == 500
         rt.assert_called_with("errors/500.html")

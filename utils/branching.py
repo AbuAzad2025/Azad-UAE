@@ -60,7 +60,7 @@ def report_branch_scope_id_for(user=None):
     if selected is not None:
         return selected
     if is_global_user(user) and not getattr(user, "is_owner", False):
-        home_branch_id = (user.branch_id if user is not None else None)
+        home_branch_id = user.branch_id if user is not None else None
         if home_branch_id:
             return int(home_branch_id or 0)
     return None
@@ -85,7 +85,7 @@ def get_accessible_branches_query(user=None):
         query = query.filter(Branch.tenant_id == tenant_id)
     if is_global_user(user):
         return query
-    branch_id = (user.branch_id if user is not None else None)
+    branch_id = user.branch_id if user is not None else None
     if branch_id is None:
         return query.filter(Branch.id < 0)
     return query.filter(Branch.id == branch_id)
@@ -156,7 +156,7 @@ def get_active_branch_id(user=None):
             session[ACTIVE_BRANCH_MODE_SESSION_KEY] = "single"
         return None
 
-    user_branch_id = (user.branch_id if user is not None else None)
+    user_branch_id = user.branch_id if user is not None else None
     if user_branch_id and session_branch_id and int(session_branch_id or 0) == int(user_branch_id or 0):
         return int(user_branch_id or 0)
     return int(user_branch_id or 0) if user_branch_id else None
@@ -185,7 +185,7 @@ def set_active_branch(branch_id=None, *, user=None, allow_all=False):
             session[ACTIVE_BRANCH_SESSION_KEY] = None
             session[ACTIVE_BRANCH_MODE_SESSION_KEY] = "all" if allow_all else "single"
             return
-        branch_id = (user.branch_id if user is not None else None)
+        branch_id = user.branch_id if user is not None else None
 
     if not user_can_access_branch(branch_id, user):
         raise ValueError("الفرع المحدد غير مسموح لهذا المستخدم.")

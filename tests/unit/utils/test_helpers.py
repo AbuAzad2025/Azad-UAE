@@ -93,7 +93,8 @@ class TestGenerateNumberAndSave:
         save = MagicMock(side_effect=IntegrityError("dup", {}, None))
         with (
             patch("utils.helpers.generate_number", return_value="N-1"),
-            patch("utils.helpers.db.session.rollback"),pytest.raises(RuntimeError)
+            patch("utils.helpers.db.session.rollback"),
+            pytest.raises(RuntimeError),
         ):
             h.generate_number_and_save("P", MagicMock(), "num", save, max_attempts=2)
 

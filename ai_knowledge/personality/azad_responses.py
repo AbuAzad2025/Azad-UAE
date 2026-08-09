@@ -498,8 +498,10 @@ class AzadResponses:
 📝 **الطريقة:** {prediction["method"]}
 
 💡 **التوصية:** {
-                    "استمر - الاتجاه صاعد!" if prediction["trend"] == "up"
-                    else "راجع استراتيجية التسويق" if prediction["trend"] == "down"
+                    "استمر - الاتجاه صاعد!"
+                    if prediction["trend"] == "up"
+                    else "راجع استراتيجية التسويق"
+                    if prediction["trend"] == "down"
                     else "مستقر"
                 }"""
             except Exception as e:
@@ -670,13 +672,14 @@ class AzadResponses:
 ✅ التحسينات المطبقة: {improvements["improvements_made"]}
 
 📊 تفاصيل التحسينات:
-{chr(10).join(
+{
+                chr(10).join(
                     [
-                        f"• {imp['area']}: {imp['old_score']} → "
-                        f"{imp['new_score']} (+{imp['improvement']})"
+                        f"• {imp['area']}: {imp['old_score']} → {imp['new_score']} (+{imp['improvement']})"
                         for imp in improvements["details"]
                     ]
-                )}
+                )
+            }
 
 🎯 أزاد يتطور باستمرار ليصبح أفضل مساعد في العالم!"""
 
@@ -748,7 +751,12 @@ class AzadResponses:
 
         # البحث عن كلمات تشير للعميل
         for i, word in enumerate(words):
-            if word.lower() in ["عميل", "زبون", "customer"] and i + 1 < len(words) or word.lower() in ["على", "لـ", "for"] and i + 1 < len(words):
+            if (
+                word.lower() in ["عميل", "زبون", "customer"]
+                and i + 1 < len(words)
+                or word.lower() in ["على", "لـ", "for"]
+                and i + 1 < len(words)
+            ):
                 customer_name = words[i + 1]
                 break
 
@@ -874,7 +882,12 @@ class AzadResponses:
         product_name = None
 
         for i, word in enumerate(words):
-            if word.lower() in ["منتج", "product", "قطعة", "part"] and i + 1 < len(words) or word.lower() in ["اسمه", "اسم", "name"] and i + 1 < len(words):
+            if (
+                word.lower() in ["منتج", "product", "قطعة", "part"]
+                and i + 1 < len(words)
+                or word.lower() in ["اسمه", "اسم", "name"]
+                and i + 1 < len(words)
+            ):
                 product_name = words[i + 1]
                 break
 

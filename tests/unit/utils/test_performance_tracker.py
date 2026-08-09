@@ -69,7 +69,8 @@ class TestPerformanceContext:
     def test_context_manager_logs_elapsed(self):
         with (
             patch("utils.performance_tracker.time.time", side_effect=[0.0, 0.05, 0.05]),
-            patch("utils.performance_tracker.logger.info") as info,PerformanceContext("db-scan")
+            patch("utils.performance_tracker.logger.info") as info,
+            PerformanceContext("db-scan"),
         ):
             pass
         info.assert_called_once()

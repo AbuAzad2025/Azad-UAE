@@ -300,9 +300,7 @@ class TestCreatePurchaseCurrency:
             )
         assert result.currency == "EUR"
 
-    @pytest.mark.skip(
-        reason="Pre-existing test issue: mock setup incompatible with PostgreSQL"
-    )
+    @pytest.mark.skip(reason="Pre-existing test issue: mock setup incompatible with PostgreSQL")
     def test_tenant_currency_fallback_on_exception(self, app, mocker):
         _patch_create_common(mocker)
         mocker.patch("services.purchase_service.Tenant.query.get", return_value=None)

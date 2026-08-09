@@ -43,7 +43,9 @@ class TestImportBp:
             patch(
                 "services.logging_core.LoggingCore.log_error",
                 side_effect=RuntimeError("log fail"),
-            ),flask_app.app_context(), pytest.raises(ImportError)
+            ),
+            flask_app.app_context(),
+            pytest.raises(ImportError),
         ):
             bp_module._import_bp(flask_app, "routes.nonexistent_xyz", "fake_bp")
 
@@ -76,7 +78,9 @@ class TestImportBp:
             patch(
                 "services.logging_core.LoggingCore.log_error",
                 side_effect=RuntimeError("log fail"),
-            ),flask_app.app_context(), pytest.raises(ImportError)
+            ),
+            flask_app.app_context(),
+            pytest.raises(ImportError),
         ):
             bp_module._import_bp(flask_app, "routes.broken_bp_xyz", "fake_bp")
 
@@ -85,9 +89,12 @@ class TestAiFallback:
     def test_ai_fallback_assistant_redirect(self, flask_app):
         ai_bp = bp_module._make_ai_fallback("import failed")
         flask_app.register_blueprint(ai_bp)
-        with flask_app.test_client() as client, patch(
-            "flask_login.utils._get_user",
-            return_value=MagicMock(is_authenticated=True),
+        with (
+            flask_app.test_client() as client,
+            patch(
+                "flask_login.utils._get_user",
+                return_value=MagicMock(is_authenticated=True),
+            ),
         ):
             resp = client.get("/ai/assistant", follow_redirects=False)
         assert resp.status_code == 302
@@ -95,9 +102,12 @@ class TestAiFallback:
     def test_ai_fallback_config_redirect(self, flask_app):
         ai_bp = bp_module._make_ai_fallback("import failed")
         flask_app.register_blueprint(ai_bp)
-        with flask_app.test_client() as client, patch(
-            "flask_login.utils._get_user",
-            return_value=MagicMock(is_authenticated=True),
+        with (
+            flask_app.test_client() as client,
+            patch(
+                "flask_login.utils._get_user",
+                return_value=MagicMock(is_authenticated=True),
+            ),
         ):
             resp = client.get("/ai/config", follow_redirects=False)
         assert resp.status_code == 302
@@ -136,9 +146,12 @@ class TestAiFallback:
     def test_ai_fallback_catch_all_sets_session(self, flask_app):
         ai_bp = bp_module._make_ai_fallback("import failed")
         flask_app.register_blueprint(ai_bp)
-        with flask_app.test_client() as client, patch(
-            "flask_login.utils._get_user",
-            return_value=MagicMock(is_authenticated=True),
+        with (
+            flask_app.test_client() as client,
+            patch(
+                "flask_login.utils._get_user",
+                return_value=MagicMock(is_authenticated=True),
+            ),
         ):
             resp = client.get("/ai/unknown-route", follow_redirects=False)
         assert resp.status_code == 302

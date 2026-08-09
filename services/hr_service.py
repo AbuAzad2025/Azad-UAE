@@ -392,7 +392,12 @@ class PayrollEngine:
         ).all()
         total_days = 0
         for leave in leaves:
-            if leave.start_date.year == year and leave.start_date.month == month or leave.end_date.year == year and leave.end_date.month == month:
+            if (
+                leave.start_date.year == year
+                and leave.start_date.month == month
+                or leave.end_date.year == year
+                and leave.end_date.month == month
+            ):
                 total_days += leave.days_taken
         return total_days
 

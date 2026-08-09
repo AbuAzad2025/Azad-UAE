@@ -182,8 +182,7 @@ class MasterBrain:
                     "eoq": "EOQ - الكمية الاقتصادية للطلب = √((2 × الطلب السنوي × تكلفة الطلب) / تكلفة الاحتفاظ)",
                     "reorder_point": "نقطة إعادة الطلب = (الطلب اليومي × مدة التوريد) + مخزون الأمان",
                     "safety_stock": (
-                        "مخزون الأمان = (الطلب الأقصى × مدة التوريد الأقصى) - "
-                        "(الطلب المتوسط × مدة التوريد المتوسطة)"
+                        "مخزون الأمان = (الطلب الأقصى × مدة التوريد الأقصى) - (الطلب المتوسط × مدة التوريد المتوسطة)"
                     ),
                     "abc_analysis": "تحليل ABC - تصنيف المخزون حسب القيمة",
                 },
@@ -505,8 +504,9 @@ class MasterBrain:
                     confidence = 1.0
 
             # الضرائب
-            if ("vat" in knowledge or "uae_vat" in knowledge) and \
-               ("ضريبة" in question.lower() or "vat" in question.lower()):
+            if ("vat" in knowledge or "uae_vat" in knowledge) and (
+                "ضريبة" in question.lower() or "vat" in question.lower()
+            ):
                 vat_info = knowledge.get("uae_vat", {})
                 answer_parts.append(f"💰 ضريبة القيمة المضافة في الإمارات: {vat_info.get('rate', 5)}%")
                 answer_parts.append(f"حد التسجيل: {vat_info.get('registration_threshold', 375000):,} درهم")

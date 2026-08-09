@@ -155,14 +155,17 @@ class TestCreateSaleSerialBranches:
     def test_serial_create_on_sale_allowed(self, app):
         customer, seller, product = _actors(has_serial_number=True, warranty_days=365)
         created = MagicMock(status="available", warehouse_id=1)
-        with _create_ctx(
-            customer,
-            seller,
-            product,
-            {"serials": ["SN-NEW"]},
-            allow_serial_on_sale=True,
-            expect_error=True,
-        ) as (svc, _, db_sess, _), patch("models.ProductSerial") as sn_mod:
+        with (
+            _create_ctx(
+                customer,
+                seller,
+                product,
+                {"serials": ["SN-NEW"]},
+                allow_serial_on_sale=True,
+                expect_error=True,
+            ) as (svc, _, db_sess, _),
+            patch("models.ProductSerial") as sn_mod,
+        ):
             sn_mod.query.filter_by.return_value.first.side_effect = [None, created]
             sn_mod.return_value = created
             svc.create_sale(
@@ -283,11 +286,12 @@ class TestCreateSaleCommissionAndOptions:
         customer, seller, product = _actors()
         with (
             _create_ctx(customer, seller, product, expect_error=True) as (
-            svc,
-            _,
-            _,
-            _,
-        ), patch("models.Tenant.get_current", side_effect=Exception("no tenant")),
+                svc,
+                _,
+                _,
+                _,
+            ),
+            patch("models.Tenant.get_current", side_effect=Exception("no tenant")),
             patch(
                 "services.sale_service.resolve_default_currency",
                 side_effect=Exception("fallback"),
@@ -303,12 +307,15 @@ class TestCreateSaleCommissionAndOptions:
         from services.sale_service import SaleService
 
         customer, seller, product = _actors()
-        with _create_ctx(customer, seller, product, defer_fulfillment=True) as (
-            svc,
-            _,
-            db_sess,
-            _,
-        ), patch.object(SaleService, "fulfill_sale") as fulfill:
+        with (
+            _create_ctx(customer, seller, product, defer_fulfillment=True) as (
+                svc,
+                _,
+                db_sess,
+                _,
+            ),
+            patch.object(SaleService, "fulfill_sale") as fulfill,
+        ):
             sale = svc.create_sale(
                 customer,
                 seller,
@@ -339,12 +346,15 @@ class TestCreateSaleCommissionAndOptions:
 
         customer, seller, product = _actors()
         payment_data = {"amount": 200, "currency": "AED", "exchange_rate": 1.0}
-        with _create_ctx(customer, seller, product, payment_data=payment_data) as (
-            svc,
-            _,
-            _,
-            _,
-        ), patch.object(SaleService, "fulfill_sale"):
+        with (
+            _create_ctx(customer, seller, product, payment_data=payment_data) as (
+                svc,
+                _,
+                _,
+                _,
+            ),
+            patch.object(SaleService, "fulfill_sale"),
+        ):
             sale = MagicMock()
             sale.sale_number = "S-CH3"
             sale.amount_aed = Decimal("100")

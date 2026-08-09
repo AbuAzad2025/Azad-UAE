@@ -97,11 +97,14 @@ class TestKSAEInvoice:
         sale = MagicMock(spec=["id", "total_aed"])
         sale.id = 99
         sale.total_aed = Decimal("50")
-        with patch.object(
-            strategy,
-            "sign_zatca_payload",
-            side_effect=ConnectionError("ZATCA portal unreachable"),
-        ), pytest.raises(ConnectionError, match="ZATCA portal"):
+        with (
+            patch.object(
+                strategy,
+                "sign_zatca_payload",
+                side_effect=ConnectionError("ZATCA portal unreachable"),
+            ),
+            pytest.raises(ConnectionError, match="ZATCA portal"),
+        ):
             strategy.generate_einvoice(sale)
 
     def test_amount_aed_fallback(self, strategy):

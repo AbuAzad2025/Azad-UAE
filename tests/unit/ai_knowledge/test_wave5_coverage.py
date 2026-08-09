@@ -534,10 +534,13 @@ class TestActionDispatcherWave5:
             _is_owner,
         )
 
-        with patch(
-            "ai_knowledge.action_dispatcher.current_user",
-            SimpleNamespace(is_authenticated=False),
-        ), patch("flask.g", create=True) as g:
+        with (
+            patch(
+                "ai_knowledge.action_dispatcher.current_user",
+                SimpleNamespace(is_authenticated=False),
+            ),
+            patch("flask.g", create=True) as g,
+        ):
             g.active_tenant_id = 3
             assert _get_active_tenant_id() == 3
         anon = SimpleNamespace(is_authenticated=False)

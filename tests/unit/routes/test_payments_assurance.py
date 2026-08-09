@@ -196,9 +196,7 @@ class TestVoucherSubmitAssurance:
             "services.gl_service.GLService.get_payment_debit_concept",
             return_value="CASH",
         )
-        payment_inst = MagicMock(
-            id=61, amount=Decimal("60"), amount_aed=Decimal("60")
-        )
+        payment_inst = MagicMock(id=61, amount=Decimal("60"), amount_aed=Decimal("60"))
         refund_mock = mocker.patch(
             "routes.payments.PaymentService.create_supplier_refund",
             return_value=payment_inst,
@@ -962,10 +960,11 @@ class TestCreateFromSaleCurrencyFallback:
         )
         with (
             payments_client.application.test_request_context(
-            "/payments/create_from_sale/5",
-            method="POST",
-            data={"amount": "40", "payment_method": "cash"},
-        ), patch("utils.decorators.branch_scope_id", return_value=None),
+                "/payments/create_from_sale/5",
+                method="POST",
+                data={"amount": "40", "payment_method": "cash"},
+            ),
+            patch("utils.decorators.branch_scope_id", return_value=None),
             patch("routes.payments.CurrencyService.get_all_rates", return_value={}),
         ):
             from routes.payments import create_from_sale
@@ -1088,10 +1087,11 @@ class TestPaymentsFinalGaps:
         )
         with (
             payments_client.application.test_request_context(
-            "/payments/create_from_sale/5",
-            method="POST",
-            data={"amount": "40", "payment_method": "cash"},
-        ), patch("routes.payments.tenant_get_or_404", return_value=sale),
+                "/payments/create_from_sale/5",
+                method="POST",
+                data={"amount": "40", "payment_method": "cash"},
+            ),
+            patch("routes.payments.tenant_get_or_404", return_value=sale),
             patch("utils.decorators.branch_scope_id", return_value=None),
             patch("routes.payments.CurrencyService.get_all_rates", return_value={}),
         ):

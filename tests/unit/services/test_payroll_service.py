@@ -95,7 +95,8 @@ class TestCreateAdvance:
             patch(
                 "utils.branching.branch_scope_id_for",
                 return_value=sample_branch.id + 99,
-            ),pytest.raises(ValueError, match="فرع")
+            ),
+            pytest.raises(ValueError, match="فرع"),
         ):
             PayrollService.create_advance(emp.id, "100", "x", user_id=1, actor_user=actor)
 
@@ -108,7 +109,8 @@ class TestCreateAdvance:
             patch(
                 "utils.tenanting.get_active_tenant_id",
                 return_value=sample_tenant.id + 50,
-            ),pytest.raises(ValueError, match="شركتك")
+            ),
+            pytest.raises(ValueError, match="شركتك"),
         ):
             PayrollService.create_advance(emp.id, "100", "x", user_id=1, actor_user=actor)
 
@@ -125,7 +127,8 @@ class TestCreateAdvance:
             patch(
                 "services.payroll_service.db.session.flush",
                 side_effect=RuntimeError("fail"),
-            ),pytest.raises(RuntimeError)
+            ),
+            pytest.raises(RuntimeError),
         ):
             PayrollService.create_advance(emp.id, "50", "x", user_id=1)
 
@@ -351,7 +354,8 @@ class TestProcessPayroll:
         actor = MagicMock()
         with (
             patch("utils.auth_helpers.is_global_owner_user", return_value=False),
-            patch("utils.branching.branch_scope_id_for", return_value=999),pytest.raises(ValueError, match="فرع")
+            patch("utils.branching.branch_scope_id_for", return_value=999),
+            pytest.raises(ValueError, match="فرع"),
         ):
             self._run_payroll(emp, actor_user=actor)
 
@@ -364,7 +368,8 @@ class TestProcessPayroll:
             patch(
                 "utils.tenanting.get_active_tenant_id",
                 return_value=sample_tenant.id + 99,
-            ),pytest.raises(ValueError, match="شركتك")
+            ),
+            pytest.raises(ValueError, match="شركتك"),
         ):
             self._run_payroll(emp, actor_user=actor)
 
@@ -421,7 +426,8 @@ class TestProcessPayroll:
             patch(
                 "services.payroll_service.db.session.flush",
                 side_effect=RuntimeError("db"),
-            ),pytest.raises(RuntimeError)
+            ),
+            pytest.raises(RuntimeError),
         ):
             PayrollService.process_payroll(emp.id, 9, 2026, 0, 0, 0, user_id=1)
 

@@ -1374,9 +1374,7 @@ class TestProductsRemainingCoverage:
             )
         assert resp.status_code == 200
 
-    @pytest.mark.skip(
-        reason="Pre-existing: requires translation files that don't exist in test env"
-    )
+    @pytest.mark.skip(reason="Pre-existing: requires translation files that don't exist in test env")
     def test_import_creates_new_category_on_the_fly(self, products_import_app):
         df = _import_dataframe({"name": ["CatItem"], "price": [11.0], "category": ["FlyCat"]})
         new_cat = _category(20, name="FlyCat")

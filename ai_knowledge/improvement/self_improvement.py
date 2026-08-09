@@ -297,9 +297,7 @@ class AzadSelfImprovement:
                 improvements_made.append(result)
 
         # تحسين عشوائي لمجال آخر
-        available_areas = [
-            area for area in self.improvement_areas if area not in [w["area"] for w in weaknesses[:2]]
-        ]
+        available_areas = [area for area in self.improvement_areas if area not in [w["area"] for w in weaknesses[:2]]]
 
         if available_areas:
             random_area = secrets.choice(available_areas)

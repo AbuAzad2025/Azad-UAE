@@ -93,9 +93,7 @@ def validate_phone(value: str | None) -> str | None:
 # ==================== Date Validators ====================
 
 
-def validate_date_range(
-    date_from: str | None, date_to: str | None
-) -> tuple[datetime | None, datetime | None]:
+def validate_date_range(date_from: str | None, date_to: str | None) -> tuple[datetime | None, datetime | None]:
     """Validate a date range."""
     from_date = None
     to_date = None

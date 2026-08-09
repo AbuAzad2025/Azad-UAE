@@ -293,8 +293,9 @@ for tbl, name, local, ref_table, ref_cols, ondel in phase_c_fks:
     ref_repr = "[" + ", ".join(f"'{c}'" for c in ref_cols) + "]"
     ondel_arg = f", ondelete='{ondel}'" if ondel else ""
     fk_lines.append(
-        "    with op.batch_alter_table('{}'):\n"
-        "        op.create_foreign_key({}, '{}', '{}', {}, {}{})".format(tbl, "'" + name + "'", tbl, ref_table, local_repr, ref_repr, ondel_arg)
+        "    with op.batch_alter_table('{}'):\n        op.create_foreign_key({}, '{}', '{}', {}, {}{})".format(
+            tbl, "'" + name + "'", tbl, ref_table, local_repr, ref_repr, ondel_arg
+        )
     )
 
 schema_body = "\n".join(phase_a)

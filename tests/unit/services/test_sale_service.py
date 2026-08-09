@@ -192,10 +192,14 @@ class TestSaleServiceCreate:
                 wh.branch_id = 1
                 mock_wh.query.filter_by.return_value = mock_wh.query
                 mock_wh.query.first.return_value = wh
-                with patch("services.sale_service.ensure_warehouse_access", return_value=wh), patch(
-                    "services.sale_service.generate_number",
-                    return_value="S-2024-001",
-                ), patch("services.sale_service.ExchangeRateService") as mock_ex:
+                with (
+                    patch("services.sale_service.ensure_warehouse_access", return_value=wh),
+                    patch(
+                        "services.sale_service.generate_number",
+                        return_value="S-2024-001",
+                    ),
+                    patch("services.sale_service.ExchangeRateService") as mock_ex,
+                ):
                     mock_ex.resolve_exchange_rate_for_transaction.return_value = {"rate": 1.0}
                     with patch("services.sale_service.db.session.add"):
                         with patch("services.sale_service.db.session.flush"):
@@ -214,14 +218,14 @@ class TestSaleServiceCreate:
                                             "services.sale_service.Sale.calculate_totals",
                                             autospec=True,
                                         ) as mock_calc:
+
                                             def _calc_side_effect(self_sale):
                                                 self_sale.total_amount = Decimal("200")
                                                 self_sale.amount = Decimal("200")
                                                 self_sale.amount_aed = Decimal("200")
+
                                             mock_calc.side_effect = _calc_side_effect
-                                            result = SaleService.create_sale(
-                                                customer, seller, lines
-                                            )
+                                            result = SaleService.create_sale(customer, seller, lines)
                                             assert result is not None
                                             assert result.total_amount == Decimal("200")
                                             assert result.customer_id == 1

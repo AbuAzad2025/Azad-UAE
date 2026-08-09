@@ -28,7 +28,13 @@ def treasury():
 
     if branch_id is None:
         branch_id = scoped_branch_id
-    elif scoped_branch_id is not None and branch_id != scoped_branch_id or scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
+    elif (
+        scoped_branch_id is not None
+        and branch_id != scoped_branch_id
+        or scoped_branch_id is None
+        and branch_id is not None
+        and not user_can_access_branch(branch_id, current_user)
+    ):
         return render_template("errors/403.html"), 403
 
     tenant_id = get_active_tenant_id(current_user)
@@ -58,7 +64,13 @@ def treasury_export():
 
     if branch_id is None:
         branch_id = scoped_branch_id
-    elif scoped_branch_id is not None and branch_id != scoped_branch_id or scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
+    elif (
+        scoped_branch_id is not None
+        and branch_id != scoped_branch_id
+        or scoped_branch_id is None
+        and branch_id is not None
+        and not user_can_access_branch(branch_id, current_user)
+    ):
         return render_template("errors/403.html"), 403
 
     tenant_id = get_active_tenant_id(current_user)

@@ -140,7 +140,7 @@ def _existing_posted_entry(cheque, reference_type):
         GLJournalEntry.reference_id == cheque.id,
         GLJournalEntry.status == "posted",
     )
-    tid = (cheque.tenant_id if cheque is not None else None)
+    tid = cheque.tenant_id if cheque is not None else None
     if tid is not None:
         q = q.filter(GLJournalEntry.tenant_id == tid)
     return q.order_by(GLJournalEntry.id.desc()).first()
@@ -420,13 +420,16 @@ def process_cheque_clear(cheque, clearance_date=None, clearance_exchange_rate=No
         from utils.currency_utils import convert_and_quantize_aed as _cq
 
         cheque.actual_amount_aed = _cq(
-            cheque.amount, cheque.currency, cheque.clearance_exchange_rate, tenant_id=(cheque.tenant_id if cheque is not None else None)
+            cheque.amount,
+            cheque.currency,
+            cheque.clearance_exchange_rate,
+            tenant_id=(cheque.tenant_id if cheque is not None else None),
         )
         cheque.currency_gain_loss = cheque.actual_amount_aed - cheque.amount_aed
         _create_clearing_journal_entry(cheque)
         from models.payment import Payment, Receipt
 
-        tid = (cheque.tenant_id if cheque is not None else None)
+        tid = cheque.tenant_id if cheque is not None else None
 
         # تأكيد الدفعات/السندات المرتبطة
         pmt_q = Payment.query.filter_by(cheque_id=cheque.id)
@@ -624,7 +627,7 @@ def process_cheque_bounce(cheque, reason, bounce_fee=None):
                 logger.error(f"Failed to adjust customer balance on bounce cheque {cheque.id}: {cust_err}")
         from models.payment import Payment, Receipt
 
-        tid = (cheque.tenant_id if cheque is not None else None)
+        tid = cheque.tenant_id if cheque is not None else None
         pmt_q = Payment.query.filter_by(cheque_id=cheque.id)
         if tid:
             pmt_q = pmt_q.filter(Payment.tenant_id == tid)
@@ -775,7 +778,7 @@ def process_cheque_cancel(cheque, reason=None, *, create_gl=True):
     if create_gl and not skip_gl:
         _create_cancel_journal_entry(cheque)
 
-    tid = (cheque.tenant_id if cheque is not None else None)
+    tid = cheque.tenant_id if cheque is not None else None
     pmt_q = Payment.query.filter_by(cheque_id=cheque.id)
     if tid:
         pmt_q = pmt_q.filter(Payment.tenant_id == tid)
@@ -792,7 +795,7 @@ def process_cheque_cancel(cheque, reason=None, *, create_gl=True):
     if create_gl and cheque.cheque_type == "outgoing" and cheque.supplier_id and not cheque.expense_id:
         from models.supplier import Supplier
 
-        tid = (cheque.tenant_id if cheque is not None else None)
+        tid = cheque.tenant_id if cheque is not None else None
         supplier_q = Supplier.query.filter_by(id=cheque.supplier_id)
         if tid:
             supplier_q = supplier_q.filter(Supplier.tenant_id == tid)

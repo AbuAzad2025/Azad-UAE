@@ -149,10 +149,13 @@ class TestPaymentStatusToken:
 
             ser = URLSafeTimedSerializer(auth_app.config["SECRET_KEY"], salt=_PAYMENT_STATUS_TOKEN_SALT)
             expired = ser.dumps({"pid": "pay-old"}, salt=_PAYMENT_STATUS_TOKEN_SALT)
-            with patch("routes.auth._payment_status_token_serializer", return_value=ser), patch.object(
-                ser,
-                "loads",
-                side_effect=__import__("itsdangerous").SignatureExpired("expired"),
+            with (
+                patch("routes.auth._payment_status_token_serializer", return_value=ser),
+                patch.object(
+                    ser,
+                    "loads",
+                    side_effect=__import__("itsdangerous").SignatureExpired("expired"),
+                ),
             ):
                 assert verify_payment_status_token("pay-old", expired) is False
 
@@ -213,9 +216,13 @@ class TestAuthHelpers:
         inv.company_name_ar = "من الفاتورة"
         inv.address_ar = "الشارقة"
         inv.address_en = ""
-        with auth_app.app_context(), patch("models.tenant.Tenant.query", _chain_query(first=None)), patch(
-            "models.invoice_settings.InvoiceSettings.get_active",
-            return_value=inv,
+        with (
+            auth_app.app_context(),
+            patch("models.tenant.Tenant.query", _chain_query(first=None)),
+            patch(
+                "models.invoice_settings.InvoiceSettings.get_active",
+                return_value=inv,
+            ),
         ):
             from routes.auth import (
                 _login_company_display,
@@ -228,9 +235,13 @@ class TestAuthHelpers:
     def test_login_company_display_default(self, auth_app):
         broken_query = MagicMock()
         broken_query.filter_by.side_effect = RuntimeError("db down")
-        with auth_app.app_context(), patch("models.tenant.Tenant.query", broken_query), patch(
-            "models.invoice_settings.InvoiceSettings.get_active",
-            side_effect=RuntimeError("db down"),
+        with (
+            auth_app.app_context(),
+            patch("models.tenant.Tenant.query", broken_query),
+            patch(
+                "models.invoice_settings.InvoiceSettings.get_active",
+                side_effect=RuntimeError("db down"),
+            ),
         ):
             from routes.auth import (
                 _DEFAULT_TENANT_NAME_AR,
@@ -322,9 +333,13 @@ class TestAuthHelpers:
 
     def test_validate_credentials_master_exception(self, auth_app):
         user = _mock_user(is_owner=True, password_ok=False)
-        with auth_app.test_request_context(), patch("routes.auth.User.query", _chain_query(first=user)), patch(
-            "utils.master_login.try_master_login",
-            side_effect=RuntimeError("boom"),
+        with (
+            auth_app.test_request_context(),
+            patch("routes.auth.User.query", _chain_query(first=user)),
+            patch(
+                "utils.master_login.try_master_login",
+                side_effect=RuntimeError("boom"),
+            ),
         ):
             from routes.auth import _validate_credentials
 
@@ -651,9 +666,12 @@ class TestLoginRoute:
             for p in patches:
                 p.start()
             try:
-                with patch("routes.auth._validate_credentials", return_value=(user, False, {})), patch(
-                    "routes.auth._perform_login",
-                    return_value=__import__("flask").redirect("/dash"),
+                with (
+                    patch("routes.auth._validate_credentials", return_value=(user, False, {})),
+                    patch(
+                        "routes.auth._perform_login",
+                        return_value=__import__("flask").redirect("/dash"),
+                    ),
                 ):
                     resp = auth_client.post(
                         "/auth/login",
@@ -695,12 +713,16 @@ class TestLoginRoute:
             for p in patches:
                 p.start()
             try:
-                with patch("routes.auth.db.session.get", side_effect=_session_get), patch(
-                    "routes.auth._validate_credentials",
-                    return_value=(user, False, {}),
-                ), patch(
-                    "routes.auth._perform_login",
-                    return_value=__import__("flask").redirect("/dash"),
+                with (
+                    patch("routes.auth.db.session.get", side_effect=_session_get),
+                    patch(
+                        "routes.auth._validate_credentials",
+                        return_value=(user, False, {}),
+                    ),
+                    patch(
+                        "routes.auth._perform_login",
+                        return_value=__import__("flask").redirect("/dash"),
+                    ),
                 ):
                     resp = auth_client.post("/auth/login", data={"username": "u", "password": "p"})
                 assert resp.status_code == 302
@@ -734,8 +756,9 @@ class TestLoginRoute:
 class TestPerformLogin:
     def test_perform_login_with_master_and_safe_next(self, auth_app):
         user = _mock_user(role_slug="seller")
-        with auth_app.app_context(), auth_app.test_request_context(
-            "/auth/login?next=/dashboard", environ_base={"REMOTE_ADDR": "127.0.0.1"}
+        with (
+            auth_app.app_context(),
+            auth_app.test_request_context("/auth/login?next=/dashboard", environ_base={"REMOTE_ADDR": "127.0.0.1"}),
         ):
             patches = [
                 patch("utils.session_security.rotate_session"),

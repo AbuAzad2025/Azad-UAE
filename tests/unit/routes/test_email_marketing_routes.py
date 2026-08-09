@@ -90,9 +90,12 @@ class TestCampaigns:
         assert "/marketing/" in resp.headers["Location"]
 
     def test_create_campaign_post_error(self, marketing_client):
-        with _marketing_patches(), patch(
-            "routes.email_marketing.EmailMarketingService.create_campaign",
-            side_effect=RuntimeError("fail"),
+        with (
+            _marketing_patches(),
+            patch(
+                "routes.email_marketing.EmailMarketingService.create_campaign",
+                side_effect=RuntimeError("fail"),
+            ),
         ):
             resp = marketing_client.post(
                 "/marketing/campaigns/create",
@@ -106,9 +109,12 @@ class TestCampaigns:
         assert resp.status_code == 200
 
     def test_campaign_detail_not_found(self, marketing_client):
-        with _marketing_patches(), patch(
-            "routes.email_marketing.EmailMarketingService.get_campaign_stats",
-            side_effect=ValueError("missing"),
+        with (
+            _marketing_patches(),
+            patch(
+                "routes.email_marketing.EmailMarketingService.get_campaign_stats",
+                side_effect=ValueError("missing"),
+            ),
         ):
             resp = marketing_client.get("/marketing/campaigns/99")
         assert resp.status_code == 302
@@ -119,9 +125,12 @@ class TestCampaigns:
         assert resp.status_code == 302
 
     def test_send_campaign_error(self, marketing_client):
-        with _marketing_patches(), patch(
-            "routes.email_marketing.EmailMarketingService.send_campaign",
-            side_effect=ValueError("not draft"),
+        with (
+            _marketing_patches(),
+            patch(
+                "routes.email_marketing.EmailMarketingService.send_campaign",
+                side_effect=ValueError("not draft"),
+            ),
         ):
             resp = marketing_client.post("/marketing/campaigns/3/send")
         assert resp.status_code == 302
@@ -142,9 +151,12 @@ class TestLists:
         assert resp.status_code == 302
 
     def test_create_list_value_error(self, marketing_client):
-        with _marketing_patches(), patch(
-            "routes.email_marketing.EmailMarketingService.create_list",
-            side_effect=ValueError("duplicate"),
+        with (
+            _marketing_patches(),
+            patch(
+                "routes.email_marketing.EmailMarketingService.create_list",
+                side_effect=ValueError("duplicate"),
+            ),
         ):
             resp = marketing_client.post(
                 "/marketing/lists/create",
@@ -153,9 +165,12 @@ class TestLists:
         assert resp.status_code == 302
 
     def test_create_list_key_error(self, marketing_client):
-        with _marketing_patches(), patch(
-            "routes.email_marketing.EmailMarketingService.create_list",
-            side_effect=KeyError("name"),
+        with (
+            _marketing_patches(),
+            patch(
+                "routes.email_marketing.EmailMarketingService.create_list",
+                side_effect=KeyError("name"),
+            ),
         ):
             resp = marketing_client.post("/marketing/lists/create", data={})
         assert resp.status_code == 302
@@ -176,9 +191,12 @@ class TestTemplates:
         assert resp.status_code == 302
 
     def test_create_template_value_error(self, marketing_client):
-        with _marketing_patches(), patch(
-            "routes.email_marketing.EmailMarketingService.create_template",
-            side_effect=ValueError("invalid"),
+        with (
+            _marketing_patches(),
+            patch(
+                "routes.email_marketing.EmailMarketingService.create_template",
+                side_effect=ValueError("invalid"),
+            ),
         ):
             resp = marketing_client.post(
                 "/marketing/templates/create",
@@ -187,9 +205,12 @@ class TestTemplates:
         assert resp.status_code == 302
 
     def test_create_template_key_error(self, marketing_client):
-        with _marketing_patches(), patch(
-            "routes.email_marketing.EmailMarketingService.create_template",
-            side_effect=KeyError("subject"),
+        with (
+            _marketing_patches(),
+            patch(
+                "routes.email_marketing.EmailMarketingService.create_template",
+                side_effect=KeyError("subject"),
+            ),
         ):
             resp = marketing_client.post("/marketing/templates/create", data={})
         assert resp.status_code == 302

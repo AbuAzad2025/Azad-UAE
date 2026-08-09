@@ -575,9 +575,7 @@ def data_cleanup():
         if not cleanup_type:
             flash(gettext("⚠️ يرجى اختيار نوع البيانات للحذف."), "warning")
             stats = {
-                "old_logs": AuditLog.query.filter(
-                    AuditLog.created_at < datetime.now(UTC) - timedelta(days=90)
-                ).count(),
+                "old_logs": AuditLog.query.filter(AuditLog.created_at < datetime.now(UTC) - timedelta(days=90)).count(),
                 "old_archived": ArchivedRecord.query.filter(
                     ArchivedRecord.archived_at < datetime.now(UTC) - timedelta(days=180)
                 ).count(),
@@ -601,9 +599,7 @@ def data_cleanup():
         return redirect(url_for("owner.data_cleanup"))
 
     stats = {
-        "old_logs": AuditLog.query.filter(
-            AuditLog.created_at < datetime.now(UTC) - timedelta(days=90)
-        ).count(),
+        "old_logs": AuditLog.query.filter(AuditLog.created_at < datetime.now(UTC) - timedelta(days=90)).count(),
         "old_archived": ArchivedRecord.query.filter(
             ArchivedRecord.archived_at < datetime.now(UTC) - timedelta(days=180)
         ).count(),

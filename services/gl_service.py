@@ -1406,7 +1406,9 @@ class GLService:
                 if account:
                     return account.code
             except GLMappingError:
-                logger.debug("No dynamic GL mapping for concept %s; trying static fallback", concept_code, exc_info=True)
+                logger.debug(
+                    "No dynamic GL mapping for concept %s; trying static fallback", concept_code, exc_info=True
+                )
         if fallback_key and fallback_key in GL_ACCOUNTS:
             return GL_ACCOUNTS[fallback_key]
         raise GLMappingError(

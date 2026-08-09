@@ -243,9 +243,7 @@ class AzadNeuralEngine:
         for product in products:
             # الميزات
             days_since_sale = (
-                (datetime.now(UTC).date() - product.last_sale_date.date()).days
-                if product.last_sale_date
-                else 365
+                (datetime.now(UTC).date() - product.last_sale_date.date()).days if product.last_sale_date else 365
             )
             usage_frequency = product.sales_count or 0
             total_usage = product.total_sold or 0
@@ -349,9 +347,7 @@ class AzadNeuralEngine:
 
         # تحضير الميزات
         days_since_sale = (
-            (datetime.now(UTC).date() - product_data.last_sale_date.date()).days
-            if product_data.last_sale_date
-            else 365
+            (datetime.now(UTC).date() - product_data.last_sale_date.date()).days if product_data.last_sale_date else 365
         )
 
         features = [
@@ -1280,9 +1276,7 @@ class AzadNeuralEngine:
         for customer in customers_data:
             # الميزات
             days_since_purchase = (
-                (datetime.now(UTC).date() - customer.last_purchase.date()).days
-                if customer.last_purchase
-                else 365
+                (datetime.now(UTC).date() - customer.last_purchase.date()).days if customer.last_purchase else 365
             )
 
             features = [
@@ -1365,9 +1359,7 @@ class AzadNeuralEngine:
 
         # تحضير الميزات
         days_since_purchase = (
-            (datetime.now(UTC).date() - customer_data.last_purchase.date()).days
-            if customer_data.last_purchase
-            else 365
+            (datetime.now(UTC).date() - customer_data.last_purchase.date()).days if customer_data.last_purchase else 365
         )
 
         features = [
@@ -2120,9 +2112,7 @@ class AzadNeuralEngine:
         for customer in customers:
             # الميزات
             days_since = (
-                (datetime.now(UTC).date() - customer.last_purchase.date()).days
-                if customer.last_purchase
-                else 365
+                (datetime.now(UTC).date() - customer.last_purchase.date()).days if customer.last_purchase else 365
             )
 
             features = [
