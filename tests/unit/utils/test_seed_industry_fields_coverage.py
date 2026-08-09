@@ -1,4 +1,4 @@
-﻿"""Tests for utils/seed_industry_fields.py uncovered lines."""
+"""Tests for utils/seed_industry_fields.py uncovered lines."""
 
 from unittest.mock import MagicMock, patch
 
@@ -31,12 +31,21 @@ def test_seed_industry_fields_skips_existing():
         mock_atomic.return_value.__exit__ = MagicMock(return_value=False)
 
         with patch("utils.seed_industry_fields.IndustryFieldDefinition") as mock_cls:
-            # First call returns None (new), second returns existing
-            mock_existing = MagicMock()
-            mock_cls.query.filter_by.return_value.first.side_effect = [None, mock_existing]
+            # Track call count to return different values
+            call_count = 0
+
+            def side_effect(*args, **kwargs):
+                nonlocal call_count
+                call_count += 1
+                # First call returns None (new field), rest return existing
+                if call_count == 1:
+                    return None
+                return MagicMock()
+
+            mock_cls.query.filter_by.return_value.first.side_effect = side_effect
             with patch("utils.seed_industry_fields.db.session") as mock_session:
                 seed_industry_fields()
-                # Should add for new, skip for existing
+                # Should add for new fields, skip for existing
                 assert mock_session.add.call_count >= 1
 
 

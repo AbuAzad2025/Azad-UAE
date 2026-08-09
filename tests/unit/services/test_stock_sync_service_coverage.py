@@ -150,7 +150,11 @@ def test_process_sync_payload_idempotent(mock_sync_batch):
     with patch("services.stock_sync_service.tenant_query") as mock_q:
         mock_q.return_value.filter_by.return_value.first.return_value = mock_sync_batch
         result = StockSyncService.process_sync_payload(
-            {"idempotency_key": "idem-001", "tenant_id": 1, "movements": [{"sku": "X", "quantity": 1, "movement_type": "adjustment"}]}
+            {
+                "idempotency_key": "idem-001",
+                "tenant_id": 1,
+                "movements": [{"sku": "X", "quantity": 1, "movement_type": "adjustment"}],
+            }
         )
         assert result["ok"] is True
         assert result["cached"] is True

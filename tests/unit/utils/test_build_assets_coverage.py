@@ -1,4 +1,4 @@
-﻿"""Tests for utils/build_assets.py uncovered lines."""
+"""Tests for utils/build_assets.py uncovered lines."""
 
 import os
 import tempfile
