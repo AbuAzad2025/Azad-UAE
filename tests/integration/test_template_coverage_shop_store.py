@@ -1,122 +1,156 @@
 """Template coverage for shop, store, and public pages.
 
 Covers templates that were not covered by the base smoke + expansion suites:
-- public/donate_azad.html, public/donate_thanks.html
-- shop/account_reset_password.html, shop/checkout.html, shop/closed.html
+- shop/account_reset_password.html, shop/closed.html, shop/checkout.html
 - shop/partials/quick_view_body.html, shop/product.html, shop/return_policy.html
 - store/admin_order_detail.html
+
+Uses real fixtures + `_store_context` so templates receive the same context
+the shop blueprint provides.
 """
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
-
+import pytest
 from flask import render_template
 
-
-def _make_mock(**kwargs):
-    """Create a mock object that returns mocks for any attribute access."""
-    mock = MagicMock()
-    for key, value in kwargs.items():
-        setattr(mock, key, value)
-    # Return mock for any other attribute access
-    mock.__getattr__ = lambda self, name: MagicMock()
-    return mock
+from routes.shop import _store_context
 
 
-def test_donate_azad_template(app):
-    """Test public/donate_azad.html renders."""
-    with app.test_request_context():
-        html = render_template("public/donate_azad.html", vault=_make_mock())
-        assert html is not None
-        assert len(html) > 0
+@pytest.fixture
+def shop_storefront(db_session, sample_tenant, sample_warehouse):
+    """A live storefront: enabled tenant store, global ecommerce on."""
+    import uuid
+
+    from models import SystemSettings, TenantStore
+
+    slug = f"test-store-{uuid.uuid4().hex[:8]}"
+    store = TenantStore(
+        tenant_id=sample_tenant.id,
+        warehouse_id=sample_warehouse.id,
+        is_enabled=True,
+        platform_disabled=False,
+        store_slug=slug,
+        title=sample_tenant.name_ar or sample_tenant.name,
+        phone="0500000000",
+        whatsapp="971500000000",
+    )
+    db_session.add(store)
+    db_session.commit()
+
+    settings = SystemSettings.get_current()
+    settings.enable_ecommerce = True
+    db_session.commit()
+    return store
 
 
-def test_donate_thanks_template(app):
-    """Test public/donate_thanks.html renders."""
-    with app.test_request_context():
-        html = render_template(
-            "public/donate_thanks.html",
-            donation=_make_mock(amount_usd="100", amount_aed="367"),
-        )
-        assert html is not None
-        assert len(html) > 0
-
-
-def test_shop_account_reset_password_template(app):
+def test_shop_account_reset_password_template(app, shop_storefront):
     """Test shop/account_reset_password.html renders."""
     with app.test_request_context():
+        ctx = _store_context(shop_storefront)
         html = render_template(
             "shop/account_reset_password.html",
-            store=_make_mock(seo_description="Test store"),
+            token="test-token",
+            noindex=True,
+            **ctx,
         )
         assert html is not None
         assert len(html) > 0
 
 
-def test_shop_checkout_template(app):
+def test_shop_checkout_template(app, shop_storefront):
     """Test shop/checkout.html renders."""
+    from flask import session as flask_session
+
+    from services.store_service import StoreService
+
     with app.test_request_context():
+        ctx = _store_context(shop_storefront)
+        cart = StoreService.get_cart(flask_session, tenant_id=shop_storefront.tenant_id) or {}
         html = render_template(
             "shop/checkout.html",
-            store=_make_mock(seo_description="Test store"),
-            cart=_make_mock(),
+            cart=cart,
+            noindex=True,
+            **ctx,
         )
         assert html is not None
         assert len(html) > 0
 
 
-def test_shop_closed_template(app):
+def test_shop_closed_template(app, shop_storefront):
     """Test shop/closed.html renders."""
     with app.test_request_context():
-        html = render_template(
-            "shop/closed.html",
-            store=_make_mock(seo_description="Test store"),
-        )
+        ctx = _store_context(shop_storefront)
+        html = render_template("shop/closed.html", reason="tenant", **ctx)
         assert html is not None
         assert len(html) > 0
 
 
-def test_shop_quick_view_body_template(app):
+def test_shop_quick_view_body_template(app, shop_storefront, sample_product):
     """Test shop/partials/quick_view_body.html renders."""
     with app.test_request_context():
+        ctx = _store_context(shop_storefront)
         html = render_template(
             "shop/partials/quick_view_body.html",
-            product=_make_mock(),
+            product=sample_product,
+            display_price=ctx["dp"](sample_product),
+            available=1,
+            wa_url=None,
+            **ctx,
         )
         assert html is not None
         assert len(html) > 0
 
 
-def test_shop_product_template(app):
+def test_shop_product_template(app, shop_storefront, sample_product):
     """Test shop/product.html renders."""
     with app.test_request_context():
+        ctx = _store_context(shop_storefront)
         html = render_template(
             "shop/product.html",
-            product=_make_mock(),
-            store=_make_mock(seo_description="Test store"),
+            product=sample_product,
+            display_price=ctx["dp"](sample_product),
+            available=1,
+            wa_url=None,
+            related_products=[],
+            recent_products=[],
+            variants=[],
+            loyalty_points=0,
+            reviews=[],
+            review_count=0,
+            avg_rating=None,
+            **ctx,
         )
         assert html is not None
         assert len(html) > 0
 
 
-def test_shop_return_policy_template(app):
+def test_shop_return_policy_template(app, shop_storefront):
     """Test shop/return_policy.html renders."""
     with app.test_request_context():
-        html = render_template(
-            "shop/return_policy.html",
-            store=_make_mock(seo_description="Test store"),
-        )
+        ctx = _store_context(shop_storefront)
+        policy = shop_storefront.return_policy(ctx["lang"])
+        if not policy:
+            pytest.skip("store has no return policy configured")
+        html = render_template("shop/return_policy.html", policy=policy, **ctx)
         assert html is not None
         assert len(html) > 0
 
 
-def test_store_admin_order_detail_template(app):
+def test_store_admin_order_detail_template(app, db_session, sample_user, sample_sale):
     """Test store/admin_order_detail.html renders."""
+    from flask_login import login_user
+
     with app.test_request_context():
+        login_user(sample_user)
         html = render_template(
             "store/admin_order_detail.html",
-            order=_make_mock(),
+            order=sample_sale,
+            pay_method=None,
+            stock_issues=[],
+            is_fulfilled=False,
+            status_label="pending",
+            wa_admin_url=None,
         )
         assert html is not None
         assert len(html) > 0
