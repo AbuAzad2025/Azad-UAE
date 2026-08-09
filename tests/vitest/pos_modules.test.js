@@ -95,6 +95,15 @@ describe('pos/index.js', () => {
       stop: vi.fn(),
     }));
 
+    // Mock fetch
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve([{ id: 1, name_ar: "category1", name: "Category 1" }]),
+      })
+    );
+
     vi.resetModules();
   });
 
@@ -103,6 +112,8 @@ describe('pos/index.js', () => {
     document.head.innerHTML = "";
     delete global.$;
     delete global.jQuery;
+    delete global.BarcodeScanner;
+    delete global.fetch;
     delete window.PosApp;
     vi.resetModules();
   });

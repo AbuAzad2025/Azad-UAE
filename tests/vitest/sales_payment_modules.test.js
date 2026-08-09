@@ -137,6 +137,15 @@ describe('payment-fields.js', () => {
     }));
     jqMock.fn = {};
     global.$ = global.jQuery = jqMock;
+
+    // Mock fetch
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ data: [] }),
+      })
+    );
+
     vi.resetModules();
   });
 
@@ -144,6 +153,7 @@ describe('payment-fields.js', () => {
     document.body.innerHTML = '';
     delete global.$;
     delete global.jQuery;
+    delete global.fetch;
     vi.resetModules();
   });
 
