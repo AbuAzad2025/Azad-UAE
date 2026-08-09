@@ -18,6 +18,38 @@ app = create_app()
 
 print("Starting Application...")
 
+
+def _mask_db_uri(uri: str) -> str:
+    """Mask sensitive parts of a database URI for logging."""
+    if not uri:
+        return uri
+    try:
+        if "://" not in uri or "@" not in uri:
+            return uri
+        scheme, rest = uri.split("://", 1)
+        creds, tail = rest.split("@", 1)
+        if ":" not in creds:
+            return uri
+        user = creds.split(":", 1)[0]
+        return f"{scheme}://{user}:***@{tail}"
+    except Exception as exc:
+        try:
+            from services.logging_core import LoggingCore
+
+            LoggingCore.log_error(
+                message=str(exc) or "Failed to mask DB URI",
+                category="SYSTEM_INIT",
+                level="WARNING",
+                source="app._mask_db_uri",
+                exception=exc,
+            )
+        except Exception:
+            import logging
+
+            logging.getLogger(__name__).exception("Failed to log DB URI masking warning")
+        return uri
+
+
 if __name__ == "__main__":
     try:
         from services.backup_service import BackupService
