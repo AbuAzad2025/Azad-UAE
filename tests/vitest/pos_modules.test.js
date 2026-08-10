@@ -120,11 +120,13 @@ describe('pos/index.js', () => {
 
   it('should load without errors with full DOM', async () => {
     await import("../../static/js/pos/index.js");
+    await new Promise((resolve) => setTimeout(resolve, 500));
     expect(true).toBe(true);
   });
 
   it("should initialize POS interface elements", async () => {
     await import("../../static/js/pos/index.js");
+    await new Promise((resolve) => setTimeout(resolve, 500));
     expect(true).toBe(true);
   });
 });

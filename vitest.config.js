@@ -17,7 +17,7 @@ export default defineConfig({
       ],
       reporter: ["text", "html", "json-summary"],
       reportsDirectory: "coverage-frontend",
-      thresholds: { lines: 8, functions: 40 },
+      thresholds: { lines: 50, functions: 60 },
     },
   },
 });
