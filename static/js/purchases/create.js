@@ -15,7 +15,6 @@ function notify(kind, message) {
 	}
 }
 /* purchaseLineIndex scoped per file to avoid cross-page collision with sales */
-const _purchaseLineIndex = 0;
 
 // Escape untrusted server-provided fields before interpolation into Select2
 // option/template HTML (defense against stored XSS via product names/SKUs).
@@ -277,31 +276,6 @@ function addLine() {
 		});
 	}
 
-	// حساب الإجمالي عند التغيير - استخدام setTimeout للتأكد من التحميل
-
-	setTimeout(() => {
-		$(
-			`.line-quantity[data-line="${purchaseLineIndex}"], .line-cost[data-line="${purchaseLineIndex}"], .line-discount[data-line="${purchaseLineIndex}"]`,
-		).on("input change keyup", function () {
-			if ($(this).hasClass("line-cost")) {
-				const enteredCost = parseFloat($(this).val()) || 0;
-
-				const rate = parseFloat($("#exchange_rate").val()) || 1;
-
-				const currency = $("#currency").val();
-
-				$(this).data(
-					"base-cost",
-					currency !== TENANT_BASE_CURRENCY && rate > 0 ? enteredCost * rate : enteredCost,
-				);
-			}
-
-			calculateLineTotal(purchaseLineIndex);
-
-			void calculateTotals();
-		});
-	}, 100);
-
 	$productSelect.on("select2:select", (e) => {
 		const data = e.params.data;
 
@@ -369,6 +343,20 @@ function calculateLineTotal(index) {
 
 // =====================================
 
+let _purchaseTotalsServerDown = false;
+
+// Warn once per outage episode instead of spamming a notify on every keystroke.
+async function _purchaseClientSideFallback() {
+	if (!_purchaseTotalsServerDown) {
+		_purchaseTotalsServerDown = true;
+		notify(
+			"warning",
+			"⚠️ تعذر الاتصال بالخادم — تم حساب الإجماليات محلياً وقد تختلف عن الحساب الرسمي",
+		);
+	}
+	await calculateTotalsClientSide();
+}
+
 async function calculateTotals() {
 	try {
 		// جمع البيانات من الفورم
@@ -426,6 +414,8 @@ async function calculateTotals() {
 		const result = await response.json();
 
 		if (result.success) {
+			_purchaseTotalsServerDown = false;
+
 			// تحديث الواجهة
 
 			$("#summary_subtotal").text(`${result.subtotal.toFixed(2)} ${TENANT_CURRENCY_SYMBOL}`);
@@ -442,12 +432,12 @@ async function calculateTotals() {
 		} else {
 			// Fallback to client-side
 
-			await calculateTotalsClientSide();
+			await _purchaseClientSideFallback();
 		}
 	} catch (_error) {
 		// Fallback to client-side
 
-		await calculateTotalsClientSide();
+		await _purchaseClientSideFallback();
 	}
 }
 
@@ -636,11 +626,28 @@ $("#supplier_id").on("change", function () {
 $(document).on("input change keyup", ".line-quantity, .line-cost, .line-discount", function () {
 	const lineNumber = $(this).data("line");
 
-	if (lineNumber !== undefined) {
-		calculateLineTotal(lineNumber);
-
-		void calculateTotals();
+	if (lineNumber === undefined) {
+		return;
 	}
+
+	// Track the base-currency cost as costs are typed so updateLineCosts()
+	// can re-derive values when the exchange rate changes.
+	if ($(this).hasClass("line-cost")) {
+		const enteredCost = parseFloat($(this).val()) || 0;
+
+		const rate = parseFloat($("#exchange_rate").val()) || 1;
+
+		const currency = $("#currency").val();
+
+		$(this).data(
+			"base-cost",
+			currency !== TENANT_BASE_CURRENCY && rate > 0 ? enteredCost * rate : enteredCost,
+		);
+	}
+
+	calculateLineTotal(lineNumber);
+
+	void calculateTotals();
 });
 
 // =====================================
