@@ -199,4 +199,30 @@ describe('pos/print-tickets.js', () => {
     const ok = await window.printQueuedCartReceipt([{ qty: 1, name: 'X' }], { total: 1 });
     expect(ok).toBe(false);
   });
+
+  it('escPosSafe strips control characters and DEL', async () => {
+    await import('../../static/js/pos/print-tickets.js');
+    expect(window.escPosSafe('A\x00B\x1bC\x7fD')).toBe('ABCD');
+    expect(window.escPosSafe('sale\nItem\t')).toBe('saleItem');
+    expect(window.escPosSafe(undefined)).toBe('');
+    expect(window.escPosSafe(null)).toBe('');
+    expect(window.escPosSafe('plain 123')).toBe('plain 123');
+  });
+
+  it('sanitizes product names before they reach the agent payload', async () => {
+    defaultFetch();
+    await import('../../static/js/pos/print-tickets.js');
+    const ok = await window.printQueuedCartReceipt([{ qty: 1, name: 'Col\x1ba\x00B' }], { total: 5 });
+    expect(ok).toBe(true);
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(body.content.lines.map((l) => l.text).join('|')).toContain('1 x ColaB');
+  });
+
+  it('attaches an abort signal to hardware agent fetches', async () => {
+    defaultFetch();
+    await import('../../static/js/pos/print-tickets.js');
+    await window.printQueuedCartReceipt([], {});
+    const opts = fetchMock.mock.calls[0][1];
+    expect(opts.signal).toBeInstanceOf(AbortSignal);
+  });
 });

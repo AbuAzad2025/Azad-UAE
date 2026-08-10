@@ -156,4 +156,32 @@ describe('pos/cfd-broadcast.js', () => {
     expect(() => window.cfdBroadcast.sendCart([{ qty: 1, price: 2 }], {})).not.toThrow();
     expect(posted).toHaveLength(0);
   });
+
+  it('survives a crashing BroadcastChannel and disables the channel', async () => {
+    defineBroadcastChannel();
+    await import('../../static/js/pos/cfd-broadcast.js');
+    global.BroadcastChannel.prototype.postMessage = function crash() {
+      throw new Error('crashed tab');
+    };
+    window.cfdBroadcast.setSession('sess-7');
+    // First send hits the throw and must not break the register.
+    expect(() => window.cfdBroadcast.sendCart([{ qty: 1, price: 2 }], {})).not.toThrow();
+    // Channel is now dropped — the second send is a no-op (would throw again otherwise).
+    expect(() => window.cfdBroadcast.sendCart([{ qty: 1, price: 2 }], {})).not.toThrow();
+  });
+
+  it('derives zero-rated taxable from line discounts plus header discount', async () => {
+    defineBroadcastChannel();
+    await import('../../static/js/pos/cfd-broadcast.js');
+    window.cfdBroadcast.setSession('sess-z');
+    window.cfdBroadcast.sendCart(
+      [{ name: 'Bread', qty: 2, price: 10, discountPercent: 10 }],
+      { discountAmount: 1, tax: 0, taxRate: 0, total: 17 }
+    );
+    const msg = posted[0];
+    // gross = 20, line discount = 2, header discount = 1 → taxable = 17
+    expect(msg.taxable_amount).toBe(17);
+    expect(msg.subtotal).toBe(20);
+    expect(msg.discount_amount).toBe(3);
+  });
 });

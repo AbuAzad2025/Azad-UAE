@@ -123,3 +123,63 @@ describe('base-helpers.js (azad object)', () => {
     expect(dateDisplay.textContent).not.toBe('');
   });
 });
+
+describe('base-helpers.js - page-load safeguards', () => {
+  beforeEach(() => {
+    document.body.innerHTML = '';
+    document.head.innerHTML = '';
+    delete window.azad;
+    delete window.AzadHelpers;
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    document.body.innerHTML = '';
+    document.head.innerHTML = '';
+    delete window.azad;
+    delete window.AzadHelpers;
+    vi.resetModules();
+  });
+
+  it('prefetches ordinary internal links but never the logout link', async () => {
+    document.body.innerHTML = `
+      <a href="/sales/" id="normal">Sales</a>
+      <a href="/logout" id="logout">Logout</a>
+      <a href="/pos/grid" id="pos">POS</a>
+    `;
+    await import('../../static/js/base-helpers.js');
+    document.getElementById('normal').dispatchEvent(new MouseEvent('mouseenter'));
+    document.getElementById('logout').dispatchEvent(new MouseEvent('mouseenter'));
+    document.getElementById('pos').dispatchEvent(new MouseEvent('mouseenter'));
+    const prefetched = [...document.querySelectorAll('link[rel="prefetch"]')].map((link) =>
+      link.getAttribute('href'),
+    );
+    expect(prefetched).toContain('/sales/');
+    expect(prefetched).toContain('/pos/grid');
+    expect(prefetched).not.toContain('/logout');
+  });
+
+  it('does not start the clock interval when no clock element exists', async () => {
+    const original = global.setInterval;
+    const spy = vi.spyOn(global, 'setInterval').mockImplementation(original);
+    try {
+      document.body.innerHTML = '<div id="app"></div>';
+      await import('../../static/js/base-helpers.js');
+      expect(spy).not.toHaveBeenCalled();
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('starts the clock interval only when a clock element exists', async () => {
+    const original = global.setInterval;
+    const spy = vi.spyOn(global, 'setInterval').mockImplementation(original);
+    try {
+      document.body.innerHTML = '<span id="time-display"></span>';
+      await import('../../static/js/base-helpers.js');
+      expect(spy).toHaveBeenCalledWith(window.AzadHelpers.updateDateTime, 1000);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+});

@@ -115,3 +115,54 @@ describe('sales.js - function coverage', () => {
     expect(true).toBe(true);
   });
 });
+
+describe('base-helpers.js - safeEval parser', () => {
+  beforeEach(() => {
+    document.body.innerHTML = '';
+    delete window.AzadHelpers;
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    document.body.innerHTML = '';
+    delete window.AzadHelpers;
+    vi.resetModules();
+  });
+
+  async function safeEval(expr) {
+    await import('../../static/js/base-helpers.js');
+    return window.AzadHelpers.safeEval(expr);
+  }
+
+  it('evaluates basic arithmetic', async () => {
+    expect(await safeEval('2+3*4')).toBe('14');
+    expect(await safeEval('(2+3)*4')).toBe('20');
+    expect(await safeEval('10-2/2')).toBe('9');
+    expect(await safeEval('10/0')).toBe('ERR');
+  });
+
+  it('supports unary minus and exponentiation', async () => {
+    expect(await safeEval('-2+5')).toBe('3');
+    expect(await safeEval('2^10')).toBe('1024');
+    expect(await safeEval('2^3^2')).toBe('512');
+  });
+
+  it('supports calculator function buttons and constants', async () => {
+    expect(await safeEval('sin(0)')).toBe('0');
+    expect(await safeEval('cos(0)')).toBe('1');
+    expect(await safeEval('sqrt(16)')).toBe('4');
+    expect(await safeEval('log(100)')).toBe('2');
+    expect(await safeEval('ln(1)')).toBe('0');
+    expect(await safeEval('Ï€')).toBe(String(Math.round((Math.PI + Number.EPSILON) * 100000000) / 100000000));
+    expect(await safeEval('e')).toBe(String(Math.round((Math.E + Number.EPSILON) * 100000000) / 100000000));
+  });
+
+  it('rejects code-execution payloads with ERR', async () => {
+    expect(await safeEval('[].constructor.constructor("alert(1)")()')).toBe('ERR');
+    expect(await safeEval('alert(1)')).toBe('ERR');
+    expect(await safeEval('constructor')).toBe('ERR');
+    expect(await safeEval('__proto__')).toBe('ERR');
+    expect(await safeEval('(function(){return 1})()')).toBe('ERR');
+    expect(await safeEval('1+')).toBe('ERR');
+  });
+});

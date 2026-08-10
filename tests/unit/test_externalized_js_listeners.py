@@ -18,6 +18,19 @@ def test_purchases_js_has_addline_event_listener():
     assert '$("#addLineBtn").on("click"' in js, "purchases/create.js should have addLineBtn click listener"
 
 
+def test_purchases_js_uses_single_delegated_line_handler():
+    js = read_file("static/js/purchases/create.js")
+    assert '$(document).on("input change keyup", ".line-quantity, .line-cost, .line-discount"' in js
+    assert ".on(\"input change keyup\", function ()" not in js, "per-line setTimeout bindings should be removed"
+
+
+def test_purchases_js_fallback_warns_once_and_resets():
+    js = read_file("static/js/purchases/create.js")
+    assert "_purchaseTotalsServerDown" in js, "fallback outage flag should exist"
+    assert "_purchaseClientSideFallback" in js, "client-side fallback helper should exist"
+    assert "_purchaseTotalsServerDown = false;" in js, "fallback flag should reset on server success"
+
+
 def test_pos_js_reads_currency_from_meta():
     js = read_file("static/js/pos/index.js")
     assert "window.POS_BASE_CURRENCY" not in js, "pos/index.js should not use window.POS_BASE_CURRENCY"

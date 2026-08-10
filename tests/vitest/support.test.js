@@ -223,6 +223,29 @@ describe('support.js', () => {
     );
   });
 
+  it('generateCryptoPayment rejects junk-string amounts instead of parsing them', async () => {
+    await import('../../static/js/support.js');
+    window.selectAmount(0, {});
+    document.getElementById('customAmount').value = '15abc';
+    await window.generateCryptoPayment();
+    expect(Swal.fire).toHaveBeenCalledWith(
+      expect.objectContaining({ icon: 'error', text: 'Minimum donation amount is $15' })
+    );
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('generateCryptoPayment sends a numeric amount with a randomized transaction id', async () => {
+    await import('../../static/js/support.js');
+    window.switchTab('donation');
+    document.getElementById('customAmount').value = '50';
+    Swal.fire.mockResolvedValueOnce({ value: { name: 'Ali', email: 'a@b.c', phone: '123', extra: 'msg' } });
+    await window.generateCryptoPayment();
+    await flush();
+    const body = JSON.parse(fetch.mock.calls[0][1].body);
+    expect(body.amount).toBe(50);
+    expect(body.transaction_id).toMatch(/^DONATION_\d+_[a-z0-9]+_[a-z0-9]+$/);
+  });
+
   it('generateCryptoPayment handles donation flow with fetch', async () => {
     await import('../../static/js/support.js');
     window.switchTab('donation');
@@ -234,7 +257,7 @@ describe('support.js', () => {
     const [url, opts] = fetch.mock.calls[0];
     expect(url).toBe('/payment-vault/api/donation');
     const body = JSON.parse(opts.body);
-    expect(body.amount).toBe('50');
+    expect(body.amount).toBe(50);
     expect(body.payment_method).toBe('crypto');
     expect(body.donor_name).toBe('Ali');
     expect(body.donor_email).toBe('a@b.c');
