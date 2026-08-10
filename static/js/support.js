@@ -14,6 +14,9 @@
 	let selectedPackage = "";
 	let currentTab = "purchase";
 
+	const newTxnId = (prefix) =>
+		`${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 11)}_${Math.random().toString(36).slice(2, 11)}`;
+
 	function buildSupportMessage(kind, amountOverride, recordId) {
 		const amount =
 			amountOverride ||
@@ -194,7 +197,7 @@
 			'<p class="sp-status-box-label"><strong>' +
 			t("Reference") +
 			":</strong> #" +
-			(recordId || "\u2014") +
+			(escapeHtml(recordId) || "\u2014") +
 			"</p>" +
 			'<p class="sp-status-box-value"><strong>' +
 			t("Amount") +
@@ -421,8 +424,8 @@
 		const customAmount = document.getElementById("customAmount")
 			? document.getElementById("customAmount").value
 			: "";
-		const paymentAmount = customAmount || selectedAmount;
-		if (!paymentAmount || paymentAmount < 15) {
+		const paymentAmount = Number(customAmount || selectedAmount);
+		if (!Number.isFinite(paymentAmount) || paymentAmount < 15) {
 			Swal.fire({
 				icon: "error",
 				title: t("Error"),
@@ -484,7 +487,7 @@
 				amount_paid: paymentAmount,
 				currency: "USD",
 				crypto_currency: cryptoType,
-				transaction_id: `CRYPTO_${Date.now()}`,
+				transaction_id: newTxnId("CRYPTO"),
 				payment_details: { crypto_type: cryptoType, amount: paymentAmount },
 			};
 		} else {
@@ -502,7 +505,7 @@
 				donor_name: fv2.name || null,
 				donor_email: fv2.email || null,
 				message: fv2.extra || null,
-				transaction_id: `DONATION_${Date.now()}`,
+				transaction_id: newTxnId("DONATION"),
 			};
 		}
 
@@ -519,7 +522,7 @@
 					const recordType = data.purchase_id ? t("Purchase") : t("Donation");
 					const payBtn = data.payment_url
 						? '<a href="' +
-							data.payment_url +
+							escapeHtml(data.payment_url) +
 							'" target="_blank" rel="noopener noreferrer" class="btn btn-primary mt-2"><i class="fas fa-external-link-alt"></i> ' +
 							t("Open Payment Page") +
 							"</a>"
@@ -532,31 +535,29 @@
 								"" +
 								'<div class="sp-result-center">' +
 								'<p class="sp-result-title">' +
-								data.message +
+								escapeHtml(data.message) +
 								"</p>" +
 								'<div class="sp-result-box">' +
 								"<p><strong>" +
 								t("Order Number") +
 								":</strong> #" +
-								recordId +
+								escapeHtml(recordId) +
 								"</p>" +
 								"<p><strong>" +
 								t("Required Amount") +
 								":</strong> " +
-								(data.payment_amount || paymentAmount) +
+								escapeHtml(data.payment_amount || paymentAmount) +
 								" " +
-								(data.crypto_currency || cryptoType.toUpperCase()) +
+								escapeHtml(data.crypto_currency || cryptoType.toUpperCase()) +
 								"</p>" +
 								"<hr>" +
 								"<p><strong>" +
 								t("Payment Address") +
 								":</strong></p>" +
 								'<p class="sp-result-address">' +
-								data.payment_address +
+								escapeHtml(data.payment_address) +
 								"</p>" +
-								"<button onclick=\"navigator.clipboard.writeText('" +
-								data.payment_address +
-								'\')" class="btn btn-outline-primary mt-2"><i class="fas fa-copy"></i> ' +
+								'<button type="button" id="spCopyAddressBtn" class="btn btn-outline-primary mt-2"><i class="fas fa-copy"></i> ' +
 								t("Copy Address") +
 								"</button>" +
 								payBtn +
@@ -580,6 +581,14 @@
 							cancelButtonText: t("Email us"),
 							width: 650,
 							allowOutsideClick: false,
+							didOpen: () => {
+								const copyBtn = document.getElementById("spCopyAddressBtn");
+								if (copyBtn && data.payment_address) {
+									copyBtn.addEventListener("click", () =>
+										navigator.clipboard.writeText(data.payment_address),
+									);
+								}
+							},
 						}).then((r) => {
 							if (r.isDenied) window.openWhatsApp("payment_help", paymentAmount, recordId);
 							else if (r.dismiss === Swal.DismissReason.cancel)
@@ -593,13 +602,13 @@
 								"" +
 								'<div class="sp-result-center">' +
 								'<p class="sp-result-amount">' +
-								data.message +
+								escapeHtml(data.message) +
 								"</p>" +
 								'<div class="sp-result-box">' +
 								"<p><strong>" +
 								t("Order Number") +
 								":</strong> #" +
-								recordId +
+								escapeHtml(recordId) +
 								"</p>" +
 								"<p><strong>" +
 								t("Amount") +
@@ -609,7 +618,7 @@
 								"<p><strong>" +
 								t("Payment Method") +
 								":</strong> " +
-								(data.payment_method_display || cryptoType.toUpperCase()) +
+								escapeHtml(data.payment_method_display || cryptoType.toUpperCase()) +
 								"</p>" +
 								"</div>" +
 								buildSupportStatusHtml(
@@ -681,8 +690,8 @@
 		const ca = document.getElementById("customAmount")
 			? document.getElementById("customAmount").value
 			: "";
-		const paymentAmount = ca || selectedAmount || 0;
-		if (!paymentAmount || paymentAmount < 15) {
+		const paymentAmount = Number(ca || selectedAmount || 0);
+		if (!Number.isFinite(paymentAmount) || paymentAmount < 15) {
 			Swal.fire({
 				icon: "error",
 				title: t("Error"),
@@ -752,7 +761,7 @@
 				payment_method: "paypal",
 				amount_paid: paymentAmount,
 				currency: "USD",
-				transaction_id: `PAYPAL_PENDING_${Date.now()}`,
+				transaction_id: newTxnId("PAYPAL_PENDING"),
 			};
 		} else {
 			requestData = {
@@ -760,7 +769,7 @@
 				payment_method: "paypal",
 				donor_name: r.value.name,
 				donor_email: r.value.email,
-				transaction_id: `PAYPAL_DONATION_${Date.now()}`,
+				transaction_id: newTxnId("PAYPAL_DONATION"),
 			};
 		}
 
@@ -785,7 +794,7 @@
 							"<p>" +
 							t("Order Number") +
 							": #" +
-							(data.purchase_id || data.donation_id) +
+							escapeHtml(data.purchase_id || data.donation_id) +
 							"</p>" +
 							'<div class="sp-result-box">' +
 							"<p><strong>" +
@@ -797,11 +806,9 @@
 							t("Transfer is automatically sent to Bitcoin") +
 							"</p><hr>" +
 							'<p class="sp-result-wallet">' +
-							data.payment_address +
+							escapeHtml(data.payment_address) +
 							"</p>" +
-							"<button onclick=\"navigator.clipboard.writeText('" +
-							data.payment_address +
-							'\')" class="btn btn-primary"><i class="fas fa-copy"></i> ' +
+							'<button type="button" id="spCopyAddressBtn" class="btn btn-primary"><i class="fas fa-copy"></i> ' +
 							t("Copy") +
 							"</button>" +
 							"</div>" +
@@ -821,6 +828,14 @@
 						showCancelButton: true,
 						cancelButtonText: t("Email us"),
 						width: 600,
+						didOpen: () => {
+							const copyBtn = document.getElementById("spCopyAddressBtn");
+							if (copyBtn && data.payment_address) {
+								copyBtn.addEventListener("click", () =>
+									navigator.clipboard.writeText(data.payment_address),
+								);
+							}
+						},
 					}).then((r2) => {
 						const rid = data.purchase_id || data.donation_id;
 						if (r2.isDenied) window.openWhatsApp("payment_help", paymentAmount, rid);
@@ -902,8 +917,8 @@
 			cardForm.addEventListener("submit", async (e) => {
 				e.preventDefault();
 				const ci = document.getElementById("cardAmount");
-				const paymentAmount = parseFloat(ci ? ci.value : "") || selectedAmount || 0;
-				if (!paymentAmount || paymentAmount < 15) {
+				const paymentAmount = Number((ci ? ci.value : "") || selectedAmount || 0);
+				if (!Number.isFinite(paymentAmount) || paymentAmount < 15) {
 					Swal.fire({
 						icon: "error",
 						title: t("Error"),
@@ -973,7 +988,7 @@
 						payment_method: "card",
 						amount_paid: paymentAmount,
 						currency: "USD",
-						transaction_id: `CARD_PENDING_${Date.now()}`,
+						transaction_id: newTxnId("CARD_PENDING"),
 					};
 				} else {
 					requestData = {
@@ -981,7 +996,7 @@
 						payment_method: "card",
 						donor_name: r.value.name,
 						donor_email: r.value.email,
-						transaction_id: `CARD_DONATION_${Date.now()}`,
+						transaction_id: newTxnId("CARD_DONATION"),
 					};
 				}
 
@@ -1003,26 +1018,24 @@
 									'<p class="sp-result-amount"><strong>' +
 									t("Order Number") +
 									": #" +
-									(data.purchase_id || data.donation_id) +
+									escapeHtml(data.purchase_id || data.donation_id) +
 									"</strong></p>" +
 									'<div class="sp-result-box">' +
 									"<p><strong>" +
 									t("Required Amount") +
 									":</strong></p>" +
 									'<p class="sp-result-cta">' +
-									(data.payment_amount || paymentAmount) +
+									escapeHtml(data.payment_amount || paymentAmount) +
 									" " +
-									(data.crypto_currency || "BTC") +
+									escapeHtml(data.crypto_currency || "BTC") +
 									"</p><hr>" +
 									"<p><strong>" +
 									t("Saved Address") +
 									":</strong></p>" +
 									'<p class="sp-result-mono">' +
-									data.payment_address +
+									escapeHtml(data.payment_address) +
 									"</p>" +
-									"<button onclick=\"navigator.clipboard.writeText('" +
-									data.payment_address +
-									'\')" class="btn btn-primary mt-2"><i class="fas fa-copy"></i> ' +
+									'<button type="button" id="spCopyAddressBtn" class="btn btn-primary mt-2"><i class="fas fa-copy"></i> ' +
 									t("Copy Address") +
 									"</button>" +
 									"</div>" +
@@ -1043,6 +1056,14 @@
 								cancelButtonText: t("Email us"),
 								width: 600,
 								allowOutsideClick: false,
+								didOpen: () => {
+									const copyBtn = document.getElementById("spCopyAddressBtn");
+									if (copyBtn && data.payment_address) {
+										copyBtn.addEventListener("click", () =>
+											navigator.clipboard.writeText(data.payment_address),
+										);
+									}
+								},
 							}).then((r2) => {
 								const rid = data.purchase_id || data.donation_id;
 								if (r2.isDenied) window.openWhatsApp("payment_help", paymentAmount, rid);
