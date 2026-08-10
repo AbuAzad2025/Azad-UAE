@@ -17,6 +17,19 @@
 			? crypto.randomUUID()
 			: `k-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 	state.idemKey = newCartKey();
+	// Session-expiry safety net: a 401 from any POS endpoint means the
+	// session ended — bounce to login instead of every later call silently
+	// failing (403 permission errors keep the existing override flow).
+	const rawFetch = window.fetch.bind(window);
+	let _sessionRedirected = false;
+	const fetch = (url, options) =>
+		rawFetch(url, options).then((r) => {
+			if (r.status === 401 && !_sessionRedirected) {
+				_sessionRedirected = true;
+				window.location.href = "/auth/login";
+			}
+			return r;
+		});
 	const qs = (s, r = document) => r.querySelector(s);
 	const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
 	const fmt = (n) => Number(n || 0).toFixed(2);
@@ -227,6 +240,7 @@
 						prices_include_vat: data.prices_include_vat,
 					};
 					if (window.cfdBroadcast) cfdBroadcast.sendCart(state.cart, exactTotals);
+					state.lastTotals = exactTotals;
 					return exactTotals;
 				}
 			} catch (_) {}
@@ -242,6 +256,7 @@
 			prices_include_vat: pricesIncludeVatMeta,
 		};
 		if (window.cfdBroadcast) cfdBroadcast.sendCart(state.cart, quickTotals);
+		state.lastTotals = quickTotals;
 		return quickTotals;
 	};
 
@@ -328,6 +343,7 @@
 				if (state.cart[idx]) {
 					state.cart[idx].qty++;
 					state.idemKey = newCartKey();
+					const _sessionBusy = false;
 					await renderCart();
 					await recalc();
 				}
@@ -701,7 +717,7 @@
 				return;
 			}
 		}
-		void recalc();
+		await recalc();
 		const lines = state.cart.map((it) => ({
 			product_id: it.productId,
 			quantity: it.qty,
@@ -906,7 +922,19 @@
 			$("#openSessionModal").modal("show");
 		});
 		qs("#openSessionConfirm").addEventListener("click", () => {
-			const bal = toNum(qs("#openSessionBalance").value);
+			if (_sessionBusy) return;
+			// Empty field = 0 balance (allowed); garbage text must not silently
+			// become 0 (Number("")/Number("abc") both coerce to 0 via toNum).
+			const openRaw = qs("#openSessionBalance")?.value ?? "";
+			const openingBalance = openRaw.trim() === "" ? 0 : Number(openRaw);
+			if (!Number.isFinite(openingBalance)) {
+				showAlert("رصيد الافتتاح غير صحيح — أدخل رقماً صحيحاً");
+				return;
+			}
+			_sessionBusy = true;
+			const openBtn = qs("#openSessionConfirm");
+			openBtn.disabled = true;
+			const bal = openingBalance;
 			fetch("/pos/api/session/open", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", "X-CSRFToken": csrf },
@@ -924,7 +952,11 @@
 						showAlert(d.error || "فشل فتح الجلسة");
 					}
 				})
-				.catch(() => {});
+				.catch(() => {})
+				.finally(() => {
+					_sessionBusy = false;
+					openBtn.disabled = false;
+				});
 		});
 		qs("#closeSessionBtn").addEventListener("click", () => {
 			fetch("/pos/api/session/report")
@@ -945,7 +977,17 @@
 				.catch(() => {});
 		});
 		qs("#closeSessionConfirm").addEventListener("click", () => {
-			const bal = toNum(qs("#closeSessionBalance").value);
+			if (_sessionBusy) return;
+			const closeRaw = qs("#closeSessionBalance")?.value ?? "";
+			const closingBalance = closeRaw.trim() === "" ? 0 : Number(closeRaw);
+			if (!Number.isFinite(closingBalance)) {
+				showAlert("رصيد الإغلاق غير صحيح — أدخل رقماً صحيحاً");
+				return;
+			}
+			_sessionBusy = true;
+			const closeBtn = qs("#closeSessionConfirm");
+			closeBtn.disabled = true;
+			const bal = closingBalance;
 			fetch("/pos/api/session/close", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", "X-CSRFToken": csrf },
@@ -963,7 +1005,11 @@
 						showAlert(d.error || "فشل إغلاق الجلسة");
 					}
 				})
-				.catch(() => {});
+				.catch(() => {})
+				.finally(() => {
+					_sessionBusy = false;
+					closeBtn.disabled = false;
+				});
 		});
 
 		if (window.BarcodeScanner) {

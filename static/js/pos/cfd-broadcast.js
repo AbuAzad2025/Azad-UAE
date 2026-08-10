@@ -33,11 +33,11 @@
 		 */
 		sendCart(cart, totals) {
 			if (!bc || !sessionId) return;
+			const t = totals || {};
 			if (!Array.isArray(cart) || cart.length === 0) {
-				bc.postMessage({ type: "waiting", session_id: sessionId });
+				this._post({ type: "waiting", session_id: sessionId });
 				return;
 			}
-			const t = totals || {};
 			let gross = 0;
 			let lineDiscount = 0;
 			const items = cart.map((it) => {
@@ -61,9 +61,14 @@
 			const tax = toNum(t.tax);
 			const taxRate = toNum(t.taxRate);
 			const total = toNum(t.total);
-			const taxable =
-				taxRate > 0 ? round3(total - tax) : round3(toNum(t.subtotal) - manualDiscount);
-			bc.postMessage({
+			const netBeforeManual = gross - lineDiscount;
+			// taxable_amount is the net-of-discount subtotal. When taxRate === 0
+			// the cart is zero-rated, so taxable = gross − line discounts −
+			// header discount — derived from the lines themselves rather than
+			// trusting t.subtotal, whose gross/net semantics differ between
+			// register versions.
+			const taxable = taxRate > 0 ? round3(total - tax) : round3(netBeforeManual - manualDiscount);
+			this._post({
 				type: "order_update",
 				live: true,
 				session_id: sessionId,
@@ -86,6 +91,18 @@
 				change_due: 0,
 				status: "cart",
 			});
+		},
+		/**
+		 * Post a payload, surviving a crashed/closed CFD tab: BroadcastChannel
+		 * throws when the receiving context is gone, and a broken broadcast
+		 * must not take down the register — drop the channel instead.
+		 */
+		_post(payload) {
+			try {
+				bc.postMessage(payload);
+			} catch (_e) {
+				bc = null;
+			}
 		},
 	};
 })();

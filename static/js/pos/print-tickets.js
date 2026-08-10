@@ -10,10 +10,41 @@
 /* global EscposPrinter, buildReceiptBytes */
 
 const _AGENT_URL = "http://127.0.0.1:8567";
+const _AGENT_TIMEOUT_MS = 5000;
 let _escposSingleton = null;
 
+/**
+ * Strip control characters (C0 range + DEL) that would corrupt ESC/POS byte
+ * streams — printer firmware does not escape them and a stray 0x00/0x0a can
+ * abort the whole document.
+ */
+function escPosSafe(value) {
+	return String(value ?? "")
+		.split("")
+		.filter((ch) => {
+			const code = ch.charCodeAt(0);
+			return code >= 0x20 && code !== 0x7f;
+		})
+		.join("");
+}
+
+/**
+ * Fetch the localhost hardware agent with a hard 5s ceiling so an
+ * unresponsive agent (crashed, blocked by the OS) can never hang the
+ * checkout or queued-receipt flow.
+ */
+async function _agentFetch(path, options = {}) {
+	const controller = new AbortController();
+	const timer = setTimeout(() => controller.abort(), _AGENT_TIMEOUT_MS);
+	try {
+		return await fetch(`${_AGENT_URL}${path}`, { ...options, signal: controller.signal });
+	} finally {
+		clearTimeout(timer);
+	}
+}
+
 async function _deliverAgentTicket(ticket) {
-	const res = await fetch(`${_AGENT_URL}/print-receipt`, {
+	const res = await _agentFetch("/print-receipt", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({ printer: ticket.printer, content: ticket.content }),
@@ -77,14 +108,14 @@ async function printQueuedCartReceipt(cart, totals, payload = {}) {
 			{ separator: true },
 		];
 		for (const it of cart || []) {
-			lines.push({ text: `${it.qty} x ${it.name}`, align: "left" });
+			lines.push({ text: `${it.qty} x ${escPosSafe(it.name)}`, align: "left" });
 			lines.push({ text: `   ${Number(it.price * it.qty).toFixed(3)}`, align: "right" });
 		}
 		lines.push({ separator: true });
 		if (totals?.total != null) {
 			lines.push({ text: `TOTAL ${Number(totals.total).toFixed(3)}`, align: "center", bold: true });
 		}
-		const res = await fetch(`${_AGENT_URL}/print-receipt`, {
+		const res = await _agentFetch("/print-receipt", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ content: { lines, cut: true, open_drawer: true } }),
@@ -97,3 +128,4 @@ async function printQueuedCartReceipt(cart, totals, payload = {}) {
 
 window.printSaleTickets = printSaleTickets;
 window.printQueuedCartReceipt = printQueuedCartReceipt;
+window.escPosSafe = escPosSafe;

@@ -14,6 +14,27 @@ const CMD_INIT = [ESC, 0x40];
 const CMD_CUT_FULL = [GS, 0x56, 0x00];
 const CMD_DRAWER_PIN2 = [ESC, 0x70, 0x00, 0x19, 0xfa];
 const _ALIGN = { left: 0, center: 1, right: 2 };
+const _USB_TRANSFER_TIMEOUT_MS = 10000;
+
+/**
+ * Reject a slow hardware operation after a hard ceiling instead of letting
+ * a wedged USB endpoint hang the print forever.
+ */
+function _withTimeout(promise, ms, message) {
+	return new Promise((resolve, reject) => {
+		const timer = setTimeout(() => reject(new Error(message)), ms);
+		promise.then(
+			(value) => {
+				clearTimeout(timer);
+				resolve(value);
+			},
+			(error) => {
+				clearTimeout(timer);
+				reject(error);
+			},
+		);
+	});
+}
 
 function _lineBytes(text, { align = "left", bold = false, double = false } = {}) {
 	const bytes = [];
@@ -70,7 +91,11 @@ class EscposPrinter {
 
 	async connectWebUsb() {
 		if (!EscposPrinter.webUsbSupported()) throw new Error("WebUSB غير مدعوم في هذا المتصفح.");
-		this.device = await navigator.usb.requestDevice({ filters: [] });
+		// Optional tenant-scoped device filter (vendor/product IDs) set via
+		// window._PRINTER_USB_FILTERS; an absent/empty config keeps the old
+		// "show every device" behaviour.
+		const filters = Array.isArray(window._PRINTER_USB_FILTERS) ? window._PRINTER_USB_FILTERS : [];
+		this.device = await navigator.usb.requestDevice({ filters });
 		await this.device.open();
 		if (this.device.configuration === null) await this.device.selectConfiguration(1);
 		await this.device.claimInterface(0);
@@ -93,7 +118,11 @@ class EscposPrinter {
 				(e) => e.direction === "out",
 			);
 			if (!endpoint) throw new Error("لم يعثر على نقطة إخراج USB للطابعة.");
-			await this.device.transferOut(endpoint.endpointNumber, bytes);
+			await _withTimeout(
+				this.device.transferOut(endpoint.endpointNumber, bytes),
+				_USB_TRANSFER_TIMEOUT_MS,
+				"تجاوزت مهلة الطباعة عبر USB.",
+			);
 			return true;
 		}
 		if (this.channel === "webserial" && this.port?.writable) {
