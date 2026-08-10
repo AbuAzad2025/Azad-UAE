@@ -89,11 +89,15 @@ $(() => {
 	}
 	$("#fxModal").on("show.bs.modal", loadFxRates);
 	updateDateTime();
-	setInterval(updateDateTime, 1000);
+	// The navbar clock only exists on pages that render one — don't burn a
+	// global interval on pages where there is nothing to update.
+	if (document.getElementById("time-display") || document.getElementById("date-display")) {
+		setInterval(updateDateTime, 1000);
+	}
 	initNavbarCalculator();
 });
 
-document.querySelectorAll('a[href^="/"]').forEach((link) => {
+document.querySelectorAll('a[href^="/"]:not([href*="/logout"])').forEach((link) => {
 	link.addEventListener(
 		"mouseenter",
 		function () {
@@ -273,21 +277,150 @@ function updateDateTime() {
 }
 
 function safeEval(expr) {
-	const normalized = String(expr || "")
+	const src = String(expr || "")
 		.replace(/Ã·/g, "/")
 		.replace(/Ã—/g, "*")
-		.replace(/\^/g, "**")
-		.replace(/Ï€/g, "Math.PI")
-		.replace(/\be\b/g, "Math.E")
-		.replace(/sin\(/g, "Math.sin(")
-		.replace(/cos\(/g, "Math.cos(")
-		.replace(/tan\(/g, "Math.tan(")
-		.replace(/log\(/g, "Math.log10(")
-		.replace(/ln\(/g, "Math.log(")
-		.replace(/sqrt\(/g, "Math.sqrt(");
-	if (!/^[0-9+\-*/().,\sA-Za-z_]*$/.test(normalized)) return "ERR";
+		.replace(/Ï€/g, "pi")
+		.replace(/π/g, "pi")
+		.replace(/\^/g, "^");
+	let pos = 0;
+	const len = src.length;
+	const isDigit = (c) => c >= "0" && c <= "9";
+	const isIdent = (c) => (c >= "a" && c <= "z") || (c >= "A" && c <= "Z");
+	const isWhite = (c) => c === " " || c === "\t" || c === "\n" || c === "\r";
+
+	function error() {
+		throw new Error("invalid expression");
+	}
+
+	function skipWs() {
+		while (pos < len && isWhite(src[pos])) pos++;
+	}
+
+	function peek() {
+		skipWs();
+		return src[pos];
+	}
+
+	function parseExpression() {
+		let value = parseTerm();
+		for (;;) {
+			const c = peek();
+			if (c === "+") {
+				pos++;
+				value += parseTerm();
+			} else if (c === "-") {
+				pos++;
+				value -= parseTerm();
+			} else {
+				return value;
+			}
+		}
+	}
+
+	function parseTerm() {
+		let value = parseFactor();
+		for (;;) {
+			const c = peek();
+			if (c === "*") {
+				pos++;
+				value *= parseFactor();
+			} else if (c === "/") {
+				pos++;
+				const d = parseFactor();
+				if (d === 0) error();
+				value /= d;
+			} else {
+				return value;
+			}
+		}
+	}
+
+	function parseFactor() {
+		skipWs();
+		if (src[pos] === "-") {
+			pos++;
+			return -parseFactor();
+		}
+		const base = parsePrimary();
+		if (peek() === "^") {
+			pos++;
+			return base ** parseFactor();
+		}
+		return base;
+	}
+
+	function parseNumber() {
+		skipWs();
+		const start = pos;
+		let hasDigit = false;
+		while (pos < len && (isDigit(src[pos]) || src[pos] === ".")) {
+			if (isDigit(src[pos])) hasDigit = true;
+			pos++;
+		}
+		if (!hasDigit) error();
+		if (pos < len && (src[pos] === "e" || src[pos] === "E")) {
+			const save = pos;
+			pos++;
+			if (pos < len && (src[pos] === "+" || src[pos] === "-")) pos++;
+			if (pos < len && isDigit(src[pos])) {
+				while (pos < len && isDigit(src[pos])) pos++;
+			} else {
+				pos = save;
+			}
+		}
+		const num = Number(src.slice(start, pos));
+		if (!Number.isFinite(num)) error();
+		return num;
+	}
+
+	function parseIdent() {
+		skipWs();
+		const start = pos;
+		while (pos < len && isIdent(src[pos])) pos++;
+		return src.slice(start, pos);
+	}
+
+	function parsePrimary() {
+		skipWs();
+		const c = src[pos];
+		if (c === "(") {
+			pos++;
+			const v = parseExpression();
+			if (peek() !== ")") error();
+			pos++;
+			return v;
+		}
+		if (isDigit(c) || c === ".") return parseNumber();
+		if (isIdent(c)) {
+			const name = parseIdent();
+			if (name === "pi") return Math.PI;
+			if (name === "e") return Math.E;
+			const funcs = {
+				sin: Math.sin,
+				cos: Math.cos,
+				tan: Math.tan,
+				sqrt: Math.sqrt,
+				log: Math.log10,
+				ln: Math.log,
+			};
+			if (funcs[name]) {
+				if (peek() !== "(") error();
+				pos++;
+				const arg = parseExpression();
+				if (peek() !== ")") error();
+				pos++;
+				return funcs[name](arg);
+			}
+			error();
+		}
+		error();
+	}
+
 	try {
-		const val = Function(`"use strict"; return (${normalized});`)();
+		const val = parseExpression();
+		skipWs();
+		if (pos !== len) error();
 		if (!Number.isFinite(val)) return "ERR";
 		return String(Math.round((val + Number.EPSILON) * 100000000) / 100000000);
 	} catch (_e) {
