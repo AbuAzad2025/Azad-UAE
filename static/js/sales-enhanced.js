@@ -6,6 +6,8 @@
 /* salesLineIndex scoped per file to avoid cross-page collision with purchases */
 let salesLineIndex = 0;
 
+let _isSubmitting = false;
+
 function getCsrfToken() {
 	const meta = document.querySelector('meta[name="csrf-token"]');
 	return meta ? meta.getAttribute("content") : "";
@@ -159,7 +161,7 @@ function addLine() {
 				},
 				success: (data) => {
 					if (data.price) {
-						$(`#price_${currentIndex}`).val(parseFloat(data.price).toFixed(2));
+						_applyBasePrice(currentIndex, data.price);
 					}
 					if (data.current_stock !== undefined) {
 						$(`#stock_${currentIndex}`).text(`${data.current_stock} ${data.unit || ""}`);
@@ -182,7 +184,7 @@ function addLine() {
 				error: () => {
 					// Fallback to selected data
 					if (selectedData.price) {
-						$(`#price_${currentIndex}`).val(parseFloat(selectedData.price).toFixed(2));
+						_applyBasePrice(currentIndex, selectedData.price);
 					}
 					void calculateTotals();
 				},
@@ -190,7 +192,7 @@ function addLine() {
 		} else {
 			// Use default price from search result
 			if (selectedData.price) {
-				$(`#price_${currentIndex}`).val(parseFloat(selectedData.price).toFixed(2));
+				_applyBasePrice(currentIndex, selectedData.price);
 			}
 		}
 
@@ -214,10 +216,31 @@ function addLine() {
 }
 
 /**
+ * Store a base-currency price on a line and render it converted to the
+ * currently selected currency. Keeps `data("base-price")` in sync so
+ * updateLinePrices() can re-derive prices when the exchange rate changes.
+ */
+function _applyBasePrice(index, basePrice) {
+	const numericBase = parseFloat(basePrice);
+	if (!Number.isFinite(numericBase)) return;
+	const $priceInput = $(`#price_${index}`);
+	$priceInput.data("base-price", numericBase);
+	const rate = parseFloat($("#exchange_rate").val()) || 1;
+	const currency = $("#currency").val();
+	let finalPrice = numericBase;
+	if (currency !== (window._FX_FALLBACK_BASE || "AED") && rate > 0) {
+		finalPrice = numericBase / rate;
+	}
+	$priceInput.val(finalPrice.toFixed(2));
+}
+
+/**
  * Remove Product Line
  */
 function _removeLine(index) {
 	$(`#line_${index}`).remove();
+	_serialStore.delete(index);
+	if (_serialModalLine === index) _serialModalLine = null;
 	void calculateTotals();
 }
 
@@ -296,6 +319,131 @@ function _loadProductPrice(index) {
 }
 
 /**
+ * Serial Number Entry (P2 fix)
+ * Serial-required products collect their numbers in the #serialNumberModal
+ * present on sales/create.html and write them back as hidden
+ * lines[i][serials][] fields consumed by routes/sales.py. Previously this
+ * feature was dead code: openSerialModal was referenced but never defined.
+ */
+const _serialStore = new Map();
+let _serialModalLine = null;
+
+function _serialQtyNeeded(lineIndex) {
+	return parseInt($(`input[name="lines[${lineIndex}][quantity]"]`).val() || "0", 10) || 0;
+}
+
+function _serialHiddenInputs(lineIndex) {
+	return $(`#line_${lineIndex}`).find(`input[name="lines[${lineIndex}][serials][]"]`);
+}
+
+function _serialSyncFromHidden(lineIndex) {
+	const existing = [];
+	_serialHiddenInputs(lineIndex).each(function () {
+		const value = $(this).val().trim();
+		if (value) existing.push(value);
+	});
+	_serialStore.set(lineIndex, existing);
+}
+
+function _serialRenderList() {
+	if (_serialModalLine === null) return;
+	const serials = _serialStore.get(_serialModalLine) || [];
+	const list = $("#serial_list");
+	list.empty();
+	serials.forEach((sn) => {
+		const removeBtn = $("<button></button>")
+			.attr("type", "button")
+			.addClass("btn btn-sm btn-link text-danger")
+			.text("×")
+			.on("click", () => _serialRemove(sn));
+		list.append(
+			$("<li></li>")
+				.addClass("list-group-item d-flex justify-content-between align-items-center")
+				.append($("<span></span>").text(sn))
+				.append(removeBtn),
+		);
+	});
+	$("#serial_count").text(serials.length);
+	const needed = _serialQtyNeeded(_serialModalLine);
+	$("#save_serials_btn").prop("disabled", needed === 0 || serials.length !== needed);
+	$("#serial_input").val("").focus();
+}
+
+function _serialAdd() {
+	if (_serialModalLine === null) return;
+	const input = $("#serial_input");
+	const value = input.val().trim();
+	if (!value) return;
+	const serials = _serialStore.get(_serialModalLine) || [];
+	if (serials.includes(value)) {
+		azad.showError("⚠️ هذا الرقم التسلسلي مُدخل مسبقاً");
+		return;
+	}
+	serials.push(value);
+	_serialStore.set(_serialModalLine, serials);
+	_serialRenderList();
+}
+
+function _serialGenerate() {
+	if (_serialModalLine === null) return;
+	const serials = _serialStore.get(_serialModalLine) || [];
+	const needed = _serialQtyNeeded(_serialModalLine);
+	let attempts = 0;
+	while (serials.length < needed && attempts < needed * 10) {
+		attempts++;
+		const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+		const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
+		const candidate = `${datePart}-${randomPart}`;
+		if (!serials.includes(candidate)) serials.push(candidate);
+	}
+	_serialStore.set(_serialModalLine, serials);
+	_serialRenderList();
+}
+
+function _serialRemove(sn) {
+	if (_serialModalLine === null) return;
+	_serialStore.set(
+		_serialModalLine,
+		(_serialStore.get(_serialModalLine) || []).filter((s) => s !== sn),
+	);
+	_serialRenderList();
+}
+
+function _serialPrint() {
+	if (_serialModalLine === null) return;
+	const serials = _serialStore.get(_serialModalLine) || [];
+	if (serials.length === 0) return;
+	const printWindow = window.open("", "_blank", "width=400,height=600");
+	printWindow.document.open();
+	printWindow.document.write("<html><head><title>طباعة الأرقام التسلسلية</title>");
+	printWindow.document.write(
+		"<style>body{font-family:Arial;padding:20px}.serial{border:1px solid #000;padding:8px;margin:4px 0;text-align:center;font-size:18px;letter-spacing:2px}</style>",
+	);
+	printWindow.document.write("</head><body>");
+	printWindow.document.write('<h2 style="text-align:center">الأرقام التسلسلية</h2>');
+	serials.forEach((s) => {
+		printWindow.document.write(`<div class="serial">${s}</div>`);
+	});
+	printWindow.document.write("</body></html>");
+	printWindow.document.close();
+	printWindow.print();
+}
+
+function _serialSave() {
+	if (_serialModalLine === null) return;
+	const lineIndex = _serialModalLine;
+	const serials = _serialStore.get(lineIndex) || [];
+	_serialHiddenInputs(lineIndex).remove();
+	const container = $(`#line_${lineIndex}`);
+	serials.forEach((sn) => {
+		container.append(
+			$('<input type="hidden">').attr("name", `lines[${lineIndex}][serials][]`).val(sn),
+		);
+	});
+	$("#serialNumberModal").modal("hide");
+}
+
+/**
  * Trigger Serial Modal
  */
 function _triggerSerialModal(salesLineIndex) {
@@ -303,11 +451,12 @@ function _triggerSerialModal(salesLineIndex) {
 	if (!btn.data("needed")) return;
 
 	const productName = btn.data("product-name");
-	const qty = $(`input[name="lines[${salesLineIndex}][quantity]"]`).val();
-
-	if (typeof openSerialModal === "function") {
-		openSerialModal(salesLineIndex, productName, qty);
-	}
+	_serialModalLine = salesLineIndex;
+	_serialSyncFromHidden(salesLineIndex);
+	$("#serial_product_name").text(productName || "");
+	$("#serial_quantity_needed").text(String(_serialQtyNeeded(salesLineIndex)));
+	_serialRenderList();
+	$("#serialNumberModal").modal("show");
 }
 
 /**
@@ -349,6 +498,19 @@ function updateCurrencyLabels() {
  * Calculate All Totals
  */
 // حساب الإجماليات - Backend Calculation
+let _totalsServerDown = false;
+
+// Warn once per outage episode instead of spamming a toast on every keystroke.
+function _clientSideFallback() {
+	if (!_totalsServerDown) {
+		_totalsServerDown = true;
+		azad.showWarning(
+			"⚠️ تعذر الاتصال بالخادم — تم حساب الإجماليات محلياً وقد تختلف عن الحساب الرسمي",
+		);
+	}
+	return calculateTotalsClientSide();
+}
+
 async function calculateTotals() {
 	try {
 		// جمع البيانات من الفورم
@@ -391,6 +553,7 @@ async function calculateTotals() {
 		const result = await response.json();
 
 		if (result.success) {
+			_totalsServerDown = false;
 			// تحديث الواجهة
 			$("#subtotal").text(azad.formatNumber(result.subtotal));
 			$("#total").text(azad.formatNumber(result.total));
@@ -406,11 +569,11 @@ async function calculateTotals() {
 			};
 		} else {
 			// Fallback to client-side calculation
-			return calculateTotalsClientSide();
+			return _clientSideFallback();
 		}
 	} catch (_error) {
 		// Fallback to client-side calculation
-		return calculateTotalsClientSide();
+		return _clientSideFallback();
 	}
 }
 
@@ -677,20 +840,37 @@ $(document).ready(() => {
 
 	$("#saleForm").on("submit", async function (e) {
 		e.preventDefault();
+		if (_isSubmitting) return false;
+		_isSubmitting = true;
+		const submitBtn = this.querySelector('[type="submit"]');
+		if (submitBtn) {
+			submitBtn.disabled = true;
+			submitBtn.classList.add("btn-loading");
+		}
+		const release = () => {
+			_isSubmitting = false;
+			if (submitBtn) {
+				submitBtn.disabled = false;
+				submitBtn.classList.remove("btn-loading");
+			}
+		};
 		const totals = await calculateTotals();
 
 		if (totals.lineCount === 0) {
+			release();
 			azad.showError("⚠️ يجب إضافة منتج واحد على الأقل");
 			return false;
 		}
 
 		// Don't block if total is 0 - could be all free items
 		if (totals.total < 0) {
+			release();
 			azad.showError("⚠️ الإجمالي لا يمكن أن يكون سالب");
 			return false;
 		}
 
 		if (!$("#customer_id").val()) {
+			release();
 			azad.showError("⚠️ يجب اختيار زبون");
 			return false;
 		}
@@ -702,6 +882,14 @@ $(document).ready(() => {
 	$(document).on("click", '[data-action="add-line"]', () => {
 		addLine();
 	});
+
+	// Wire the serial entry modal (template: sales/create.html).
+	if (document.getElementById("serialNumberModal")) {
+		$("#add_serial_btn").on("click", _serialAdd);
+		$("#generate_serial_btn").on("click", _serialGenerate);
+		$("#print_serials_btn").on("click", _serialPrint);
+		$("#save_serials_btn").on("click", _serialSave);
+	}
 });
 
 // Expose the handlers referenced by inline onclick/onchange attributes in the

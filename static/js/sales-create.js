@@ -7,6 +7,14 @@ $(document).ready(() => {
 	// Initialize serial number inputs
 	const $serialsContainer = $("#serials_input_container");
 
+	// This module drives the single-product serial form (its own #serialModal).
+	// On the multi-line sales form (#serialNumberModal, handled by
+	// sales-enhanced.js) those elements don't exist — bail out so we don't
+	// double-bind the shared modal buttons (#add_serial_btn, etc.).
+	if ($serialsContainer.length === 0) {
+		return;
+	}
+
 	// Generate serial number
 	function generateSerialNumber(productId = "") {
 		const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, "");
