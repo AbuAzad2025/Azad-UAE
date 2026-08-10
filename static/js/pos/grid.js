@@ -17,6 +17,11 @@
 			? crypto.randomUUID()
 			: `k-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 	state.idemKey = newCartKey();
+	// Module-scope busy/timer guards — shared by the session handlers, the
+	// checkout double-click guard, and the product-search debounce.
+	let _sessionBusy = false;
+	let checkoutBusy = false;
+	let productSearchTimer = null;
 	// Session-expiry safety net: a 401 from any POS endpoint means the
 	// session ended — bounce to login instead of every later call silently
 	// failing (403 permission errors keep the existing override flow).
@@ -343,7 +348,6 @@
 				if (state.cart[idx]) {
 					state.cart[idx].qty++;
 					state.idemKey = newCartKey();
-					const _sessionBusy = false;
 					await renderCart();
 					await recalc();
 				}
@@ -703,114 +707,125 @@
 	};
 
 	const doCheckout = async (print = false) => {
-		if (state.cart.length === 0) {
-			showAlert("السلة فارغة", "warning");
-			return;
-		}
-		if (!state.customer) {
-			try {
-				const r = await fetch("/pos/api/walkin-customer");
-				const d = await r.json();
-				if (d.success) state.customer = d;
-			} catch (_e) {
-				showAlert("تعذر اختيار عميل نقدي");
-				return;
-			}
-		}
-		await recalc();
-		const lines = state.cart.map((it) => ({
-			product_id: it.productId,
-			quantity: it.qty,
-			unit_price: it.price,
-			discount_percent: it.discountPercent || 0,
-		}));
-		const body = {
-			idempotency_key: state.idemKey,
-			customer_id: state.customer?.id,
-			quick_customer: true,
-			warehouse_id: qs("#warehouseId")?.value || null,
-			currency: selectedCurrency(),
-			exchange_rate: currentRate() || 1,
-			tax_rate: toNum(qs("#taxRate")?.value) || 0,
-			shipping_cost: toNum(qs("#shippingCost")?.value) || 0,
-			discount_amount: toNum(qs("#discountAmount")?.value) || 0,
-			payment_method: qs("#paymentMethod")?.value || "",
-			paid_amount: toNum(qs("#paidAmount")?.value) || 0,
-			payment_currency: selectedCurrency(),
-			payment_exchange_rate: currentRate() || 1,
-			reference_number: qs("#referenceNumber")?.value || "",
-			order_type: qs("#orderType")?.value || null,
-			table_id:
-				qs("#tableSelect") && !qs("#tableField")?.classList.contains("d-none")
-					? qs("#tableSelect").value || null
-					: null,
-			lines: lines,
-		};
-		if (splitEnabled()) {
-			const chunks = readSplitPayments();
-			if (!chunks) return;
-			body.payments = chunks;
-		}
+		if (checkoutBusy) return;
+		checkoutBusy = true;
 		try {
-			const sendCheckout = (token) => {
-				const payload = token ? { ...body, override_token: token } : body;
-				return fetch("/pos/api/checkout", {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-						"X-CSRFToken": csrf,
-						"Idempotency-Key": state.idemKey,
-					},
-					body: JSON.stringify(payload),
-				});
-			};
-			let r = await sendCheckout(null);
-			let d = await r.json().catch(() => ({}));
-			if (needsOverride(r, d)) {
-				const token = await requestOverrideToken("discount_override");
-				if (token) {
-					r = await sendCheckout(token);
-					d = await r.json().catch(() => ({}));
-				}
-			}
-			if (r.status === 202 && d.queued) {
-				// SW queued the sale offline — accepted locally, not an error.
-				showAlert(d.message || "تم حفظ الفاتورة محلياً وستُرسل تلقائياً عند عودة الاتصال.", "warning");
-				if (window.printQueuedCartReceipt) {
-					void printQueuedCartReceipt(state.cart, state.lastTotals, body);
-				}
-				state.cart = [];
-				state.idemKey = newCartKey();
-				await renderCart();
-				const splitToggle = qs("#splitTenderToggle");
-				if (splitToggle) splitToggle.checked = false;
-				qs("#splitTenderBox")?.classList.add("d-none");
-				const splitRows = qs("#splitTenderRows");
-				if (splitRows) splitRows.innerHTML = "";
+			if (state.cart.length === 0) {
+				showAlert("السلة فارغة", "warning");
 				return;
 			}
-			if (d.success) {
-				qs("#doneSaleNumber").textContent = d.sale_number;
-				renderUpsellMessages(qs("#doneUpsellList"), d.upsell_prompts);
-				qs("#doneViewBtn").href = d.view_url;
-				qs("#donePrintBtn").href = d.print_url;
-				$("#posDoneModal").modal("show");
-				state.cart = [];
-				state.idemKey = newCartKey();
-				await renderCart();
-				const splitToggle = qs("#splitTenderToggle");
-				if (splitToggle) splitToggle.checked = false;
-				qs("#splitTenderBox")?.classList.add("d-none");
-				const splitRows = qs("#splitTenderRows");
-				if (splitRows) splitRows.innerHTML = "";
-				if (print) {
-					window.open(d.print_url, "_blank");
+			if (!state.customer) {
+				try {
+					const r = await fetch("/pos/api/walkin-customer");
+					const d = await r.json();
+					if (d.success) state.customer = d;
+				} catch (_e) {
+					showAlert("تعذر اختيار عميل نقدي");
+					return;
 				}
-			} else {
-				showAlert(d.error || "فشل حفظ الفاتورة");
+			}
+			await recalc();
+			const lines = state.cart.map((it) => ({
+				product_id: it.productId,
+				quantity: it.qty,
+				unit_price: it.price,
+				discount_percent: it.discountPercent || 0,
+			}));
+			const body = {
+				idempotency_key: state.idemKey,
+				customer_id: state.customer?.id,
+				quick_customer: true,
+				warehouse_id: qs("#warehouseId")?.value || null,
+				currency: selectedCurrency(),
+				exchange_rate: currentRate() || 1,
+				tax_rate: toNum(qs("#taxRate")?.value) || 0,
+				shipping_cost: toNum(qs("#shippingCost")?.value) || 0,
+				discount_amount: toNum(qs("#discountAmount")?.value) || 0,
+				payment_method: qs("#paymentMethod")?.value || "",
+				paid_amount: toNum(qs("#paidAmount")?.value) || 0,
+				payment_currency: selectedCurrency(),
+				payment_exchange_rate: currentRate() || 1,
+				reference_number: qs("#referenceNumber")?.value || "",
+				order_type: qs("#orderType")?.value || null,
+				table_id:
+					qs("#tableSelect") && !qs("#tableField")?.classList.contains("d-none")
+						? qs("#tableSelect").value || null
+						: null,
+				lines: lines,
+			};
+			if (splitEnabled()) {
+				const chunks = readSplitPayments();
+				if (!chunks) return;
+				body.payments = chunks;
+			}
+			try {
+				const sendCheckout = (token) => {
+					const payload = token ? { ...body, override_token: token } : body;
+					return fetch("/pos/api/checkout", {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+							"X-CSRFToken": csrf,
+							"Idempotency-Key": state.idemKey,
+						},
+						body: JSON.stringify(payload),
+					});
+				};
+				let r = await sendCheckout(null);
+				let d = await r.json().catch(() => ({}));
+				if (needsOverride(r, d)) {
+					const token = await requestOverrideToken("discount_override");
+					if (token) {
+						r = await sendCheckout(token);
+						d = await r.json().catch(() => ({}));
+					}
+				}
+				if (r.status === 202 && d.queued) {
+					// SW queued the sale offline — accepted locally, not an error.
+					showAlert(
+						d.message || "تم حفظ الفاتورة محلياً وستُرسل تلقائياً عند عودة الاتصال.",
+						"warning",
+					);
+					if (window.printQueuedCartReceipt) {
+						void printQueuedCartReceipt(state.cart, state.lastTotals, body);
+					}
+					state.cart = [];
+					state.idemKey = newCartKey();
+					await renderCart();
+					const splitToggle = qs("#splitTenderToggle");
+					if (splitToggle) splitToggle.checked = false;
+					qs("#splitTenderBox")?.classList.add("d-none");
+					const splitRows = qs("#splitTenderRows");
+					if (splitRows) splitRows.innerHTML = "";
+					return;
+				}
+				if (d.success) {
+					qs("#doneSaleNumber").textContent = d.sale_number;
+					renderUpsellMessages(qs("#doneUpsellList"), d.upsell_prompts);
+					qs("#doneViewBtn").href = d.view_url;
+					qs("#donePrintBtn").href = d.print_url;
+					$("#posDoneModal").modal("show");
+					state.cart = [];
+					state.idemKey = newCartKey();
+					await renderCart();
+					const splitToggle = qs("#splitTenderToggle");
+					if (splitToggle) splitToggle.checked = false;
+					qs("#splitTenderBox")?.classList.add("d-none");
+					const splitRows = qs("#splitTenderRows");
+					if (splitRows) splitRows.innerHTML = "";
+					if (print) {
+						window.open(d.print_url, "_blank");
+					}
+				} else {
+					showAlert(d.error || "فشل حفظ الفاتورة");
+				}
+			} catch (_) {
+				showAlert("فشل الاتصال بالخادم");
 			}
 		} catch (_) {
 			showAlert("فشل الاتصال بالخادم");
+		} finally {
+			checkoutBusy = false;
 		}
 	};
 
@@ -855,7 +870,8 @@
 
 		qs("#productSearch").addEventListener("input", (e) => {
 			const q = e.target.value.trim();
-			setTimeout(() => void loadProducts(q || ""), 150);
+			clearTimeout(productSearchTimer);
+			productSearchTimer = setTimeout(() => void loadProducts(q || ""), 150);
 		});
 		qs("#productSearch").addEventListener("keydown", (e) => {
 			if (e.key === "Enter") {
