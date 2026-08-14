@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from unittest.mock import MagicMock
 
 
@@ -48,6 +49,28 @@ class TestUserContext:
         ctx = PrintService._user_context()
         assert ctx["print_user_name"] == "—"
         assert ctx["print_user_id"] is None
+
+
+class TestPrintableDocumentsRegistry:
+    def test_payment_uses_dedicated_payment_voucher_template(self):
+        from services.print_service import PrintService
+
+        entry = PrintService.PRINTABLE_DOCUMENTS["payment"]
+        assert entry["template"] == "receipts/payment_voucher.html"
+
+    def test_static_templates_exist_on_disk(self):
+        from services.print_service import PrintService
+
+        project_root = Path(__file__).resolve().parents[3]
+        missing = []
+        for doc_type, entry in PrintService.PRINTABLE_DOCUMENTS.items():
+            template = entry.get("template")
+            if template is None:
+                continue
+            template_path = project_root / "templates" / template
+            if not template_path.is_file():
+                missing.append(f"{doc_type}:{template}")
+        assert not missing, f"Missing print templates: {missing}"
 
 
 class TestRenderPrint:

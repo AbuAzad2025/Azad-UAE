@@ -146,6 +146,45 @@ class TestPrintExpense:
         mocks["send_file"].assert_called_once()
 
 
+class TestPrintPayment:
+    def test_payment_pdf_uses_payment_voucher_template(self, printing_client):
+        payment = _doc_mock(id=1, branch_id=1, payment_number="PAY-001")
+        mocks = printing_client._printing_mocks
+        model_cls = MagicMock()
+        model_cls.query = _model_query_chain(payment)
+        mocks["get_model"].return_value = model_cls
+        resp = printing_client.get("/printing/payment/1/pdf")
+        assert resp.status_code == 200
+        mocks["render_pdf"].assert_called_once()
+        assert mocks["render_pdf"].call_args[0][0] == "receipts/payment_voucher.html"
+        mocks["send_file"].assert_called_once()
+
+    def test_payment_print_uses_payment_voucher_template(self, printing_client):
+        payment = _doc_mock(id=2, branch_id=1, payment_number="PAY-002")
+        mocks = printing_client._printing_mocks
+        model_cls = MagicMock()
+        model_cls.query = _model_query_chain(payment)
+        mocks["get_model"].return_value = model_cls
+        resp = printing_client.get("/printing/payment/2")
+        assert resp.status_code == 200
+        mocks["render_print"].assert_called_once()
+        assert mocks["render_print"].call_args[0][0] == "receipts/payment_voucher.html"
+
+    def test_payment_preview_uses_payment_voucher_template(self, printing_client):
+        payment = _doc_mock(id=3, branch_id=1, payment_number="PAY-003")
+        mocks = printing_client._printing_mocks
+        model_cls = MagicMock()
+        model_cls.query.filter_by.return_value.first.return_value = payment
+        mocks["get_model"].return_value = model_cls
+        resp = printing_client.post(
+            "/printing/api/preview",
+            json={"type": "payment", "id": 3},
+            content_type="application/json",
+        )
+        assert resp.status_code == 200
+        assert mocks["render_print"].call_args[0][0] == "receipts/payment_voucher.html"
+
+
 class TestPrintPayroll:
     def test_salary_slip_returns_200(self, printing_client):
         txn = _doc_mock(id=10, branch_id=1)

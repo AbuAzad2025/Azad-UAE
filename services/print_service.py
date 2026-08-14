@@ -76,7 +76,7 @@ class PrintService:
             "filename_prefix": "receipt",
         },
         "payment": {
-            "template": None,  # resolved dynamically via resolve_template()
+            "template": "receipts/payment_voucher.html",
             "model": "Payment",
             "context_key": "payment",
             "permission": "manage_payments",
