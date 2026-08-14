@@ -171,9 +171,26 @@ class PrintService:
 
         html = PrintService.render_print(template, extra_context, tenant_id)
         try:
+            import os
+            import re
+            from pathlib import Path
+
             import weasyprint
 
-            pdf_bytes = weasyprint.HTML(string=html).write_pdf()
+            html_ready = html
+            try:
+                static_folder = current_app.static_folder
+                root = os.path.abspath(os.path.join(static_folder, os.pardir))
+                root_uri = Path(root).as_uri()
+                html_ready = re.sub(
+                    r'((?:src|href)=")/static/',
+                    rf"\1{root_uri}/static/",
+                    html,
+                )
+            except Exception:
+                html_ready = html
+
+            pdf_bytes = weasyprint.HTML(string=html_ready).write_pdf()
             logger.info("PDF generated via WeasyPrint: %s (%d bytes)", filename, len(pdf_bytes))
             return pdf_bytes
         except ImportError:
