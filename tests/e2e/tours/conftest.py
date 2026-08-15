@@ -4,6 +4,7 @@ All tours share a common Playwright page and pre-loaded auth state
 for the target role.
 """
 
+import json
 import os
 
 import pytest

@@ -130,7 +130,8 @@ def _do_seed_demo(_app):
     from models.payroll import Employee, PayrollTransaction, SalaryAdvance
     from models.pos_session import PosSession
     from models.product import Product, ProductCategory
-    from models.product_return import ProductReturn, ProductReturnLine
+
+    # from models.product_return import ProductReturn, ProductReturnLine
     from models.sale import Sale
     from models.supplier import Supplier
     from models.tenant import Tenant
