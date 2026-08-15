@@ -187,6 +187,7 @@ POST /api/webhooks/subscribe
 **EN:**
 ```python
 import hmac, hashlib
+
 expected = hmac.new(secret.encode(), payload.encode(), hashlib.sha256).hexdigest()
 assert signature == expected
 ```
@@ -194,6 +195,7 @@ assert signature == expected
 **AR:**
 ```python
 import hmac, hashlib
+
 expected = hmac.new(secret.encode(), payload.encode(), hashlib.sha256).hexdigest()
 assert signature == expected
 ```

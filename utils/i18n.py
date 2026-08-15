@@ -7578,7 +7578,10 @@ TRANSLATIONS = {
     "contact_us": {"ar": "تواصل معنا", "en": "Contact Us"},
     "continue_shopping": {"ar": "مواصلة التسوق", "en": "Continue Shopping"},
     "cookie_accept": {"ar": "قبول", "en": "Accept"},
-    "cookie_notice": {"ar": "نستخدم ملفات تعريف الارتباط لتحسين تجربتك", "en": "We use cookies to improve your experience"},
+    "cookie_notice": {
+        "ar": "نستخدم ملفات تعريف الارتباط لتحسين تجربتك",
+        "en": "We use cookies to improve your experience",
+    },
     "customer_service": {"ar": "خدمة العملاء", "en": "Customer Service"},
     "default": {"ar": "افتراضي", "en": "Default"},
     "delivered": {"ar": "تم التوصيل", "en": "Delivered"},
@@ -7617,7 +7620,10 @@ TRANSLATIONS = {
     "notes": {"ar": "ملاحظات", "en": "Notes"},
     "notify_me": {"ar": "أبلغني عند التوفر", "en": "Notify Me"},
     "offline": {"ar": "غير متصل", "en": "Offline"},
-    "offline_msg": {"ar": "المتجر غير متاح حالياً، سيعود قريباً", "en": "Store is currently unavailable, will be back soon"},
+    "offline_msg": {
+        "ar": "المتجر غير متاح حالياً، سيعود قريباً",
+        "en": "Store is currently unavailable, will be back soon",
+    },
     "offline_title": {"ar": "المتجر مغلق مؤقتاً", "en": "Store Temporarily Closed"},
     "order_details": {"ar": "تفاصيل الطلب", "en": "Order Details"},
     "order_pending": {"ar": "الطلب قيد المعالجة", "en": "Order Pending"},
@@ -7666,8 +7672,7 @@ TRANSLATIONS = {
     "write_review": {"ar": "كتابة تقييم", "en": "Write Review"},
     "you_may_also_like": {"ar": "قد يعجبك أيضاً", "en": "You May Also Like"},
     "حتى اليوم": {"ar": "حتى اليوم", "en": "As of Today"},
-    "من البداية": {"ar": "من البداية", "en": "From the Beginning"}
-
+    "من البداية": {"ar": "من البداية", "en": "From the Beginning"},
 }
 
 

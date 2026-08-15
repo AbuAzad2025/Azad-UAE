@@ -197,6 +197,7 @@ def format_currency(amount, currency=None, lang=None):
 
         if lang is None:
             from utils.i18n import get_current_language
+
             lang = get_current_language()
 
         currency = (currency or settings_currency or get_system_default_currency()).upper()

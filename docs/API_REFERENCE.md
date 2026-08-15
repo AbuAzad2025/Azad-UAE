@@ -171,12 +171,14 @@ X-Webhook-Signature: t={الطابع الزمني},v1={التوقيع}
 **EN:** Verify using the shared secret:
 ```python
 import hmac, hashlib
+
 expected = hmac.new(secret.encode(), payload.encode(), hashlib.sha256).hexdigest()
 ```
 
 **AR:** تحقق باستخدام السر المشترك:
 ```python
 import hmac, hashlib
+
 expected = hmac.new(secret.encode(), payload.encode(), hashlib.sha256).hexdigest()
 ```
 

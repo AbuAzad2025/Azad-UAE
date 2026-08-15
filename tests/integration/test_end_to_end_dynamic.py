@@ -955,7 +955,9 @@ class TestSecurityAuditFixes:
         db_session.add(b)
         db_session.flush()
         r_admin = Role.query.filter_by(slug="manager").first() or Role(slug="manager", name="Manager", is_active=True)
-        r_seller = Role.query.filter_by(slug="seller").first() or Role(slug="seller", name=f"Cashier_{suffix}", is_active=True)
+        r_seller = Role.query.filter_by(slug="seller").first() or Role(
+            slug="seller", name=f"Cashier_{suffix}", is_active=True
+        )
         if not r_admin.id:
             db_session.add(r_admin)
         if not r_seller.id:

@@ -481,7 +481,9 @@ class ReturnService:
                         "concept_code": "SALES_RETURNS",
                         "debit": net_return_amount,
                         "credit": 0,
-                        "description": gettext(f"عكس إيراد مرتجع بيع {sale.sale_number} (Sales Return Revenue Reversal)"),
+                        "description": gettext(
+                            f"عكس إيراد مرتجع بيع {sale.sale_number} (Sales Return Revenue Reversal)"
+                        ),
                     }
                 )
 
@@ -539,7 +541,9 @@ class ReturnService:
                 GLService.ensure_core_accounts(tenant_id=tenant_id)
                 post_or_fail(
                     lines=revenue_lines,
-                    description=gettext(f"مرتجع بيع {product_return.return_number} للبيع {sale.sale_number} (Sales Return)"),
+                    description=gettext(
+                        f"مرتجع بيع {product_return.return_number} للبيع {sale.sale_number} (Sales Return)"
+                    ),
                     reference_type=GLRef.PRODUCT_RETURN,
                     reference_id=product_return.id,
                     currency=product_return.currency,
@@ -552,7 +556,9 @@ class ReturnService:
                 GLService.ensure_core_accounts(tenant_id=tenant_id)
                 post_or_fail(
                     lines=cost_lines,
-                    description=gettext(f"عكس تكلفة مرتجع بيع {product_return.return_number} للبيع {sale.sale_number} (Sales Return COGS)"),
+                    description=gettext(
+                        f"عكس تكلفة مرتجع بيع {product_return.return_number} للبيع {sale.sale_number} (Sales Return COGS)"
+                    ),
                     reference_type=GLRef.PRODUCT_RETURN,
                     reference_id=product_return.id,
                     exchange_rate=1.0,

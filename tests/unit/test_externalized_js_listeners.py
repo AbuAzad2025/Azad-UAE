@@ -21,7 +21,7 @@ def test_purchases_js_has_addline_event_listener():
 def test_purchases_js_uses_single_delegated_line_handler():
     js = read_file("static/js/purchases/create.js")
     assert '$(document).on("input change keyup", ".line-quantity, .line-cost, .line-discount"' in js
-    assert ".on(\"input change keyup\", function ()" not in js, "per-line setTimeout bindings should be removed"
+    assert '.on("input change keyup", function ()' not in js, "per-line setTimeout bindings should be removed"
 
 
 def test_purchases_js_fallback_warns_once_and_resets():
