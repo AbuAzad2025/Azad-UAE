@@ -4,7 +4,6 @@ All tours share a common Playwright page and pre-loaded auth state
 for the target role.
 """
 
-import json
 import os
 
 import pytest
@@ -34,7 +33,7 @@ def browser_context_args():
 def cashier_context(browser):
     state = _load_state("cashier")
     context = browser.new_context(
-        storage_state=json.dumps(state),
+        storage_state=state,
         base_url=BASE_URL,
         locale="ar-AE",
     )
@@ -46,7 +45,7 @@ def cashier_context(browser):
 def manager_context(browser):
     state = _load_state("store_manager")
     context = browser.new_context(
-        storage_state=json.dumps(state),
+        storage_state=state,
         base_url=BASE_URL,
         locale="ar-AE",
     )
@@ -58,7 +57,7 @@ def manager_context(browser):
 def owner_context(browser):
     state = _load_state("tenant_owner")
     context = browser.new_context(
-        storage_state=json.dumps(state),
+        storage_state=state,
         base_url=BASE_URL,
         locale="ar-AE",
     )
@@ -70,7 +69,7 @@ def owner_context(browser):
 def admin_context(browser):
     state = _load_state("super_admin")
     context = browser.new_context(
-        storage_state=json.dumps(state),
+        storage_state=state,
         base_url=BASE_URL,
         locale="ar-AE",
     )

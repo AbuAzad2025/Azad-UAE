@@ -9,8 +9,8 @@
 #   .env into the process environment and then starts the dev server.
 #
 # USAGE:
-#   .\dev.ps1                Start the Flask dev server (http://127.0.0.1:5000)
-#   .\dev.ps1 flask seed-demo    Run any flask CLI command with .env loaded
+#   .\scripts\dev.ps1           Start the Flask dev server (http://127.0.0.1:5000)
+#   .\scripts\dev.ps1 flask seed-demo   Run any flask CLI command with .env loaded
 # =============================================================================
 
 param(
@@ -21,7 +21,7 @@ param(
 # NOTE: do NOT set $ErrorActionPreference='Stop' here. On PowerShell 5.1 that
 # treats any stderr line from a native command (Flask logs to stderr) as a
 # terminating error and aborts the run. We use $LASTEXITCODE instead.
-$root = Split-Path -Parent $MyInvocation.MyCommand.Path
+$root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 Set-Location $root
 
 # --- Load .env into the process environment -------------------------------
