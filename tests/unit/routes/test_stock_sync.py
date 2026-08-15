@@ -7,6 +7,7 @@ import pytest
 def app():
     import os
 
+    prev_db = os.environ.get("DATABASE_URL")
     os.environ["FLASK_ENV"] = "testing"
     os.environ["DATABASE_URL"] = "sqlite:///:memory:"
     from app.factory import create_app
@@ -17,6 +18,10 @@ def app():
 
         db.create_all()
         yield _app
+    if prev_db is None:
+        os.environ.pop("DATABASE_URL", None)
+    else:
+        os.environ["DATABASE_URL"] = prev_db
 
 
 @pytest.fixture

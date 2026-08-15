@@ -8,6 +8,12 @@ def public_client(app_factory):
     from routes.public import public_bp
 
     app = app_factory(public_bp)
+    with app.app_context():
+        from extensions import db
+        from models.package import Package
+
+        db.session.query(Package).delete()
+        db.session.commit()
     return app.test_client()
 
 
