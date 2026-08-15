@@ -1,5 +1,18 @@
 import { vi } from 'vitest';
 
+// Emulate i18n.js global so classic scripts can call bare `t()` (the browser
+// loads static/js/i18n.js before POS modules). Identity passthrough keeps the
+// Arabic source string intact for assertions.
+const _t = (key) => {
+  const lang = window.I18N_LANG || document.documentElement.lang || 'ar';
+  const dict = window.I18N_TRANSLATIONS;
+  if (dict && dict[key] && dict[key][lang]) return dict[key][lang];
+  if (dict && dict[key] && dict[key].en) return dict[key].en;
+  return key;
+};
+globalThis.t = _t;
+if (typeof window !== 'undefined') window.t = _t;
+
 // Minimal jQuery global mock — classic scripts reference `$`/`window.$`.
 const jqueryChainable = () => {
   const store = {};
