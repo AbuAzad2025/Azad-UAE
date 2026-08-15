@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 from decimal import ROUND_HALF_UP, Decimal
 
 from flask import current_app
+from flask_babel import gettext
 
 from extensions import db
 from models import (
@@ -339,7 +340,7 @@ class ReturnService:
                                 "concept_code": "INVENTORY_ASSET",
                                 "debit": cost_value,
                                 "credit": 0,
-                                "description": f"Inventory Restock - {product.name}",
+                                "description": gettext(f"إرجاع إلى المخزون - {product.name}"),
                             }
                         )
                         cost_lines.append(
@@ -353,7 +354,7 @@ class ReturnService:
                                 "concept_code": "COGS_REVERSAL",
                                 "debit": 0,
                                 "credit": cost_value,
-                                "description": f"COGS Reversal - {product.name}",
+                                "description": gettext(f"عكس تكلفة البضاعة المباعة - {product.name}"),
                             }
                         )
 
@@ -480,7 +481,7 @@ class ReturnService:
                         "concept_code": "SALES_RETURNS",
                         "debit": net_return_amount,
                         "credit": 0,
-                        "description": f"Sales Return Revenue Reversal {sale.sale_number}",
+                        "description": gettext(f"عكس إيراد مرتجع بيع {sale.sale_number}"),
                     }
                 )
 
@@ -496,7 +497,7 @@ class ReturnService:
                         "concept_code": "VAT_OUTPUT",
                         "debit": tax_amount,
                         "credit": 0,
-                        "description": f"Sales Return Tax Reversal {sale.sale_number}",
+                        "description": gettext(f"عكس ضريبة مرتجع بيع {sale.sale_number}"),
                     }
                 )
 
@@ -515,7 +516,7 @@ class ReturnService:
                         "concept_code": "CAMPAIGN_DISCOUNT_REVERSAL",
                         "debit": 0,
                         "credit": promo_reversal_amount,
-                        "description": f"Promo Discount Reversal {sale.sale_number}",
+                        "description": gettext(f"عكس خصم ترويجي مرتجع بيع {sale.sale_number}"),
                     }
                 )
 
@@ -530,7 +531,7 @@ class ReturnService:
                         "concept_code": GLService.get_customer_credit_concept(sale.customer),
                         "debit": 0,
                         "credit": final_refund_amount,
-                        "description": f"Credit Customer for Return {sale.sale_number}",
+                        "description": gettext(f"تسوية رصيد عميل مرتجع بيع {sale.sale_number}"),
                     }
                 )
 
@@ -538,7 +539,7 @@ class ReturnService:
                 GLService.ensure_core_accounts(tenant_id=tenant_id)
                 post_or_fail(
                     lines=revenue_lines,
-                    description=f"Sales Return {product_return.return_number} for Sale {sale.sale_number}",
+                    description=gettext(f"مرتجع بيع {product_return.return_number} للبيع {sale.sale_number}"),
                     reference_type=GLRef.PRODUCT_RETURN,
                     reference_id=product_return.id,
                     currency=product_return.currency,
@@ -551,7 +552,7 @@ class ReturnService:
                 GLService.ensure_core_accounts(tenant_id=tenant_id)
                 post_or_fail(
                     lines=cost_lines,
-                    description=f"Sales Return COGS {product_return.return_number} for Sale {sale.sale_number}",
+                    description=gettext(f"عكس تكلفة مرتجع بيع {product_return.return_number} للبيع {sale.sale_number}"),
                     reference_type=GLRef.PRODUCT_RETURN,
                     reference_id=product_return.id,
                     exchange_rate=1.0,

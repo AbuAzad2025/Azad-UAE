@@ -886,9 +886,8 @@ def inventory_reconciliation():
         return render_template("errors/403.html"), 403
 
     tenant_id = get_active_tenant_id(current_user)
-    warehouses_query = WarehouseModel.query.filter_by(is_active=True)
-    if tenant_id is not None:
-        warehouses_query = warehouses_query.filter(WarehouseModel.tenant_id == tenant_id)
+    from utils.tenanting import tenant_query
+    warehouses_query = tenant_query(WarehouseModel).filter_by(is_active=True)
     if branch_id is not None:
         warehouses_query = warehouses_query.filter(WarehouseModel.branch_id == branch_id)
     else:
@@ -953,12 +952,11 @@ def inventory_reconciliation_export():
 
     tenant_id = get_active_tenant_id(current_user)
     if warehouse_id is not None:
-        warehouse = WarehouseModel.query.filter_by(id=warehouse_id, is_active=True).first()
-        if (
-            not warehouse
-            or (tenant_id is not None and warehouse.tenant_id != tenant_id)
-            or (branch_id is not None and warehouse.branch_id != branch_id)
-        ):
+        from utils.tenanting import tenant_get_or_404
+        warehouse = tenant_get_or_404(WarehouseModel, warehouse_id)
+        if not warehouse.is_active:
+            return render_template("errors/403.html"), 403
+        if branch_id is not None and warehouse.branch_id != branch_id:
             return render_template("errors/403.html"), 403
 
         accessible_ids = get_accessible_warehouse_ids(current_user)

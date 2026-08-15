@@ -252,6 +252,8 @@ class BackupService:
             path = os.path.join(cls.BACKUP_DIR, name)
             if not os.path.isfile(path):
                 continue
+            if name.endswith(".meta.json"):
+                continue
             if not (name.startswith(cls.BACKUP_PREFIX) or LEGACY_NAME_RE.match(name)):
                 continue
             is_auto = name.startswith(cls.BACKUP_PREFIX) and "auto" in name.lower()
@@ -1323,7 +1325,9 @@ This archive does NOT include secrets, .env, or AI runtime memory.
         if os.path.exists(sidecar):
             try:
                 with open(sidecar, encoding="utf-8") as f:
-                    info["sidecar"] = json.load(f)
+                    sidecar_data = json.load(f)
+                info["sidecar"] = sidecar_data
+                info.update({k: v for k, v in sidecar_data.items() if k not in ("filename", "path")})
             except Exception as exc:
                 logging.getLogger(__name__).debug("backup sidecar: %s", exc)
         if filename.endswith(".tar.gz"):

@@ -813,43 +813,27 @@ def _do_seed_demo(_app):
         )
         db.session.add(sess)
 
-    # 20. Sale returns (مرتجعات) — up to 5
+    # 20. Sale returns (مرتجعات) — via ReturnService so GL, stock, and customer
+    # balance are posted exactly as they would be for a real return.
+    from services.return_service import ReturnService
+
     sales_for_return = Sale.query.filter_by(tenant_id=tid).limit(3).all()
-    return_products = Product.query.filter_by(tenant_id=tid).limit(3).all()
     for i, sale in enumerate(sales_for_return[:3]):
-        prod = return_products[i % len(return_products)] if return_products else None
-        if not prod:
+        first_line = (sale.lines or [])[0] if sale.lines else None
+        if not first_line or not first_line.product:
             continue
-        qty = Decimal("1")
-        price = Decimal(str(prod.regular_price or 100))
-        total = qty * price
-        ret = ProductReturn(
-            tenant_id=tid,
-            return_number=f"DEMO-RET-{i + 1:03d}",
+        ReturnService.create_return(
             sale_id=sale.id,
-            customer_id=sale.customer_id,
-            branch_id=branch.id,
-            currency="ILS",
-            exchange_rate=1,
-            return_reason="عيب في المنتج / تغيير رأي",
-            status="completed",
-            processed_by=(seller.id if seller else None),
-            total_amount=total,
-            refund_amount=total,
-            amount_aed=total,
+            return_lines_data=[
+                {
+                    "sale_line_id": first_line.id,
+                    "quantity": Decimal("1"),
+                    "condition": "good",
+                }
+            ],
+            user=None,
+            notes="عيب في المنتج / تغيير رأي (بيانات تجريبية)",
         )
-        db.session.add(ret)
-        db.session.flush()
-        line = ProductReturnLine(
-            tenant_id=tid,
-            return_id=ret.id,
-            product_id=prod.id,
-            quantity=qty,
-            unit_price=price,
-            line_total=total,
-        )
-        db.session.add(line)
-        db.session.flush()
 
     # Recompute customer balances from posted sales/payments
     # (stored sign convention: negative = customer owes us)
