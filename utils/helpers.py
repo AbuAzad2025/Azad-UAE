@@ -180,7 +180,7 @@ def _resolve_format_currency_settings():
     return settings_currency, settings_symbol, settings_position, settings_decimals
 
 
-def format_currency(amount, currency=None, lang="ar"):
+def format_currency(amount, currency=None, lang=None):
     if not amount:
         return "0.00"
 
@@ -194,6 +194,10 @@ def format_currency(amount, currency=None, lang="ar"):
             get_currency_symbol,
             get_system_default_currency,
         )
+
+        if lang is None:
+            from utils.i18n import get_current_language
+            lang = get_current_language()
 
         currency = (currency or settings_currency or get_system_default_currency()).upper()
         decimals = settings_decimals if isinstance(settings_decimals, int) and settings_decimals >= 0 else 2
