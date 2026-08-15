@@ -445,7 +445,7 @@ def register_context_processors(app):
             ),
             "report_categories": REPORT_CATEGORIES,
             "report_registry_by_category": get_reports_by_category(current_user),
-             "report_registry": REPORT_REGISTRY,
+            "report_registry": REPORT_REGISTRY,
             "tenant_usage": tenant_usage,
             "tenant_subscription": tenant_subscription,
             "wa_upgrade_link": wa_upgrade_link,
