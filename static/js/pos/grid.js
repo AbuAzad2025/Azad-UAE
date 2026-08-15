@@ -325,7 +325,7 @@
 			div.className = `pos-cart-item${state.selectedLine === idx ? " selected" : ""}`;
 			div.dataset.idx = String(idx);
 			const lineTotal = it.qty * it.price * (1 - (it.discountPercent || 0) / 100);
-			div.innerHTML = `<div class="item-info"><div class="item-name">${esc(it.name)}</div><div class="item-price">${fmt(it.price)} x ${it.qty}${it.discountPercent ? ` (${it.discountPercent}% ${t('خصم')})` : ""}</div></div><div class="item-qty"><button class="qty-minus" data-idx="${idx}">-</button><span>${it.qty}</span><button class="qty-plus" data-idx="${idx}">+</button></div><div class="item-total">${fmt(lineTotal)}</div><div class="item-remove" data-idx="${idx}"><i class="fas fa-times"></i></div>`;
+			div.innerHTML = `<div class="item-info"><div class="item-name">${esc(it.name)}</div><div class="item-price">${fmt(it.price)} x ${it.qty}${it.discountPercent ? ` (${it.discountPercent}% ${t("خصم")})` : ""}</div></div><div class="item-qty"><button class="qty-minus" data-idx="${idx}">-</button><span>${it.qty}</span><button class="qty-plus" data-idx="${idx}">+</button></div><div class="item-total">${fmt(lineTotal)}</div><div class="item-remove" data-idx="${idx}"><i class="fas fa-times"></i></div>`;
 			container.appendChild(div);
 		});
 		qsa(".qty-minus").forEach((b) => {
@@ -492,8 +492,8 @@
 			}
 			state.numpadMode = key;
 			state.numpadBuffer = "";
-const labels = { qty: t("الكمية"), disc: t("نسبة الخصم"), price: t("السعر") };
-showAlert(`${t('أدخل')} ${labels[key]} ${t('باستخدام لوحة الأرقام ثم اضغط Enter')}`, "info");
+			const labels = { qty: t("الكمية"), disc: t("نسبة الخصم"), price: t("السعر") };
+			showAlert(`${t("أدخل")} ${labels[key]} ${t("باستخدام لوحة الأرقام ثم اضغط Enter")}`, "info");
 			return;
 		}
 		if (key.match(/^[0-9.]$/) && state.numpadMode) {

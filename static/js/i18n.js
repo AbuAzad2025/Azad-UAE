@@ -6,14 +6,14 @@
  */
 
 function getCurrentLanguage() {
-	return (window.I18N_LANG || document.documentElement.lang || "ar");
+	return window.I18N_LANG || document.documentElement.lang || "ar";
 }
 
 // Translation function — uses server-injected TRANSLATIONS dict
-window.t = function(key) {
+window.t = (key) => {
+	const lang = getCurrentLanguage();
 	if (window.I18N_TRANSLATIONS && key in window.I18N_TRANSLATIONS) {
-		var lang = getCurrentLanguage();
-		return window.I18N_TRANSLATIONS[key][lang] || window.I18N_TRANSLATIONS[key]['en'] || key;
+		return window.I18N_TRANSLATIONS[key][lang] ?? window.I18N_TRANSLATIONS[key].en ?? key;
 	}
 	return key;
 };
