@@ -8,8 +8,12 @@ from flask_babel import gettext, lazy_gettext
 
 
 def _(text):
-    """دالة الترجمة المختصرة"""
-    return gettext(text)
+    """دالة الترجمة المختصرة - تستخدم قاموس TRANSLATIONS كبديل عند عدم وجود ملف .po"""
+    translated = gettext(text)
+    if translated == text and text in TRANSLATIONS:
+        lang = get_current_language()
+        return TRANSLATIONS[text].get(lang, text)
+    return translated
 
 
 def _l(text):
@@ -7673,6 +7677,56 @@ TRANSLATIONS = {
     "you_may_also_like": {"ar": "قد يعجبك أيضاً", "en": "You May Also Like"},
     "حتى اليوم": {"ar": "حتى اليوم", "en": "As of Today"},
     "من البداية": {"ar": "من البداية", "en": "From the Beginning"},
+    "من:": {"ar": "من:", "en": "From:"},
+    "إلى:": {"ar": "إلى:", "en": "To:"},
+    "الدولة": {"ar": "الدولة", "en": "Country"},
+    "الصيغة": {"ar": "الصيغة", "en": "Format"},
+    "الإقرار": {"ar": "الإقرار", "en": "Return"},
+    "المخرجات": {"ar": "المخرجات", "en": "Output"},
+    "المدخلات": {"ar": "المدخلات", "en": "Input"},
+    "المستحق": {"ar": "المستحق", "en": "Due"},
+    "النسبة %%": {"ar": "النسبة %%", "en": "Percentage"},
+    "تاريخ التسوية": {"ar": "تاريخ التسوية", "en": "Clearing Date"},
+    "مرفوض": {"ar": "مرفوض", "en": "Rejected"},
+    "سبب الرفض": {"ar": "سبب الرفض", "en": "Rejection Reason"},
+    "حالة السند": {"ar": "حالة السند", "en": "Receipt Status"},
+    "مرفوض / غير مؤكد": {"ar": "مرفوض / غير مؤكد", "en": "Rejected / Unconfirmed"},
+    "تاريخ التسوية / التأكيد": {"ar": "تاريخ التسوية / التأكيد", "en": "Clearing / Confirmation Date"},
+    "الشيك المرتبط": {"ar": "الشيك المرتبط", "en": "Linked Cheque"},
+    "توثيق آمن": {"ar": "توثيق آمن", "en": "Secure Authentication"},
+    "ضريبة %%": {"ar": "الضريبة %%", "en": "Tax %%"},
+    "هل أنت متأكد من حذف هذا السند؟\n\nتنبيه: سيتم أرشفة السند إذا كان له تخصيصات أو مرتبط بشيكات، أو سيتم الحذف نهائياً إذا كان غير مرتبط.": {"ar": "هل أنت متأكد من حذف هذا السند؟\n\nتنبيه: سيتم أرشفة السند إذا كان له تخصيصات أو مرتبط بشيكات، أو سيتم الحذف نهائياً إذا كان غير مرتبط.", "en": "Are you sure you want to delete this receipt?\n\nNote: The receipt will be archived if it has allocations or is linked to cheques, or permanently deleted if not linked."},
+    "هل أنت متأكد من حذف هذا السند؟\n\nتنبيه: سيتم أرشيف السند إذا كان مرتبطاً بشيكات، أو سيتم الحذف نهائياً إذا كان غير مرتبط.": {"ar": "هل أنت متأكد من حذف هذا السند؟\n\nتنبيه: سيتم أرشيف السند إذا كان مرتبطاً بشيكات، أو سيتم الحذف نهائياً إذا كان غير مرتبط.", "en": "Are you sure you want to delete this receipt?\n\nNote: The receipt will be archived if linked to cheques, or permanently deleted if not linked."},
+    "تعذر تحميل عميل نقدي": {"ar": "تعذر تحميل عميل نقدي", "en": "Could not load walk-in customer"},
+    "تعذر التفويض": {"ar": "تعذر التفويض", "en": "Authorization failed"},
+    "تم فتح الدرج": {"ar": "تم فتح الدرج", "en": "Drawer opened"},
+    "تعذر فتح الدرج": {"ar": "تعذر فتح الدرج", "en": "Could not open drawer"},
+    "السلة فارغة.": {"ar": "السلة فارغة.", "en": "The cart is empty."},
+    "فشل العملية": {"ar": "فشل العملية", "en": "Operation failed"},
+    "فشل فتح الجلسة": {"ar": "فشل فتح الجلسة", "en": "Failed to open session"},
+    "فشل إغلاق الجلسة": {"ar": "فشل إغلاق الجلسة", "en": "Failed to close session"},
+    "فشل حفظ الفاتورة": {"ar": "فشل حفظ الفاتورة", "en": "Failed to save invoice"},
+    "المنتج غير موجود": {"ar": "المنتج غير موجود", "en": "Product not found"},
+    "الطابعة غير متصلة.": {"ar": "الطابعة غير متصلة.", "en": "Printer is not connected."},
+    "WebUSB غير مدعوم في هذا المتصفح.": {"ar": "WebUSB غير مدعوم في هذا المتصفح.", "en": "WebUSB is not supported in this browser."},
+    "Web Serial غير مدعوم في هذا المتصفح.": {"ar": "Web Serial غير مدعوم في هذا المتصفح.", "en": "Web Serial is not supported in this browser."},
+    "لم يعثر على نقطة إخراج USB للطابعة.": {"ar": "لم يعثر على نقطة إخراج USB للطابعة.", "en": "Could not find USB output endpoint for printer."},
+    "تجاوزت مهلة الطباعة عبر USB.": {"ar": "تجاوزت مهلة الطباعة عبر USB.", "en": "USB print timeout exceeded."},
+    "تعذر الاتصال بالميزان.": {"ar": "تعذر الاتصال بالميزان.", "en": "Could not connect to scale."},
+    "انقطع الاتصال بالميزان.": {"ar": "انقطع الاتصال بالميزان.", "en": "Scale connection lost."},
+    "تعذر تحميل مكتبة الدفع الطرفي. تحقق من الاتصال.": {"ar": "تعذر تحميل مكتبة الدفع الطرفي. تحقق من الاتصال.", "en": "Could not load payment terminal library. Check connection."},
+    "فشلت عملية الدفع الطرفي.": {"ar": "فشلت عملية الدفع الطرفي.", "en": "Terminal payment failed."},
+    "تعذر البحث عن قارئ البطاقات.": {"ar": "تعذر البحث عن قارئ البطاقات.", "en": "Could not find a card reader."},
+    "لا يوجد قارئ بطاقات مقترن. استخدم الدفع اليدوي.": {"ar": "لا يوجد قارئ بطاقات مقترن. استخدم الدفع اليدوي.", "en": "No paired card reader found. Use manual payment."},
+    "تعذر الاتصال بقارئ البطاقات.": {"ar": "تعذر الاتصال بقارئ البطاقات.", "en": "Could not connect to card reader."},
+    "ألغيت العملية أو تعذرت قراءة البطاقة.": {"ar": "ألغيت العملية أو تعذرت قراءة البطاقة.", "en": "Process cancelled or card read failed."},
+    "أضف أصنافاً إلى السلة أولاً.": {"ar": "أضف أصنافاً إلى السلة أولاً.", "en": "Add items to cart first."},
+    "رفضت جهة الإصدار العملية. استخدم الدفع اليدوي.": {"ar": "رفضت جهة الإصدار العملية. استخدم الدفع اليدوي.", "en": "The issuing bank rejected the process. Use manual payment."},
+    "لم تكتمل عملية الدفع. استخدم الدفع اليدوي.": {"ar": "لم تكتمل عملية الدفع. استخدم الدفع اليدوي.", "en": "Payment process was not completed. Use manual payment."},
+    "خصم%": {"ar": "خصم%", "en": "Discount%"},
+    "كمية": {"ar": "كمية", "en": "Quantity"},
+    "سعر": {"ar": "السعر", "en": "Price"},
+    "نسبة الخصم": {"ar": "نسبة الخصم", "en": "Discount Percent"},
 }
 
 

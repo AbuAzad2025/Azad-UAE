@@ -28,7 +28,7 @@ function _loadTerminalSdk() {
 		s.onload = () => resolve();
 		s.onerror = () => {
 			_sdkPromise = null;
-			reject(new Error("تعذر تحميل مكتبة الدفع الطرفي. تحقق من الاتصال."));
+			reject(new Error(t("تعذر تحميل مكتبة الدفع الطرفي. تحقق من الاتصال.")));
 		};
 		document.head.appendChild(s);
 	});
@@ -43,7 +43,7 @@ async function _postJson(url, body) {
 	});
 	const data = await res.json().catch(() => ({}));
 	if (!res.ok || data.success === false) {
-		throw new Error(data.error || "فشلت عملية الدفع الطرفي.");
+		throw new Error(data.error || t("فشلت عملية الدفع الطرفي."));
 	}
 	return data;
 }
@@ -84,12 +84,12 @@ class PosTerminal {
 		if (this._reader) return this._reader;
 		const savedId = localStorage.getItem(_READER_STORAGE_KEY);
 		const discovered = await terminal.discoverReaders();
-		if (discovered.error) throw new Error("تعذر البحث عن قارئ البطاقات.");
+		if (discovered.error) throw new Error(t("تعذر البحث عن قارئ البطاقات."));
 		const readers = discovered.discoveredReaders || [];
-		if (readers.length === 0) throw new Error("لا يوجد قارئ بطاقات مقترن. استخدم الدفع اليدوي.");
+		if (readers.length === 0) throw new Error(t("لا يوجد قارئ بطاقات مقترن. استخدم الدفع اليدوي."));
 		const reader = readers.find((r) => r.id === savedId) || readers[0];
 		const connected = await terminal.connectReader(reader);
-		if (connected.error) throw new Error("تعذر الاتصال بقارئ البطاقات.");
+		if (connected.error) throw new Error(t("تعذر الاتصال بقارئ البطاقات."));
 		this._reader = connected.reader;
 		localStorage.setItem(_READER_STORAGE_KEY, this._reader.id || "");
 		return this._reader;
@@ -109,12 +109,12 @@ class PosTerminal {
 		const terminal = await this._getTerminal();
 		await this._connectReader(terminal);
 		const collected = await terminal.collectPaymentMethod(intent.client_secret);
-		if (collected.error) throw new Error("ألغيت العملية أو تعذرت قراءة البطاقة.");
+		if (collected.error) throw new Error(t("ألغيت العملية أو تعذرت قراءة البطاقة."));
 		const processed = await terminal.processPayment(collected.paymentIntent);
-		if (processed.error) throw new Error("رفضت جهة الإصدار العملية. استخدم الدفع اليدوي.");
+		if (processed.error) throw new Error(t("رفضت جهة الإصدار العملية. استخدم الدفع اليدوي."));
 		const paid = processed.paymentIntent;
 		if (paid?.status !== "succeeded") {
-			throw new Error("لم تكتمل عملية الدفع. استخدم الدفع اليدوي.");
+			throw new Error(t("لم تكتمل عملية الدفع. استخدم الدفع اليدوي."));
 		}
 		return { intentId: paid.id || intent.id, amountMinor: intent.amount_minor };
 	}
@@ -134,7 +134,7 @@ async function setupTerminalButton({ button, getAmount, getCurrency, onApproved,
 	button.addEventListener("click", async () => {
 		const amount = Number(getAmount?.() || 0);
 		if (!(amount > 0)) {
-			onError?.("أضف أصنافاً إلى السلة أولاً.");
+			onError?.(t("أضف أصنافاً إلى السلة أولاً."));
 			return;
 		}
 		button.disabled = true;
@@ -145,7 +145,7 @@ async function setupTerminalButton({ button, getAmount, getCurrency, onApproved,
 			});
 			onApproved?.(result);
 		} catch (err) {
-			onError?.(err?.message || "فشلت عملية الدفع الطرفي.");
+			onError?.(err?.message || t("فشلت عملية الدفع الطرفي."));
 		} finally {
 			button.disabled = false;
 		}

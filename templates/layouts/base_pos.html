@@ -63,6 +63,11 @@
         window.CURRENT_USER_PERMISSIONS = JSON.parse(document.getElementById('user-permissions-data').textContent || '[]');
     </script>
     <script src="{{ url_for('static', filename='js/pos-permissions.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
+    <script>
+        window.I18N_LANG = "{{ current_language or 'ar' }}";
+        window.I18N_TRANSLATIONS = {{ translation_dict | tojson }};
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

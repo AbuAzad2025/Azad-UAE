@@ -58,7 +58,7 @@ class PosScaleSerial {
 
 	async connect() {
 		if (!PosScaleSerial.isSupported()) {
-			this._fail("Web Serial غير مدعوم في هذا المتصفح.");
+			this._fail(t("Web Serial غير مدعوم في هذا المتصفح."));
 			return false;
 		}
 		try {
@@ -69,7 +69,7 @@ class PosScaleSerial {
 			return true;
 		} catch (err) {
 			this.connected = false;
-			this._fail(err?.message || "تعذر الاتصال بالميزان.");
+			this._fail(err?.message || t("تعذر الاتصال بالميزان."));
 			return false;
 		}
 	}
@@ -102,7 +102,7 @@ class PosScaleSerial {
 					if (value) this._ingest(decoder.decode(value, { stream: true }));
 				}
 			} catch (err) {
-				if (this.connected) this._fail(err?.message || "انقطع الاتصال بالميزان.");
+				if (this.connected) this._fail(err?.message || t("انقطع الاتصال بالميزان."));
 			} finally {
 				this.reader.releaseLock();
 				this.reader = null;

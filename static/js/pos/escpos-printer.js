@@ -90,7 +90,7 @@ class EscposPrinter {
 	}
 
 	async connectWebUsb() {
-		if (!EscposPrinter.webUsbSupported()) throw new Error("WebUSB غير مدعوم في هذا المتصفح.");
+		if (!EscposPrinter.webUsbSupported()) throw new Error(t("WebUSB غير مدعوم في هذا المتصفح."));
 		// Optional tenant-scoped device filter (vendor/product IDs) set via
 		// window._PRINTER_USB_FILTERS; an absent/empty config keeps the old
 		// "show every device" behavior.
@@ -105,7 +105,7 @@ class EscposPrinter {
 
 	async connectSerial({ baudRate = 9600 } = {}) {
 		if (!EscposPrinter.webSerialSupported())
-			throw new Error("Web Serial غير مدعوم في هذا المتصفح.");
+			throw new Error(t("Web Serial غير مدعوم في هذا المتصفح."));
 		this.port = await navigator.serial.requestPort();
 		await this.port.open({ baudRate });
 		this.channel = "webserial";
@@ -117,11 +117,11 @@ class EscposPrinter {
 			const endpoint = this.device.configuration.interfaces[0].alternate.endpoints.find(
 				(e) => e.direction === "out",
 			);
-			if (!endpoint) throw new Error("لم يعثر على نقطة إخراج USB للطابعة.");
+			if (!endpoint) throw new Error(t("لم يعثر على نقطة إخراج USB للطابعة."));
 			await _withTimeout(
 				this.device.transferOut(endpoint.endpointNumber, bytes),
 				_USB_TRANSFER_TIMEOUT_MS,
-				"تجاوزت مهلة الطباعة عبر USB.",
+				t("تجاوزت مهلة الطباعة عبر USB."),
 			);
 			return true;
 		}
@@ -134,7 +134,7 @@ class EscposPrinter {
 			}
 			return true;
 		}
-		throw new Error("الطابعة غير متصلة.");
+		throw new Error(t("الطابعة غير متصلة."));
 	}
 
 	async disconnect() {

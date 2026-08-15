@@ -1,4 +1,5 @@
 (() => {
+	const t = window.t || ((k) => k);
 	const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "";
 	const state = {
 		customer: null,
@@ -98,7 +99,7 @@
 	const customerHint = () => {
 		const el = qs("#customerSelectedHint");
 		if (state.customer) {
-			el.textContent = `العميل المختار: ${state.customer.text}`;
+			el.textContent = `${t('العميل المختار')} ${state.customer.text}`;
 			el.className = "text-success mt-2";
 		} else {
 			el.textContent = "لم يتم اختيار عميل بعد";
@@ -455,7 +456,7 @@
 				: `<span class="badge badge-secondary badge-pill ml-1">${fmt(p.stock)}</span>`;
 			a.className =
 				"list-group-item list-group-item-action d-flex justify-content-between align-items-center";
-			a.innerHTML = `<span>${esc(p.text)}${p.is_inactive ? ' <small class="text-danger">(غير نشط)</small>' : ""}</span><span>${stockBadge} <span class="badge badge-primary badge-pill">${fmt(priceForCurrency(p.price))} ${currencySymbolFor(selectedCurrency())}</span></span>`;
+			a.innerHTML = `<span>${esc(p.text)}${p.is_inactive ? ` <small class="text-danger">(${t('غير نشط')})</small>` : ""}</span><span>${stockBadge} <span class="badge badge-primary badge-pill">${fmt(priceForCurrency(p.price))} ${currencySymbolFor(selectedCurrency())}</span></span>`;
 			a.addEventListener("click", async () => {
 				if (p.is_inactive) {
 					showAlert("المنتج غير نشط.", "warning");
@@ -944,7 +945,7 @@
 			await addToCart(p, qty);
 			qs("#productSearch").value = "";
 			qs("#productResults").classList.add("d-none");
-			showAlert(`تمت إضافة ${p.name}`, "success");
+			showAlert(`${t('تمت إضافة')} ${p.name}`, "success");
 		}
 	};
 	state.barcodeScanner = new BarcodeScanner({ onScan: handleScannedCode });
@@ -1035,7 +1036,7 @@
 			getCurrency: () => selectedCurrency(),
 			onApproved: (result) => {
 				if (paidEl && state.lastTotals) paidEl.value = String(state.lastTotals.total);
-				showAlert(`تمت الموافقة على الدفع بالبطاقة (${result.intentId})`, "success");
+				showAlert(`${t('تمت الموافقة على الدفع بالبطاقة')} (${result.intentId})`, "success");
 			},
 			onError: (msg) => showAlert(msg, "warning"),
 		});
@@ -1176,8 +1177,8 @@
 			card.addEventListener("click", () => {
 				selectedTable = { id: t.id, label: t.label };
 				const sel = qs("#posTableSelected");
-				if (sel) sel.textContent = `الطاولة المحددة: ${t.label}`;
-				if (tablesBtn) tablesBtn.title = `الطاولة: ${t.label}`;
+if (sel) sel.textContent = `${t('الطاولة المحددة')} ${t.label}`;
+if (tablesBtn) tablesBtn.title = `${t('الطاولة')} ${t.label}`;
 				if (window.jQuery) $("#posTablesModal").modal("hide");
 			});
 			grid.appendChild(card);
@@ -1235,7 +1236,7 @@
 			state.idemKey = newCartKey();
 			await renderCart();
 			if (qs("#orderNote")) qs("#orderNote").value = "";
-			showAlert(`تم تعليق الفاتورة (${heldCount()} معلّقة)`, "success");
+			showAlert(`${t('تم تعليق الفاتورة')} (${heldCount()} ${t('معلّقة')})`, "success");
 		});
 	}
 
@@ -1255,7 +1256,7 @@
 				qs("#sessionNumber").textContent = s.number;
 				qs("#sessionBalance").textContent = fmt(s.opening_balance);
 				qs("#sessionTotal").textContent = fmt(s.total_sales);
-				qs("#sessionTime").textContent = `مفتوحة منذ ${s.duration_minutes} دقيقة`;
+				qs("#sessionTime").textContent = `${t('مفتوحة منذ')} ${s.duration_minutes} ${t('دقيقة')}`;
 				qs("#closeOpening").textContent = fmt(s.opening_balance);
 			} else {
 				if (window.cfdBroadcast) cfdBroadcast.setSession(null);
@@ -1293,7 +1294,7 @@
 			}
 			$("#openSessionModal").modal("hide");
 			await loadSession();
-			showAlert(`تم فتح الجلسة: ${j.session.number}`, "success");
+			showAlert(`${t('تم فتح الجلسة')} ${j.session.number}`, "success");
 		} catch (err) {
 			showModalAlert("openSession", err.message, "danger");
 		} finally {
@@ -1321,7 +1322,7 @@
 		} catch (err) {
 			showModalAlert(
 				"closeSession",
-				`تعذر تحميل بيانات الجلسة: ${err.message || "خطأ غير معروف"}`,
+				`${t('تعذر تحميل بيانات الجلسة')} ${err.message || t('خطأ غير معروف')}`,
 				"warning",
 			);
 		}
@@ -1358,7 +1359,7 @@
 			await loadSession();
 			const diff = j.session.difference;
 			if (Math.abs(diff) > 0.01) {
-				showAlert(`تم إغلاق الجلسة. فرق الرصيد: ${fmt(diff)}`, diff < 0 ? "danger" : "warning");
+				showAlert(`${t('تم إغلاق الجلسة. فرق الرصيد')}: ${fmt(diff)}`, diff < 0 ? "danger" : "warning");
 			} else {
 				showAlert("تم إغلاق الجلسة بنجاح. الرصيد مطابق.", "success");
 			}
