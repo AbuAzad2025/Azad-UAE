@@ -60,7 +60,7 @@ def register_context_processors(app):
     @app.context_processor
     def utility_processor() -> dict[str, Any]:
         from utils.helpers import format_currency, format_date, format_datetime, format_number, format_time, timeago
-        from utils.i18n import get_current_language, is_rtl, t, TRANSLATIONS
+        from utils.i18n import TRANSLATIONS, get_current_language, is_rtl, t
         from utils.number_to_arabic import number_to_arabic_words
         from utils.report_registry import (
             REPORT_CATEGORIES,
