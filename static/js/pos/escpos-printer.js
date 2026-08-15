@@ -93,7 +93,7 @@ class EscposPrinter {
 		if (!EscposPrinter.webUsbSupported()) throw new Error("WebUSB غير مدعوم في هذا المتصفح.");
 		// Optional tenant-scoped device filter (vendor/product IDs) set via
 		// window._PRINTER_USB_FILTERS; an absent/empty config keeps the old
-		// "show every device" behaviour.
+		// "show every device" behavior.
 		const filters = Array.isArray(window._PRINTER_USB_FILTERS) ? window._PRINTER_USB_FILTERS : [];
 		this.device = await navigator.usb.requestDevice({ filters });
 		await this.device.open();
