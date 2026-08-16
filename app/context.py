@@ -392,6 +392,15 @@ def register_context_processors(app):
             "tenant_default_currency": tenant_default_currency
             or system_default_currency
             or get_system_default_currency(),
+            "tenant_base_currency": tenant_default_currency
+            or system_default_currency
+            or get_system_default_currency(),
+            "FX_BASE_CURRENCY": tenant_default_currency
+            or system_default_currency
+            or get_system_default_currency(),
+            "FX_BASE_LABEL": get_currency_name_ar(
+                tenant_default_currency or system_default_currency or get_system_default_currency()
+            ),
             "tenant_currency_symbol": get_currency_symbol(
                 tenant_default_currency or system_default_currency or get_system_default_currency()
             ),

@@ -135,8 +135,10 @@
     window.CURRENT_USER_PERMISSIONS = {{ current_user_permissions | tojson | safe }};
     window.hasPermission = (code) => (window.CURRENT_USER_PERMISSIONS || []).includes(code);
     window._LOG_ENDPOINT = '{{ url_for("api.log_client_error") }}';
-    window._FX_API_URL = '{{ url_for("api.exchange_rates_display") }}?base={{ tenant_default_currency }}';
-    window._FX_FALLBACK_BASE = '{{ tenant_default_currency }}';
+    window._FX_API_URL = '{{ url_for("api.exchange_rates_display") }}';
+    window._FX_BASE_CURRENCY = '{{ FX_BASE_CURRENCY }}';
+    window._FX_FALLBACK_BASE = '{{ FX_BASE_CURRENCY }}';
+    window._FX_BASE_LABEL = '{{ FX_BASE_LABEL }}';
     window._CURRENCY_NAME_AR = '{{ tenant_currency_name_ar or tenant_currency_symbol }}';
     window._CURRENCY_SYMBOL = '{{ tenant_currency_symbol }}';
 

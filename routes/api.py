@@ -576,15 +576,34 @@ def exchange_rates_display():
     Use /api/currency-rate/<from>/<to> for accounting rates.
     """
     from services.exchange_rate_service import ExchangeRateService
+    from utils.tenanting import get_active_tenant_id
+    from flask_login import current_user
 
-    base = request.args.get("base", "USD").upper()
+    # Use tenant's base currency as the base for display
+    tenant_id = get_active_tenant_id(current_user)
+    if tenant_id:
+        from models import Tenant
+        tenant = Tenant.query.get(tenant_id)
+        if tenant:
+            base = tenant.get_base_currency()
+        else:
+            base = "USD"
+    else:
+        base = request.args.get("base", "USD").upper()
+
     symbols_str = request.args.get("symbols", "")
     if symbols_str:
         symbols = tuple(s.strip().upper() for s in symbols_str.split(",") if s.strip())
     else:
         symbols = ExchangeRateService.DISPLAY_CURRENCIES
 
+    # Ensure the tenant's base currency is included in symbols
+    if base not in symbols:
+        symbols = (base,) + symbols
+
     result = ExchangeRateService.get_online_rates_for_display(base=base, symbols=symbols)
+    # Add tenant base currency info for the UI
+    result["tenant_base_currency"] = base
     resp = make_response(jsonify(result), 200)
     resp.headers["Cache-Control"] = "private, max-age=300"
     return resp

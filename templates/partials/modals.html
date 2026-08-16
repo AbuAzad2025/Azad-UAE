@@ -4,18 +4,27 @@
       <div class="modal-content">
         <div class="modal-header bg-primary text-white py-2">
           <h6 class="modal-title" id="fxModalLabel"><i class="fas fa-coins mr-2"></i>{{ t('Exchange_Rates_View_Only') }}</h6>
+          <span class="badge badge-light ml-2" id="fx-base-badge">{{ FX_BASE_LABEL }} ({{ FX_BASE_CURRENCY }})</span>
           <button type="button" class="close text-white" data-dismiss="modal" aria-label="{{ t('Close') }}">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
         <div class="modal-body p-0">
+          <div class="alert alert-info py-1 px-2 mb-0 text-center small">
+            <i class="fas fa-info-circle mr-1"></i>
+            <strong>العملة الأساسية للتينانت:</strong> {{ FX_BASE_LABEL }} ({{ FX_BASE_CURRENCY }})
+            <span class="ml-2 text-muted">| جميع الأسعار مقابل 1 {{ FX_BASE_CURRENCY }}</span>
+          </div>
           <div class="table-responsive erp-modal-scroll">
             <table class="table table-sm table-striped table-hover text-center mb-0" id="fx-rates-table">
               <thead class="thead-dark">
                 <tr>
                   <th class="text-right">{{ t('Currency') }}</th>
-                  <th>{{ t('Value') }}</th>
-                  <th class="text-muted small">{{ t('Against_USD') }} USD</th>
+                  <th>{{ t('Rate') }}</th>
+                  <th class="text-muted small">
+                    <div>1 {{ FX_BASE_CURRENCY }} = X العملة</div>
+                    <div class="text-success small">1 العملة = X {{ FX_BASE_CURRENCY }}</div>
+                  </th>
                 </tr>
               </thead>
               <tbody id="fx-rates-body">

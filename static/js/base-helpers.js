@@ -1,9 +1,9 @@
-/**
- * Azad ERP — Base Helpers & Utilities
+﻿/**
+ * Azad ERP â€” Base Helpers & Utilities
  * Fixed encoding issues, enhanced performance, added new utilities
  */
 
-// ── 1. Azad UI Helper ──
+// â”€â”€ 1. Azad UI Helper â”€â”€
 (() => {
   let loadingCount = 0;
 
@@ -98,7 +98,7 @@
   };
 })();
 
-// ── 2. CSRF & AJAX Setup ──
+// â”€â”€ 2. CSRF & AJAX Setup â”€â”€
 $(() => {
   try {
     const csrfToken = $('meta[name="csrf-token"]').attr("content");
@@ -129,7 +129,7 @@ $(() => {
   initNavbarCalculator();
 });
 
-// ── 3. Smart Link Prefetching ──
+// â”€â”€ 3. Smart Link Prefetching â”€â”€
 document.querySelectorAll('a[href^="/"]:not([href*="/logout"]):not([href^="//"])').forEach((link) => {
   link.addEventListener(
     "mouseenter",
@@ -147,7 +147,7 @@ document.querySelectorAll('a[href^="/"]:not([href*="/logout"]):not([href^="//"])
   );
 });
 
-// ── 4. Flash Message Auto-Dismiss ──
+// â”€â”€ 4. Flash Message Auto-Dismiss â”€â”€
 document.querySelectorAll(".flash-message").forEach((alert) => {
   if (!alert.classList.contains("alert-permanent") && !alert.classList.contains("alert-danger")) {
     const progressBar = alert.querySelector(".flash-timer");
@@ -163,7 +163,7 @@ document.querySelectorAll(".flash-message").forEach((alert) => {
   }
 });
 
-// ── 5. FX Rates ──
+// â”€â”€ 5. FX Rates â”€â”€
 let fxDisplayCache = null;
 let fxDisplayCacheTime = 0;
 const FX_DISPLAY_CACHE_MS = 300000;
@@ -186,11 +186,12 @@ async function loadFxRates() {
 
   const tbody = document.getElementById("fx-rates-body");
   if (tbody) {
-    tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4"><div class="spinner-border spinner-border-sm text-muted" role="status"></div><span class="mr-2"> جارٍ التحميل...</span></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4"><div class="spinner-border spinner-border-sm text-muted" role="status"></div><span class="mr-2"> Ø¬Ø§Ø±Ù Ø§Ù„ØªØ­Ù…ÙŠÙ„...</span></td></tr>';
   }
 
   try {
-    const res = await fetch(window._FX_API_URL, { cache: "no-store" });
+    const baseCurrency = window._FX_BASE_CURRENCY || "{{ tenant_base_currency|default(\x27USD\x27) }}";
+    const res = await fetch(`${window._FX_API_URL}?base=${encodeURIComponent(baseCurrency)}`, { cache: "no-store" });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
     if (!data.ok) throw new Error("API error");
@@ -218,13 +219,13 @@ function getFallbackFx() {
 
 function populateFxDisplay(data) {
   const rates = data.rates || {};
-  const base = data.base || "USD";
+  const base = data.tenant_base_currency || data.base || "USD";
   const stale = data.stale || false;
   const source = data.source || "unknown";
 
   const labels = {
     USD: { ar: "دولار أمريكي", sym: "$" },
-    ILS: { ar: "شيقل إسرائيلي", sym: "₪" },
+    ILS: { ar: "شيكل إسرائيلي", sym: "₪" },
     JOD: { ar: "دينار أردني", sym: "JD" },
     EUR: { ar: "يورو", sym: "€" },
     AED: { ar: "درهم إماراتي", sym: "د.إ" },
@@ -256,13 +257,13 @@ function populateFxDisplay(data) {
     badge.style.display = "inline-block";
     if (source === "fallback_static") {
       badge.className = "badge badge-warning ml-1";
-      badge.textContent = "سعر تقديري";
+      badge.textContent = "Ø³Ø¹Ø± ØªÙ‚Ø¯ÙŠØ±ÙŠ";
     } else if (stale) {
       badge.className = "badge badge-warning ml-1";
-      badge.textContent = "آخر سعر محفوظ";
+      badge.textContent = "Ø¢Ø®Ø± Ø³Ø¹Ø± Ù…Ø­ÙÙˆØ¸";
     } else {
       badge.className = "badge badge-success ml-1";
-      badge.textContent = "مباشر";
+      badge.textContent = "Ù…Ø¨Ø§Ø´Ø±";
     }
   }
 
@@ -272,11 +273,11 @@ function populateFxDisplay(data) {
     const timeStr = Number.isNaN(d.getTime())
       ? "--"
       : d.toLocaleTimeString("ar-AE", { hour: "2-digit", minute: "2-digit" });
-    updatedEl.innerHTML = `<i class="fas fa-clock mr-1"></i>آخر تحديث: ${timeStr}`;
+    updatedEl.innerHTML = `<i class="fas fa-clock mr-1"></i>Ø¢Ø®Ø± ØªØ­Ø¯ÙŠØ«: ${timeStr}`;
   }
 }
 
-// ── 6. DateTime Display ──
+// â”€â”€ 6. DateTime Display â”€â”€
 function updateDateTime() {
   const now = new Date();
   const timeString = now.toLocaleTimeString("ar-SA", {
@@ -291,13 +292,13 @@ function updateDateTime() {
   if (dateDisplay) dateDisplay.textContent = dateString;
 }
 
-// ── 7. Safe Expression Evaluator ──
+// â”€â”€ 7. Safe Expression Evaluator â”€â”€
 function safeEval(expr) {
   const src = String(expr || "")
-    .replace(/÷/g, "/")
-    .replace(/×/g, "*")
-    .replace(/π/g, "pi")
-    .replace(/\^/g, "^");
+    .replace(/[÷]/g, "/")
+    .replace(/[×]/g, "*")
+    .replace(/[π]/g, "pi")
+    .replace(/\^/g, "**");
 
   let pos = 0;
   const len = src.length;
@@ -333,7 +334,11 @@ function safeEval(expr) {
     skipWs();
     if (src[pos] === "-") { pos++; return -parseFactor(); }
     const base = parsePrimary();
-    if (peek() === "^") { pos++; return base ** parseFactor(); }
+    if (peek() === "^" || (peek() === "*" && src[pos + 1] === "*")) { 
+        if (src[pos] === "^") pos++; 
+        else pos += 2; 
+        return base ** parseFactor(); 
+    }
     return base;
   }
 
@@ -399,7 +404,7 @@ function safeEval(expr) {
   }
 }
 
-// ── 8. Calculator Pad Wiring ──
+// â”€â”€ 8. Calculator Pad Wiring â”€â”€
 function wirePad(container, display, buttons) {
   if (!container || !display) return;
   container.innerHTML = buttons
@@ -426,16 +431,16 @@ function initNavbarCalculator() {
   const scientificContainer = document.getElementById("calcScientificButtons");
 
   wirePad(classicContainer, classicDisplay, [
-    "7", "8", "9", "÷",
-    "4", "5", "6", "×",
+    "7", "8", "9", "Ã·",
+    "4", "5", "6", "Ã—",
     "1", "2", "3", "-",
     "0", ".", "=", "+",
     "(", ")", "DEL", "C",
   ]);
   wirePad(scientificContainer, scientificDisplay, [
-    "sin(", "cos(", "tan(", "sqrt(", "log(", "ln(", "π", "e",
-    "7", "8", "9", "÷",
-    "4", "5", "6", "×",
+    "sin(", "cos(", "tan(", "sqrt(", "log(", "ln(", "Ï€", "e",
+    "7", "8", "9", "Ã·",
+    "4", "5", "6", "Ã—",
     "1", "2", "3", "-",
     "0", ".", "^", "+",
     "(", ")", "DEL", "C", "=",
@@ -453,7 +458,7 @@ function initNavbarCalculator() {
 
       if (!(p > 0) || !(months > 0)) {
         out.className = "alert alert-warning mt-2 mb-0";
-        out.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>أدخل قيم صحيحة.';
+        out.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>Ø£Ø¯Ø®Ù„ Ù‚ÙŠÙ… ØµØ­ÙŠØ­Ø©.';
         return;
       }
 
@@ -465,9 +470,9 @@ function initNavbarCalculator() {
       out.className = "alert alert-info mt-2 mb-0";
       out.innerHTML = `
         <div class="d-flex justify-content-between flex-wrap">
-          <span><i class="fas fa-hand-holding-usd mr-1"></i>القسط: <strong>${emi.toFixed(2)}</strong></span>
-          <span><i class="fas fa-coins mr-1"></i>الفائدة: <strong>${interest.toFixed(2)}</strong></span>
-          <span><i class="fas fa-wallet mr-1"></i>الإجمالي: <strong>${total.toFixed(2)}</strong></span>
+          <span><i class="fas fa-hand-holding-usd mr-1"></i>Ø§Ù„Ù‚Ø³Ø·: <strong>${emi.toFixed(2)}</strong></span>
+          <span><i class="fas fa-coins mr-1"></i>Ø§Ù„ÙØ§Ø¦Ø¯Ø©: <strong>${interest.toFixed(2)}</strong></span>
+          <span><i class="fas fa-wallet mr-1"></i>Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ: <strong>${total.toFixed(2)}</strong></span>
         </div>`;
     });
   }
@@ -480,7 +485,7 @@ function initNavbarCalculator() {
 
       if (!(cost >= 0) || !(sell > 0)) {
         out.className = "alert alert-warning mt-2 mb-0";
-        out.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>أدخل قيم صحيحة.';
+        out.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>Ø£Ø¯Ø®Ù„ Ù‚ÙŠÙ… ØµØ­ÙŠØ­Ø©.';
         return;
       }
 
@@ -491,7 +496,7 @@ function initNavbarCalculator() {
       out.className = "alert alert-success mt-2 mb-0";
       out.innerHTML = `
         <div class="d-flex justify-content-between flex-wrap">
-          <span><i class="fas fa-dollar-sign mr-1 text-success"></i>الربح: <strong>${profit.toFixed(2)}</strong></span>
+          <span><i class="fas fa-dollar-sign mr-1 text-success"></i>Ø§Ù„Ø±Ø¨Ø­: <strong>${profit.toFixed(2)}</strong></span>
           <span><i class="fas fa-percentage mr-1 text-info"></i>Margin: <strong>${margin.toFixed(2)}%</strong></span>
           <span><i class="fas fa-chart-line mr-1 text-warning"></i>Markup: <strong>${markup.toFixed(2)}%</strong></span>
         </div>`;
@@ -499,9 +504,9 @@ function initNavbarCalculator() {
   }
 }
 
-// ── 9. View Mode System ──
+// â”€â”€ 9. View Mode System â”€â”€
 const VIEW_MODES = ["auto", "desktop", "mobile"];
-const VIEW_MODE_LABELS = { auto: "تلقائي", desktop: "كمبيوتر", mobile: "جوال" };
+const VIEW_MODE_LABELS = { auto: "ØªÙ„Ù‚Ø§Ø¦ÙŠ", desktop: "ÙƒÙ…Ø¨ÙŠÙˆØªØ±", mobile: "Ø¬ÙˆØ§Ù„" };
 const VIEW_MODE_ICONS = { auto: "fa-desktop", desktop: "fa-desktop", mobile: "fa-mobile-alt" };
 
 function getSavedViewMode() {
@@ -527,7 +532,7 @@ function updateViewModeButton(mode) {
     icon.classList.remove("fa-desktop", "fa-mobile-alt");
     icon.classList.add(VIEW_MODE_ICONS[mode] || "fa-desktop");
   }
-  if (label) label.textContent = VIEW_MODE_LABELS[mode] || "تلقائي";
+  if (label) label.textContent = VIEW_MODE_LABELS[mode] || "ØªÙ„Ù‚Ø§Ø¦ÙŠ";
 }
 
 function cycleViewMode() {
@@ -545,7 +550,7 @@ const currentMode = getSavedViewMode();
 if (window._DEBUG) console.log("[Azad] View mode:", currentMode, "| Screen:", `${window.innerWidth}x${window.innerHeight}`);
 setViewMode(currentMode);
 
-// ── 10. Telemetry & Error Reporting ──
+// â”€â”€ 10. Telemetry & Error Reporting â”€â”€
 (() => {
   const sentErrors = new Map();
   let sentWindow = [];
@@ -766,7 +771,7 @@ setViewMode(currentMode);
   } catch (_) {}
 })();
 
-// ── 11. Expose Testable API ──
+// â”€â”€ 11. Expose Testable API â”€â”€
 if (typeof window !== "undefined") {
   window.AzadHelpers = {
     azad: window.azad,
@@ -782,3 +787,5 @@ if (typeof window !== "undefined") {
     initNavbarCalculator,
   };
 }
+
+
