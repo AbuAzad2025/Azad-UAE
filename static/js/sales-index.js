@@ -33,7 +33,9 @@ $(document).ready(() => {
 					.column(4, { page: "current" })
 					.data()
 					.reduce((a, b) => a + firstNumber(b), 0);
-				UI.toast(`إجمالي الصفحة: ${total.toFixed(2)} | مدفوع: ${paid.toFixed(2)}`, "info", 2000);
+				(window.azad && typeof window.azad.showInfo === "function")
+					? window.azad.showInfo(`إجمالي الصفحة: ${total.toFixed(2)} | مدفوع: ${paid.toFixed(2)}`)
+					: console.info(`إجمالي الصفحة: ${total.toFixed(2)} | مدفوع: ${paid.toFixed(2)}`);
 			},
 		});
 	}

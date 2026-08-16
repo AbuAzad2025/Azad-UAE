@@ -211,6 +211,7 @@ class PaymentService:
             )
 
             exchange_rate = PaymentService._resolve_transaction_rate(currency, user_exchange_rate)
+            base_currency = resolve_tenant_base_currency(tenant_id=(supplier.tenant_id if supplier is not None else None))
 
             payment = Payment(
                 tenant_id=(supplier.tenant_id if supplier is not None else None)
@@ -227,6 +228,7 @@ class PaymentService:
                 amount=Decimal(str(amount)),
                 currency=currency,
                 exchange_rate=exchange_rate,
+                base_currency=base_currency,
                 amount_aed=convert_and_quantize_aed(
                     amount, currency, exchange_rate, tenant_id=(supplier.tenant_id if supplier is not None else None)
                 ),
@@ -377,6 +379,7 @@ class PaymentService:
         )
 
         exchange_rate = PaymentService._resolve_transaction_rate(currency)
+        base_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
         amount_decimal = Decimal(str(amount))
         amount_aed = convert_and_quantize_aed(amount_decimal, currency, exchange_rate, tenant_id=tenant_id)
 
@@ -390,6 +393,7 @@ class PaymentService:
             amount=amount_decimal,
             currency=currency,
             exchange_rate=exchange_rate,
+            base_currency=base_currency,
             amount_aed=amount_aed,
             payment_method=payment_method,
             notes=notes,
@@ -570,6 +574,7 @@ class PaymentService:
             )
 
             exchange_rate = PaymentService._resolve_transaction_rate(currency, user_exchange_rate)
+            base_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
 
             receipt = Receipt(
                 tenant_id=tenant_id,
@@ -581,6 +586,7 @@ class PaymentService:
                 amount=Decimal(str(amount)),
                 currency=currency,
                 exchange_rate=exchange_rate,
+                base_currency=base_currency,
                 amount_aed=convert_and_quantize_aed(amount, currency, exchange_rate, tenant_id=tenant_id),
                 payment_method=payment_method,
                 payment_confirmed=(payment_method != "cheque"),

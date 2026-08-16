@@ -1,11 +1,16 @@
+<!-- Core Libraries (load first) -->
 <script src="{{ url_for('static', filename='adminlte/plugins/jquery/jquery.min.js') }}"></script>
 <script src="{{ url_for('static', filename='adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <script src="{{ url_for('static', filename='adminlte/js/adminlte.min.js') }}"></script>
 
+<!-- Deferred Utility Scripts -->
 <script defer src="{{ url_for('static', filename='js/telemetry.js') }}"></script>
 <script defer src="{{ url_for('static', filename='adminlte/plugins/sweetalert2/sweetalert2.all.min.js') }}"></script>
 <script defer src="{{ url_for('static', filename='js/base-helpers.js') }}"></script>
 <script defer src="{{ url_for('static', filename='js/i18n.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/ui-theme.js') }}"></script>
+
+<!-- Deferred Feature Scripts -->
 <script defer src="{{ url_for('static', filename='js/app.js') }}"></script>
 <script defer src="{{ url_for('static', filename='js/customer-select.js') }}"></script>
 <script defer src="{{ url_for('static', filename='js/payment-fields.js') }}"></script>
@@ -13,6 +18,5 @@
 <script defer src="{{ url_for('static', filename='js/action-helpers.js') }}"></script>
 <script defer src="{{ url_for('static', filename='js/notifications.js') }}"></script>
 <script defer src="{{ url_for('static', filename='js/keyboard-shortcuts.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/ui-theme.js') }}"></script>
 <script defer src="{{ url_for('static', filename='js/performance.js') }}"></script>
 <script defer src="{{ url_for('static', filename='js/smart-print.js') }}"></script>

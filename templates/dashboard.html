@@ -1,38 +1,49 @@
 {% extends 'base.html' %}
 
 {% block title %}{{ _('لوحة تحكم أزاد للأنظمة الذكية') }}{% endblock %}
+
 {% block page_title %}
-<div class="d-flex justify-content-between align-items-center">
+<div class="d-flex justify-content-between align-items-center az-enter">
   <div>
-    <h1 class="text-gradient mb-0">{{ _('لوحة التحكم') }}</h1>
-    <p class="text-muted">{{ _('مرحباً بك،') }} {{ current_user.full_name or current_user.username }}</p>
+    <h1 class="az-text-gradient mb-0">{{ _('لوحة التحكم') }}</h1>
+    <p class="text-muted az-fade-in-delay">{{ _('مرحباً بك،') }} {{ current_user.full_name or current_user.username }}</p>
+  </div>
+  <div class="d-none d-md-block">
+    <span class="badge badge-primary px-3 py-2" style="font-size:0.9rem">
+      <i class="fas fa-calendar-alt mr-1"></i> {{ current_date or now().strftime('%Y-%m-%d') }}
+    </span>
   </div>
 </div>
 {% endblock %}
 
 {% block content %}
 
+<!-- Usage Warnings -->
 {% if stats.usage_warnings %}
-<div class="alert alert-warning d-flex align-items-center flex-wrap mb-4" role="alert">
-  <i class="fas fa-exclamation-triangle ml-2"></i>
-  <div>
+<div class="alert alert-warning d-flex align-items-center flex-wrap mb-4 az-enter az-enter-d1" role="alert">
+  <div class="erp-flash-icon mr-3">
+    <i class="fas fa-exclamation-triangle"></i>
+  </div>
+  <div class="flex-grow-1">
     <strong>{{ _('تنبيه الباقة:') }}</strong>
     {% for row in stats.usage_warnings %}
     <span class="badge badge-warning ml-1">{{ row.label_ar }} {{ row.current }}/{{ row.limit }} ({{ row.percent }}%)</span>
     {% endfor %}
-    — {{ _('اقتربت من حدود باقتك. رقِّ الباقة لتجنب توقف العمليات.') }}
+    <span class="d-block d-md-inline">— {{ _('اقتربت من حدود باقتك. رقِّ الباقة لتجنب توقف العمليات.') }}</span>
   </div>
+  <button type="button" class="close" data-dismiss="alert" aria-label="{{ _('إغلاق') }}">&times;</button>
 </div>
 {% endif %}
 
+<!-- Stat Cards -->
 <div class="row mb-4">
   {% if current_user.has_permission('manage_sales') %}
-  <div class="col-lg-3 col-md-6 mb-4">
-    <div class="stat-card">
-      <div class="stat-icon erp-stat-icon-sales">
+  <div class="col-lg-3 col-md-6 mb-4 az-enter" style="animation-delay:0.05s">
+    <div class="stat-card az-stat-sales">
+      <div class="stat-icon erp-stat-icon-sales az-pulse-glow">
         <i class="fas fa-shopping-cart"></i>
       </div>
-      <div class="stat-value">{{ stats.today_sales_count|default(0) }}</div>
+      <div class="stat-value az-counter" data-target="{{ stats.today_sales_count|default(0) }}">0</div>
       <div class="stat-label">{{ _('مبيعات اليوم') }}</div>
       <div class="mt-2">
         <strong class="erp-stat-value-success erp-stat-value-lg">
@@ -40,7 +51,7 @@
         </strong>
         <small class="text-muted"> {{ tenant_currency_symbol }}</small>
       </div>
-      <a href="{{ url_for('sales.index') }}" class="btn btn-primary mt-2 w-100">
+      <a href="{{ url_for('sales.index') }}" class="btn btn-primary mt-3 w-100">
         <i class="fas fa-arrow-left"></i> {{ _('عرض الكل') }}
       </a>
     </div>
@@ -48,17 +59,17 @@
   {% endif %}
 
   {% if current_user.has_permission('manage_customers') %}
-  <div class="col-lg-3 col-md-6 mb-4">
-    <div class="stat-card">
+  <div class="col-lg-3 col-md-6 mb-4 az-enter" style="animation-delay:0.1s">
+    <div class="stat-card az-stat-customers">
       <div class="stat-icon erp-stat-icon-customers">
         <i class="fas fa-users"></i>
       </div>
-      <div class="stat-value">{{ stats.customers_count|default(0) }}</div>
+      <div class="stat-value az-counter" data-target="{{ stats.customers_count|default(0) }}">0</div>
       <div class="stat-label">{{ _('إجمالي العملاء') }}</div>
       <div class="mt-2">
         <small class="text-muted">{{ _('عملاء نشطون') }}</small>
       </div>
-      <a href="{{ url_for('customers.index') }}" class="btn btn-success mt-2 w-100 stretched-link">
+      <a href="{{ url_for('customers.index') }}" class="btn btn-success mt-3 w-100">
         <i class="fas fa-arrow-left"></i> {{ _('عرض الكل') }}
       </a>
     </div>
@@ -66,17 +77,17 @@
   {% endif %}
 
   {% if current_user.has_permission('view_reports') %}
-  <div class="col-lg-3 col-md-6 mb-4">
-    <div class="stat-card">
+  <div class="col-lg-3 col-md-6 mb-4 az-enter" style="animation-delay:0.15s">
+    <div class="stat-card az-stat-receivables">
       <div class="stat-icon erp-stat-icon-receivables">
         <i class="fas fa-file-invoice-dollar"></i>
       </div>
-      <div class="stat-value">{{ "{:,.0f}".format(stats.total_receivables|default(0)) }}</div>
+      <div class="stat-value az-counter" data-target="{{ stats.total_receivables|default(0) }}">0</div>
       <div class="stat-label">{{ _('إجمالي الذمم') }}</div>
       <div class="mt-2">
         <small class="text-muted">{{ tenant_currency_name_ar }}</small>
       </div>
-      <a href="{{ url_for('reports.receivables') }}" class="btn btn-warning mt-2 w-100 stretched-link">
+      <a href="{{ url_for('reports.receivables') }}" class="btn btn-warning mt-3 w-100">
         <i class="fas fa-arrow-left"></i> {{ _('عرض التفاصيل') }}
       </a>
     </div>
@@ -84,17 +95,17 @@
   {% endif %}
 
   {% if current_user.has_permission('manage_products') %}
-  <div class="col-lg-3 col-md-6 mb-4">
-    <div class="stat-card">
+  <div class="col-lg-3 col-md-6 mb-4 az-enter" style="animation-delay:0.2s">
+    <div class="stat-card az-stat-products">
       <div class="stat-icon erp-stat-icon-products">
         <i class="fas fa-box-open"></i>
       </div>
-      <div class="stat-value">{{ stats.products_count|default(0) }}</div>
+      <div class="stat-value az-counter" data-target="{{ stats.products_count|default(0) }}">0</div>
       <div class="stat-label">{{ _('المنتجات') }}</div>
       <div class="mt-2">
         <small class="text-muted">{{ _('منتجات نشطة') }}</small>
       </div>
-      <a href="{{ url_for('products.index') }}" class="btn btn-danger mt-2 w-100 stretched-link">
+      <a href="{{ url_for('products.index') }}" class="btn btn-danger mt-3 w-100">
         <i class="fas fa-arrow-left"></i> {{ _('عرض الكل') }}
       </a>
     </div>
@@ -102,17 +113,18 @@
   {% endif %}
 </div>
 
+<!-- Usage Summary -->
 {% if stats.usage_summary %}
-<div class="row mb-4">
+<div class="row mb-4 az-enter az-enter-d2">
   <div class="col-12">
     <div class="card glass-effect border-0">
       <div class="card-header bg-transparent border-0 pb-0">
-        <h5 class="mb-0"><i class="fas fa-chart-pie ml-2"></i>{{ _('استهلاك الباقة') }}</h5>
+        <h5 class="mb-0"><i class="fas fa-chart-pie ml-2 text-primary"></i>{{ _('استهلاك الباقة') }}</h5>
       </div>
       <div class="card-body pt-3">
         <div class="row">
           {% for row in stats.usage_summary %}
-          <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
+          <div class="col-lg-3 col-md-4 col-sm-6 mb-3 az-enter" style="animation-delay:{{ loop.index0 * 0.05 }}s">
             <div class="d-flex justify-content-between align-items-baseline">
               <span class="text-muted">{{ row.label_ar }}</span>
               <strong>
@@ -124,16 +136,18 @@
                 {% endif %}
               </strong>
             </div>
-            <div class="progress" style="height: 6px;">
+            <div class="progress az-progress" style="height: 8px;">
               <div
-                class="progress-bar {% if row.warn %}bg-warning{% else %}bg-success{% endif %}"
+                class="progress-bar az-progress-bar {% if row.warn %}bg-warning{% else %}bg-success{% endif %}"
                 role="progressbar"
-                style="width: {{ row.percent }}%;"
+                data-width="{{ row.percent }}"
+                style="width: 0%;"
                 aria-valuenow="{{ row.percent }}"
                 aria-valuemin="0"
                 aria-valuemax="100"
               ></div>
             </div>
+            <small class="text-muted">{{ row.percent }}%</small>
           </div>
           {% endfor %}
         </div>
@@ -143,48 +157,48 @@
 </div>
 {% endif %}
 
+<!-- Financial Summary Cards -->
 {% if current_user.can_see_costs() and stats.cash_balance is defined %}
-
 <div class="row mb-4">
-  <div class="col-md-4 mb-3">
-    <div class="card glass-effect border-0">
+  <div class="col-md-4 mb-3 az-enter" style="animation-delay:0.05s">
+    <div class="card glass-effect border-0 az-financial-card az-financial-cash">
       <div class="card-body text-center">
-        <div class="mb-3">
+        <div class="mb-3 az-icon-float">
           <i class="fas fa-wallet fa-3x erp-stat-value-success"></i>
         </div>
         <h5 class="text-muted">{{ _('رصيد الصندوق') }}</h5>
-        <h2 class="mb-0 erp-stat-value-success erp-stat-value-xl">
-          {{ format_currency(stats.cash_balance|default(0)) }}
+        <h2 class="mb-0 erp-stat-value-success erp-stat-value-xl az-counter-currency" data-target="{{ stats.cash_balance|default(0) }}">
+          {{ format_currency(0) }}
         </h2>
         <small class="text-muted">{{ tenant_currency_name_ar }}</small>
       </div>
     </div>
   </div>
 
-  <div class="col-md-4 mb-3">
-    <div class="card glass-effect border-0">
+  <div class="col-md-4 mb-3 az-enter" style="animation-delay:0.1s">
+    <div class="card glass-effect border-0 az-financial-card az-financial-bank">
       <div class="card-body text-center">
-        <div class="mb-3">
+        <div class="mb-3 az-icon-float">
           <i class="fas fa-university fa-3x erp-stat-value-info"></i>
         </div>
         <h5 class="text-muted">{{ _('رصيد البنك') }}</h5>
-        <h2 class="mb-0 erp-stat-value-info erp-stat-value-xl">
-          {{ format_currency(stats.bank_balance|default(0)) }}
+        <h2 class="mb-0 erp-stat-value-info erp-stat-value-xl az-counter-currency" data-target="{{ stats.bank_balance|default(0) }}">
+          {{ format_currency(0) }}
         </h2>
         <small class="text-muted">{{ tenant_currency_name_ar }}</small>
       </div>
     </div>
   </div>
 
-  <div class="col-md-4 mb-3">
-    <div class="card glass-effect border-0">
+  <div class="col-md-4 mb-3 az-enter" style="animation-delay:0.15s">
+    <div class="card glass-effect border-0 az-financial-card az-financial-inventory">
       <div class="card-body text-center">
-        <div class="mb-3">
+        <div class="mb-3 az-icon-float">
           <i class="fas fa-boxes fa-3x erp-stat-value-warning"></i>
         </div>
         <h5 class="text-muted">{{ _('قيمة المخزون') }}</h5>
-        <h2 class="mb-0 erp-stat-value-warning erp-stat-value-xl">
-          {{ format_currency(stats.inventory_value_gl|default(0)) }}
+        <h2 class="mb-0 erp-stat-value-warning erp-stat-value-xl az-counter-currency" data-target="{{ stats.inventory_value_gl|default(0) }}">
+          {{ format_currency(0) }}
         </h2>
         <small class="text-muted">{{ tenant_currency_name_ar }}</small>
       </div>
@@ -193,42 +207,40 @@
 </div>
 {% endif %}
 
+<!-- Recent Sales Table -->
 {% if current_user.has_permission('manage_sales') %}
-
-<div class="row">
+<div class="row az-enter az-enter-d3">
   <div class="col-12">
-    <div class="card">
-      <div class="card-header">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <h3 class="card-title mb-0">
-            <i class="fas fa-clock"></i>{{ _('آخر المبيعات') }}
-          </h3>
-          <a href="{{ url_for('sales.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i>{{ _('فاتورة جديدة') }}
-          </a>
-        </div>
+    <div class="card az-card-elevated">
+      <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h3 class="card-title mb-0">
+          <i class="fas fa-clock text-primary mr-2"></i>{{ _('آخر المبيعات') }}
+        </h3>
+        <a href="{{ url_for('sales.create') }}" class="btn btn-primary">
+          <i class="fas fa-plus mr-1"></i>{{ _('فاتورة جديدة') }}
+        </a>
       </div>
       <div class="card-body p-0">
         <div class="table-responsive">
           <table class="table table-hover mb-0 erp-table-compact" id="recentSalesTable">
             <thead>
               <tr>
-                <th><i class="fas fa-hashtag"></i>{{ _('رقم الفاتورة') }}</th>
-                <th><i class="fas fa-user"></i>{{ _('العميل') }}</th>
-                <th><i class="far fa-calendar"></i>{{ _('التاريخ') }}</th>
-                <th class="text-center"><i class="fas fa-money-bill-wave"></i>{{ _('المبلغ') }}</th>
-                <th class="text-center"><i class="fas fa-wallet"></i>{{ _('الدفع') }}</th>
-                <th class="text-center"><i class="fas fa-check-circle"></i>{{ _('الحالة') }}</th>
-                <th class="text-center erp-col-actions"><i class="fas fa-cog"></i>{{ _('الإجراءات') }}</th>
+                <th><i class="fas fa-hashtag mr-1"></i>{{ _('رقم الفاتورة') }}</th>
+                <th><i class="fas fa-user mr-1"></i>{{ _('العميل') }}</th>
+                <th><i class="far fa-calendar mr-1"></i>{{ _('التاريخ') }}</th>
+                <th class="text-center"><i class="fas fa-money-bill-wave mr-1"></i>{{ _('المبلغ') }}</th>
+                <th class="text-center"><i class="fas fa-wallet mr-1"></i>{{ _('الدفع') }}</th>
+                <th class="text-center"><i class="fas fa-check-circle mr-1"></i>{{ _('الحالة') }}</th>
+                <th class="text-center erp-col-actions"><i class="fas fa-cog mr-1"></i>{{ _('الإجراءات') }}</th>
               </tr>
             </thead>
             <tbody>
               {% if stats.recent_sales %}
                 {% for sale in stats.recent_sales %}
-                <tr class="fade-in">
+                <tr class="az-fade-in-row" style="animation-delay:{{ loop.index0 * 0.04 }}s">
                   <td>
                     {% if current_user.has_permission('manage_sales') %}
-                    <a href="{{ url_for('sales.view', id=sale.id) }}" class="font-weight-bold text-primary">
+                    <a href="{{ url_for('sales.view', id=sale.id) }}" class="font-weight-bold az-link-primary">
                       {{ sale.sale_number }}
                     </a>
                     {% else %}
@@ -237,7 +249,9 @@
                   </td>
                   <td>
                     <div class="d-flex align-items-center">
-                      <i class="fas fa-user-circle fa-lg text-muted erp-table-user-icon"></i>
+                      <div class="erp-table-user-icon mr-2">
+                        <i class="fas fa-user-circle"></i>
+                      </div>
                       <div>
                         <strong>{{ sale.customer.name if sale.customer else '-' }}</strong>
                         {% if sale.customer and sale.customer.phone %}
@@ -257,26 +271,26 @@
                   <td class="text-center">
                     {% if sale.payment_status == 'paid' %}
                       <span class="badge badge-success">
-                        <i class="fas fa-check"></i> {{ _('مدفوع') }}
+                        <i class="fas fa-check mr-1"></i>{{ _('مدفوع') }}
                       </span>
                     {% elif sale.payment_status == 'partial' %}
                       <span class="badge badge-warning">
-                        <i class="fas fa-clock"></i> {{ _('جزئي') }}
+                        <i class="fas fa-clock mr-1"></i>{{ _('جزئي') }}
                       </span>
                     {% else %}
                       <span class="badge badge-danger">
-                        <i class="fas fa-times"></i> {{ _('آجل') }}
+                        <i class="fas fa-times mr-1"></i>{{ _('آجل') }}
                       </span>
                     {% endif %}
                   </td>
                   <td class="text-center">
                     {% if sale.status == 'cancelled' %}
                       <span class="badge badge-danger">
-                        <i class="fas fa-ban"></i> {{ _('ملغي') }}
+                        <i class="fas fa-ban mr-1"></i>{{ _('ملغي') }}
                       </span>
                     {% elif sale.status == 'confirmed' %}
                       <span class="badge badge-success">
-                        <i class="fas fa-check-circle"></i> {{ _('مؤكد') }}
+                        <i class="fas fa-check-circle mr-1"></i>{{ _('مؤكد') }}
                       </span>
                     {% else %}
                       <span class="badge badge-secondary">{{ sale.status }}</span>
@@ -288,8 +302,6 @@
                       <a href="{{ url_for('sales.view', id=sale.id) }}" class="btn btn-info btn-sm" title="{{ _('عرض') }}">
                         <i class="fas fa-eye"></i>
                       </a>
-                      {% endif %}
-                      {% if current_user.has_permission('manage_sales') %}
                       <a href="{{ url_for('sales.print_invoice', id=sale.id) }}" class="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" title="{{ _('طباعة') }}">
                         <i class="fas fa-print"></i>
                       </a>
@@ -301,13 +313,15 @@
               {% else %}
                 <tr>
                   <td colspan="7" class="text-center py-5">
-                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                    <p class="text-muted">{{ _('لا توجد مبيعات حتى الآن') }}</p>
-                    {% if current_user.has_permission('manage_sales') %}
-                    <a href="{{ url_for('sales.create') }}" class="btn btn-primary">
-                      <i class="fas fa-plus"></i>{{ _('إنشاء فاتورة جديدة') }}
-                    </a>
-                    {% endif %}
+                    <div class="az-empty-state">
+                      <i class="fas fa-inbox fa-3x text-muted mb-3 az-empty-icon"></i>
+                      <p class="text-muted">{{ _('لا توجد مبيعات حتى الآن') }}</p>
+                      {% if current_user.has_permission('manage_sales') %}
+                      <a href="{{ url_for('sales.create') }}" class="btn btn-primary">
+                        <i class="fas fa-plus mr-1"></i>{{ _('إنشاء فاتورة جديدة') }}
+                      </a>
+                      {% endif %}
+                    </div>
                   </td>
                 </tr>
               {% endif %}
@@ -319,7 +333,7 @@
       <div class="card-footer text-center">
         {% if current_user.has_permission('manage_sales') %}
         <a href="{{ url_for('sales.index') }}" class="btn btn-link">
-          {{ _('عرض جميع المبيعات') }} <i class="fas fa-arrow-left"></i>
+          {{ _('عرض جميع المبيعات') }} <i class="fas fa-arrow-left mr-1"></i>
         </a>
         {% endif %}
       </div>
@@ -329,69 +343,83 @@
 </div>
 {% endif %}
 
-
-<div class="row">
+<!-- Quick Actions -->
+<div class="row mt-4">
   {% if current_user.has_permission('manage_sales') %}
-  <div class="col-md-3 mb-3">
-    <a href="{{ url_for('sales.create') }}" class="card text-center text-decoration-none hover-card">
+  <div class="col-md-3 col-sm-6 mb-3 az-enter" style="animation-delay:0.05s">
+    <a href="{{ url_for('sales.create') }}" class="card text-center text-decoration-none hover-card az-quick-card">
       <div class="card-body">
-        <i class="fas fa-plus-circle fa-3x mb-3 erp-stat-value-success"></i>
+        <div class="az-quick-icon az-quick-icon-sales">
+          <i class="fas fa-plus-circle"></i>
+        </div>
         <h5 class="mb-0">{{ _('فاتورة جديدة') }}</h5>
+        <small class="text-muted">{{ _('إنشاء فاتورة مبيعات') }}</small>
       </div>
     </a>
   </div>
   {% endif %}
   {% if current_user.has_permission('manage_customers') %}
-  <div class="col-md-3 mb-3">
-    <a href="{{ url_for('customers.create') }}" class="card text-center text-decoration-none hover-card">
+  <div class="col-md-3 col-sm-6 mb-3 az-enter" style="animation-delay:0.1s">
+    <a href="{{ url_for('customers.create') }}" class="card text-center text-decoration-none hover-card az-quick-card">
       <div class="card-body">
-        <i class="fas fa-user-plus fa-3x mb-3 erp-stat-value-success"></i>
+        <div class="az-quick-icon az-quick-icon-customers">
+          <i class="fas fa-user-plus"></i>
+        </div>
         <h5 class="mb-0">{{ _('عميل جديد') }}</h5>
+        <small class="text-muted">{{ _('إضافة عميل جديد') }}</small>
       </div>
     </a>
   </div>
   {% endif %}
   {% if current_user.has_permission('manage_products') %}
-  <div class="col-md-3 mb-3">
-    <a href="{{ url_for('products.create') }}" class="card text-center text-decoration-none hover-card">
+  <div class="col-md-3 col-sm-6 mb-3 az-enter" style="animation-delay:0.15s">
+    <a href="{{ url_for('products.create') }}" class="card text-center text-decoration-none hover-card az-quick-card">
       <div class="card-body">
-        <i class="fas fa-box fa-3x mb-3 erp-stat-icon-receivables-text"></i>
+        <div class="az-quick-icon az-quick-icon-products">
+          <i class="fas fa-box"></i>
+        </div>
         <h5 class="mb-0">{{ _('منتج جديد') }}</h5>
+        <small class="text-muted">{{ _('إضافة منتج للمخزون') }}</small>
       </div>
     </a>
   </div>
   {% endif %}
   {% if current_user.has_permission('view_reports') %}
-  <div class="col-md-3 mb-3">
-    <a href="{{ url_for('reports.sales') }}" class="card text-center text-decoration-none hover-card">
+  <div class="col-md-3 col-sm-6 mb-3 az-enter" style="animation-delay:0.2s">
+    <a href="{{ url_for('reports.sales') }}" class="card text-center text-decoration-none hover-card az-quick-card">
       <div class="card-body">
-        <i class="fas fa-chart-bar fa-3x mb-3 erp-stat-value-info"></i>
+        <div class="az-quick-icon az-quick-icon-reports">
+          <i class="fas fa-chart-bar"></i>
+        </div>
         <h5 class="mb-0">{{ _('التقارير') }}</h5>
+        <small class="text-muted">{{ _('عرض التقارير والإحصائيات') }}</small>
       </div>
     </a>
   </div>
   {% endif %}
 </div>
 
+<!-- Permissions Alert -->
 {% if not stats.can_apply_discount or not stats.can_edit_price %}
-<div class="alert alert-warning alert-dismissible fade show" role="alert">
-  <i class="fas fa-shield-alt"></i>
-  صلاحياتك محدودة:
+<div class="alert alert-warning alert-dismissible fade show az-enter" role="alert">
+  <i class="fas fa-shield-alt mr-2"></i>
+  <strong>{{ _('صلاحياتك محدودة:') }}</strong>
   {% if not stats.can_apply_discount %}<span class="badge badge-warning ml-2">{{ _('لا يمكن تطبيق الخصم') }}</span>{% endif %}
   {% if not stats.can_edit_price %}<span class="badge badge-warning ml-2">{{ _('لا يمكن تعديل السعر') }}</span>{% endif %}
   <small class="text-muted mr-2">{{ _('— يمكن طلب تفويض المشرف للقيام بهذه الإجراءات') }}</small>
-  <button type="button" class="close" data-dismiss="alert">&times;</button>
+  <button type="button" class="close" data-dismiss="alert" aria-label="{{ _('إغلاق') }}">&times;</button>
 </div>
 {% endif %}
 
-<div class="modal fade" id="supervisorOverrideModal" tabindex="-1" role="dialog">
-  <div class="modal-dialog" role="document">
+<!-- Supervisor Override Modal -->
+<div class="modal fade" id="supervisorOverrideModal" tabindex="-1" role="dialog" aria-labelledby="supervisorOverrideLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
-      <div class="modal-header bg-warning">
-        <h5 class="modal-title"><i class="fas fa-shield-alt"></i> {{ _('تفويض المشرف') }}</h5>
-        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      <div class="modal-header bg-warning text-white">
+        <h5 class="modal-title" id="supervisorOverrideLabel"><i class="fas fa-shield-alt mr-2"></i> {{ _('تفويض المشرف') }}</h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="{{ _('إغلاق') }}">&times;</button>
       </div>
-      <form id="supervisorOverrideForm">
+      <form id="supervisorOverrideForm" class="needs-validation" novalidate>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" id="overrideAction" value="">
         <div class="modal-body">
@@ -399,17 +427,19 @@
           <div class="form-group">
             <label for="supervisor_id">{{ _('معرف المشرف (رقم المستخدم)') }}</label>
             <input type="number" name="supervisor_id" id="supervisor_id" class="form-control" required min="1" placeholder="{{ _('أدخل رقم المستخدم للمشرف') }}">
+            <div class="invalid-feedback">{{ _('معرف المشرف مطلوب') }}</div>
           </div>
           <div class="form-group">
             <label for="supervisor_password">{{ _('كلمة مرور المشرف') }}</label>
             <input type="password" name="password" id="supervisor_password" class="form-control" required placeholder="{{ _('كلمة مرور المشرف') }}">
+            <div class="invalid-feedback">{{ _('كلمة المرور مطلوبة') }}</div>
           </div>
           <div id="overrideResult" class="alert d-none"></div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ _('إلغاء') }}</button>
           <button type="submit" class="btn btn-warning" id="overrideSubmitBtn">
-            <i class="fas fa-check"></i> {{ _('تأكيد التفويض') }}
+            <i class="fas fa-check mr-1"></i> {{ _('تأكيد التفويض') }}
           </button>
         </div>
       </form>
@@ -421,56 +451,129 @@
 {% block extra_js %}
 {% include 'partials/datatables_assets.html' %}
 <script>
-// Initialize DataTable for recent sales
-$(document).ready(() => {% if stats.recent_sales and stats.recent_sales|length > 0 %}
-  $('#recentSalesTable').DataTable({
-    language: { url: '{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}' },
-    pageLength: 10,
-    order: [[2, 'desc']],
-    dom: 'frtip',
-    responsive: true,
-    columnDefs: [{
-      targets: -1,
-      orderable: false
-    }]
-  });{% endif %}
+(function() {
+  // Counter animation for stat cards
+  function animateCounter(el) {
+    const target = parseInt(el.dataset.target || '0', 10);
+    if (!target || isNaN(target)) { el.textContent = '0'; return; }
+    const duration = 1200;
+    const start = performance.now();
+    function step(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      el.textContent = Math.floor(eased * target).toLocaleString();
+      if (progress < 1) requestAnimationFrame(step);
+      else el.textContent = target.toLocaleString();
+    }
+    requestAnimationFrame(step);
+  }
 
-  $('#supervisorOverrideForm').on('submit', (e) => {
-    e.preventDefault();
-    const btn = $('#overrideSubmitBtn');
-    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> {{ _("جاري التحقق...") }}');
-    $('#overrideResult').addClass('d-none');
-    $.ajax({
-      url: '{{ url_for("owner.api_supervisor_override") }}',
-      method: 'POST',
-      contentType: 'application/json',
-      data: JSON.stringify({
-        action: $('#overrideAction').val(),
-        supervisor_id: $('input[name="supervisor_id"]').val(),
-        password: $('input[name="password"]').val()
-      }),
-      headers: { 'X-CSRFToken': $('input[name="csrf_token"]').val() }
-    }).done((res) => {
-      if (res.success) {
-        $('#overrideResult').removeClass('d-none alert-danger').addClass('alert-success').html(
-          '<i class="fas fa-check-circle"></i> {{ _("تم التفويض بنجاح") }} (' + res.supervisor_username + ')'
-        );
-        setTimeout(() => { $('#supervisorOverrideModal').modal('hide'); }, 1500);
-      } else {
-        $('#overrideResult').removeClass('d-none alert-success').addClass('alert-danger').html(
-          '<i class="fas fa-times-circle"></i> ' + (res.error || '{{ _("فشل التفويض") }}')
-        );
+  // Currency counter animation
+  function animateCurrency(el) {
+    const target = parseFloat(el.dataset.target || '0');
+    if (isNaN(target)) return;
+    const duration = 1500;
+    const start = performance.now();
+    const symbol = el.textContent.replace(/[0-9.,]/g, '').trim() || '';
+    function step(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = target * eased;
+      el.textContent = symbol + ' ' + current.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  // Progress bar animation
+  function animateProgressBars() {
+    document.querySelectorAll('.az-progress-bar[data-width]').forEach(bar => {
+      const width = bar.dataset.width;
+      setTimeout(() => { bar.style.width = width + '%'; }, 300);
+    });
+  }
+
+  // Intersection Observer for animations
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const counters = entry.target.querySelectorAll('.az-counter');
+        counters.forEach(animateCounter);
+        const currencies = entry.target.querySelectorAll('.az-counter-currency');
+        currencies.forEach(animateCurrency);
+        observer.unobserve(entry.target);
       }
-    }).fail((xhr) => {
-      let msg = '{{ _("خطأ في الاتصال") }}';
-      try { msg = xhr.responseJSON.error || msg; } catch(e) {}
-      $('#overrideResult').removeClass('d-none alert-success').addClass('alert-danger').html(
-        '<i class="fas fa-times-circle"></i> ' + msg
-      );
-    }).always(() => {
-      btn.prop('disabled', false).html('<i class="fas fa-check"></i> {{ _("تأكيد التفويض") }}');
+    });
+  }, { threshold: 0.2 });
+
+  document.querySelectorAll('.stat-card, .az-financial-card').forEach(card => {
+    observer.observe(card);
+  });
+
+  // Animate progress bars on load
+  animateProgressBars();
+
+  // DataTable initialization
+  $(document).ready(function() {
+    {% if stats.recent_sales and stats.recent_sales|length > 0 %}
+    const table = $('#recentSalesTable').DataTable({
+      language: { url: '{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}' },
+      pageLength: 10,
+      order: [[2, 'desc']],
+      dom: '<"az-dt-top"f>rt<"az-dt-bottom"ip>',
+      responsive: true,
+      columnDefs: [{
+        targets: -1,
+        orderable: false
+      }],
+      initComplete: function() {
+        $('.dataTables_filter input').addClass('form-control').attr('placeholder', '{{ _("ابحث...") }}');
+      }
+    });
+    {% endif %}
+
+    // Supervisor override form
+    $('#supervisorOverrideForm').on('submit', function(e) {
+      e.preventDefault();
+      const form = this;
+      if (!window.FormValidation || !window.FormValidation.validateForm(form)) return;
+
+      const btn = $('#overrideSubmitBtn');
+      btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> {{ _("جاري التحقق...") }}');
+      $('#overrideResult').addClass('d-none');
+
+      $.ajax({
+        url: '{{ url_for("owner.api_supervisor_override") }}',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+          action: $('#overrideAction').val(),
+          supervisor_id: $('input[name="supervisor_id"]').val(),
+          password: $('input[name="password"]').val()
+        }),
+        headers: { 'X-CSRFToken': $('input[name="csrf_token"]').val() }
+      }).done(function(res) {
+        if (res.success) {
+          $('#overrideResult').removeClass('d-none alert-danger').addClass('alert-success').html(
+            '<i class="fas fa-check-circle mr-1"></i> {{ _("تم التفويض بنجاح") }} (' + res.supervisor_username + ')'
+          );
+          setTimeout(function() { $('#supervisorOverrideModal').modal('hide'); }, 1500);
+        } else {
+          $('#overrideResult').removeClass('d-none alert-success').addClass('alert-danger').html(
+            '<i class="fas fa-times-circle mr-1"></i> ' + (res.error || '{{ _("فشل التفويض") }}')
+          );
+        }
+      }).fail(function(xhr) {
+        let msg = '{{ _("خطأ في الاتصال") }}';
+        try { msg = xhr.responseJSON.error || msg; } catch(e) {}
+        $('#overrideResult').removeClass('d-none alert-success').addClass('alert-danger').html(
+          '<i class="fas fa-times-circle mr-1"></i> ' + msg
+        );
+      }).always(function() {
+        btn.prop('disabled', false).html('<i class="fas fa-check mr-1"></i> {{ _("تأكيد التفويض") }}');
+      });
     });
   });
-});
+})();
 </script>
 {% endblock %}

@@ -42,25 +42,39 @@ describe('base-helpers.js (azad object)', () => {
   });
 
   it('showLoading/hideLoading toggle overlay', async () => {
-    await loadModule();
-    window.azad.showLoading();
-    const overlay = document.getElementById('azadLoadingOverlay');
-    expect(overlay).toBeTruthy();
-    expect(overlay.style.display).toBe('flex');
+    vi.useFakeTimers();
+    try {
+      await loadModule();
+      window.azad.showLoading();
+      const overlay = document.getElementById('azadLoadingOverlay');
+      expect(overlay).toBeTruthy();
+      expect(overlay.style.display).toBe('flex');
 
-    window.azad.hideLoading();
-    expect(overlay.style.display).toBe('none');
+      window.azad.hideLoading();
+      expect(overlay.style.opacity).toBe('0');
+      vi.advanceTimersByTime(301);
+      expect(overlay.style.display).toBe('none');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('showLoading increments counter, hideLoading decrements', async () => {
-    await loadModule();
-    window.azad.showLoading();
-    window.azad.showLoading();
-    window.azad.hideLoading();
-    const overlay = document.getElementById('azadLoadingOverlay');
-    expect(overlay.style.display).toBe('flex');
-    window.azad.hideLoading();
-    expect(overlay.style.display).toBe('none');
+    vi.useFakeTimers();
+    try {
+      await loadModule();
+      window.azad.showLoading();
+      window.azad.showLoading();
+      window.azad.hideLoading();
+      const overlay = document.getElementById('azadLoadingOverlay');
+      expect(overlay.style.display).toBe('flex');
+      window.azad.hideLoading();
+      expect(overlay.style.opacity).toBe('0');
+      vi.advanceTimersByTime(301);
+      expect(overlay.style.display).toBe('none');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('toast methods create toast elements', async () => {

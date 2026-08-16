@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+﻿from datetime import UTC, datetime
 from decimal import ROUND_HALF_UP, Decimal
 
 from extensions import db
@@ -45,9 +45,10 @@ class Purchase(db.Model):
     amount = db.Column(db.Numeric(15, 3), nullable=False)
     currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
+    base_currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)
     amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
 
-    # Pricing Method - هل أسعار المشتريات تشمل الضريبة؟
+    # Pricing Method - Ù‡Ù„ Ø£Ø³Ø¹Ø§Ø± Ø§Ù„Ù…Ø´ØªØ±ÙŠØ§Øª ØªØ´Ù…Ù„ Ø§Ù„Ø¶Ø±ÙŠØ¨Ø©ØŸ
     prices_include_vat = db.Column(db.Boolean, default=False, nullable=False)
 
     @property
@@ -73,7 +74,7 @@ class Purchase(db.Model):
             + Decimal(str(self.other_landed_cost or 0))
         )
 
-    # Alias for unified currency handling — amount_aed stores the tenant's base currency
+    # Alias for unified currency handling â€” amount_aed stores the tenant's base currency
     @property
     def base_amount(self):
         return self.amount_aed
@@ -81,6 +82,11 @@ class Purchase(db.Model):
     @base_amount.setter
     def base_amount(self, value):
         self.amount_aed = value
+
+    @property
+    def base_currency_display(self):
+        """Alias for templates."""
+        return self.base_currency
 
     status = db.Column(db.String(20), default="confirmed", index=True)
 
@@ -117,7 +123,7 @@ class Purchase(db.Model):
         return f"<Purchase {self.purchase_number}>"
 
     def get_paid_amount(self, as_of_date=None):
-        """حساب المبلغ المدفوع المؤكد لهذه الفاتورة."""
+        """Ø­Ø³Ø§Ø¨ Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ù…Ø¯ÙÙˆØ¹ Ø§Ù„Ù…Ø¤ÙƒØ¯ Ù„Ù‡Ø°Ù‡ Ø§Ù„ÙØ§ØªÙˆØ±Ø©."""
         from datetime import date
         from decimal import Decimal
 
@@ -128,7 +134,7 @@ class Purchase(db.Model):
         if as_of_date is None:
             as_of_date = date.today()
 
-        # أولوية 1: المدفوعات المرتبطة مباشرة بهذه الفاتورة
+        # Ø£ÙˆÙ„ÙˆÙŠØ© 1: Ø§Ù„Ù…Ø¯ÙÙˆØ¹Ø§Øª Ø§Ù„Ù…Ø±ØªØ¨Ø·Ø© Ù…Ø¨Ø§Ø´Ø±Ø© Ø¨Ù‡Ø°Ù‡ Ø§Ù„ÙØ§ØªÙˆØ±Ø©
         query = db.session.query(func.sum(Payment.amount_aed)).filter(
             Payment.purchase_id == self.id,
             Payment.tenant_id == self.tenant_id,
@@ -143,7 +149,7 @@ class Purchase(db.Model):
         if direct_paid:
             return Decimal(str(direct_paid))
 
-        # أولوية 2 (للتوافق مع الإصدارات السابقة): توزيع FIFO على مستوى المورد
+        # Ø£ÙˆÙ„ÙˆÙŠØ© 2 (Ù„Ù„ØªÙˆØ§ÙÙ‚ Ù…Ø¹ Ø§Ù„Ø¥ØµØ¯Ø§Ø±Ø§Øª Ø§Ù„Ø³Ø§Ø¨Ù‚Ø©): ØªÙˆØ²ÙŠØ¹ FIFO Ø¹Ù„Ù‰ Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ù…ÙˆØ±Ø¯
         total_supplier_paid = db.session.query(func.sum(Payment.amount_aed)).filter(
             Payment.supplier_id == self.supplier_id,
             Payment.tenant_id == self.tenant_id,
@@ -159,7 +165,7 @@ class Purchase(db.Model):
         if not total_paid:
             return Decimal("0")
 
-        # توزيع FIFO: حساب إجمالي فواتير المورد غير المرتبطة بمدفوعات مباشرة
+        # ØªÙˆØ²ÙŠØ¹ FIFO: Ø­Ø³Ø§Ø¨ Ø¥Ø¬Ù…Ø§Ù„ÙŠ ÙÙˆØ§ØªÙŠØ± Ø§Ù„Ù…ÙˆØ±Ø¯ ØºÙŠØ± Ø§Ù„Ù…Ø±ØªØ¨Ø·Ø© Ø¨Ù…Ø¯ÙÙˆØ¹Ø§Øª Ù…Ø¨Ø§Ø´Ø±Ø©
         from models import Purchase
 
         other_purchases = Purchase.query.filter(
@@ -175,7 +181,7 @@ class Purchase(db.Model):
         total_paid_decimal = Decimal(str(total_paid))
         my_amount = Decimal(str(self.amount_aed or 0))
 
-        # توزيع المدفوعات على الفواتير حسب FIFO
+        # ØªÙˆØ²ÙŠØ¹ Ø§Ù„Ù…Ø¯ÙÙˆØ¹Ø§Øª Ø¹Ù„Ù‰ Ø§Ù„ÙÙˆØ§ØªÙŠØ± Ø­Ø³Ø¨ FIFO
         if other_total >= total_paid_decimal:
             return Decimal("0")
 
@@ -198,7 +204,7 @@ class Purchase(db.Model):
 
         # Calculate tax based on pricing method (inclusive vs exclusive VAT)
         if self.prices_include_vat:
-            # الأسعار تشمل الضريبة: نفصل الضريبة من الإجمالي
+            # Ø§Ù„Ø£Ø³Ø¹Ø§Ø± ØªØ´Ù…Ù„ Ø§Ù„Ø¶Ø±ÙŠØ¨Ø©: Ù†ÙØµÙ„ Ø§Ù„Ø¶Ø±ÙŠØ¨Ø© Ù…Ù† Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ
             gross = self.subtotal - discount
             if tax_rate_decimal > 0:
                 taxable_amount = (gross / (Decimal("1") + (tax_rate_decimal / Decimal("100")))).quantize(
@@ -210,7 +216,7 @@ class Purchase(db.Model):
                 self.tax_amount = Decimal("0")
             self.total_amount = (gross + self.total_landed_cost).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         else:
-            # الأسعار لا تشمل الضريبة: نضيف الضريبة فوق الصافي
+            # Ø§Ù„Ø£Ø³Ø¹Ø§Ø± Ù„Ø§ ØªØ´Ù…Ù„ Ø§Ù„Ø¶Ø±ÙŠØ¨Ø©: Ù†Ø¶ÙŠÙ Ø§Ù„Ø¶Ø±ÙŠØ¨Ø© ÙÙˆÙ‚ Ø§Ù„ØµØ§ÙÙŠ
             taxable_amount = self.subtotal - discount
             self.tax_amount = (taxable_amount * (tax_rate_decimal / Decimal("100"))).quantize(
                 Decimal("0.01"), rounding=ROUND_HALF_UP
@@ -224,8 +230,19 @@ class Purchase(db.Model):
         # Ensure amount in invoice currency matches total_amount
         self.amount = self.total_amount
 
-        # Calculate AED amount with proper rounding (includes landed cost)
-        self.amount_aed = (self.total_amount * exchange_rate_decimal).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        # Resolve tenant base currency and store it at transaction time
+        from utils.currency_utils import resolve_tenant_base_currency
+
+        base_currency = resolve_tenant_base_currency(tenant_id=self.tenant_id)
+        self.base_currency = base_currency
+
+        # Calculate amount in tenant base currency (using stored base_currency)
+        if self.currency == base_currency:
+            self.amount_aed = self.total_amount
+        else:
+            self.amount_aed = (self.total_amount * exchange_rate_decimal).quantize(
+                Decimal("0.001"), rounding=ROUND_HALF_UP
+            )
 
     def to_dict(self, include_lines=False):
         data = {
@@ -340,3 +357,4 @@ class PurchaseLine(db.Model):
             "landed_cost": float(self.landed_cost) if self.landed_cost else 0,
             "landed_unit_cost": (float(self.landed_unit_cost) if self.landed_unit_cost else 0),
         }
+

@@ -9,6 +9,7 @@ from services.return_service import ReturnService
 from utils.branching import should_show_all_branch_columns
 from utils.db_safety import atomic_transaction
 from utils.decorators import branch_scope_id, permission_required
+from utils.helpers import format_currency
 from utils.tenanting import get_active_tenant_id, is_platform_owner
 
 returns_bp = Blueprint("returns", __name__, url_prefix="/returns")
@@ -118,6 +119,84 @@ def api_create_return():
     except Exception as e:
         current_app.logger.error(f"Error creating return: {e}")
         return jsonify({"success": False, "message": "Internal server error"}), 500
+
+
+@returns_bp.route("/api/search_sales")
+@login_required
+@permission_required("manage_sales")
+def api_search_sales():
+    """Search sales for return creation (select2 AJAX)."""
+    q = (request.args.get("q") or "").strip()
+    page = request.args.get("page", 1, type=int)
+    per_page = 20
+
+    if not q:
+        return jsonify({"items": [], "has_more": False})
+
+    from utils.tenanting import tenant_query
+    from sqlalchemy import or_
+
+    query = tenant_query(Sale).filter(Sale.status == "completed")
+    if q.isdigit():
+        query = query.filter(Sale.id == int(q))
+    else:
+        query = query.filter(or_(
+            Sale.sale_number.ilike(f"%{q}%"),
+            Sale.invoice_number.ilike(f"%{q}%")
+        ))
+
+    pagination = query.order_by(Sale.sale_date.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+
+    items = [
+        {
+            "id": s.id,
+            "text": f"{s.sale_number} — {s.customer.name if s.customer else '—'} — {format_currency(s.total_amount or 0, s.currency)}",
+            "sale_number": s.sale_number,
+            "customer": s.customer.name if s.customer else "",
+            "total": float(s.total_amount or 0),
+            "currency": s.currency,
+        }
+        for s in pagination.items
+    ]
+
+    return jsonify({"items": items, "has_more": pagination.has_next})
+
+
+@returns_bp.route("/api/get_sale_lines")
+@login_required
+@permission_required("manage_sales")
+def api_get_sale_lines():
+    """Get sale lines for return creation."""
+    sale_id = request.args.get("sale_id", type=int)
+    if not sale_id:
+        return jsonify({"lines": []}), 400
+
+    from utils.tenanting import tenant_get_or_404
+
+    sale = tenant_get_or_404(Sale, sale_id)
+
+    lines = []
+    for line in sale.lines:
+        # Calculate available quantity (sold - already returned)
+        returned_qty = sum(
+            rl.quantity for r in sale.returns for rl in r.lines
+            if rl.line_id == line.id and r.status == "approved"
+        )
+        available = (line.quantity or 0) - returned_qty
+        if available <= 0:
+            continue
+        lines.append({
+            "id": line.id,
+            "line_id": line.id,
+            "product_name": line.product.name if line.product else "—",
+            "variant": line.variant_name or "",
+            "available_qty": available,
+            "unit_price": float(line.unit_price or 0),
+        })
+
+    return jsonify({"lines": lines})
 
 
 @returns_bp.route("/view/<int:id>")

@@ -331,8 +331,9 @@ def system_config():
 
                     tenant = Tenant.get_current(user=current_user)
                     tenant.default_currency = default_currency
+                    tenant.base_currency = default_currency
                 except Exception as exc:
-                    logger.debug("tenant default_currency sync: %s", exc)
+                    logger.debug("tenant currency sync: %s", exc)
                 settings.default_language = request.form.get("default_language", "ar")
                 settings.timezone = request.form.get("timezone", "Asia/Dubai")
                 settings.items_per_page = int(request.form.get("items_per_page", 25))
@@ -898,6 +899,7 @@ def currency_settings():
 
                     tenant = Tenant.get_current(user=current_user)
                     tenant.default_currency = default_currency
+                    tenant.base_currency = default_currency
                 except Exception as exc:
                     logger.debug("tenant currency settings sync: %s", exc)
                 settings.auto_update_rates = request.form.get("auto_update_rates") == "on"

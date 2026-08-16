@@ -33,6 +33,7 @@
 {% endblock %}
 
 {% block extra_css %}
+{% include 'partials/select2_assets.html' %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/form-select-common.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/purchases.css') }}">
 {% endblock %}
@@ -509,6 +510,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{% include 'partials/select2_assets.html' %}
 <script>
   window._PRICES_INCLUDE_VAT = {{ 'true' if prices_include_vat else 'false' }};
   window._API_SEARCH_URL = {% if current_user.has_permission('view_reports') %}'{{ url_for('api.api_search') }}'{% else %}null{% endif %};

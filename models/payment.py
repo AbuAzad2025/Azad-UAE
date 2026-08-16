@@ -52,6 +52,7 @@ class Payment(db.Model):
         db.String(3), default=context_aware_default_currency, nullable=False
     )  # TODO: use Config.DEFAULT_CURRENCY
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
+    base_currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)
     amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
 
     # Alias for unified currency handling
@@ -63,11 +64,16 @@ class Payment(db.Model):
     def base_amount(self, value):
         self.amount_aed = value
 
+    @property
+    def base_currency_display(self):
+        """Alias for templates."""
+        return self.base_currency
+
     payment_method = db.Column(db.String(20), nullable=False)
 
     reference_number = db.Column(db.String(100))
 
-    # معلومات الشيك (قديمة - للتوافق)
+    # U.O1U,U^U.OO� OU,O'USU� (U,O_USU.Oc - U,U,O�U^OU?U,)
     cheque_number = db.Column(db.String(50))
     cheque_date = db.Column(db.Date)
     bank_name = db.Column(db.String(100))
@@ -203,6 +209,7 @@ class Receipt(db.Model):
         db.String(3), default=context_aware_default_currency, nullable=False
     )  # TODO: use Config.DEFAULT_CURRENCY
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
+    base_currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)
     amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
 
     # Alias for unified currency handling
@@ -213,6 +220,11 @@ class Receipt(db.Model):
     @base_amount.setter
     def base_amount(self, value):
         self.amount_aed = value
+
+    @property
+    def base_currency_display(self):
+        """Alias for templates."""
+        return self.base_currency
 
     payment_method = db.Column(db.String(20), nullable=False)
 

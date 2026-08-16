@@ -1205,7 +1205,19 @@ class LoggingCore:
             logger.exception("Error log resolve failed")
             return False
 
-    # ──────────────────────────────────────────────────────────────
+    @classmethod
+    def clear_all_error_logs(cls) -> int:
+        """Delete all error audit logs. Returns count of deleted records."""
+        from models.error_audit_log import ErrorAuditLog
+        try:
+            with atomic_transaction("clear_all_error_logs"):
+                deleted = ErrorAuditLog.query.delete()
+            return deleted
+        except Exception:
+            logger.exception("Clear all error logs failed")
+            return 0
+
+    # ═══════════════════════════════════════════════════════════════════════
     #  AUDIT LOGGING (Business Operations)
     # ──────────────────────────────────────────────────────────────
 

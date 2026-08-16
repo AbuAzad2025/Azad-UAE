@@ -442,3 +442,16 @@ def export_error_audit_logs():
     except Exception:
         flash(gettext("صيغة التصدير غير مدعومة أو فشل التصدير."), "danger")
         return redirect(url_for("owner.error_audit_logs"))
+
+
+@owner_bp.route("/error-audit-logs/clear", methods=["POST"])
+@owner_required
+def clear_error_audit_logs():
+    """Clear all error audit logs (owner only)."""
+    try:
+        with atomic_transaction("clear_error_logs"):
+            deleted = LoggingCore.clear_all_error_logs()
+        flash(gettext(f"✅ تم مسح {deleted} سجل خطأ من النظام"), "success")
+    except Exception as e:
+        flash(gettext(f"❌ فشل في مسح سجلات الأخطاء: {str(e)}"), "danger")
+    return redirect(url_for("owner.error_audit_logs"))

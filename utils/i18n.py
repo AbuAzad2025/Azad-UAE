@@ -3220,7 +3220,7 @@ TRANSLATIONS = {
         "ar": "بانتظار إتمام الدفع أو المتابعة مع ازاد",
         "en": "Pending payment completion or follow-up with Azad",
     },
-    "Procurement": {"ar": "المشتриات", "en": "Procurement"},
+    "Procurement": {"ar": "المشتريات", "en": "Procurement"},
     "Skip to main content": {"ar": "تخطي إلى المحتوى الرئيسي", "en": "Skip to main content"},
     # ── Sidebar / Navbar / Partials consolidated labels ──
     "Call": {"ar": "اتصال", "en": "Call"},

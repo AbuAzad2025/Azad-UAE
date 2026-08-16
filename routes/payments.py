@@ -897,6 +897,7 @@ def create_voucher_submit():
                     return redirect(url_for("payments.create_voucher"))
                 tenant_id = getattr(customer, "tenant_id", None) or get_active_tenant_id(current_user)
                 with atomic_transaction("customer_refund_creation"):
+                    base_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
                     payment = Payment(
                         tenant_id=tenant_id,
                         payment_number=generate_number(
@@ -912,6 +913,7 @@ def create_voucher_submit():
                         amount=amount_decimal,
                         currency=currency,
                         exchange_rate=exchange_rate,
+                        base_currency=base_currency,
                         amount_aed=amount_aed,
                         payment_method=payment_method,
                         notes=notes,
@@ -1571,6 +1573,7 @@ def create_payment(purchase_id):
                     amount=amount_decimal,
                     currency=currency,
                     exchange_rate=exchange_rate_decimal,
+                    base_currency=resolve_tenant_base_currency(tenant_id=tenant_id),
                     amount_aed=amount_aed,
                     payment_method=payment_method_value,
                     notes=notes,

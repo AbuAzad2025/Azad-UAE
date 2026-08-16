@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+﻿from datetime import UTC, datetime
 
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
@@ -51,6 +51,7 @@ class Expense(db.Model):
     amount = db.Column(db.Numeric(15, 3), nullable=False)
     currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
+    base_currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)
     amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
 
     @property
@@ -78,6 +79,11 @@ class Expense(db.Model):
     supplier_name = db.Column(db.String(200))
 
     notes = db.Column(db.Text)
+
+    @property
+    def base_currency_display(self):
+        """Alias for templates."""
+        return self.base_currency
 
     status = db.Column(db.String(20), default="confirmed", index=True)
     is_active = db.Column(db.Boolean, default=True, index=True)
@@ -115,3 +121,4 @@ class Expense(db.Model):
             "payment_method": self.payment_method,
             "status": self.status,
         }
+

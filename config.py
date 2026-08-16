@@ -179,6 +179,9 @@ class Config:
     CACHE_REDIS_URL = os.environ.get("CACHE_REDIS_URL", REDIS_URL)
     CACHE_DEFAULT_TIMEOUT = _int("CACHE_DEFAULT_TIMEOUT", 300)
     CACHE_KEY_PREFIX = "azad"
+    # redis-py 8 defaults to RESP3 (HELLO command) which older servers reject;
+    # pin RESP2 so the cache client works with legacy Redis versions.
+    CACHE_OPTIONS = {"protocol": 2}
 
     CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", REDIS_URL)
     CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", REDIS_URL)

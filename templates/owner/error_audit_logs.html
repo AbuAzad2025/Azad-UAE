@@ -15,16 +15,17 @@
           <i class="fas fa-bug text-danger mr-2"></i>{{ t('System_Error_Log') }}<span class="badge badge-dark ml-2">Error Audit</span>
         </h1>
         </div>
-      <div class="col-sm-6 d-flex justify-content-end">
-        <div class="d-flex align-items-center">
-          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
-            <i class="fas fa-arrow-right mr-1"></i> {{ t('Back_To_Owner_Dashboard') }}
-          </a>
-          <ol class="breadcrumb float-sm-left mb-0">
-            <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
-            <li class="breadcrumb-item active">{{ t('Error_Log') }}</li>
-          </ol>
-        </div>
+      <div class="col-sm-6 d-flex justify-content-end align-items-center">
+        <ol class="breadcrumb mb-0 mr-3">
+          <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
+          <li class="breadcrumb-item active">{{ t('Error_Log') }}</li>
+        </ol>
+        <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary mr-2">
+          <i class="fas fa-arrow-right mr-1"></i> {{ t('Back_To_Owner_Dashboard') }}
+        </a>
+        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#clearAllErrorsModal" title="{{ t('Clear_All_Errors') }}" aria-label="{{ t('Clear_All_Errors') }}">
+          <i class="fas fa-trash-alt mr-1"></i> {{ t('Clear_All') }}
+        </button>
       </div>
     </div>
 
@@ -270,6 +271,37 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ t('Close') }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# Clear All Errors Confirmation Modal #}
+<div class="modal fade" id="clearAllErrorsModal" tabindex="-1" role="dialog" aria-labelledby="clearAllErrorsTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-danger">
+        <h5 class="modal-title" id="clearAllErrorsTitle"><i class="fas fa-exclamation-triangle mr-2"></i>{{ t('Confirm_Clear_All') }}</h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-danger">
+          <i class="fas fa-trash-alt fa-2x float-left ml-3"></i>
+          <h5>{{ t('Warning_Delete_All_Errors') }}</h5>
+          <p class="mb-0">{{ t('This_Action_Cannot_Be_Undone') }}</p>
+        </div>
+        <p class="small text-muted">{{ t('All_Error_Logs_Will_Be_Permanently_Deleted') }}</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ t('Cancel') }}</button>
+        <form method="post" action="{{ url_for('owner.clear_error_audit_logs') }}" class="d-inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+          <button type="submit" class="btn btn-danger" aria-label="{{ t('Confirm_Delete_All') }}">
+            <i class="fas fa-trash mr-1"></i> {{ t('Yes_Delete_All') }}
+          </button>
+        </form>
       </div>
     </div>
   </div>

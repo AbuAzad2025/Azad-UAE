@@ -1,65 +1,83 @@
-<nav class="main-header navbar navbar-expand navbar-white navbar-light erp-navbar">
+<nav class="main-header navbar navbar-expand navbar-white navbar-light erp-navbar" role="navigation" aria-label="{{ _('الشريط العلوي') }}">
+    <!-- Brand Zone -->
     <div class="erp-navbar-brand-zone">
-      <a class="erp-navbar-pushmenu" data-widget="pushmenu" href="#" role="button" title="{{ t('Toggle_Sidebar_Position') }}">
+      <a class="erp-navbar-pushmenu" data-widget="pushmenu" href="#" role="button" title="{{ t('Toggle_Sidebar') }}" aria-label="{{ t('Toggle_Sidebar') }}">
         <i class="fas fa-bars"></i>
       </a>
-      <a href="{{ url_for('main.dashboard') }}" class="erp-navbar-brand-link">
+      <a href="{{ url_for('main.dashboard') }}" class="erp-navbar-brand-link" aria-label="{{ t('Dashboard') }}">
         <i class="fas fa-shield-alt erp-navbar-brand-icon"></i>
         <span class="erp-navbar-brand-name d-none d-md-inline">{{ tenant_name_ar or company_name_ar or t('Default_Brand') }}</span>
       </a>
     </div>
-    <div class="erp-navbar-main-zone">
-      <a href="{{ url_for('main.dashboard') }}" class="erp-nav-main-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}" {% if request.endpoint == 'main.dashboard' %}aria-current="page"{% endif %}>
+
+    <!-- Main Navigation Links -->
+    <div class="erp-navbar-main-zone" role="menubar">
+      <a href="{{ url_for('main.dashboard') }}" class="erp-nav-main-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}" 
+         {% if request.endpoint == 'main.dashboard' %}aria-current="page"{% endif %} role="menuitem">
         <i class="fas fa-home"></i>
         <span class="d-none d-lg-inline">{{ t('Dashboard') }}</span>
       </a>
       {% if current_user.is_authenticated and current_user.has_permission('manage_sales') %}
-      <a href="{{ url_for('sales.index') }}" class="erp-nav-main-link {% if request.endpoint and 'sales' in request.endpoint %}active{% endif %}" {% if request.endpoint and 'sales' in request.endpoint %}aria-current="page"{% endif %}>
+      <a href="{{ url_for('sales.index') }}" class="erp-nav-main-link {% if request.endpoint and 'sales' in request.endpoint %}active{% endif %}" 
+         {% if request.endpoint and 'sales' in request.endpoint %}aria-current="page"{% endif %} role="menuitem">
         <i class="fas fa-shopping-cart"></i>
         <span class="d-none d-lg-inline">{{ t('Sales') }}</span>
       </a>
       {% endif %}
       {% if current_user.is_authenticated and (current_user.has_permission('manage_purchases') or current_user.has_permission('manage_suppliers')) %}
-      <a href="{{ url_for('purchases.index') }}" class="erp-nav-main-link {% if request.endpoint and 'purchases' in request.endpoint %}active{% endif %}" {% if request.endpoint and 'purchases' in request.endpoint %}aria-current="page"{% endif %}>
+      <a href="{{ url_for('purchases.index') }}" class="erp-nav-main-link {% if request.endpoint and 'purchases' in request.endpoint %}active{% endif %}" 
+         {% if request.endpoint and 'purchases' in request.endpoint %}aria-current="page"{% endif %} role="menuitem">
         <i class="fas fa-truck"></i>
         <span class="d-none d-lg-inline">{{ t('Procurement') }}</span>
       </a>
       {% endif %}
       {% if current_user.is_authenticated and (current_user.has_permission('manage_products') or current_user.has_permission('manage_warehouse')) %}
-      <a href="{{ url_for('products.index') }}" class="erp-nav-main-link {% if request.endpoint and 'products' in request.endpoint %}active{% endif %}" {% if request.endpoint and 'products' in request.endpoint %}aria-current="page"{% endif %}>
+      <a href="{{ url_for('products.index') }}" class="erp-nav-main-link {% if request.endpoint and 'products' in request.endpoint %}active{% endif %}" 
+         {% if request.endpoint and 'products' in request.endpoint %}aria-current="page"{% endif %} role="menuitem">
         <i class="fas fa-warehouse"></i>
         <span class="d-none d-lg-inline">{{ t('Inventory') }}</span>
       </a>
       {% endif %}
       {% if current_user.is_authenticated and (current_user.has_permission('manage_payments') or current_user.has_permission('manage_expenses')) %}
-      <a href="{{ url_for('payments.receipts') }}" class="erp-nav-main-link {% if request.endpoint and 'payments' in request.endpoint %}active{% endif %}" {% if request.endpoint and 'payments' in request.endpoint %}aria-current="page"{% endif %}>
+      <a href="{{ url_for('payments.receipts') }}" class="erp-nav-main-link {% if request.endpoint and 'payments' in request.endpoint %}active{% endif %}" 
+         {% if request.endpoint and 'payments' in request.endpoint %}aria-current="page"{% endif %} role="menuitem">
         <i class="fas fa-money-bill-wave"></i>
         <span class="d-none d-lg-inline">{{ t('Finance') }}</span>
       </a>
       {% endif %}
       {% if current_user.is_authenticated and current_user.has_permission('view_reports') %}
-      <a href="{{ url_for('reports.sales') }}" class="erp-nav-main-link {% if request.endpoint and 'reports' in request.endpoint %}active{% endif %}" {% if request.endpoint and 'reports' in request.endpoint %}aria-current="page"{% endif %}>
+      <a href="{{ url_for('reports.sales') }}" class="erp-nav-main-link {% if request.endpoint and 'reports' in request.endpoint %}active{% endif %}" 
+         {% if request.endpoint and 'reports' in request.endpoint %}aria-current="page"{% endif %} role="menuitem">
         <i class="fas fa-chart-bar"></i>
         <span class="d-none d-lg-inline">{{ t('Reports') }}</span>
       </a>
       {% endif %}
       {% if current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug in ['developer','super_admin','manager'])) %}
-      <a href="{{ url_for('owner.company_info' if (current_user.role and current_user.role.slug in ['super_admin','manager']) else 'owner.system_config') }}" class="erp-nav-main-link {% if request.endpoint and 'owner.' in request.endpoint %}active{% endif %}" {% if request.endpoint and 'owner.' in request.endpoint %}aria-current="page"{% endif %}>
+      <a href="{{ url_for('owner.company_info' if (current_user.role and current_user.role.slug in ['super_admin','manager']) else 'owner.system_config') }}" 
+         class="erp-nav-main-link {% if request.endpoint and 'owner.' in request.endpoint %}active{% endif %}" 
+         {% if request.endpoint and 'owner.' in request.endpoint %}aria-current="page"{% endif %} role="menuitem">
         <i class="fas fa-cog"></i>
         <span class="d-none d-lg-inline">{{ t('Settings') }}</span>
       </a>
       {% endif %}
     </div>
+
+    <!-- Actions Zone -->
     <div class="erp-navbar-actions-zone">
-      <button class="btn btn-outline-light erp-navbar-tool-btn" type="button" data-action="toggle-sidebar-direction" title="{{ t('Toggle_Sidebar_Position') }}">
+      <!-- Sidebar Direction Toggle -->
+      <button class="btn btn-outline-light erp-navbar-tool-btn d-none d-md-flex" type="button" data-action="toggle-sidebar-direction" 
+              title="{{ t('Toggle_Sidebar_Position') }}" aria-label="{{ t('Toggle_Sidebar_Position') }}">
         <i class="fas fa-exchange-alt"></i>
       </button>
+
+      <!-- Tools Dropdown -->
       <div class="dropdown erp-navbar-tool-dropdown d-none d-md-block">
-        <button class="btn btn-outline-light erp-navbar-tool-btn" type="button" data-toggle="dropdown" aria-expanded="false" title="{{ t('System_Tools') }}">
+        <button class="btn btn-outline-light erp-navbar-tool-btn" type="button" data-toggle="dropdown" aria-expanded="false" 
+                title="{{ t('System_Tools') }}" aria-haspopup="true" aria-label="{{ t('System_Tools') }}">
           <i class="fas fa-tools"></i>
           <span class="d-none d-lg-inline">{{ t('Tools') }}</span>
         </button>
-        <div class="dropdown-menu dropdown-menu-right">
+        <div class="dropdown-menu dropdown-menu-right az-dropdown-animate">
           <span class="dropdown-item dropdown-header">{{ t('System_Tools') }}</span>
           <div class="dropdown-divider"></div>
           <a class="dropdown-item" href="#" data-toggle="modal" data-target="#fxModal">
@@ -98,58 +116,85 @@
           {% endif %}
         </div>
       </div>
+
+      <!-- Language Switcher -->
       <div class="dropdown">
-        <button class="btn btn-outline-light erp-navbar-icon-btn" type="button" data-toggle="dropdown" title="{{ t('Change') }} {{ t('Language') }}">
+        <button class="btn btn-outline-light erp-navbar-icon-btn" type="button" data-toggle="dropdown" 
+                title="{{ t('Change') }} {{ t('Language') }}" aria-label="{{ t('Change_Language') }}" aria-haspopup="true">
           <i class="fas fa-globe"></i>
           <span class="d-none d-lg-inline">{{ session.get('language', 'ar')|upper }}</span>
         </button>
-        <div class="dropdown-menu dropdown-menu-sm dropdown-menu-right">
-          <a href="{{ url_for('language.set_language', lang='ar', next=request.full_path) }}" class="dropdown-item {% if session.get('language', 'ar') == 'ar' %}active{% endif %}">
+        <div class="dropdown-menu dropdown-menu-sm dropdown-menu-right az-dropdown-animate">
+          <a href="{{ url_for('language.set_language', lang='ar', next=request.full_path) }}" 
+             class="dropdown-item {% if session.get('language', 'ar') == 'ar' %}active{% endif %}">
             <i class="fas fa-check mr-2 {% if session.get('language', 'ar') != 'ar' %}opacity-0{% endif %}"></i>{{ t('Arabic_2') }}
           </a>
-          <a href="{{ url_for('language.set_language', lang='en', next=request.full_path) }}" class="dropdown-item {% if session.get('language') == 'en' %}active{% endif %}">
+          <a href="{{ url_for('language.set_language', lang='en', next=request.full_path) }}" 
+             class="dropdown-item {% if session.get('language') == 'en' %}active{% endif %}">
             <i class="fas fa-check mr-2 {% if session.get('language') != 'en' %}opacity-0{% endif %}"></i>{{ t('English') }}
           </a>
         </div>
       </div>
-      <button type="button" class="btn btn-outline-light erp-navbar-icon-btn" data-ui-action="toggle-mode" title="{{ t('Toggle_Dark_Mode') }}" aria-label="{{ t('Toggle_Dark_Mode') }}">
+
+      <!-- Dark Mode Toggle -->
+      <button type="button" class="btn btn-outline-light erp-navbar-icon-btn" data-ui-action="toggle-mode" 
+              title="{{ t('Toggle_Dark_Mode') }}" aria-label="{{ t('Toggle_Dark_Mode') }}" aria-pressed="false">
         <i class="fas fa-sun" data-ui-role="mode-icon"></i>
       </button>
+
+      <!-- Theme Variant Switcher -->
       <div class="erp-theme-switcher d-none d-md-flex" role="group" aria-label="{{ t('Select_Theme') }}">
         <button type="button" class="erp-theme-option" data-value="palestinian" data-ui-action="set-variant" title="{{ t('Palestinian_Theme') }}">
+          <span class="theme-dot theme-palestinian"></span>
           <span>{{ t('Palestinian_2') }}</span>
         </button>
         <button type="button" class="erp-theme-option" data-value="gulf" data-ui-action="set-variant" title="{{ t('Gulf_Theme') }}">
+          <span class="theme-dot theme-gulf"></span>
           <span>{{ t('Gulf_2') }}</span>
         </button>
       </div>
+
+      <!-- User Dropdown -->
       <div class="dropdown">
-        <button class="btn btn-outline-light erp-navbar-user-btn" type="button" data-toggle="dropdown" title="{{ t('Personal_File') }}">
-          <span class="erp-user-avatar"><i class="far fa-user"></i></span>
+        <button class="btn btn-outline-light erp-navbar-user-btn" type="button" data-toggle="dropdown" 
+                title="{{ t('Personal_File') }}" aria-label="{{ t('User_Menu') }}" aria-haspopup="true">
+          <span class="erp-user-avatar">
+            <i class="far fa-user"></i>
+          </span>
           <span class="d-none d-lg-inline ml-2">{{ current_user.username }}</span>
         </button>
-        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-          <span class="dropdown-item dropdown-header">{{ current_user.username }}</span>
+        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right az-dropdown-animate">
+          <div class="dropdown-header az-user-header">
+            <div class="az-user-avatar-lg">
+              <i class="far fa-user"></i>
+            </div>
+            <div class="az-user-info">
+              <strong>{{ current_user.username }}</strong>
+              <small>{{ current_user.role.name_ar if (current_user.is_authenticated and current_user.role) else t('User') }}</small>
+            </div>
+          </div>
           <div class="dropdown-divider"></div>
           <a href="{{ url_for('main.my_profile') }}" class="dropdown-item">
-            <i class="fas fa-user-circle mr-2"></i>{{ t('Profile') }}
+            <i class="fas fa-user-circle mr-2 text-primary"></i>{{ t('Profile') }}
           </a>
           <div class="dropdown-divider"></div>
-          <a href="{{ url_for('auth.logout') }}" class="dropdown-item">
+          <a href="{{ url_for('auth.logout') }}" class="dropdown-item text-danger">
             <i class="fas fa-sign-out-alt mr-2"></i>{{ t('Logout') }}
           </a>
         </div>
       </div>
     </div>
   </nav>
+
   <script>
+  // Sidebar direction toggle (delegated, single listener)
   if (!window.__navbarDelegationBound) {
       window.__navbarDelegationBound = true;
       document.addEventListener('click', (e) => {
           const el = e.target.closest('[data-action="toggle-sidebar-direction"]');
           if (!el) return;
           e.preventDefault();
-          toggleSidebarDirection();
+          if (typeof toggleSidebarDirection === 'function') toggleSidebarDirection();
       });
   }
   </script>

@@ -1,4 +1,4 @@
-<footer class="main-footer erp-footer">
+<footer class="main-footer erp-footer" role="contentinfo">
     <div class="erp-footer-inner">
       <div class="container-fluid">
         {% set _developer_title = (developer_name_ar or developer_name or 'AZAD') %}
@@ -13,6 +13,7 @@
         {% endif %}
         {% set _footer_phone = (developer_phone or '')|trim %}
         {% set _footer_email = (developer_email or '')|trim %}
+
         <div class="erp-footer-row">
           <div class="erp-footer-brand">
             <img
@@ -21,41 +22,49 @@
               alt="{{ _developer_title }}"
               loading="lazy"
               class="erp-footer-logo"
+              onerror="if(this.dataset.fallback){this.src=this.dataset.fallback;this.removeAttribute('onerror');}"
             >
             <div class="erp-footer-brand-text">
               <div class="erp-footer-title">{{ _developer_title }}</div>
               <div class="erp-footer-muted"><i class="fas fa-code"></i> {{ _developer_credit_text }}</div>
             </div>
           </div>
+
           <div class="erp-footer-center">
-            <span class="erp-footer-chip">v{{ config.APP_VERSION }}</span>
+            <span class="erp-footer-chip" title="{{ t('Version') }}">
+              <i class="fas fa-code-branch mr-1"></i>v{{ config.APP_VERSION }}
+            </span>
           </div>
+
           <div class="erp-footer-actions">
             {% if developer_whatsapp_link %}
-              <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener noreferrer" class="erp-footer-action">
-                <i class="fab fa-whatsapp"></i><span>{{ t('WhatsApp') }}</span>
+              <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener noreferrer" class="erp-footer-action" title="WhatsApp">
+                <i class="fab fa-whatsapp"></i><span class="d-none d-sm-inline">{{ t('WhatsApp') }}</span>
               </a>
             {% endif %}
             {% if _footer_phone %}
-              <a href="tel:{{ _footer_phone }}" class="erp-footer-action">
-                <i class="fas fa-phone"></i><span>{{ t('Call') }}</span>
+              <a href="tel:{{ _footer_phone }}" class="erp-footer-action" title="{{ t('Call') }}">
+                <i class="fas fa-phone"></i><span class="d-none d-sm-inline">{{ t('Call') }}</span>
               </a>
             {% endif %}
             {% if _footer_email %}
-              <a href="mailto:{{ _footer_email }}" class="erp-footer-action">
-                <i class="fas fa-envelope"></i><span>{{ t('Email') }}</span>
+              <a href="mailto:{{ _footer_email }}" class="erp-footer-action" title="{{ t('Email') }}">
+                <i class="fas fa-envelope"></i><span class="d-none d-sm-inline">{{ t('Email') }}</span>
               </a>
             {% endif %}
           </div>
         </div>
+
         <div class="erp-footer-copyright text-center mt-3 pt-2 border-top small text-muted">
           &copy; {{ current_year }} {{ tenant_name_ar or company_name_ar or _developer_title }} &mdash; {{ t('All Rights Reserved') }}
+          <span class="mx-2">|</span>
+          <span class="az-palestine-badge" title="{{ t('Made_With_Love') }}">
+            <span class="az-flag-strip az-flag-black"></span>
+            <span class="az-flag-strip az-flag-white"></span>
+            <span class="az-flag-strip az-flag-green"></span>
+            <span class="az-flag-triangle"></span>
+          </span>
         </div>
       </div>
     </div>
   </footer>
-  <script>
-  document.querySelectorAll('.erp-footer-logo[data-fallback]').forEach((img)=> {
-    img.addEventListener('error',function(){if(this.dataset.fallback){this.src=this.dataset.fallback;}});
-  });
-  </script>

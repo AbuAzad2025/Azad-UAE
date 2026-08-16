@@ -58,6 +58,7 @@ class Sale(db.Model):
 
     currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
+    base_currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)
     amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
     paid_amount_aed = db.Column(db.Numeric(15, 3), default=0)
 
@@ -89,13 +90,23 @@ class Sale(db.Model):
         self.amount_aed = value
 
     @property
+    def base_currency_for_display(self):
+        """Return the base currency this transaction's amounts are stored in."""
+        return self.base_currency or self.currency
+
+    @property
     def balance_due_base(self):
         return self.balance_due
 
     @property
     def balance_due_aed(self):
-        """Alias: balance_due is always in AED/base currency."""
+        """Alias: balance_due is always in base currency."""
         return self.balance_due
+
+    @property
+    def base_currency_display(self):
+        """Alias for templates."""
+        return self.base_currency
 
     payment_status = db.Column(db.String(20), default="unpaid", index=True)
     status = db.Column(db.String(20), default="confirmed", index=True)
@@ -181,12 +192,13 @@ class Sale(db.Model):
         # Ensure amount in invoice currency matches total_amount
         self.amount = self.total_amount
 
-        # Resolve tenant base currency dynamically
+        # Resolve tenant base currency dynamically and store it at transaction time
         from utils.currency_utils import resolve_tenant_base_currency
 
         base_currency = resolve_tenant_base_currency(tenant_id=self.tenant_id)
+        self.base_currency = base_currency
 
-        # Calculate amount in tenant base currency (dynamic)
+        # Calculate amount in tenant base currency (using stored base_currency)
         if self.currency == base_currency:
             self.amount_aed = self.total_amount
         else:
@@ -230,14 +242,11 @@ class Sale(db.Model):
             elif p.payment_method == "cheque":
                 total_pending_cheque_aed += amount
 
-        # Update paid amounts (confirmed only) - Dynamic tenant base currency
+        # Update paid amounts (confirmed only) - use stored base_currency
         self.paid_amount_aed = total_confirmed_paid_aed
         try:
-            from utils.currency_utils import resolve_tenant_base_currency
-
-            base_currency = resolve_tenant_base_currency(tenant_id=self.tenant_id)
             ex = Decimal(str(self.exchange_rate)) if self.exchange_rate else Decimal("1")
-            if self.currency == base_currency:
+            if self.currency == self.base_currency:
                 self.paid_amount = total_confirmed_paid_aed
             else:
                 self.paid_amount = (total_confirmed_paid_aed / ex).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)

@@ -1,11 +1,14 @@
-  <meta name="csrf-token" content="{{ csrf_token() }}">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 
+  <!-- PWA & Mobile -->
   <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
-  <meta name="theme-color" content="#1a5fb4">
+  <meta name="theme-color" content="#0e5a3a">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="{{ tenant_name_ar or company_name_ar or t('App_Name') }}">
 
+  <!-- SEO Meta -->
   <meta name="description" content="{% block meta_description %}{{ tenant_meta_description or t('Default_Meta_Description') }}{% endblock %}">
   <meta name="keywords" content="{% block meta_keywords %}{{ tenant_meta_keywords or t('Default_Meta_Keywords') }}{% endblock %}">
   <meta name="author" content="{{ developer_name_ar or t('Default_Author') }}">
@@ -15,10 +18,11 @@
   <meta name="revisit-after" content="7 days">
   <meta name="generator" content="{{ t('App_Name') }}">
 
-{% if config.GOOGLE_SITE_VERIFICATION %}
+  {% if config.GOOGLE_SITE_VERIFICATION %}
   <meta name="google-site-verification" content="{{ config.GOOGLE_SITE_VERIFICATION }}">
-{% endif %}
+  {% endif %}
 
+  <!-- Open Graph -->
   <meta property="og:type" content="{% block og_type %}website{% endblock %}">
   <meta property="og:url" content="{{ request.url }}">
   <meta property="og:title" content="{% block og_title %}{{ tenant_name_ar or company_name_ar or t('App_Name') }}{% endblock %}">
@@ -32,46 +36,57 @@
   <meta property="og:locale" content="{{ 'ar_AE' if current_language == 'ar' else 'en_US' }}">
   <meta property="og:site_name" content="{{ tenant_name_ar or company_name_ar or t('App_Name') }}">
 
+  <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="{{ request.url }}">
   <meta name="twitter:title" content="{{ tenant_name_ar or company_name_ar or t('App_Name') }}">
   <meta name="twitter:description" content="{{ tenant_name_ar or company_name_ar or t('App_Name') }} — {{ t('App_Description') }}">
   <meta name="twitter:image" content="{{ _logo_external }}">
 
+  <!-- Canonical -->
   <link rel="canonical" href="{{ request.url }}">
   <link rel="alternate" hreflang="{{ current_language or 'ar' }}" href="{{ request.url }}">
   <link rel="alternate" hreflang="x-default" href="{{ request.url }}">
 
+  <!-- Favicon -->
   {% set _favicon_path = tenant_favicon_url or 'assets/brand/azad/favicons/favicon.png' %}
   <link rel="icon" href="{{ _favicon_path if _favicon_path.startswith('http') else url_for('static', filename=_favicon_path) }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/brand/azad/icons/icon-192.png') }}">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- DNS Prefetch & Preconnect -->
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
 
+  <!-- Preload Critical Fonts -->
+  <link rel="preload" href="{{ url_for('static', filename='fonts/tajawal/Tajawal-Regular.woff2') }}" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{{ url_for('static', filename='fonts/tajawal/Tajawal-Bold.woff2') }}" as="font" type="font/woff2" crossorigin>
+
+  <!-- Preload Critical CSS -->
+  <link rel="preload" href="{{ url_for('static', filename='adminlte/plugins/bootstrap/css/bootstrap.min.css') }}" as="style">
+  <link rel="preload" href="{{ url_for('static', filename='adminlte/css/adminlte.min.css') }}" as="style">
+  <link rel="preload" href="{{ url_for('static', filename='css/erp-theme.css') }}" as="style">
+
+  <!-- Stylesheets -->
   <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/bootstrap/css/bootstrap.min.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/css/adminlte.min.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme-pro.css') }}">
 
-  <link rel="stylesheet" href="{{ url_for('static', filename='fonts/tajawal/tajawal.css') }}" media="print" data-action="media-all">
+  <!-- Fonts (async load with fallback) -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='fonts/tajawal/tajawal.css') }}" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="{{ url_for('static', filename='fonts/tajawal/tajawal.css') }}"></noscript>
-  <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}" media="print" data-action="media-all">
+
+  <!-- FontAwesome (async) -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}"></noscript>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/sweetalert2.min.css') }}" media="print" data-action="media-all">
+
+  <!-- SweetAlert2 (async) -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/sweetalert2.min.css') }}" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="{{ url_for('static', filename='css/sweetalert2.min.css') }}"></noscript>
-  <script>
-  if (!window.__headDelegationBound) {
-      window.__headDelegationBound = true;
-      document.addEventListener('load', (e) => {
-          const el = e.target instanceof Element ? e.target.closest('[data-action]') : null;
-          if (!el) return;
-          if (el.dataset.action === 'media-all') el.media = 'all';
-      }, true);
-  }
-  </script>
+
   {% block extra_css %}{% endblock %}
 
+  <!-- Structured Data: Organization -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",

@@ -4,7 +4,7 @@
 
 {% block extra_css %}
 {% include 'partials/datatables_assets.html' %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/datatables.css') }}">
+{% include 'partials/select2_assets.html' %}
 <style>
   #returnsTable th,
   #returnsTable td {
@@ -27,9 +27,168 @@
 </style>
 {% endblock %}
 
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="mb-0"><i class="fas fa-undo-alt {% if is_rtl %}ml-2{% else %}mr-2{% endif %}"></i>{{ t('returns') }}</h1>
+    <p class="text-muted mb-0">{{ t('returns_sales_invoices_log') }}</p>
+  </div>
+  <div>
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newReturnModal">
+      <i class="fas fa-plus {% if is_rtl %}ml-2{% else %}mr-2{% endif %}"></i>{{ t('new_return') }}
+    </button>
+    <a href="{{ url_for('sales.index') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-file-invoice {% if is_rtl %}ml-2{% else %}mr-2{% endif %}"></i>{{ t('sales') }}
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+{# New Return Modal #}
+<div class="modal fade" id="newReturnModal" tabindex="-1" role="dialog" aria-labelledby="newReturnModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="newReturnModalLabel"><i class="fas fa-undo-alt mr-2"></i>{{ t('new_return') }}</h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="newReturnForm">
+        <div class="modal-body">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+          <div class="form-group">
+            <label for="returnSaleId">{{ t('select_sale') }} <span class="text-danger">*</span></label>
+            <select name="sale_id" id="returnSaleId" class="form-control select2" required aria-label="sale id">
+              <option value="">{{ t('select') }}</option>
+            </select>
+            <small class="form-text text-muted">{{ t('select_sale_for_return') }}</small>
+          </div>
+          <div class="form-group" id="returnLinesContainer" style="display:none;">
+            <label>{{ t('return_items') }} <span class="text-danger">*</span></label>
+            <table class="table table-sm" id="returnLinesTable">
+              <thead>
+                <tr>
+                  <th>{{ t('product') }}</th>
+                  <th>{{ t('available_qty') }}</th>
+                  <th>{{ t('return_qty') }}</th>
+                  <th>{{ t('unit_price') }}</th>
+                  <th>{{ t('line_total') }}</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="form-group">
+            <label for="returnNotes">{{ t('notes') }}</label>
+            <textarea name="notes" id="returnNotes" class="form-control" rows="2" placeholder="{{ t('notes_placeholder') }}"></textarea>
+          </div>
+          <div class="alert alert-info" id="returnSummary" style="display:none;">
+            <strong>{{ t('refund_amount') }}:</strong> <span id="returnTotalAmount">0.00</span> {{ tenant_default_currency or 'AED' }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ t('Cancel') }}</button>
+          <button type="submit" class="btn btn-primary" id="submitReturnBtn" disabled>
+            <i class="fas fa-save mr-1"></i>{{ t('create_return') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="mb-3 d-flex flex-wrap erp-gap-1">
+  <span class="badge badge-primary">
+    <i class="fas fa-undo-alt"></i> {{ t('total') }}: {{ returns|length }}
+  </span>
+  <span class="badge badge-success">
+    <i class="fas fa-check"></i> {{ t('approved') }}: {{ returns|selectattr('status', 'equalto', 'approved')|list|length }}
+  </span>
+  <span class="badge badge-warning">
+    <i class="fas fa-hourglass-half"></i> {{ t('under_review') }}: {{ returns|selectattr('status', 'equalto', 'pending')|list|length }}
+  </span>
+  <span class="badge badge-danger">
+    <i class="fas fa-times"></i> {{ t('rejected') }}: {{ returns|selectattr('status', 'equalto', 'rejected')|list|length }}
+  </span>
+</div>
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title mb-0"><i class="fas fa-list {% if is_rtl %}ml-2{% else %}mr-2{% endif %}"></i>{{ t('list') }} {{ t('returns') }}</h3>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table id="returnsTable" class="table table-hover table-bordered">
+        <thead>
+          <tr>
+            <th>{{ t('return_number') }}</th>
+            <th>{{ t('branch') }}</th>
+            <th>{{ t('sale_number') }}</th>
+            <th>{{ t('customer') }}</th>
+            <th>{{ t('date') }}</th>
+            <th>{{ t('status') }}</th>
+            <th class="text-{{ 'right' if is_rtl else 'left' }}">{{ t('total') }}</th>
+            <th class="text-center">{{ t('actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in returns %}
+          <tr>
+            <td><strong>{{ r.return_number }}</strong></td>
+            <td>
+              {% if r.sale and r.sale.branch %}
+                <span class="badge badge-light border">{{ r.sale.branch.name }}{% if r.sale.branch.code %} ({{ r.sale.branch.code }}){% endif %}</span>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if r.sale %}
+                <a href="{{ url_for('sales.view', id=r.sale.id) }}" class="text-primary font-weight-bold">{{ r.sale.sale_number }}</a>
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>{{ r.customer.name if r.customer else '-' }}</td>
+            <td>{{ r.return_date.strftime('%Y-%m-%d') if r.return_date else '-' }}</td>
+            <td>
+              {% if r.status == 'approved' %}
+                <span class="badge badge-success">{{ t('approved') }}</span>
+              {% elif r.status == 'rejected' %}
+                <span class="badge badge-danger">{{ t('rejected') }}</span>
+              {% else %}
+                <span class="badge badge-warning">{{ t('under_review') }}</span>
+              {% endif %}
+            </td>
+            <td class="text-{{ 'right' if is_rtl else 'left' }}">{{ format_currency(r.total_amount or 0, r.currency) }}</td>
+            <td class="text-center actions-cell">
+              <a href="{{ url_for('returns.view', id=r.id) }}" class="btn btn-outline-primary">
+                <i class="fas fa-eye {% if is_rtl %}ml-1{% else %}mr-1{% endif %}"></i>{{ t('view') }}
+              </a>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="8" class="text-center text-muted">{{ t('no_returns_found') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% if pagination %}
+  <div class="card-footer">
+    {% set endpoint = 'returns.index' %}
+    {% include 'partials/flask_pagination.html' %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
 {% block extra_js %}
 {% include 'partials/datatables_assets.html' %}
-<script src="{{ url_for('static', filename='js/datatables.js') }}"></script>
+{% include 'partials/select2_assets.html' %}
 <script>
   (() => {
     const tableSelector = '#returnsTable';
@@ -61,27 +220,156 @@
 
     $(document).ready(initReturnsTable);
   })();
+
+  // New Return Modal Logic
+  (() => {
+    const $saleSelect = $('#returnSaleId');
+    const $linesContainer = $('#returnLinesContainer');
+    const $linesTable = $('#returnLinesTable tbody');
+    const $notes = $('#returnNotes');
+    const $summary = $('#returnSummary');
+    const $totalAmount = $('#returnTotalAmount');
+    const $submitBtn = $('#submitReturnBtn');
+    const $form = $('#newReturnForm');
+
+    let selectedSaleLines = [];
+
+    function formatMoney(val) {
+      return Number(val || 0).toFixed(2);
+    }
+
+    function recalcTotal() {
+      let total = 0;
+      $linesTable.find('tr').each(function() {
+        const qty = parseFloat($(this).find('.return-qty').val()) || 0;
+        const price = parseFloat($(this).data('price')) || 0;
+        total += qty * price;
+        $(this).find('.line-total').text(formatMoney(qty * price));
+      });
+      $totalAmount.text(formatMoney(total));
+      return total;
+    }
+
+    // Load sales for select2
+    $saleSelect.select2({
+      ajax: {
+        url: '{{ url_for("returns.api_search_sales") }}',
+        dataType: 'json',
+        delay: 250,
+        data: (params) => ({ q: params.term, page: params.page || 1 }),
+        processResults: (data) => ({
+          results: data.items,
+          pagination: { more: data.has_more }
+        })
+      },
+      minimumInputLength: 2,
+      placeholder: '{{ t("search_sale_placeholder") }}',
+      allowClear: true
+    });
+
+    // On sale select - fetch lines
+    $saleSelect.on('select2:select', function(e) {
+      const saleId = e.params.data.id;
+      $linesTable.empty();
+      $linesContainer.hide();
+      $summary.hide();
+      $submitBtn.prop('disabled', true);
+
+      $.get('{{ url_for("returns.api_get_sale_lines") }}', { sale_id: saleId })
+        .done(function(data) {
+          selectedSaleLines = data.lines || [];
+          if (selectedSaleLines.length === 0) {
+            $linesContainer.hide();
+            return;
+          }
+          selectedSaleLines.forEach(line => {
+            const $tr = $('<tr>').data('line-id', line.id).data('price', line.unit_price);
+            $tr.append($('<td>').text(line.product_name + (line.variant ? ' - ' + line.variant : '')));
+            $tr.append($('<td>').text(formatMoney(line.available_qty)));
+            $tr.append($('<td>').html(
+              '<input type="number" class="form-control form-control-sm return-qty" ' +
+              'min="0" max="' + line.available_qty + '" step="0.01" value="0" ' +
+              'data-line-id="' + line.id + '" data-max="' + line.available_qty + '">'
+            ));
+            $tr.append($('<td>').text(formatMoney(line.unit_price)));
+            $tr.append($('<td class="line-total">').text('0.00'));
+            $linesTable.append($tr);
+          });
+          $linesContainer.show();
+          $summary.show();
+          $submitBtn.prop('disabled', false);
+        })
+        .fail(function() {
+          window.azad?.showError?.('{{ t("failed_load_sale_lines") }}');
+        });
+    });
+
+    // Quantity change
+    $linesTable.on('input change', '.return-qty', function() {
+      const $input = $(this);
+      const max = parseFloat($input.data('max')) || 0;
+      let val = parseFloat($input.val()) || 0;
+      if (val > max) val = max;
+      if (val < 0) val = 0;
+      $input.val(val.toFixed(2));
+      recalcTotal();
+    });
+
+    // Form submit
+    $form.on('submit', function(e) {
+      e.preventDefault();
+      const saleId = $saleSelect.val();
+      const lines = [];
+      $linesTable.find('tr').each(function() {
+        const qty = parseFloat($(this).find('.return-qty').val()) || 0;
+        if (qty > 0) {
+          lines.push({ line_id: $(this).data('line-id'), quantity: qty });
+        }
+      });
+      if (!saleId || lines.length === 0) {
+        window.azad?.showError?.('{{ t("select_sale_and_items") }}');
+        return;
+      }
+      const payload = {
+        sale_id: saleId,
+        lines: lines,
+        notes: $notes.val().trim() || null
+      };
+      $submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>{{ t("processing") }}');
+      $.ajax({
+        url: '{{ url_for("returns.api_create_return") }}',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(payload),
+        success: function(res) {
+          if (res.success) {
+            window.azad?.showSuccess?.('{{ t("return_created_success") }}');
+            $('#newReturnModal').modal('hide');
+            setTimeout(() => location.reload(), 800);
+          } else {
+            window.azad?.showError?.(res.message || '{{ t("error_create_return") }}');
+            $submitBtn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i>{{ t("create_return") }}');
+          }
+        },
+        error: function() {
+          window.azad?.showError?.('{{ t("server_error") }}');
+          $submitBtn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i>{{ t("create_return") }}');
+        }
+      });
+    });
+
+    // Reset modal on close
+    $('#newReturnModal').on('hidden.bs.modal', function() {
+      $saleSelect.val(null).trigger('change');
+      $linesTable.empty();
+      $linesContainer.hide();
+      $summary.hide();
+      $notes.val('');
+      $submitBtn.prop('disabled', true).html('<i class="fas fa-save mr-1"></i>{{ t("create_return") }}');
+    });
+  })();
 </script>
 {% endblock %}
-
-{% block page_title %}
-<div class="d-flex justify-content-between align-items-center">
-  <div>
-    <h1 class="mb-0"><i class="fas fa-undo-alt {% if is_rtl %}ml-2{% else %}mr-2{% endif %}"></i>{{ t('returns') }}</h1>
-    <p class="text-muted mb-0">{{ t('returns_sales_invoices_log') }}</p>
-  </div>
-  <div>
-    <a href="{{ url_for('returns.index') }}" class="btn btn-primary">
-      <i class="fas fa-plus {% if is_rtl %}ml-2{% else %}mr-2{% endif %}"></i>{{ t('new_return') }}
-    </a>
-    <a href="{{ url_for('sales.index') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-file-invoice {% if is_rtl %}ml-2{% else %}mr-2{% endif %}"></i>{{ t('sales') }}
-    </a>
-  </div>
-</div>
-{% endblock %}
-
-{% block content %}
 <div class="mb-3 d-flex flex-wrap erp-gap-1">
   <span class="badge badge-primary">
     <i class="fas fa-undo-alt"></i> {{ t('total') }}: {{ returns|length }}

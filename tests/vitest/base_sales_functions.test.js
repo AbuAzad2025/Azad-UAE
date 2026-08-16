@@ -153,7 +153,7 @@ describe('base-helpers.js - safeEval parser', () => {
     expect(await safeEval('sqrt(16)')).toBe('4');
     expect(await safeEval('log(100)')).toBe('2');
     expect(await safeEval('ln(1)')).toBe('0');
-    expect(await safeEval('Ï€')).toBe(String(Math.round((Math.PI + Number.EPSILON) * 100000000) / 100000000));
+    expect(await safeEval('π')).toBe(String(Math.round((Math.PI + Number.EPSILON) * 100000000) / 100000000));
     expect(await safeEval('e')).toBe(String(Math.round((Math.E + Number.EPSILON) * 100000000) / 100000000));
   });
 

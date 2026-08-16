@@ -1,41 +1,55 @@
-<div id="upgrade-banner" class="row d-none">
+<div id="upgrade-banner" class="row d-none az-enter">
   <div class="col-12">
     <div class="alert alert-warning alert-dismissible fade show erp-flash erp-flash-warning" role="alert">
-      <div class="d-flex align-items-center">
-        <div class="erp-flash-icon"><i class="fas fa-rocket"></i></div>
+      <div class="d-flex align-items-center flex-wrap">
+        <div class="erp-flash-icon">
+          <i class="fas fa-rocket"></i>
+        </div>
         <div class="erp-flash-body flex-grow-1">
           <strong>{{ t('Plan_Upgrade') }}</strong>
           <span class="mx-2">&mdash;</span>
           <span>{{ t('Plan_Limit_Warning') }}</span>
-          <a href="#" class="btn btn-sm btn-warning ml-3" data-action="open-upgrade-link" data-url="{{ wa_upgrade_link }}">
+          <a href="#" class="btn btn-sm btn-warning ml-3 mt-1 mt-md-0" data-action="open-upgrade-link" data-url="{{ wa_upgrade_link }}">
             <i class="fab fa-whatsapp ml-1"></i>{{ t('Contact_Developer_For_Upgrade') }}
           </a>
         </div>
-        <button type="button" class="close" data-dismiss="alert" data-action="dismiss-alert">&times;</button>
+        <button type="button" class="close" data-dismiss="alert" data-action="dismiss-alert" aria-label="{{ _('إغلاق') }}">&times;</button>
       </div>
       <div class="row mt-2" id="upgrade-meter-container"></div>
     </div>
   </div>
 </div>
 <script>
-(() => {
+(function() {
   const usage = {{ tenant_usage | tojson }};
   const sub = {{ tenant_subscription | tojson }};
   let maxed = false;
   let html = '';
+
   for (const key in usage) {
     const u = usage[key];
     if (u.max && u.max > 0 && u.percent >= 80) {
       maxed = true;
       const barClass = u.percent >= 100 ? 'bg-danger' : (u.percent >= 90 ? 'bg-warning' : 'bg-info');
-      html += '<div class="col-md-4 col-sm-6 mb-1"><small class="text-muted">' + key + ': ' + u.current + '/' + u.max + '</small><div class="progress" style="height:6px"><div class="progress-bar ' + barClass + '" style="width:' + u.percent + '%"></div></div></div>';
+      html += '<div class="col-md-4 col-sm-6 mb-1 az-enter" style="animation-delay:' + (Object.keys(usage).indexOf(key) * 0.05) + 's">' +
+        '<small class="text-muted">' + key + ': ' + u.current + '/' + u.max + '</small>' +
+        '<div class="progress" style="height:6px">' +
+        '<div class="progress-bar ' + barClass + '" style="width:' + u.percent + '%;transition:width 1s ease-out"></div>' +
+        '</div></div>';
     }
   }
+
   if (maxed && sub.plan !== 'enterprise') {
-    document.getElementById('upgrade-meter-container').innerHTML = html;
-    document.getElementById('upgrade-banner').classList.remove('d-none');
+    const container = document.getElementById('upgrade-meter-container');
+    const banner = document.getElementById('upgrade-banner');
+    if (container) container.innerHTML = html;
+    if (banner) {
+      banner.classList.remove('d-none');
+      banner.classList.add('az-enter');
+    }
   }
 })();
+
 if (!window.__upgradeBannerDelegationBound) {
   window.__upgradeBannerDelegationBound = true;
   document.addEventListener('click', (e) => {
@@ -43,7 +57,15 @@ if (!window.__upgradeBannerDelegationBound) {
     if (!el) return;
     const action = el.dataset.action;
     if (action === 'open-upgrade-link') window.open(el.dataset.url, '_blank');
-    else if (action === 'dismiss-alert') el.closest('.alert').remove();
+    else if (action === 'dismiss-alert') {
+      const alert = el.closest('.alert');
+      if (alert) {
+        alert.style.transition = 'all 0.3s ease';
+        alert.style.opacity = '0';
+        alert.style.transform = 'translateY(-10px)';
+        setTimeout(() => alert.remove(), 300);
+      }
+    }
   });
 }
 </script>

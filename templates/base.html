@@ -2,161 +2,243 @@
 <html lang="{{ current_language or 'ar' }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}" data-ui-variant="palestinian" data-ui-mode="light">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0e5a3a" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
   <title>{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}{% endblock %}</title>
+
+  <!-- PWA & Icons -->
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/brand/azad/icons/icon-192.png') }}">
-{% include 'partials/head.html' %}
-{% block extra_css %}{% endblock %}
+  <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
+
+  <!-- Preconnect for performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  {% include 'partials/head.html' %}
+  {% block extra_css %}{% endblock %}
+
+  <!-- Critical CSS inline for faster first paint -->
+  <style>
+    /* Critical: prevent FOUC */
+    html{visibility:visible;opacity:1}
+    html[data-ui-mode="dark"]{background:#0b1220}
+    html[data-ui-mode="light"]{background:#f8f7f2}
+    /* Skeleton loading */
+    .az-skeleton{position:relative;overflow:hidden;background:var(--az-surface-2,#e2e8f0);border-radius:8px;min-height:1em;color:transparent!important;pointer-events:none}
+    .az-skeleton::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.4) 50%,transparent 100%);animation:az-shimmer 1.4s infinite;transform:translateX(-100%)}
+    @keyframes az-shimmer{to{transform:translateX(100%)}}
+    /* Page entrance */
+    @keyframes az-fade-up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    .az-enter{animation:az-fade-up 0.35s ease-out both}
+    .az-enter-d1{animation-delay:0.05s}.az-enter-d2{animation-delay:0.1s}.az-enter-d3{animation-delay:0.15s}.az-enter-d4{animation-delay:0.2s}
+  </style>
 </head>
 <body class="hold-transition sidebar-mini layout-fixed" data-sidebar-side="{{ 'right' if is_rtl else 'left' }}">
-<a href="#main-content" class="sr-only sr-only-focusable">{{ _('تخطي إلى المحتوى الرئيسي') }}</a>
-<div class="wrapper">
-  {% set is_global_scope_user = current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug in role_enum.global_scope)) %}
-  {% include 'partials/navbar.html' %}
-  {% include 'partials/sidebar.html' %}
-  <div class="content-wrapper" id="main-content" tabindex="-1">
-    <div class="content-header">
-      <div class="container-fluid">
-        <h1 class="m-0">{% block page_title %}{% endblock %}</h1>
-      </div>
+
+  <!-- Skip link for accessibility -->
+  <a href="#main-content" class="sr-only sr-only-focusable">{{ _('تخطي إلى المحتوى الرئيسي') }}</a>
+
+  <!-- Global Loading Overlay -->
+  <div id="azad-page-loader" class="azad-page-loader" aria-hidden="true">
+    <div class="azad-loader-ring">
+      <div></div><div></div><div></div><div></div>
     </div>
-    <section class="content">
-      <div class="container-fluid">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            <div id="flash-messages-container" class="erp-flash-container" aria-live="polite" aria-atomic="true">
-              {% for category, message in messages %}
-                {% set _cat = 'danger' if category == 'error' else category %}
-                {% set _erp_class = 'erp-flash-success' if _cat == 'success' else ('erp-flash-danger' if _cat in ['danger'] else ('erp-flash-warning' if _cat == 'warning' else 'erp-flash-info')) %}
-                <div class="alert alert-{{ _cat }} alert-dismissible fade show flash-message erp-flash {{ _erp_class }}">
-                  <div class="erp-flash-icon">
-                    {% if _cat == 'success' %}
-                      <i class="fas fa-check-circle"></i>
-                    {% elif _cat == 'danger' %}
-                      <i class="fas fa-exclamation-circle"></i>
-                    {% elif _cat == 'warning' %}
-                      <i class="fas fa-exclamation-triangle"></i>
-                    {% else %}
-                      <i class="fas fa-info-circle"></i>
-                    {% endif %}
-                  </div>
-                  <div class="erp-flash-body">{{ message }}</div>
-                  <button type="button" class="close" data-dismiss="alert">&times;</button>
-                  <div class="progress mt-2 w-100">
-                    <div class="progress-bar flash-timer" role="progressbar" aria-label="{{ _('تنبيه مؤقت') }}"></div>
-                  </div>
-                </div>
-              {% endfor %}
-            </div>
-          {% endif %}
-        {% endwith %}
-        {% include 'partials/upgrade_banner.html' %}
-        {% block content %}{% endblock %}
-      </div>
-    </section>
+    <span class="azad-loader-text">جاري التحميل...</span>
   </div>
-  {% include 'partials/footer.html' %}
-  <nav class="erp-mobile-nav d-md-none" aria-label="{{ _('التنقل السريع') }}">
-    <a href="{{ url_for('main.dashboard') }}" class="{% if request.endpoint == 'main.dashboard' %}active{% endif %}">
-      <i class="fas fa-home"></i><span>{{ _('الرئيسية') }}</span>
-    </a>
-    {% if current_user.is_authenticated and current_user.has_permission('manage_sales') %}
-    <a href="{{ url_for('sales.index') }}" class="{% if request.endpoint and 'sales' in request.endpoint %}active{% endif %}">
-      <i class="fas fa-file-invoice"></i><span>{{ _('المبيعات') }}</span>
-    </a>
-    {% endif %}
-    {% if current_user.is_authenticated and current_user.has_permission('manage_purchases') %}
-    <a href="{{ url_for('purchases.index') }}" class="{% if request.endpoint and 'purchases' in request.endpoint %}active{% endif %}">
-      <i class="fas fa-shopping-cart"></i><span>{{ _('المشتريات') }}</span>
-    </a>
-    {% endif %}
-    {% if current_user.is_authenticated and current_user.has_permission('manage_products') %}
-    <a href="{{ url_for('products.index') }}" class="{% if request.endpoint and 'products' in request.endpoint %}active{% endif %}">
-      <i class="fas fa-box"></i><span>{{ _('المنتجات') }}</span>
-    </a>
-    {% endif %}
-    {% if current_user.is_authenticated and current_user.has_permission('view_reports') %}
-    <a href="{{ url_for('reports.sales') }}" class="{% if request.endpoint and 'reports' in request.endpoint %}active{% endif %}">
-      <i class="fas fa-chart-bar"></i><span>{{ _('التقارير') }}</span>
-    </a>
-    {% endif %}
-  </nav>
-</div>
-<script>
-  window.APP_ENUMS = {{ app_enums | tojson | safe }};
-  window.CURRENT_USER_PERMISSIONS = {{ current_user_permissions | tojson | safe }};
-  window.hasPermission = (code) => (window.CURRENT_USER_PERMISSIONS || []).indexOf(code) !== -1;
-  window._LOG_ENDPOINT = '{{ url_for("api.log_client_error") }}';
-  window._FX_API_URL = '{{ url_for("api.exchange_rates_display") }}?base={{ tenant_default_currency }}';
-  window._FX_FALLBACK_BASE = '{{ tenant_default_currency }}';
-  window._CURRENCY_NAME_AR = '{{ tenant_currency_name_ar or tenant_currency_symbol }}';
-  window._CURRENCY_SYMBOL = '{{ tenant_currency_symbol }}';
-// noinspection JSUnusedGlobalSymbols
-window.ROUTES = {
-    payments: {
-      view: '{{ url_for("payments.view_receipt", id=0) }}'.replace('/0', ''),
-      print: '{{ url_for("payments.print_receipt", id=0) }}'.replace('/0', ''),
-      delete: '{{ url_for("payments.delete_payment", id=0) }}'.replace('/0', ''),
-      archive: '{{ url_for("payments.archive_payment", id=0) }}'.replace('/0', ''),
-      searchEntities: '{{ url_for("payments.search_entities") }}'
-    },
-    service: {
-      exportCsv: '{{ url_for("owner.export_database") }}',
-      searchWarehouses: '{{ url_for("api.api_search_warehouses") }}',
-      productsByWarehouse: (wid) => '{{ url_for("api.api_warehouse_products", wid=0) }}'.replace('/0', '/' + wid),
-      productInfo: (pid) => '{{ url_for("api.api_product_info", pid=0) }}'.replace('/0', '/' + pid)
-    },
-    vendors: {
-      payUrl: '{{ url_for("payments.create_voucher") }}'
+
+  <div class="wrapper">
+    {% set is_global_scope_user = current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug in role_enum.global_scope)) %}
+
+    {% include 'partials/navbar.html' %}
+    {% include 'partials/sidebar.html' %}
+
+    <div class="content-wrapper" id="main-content" tabindex="-1">
+      <div class="content-header az-enter">
+        <div class="container-fluid">
+          <h1 class="m-0">{% block page_title %}{% endblock %}</h1>
+        </div>
+      </div>
+
+      <section class="content">
+        <div class="container-fluid">
+
+          <!-- Enhanced Flash Messages with staggered animation -->
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              <div id="flash-messages-container" class="erp-flash-container" aria-live="polite" aria-atomic="true">
+                {% for category, message in messages %}
+                  {% set _cat = 'danger' if category == 'error' else category %}
+                  {% set _erp_class = 'erp-flash-success' if _cat == 'success' else ('erp-flash-danger' if _cat in ['danger'] else ('erp-flash-warning' if _cat == 'warning' else 'erp-flash-info')) %}
+                  {% set _icon = 'fa-check-circle' if _cat == 'success' else ('fa-exclamation-circle' if _cat == 'danger' else ('fa-exclamation-triangle' if _cat == 'warning' else 'fa-info-circle')) %}
+                  {% set _delay = loop.index0 * 0.08 %}
+                  <div class="alert alert-{{ _cat }} alert-dismissible fade show flash-message erp-flash {{ _erp_class }} az-enter" style="animation-delay:{{ _delay }}s">
+                    <div class="erp-flash-main">
+                      <div class="erp-flash-icon">
+                        <i class="fas {{ _icon }}"></i>
+                      </div>
+                      <div class="erp-flash-body">{{ message }}</div>
+                      <button type="button" class="close" data-dismiss="alert" aria-label="{{ _('إغلاق') }}">&times;</button>
+                    </div>
+                    <div class="erp-flash-progress">
+                      <div class="progress-bar flash-timer" role="progressbar" aria-label="{{ _('تنبيه مؤقت') }}"></div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% endwith %}
+
+          {% include 'partials/upgrade_banner.html' %}
+
+          <!-- Main Content Block -->
+          <div class="az-enter az-enter-d1">
+            {% block content %}{% endblock %}
+          </div>
+        </div>
+      </section>
+    </div>
+
+    {% include 'partials/footer.html' %}
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="erp-mobile-nav d-md-none" aria-label="{{ _('التنقل السريع') }}">
+      <a href="{{ url_for('main.dashboard') }}" class="{% if request.endpoint == 'main.dashboard' %}active{% endif %}">
+        <i class="fas fa-home"></i><span>{{ _('الرئيسية') }}</span>
+      </a>
+      {% if current_user.is_authenticated and current_user.has_permission('manage_sales') %}
+      <a href="{{ url_for('sales.index') }}" class="{% if request.endpoint and 'sales' in request.endpoint %}active{% endif %}">
+        <i class="fas fa-file-invoice"></i><span>{{ _('المبيعات') }}</span>
+      </a>
+      {% endif %}
+      {% if current_user.is_authenticated and current_user.has_permission('manage_purchases') %}
+      <a href="{{ url_for('purchases.index') }}" class="{% if request.endpoint and 'purchases' in request.endpoint %}active{% endif %}">
+        <i class="fas fa-shopping-cart"></i><span>{{ _('المشتريات') }}</span>
+      </a>
+      {% endif %}
+      {% if current_user.is_authenticated and current_user.has_permission('manage_products') %}
+      <a href="{{ url_for('products.index') }}" class="{% if request.endpoint and 'products' in request.endpoint %}active{% endif %}">
+        <i class="fas fa-box"></i><span>{{ _('المنتجات') }}</span>
+      </a>
+      {% endif %}
+      {% if current_user.is_authenticated and current_user.has_permission('view_reports') %}
+      <a href="{{ url_for('reports.sales') }}" class="{% if request.endpoint and 'reports' in request.endpoint %}active{% endif %}">
+        <i class="fas fa-chart-bar"></i><span>{{ _('التقارير') }}</span>
+      </a>
+      {% endif %}
+    </nav>
+  </div>
+
+  <!-- Global App Config -->
+  <script>
+    window.APP_ENUMS = {{ app_enums | tojson | safe }};
+    window.CURRENT_USER_PERMISSIONS = {{ current_user_permissions | tojson | safe }};
+    window.hasPermission = (code) => (window.CURRENT_USER_PERMISSIONS || []).includes(code);
+    window._LOG_ENDPOINT = '{{ url_for("api.log_client_error") }}';
+    window._FX_API_URL = '{{ url_for("api.exchange_rates_display") }}?base={{ tenant_default_currency }}';
+    window._FX_FALLBACK_BASE = '{{ tenant_default_currency }}';
+    window._CURRENCY_NAME_AR = '{{ tenant_currency_name_ar or tenant_currency_symbol }}';
+    window._CURRENCY_SYMBOL = '{{ tenant_currency_symbol }}';
+
+    // Unified Routes Object
+    window.ROUTES = {
+      payments: {
+        view: '{{ url_for("payments.view_receipt", id=0) }}'.replace('/0', ''),
+        print: '{{ url_for("payments.print_receipt", id=0) }}'.replace('/0', ''),
+        delete: '{{ url_for("payments.delete_payment", id=0) }}'.replace('/0', ''),
+        archive: '{{ url_for("payments.archive_payment", id=0) }}'.replace('/0', ''),
+        searchEntities: '{{ url_for("payments.search_entities") }}'
+      },
+      service: {
+        exportCsv: '{{ url_for("owner.export_database") }}',
+        searchWarehouses: '{{ url_for("api.api_search_warehouses") }}',
+        productsByWarehouse: (wid) => '{{ url_for("api.api_warehouse_products", wid=0) }}'.replace('/0', '/' + wid),
+        productInfo: (pid) => '{{ url_for("api.api_product_info", pid=0) }}'.replace('/0', '/' + pid)
+      },
+      vendors: {
+        payUrl: '{{ url_for("payments.create_voucher") }}'
+      }
+    };
+
+    // Unified notification system
+    window.notify = function(msg, type = 'info') {
+      const a = window.azad;
+      if (a && a.showError) {
+        const fnMap = { error: 'showError', success: 'showSuccess', warning: 'showWarning', info: 'showInfo' };
+        const fn = a[fnMap[type]] || a.showInfo;
+        fn.call(a, msg);
+      } else {
+        // Fallback toast
+        const el = document.createElement('div');
+        el.textContent = msg;
+        const colors = { success: '#28a745', error: '#dc3545', warning: '#D4AF37', info: '#17a2b8' };
+        el.style.cssText = `position:fixed;bottom:24px;right:24px;z-index:20001;background:${colors[type]||colors.info};color:#fff;padding:12px 20px;border-radius:8px;font-weight:600;font-size:0.9rem;box-shadow:0 4px 16px rgba(0,0,0,0.25);max-width:380px;direction:rtl;opacity:0;transition:opacity .3s;`;
+        document.body.appendChild(el);
+        requestAnimationFrame(() => el.style.opacity = '1');
+        setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 400); }, 5000);
+      }
+    };
+
+    // Global action delegation (performance: single listener)
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      const action = btn.dataset.action;
+      switch(action) {
+        case 'window-print': e.preventDefault(); window.print(); break;
+        case 'window-close': e.preventDefault(); window.close(); break;
+        case 'history-back': 
+          e.preventDefault(); 
+          window.history.length > 1 ? window.history.back() : window.location.href = '{{ url_for("main.dashboard") }}';
+          break;
+        case 'location-reload': e.preventDefault(); window.location.reload(); break;
+      }
+    });
+
+    // Auto-print support
+    if (new URLSearchParams(window.location.search).get('auto_print') === 'true') {
+      window.addEventListener('DOMContentLoaded', () => setTimeout(() => window.print(), 300));
     }
-  };
-  // Unified UI notification — replaces raw alert() with the design-system toast
-  window.notify = function (msg, type) {
-    const a = window.azad;
-    if (a && a.showError) {
-      const fn = { error: a.showError, success: a.showSuccess, warning: a.showWarning, info: a.showInfo }[type] || a.showInfo;
-      fn.call(a, msg);
-    } else {
-      alert(msg);
-    }
-  };
-  document.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-action="window-print"]');
-    if (btn) { e.preventDefault(); window.print(); }
-    const closeBtn = e.target.closest('[data-action="window-close"]');
-    if (closeBtn) { e.preventDefault(); window.close(); }
-    const backBtn = e.target.closest('[data-action="history-back"]');
-    if (backBtn) {
-      e.preventDefault();
-      if (window.history.length > 1) { window.history.back(); }
-      else { window.location.href = '{{ url_for("main.dashboard") }}'; }
-    }
-    const reloadBtn = e.target.closest('[data-action="location-reload"]');
-    if (reloadBtn) { e.preventDefault(); window.location.reload(); }
-  });
-  if (new URLSearchParams(window.location.search).get('auto_print') === 'true') {
-    window.addEventListener('DOMContentLoaded', () => { setTimeout(() => { window.print(); }, 300); });
-  }
-  document.addEventListener('submit', (ev) => {
-    const btn = ev.target.querySelector('button[type="submit"]');
-    if (btn && !btn.disabled) {
-      setTimeout(() => {
-        btn.disabled = true;
-        const icon = btn.querySelector('.fa-spinner');
-        if (!icon) btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>' + btn.innerHTML;
-      }, 10);
-    }
-  }, true);
-  document.addEventListener('change', (ev) => {
-    if (ev.target.matches('[data-calc-totals]') && typeof calculateTotals === 'function') calculateTotals();
-  });
-  document.addEventListener('keyup', (ev) => {
-    if (ev.target.matches('[data-calc-totals]') && typeof calculateTotals === 'function') calculateTotals();
-  });
-</script>
-{% include 'partials/scripts.html' %}
-{% include 'partials/modals.html' %}
-{% block extra_js %}{% endblock %}
-<script src="{{ url_for('static', filename='js/form_validation.js') }}"></script>
+
+    // Form submit loading state with debounce
+    document.addEventListener('submit', (ev) => {
+      const form = ev.target;
+      const btn = form.querySelector('button[type="submit"]');
+      if (btn && !btn.disabled && !form.dataset.submitting) {
+        form.dataset.submitting = 'true';
+        setTimeout(() => {
+          btn.disabled = true;
+          btn.dataset.originalHtml = btn.innerHTML;
+          const spinner = btn.querySelector('.fa-spinner');
+          if (!spinner) {
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>' + btn.innerHTML;
+          }
+          btn.setAttribute('aria-busy', 'true');
+        }, 10);
+      }
+    }, true);
+
+    // Auto-calculate totals on change/keyup
+    document.addEventListener('change', (ev) => {
+      if (ev.target.matches('[data-calc-totals]') && typeof calculateTotals === 'function') calculateTotals();
+    });
+    document.addEventListener('keyup', (ev) => {
+      if (ev.target.matches('[data-calc-totals]') && typeof calculateTotals === 'function') calculateTotals();
+    });
+
+    // Hide page loader when DOM is ready
+    document.addEventListener('DOMContentLoaded', () => {
+      const loader = document.getElementById('azad-page-loader');
+      if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => loader.style.display = 'none', 300);
+      }
+    });
+  </script>
+
+  {% include 'partials/scripts.html' %}
+  {% include 'partials/modals.html' %}
+  {% block extra_js %}{% endblock %}
+  <script src="{{ url_for('static', filename='js/form_validation.js') }}"></script>
 </body>
 </html>

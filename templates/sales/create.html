@@ -18,6 +18,7 @@
 
 
 {% block extra_css %}
+{% include 'partials/select2_assets.html' %}
 <style>
 @media print {
   .main-sidebar, .main-header, .main-footer, .content-header,
@@ -343,6 +344,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{% include 'partials/select2_assets.html' %}
 <script>
   window._API_SEARCH_URL = {% if current_user.has_permission('view_reports') %}'{{ url_for('api.api_search') }}'{% else %}null{% endif %};
   window._PRESELECTED_CUSTOMER = {{ preselected_customer | tojson if preselected_customer else 'null' }};

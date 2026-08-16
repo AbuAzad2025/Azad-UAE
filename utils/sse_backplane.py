@@ -44,6 +44,7 @@ def _redis_client():
                 socket_timeout=1.5,
                 socket_connect_timeout=1.5,
                 health_check_interval=30,
+                protocol=2,
             )
             candidate.ping()
             _client = candidate
