@@ -41,6 +41,7 @@ class Budget(db.Model):
 
     # الحالة
     status = db.Column(db.String(20), default="draft", index=True)  # draft, active, closed
+    enforcement = db.Column(db.String(20), default="warn")  # warn, hard, off
 
     notes = db.Column(db.Text)
 
@@ -83,6 +84,109 @@ class Budget(db.Model):
         """نوع الفترة بالعربي"""
         types = {"annual": "سنوية", "quarterly": "ربع سنوية", "monthly": "شهرية"}
         return types.get(self.period_type, self.period_type)
+
+    def check_budget(self, account_id, amount):
+        """
+        Check if a proposed expense exceeds the budget for an account.
+
+        Returns:
+            dict with keys:
+                - allowed: bool
+                - budgeted: Decimal
+                - actual: Decimal
+                - remaining: Decimal
+                - message: str (warning/error)
+                - enforcement: str (warn/hard/off)
+        """
+        if self.status != "active":
+            return {
+                "allowed": True,
+                "budgeted": Decimal("0"),
+                "actual": Decimal("0"),
+                "remaining": Decimal("0"),
+                "message": "",
+                "enforcement": "off",
+            }
+
+        if self.enforcement == "off":
+            return {
+                "allowed": True,
+                "budgeted": Decimal("0"),
+                "actual": Decimal("0"),
+                "remaining": Decimal("0"),
+                "message": "",
+                "enforcement": "off",
+            }
+
+        line = BudgetLine.query.filter_by(
+            budget_id=self.id,
+            account_id=account_id,
+            tenant_id=self.tenant_id,
+        ).first()
+
+        if not line:
+            return {
+                "allowed": True,
+                "budgeted": Decimal("0"),
+                "actual": Decimal("0"),
+                "remaining": Decimal("0"),
+                "message": "",
+                "enforcement": self.enforcement,
+            }
+
+        from sqlalchemy import func
+
+        from models import GLJournalEntry, GLJournalLine
+
+        entry_filters = [
+            GLJournalEntry.tenant_id == self.tenant_id,
+            func.date(GLJournalEntry.entry_date).between(self.period_start, self.period_end),
+        ]
+        if self.branch_id is not None:
+            entry_filters.append(GLJournalEntry.branch_id == self.branch_id)
+
+        actual_debits = (
+            db.session.query(func.coalesce(func.sum(GLJournalLine.debit), Decimal("0")))
+            .filter(GLJournalLine.account_id == account_id)
+            .join(GLJournalEntry)
+            .filter(*entry_filters)
+            .scalar()
+        )
+
+        actual_credits = (
+            db.session.query(func.coalesce(func.sum(GLJournalLine.credit), Decimal("0")))
+            .filter(GLJournalLine.account_id == account_id)
+            .join(GLJournalEntry)
+            .filter(*entry_filters)
+            .scalar()
+        )
+
+        account = line.account
+        if account.type in ["asset", "expense"]:
+            current_actual = actual_debits - actual_credits
+        else:
+            current_actual = actual_credits - actual_debits
+
+        budgeted = Decimal(str(line.budgeted_amount))
+        remaining = budgeted - current_actual - Decimal(str(amount))
+
+        message = ""
+        allowed = True
+        if remaining < Decimal("0"):
+            if self.enforcement == "hard":
+                allowed = False
+                message = f"تجاوز الموازنة: المخطط {budgeted}، الفعلي {current_actual}، المطلوب {amount}"
+            else:
+                message = f"تحذير: هذا الإجراء سيتجاوز الموازنة بقيمة {abs(remaining)}"
+
+        return {
+            "allowed": allowed,
+            "budgeted": budgeted,
+            "actual": current_actual,
+            "remaining": remaining,
+            "message": message,
+            "enforcement": self.enforcement,
+        }
 
     def update_actuals(self):
         """تحديث الأرقام الفعلية من دفتر الأستاذ"""

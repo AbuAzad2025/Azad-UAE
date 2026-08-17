@@ -26,6 +26,11 @@ class Employee(db.Model):
     allowances = db.Column(db.Numeric(10, 2), default=0)  # Monthly allowances
     currency = db.Column(db.String(3), default=context_aware_default_currency)
 
+    # Bank / WPS Fields
+    bank_code = db.Column(db.String(20))  # Bank swift/sort code
+    bank_name = db.Column(db.String(100))
+    iban = db.Column(db.String(50))
+
     # Branch Link
     branch_id = db.Column(db.Integer, db.ForeignKey("branches.id", ondelete="RESTRICT"), nullable=True, index=True)
 

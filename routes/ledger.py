@@ -1178,3 +1178,72 @@ def admin_income_statement():
 def admin_settings():
     """إعدادات النظام المحاسبي"""
     return render_template("admin/ledger/settings.html")
+
+
+@ledger_bp.route("/close-fiscal-year", methods=["POST"])
+@login_required
+@permission_required("admin")
+def close_fiscal_year():
+    """إغلاق السنة المالية — ينشئ قيد إغلاق وينقل أرباح المرحلة لحساب retained earnings."""
+    from services.gl_service import FiscalYearService
+    from utils.tenanting import get_active_tenant_id
+
+    tenant_id = get_active_tenant_id(current_user)
+    if not tenant_id:
+        flash(gettext("يجب تحديد المستأجر."), "danger")
+        return redirect(url_for("ledger.index"))
+
+    fiscal_year = request.form.get("fiscal_year", type=int)
+    if not fiscal_year:
+        flash(gettext("يجب إدخال السنة المالية."), "danger")
+        return redirect(url_for("ledger.trial_balance"))
+
+    try:
+        with atomic_transaction("fiscal_year_close"):
+            closing_entry = FiscalYearService.close_fiscal_year(
+                tenant_id=tenant_id,
+                fiscal_year=fiscal_year,
+                user_id=current_user.id,
+            )
+        flash(
+            gettext(f"تم إغلاق السنة المالية {fiscal_year} بنجاح. القيد: {closing_entry.entry_number}"),
+            "success",
+        )
+    except ValueError as exc:
+        flash(str(exc), "warning")
+    except Exception:
+        current_app.logger.exception("Fiscal year close failed")
+        flash(gettext("فشل إغلاق السنة المالية."), "danger")
+
+    return redirect(url_for("ledger.trial_balance"))
+
+
+@ledger_bp.route("/fiscal-year-preview")
+@login_required
+@permission_required("admin")
+def fiscal_year_preview():
+    """معاينة إغلاق السنة المالية — يعرض الأرصدة قبل الإغلاق."""
+    from services.gl_service import FiscalYearService
+    from utils.tenanting import get_active_tenant_id
+
+    tenant_id = get_active_tenant_id(current_user)
+    if not tenant_id:
+        return jsonify({"error": "tenant required"}), 400
+
+    fiscal_year = request.args.get("fiscal_year", type=int)
+    if not fiscal_year:
+        return jsonify({"error": "fiscal_year required"}), 400
+
+    try:
+        preview = FiscalYearService.calculate_pl_balance(tenant_id, fiscal_year)
+        return jsonify(
+            {
+                "fiscal_year": fiscal_year,
+                "total_revenue": str(preview["total_revenue"]),
+                "total_expense": str(preview["total_expense"]),
+                "net_income": str(preview["net_income"]),
+                "line_count": len(preview["lines"]),
+            }
+        )
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 400

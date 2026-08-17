@@ -5,7 +5,7 @@ Phase 8: Treasury & Cash Position Reporting
 
 from datetime import datetime
 
-from flask import Blueprint, render_template, request, send_file
+from flask import Blueprint, flash, redirect, render_template, request, send_file, url_for
 from flask_babel import gettext
 from flask_login import current_user, login_required
 
@@ -132,9 +132,14 @@ def wps_export():
     from flask import Response
 
     from utils.localization import get_strategy
+    from utils.tenanting import tenant_query
 
     tenant_id = get_active_tenant_id(current_user)
-    from models import Tenant
+    if not tenant_id:
+        flash(gettext("يجب تحديد الشركة أولاً."), "warning")
+        return redirect(url_for("treasury.treasury"))
+
+    from models import PayrollTransaction, Tenant
 
     tenant = db.session.get(Tenant, tenant_id) if tenant_id else None
     country = (getattr(tenant, "vat_country", None) or "AE").strip().upper()
@@ -146,12 +151,59 @@ def wps_export():
             403,
         )
 
-    # Mock employees list (replace with real payroll query)
-    employees = []
-    result = strategy.get_wps_format(employees)
-    lines = "\n".join(result["lines"])
+    month = request.args.get("month", type=int) or datetime.now().month
+    year = request.args.get("year", type=int) or datetime.now().year
+
+    from models import Employee
+
+    employees = (
+        tenant_query(Employee)
+        .filter(
+            Employee.is_active.is_(True),
+            Employee.bank_code.isnot(None),
+            Employee.iban.isnot(None),
+        )
+        .all()
+    )
+
+    if not employees:
+        flash(gettext("لا يوجد موظفين مرتبطين بحسابات بنكية."), "warning")
+        return redirect(url_for("treasury.treasury"))
+
+    employee_data = []
+    for emp in employees:
+        txn = PayrollTransaction.query.filter_by(
+            tenant_id=tenant_id,
+            employee_id=emp.id,
+            month=month,
+            year=year,
+        ).first()
+        if not txn:
+            continue
+        employee_data.append(
+            {
+                "wps_id": f"{emp.id:08d}",
+                "employee_id": emp.id,
+                "name": emp.name,
+                "iban": emp.iban,
+                "bank_code": emp.bank_code,
+                "basic_salary": str(txn.basic_amount),
+                "allowances": str(txn.allowances),
+                "net_salary": str(txn.net_salary),
+                "currency": emp.currency or "AED",
+                "payment_date": txn.payment_date.isoformat() if txn.payment_date else "",
+            }
+        )
+
+    if not employee_data:
+        flash(gettext("لا توجد معاملات رواتب لهذا الشهر."), "warning")
+        return redirect(url_for("treasury.treasury"))
+
+    result = strategy.get_wps_format(employee_data)
+    lines = result.get("content", "\n".join(result["lines"]))
+    filename = f"wps_sif_{year}_{month:02d}.csv"
     return Response(
         lines,
-        mimetype="text/plain; charset=utf-8",
-        headers={"Content-Disposition": "attachment; filename=wps_export.sif"},
+        mimetype="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )

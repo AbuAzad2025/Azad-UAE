@@ -479,6 +479,175 @@ class PayrollService:
         return gl_entry
 
     @staticmethod
+    def calculate_eosb(employee):
+        """
+        Calculate End-of-Service Benefits settlement amount (UAE labor law).
+
+        Limited contract:
+        - First 5 years: 21 days/year
+        - After 5 years: 30 days/year for additional years
+        - Max = 2 years' total salary
+
+        Unlimited contract:
+        - First 1 year: no benefit
+        - Years 2-5: 21 days/year
+        - After 5 years: 30 days/year
+
+        Daily wage = basic_salary / 30.
+        """
+        if not employee.joined_date or not employee.termination_date:
+            return Decimal("0")
+
+        basic = Decimal(str(employee.basic_salary or 0))
+        if basic <= 0:
+            return Decimal("0")
+
+        joined = employee.joined_date
+        terminated = employee.termination_date
+        contract_type = getattr(employee, "contract_type", "limited")
+        daily_wage = basic / Decimal("30")
+
+        total_days = (terminated - joined).days
+        years = total_days // 365
+
+        if years < 1 and contract_type == "unlimited":
+            return Decimal("0")
+
+        eligible_years = max(0, years - 1) if contract_type == "unlimited" else years
+
+        first_five = min(eligible_years, 5)
+        after_five = max(0, eligible_years - 5)
+
+        total_benefit_days = first_five * 21 + after_five * 30
+        amount = daily_wage * Decimal(str(total_benefit_days))
+
+        max_limit = daily_wage * Decimal("730")
+        if amount > max_limit:
+            amount = max_limit
+
+        return amount.quantize(Decimal("0.01"))
+
+    @staticmethod
+    def settle_eosb(employee_id, user_id):
+        """
+        Settle EOS for a terminated employee:
+        1. Calculate EOSB amount
+        2. Post GL entry: Dr 6190 (EOS Provision Expense) / Cr 2140 (EOS Liability)
+        3. Return the settlement details
+        """
+        employee = Employee.query.get_or_404(employee_id)
+        tenant_id = PayrollService._require_employee_tenant_id(employee)
+
+        eosb_amount = PayrollService.calculate_eosb(employee)
+        if eosb_amount <= Decimal("0"):
+            raise ValueError(gettext("مبلغ مكافأة نهاية الخدمة صفر — لا يمكن التسوية."))
+
+        GLService.ensure_core_accounts(tenant_id=tenant_id)
+
+        gl_entry = post_or_fail(
+            [
+                {
+                    "account": GLService.get_account_code_for_concept(
+                        "END_OF_SERVICE_PROVISION",
+                        branch_id=employee.branch_id,
+                        tenant_id=tenant_id,
+                        fallback_key="end_of_service_provision",
+                    ),
+                    "concept_code": "END_OF_SERVICE_PROVISION",
+                    "debit": eosb_amount,
+                    "credit": 0,
+                    "description": f"EOSB Settlement - {employee.name}",
+                },
+                {
+                    "account": GLService.get_account_code_for_concept(
+                        "END_OF_SERVICE_LIABILITY",
+                        branch_id=employee.branch_id,
+                        tenant_id=tenant_id,
+                        fallback_key="end_of_service_liability",
+                    ),
+                    "concept_code": "END_OF_SERVICE_LIABILITY",
+                    "debit": 0,
+                    "credit": eosb_amount,
+                    "description": f"EOSB Settlement - {employee.name}",
+                },
+            ],
+            description=f"EOSB Settlement - {employee.name}",
+            reference_type=GLRef.PAYROLL,
+            reference_id=employee.id,
+            branch_id=employee.branch_id,
+            tenant_id=tenant_id,
+            user_id=user_id,
+        )
+
+        return {
+            "employee_id": employee.id,
+            "employee_name": employee.name,
+            "eosb_amount": eosb_amount,
+            "gl_entry_id": gl_entry.id,
+            "contract_type": getattr(employee, "contract_type", "limited"),
+            "joined_date": str(employee.joined_date),
+            "termination_date": str(employee.termination_date),
+        }
+
+    @staticmethod
+    def process_termination(employee_id, termination_date, termination_reason, user_id):
+        """
+        Full offboarding flow:
+        1. Mark employee inactive + set termination fields
+        2. Deduct any remaining salary advances
+        3. Settle EOSB via GL
+        """
+        employee = Employee.query.get_or_404(employee_id)
+        tenant_id = PayrollService._require_employee_tenant_id(employee)
+
+        if not employee.is_active:
+            raise ValueError(gettext("الموظف غير نشط بالفعل."))
+
+        if isinstance(termination_date, str):
+            termination_date = datetime.strptime(termination_date, "%Y-%m-%d").date()
+
+        employee.is_active = False
+        employee.termination_date = termination_date
+        employee.termination_reason = termination_reason
+
+        pending_advances = SalaryAdvance.query.filter_by(
+            employee_id=employee_id,
+            is_deducted=False,
+            status="approved",
+            tenant_id=tenant_id,
+        ).all()
+
+        advances_cleared = Decimal("0")
+        for adv in pending_advances:
+            remaining = Decimal(str(adv.remaining_amount or 0))
+            if remaining <= Decimal("0"):
+                remaining = Decimal(str(adv.total_amount or 0)) - Decimal(str(adv.deducted_amount or 0))
+                if remaining <= Decimal("0"):
+                    continue
+            adv.deducted_amount = Decimal(str(adv.total_amount or 0))
+            adv.remaining_amount = Decimal("0")
+            adv.is_deducted = True
+            adv.fully_deducted_at = datetime.now()
+            advances_cleared += remaining
+
+        eosb_result = None
+        try:
+            eosb_result = PayrollService.settle_eosb(employee_id, user_id)
+        except ValueError:
+            eosb_result = None
+
+        db.session.flush()
+
+        return {
+            "employee_id": employee.id,
+            "employee_name": employee.name,
+            "termination_date": str(termination_date),
+            "termination_reason": termination_reason,
+            "advances_cleared": advances_cleared,
+            "eosb": eosb_result,
+        }
+
+    @staticmethod
     def generate_branch_payroll(branch_id, month, year, user_id):
         tenant_id = PayrollService._branch_tenant_id(branch_id)
         employees = Employee.query.filter_by(branch_id=branch_id, tenant_id=tenant_id, is_active=True).all()

@@ -6,7 +6,7 @@ from typing import Any
 from flask_babel import gettext
 
 from extensions import db
-from models import GLAccount, GLJournalEntry, GLJournalLine
+from models import GLAccount, GLJournalEntry, GLJournalLine, GLPeriod
 from models._constants import (
     GL_CONCEPT_REGISTRY,
     RESOLUTION_MODE_LIQUIDITY,
@@ -1511,3 +1511,202 @@ class GLService:
             "ap_subledger_balance": float(total_supplier_balance),
             "ap_difference": float(gl_ap - total_supplier_balance),
         }
+
+
+class FiscalYearService:
+    """Fiscal year closing — validates all periods are closed, computes P&L,
+    generates year-end closing entries into Retained Earnings, and locks
+    the closed fiscal year."""
+
+    RETAINED_EARNINGS_CODE = "3200"
+
+    @staticmethod
+    def get_fiscal_year_months(tenant_id, fiscal_year):
+        """Return the 12 (year, month) tuples that comprise *fiscal_year*.
+
+        Uses ``Tenant.fiscal_year_start`` (1-12) to determine the mapping.
+        For example, if ``fiscal_year_start=7`` then fiscal year 2025
+        covers Jul-2025 through Jun-2026.
+        """
+        from models.tenant import Tenant
+
+        tenant = db.session.get(Tenant, int(tenant_id))
+        start_month = getattr(tenant, "fiscal_year_start", 1) or 1
+        months = []
+        for offset in range(12):
+            m = ((start_month - 1 + offset) % 12) + 1
+            y = fiscal_year + (1 if m < start_month else 0)
+            months.append((y, m))
+        return months
+
+    @staticmethod
+    def validate_periods_closed(tenant_id, fiscal_year):
+        """Return list of (year, month) tuples that are NOT yet closed.
+
+        Raises ``ValueError`` if any periods are still open.
+        """
+        from models.gl import GLPeriod
+
+        months = FiscalYearService.get_fiscal_year_months(tenant_id, fiscal_year)
+        open_periods = []
+        for y, m in months:
+            period = GLPeriod.query.filter_by(tenant_id=int(tenant_id), year=y, month=m).first()
+            if not period or not period.is_closed:
+                open_periods.append((y, m))
+        if open_periods:
+            labels = ", ".join(f"{y}-{m:02d}" for y, m in open_periods)
+            raise ValueError(gettext(f"لا يمكن إغلاق السنة المالية: الأيام غير المقفلة: {labels}"))
+        return open_periods
+
+    @staticmethod
+    def calculate_pl_balance(tenant_id, fiscal_year, user_id=None):
+        """Compute net income/loss for the given fiscal year.
+
+        Returns a dict with ``total_revenue``, ``total_expense``,
+        ``net_income``, and a ``lines`` list of per-account balances
+        suitable for building the closing journal entry.
+        """
+        months = FiscalYearService.get_fiscal_year_months(tenant_id, fiscal_year)
+        first_year, first_month = months[0]
+        last_year, last_month = months[-1]
+
+        start_date = datetime(first_year, first_month, 1, tzinfo=UTC)
+        if last_month == 12:
+            end_date = datetime(last_year, 12, 31, 23, 59, 59, tzinfo=UTC)
+        else:
+            end_date = datetime(last_year, last_month + 1, 1, tzinfo=UTC)
+
+        pl_accounts = (
+            GLAccount.query.filter(
+                GLAccount.tenant_id == int(tenant_id),
+                GLAccount.type.in_(["revenue", "expense"]),
+                GLAccount.is_active.is_(True),
+                GLAccount.is_header.is_(False),
+            )
+            .order_by(GLAccount.code)
+            .all()
+        )
+
+        total_revenue = Decimal("0")
+        total_expense = Decimal("0")
+        lines = []
+        for acct in pl_accounts:
+            bal = acct.get_balance(start_date=start_date, end_date=end_date)
+            if bal == 0:
+                continue
+            lines.append(
+                {
+                    "account_id": acct.id,
+                    "account_code": acct.code,
+                    "account_type": acct.type,
+                    "balance": bal,
+                }
+            )
+            if acct.type == "revenue":
+                total_revenue += abs(bal)
+            else:
+                total_expense += abs(bal)
+
+        net_income = total_revenue - total_expense
+        return {
+            "fiscal_year": fiscal_year,
+            "start_date": start_date,
+            "end_date": end_date,
+            "total_revenue": total_revenue,
+            "total_expense": total_expense,
+            "net_income": net_income,
+            "lines": lines,
+        }
+
+    @staticmethod
+    def close_fiscal_year(tenant_id, fiscal_year, user_id=None):
+        """Execute the full year-end closing procedure.
+
+        Steps:
+          1. Validate all 12 periods are closed.
+          2. Compute net P&L balance.
+          3. Create a closing journal entry zeroing P&L → Retained Earnings.
+          4. Lock all periods (redundant safety) and mark fiscal year done.
+
+        Returns the closing ``GLJournalEntry``.
+        """
+        from services.gl_posting import post_or_fail
+
+        FiscalYearService.validate_periods_closed(tenant_id, fiscal_year)
+        pl = FiscalYearService.calculate_pl_balance(tenant_id, fiscal_year, user_id=user_id)
+
+        if not pl["lines"]:
+            raise ValueError(gettext("لا توجد حسابات إيرادات أو مصروفات لإغلاقها."))
+
+        closing_date = pl["end_date"]
+        retained_code = FiscalYearService.RETAINED_EARNINGS_CODE
+        retained_acct = GLAccount.query.filter_by(tenant_id=int(tenant_id), code=retained_code).first()
+        if not retained_acct:
+            raise ValueError(gettext(f"حساب أرباح مرحلة ({retained_code}) غير موجود في دليل الحسابات."))
+
+        gl_lines = []
+        for item in pl["lines"]:
+            bal = item["balance"]
+            acct_id = item["account_id"]
+            if item["account_type"] == "revenue":
+                # Revenue has normal credit balance; close by debiting it
+                gl_lines.append(
+                    {
+                        "account_id": acct_id,
+                        "debit": abs(bal),
+                        "credit": Decimal("0"),
+                        "description": f"إقفال إيرادات - {fiscal_year}",
+                    }
+                )
+            else:
+                # Expense has normal debit balance; close by crediting it
+                gl_lines.append(
+                    {
+                        "account_id": acct_id,
+                        "debit": Decimal("0"),
+                        "credit": abs(bal),
+                        "description": f"إقفال مصروفات - {fiscal_year}",
+                    }
+                )
+
+        # Balanced plug to Retained Earnings
+        net = pl["net_income"]
+        if net >= 0:
+            gl_lines.append(
+                {
+                    "account_id": retained_acct.id,
+                    "debit": Decimal("0"),
+                    "credit": abs(net),
+                    "description": f"أرباح المرحلة - {fiscal_year}",
+                }
+            )
+        else:
+            gl_lines.append(
+                {
+                    "account_id": retained_acct.id,
+                    "debit": abs(net),
+                    "credit": Decimal("0"),
+                    "description": f"خسائر المرحلة - {fiscal_year}",
+                }
+            )
+
+        closing_entry = post_or_fail(
+            gl_lines,
+            description=f"إقفال السنة المالية {fiscal_year}",
+            reference_type="closing",
+            date=closing_date,
+            user_id=user_id,
+            tenant_id=tenant_id,
+        )
+
+        # Lock all periods for the fiscal year (redundant safety)
+        months = FiscalYearService.get_fiscal_year_months(tenant_id, fiscal_year)
+        for y, m in months:
+            period = GLPeriod.query.filter_by(tenant_id=int(tenant_id), year=y, month=m).first()
+            if period and not period.is_closed:
+                period.is_closed = True
+                period.closed_at = datetime.now(UTC)
+                period.closed_by = user_id
+        db.session.flush()
+
+        return closing_entry

@@ -7,9 +7,9 @@ from unittest.mock import MagicMock
 import pytest
 
 from extensions import db
-from models import GLAccount, GLJournalLine
+from models import GLAccount, GLJournalEntry, GLJournalLine, GLPeriod
 from services.gl_account_resolver import GLMappingError
-from services.gl_service import GL_ACCOUNTS, GLService
+from services.gl_service import GL_ACCOUNTS, FiscalYearService, GLService
 
 
 def _balanced_lines(amount=Decimal("100")):
@@ -1455,3 +1455,197 @@ class TestGlServiceCoverageGaps:
             branch_id=sample_branch.id,
         )
         assert resolved.code == "FA1"
+
+
+class TestFiscalYearService:
+    """Tests for FiscalYearService (year-end closing)."""
+
+    def test_get_fiscal_year_months_calendar(self, db_session, sample_tenant):
+        """Calendar fiscal year (start=1) → Jan-Dec."""
+        sample_tenant.fiscal_year_start = 1
+        db_session.flush()
+        months = FiscalYearService.get_fiscal_year_months(sample_tenant.id, 2025)
+        assert months == [
+            (2025, 1),
+            (2025, 2),
+            (2025, 3),
+            (2025, 4),
+            (2025, 5),
+            (2025, 6),
+            (2025, 7),
+            (2025, 8),
+            (2025, 9),
+            (2025, 10),
+            (2025, 11),
+            (2025, 12),
+        ]
+
+    def test_get_fiscal_year_months_july_start(self, db_session, sample_tenant):
+        """Mid-year fiscal year (start=7) → Jul 2025 to Jun 2026."""
+        sample_tenant.fiscal_year_start = 7
+        db_session.flush()
+        months = FiscalYearService.get_fiscal_year_months(sample_tenant.id, 2025)
+        assert months[0] == (2025, 7)
+        assert months[-1] == (2026, 6)
+        assert len(months) == 12
+
+    def test_validate_periods_closed_success(self, db_session, sample_tenant):
+        """All 12 periods closed → no error."""
+        sample_tenant.fiscal_year_start = 1
+        months = FiscalYearService.get_fiscal_year_months(sample_tenant.id, 2025)
+        for y, m in months:
+            period = GLPeriod(
+                tenant_id=sample_tenant.id,
+                year=y,
+                month=m,
+                is_closed=True,
+                closed_at=datetime.now(UTC),
+            )
+            db_session.add(period)
+        db_session.flush()
+        open_periods = FiscalYearService.validate_periods_closed(sample_tenant.id, 2025)
+        assert open_periods == []
+
+    def test_validate_periods_closed_raises(self, db_session, sample_tenant):
+        """Missing period → ValueError."""
+        sample_tenant.fiscal_year_start = 1
+        # Only close 11 of 12 months
+        months = FiscalYearService.get_fiscal_year_months(sample_tenant.id, 2025)
+        for y, m in months[:11]:
+            period = GLPeriod(
+                tenant_id=sample_tenant.id,
+                year=y,
+                month=m,
+                is_closed=True,
+                closed_at=datetime.now(UTC),
+            )
+            db_session.add(period)
+        db_session.flush()
+        with pytest.raises(ValueError, match="المقفلة"):
+            FiscalYearService.validate_periods_closed(sample_tenant.id, 2025)
+
+    def test_calculate_pl_balance(self, db_session, sample_tenant, sample_gl_accounts):
+        """P&L balance aggregates revenue and expense accounts."""
+        revenue_acct = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="4100").first()
+        expense_acct = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="6500").first()
+        if not revenue_acct or not expense_acct:
+            pytest.skip("GL accounts not seeded")
+        pl = FiscalYearService.calculate_pl_balance(sample_tenant.id, 2025)
+        assert "net_income" in pl
+        assert "total_revenue" in pl
+        assert "total_expense" in pl
+        assert isinstance(pl["net_income"], Decimal)
+
+    def test_close_fiscal_year_posts_entry(self, db_session, sample_tenant, sample_gl_accounts, sample_user, mocker):
+        """close_fiscal_year posts a closing entry to Retained Earnings."""
+        sample_tenant.fiscal_year_start = 1
+        months = FiscalYearService.get_fiscal_year_months(sample_tenant.id, 2025)
+        for y, m in months:
+            period = GLPeriod(
+                tenant_id=sample_tenant.id,
+                year=y,
+                month=m,
+                is_closed=True,
+                closed_at=datetime.now(UTC),
+            )
+            db_session.add(period)
+        db_session.flush()
+
+        revenue_acct = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="4100").first()
+        expense_acct = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="6500").first()
+        assert revenue_acct and expense_acct, "GL accounts not seeded"
+
+        # Seed a revenue journal entry (credit 4100 = 1000)
+        rev_entry = GLJournalEntry(
+            tenant_id=sample_tenant.id,
+            entry_number="JE-2025-0001",
+            entry_date=datetime(2025, 3, 15, tzinfo=UTC),
+            description="Test revenue",
+            entry_type="auto",
+            status="posted",
+            total_debit=Decimal("1000"),
+            total_credit=Decimal("1000"),
+        )
+        db_session.add(rev_entry)
+        db_session.flush()
+        db_session.add(
+            GLJournalLine(
+                tenant_id=sample_tenant.id,
+                entry_id=rev_entry.id,
+                account_id=revenue_acct.id,
+                debit=Decimal("0"),
+                credit=Decimal("1000"),
+                amount_aed=Decimal("-1000"),
+            )
+        )
+        # Seed an expense journal entry (debit 6500 = 400)
+        exp_entry = GLJournalEntry(
+            tenant_id=sample_tenant.id,
+            entry_number="JE-2025-0002",
+            entry_date=datetime(2025, 6, 10, tzinfo=UTC),
+            description="Test expense",
+            entry_type="auto",
+            status="posted",
+            total_debit=Decimal("400"),
+            total_credit=Decimal("400"),
+        )
+        db_session.add(exp_entry)
+        db_session.flush()
+        db_session.add(
+            GLJournalLine(
+                tenant_id=sample_tenant.id,
+                entry_id=exp_entry.id,
+                account_id=expense_acct.id,
+                debit=Decimal("400"),
+                credit=Decimal("0"),
+                amount_aed=Decimal("400"),
+            )
+        )
+        db_session.flush()
+
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=False)
+
+        def _fake_post_or_fail(lines, **kwargs):
+            entry = GLJournalEntry(
+                tenant_id=sample_tenant.id,
+                entry_number="JE-2025-9999",
+                entry_date=kwargs.get("date", datetime(2025, 12, 31, tzinfo=UTC)),
+                description=kwargs.get("description", "closing"),
+                entry_type="auto",
+                status="posted",
+                total_debit=sum(Decimal(str(ln.get("debit", 0))) for ln in lines),
+                total_credit=sum(Decimal(str(ln.get("credit", 0))) for ln in lines),
+                created_by=kwargs.get("user_id"),
+            )
+            db_session.add(entry)
+            db_session.flush()
+            return entry
+
+        mocker.patch("services.gl_posting.post_or_fail", side_effect=_fake_post_or_fail)
+
+        retained = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="3200").first()
+        if not retained:
+            retained = GLAccount(
+                tenant_id=sample_tenant.id,
+                code="3200",
+                name="Retained Earnings",
+                name_ar="أرباح مرحلة",
+                type="equity",
+                is_active=True,
+                is_header=False,
+            )
+            db_session.add(retained)
+            db_session.flush()
+
+        closing_entry = FiscalYearService.close_fiscal_year(
+            sample_tenant.id,
+            2025,
+            user_id=sample_user.id,
+        )
+        assert closing_entry is not None
+        assert closing_entry.status == "posted"
+        # Revenue 1000 - Expense 400 = Net Income 600
+        pl = FiscalYearService.calculate_pl_balance(sample_tenant.id, 2025)
+        assert pl["total_revenue"] == Decimal("1000")
+        assert pl["total_expense"] == Decimal("400")
+        assert pl["net_income"] == Decimal("600")

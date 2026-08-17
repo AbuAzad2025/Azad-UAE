@@ -301,6 +301,18 @@ class PurchaseService:
 
         total_payable = purchase.total_amount
 
+        # Budget enforcement check
+        from services.budget_enforcement import check_budget_for_account
+
+        budget_check = check_budget_for_account(
+            tenant_id=tenant_id,
+            account_code=GL_ACCOUNTS["inventory"],
+            amount=inventory_debit,
+            branch_id=purchase_branch_id,
+        )
+        if budget_check and not budget_check.get("allowed", True):
+            raise ValueError(gettext(budget_check["message"]))
+
         lines = [
             {
                 "account": GL_ACCOUNTS["inventory"],

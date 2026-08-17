@@ -234,6 +234,22 @@ def create():
                     tenant_id=getattr(expense, "tenant_id", None) or get_active_tenant_id(current_user)
                 )
                 tid = getattr(expense, "tenant_id", None) or get_active_tenant_id(current_user)
+
+                # Budget enforcement check
+                from services.budget_enforcement import check_budget_for_account
+                from services.gl_service import GL_ACCOUNTS as _GL_ACCTS
+
+                cat = ExpenseCategory.query.get(expense.category_id) if expense.category_id else None
+                expense_acct = getattr(cat, "gl_account_code", None) or _GL_ACCTS.get("misc_expense", "6500")
+                budget_check = check_budget_for_account(
+                    tenant_id=tid,
+                    account_code=expense_acct,
+                    amount=expense.amount,
+                    branch_id=expense_branch_id,
+                )
+                if budget_check and not budget_check.get("allowed", True):
+                    raise ValueError(budget_check["message"])
+
                 lines = _build_expense_gl_lines(expense, tid)
                 post_or_fail(
                     lines,

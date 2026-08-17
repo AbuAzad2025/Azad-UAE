@@ -551,3 +551,48 @@ class TestGenerateBranchPayroll:
             generated, skipped = PayrollService.generate_branch_payroll(sample_branch.id, 8, 2026, user_id=1)
         assert generated == 1
         proc.assert_called_once()
+
+
+class TestEOSB:
+    def test_calculate_eosb_limited_3_years(self, db_session, sample_branch, sample_tenant):
+        from datetime import date
+
+        emp = _employee(db_session, sample_branch, sample_tenant, name="EOSB1", basic_salary="6000")
+        emp.contract_type = "limited"
+        emp.joined_date = date(2022, 1, 1)
+        emp.termination_date = date(2025, 1, 1)
+        db_session.flush()
+
+        amount = PayrollService.calculate_eosb(emp)
+        # 3 years × 21 days = 63 days, daily_wage = 6000/30 = 200
+        assert amount == Decimal("12600.00")
+
+    def test_calculate_eosb_unlimited_under_1_year(self, db_session, sample_branch, sample_tenant):
+        from datetime import date
+
+        emp = _employee(db_session, sample_branch, sample_tenant, name="EOSB2")
+        emp.contract_type = "unlimited"
+        emp.joined_date = date(2025, 6, 1)
+        emp.termination_date = date(2026, 1, 1)
+        db_session.flush()
+
+        assert PayrollService.calculate_eosb(emp) == Decimal("0")
+
+    def test_calculate_eosb_no_dates(self, db_session, sample_branch, sample_tenant):
+        emp = _employee(db_session, sample_branch, sample_tenant, name="EOSB3")
+        db_session.flush()
+        assert PayrollService.calculate_eosb(emp) == Decimal("0")
+
+    def test_calculate_eosb_capped_at_2_years(self, db_session, sample_branch, sample_tenant):
+        from datetime import date
+
+        emp = _employee(db_session, sample_branch, sample_tenant, name="EOSB4", basic_salary="30000")
+        emp.contract_type = "limited"
+        emp.joined_date = date(2000, 1, 1)
+        emp.termination_date = date(2026, 1, 1)
+        db_session.flush()
+
+        amount = PayrollService.calculate_eosb(emp)
+        # 5×21 + 21×30 = 105 + 630 = 735 days → uncapped=300000 > cap=300000 → capped
+        daily = Decimal("30000") / Decimal("30")
+        assert amount == (daily * Decimal("730")).quantize(Decimal("0.01"))
