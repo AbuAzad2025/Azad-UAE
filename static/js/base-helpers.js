@@ -576,8 +576,7 @@ function initNavbarCalculator() {
 
 			if (!(p > 0) || !(months > 0)) {
 				out.className = "alert alert-warning mt-2 mb-0";
-				out.innerHTML =
-					'<i class="fas fa-exclamation-triangle mr-1"></i>أدخل قيم صحيحة.';
+				out.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>أدخل قيم صحيحة.';
 				return;
 			}
 
@@ -604,8 +603,7 @@ function initNavbarCalculator() {
 
 			if (!(cost >= 0) || !(sell > 0)) {
 				out.className = "alert alert-warning mt-2 mb-0";
-				out.innerHTML =
-					'<i class="fas fa-exclamation-triangle mr-1"></i>أدخل قيم صحيحة.';
+				out.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>أدخل قيم صحيحة.';
 				return;
 			}
 
