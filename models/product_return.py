@@ -1,4 +1,4 @@
-﻿from datetime import UTC, datetime
+from datetime import UTC, datetime
 from decimal import ROUND_HALF_UP, Decimal
 
 from extensions import db
@@ -57,6 +57,7 @@ class ProductReturn(db.Model):
         self.amount_aed = value
 
     return_reason = db.Column(db.String(255))
+
     @property
     def base_currency_display(self):
         """Alias for templates."""
@@ -127,5 +128,3 @@ class ProductReturnLine(db.Model):
 
     def __repr__(self):
         return f"<ProductReturnLine {self.product_id} x {self.quantity}>"
-
-

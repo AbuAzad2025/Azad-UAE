@@ -1,4 +1,4 @@
-﻿from datetime import UTC, datetime
+from datetime import UTC, datetime
 
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
@@ -121,4 +121,3 @@ class Expense(db.Model):
             "payment_method": self.payment_method,
             "status": self.status,
         }
-

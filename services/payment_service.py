@@ -211,7 +211,9 @@ class PaymentService:
             )
 
             exchange_rate = PaymentService._resolve_transaction_rate(currency, user_exchange_rate)
-            base_currency = resolve_tenant_base_currency(tenant_id=(supplier.tenant_id if supplier is not None else None))
+            base_currency = resolve_tenant_base_currency(
+                tenant_id=(supplier.tenant_id if supplier is not None else None)
+            )
 
             payment = Payment(
                 tenant_id=(supplier.tenant_id if supplier is not None else None)

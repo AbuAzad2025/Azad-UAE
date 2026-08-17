@@ -138,14 +138,9 @@ def api_search_sales():
     if q.isdigit():
         query = query.filter(Sale.id == int(q))
     else:
-        query = query.filter(or_(
-            Sale.sale_number.ilike(f"%{q}%"),
-            Sale.invoice_number.ilike(f"%{q}%")
-        ))
+        query = query.filter(or_(Sale.sale_number.ilike(f"%{q}%"), Sale.invoice_number.ilike(f"%{q}%")))
 
-    pagination = query.order_by(Sale.sale_date.desc()).paginate(
-        page=page, per_page=per_page, error_out=False
-    )
+    pagination = query.order_by(Sale.sale_date.desc()).paginate(page=page, per_page=per_page, error_out=False)
 
     items = [
         {
@@ -179,20 +174,21 @@ def api_get_sale_lines():
     for line in sale.lines:
         # Calculate available quantity (sold - already returned)
         returned_qty = sum(
-            rl.quantity for r in sale.returns for rl in r.lines
-            if rl.line_id == line.id and r.status == "approved"
+            rl.quantity for r in sale.returns for rl in r.lines if rl.line_id == line.id and r.status == "approved"
         )
         available = (line.quantity or 0) - returned_qty
         if available <= 0:
             continue
-        lines.append({
-            "id": line.id,
-            "line_id": line.id,
-            "product_name": line.product.name if line.product else "—",
-            "variant": line.variant_name or "",
-            "available_qty": available,
-            "unit_price": float(line.unit_price or 0),
-        })
+        lines.append(
+            {
+                "id": line.id,
+                "line_id": line.id,
+                "product_name": line.product.name if line.product else "—",
+                "variant": line.variant_name or "",
+                "available_qty": available,
+                "unit_price": float(line.unit_price or 0),
+            }
+        )
 
     return jsonify({"lines": lines})
 

@@ -1,4 +1,4 @@
-﻿from datetime import UTC, datetime
+from datetime import UTC, datetime
 from decimal import ROUND_HALF_UP, Decimal
 
 from extensions import db
@@ -357,4 +357,3 @@ class PurchaseLine(db.Model):
             "landed_cost": float(self.landed_cost) if self.landed_cost else 0,
             "landed_unit_cost": (float(self.landed_unit_cost) if self.landed_unit_cost else 0),
         }
-
