@@ -237,6 +237,7 @@ describe('customer-select.js', () => {
       vi.advanceTimersByTime(150);
       expect(select2Calls.length).toBeGreaterThanOrEqual(1);
     } finally {
+      vi.clearAllTimers();
       vi.useRealTimers();
     }
   });
