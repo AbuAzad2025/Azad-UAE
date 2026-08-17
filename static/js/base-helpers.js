@@ -204,7 +204,7 @@ async function loadFxRates() {
 	const tbody = document.getElementById("fx-rates-body");
 	if (tbody) {
 		tbody.innerHTML =
-			'<tr><td colspan="3" class="text-center py-4"><div class="spinner-border spinner-border-sm text-muted" role="status"></div><span class="mr-2"> جار�? التحميل...</span></td></tr>';
+			'<tr><td colspan="3" class="text-center py-4"><div class="spinner-border spinner-border-sm text-muted" role="status"></div><span class="mr-2"> جارٍ التحميل...</span></td></tr>';
 	}
 
 	try {
@@ -251,14 +251,14 @@ function populateFxDisplay(data) {
 	const source = data.source || "unknown";
 
 	const labels = {
-		USD: { ar: "????? ??????", sym: "$" },
-		ILS: { ar: "???? ????????", sym: "?" },
-		JOD: { ar: "????? ?????", sym: "JD" },
-		EUR: { ar: "????", sym: "�" },
-		AED: { ar: "???? ???????", sym: "?.?" },
-		SAR: { ar: "???? ?????", sym: "?.?" },
-		EGP: { ar: "???? ????", sym: "?.?" },
-		GBP: { ar: "???? ????????", sym: "�" },
+		USD: { ar: "دولار أمريكي", sym: "$" },
+		ILS: { ar: "شيكل فلسطيني", sym: "₪" },
+		JOD: { ar: "دينار أردني", sym: "JD" },
+		EUR: { ar: "يورو", sym: "€" },
+		AED: { ar: "درهم إماراتي", sym: "د.إ" },
+		SAR: { ar: "ريال سعودي", sym: "ر.س" },
+		EGP: { ar: "جنيه مصري", sym: "ج.م" },
+		GBP: { ar: "جنيه إسترليني", sym: "£" },
 	};
 	labels[window._FX_FALLBACK_BASE || "USD"] = {
 		ar: window._CURRENCY_NAME_AR,
@@ -287,7 +287,7 @@ function populateFxDisplay(data) {
 			badge.textContent = "سعر تقديري";
 		} else if (stale) {
 			badge.className = "badge badge-warning ml-1";
-			badge.textContent = "آخر سعر مح�?وظ";
+			badge.textContent = "آخر سعر محفوظ";
 		} else {
 			badge.className = "badge badge-success ml-1";
 			badge.textContent = "مباشر";
@@ -327,9 +327,9 @@ function updateDateTime() {
 // ── 7. Safe Expression Evaluator ──
 function safeEval(expr) {
 	const src = String(expr || "")
-		.replace(/[�]/g, "/")
-		.replace(/[�]/g, "*")
-		.replace(/[?]/g, "pi")
+		.replace(/[÷]/g, "/")
+		.replace(/[×]/g, "*")
+		.replace(/[π]/g, "pi")
 		.replace(/\^/g, "**");
 
 	let pos = 0;
@@ -589,7 +589,7 @@ function initNavbarCalculator() {
 			out.innerHTML = `
         <div class="d-flex justify-content-between flex-wrap">
           <span><i class="fas fa-hand-holding-usd mr-1"></i>القسط: <strong>${emi.toFixed(2)}</strong></span>
-          <span><i class="fas fa-coins mr-1"></i>ال�?ائدة: <strong>${interest.toFixed(2)}</strong></span>
+          <span><i class="fas fa-coins mr-1"></i>الفائدة: <strong>${interest.toFixed(2)}</strong></span>
           <span><i class="fas fa-wallet mr-1"></i>الإجمالي: <strong>${total.toFixed(2)}</strong></span>
         </div>`;
 		});
