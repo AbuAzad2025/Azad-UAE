@@ -814,6 +814,7 @@ html, body.azad-login-page {
     gap: 24px;
   }
   .azad-login-brand__text, .azad-login-trust { display: none; }
+
   .azad-login-card {
     padding: 28px 22px;
     border-radius: var(--radius-lg);
@@ -849,6 +850,7 @@ html[dir="rtl"] .azad-login-forgot::after { left: auto; right: 0; }
 @media print {
   .azad-login-bg, .azad-login-lang, .azad-login-trust { display: none !important; }
   .azad-login-shell { min-height: auto; padding: 20px; }
+
   .azad-login-card {
     box-shadow: none;
     border: 1px solid #ccc;
