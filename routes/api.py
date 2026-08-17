@@ -575,21 +575,19 @@ def exchange_rates_display():
     NEVER use these for accounting, invoicing, payments, or GL entries.
     Use /api/currency-rate/<from>/<to> for accounting rates.
     """
+    from flask_login import current_user
+
+    from models import Tenant
     from services.exchange_rate_service import ExchangeRateService
     from utils.tenanting import get_active_tenant_id
-    from flask_login import current_user
 
     # Use tenant's base currency as the base for display
     tenant_id = get_active_tenant_id(current_user)
-    if tenant_id:
-        from models import Tenant
-        tenant = Tenant.query.get(tenant_id)
-        if tenant:
-            base = tenant.get_base_currency()
-        else:
-            base = "USD"
-    else:
-        base = request.args.get("base", "USD").upper()
+    base = (
+        Tenant.query.get(tenant_id).get_base_currency
+        if tenant_id and Tenant.query.get(tenant_id)
+        else request.args.get("base", "USD").upper()
+    )
 
     symbols_str = request.args.get("symbols", "")
     if symbols_str:

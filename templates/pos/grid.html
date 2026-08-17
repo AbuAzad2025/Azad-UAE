@@ -191,7 +191,7 @@
         <button data-key="4">4</button><button data-key="5">5</button><button data-key="6">6</button>
         <button data-key="7">7</button><button data-key="8">8</button><button data-key="9">9</button>
         <button data-key=".">.</button><button data-key="0">0</button><button class="action" data-key="qty">{{ _('ÙƒÙ…ÙŠØ©') }}</button>
-        <button class="danger" data-key="del" title="{{ _('Ø­Ø°Ù') }}" aria-label="{{ _('Ø­Ø°Ù') }}"><i class="fas fa-backspace"></i></button><button class="action" data-key="disc">{{ _('Ø®ØµÙ…%') }}</button><button class="action" data-key="price">{{ _('Ø³Ø¹Ø±') }}</button>
+        <button class="danger" data-key="del" title="{{ _('حذف') }}" aria-label="{{ _('حذف') }}"><i class="fas fa-backspace"></i></button><button class="action" data-key="disc">{{ _('خصم') }}</button><button class="action" data-key="price">{{ _('السعر') }}</button>
       </div>
       <div class="pos-payment-btns">
         <button id="checkoutBtn" class="btn-pay"><i class="fas fa-check mr-1"></i>{{ _('Ø­ÙØ¸ Ø§Ù„ÙØ§ØªÙˆØ±Ø©') }}</button>
@@ -282,4 +282,15 @@ document.addEventListener('click', (e) => {
 <script src="{{ url_for('static', filename='js/pos/grid.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pos/offline.js') }}"></script>
 {% endblock %}
+
+
+
+
+
+
+
+
+
+
+
 

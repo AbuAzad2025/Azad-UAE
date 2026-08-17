@@ -1,6 +1,7 @@
 from flask import Blueprint, abort, current_app, jsonify, render_template, request
 from flask_babel import gettext
 from flask_login import current_user, login_required
+from sqlalchemy import or_
 
 from extensions import limiter
 from models import ProductReturn, Sale
@@ -10,7 +11,7 @@ from utils.branching import should_show_all_branch_columns
 from utils.db_safety import atomic_transaction
 from utils.decorators import branch_scope_id, permission_required
 from utils.helpers import format_currency
-from utils.tenanting import get_active_tenant_id, is_platform_owner
+from utils.tenanting import get_active_tenant_id, is_platform_owner, tenant_query
 
 returns_bp = Blueprint("returns", __name__, url_prefix="/returns")
 
@@ -132,9 +133,6 @@ def api_search_sales():
 
     if not q:
         return jsonify({"items": [], "has_more": False})
-
-    from utils.tenanting import tenant_query
-    from sqlalchemy import or_
 
     query = tenant_query(Sale).filter(Sale.status == "completed")
     if q.isdigit():

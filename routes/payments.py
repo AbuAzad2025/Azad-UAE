@@ -24,7 +24,7 @@ from services.gl_posting import post_or_fail
 from services.logging_core import LoggingCore
 from services.payment_service import PaymentService
 from utils.branching import should_show_all_branch_columns
-from utils.currency_utils import get_system_default_currency, resolve_default_currency
+from utils.currency_utils import get_system_default_currency, resolve_default_currency, resolve_tenant_base_currency
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
 from utils.gl_reference_types import GLRef
