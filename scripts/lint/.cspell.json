@@ -160,7 +160,9 @@
 		"testi",
 		"toastr",
 		"Trisectrix",
-		"Xatwd"
+		"Xatwd",
+		"describedby",
+		"FOUC"
 	],
 	"flagWords": [],
 	"ignoreWords": [

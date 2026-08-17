@@ -1,9 +1,9 @@
-﻿/**
- * Azad ERP â€” Base Helpers & Utilities
+/**
+ * Azad ERP — Base Helpers & Utilities
  * Fixed encoding issues, enhanced performance, added new utilities
  */
 
-// â”€â”€ 1. Azad UI Helper â”€â”€
+// ── 1. Azad UI Helper ──
 (() => {
 	let loadingCount = 0;
 
@@ -113,7 +113,7 @@
 	};
 })();
 
-// â”€â”€ 2. CSRF & AJAX Setup â”€â”€
+// ── 2. CSRF & AJAX Setup ──
 $(() => {
 	try {
 		const csrfToken = $('meta[name="csrf-token"]').attr("content");
@@ -144,7 +144,7 @@ $(() => {
 	initNavbarCalculator();
 });
 
-// â”€â”€ 3. Smart Link Prefetching â”€â”€
+// ── 3. Smart Link Prefetching ──
 document
 	.querySelectorAll('a[href^="/"]:not([href*="/logout"]):not([href^="//"])')
 	.forEach((link) => {
@@ -164,7 +164,7 @@ document
 		);
 	});
 
-// â”€â”€ 4. Flash Message Auto-Dismiss â”€â”€
+// ── 4. Flash Message Auto-Dismiss ──
 document.querySelectorAll(".flash-message").forEach((alert) => {
 	if (!alert.classList.contains("alert-permanent") && !alert.classList.contains("alert-danger")) {
 		const progressBar = alert.querySelector(".flash-timer");
@@ -180,7 +180,7 @@ document.querySelectorAll(".flash-message").forEach((alert) => {
 	}
 });
 
-// â”€â”€ 5. FX Rates â”€â”€
+// ── 5. FX Rates ──
 let fxDisplayCache = null;
 let fxDisplayCacheTime = 0;
 const FX_DISPLAY_CACHE_MS = 300000;
@@ -204,7 +204,7 @@ async function loadFxRates() {
 	const tbody = document.getElementById("fx-rates-body");
 	if (tbody) {
 		tbody.innerHTML =
-			'<tr><td colspan="3" class="text-center py-4"><div class="spinner-border spinner-border-sm text-muted" role="status"></div><span class="mr-2"> Ø¬Ø§Ø±Ù Ø§Ù„ØªØ­Ù…ÙŠÙ„...</span></td></tr>';
+			'<tr><td colspan="3" class="text-center py-4"><div class="spinner-border spinner-border-sm text-muted" role="status"></div><span class="mr-2"> جار�? التحميل...</span></td></tr>';
 	}
 
 	try {
@@ -251,14 +251,14 @@ function populateFxDisplay(data) {
 	const source = data.source || "unknown";
 
 	const labels = {
-		USD: { ar: "دولار أمريكي", sym: "$" },
-		ILS: { ar: "شيكل إسرائيلي", sym: "₪" },
-		JOD: { ar: "دينار أردني", sym: "JD" },
-		EUR: { ar: "يورو", sym: "€" },
-		AED: { ar: "درهم إماراتي", sym: "د.إ" },
-		SAR: { ar: "ريال سعودي", sym: "ر.س" },
-		EGP: { ar: "جنيه مصري", sym: "ج.م" },
-		GBP: { ar: "جنيه إسترليني", sym: "£" },
+		USD: { ar: "????? ??????", sym: "$" },
+		ILS: { ar: "???? ????????", sym: "?" },
+		JOD: { ar: "????? ?????", sym: "JD" },
+		EUR: { ar: "????", sym: "�" },
+		AED: { ar: "???? ???????", sym: "?.?" },
+		SAR: { ar: "???? ?????", sym: "?.?" },
+		EGP: { ar: "???? ????", sym: "?.?" },
+		GBP: { ar: "???? ????????", sym: "�" },
 	};
 	labels[window._FX_FALLBACK_BASE || "USD"] = {
 		ar: window._CURRENCY_NAME_AR,
@@ -284,13 +284,13 @@ function populateFxDisplay(data) {
 		badge.style.display = "inline-block";
 		if (source === "fallback_static") {
 			badge.className = "badge badge-warning ml-1";
-			badge.textContent = "Ø³Ø¹Ø± ØªÙ‚Ø¯ÙŠØ±ÙŠ";
+			badge.textContent = "سعر تقديري";
 		} else if (stale) {
 			badge.className = "badge badge-warning ml-1";
-			badge.textContent = "Ø¢Ø®Ø± Ø³Ø¹Ø± Ù…Ø­ÙÙˆØ¸";
+			badge.textContent = "آخر سعر مح�?وظ";
 		} else {
 			badge.className = "badge badge-success ml-1";
-			badge.textContent = "Ù…Ø¨Ø§Ø´Ø±";
+			badge.textContent = "مباشر";
 		}
 	}
 
@@ -300,11 +300,11 @@ function populateFxDisplay(data) {
 		const timeStr = Number.isNaN(d.getTime())
 			? "--"
 			: d.toLocaleTimeString("ar-AE", { hour: "2-digit", minute: "2-digit" });
-		updatedEl.innerHTML = `<i class="fas fa-clock mr-1"></i>Ø¢Ø®Ø± ØªØ­Ø¯ÙŠØ«: ${timeStr}`;
+		updatedEl.innerHTML = `<i class="fas fa-clock mr-1"></i>آخر تحديث: ${timeStr}`;
 	}
 }
 
-// â”€â”€ 6. DateTime Display â”€â”€
+// ── 6. DateTime Display ──
 function updateDateTime() {
 	const now = new Date();
 	const timeString = now.toLocaleTimeString("ar-SA", {
@@ -324,12 +324,12 @@ function updateDateTime() {
 	if (dateDisplay) dateDisplay.textContent = dateString;
 }
 
-// â”€â”€ 7. Safe Expression Evaluator â”€â”€
+// ── 7. Safe Expression Evaluator ──
 function safeEval(expr) {
 	const src = String(expr || "")
-		.replace(/[÷]/g, "/")
-		.replace(/[×]/g, "*")
-		.replace(/[π]/g, "pi")
+		.replace(/[�]/g, "/")
+		.replace(/[�]/g, "*")
+		.replace(/[?]/g, "pi")
 		.replace(/\^/g, "**");
 
 	let pos = 0;
@@ -472,7 +472,7 @@ function safeEval(expr) {
 	}
 }
 
-// â”€â”€ 8. Calculator Pad Wiring â”€â”€
+// ── 8. Calculator Pad Wiring ──
 function wirePad(container, display, buttons) {
 	if (!container || !display) return;
 	container.innerHTML = buttons
@@ -514,11 +514,11 @@ function initNavbarCalculator() {
 		"7",
 		"8",
 		"9",
-		"Ã·",
+		"÷",
 		"4",
 		"5",
 		"6",
-		"Ã—",
+		"×",
 		"1",
 		"2",
 		"3",
@@ -539,16 +539,16 @@ function initNavbarCalculator() {
 		"sqrt(",
 		"log(",
 		"ln(",
-		"Ï€",
+		"π",
 		"e",
 		"7",
 		"8",
 		"9",
-		"Ã·",
+		"÷",
 		"4",
 		"5",
 		"6",
-		"Ã—",
+		"×",
 		"1",
 		"2",
 		"3",
@@ -577,7 +577,7 @@ function initNavbarCalculator() {
 			if (!(p > 0) || !(months > 0)) {
 				out.className = "alert alert-warning mt-2 mb-0";
 				out.innerHTML =
-					'<i class="fas fa-exclamation-triangle mr-1"></i>Ø£Ø¯Ø®Ù„ Ù‚ÙŠÙ… ØµØ­ÙŠØ­Ø©.';
+					'<i class="fas fa-exclamation-triangle mr-1"></i>أدخل قيم صحيحة.';
 				return;
 			}
 
@@ -589,9 +589,9 @@ function initNavbarCalculator() {
 			out.className = "alert alert-info mt-2 mb-0";
 			out.innerHTML = `
         <div class="d-flex justify-content-between flex-wrap">
-          <span><i class="fas fa-hand-holding-usd mr-1"></i>Ø§Ù„Ù‚Ø³Ø·: <strong>${emi.toFixed(2)}</strong></span>
-          <span><i class="fas fa-coins mr-1"></i>Ø§Ù„ÙØ§Ø¦Ø¯Ø©: <strong>${interest.toFixed(2)}</strong></span>
-          <span><i class="fas fa-wallet mr-1"></i>Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ: <strong>${total.toFixed(2)}</strong></span>
+          <span><i class="fas fa-hand-holding-usd mr-1"></i>القسط: <strong>${emi.toFixed(2)}</strong></span>
+          <span><i class="fas fa-coins mr-1"></i>ال�?ائدة: <strong>${interest.toFixed(2)}</strong></span>
+          <span><i class="fas fa-wallet mr-1"></i>الإجمالي: <strong>${total.toFixed(2)}</strong></span>
         </div>`;
 		});
 	}
@@ -605,7 +605,7 @@ function initNavbarCalculator() {
 			if (!(cost >= 0) || !(sell > 0)) {
 				out.className = "alert alert-warning mt-2 mb-0";
 				out.innerHTML =
-					'<i class="fas fa-exclamation-triangle mr-1"></i>Ø£Ø¯Ø®Ù„ Ù‚ÙŠÙ… ØµØ­ÙŠØ­Ø©.';
+					'<i class="fas fa-exclamation-triangle mr-1"></i>أدخل قيم صحيحة.';
 				return;
 			}
 
@@ -616,7 +616,7 @@ function initNavbarCalculator() {
 			out.className = "alert alert-success mt-2 mb-0";
 			out.innerHTML = `
         <div class="d-flex justify-content-between flex-wrap">
-          <span><i class="fas fa-dollar-sign mr-1 text-success"></i>Ø§Ù„Ø±Ø¨Ø­: <strong>${profit.toFixed(2)}</strong></span>
+          <span><i class="fas fa-dollar-sign mr-1 text-success"></i>الربح: <strong>${profit.toFixed(2)}</strong></span>
           <span><i class="fas fa-percentage mr-1 text-info"></i>Margin: <strong>${margin.toFixed(2)}%</strong></span>
           <span><i class="fas fa-chart-line mr-1 text-warning"></i>Markup: <strong>${markup.toFixed(2)}%</strong></span>
         </div>`;
@@ -624,9 +624,9 @@ function initNavbarCalculator() {
 	}
 }
 
-// â”€â”€ 9. View Mode System â”€â”€
+// ── 9. View Mode System ──
 const VIEW_MODES = ["auto", "desktop", "mobile"];
-const VIEW_MODE_LABELS = { auto: "ØªÙ„Ù‚Ø§Ø¦ÙŠ", desktop: "ÙƒÙ…Ø¨ÙŠÙˆØªØ±", mobile: "Ø¬ÙˆØ§Ù„" };
+const VIEW_MODE_LABELS = { auto: "تلقائي", desktop: "كمبيوتر", mobile: "جوال" };
 const VIEW_MODE_ICONS = { auto: "fa-desktop", desktop: "fa-desktop", mobile: "fa-mobile-alt" };
 
 function getSavedViewMode() {
@@ -658,7 +658,7 @@ function updateViewModeButton(mode) {
 		icon.classList.remove("fa-desktop", "fa-mobile-alt");
 		icon.classList.add(VIEW_MODE_ICONS[mode] || "fa-desktop");
 	}
-	if (label) label.textContent = VIEW_MODE_LABELS[mode] || "ØªÙ„Ù‚Ø§Ø¦ÙŠ";
+	if (label) label.textContent = VIEW_MODE_LABELS[mode] || "تلقائي";
 }
 
 function cycleViewMode() {
@@ -685,7 +685,7 @@ if (window._DEBUG)
 	);
 setViewMode(currentMode);
 
-// â”€â”€ 10. Telemetry & Error Reporting â”€â”€
+// ── 10. Telemetry & Error Reporting ──
 (() => {
 	const sentErrors = new Map();
 	let sentWindow = [];
@@ -1039,7 +1039,7 @@ setViewMode(currentMode);
 	} catch (_) {}
 })();
 
-// â”€â”€ 11. Expose Testable API â”€â”€
+// ── 11. Expose Testable API ──
 if (typeof window !== "undefined") {
 	window.AzadHelpers = {
 		azad: window.azad,
