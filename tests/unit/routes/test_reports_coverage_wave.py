@@ -330,6 +330,7 @@ class TestReconciliationWave:
                 return_value={"rows": [row]},
             ),
             patch("models.Warehouse.query", wh_query),
+            patch("utils.tenanting.tenant_get_or_404", return_value=wh),
             patch("utils.branching.get_accessible_warehouse_ids", return_value=[1]),
             patch("utils.branching.user_can_access_branch", return_value=True),
             patch(
@@ -344,14 +345,14 @@ class TestReconciliationWave:
     def test_inventory_reconciliation_export_warehouse_403(self, reports_client, mock_user):
         _configure_user(mock_user)
         mock_user.is_admin.return_value = False
+        wh = MagicMock(id=99, tenant_id=1, branch_id=1, is_active=True)
         with (
             patch("models.Warehouse.query") as wh_model,
+            patch("utils.tenanting.tenant_get_or_404", return_value=wh),
             patch("utils.branching.get_accessible_warehouse_ids", return_value=[2]),
             patch("utils.branching.user_can_access_branch", return_value=True),
         ):
-            wh_model.query.filter_by.return_value.first.return_value = MagicMock(
-                id=99, tenant_id=1, branch_id=1, is_active=True
-            )
+            wh_model.query.filter_by.return_value.first.return_value = wh
             resp = reports_client.get("/reports/inventory-reconciliation/export?warehouse_id=99&branch_id=1")
             assert resp.status_code == 403
 
@@ -1596,6 +1597,7 @@ class TestInventoryReconciliationExportAccess:
         wh_query.filter_by.return_value.first.return_value = wh
         with (
             patch("models.Warehouse.query", wh_query),
+            patch("utils.tenanting.tenant_get_or_404", return_value=wh),
             patch("utils.branching.get_accessible_warehouse_ids", return_value=[1]),
             patch("utils.branching.user_can_access_branch", return_value=True),
         ):
