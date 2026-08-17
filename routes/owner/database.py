@@ -350,7 +350,9 @@ def sql_console():
                 )
 
             except Exception as e:
-                error = str(e)
+                from utils.helpers import sanitize_error_message
+
+                error = sanitize_error_message(e)
 
     return render_template("owner/sql_console.html", result=result_data, error=error)
 

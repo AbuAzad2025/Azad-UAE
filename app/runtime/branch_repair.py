@@ -13,14 +13,18 @@ def _ensure_column(table_name: str, column_name: str, ddl: str) -> bool:
     existing = {column["name"] for column in inspector.get_columns(table_name)}
     if column_name in existing:
         return False
+    safe_table = f'"{table_name}"'
     with db.engine.begin() as connection:
-        connection.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {ddl}"))
+        connection.execute(text(f"ALTER TABLE {safe_table} ADD COLUMN {ddl}"))
     return True
 
 
 def _ensure_index(index_name: str, table_name: str, column_name: str) -> None:
+    safe_index = f'"{index_name}"'
+    safe_table = f'"{table_name}"'
+    safe_col = f'"{column_name}"'
     with db.engine.begin() as connection:
-        connection.execute(text(f"CREATE INDEX IF NOT EXISTS {index_name} ON {table_name} ({column_name})"))
+        connection.execute(text(f"CREATE INDEX IF NOT EXISTS {safe_index} ON {safe_table} ({safe_col})"))
 
 
 def _first_non_null(*values):

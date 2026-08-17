@@ -36,7 +36,14 @@
 
 		const el = document.createElement("div");
 		el.className = "azad-toast";
-		el.innerHTML = `<i class="fas ${icons[type] || icons.info} azad-toast-icon"></i><span>${message}</span>`;
+		const msgSpan = document.createElement("span");
+		msgSpan.textContent = message;
+		el.appendChild(
+			Object.assign(document.createElement("i"), {
+				className: `fas ${icons[type] || icons.info} azad-toast-icon`,
+			}),
+		);
+		el.appendChild(msgSpan);
 		el.style.cssText =
 			"position:fixed;bottom:24px;right:24px;z-index:20001;background:" +
 			(colors[type] || colors.info) +

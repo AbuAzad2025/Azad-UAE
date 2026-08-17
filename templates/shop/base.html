@@ -26,6 +26,7 @@
   {% block extra_head %}{% endblock %}
   {% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/shop-utilities.css') }}">{% endblock %}
   {% if analytics_id %}
+{# SRI omitted for Google Tag Manager — Google rotates script hashes frequently; verify via CSP connect-src instead #}
 <script async src="https://www.googletagmanager.com/gtag/js?id={{ analytics_id }}"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','{{ analytics_id }}');</script>
 {% endif %}

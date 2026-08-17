@@ -239,14 +239,34 @@ class NotificationManager {
 		progress.className = "toast-progress";
 		progress.style.animationDuration = `${duration}ms`;
 
-		toast.innerHTML = `
-            <div class="toast-icon">${icons[type]}</div>
-            <div class="toast-content">
-                ${title ? `<div class="toast-title">${title}</div>` : ""}
-                <div class="toast-message">${message}</div>
-            </div>
-            <button class="toast-close" onclick="this.closest('.toast').remove()">×</button>
-        `;
+		const titleEl = title
+			? Object.assign(document.createElement("div"), {
+					className: "toast-title",
+					textContent: title,
+				})
+			: null;
+		const msgEl = Object.assign(document.createElement("div"), {
+			className: "toast-message",
+			textContent: message,
+		});
+		const contentEl = document.createElement("div");
+		contentEl.className = "toast-content";
+		if (titleEl) contentEl.appendChild(titleEl);
+		contentEl.appendChild(msgEl);
+
+		const iconEl = Object.assign(document.createElement("div"), {
+			className: "toast-icon",
+			textContent: icons[type],
+		});
+		const closeBtn = Object.assign(document.createElement("button"), {
+			className: "toast-close",
+			textContent: "\u00d7",
+		});
+		closeBtn.addEventListener("click", () => toast.remove());
+
+		toast.appendChild(iconEl);
+		toast.appendChild(contentEl);
+		toast.appendChild(closeBtn);
 		toast.appendChild(progress);
 
 		// Add to container

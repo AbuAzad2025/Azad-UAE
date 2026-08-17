@@ -13,6 +13,29 @@ from extensions import db
 logger = logging.getLogger(__name__)
 
 
+def sanitize_error_message(exc: Exception) -> str:
+    """Return a user-safe error message that hides internal details."""
+    msg = str(exc)
+    internal_patterns = [
+        r"(?i)column\s+\"?\w+\"?\s+does\s+not\s+exist",
+        r"(?i)relation\s+\"?\w+\"?\s+does\s+not\s+exist",
+        r"(?i)syntax\s+error\s+at",
+        r"(?i)permission\s+denied",
+        r"(?i)FATAL:\s+",
+        r"(?i)psycopg2\.\w+",
+        r"(?i)sqlalchemy\.\w+",
+        r"(?i)Traceback\s+\(most\s+recent",
+    ]
+    for pat in internal_patterns:
+        if re.search(pat, msg):
+            current_app.logger.warning("Sanitized DB error: %s", msg)
+            return "An internal database error occurred. Please check the logs for details."
+    if len(msg) > 200:
+        current_app.logger.warning("Sanitized long error: %s", msg[:500])
+        return "An internal error occurred. Please check the logs for details."
+    return msg
+
+
 def _normalize_branch_code(branch_code):
     if not branch_code:
         return None

@@ -264,6 +264,8 @@ def create_app(config_class=Config) -> Flask:
             "object-src 'none'; "
             "base-uri 'self'; "
             "form-action 'self'; "
+            # NOTE: unsafe-inline + unsafe-eval required until inline scripts are migrated to external files.
+            # All dynamic innerHTML assignments now use textContent/esc() to mitigate DOM XSS.
         )
         response.headers["Content-Security-Policy"] = csp
         return response

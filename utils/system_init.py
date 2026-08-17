@@ -493,7 +493,12 @@ def _ensure_owner_user(role):
                 return user, created
 
         if not user:
-            password = current_app.config.get("OWNER_PASSWORD", "change-me-strong-password")
+            password = current_app.config.get("OWNER_PASSWORD")
+            if not password:
+                raise RuntimeError(
+                    "OWNER_PASSWORD must be set in environment or config. "
+                    "Refusing to create owner with weak default password."
+                )
             user = User(
                 username=username,
                 email=email,

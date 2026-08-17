@@ -219,7 +219,7 @@ def wishlist_add(slug, product_id):
                 db.session.add(wl)
         count = ShopWishlist.query.filter_by(account_id=account.id, tenant_id=store.tenant_id).count()
         return jsonify({"success": True, "wishlisted": True, "count": count})
-    return redirect(request.referrer or url_for("shop.catalog", slug=store.store_slug))
+    return redirect(safe_redirect_target(request.referrer, "shop.catalog", slug=store.store_slug))
 
 
 @shop_bp.route("/<slug>/wishlist/remove/<int:product_id>", methods=["POST"])
@@ -232,7 +232,7 @@ def wishlist_remove(slug, product_id):
         ShopWishlist.query.filter_by(account_id=account.id, product_id=product_id, tenant_id=store.tenant_id).delete()
     if request.content_type and "application/json" in request.content_type:
         return jsonify({"success": True, "wishlisted": False})
-    return redirect(request.referrer or url_for("shop.catalog", slug=store.store_slug))
+    return redirect(safe_redirect_target(request.referrer, "shop.catalog", slug=store.store_slug))
 
 
 @shop_bp.route("/<slug>/wishlist")
@@ -616,7 +616,7 @@ def add_review(slug, product_id):
     if not rating or rating < 1 or rating > 5:
         flash("Rating must be 1-5", "danger")
         return redirect(
-            request.referrer or url_for("shop.product_detail", slug=store.store_slug, product_id=product_id)
+            safe_redirect_target(request.referrer, "shop.product_detail", slug=store.store_slug, product_id=product_id)
         )
     review = ShopReview(
         tenant_id=store.tenant_id,
@@ -641,7 +641,7 @@ def stock_alert(slug, product_id):
     if not email or "@" not in email:
         flash("Email is required", "danger")
         return redirect(
-            request.referrer or url_for("shop.product_detail", slug=store.store_slug, product_id=product_id)
+            safe_redirect_target(request.referrer, "shop.product_detail", slug=store.store_slug, product_id=product_id)
         )
     from models.shop_stock_alert import ShopStockAlert
 
@@ -663,7 +663,7 @@ def newsletter_subscribe(slug):
     email = (request.form.get("email") or "").strip()
     if not email or "@" not in email:
         flash(t("invalid_email", shop_lang()), "danger")
-        return redirect(request.referrer or url_for("shop.catalog", slug=store.store_slug))
+        return redirect(safe_redirect_target(request.referrer, "shop.catalog", slug=store.store_slug))
     from models.shop_newsletter import ShopNewsletter
 
     existing = ShopNewsletter.query.filter_by(tenant_id=store.tenant_id, email=email).first()
@@ -672,7 +672,7 @@ def newsletter_subscribe(slug):
             sub = ShopNewsletter(tenant_id=store.tenant_id, email=email)
             db.session.add(sub)
     flash(t("newsletter_subscribed", shop_lang()), "success")
-    return redirect(request.referrer or url_for("shop.catalog", slug=store.store_slug))
+    return redirect(safe_redirect_target(request.referrer, "shop.catalog", slug=store.store_slug))
 
 
 @shop_bp.route("/<slug>/cart")

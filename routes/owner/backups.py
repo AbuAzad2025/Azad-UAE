@@ -363,8 +363,8 @@ def download_backup(filename):
         mimetype = "application/gzip" if safe.endswith(".gz") else "application/octet-stream"
         _audit_owner_db_action("download_backup", {"filename": safe})
         return send_file(backup_path, as_attachment=True, download_name=safe, mimetype=mimetype)
-    except Exception as e:
-        flash(gettext(f"❌ فشل التحميل: {str(e)}"), "danger")
+    except Exception:
+        flash(gettext("❌ فشل التحميل: خطأ داخلي"), "danger")
         return redirect(url_for("owner.list_backups"))
 
 

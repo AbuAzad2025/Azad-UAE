@@ -417,16 +417,22 @@
                             // The backend 'entity_report_fragment' logic is: if type == 'supplier' ... else ... (treat as Customer).
                             // So passing the specific type is fine.
                             
-                            searchResults.append(`
-                                <a href="#" class="list-group-item list-group-item-action" 
-                                   onclick="loadEntityDetails('${item.type}', ${item.id}, '${item.name}'); return false;">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <h6 class="mb-1">${item.name}</h6>
-                                        <small class="badge bg-secondary text-white">${typeLabel}</small>
-                                    </div>
-                                    <small class="text-muted"><i class="fas fa-phone fa-xs"></i> ${item.phone || '---'}</small>
-                                </a>
-                            `);
+                            const a = document.createElement('a');
+                            a.href = '#';
+                            a.className = 'list-group-item list-group-item-action';
+                            a.addEventListener('click', function(ev) {
+                                ev.preventDefault();
+                                loadEntityDetails(item.type, item.id, item.name);
+                            });
+                            a.innerHTML = '<div class="d-flex w-100 justify-content-between">' +
+                                '<h6 class="mb-1"></h6>' +
+                                '<small class="badge bg-secondary text-white"></small>' +
+                                '</div>' +
+                                '<small class="text-muted"><i class="fas fa-phone fa-xs"></i></small>';
+                            a.querySelector('h6').textContent = item.name;
+                            a.querySelector('.badge').textContent = typeLabel;
+                            a.querySelector('.text-muted').childNodes[2].textContent = item.phone || '---';
+                            searchResults.append(a);
                         });
                         searchResults.show();
                     } else {

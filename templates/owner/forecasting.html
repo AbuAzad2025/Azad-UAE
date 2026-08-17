@@ -48,10 +48,10 @@
 new Chart(document.getElementById('forecastChart'), {
   type: 'line',
   data: {
-    labels: {{ (historical|default([]))|map(attribute='month')|list|tojson|safe }},
+    labels: {{ (historical|default([]))|map(attribute='month')|list|tojson }},
     datasets: [{
-      label: {{ _('الإيرادات الشهرية')|tojson|safe }},
-      data: {{ (historical|default([]))|map(attribute='revenue')|list|tojson|safe }},
+      label: {{ _('الإيرادات الشهرية')|tojson }},
+      data: {{ (historical|default([]))|map(attribute='revenue')|list|tojson }},
       borderColor: 'rgb(75, 192, 192)',
       tension: 0.1
     }]

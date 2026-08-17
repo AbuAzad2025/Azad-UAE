@@ -422,7 +422,8 @@ function _serialPrint() {
 	printWindow.document.write("</head><body>");
 	printWindow.document.write('<h2 style="text-align:center">الأرقام التسلسلية</h2>');
 	serials.forEach((s) => {
-		printWindow.document.write(`<div class="serial">${s}</div>`);
+		const safe = String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+		printWindow.document.write(`<div class="serial">${safe}</div>`);
 	});
 	printWindow.document.write("</body></html>");
 	printWindow.document.close();

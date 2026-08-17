@@ -1,4 +1,13 @@
 ((window, $) => {
+	function _spEsc(s) {
+		return String(s == null ? "" : s)
+			.replace(/&/g, "&amp;")
+			.replace(/</g, "&lt;")
+			.replace(/>/g, "&gt;")
+			.replace(/"/g, "&quot;")
+			.replace(/'/g, "&#39;");
+	}
+
 	const hasPrintExtension =
 		$?.fn?.dataTable?.Buttons &&
 		$.fn.dataTable.ext?.buttons?.print &&
@@ -354,7 +363,7 @@
 
 		const title = opts.title || config.title || document.title;
 
-		win.document.write(`<!DOCTYPE html><html dir="rtl"><head><title>${title}</title>`);
+		win.document.write(`<!DOCTYPE html><html dir="rtl"><head><title>${_spEsc(title)}</title>`);
 		win.document.write("<style>");
 		win.document.write(
 			'body { font-family: "Tajawal", sans-serif; direction: rtl; padding: 20px; }',
@@ -371,15 +380,16 @@
 		win.document.write("</head><body>");
 
 		win.document.write('<div class="print-header">');
-		if (info.title) win.document.write(`<h1 class="print-title">${info.title}</h1>`);
-		if (info.messageTop) win.document.write(`<div class="message-top">${info.messageTop}</div>`);
+		if (info.title) win.document.write(`<h1 class="print-title">${_spEsc(info.title)}</h1>`);
+		if (info.messageTop)
+			win.document.write(`<div class="message-top">${_spEsc(info.messageTop)}</div>`);
 		win.document.write("</div>");
 
 		win.document.write(html);
 
 		if (info.messageBottom)
 			win.document.write(
-				`<div class="message-bottom" style="margin-top: 20px;">${info.messageBottom}</div>`,
+				`<div class="message-bottom" style="margin-top: 20px;">${_spEsc(info.messageBottom)}</div>`,
 			);
 
 		win.document.write("</body></html>");

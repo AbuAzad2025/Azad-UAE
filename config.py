@@ -158,9 +158,11 @@ class Config:
     WTF_CSRF_TIME_LIMIT = 3600
 
     CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "http://localhost:5000,http://127.0.0.1:5000").split(",")
+    if "*" in CORS_ORIGINS:
+        raise ValueError("CORS_ORIGINS must not contain '*' with credentials enabled.")
     CORS_SUPPORTS_CREDENTIALS = True
 
-    RATELIMIT_ENABLED = _bool(os.environ.get("RATELIMIT_ENABLED"))
+    RATELIMIT_ENABLED = _bool(os.environ.get("RATELIMIT_ENABLED"), True)
     RATELIMIT_DEFAULT = "100000 per hour"
     RATELIMIT_STORAGE_URI = os.environ.get("RATELIMIT_STORAGE_URI", "memory://")
     RATELIMIT_LOGIN = "1000 per hour;100 per minute"

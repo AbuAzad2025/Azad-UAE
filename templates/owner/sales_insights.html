@@ -53,10 +53,10 @@
 new Chart(document.getElementById('salesChart'), {
   type: 'bar',
   data: {
-    labels: {{ (insights.daily_sales|default([]))|map(attribute='date')|list|tojson|safe }},
+    labels: {{ (insights.daily_sales|default([]))|map(attribute='date')|list|tojson }},
     datasets: [{
-      label: {{ _('المبيعات اليومية')|tojson|safe }},
-      data: {{ (insights.daily_sales|default([]))|map(attribute='total')|list|tojson|safe }},
+      label: {{ _('المبيعات اليومية')|tojson }},
+      data: {{ (insights.daily_sales|default([]))|map(attribute='total')|list|tojson }},
       backgroundColor: 'rgba(54, 162, 235, 0.5)'
     }]
   }
