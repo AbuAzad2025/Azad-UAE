@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Quotation') }} {{ quotation.quotation_number }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>{{ t('Quotation') }} {{ quotation.quotation_number }}</h2>
+    <div>
+      {% if quotation.status == 'draft' %}
+        <form method="POST" action="{{ url_for('quotations.send', quotation_id=quotation.id) }}" class="d-inline">
+          <button class="btn btn-info" onclick="return confirm('{{ t('Send this quotation?') }}')">{{ t('Send') }}</button>
+        </form>
+        <a href="{{ url_for('quotations.edit', quotation_id=quotation.id) }}" class="btn btn-warning">{{ t('Edit') }}</a>
+      {% endif %}
+      {% if quotation.status == 'sent' %}
+        <form method="POST" action="{{ url_for('quotations.accept', quotation_id=quotation.id) }}" class="d-inline">
+          <button class="btn btn-success" onclick="return confirm('{{ t('Accept?') }}')">{{ t('Accept') }}</button>
+        </form>
+        <form method="POST" action="{{ url_for('quotations.reject', quotation_id=quotation.id) }}" class="d-inline">
+          <button class="btn btn-danger" onclick="return confirm('{{ t('Reject?') }}')">{{ t('Reject') }}</button>
+        </form>
+      {% endif %}
+      {% if quotation.status == 'accepted' %}
+        <form method="POST" action="{{ url_for('quotations.convert', quotation_id=quotation.id) }}" class="d-inline">
+          <button class="btn btn-primary" onclick="return confirm('{{ t('Convert to sale?') }}')">{{ t('Convert to Sale') }}</button>
+        </form>
+      {% endif %}
+      <form method="POST" action="{{ url_for('quotations.duplicate', quotation_id=quotation.id) }}" class="d-inline">
+        <button class="btn btn-outline-secondary">{{ t('Duplicate') }}</button>
+      </form>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4"><strong>{{ t('Customer') }}:</strong> {{ quotation.customer.name if quotation.customer else '-' }}</div>
+            <div class="col-md-3"><strong>{{ t('Date') }}:</strong> {{ quotation.quotation_date }}</div>
+            <div class="col-md-3"><strong>{{ t('Expiry') }}:</strong> {{ quotation.expiry_date or '-' }}</div>
+            <div class="col-md-2">
+              <span class="badge {% if quotation.status == 'accepted' %}bg-success{% elif quotation.status == 'rejected' %}bg-danger{% elif quotation.status == 'sent' %}bg-info{% else %}bg-secondary{% endif %}">
+                {{ quotation.status_ar }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card mb-4">
+        <div class="card-body table-responsive">
+          <table class="table">
+            <thead><tr><th>{{ t('Product') }}</th><th class="text-end">{{ t('Qty') }}</th><th class="text-end">{{ t('Price') }}</th><th class="text-end">{{ t('Total') }}</th></tr></thead>
+            <tbody>
+              {% for line in quotation.lines %}
+              <tr>
+                <td>{{ line.product.name if line.product else line.description }}</td>
+                <td class="text-end">{{ line.quantity }}</td>
+                <td class="text-end">{{ '%.3f'|format(line.unit_price|float) }}</td>
+                <td class="text-end">{{ '%.3f'|format(line.line_total|float) }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5>{{ t('Summary') }}</h5>
+          <table class="table table-sm">
+            <tr><td>{{ t('Subtotal') }}</td><td class="text-end">{{ '%.3f'|format(quotation.subtotal|float) }}</td></tr>
+            <tr><td>{{ t('Discount') }}</td><td class="text-end">{{ '%.3f'|format(quotation.discount_amount|float) }}</td></tr>
+            <tr><td>{{ t('Tax') }}</td><td class="text-end">{{ '%.3f'|format(quotation.tax_amount|float) }}</td></tr>
+            <tr class="fw-bold"><td>{{ t('Total') }}</td><td class="text-end">{{ '%.3f'|format(quotation.total_amount|float) }}</td></tr>
+          </table>
+        </div>
+      </div>
+      {% if quotation.notes %}
+      <div class="card mb-4"><div class="card-body"><h5>{{ t('Notes') }}</h5><p>{{ quotation.notes }}</p></div></div>
+      {% endif %}
+      {% if quotation.sale_id %}
+      <div class="alert alert-success">{{ t('Converted to Sale') }} #{{ quotation.sale_id }}</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

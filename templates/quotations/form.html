@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Quotation') }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <h2>{{ t('Edit Quotation') if quotation else t('New Quotation') }}</h2>
+  <form method="POST">
+    <div class="card mb-4">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">{{ t('Customer') }} *</label>
+            <select name="customer_id" class="form-select" required>
+              <option value="">{{ t('Select') }}</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">{{ t('Expiry Date') }}</label>
+            <input type="date" name="expiry_date" class="form-control" value="{{ quotation.expiry_date if quotation and quotation.expiry_date else '' }}">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">{{ t('Currency') }}</label>
+            <input type="text" name="currency" class="form-control" value="{{ quotation.currency if quotation else 'AED' }}">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ t('Notes') }}</label>
+            <textarea name="notes" class="form-control" rows="2">{{ quotation.notes if quotation else '' }}</textarea>
+          </div>
+          <div class="col-md-12">
+            <label class="form-label">{{ t('Terms & Conditions') }}</label>
+            <textarea name="terms" class="form-control" rows="2">{{ quotation.terms if quotation else '' }}</textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card mb-4">
+      <div class="card-header"><h5>{{ t('Lines') }}</h5></div>
+      <div class="card-body">
+        <div id="lines-container"></div>
+        <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="addLine()"><i class="fas fa-plus"></i> {{ t('Add Line') }}</button>
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary">{{ t('Save') }}</button>
+    <a href="{{ url_for('quotations.index') }}" class="btn btn-secondary">{{ t('Cancel') }}</a>
+  </form>
+</div>
+{% endblock %}

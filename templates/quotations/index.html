@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Quotations') }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>{{ t('Quotations') }}</h2>
+    <a href="{{ url_for('quotations.create') }}" class="btn btn-primary"><i class="fas fa-plus"></i> {{ t('New Quotation') }}</a>
+  </div>
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>{{ t('Number') }}</th>
+            <th>{{ t('Customer') }}</th>
+            <th>{{ t('Date') }}</th>
+            <th>{{ t('Expiry') }}</th>
+            <th class="text-end">{{ t('Total') }}</th>
+            <th class="text-center">{{ t('Status') }}</th>
+            <th class="text-center">{{ t('Actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for q in quotations %}
+          <tr>
+            <td><strong>{{ q.quotation_number }}</strong></td>
+            <td>{{ q.customer.name if q.customer else '-' }}</td>
+            <td>{{ q.quotation_date }}</td>
+            <td>{{ q.expiry_date or '-' }}</td>
+            <td class="text-end">{{ '%.3f'|format(q.total_amount|float) }}</td>
+            <td class="text-center">
+              <span class="badge {% if q.status == 'accepted' %}bg-success{% elif q.status == 'rejected' %}bg-danger{% elif q.status == 'sent' %}bg-info{% elif q.status == 'converted_to_sale' %}bg-primary{% else %}bg-secondary{% endif %}">
+                {{ q.status_ar }}
+              </span>
+            </td>
+            <td class="text-center">
+              <a href="{{ url_for('quotations.detail', quotation_id=q.id) }}" class="btn btn-sm btn-outline-primary">{{ t('View') }}</a>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" class="text-center py-4 text-muted">{{ t('No quotations found') }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -95,6 +95,7 @@ from .purchase import (
     PurchaseRequisitionLine,
 )
 from .purchase_return import PurchaseReturn, PurchaseReturnLine
+from .quotation import Quotation, QuotationLine
 from .sale import Sale, SaleLine
 from .security_alert import SecurityAlert
 from .shipment import Shipment
@@ -108,6 +109,7 @@ from .shop_saved_payment import ShopSavedPayment
 from .shop_stock_alert import ShopStockAlert
 from .shop_wishlist import ShopWishlist
 from .stock_batch import StockBatch
+from .stock_transfer import WarehouseTransfer, WarehouseTransferLine
 from .store_coupon import StoreCoupon
 from .store_payment_method import StorePaymentMethod
 from .supplier import Supplier
@@ -147,6 +149,10 @@ __all__ = [
     "PurchaseOrderLine",
     "GoodsReceipt",
     "GoodsReceiptLine",
+    "Quotation",
+    "QuotationLine",
+    "WarehouseTransfer",
+    "WarehouseTransferLine",
     "Payment",
     "Receipt",
     "Currency",

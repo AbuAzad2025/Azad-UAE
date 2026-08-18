@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('New Transfer') }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <h2>{{ t('Edit Transfer') if transfer else t('New Transfer') }}</h2>
+  <form method="POST">
+    <div class="card mb-4">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">{{ t('From Warehouse') }} *</label>
+            <select name="from_warehouse_id" class="form-select" required>
+              <option value="">{{ t('Select') }}</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ t('To Warehouse') }} *</label>
+            <select name="to_warehouse_id" class="form-select" required>
+              <option value="">{{ t('Select') }}</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ t('Notes') }}</label>
+            <textarea name="notes" class="form-control" rows="2">{{ transfer.notes if transfer else '' }}</textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card mb-4">
+      <div class="card-header"><h5>{{ t('Items') }}</h5></div>
+      <div class="card-body">
+        <div id="lines-container"></div>
+        <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="addLine()"><i class="fas fa-plus"></i> {{ t('Add Item') }}</button>
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary">{{ t('Save') }}</button>
+    <a href="{{ url_for('transfers.index') }}" class="btn btn-secondary">{{ t('Cancel') }}</a>
+  </form>
+</div>
+{% endblock %}

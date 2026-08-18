@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Transfer') }} {{ transfer.transfer_number }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>{{ t('Transfer') }} {{ transfer.transfer_number }}</h2>
+    <div>
+      {% if transfer.status == 'draft' %}
+        <form method="POST" action="{{ url_for('transfers.approve', transfer_id=transfer.id) }}" class="d-inline">
+          <button class="btn btn-success" onclick="return confirm('{{ t('Approve?') }}')">{{ t('Approve') }}</button>
+        </form>
+      {% endif %}
+      {% if transfer.status == 'approved' %}
+        <form method="POST" action="{{ url_for('transfers.ship', transfer_id=transfer.id) }}" class="d-inline">
+          <button class="btn btn-warning" onclick="return confirm('{{ t('Ship?') }}')">{{ t('Ship') }}</button>
+        </form>
+      {% endif %}
+      {% if transfer.status == 'in_transit' %}
+        <form method="POST" action="{{ url_for('transfers.receive', transfer_id=transfer.id) }}" class="d-inline">
+          <button class="btn btn-primary" onclick="return confirm('{{ t('Receive & Complete?') }}')">{{ t('Receive & Complete') }}</button>
+        </form>
+      {% endif %}
+      {% if transfer.status not in ('completed', 'cancelled') %}
+        <form method="POST" action="{{ url_for('transfers.cancel', transfer_id=transfer.id) }}" class="d-inline">
+          <button class="btn btn-danger" onclick="return confirm('{{ t('Cancel?') }}')">{{ t('Cancel') }}</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-3"><strong>{{ t('From') }}:</strong> {{ transfer.from_warehouse.name if transfer.from_warehouse else '-' }}</div>
+            <div class="col-md-3"><strong>{{ t('To') }}:</strong> {{ transfer.to_warehouse.name if transfer.to_warehouse else '-' }}</div>
+            <div class="col-md-3"><strong>{{ t('Date') }}:</strong> {{ transfer.transfer_date }}</div>
+            <div class="col-md-3">
+              <span class="badge {% if transfer.status == 'completed' %}bg-success{% elif transfer.status == 'in_transit' %}bg-warning{% elif transfer.status == 'cancelled' %}bg-danger{% else %}bg-secondary{% endif %}">
+                {{ transfer.status_ar }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card mb-4">
+        <div class="card-body table-responsive">
+          <table class="table">
+            <thead><tr><th>{{ t('Product') }}</th><th class="text-end">{{ t('Requested') }}</th><th class="text-end">{{ t('Received') }}</th></tr></thead>
+            <tbody>
+              {% for line in transfer.lines %}
+              <tr>
+                <td>{{ line.product.name if line.product else '-' }}</td>
+                <td class="text-end">{{ line.requested_quantity }}</td>
+                <td class="text-end">{{ line.received_quantity }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5>{{ t('Details') }}</h5>
+          <table class="table table-sm">
+            <tr><td>{{ t('Requested by') }}</td><td>{{ transfer.requester.username if transfer.requester else '-' }}</td></tr>
+            <tr><td>{{ t('Approved by') }}</td><td>{{ transfer.approver.username if transfer.approver else '-' }}</td></tr>
+            <tr><td>{{ t('Received by') }}</td><td>{{ transfer.receiver.username if transfer.receiver else '-' }}</td></tr>
+            <tr><td>{{ t('Completed') }}</td><td>{{ transfer.completed_date or '-' }}</td></tr>
+          </table>
+        </div>
+      </div>
+      {% if transfer.notes %}
+      <div class="card mb-4"><div class="card-body"><h5>{{ t('Notes') }}</h5><p>{{ transfer.notes }}</p></div></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

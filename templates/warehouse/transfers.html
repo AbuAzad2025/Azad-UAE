@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Warehouse Transfers') }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>{{ t('Warehouse Transfers') }}</h2>
+    <a href="{{ url_for('transfers.create') }}" class="btn btn-primary"><i class="fas fa-plus"></i> {{ t('New Transfer') }}</a>
+  </div>
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>{{ t('Number') }}</th>
+            <th>{{ t('From') }}</th>
+            <th>{{ t('To') }}</th>
+            <th>{{ t('Date') }}</th>
+            <th class="text-center">{{ t('Status') }}</th>
+            <th class="text-center">{{ t('Actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t_item in transfers %}
+          <tr>
+            <td><strong>{{ t_item.transfer_number }}</strong></td>
+            <td>{{ t_item.from_warehouse.name if t_item.from_warehouse else '-' }}</td>
+            <td>{{ t_item.to_warehouse.name if t_item.to_warehouse else '-' }}</td>
+            <td>{{ t_item.transfer_date }}</td>
+            <td class="text-center">
+              <span class="badge {% if t_item.status == 'completed' %}bg-success{% elif t_item.status == 'in_transit' %}bg-warning{% elif t_item.status == 'cancelled' %}bg-danger{% elif t_item.status == 'approved' %}bg-info{% else %}bg-secondary{% endif %}">
+                {{ t_item.status_ar }}
+              </span>
+            </td>
+            <td class="text-center">
+              <a href="{{ url_for('transfers.detail', transfer_id=t_item.id) }}" class="btn btn-sm btn-outline-primary">{{ t('View') }}</a>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="text-center py-4 text-muted">{{ t('No transfers found') }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
