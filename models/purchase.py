@@ -357,3 +357,327 @@ class PurchaseLine(db.Model):
             "landed_cost": float(self.landed_cost) if self.landed_cost else 0,
             "landed_unit_cost": (float(self.landed_unit_cost) if self.landed_unit_cost else 0),
         }
+
+
+class PurchaseRequisition(db.Model):
+    __tablename__ = "purchase_requisitions"
+    __table_args__ = (db.UniqueConstraint("tenant_id", "requisition_number", name="uq_pr_tenant_number"),)
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(
+        db.Integer,
+        db.ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    requisition_number = db.Column(db.String(50), nullable=False, index=True)
+    requester_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    department_id = db.Column(
+        db.Integer,
+        db.ForeignKey("departments.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    branch_id = db.Column(
+        db.Integer,
+        db.ForeignKey("branches.id", ondelete="RESTRICT"),
+        nullable=True,
+        index=True,
+    )
+    requested_date = db.Column(db.Date, nullable=False, index=True)
+    needed_by_date = db.Column(db.Date)
+    priority = db.Column(db.String(20), default="normal")
+    status = db.Column(db.String(20), default="draft", index=True)
+    justification = db.Column(db.Text)
+    notes = db.Column(db.Text)
+    approved_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    approved_at = db.Column(db.DateTime)
+    rejected_reason = db.Column(db.String(500))
+    po_id = db.Column(db.Integer, db.ForeignKey("purchases.id", ondelete="SET NULL"), nullable=True, index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False, index=True)
+    updated_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
+
+    tenant = db.relationship("Tenant", backref="purchase_requisitions", foreign_keys=[tenant_id])
+    requester = db.relationship("User", foreign_keys=[requester_id])
+    department = db.relationship("Department", backref="requisitions")
+    branch = db.relationship("Branch", backref="requisitions", foreign_keys=[branch_id])
+    approver = db.relationship("User", foreign_keys=[approved_by])
+    purchase = db.relationship("Purchase", backref="requisitions", foreign_keys=[po_id])
+    lines = db.relationship(
+        "PurchaseRequisitionLine", back_populates="requisition", lazy="joined", cascade="all, delete-orphan"
+    )
+
+    def __repr__(self):
+        return f"<PurchaseRequisition {self.requisition_number}>"
+
+    @property
+    def status_ar(self):
+        mapping = {
+            "draft": "مسودة",
+            "pending_approval": "بانتظار الموافقة",
+            "approved": "تمت الموافقة",
+            "rejected": "مرفوض",
+            "converted_to_po": "تم التحويل لطلب شراء",
+        }
+        return mapping.get(self.status, self.status)
+
+    @property
+    def priority_ar(self):
+        mapping = {"low": "منخفضة", "normal": "عادية", "high": "عالية", "urgent": "عاجلة"}
+        return mapping.get(self.priority, self.priority)
+
+
+class PurchaseRequisitionLine(db.Model):
+    __tablename__ = "purchase_requisition_lines"
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(
+        db.Integer,
+        db.ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    requisition_id = db.Column(
+        db.Integer,
+        db.ForeignKey("purchase_requisitions.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id", ondelete="RESTRICT"), nullable=False, index=True)
+    quantity = db.Column(db.Numeric(15, 3), nullable=False)
+    unit_cost_estimate = db.Column(db.Numeric(15, 3), default=0)
+    notes = db.Column(db.String(255))
+
+    requisition = db.relationship("PurchaseRequisition", back_populates="lines")
+    product = db.relationship("Product")
+    tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
+
+    def __repr__(self):
+        return f"<PurchaseRequisitionLine {self.product_id} x {self.quantity}>"
+
+
+class PurchaseOrder(db.Model):
+    __tablename__ = "purchase_orders"
+    __table_args__ = (db.UniqueConstraint("tenant_id", "po_number", name="uq_po_tenant_number"),)
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(
+        db.Integer,
+        db.ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    po_number = db.Column(db.String(50), nullable=False, index=True)
+    supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.id", ondelete="RESTRICT"), nullable=False, index=True)
+    warehouse_id = db.Column(
+        db.Integer,
+        db.ForeignKey("warehouses.id", ondelete="RESTRICT"),
+        nullable=True,
+        index=True,
+    )
+    branch_id = db.Column(
+        db.Integer,
+        db.ForeignKey("branches.id", ondelete="RESTRICT"),
+        nullable=True,
+        index=True,
+    )
+    requisition_id = db.Column(
+        db.Integer,
+        db.ForeignKey("purchase_requisitions.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    order_date = db.Column(db.Date, nullable=False, index=True)
+    expected_delivery_date = db.Column(db.Date)
+    subtotal = db.Column(db.Numeric(15, 3), default=0)
+    tax_amount = db.Column(db.Numeric(15, 3), default=0)
+    total_amount = db.Column(db.Numeric(15, 3), default=0)
+    currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)
+    status = db.Column(db.String(20), default="draft", index=True)
+    notes = db.Column(db.Text)
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True)
+    confirmed_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    confirmed_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False, index=True)
+    updated_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
+
+    tenant = db.relationship("Tenant", backref="purchase_orders", foreign_keys=[tenant_id])
+    supplier = db.relationship("Supplier", backref="purchase_orders")
+    warehouse = db.relationship("Warehouse", backref="purchase_orders", foreign_keys=[warehouse_id])
+    branch = db.relationship("Branch", backref="purchase_orders", foreign_keys=[branch_id])
+    requisition = db.relationship("PurchaseRequisition", backref="converted_po", foreign_keys=[requisition_id])
+    creator = db.relationship("User", foreign_keys=[created_by])
+    confirmer = db.relationship("User", foreign_keys=[confirmed_by])
+    lines = db.relationship("PurchaseOrderLine", back_populates="order", lazy="joined", cascade="all, delete-orphan")
+    goods_receipts = db.relationship("GoodsReceipt", back_populates="purchase_order")
+
+    def __repr__(self):
+        return f"<PurchaseOrder {self.po_number}>"
+
+    def calculate_totals(self):
+        self.subtotal = sum((Decimal(str(line.line_total)) for line in self.lines), Decimal("0"))
+        self.total_amount = self.subtotal + self.tax_amount
+
+    @property
+    def total_received_quantity(self):
+        total = Decimal("0")
+        for line in self.lines:
+            total += line.received_quantity or Decimal("0")
+        return total
+
+    @property
+    def is_fully_received(self):
+        return all((line.received_quantity or Decimal("0")) >= line.quantity for line in self.lines if line.quantity)
+
+    @property
+    def status_ar(self):
+        mapping = {
+            "draft": "مسودة",
+            "submitted": "مُرسل",
+            "confirmed": "مؤكد",
+            "partially_received": "تم الاستلام جزئياً",
+            "received": "تم الاستلام",
+            "closed": "مغلق",
+            "cancelled": "ملغى",
+        }
+        return mapping.get(self.status, self.status)
+
+
+class PurchaseOrderLine(db.Model):
+    __tablename__ = "purchase_order_lines"
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(
+        db.Integer,
+        db.ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    po_id = db.Column(
+        db.Integer,
+        db.ForeignKey("purchase_orders.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id", ondelete="RESTRICT"), nullable=False, index=True)
+    quantity = db.Column(db.Numeric(15, 3), nullable=False)
+    unit_cost = db.Column(db.Numeric(15, 3), nullable=False)
+    line_total = db.Column(db.Numeric(15, 3), nullable=False)
+    received_quantity = db.Column(db.Numeric(15, 3), default=0)
+    notes = db.Column(db.String(255))
+
+    order = db.relationship("PurchaseOrder", back_populates="lines")
+    product = db.relationship("Product")
+    tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
+
+    def __repr__(self):
+        return f"<PurchaseOrderLine {self.product_id} x {self.quantity}>"
+
+    def calculate_line_total(self):
+        qty = Decimal(str(self.quantity)) if self.quantity else Decimal("0")
+        cost = Decimal(str(self.unit_cost)) if self.unit_cost else Decimal("0")
+        self.line_total = (qty * cost).quantize(Decimal("0.001"))
+
+
+class GoodsReceipt(db.Model):
+    __tablename__ = "goods_receipts"
+    __table_args__ = (db.UniqueConstraint("tenant_id", "grn_number", name="uq_grn_tenant_number"),)
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(
+        db.Integer,
+        db.ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    grn_number = db.Column(db.String(50), nullable=False, index=True)
+    po_id = db.Column(
+        db.Integer,
+        db.ForeignKey("purchase_orders.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.id", ondelete="RESTRICT"), nullable=False, index=True)
+    warehouse_id = db.Column(
+        db.Integer,
+        db.ForeignKey("warehouses.id", ondelete="RESTRICT"),
+        nullable=True,
+        index=True,
+    )
+    branch_id = db.Column(
+        db.Integer,
+        db.ForeignKey("branches.id", ondelete="RESTRICT"),
+        nullable=True,
+        index=True,
+    )
+    received_date = db.Column(db.Date, nullable=False, index=True)
+    received_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True)
+    status = db.Column(db.String(20), default="draft", index=True)
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False, index=True)
+
+    tenant = db.relationship("Tenant", backref="goods_receipts", foreign_keys=[tenant_id])
+    purchase_order = db.relationship("PurchaseOrder", back_populates="goods_receipts")
+    supplier = db.relationship("Supplier")
+    warehouse = db.relationship("Warehouse")
+    branch = db.relationship("Branch", backref="goods_receipts", foreign_keys=[branch_id])
+    receiver = db.relationship("User", foreign_keys=[received_by])
+    lines = db.relationship("GoodsReceiptLine", back_populates="grn", lazy="joined", cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<GoodsReceipt {self.grn_number}>"
+
+    @property
+    def status_ar(self):
+        mapping = {"draft": "مسودة", "confirmed": "مؤكد", "cancelled": "ملغى"}
+        return mapping.get(self.status, self.status)
+
+
+class GoodsReceiptLine(db.Model):
+    __tablename__ = "goods_receipt_lines"
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(
+        db.Integer,
+        db.ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    grn_id = db.Column(
+        db.Integer,
+        db.ForeignKey("goods_receipts.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    po_line_id = db.Column(
+        db.Integer,
+        db.ForeignKey("purchase_order_lines.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id", ondelete="RESTRICT"), nullable=False, index=True)
+    ordered_quantity = db.Column(db.Numeric(15, 3), nullable=False)
+    received_quantity = db.Column(db.Numeric(15, 3), nullable=False)
+    condition = db.Column(db.String(20), default="acceptable")
+    notes = db.Column(db.String(255))
+
+    grn = db.relationship("GoodsReceipt", back_populates="lines")
+    po_line = db.relationship("PurchaseOrderLine", backref="grn_lines")
+    product = db.relationship("Product")
+    tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
+
+    def __repr__(self):
+        return f"<GoodsReceiptLine {self.product_id} received={self.received_quantity}>"

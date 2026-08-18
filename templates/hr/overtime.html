@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Overtime Requests') }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <h2 class="mb-4">{{ t('Overtime Requests') }}</h2>
+
+  <div class="card mb-4"><div class="card-header"><h5>{{ t('New Overtime') }}</h5></div><div class="card-body">
+    <form method="POST" action="{{ url_for('hr.overtime_create') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-2"><label class="form-label">{{ t('User ID') }} *</label><input type="number" name="user_id" class="form-control" required></div>
+        <div class="col-md-2"><label class="form-label">{{ t('Date') }} *</label><input type="date" name="overtime_date" class="form-control" required></div>
+        <div class="col-md-2"><label class="form-label">{{ t('Hours') }} *</label><input type="number" step="0.5" name="hours" class="form-control" required></div>
+        <div class="col-md-2"><label class="form-label">{{ t('Type') }}</label>
+          <select name="overtime_type" class="form-select"><option value="standard">{{ t('Standard (1.25x)') }}</option><option value="weekend">{{ t('Weekend (1.5x)') }}</option><option value="holiday">{{ t('Holiday (1.5x)') }}</option></select>
+        </div>
+        <div class="col-md-4"><button type="submit" class="btn btn-primary">{{ t('Create') }}</button></div>
+      </div>
+    </form>
+  </div></div>
+
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr><th>{{ t('User') }}</th><th>{{ t('Date') }}</th><th class="text-end">{{ t('Hours') }}</th><th>{{ t('Type') }}</th><th class="text-end">{{ t('Pay') }}</th><th class="text-center">{{ t('Status') }}</th><th class="text-center">{{ t('Actions') }}</th></tr>
+        </thead>
+        <tbody>
+          {% for ot in entries %}
+          <tr>
+            <td>{{ ot.user.full_name if ot.user else ot.user_id }}</td>
+            <td>{{ ot.overtime_date }}</td>
+            <td class="text-end">{{ '%.1f'|format(ot.hours|float) }}</td>
+            <td>{{ ot.overtime_type_ar }}</td>
+            <td class="text-end">{{ '%.3f'|format(ot.pay_amount|float) }}</td>
+            <td class="text-center"><span class="badge {% if ot.status == 'approved' %}bg-success{% elif ot.status == 'rejected' %}bg-danger{% else %}bg-warning text-dark{% endif %}">{{ ot.status_ar }}</span></td>
+            <td class="text-center">
+              {% if ot.status == 'pending' %}
+              <form method="POST" action="{{ url_for('hr.overtime_approve', ot_id=ot.id) }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-success">{{ t('Approve') }}</button></form>
+              <form method="POST" action="{{ url_for('hr.overtime_reject', ot_id=ot.id) }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-danger">{{ t('Reject') }}</button></form>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" class="text-center text-muted py-4">{{ t('No overtime entries') }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

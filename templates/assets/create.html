@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Fixed Assets') }} - {{ t('Create') if not asset else t('Edit') }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-4">{{ t('Add Fixed Asset') if not asset else t('Edit') ~ ': ' ~ asset.asset_number }}</h2>
+  <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row g-3">
+      <div class="col-md-6"><label class="form-label">{{ t('Name') }} (AR) *</label><input type="text" name="name_ar" class="form-control" required value="{{ asset.name_ar if asset else '' }}"></div>
+      <div class="col-md-6"><label class="form-label">{{ t('Name') }} (EN)</label><input type="text" name="name_en" class="form-control" value="{{ asset.name_en if asset else '' }}"></div>
+      <div class="col-md-4"><label class="form-label">{{ t('Category') }}</label>
+        <select name="category" class="form-select">
+          {% for c in [('land','Agricultural Land'),('building','Building'),('vehicle','Vehicle'),('equipment','Equipment'),('furniture','Furniture'),('computer','Computer')] %}
+          <option value="{{ c[0] }}" {% if asset and asset.category == c[0] %}selected{% endif %}>{{ c[1] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4"><label class="form-label">{{ t('Purchase Date') }} *</label><input type="date" name="purchase_date" class="form-control" required value="{{ asset.purchase_date if asset else '' }}"></div>
+      <div class="col-md-4"><label class="form-label">{{ t('Purchase Price') }} *</label><input type="number" step="0.001" name="purchase_price" class="form-control" required value="{{ asset.purchase_price if asset else '' }}"></div>
+      <div class="col-md-4"><label class="form-label">{{ t('Salvage Value') }}</label><input type="number" step="0.001" name="salvage_value" class="form-control" value="{{ asset.salvage_value if asset else '0' }}"></div>
+      <div class="col-md-4"><label class="form-label">{{ t('Depreciation Method') }}</label>
+        <select name="depreciation_method" class="form-select">
+          <option value="straight_line" {% if asset and asset.depreciation_method == 'straight_line' %}selected{% endif %}>{{ t('Straight Line') }}</option>
+          <option value="declining_balance" {% if asset and asset.depreciation_method == 'declining_balance' %}selected{% endif %}>{{ t('Declining Balance') }}</option>
+        </select>
+      </div>
+      <div class="col-md-4"><label class="form-label">{{ t('Useful Life (Years)') }} *</label><input type="number" name="useful_life_years" class="form-control" required value="{{ asset.useful_life_years if asset else '' }}"></div>
+      <div class="col-md-6"><label class="form-label">{{ t('Asset Account ID') }} *</label><input type="number" name="asset_account_id" class="form-control" required value="{{ asset.asset_account_id if asset else '' }}"></div>
+      <div class="col-md-3"><label class="form-label">{{ t('Depreciation Account ID') }}</label><input type="number" name="depreciation_account_id" class="form-control" value="{{ asset.depreciation_account_id if asset else '' }}"></div>
+      <div class="col-md-3"><label class="form-label">{{ t('Expense Account ID') }}</label><input type="number" name="expense_account_id" class="form-control" value="{{ asset.expense_account_id if asset else '' }}"></div>
+      <div class="col-md-4"><label class="form-label">{{ t('Location') }}</label><input type="text" name="location" class="form-control" value="{{ asset.location if asset else '' }}"></div>
+      <div class="col-md-8"><label class="form-label">{{ t('Notes') }}</label><textarea name="notes" class="form-control" rows="2">{{ asset.notes if asset else '' }}</textarea></div>
+    </div>
+    <div class="mt-4"><button type="submit" class="btn btn-primary btn-lg">{{ t('Save') }}</button></div>
+  </form>
+</div>
+{% endblock %}

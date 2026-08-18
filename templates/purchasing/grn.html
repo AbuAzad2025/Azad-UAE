@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Goods Receipt Notes') }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>{{ t('Goods Receipt Notes') }}</h2>
+  </div>
+
+  {% if creating is defined and creating %}
+  <div class="card mb-4"><div class="card-header"><h5>{{ t('New GRN') }}</h5></div><div class="card-body">
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="row g-3 mb-3">
+        <div class="col-md-6"><label class="form-label">{{ t('Purchase Order') }} *</label>
+          <select name="po_id" class="form-select" required><option value="">{{ t('Select PO') }}</option>
+          {% for po in pos|default([]) %}<option value="{{ po.id }}">{{ po.po_number }} - {{ po.supplier.name if po.supplier else '' }} ({{ po.total_amount }})</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-md-6"><label class="form-label">{{ t('Notes') }}</label><input type="text" name="notes" class="form-control"></div>
+      </div>
+      <h5>{{ t('Received Items') }}</h5>
+      <div id="grn-lines">
+        <div class="row g-2 mb-2 grn-line-row">
+          <div class="col-md-3"><input type="number" name="line_0_po_line_id" class="form-control" placeholder="{{ t('PO Line ID') }}" required></div>
+          <div class="col-md-3"><input type="number" step="0.001" name="line_0_received_quantity" class="form-control" placeholder="{{ t('Received Qty') }}" required></div>
+          <div class="col-md-3"><select name="line_0_condition" class="form-select"><option value="acceptable">{{ t('Acceptable') }}</option><option value="damaged">{{ t('Damaged') }}</option></select></div>
+          <div class="col-md-3"><button type="button" class="btn btn-sm btn-danger remove-line">X</button></div>
+        </div>
+      </div>
+      <button type="button" id="add-grn-line" class="btn btn-sm btn-outline-primary mb-3">{{ t('Add Line') }}</button>
+      <div><button type="submit" class="btn btn-primary">{{ t('Create GRN') }}</button></div>
+    </form>
+  </div></div>
+  {% endif %}
+
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr><th>{{ t('Number') }}</th><th>{{ t('PO') }}</th><th>{{ t('Date') }}</th><th>{{ t('Receiver') }}</th><th class="text-center">{{ t('Status') }}</th><th class="text-center">{{ t('Actions') }}</th></tr>
+        </thead>
+        <tbody>
+          {% for grn in receipts|default([]) %}
+          <tr>
+            <td><strong>{{ grn.grn_number }}</strong></td>
+            <td>{{ grn.purchase_order.po_number if grn.purchase_order else '' }}</td>
+            <td>{{ grn.received_date }}</td>
+            <td>{{ grn.receiver.full_name if grn.receiver else '' }}</td>
+            <td class="text-center"><span class="badge {% if grn.status == 'confirmed' %}bg-success{% else %}bg-secondary{% endif %}">{{ grn.status_ar }}</span></td>
+            <td class="text-center">
+              {% if grn.status == 'draft' %}
+              <form method="POST" action="{{ url_for('purchases.confirm_grn', grn_id=grn.id) }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-success">{{ t('Confirm') }}</button></form>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="text-center text-muted py-4">{{ t('No goods receipts') }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.getElementById('add-grn-line')?.addEventListener('click', function() {
+  var idx = document.querySelectorAll('.grn-line-row').length;
+  var html = '<div class="row g-2 mb-2 grn-line-row"><div class="col-md-3"><input type="number" name="line_'+idx+'_po_line_id" class="form-control" placeholder="{{ t("PO Line ID") }}" required></div><div class="col-md-3"><input type="number" step="0.001" name="line_'+idx+'_received_quantity" class="form-control" placeholder="{{ t("Received Qty") }}" required></div><div class="col-md-3"><select name="line_'+idx+'_condition" class="form-select"><option value="acceptable">{{ t("Acceptable") }}</option><option value="damaged">{{ t("Damaged") }}</option></select></div><div class="col-md-3"><button type="button" class="btn btn-sm btn-danger remove-line">X</button></div></div>';
+  document.getElementById('grn-lines').insertAdjacentHTML('beforeend', html);
+});
+document.addEventListener('click', function(e) { if (e.target.classList.contains('remove-line')) e.target.closest('.grn-line-row').remove(); });
+</script>
+{% endblock %}

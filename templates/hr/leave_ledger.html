@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Leave Balance Ledger') }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <h2 class="mb-4">{{ t('Leave Balance Ledger') }}</h2>
+
+  <div class="card mb-4"><div class="card-header"><h5>{{ t('Accrue Balance') }}</h5></div><div class="card-body">
+    <form method="POST" action="{{ url_for('hr.accrue_leave_balance') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-3"><label class="form-label">{{ t('User ID') }} *</label><input type="number" name="user_id" class="form-control" required></div>
+        <div class="col-md-3"><label class="form-label">{{ t('Leave Type') }} *</label>
+          <select name="leave_type_id" class="form-select" required><option value="">{{ t('Select') }}</option>
+          {% for lt in leave_types %}<option value="{{ lt.id }}">{{ lt.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2"><label class="form-label">{{ t('Year') }} *</label><input type="number" name="year" class="form-control" required></div>
+        <div class="col-md-2"><label class="form-label">{{ t('Days') }} *</label><input type="number" step="0.5" name="entitled_days" class="form-control" required></div>
+        <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">{{ t('Accrue') }}</button></div>
+      </div>
+    </form>
+  </div></div>
+
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr><th>{{ t('User') }}</th><th>{{ t('Leave Type') }}</th><th>{{ t('Year') }}</th><th class="text-end">{{ t('Entitled') }}</th><th class="text-end">{{ t('Used') }}</th><th class="text-end">{{ t('Carried') }}</th><th class="text-end">{{ t('Available') }}</th></tr>
+        </thead>
+        <tbody>
+          {% for lb in balances %}
+          <tr>
+            <td>{{ lb.user.full_name if lb.user else lb.user_id }}</td>
+            <td>{{ lb.leave_type.name if lb.leave_type else lb.leave_type_id }}</td>
+            <td>{{ lb.year }}</td>
+            <td class="text-end">{{ '%.1f'|format(lb.entitled_days|float) }}</td>
+            <td class="text-end">{{ '%.1f'|format(lb.used_days|float) }}</td>
+            <td class="text-end">{{ '%.1f'|format(lb.carried_forward_days|float) }}</td>
+            <td class="text-end fw-bold">{{ '%.1f'|format(lb.available_days|float) }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" class="text-center text-muted py-4">{{ t('No leave balances') }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

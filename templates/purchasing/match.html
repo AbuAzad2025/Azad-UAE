@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('3-Way Match') }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <h2 class="mb-4">{{ t('3-Way Match') }} - PO #{{ po_id }}</h2>
+  <form method="GET" class="row g-3 mb-4">
+    <div class="col-md-4"><label class="form-label">{{ t('Invoice Amount') }}</label><input type="number" step="0.001" name="invoice_amount" class="form-control" value="{{ request.args.get('invoice_amount', '0') }}"></div>
+    <div class="col-md-2"><button type="submit" class="btn btn-primary mt-4">{{ t('Check Match') }}</button></div>
+  </form>
+  {% if result %}
+  <div class="alert {% if result.overall %}alert-success{% else %}alert-danger{% endif %}">
+    {% if result.overall %}{{ t('All items matched successfully.') }}{% else %}{{ t('Variance detected. Review below.') }}{% endif %}
+  </div>
+  <div class="card mb-4"><div class="card-body">
+    <div class="row">
+      <div class="col-md-4"><strong>{{ t('PO Total') }}:</strong> {{ '%.3f'|format(result.po_total|float) }}</div>
+      <div class="col-md-4"><strong>{{ t('Invoice Amount') }}:</strong> {{ '%.3f'|format(result.invoice_amount|float) }}</div>
+      <div class="col-md-4"><strong>{{ t('Variance') }}:</strong> <span class="{% if result.amount_variance != 0 %}text-danger{% else %}text-success{% endif %}">{{ '%.3f'|format(result.amount_variance|float) }}</span></div>
+    </div>
+  </div></div>
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr><th>{{ t('PO Line') }}</th><th class="text-end">{{ t('PO Qty') }}</th><th class="text-end">{{ t('Received Qty') }}</th><th class="text-end">{{ t('Unit Cost') }}</th><th class="text-end">{{ t('Qty Variance') }}</th><th class="text-center">{{ t('Match') }}</th></tr>
+        </thead>
+        <tbody>
+          {% for lm in result.line_matches %}
+          <tr>
+            <td>{{ lm.po_line_id }}</td>
+            <td class="text-end">{{ lm.po_quantity }}</td>
+            <td class="text-end">{{ lm.received_quantity }}</td>
+            <td class="text-end">{{ lm.unit_cost }}</td>
+            <td class="text-end {% if lm.quantity_variance != 0 %}text-danger{% else %}text-success{% endif %}">{{ lm.quantity_variance }}</td>
+            <td class="text-center">{% if lm.matched %}<span class="badge bg-success">{{ t('OK') }}</span>{% else %}<span class="badge bg-danger">{{ t('Variance') }}</span>{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+  <div class="mt-4"><a href="{{ url_for('purchases.grn_list') }}" class="btn btn-secondary">{{ t('Back') }}</a></div>
+</div>
+{% endblock %}

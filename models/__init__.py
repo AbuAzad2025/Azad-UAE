@@ -39,7 +39,16 @@ from .fiscal_position import FiscalPosition, FiscalPositionTaxRule
 from .fixed_asset import DepreciationSchedule, FixedAsset
 from .gl import VALID_GL_CONCEPT_CODES, GLAccount, GLAccountMapping, GLJournalEntry, GLJournalLine, GLPeriod
 from .helpdesk import Ticket, TicketCategory, TicketComment, TicketPriority
-from .hr import Attendance, Department, HRContract, JobPosition, LeaveRequest, LeaveType
+from .hr import (
+    Attendance,
+    Department,
+    HRContract,
+    JobPosition,
+    LeaveBalance,
+    LeaveRequest,
+    LeaveType,
+    OvertimeEntry,
+)
 from .idempotency_key import IdempotencyKey
 from .industry_field_definition import IndustryFieldDefinition
 from .integration_settings import IntegrationSettings
@@ -75,7 +84,16 @@ from .product_serial import ProductSerial
 from .product_warehouse_cost import ProductWarehouseCost
 from .profit_center import ProfitCenter
 from .projects import Project, ProjectMember, Task, TaskStage, Timesheet
-from .purchase import Purchase, PurchaseLine
+from .purchase import (
+    GoodsReceipt,
+    GoodsReceiptLine,
+    Purchase,
+    PurchaseLine,
+    PurchaseOrder,
+    PurchaseOrderLine,
+    PurchaseRequisition,
+    PurchaseRequisitionLine,
+)
 from .purchase_return import PurchaseReturn, PurchaseReturnLine
 from .sale import Sale, SaleLine
 from .security_alert import SecurityAlert
@@ -123,6 +141,12 @@ __all__ = [
     "PurchaseLine",
     "PurchaseReturn",
     "PurchaseReturnLine",
+    "PurchaseRequisition",
+    "PurchaseRequisitionLine",
+    "PurchaseOrder",
+    "PurchaseOrderLine",
+    "GoodsReceipt",
+    "GoodsReceiptLine",
     "Payment",
     "Receipt",
     "Currency",
@@ -242,6 +266,8 @@ __all__ = [
     "Attendance",
     "LeaveType",
     "LeaveRequest",
+    "LeaveBalance",
+    "OvertimeEntry",
     "EmailList",
     "EmailSubscriber",
     "EmailTemplate",

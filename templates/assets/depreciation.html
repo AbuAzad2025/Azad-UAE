@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Depreciation Schedule') }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <h2 class="mb-4">{{ t('Depreciation Schedule') }}</h2>
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr><th>{{ t('Number') }}</th><th>{{ t('Name') }}</th><th class="text-end">{{ t('Cost') }}</th><th class="text-end">{{ t('Accumulated') }}</th><th class="text-end">{{ t('Book Value') }}</th><th class="text-end">{{ t('Monthly') }}</th><th class="text-center">{{ t('Actions') }}</th></tr>
+        </thead>
+        <tbody>
+          {% for a in assets %}
+          <tr>
+            <td>{{ a.asset_number }}</td>
+            <td>{{ a.name_ar }}</td>
+            <td class="text-end">{{ '%.3f'|format(a.purchase_price|float) }}</td>
+            <td class="text-end">{{ '%.3f'|format(a.accumulated_depreciation|float) }}</td>
+            <td class="text-end">{{ '%.3f'|format(a.remaining_book_value|float) }}</td>
+            <td class="text-end">{{ '%.3f'|format(a.calculate_monthly_depreciation()|float) }}</td>
+            <td class="text-center"><a href="{{ url_for('assets.detail', asset_id=a.id) }}" class="btn btn-sm btn-outline-primary">{{ t('View') }}</a></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" class="text-center text-muted py-4">{{ t('No active assets') }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

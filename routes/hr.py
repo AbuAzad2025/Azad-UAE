@@ -1,9 +1,11 @@
+from datetime import date
+
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_babel import gettext
 from flask_login import current_user, login_required
 
 from models import LeaveRequest, LeaveType, User
-from services.hr_service import HRService
+from services.hr_service import HRService, LeaveBalanceService, OvertimeService
 from utils.decorators import permission_required
 from utils.tenanting import get_active_tenant_id, tenant_get_or_404, tenant_query
 
@@ -150,3 +152,125 @@ def create_contract():
     except (ValueError, KeyError) as e:
         flash(str(e), "danger")
     return redirect(url_for("hr.departments_list"))
+
+
+# ---------------------------------------------------------------------------
+# Leave Balance Ledger
+# ---------------------------------------------------------------------------
+@hr_bp.route("/leave-ledger")
+@login_required
+@permission_required("hr:leave_manage")
+def leave_ledger():
+    tid = get_active_tenant_id(current_user)
+    year = request.args.get("year", date.today().year, type=int)
+    user_id = request.args.get("user_id", type=int)
+    balances = LeaveBalanceService.list_balances(user_id, year, tid) if user_id else []
+    users = User.query.filter(User.tenant_id == tid, User.is_active).order_by(User.full_name).all() if tid else []
+    leave_types = tenant_query(LeaveType).filter_by(is_active=True).all() if tid else []
+    return render_template(
+        "hr/leave_ledger.html",
+        balances=balances,
+        users=users,
+        leave_types=leave_types,
+        selected_year=year,
+        selected_user_id=user_id,
+    )
+
+
+@hr_bp.route("/leave-ledger/accrue", methods=["POST"])
+@login_required
+@permission_required("hr:leave_manage")
+def accrue_leave():
+    try:
+        user_id = int(request.form["user_id"])
+        leave_type_id = int(request.form["leave_type_id"])
+        days = request.form.get("days", "1")
+        year = int(request.args.get("year", date.today().year))
+        tid = get_active_tenant_id(current_user)
+        LeaveBalanceService.accrue_leave(user_id, leave_type_id, year, float(days), tid)
+        flash(gettext("تم احتساب أيام الإجازة"), "success")
+    except (ValueError, KeyError) as e:
+        flash(str(e), "danger")
+    return redirect(url_for("hr.leave_ledger", user_id=user_id, year=year))
+
+
+@hr_bp.route("/leave-ledger/carry-forward", methods=["POST"])
+@login_required
+@permission_required("hr:leave_manage")
+def carry_forward_leave():
+    try:
+        user_id = int(request.form["user_id"])
+        leave_type_id = int(request.form["leave_type_id"])
+        from_year = int(request.form["from_year"])
+        tid = get_active_tenant_id(current_user)
+        LeaveBalanceService.carry_forward_leave(user_id, leave_type_id, from_year, tid)
+        flash(gettext("تم تحويل الرصيد إلى السنة الجديدة"), "success")
+    except (ValueError, KeyError) as e:
+        flash(str(e), "danger")
+    return redirect(url_for("hr.leave_ledger"))
+
+
+# ---------------------------------------------------------------------------
+# Overtime Management
+# ---------------------------------------------------------------------------
+@hr_bp.route("/overtime")
+@login_required
+@permission_required("hr:manage")
+def overtime_list():
+    filters = {k: v for k, v in request.args.items() if v}
+    entries = OvertimeService.list_entries(current_user, filters)
+    tid = get_active_tenant_id(current_user)
+    users = User.query.filter(User.tenant_id == tid, User.is_active).order_by(User.full_name).all() if tid else []
+    return render_template("hr/overtime.html", entries=entries, users=users)
+
+
+@hr_bp.route("/overtime/create", methods=["POST"])
+@login_required
+@permission_required("hr:manage")
+def create_overtime():
+    try:
+        data = {
+            "user_id": request.form["user_id"],
+            "branch_id": request.form.get("branch_id"),
+            "overtime_date": request.form["overtime_date"],
+            "hours": request.form["hours"],
+            "rate_multiplier": request.form.get("rate_multiplier", "1.0"),
+            "overtime_type": request.form.get("overtime_type", "standard"),
+            "notes": request.form.get("notes"),
+        }
+        OvertimeService.create_entry(data, current_user)
+        flash(gettext("تم إنشاء سجل العمل الإضافي"), "success")
+    except (ValueError, KeyError) as e:
+        flash(str(e), "danger")
+    return redirect(url_for("hr.overtime_list"))
+
+
+@hr_bp.route("/overtime/<int:entry_id>/approve", methods=["POST"])
+@login_required
+@permission_required("hr:manage")
+def approve_overtime(entry_id):
+    from models import OvertimeEntry
+
+    entry = tenant_get_or_404(OvertimeEntry, entry_id)
+    try:
+        OvertimeService.approve_entry(entry, current_user)
+        flash(gettext("تمت الموافقة على العمل الإضافي"), "success")
+    except ValueError as e:
+        flash(str(e), "danger")
+    return redirect(url_for("hr.overtime_list"))
+
+
+@hr_bp.route("/overtime/<int:entry_id>/reject", methods=["POST"])
+@login_required
+@permission_required("hr:manage")
+def reject_overtime(entry_id):
+    from models import OvertimeEntry
+
+    entry = tenant_get_or_404(OvertimeEntry, entry_id)
+    reason = request.form.get("reason", "")
+    try:
+        OvertimeService.reject_entry(entry, current_user, reason)
+        flash(gettext("تم رفض العمل الإضافي"), "success")
+    except ValueError as e:
+        flash(str(e), "danger")
+    return redirect(url_for("hr.overtime_list"))

@@ -543,3 +543,214 @@ def api_calculate_purchase_totals():
     except Exception:
         current_app.logger.exception("calculate_purchase_totals failed")
         return jsonify({"success": False, "error": gettext("تعذر حساب الإجماليات حالياً")}), 500
+
+
+# ---------------------------------------------------------------------------
+# Purchase Requisitions
+# ---------------------------------------------------------------------------
+@purchases_bp.route("/requisitions")
+@login_required
+@permission_required("purchase_req:create")
+def requisitions_list():
+    from models import PurchaseRequisition
+
+    tid = get_active_tenant_id(current_user)
+    requisitions = (
+        PurchaseRequisition.query.filter_by(tenant_id=tid).order_by(PurchaseRequisition.created_at.desc()).all()
+    )
+    return render_template("purchasing/requisitions.html", requisitions=requisitions)
+
+
+@purchases_bp.route("/requisitions/create", methods=["GET", "POST"])
+@login_required
+@permission_required("purchase_req:create")
+def create_requisition():
+    if request.method == "POST":
+        try:
+            from services.procurement_service import ProcurementService
+
+            data = _parse_requisition_form(request.form)
+            ProcurementService.create_requisition(data, current_user)
+            flash(gettext("تم إنشاء طلب الشراء"), "success")
+            return redirect(url_for("purchases.requisitions_list"))
+        except (ValueError, KeyError) as e:
+            flash(str(e), "danger")
+    from models import Product
+
+    tid = get_active_tenant_id(current_user)
+    products = Product.query.filter_by(tenant_id=tid, is_active=True).all() if tid else []
+    return render_template("purchasing/requisitions.html", products=products, creating=True)
+
+
+@purchases_bp.route("/requisitions/<int:pr_id>/submit", methods=["POST"])
+@login_required
+@permission_required("purchase_req:create")
+def submit_requisition(pr_id):
+    from models import PurchaseRequisition
+    from services.procurement_service import ProcurementService
+
+    pr = tenant_get_or_404(PurchaseRequisition, pr_id)
+    try:
+        ProcurementService.submit_requisition(pr)
+        flash(gettext("تم إرسال الطلب"), "success")
+    except ValueError as e:
+        flash(str(e), "danger")
+    return redirect(url_for("purchases.requisitions_list"))
+
+
+@purchases_bp.route("/requisitions/<int:pr_id>/approve", methods=["POST"])
+@login_required
+@permission_required("purchase_req:approve")
+def approve_requisition(pr_id):
+    from models import PurchaseRequisition
+    from services.procurement_service import ProcurementService
+
+    pr = tenant_get_or_404(PurchaseRequisition, pr_id)
+    try:
+        ProcurementService.approve_requisition(pr, current_user)
+        flash(gettext("تمت الموافقة على الطلب"), "success")
+    except ValueError as e:
+        flash(str(e), "danger")
+    return redirect(url_for("purchases.requisitions_list"))
+
+
+@purchases_bp.route("/requisitions/<int:pr_id>/reject", methods=["POST"])
+@login_required
+@permission_required("purchase_req:approve")
+def reject_requisition(pr_id):
+    from models import PurchaseRequisition
+    from services.procurement_service import ProcurementService
+
+    pr = tenant_get_or_404(PurchaseRequisition, pr_id)
+    reason = request.form.get("reason", "")
+    try:
+        ProcurementService.reject_requisition(pr, current_user, reason)
+        flash(gettext("تم رفض الطلب"), "success")
+    except ValueError as e:
+        flash(str(e), "danger")
+    return redirect(url_for("purchases.requisitions_list"))
+
+
+# ---------------------------------------------------------------------------
+# Purchase Orders (GRN)
+# ---------------------------------------------------------------------------
+@purchases_bp.route("/grn")
+@login_required
+@permission_required("grn:manage")
+def grn_list():
+    from models import GoodsReceipt
+
+    tid = get_active_tenant_id(current_user)
+    receipts = GoodsReceipt.query.filter_by(tenant_id=tid).order_by(GoodsReceipt.created_at.desc()).all()
+    return render_template("purchasing/grn.html", receipts=receipts)
+
+
+@purchases_bp.route("/grn/create", methods=["GET", "POST"])
+@login_required
+@permission_required("grn:manage")
+def create_grn():
+    if request.method == "POST":
+        try:
+            from services.procurement_service import ProcurementService
+
+            po_id = int(request.form["po_id"])
+            data = _parse_grn_form(request.form)
+            ProcurementService.create_grn(po_id, data, current_user)
+            flash(gettext("تم إنشاء إيصال الاستلام"), "success")
+            return redirect(url_for("purchases.grn_list"))
+        except (ValueError, KeyError) as e:
+            flash(str(e), "danger")
+    from models import PurchaseOrder
+
+    tid = get_active_tenant_id(current_user)
+    pos = (
+        PurchaseOrder.query.filter(
+            PurchaseOrder.tenant_id == tid,
+            PurchaseOrder.status.in_(["confirmed", "partially_received"]),
+        ).all()
+        if tid
+        else []
+    )
+    return render_template("purchasing/grn.html", pos=pos, creating=True)
+
+
+@purchases_bp.route("/grn/<int:grn_id>/confirm", methods=["POST"])
+@login_required
+@permission_required("grn:manage")
+def confirm_grn(grn_id):
+    from models import GoodsReceipt
+    from services.procurement_service import ProcurementService
+
+    grn = tenant_get_or_404(GoodsReceipt, grn_id)
+    try:
+        ProcurementService.confirm_grn(grn)
+        flash(gettext("تم تأكيد الاستلام"), "success")
+    except ValueError as e:
+        flash(str(e), "danger")
+    return redirect(url_for("purchases.grn_list"))
+
+
+# ---------------------------------------------------------------------------
+# 3-Way Match
+# ---------------------------------------------------------------------------
+@purchases_bp.route("/match/<int:po_id>")
+@login_required
+@permission_required("grn:manage")
+def match_view(po_id):
+    from services.procurement_service import ProcurementService
+
+    invoice_amount = request.args.get("invoice_amount", "0")
+    try:
+        result = ProcurementService.three_way_match(po_id, invoice_amount)
+    except ValueError as e:
+        flash(str(e), "danger")
+        result = None
+    return render_template("purchasing/match.html", result=result, po_id=po_id)
+
+
+def _parse_requisition_form(form):
+    lines = []
+    idx = 0
+    while True:
+        pid = form.get(f"line_{idx}_product_id")
+        qty = form.get(f"line_{idx}_quantity")
+        if pid is None or pid == "":
+            break
+        lines.append(
+            {
+                "product_id": pid,
+                "quantity": qty or "0",
+                "unit_cost_estimate": form.get(f"line_{idx}_unit_cost", "0"),
+                "notes": form.get(f"line_{idx}_notes", ""),
+            }
+        )
+        idx += 1
+    return {
+        "department_id": form.get("department_id"),
+        "branch_id": form.get("branch_id"),
+        "needed_by_date": form.get("needed_by_date"),
+        "priority": form.get("priority", "normal"),
+        "justification": form.get("justification"),
+        "notes": form.get("notes"),
+        "lines": lines,
+    }
+
+
+def _parse_grn_form(form):
+    lines = []
+    idx = 0
+    while True:
+        plid = form.get(f"line_{idx}_po_line_id")
+        rq = form.get(f"line_{idx}_received_quantity")
+        if plid is None or plid == "":
+            break
+        lines.append(
+            {
+                "po_line_id": plid,
+                "received_quantity": rq or "0",
+                "condition": form.get(f"line_{idx}_condition", "acceptable"),
+                "notes": form.get(f"line_{idx}_notes", ""),
+            }
+        )
+        idx += 1
+    return {"notes": form.get("notes"), "lines": lines}

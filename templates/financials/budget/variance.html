@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Variance') }} - {{ report.budget.budget_number }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>{{ t('Budget Variance') }}: {{ report.budget.name_ar }}</h2>
+    <a href="{{ url_for('budget.detail', budget_id=report.budget.id) }}" class="btn btn-secondary">{{ t('Back') }}</a>
+  </div>
+  <div class="row mb-4">
+    <div class="col-md-4"><div class="card text-center p-3"><h5>{{ t('Budgeted') }}</h5><h3>{{ '%.3f'|format(report.total_budgeted) }}</h3></div></div>
+    <div class="col-md-4"><div class="card text-center p-3"><h5>{{ t('Actual') }}</h5><h3>{{ '%.3f'|format(report.total_actual) }}</h3></div></div>
+    <div class="col-md-4"><div class="card text-center p-3"><h5>{{ t('Variance') }}</h5><h3 class="{% if report.total_variance < 0 %}text-danger{% else %}text-success{% endif %}">{{ '%.3f'|format(report.total_variance) }}</h3></div></div>
+  </div>
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>{{ t('Account') }}</th>
+            <th class="text-end">{{ t('Budgeted') }}</th>
+            <th class="text-end">{{ t('Actual') }}</th>
+            <th class="text-end">{{ t('Variance') }}</th>
+            <th class="text-end">%</th>
+            <th class="text-center">{{ t('Status') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for line in report.lines %}
+          <tr>
+            <td>{{ line.account_code }} - {{ line.account_name }}</td>
+            <td class="text-end">{{ '%.3f'|format(line.budgeted) }}</td>
+            <td class="text-end">{{ '%.3f'|format(line.actual) }}</td>
+            <td class="text-end {% if line.variance < 0 %}text-danger{% else %}text-success{% endif %}">{{ '%.3f'|format(line.variance) }}</td>
+            <td class="text-end">{{ '%.1f'|format(line.variance_percentage) }}%</td>
+            <td class="text-center">
+              <span class="badge {% if line.variance_status == 'good' %}bg-success{% elif line.variance_status == 'warning' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                {{ line.variance_status_ar }}
+              </span>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="text-center text-muted py-3">{{ t('No budget lines') }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

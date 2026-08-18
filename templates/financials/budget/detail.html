@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Budget') }} {{ budget.budget_number }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2>{{ budget.name_ar }} <small class="text-muted">{{ budget.budget_number }}</small></h2>
+      <span class="badge {% if budget.status == 'active' %}bg-success{% elif budget.status == 'draft' %}bg-secondary{% else %}bg-dark{% endif %} me-2">{{ budget.status_ar }}</span>
+      <span class="badge bg-info">{{ budget.fiscal_year }}</span>
+      <span class="badge bg-light text-dark">{{ budget.period_type_ar }}</span>
+    </div>
+    <div>
+      <a href="{{ url_for('budget.index') }}" class="btn btn-secondary">{{ t('Back') }}</a>
+      <a href="{{ url_for('budget.variance', budget_id=budget.id) }}" class="btn btn-info">{{ t('Variance') }}</a>
+      {% if budget.status == 'draft' %}
+      <form method="POST" action="{{ url_for('budget.approve', budget_id=budget.id) }}" class="d-inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-success">{{ t('Approve') }}</button>
+      </form>
+      <a href="{{ url_for('budget.edit', budget_id=budget.id) }}" class="btn btn-warning">{{ t('Edit') }}</a>
+      <form method="POST" action="{{ url_for('budget.delete', budget_id=budget.id) }}" class="d-inline" onsubmit="return confirm('{{ t('Are you sure?') }}')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-danger">{{ t('Delete') }}</button>
+      </form>
+      {% endif %}
+      {% if budget.status == 'approved' %}
+      <form method="POST" action="{{ url_for('budget.activate', budget_id=budget.id) }}" class="d-inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-primary">{{ t('Activate') }}</button>
+      </form>
+      {% endif %}
+      {% if budget.status == 'active' %}
+      <form method="POST" action="{{ url_for('budget.close', budget_id=budget.id) }}" class="d-inline" onsubmit="return confirm('{{ t('Are you sure?') }}')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-dark">{{ t('Close') }}</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-3"><strong>{{ t('Period') }}:</strong> {{ budget.period_start }} → {{ budget.period_end }}</div>
+    <div class="col-md-3"><strong>{{ t('Enforcement') }}:</strong> {{ budget.enforcement }}</div>
+    <div class="col-md-3"><strong>{{ t('Budgeted') }}:</strong> {{ '%.3f'|format(budget.total_budgeted|float) }}</div>
+    <div class="col-md-3"><strong>{{ t('Actual') }}:</strong> {{ '%.3f'|format(budget.total_actual|float) }}</div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h5>{{ t('Budget Lines') }}</h5></div>
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>{{ t('Account') }}</th>
+            <th class="text-end">{{ t('Budgeted') }}</th>
+            <th class="text-end">{{ t('Actual') }}</th>
+            <th class="text-end">{{ t('Variance') }}</th>
+            <th class="text-center">{{ t('Status') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for line in budget.lines %}
+          <tr>
+            <td>{{ line.account.code if line.account else '' }} - {{ line.account.name if line.account else '' }}</td>
+            <td class="text-end">{{ '%.3f'|format(line.budgeted_amount|float) }}</td>
+            <td class="text-end">{{ '%.3f'|format(line.actual_amount|float) }}</td>
+            <td class="text-end {% if line.variance < 0 %}text-danger{% else %}text-success{% endif %}">{{ '%.3f'|format(line.variance|float) }}</td>
+            <td class="text-center">
+              <span class="badge {% if line.variance_status == 'good' %}bg-success{% elif line.variance_status == 'warning' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                {{ line.variance_status_ar }}
+              </span>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" class="text-center text-muted py-3">{{ t('No budget lines') }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if budget.notes %}
+  <div class="card mt-4"><div class="card-body"><strong>{{ t('Notes') }}:</strong> {{ budget.notes }}</div></div>
+  {% endif %}
+</div>
+{% endblock %}

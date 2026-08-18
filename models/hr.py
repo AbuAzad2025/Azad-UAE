@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from decimal import Decimal
 
 from extensions import db
 
@@ -157,6 +158,8 @@ class LeaveType(db.Model):
     color = db.Column(db.String(7), default="#10b981")
     allocation_type = db.Column(db.String(20), default="fixed")
     days_per_year = db.Column(db.Integer, default=0)
+    carry_forward_days = db.Column(db.Integer, default=0)
+    max_carry_forward = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True, index=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
 
@@ -214,3 +217,113 @@ class LeaveRequest(db.Model):
 
     def __repr__(self):
         return f"<LeaveRequest U{self.user_id} {self.date_from}-{self.date_to}>"
+
+
+class LeaveBalance(db.Model):
+    __tablename__ = "leave_balances"
+    __table_args__ = (
+        db.UniqueConstraint(
+            "tenant_id",
+            "user_id",
+            "leave_type_id",
+            "year",
+            name="uq_leave_balance_user_type_year",
+        ),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(
+        db.Integer,
+        db.ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    leave_type_id = db.Column(
+        db.Integer,
+        db.ForeignKey("leave_types.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    year = db.Column(db.Integer, nullable=False, index=True)
+    entitled_days = db.Column(db.Numeric(5, 1), default=0, nullable=False)
+    carried_forward = db.Column(db.Numeric(5, 1), default=0, nullable=False)
+    taken_days = db.Column(db.Numeric(5, 1), default=0, nullable=False)
+    pending_days = db.Column(db.Numeric(5, 1), default=0, nullable=False)
+    remaining_days = db.Column(db.Numeric(5, 1), default=0, nullable=False)
+    updated_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
+
+    tenant = db.relationship("Tenant", backref="leave_balances", foreign_keys=[tenant_id])
+    user = db.relationship("User", backref="leave_balances")
+    leave_type = db.relationship("LeaveType", backref="balances")
+
+    def __repr__(self):
+        return f"<LeaveBalance U{self.user_id} {self.leave_type_id} {self.year}>"
+
+    def recalculate(self):
+        self.remaining_days = (self.entitled_days + self.carried_forward) - self.taken_days - self.pending_days
+
+
+class OvertimeEntry(db.Model):
+    __tablename__ = "overtime_entries"
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(
+        db.Integer,
+        db.ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    branch_id = db.Column(
+        db.Integer,
+        db.ForeignKey("branches.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    overtime_date = db.Column(db.Date, nullable=False, index=True)
+    hours = db.Column(db.Numeric(5, 2), nullable=False)
+    rate_multiplier = db.Column(db.Numeric(4, 2), default=1.0, nullable=False)
+    overtime_type = db.Column(db.String(20), default="standard", nullable=False)
+    status = db.Column(db.String(20), default="pending", index=True)
+    approved_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    approved_at = db.Column(db.DateTime)
+    rejected_reason = db.Column(db.String(500))
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False, index=True)
+
+    tenant = db.relationship("Tenant", backref="overtime_entries", foreign_keys=[tenant_id])
+    user = db.relationship("User", foreign_keys=[user_id], backref="overtime_entries")
+    branch = db.relationship("Branch", backref="overtime_entries", foreign_keys=[branch_id])
+    approver = db.relationship("User", foreign_keys=[approved_by])
+
+    def __repr__(self):
+        return f"<OvertimeEntry U{self.user_id} {self.overtime_date} {self.hours}h>"
+
+    @property
+    def overtime_type_ar(self):
+        mapping = {"standard": "إضافي عادي", "weekend": "إضافي يوم إجازة", "holiday": "إضافي عطلة رسمية"}
+        return mapping.get(self.overtime_type, self.overtime_type)
+
+    @property
+    def status_ar(self):
+        mapping = {"pending": "قيد المراجعة", "approved": "تمت الموافقة", "rejected": "مرفوض"}
+        return mapping.get(self.status, self.status)
+
+    @property
+    def total_hours_value(self):
+        return Decimal(str(self.hours)) * Decimal(str(self.rate_multiplier))

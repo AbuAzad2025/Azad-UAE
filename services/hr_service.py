@@ -524,3 +524,165 @@ class PayrollService:
             tx.gl_entry_id = gl_entry.id
 
         return gl_entry
+
+
+class LeaveBalanceService:
+    @staticmethod
+    def _tid(user):
+        return get_active_tenant_id(user)
+
+    @classmethod
+    def get_or_create_balance(cls, user_id, leave_type_id, year, tenant_id=None):
+        from models import LeaveBalance
+
+        balance = LeaveBalance.query.filter_by(
+            tenant_id=tenant_id,
+            user_id=user_id,
+            leave_type_id=leave_type_id,
+            year=year,
+        ).first()
+        if not balance:
+            from models import LeaveType
+
+            lt = LeaveType.query.filter_by(id=leave_type_id, tenant_id=tenant_id).first()
+            entitled = Decimal(str(lt.days_per_year)) if lt else Decimal("0")
+            balance = LeaveBalance(
+                tenant_id=tenant_id,
+                user_id=user_id,
+                leave_type_id=leave_type_id,
+                year=year,
+                entitled_days=entitled,
+                carried_forward=Decimal("0"),
+                taken_days=Decimal("0"),
+                pending_days=Decimal("0"),
+                remaining_days=entitled,
+            )
+            db.session.add(balance)
+            db.session.flush()
+        return balance
+
+    @classmethod
+    def accrue_leave(cls, user_id, leave_type_id, year, days, tenant_id=None):
+        balance = cls.get_or_create_balance(user_id, leave_type_id, year, tenant_id)
+        balance.taken_days = (balance.taken_days or Decimal("0")) + Decimal(str(days))
+        balance.recalculate()
+        db.session.flush()
+        return balance
+
+    @classmethod
+    def carry_forward_leave(cls, user_id, leave_type_id, from_year, tenant_id=None):
+        from models import LeaveBalance, LeaveType
+
+        old_balance = LeaveBalance.query.filter_by(
+            tenant_id=tenant_id,
+            user_id=user_id,
+            leave_type_id=leave_type_id,
+            year=from_year,
+        ).first()
+        if not old_balance:
+            return None
+
+        remaining = old_balance.remaining_days or Decimal("0")
+        if remaining <= 0:
+            return None
+
+        lt = LeaveType.query.filter_by(id=leave_type_id, tenant_id=tenant_id).first()
+        max_cf = Decimal(str(lt.max_carry_forward)) if lt and lt.max_carry_forward else remaining
+        cf_days = min(remaining, max_cf)
+
+        new_balance = cls.get_or_create_balance(user_id, leave_type_id, from_year + 1, tenant_id)
+        new_balance.carried_forward = cf_days
+        new_balance.recalculate()
+        db.session.flush()
+        return new_balance
+
+    @classmethod
+    def get_balance(cls, user_id, leave_type_id, year, tenant_id=None):
+        from models import LeaveBalance
+
+        return LeaveBalance.query.filter_by(
+            tenant_id=tenant_id,
+            user_id=user_id,
+            leave_type_id=leave_type_id,
+            year=year,
+        ).first()
+
+    @classmethod
+    def list_balances(cls, user_id, year, tenant_id=None):
+        from models import LeaveBalance
+
+        return LeaveBalance.query.filter_by(
+            tenant_id=tenant_id,
+            user_id=user_id,
+            year=year,
+        ).all()
+
+
+class OvertimeService:
+    @staticmethod
+    def _tid(user):
+        return get_active_tenant_id(user)
+
+    @classmethod
+    def create_entry(cls, data, user):
+        tid = cls._tid(user)
+        from models import OvertimeEntry
+
+        entry = OvertimeEntry(
+            tenant_id=tid,
+            user_id=int(data["user_id"]),
+            branch_id=int(data["branch_id"]) if data.get("branch_id") else None,
+            overtime_date=data["overtime_date"],
+            hours=Decimal(str(data["hours"])),
+            rate_multiplier=Decimal(str(data.get("rate_multiplier", "1.0"))),
+            overtime_type=data.get("overtime_type", "standard"),
+            notes=data.get("notes"),
+            status="pending",
+        )
+        db.session.add(entry)
+        db.session.flush()
+        return entry
+
+    @classmethod
+    def approve_entry(cls, entry, user):
+        if entry.status != "pending":
+            raise ValueError(gettext("طلب إضافي ليس في انتظار المراجعة."))
+        entry.status = "approved"
+        entry.approved_by = user.id
+        entry.approved_at = datetime.now(UTC)
+        db.session.flush()
+        return entry
+
+    @classmethod
+    def reject_entry(cls, entry, user, reason=""):
+        if entry.status != "pending":
+            raise ValueError(gettext("طلب إضافي ليس في انتظار المراجعة."))
+        entry.status = "rejected"
+        entry.rejected_reason = reason
+        entry.approved_by = user.id
+        entry.approved_at = datetime.now(UTC)
+        db.session.flush()
+        return entry
+
+    @classmethod
+    def list_entries(cls, user, filters=None):
+        tid = cls._tid(user)
+        from models import OvertimeEntry
+
+        query = OvertimeEntry.query.filter_by(tenant_id=tid)
+        filters = filters or {}
+        if filters.get("user_id"):
+            query = query.filter_by(user_id=int(filters["user_id"]))
+        if filters.get("status"):
+            query = query.filter_by(status=filters["status"])
+        if filters.get("date_from"):
+            query = query.filter(OvertimeEntry.overtime_date >= filters["date_from"])
+        if filters.get("date_to"):
+            query = query.filter(OvertimeEntry.overtime_date <= filters["date_to"])
+        return query.order_by(OvertimeEntry.overtime_date.desc()).all()
+
+    @classmethod
+    def calculate_overtime_pay(cls, base_salary, hours, rate_multiplier, working_days_per_month=26):
+        daily_rate = Decimal(str(base_salary)) / Decimal(str(working_days_per_month))
+        hourly_rate = daily_rate / Decimal("8")
+        return (hourly_rate * Decimal(str(hours)) * Decimal(str(rate_multiplier))).quantize(Decimal("0.01"))

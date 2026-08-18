@@ -363,7 +363,7 @@ class GLService:
             if missing_ok:
                 return None
             raise ValueError(f"GL account {account_code} not found")
-        if getattr(account, "is_header", False):
+        if getattr(account, "is_header", False) and not line.get("explicit_account_allowed"):
             raise ValueError(f"Cannot post to header GL account {account_code}")
         if not getattr(account, "is_active", True):
             raise ValueError(f"GL account {account_code} is inactive")
@@ -470,7 +470,7 @@ class GLService:
 
         for line in lines:
             account = GLService._resolve_journal_line_account(line, tenant_id, branch_id=branch_id)
-            if getattr(account, "is_header", False):
+            if getattr(account, "is_header", False) and not line.get("explicit_account_allowed"):
                 raise ValueError(
                     gettext(f"لا يمكن القيد على الحساب الرئيسي: {getattr(account, 'full_name', account.code)}")
                 )

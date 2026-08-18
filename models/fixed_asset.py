@@ -308,7 +308,7 @@ class FixedAsset(db.Model):
         if self.disposal_gain_loss > 0:
             lines.append(
                 {
-                    "account": "4500",
+                    "account": "4600",
                     "concept_code": "FIXED_ASSET_GAIN",
                     "debit": 0,
                     "credit": self.disposal_gain_loss,
@@ -318,7 +318,7 @@ class FixedAsset(db.Model):
         elif self.disposal_gain_loss < 0:
             lines.append(
                 {
-                    "account": "6990",
+                    "account": "6700",
                     "concept_code": "FIXED_ASSET_LOSS",
                     "debit": abs(self.disposal_gain_loss),
                     "credit": 0,

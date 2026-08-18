@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Fixed Assets') }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>{{ t('Fixed Assets') }}</h2>
+    <a href="{{ url_for('assets.create') }}" class="btn btn-primary"><i class="fas fa-plus"></i> {{ t('Add Asset') }}</a>
+  </div>
+  <div class="row mb-4">
+    <div class="col-md-3"><div class="card p-3 text-center"><h6>{{ t('Total Assets') }}</h6><h3>{{ summary.total }}</h3></div></div>
+    <div class="col-md-3"><div class="card p-3 text-center"><h6>{{ t('Active') }}</h6><h3 class="text-success">{{ summary.active }}</h3></div></div>
+    <div class="col-md-3"><div class="card p-3 text-center"><h6">{{ t('Disposed') }}</h6><h3 class="text-secondary">{{ summary.disposed }}</h3></div></div>
+    <div class="col-md-3"><div class="card p-3 text-center"><h6>{{ t('Total Cost') }}</h6><h3>{{ '%.3f'|format(summary.total_cost|float) }}</h3></div></div>
+  </div>
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr><th>{{ t('Number') }}</th><th>{{ t('Name') }}</th><th>{{ t('Category') }}</th><th class="text-end">{{ t('Cost') }}</th><th class="text-end">{{ t('Book Value') }}</th><th class="text-center">{{ t('Status') }}</th><th class="text-center">{{ t('Actions') }}</th></tr>
+        </thead>
+        <tbody>
+          {% for a in assets %}
+          <tr>
+            <td><strong>{{ a.asset_number }}</strong></td>
+            <td>{{ a.name_ar }}</td>
+            <td>{{ a.category_ar }}</td>
+            <td class="text-end">{{ '%.3f'|format(a.purchase_price|float) }}</td>
+            <td class="text-end">{{ '%.3f'|format(a.remaining_book_value|float) }}</td>
+            <td class="text-center"><span class="badge {% if a.status == 'active' %}bg-success{% elif a.status == 'fully_depreciated' %}bg-info{% else %}bg-secondary{% endif %}">{{ a.status_ar }}</span></td>
+            <td class="text-center"><a href="{{ url_for('assets.detail', asset_id=a.id) }}" class="btn btn-sm btn-outline-primary">{{ t('View') }}</a></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" class="text-center py-4 text-muted">{{ t('No assets') }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

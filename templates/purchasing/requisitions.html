@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Purchase Requisitions') }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>{{ t('Purchase Requisitions') }}</h2>
+  </div>
+
+  {% if creating is defined and creating %}
+  <div class="card mb-4"><div class="card-header"><h5>{{ t('New Requisition') }}</h5></div><div class="card-body">
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="row g-3 mb-3">
+        <div class="col-md-4"><label class="form-label">{{ t('Priority') }}</label>
+          <select name="priority" class="form-select"><option value="normal">{{ t('Normal') }}</option><option value="high">{{ t('High') }}</option><option value="urgent">{{ t('Urgent') }}</option></select>
+        </div>
+        <div class="col-md-4"><label class="form-label">{{ t('Needed By') }}</label><input type="date" name="needed_by_date" class="form-control"></div>
+        <div class="col-md-4"><label class="form-label">{{ t('Branch') }}</label><input type="number" name="branch_id" class="form-control"></div>
+        <div class="col-md-12"><label class="form-label">{{ t('Justification') }}</label><textarea name="justification" class="form-control" rows="2"></textarea></div>
+      </div>
+      <h5>{{ t('Lines') }}</h5>
+      <div id="pr-lines">
+        <div class="row g-2 mb-2 pr-line-row">
+          <div class="col-md-4"><select name="line_0_product_id" class="form-select" required><option value="">{{ t('Product') }}</option>{% for p in products|default([]) %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}</select></div>
+          <div class="col-md-2"><input type="number" step="0.001" name="line_0_quantity" class="form-control" placeholder="{{ t('Qty') }}" required></div>
+          <div class="col-md-2"><input type="number" step="0.001" name="line_0_unit_cost" class="form-control" placeholder="{{ t('Est. Cost') }}"></div>
+          <div class="col-md-3"><input type="text" name="line_0_notes" class="form-control" placeholder="{{ t('Notes') }}"></div>
+          <div class="col-md-1"><button type="button" class="btn btn-sm btn-danger remove-line">X</button></div>
+        </div>
+      </div>
+      <button type="button" id="add-pr-line" class="btn btn-sm btn-outline-primary mb-3">{{ t('Add Line') }}</button>
+      <div><button type="submit" class="btn btn-primary">{{ t('Submit') }}</button></div>
+    </form>
+  </div></div>
+  {% endif %}
+
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr><th>{{ t('Number') }}</th><th>{{ t('Requester') }}</th><th>{{ t('Date') }}</th><th>{{ t('Priority') }}</th><th class="text-center">{{ t('Status') }}</th><th class="text-center">{{ t('Actions') }}</th></tr>
+        </thead>
+        <tbody>
+          {% for pr in requisitions|default([]) %}
+          <tr>
+            <td><strong>{{ pr.requisition_number }}</strong></td>
+            <td>{{ pr.requester.full_name if pr.requester else '' }}</td>
+            <td>{{ pr.requested_date }}</td>
+            <td>{{ pr.priority_ar }}</td>
+            <td class="text-center"><span class="badge {% if pr.status == 'approved' %}bg-success{% elif pr.status == 'rejected' %}bg-danger{% elif pr.status == 'pending_approval' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">{{ pr.status_ar }}</span></td>
+            <td class="text-center">
+              {% if pr.status == 'draft' %}
+              <form method="POST" action="{{ url_for('purchases.submit_requisition', pr_id=pr.id) }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-primary">{{ t('Submit') }}</button></form>
+              {% endif %}
+              {% if pr.status == 'pending_approval' %}
+              <form method="POST" action="{{ url_for('purchases.approve_requisition', pr_id=pr.id) }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-success">{{ t('Approve') }}</button></form>
+              <form method="POST" action="{{ url_for('purchases.reject_requisition', pr_id=pr.id) }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-danger">{{ t('Reject') }}</button></form>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="text-center text-muted py-4">{{ t('No requisitions') }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.getElementById('add-pr-line')?.addEventListener('click', function() {
+  var idx = document.querySelectorAll('.pr-line-row').length;
+  var html = '<div class="row g-2 mb-2 pr-line-row"><div class="col-md-4"><select name="line_'+idx+'_product_id" class="form-select" required><option value="">{{ t("Product") }}</option></select></div><div class="col-md-2"><input type="number" step="0.001" name="line_'+idx+'_quantity" class="form-control" placeholder="{{ t("Qty") }}" required></div><div class="col-md-2"><input type="number" step="0.001" name="line_'+idx+'_unit_cost" class="form-control" placeholder="{{ t("Est. Cost") }}"></div><div class="col-md-3"><input type="text" name="line_'+idx+'_notes" class="form-control" placeholder="{{ t("Notes") }}"></div><div class="col-md-1"><button type="button" class="btn btn-sm btn-danger remove-line">X</button></div></div>';
+  document.getElementById('pr-lines').insertAdjacentHTML('beforeend', html);
+});
+document.addEventListener('click', function(e) { if (e.target.classList.contains('remove-line')) e.target.closest('.pr-line-row').remove(); });
+</script>
+{% endblock %}
