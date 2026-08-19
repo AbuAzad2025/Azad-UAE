@@ -431,7 +431,7 @@ class PurchaseService:
                 Decimal("0"),
             )
 
-        from models.warehouse import StockMovement
+        from models.stock_movement import StockMovement
 
         has_stock = (
             StockMovement.query.filter_by(

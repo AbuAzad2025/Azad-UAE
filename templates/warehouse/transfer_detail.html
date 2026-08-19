@@ -7,21 +7,25 @@
     <div>
       {% if transfer.status == 'draft' %}
         <form method="POST" action="{{ url_for('transfers.approve', transfer_id=transfer.id) }}" class="d-inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button class="btn btn-success" onclick="return confirm('{{ t('Approve?') }}')">{{ t('Approve') }}</button>
         </form>
       {% endif %}
       {% if transfer.status == 'approved' %}
         <form method="POST" action="{{ url_for('transfers.ship', transfer_id=transfer.id) }}" class="d-inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button class="btn btn-warning" onclick="return confirm('{{ t('Ship?') }}')">{{ t('Ship') }}</button>
         </form>
       {% endif %}
       {% if transfer.status == 'in_transit' %}
         <form method="POST" action="{{ url_for('transfers.receive', transfer_id=transfer.id) }}" class="d-inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button class="btn btn-primary" onclick="return confirm('{{ t('Receive & Complete?') }}')">{{ t('Receive & Complete') }}</button>
         </form>
       {% endif %}
       {% if transfer.status not in ('completed', 'cancelled') %}
         <form method="POST" action="{{ url_for('transfers.cancel', transfer_id=transfer.id) }}" class="d-inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button class="btn btn-danger" onclick="return confirm('{{ t('Cancel?') }}')">{{ t('Cancel') }}</button>
         </form>
       {% endif %}

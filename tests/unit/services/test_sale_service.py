@@ -523,7 +523,7 @@ class TestSaleServiceOtherMethods:
 
         sale = MagicMock()
         sale.id = 1
-        with patch("models.warehouse.StockMovement.query") as mock_q:
+        with patch("models.stock_movement.StockMovement.query") as mock_q:
             mock_q.filter_by.return_value.first.return_value = MagicMock()
             assert SaleService.has_inventory_posted(sale) is True
 
@@ -533,7 +533,7 @@ class TestSaleServiceOtherMethods:
         sale = MagicMock()
         sale.id = 1
         sale.tenant_id = None
-        with patch("models.warehouse.StockMovement.query") as mock_q:
+        with patch("models.stock_movement.StockMovement.query") as mock_q:
             mock_q.filter_by.return_value.first.return_value = None
             assert SaleService.has_inventory_posted(sale) is False
 

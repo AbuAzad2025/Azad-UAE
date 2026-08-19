@@ -48,7 +48,7 @@ class TestPurchaseCancelValidations:
             mock_filter.filter.return_value = mock_filter
             mock_db.session.commit = MagicMock()
             mock_db.session.rollback = MagicMock()
-            with patch("models.warehouse.StockMovement") as mock_sm:
+            with patch("models.stock_movement.StockMovement") as mock_sm:
                 mock_sm.query.filter_by.return_value.first.return_value = None
                 with patch("services.purchase_service.StockService") as mock_ss:
                     with patch("services.purchase_service.GLService") as mock_gl:
@@ -77,7 +77,7 @@ class TestPurchaseCancelValidations:
             mock_filter.filter.return_value = mock_filter
             mock_db.session.commit = MagicMock()
             mock_db.session.rollback = MagicMock()
-            with patch("models.warehouse.StockMovement") as mock_sm:
+            with patch("models.stock_movement.StockMovement") as mock_sm:
                 mock_sm.query.filter_by.return_value.first.return_value = MagicMock()
                 with patch("services.purchase_service.StockService") as mock_ss:
                     with patch("services.purchase_service.GLService") as mock_gl:
@@ -103,7 +103,7 @@ class TestPurchaseCancelValidations:
             mock_filter.filter.return_value = mock_filter
             mock_db.session.commit = MagicMock()
             mock_db.session.rollback = MagicMock()
-            with patch("models.warehouse.StockMovement") as mock_sm:
+            with patch("models.stock_movement.StockMovement") as mock_sm:
                 mock_sm.query.filter_by.return_value.first.return_value = None
                 with patch("services.purchase_service.StockService"):
                     with patch("services.purchase_service.GLService"):

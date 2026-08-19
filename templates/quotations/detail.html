@@ -7,24 +7,29 @@
     <div>
       {% if quotation.status == 'draft' %}
         <form method="POST" action="{{ url_for('quotations.send', quotation_id=quotation.id) }}" class="d-inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button class="btn btn-info" onclick="return confirm('{{ t('Send this quotation?') }}')">{{ t('Send') }}</button>
         </form>
         <a href="{{ url_for('quotations.edit', quotation_id=quotation.id) }}" class="btn btn-warning">{{ t('Edit') }}</a>
       {% endif %}
       {% if quotation.status == 'sent' %}
         <form method="POST" action="{{ url_for('quotations.accept', quotation_id=quotation.id) }}" class="d-inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button class="btn btn-success" onclick="return confirm('{{ t('Accept?') }}')">{{ t('Accept') }}</button>
         </form>
         <form method="POST" action="{{ url_for('quotations.reject', quotation_id=quotation.id) }}" class="d-inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button class="btn btn-danger" onclick="return confirm('{{ t('Reject?') }}')">{{ t('Reject') }}</button>
         </form>
       {% endif %}
       {% if quotation.status == 'accepted' %}
         <form method="POST" action="{{ url_for('quotations.convert', quotation_id=quotation.id) }}" class="d-inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button class="btn btn-primary" onclick="return confirm('{{ t('Convert to sale?') }}')">{{ t('Convert to Sale') }}</button>
         </form>
       {% endif %}
       <form method="POST" action="{{ url_for('quotations.duplicate', quotation_id=quotation.id) }}" class="d-inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button class="btn btn-outline-secondary">{{ t('Duplicate') }}</button>
       </form>
     </div>

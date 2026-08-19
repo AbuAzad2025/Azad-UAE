@@ -230,7 +230,7 @@ class TestPurchasesDelete:
         with (
             _purchase_patches(purchase=purchase),
             patch("models.Cheque") as cheque_model,
-            patch("models.warehouse.StockMovement") as stock_model,
+            patch("models.stock_movement.StockMovement") as stock_model,
             patch("services.gl_service.GLService.reverse_entry"),
             patch("models.PurchaseLine") as _line_model,
             patch("routes.purchases.PurchaseService.delete_purchase") as mock_delete,
@@ -248,7 +248,7 @@ class TestPurchasesDelete:
             _purchase_patches(purchase=purchase),
             patch("services.archive_service.ArchiveService", return_value=archive),
             patch("models.Cheque") as cheque_model,
-            patch("models.warehouse.StockMovement") as stock_model,
+            patch("models.stock_movement.StockMovement") as stock_model,
         ):
             cheque_model.query.filter_by.return_value.count.return_value = 0
             stock_model.query.filter_by.return_value.count.return_value = 0
@@ -392,7 +392,7 @@ class TestPurchasesExtended:
             _purchase_patches(purchase=purchase),
             patch("services.archive_service.ArchiveService", return_value=archive),
             patch("models.Cheque") as cheque_model,
-            patch("models.warehouse.StockMovement") as stock_model,
+            patch("models.stock_movement.StockMovement") as stock_model,
         ):
             cheque_model.query.filter_by.return_value.count.return_value = 2
             stock_model.query.filter_by.return_value.count.return_value = 0
@@ -407,7 +407,7 @@ class TestPurchasesExtended:
             _purchase_patches(purchase=purchase),
             patch("services.archive_service.ArchiveService", return_value=archive),
             patch("models.Cheque") as cheque_model,
-            patch("models.warehouse.StockMovement") as stock_model,
+            patch("models.stock_movement.StockMovement") as stock_model,
         ):
             cheque_model.query.filter_by.return_value.count.return_value = 0
             stock_model.query.filter_by.return_value.count.return_value = 3
@@ -421,7 +421,7 @@ class TestPurchasesExtended:
         with (
             _purchase_patches(purchase=purchase) as _ctx,
             patch("models.Cheque") as cheque_model,
-            patch("models.warehouse.StockMovement") as stock_model,
+            patch("models.stock_movement.StockMovement") as stock_model,
             patch("services.gl_service.GLService.reverse_entry"),
             patch("models.PurchaseLine") as _line_model,
             patch("models.Supplier") as supplier_model,
@@ -438,7 +438,7 @@ class TestPurchasesExtended:
         with (
             _purchase_patches(purchase=purchase) as _ctx,
             patch("models.Cheque") as cheque_model,
-            patch("models.warehouse.StockMovement") as stock_model,
+            patch("models.stock_movement.StockMovement") as stock_model,
             patch(
                 "services.gl_service.GLService.reverse_entry",
                 side_effect=RuntimeError("gl fail"),

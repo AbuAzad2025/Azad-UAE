@@ -4,6 +4,7 @@
 <div class="container-fluid py-4">
   <h2>{{ t('Edit Transfer') if transfer else t('New Transfer') }}</h2>
   <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="card mb-4">
       <div class="card-body">
         <div class="row g-3">

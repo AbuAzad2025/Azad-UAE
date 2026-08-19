@@ -850,7 +850,7 @@ class SaleService:
 
     @staticmethod
     def has_inventory_posted(sale):
-        from models.warehouse import StockMovement
+        from models.stock_movement import StockMovement
 
         query = StockMovement.query.filter_by(
             reference_type=GLRef.SALE,

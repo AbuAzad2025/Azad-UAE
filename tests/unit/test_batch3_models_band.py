@@ -429,7 +429,8 @@ class TestWarehouseModels:
     def test_warehouse_repr_and_type_labels(self):
         from datetime import datetime
 
-        from models.warehouse import ProductWarehouseStock, StockMovement, Warehouse
+        from models.stock_movement import StockMovement
+        from models.warehouse import ProductWarehouseStock, Warehouse
 
         wh = Warehouse(name="Main", warehouse_type=Warehouse.TYPE_ONLINE)
         assert "Main" in repr(wh)

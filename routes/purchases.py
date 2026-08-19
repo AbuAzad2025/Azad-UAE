@@ -289,7 +289,7 @@ def delete(**kwargs):
     if linked_cheques > 0:
         has_links = True
 
-    from models.warehouse import StockMovement
+    from models.stock_movement import StockMovement
 
     has_stock = (
         StockMovement.query.filter_by(
