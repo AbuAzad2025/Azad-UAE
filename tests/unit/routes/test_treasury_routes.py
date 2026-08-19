@@ -206,15 +206,33 @@ class TestTreasuryWpsExport:
         strategy.get_wps_format.return_value = {"lines": ["HDR", "ROW1"]}
         tenant = MagicMock()
         tenant.vat_country = "AE"
+        emp = MagicMock()
+        emp.id = 1
+        emp.name = "Ali"
+        emp.iban = "AE123"
+        emp.bank_code = "001"
+        emp.currency = "AED"
+        emp_q = MagicMock()
+        emp_q.filter.return_value.all.return_value = [emp]
+        txn = MagicMock()
+        txn.basic_amount = 5000
+        txn.allowances = 1000
+        txn.net_salary = 6000
+        txn.payment_date = None
+        txn_q = MagicMock()
+        txn_q.first.return_value = txn
         with (
             patch("utils.localization.get_strategy", return_value=strategy),
             patch("routes.treasury.db.session") as mock_session,
             patch("routes.treasury.render_template"),
+            patch("utils.tenanting.tenant_query", return_value=emp_q),
+            patch("models.PayrollTransaction") as payroll_model,
         ):
             mock_session.get.return_value = tenant
+            payroll_model.query.filter_by.return_value = txn_q
             resp = treasury_client.get("/reports/wps-export")
         assert resp.status_code == 200
-        assert resp.mimetype.startswith("text/plain")
+        assert resp.mimetype.startswith("text/csv")
         assert b"HDR" in resp.data
 
     def test_wps_export_not_supported_403(self, treasury_client):

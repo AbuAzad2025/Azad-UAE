@@ -63,7 +63,7 @@ class TestPublicPricing:
         with patch("routes.public.render_template", return_value="pricing-en") as render:
             resp = public_client.get("/pricing")
         assert resp.status_code == 200
-        render.assert_called_once_with("public/pricing.html", packages=[], is_en=True, developer_whatsapp_link="")
+        render.assert_called_once_with("public/pricing_en.html", packages=[], is_en=True, developer_whatsapp_link="")
 
 
 class TestPublicFeatures:

@@ -18,9 +18,15 @@ def app():
         ENABLE_LANDED_COST_CAPITALIZATION=True,
         ENABLE_MWAC=False,
     )
-    from extensions import babel, get_locale
+    from extensions import babel, get_locale, login_manager
 
     babel.init_app(application, locale_selector=get_locale)
+    login_manager.init_app(application)
+
+    @login_manager.user_loader
+    def _load_user(user_id):
+        return None
+
     return application
 
 

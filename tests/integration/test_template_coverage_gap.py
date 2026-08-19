@@ -403,7 +403,6 @@ class TestDirectTemplateRenders:
             "public/subscription_expired.html",
             "public/tenant_suspended.html",
             "public/pricing_en.html",
-            "products/_form_badges.html",
         ],
     )
     def test_error_and_public_pages_render(self, app, sample_tenant, template_name):

@@ -13,6 +13,8 @@ from services.store_payment_method_service import (
     StorePaymentMethodService,
 )
 
+_TID = 1
+
 
 @pytest.fixture(autouse=True)
 def _app_context(app):
@@ -36,8 +38,10 @@ def _custom(
     is_builtin=False,
     sort_order=100,
     config=None,
+    tenant_id=_TID,
 ):
     row = StorePaymentMethod(
+        tenant_id=tenant_id,
         code=code or f"custom_{uuid.uuid4().hex[:10]}",
         name_ar=name_ar,
         name_en=name_en,
@@ -54,29 +58,29 @@ def _custom(
 
 class TestEnsureDefaults:
     def test_creates_missing_and_skips_existing(self, db_session):
-        StorePaymentMethodService.ensure_defaults()
-        before = StorePaymentMethod.query.count()
+        StorePaymentMethodService.ensure_defaults(tenant_id=_TID)
+        before = StorePaymentMethod.query.filter_by(tenant_id=_TID).count()
 
-        StorePaymentMethodService.ensure_defaults()
-        after = StorePaymentMethod.query.count()
+        StorePaymentMethodService.ensure_defaults(tenant_id=_TID)
+        after = StorePaymentMethod.query.filter_by(tenant_id=_TID).count()
 
         assert after == before
-        codes = {m.code for m in StorePaymentMethod.query.all()}
+        codes = {m.code for m in StorePaymentMethod.query.filter_by(tenant_id=_TID).all()}
         for item in DEFAULT_METHODS:
             assert item["code"] in codes
 
     def test_recreates_deleted_defaults(self, db_session):
-        StorePaymentMethodService.ensure_defaults()
-        cod = StorePaymentMethod.query.filter_by(code="cod").first()
-        bank = StorePaymentMethod.query.filter_by(code="bank_transfer").first()
+        StorePaymentMethodService.ensure_defaults(tenant_id=_TID)
+        cod = StorePaymentMethod.query.filter_by(tenant_id=_TID, code="cod").first()
+        bank = StorePaymentMethod.query.filter_by(tenant_id=_TID, code="bank_transfer").first()
         db_session.delete(cod)
         db_session.delete(bank)
         db_session.flush()
 
-        StorePaymentMethodService.ensure_defaults()
+        StorePaymentMethodService.ensure_defaults(tenant_id=_TID)
 
-        recreated_cod = StorePaymentMethod.query.filter_by(code="cod").first()
-        recreated_bank = StorePaymentMethod.query.filter_by(code="bank_transfer").first()
+        recreated_cod = StorePaymentMethod.query.filter_by(tenant_id=_TID, code="cod").first()
+        recreated_bank = StorePaymentMethod.query.filter_by(tenant_id=_TID, code="bank_transfer").first()
         assert recreated_cod is not None
         assert recreated_cod.is_builtin is True
         assert recreated_bank is not None
@@ -85,28 +89,29 @@ class TestEnsureDefaults:
     def test_commit_failure_rolls_back(self, db_session, mocker):
         mocker.patch.object(db.session, "commit", side_effect=RuntimeError("db fail"))
         with pytest.raises(RuntimeError, match="db fail"):
-            StorePaymentMethodService.ensure_defaults()
+            StorePaymentMethodService.ensure_defaults(tenant_id=_TID)
 
 
 class TestListAll:
     def test_returns_all_ordered(self, db_session):
         _custom(db_session, sort_order=5)
         _custom(db_session, sort_order=1)
-        rows = StorePaymentMethodService.list_all()
+        rows = StorePaymentMethodService.list_all(tenant_id=_TID)
         orders = [m.sort_order for m in rows]
         assert orders == sorted(orders)
 
     def test_enabled_only(self, db_session):
         enabled = _custom(db_session, is_enabled=True)
         _custom(db_session, is_enabled=False)
-        rows = StorePaymentMethodService.list_all(enabled_only=True)
+        rows = StorePaymentMethodService.list_all(enabled_only=True, tenant_id=_TID)
         assert all(m.is_enabled for m in rows)
         assert enabled.id in {m.id for m in rows}
 
 
 class TestListForCheckout:
     def test_excludes_online_pay_when_not_configured(self, db_session, mocker):
-        online = StorePaymentMethod.query.filter_by(code="online_pay").first()
+        StorePaymentMethodService.ensure_defaults(tenant_id=_TID)
+        online = StorePaymentMethod.query.filter_by(tenant_id=_TID, code="online_pay").first()
         if online:
             online.is_enabled = True
             db_session.flush()
@@ -114,41 +119,40 @@ class TestListForCheckout:
             "services.store_online_payment_service.StoreOnlinePaymentService.is_configured",
             return_value=False,
         )
-        codes = {m.code for m in StorePaymentMethodService.list_for_checkout(tenant_id=1)}
+        codes = {m.code for m in StorePaymentMethodService.list_for_checkout(tenant_id=_TID)}
         assert "online_pay" not in codes
 
     def test_includes_online_pay_when_configured(self, db_session, mocker):
-        online = StorePaymentMethod.query.filter_by(code="online_pay").first()
-        if not online:
-            StorePaymentMethodService.ensure_defaults()
-            online = StorePaymentMethod.query.filter_by(code="online_pay").first()
+        StorePaymentMethodService.ensure_defaults(tenant_id=_TID)
+        online = StorePaymentMethod.query.filter_by(tenant_id=_TID, code="online_pay").first()
         online.is_enabled = True
         db_session.flush()
         mocker.patch(
             "services.store_online_payment_service.StoreOnlinePaymentService.is_configured",
             return_value=True,
         )
-        codes = {m.code for m in StorePaymentMethodService.list_for_checkout(tenant_id=1)}
+        codes = {m.code for m in StorePaymentMethodService.list_for_checkout(tenant_id=_TID)}
         assert "online_pay" in codes
 
     def test_import_error_filters_online_pay(self, db_session, mocker):
         mocker.patch.dict("sys.modules", {"services.store_online_payment_service": None})
-        online = StorePaymentMethod.query.filter_by(code="online_pay").first()
+        StorePaymentMethodService.ensure_defaults(tenant_id=_TID)
+        online = StorePaymentMethod.query.filter_by(tenant_id=_TID, code="online_pay").first()
         if online:
             online.is_enabled = True
             db_session.flush()
-        codes = {m.code for m in StorePaymentMethodService.list_for_checkout()}
+        codes = {m.code for m in StorePaymentMethodService.list_for_checkout(tenant_id=_TID)}
         assert "online_pay" not in codes
 
 
 class TestGetByCode:
     def test_empty_code_returns_none(self):
-        assert StorePaymentMethodService.get_by_code("") is None
-        assert StorePaymentMethodService.get_by_code("   ") is None
+        assert StorePaymentMethodService.get_by_code("", tenant_id=_TID) is None
+        assert StorePaymentMethodService.get_by_code("   ", tenant_id=_TID) is None
 
     def test_finds_normalized_code(self, db_session):
         row = _custom(db_session, code="my_gateway")
-        found = StorePaymentMethodService.get_by_code("  MY_GATEWAY ")
+        found = StorePaymentMethodService.get_by_code("  MY_GATEWAY ", tenant_id=_TID)
         assert found is not None
         assert found.id == row.id
 
@@ -156,44 +160,46 @@ class TestGetByCode:
 class TestValidateForCheckout:
     def test_missing_raises(self):
         with pytest.raises(ValueError, match="غير متاحة"):
-            StorePaymentMethodService.validate_for_checkout("nonexistent_xyz")
+            StorePaymentMethodService.validate_for_checkout("nonexistent_xyz", tenant_id=_TID)
 
     def test_disabled_raises(self, db_session):
         row = _custom(db_session, is_enabled=False)
         with pytest.raises(ValueError, match="غير متاحة"):
-            StorePaymentMethodService.validate_for_checkout(row.code)
+            StorePaymentMethodService.validate_for_checkout(row.code, tenant_id=_TID)
 
     def test_enabled_returns_method(self, db_session):
         row = _custom(db_session, is_enabled=True)
-        assert StorePaymentMethodService.validate_for_checkout(row.code).id == row.id
+        assert StorePaymentMethodService.validate_for_checkout(row.code, tenant_id=_TID).id == row.id
 
 
 class TestToggleEnabled:
     def test_not_found_raises(self):
         with pytest.raises(ValueError, match="غير موجودة"):
-            StorePaymentMethodService.toggle_enabled(999999999, True)
+            StorePaymentMethodService.toggle_enabled(999999999, True, tenant_id=_TID)
 
     def test_toggles_and_commits(self, db_session):
         row = _custom(db_session, is_enabled=False)
-        updated = StorePaymentMethodService.toggle_enabled(row.id, True)
+        updated = StorePaymentMethodService.toggle_enabled(row.id, True, tenant_id=_TID)
         assert updated.is_enabled is True
 
     def test_commit_failure_raises(self, db_session, mocker):
         row = _custom(db_session)
         mocker.patch.object(db.session, "commit", side_effect=RuntimeError("commit fail"))
         with pytest.raises(RuntimeError, match="commit fail"):
-            StorePaymentMethodService.toggle_enabled(row.id, False)
+            StorePaymentMethodService.toggle_enabled(row.id, False, tenant_id=_TID)
 
 
 class TestCreateMethod:
     def test_duplicate_code_raises(self, db_session):
         row = _custom(db_session, code="dup_code")
         with pytest.raises(ValueError, match="مستخدم مسبقاً"):
-            StorePaymentMethodService.create_method({"code": row.code, "name_en": "X"})
+            StorePaymentMethodService.create_method({"code": row.code, "name_en": "X"}, tenant_id=_TID)
 
     def test_short_names_raises(self):
         with pytest.raises(ValueError, match="الاسم"):
-            StorePaymentMethodService.create_method({"code": "valid_code", "name_ar": "", "name_en": ""})
+            StorePaymentMethodService.create_method(
+                {"code": "valid_code", "name_ar": "", "name_en": ""}, tenant_id=_TID
+            )
 
     def test_creates_with_config_and_name_fallback(self, db_session):
         method = StorePaymentMethodService.create_method(
@@ -204,7 +210,8 @@ class TestCreateMethod:
                 "iban": "AE123",
                 "is_enabled": True,
                 "sort_order": 55,
-            }
+            },
+            tenant_id=_TID,
         )
         assert method.name_ar == "Wire"
         assert method.name_en == "Wire"
@@ -218,14 +225,15 @@ class TestCreateMethod:
                 {
                     "code": f"fail_{uuid.uuid4().hex[:8]}",
                     "name_ar": "اختبار",
-                }
+                },
+                tenant_id=_TID,
             )
 
 
 class TestUpdateMethod:
     def test_not_found_raises(self):
         with pytest.raises(ValueError, match="غير موجودة"):
-            StorePaymentMethodService.update_method(999999999, {"name_ar": "x"})
+            StorePaymentMethodService.update_method(999999999, {"name_ar": "x"}, tenant_id=_TID)
 
     def test_updates_fields_and_custom_code(self, db_session):
         row = _custom(db_session, code=f"old_{uuid.uuid4().hex[:8]}")
@@ -243,6 +251,7 @@ class TestUpdateMethod:
                 "providers": "Apple Pay",
                 "instructions": "Follow steps",
             },
+            tenant_id=_TID,
         )
         assert updated.code == new_code
         assert updated.name_ar == "جديد"
@@ -252,18 +261,18 @@ class TestUpdateMethod:
         assert cfg["instructions"] == "Follow steps"
 
     def test_builtin_ignores_code_change(self, db_session):
-        cod = StorePaymentMethod.query.filter_by(code="cod").first()
-        if not cod:
-            StorePaymentMethodService.ensure_defaults()
-            cod = StorePaymentMethod.query.filter_by(code="cod").first()
-        updated = StorePaymentMethodService.update_method(cod.id, {"code": "other_code", "name_ar": "COD"})
+        StorePaymentMethodService.ensure_defaults(tenant_id=_TID)
+        cod = StorePaymentMethod.query.filter_by(tenant_id=_TID, code="cod").first()
+        updated = StorePaymentMethodService.update_method(
+            cod.id, {"code": "other_code", "name_ar": "COD"}, tenant_id=_TID
+        )
         assert updated.code == "cod"
 
     def test_code_clash_raises(self, db_session):
         a = _custom(db_session, code="code_a")
         b = _custom(db_session, code="code_b")
         with pytest.raises(ValueError, match="مستخدم مسبقاً"):
-            StorePaymentMethodService.update_method(b.id, {"code": a.code})
+            StorePaymentMethodService.update_method(b.id, {"code": a.code}, tenant_id=_TID)
 
     def test_removes_empty_config_keys(self, db_session):
         row = _custom(db_session, config={"providers": "Old", "instructions": "Keep"})
@@ -273,6 +282,7 @@ class TestUpdateMethod:
                 "providers": "",
                 "instructions": "Updated",
             },
+            tenant_id=_TID,
         )
         cfg = updated.get_config()
         assert "providers" not in cfg
@@ -282,41 +292,37 @@ class TestUpdateMethod:
         row = _custom(db_session)
         mocker.patch.object(db.session, "commit", side_effect=RuntimeError("update fail"))
         with pytest.raises(RuntimeError, match="update fail"):
-            StorePaymentMethodService.update_method(row.id, {"name_ar": "x"})
+            StorePaymentMethodService.update_method(row.id, {"name_ar": "x"}, tenant_id=_TID)
 
 
 class TestDeleteMethod:
     def test_not_found_raises(self):
         with pytest.raises(ValueError, match="غير موجودة"):
-            StorePaymentMethodService.delete_method(999999999)
+            StorePaymentMethodService.delete_method(999999999, tenant_id=_TID)
 
     def test_builtin_raises(self, db_session):
-        cod = StorePaymentMethod.query.filter_by(code="cod").first()
-        if not cod:
-            StorePaymentMethodService.ensure_defaults()
-            cod = StorePaymentMethod.query.filter_by(code="cod").first()
+        StorePaymentMethodService.ensure_defaults(tenant_id=_TID)
+        cod = StorePaymentMethod.query.filter_by(tenant_id=_TID, code="cod").first()
         with pytest.raises(ValueError, match="الأساسية"):
-            StorePaymentMethodService.delete_method(cod.id)
+            StorePaymentMethodService.delete_method(cod.id, tenant_id=_TID)
 
     def test_deletes_custom(self, db_session):
         row = _custom(db_session)
         method_id = row.id
-        StorePaymentMethodService.delete_method(method_id)
+        StorePaymentMethodService.delete_method(method_id, tenant_id=_TID)
         assert db.session.get(StorePaymentMethod, method_id) is None
 
     def test_commit_failure_raises(self, db_session, mocker):
         row = _custom(db_session)
         mocker.patch.object(db.session, "commit", side_effect=RuntimeError("delete fail"))
         with pytest.raises(RuntimeError, match="delete fail"):
-            StorePaymentMethodService.delete_method(row.id)
+            StorePaymentMethodService.delete_method(row.id, tenant_id=_TID)
 
 
 class TestFormatCheckoutInstructions:
     def test_bank_transfer_details(self, db_session):
-        row = StorePaymentMethod.query.filter_by(code="bank_transfer").first()
-        if not row:
-            StorePaymentMethodService.ensure_defaults()
-            row = StorePaymentMethod.query.filter_by(code="bank_transfer").first()
+        StorePaymentMethodService.ensure_defaults(tenant_id=_TID)
+        row = StorePaymentMethod.query.filter_by(tenant_id=_TID, code="bank_transfer").first()
         row.set_config(
             {
                 "bank_name": "Emirates NBD",

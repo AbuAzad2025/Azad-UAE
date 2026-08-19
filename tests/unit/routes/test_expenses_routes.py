@@ -98,6 +98,8 @@ def _expense_patches(expense=None, tenant_get_raises=False, branch_scope=None):
         )
         stack.enter_context(patch("services.cheque_service.process_cheque_issue"))
         stack.enter_context(patch("extensions.limiter.limit", return_value=lambda f: f))
+        stack.enter_context(patch("services.budget_enforcement.check_budget_for_account", return_value=None))
+        stack.enter_context(patch("routes.expenses.convert_and_quantize_aed", return_value=Decimal("0")))
         if tenant_get_raises:
             stack.enter_context(patch("routes.expenses.tenant_get_or_404", side_effect=NotFound()))
         render = stack.enter_context(patch("routes.expenses.render_template", return_value="ok"))
