@@ -7,7 +7,23 @@ from flask import Flask, abort
 from flask.testing import FlaskClient
 
 from app.factory import create_app
+from services.logging_core import LoggingCore
 from utils.exceptions import PaymentRequired
+
+
+@pytest.fixture(autouse=True)
+def _isolate_logging(request):
+    """Prevent real DB writes from LoggingCore during error handler tests."""
+    original = LoggingCore.log_error
+    original_frontend = LoggingCore.log_frontend_error
+    LoggingCore.log_error = lambda *a, **kw: None
+    LoggingCore.log_frontend_error = lambda *a, **kw: None
+
+    def _restore():
+        LoggingCore.log_error = original
+        LoggingCore.log_frontend_error = original_frontend
+
+    request.addfinalizer(_restore)
 
 
 @pytest.fixture
@@ -44,14 +60,45 @@ class Test503ErrorHandler:
             assert b"503" in response.data
             assert (
                 b"Service Unavailable" in response.data
-                or rb"\u0627\u0644\u062e\u062f\u0645\u0629 \u063a\u064a\u0631 \u0645\u062a\u0627\u062d\u0629"
+                or bytes(
+                    [
+                        0xD8,
+                        0xA7,
+                        0xD9,
+                        0x84,
+                        0xD8,
+                        0xAE,
+                        0xD8,
+                        0xAF,
+                        0xD9,
+                        0x85,
+                        0xD8,
+                        0xA9,
+                        0x20,
+                        0xD8,
+                        0xBA,
+                        0xD9,
+                        0x8A,
+                        0xD8,
+                        0xB1,
+                        0x20,
+                        0xD9,
+                        0x85,
+                        0xD8,
+                        0xAA,
+                        0xD8,
+                        0xA7,
+                        0xD8,
+                        0xAD,
+                        0xD8,
+                        0xA9,
+                    ]
+                )
                 in response.data
             )
 
     def test_503_handler_logs_error(self, mocker):
         """Test that 503 handler logs the error."""
-        from services.logging_core import LoggingCore
-
         mock_log = mocker.patch.object(LoggingCore, "log_error")
 
         test_app = create_app()
@@ -91,16 +138,38 @@ class Test402ErrorHandler:
             response = test_client.get("/trigger-402")
             assert response.status_code == 402
             assert b"402" in response.data
-            # Template uses translation; check for either English or Arabic
             assert (
                 b"Payment Required" in response.data
-                or rb"\u0627\u0644\u062f\u0641\u0639 \u0627\u0644\u0645\u0637\u0644\u0648\u0628" in response.data
+                or bytes(
+                    [
+                        0xD8,
+                        0xA7,
+                        0xD9,
+                        0x84,
+                        0xD8,
+                        0xAF,
+                        0xD9,
+                        0x81,
+                        0xD8,
+                        0xB9,
+                        0x20,
+                        0xD9,
+                        0x85,
+                        0xD8,
+                        0xB7,
+                        0xD9,
+                        0x84,
+                        0xD9,
+                        0x88,
+                        0xD8,
+                        0xA8,
+                    ]
+                )
+                in response.data
             )
 
     def test_402_handler_logs_error(self, mocker):
         """Test that 402 handler logs the error."""
-        from services.logging_core import LoggingCore
-
         mock_log = mocker.patch.object(LoggingCore, "log_error")
 
         test_app = create_app()
