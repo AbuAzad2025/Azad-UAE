@@ -32,8 +32,15 @@ from extensions import db
 # Permission codes referenced by the routes below that are absent from
 # ``sample_permissions`` in tests/conftest.py.
 _EXTRA_PERMISSION_CODES = [
+    "assets:depreciate",
+    "assets:manage",
+    "assets:view",
+    "budget:approve",
+    "budget:create",
     "crm.view",
     "crm.manage",
+    "grn:manage",
+    "hr:leave_manage",
     "hr.view",
     "hr.manage",
     "marketing.manage",
@@ -42,6 +49,7 @@ _EXTRA_PERMISSION_CODES = [
     "manage_users",
     "project.view",
     "project.manage",
+    "purchase_req:create",
     "support.view",
     "support.manage",
     "view_customers",
