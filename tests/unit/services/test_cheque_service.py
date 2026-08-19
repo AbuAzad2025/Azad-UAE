@@ -7,7 +7,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from models import Cheque, Payment, Receipt
+from models import Cheque, Payment
+from models.receipt import Receipt
 from services.cheque_service import (
     calculate_amount_aed,
     process_cheque_bounce,

@@ -10,7 +10,8 @@ class TestPaymentsListPage:
     def test_receipts_list_page_renders(self, app, db_session, client):
         from datetime import date
 
-        from models import Branch, Customer, Payment, Receipt, Role, Tenant, User
+        from models import Branch, Customer, Payment, Role, Tenant, User
+        from models.receipt import Receipt
 
         tid = str(uuid.uuid4())[:8]
         tenant = Tenant(

@@ -69,7 +69,8 @@ def register_gl_event_listeners():
 def register_validation_event_listeners():
     from sqlalchemy import event
 
-    from models import Payment, Product, Purchase, Receipt, Sale
+    from models import Payment, Product, Purchase, Sale
+    from models.receipt import Receipt
 
     @event.listens_for(Sale, "before_insert")
     @event.listens_for(Sale, "before_update")

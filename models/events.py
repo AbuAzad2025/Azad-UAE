@@ -86,7 +86,7 @@ def register_sale_listeners():
 def register_receipt_listeners():
     if not _mark("receipt"):
         return
-    from models import Receipt
+    from models.receipt import Receipt
 
     @event.listens_for(Receipt, "after_insert")
     def _h(mapper, connection, target):
@@ -228,7 +228,8 @@ def register_validation_listeners():
 def register_audit_listeners():
     if not _mark("audit"):
         return
-    from models import Payment, Purchase, Receipt, Sale
+    from models import Payment, Purchase, Sale
+    from models.receipt import Receipt
 
     @event.listens_for(Sale, "after_delete")
     def _h1(mapper, connection, target):

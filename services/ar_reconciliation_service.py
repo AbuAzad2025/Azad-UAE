@@ -44,7 +44,8 @@ class ARReconciliationService:
 
     @staticmethod
     def _ops_unpaid(tenant_id: int | None, branch_id: int | None, customer_types: tuple[str, ...]) -> Decimal:
-        from models import Payment, Receipt
+        from models import Payment
+        from models.receipt import Receipt
 
         # Get all confirmed sales for these customer types
         sales_q = (

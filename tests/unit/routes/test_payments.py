@@ -6,7 +6,7 @@ class TestPaymentsReceipts:
     def test_receipts_list_returns_200(self, auth_client, db_session, sample_tenant, sample_customer):
         import uuid
 
-        from models import Receipt
+        from models.receipt import Receipt
 
         receipt = Receipt(
             tenant_id=sample_tenant.id,
@@ -31,7 +31,7 @@ class TestPaymentsReceipts:
         from datetime import datetime
         from decimal import Decimal
 
-        from models import Receipt
+        from models.receipt import Receipt
 
         receipt = Receipt(
             tenant_id=sample_tenant.id,

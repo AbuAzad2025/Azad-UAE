@@ -44,7 +44,8 @@ class Test503ErrorHandler:
             assert b"503" in response.data
             assert (
                 b"Service Unavailable" in response.data
-                or rb"\u0627\u0644\u062e\u062f\u0645\u0629 \u063a\u064a\u0631 \u0645\u062a\u0627\u062d\u0629" in response.data
+                or rb"\u0627\u0644\u062e\u062f\u0645\u0629 \u063a\u064a\u0631 \u0645\u062a\u0627\u062d\u0629"
+                in response.data
             )
 
     def test_503_handler_logs_error(self, mocker):

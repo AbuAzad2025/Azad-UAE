@@ -117,7 +117,8 @@ def _validate_public_telemetry_origin():
 
 
 def _scoped_customer_query():
-    from models import Payment, Receipt, Sale
+    from models import Payment, Sale
+    from models.receipt import Receipt
 
     query = Customer.query
     tid = get_active_tenant_id(current_user)

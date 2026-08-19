@@ -142,7 +142,7 @@ def sample_receipt(db_session, sample_tenant, sample_customer, sample_user, samp
     """Incoming cash receipt linked to a branch and user."""
     from decimal import Decimal
 
-    from models import Receipt
+    from models.receipt import Receipt
 
     receipt = Receipt(
         tenant_id=sample_tenant.id,

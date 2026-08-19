@@ -20,7 +20,8 @@ from flask_babel import gettext
 from flask_login import current_user, login_required
 
 from extensions import db, limiter
-from models import Cheque, Customer, Receipt, Sale, Supplier
+from models import Cheque, Customer, Sale, Supplier
+from models.receipt import Receipt
 from services.cheque_service import (
     calculate_amount_aed,
     process_cheque_bounce,

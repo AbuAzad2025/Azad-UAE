@@ -30,7 +30,8 @@ customers_bp = Blueprint("customers", __name__, url_prefix="/customers")
 
 
 def _scoped_customer_query():
-    from models import Payment, Receipt
+    from models import Payment
+    from models.receipt import Receipt
 
     query = tenant_query(Customer)
     scoped_branch_id = branch_scope_id()
@@ -84,7 +85,8 @@ def _attach_customer_branch_labels(customers):
     if not customers:
         return
 
-    from models import Branch, Payment, Receipt
+    from models import Branch, Payment
+    from models.receipt import Receipt
 
     customer_ids = [c.id for c in customers]
     branch_map = {cid: set() for cid in customer_ids}
@@ -172,7 +174,8 @@ def index():
 @login_required
 @permission_required("manage_customers")
 def export():
-    from models import Payment, Receipt
+    from models import Payment
+    from models.receipt import Receipt
     from services.export_service import ExportService
 
     fmt = (request.args.get("format") or "csv").strip().lower()
@@ -450,7 +453,8 @@ def delete(**kwargs):
     try:
         with atomic_transaction("customer_delete"):
             sales_query = Sale.query.filter_by(customer_id=record_id, tenant_id=tid)
-            from models import Payment, Receipt
+            from models import Payment
+            from models.receipt import Receipt
 
             payments_query = Payment.query.filter_by(customer_id=record_id, tenant_id=tid)
             receipts_query = Receipt.query.filter_by(customer_id=record_id, tenant_id=tid)
@@ -517,7 +521,8 @@ def print_statement(**kwargs):
 
     from sqlalchemy import func
 
-    from models import Payment, ProductReturn, Receipt
+    from models import Payment, ProductReturn
+    from models.receipt import Receipt
 
     tid = get_active_tenant_id(current_user)
     sales_q = Sale.query.filter_by(customer_id=record_id, status="confirmed", tenant_id=tid)
@@ -699,7 +704,8 @@ def statement(**kwargs):
 
     from sqlalchemy import func
 
-    from models import Payment, ProductReturn, Receipt
+    from models import Payment, ProductReturn
+    from models.receipt import Receipt
 
     tid = get_active_tenant_id(current_user)
     sales_query = Sale.query.filter_by(customer_id=record_id, status="confirmed", tenant_id=tid)

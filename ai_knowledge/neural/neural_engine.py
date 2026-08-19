@@ -559,7 +559,8 @@ class AzadNeuralEngine:
         from sqlalchemy import func
 
         from extensions import db
-        from models import Expense, Purchase, Receipt, Sale
+        from models import Expense, Purchase, Sale
+        from models.receipt import Receipt
         from utils.tenanting import get_active_tenant_id
 
         tid = get_active_tenant_id()
@@ -695,7 +696,8 @@ class AzadNeuralEngine:
         from sqlalchemy import func
 
         from extensions import db
-        from models import Expense, Purchase, Receipt, Sale
+        from models import Expense, Purchase, Sale
+        from models.receipt import Receipt
         from utils.tenanting import get_active_tenant_id
 
         tid = get_active_tenant_id()

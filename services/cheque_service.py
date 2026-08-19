@@ -427,7 +427,8 @@ def process_cheque_clear(cheque, clearance_date=None, clearance_exchange_rate=No
         )
         cheque.currency_gain_loss = cheque.actual_amount_aed - cheque.amount_aed
         _create_clearing_journal_entry(cheque)
-        from models.payment import Payment, Receipt
+        from models.payment import Payment
+        from models.receipt import Receipt
 
         tid = cheque.tenant_id if cheque is not None else None
 
@@ -625,7 +626,8 @@ def process_cheque_bounce(cheque, reason, bounce_fee=None):
                 cheque.customer.adjust_balance(-(cheque.amount_aed or Decimal("0")))
             except Exception as cust_err:
                 logger.error(f"Failed to adjust customer balance on bounce cheque {cheque.id}: {cust_err}")
-        from models.payment import Payment, Receipt
+        from models.payment import Payment
+        from models.receipt import Receipt
 
         tid = cheque.tenant_id if cheque is not None else None
         pmt_q = Payment.query.filter_by(cheque_id=cheque.id)
@@ -763,7 +765,8 @@ def _create_cancel_journal_entry(cheque):
 
 
 def process_cheque_cancel(cheque, reason=None, *, create_gl=True):
-    from models import Payment, Receipt
+    from models import Payment
+    from models.receipt import Receipt
 
     if cheque.status == "cancelled":
         return

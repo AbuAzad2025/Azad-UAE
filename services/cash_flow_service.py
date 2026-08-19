@@ -10,7 +10,8 @@ from flask_babel import gettext
 from sqlalchemy import and_, func
 
 from extensions import db
-from models import Expense, GLAccount, GLJournalEntry, GLJournalLine, Payment, Receipt
+from models import Expense, GLAccount, GLJournalEntry, GLJournalLine, Payment
+from models.receipt import Receipt
 
 
 class CashFlowService:

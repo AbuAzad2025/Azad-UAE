@@ -79,7 +79,8 @@ def get_confirmed_supplier_paid_aed(supplier_id, purchase_id=None, tenant_id=Non
 
 
 def _scoped_customer_query():
-    from models import Payment, Receipt
+    from models import Payment
+    from models.receipt import Receipt
 
     query = tenant_query(Customer)
     scoped_branch_id = report_branch_scope_id()
@@ -128,7 +129,8 @@ def index():
 @permission_required("view_reports")
 def partners():
     """تقرير الشركاء والمنتجات التابعة للتجار"""
-    from models import Payment, Receipt
+    from models import Payment
+    from models.receipt import Receipt
 
     date_from = request.args.get("date_from", "", type=str)
     date_to = request.args.get("date_to", "", type=str)
@@ -1701,7 +1703,8 @@ def api_entity_search():
 def entity_report_fragment(entity_type, **kwargs):
     record_id = kwargs.pop("id")
     try:
-        from models import Payment, PurchaseLine, Receipt, Supplier
+        from models import Payment, PurchaseLine, Supplier
+        from models.receipt import Receipt
 
         scoped_branch_id = report_branch_scope_id()
         tenant_id = get_active_tenant_id(current_user)

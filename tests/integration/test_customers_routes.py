@@ -210,7 +210,8 @@ class TestCustomerBranchIsolation:
 class TestCustomerStatement:
     def test_statement_shows_sales_receipts(self, app, db_session, client):
         """Customer statement must show sales and receipts."""
-        from models import Branch, Customer, Receipt, Role, Sale, Tenant, User
+        from models import Branch, Customer, Role, Sale, Tenant, User
+        from models.receipt import Receipt
         from services.gl_service import GLService
 
         tid = uuid.uuid4().hex[:12]

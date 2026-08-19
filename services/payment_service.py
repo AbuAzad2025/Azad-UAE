@@ -6,7 +6,8 @@ from flask_babel import gettext
 from flask_login import current_user
 
 from extensions import db
-from models import Receipt, Sale
+from models import Sale
+from models.receipt import Receipt
 from services.cheque_service import process_cheque_receive
 from services.exchange_rate_service import ExchangeRateService
 from services.gl_posting import GlPostingError, post_or_fail

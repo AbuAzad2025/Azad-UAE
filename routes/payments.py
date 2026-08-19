@@ -16,7 +16,8 @@ from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from extensions import db
-from models import Customer, InvoiceSettings, Payment, Receipt, Supplier
+from models import Customer, InvoiceSettings, Payment, Supplier
+from models.receipt import Receipt
 from services.cheque_service import process_cheque_issue
 from services.currency_service import CurrencyService
 from services.exchange_rate_service import ExchangeRateService
@@ -1292,7 +1293,7 @@ def restore_receipt(**kwargs):
 @permission_required("manage_payments")
 def delete_receipt(**kwargs):
     """حذف أو أرشفة سند قبض"""
-    from models import Receipt
+    from models.receipt import Receipt
     from services.archive_service import ArchiveService
 
     record_id = kwargs.pop("id")

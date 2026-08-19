@@ -156,7 +156,8 @@ def _validate_product_create_payload(form, *, warehouse_id, initial_stock, cost_
 
 
 def _scoped_customers_query(customer_type=None):
-    from models import Payment, Receipt, Sale
+    from models import Payment, Sale
+    from models.receipt import Receipt
 
     query = tenant_query(Customer).filter(Customer.is_active)
     if customer_type:

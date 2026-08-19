@@ -421,7 +421,7 @@ class TestFactory:
 
     def create_receipt(self, customer, amount=25.00, **kwargs):
         """Create a Receipt with proper tenant isolation."""
-        from models import Receipt
+        from models.receipt import Receipt
 
         receipt = Receipt(
             tenant_id=self.user.tenant_id,

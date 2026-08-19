@@ -60,7 +60,7 @@ from .partner import Partner
 from .partner_commission import PartnerCommissionEntry
 from .partner_profit_distribution import PartnerProfitDistribution
 from .partner_transaction import PartnerTransaction
-from .payment import Payment, Receipt
+from .payment import Payment
 from .payment_vault import PaymentLog, PaymentTransaction, PaymentVault
 from .payroll import Employee, PayrollTransaction, SalaryAdvance
 from .payroll_settings import PayrollSettings
@@ -96,6 +96,7 @@ from .purchase import (
 )
 from .purchase_return import PurchaseReturn, PurchaseReturnLine
 from .quotation import Quotation, QuotationLine
+from .receipt import Receipt
 from .sale import Sale, SaleLine
 from .security_alert import SecurityAlert
 from .shipment import Shipment
@@ -109,6 +110,7 @@ from .shop_saved_payment import ShopSavedPayment
 from .shop_stock_alert import ShopStockAlert
 from .shop_wishlist import ShopWishlist
 from .stock_batch import StockBatch
+from .stock_movement import StockMovement
 from .stock_transfer import WarehouseTransfer, WarehouseTransferLine
 from .store_coupon import StoreCoupon
 from .store_payment_method import StorePaymentMethod
@@ -118,7 +120,7 @@ from .system_settings import SystemSettings
 from .tenant import Tenant
 from .tenant_store import TenantStore
 from .user import Permission, Role, User
-from .warehouse import ProductWarehouseStock, StockMovement, Warehouse
+from .warehouse import ProductWarehouseStock, Warehouse
 from .warranty_claim import WarrantyClaim
 
 __all__ = [

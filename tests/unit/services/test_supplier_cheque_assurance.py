@@ -81,7 +81,8 @@ class TestChequeClearanceGL:
     @staticmethod
     def _patch_db_queries(mocker):
         mocker.patch("services.cheque_service.gl_ensure_core_accounts")
-        from models.payment import Payment, Receipt
+        from models.payment import Payment
+        from models.receipt import Receipt
 
         mocker.patch.object(
             Payment,
@@ -224,7 +225,8 @@ class TestChequeBounceGL:
     def _patch_bounce_deps(mocker):
         mocker.patch("services.cheque_service.gl_ensure_core_accounts")
         from models.expense import Expense
-        from models.payment import Payment, Receipt
+        from models.payment import Payment
+        from models.receipt import Receipt
         from models.supplier import Supplier
 
         mocker.patch.object(
@@ -409,7 +411,8 @@ class TestChequeStateTransitions:
 
     def test_clear_from_pending(self, mocker, app):
         mocker.patch("services.cheque_service.gl_ensure_core_accounts")
-        from models.payment import Payment, Receipt
+        from models.payment import Payment
+        from models.receipt import Receipt
 
         mocker.patch.object(
             Payment,

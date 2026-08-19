@@ -101,7 +101,8 @@ class ArchiveService:
 
     @staticmethod
     def _init_archive_model_map():
-        from models import Cheque, Expense, Payment, Purchase, Receipt, Sale
+        from models import Cheque, Expense, Payment, Purchase, Sale
+        from models.receipt import Receipt
 
         ArchiveService.ARCHIVE_MODEL_MAP.update(
             {

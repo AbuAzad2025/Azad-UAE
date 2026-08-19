@@ -42,7 +42,7 @@ def _payment_stub(**kwargs):
 
 
 def _receipt_stub(**kwargs):
-    from models.payment import Receipt
+    from models.receipt import Receipt
 
     class Stub:
         id = kwargs.get("id", 1)

@@ -82,7 +82,7 @@ class DocumentVerificationService:
 
                 return Payment.query.filter_by(id=document_id, tenant_id=tenant_id).first()
             if document_type == "receipt":
-                from models import Receipt
+                from models.receipt import Receipt
 
                 return Receipt.query.filter_by(id=document_id, tenant_id=tenant_id).first()
             if document_type == "purchase":

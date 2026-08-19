@@ -3,7 +3,8 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy import func
 
 from extensions import db
-from models import Expense, Purchase, Receipt, Sale
+from models import Expense, Purchase, Sale
+from models.receipt import Receipt
 
 
 class FinancialService:
