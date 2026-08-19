@@ -13,7 +13,13 @@ class StorePaymentMethod(db.Model):
     __tablename__ = "store_payment_methods"
 
     id = db.Column(db.Integer, primary_key=True)
-    code = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    tenant_id = db.Column(
+        db.Integer,
+        db.ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    code = db.Column(db.String(50), nullable=False, index=True)
     name_ar = db.Column(db.String(120), nullable=False)
     name_en = db.Column(db.String(120), nullable=False)
     description_ar = db.Column(db.Text)
@@ -34,6 +40,8 @@ class StorePaymentMethod(db.Model):
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
+
+    __table_args__ = (db.UniqueConstraint("tenant_id", "code", name="uq_store_payment_method_tenant_code"),)
 
     def get_config(self) -> dict:
         if not self.config_json:

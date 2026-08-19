@@ -1,14 +1,16 @@
-"""Platform store payment methods — shared across all tenant storefronts."""
+"""Platform store payment methods — tenant-scoped for tenant storefronts."""
 
 from __future__ import annotations
 
 from typing import cast
 
+from flask import g
 from flask_babel import gettext
 
 from extensions import db
 from models.store_payment_method import StorePaymentMethod
 from utils.db_safety import atomic_transaction
+from utils.tenanting import get_active_tenant_id
 
 DEFAULT_METHODS = (
     {
@@ -73,13 +75,20 @@ DEFAULT_METHODS = (
 
 class StorePaymentMethodService:
     @staticmethod
-    def ensure_defaults() -> None:
+    def _get_tenant_id() -> int:
+        """Get the current tenant ID, falling back to 1 for platform-wide operations."""
+        return get_active_tenant_id(g) or 1
+
+    @staticmethod
+    def ensure_defaults(tenant_id: int | None = None) -> None:
+        tenant_id = tenant_id or StorePaymentMethodService._get_tenant_id()
         with atomic_transaction("ensure_payment_defaults"):
             for item in DEFAULT_METHODS:
-                existing = StorePaymentMethod.query.filter_by(code=item["code"]).first()
+                existing = StorePaymentMethod.query.filter_by(tenant_id=tenant_id, code=item["code"]).first()
                 if existing:
                     continue
                 row = StorePaymentMethod(
+                    tenant_id=tenant_id,
                     code=item["code"],
                     name_ar=item["name_ar"],
                     name_en=item["name_en"],
@@ -96,15 +105,17 @@ class StorePaymentMethodService:
                 db.session.add(row)
 
     @staticmethod
-    def list_all(*, enabled_only=False):
-        q = StorePaymentMethod.query
+    def list_all(*, enabled_only=False, tenant_id: int | None = None):
+        tenant_id = tenant_id or StorePaymentMethodService._get_tenant_id()
+        q = StorePaymentMethod.query.filter_by(tenant_id=tenant_id)
         if enabled_only:
             q = q.filter_by(is_enabled=True)
         return q.order_by(StorePaymentMethod.sort_order.asc(), StorePaymentMethod.id.asc()).all()
 
     @staticmethod
     def list_for_checkout(tenant_id=None):
-        methods = StorePaymentMethodService.list_all(enabled_only=True)
+        tenant_id = tenant_id or StorePaymentMethodService._get_tenant_id()
+        methods = StorePaymentMethodService.list_all(enabled_only=True, tenant_id=tenant_id)
         try:
             from services.store_online_payment_service import StoreOnlinePaymentService
 
@@ -115,32 +126,36 @@ class StorePaymentMethodService:
         return methods
 
     @staticmethod
-    def get_by_code(code: str) -> StorePaymentMethod | None:
+    def get_by_code(code: str, tenant_id: int | None = None) -> StorePaymentMethod | None:
+        tenant_id = tenant_id or StorePaymentMethodService._get_tenant_id()
         normalized = (code or "").strip().lower()
         if not normalized:
             return None
-        return StorePaymentMethod.query.filter_by(code=normalized).first()
+        return StorePaymentMethod.query.filter_by(tenant_id=tenant_id, code=normalized).first()
 
     @staticmethod
-    def validate_for_checkout(code: str) -> StorePaymentMethod:
-        method = StorePaymentMethodService.get_by_code(code)
+    def validate_for_checkout(code: str, tenant_id: int | None = None) -> StorePaymentMethod:
+        tenant_id = tenant_id or StorePaymentMethodService._get_tenant_id()
+        method = StorePaymentMethodService.get_by_code(code, tenant_id=tenant_id)
         if not method or not method.is_enabled:
             raise ValueError(gettext("طريقة الدفع غير متاحة."))
         return method
 
     @staticmethod
-    def toggle_enabled(method_id: int, enabled: bool) -> StorePaymentMethod:
+    def toggle_enabled(method_id: int, enabled: bool, tenant_id: int | None = None) -> StorePaymentMethod:
+        tenant_id = tenant_id or StorePaymentMethodService._get_tenant_id()
         method = db.session.get(StorePaymentMethod, int(method_id))
-        if not method:
+        if not method or method.tenant_id != tenant_id:
             raise ValueError(gettext("طريقة الدفع غير موجودة."))
         with atomic_transaction("toggle_payment_method"):
             method.is_enabled = bool(enabled)
         return method
 
     @staticmethod
-    def create_method(data: dict) -> StorePaymentMethod:
+    def create_method(data: dict, tenant_id: int | None = None) -> StorePaymentMethod:
+        tenant_id = tenant_id or StorePaymentMethodService._get_tenant_id()
         code = StorePaymentMethod.normalize_code(data.get("code") or "")
-        if StorePaymentMethod.query.filter_by(code=code).first():
+        if StorePaymentMethod.query.filter_by(tenant_id=tenant_id, code=code).first():
             raise ValueError(gettext("رمز طريقة الدفع مستخدم مسبقاً."))
 
         name_ar = (data.get("name_ar") or "").strip()
@@ -150,6 +165,7 @@ class StorePaymentMethodService:
 
         with atomic_transaction("create_payment_method"):
             method = StorePaymentMethod(
+                tenant_id=tenant_id,
                 code=code,
                 name_ar=name_ar or name_en,
                 name_en=name_en or name_ar,
@@ -178,9 +194,10 @@ class StorePaymentMethodService:
         return method
 
     @staticmethod
-    def update_method(method_id: int, data: dict) -> StorePaymentMethod:
+    def update_method(method_id: int, data: dict, tenant_id: int | None = None) -> StorePaymentMethod:
+        tenant_id = tenant_id or StorePaymentMethodService._get_tenant_id()
         method = db.session.get(StorePaymentMethod, int(method_id))
-        if not method:
+        if not method or method.tenant_id != tenant_id:
             raise ValueError(gettext("طريقة الدفع غير موجودة."))
 
         with atomic_transaction("update_payment_method"):
@@ -200,6 +217,7 @@ class StorePaymentMethodService:
             if not method.is_builtin and data.get("code"):
                 new_code = StorePaymentMethod.normalize_code(data["code"])
                 clash = StorePaymentMethod.query.filter(
+                    StorePaymentMethod.tenant_id == tenant_id,
                     StorePaymentMethod.code == new_code,
                     StorePaymentMethod.id != method.id,
                 ).first()
@@ -226,9 +244,10 @@ class StorePaymentMethodService:
         return method
 
     @staticmethod
-    def delete_method(method_id: int):
+    def delete_method(method_id: int, tenant_id: int | None = None):
+        tenant_id = tenant_id or StorePaymentMethodService._get_tenant_id()
         method = db.session.get(StorePaymentMethod, int(method_id))
-        if not method:
+        if not method or method.tenant_id != tenant_id:
             raise ValueError(gettext("طريقة الدفع غير موجودة."))
         if method.is_builtin:
             raise ValueError(gettext("لا يمكن حذف طرق الدفع الأساسية — يمكن إيقافها فقط."))

@@ -367,7 +367,7 @@ def account_orders(slug):
 
     orders = StoreOrderService.list_for_customer(store.tenant_id, account.customer_id)
 
-    payment_methods = {m.code: m for m in StorePaymentMethodService.list_all()}
+    payment_methods = {m.code: m for m in StorePaymentMethodService.list_all(tenant_id=store.tenant_id)}
 
     return render_template(
         "shop/account_orders.html",
@@ -400,7 +400,7 @@ def account_order_detail(slug, order_id):
     if not sale or sale.customer_id != account.customer_id:
         abort(404)
 
-    pay_method = StorePaymentMethodService.get_by_code(sale.checkout_payment_method or "cod")
+    pay_method = StorePaymentMethodService.get_by_code(sale.checkout_payment_method or "cod", tenant_id=store.tenant_id)
 
     return render_template(
         "shop/account_order_detail.html",
@@ -1261,7 +1261,7 @@ def order_invoice(slug, sale_id):
     sale = Sale.query.filter_by(id=sale_id, tenant_id=store.tenant_id, source="online_store").first_or_404()
     if sale.customer_id != account.customer_id:
         abort(404)
-    pay_method = StorePaymentMethodService.get_by_code(sale.checkout_payment_method or "cod")
+    pay_method = StorePaymentMethodService.get_by_code(sale.checkout_payment_method or "cod", tenant_id=store.tenant_id)
     ctx.update(
         status_label=StoreOrderService.status_label(sale.status, ctx.get("lang", "")),
         pay_method=pay_method,

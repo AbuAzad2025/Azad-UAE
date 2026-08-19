@@ -7,6 +7,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.exceptions import HTTPException
 
 from services.logging_core import LoggingCore
+from utils.exceptions import PaymentRequired
 from utils.logger import log_exception
 
 
@@ -111,6 +112,21 @@ def register_error_handlers(app):
         )
         g.denial_reason = description if description and description != default_desc else None
         return render_template("errors/403.html"), 403
+
+    @app.errorhandler(PaymentRequired)
+    def handle_402(exc):
+        LoggingCore.log_error(
+            message=f"Payment Required: {request.path}",
+            category="BILLING",
+            level="WARNING",
+            source="app.errorhandler.402",
+            exception=exc,
+        )
+        if app.config.get("DEBUG"):
+            raise exc
+        description = getattr(exc, "description", "") or ""
+        g.denial_reason = description if description else None
+        return render_template("errors/402.html"), 402
 
     @app.errorhandler(HTTPException)
     def handle_http_exception(exc):

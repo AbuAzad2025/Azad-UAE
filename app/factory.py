@@ -165,6 +165,24 @@ def create_app(config_class=Config) -> Flask:
     # Register error handlers
     register_error_handlers(app)
 
+    # Explicit 503 error handler for service unavailable (tenant suspended, maintenance, etc.)
+    @app.errorhandler(503)
+    def handle_503(exc):
+        from flask import render_template
+
+        from services.logging_core import LoggingCore
+
+        LoggingCore.log_error(
+            message=f"Service Unavailable: {request.path}",
+            category="SYSTEM",
+            level="WARNING",
+            source="app.errorhandler.503",
+            exception=exc,
+        )
+        if app.config.get("DEBUG"):
+            raise exc
+        return render_template("errors/503.html"), 503
+
     # Register context processors
     register_context_processors(app)
 

@@ -303,7 +303,7 @@ def admin_orders():
     if status_filter in StoreOrderService.STORE_ORDER_STATUSES:
         query = query.filter_by(status=status_filter)
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
-    payment_methods = {m.code: m for m in StorePaymentMethodService.list_all()}
+    payment_methods = {m.code: m for m in StorePaymentMethodService.list_all(tenant_id=tenant_id)}
     return render_template(
         "store/admin_orders.html",
         store=store,
@@ -325,7 +325,7 @@ def admin_order_detail(order_id):
     sale = StoreOrderService.get_tenant_order(tenant_id, order_id)
     if not sale:
         abort(404)
-    pay_method = StorePaymentMethodService.get_by_code(sale.checkout_payment_method or "cod")
+    pay_method = StorePaymentMethodService.get_by_code(sale.checkout_payment_method or "cod", tenant_id=tenant_id)
     stock_issues = []
     if sale.status == "pending" and not StoreOrderService.is_fulfilled(sale):
         stock_issues = StoreOrderService.validate_stock_for_order(sale)
