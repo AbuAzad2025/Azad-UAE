@@ -526,7 +526,7 @@ class TestChequeServiceProcessGaps:
         )
         mocker.patch("services.cheque_service._create_clearing_journal_entry")
         mocker.patch("models.payment.Payment")
-        mocker.patch("models.payment.Receipt")
+        mocker.patch("models.Receipt")
         from services.cheque_service import process_cheque_clear
 
         process_cheque_clear(cheque)
@@ -547,7 +547,7 @@ class TestChequeServiceProcessGaps:
         cheque.customer.adjust_balance.side_effect = RuntimeError("balance")
         mocker.patch("services.cheque_service._create_bounce_journal_entry")
         mocker.patch("models.payment.Payment")
-        mocker.patch("models.payment.Receipt")
+        mocker.patch("models.Receipt")
         from services.cheque_service import process_cheque_bounce
 
         process_cheque_bounce(cheque, "NSF")
@@ -579,7 +579,7 @@ class TestChequeServiceProcessGaps:
         supplier = MagicMock()
         mocker.patch("services.cheque_service._create_bounce_journal_entry")
         mocker.patch("models.payment.Payment")
-        mocker.patch("models.payment.Receipt")
+        mocker.patch("models.Receipt")
         supplier_model = mocker.patch("models.supplier.Supplier")
         supplier_model.query.filter_by.return_value.first.return_value = supplier
         from services.cheque_service import process_cheque_bounce
@@ -677,8 +677,8 @@ class TestChequeServiceProcessGaps:
         mock_q = MagicMock()
         mock_q.filter.return_value.all.return_value = [mock_receipt]
         mocker.patch("models.payment.Payment")
-        mocker.patch("models.payment.Receipt")
-        receipt = mocker.patch("models.payment.Receipt")
+        mocker.patch("models.Receipt")
+        receipt = mocker.patch("models.Receipt")
         receipt.query.filter_by.return_value = mock_q
         mocker.patch("services.cheque_service._create_cancel_journal_entry")
         from services.cheque_service import process_cheque_cancel
