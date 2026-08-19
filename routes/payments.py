@@ -517,6 +517,7 @@ def print_payment(**kwargs):
 
     ctx = {
         "receipt": payment,
+        "payment": payment,
         "is_payment": True,
         "company": company,
         "settings": settings,

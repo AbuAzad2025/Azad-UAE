@@ -42,7 +42,7 @@ _EXTRA_PERMISSION_CODES = [
     "grn:manage",
     "hr:leave_manage",
     "hr.view",
-    "hr.manage",
+    "hr:manage",
     "marketing.manage",
     "manage_ledger",
     "manage_store",
@@ -936,7 +936,7 @@ class TestHRRoutes:
 
     def test_hr_overtime_renders(self, auth_client, granted_permissions):
         resp = auth_client.get("/hr/overtime", follow_redirects=True)
-        assert resp.status_code in (200, 404, 403), resp.status_code
+        assert resp.status_code == 200, resp.status_code
 
 
 # ── Purchasing routes ───────────────────────────────────────────────────────
@@ -1008,19 +1008,38 @@ class TestWarehouseTransferRoutes:
 
 
 class TestPaymentVoucherRoute:
-    """receipts/payment_voucher.html."""
+    """receipts/payment_voucher.html — rendered directly since the route has
+    complex tenant scoping that causes 404 in isolated test sessions."""
 
     def test_payment_voucher_renders(
         self,
-        auth_client,
-        granted_permissions,
+        app,
+        db_session,
         sample_payment_for_voucher,
     ):
-        resp = auth_client.get(
-            f"/payments/{sample_payment_for_voucher.id}/print",
-            follow_redirects=True,
-        )
-        assert resp.status_code in (200, 404, 403), resp.status_code
+        from datetime import datetime
+
+        with app.app_context():
+            p = sample_payment_for_voucher
+            html = render_template(
+                "receipts/payment_voucher.html",
+                receipt=p,
+                payment=p,
+                is_payment=True,
+                company={},
+                settings=None,
+                printed_at=datetime.now(),
+                print_branch=None,
+                print_user_name="Test User",
+                amount_in_words="",
+                qr_data_url="",
+                doc_number=p.payment_number,
+                print_branding={},
+                print_tenant_id=p.tenant_id,
+                available_templates=["modern"],
+                current_template="payment_voucher",
+            )
+            assert "payment_voucher" in html.lower() or "PAY-VOUCHER" in html
 
 
 # ── Shop return policy (with policy set) ───────────────────────────────────

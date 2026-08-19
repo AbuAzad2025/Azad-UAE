@@ -16,7 +16,7 @@ class PrintService:
 
     # Valid template names for invoices and receipts
     INVOICE_TEMPLATES = {"modern", "classic", "gulf", "minimal", "simple"}
-    RECEIPT_TEMPLATES = {"modern", "classic", "gulf", "minimal", "simple"}
+    RECEIPT_TEMPLATES = {"modern", "classic", "gulf", "minimal", "simple", "payment_voucher"}
 
     PRINTABLE_DOCUMENTS = {
         "purchase": {

@@ -5,7 +5,7 @@
   <h2 class="mb-4">{{ t('Overtime Requests') }}</h2>
 
   <div class="card mb-4"><div class="card-header"><h5>{{ t('New Overtime') }}</h5></div><div class="card-body">
-    <form method="POST" action="{{ url_for('hr.overtime_create') }}">
+    <form method="POST" action="{{ url_for('hr.create_overtime') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="row g-3 align-items-end">
         <div class="col-md-2"><label class="form-label">{{ t('User ID') }} *</label><input type="number" name="user_id" class="form-control" required></div>
