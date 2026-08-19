@@ -160,7 +160,7 @@ class TestReceipt:
             sale_id=1,
             sale=sale,
         )
-        mock_payment = mocker.patch("models.payment.Payment")
+        mock_payment = mocker.patch("models.Payment")
         mock_payment.query.filter.return_value.all.return_value = [linked]
         r = _receipt_stub(payment_confirmed=True)
         r.reject_receipt("returned")
@@ -179,7 +179,7 @@ class TestReceipt:
             sale_date=datetime(2025, 1, 1),
             total_amount=Decimal("500"),
         )
-        mocker.patch("models.payment.db.session.get", return_value=sale)
+        mocker.patch("extensions.db.session.get", return_value=sale)
         info = _receipt_stub(source_type="sale", source_id=10).get_source_info()
         assert info["number"] == "S-100"
 
