@@ -583,9 +583,7 @@ def sample_gl_account(db_session, sample_tenant, sample_gl_accounts):
     """A single GL account for asset/budget FK references."""
     from models import GLAccount
 
-    acct = GLAccount.query.filter_by(
-        tenant_id=sample_tenant.id, type="expense"
-    ).first()
+    acct = GLAccount.query.filter_by(tenant_id=sample_tenant.id, type="expense").first()
     if not acct:
         acct = GLAccount(
             tenant_id=sample_tenant.id,
@@ -605,9 +603,7 @@ def sample_asset_account(db_session, sample_tenant, sample_gl_accounts):
     """GL account of type 'asset' for FixedAsset.asset_account_id."""
     from models import GLAccount
 
-    acct = GLAccount.query.filter_by(
-        tenant_id=sample_tenant.id, type="asset"
-    ).first()
+    acct = GLAccount.query.filter_by(tenant_id=sample_tenant.id, type="asset").first()
     if not acct:
         acct = GLAccount(
             tenant_id=sample_tenant.id,
@@ -707,9 +703,7 @@ def sample_leave_type(db_session, sample_tenant):
 
 
 @pytest.fixture
-def sample_quotation_with_lines(
-    db_session, sample_tenant, sample_customer, sample_user, sample_product, sample_branch
-):
+def sample_quotation_with_lines(db_session, sample_tenant, sample_customer, sample_user, sample_product, sample_branch):
     from decimal import Decimal
 
     from models import Quotation, QuotationLine
@@ -786,9 +780,7 @@ def sample_warehouse_transfer_with_lines(
 
 
 @pytest.fixture
-def sample_payment_for_voucher(
-    db_session, sample_tenant, sample_supplier, sample_user, sample_branch
-):
+def sample_payment_for_voucher(db_session, sample_tenant, sample_supplier, sample_user, sample_branch):
     from datetime import UTC, datetime
     from decimal import Decimal
 
@@ -896,28 +888,16 @@ class TestAssetsRoutes:
         resp = auth_client.get("/assets/create", follow_redirects=True)
         assert resp.status_code in (200, 404, 403), resp.status_code
 
-    def test_assets_detail_renders(
-        self, auth_client, granted_permissions, sample_fixed_asset
-    ):
-        resp = auth_client.get(
-            f"/assets/{sample_fixed_asset.id}", follow_redirects=True
-        )
+    def test_assets_detail_renders(self, auth_client, granted_permissions, sample_fixed_asset):
+        resp = auth_client.get(f"/assets/{sample_fixed_asset.id}", follow_redirects=True)
         assert resp.status_code in (200, 404, 403), resp.status_code
 
-    def test_assets_disposal_renders(
-        self, auth_client, granted_permissions, sample_fixed_asset
-    ):
-        resp = auth_client.get(
-            f"/assets/{sample_fixed_asset.id}/dispose", follow_redirects=True
-        )
+    def test_assets_disposal_renders(self, auth_client, granted_permissions, sample_fixed_asset):
+        resp = auth_client.get(f"/assets/{sample_fixed_asset.id}/dispose", follow_redirects=True)
         assert resp.status_code in (200, 404, 403), resp.status_code
 
-    def test_assets_depreciation_renders(
-        self, auth_client, granted_permissions, sample_fixed_asset
-    ):
-        resp = auth_client.get(
-            "/assets/depreciation-schedule", follow_redirects=True
-        )
+    def test_assets_depreciation_renders(self, auth_client, granted_permissions, sample_fixed_asset):
+        resp = auth_client.get("/assets/depreciation-schedule", follow_redirects=True)
         assert resp.status_code in (200, 404, 403), resp.status_code
 
 
@@ -936,15 +916,11 @@ class TestBudgetRoutes:
         assert resp.status_code in (200, 404, 403), resp.status_code
 
     def test_budget_detail_renders(self, auth_client, granted_permissions, sample_budget):
-        resp = auth_client.get(
-            f"/budgets/{sample_budget.id}", follow_redirects=True
-        )
+        resp = auth_client.get(f"/budgets/{sample_budget.id}", follow_redirects=True)
         assert resp.status_code in (200, 404, 403), resp.status_code
 
     def test_budget_variance_renders(self, auth_client, granted_permissions, sample_budget):
-        resp = auth_client.get(
-            f"/budgets/{sample_budget.id}/variance", follow_redirects=True
-        )
+        resp = auth_client.get(f"/budgets/{sample_budget.id}/variance", follow_redirects=True)
         assert resp.status_code in (200, 404, 403), resp.status_code
 
 
@@ -954,9 +930,7 @@ class TestBudgetRoutes:
 class TestHRRoutes:
     """hr/leave_ledger.html + hr/overtime.html."""
 
-    def test_hr_leave_ledger_renders(
-        self, auth_client, granted_permissions, sample_user, sample_leave_type
-    ):
+    def test_hr_leave_ledger_renders(self, auth_client, granted_permissions, sample_user, sample_leave_type):
         resp = auth_client.get("/hr/leave-ledger", follow_redirects=True)
         assert resp.status_code in (200, 404, 403), resp.status_code
 
@@ -972,18 +946,14 @@ class TestPurchasingRoutes:
     """purchasing/{requisitions,grn,match}.html."""
 
     def test_purchasing_requisitions_renders(self, auth_client, granted_permissions):
-        resp = auth_client.get(
-            "/purchases/requisitions", follow_redirects=True
-        )
+        resp = auth_client.get("/purchases/requisitions", follow_redirects=True)
         assert resp.status_code in (200, 404, 403), resp.status_code
 
     def test_purchasing_grn_renders(self, auth_client, granted_permissions):
         resp = auth_client.get("/purchases/grn", follow_redirects=True)
         assert resp.status_code in (200, 404, 403), resp.status_code
 
-    def test_purchasing_match_renders(
-        self, auth_client, granted_permissions, sample_purchase_order_for_match
-    ):
+    def test_purchasing_match_renders(self, auth_client, granted_permissions, sample_purchase_order_for_match):
         resp = auth_client.get(
             f"/purchases/match/{sample_purchase_order_for_match.id}",
             follow_redirects=True,
@@ -1005,12 +975,8 @@ class TestQuotationRoutes:
         resp = auth_client.get("/quotations/create", follow_redirects=True)
         assert resp.status_code in (200, 404, 403), resp.status_code
 
-    def test_quotations_detail_renders(
-        self, auth_client, granted_permissions, sample_quotation_with_lines
-    ):
-        resp = auth_client.get(
-            f"/quotations/{sample_quotation_with_lines.id}", follow_redirects=True
-        )
+    def test_quotations_detail_renders(self, auth_client, granted_permissions, sample_quotation_with_lines):
+        resp = auth_client.get(f"/quotations/{sample_quotation_with_lines.id}", follow_redirects=True)
         assert resp.status_code in (200, 404, 403), resp.status_code
 
 
@@ -1020,15 +986,11 @@ class TestQuotationRoutes:
 class TestWarehouseTransferRoutes:
     """warehouse/{transfers,transfer_form,transfer_detail}.html."""
 
-    def test_warehouse_transfers_index_renders(
-        self, auth_client, granted_permissions
-    ):
+    def test_warehouse_transfers_index_renders(self, auth_client, granted_permissions):
         resp = auth_client.get("/transfers/", follow_redirects=True)
         assert resp.status_code in (200, 404, 403), resp.status_code
 
-    def test_warehouse_transfer_form_renders(
-        self, auth_client, granted_permissions
-    ):
+    def test_warehouse_transfer_form_renders(self, auth_client, granted_permissions):
         resp = auth_client.get("/transfers/create", follow_redirects=True)
         assert resp.status_code in (200, 404, 403), resp.status_code
 
@@ -1067,9 +1029,7 @@ class TestPaymentVoucherRoute:
 class TestShopReturnPolicyRoute:
     """shop/return_policy.html — needs actual policy text to avoid 404."""
 
-    def test_shop_return_policy_with_text_renders(
-        self, client, shop_storefront_with_policy
-    ):
+    def test_shop_return_policy_with_text_renders(self, client, shop_storefront_with_policy):
         resp = client.get(
             f"/s/{shop_storefront_with_policy['slug']}/return-policy",
             follow_redirects=True,
