@@ -1,7 +1,7 @@
 import sys
 
 path = sys.argv[1]
-with open(path, 'r', encoding='utf-8') as f:
+with open(path, encoding="utf-8") as f:
     content = f.read()
 
 # 1. Fix fmt(5.555) -> fmt(5.556)
@@ -273,7 +273,10 @@ old_loadprod1 = '''  it("renders products grid", async () => {
           status: 200,
           json: () => Promise.resolve({
             ok: true,
-            data: [{ id: 1, name: "Burger", name_ar: "برجر", price: 25, stock: 10, is_out_of_stock: false, is_inactive: false }],
+            data: [
+              { id: 1, name: "Burger", name_ar: "برجر", price: 25, stock: 10,
+                is_out_of_stock: false, is_inactive: false },
+            ],
           }),
         }),
     });
@@ -289,7 +292,8 @@ new_loadprod1 = '''  it("renders products grid", async () => {
           ok: true,
           status: 200,
           json: () => Promise.resolve([
-            { id: 1, name: "Burger", name_ar: "برجر", price: 25, stock: 10, is_out_of_stock: false, is_inactive: false },
+            { id: 1, name: "Burger", name_ar: "برجر", price: 25, stock: 10,
+                is_out_of_stock: false, is_inactive: false },
           ]),
         }),
     });

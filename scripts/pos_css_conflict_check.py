@@ -13,11 +13,10 @@ def parse_rules(path: str):
     Handles @media blocks by tracking context; nested rules are flattened
     with their media context prefixed.
     """
-    text = strip_comments(open(path, encoding="utf-8").read())
+    with open(path, encoding="utf-8") as f:
+        text = strip_comments(f.read())
     rules = {}
-    i = 0
     n = len(text)
-    stack = []  # at-rule contexts
 
     def read_block(pos):
         """pos points at '{'. Return (content, newpos after matching '}')."""
@@ -61,7 +60,6 @@ def parse_rules(path: str):
 
     def process_at(body, context, tag):
         # parse the body string as its own mini-document
-        saved = globals()["text"], globals()["n"]
         return _process_body(body, context)
 
     def _process_body(body, context):

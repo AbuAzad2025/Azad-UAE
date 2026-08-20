@@ -47,10 +47,12 @@ def parse_icon_blocks(css_text):
 
 
 def main():
-    report = json.load(open(os.path.join(ROOT, "scripts", "ops", "_fa_used.json")))
+    with open(os.path.join(ROOT, "scripts", "ops", "_fa_used.json")) as f:
+        report = json.load(f)
     used = set(report["used_icons"])
 
-    css_text = open(ORIG_CSS, encoding="utf-8").read()
+    with open(ORIG_CSS, encoding="utf-8") as f:
+        css_text = f.read()
     defined = {}
     for _block, names, code in parse_icon_blocks(css_text):
         for n in names:
@@ -138,7 +140,8 @@ def main():
     # insert after the leading license comment
     end_license = new_css.find("*/") + 2
     new_css = new_css[:end_license] + "\n" + header + new_css[end_license:].lstrip("\n")
-    open(OUT_CSS, "w", encoding="utf-8", newline="\n").write(new_css)
+    with open(OUT_CSS, "w", encoding="utf-8", newline="\n") as f:
+        f.write(new_css)
     print(f"wrote {OUT_CSS} ({os.path.getsize(OUT_CSS)} bytes)")
 
     # --- verification ---

@@ -1046,9 +1046,9 @@
 	const loadCategories = async () => {
 		const box = qs("#posCategories");
 		if (!box) return;
-		const res = await fetchJson("/pos/api/categories");
+		const res = await fetchJson("/pos/api/categories"); console.log("LC res", res);
 		if (!res.ok) return;
-		const cats = res.data;
+		const cats = res.data; console.log("LC cats", cats, typeof cats, Array.isArray(cats));
 		if (!cats) return;
 		let html = '<div class="pos-cat active" data-cat="">الكل</div>';
 		cats.forEach((c) => {
