@@ -1,4 +1,4 @@
-with open('tests/vitest/app_global_enhanced.test.js', 'r', encoding='utf-8') as f:
+with open('tests/vitest/app_global_enhanced.test.js', encoding='utf-8') as f:
     lines = f.readlines()
 
 # Find the line with "$.fn = {};" and keep only that line, removing everything after it

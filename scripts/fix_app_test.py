@@ -1,4 +1,4 @@
-with open('tests/vitest/app_global_enhanced.test.js', 'r', encoding='utf-8') as f:
+with open('tests/vitest/app_global_enhanced.test.js', encoding='utf-8') as f:
     content = f.read()
 
 # The correct $ function definition
