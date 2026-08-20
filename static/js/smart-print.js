@@ -251,19 +251,18 @@
 			} else {
 				// Manual extraction from DOM if Buttons extension is missing
 
-				// Extract Header
-				$(dt.table().header())
-					.find("tr")
-					.each(function () {
+				// Extract Header (use native DOM to work without jQuery Buttons extension)
+				const headerEl = dt.table().header();
+				if (headerEl) {
+					headerEl.querySelectorAll("tr").forEach((tr) => {
 						const row = [];
-						$(this)
-							.find("th, td")
-							.each(function () {
-								row.push($(this).text().trim());
-							});
+						tr.querySelectorAll("th, td").forEach((cell) => {
+							row.push(cell.textContent.trim());
+						});
 						// Only take the last header row if multiple exist (common in DT)
 						data.header = row;
 					});
+				}
 
 				// Extract Body (using current page or all pages based on config?)
 				// If we want all data, we might need to use dt.rows().data()
@@ -288,29 +287,26 @@
 						data.body.push(rowData);
 					}
 				} else {
-					$(rows).each(function () {
+					for (const rowEl of rows) {
 						const row = [];
-						$(this)
-							.find("td")
-							.each(function () {
-								row.push($(this).text().trim());
-							});
+						rowEl.querySelectorAll("td").forEach((cell) => {
+							row.push(cell.textContent.trim());
+						});
 						data.body.push(row);
-					});
+					}
 				}
 
 				// Extract Footer
-				$(dt.table().footer())
-					.find("tr")
-					.each(function () {
+				const footerEl = dt.table().footer();
+				if (footerEl) {
+					footerEl.querySelectorAll("tr").forEach((tr) => {
 						const row = [];
-						$(this)
-							.find("th, td")
-							.each(function () {
-								row.push($(this).text().trim());
-							});
+						tr.querySelectorAll("th, td").forEach((cell) => {
+							row.push(cell.textContent.trim());
+						});
 						data.footer = row;
 					});
+				}
 
 				info.title = config.title || document.title;
 			}

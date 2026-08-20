@@ -532,46 +532,6 @@ describe('smart-print.js', () => {
       expect($('#smartPrintRowStart, #smartPrintRowEnd, #smartPrintPageStart, #smartPrintPageEnd').val()).toBe('');
     });
   });
-    it('disables all inputs for mode "all"', async () => {
-      $ = makeJQuery();
-      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
-      const SmartPrint = await importSmartPrint($);
-      SmartPrint._updateInputStates('all');
-      expect($('#smartPrintRowStart').prop('disabled')).toBe(true);
-      expect($('#smartPrintPageStart').prop('disabled')).toBe(true);
-    });
-
-    it('enables row inputs for mode "rows"', async () => {
-      $ = makeJQuery();
-      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
-      const SmartPrint = await importSmartPrint($);
-      SmartPrint._updateInputStates('rows');
-      expect($('#smartPrintRowStart').prop('disabled')).toBe(false);
-      expect($('#smartPrintPageStart').prop('disabled')).toBe(true);
-    });
-
-    it('enables page inputs for mode "pages"', async () => {
-      $ = makeJQuery();
-      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
-      const SmartPrint = await importSmartPrint($);
-      SmartPrint._updateInputStates('pages');
-      expect($('#smartPrintRowStart').prop('disabled')).toBe(true);
-      expect($('#smartPrintPageStart').prop('disabled')).toBe(false);
-    });
-  });
-
-  describe('_resetModal', () => {
-    it('resets radio to all and clears inputs', async () => {
-      $ = makeJQuery();
-      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
-      const SmartPrint = await importSmartPrint($);
-      $('input[name="smartPrintRange"]').prop('checked', false);
-      $('#smartPrintRowStart').val('5');
-      SmartPrint._resetModal();
-      expect($('#smartPrintAll').prop('checked')).toBe(true);
-      expect($('#smartPrintRowStart').val()).toBe('');
-    });
-  });
 
   describe('_applyPrintStyles', () => {
     function makeWinJQuery(doc) {
