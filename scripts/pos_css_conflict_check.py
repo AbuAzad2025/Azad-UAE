@@ -16,7 +16,7 @@ def parse_rules(path: str):
     """
     with open(path, encoding="utf-8") as f:
         text = strip_comments(f.read())
-    rules = {}
+    rules: dict[tuple[tuple[str, ...], str], list[str]] = {}
     n = len(text)
 
     def read_block(pos):
