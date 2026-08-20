@@ -1,6 +1,4 @@
-import re
-
-with open('tests/vitest/pos_index_extended.test.js', 'r', encoding='utf-8') as f:
+with open('tests/vitest/pos_index_extended.test.js', encoding='utf-8') as f:
     content = f.read()
 
 old = '''  for (const id of ["orderType", "tableSelect", "paymentMethod", "warehouseId", "currency"]) {

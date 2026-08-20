@@ -1,6 +1,4 @@
-import re
-
-with open('tests/vitest/pos_index.test.js', 'r', encoding='utf-8') as f:
+with open('tests/vitest/pos_index.test.js', encoding='utf-8') as f:
     content = f.read()
 
 # Fix 1: Move exchangeRate from select to input

@@ -1,4 +1,4 @@
-with open('tests/vitest/sales_js_extended.test.js', 'r', encoding='utf-8') as f:
+with open('tests/vitest/sales_js_extended.test.js', encoding='utf-8') as f:
     content = f.read()
 
 old = '''  row.innerHTML = `

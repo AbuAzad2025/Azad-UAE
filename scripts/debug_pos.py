@@ -1,4 +1,4 @@
-f = open('static/js/pos/index.js', 'r', encoding='utf-8')
+f = open('static/js/pos/index.js', encoding='utf-8')
 c = f.read()
 f.close()
 old = 'const res = await fetchJson("/pos/api/categories");'

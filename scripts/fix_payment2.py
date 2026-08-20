@@ -1,7 +1,7 @@
 import sys
 
 path = sys.argv[1]
-with open(path, 'r', encoding='utf-8') as f:
+with open(path, encoding='utf-8') as f:
     s = f.read()
 
 old = '''  it("payment method chips click sets value", async () => {

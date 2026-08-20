@@ -1,6 +1,4 @@
-import re
-
-with open('static/js/sales.js', 'r', encoding='utf-8') as f:
+with open('static/js/sales.js', encoding='utf-8') as f:
     content = f.read()
 
 # Find the closing of initForm and the outer IIFE
