@@ -2,6 +2,7 @@
 
 Outputs a JSON report: scripts/ops/_fa_used.json
 """
+
 import json
 import os
 import re
@@ -13,14 +14,49 @@ CSS_PATH = os.path.join(FA_DIR, "_original", "css", "all.min.css")
 
 # Non-icon utility classes to exclude
 EXCLUDE_EXACT = {
-    "fa", "fas", "far", "fal", "fad", "fab", "fa-brands", "fa-regular",
-    "fa-solid", "fa-light", "fa-duotone", "fa-thin", "fa-sharp", "fa-classic",
-    "fa-fw", "fa-ul", "fa-li", "fa-border", "fa-spin", "fa-pulse",
-    "fa-inverse", "fa-sr-only", "fa-stack", "fa-stack-1x", "fa-stack-2x",
-    "fa-pull-left", "fa-pull-right", "fa-rotate-90", "fa-rotate-180",
-    "fa-rotate-270", "fa-rotate-by", "fa-flip-horizontal", "fa-flip-vertical",
-    "fa-flip-both", "fa-beat", "fa-fade", "fa-beat-fade", "fa-bounce",
-    "fa-flip", "fa-shake", "fa-spin-pulse", "fa-spin-reverse", "fa-swap-opacity",
+    "fa",
+    "fas",
+    "far",
+    "fal",
+    "fad",
+    "fab",
+    "fa-brands",
+    "fa-regular",
+    "fa-solid",
+    "fa-light",
+    "fa-duotone",
+    "fa-thin",
+    "fa-sharp",
+    "fa-classic",
+    "fa-fw",
+    "fa-ul",
+    "fa-li",
+    "fa-border",
+    "fa-spin",
+    "fa-pulse",
+    "fa-inverse",
+    "fa-sr-only",
+    "fa-stack",
+    "fa-stack-1x",
+    "fa-stack-2x",
+    "fa-pull-left",
+    "fa-pull-right",
+    "fa-rotate-90",
+    "fa-rotate-180",
+    "fa-rotate-270",
+    "fa-rotate-by",
+    "fa-flip-horizontal",
+    "fa-flip-vertical",
+    "fa-flip-both",
+    "fa-beat",
+    "fa-fade",
+    "fa-beat-fade",
+    "fa-bounce",
+    "fa-flip",
+    "fa-shake",
+    "fa-spin-pulse",
+    "fa-spin-reverse",
+    "fa-swap-opacity",
 }
 EXCLUDE_RE = re.compile(
     r"^fa-(\d+x|xs|sm|lg|xl|2xl|pull-|rotate-|flip-|stack|border|spin|pulse|"
@@ -43,9 +79,20 @@ SCAN_GLOBS = [
     ("static/adminlte", (".css", ".js")),
 ]
 
-SKIP_DIRS = {"node_modules", ".venv", "__pycache__", ".git", "_original",
-             "webfonts", "fonts", ".pytest_cache", "coverage-frontend",
-             "fontawesome", "fontawesome-free", "bootstrap-icons"}
+SKIP_DIRS = {
+    "node_modules",
+    ".venv",
+    "__pycache__",
+    ".git",
+    "_original",
+    "webfonts",
+    "fonts",
+    ".pytest_cache",
+    "coverage-frontend",
+    "fontawesome",
+    "fontawesome-free",
+    "bootstrap-icons",
+}
 
 
 def parse_defined_icons(css_text):

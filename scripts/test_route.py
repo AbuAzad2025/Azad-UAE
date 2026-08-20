@@ -18,18 +18,18 @@ def main():
     db.init_app(app)
 
     babel = Babel()
-    babel.init_app(app, locale_selector=lambda: 'ar')
+    babel.init_app(app, locale_selector=lambda: "ar")
     app.register_blueprint(reports_bp)
 
     with app.test_request_context():
         for rule in app.url_map.iter_rules():
-            if 'inventory' in rule.rule:
-                print(f'  {rule.endpoint}: {rule.rule}')
+            if "inventory" in rule.rule:
+                print(f"  {rule.endpoint}: {rule.rule}")
 
     client = app.test_client()
-    resp = client.get('/reports/inventory-reconciliation/export?format=csv&warehouse_id=1&branch_id=1')
-    print(f'Status: {resp.status_code}')
-    print(f'Response: {resp.data[:200]}')
+    resp = client.get("/reports/inventory-reconciliation/export?format=csv&warehouse_id=1&branch_id=1")
+    print(f"Status: {resp.status_code}")
+    print(f"Response: {resp.data[:200]}")
 
 
 if __name__ == "__main__":

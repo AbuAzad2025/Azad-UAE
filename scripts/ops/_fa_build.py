@@ -4,6 +4,7 @@ Inputs:  scripts/ops/_fa_used.json (from _fa_scan.py)
 Outputs: overwrites static/adminlte/plugins/fontawesome/webfonts/* and css/all.min.css
          (originals already backed up in _original/)
 """
+
 import json
 import os
 import re
@@ -19,10 +20,18 @@ OUT_FONTS = os.path.join(FA_DIR, "webfonts")
 # Extra icons: resolved from dynamic Jinja (fa-chevron-{{...}}) and a safety
 # set for the free-text StorePaymentMethod.icon DB field (payment/brand icons).
 EXTRA_ICONS = [
-    "fa-chevron-left", "fa-chevron-right",
-    "fa-cc-amex", "fa-cc-paypal", "fa-cc-stripe", "fa-cc-apple-pay",
-    "fa-apple-pay", "fa-google-pay", "fa-money-bill-transfer",
-    "fa-building-columns", "fa-mobile-screen", "fa-bank",
+    "fa-chevron-left",
+    "fa-chevron-right",
+    "fa-cc-amex",
+    "fa-cc-paypal",
+    "fa-cc-stripe",
+    "fa-cc-apple-pay",
+    "fa-apple-pay",
+    "fa-google-pay",
+    "fa-money-bill-transfer",
+    "fa-building-columns",
+    "fa-mobile-screen",
+    "fa-bank",
 ]
 
 FAMILIES = {
@@ -31,9 +40,7 @@ FAMILIES = {
     "fa-brands-400": ["fa-brands-400.ttf", "fa-brands-400.woff2"],
 }
 
-ICON_BLOCK_RE = re.compile(
-    r"((?:\.fa-[a-z0-9-]+:before\s*,?\s*)+)\{\s*content:\s*\"\\[0-9a-f]{2,4}\";\s*\}"
-)
+ICON_BLOCK_RE = re.compile(r"((?:\.fa-[a-z0-9-]+:before\s*,?\s*)+)\{\s*content:\s*\"\\[0-9a-f]{2,4}\";\s*\}")
 SEL_RE = re.compile(r"\.(fa-[a-z0-9-]+):before")
 CONTENT_RE = re.compile(r'content:\s*"\\([0-9a-f]{2,4})"')
 
@@ -79,10 +86,7 @@ def main():
         family_cps[fam] = cps
         print(f"{fam}: {len(cps)} codepoints")
 
-    uncovered = [
-        cp for cp in codepoints
-        if not any(cp in family_cps[f] for f in FAMILIES)
-    ]
+    uncovered = [cp for cp in codepoints if not any(cp in family_cps[f] for f in FAMILIES)]
     if uncovered:
         names = [n for n in keep if defined[n] in uncovered]
         print(f"WARNING codepoints not in any free font cmap: {uncovered} ({names})")
@@ -147,9 +151,7 @@ def main():
     # --- verification ---
     errors = []
     if new_css.count("{") != new_css.count("}"):
-        errors.append(
-            f"brace imbalance: {{={new_css.count('{')} }}={new_css.count('}')}"
-        )
+        errors.append(f"brace imbalance: {{={new_css.count('{')} }}={new_css.count('}')}")
     new_defined = set(re.findall(r"\.(fa-[a-z0-9-]+):before", new_css))
     missing_icons = [n for n in keep if n not in new_defined]
     if missing_icons:
@@ -172,8 +174,7 @@ def main():
         for e in errors:
             print(" -", e)
         sys.exit(1)
-    print("VERIFICATION OK: css braces balanced, all kept icons present, "
-          "all codepoints present in subset fonts.")
+    print("VERIFICATION OK: css braces balanced, all kept icons present, all codepoints present in subset fonts.")
 
 
 if __name__ == "__main__":

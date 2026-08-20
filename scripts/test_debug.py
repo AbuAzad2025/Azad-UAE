@@ -1,4 +1,5 @@
 """Debug test to understand mock behavior."""
+
 from unittest.mock import MagicMock
 
 from app.factory import create_app
@@ -17,16 +18,18 @@ print(f"After mocker.patch.object: LoggingCore.log_error = {LoggingCore.log_erro
 
 # Create app and trigger handler
 app = create_app()
-app.config['TESTING'] = True
-app.config['DEBUG'] = False
+app.config["TESTING"] = True
+app.config["DEBUG"] = False
 
-@app.route('/trigger-402')
+
+@app.route("/trigger-402")
 def trigger_402():
-    raise PaymentRequired('Test 402')
+    raise PaymentRequired("Test 402")
+
 
 with app.test_client() as client:
-    response = client.get('/trigger-402')
-    print(f'Status: {response.status_code}')
+    response = client.get("/trigger-402")
+    print(f"Status: {response.status_code}")
 
 print(f"Mock called: {mock_log.called}")
 print(f"Mock call count: {mock_log.call_count}")

@@ -5,6 +5,7 @@ styles only apply on the grid POS page (body carries the pos-page--grid class).
 @media wrappers are kept structurally intact; only inner selectors are scoped.
 Purgecss ignore markers are left in place around the same rule ranges.
 """
+
 import re
 
 SCOPE = ".pos-page--grid"
@@ -14,11 +15,7 @@ def scope_v2(text: str) -> str:
     out = []
     for line in text.split("\r\n"):
         stripped = line.strip()
-        if (
-            stripped.endswith("{")
-            and not stripped.startswith("@")
-            and not stripped.startswith("/*")
-        ):
+        if stripped.endswith("{") and not stripped.startswith("@") and not stripped.startswith("/*"):
             indent = line[: len(line) - len(line.lstrip())]
             selectors = [s.strip() for s in stripped[:-1].split(",")]
             scoped = ", ".join(f"{SCOPE} {s}" for s in selectors if s)

@@ -1,4 +1,4 @@
-with open('tests/vitest/pos_index.test.js', encoding='utf-8') as f:
+with open("tests/vitest/pos_index.test.js", encoding="utf-8") as f:
     content = f.read()
 
 # Fix 1: Move exchangeRate from select to input
@@ -11,7 +11,7 @@ new_input = 'for (const id of ["taxRate", "shippingCost", "discountAmount", "pai
 content = content.replace(old_input, new_input)
 
 # Fix 2: Make mockFetch merge handlers
-old_mock = '''function mockFetch(map) {
+old_mock = """function mockFetch(map) {
   const spy = vi.fn((url) => {
     const handler = map[url] || map[url.split("?")[0]];
     if (handler) return handler(url);
@@ -20,8 +20,8 @@ old_mock = '''function mockFetch(map) {
     globalThis.fetch = spy; window.fetch = spy; console.log("FETCH_SET", typeof globalThis.fetch);
   
   return spy;
-}'''
-new_mock = '''function mockFetch(map) {
+}"""
+new_mock = """function mockFetch(map) {
   const existing = globalThis.fetch?._map || {};
   const merged = { ...existing, ...map };
   const spy = vi.fn((url) => {
@@ -32,10 +32,10 @@ new_mock = '''function mockFetch(map) {
   spy._map = merged;
   globalThis.fetch = spy; window.fetch = spy;
   return spy;
-}'''
+}"""
 content = content.replace(old_mock, new_mock)
 
-with open('tests/vitest/pos_index.test.js', 'w', encoding='utf-8') as f:
+with open("tests/vitest/pos_index.test.js", "w", encoding="utf-8") as f:
     f.write(content)
 
 print("Fixed test file")

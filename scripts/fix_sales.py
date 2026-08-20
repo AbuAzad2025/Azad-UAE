@@ -1,4 +1,4 @@
-with open('static/js/sales.js', encoding='utf-8') as f:
+with open("static/js/sales.js", encoding="utf-8") as f:
     content = f.read()
 
 # Find the closing of initForm and the outer IIFE
@@ -44,7 +44,7 @@ if old not in content:
 
 content = content.replace(old, new)
 
-with open('static/js/sales.js', 'w', encoding='utf-8') as f:
+with open("static/js/sales.js", "w", encoding="utf-8") as f:
     f.write(content)
 
 print("Done")

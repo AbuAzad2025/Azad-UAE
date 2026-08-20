@@ -1,4 +1,5 @@
 """Parse pos-theme.css and pos_v2.css for top-level selectors and report conflicts."""
+
 import re
 import sys
 
@@ -141,12 +142,8 @@ def main():
     identical = []
     for sel in sorted(shared):
         # compare across ALL contexts where the selector appears
-        theme_bodies = sorted(
-            {b for (ctx, s), bodies in theme.items() if s == sel for b in bodies}
-        )
-        v2_bodies = sorted(
-            {b for (ctx, s), bodies in v2.items() if s == sel for b in bodies}
-        )
+        theme_bodies = sorted({b for (ctx, s), bodies in theme.items() if s == sel for b in bodies})
+        v2_bodies = sorted({b for (ctx, s), bodies in v2.items() if s == sel for b in bodies})
         if theme_bodies == v2_bodies:
             identical.append(sel)
         else:
@@ -169,7 +166,11 @@ def main():
                 print(f"    {line}")
 
     # brace balance sanity
-    for path in ("static/css/_archive/pos-theme.css", "static/css/_archive/pos_v2.css", "static/css/_archive/pos-layout.css"):
+    for path in (
+        "static/css/_archive/pos-theme.css",
+        "static/css/_archive/pos_v2.css",
+        "static/css/_archive/pos-layout.css",
+    ):
         raw = strip_comments(open(path, encoding="utf-8").read())
         print(f"\n{path}: open={raw.count('{')} close={raw.count('}')}")
 

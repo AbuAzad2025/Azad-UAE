@@ -1,4 +1,4 @@
-with open('static/js/app.js', encoding='utf-8') as f:
+with open("static/js/app.js", encoding="utf-8") as f:
     content = f.read()
 
 old = """// Systemic safety net: any async failure a caller forgot to catch becomes
@@ -59,7 +59,7 @@ if old not in content:
 
 content = content.replace(old, new)
 
-with open('static/js/app.js', 'w', encoding='utf-8') as f:
+with open("static/js/app.js", "w", encoding="utf-8") as f:
     f.write(content)
 
 print("Done")
