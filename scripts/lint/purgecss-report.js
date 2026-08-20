@@ -10,7 +10,7 @@ const fs = require("fs");
 const path = require("path");
 const { PurgeCSS } = require("purgecss");
 
-const config = require("../../purgecss.config.js");
+const config = require("../purgecss.config.js");
 const OUT_DIR = path.resolve(__dirname, "../../coverage-frontend/purgecss");
 
 async function main() {

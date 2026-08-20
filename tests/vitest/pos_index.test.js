@@ -154,7 +154,7 @@ afterEach(async () => {
 
 async function loadModule() {
   delete window._posFmt;
-  await import(MOD_PATH + String.fromCharCode(63) + Date.now());
+  await import(MOD_PATH);
   await new Promise((r) => setTimeout(r, 50));
 }
 
@@ -169,7 +169,7 @@ describe("module load", () => {
   await import(MOD_PATH + "?" + Date.now());
   await new Promise((r) => setTimeout(r, 50));
 }
-  await import(MOD_PATH + String.fromCharCode(63) + Date.now());
+  await import(MOD_PATH);
   await new Promise((r) => setTimeout(r, 50));
 }
 
