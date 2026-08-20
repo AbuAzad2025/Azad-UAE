@@ -7,7 +7,6 @@ Outputs: overwrites static/adminlte/plugins/fontawesome/webfonts/* and css/all.m
 import json
 import os
 import re
-import subprocess
 import sys
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -16,7 +15,6 @@ ORIG_CSS = os.path.join(FA_DIR, "_original", "css", "all.min.css")
 ORIG_FONTS = os.path.join(FA_DIR, "_original", "webfonts")
 OUT_CSS = os.path.join(FA_DIR, "css", "all.min.css")
 OUT_FONTS = os.path.join(FA_DIR, "webfonts")
-PYFTSUBSET = os.path.join(ROOT, ".venv", "Scripts", "pyftsubset.exe")
 
 # Extra icons: resolved from dynamic Jinja (fa-chevron-{{...}}) and a safety
 # set for the free-text StorePaymentMethod.icon DB field (payment/brand icons).
@@ -76,7 +74,6 @@ def main():
         cmap = font.getBestCmap()
         font.close()
         cps = [cp for cp in codepoints if int(cp, 16) in cmap]
-        missing = [cp for cp in codepoints if int(cp, 16) not in cmap]
         family_cps[fam] = cps
         print(f"{fam}: {len(cps)} codepoints")
 
@@ -98,8 +95,13 @@ def main():
         src = os.path.join(ORIG_FONTS, files[0])
         for out_name in files:
             out_path = os.path.join(OUT_FONTS, out_name)
-            cmd = [
-                PYFTSUBSET, src,
+            # In-process equivalent of pyftsubset (fontTools.subset CLI) —
+            # avoids spawning a subprocess (repo policy: subprocess only via
+            # utils/secure_subprocess.py).
+            from fontTools import subset as ft_subset
+
+            argv = [
+                src,
                 f"--output-file={out_path}",
                 f"--unicodes={unicodes}",
                 "--layout-features=*",
@@ -107,8 +109,12 @@ def main():
                 "--recommended-glyphs",
             ]
             if out_name.endswith(".woff2"):
-                cmd.append("--flavor=woff2")
-            subprocess.run(cmd, check=True, capture_output=True)
+                argv.append("--flavor=woff2")
+            # fontTools.subset.main returns None on success and raises on
+            # failure — verify via the output file instead of a return code.
+            ft_subset.main(argv)
+            if not os.path.exists(out_path):
+                raise RuntimeError(f"fontTools subset produced no output for {out_name}")
             print(f"wrote {out_name} ({os.path.getsize(out_path)} bytes)")
 
     # --- regenerate css: keep everything except unused icon rules ---
