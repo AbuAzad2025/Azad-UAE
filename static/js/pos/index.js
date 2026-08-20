@@ -1046,9 +1046,11 @@
 	const loadCategories = async () => {
 		const box = qs("#posCategories");
 		if (!box) return;
-		const res = await fetchJson("/pos/api/categories"); console.log("LC res", res);
+		const res = await fetchJson("/pos/api/categories");
+		console.log("LC res", res);
 		if (!res.ok) return;
-		const cats = res.data; console.log("LC cats", cats, typeof cats, Array.isArray(cats));
+		const cats = res.data;
+		console.log("LC cats", cats, typeof cats, Array.isArray(cats));
 		if (!cats) return;
 		let html = '<div class="pos-cat active" data-cat="">الكل</div>';
 		cats.forEach((c) => {
@@ -1376,7 +1378,7 @@
 	$("#posDoneModal").on("hidden.bs.modal", () => {
 		qs("#productSearch").focus();
 	});
-		loadOrderTypes();
+	loadOrderTypes();
 	void loadSession();
 
 	// Test exports
@@ -1423,5 +1425,5 @@
 	window._posRenderUpsellMessages = renderUpsellMessages;
 	window._posToggleTableField = toggleTableField;
 	window._posLoadTableOptions = loadTableOptions;
-					window._posSyncPay = syncPay;
+	window._posSyncPay = syncPay;
 })();

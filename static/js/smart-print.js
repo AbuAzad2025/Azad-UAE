@@ -608,7 +608,7 @@
 		},
 	};
 
-window.SmartPrint = SmartPrint;
+	window.SmartPrint = SmartPrint;
 	// Expose internals for test coverage
 	SmartPrint._buildRowsSelector = buildRowsSelector;
 	SmartPrint._updateInputStates = updateInputStates;
