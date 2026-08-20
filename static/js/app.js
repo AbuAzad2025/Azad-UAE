@@ -781,4 +781,10 @@
 			});
 		}
 	});
+
+	// Expose key functions for testability
+	window.showNotification = showNotification;
+	window.showSystemAlert = showSystemAlert;
+	window.saveFormData = saveFormData;
+	window.performSearch = performSearch;
 })(jQuery);

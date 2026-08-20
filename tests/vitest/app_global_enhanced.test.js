@@ -125,7 +125,15 @@ function createJQueryMock() {
     if (typeof sel === 'function') return api([]).ready(sel);
     if (sel && sel.nodeType) return api([sel]);
     if (sel && sel[0] && sel[0].nodeType) return sel;
-    if (typeof sel === 'string') return api(Array.from(document.querySelectorAll(sel)));
+    if (typeof sel === 'string') {
+      const trimmed = sel.trim();
+      if (trimmed.startsWith('<') && trimmed.endsWith('>')) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = trimmed;
+        return api(Array.from(tmp.children));
+      }
+      return api(Array.from(document.querySelectorAll(sel)));
+    }
     return api([]);
   };
 
@@ -748,5 +756,54 @@ describe('app.js – enhanced coverage', () => {
   it('installBootstrapFacade skips when $.fn.modal is not available', async () => {
     await import('../../static/js/app.js');
     expect(window.bootstrap).toBeDefined();
+  });
+
+  it('showNotification creates container and appends alert', async () => {
+    await import('../../static/js/app.js');
+    window.showNotification('Title', 'Message body', 'success');
+    const container = document.getElementById('notification-container');
+    expect(container).toBeTruthy();
+    expect(container.querySelector('.alert-success')).toBeTruthy();
+    expect(container.textContent).toContain('Title');
+    expect(container.textContent).toContain('Message body');
+  });
+
+  it('showNotification creates container on left for info type', async () => {
+    await import('../../static/js/app.js');
+    window.showNotification('Info', 'Info msg', 'info');
+    const container = document.getElementById('notification-container');
+    expect(container.querySelector('.alert-info')).toBeTruthy();
+  });
+
+  it('showNotification appends multiple toasts to existing container', async () => {
+    await import('../../static/js/app.js');
+    window.showNotification('First', 'msg1', 'warning');
+    window.showNotification('Second', 'msg2', 'error');
+    const container = document.getElementById('notification-container');
+    expect(container.querySelectorAll('.alert').length).toBe(2);
+  });
+
+  it('showSystemAlert creates container and appends alert', async () => {
+    await import('../../static/js/app.js');
+    window.showSystemAlert('Server down', 'critical');
+    const container = document.getElementById('system-alert-container');
+    expect(container).toBeTruthy();
+    expect(container.querySelector('.alert-danger')).toBeTruthy();
+    expect(container.textContent).toContain('Server down');
+  });
+
+  it('showSystemAlert uses warning as default severity', async () => {
+    await import('../../static/js/app.js');
+    window.showSystemAlert('Default warning');
+    const container = document.getElementById('system-alert-container');
+    expect(container.querySelector('.alert-warning')).toBeTruthy();
+  });
+
+  it('showSystemAlert appends multiple alerts to existing container', async () => {
+    await import('../../static/js/app.js');
+    window.showSystemAlert('Alert 1', 'info');
+    window.showSystemAlert('Alert 2', 'warning');
+    const container = document.getElementById('system-alert-container');
+    expect(container.querySelectorAll('.alert').length).toBe(2);
   });
 });

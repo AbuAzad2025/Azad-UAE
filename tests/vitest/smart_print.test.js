@@ -324,4 +324,477 @@ describe('smart-print.js', () => {
     $('#smartPrintModalConfirm').trigger('click');
     expect(SmartPrint).toBeDefined();
   });
+
+  describe('_buildRowsSelector', () => {
+    function makeTableForSelector(applied = [10, 11, 12, 13], current = [10, 11], pageInfo = { page: 0, pages: 2, length: 2, recordsTotal: 4, recordsDisplay: 4 }) {
+      return {
+        rows: vi.fn((mod) => {
+          if (mod?.page === 'current') return { indexes: () => ({ toArray: () => current }) };
+          return { indexes: () => ({ toArray: () => applied }) };
+        }),
+        page: { info: () => pageInfo },
+      };
+    }
+
+    it('mode "all" returns a selector including all applied indexes', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const table = makeTableForSelector();
+      const sel = SmartPrint._buildRowsSelector('all', table, {});
+      expect(typeof sel).toBe('function');
+      expect(sel(10)).toBe(true);
+      expect(sel(13)).toBe(true);
+      expect(sel(99)).toBe(false);
+    });
+
+    it('mode "page" returns a selector for current page indexes', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const table = makeTableForSelector([10, 11, 12, 13], [10, 11]);
+      const sel = SmartPrint._buildRowsSelector('page', table, {});
+      expect(sel(10)).toBe(true);
+      expect(sel(11)).toBe(true);
+      expect(sel(12)).toBe(false);
+    });
+
+    it('mode "page" shows error when no current page rows', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const table = makeTableForSelector([10, 11, 12, 13], []);
+      const sel = SmartPrint._buildRowsSelector('page', table, {});
+      expect(sel).toBeNull();
+    });
+
+    it('mode "rows" returns selector for valid range', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const table = makeTableForSelector();
+      const sel = SmartPrint._buildRowsSelector('rows', table, { rowStart: '2', rowEnd: '3' });
+      expect(sel(10)).toBe(false);
+      expect(sel(11)).toBe(true);
+      expect(sel(12)).toBe(true);
+      expect(sel(13)).toBe(false);
+    });
+
+    it('mode "rows" defaults end to start when omitted', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const table = makeTableForSelector();
+      const sel = SmartPrint._buildRowsSelector('rows', table, { rowStart: '2' });
+      expect(sel(11)).toBe(true);
+      expect(sel(10)).toBe(false);
+      expect(sel(12)).toBe(false);
+    });
+
+    it('mode "rows" shows error for invalid start', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const table = makeTableForSelector();
+      expect(SmartPrint._buildRowsSelector('rows', table, { rowStart: '' })).toBeNull();
+      expect(SmartPrint._buildRowsSelector('rows', table, { rowStart: '0' })).toBeNull();
+      expect(SmartPrint._buildRowsSelector('rows', table, { rowStart: '-1' })).toBeNull();
+    });
+
+    it('mode "rows" shows error when end < start', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const table = makeTableForSelector();
+      expect(SmartPrint._buildRowsSelector('rows', table, { rowStart: '3', rowEnd: '1' })).toBeNull();
+    });
+
+    it('mode "rows" shows error when start exceeds total', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const table = makeTableForSelector();
+      expect(SmartPrint._buildRowsSelector('rows', table, { rowStart: '10' })).toBeNull();
+    });
+
+    it('mode "pages" returns selector for valid page range', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const table = makeTableForSelector([10, 11, 12, 13], [10, 11], { page: 0, pages: 2, length: 2, recordsTotal: 4, recordsDisplay: 4 });
+      const sel = SmartPrint._buildRowsSelector('pages', table, { pageStart: '1', pageEnd: '2' });
+      expect(sel(10)).toBe(true);
+      expect(sel(11)).toBe(true);
+      expect(sel(12)).toBe(true);
+      expect(sel(13)).toBe(true);
+    });
+
+    it('mode "pages" defaults end to start when omitted', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const table = makeTableForSelector([10, 11, 12, 13], [10, 11], { page: 0, pages: 2, length: 2, recordsTotal: 4, recordsDisplay: 4 });
+      const sel = SmartPrint._buildRowsSelector('pages', table, { pageStart: '2' });
+      expect(sel(10)).toBe(false);
+      expect(sel(11)).toBe(false);
+      expect(sel(12)).toBe(true);
+      expect(sel(13)).toBe(true);
+    });
+
+    it('mode "pages" shows error when totalPages <= 1', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const table = makeTableForSelector([10, 11, 12, 13], [10, 11, 12, 13], { page: 0, pages: 1, length: -1, recordsTotal: 4, recordsDisplay: 4 });
+      expect(SmartPrint._buildRowsSelector('pages', table, { pageStart: '1' })).toBeNull();
+    });
+
+    it('mode "pages" shows error for invalid start', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const table = makeTableForSelector([10, 11, 12, 13], [10, 11], { page: 0, pages: 2, length: 2, recordsTotal: 4, recordsDisplay: 4 });
+      expect(SmartPrint._buildRowsSelector('pages', table, { pageStart: '' })).toBeNull();
+      expect(SmartPrint._buildRowsSelector('pages', table, { pageStart: '0' })).toBeNull();
+    });
+
+    it('mode "pages" shows error when end < start', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const table = makeTableForSelector([10, 11, 12, 13], [10, 11], { page: 0, pages: 2, length: 2, recordsTotal: 4, recordsDisplay: 4 });
+      expect(SmartPrint._buildRowsSelector('pages', table, { pageStart: '2', pageEnd: '1' })).toBeNull();
+    });
+
+    it('mode "pages" shows error when startPage > totalPages', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const table = makeTableForSelector([10, 11, 12, 13], [10, 11], { page: 0, pages: 2, length: 2, recordsTotal: 4, recordsDisplay: 4 });
+      expect(SmartPrint._buildRowsSelector('pages', table, { pageStart: '5' })).toBeNull();
+    });
+
+    it('returns null when no applied indexes', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const table = makeTableForSelector([]);
+      expect(SmartPrint._buildRowsSelector('all', table, {})).toBeNull();
+    });
+
+    it('returns null for unknown mode', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const table = makeTableForSelector();
+      expect(SmartPrint._buildRowsSelector('bogus', table, {})).toBeNull();
+    });
+  });
+
+  describe('_updateInputStates', () => {
+    it('disables all inputs for mode "all"', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      SmartPrint._updateInputStates('all');
+      expect($('#smartPrintRowStart, #smartPrintRowEnd').prop('disabled')).toBe(true);
+      expect($('#smartPrintPageStart, #smartPrintPageEnd').prop('disabled')).toBe(true);
+    });
+
+    it('enables row inputs for mode "rows"', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      SmartPrint._updateInputStates('rows');
+      expect($('#smartPrintRowStart, #smartPrintRowEnd').prop('disabled')).toBe(false);
+      expect($('#smartPrintPageStart, #smartPrintPageEnd').prop('disabled')).toBe(true);
+    });
+
+    it('enables page inputs for mode "pages"', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      SmartPrint._updateInputStates('pages');
+      expect($('#smartPrintRowStart, #smartPrintRowEnd').prop('disabled')).toBe(true);
+      expect($('#smartPrintPageStart, #smartPrintPageEnd').prop('disabled')).toBe(false);
+    });
+  });
+
+  describe('_resetModal', () => {
+    it('resets radio to all and clears inputs', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      $('input[name="smartPrintRange"]').prop('checked', false);
+      $('#smartPrintRowStart, #smartPrintRowEnd, #smartPrintPageStart, #smartPrintPageEnd').val('5');
+      SmartPrint._resetModal();
+      expect($('#smartPrintAll').prop('checked')).toBe(true);
+      expect($('#smartPrintRowStart, #smartPrintRowEnd, #smartPrintPageStart, #smartPrintPageEnd').val()).toBe('');
+    });
+  });
+    it('disables all inputs for mode "all"', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      SmartPrint._updateInputStates('all');
+      expect($('#smartPrintRowStart').prop('disabled')).toBe(true);
+      expect($('#smartPrintPageStart').prop('disabled')).toBe(true);
+    });
+
+    it('enables row inputs for mode "rows"', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      SmartPrint._updateInputStates('rows');
+      expect($('#smartPrintRowStart').prop('disabled')).toBe(false);
+      expect($('#smartPrintPageStart').prop('disabled')).toBe(true);
+    });
+
+    it('enables page inputs for mode "pages"', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      SmartPrint._updateInputStates('pages');
+      expect($('#smartPrintRowStart').prop('disabled')).toBe(true);
+      expect($('#smartPrintPageStart').prop('disabled')).toBe(false);
+    });
+  });
+
+  describe('_resetModal', () => {
+    it('resets radio to all and clears inputs', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      $('input[name="smartPrintRange"]').prop('checked', false);
+      $('#smartPrintRowStart').val('5');
+      SmartPrint._resetModal();
+      expect($('#smartPrintAll').prop('checked')).toBe(true);
+      expect($('#smartPrintRowStart').val()).toBe('');
+    });
+  });
+
+  describe('_applyPrintStyles', () => {
+    function makeWinJQuery(doc) {
+      const wrap = (el) => ({
+        length: el ? 1 : 0,
+        css: (k, v) => { if (el) el.style[k] = v; return wrap(el); },
+        find: (s) => wrap(el ? el.querySelector(s) : null),
+        first: () => wrap(el),
+        remove: () => { if (el && el.parentNode) el.parentNode.removeChild(el); return wrap(el); },
+        prepend: (html) => { if (el) el.insertAdjacentHTML('afterbegin', html); return wrap(el); },
+        removeClass: (c) => { if (el) el.classList.remove(...c.split(' ')); return wrap(el); },
+        addClass: (c) => { if (el) el.classList.add(...c.split(' ')); return wrap(el); },
+      });
+      return (sel) => wrap(typeof sel === 'string' ? doc.querySelector(sel) : sel);
+    }
+
+    it('injects styles and title into print window', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const doc = document.implementation.createHTMLDocument('print');
+      doc.body.innerHTML = '<table><tr><td>test</td></tr></table>';
+      const win = { document: doc, jQuery: makeWinJQuery(doc) };
+      SmartPrint._applyPrintStyles(win, { title: 'كشف', headerColor: '#28a745', wide: false });
+      expect(doc.querySelector('style')).toBeTruthy();
+      expect(doc.querySelector('h1.print-title')?.textContent).toBe('كشف');
+      expect(doc.querySelector('.print-meta')?.textContent).toBe('Azad ERP System');
+    });
+
+    it('works without jQuery in window', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const doc = document.implementation.createHTMLDocument('print');
+      const win = { document: doc };
+      delete window.jQuery;
+      SmartPrint._applyPrintStyles(win, { title: '', wide: true });
+      expect(doc.querySelector('style')).toBeTruthy();
+    });
+
+    it('skips title when empty', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const doc = document.implementation.createHTMLDocument('print');
+      doc.body.innerHTML = '<table><tr><td>test</td></tr></table>';
+      const win = { document: doc, jQuery: makeWinJQuery(doc) };
+      SmartPrint._applyPrintStyles(win, { title: '', wide: true });
+      expect(doc.querySelector('h1.print-title')).toBeFalsy();
+    });
+  });
+
+  describe('_fallbackPrint', () => {
+    it('extracts data via buttons exportData when available', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const printWin = {
+        document: { write: vi.fn(), close: vi.fn() },
+        focus: vi.fn(), print: vi.fn(), close: vi.fn(),
+      };
+      window.open = vi.fn(() => printWin);
+      const buttonsFn = vi.fn(() => ({}));
+      buttonsFn.exportData = vi.fn(() => ({ header: ['H'], body: [['B']], footer: ['F'] }));
+      buttonsFn.exportInfo = vi.fn(() => ({ title: 'T', messageTop: 'MT', messageBottom: 'MB' }));
+      const dt = { buttons: buttonsFn };
+      SmartPrint._fallbackPrint(dt, { header: true, footer: true, smartPrintOptions: {} });
+      const writes = printWin.document.write.mock.calls.map(c => c[0]).join('');
+      expect(writes).toContain('H');
+      expect(writes).toContain('B');
+      expect(writes).toContain('F');
+      expect(writes).toContain('MT');
+      expect(writes).toContain('MB');
+    });
+
+    it('extracts data from DOM when buttons extension is missing', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const printWin = {
+        document: { write: vi.fn(), close: vi.fn() },
+        focus: vi.fn(), print: vi.fn(), close: vi.fn(),
+      };
+      window.open = vi.fn(() => printWin);
+      const realTable = document.createElement('table');
+      const thead = document.createElement('thead');
+      const tr = document.createElement('tr');
+      const th = document.createElement('th');
+      th.textContent = 'العنوان';
+      tr.appendChild(th);
+      thead.appendChild(tr);
+      realTable.appendChild(thead);
+      const tbody = document.createElement('tbody');
+      const trow = document.createElement('tr');
+      const td = document.createElement('td');
+      td.textContent = 'القيمة';
+      trow.appendChild(td);
+      tbody.appendChild(trow);
+      realTable.appendChild(tbody);
+      document.body.appendChild(realTable);
+      const dt = {
+        table: () => ({ header: () => thead, footer: () => document.createElement('tfoot') }),
+        rows: () => ({ nodes: () => [trow], data: () => [], length: 1 }),
+      };
+      SmartPrint._fallbackPrint(dt, { header: true, footer: false, smartPrintOptions: {}, title: 'تقرير' });
+      const writes = printWin.document.write.mock.calls.map(c => c[0]).join('');
+      expect(writes).toContain('العنوان');
+      expect(writes).toContain('القيمة');
+      realTable.remove();
+    });
+
+    it('extracts raw data when nodes are empty', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const printWin = {
+        document: { write: vi.fn(), close: vi.fn() },
+        focus: vi.fn(), print: vi.fn(), close: vi.fn(),
+      };
+      window.open = vi.fn(() => printWin);
+      const thead = document.createElement('thead');
+      const dt = {
+        table: () => ({ header: () => thead, footer: () => document.createElement('tfoot') }),
+        rows: () => ({ nodes: () => [], data: () => [['مباشر']], length: 1 }),
+      };
+      SmartPrint._fallbackPrint(dt, { header: false, footer: false, smartPrintOptions: {} });
+      const writes = printWin.document.write.mock.calls.map(c => c[0]).join('');
+      expect(writes).toContain('مباشر');
+    });
+
+    it('extracts object raw data with Object.values', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const printWin = {
+        document: { write: vi.fn(), close: vi.fn() },
+        focus: vi.fn(), print: vi.fn(), close: vi.fn(),
+      };
+      window.open = vi.fn(() => printWin);
+      const dt = {
+        table: () => ({ header: () => document.createElement('thead'), footer: () => document.createElement('tfoot') }),
+        rows: () => ({ nodes: () => [], data: () => [{ a: 'x', b: 'y' }], length: 1 }),
+      };
+      SmartPrint._fallbackPrint(dt, { header: false, footer: false, smartPrintOptions: {} });
+      const writes = printWin.document.write.mock.calls.map(c => c[0]).join('');
+      expect(writes).toContain('x');
+      expect(writes).toContain('y');
+    });
+
+    it('shows alert when popup is blocked', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      window.open = vi.fn(() => null);
+      global.alert = vi.fn();
+      const buttonsFn = vi.fn(() => ({}));
+      buttonsFn.exportData = vi.fn(() => ({ header: [], body: [], footer: [] }));
+      buttonsFn.exportInfo = vi.fn(() => ({}));
+      const dt = { buttons: buttonsFn };
+      SmartPrint._fallbackPrint(dt, { smartPrintOptions: {} });
+      expect(global.alert).toHaveBeenCalledWith(expect.stringContaining('النوافذ المنبثقة'));
+    });
+  });
+
+  describe('attachTrigger', () => {
+    it('binds click and calls trigger on click', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const { table, btnNode } = makeTable();
+      $(btnNode).data('smartPrintConfig', { smartPrintOptions: { title: 'X' } });
+      const triggerSpy = vi.spyOn(SmartPrint, 'trigger').mockImplementation(() => {});
+      SmartPrint.attachTrigger(table, btnNode);
+      $(btnNode).trigger('click.smartPrint');
+      expect(triggerSpy).toHaveBeenCalledWith(table, undefined);
+      triggerSpy.mockRestore();
+    });
+
+    it('returns early for same selector', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const { table, btnNode } = makeTable();
+      SmartPrint.attachTrigger(table, btnNode);
+      const triggerSpy = vi.spyOn(SmartPrint, 'trigger').mockImplementation(() => {});
+      SmartPrint.attachTrigger(table, btnNode);
+      $(btnNode).trigger('click.smartPrint');
+      expect(triggerSpy).toHaveBeenCalledTimes(1);
+      triggerSpy.mockRestore();
+    });
+  });
+
+  describe('trigger fallback button finding', () => {
+    it('falls back to last button when smart-print-button not found', async () => {
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const btnNode = document.createElement('button');
+      const table = {
+        button: vi.fn((sel) => {
+          if (sel === '.smart-print-button') return { length: 0 };
+          if (sel === 'smart-print:name') return { length: 0 };
+          return { length: 1, node: () => btnNode };
+        }),
+        buttons: vi.fn(() => ({ count: () => 3 })),
+      };
+      $(btnNode).data('smartPrintConfig', { smartPrintOptions: { title: 'fallback' } });
+      SmartPrint.trigger(table);
+      expect($('#smartPrintModal').modal).toHaveBeenCalledWith('show');
+    });
+
+    it('warns when no buttons exist at all', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      $ = makeJQuery();
+      $.fn.dataTable = { Buttons: {}, ext: { buttons: { print: { action: vi.fn() } } } };
+      const SmartPrint = await importSmartPrint($);
+      const table = {
+        button: vi.fn(() => ({ length: 0 })),
+        buttons: vi.fn(() => ({ count: () => 0 })),
+      };
+      SmartPrint.trigger(table);
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('hidden print button'));
+      warn.mockRestore();
+    });
+  });
 });

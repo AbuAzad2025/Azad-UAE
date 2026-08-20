@@ -15,20 +15,22 @@ function buildDom() {
   document.head.appendChild(base);
   const ids = ["cartBody", "cartCount", "kpiSubtotal", "kpiDiscount", "kpiTotal", "kpiCurrency", "productResults", "productLoading", "productSearch", "customerSearch", "customerResults", "customerSelectedHint", "posAlert", "posPinModal", "posPinError", "posPinInput", "upsellBar", "doneSaleNumber", "doneViewBtn", "donePrintBtn", "doneUpsellList", "openSessionModal", "closeSessionModal", "openSessionAlert", "closeSessionAlert", "tableField", "posTablesBtn", "posHoldBtn", "posTableSelected", "posFloors", "posTablesGrid", "posTableClear", "posCategories", "posProductGrid", "posSessionBar", "posSessionRequired", "sessionNumber", "sessionBalance", "sessionTotal", "sessionTime", "splitTenderBox", "splitTenderRows", "splitTenderSum", "closeOpening", "closeCashSales", "closeExpected", "closeExpectedBlock", "posCalc", "posPayMethod", "taxRow"];
   for (const id of ids) { const el = document.createElement("div"); el.id = id; document.body.appendChild(el); }
-  for (const id of ["orderType", "tableSelect", "paymentMethod", "warehouseId", "currency", "exchangeRate"]) { const el = document.createElement("select"); el.id = id; document.body.appendChild(el); }
-  for (const id of ["taxRate", "shippingCost", "discountAmount", "paidAmount", "referenceNumber", "orderNote", "openSessionBalance", "openSessionNotes", "closeSessionBalance", "closeSessionNotes"]) { const el = document.createElement("input"); el.id = id; document.body.appendChild(el); }
+  for (const id of ["orderType", "tableSelect", "paymentMethod", "warehouseId", "currency"]) { const el = document.createElement("select"); el.id = id; document.body.appendChild(el); }
+  for (const id of ["taxRate", "shippingCost", "discountAmount", "paidAmount", "referenceNumber", "orderNote", "openSessionBalance", "openSessionNotes", "closeSessionBalance", "closeSessionNotes", "exchangeRate"]) { const el = document.createElement("input"); el.id = id; document.body.appendChild(el); }
   for (const id of ["checkoutBtn", "checkoutPrintBtn", "clearCustomer", "walkinCustomer", "drawerOpenBtn", "splitTenderAdd", "posPinConfirm", "openSessionBtn", "openSessionConfirm", "closeSessionBtn", "closeSessionConfirm", "clearProductSearch", "cameraScanBtn", "scaleConnectBtn"]) { const el = document.createElement("button"); el.id = id; el.type = "button"; document.body.appendChild(el); }
   const cb = document.createElement("input"); cb.type = "checkbox"; cb.id = "splitTenderToggle"; document.body.appendChild(cb);
 }
 
 function mockFetch(map) {
+  const existing = globalThis.fetch?._map || {};
+  const merged = { ...existing, ...map };
   const spy = vi.fn((url) => {
-    const handler = map[url] || map[url.split("?")[0]];
+    const handler = merged[url] || merged[url.split("?")[0]];
     if (handler) return handler(url);
     return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ success: true }) });
   });
-    globalThis.fetch = spy; window.fetch = spy; console.log("FETCH_SET", typeof globalThis.fetch);
-  
+  spy._map = merged;
+  globalThis.fetch = spy; window.fetch = spy;
   return spy;
 }
 

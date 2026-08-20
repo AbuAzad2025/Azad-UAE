@@ -384,5 +384,15 @@
 		const currency = qs('select[name="currency"]');
 		if (currency) on(currency, "change", recalcDebounced);
 		recalc();
+
+		// Expose key functions for testability
+		window._salesAddLine = addLine;
+		window._salesRemoveLine = removeLine;
+		window._salesRecalc = recalc;
+		window._salesClearRow = clearRow;
+		window._salesRenumberRow = renumberRow;
+		window._salesCurrentMaxIndex = currentMaxIndex;
+		window._salesFetchProductInfo = fetchProductInfo;
+		window._salesUpdateAvailability = updateAvailability;
 	})();
 })();
