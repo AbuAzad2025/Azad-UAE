@@ -62,15 +62,22 @@
   <link rel="preload" href="{{ url_for('static', filename='fonts/tajawal/Tajawal-Bold.woff2') }}" as="font" type="font/woff2" crossorigin>
 
   <!-- Preload Critical CSS -->
+  {% if is_rtl %}
+  <link rel="preload" href="{{ url_for('static', filename='adminlte/plugins/bootstrap/css/bootstrap5.rtl.min.css') }}" as="style">
+  {% else %}
   <link rel="preload" href="{{ url_for('static', filename='adminlte/plugins/bootstrap/css/bootstrap.min.css') }}" as="style">
+  {% endif %}
   <link rel="preload" href="{{ url_for('static', filename='adminlte/css/adminlte.min.css') }}" as="style">
-  <link rel="preload" href="{{ url_for('static', filename='css/erp-theme.css') }}" as="style">
+  <link rel="preload" href="{{ url_for('static', filename='css/erp-theme-unified.css') }}" as="style">
 
   <!-- Stylesheets -->
+  {% if is_rtl %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/bootstrap/css/bootstrap5.rtl.min.css') }}">
+  {% else %}
   <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/bootstrap/css/bootstrap.min.css') }}">
+  {% endif %}
   <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/css/adminlte.min.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme-pro.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme-unified.css') }}">
 
   <!-- Fonts (async load with fallback) -->
   <link rel="stylesheet" href="{{ url_for('static', filename='fonts/tajawal/tajawal.css') }}" media="print" onload="this.media='all'">
