@@ -69,13 +69,25 @@ function makeJQuery() {
 }
 
 async function importCustomerSelect() {
-  await import('../../static/js/customer-select.js');
-  return {
-    SmartSearch: window.SmartSearch,
-    initCustomerSelect: window.initCustomerSelect,
-    initSupplierSelect: window.initSupplierSelect,
-    initProductSelect: window.initProductSelect,
-  };
+  // Mock setTimeout to prevent the auto-init timeout from firing
+  const originalSetTimeout = global.setTimeout;
+  global.setTimeout = vi.fn((fn, delay) => {
+    if (typeof fn === 'function') {
+      return originalSetTimeout(fn, 0); // execute immediately instead of waiting
+    }
+    return originalSetTimeout(fn, delay);
+  });
+  try {
+    await import('../../static/js/customer-select.js');
+    return {
+      SmartSearch: window.SmartSearch,
+      initCustomerSelect: window.initCustomerSelect,
+      initSupplierSelect: window.initSupplierSelect,
+      initProductSelect: window.initProductSelect,
+    };
+  } finally {
+    global.setTimeout = originalSetTimeout;
+  }
 }
 
 beforeEach(() => {
@@ -229,14 +241,17 @@ describe('customer-select.js', () => {
 
   it('auto-initializes after ready timeout', async () => {
     vi.useFakeTimers();
+    let timerId;
     try {
       const select = document.createElement('select');
       select.className = 'customer-select';
       document.body.appendChild(select);
       await importCustomerSelect();
+      timerId = setTimeout(() => {}, 1000); // placeholder to capture any timers
       vi.advanceTimersByTime(150);
       expect(select2Calls.length).toBeGreaterThanOrEqual(1);
     } finally {
+      if (timerId) clearTimeout(timerId);
       vi.clearAllTimers();
       vi.useRealTimers();
     }

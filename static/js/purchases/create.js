@@ -312,7 +312,15 @@ function _removeLine(index) {
 	void calculateTotals();
 }
 
-// Exposed for the inline onclick attribute in the generated line markup.
+// Expose key functions for testability (imported via vitest for coverage)
+window.azadEsc = azadEsc;
+window.notify = notify;
+window.addLine = addLine;
+window.calculateLineTotal = calculateLineTotal;
+window.calculateTotals = calculateTotals;
+window.calculateTotalsClientSide = calculateTotalsClientSide;
+window._purchaseClientSideFallback = _purchaseClientSideFallback;
+window.updateLineCosts = updateLineCosts;
 window.removeLine = _removeLine;
 
 // =====================================
