@@ -1,10 +1,9 @@
-const POS_CACHE = "pos-cache-v1";
+const POS_CACHE = "pos-cache-v2";
 const POS_QUEUE_DB = "pos-offline-queue";
 const POS_QUEUE_STORE = "checkout-queue";
 
 const ASSETS_TO_CACHE = [
-	"/static/css/pos-theme.css",
-	"/static/css/pos_v2.css",
+	"/static/css/pos-unified.css",
 	"/static/js/barcode-scanner.js",
 	"/static/js/pos/pos-config.js",
 	"/static/js/pos/cfd-broadcast.js",

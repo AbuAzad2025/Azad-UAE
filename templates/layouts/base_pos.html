@@ -10,10 +10,10 @@
     {# TODO: Add <link rel="manifest"> when static/manifest.json is created #}
     <title>{% block title %}POS — {{ tenant_name_ar or company_name_ar or 'Azad' }}{% endblock %}</title>
     {% include 'partials/head.html' %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/pos-layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pos-unified.css') }}">
     {% block extra_css %}{% endblock %}
 </head>
-<body class="pos-layout">
+<body class="pos-layout{% block body_class %}{% endblock %}">
     <noscript>
         <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:#0a0a0a; color:#fff; display:flex; align-items:center; justify-content:center; z-index:99999;">
             <div style="text-align:center; padding:20px;">

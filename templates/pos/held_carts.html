@@ -2,9 +2,7 @@
 
 {% block title %}{{ _('نقطة البيع') }} — {{ _('السلال المعلّقة') }}{% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/pos-theme.css') }}">
-{% endblock %}
+{# pos-theme styles are bundled in css/pos-unified.css, loaded by base_pos.html #}
 
 {% block content %}
 <div class="pos-app">

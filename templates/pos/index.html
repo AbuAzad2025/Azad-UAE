@@ -10,9 +10,7 @@
 <meta name="pos-config" content="{{ pos_config | tojson | e }}">
 {% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/pos-theme.css') }}">
-{% endblock %}
+{# pos-theme styles are bundled in css/pos-unified.css, loaded by base_pos.html #}
 
 {% block content %}
 

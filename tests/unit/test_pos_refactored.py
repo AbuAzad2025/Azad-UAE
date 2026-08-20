@@ -34,4 +34,4 @@ def test_pos_js_exists():
 
 
 def test_pos_css_exists():
-    assert os.path.isfile(_static_path("css", "pos-theme.css")), "static/css/pos-theme.css not found"
+    assert os.path.isfile(_static_path("css", "pos-unified.css")), "static/css/pos-unified.css not found"
