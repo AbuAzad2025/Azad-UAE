@@ -288,8 +288,9 @@ class Config:
     BACKUP_DIR = os.path.join(instance_dir, "backups")
     os.makedirs(BACKUP_DIR, exist_ok=True)
     BACKUP_KEEP_LAST = _int("BACKUP_KEEP_LAST", 10)
-    BACKUP_SCHEDULE = "0 2 * * *"
+    BACKUP_SCHEDULE = os.environ.get("BACKUP_SCHEDULE", "0 2 * * *")
     BACKUP_METHOD = os.environ.get("BACKUP_METHOD", "celery")  # options: celery, cron, disabled
+    BACKUP_ENCRYPTION_KEY = os.environ.get("BACKUP_ENCRYPTION_KEY", "")
 
     LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
     LOG_FILE = os.path.join(instance_dir, "app.log")

@@ -1,16 +1,21 @@
 """
 Production backup/restore for PostgreSQL + uploads (PythonAnywhere-ready).
 
-Artifact: instance/backups/azad_backup_YYYYMMDD_HHMMSS_<shortsha>.tar.gz
+Artifact (unencrypted): instance/backups/azad_backup_YYYYMMDD_HHMMSS_<shortsha>.tar.gz
+Artifact (encrypted):   instance/backups/azad_backup_YYYYMMDD_HHMMSS_<shortsha>.tar.gz.enc
   - db.dump          (pg_dump -Fc)
   - uploads.tar.gz
   - manifest.json
   - env.example.redacted
   - README_RESTORE.txt
+
+When BACKUP_ENCRYPTION_KEY is configured, archives are encrypted with
+AES-256-GCM. See utils/backup_crypto.py for implementation details.
 """
 
 from __future__ import annotations
 
+import contextlib
 import glob
 import hashlib
 import json
@@ -29,6 +34,7 @@ from models.branch import Branch
 from models.tenant import Tenant
 from models.tenant_store import TenantStore
 from utils.auth_helpers import is_global_owner_user
+from utils.backup_crypto import BackupCrypto, BackupCryptoError
 from utils.tenanting import get_active_tenant_id
 
 logger = logging.getLogger(__name__)
@@ -36,11 +42,11 @@ logger = logging.getLogger(__name__)
 BACKUP_VERSION = 3
 BACKUP_BASENAME_RE = re.compile(
     r"^azad_backup_(?:system|tenant_[a-z0-9_-]+|branch_[a-z0-9_-]+|store_[a-z0-9_-]+)"
-    r"_\d{8}_\d{6}_[0-9a-f]+\.tar\.gz$",
+    r"_\d{8}_\d{6}_[0-9a-f]+\.tar\.gz(?:\.enc)?$",
     re.IGNORECASE,
 )
 BACKUP_BASENAME_LEGACY_RE = re.compile(
-    r"^azad_backup_\d{8}_\d{6}_[0-9a-f]+\.tar\.gz$",
+    r"^azad_backup_\d{8}_\d{6}_[0-9a-f]+\.tar\.gz(?:\.enc)?$",
     re.IGNORECASE,
 )
 LEGACY_NAME_RE = re.compile(
@@ -240,6 +246,78 @@ class BackupService:
         except Exception as e:
             logger.error("Failed to initialize backup directory: %s", e)
             return False
+
+    @classmethod
+    def _get_crypto(cls) -> BackupCrypto:
+        """Return a cached BackupCrypto instance for the current process."""
+        if not hasattr(cls, "_crypto_instance"):
+            key = ""
+            try:
+                from flask import current_app
+
+                key = current_app.config.get("BACKUP_ENCRYPTION_KEY", "")
+            except Exception:
+                key = os.environ.get("BACKUP_ENCRYPTION_KEY", "")
+            cls._crypto_instance = BackupCrypto(key if key else None)
+        return cls._crypto_instance
+
+    @classmethod
+    def _maybe_encrypt_archive(cls, archive_path: str) -> tuple[str, bool]:
+        """Encrypt ``archive_path`` if a backup encryption key is configured.
+
+        Returns ``(final_path, was_encrypted)``. The original unencrypted file
+        is removed when encryption succeeds.
+        """
+        crypto = cls._get_crypto()
+        if not crypto.enabled:
+            return archive_path, False
+        encrypted_path = archive_path + ".enc"
+        try:
+            crypto.encrypt_file(archive_path, encrypted_path)
+            os.remove(archive_path)
+            return encrypted_path, True
+        except Exception as exc:
+            logger.error("Backup encryption failed for %s: %s", archive_path, exc)
+            if os.path.exists(encrypted_path):
+                try:
+                    os.remove(encrypted_path)
+                except OSError:
+                    pass
+            return archive_path, False
+
+    @classmethod
+    def _maybe_decrypt_archive(cls, archive_path: str) -> tuple[str, bool]:
+        """Decrypt ``archive_path`` to a temp file if it has the .enc suffix.
+
+        Returns ``(path_to_use, is_temp)``. Caller must clean up the temp file
+        when ``is_temp`` is True.
+        """
+        if not archive_path.endswith(".enc"):
+            return archive_path, False
+        crypto = cls._get_crypto()
+        if not crypto.enabled:
+            raise BackupCryptoError(
+                "Encrypted backup found but BACKUP_ENCRYPTION_KEY is not configured"
+            )
+        work = tempfile.mkdtemp(prefix="azad_decrypt_")
+        decrypted_path = os.path.join(work, os.path.basename(archive_path)[: -len(".enc")])
+        crypto.decrypt_file(archive_path, decrypted_path)
+        return decrypted_path, True
+
+    @classmethod
+    @contextlib.contextmanager
+    def _open_archive_for_read(cls, archive_path: str):
+        """Yield a path to a readable tar.gz, decrypting first if necessary.
+
+        The context manager handles cleanup of any temporary decrypted file.
+        """
+        path, is_temp = cls._maybe_decrypt_archive(archive_path)
+        try:
+            yield path
+        finally:
+            if is_temp:
+                work_dir = os.path.dirname(path)
+                shutil.rmtree(work_dir, ignore_errors=True)
 
     @classmethod
     def list_backups(cls, auto_only: bool = False) -> list[dict]:
@@ -927,6 +1005,14 @@ class BackupService:
                     elif os.path.isfile(full):
                         tar.add(full, arcname=member)
 
+            archive_path, was_encrypted = cls._maybe_encrypt_archive(archive_path)
+            if was_encrypted:
+                archive_name = os.path.basename(archive_path)
+                manifest["encrypted"] = True
+                manifest["encryption"] = "aes-256-gcm"
+                # Rewrite manifest inside the encrypted archive is impossible
+                # without re-archiving; sidecar carries the encryption flag.
+
             size = os.path.getsize(archive_path)
             sidecar = cls._build_sidecar(
                 archive_name,
@@ -939,6 +1025,9 @@ class BackupService:
                 manual,
                 description,
             )
+            sidecar["encrypted"] = was_encrypted
+            if was_encrypted:
+                sidecar["encryption"] = "aes-256-gcm"
             with open(archive_path + ".meta.json", "w", encoding="utf-8") as f:
                 json.dump(sidecar, f, indent=2, ensure_ascii=False)
 
@@ -1206,6 +1295,12 @@ class BackupService:
                 for member in sys_members:
                     tar.add(os.path.join(work_dir, member), arcname=member)
 
+            archive_path, was_encrypted = cls._maybe_encrypt_archive(archive_path)
+            if was_encrypted:
+                archive_name = os.path.basename(archive_path)
+                manifest["encrypted"] = True
+                manifest["encryption"] = "aes-256-gcm"
+
             size = os.path.getsize(archive_path)
             sidecar = cls._build_sidecar(
                 archive_name,
@@ -1218,6 +1313,9 @@ class BackupService:
                 manual,
                 description,
             )
+            sidecar["encrypted"] = was_encrypted
+            if was_encrypted:
+                sidecar["encryption"] = "aes-256-gcm"
             with open(archive_path + ".meta.json", "w", encoding="utf-8") as f:
                 json.dump(sidecar, f, indent=2, ensure_ascii=False)
 
@@ -1254,15 +1352,16 @@ class BackupService:
 ============================================================
 
 1. Create a NEW empty PostgreSQL database (do not restore over production in place).
-2. Upload the azad_backup_*.tar.gz to instance/backups/ on the server.
-3. Extract: tar -xzf azad_backup_YYYYMMDD_HHMMSS_<sha>.tar.gz -C /tmp/azad_restore
-4. Restore DB:
+2. Upload the azad_backup_*.tar.gz (or .tar.gz.enc if encrypted) to instance/backups/ on the server.
+3. Encrypted archives require BACKUP_ENCRYPTION_KEY to be set in the environment.
+4. Extract: tar -xzf azad_backup_YYYYMMDD_HHMMSS_<sha>.tar.gz -C /tmp/azad_restore
+5. Restore DB:
    pg_restore --clean --if-exists --no-owner --no-privileges \\
      --dbname=postgresql://USER:***@HOST:PORT/NEW_DB_NAME /tmp/azad_restore/db.dump
-5. Restore uploads:
+6. Restore uploads:
    tar -xzf uploads.tar.gz -C /home/USERNAME/Azad-UAE/static/
-6. Configure .env with DATABASE_URL pointing to the NEW database (never commit .env).
-7. Verify:
+7. Configure .env with DATABASE_URL pointing to the NEW database (never commit .env).
+8. Verify:
    flask db current
    python tools/qa/predeploy_check.py --profile production-readiness
 
@@ -1330,13 +1429,14 @@ This archive does NOT include secrets, .env, or AI runtime memory.
                 info.update({k: v for k, v in sidecar_data.items() if k not in ("filename", "path")})
             except Exception as exc:
                 logging.getLogger(__name__).debug("backup sidecar: %s", exc)
-        if filename.endswith(".tar.gz"):
+        if filename.endswith(".tar.gz") or filename.endswith(".tar.gz.enc"):
             try:
-                with tarfile.open(path, "r:gz") as tar:
-                    if "manifest.json" in tar.getnames():
-                        member = tar.extractfile("manifest.json")
-                        if member:
-                            info["manifest"] = json.loads(member.read().decode("utf-8"))
+                with cls._open_archive_for_read(path) as readable_path:
+                    with tarfile.open(readable_path, "r:gz") as tar:
+                        if "manifest.json" in tar.getnames():
+                            member = tar.extractfile("manifest.json")
+                            if member:
+                                info["manifest"] = json.loads(member.read().decode("utf-8"))
             except Exception as e:
                 info["manifest_error"] = str(e)[:200]
         return info
@@ -1370,10 +1470,10 @@ This archive does NOT include secrets, .env, or AI runtime memory.
             except Exception:
                 result["warnings"].append("sidecar unreadable")
 
-        if filename.endswith(".tar.gz") and filename.startswith(cls.BACKUP_PREFIX):
+        if (filename.endswith(".tar.gz") or filename.endswith(".tar.gz.enc")) and filename.startswith(cls.BACKUP_PREFIX):
             return cls._verify_modern_archive(path, result)
 
-        if filename.endswith(".gz") or filename.endswith(".dump"):
+        if filename.endswith(".gz") or filename.endswith(".dump") or filename.endswith(".enc"):
             if cls._verify_legacy_file(path, filename):
                 result["valid"] = True
                 result["format"] = "legacy"
@@ -1412,81 +1512,82 @@ This archive does NOT include secrets, .env, or AI runtime memory.
     def _verify_modern_archive(cls, path: str, result: dict[str, Any]) -> dict[str, Any]:
         work = tempfile.mkdtemp(prefix="azad_verify_")
         try:
-            with tarfile.open(path, "r:gz") as tar:
-                archive_names = set(tar.getnames())
-                if "manifest.json" not in archive_names:
-                    result["errors"].append("missing manifest.json")
-                    return result
-                tar.extract("manifest.json", work, filter="data")
-            manifest_path = os.path.join(work, "manifest.json")
-            with open(manifest_path, encoding="utf-8") as f:
-                manifest = json.load(f)
-            result["manifest"] = manifest
-            scope = manifest.get("backup_scope") or "system"
-            result["backup_scope"] = scope
-
-            if scope in ("tenant", "branch", "store"):
-                has_data = any(n.startswith("data/") for n in archive_names)
-                has_legacy = "tenant_export.json" in archive_names
-                if not has_data and not has_legacy:
-                    result["errors"].append("missing data/ or tenant_export.json")
-                    return result
-                if has_legacy:
-                    with tarfile.open(path, "r:gz") as tar:
-                        tar.extract("tenant_export.json", work, filter="data")
-                    export_path = os.path.join(work, "tenant_export.json")
-                    expected = (manifest.get("sha256") or {}).get("tenant_export.json")
-                    if expected and cls._sha256_file(export_path) != expected:
-                        result["errors"].append("tenant_export.json checksum mismatch")
+            with cls._open_archive_for_read(path) as readable_path:
+                with tarfile.open(readable_path, "r:gz") as tar:
+                    archive_names = set(tar.getnames())
+                    if "manifest.json" not in archive_names:
+                        result["errors"].append("missing manifest.json")
                         return result
-                    tenant_ok = cls._verify_tenant_export(export_path, manifest)
-                else:
-                    with tarfile.open(path, "r:gz") as tar:
-                        for n in archive_names:
-                            if n.startswith("data/"):
-                                tar.extract(n, work, filter="data")
-                    from services.backup_scope_config import read_data_directory
+                    tar.extract("manifest.json", work, filter="data")
+                manifest_path = os.path.join(work, "manifest.json")
+                with open(manifest_path, encoding="utf-8") as f:
+                    manifest = json.load(f)
+                result["manifest"] = manifest
+                scope = manifest.get("backup_scope") or "system"
+                result["backup_scope"] = scope
 
-                    tables, _meta = read_data_directory(os.path.join(work, "data"))
-                    export_doc = {
-                        "tenant_id": manifest.get("tenant_id"),
-                        "tables": tables,
-                    }
-                    export_path = os.path.join(work, "_verify_export.json")
-                    with open(export_path, "w", encoding="utf-8") as f:
-                        json.dump(export_doc, f)
-                    tenant_ok = cls._verify_tenant_export(export_path, manifest)
-                if not tenant_ok.get("ok"):
-                    result["errors"].extend(tenant_ok.get("errors", []))
-                    return result
-                result["scoped_verify"] = tenant_ok
-            else:
-                required = {"db.dump", "uploads.tar.gz", "manifest.json"}
-                missing = required - archive_names
-                if missing:
-                    result["errors"].append(f"missing members: {sorted(missing)}")
-                    return result
-                with tarfile.open(path, "r:gz") as tar:
-                    tar.extract("db.dump", work, filter="data")
-                db_path = os.path.join(work, "db.dump")
-                expected = (manifest.get("sha256") or {}).get("db.dump")
-                if expected and cls._sha256_file(db_path) != expected:
-                    result["errors"].append("db.dump checksum mismatch")
-                    return result
-                pg_restore = cls._resolve_pg_tool("pg_restore", "PG_RESTORE_PATH")
-                if pg_restore:
-                    from services.backup_exec import run_pg_tool
-
-                    proc = run_pg_tool([pg_restore, "--list", db_path], timeout=180)
-                    if proc.returncode != 0:
-                        result["errors"].append("pg_restore --list failed")
+                if scope in ("tenant", "branch", "store"):
+                    has_data = any(n.startswith("data/") for n in archive_names)
+                    has_legacy = "tenant_export.json" in archive_names
+                    if not has_data and not has_legacy:
+                        result["errors"].append("missing data/ or tenant_export.json")
                         return result
-                else:
-                    result["warnings"].append("pg_restore not available; skipped dump list check")
+                    if has_legacy:
+                        with tarfile.open(readable_path, "r:gz") as tar:
+                            tar.extract("tenant_export.json", work, filter="data")
+                        export_path = os.path.join(work, "tenant_export.json")
+                        expected = (manifest.get("sha256") or {}).get("tenant_export.json")
+                        if expected and cls._sha256_file(export_path) != expected:
+                            result["errors"].append("tenant_export.json checksum mismatch")
+                            return result
+                        tenant_ok = cls._verify_tenant_export(export_path, manifest)
+                    else:
+                        with tarfile.open(readable_path, "r:gz") as tar:
+                            for n in archive_names:
+                                if n.startswith("data/"):
+                                    tar.extract(n, work, filter="data")
+                        from services.backup_scope_config import read_data_directory
 
-            result["valid"] = True
-            result["format"] = "azad_tar_v1"
-            return result
+                        tables, _meta = read_data_directory(os.path.join(work, "data"))
+                        export_doc = {
+                            "tenant_id": manifest.get("tenant_id"),
+                            "tables": tables,
+                        }
+                        export_path = os.path.join(work, "_verify_export.json")
+                        with open(export_path, "w", encoding="utf-8") as f:
+                            json.dump(export_doc, f)
+                        tenant_ok = cls._verify_tenant_export(export_path, manifest)
+                    if not tenant_ok.get("ok"):
+                        result["errors"].extend(tenant_ok.get("errors", []))
+                        return result
+                    result["scoped_verify"] = tenant_ok
+                else:
+                    required = {"db.dump", "uploads.tar.gz", "manifest.json"}
+                    missing = required - archive_names
+                    if missing:
+                        result["errors"].append(f"missing members: {sorted(missing)}")
+                        return result
+                    with tarfile.open(readable_path, "r:gz") as tar:
+                        tar.extract("db.dump", work, filter="data")
+                    db_path = os.path.join(work, "db.dump")
+                    expected = (manifest.get("sha256") or {}).get("db.dump")
+                    if expected and cls._sha256_file(db_path) != expected:
+                        result["errors"].append("db.dump checksum mismatch")
+                        return result
+                    pg_restore = cls._resolve_pg_tool("pg_restore", "PG_RESTORE_PATH")
+                    if pg_restore:
+                        from services.backup_exec import run_pg_tool
+
+                        proc = run_pg_tool([pg_restore, "--list", db_path], timeout=180)
+                        if proc.returncode != 0:
+                            result["errors"].append("pg_restore --list failed")
+                            return result
+                    else:
+                        result["warnings"].append("pg_restore not available; skipped dump list check")
+
+                result["valid"] = True
+                result["format"] = "azad_tar_v1"
+                return result
         except Exception as e:
             result["errors"].append(str(e)[:200])
             return result
@@ -1706,11 +1807,12 @@ This archive does NOT include secrets, .env, or AI runtime memory.
 
         work = tempfile.mkdtemp(prefix="azad_restore_")
         try:
-            if filename.endswith(".tar.gz") and filename.startswith(cls.BACKUP_PREFIX):
-                with tarfile.open(path, "r:gz") as tar:
-                    tar.extract("db.dump", work, filter="data")
-                    if restore_uploads and "uploads.tar.gz" in tar.getnames():
-                        tar.extract("uploads.tar.gz", work, filter="data")
+            if (filename.endswith(".tar.gz") or filename.endswith(".tar.gz.enc")) and filename.startswith(cls.BACKUP_PREFIX):
+                with cls._open_archive_for_read(path) as readable_path:
+                    with tarfile.open(readable_path, "r:gz") as tar:
+                        tar.extract("db.dump", work, filter="data")
+                        if restore_uploads and "uploads.tar.gz" in tar.getnames():
+                            tar.extract("uploads.tar.gz", work, filter="data")
                 dump_path = os.path.join(work, "db.dump")
             elif filename.endswith(".dump"):
                 dump_path = os.path.join(work, "legacy.dump")
@@ -1796,8 +1898,9 @@ This archive does NOT include secrets, .env, or AI runtime memory.
 
         work = tempfile.mkdtemp(prefix="azad_scoped_restore_")
         try:
-            with tarfile.open(path, "r:gz") as tar:
-                tar.extractall(work, filter="data")
+            with cls._open_archive_for_read(path) as readable_path:
+                with tarfile.open(readable_path, "r:gz") as tar:
+                    tar.extractall(work, filter="data")
             outcome = restore_scoped_to_target(
                 work,
                 manifest,

@@ -18,21 +18,10 @@
   {% include 'partials/head.html' %}
   {% block extra_css %}{% endblock %}
 
-  <!-- Critical CSS inline for faster first paint -->
-  <style>
-    /* Critical: prevent FOUC */
-    html{visibility:visible;opacity:1}
-    html[data-ui-mode="dark"]{background:#0b1220}
-    html[data-ui-mode="light"]{background:#f8f7f2}
-    /* Skeleton loading */
-    .az-skeleton{position:relative;overflow:hidden;background:var(--az-surface-2,#e2e8f0);border-radius:8px;min-height:1em;color:transparent!important;pointer-events:none}
-    .az-skeleton::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.4) 50%,transparent 100%);animation:az-shimmer 1.4s infinite;transform:translateX(-100%)}
-    @keyframes az-shimmer{to{transform:translateX(100%)}}
-    /* Page entrance */
-    @keyframes az-fade-up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-    .az-enter{animation:az-fade-up 0.35s ease-out both}
-    .az-enter-d1{animation-delay:0.05s}.az-enter-d2{animation-delay:0.1s}.az-enter-d3{animation-delay:0.15s}.az-enter-d4{animation-delay:0.2s}
-  </style>
+  <!-- Critical CSS preload (inlined via preload for fastest first paint) -->
+  <link rel="preload" href="{{ url_for('static', filename='css/critical.css') }}" as="style">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/critical.css') }}" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="{{ url_for('static', filename='css/critical.css') }}"></noscript>
 </head>
 <body class="hold-transition sidebar-mini layout-fixed" data-sidebar-side="{{ 'right' if is_rtl else 'left' }}">
 

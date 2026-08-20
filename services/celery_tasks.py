@@ -2,6 +2,7 @@ import os
 from datetime import UTC
 
 from celery import Celery
+from celery.schedules import crontab
 from flask import current_app
 from flask_babel import gettext
 
@@ -13,23 +14,55 @@ celery = Celery(
     backend=os.environ.get("CELERY_RESULT_BACKEND", "redis://localhost:6379/0"),
 )
 
+
+def _parse_backup_schedule(schedule_str: str | None):
+    """Parse a cron-like string 'M H DoM Mon DoW' into a celery crontab.
+
+    Defaults to 02:00 daily if the string is empty or malformed.
+    """
+    if not schedule_str:
+        return crontab(minute=0, hour=2)
+    parts = schedule_str.strip().split()
+    if len(parts) != 5:
+        return crontab(minute=0, hour=2)
+    minute, hour, day_of_month, month, day_of_week = parts
+    return crontab(
+        minute=minute,
+        hour=hour,
+        day_of_month=day_of_month,
+        month_of_year=month,
+        day_of_week=day_of_week,
+    )
+
+
+# Build beat schedule dynamically so BACKUP_METHOD/BACKUP_SCHEDULE are honored.
+_beat_schedule = {
+    "daily-inventory-reconciliation": {
+        "task": "services.celery_tasks.run_inventory_reconciliation",
+        "schedule": 86400.0,  # 24 hours in seconds
+        "args": (None,),  # tenant_id=None → reconcile all tenants
+    },
+    "check-abandoned-carts": {
+        "task": "services.celery_tasks.send_abandoned_cart_reminders",
+        "schedule": 900.0,  # Every 15 minutes
+    },
+}
+
+_backup_method = os.environ.get("BACKUP_METHOD", "celery").lower()
+_backup_schedule = os.environ.get("BACKUP_SCHEDULE", "0 2 * * *")
+if _backup_method not in ("", "disabled", "none"):
+    _beat_schedule["daily-auto-backup"] = {
+        "task": "services.celery_tasks.auto_backup_database",
+        "schedule": _parse_backup_schedule(_backup_schedule),
+    }
+
 celery.conf.update(
     task_serializer="json",
     accept_content=["json"],
     result_serializer="json",
     timezone="Asia/Dubai",
     enable_utc=True,
-    beat_schedule={
-        "daily-inventory-reconciliation": {
-            "task": "services.celery_tasks.run_inventory_reconciliation",
-            "schedule": 86400.0,  # 24 hours in seconds
-            "args": (None,),  # tenant_id=None → reconcile all tenants
-        },
-        "check-abandoned-carts": {
-            "task": "services.celery_tasks.send_abandoned_cart_reminders",
-            "schedule": 900.0,  # Every 15 minutes
-        },
-    },
+    beat_schedule=_beat_schedule,
 )
 
 

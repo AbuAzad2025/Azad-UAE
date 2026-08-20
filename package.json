@@ -2,14 +2,24 @@
 	"scripts": {
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"css:purge": "node scripts/lint/purgecss-report.js"
+		"css:purge": "node scripts/lint/purgecss-report.js",
+		"css:build": "postcss \"static/css/*.css\" --dir static/css/dist --config postcss.config.js",
+		"css:minify": "postcss \"static/css/dist/*.css\" --dir static/css/dist --config postcss.config.min.js",
+		"js:minify": "node scripts/build/minify-js.js",
+		"build:assets": "npm run css:build && npm run css:minify && npm run js:minify",
+		"build:prod": "npm run build:assets && npm run css:purge"
 	},
 	"devDependencies": {
 		"@vitest/coverage-v8": "^3.2.7",
+		"cssnano": "^7.0.6",
 		"jsdom": "^30.0.1",
+		"postcss": "^8.4.47",
+		"postcss-cli": "^11.0.0",
+		"postcss-import": "^16.1.0",
 		"purgecss": "^8.0.0",
 		"stylelint": "^17.14.0",
 		"stylelint-config-standard": "^40.0.0",
+		"terser": "^5.34.1",
 		"vitest": "^3.2.4"
 	}
 }
