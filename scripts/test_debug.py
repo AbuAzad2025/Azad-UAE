@@ -8,12 +8,12 @@ from utils.exceptions import PaymentRequired
 
 # Simulate what conftest does
 original_log_error = LoggingCore.log_error
-setattr(LoggingCore, "log_error", lambda *args, **kwargs: None)
+type.__setattr__(LoggingCore, "log_error", lambda *args, **kwargs: None)
 print(f"After conftest patch: LoggingCore.log_error = {LoggingCore.log_error}")
 
 # Now simulate what mocker.patch.object does
 mock_log = MagicMock()
-setattr(LoggingCore, "log_error", mock_log)
+type.__setattr__(LoggingCore, "log_error", mock_log)
 print(f"After mocker.patch.object: LoggingCore.log_error = {LoggingCore.log_error}")
 
 # Create app and trigger handler
@@ -37,4 +37,4 @@ if mock_log.called:
     print(f"Mock call args: {mock_log.call_args}")
 
 # Restore
-setattr(LoggingCore, "log_error", original_log_error)
+type.__setattr__(LoggingCore, "log_error", original_log_error)
