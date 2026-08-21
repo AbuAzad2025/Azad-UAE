@@ -522,33 +522,24 @@ class TestGlAutoValidationBranches:
             gl_auto_service.register_validation_event_listeners()
         return handlers[model_name][0]
 
-    def test_purchase_negative_amount_logs_error(self):
-        from services import gl_auto_service
+    def test_purchase_negative_amount_raises_error(self):
 
         target = MagicMock(purchase_number="P-9", amount_aed=Decimal("-3"))
-        with patch.object(gl_auto_service.logger, "error") as mock_error:
+        with pytest.raises(ValueError, match="P-9"):
             self._handler_for("Purchase")(None, None, target)
-        mock_error.assert_called_once()
-        assert "P-9" in mock_error.call_args[0][0]
 
-    def test_purchase_validation_exception_logged(self):
-        from services import gl_auto_service
+    def test_purchase_validation_exception_propagates(self):
 
         target = MagicMock()
         type(target).amount_aed = property(lambda self: (_ for _ in ()).throw(RuntimeError("boom")))
-        with patch.object(gl_auto_service.logger, "error") as mock_error:
+        with pytest.raises(RuntimeError, match="boom"):
             self._handler_for("Purchase")(None, None, target)
-        mock_error.assert_called_once()
-        assert "Failed to validate purchase" in mock_error.call_args[0][0]
 
-    def test_receipt_negative_amount_logs_error(self):
-        from services import gl_auto_service
+    def test_receipt_negative_amount_raises_error(self):
 
         target = MagicMock(receipt_number="R-9", amount_aed=Decimal("-1"))
-        with patch.object(gl_auto_service.logger, "error") as mock_error:
+        with pytest.raises(ValueError, match="R-9"):
             self._handler_for("Receipt")(None, None, target)
-        mock_error.assert_called_once()
-        assert "R-9" in mock_error.call_args[0][0]
 
 
 # ---------------------------------------------------------------------------
