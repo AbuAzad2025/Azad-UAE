@@ -85,6 +85,7 @@ function mockFetch(map) {
 }
 
 beforeEach(() => {
+  vi.useFakeTimers();
   buildDom();
   mockFetch({});
   window.t = (k) => k;
@@ -94,6 +95,7 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
+  vi.runOnlyPendingTimers();
   vi.useRealTimers();
   vi.clearAllTimers();
   vi.restoreAllMocks();
