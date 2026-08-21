@@ -7,14 +7,14 @@ from decimal import Decimal
 
 import pytest
 
-from extensions import db
-from models import Budget, BudgetLine, GLAccount
+from models import Budget, BudgetLine
 from services.budget_service import BudgetService
+from tests.factories import GLAccountFactory
 
 
-def _make_account(tenant_id, code, name="Account"):
-    acct = GLAccount(
-        tenant_id=tenant_id,
+def _make_account(db_session, tenant, code, name="Account"):
+    acct = GLAccountFactory(
+        tenant=tenant,
         code=code,
         name=name,
         name_ar=name,
@@ -22,8 +22,7 @@ def _make_account(tenant_id, code, name="Account"):
         is_active=True,
         is_header=False,
     )
-    db.session.add(acct)
-    db.session.flush()
+    db_session.commit()
     return acct
 
 
@@ -124,7 +123,7 @@ class TestBudgetWorkflow:
             BudgetService.delete_budget(budget)
 
     def test_recalculate_totals(self, db_session, sample_tenant):
-        acct = _make_account(sample_tenant.id, "6500", "Expenses")
+        acct = _make_account(db_session, sample_tenant, "6500", "Expenses")
         budget = Budget(
             tenant_id=sample_tenant.id,
             budget_number="BUD-TEST-007",

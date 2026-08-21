@@ -7,25 +7,16 @@ import uuid
 import pytest
 
 from extensions import db
-from models import Tenant
 from models.store_payment_method import StorePaymentMethod
 from services.store_payment_method_service import StorePaymentMethodService
+from tests.factories import TenantFactory
 
 
 @pytest.fixture
-def sample_tenant2(db_session, sample_user):
+def sample_tenant2(db_session):
     """Create a second tenant for isolation testing."""
-    import uuid
-
-    unique_suffix = uuid.uuid4().hex[:8]
-    tenant = Tenant(
-        name=f"Test Tenant 2 {unique_suffix}",
-        name_ar=f"مستأجر اختبار 2 {unique_suffix}",
-        slug=f"tenant2-test-{unique_suffix}",
-        is_active=True,
-    )
-    db_session.add(tenant)
-    db_session.flush()
+    tenant = TenantFactory()
+    db_session.commit()
     return tenant
 
 
