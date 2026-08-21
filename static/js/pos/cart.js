@@ -151,7 +151,10 @@ const evaluateUpsell = async () => {
 };
 const scheduleUpsellEval = () => {
 	clearTimeout(upsellTimer);
-	upsellTimer = setTimeout(() => void evaluateUpsell(), 400);
+	upsellTimer = setTimeout(() => {
+		if (typeof document === "undefined") return;
+		void evaluateUpsell();
+	}, 400);
 };
 
 const renderCart = async () => {

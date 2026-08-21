@@ -141,10 +141,133 @@ interface DataTableButton {
 	customize?: (win: Window) => void;
 }
 
+interface AzadPrintOptions {
+	title?: string;
+	headerColor?: string;
+	css?: string[];
+}
+
+interface LazyLoad {
+	sweetalert2(): Promise<unknown>;
+	datatables(): Promise<unknown[]>;
+	select2(): Promise<unknown>;
+	sortable(): Promise<unknown>;
+	chartjs(): Promise<unknown>;
+	qrcode(): Promise<unknown>;
+}
+
+interface SmartSearchItem {
+	id?: number | string | null;
+	text?: string;
+	name?: string;
+	phone?: string;
+	code?: string;
+	balance?: number | string;
+	stock?: number | string;
+	price?: number | string;
+	loading?: boolean;
+}
+
+interface SmartSearch {
+	esc(v: unknown): string;
+	initCustomerSearch(): void;
+	initSupplierSearch(): void;
+	initProductSearch(): void;
+	formatCustomerResult(item: SmartSearchItem): JQuery | string;
+	formatCustomerSelection(item: SmartSearchItem): string;
+	formatSupplierResult(item: SmartSearchItem): JQuery | string;
+	formatSupplierSelection(item: SmartSearchItem): string;
+	formatProductResult(item: SmartSearchItem): JQuery | string;
+	formatProductSelection(item: SmartSearchItem): string;
+	init(): void;
+}
+
+interface PosState {
+	customer: { id: number | string; text: string; is_walkin?: boolean } | null;
+	cart: PosCartItem[];
+	lastProductResults: Record<string, unknown>[];
+	barcodeScanner: { stop(): void } | null;
+	posScale: { connect(): Promise<void> } | null;
+	selectedTable: { id: number | string; label: string } | null;
+	scaleWeightKg?: number;
+	idemKey?: string;
+	lastTotals?: Record<string, unknown>;
+}
+
+interface PosCartItem {
+	id: number | string;
+	name: string;
+	sku?: string;
+	barcode?: string;
+	qty: number;
+	basePrice: number;
+	price: number;
+	discountPercent: number;
+	is_weight_product?: boolean;
+}
+
+interface PosTotals {
+	subtotal: number;
+	tax: number;
+	shipping: number;
+	discountAmount: number;
+	taxRate: number;
+	total: number;
+	prices_include_vat: boolean;
+}
+
+interface PosPaymentChunk {
+	amount: number;
+	payment_method: string;
+	currency: string;
+	exchange_rate: number;
+}
+
+interface PosFetchResult {
+	ok: boolean;
+	data?: unknown;
+	error?: string;
+}
+
+interface PosOfflineCatalog {
+	hydrateCatalog(options?: { warehouseParam?: string }): Promise<unknown>;
+	lookupLocalProduct(code: string): Promise<Record<string, unknown> | null>;
+	parseScaleBarcodeLocal?(code: string): Record<string, unknown> | null;
+}
+
+interface PosScaleSerial {
+	new (options: {
+		onStableWeight: (kg: number) => void;
+		onError: (msg: string) => void;
+	}): { connect(): Promise<void> };
+	isSupported(): boolean;
+}
+
+interface PosScaleUIOptions {
+	button: HTMLElement | null;
+	scale: { connect(): Promise<void> };
+	connectedTitle?: string;
+	disconnectedTitle?: string;
+}
+
+interface PosCameraScanUIOptions {
+	button: HTMLElement | null;
+	onScan: (code: string) => void;
+	onError: (msg: string) => void;
+}
+
+interface PosTerminalOptions {
+	button: HTMLElement | null;
+	getAmount: () => number;
+	getCurrency: () => string;
+	onApproved: (result: { intentId: string }) => void;
+	onError: (msg: string) => void;
+}
+
 interface Window {
 	SmartPrint?: {
-		buildButtons(options: Record<string, any>): DataTableButton[];
-		attachTrigger(table: any, triggerSelector: string, options: Record<string, any>): void;
+		buildButtons(options: Record<string, unknown>): DataTableButton[];
+		attachTrigger(table: unknown, triggerSelector: string, options: Record<string, unknown>): void;
 	};
 	ActionHelpers?: {
 		archivePaymentItem(type: string, id: string, number: string): void;
@@ -153,14 +276,15 @@ interface Window {
 	BarcodeScanner?: new (options: {
 		onScan: (code: string) => void;
 		minLength?: number;
-	}) => { start(): void };
+	}) => { start(): void; stop(): void };
 	notify?: {
 		show(options: { type: string; title?: string; message: string; duration?: number }): void;
 	};
-	azad?: Record<string, any>;
-	UI?: Record<string, any>;
-	submitWithFallback?: (url: string, data: any, method?: string) => Promise<any>;
+	azad?: Record<string, unknown>;
+	UI?: Record<string, unknown>;
+	submitWithFallback?: (url: string, data: unknown, method?: string) => Promise<unknown>;
 	fetchWithRetry?: (url: string, options?: RequestInit, retries?: number) => Promise<Response>;
+	apiFetch?: (url: string, options?: RequestInit) => Promise<unknown>;
 	saveFormState?: () => void;
 	undoForm?: () => void;
 	redoForm?: () => void;
@@ -170,13 +294,16 @@ interface Window {
 	restoreItem?: (itemId: string, itemType: string, itemName?: string) => void;
 	AzadPrint?: {
 		printPageReport(): void;
-		printElement(selector: string, options?: Record<string, any>): void;
+		printElement(selector: string, options?: AzadPrintOptions): void;
 	};
 	initAutoSave?: () => void;
 	initProgressIndicators?: () => void;
 	initSmartDefaults?: () => void;
-	initProductCategoryControls?: (opts: Record<string, any>) => void;
-	initCategoryListControls?: (opts: Record<string, any>) => void;
+	initProductCategoryControls?: (opts: Record<string, unknown>) => void;
+	initCategoryListControls?: (opts: Record<string, unknown>) => void;
+	initCustomerSelect?: () => void;
+	initSupplierSelect?: () => void;
+	initProductSelect?: () => void;
 	APP_INLINE_EDIT_ENABLED?: boolean;
 	APP_INLINE_EDIT_ENDPOINT_TEMPLATE?: string;
 	_FX_FALLBACK_BASE?: string;
@@ -188,11 +315,68 @@ interface Window {
 	_PURCHASE_CALC_URL?: string;
 	_PRICES_INCLUDE_VAT?: boolean;
 	_EMPTY_CART_TEXT?: string;
-	Sortable?: new (element: HTMLElement, options: Record<string, any>) => undefined;
+	Sortable?: new (element: HTMLElement, options: Record<string, unknown>) => undefined;
 	_mutationPending?: boolean;
 	__azadModalStackingBound?: boolean;
 	__bootstrapCompatDelegatesBound?: boolean;
-	bootstrap?: Record<string, any>;
+	bootstrap?: Record<string, unknown>;
+	lazyLoad?: LazyLoad;
+	SmartSearch?: SmartSearch;
+	printSaleTickets?: (saleId: number | string) => Promise<void>;
+	printQueuedCartReceipt?: (cart: PosCartItem[], totals: PosTotals | Record<string, unknown>, payload: Record<string, unknown>) => Promise<void>;
+	setupTerminalButton?: (options: PosTerminalOptions) => Promise<unknown>;
+	PosScaleSerial?: PosScaleSerial;
+	setupPosScaleUI?: (options: PosScaleUIOptions) => void;
+	setupCameraScanUI?: (options: PosCameraScanUIOptions) => { start?(): void; stop?(): void } | undefined;
+	posOfflineCatalog?: PosOfflineCatalog;
+	_cfdBroadcast?: {
+		sendCart(cart: PosCartItem[], totals: Record<string, unknown>): void;
+		setSession(sessionId: number | string | null): void;
+	};
+	_posFmt?: (n: number | string | null) => string;
+	_posToNum?: (v: unknown) => number;
+	_posEsc?: (s: unknown) => string;
+	_posPriceForCurrency?: (basePrice: number) => number;
+	_posCurrencySymbolFor?: (code: string) => string;
+	_posState?: PosState;
+	_posAddToCart?: (p: Record<string, unknown>, qty?: number) => Promise<void>;
+	_posRenderCart?: () => Promise<void>;
+	_posRecalc?: () => Promise<PosTotals>;
+	_posRenderProductResults?: (res: Record<string, unknown>[]) => void;
+	_posRunProductSearch?: (q: string) => Promise<void>;
+	_posAddFirstOrLookup?: (q: string) => Promise<void>;
+	_posShowAlert?: (msg: string, level?: string) => void;
+	_posShowModalAlert?: (modalId: string, msg: string, level?: string) => void;
+	_posHideModalAlert?: (modalId: string) => void;
+	_posCustomerHint?: () => void;
+	_posUpdateCartPrices?: () => Promise<void>;
+	_posLoadRateForCurrency?: () => Promise<void>;
+	_posSplitEnabled?: () => boolean;
+	_posSplitSumRefresh?: () => void;
+	_posAddSplitRow?: (amount: number | string, method: string) => void;
+	_posReadSplitPayments?: () => PosPaymentChunk[] | null;
+	_posResetAfterSale?: () => Promise<void>;
+	_posCheckout?: (autoPrint: boolean) => Promise<void>;
+	_posHandleScannedCode?: (code: string) => Promise<void>;
+	_posLoadCategories?: () => Promise<void>;
+	_posLoadProducts?: (categoryId?: string) => Promise<void>;
+	_posLoadFloors?: () => Promise<void>;
+	_posLoadTables?: (floorId: string) => Promise<void>;
+	_posLoadTableOptions?: () => Promise<void>;
+	_posToggleTableField?: () => void;
+	_posHeldCount?: () => number;
+	_posNewCartKey?: () => string;
+	_posFetchJson?: (url: string) => Promise<PosFetchResult>;
+	_posWarehouseParam?: (sep?: string) => string;
+	_posNeedsOverride?: (r: Response, j: { error?: string }) => boolean;
+	_posPostWithOverride?: (url: string, body: Record<string, unknown>, action: string) => Promise<{ r: Response; j: Record<string, unknown> }>;
+	_posRequestOverrideToken?: (action: string) => Promise<string | null>;
+	_posConfirmPin?: () => Promise<void>;
+	_posSettlePin?: (token: string | null) => void;
+	_posEvaluateUpsell?: () => Promise<void>;
+	_posScheduleUpsellEval?: () => void;
+	_posRenderUpsellMessages?: (container: HTMLElement | null, prompts: { message?: string }[]) => void;
+	_posSyncPay?: () => void;
 	onerror?: (
 		message: string,
 		source?: string,
