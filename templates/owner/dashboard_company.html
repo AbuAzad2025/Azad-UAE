@@ -352,7 +352,7 @@
 
 {% block extra_js %}
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 const i18n = {{ {
   'update_success': t('Update_Success'),
   'update_failed': t('Update_Failed'),

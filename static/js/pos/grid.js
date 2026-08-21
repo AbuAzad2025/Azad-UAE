@@ -435,7 +435,11 @@
 				});
 				list.appendChild(div);
 			});
-		} catch (_) {}
+		} catch (_) {
+			showAlert("تعذر تحميل التصنيفات. تحقق من الاتصال وأعد المحاولة.", "danger");
+			const list = qs("#categoryList");
+			if (list) list.innerHTML = '<div class="text-muted text-center py-2 w-100">تعذر تحميل التصنيفات</div>';
+		}
 	};
 
 	const loadProducts = async (q = "") => {
@@ -457,7 +461,11 @@
 				qs("#productGrid").innerHTML =
 					'<div class="text-center text-muted py-5 w-100">لا توجد منتجات</div>';
 			}
-		} catch (_) {}
+		} catch (_) {
+			showAlert("تعذر تحميل المنتجات. تحقق من الاتصال وأعد المحاولة.", "danger");
+			qs("#productGrid").innerHTML =
+				'<div class="text-center text-danger py-5 w-100">تعذر تحميل المنتجات — أعد المحاولة</div>';
+		}
 		qs("#productLoading")?.classList.add("d-none");
 	};
 

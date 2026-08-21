@@ -112,6 +112,24 @@ class TestSaleServiceValidations:
                 discount_amount=-10,
             )
 
+    def test_ensure_discount_rejects_amount_above_subtotal(self, app):
+        from services.sale_service import SaleService
+
+        with pytest.raises(ValueError, match="تتجاوز إجمالي الفاتورة"):
+            SaleService._ensure_discount_within_subtotal(Decimal("150"), Decimal("100"))
+
+    def test_ensure_discount_allows_equal_to_subtotal(self, app):
+        from services.sale_service import SaleService
+
+        SaleService._ensure_discount_within_subtotal(Decimal("100"), Decimal("100"))
+        SaleService._ensure_discount_within_subtotal(Decimal("0"), Decimal("100"))
+
+    def test_ensure_discount_tolerates_none_inputs(self, app):
+        from services.sale_service import SaleService
+
+        SaleService._ensure_discount_within_subtotal(None, Decimal("100"))
+        SaleService._ensure_discount_within_subtotal(Decimal("10"), None)
+
     def test_create_sale_rejects_negative_shipping(self, app):
         from services.sale_service import SaleService
 

@@ -3,7 +3,7 @@
 <script src="{{ url_for('static', filename='adminlte/plugins/sweetalert2/sweetalert2.all.min.js') }}"></script>
 <script src="{{ url_for('static', filename='adminlte/plugins/qrcodejs/qrcode.min.js') }}"></script>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 window.spConfig = {
   whatsappLink: "{{ developer_whatsapp_link }}",
   whatsappDisplay: "{{ developer_whatsapp or config.DEVELOPER_WHATSAPP }}",

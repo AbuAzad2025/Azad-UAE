@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ _('إيصال') }} #{{ sale.sale_number }}</title>
-    <style>
+    <style nonce="{{ csp_nonce() }}">
         @page { size: 80mm; margin: 0; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -126,7 +126,7 @@
             {% if developer_whatsapp %}<br>WhatsApp: {{ developer_whatsapp }}{% endif %}
         </div>
     </div>
-    <script>
+    <script nonce="{{ csp_nonce() }}">
         window.addEventListener('load', () => { setTimeout(() => { window.print(); }, 300); });
     </script>
 </body>

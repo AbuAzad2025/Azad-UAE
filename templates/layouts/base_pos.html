@@ -47,7 +47,7 @@
     <script defer src="{{ dist_url('js/telemetry.js') }}"></script>
     <script type="application/json" id="app-enums-data">{{ app_enums|tojson }}</script>
     <script type="application/json" id="user-permissions-data">{{ current_user_permissions|tojson }}</script>
-    <script>
+    <script nonce="{{ csp_nonce() }}">
         window.APP_ENUMS = JSON.parse(document.getElementById('app-enums-data').textContent || '{}');
         // Unified UI notification — replaces raw alert() with the design-system toast
         window.notify = function (msg, type) {
@@ -64,7 +64,7 @@
     </script>
     <script src="{{ dist_url('js/pos-permissions.js') }}"></script>
     <script src="{{ dist_url('js/i18n.js') }}"></script>
-    <script>
+    <script nonce="{{ csp_nonce() }}">
         window.I18N_LANG = "{{ current_language or 'ar' }}";
         window.I18N_TRANSLATIONS = {{ translation_dict | tojson }};
     </script>

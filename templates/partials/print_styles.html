@@ -1,5 +1,5 @@
 <link rel="stylesheet" href="{{ dist_url('css/print-base.css') }}">
-<style>
+<style nonce="{{ csp_nonce() }}">
 @page {
   {% if settings is defined and settings %}
   size: {{ settings.paper_size or 'A4' }} {{ settings.orientation or 'portrait' }};

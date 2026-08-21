@@ -3,7 +3,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 import pytest
-from flask import Flask
+from flask import Flask, g
 
 
 @pytest.fixture
@@ -364,3 +364,24 @@ class TestContextProcessor:
         ):
             ctx = self._ctx(ctx_app)
         assert ctx["developer_name"] is not None or ctx["developer_name"] == ""
+
+
+class TestCspNonce:
+    def test_csp_nonce_is_stable_within_request(self, ctx_app):
+        with ctx_app.test_request_context():
+            n1 = ctx_app.jinja_env.globals["csp_nonce"]()
+            n2 = ctx_app.jinja_env.globals["csp_nonce"]()
+        assert n1
+        assert n1 == n2
+
+    def test_csp_nonce_changes_across_requests(self, ctx_app):
+        with ctx_app.test_request_context():
+            n1 = ctx_app.jinja_env.globals["csp_nonce"]()
+        with ctx_app.test_request_context():
+            n2 = ctx_app.jinja_env.globals["csp_nonce"]()
+        assert n1 != n2
+
+    def test_csp_nonce_stored_on_g(self, ctx_app):
+        with ctx_app.test_request_context():
+            nonce = ctx_app.jinja_env.globals["csp_nonce"]()
+            assert g.csp_nonce == nonce

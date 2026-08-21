@@ -1,6 +1,7 @@
 """Flask application factory for Azad Intelligent Systems ERP."""
 
 import os
+import secrets
 import time
 import uuid
 from typing import Any, cast
@@ -58,7 +59,6 @@ def create_app(config_class=Config) -> Flask:
     # Dev mode: auto-generate owner password if empty
     if app.config.get("DEBUG") or app.config.get("APP_ENV", "production") != "production":
         if not os.environ.get("OWNER_PASSWORD"):
-            import secrets
             import string
 
             _generated = "".join(secrets.choice(string.ascii_letters + string.digits + "@$!%*?&") for _ in range(20))
@@ -270,10 +270,17 @@ def create_app(config_class=Config) -> Flask:
             response.headers["Cache-Control"] = "no-cache"
         if not app.debug and app.config.get("APP_ENV", "").lower() == "production":
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+
+        csp_strict = app.config.get("CSP_STRICT", False)
+        nonce = getattr(g, "csp_nonce", None)
+        if nonce is None and csp_strict:
+            nonce = secrets.token_urlsafe(16)
+            g.csp_nonce = nonce
+        nonce_directive = f"'nonce-{nonce}' " if nonce else ""
         csp = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
-            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
+            f"script-src 'self' {nonce_directive}'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+            f"style-src 'self' {nonce_directive}'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
             "img-src 'self' data: blob:; "
             "media-src 'self' data: blob:; "
@@ -283,9 +290,10 @@ def create_app(config_class=Config) -> Flask:
             "base-uri 'self'; "
             "form-action 'self'; "
             # NOTE: unsafe-inline is retained because ~300 templates still contain inline
-            # scripts/styles. Removing it requires extracting all inline blocks to external
-            # files or adding nonces; that migration is tracked for a future hardening wave.
+            # scripts/styles without a nonce. Phase 1 adds nonces to all inline blocks;
+            # once 1e is complete we can drop 'unsafe-inline' from script-src/style-src.
             # unsafe-eval remains until dynamic eval paths are refactored.
+            # CSP_STRICT=false provides an instant rollback if anything breaks.
         )
         response.headers["Content-Security-Policy"] = csp
         return response

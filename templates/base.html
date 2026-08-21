@@ -137,7 +137,7 @@
   </div>
 
   <!-- Global App Config -->
-  <script>
+  <script nonce="{{ csp_nonce() }}">
     window.APP_ENUMS = {{ app_enums | tojson | safe }};
     window.CURRENT_USER_PERMISSIONS = {{ current_user_permissions | tojson | safe }};
     window.hasPermission = (code) => (window.CURRENT_USER_PERMISSIONS || []).includes(code);

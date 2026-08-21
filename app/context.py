@@ -1,10 +1,11 @@
 """Context processors and template globals for Azad Intelligent Systems ERP."""
 
 import re
+import secrets
 from datetime import datetime
 from typing import Any
 
-from flask import current_app
+from flask import current_app, g
 from flask_login import current_user
 
 from services.logging_core import LoggingCore
@@ -27,6 +28,17 @@ def register_context_processors(app):
 
     app.jinja_env.globals.setdefault("static_v", static_v)
     app.jinja_env.globals.setdefault("dist_url", dist_url)
+
+    @app.template_global()
+    def csp_nonce():
+        """Return a cryptographically random nonce for the current request.
+
+        The nonce is generated once per request and used both in the
+        Content-Security-Policy header and inline script/style tags.
+        """
+        if not hasattr(g, "csp_nonce"):
+            g.csp_nonce = secrets.token_urlsafe(16)
+        return g.csp_nonce
 
     # make t() available as a Jinja2 global so macros can use it
     app.jinja_env.globals.setdefault("t", __import__("utils.i18n", fromlist=["t"]).t)

@@ -70,6 +70,25 @@ class TestFactoryRoutes:
             assert resp.headers.get("X-Content-Type-Options") == "nosniff"
             assert resp.headers.get("X-Request-Id") == "req-1"
 
+    def test_csp_header_includes_nonce_when_strict(self, monkeypatch):
+        monkeypatch.setenv("SKIP_SYSTEM_INTEGRITY", "1")
+        from flask import g, make_response
+
+        from config import Config
+
+        class StrictConfig(Config):
+            CSP_STRICT = True
+
+        with _minimal_app(config_class=StrictConfig) as app, app.test_request_context("/"):
+            g.csp_nonce = "testnonce"
+            resp = make_response("ok")
+            resp.content_type = "text/html"
+            for func in app.after_request_funcs[None]:
+                resp = func(resp)
+            csp = resp.headers.get("Content-Security-Policy", "")
+            assert "'nonce-testnonce'" in csp
+            assert "'unsafe-inline'" in csp  # kept for rollback until Phase 1e
+
     def test_is_migration_command(self):
         import sys
 

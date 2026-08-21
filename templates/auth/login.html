@@ -125,7 +125,7 @@
     {{ _('Developed by') }} <span>{{ _('شركة ازاد للأنظمة الذكية') }}</span> &mdash; ERP &bull; Automation &bull; Smart Systems
   </footer>
 
-  <script>
+  <script nonce="{{ csp_nonce() }}">
     (() => {
       const modeInput = document.getElementById('access_mode');
       const tabs = document.querySelectorAll('.azad-login-tab');

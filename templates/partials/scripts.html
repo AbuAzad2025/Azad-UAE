@@ -100,7 +100,7 @@
 <script id="qrcode-js" data-src="{{ url_for('static', filename='adminlte/plugins/qrcodejs/qrcode.min.js') }}"></script>
 
 <!-- Lazy-loader: loads heavy libs on demand -->
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function() {
   'use strict';
   const loaded = new Set();

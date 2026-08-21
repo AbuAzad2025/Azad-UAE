@@ -28,6 +28,18 @@ from utils.tenanting import get_active_tenant_id
 
 class SaleService:
     @staticmethod
+    def _ensure_discount_within_subtotal(discount_decimal, subtotal):
+        if discount_decimal is None or subtotal is None:
+            return
+        if discount_decimal > subtotal:
+            raise ValueError(
+                gettext(
+                    "⚠️ قيمة الخصم تتجاوز إجمالي الفاتورة.\n"
+                    f"💡 الحد الأقصى المسموح للخصم هو {subtotal}"
+                )
+            )
+
+    @staticmethod
     def _commission_base_aed(profit_margin, exchange_rate, currency=None, tenant_id=None):
         if profit_margin <= Decimal("0"):
             return Decimal("0")
@@ -405,6 +417,8 @@ class SaleService:
                 # ---------------------------------
 
             sale.subtotal = subtotal
+
+            SaleService._ensure_discount_within_subtotal(discount_decimal, sale.subtotal)
 
             # Phase 1 promotion engine: record auto-applied promotional
             # discounts distinctly from the manual discount_amount.
