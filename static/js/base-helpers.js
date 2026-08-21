@@ -210,8 +210,7 @@ async function loadFxRates() {
 
 	const tbody = document.getElementById("fx-rates-body");
 	if (tbody) {
-		tbody.innerHTML =
-			`<tr><td colspan="3" class="text-center py-4"><div class="spinner-border spinner-border-sm text-muted" role="status"></div><span class="mr-2"> ${window.t("loading_ellipsis")}</span></td></tr>`;
+		tbody.innerHTML = `<tr><td colspan="3" class="text-center py-4"><div class="spinner-border spinner-border-sm text-muted" role="status"></div><span class="mr-2"> ${window.t("loading_ellipsis")}</span></td></tr>`;
 	}
 
 	try {

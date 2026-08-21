@@ -1,6 +1,6 @@
-import { state, t, qs, fetchJson, warehouseParam } from './core.js';
-import { addToCart } from './cart.js';
-import { showAlert } from './ui.js';
+import { addToCart } from "./cart.js";
+import { fetchJson, qs, state, t, warehouseParam } from "./core.js";
+import { showAlert } from "./ui.js";
 
 const handleScannedCode = async (code) => {
 	if (!code?.trim()) return;
@@ -59,4 +59,5 @@ const setupDevices = () => {
 		window.addEventListener("online", hydrate);
 	}
 };
+
 export { handleScannedCode, setupDevices };

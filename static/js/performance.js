@@ -19,7 +19,15 @@ $(document).ready(() => {
 	}
 
 	// Optimize search inputs using canonical debounce from base-helpers
-	const debounce = window.azad?.debounce || function (fn, w) { let t; return function (...a) { clearTimeout(t); t = setTimeout(() => fn.apply(this, a), w); }; };
+	const debounce =
+		window.azad?.debounce ||
+		((fn, w) => {
+			let t;
+			return function (...a) {
+				clearTimeout(t);
+				t = setTimeout(() => fn.apply(this, a), w);
+			};
+		});
 	$('input[type="search"], input[placeholder*="بحث"], input[placeholder*="search"]').each(
 		function () {
 			const $input = $(this);

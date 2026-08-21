@@ -315,7 +315,12 @@ class NotificationManager {
 	}
 
 	error(message, title) {
-		return this.show({ type: "error", title: title || window.t("error"), message, duration: 20000 });
+		return this.show({
+			type: "error",
+			title: title || window.t("error"),
+			message,
+			duration: 20000,
+		});
 	}
 
 	warning(message, title) {

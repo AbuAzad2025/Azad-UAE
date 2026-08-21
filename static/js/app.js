@@ -775,7 +775,10 @@
 				500: window.t("server_error"),
 			};
 			throw new Error(
-				data.error || data.message || fallback[resp.status] || `${window.t("unexpected_error")} (${resp.status})`,
+				data.error ||
+					data.message ||
+					fallback[resp.status] ||
+					`${window.t("unexpected_error")} (${resp.status})`,
 			);
 		}
 		return data;

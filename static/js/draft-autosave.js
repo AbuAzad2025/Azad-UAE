@@ -3,7 +3,7 @@
  * Persists form state to localStorage and offers restore on page load.
  * Usage: DraftAutosave.init('form_key', '#form-selector')
  */
-const DraftAutosave = (function () {
+const DraftAutosave = (() => {
 	const STORAGE_PREFIX = "azad_draft_";
 	const AUTOSAVE_DELAY = 5000;
 	const MAX_AGE_MS = 24 * 60 * 60 * 1000;

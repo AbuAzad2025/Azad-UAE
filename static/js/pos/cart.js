@@ -1,4 +1,17 @@
-import { state, csrf, qs, fmt, toNum, esc, baseCurrency, selectedCurrency, currentRate, priceForCurrency, currencySymbolFor, pricesIncludeVatMeta, newCartKey } from './core.js';
+import {
+	baseCurrency,
+	csrf,
+	currencySymbolFor,
+	esc,
+	fmt,
+	newCartKey,
+	priceForCurrency,
+	pricesIncludeVatMeta,
+	qs,
+	selectedCurrency,
+	state,
+	toNum,
+} from "./core.js";
 
 const HOLD_KEY = "pos_held_carts";
 
@@ -229,7 +242,14 @@ const heldCount = () => {
 };
 
 export {
-	HOLD_KEY, updateCartPrices, loadRateForCurrency, recalc,
-	renderUpsellMessages, evaluateUpsell, scheduleUpsellEval,
-	renderCart, addToCart, heldCount,
+	addToCart,
+	evaluateUpsell,
+	HOLD_KEY,
+	heldCount,
+	loadRateForCurrency,
+	recalc,
+	renderCart,
+	renderUpsellMessages,
+	scheduleUpsellEval,
+	updateCartPrices,
 };

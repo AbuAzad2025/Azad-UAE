@@ -1,9 +1,62 @@
-﻿import { state, qs, qsa, fmt, toNum, newCartKey, csrf, baseCurrency, selectedCurrency, currentRate, priceForCurrency, currencySymbolFor, fetchJson, warehouseParam, esc } from './core.js';
-import { HOLD_KEY, updateCartPrices, loadRateForCurrency, recalc, renderCart, addToCart, heldCount, renderUpsellMessages, evaluateUpsell, scheduleUpsellEval } from './cart.js';
-import { showAlert, showModalAlert, hideModalAlert, customerHint, loadOrderTypes, toggleTableField, loadTableOptions, renderProductResults, runProductSearch, addFirstOrLookup, loadCategories, loadProducts, loadFloors, loadTables } from './ui.js';
-import { settlePin, requestOverrideToken, confirmPin, postWithOverride, needsOverride, splitEnabled, splitSumRefresh, addSplitRow, readSplitPayments, syncPay } from './payments.js';
-import { autoPrintSale, autoPrintQueuedReceipt } from './printer.js';
-import { handleScannedCode, setupDevices } from './offline-sync.js';
+﻿import {
+	addToCart,
+	evaluateUpsell,
+	HOLD_KEY,
+	heldCount,
+	loadRateForCurrency,
+	recalc,
+	renderCart,
+	renderUpsellMessages,
+	scheduleUpsellEval,
+	updateCartPrices,
+} from "./cart.js";
+import {
+	baseCurrency,
+	csrf,
+	currencySymbolFor,
+	currentRate,
+	esc,
+	fetchJson,
+	fmt,
+	newCartKey,
+	priceForCurrency,
+	qs,
+	qsa,
+	selectedCurrency,
+	state,
+	toNum,
+	warehouseParam,
+} from "./core.js";
+import { handleScannedCode, setupDevices } from "./offline-sync.js";
+import {
+	addSplitRow,
+	confirmPin,
+	needsOverride,
+	postWithOverride,
+	readSplitPayments,
+	requestOverrideToken,
+	settlePin,
+	splitEnabled,
+	splitSumRefresh,
+	syncPay,
+} from "./payments.js";
+import { autoPrintQueuedReceipt, autoPrintSale } from "./printer.js";
+import {
+	addFirstOrLookup,
+	customerHint,
+	hideModalAlert,
+	loadCategories,
+	loadFloors,
+	loadOrderTypes,
+	loadProducts,
+	loadTableOptions,
+	loadTables,
+	renderProductResults,
+	runProductSearch,
+	showAlert,
+	showModalAlert,
+	toggleTableField,
+} from "./ui.js";
 
 qs("#cartBody").addEventListener("click", (e) => {
 	const btn = e.target.closest("button[data-act]");
@@ -451,7 +504,8 @@ async function loadSession() {
 			qs("#sessionNumber").textContent = s.number;
 			qs("#sessionBalance").textContent = fmt(s.opening_balance);
 			qs("#sessionTotal").textContent = fmt(s.total_sales);
-			qs("#sessionTime").textContent = `${window.t("مفتوحة منذ")} ${s.duration_minutes} ${window.t("دقيقة")}`;
+			qs("#sessionTime").textContent =
+				`${window.t("مفتوحة منذ")} ${s.duration_minutes} ${window.t("دقيقة")}`;
 			qs("#closeOpening").textContent = fmt(s.opening_balance);
 		} else {
 			if (window.cfdBroadcast) cfdBroadcast.setSession(null);

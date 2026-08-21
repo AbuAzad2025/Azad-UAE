@@ -1,5 +1,5 @@
-import { qs, qsa, fmt, toNum, csrf } from './core.js';
-import { showAlert } from './ui.js';
+import { csrf, fmt, qs, qsa, toNum } from "./core.js";
+import { showAlert } from "./ui.js";
 
 let pinResolver = null;
 const settlePin = (token) => {
@@ -43,10 +43,12 @@ const confirmPin = async () => {
 			settlePin(j.override_token);
 			return;
 		}
-		err.textContent = j.error || "\u062a\u0639\u0630\u0631 \u0627\u0644\u062a\u0641\u0648\u064a\u0636";
+		err.textContent =
+			j.error || "\u062a\u0639\u0630\u0631 \u0627\u0644\u062a\u0641\u0648\u064a\u0636";
 		err.classList.remove("d-none");
 	} catch (_) {
-		err.textContent = "\u0641\u0634\u0644 \u0627\u0644\u0627\u062a\u0635\u0627\u0644 \u0628\u0627\u0644\u062e\u0627\u062f\u0645";
+		err.textContent =
+			"\u0641\u0634\u0644 \u0627\u0644\u0627\u062a\u0635\u0627\u0644 \u0628\u0627\u0644\u062e\u0627\u062f\u0645";
 		err.classList.remove("d-none");
 	}
 };
@@ -73,13 +75,18 @@ const postWithOverride = async (url, body, action) => {
 	return send(token);
 };
 const needsOverride = (r, j) =>
-	r.status === 403 && typeof j.error === "string" && j.error.includes("\u062a\u0641\u0648\u064a\u0636");
+	r.status === 403 &&
+	typeof j.error === "string" &&
+	j.error.includes("\u062a\u0641\u0648\u064a\u0636");
 
 const SPLIT_METHODS = [
 	["cash", "\u0646\u0642\u062f\u064a"],
 	["card", "\u0628\u0637\u0627\u0642\u0629"],
 	["bank_transfer", "\u062a\u062d\u0648\u064a\u0644 \u0628\u0646\u0643\u064a"],
-	["e_wallet", "\u0645\u062d\u0641\u0638\u0629 \u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a\u0629"],
+	[
+		"e_wallet",
+		"\u0645\u062d\u0641\u0638\u0629 \u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a\u0629",
+	],
 	["cheque", "\u0634\u064a\u0643"],
 ];
 const splitEnabled = () => qs("#splitTenderToggle")?.checked === true;
@@ -129,7 +136,10 @@ const addSplitRow = (amount, method) => {
 const readSplitPayments = () => {
 	const rows = qsa("#splitTenderRows .split-row");
 	if (!rows.length) {
-		showAlert("\u0623\u0636\u0641 \u062f\u0641\u0639\u0629 \u0648\u0627\u062d\u062f\u0629 \u0639\u0644\u0649 \u0627\u0644\u0623\u0642\u0644 \u0623\u0648 \u0623\u0648\u0642\u0641 \u0627\u0644\u062f\u0641\u0639 \u0627\u0644\u0645\u062a\u0639\u062f\u062f", "warning");
+		showAlert(
+			"\u0623\u0636\u0641 \u062f\u0641\u0639\u0629 \u0648\u0627\u062d\u062f\u0629 \u0639\u0644\u0649 \u0627\u0644\u0623\u0642\u0644 \u0623\u0648 \u0623\u0648\u0642\u0641 \u0627\u0644\u062f\u0641\u0639 \u0627\u0644\u0645\u062a\u0639\u062f\u062f",
+			"warning",
+		);
 		return null;
 	}
 	const cur = qs("#currency").value;
@@ -139,7 +149,10 @@ const readSplitPayments = () => {
 		const amount = toNum(row.querySelector(".split-amount")?.value) || 0;
 		const method = row.querySelector(".split-method")?.value || "";
 		if (amount <= 0 || !method) {
-			showAlert("\u0643\u0644 \u062f\u0641\u0639\u0629 \u062a\u062d\u062a\u0627\u062c \u0645\u0628\u0644\u063a\u064b\u0627 \u0623\u0643\u0628\u0631 \u0645\u0646 \u0635\u0641\u0631 \u0648\u0637\u0631\u064a\u0642\u0629 \u062f\u0641\u0639", "warning");
+			showAlert(
+				"\u0643\u0644 \u062f\u0641\u0639\u0629 \u062a\u062d\u062a\u0627\u062c \u0645\u0628\u0644\u063a\u064b\u0627 \u0623\u0643\u0628\u0631 \u0645\u0646 \u0635\u0641\u0631 \u0648\u0637\u0631\u064a\u0642\u0629 \u062f\u0641\u0639",
+				"warning",
+			);
 			return null;
 		}
 		chunks.push({ amount, payment_method: method, currency: cur, exchange_rate: rate });
@@ -157,6 +170,15 @@ const syncPay = () => {
 };
 
 export {
-	settlePin, requestOverrideToken, confirmPin, postWithOverride, needsOverride,
-	SPLIT_METHODS, splitEnabled, splitSumRefresh, addSplitRow, readSplitPayments, syncPay,
+	addSplitRow,
+	confirmPin,
+	needsOverride,
+	postWithOverride,
+	readSplitPayments,
+	requestOverrideToken,
+	SPLIT_METHODS,
+	settlePin,
+	splitEnabled,
+	splitSumRefresh,
+	syncPay,
 };

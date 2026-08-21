@@ -323,11 +323,17 @@ interface Window {
 	lazyLoad?: LazyLoad;
 	SmartSearch?: SmartSearch;
 	printSaleTickets?: (saleId: number | string) => Promise<void>;
-	printQueuedCartReceipt?: (cart: PosCartItem[], totals: PosTotals | Record<string, unknown>, payload: Record<string, unknown>) => Promise<void>;
+	printQueuedCartReceipt?: (
+		cart: PosCartItem[],
+		totals: PosTotals | Record<string, unknown>,
+		payload: Record<string, unknown>,
+	) => Promise<void>;
 	setupTerminalButton?: (options: PosTerminalOptions) => Promise<unknown>;
 	PosScaleSerial?: PosScaleSerial;
 	setupPosScaleUI?: (options: PosScaleUIOptions) => void;
-	setupCameraScanUI?: (options: PosCameraScanUIOptions) => { start?(): void; stop?(): void } | undefined;
+	setupCameraScanUI?: (
+		options: PosCameraScanUIOptions,
+	) => { start?(): void; stop?(): void } | undefined;
 	posOfflineCatalog?: PosOfflineCatalog;
 	_cfdBroadcast?: {
 		sendCart(cart: PosCartItem[], totals: Record<string, unknown>): void;
@@ -369,13 +375,20 @@ interface Window {
 	_posFetchJson?: (url: string) => Promise<PosFetchResult>;
 	_posWarehouseParam?: (sep?: string) => string;
 	_posNeedsOverride?: (r: Response, j: { error?: string }) => boolean;
-	_posPostWithOverride?: (url: string, body: Record<string, unknown>, action: string) => Promise<{ r: Response; j: Record<string, unknown> }>;
+	_posPostWithOverride?: (
+		url: string,
+		body: Record<string, unknown>,
+		action: string,
+	) => Promise<{ r: Response; j: Record<string, unknown> }>;
 	_posRequestOverrideToken?: (action: string) => Promise<string | null>;
 	_posConfirmPin?: () => Promise<void>;
 	_posSettlePin?: (token: string | null) => void;
 	_posEvaluateUpsell?: () => Promise<void>;
 	_posScheduleUpsellEval?: () => void;
-	_posRenderUpsellMessages?: (container: HTMLElement | null, prompts: { message?: string }[]) => void;
+	_posRenderUpsellMessages?: (
+		container: HTMLElement | null,
+		prompts: { message?: string }[],
+	) => void;
 	_posSyncPay?: () => void;
 	onerror?: (
 		message: string,

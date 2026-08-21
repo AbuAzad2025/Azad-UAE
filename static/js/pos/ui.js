@@ -1,8 +1,19 @@
-import { state, t, qs, qsa, fmt, esc, priceForCurrency, currencySymbolFor, selectedCurrency, fetchJson, warehouseParam } from './core.js';
-import { addToCart } from './cart.js';
+import { addToCart } from "./cart.js";
+import {
+	currencySymbolFor,
+	esc,
+	fetchJson,
+	fmt,
+	priceForCurrency,
+	qs,
+	selectedCurrency,
+	state,
+	t,
+	warehouseParam,
+} from "./core.js";
 
-let customerTimer = null;
-let productTimer = null;
+const _customerTimer = null;
+const _productTimer = null;
 let productBusy = false;
 
 const showAlert = (msg, level = "danger") => {
@@ -125,9 +136,7 @@ const addFirstOrLookup = async (q) => {
 		qs("#productResults").classList.add("d-none");
 		return;
 	}
-	const res = await fetchJson(
-		`/pos/api/product?code=${encodeURIComponent(q)}${warehouseParam()}`,
-	);
+	const res = await fetchJson(`/pos/api/product?code=${encodeURIComponent(q)}${warehouseParam()}`);
 	if (!res.ok) {
 		if ((state.lastProductResults || []).length) {
 			await addToCart(state.lastProductResults[0]);
@@ -290,8 +299,18 @@ const loadTables = async (floorId) => {
 };
 
 export {
-	showAlert, showModalAlert, hideModalAlert, customerHint,
-	loadOrderTypes, toggleTableField, loadTableOptions,
-	renderProductResults, runProductSearch, addFirstOrLookup,
-	loadCategories, loadProducts, loadFloors, loadTables,
+	addFirstOrLookup,
+	customerHint,
+	hideModalAlert,
+	loadCategories,
+	loadFloors,
+	loadOrderTypes,
+	loadProducts,
+	loadTableOptions,
+	loadTables,
+	renderProductResults,
+	runProductSearch,
+	showAlert,
+	showModalAlert,
+	toggleTableField,
 };

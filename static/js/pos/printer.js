@@ -8,4 +8,5 @@ const autoPrintQueuedReceipt = (cart, totals, payload) => {
 		void window.printQueuedCartReceipt(cart, totals, payload);
 	}
 };
-export { autoPrintSale, autoPrintQueuedReceipt };
+
+export { autoPrintQueuedReceipt, autoPrintSale };

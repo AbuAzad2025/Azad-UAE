@@ -41,8 +41,7 @@ const esc = (s) => {
 		.replace(/"/g, "&quot;");
 };
 const pricesIncludeVatMeta =
-	document.querySelector('meta[name="pos-prices-include-vat"]')?.getAttribute("content") ===
-	"true";
+	document.querySelector('meta[name="pos-prices-include-vat"]')?.getAttribute("content") === "true";
 const CURRENCY_SYMBOLS = {
 	USD: "$",
 	ILS: "₪",
@@ -82,9 +81,24 @@ const fetchJson = async (url) => {
 	const data = await r.json();
 	return { ok: true, data };
 };
+
 export {
-	t, csrf, state, newCartKey, qs, qsa, fmt, toNum, esc,
-	baseCurrency, selectedCurrency, currentRate, priceForCurrency,
-	CURRENCY_SYMBOLS, currencySymbolFor, pricesIncludeVatMeta,
-	warehouseParam, fetchJson,
+	baseCurrency,
+	CURRENCY_SYMBOLS,
+	csrf,
+	currencySymbolFor,
+	currentRate,
+	esc,
+	fetchJson,
+	fmt,
+	newCartKey,
+	priceForCurrency,
+	pricesIncludeVatMeta,
+	qs,
+	qsa,
+	selectedCurrency,
+	state,
+	t,
+	toNum,
+	warehouseParam,
 };
