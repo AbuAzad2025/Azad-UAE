@@ -396,7 +396,8 @@
             }
 
             searchTimeout = setTimeout(() => {
-                $.get(`{{ url_for("reports.api_entity_search") }}?q=${encodeURIComponent(query)}&type=${type}`, (data) => {
+                $.get(`{{ url_for("reports.api_entity_search") }}?q=${encodeURIComponent(query)}&type=${type}`, (response) => {
+                    const data = response && response.data ? response.data : response;
                     searchResults.empty();
                     if (data.length > 0) {
                         data.forEach(item => {

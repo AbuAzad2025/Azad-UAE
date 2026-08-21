@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
-from flask import Blueprint, jsonify, render_template, request
+from flask import Blueprint, render_template, request
 from flask_babel import gettext
 from flask_login import current_user, login_required
 from sqlalchemy import func, select
@@ -18,6 +18,7 @@ from models import (
     SaleLine,
 )
 from models.payment import payment_affects_balance
+from utils.api_response import success_response
 from utils.cache_decorators import cached_query
 from utils.decorators import permission_required, report_branch_scope_id
 from utils.feature_guards import install_feature_gate
@@ -525,21 +526,21 @@ def partners():
             total_paid_to = paid_map.get(sup.id, Decimal("0"))
             total_refunds = refunds_map.get(sup.id, Decimal("0"))
 
-        # Balance = Purchases - (Paid - Refunds)
-        # Or: Purchases - Net Paid
-        net_paid = total_paid_to - total_refunds
-        balance_due = total_purchases - net_paid
+            # Balance = Purchases - (Paid - Refunds)
+            # Or: Purchases - Net Paid
+            net_paid = total_paid_to - total_refunds
+            balance_due = total_purchases - net_paid
 
-        if total_purchases > 0 or total_paid_to > 0 or total_refunds > 0:
-            suppliers_summary.append(
-                {
-                    "name": sup.name,
-                    "total_purchases": total_purchases,
-                    "paid_to": total_paid_to,
-                    "received_from": total_refunds,
-                    "balance_due": balance_due,
-                }
-            )
+            if total_purchases > 0 or total_paid_to > 0 or total_refunds > 0:
+                suppliers_summary.append(
+                    {
+                        "name": sup.name,
+                        "total_purchases": total_purchases,
+                        "paid_to": total_paid_to,
+                        "received_from": total_refunds,
+                        "balance_due": balance_due,
+                    }
+                )
 
     return render_template(
         "reports/partners.html",
@@ -1690,73 +1691,72 @@ def inventory_export():
 def api_model_fields():
     """Return column names and date fields for a given model/table (for dynamic report builder)."""
     model = (request.args.get("model") or "").strip()
-    if not model:
-        return jsonify(columns=[], date_fields=[], all_fields=[])
-    model_lower = model.lower()
     columns = []
     date_fields = []
-    if model_lower in ("sale", "sales"):
-        columns = [
-            "id",
-            "sale_number",
-            "sale_date",
-            "customer_id",
-            "total",
-            "status",
-            "branch_id",
-            "created_at",
-        ]
-        date_fields = ["sale_date", "created_at"]
-    elif model_lower in ("purchase", "purchases"):
-        columns = [
-            "id",
-            "purchase_number",
-            "purchase_date",
-            "supplier_id",
-            "total",
-            "status",
-            "branch_id",
-            "created_at",
-        ]
-        date_fields = ["purchase_date", "created_at"]
-    elif model_lower in ("customer", "customers"):
-        columns = [
-            "id",
-            "name",
-            "phone",
-            "email",
-            "customer_type",
-            "balance",
-            "created_at",
-        ]
-        date_fields = ["created_at"]
-    elif model_lower in ("product", "products"):
-        columns = [
-            "id",
-            "name",
-            "sku",
-            "barcode",
-            "regular_price",
-            "cost_price",
-            "current_stock",
-            "created_at",
-        ]
-        date_fields = ["created_at"]
-    elif model_lower in ("expense", "expenses"):
-        columns = [
-            "id",
-            "expense_date",
-            "amount",
-            "category_id",
-            "description",
-            "branch_id",
-            "created_at",
-        ]
-        date_fields = ["expense_date", "created_at"]
-    else:
-        date_fields = ["created_at", "date", "updated_at"]
+    if model:
+        model_lower = model.lower()
+        if model_lower in ("sale", "sales"):
+            columns = [
+                "id",
+                "sale_number",
+                "sale_date",
+                "customer_id",
+                "total",
+                "status",
+                "branch_id",
+                "created_at",
+            ]
+            date_fields = ["sale_date", "created_at"]
+        elif model_lower in ("purchase", "purchases"):
+            columns = [
+                "id",
+                "purchase_number",
+                "purchase_date",
+                "supplier_id",
+                "total",
+                "status",
+                "branch_id",
+                "created_at",
+            ]
+            date_fields = ["purchase_date", "created_at"]
+        elif model_lower in ("customer", "customers"):
+            columns = [
+                "id",
+                "name",
+                "phone",
+                "email",
+                "customer_type",
+                "balance",
+                "created_at",
+            ]
+            date_fields = ["created_at"]
+        elif model_lower in ("product", "products"):
+            columns = [
+                "id",
+                "name",
+                "sku",
+                "barcode",
+                "regular_price",
+                "cost_price",
+                "current_stock",
+                "created_at",
+            ]
+            date_fields = ["created_at"]
+        elif model_lower in ("expense", "expenses"):
+            columns = [
+                "id",
+                "expense_date",
+                "amount",
+                "category_id",
+                "description",
+                "branch_id",
+                "created_at",
+            ]
+            date_fields = ["expense_date", "created_at"]
+        else:
+            date_fields = ["created_at", "date", "updated_at"]
     all_fields = list(columns) if columns else []
-    return jsonify(columns=columns, date_fields=date_fields, all_fields=all_fields)
+    return success_response(data={"columns": columns, "date_fields": date_fields, "all_fields": all_fields})
 
 
 @reports_bp.route("/api/entity-search")
@@ -1801,7 +1801,7 @@ def api_entity_search():
         for c in customers:
             results.append({"id": c.id, "name": c.name, "phone": c.phone, "type": c.customer_type})
 
-    return jsonify(results)
+    return success_response(data=results)
 
 
 @reports_bp.route("/entity_report_fragment/<entity_type>/<id>")

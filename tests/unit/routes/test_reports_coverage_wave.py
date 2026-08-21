@@ -606,8 +606,9 @@ class TestEntitySearchWave:
             resp = reports_client.get("/reports/api/entity-search?type=supplier&q=acme")
             assert resp.status_code == 200
             body = resp.get_json()
-            assert len(body) == 1
-            assert body[0]["type"] == "supplier"
+            assert body["success"] is True
+            assert len(body["data"]) == 1
+            assert body["data"][0]["type"] == "supplier"
 
     def test_customer_search_returns_results(self, reports_client, mock_user):
         _configure_user(mock_user)
@@ -616,7 +617,9 @@ class TestEntitySearchWave:
         with patch("routes.reports._scoped_customer_query", return_value=scoped):
             resp = reports_client.get("/reports/api/entity-search?type=customer&q=john")
             assert resp.status_code == 200
-            assert resp.get_json()[0]["name"] == "John"
+            body = resp.get_json()
+            assert body["success"] is True
+            assert body["data"][0]["name"] == "John"
 
 
 class TestEntityFragmentWave:

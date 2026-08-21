@@ -379,65 +379,84 @@ class TestReportsApiModelFields:
         resp = reports_client.get("/reports/api/model_fields")
         assert resp.status_code == 200
         body = resp.get_json()
-        assert body["columns"] == []
-        assert body["date_fields"] == []
-        assert body["all_fields"] == []
+        assert body["success"] is True
+        data = body["data"]
+        assert data["columns"] == []
+        assert data["date_fields"] == []
+        assert data["all_fields"] == []
 
     def test_empty_model_param_returns_empty_arrays(self, reports_client):
         resp = reports_client.get("/reports/api/model_fields?model=")
         assert resp.status_code == 200
         body = resp.get_json()
-        assert body["columns"] == []
-        assert body["date_fields"] == []
-        assert body["all_fields"] == []
+        assert body["success"] is True
+        data = body["data"]
+        assert data["columns"] == []
+        assert data["date_fields"] == []
+        assert data["all_fields"] == []
 
     def test_sale_model_returns_columns(self, reports_client):
         resp = reports_client.get("/reports/api/model_fields?model=sale")
         assert resp.status_code == 200
         body = resp.get_json()
-        assert "sale_number" in body["columns"]
-        assert "sale_date" in body["date_fields"]
-        assert body["all_fields"] == body["columns"]
+        assert body["success"] is True
+        data = body["data"]
+        assert "sale_number" in data["columns"]
+        assert "sale_date" in data["date_fields"]
+        assert data["all_fields"] == data["columns"]
 
     def test_sales_plural_model(self, reports_client):
         resp = reports_client.get("/reports/api/model_fields?model=sales")
         assert resp.status_code == 200
         body = resp.get_json()
-        assert "id" in body["columns"]
+        assert body["success"] is True
+        assert "id" in body["data"]["columns"]
 
     def test_unknown_model_default_date_fields(self, reports_client):
         resp = reports_client.get("/reports/api/model_fields?model=unknown_table")
         assert resp.status_code == 200
         body = resp.get_json()
-        assert body["columns"] == []
-        assert "created_at" in body["date_fields"]
+        assert body["success"] is True
+        data = body["data"]
+        assert data["columns"] == []
+        assert "created_at" in data["date_fields"]
 
 
 class TestReportsApiEntitySearch:
     def test_entity_search_supplier_default(self, reports_client):
         resp = reports_client.get("/reports/api/entity-search")
         assert resp.status_code == 200
-        assert resp.get_json() == []
+        body = resp.get_json()
+        assert body["success"] is True
+        assert body["data"] == []
 
     def test_entity_search_with_q(self, reports_client):
         resp = reports_client.get("/reports/api/entity-search?q=acme")
         assert resp.status_code == 200
-        assert isinstance(resp.get_json(), list)
+        body = resp.get_json()
+        assert body["success"] is True
+        assert isinstance(body["data"], list)
 
     def test_entity_search_partner_type(self, reports_client):
         resp = reports_client.get("/reports/api/entity-search?type=partner&q=ali")
         assert resp.status_code == 200
-        assert isinstance(resp.get_json(), list)
+        body = resp.get_json()
+        assert body["success"] is True
+        assert isinstance(body["data"], list)
 
     def test_entity_search_merchant_type(self, reports_client):
         resp = reports_client.get("/reports/api/entity-search?type=merchant&q=shop")
         assert resp.status_code == 200
-        assert isinstance(resp.get_json(), list)
+        body = resp.get_json()
+        assert body["success"] is True
+        assert isinstance(body["data"], list)
 
     def test_entity_search_customer_type(self, reports_client):
         resp = reports_client.get("/reports/api/entity-search?type=customer&q=john")
         assert resp.status_code == 200
-        assert isinstance(resp.get_json(), list)
+        body = resp.get_json()
+        assert body["success"] is True
+        assert isinstance(body["data"], list)
 
 
 class TestReportsEntityFragment:
@@ -860,7 +879,7 @@ class TestReportsApiModelFieldsAll:
     def test_model_fields_variants(self, reports_client, model, expected_col):
         resp = reports_client.get(f"/reports/api/model_fields?model={model}")
         assert resp.status_code == 200
-        assert expected_col in resp.get_json()["columns"]
+        assert expected_col in resp.get_json()["data"]["columns"]
 
 
 class TestReportsReceivablesDeep:
