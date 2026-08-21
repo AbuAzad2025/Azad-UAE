@@ -405,7 +405,9 @@ class TestSuppliersApiSearch:
         ):
             resp = suppliers_client.get("/suppliers/api/search?q=vendor")
         assert resp.status_code == 200
-        assert isinstance(resp.get_json(), list)
+        body = resp.get_json()
+        assert body["success"] is True
+        assert isinstance(body["data"], list)
 
     def test_api_search_empty_query(self, suppliers_client):
         with (
@@ -417,6 +419,9 @@ class TestSuppliersApiSearch:
         ):
             resp = suppliers_client.get("/suppliers/api/search")
         assert resp.status_code == 200
+        body = resp.get_json()
+        assert body["success"] is True
+        assert isinstance(body["data"], list)
 
     def test_api_search_error(self, suppliers_client):
         with (
@@ -427,4 +432,6 @@ class TestSuppliersApiSearch:
             ),
         ):
             resp = suppliers_client.get("/suppliers/api/search?q=x")
-        assert resp.get_json() == []
+        body = resp.get_json()
+        assert body["success"] is True
+        assert body["data"] == []

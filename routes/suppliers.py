@@ -7,7 +7,6 @@ from flask import (
     Blueprint,
     current_app,
     flash,
-    jsonify,
     redirect,
     render_template,
     request,
@@ -20,6 +19,7 @@ from sqlalchemy import desc, func, select
 from extensions import db, limiter
 from models import Payment, Purchase, PurchaseReturn, Supplier
 from services.logging_core import LoggingCore
+from utils.api_response import success_response
 from utils.branching import should_show_all_branch_columns
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
@@ -833,7 +833,7 @@ def api_search():
                 }
             )
 
-        return jsonify(results)
+        return success_response(data=results)
     except Exception as e:
         print(f"Error in supplier search API: {e}")
-        return jsonify([])
+        return success_response(data=[])
