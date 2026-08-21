@@ -164,7 +164,15 @@ class Config:
 
     RATELIMIT_ENABLED = _bool(os.environ.get("RATELIMIT_ENABLED"), True)
     RATELIMIT_DEFAULT = "100000 per hour"
-    RATELIMIT_STORAGE_URI = os.environ.get("RATELIMIT_STORAGE_URI", "memory://")
+    # Prefer explicit RATELIMIT_STORAGE_URI; otherwise fall back to REDIS_URL when
+    # the deployment provides one, and only use in-memory storage as a last resort.
+    _ratelimit_storage = os.environ.get("RATELIMIT_STORAGE_URI")
+    if _ratelimit_storage:
+        RATELIMIT_STORAGE_URI = _ratelimit_storage
+    elif os.environ.get("REDIS_URL"):
+        RATELIMIT_STORAGE_URI = os.environ["REDIS_URL"]
+    else:
+        RATELIMIT_STORAGE_URI = "memory://"
     RATELIMIT_LOGIN = "1000 per hour;100 per minute"
     RATELIMIT_API = "600 per hour;10 per second"
 

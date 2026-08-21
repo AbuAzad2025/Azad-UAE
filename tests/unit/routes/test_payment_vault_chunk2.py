@@ -99,69 +99,117 @@ class TestReplayProtection:
 
 
 class TestIdempotencyKey:
-    """Idempotency-Key cache behavior."""
+    """Durable Idempotency-Key ledger behavior for public vault APIs."""
 
-    @staticmethod
-    def _reset_store():
-        from routes.payment_vault import _idempotency_store
-
-        _idempotency_store.clear()
-
-    def test_cache_miss_returns_none(self, app_factory, mocker):
+    def test_missing_key_header_returns_400(self, app_factory, mocker):
         from routes.payment_vault import _check_idempotency_key, payment_vault_bp
 
         app = app_factory(payment_vault_bp)
-        self._reset_store()
-        with app.test_request_context(
-            headers={"Idempotency-Key": "key-001"},
-        ):
-            result = _check_idempotency_key()
-        assert result is None
+        with app.test_request_context():
+            result = _check_idempotency_key("vault_api_purchase")
+        assert result is not None
+        resp, code = result
+        assert code == 400
+        assert "Idempotency-Key" in resp.get_json()["error"]
 
-    def test_cache_hit_returns_cached_response(self, app_factory, mocker):
-        from routes.payment_vault import (
-            _check_idempotency_key,
-            _save_idempotency_key,
-            payment_vault_bp,
-        )
+    def test_fresh_key_begins_ledger_and_returns_none(self, app_factory, mocker):
+        from routes.payment_vault import _check_idempotency_key, payment_vault_bp
 
         app = app_factory(payment_vault_bp)
-        self._reset_store()
+        mock_begin = mocker.patch(
+            "routes.payment_vault.IdempotencyService.begin",
+            return_value=(MagicMock(), None),
+        )
+        mock_key = MagicMock()
+        mock_key.tenant_id = 1
+        mock_key.created_by = 7
+
         with app.test_request_context(
             headers={"Idempotency-Key": "key-001"},
+            json={"amount": 50},
         ):
-            _save_idempotency_key({"success": True}, 201)
-            resp, code = _check_idempotency_key()
+            from flask import g
+
+            g.vault_api_key = mock_key
+            result = _check_idempotency_key("vault_api_purchase")
+
+        assert result is None
+        mock_begin.assert_called_once()
+        call_kwargs = mock_begin.call_args.kwargs
+        assert call_kwargs["tenant_id"] == 1
+        assert call_kwargs["user_id"] == 7
+        assert call_kwargs["endpoint"] == "vault_api_purchase"
+        assert call_kwargs["key"] == "key-001"
+
+    def test_completed_replay_returns_stored_response(self, app_factory, mocker):
+        from routes.payment_vault import _check_idempotency_key, payment_vault_bp
+
+        app = app_factory(payment_vault_bp)
+        mocker.patch(
+            "routes.payment_vault.IdempotencyService.begin",
+            return_value=(None, ({"success": True, "id": 5}, 201)),
+        )
+
+        with app.test_request_context(
+            headers={"Idempotency-Key": "key-002"},
+            json={"amount": 50},
+        ):
+            resp, code = _check_idempotency_key("vault_api_purchase")
+
         assert code == 201
         assert resp.get_json()["success"] is True
+        assert resp.get_json()["idempotent_replay"] is True
 
-    def test_no_key_header_returns_none(self, app_factory, mocker):
+    def test_in_flight_returns_409(self, app_factory, mocker):
         from routes.payment_vault import _check_idempotency_key, payment_vault_bp
+        from services.idempotency_service import IdempotencyInFlightError
 
         app = app_factory(payment_vault_bp)
-        self._reset_store()
-        with app.test_request_context():
-            result = _check_idempotency_key()
-        assert result is None
-
-    def test_different_keys_independent(self, app_factory, mocker):
-        from routes.payment_vault import (
-            _check_idempotency_key,
-            _save_idempotency_key,
-            payment_vault_bp,
+        mocker.patch(
+            "routes.payment_vault.IdempotencyService.begin",
+            side_effect=IdempotencyInFlightError,
         )
 
+        with app.test_request_context(
+            headers={"Idempotency-Key": "key-003"},
+            json={"amount": 50},
+        ):
+            resp, code = _check_idempotency_key("vault_api_purchase")
+
+        assert code == 409
+
+    def test_hash_mismatch_returns_422(self, app_factory, mocker):
+        from routes.payment_vault import _check_idempotency_key, payment_vault_bp
+        from services.idempotency_service import IdempotencyHashMismatchError
+
         app = app_factory(payment_vault_bp)
-        self._reset_store()
+        mocker.patch(
+            "routes.payment_vault.IdempotencyService.begin",
+            side_effect=IdempotencyHashMismatchError,
+        )
+
         with app.test_request_context(
-            headers={"Idempotency-Key": "key-A"},
+            headers={"Idempotency-Key": "key-004"},
+            json={"amount": 50},
         ):
-            _save_idempotency_key({"id": "A"}, 201)
-        with app.test_request_context(
-            headers={"Idempotency-Key": "key-B"},
-        ):
-            result = _check_idempotency_key()
-        assert result is None  # key-B is not cached
+            resp, code = _check_idempotency_key("vault_api_purchase")
+
+        assert code == 422
+
+    def test_save_completes_ledger_record(self, app_factory, mocker):
+        from routes.payment_vault import _save_idempotency_key, payment_vault_bp
+
+        app = app_factory(payment_vault_bp)
+        mock_record = MagicMock()
+        mock_complete = mocker.patch("routes.payment_vault.IdempotencyService.complete")
+
+        with app.test_request_context():
+            from flask import g
+
+            g.vault_idempotency_record = mock_record
+            _save_idempotency_key({"success": True}, 201)
+
+        mock_complete.assert_called_once_with(mock_record, {"success": True}, 201)
 
 
 # =============================================================================
@@ -171,12 +219,6 @@ class TestIdempotencyKey:
 
 class TestApiKeyValidation:
     """X-API-Key scope enforcement."""
-
-    @pytest.fixture(autouse=True)
-    def _reset(self):
-        from routes.payment_vault import _idempotency_store
-
-        _idempotency_store.clear()
 
     def test_missing_key_returns_401(self, app_factory, mock_db, mocker):
         from routes.payment_vault import _validate_api_key, payment_vault_bp
@@ -241,8 +283,11 @@ class TestApiKeyValidation:
         with app.test_request_context(
             headers={"X-API-Key": "write-key"},
         ):
+            from flask import g
+
             result = _validate_api_key(required_scope="write")
-        assert result is None
+            assert result is None
+            assert g.vault_api_key is mock_key
 
 
 # =============================================================================
@@ -381,7 +426,11 @@ class TestPurchaseEndpointIdempotency:
         assert resp.get_json()["cached"] is True
         spy.assert_not_called()
 
-    def test_missing_idempotency_key_processes_normally(self, vault_owner_client, mocker):
+    def test_missing_idempotency_key_is_rejected(self, vault_owner_client, mocker):
+        mocker.patch(
+            "routes.payment_vault._check_idempotency_key",
+            return_value=({"success": False, "error": "Idempotency-Key header is required"}, 400),
+        )
         mocker.patch("routes.payment_vault.NOWPaymentsService")
 
         resp = vault_owner_client.post(
@@ -389,7 +438,7 @@ class TestPurchaseEndpointIdempotency:
             json=self.SAMPLE_DATA,
             headers={"X-API-Key": "write-key"},
         )
-        assert resp.status_code == 201
+        assert resp.status_code == 400
 
     def test_missing_api_key_returns_401(self, vault_owner_client, mocker):
         mocker.patch(

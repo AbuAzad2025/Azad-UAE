@@ -454,8 +454,10 @@ def logout():
     if current_user.is_authenticated:
         LoggingCore.log_audit("logout", "users", current_user.id)
         logout_user()
-        session.pop("last_activity", None)
+        session.clear()
         flash(gettext("✅ تم تسجيل الخروج بنجاح. نراك قريباً!"), "success")
+    else:
+        session.clear()
     clear_active_branch()
     clear_active_tenant()
     return redirect(url_for("public.landing"))

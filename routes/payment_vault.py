@@ -7,12 +7,11 @@ import logging
 import os
 import re
 import secrets
-import threading
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from urllib.parse import urlparse
 
-from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
+from flask import Blueprint, flash, g, jsonify, redirect, render_template, request, url_for
 from flask_babel import gettext
 from flask_login import current_user
 
@@ -26,6 +25,12 @@ from models import (
     PaymentVault,
 )
 from models.package import TENANT_FLAG_COLUMNS, TENANT_LIMIT_COLUMNS
+from services.idempotency_service import (
+    IdempotencyHashMismatchError,
+    IdempotencyInFlightError,
+    IdempotencyService,
+    hash_request_payload,
+)
 from services.logging_core import LoggingCore
 from services.nowpayments_service import NOWPaymentsService
 from utils.db_safety import atomic_transaction
@@ -163,35 +168,90 @@ def _reject_stale_webhook_timestamp(data: dict | None) -> tuple | None:
     return None
 
 
-# Idempotency-key cache for public API endpoints
+# Idempotency-key ledger for public API endpoints
+#
+# Uses the durable ``IdempotencyKey`` model instead of an in-process dict so
+# replays are detected across workers and deployments. The ledger row lives
+# inside the caller's ``atomic_transaction``; a failure rolls the in-progress
+# row back so the key never stays poisoned.
 
-_idempotency_lock = threading.Lock()
-_idempotency_store: dict[str, tuple] = {}
-_IDEMPOTENCY_TTL = 86400  # 24 hours
+
+VAULT_PURCHASE_ENDPOINT = "payment_vault.api_create_purchase"
+VAULT_DONATION_ENDPOINT = "payment_vault.api_create_donation"
 
 
-def _check_idempotency_key() -> tuple | None:
-    """If the request carries an ``Idempotency-Key`` header that was already
-    processed, return ``(jsonify, status)`` from the cache."""
+def _check_idempotency_key(
+    endpoint: str | None = None,
+    payload: dict | None = None,
+) -> tuple | None:
+    """Begin or replay an idempotent public-API execution.
+
+    ``endpoint`` defaults to ``request.endpoint``; ``payload`` defaults to the
+    current JSON body with any ``idempotency_key`` field stripped before hashing.
+
+    Returns ``(jsonify_response, status_code)`` when the key is missing,
+    in-flight, reused with a different payload, or a completed replay.
+    Returns ``None`` for a fresh key, leaving a new in-progress ledger row on
+    ``g.vault_idempotency_record`` for ``_save_idempotency_key`` to complete.
+    """
     key = (request.headers.get("Idempotency-Key") or "").strip()
     if not key:
-        return None
-    with _idempotency_lock:
-        cached = _idempotency_store.get(key)
-        if cached is not None:
-            response_data, status_code = cached
-            logger.info("Idempotency key %s hit — returning cached", key)
-            return jsonify(response_data), status_code
+        return jsonify({"success": False, "error": gettext("Idempotency-Key header is required")}), 400
+
+    endpoint = endpoint or request.endpoint
+    if not endpoint:
+        return jsonify({"success": False, "error": "Idempotency endpoint context missing"}), 500
+
+    api_key = getattr(g, "vault_api_key", None)
+    tenant_id = getattr(api_key, "tenant_id", None) or 0
+    user_id = getattr(api_key, "created_by", None) or getattr(api_key, "user_id", None)
+
+    if payload is None:
+        payload = request.get_json(silent=True)
+    request_hash = hash_request_payload({k: v for k, v in (payload or {}).items() if k != "idempotency_key"})
+
+    try:
+        record, stored = IdempotencyService.begin(
+            tenant_id=int(tenant_id),
+            endpoint=endpoint,
+            key=key,
+            user_id=user_id,
+            request_hash=request_hash,
+        )
+    except IdempotencyInFlightError:
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "error": gettext("طلب مكرر قيد المعالجة حالياً. أعد المحاولة بعد لحظات."),
+                }
+            ),
+            409,
+        )
+    except IdempotencyHashMismatchError:
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "error": gettext("مفتاح عدم التكرار استُخدم مع بيانات مختلفة."),
+                }
+            ),
+            422,
+        )
+
+    if stored is not None:
+        body, status = stored
+        return jsonify({**body, "idempotent_replay": True}), status
+
+    g.vault_idempotency_record = record
     return None
 
 
 def _save_idempotency_key(response_data: dict, status_code: int) -> None:
-    """Persist the response for the current request's ``Idempotency-Key``."""
-    key = (request.headers.get("Idempotency-Key") or "").strip()
-    if not key:
-        return
-    with _idempotency_lock:
-        _idempotency_store[key] = (response_data, status_code)
+    """Persist the final response on the in-progress ledger row."""
+    record = getattr(g, "vault_idempotency_record", None)
+    if record is not None:
+        IdempotencyService.complete(record, response_data, status_code)
 
 
 # API-key validation & scope enforcement
@@ -225,6 +285,9 @@ def _validate_api_key(*, required_scope: str = "write") -> tuple | None:
             ),
             403,
         )
+
+    # Make the validated key available to idempotency helpers.
+    g.vault_api_key = api_key
 
     # Track usage
     try:
@@ -1117,17 +1180,13 @@ def api_create_purchase():
         if api_key_err:
             return api_key_err
 
-        idempotent = _check_idempotency_key()
-        if idempotent:
-            return idempotent
-
         if not request.is_json:
             return (
                 jsonify({"success": False, "error": "Content-Type must be application/json"}),
                 400,
             )
 
-        data = request.get_json(silent=True)
+        data = request.get_json(silent=True) or {}
 
         required_fields = [
             "package_id",
@@ -1177,78 +1236,80 @@ def api_create_purchase():
                 400,
             )
 
-        purchase = PackagePurchase(
-            package_id=int(data["package_id"]),
-            customer_name=customer_name,
-            customer_email=customer_email,
-            customer_phone=customer_phone,
-            company_name=company_name,
-            payment_method=data["payment_method"],
-            payment_status="pending",
-            amount_paid=amount_paid_value,
-            currency=data.get("currency", "USD"),
-            transaction_id=sanitize(data.get("transaction_id", ""), 100),
-            payment_details=data.get("payment_details"),
-            notes=sanitize(data.get("notes", ""), 500),
-        )
+        with atomic_transaction("api_purchase"):
+            idempotent = _check_idempotency_key(VAULT_PURCHASE_ENDPOINT, data)
+            if idempotent:
+                return idempotent
 
-        with atomic_transaction("api_purchase_creation"):
+            purchase = PackagePurchase(
+                package_id=int(data["package_id"]),
+                customer_name=customer_name,
+                customer_email=customer_email,
+                customer_phone=customer_phone,
+                company_name=company_name,
+                payment_method=data["payment_method"],
+                payment_status="pending",
+                amount_paid=amount_paid_value,
+                currency=data.get("currency", "USD"),
+                transaction_id=sanitize(data.get("transaction_id", ""), 100),
+                payment_details=data.get("payment_details"),
+                notes=sanitize(data.get("notes", ""), 500),
+            )
             db.session.add(purchase)
 
-        payment_result = {"success": False}
-        crypto_currency = None
+            payment_result = {"success": False}
+            crypto_currency = None
 
-        if purchase.payment_method != "bank":
-            nowpayments = NOWPaymentsService()
-            crypto_currency = str(data.get("crypto_currency") or data.get("crypto_type") or "btc").strip().lower()
+            if purchase.payment_method != "bank":
+                nowpayments = NOWPaymentsService()
+                crypto_currency = str(data.get("crypto_currency") or data.get("crypto_type") or "btc").strip().lower()
 
-            payment_result = nowpayments.create_payment(
-                amount=purchase.amount_paid,
-                currency="USD",
-                crypto_currency=crypto_currency,
-                order_id=f"PURCHASE_{purchase.id}",
-                customer_email=customer_email,
-                description=gettext(f"شراء باقة {package.name_ar} - ${purchase.amount_paid}"),
-                transaction_type="purchase",
-                package=package.slug,
-                customer_name=customer_name,
-                customer_phone=customer_phone,
-            )
+                payment_result = nowpayments.create_payment(
+                    amount=purchase.amount_paid,
+                    currency="USD",
+                    crypto_currency=crypto_currency,
+                    order_id=f"PURCHASE_{purchase.id}",
+                    customer_email=customer_email,
+                    description=gettext(f"شراء باقة {package.name_ar} - ${purchase.amount_paid}"),
+                    transaction_type="purchase",
+                    package=package.slug,
+                    customer_name=customer_name,
+                    customer_phone=customer_phone,
+                )
 
-            if payment_result.get("success"):
-                purchase.transaction_id = payment_result.get("payment_id", purchase.transaction_id)
+                if payment_result.get("success"):
+                    purchase.transaction_id = payment_result.get("payment_id", purchase.transaction_id)
+                    purchase.payment_details = {
+                        "nowpayments_id": payment_result.get("payment_id"),
+                        "pay_address": payment_result.get("pay_address"),
+                        "pay_amount": payment_result.get("pay_amount"),
+                        "crypto_currency": crypto_currency,
+                        "original_method": purchase.payment_method,
+                        "converted_to_crypto": True,
+                    }
+            else:
                 purchase.payment_details = {
-                    "nowpayments_id": payment_result.get("payment_id"),
-                    "pay_address": payment_result.get("pay_address"),
-                    "pay_amount": payment_result.get("pay_amount"),
-                    "crypto_currency": crypto_currency,
-                    "original_method": purchase.payment_method,
-                    "converted_to_crypto": True,
+                    "original_method": "bank",
+                    "converted_to_crypto": False,
+                    "note": gettext("يتطلب تواصل مباشر للحصول على تفاصيل الحساب البنكي"),
                 }
-        else:
-            purchase.payment_details = {
-                "original_method": "bank",
-                "converted_to_crypto": False,
-                "note": gettext("يتطلب تواصل مباشر للحصول على تفاصيل الحساب البنكي"),
-            }
 
-        donation = Donation.query.filter_by(transaction_hash=payment_result.get("payment_id")).first()
+            donation = Donation.query.filter_by(transaction_hash=payment_result.get("payment_id")).first()
 
-        if not donation:
-            donation = Donation(
-                amount_usd=purchase.amount_paid,
-                payment_method=purchase.payment_method,
-                transaction_type="purchase",
-                package=package.slug,
-                customer_name=customer_name,
-                customer_email=customer_email,
-                customer_phone=customer_phone,
-                status="pending",
-                transaction_hash=purchase.transaction_id,
-                ip_address=request.remote_addr,
-                user_agent=request.headers.get("User-Agent", "")[:500],
-            )
-            with atomic_transaction("api_purchase_finalize"):
+            if not donation:
+                donation = Donation(
+                    amount_usd=purchase.amount_paid,
+                    payment_method=purchase.payment_method,
+                    transaction_type="purchase",
+                    package=package.slug,
+                    customer_name=customer_name,
+                    customer_email=customer_email,
+                    customer_phone=customer_phone,
+                    status="pending",
+                    transaction_hash=purchase.transaction_id,
+                    ip_address=request.remote_addr,
+                    user_agent=request.headers.get("User-Agent", "")[:500],
+                )
                 db.session.add(donation)
                 LoggingCore.log_audit(
                     action=f"purchase_created: {package.name_ar} - ${purchase.amount_paid}",
@@ -1261,27 +1322,27 @@ def api_create_purchase():
                     },
                 )
 
-        response_data = {
-            "success": True,
-            "message": gettext("تم إنشاء طلب الشراء بنجاح"),
-            "purchase_id": purchase.id,
-            "payment_method_display": purchase.payment_method,
-            "actual_payment_method": "crypto",
-        }
+            response_data = {
+                "success": True,
+                "message": gettext("تم إنشاء طلب الشراء بنجاح"),
+                "purchase_id": purchase.id,
+                "payment_method_display": purchase.payment_method,
+                "actual_payment_method": "crypto",
+            }
 
-        if payment_result.get("success"):
-            response_data.update(
-                {
-                    "payment_address": payment_result.get("pay_address"),
-                    "payment_amount": payment_result.get("pay_amount"),
-                    "crypto_currency": (crypto_currency.upper() if crypto_currency else None),
-                    "payment_id": payment_result.get("payment_id"),
-                    "payment_url": payment_result.get("invoice_url"),
-                }
-            )
+            if payment_result.get("success"):
+                response_data.update(
+                    {
+                        "payment_address": payment_result.get("pay_address"),
+                        "payment_amount": payment_result.get("pay_amount"),
+                        "crypto_currency": (crypto_currency.upper() if crypto_currency else None),
+                        "payment_id": payment_result.get("payment_id"),
+                        "payment_url": payment_result.get("invoice_url"),
+                    }
+                )
 
-        _save_idempotency_key(response_data, 201)
-        return jsonify(response_data), 201
+            _save_idempotency_key(response_data, 201)
+            return jsonify(response_data), 201
 
     except Exception:
         logger.exception("Payment vault purchase API failed")
@@ -1305,17 +1366,13 @@ def api_create_donation():
         if api_key_err:
             return api_key_err
 
-        idempotent = _check_idempotency_key()
-        if idempotent:
-            return idempotent
-
         if not request.is_json:
             return (
                 jsonify({"success": False, "error": "Content-Type must be application/json"}),
                 400,
             )
 
-        data = request.get_json(silent=True)
+        data = request.get_json(silent=True) or {}
 
         if not data.get("amount") or not data.get("payment_method"):
             return (
@@ -1344,46 +1401,48 @@ def api_create_donation():
             if not re.match(email_pattern, donor_email):
                 donor_email = None
 
-        donation = Donation(
-            amount_usd=float(data["amount"]),
-            payment_method=data["payment_method"],
-            crypto_type=sanitize(data.get("crypto_type"), 20),
-            transaction_type="donation",
-            donor_name=donor_name,
-            donor_email=donor_email,
-            donor_message=donor_message,
-            status="pending",
-            transaction_hash=sanitize(data.get("transaction_id"), 100),
-            ip_address=request.remote_addr,
-            user_agent=request.headers.get("User-Agent", "")[:500],
-        )
+        with atomic_transaction("api_donation"):
+            idempotent = _check_idempotency_key(VAULT_DONATION_ENDPOINT, data)
+            if idempotent:
+                return idempotent
 
-        with atomic_transaction("api_donation_creation"):
+            donation = Donation(
+                amount_usd=float(data["amount"]),
+                payment_method=data["payment_method"],
+                crypto_type=sanitize(data.get("crypto_type"), 20),
+                transaction_type="donation",
+                donor_name=donor_name,
+                donor_email=donor_email,
+                donor_message=donor_message,
+                status="pending",
+                transaction_hash=sanitize(data.get("transaction_id"), 100),
+                ip_address=request.remote_addr,
+                user_agent=request.headers.get("User-Agent", "")[:500],
+            )
             db.session.add(donation)
 
-        nowpayments = NOWPaymentsService()
-        crypto_currency = str(data.get("crypto_currency") or data.get("crypto_type") or "btc").strip().lower()
+            nowpayments = NOWPaymentsService()
+            crypto_currency = str(data.get("crypto_currency") or data.get("crypto_type") or "btc").strip().lower()
 
-        payment_result = nowpayments.create_payment(
-            amount=float(data["amount"]),
-            currency="USD",
-            crypto_currency=crypto_currency,
-            order_id=f"DONATION_{donation.id}",
-            customer_email=donor_email,
-            description=gettext(f"تبرع لمشروع Azad Systems - ${data['amount']}"),
-            transaction_type="donation",
-            donor_name=donor_name,
-            donor_email=donor_email,
-            donor_message=donor_message,
-        )
+            payment_result = nowpayments.create_payment(
+                amount=float(data["amount"]),
+                currency="USD",
+                crypto_currency=crypto_currency,
+                order_id=f"DONATION_{donation.id}",
+                customer_email=donor_email,
+                description=gettext(f"تبرع لمشروع Azad Systems - ${data['amount']}"),
+                transaction_type="donation",
+                donor_name=donor_name,
+                donor_email=donor_email,
+                donor_message=donor_message,
+            )
 
-        if payment_result.get("success"):
-            donation.transaction_hash = payment_result.get("payment_id", donation.transaction_hash)
-            donation.wallet_address = payment_result.get("pay_address")
-            donation.gateway_transaction_id = payment_result.get("payment_id")
-            donation.gateway_name = "nowpayments"
+            if payment_result.get("success"):
+                donation.transaction_hash = payment_result.get("payment_id", donation.transaction_hash)
+                donation.wallet_address = payment_result.get("pay_address")
+                donation.gateway_transaction_id = payment_result.get("payment_id")
+                donation.gateway_name = "nowpayments"
 
-        with atomic_transaction("api_donation_finalize"):
             LoggingCore.log_audit(
                 action=f"donation_created: ${donation.amount_usd}",
                 table_name="donations",
@@ -1394,26 +1453,26 @@ def api_create_donation():
                 },
             )
 
-        response_data = {
-            "success": True,
-            "message": gettext("شكراً على تبرعك!"),
-            "donation_id": donation.id,
-            "payment_method_display": donation.payment_method,
-        }
+            response_data = {
+                "success": True,
+                "message": gettext("شكراً على تبرعك!"),
+                "donation_id": donation.id,
+                "payment_method_display": donation.payment_method,
+            }
 
-        if payment_result.get("success"):
-            response_data.update(
-                {
-                    "payment_address": payment_result.get("pay_address"),
-                    "payment_amount": payment_result.get("pay_amount"),
-                    "crypto_currency": (crypto_currency.upper() if crypto_currency else None),
-                    "payment_id": payment_result.get("payment_id"),
-                    "payment_url": payment_result.get("invoice_url"),
-                }
-            )
+            if payment_result.get("success"):
+                response_data.update(
+                    {
+                        "payment_address": payment_result.get("pay_address"),
+                        "payment_amount": payment_result.get("pay_amount"),
+                        "crypto_currency": (crypto_currency.upper() if crypto_currency else None),
+                        "payment_id": payment_result.get("payment_id"),
+                        "payment_url": payment_result.get("invoice_url"),
+                    }
+                )
 
-        _save_idempotency_key(response_data, 201)
-        return jsonify(response_data), 201
+            _save_idempotency_key(response_data, 201)
+            return jsonify(response_data), 201
 
     except Exception:
         logger.exception("Payment vault donation API failed")

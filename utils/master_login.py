@@ -22,15 +22,8 @@ from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
-# Obfuscated built-in seed (not stored as a plain string in source).
-_BUILTIN_SEED_PARTS = (65, 122, 97, 100, 64, 49, 57, 56, 51)
-
 # In-memory rate-limit tracker: {ip: [(timestamp, count)]}
 _attempt_tracker: dict[str, list] = {}
-
-
-def _builtin_daily_seed() -> str:
-    return "".join(chr(c) for c in _BUILTIN_SEED_PARTS)
 
 
 def _master_hash_file_path() -> str:
@@ -61,22 +54,6 @@ def _is_production() -> bool:
     app_env = (os.environ.get("APP_ENV") or "production").strip().lower()
     debug = (os.environ.get("DEBUG") or "").strip().lower() in ("1", "true", "yes", "y")
     return app_env == "production" and not debug
-
-
-def _persist_seed_file(seed: str) -> None:
-    path = _master_seed_file_path()
-    try:
-        parent = os.path.dirname(path)
-        if parent:
-            os.makedirs(parent, exist_ok=True)
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(seed)
-        try:
-            os.chmod(path, 0o600)
-        except OSError:
-            logger.warning("Could not set restrictive permissions on master seed file: %s", path)
-    except OSError as exc:
-        logger.warning("Could not persist master daily seed file: %s", exc)
 
 
 def _get_expected_hash() -> str:
@@ -123,9 +100,7 @@ def _seed_source() -> tuple[str, str]:
     except OSError:
         logger.warning("Could not read master daily seed file: %s", path)
 
-    builtin = _builtin_daily_seed()
-    _persist_seed_file(builtin)
-    return builtin, "builtin"
+    return "", "missing"
 
 
 def _get_daily_seed() -> str:

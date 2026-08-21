@@ -25,6 +25,7 @@ def dev_env(monkeypatch, tmp_path):
     monkeypatch.delenv("AZAD_MASTER_DAILY_SEED", raising=False)
     seed_file = tmp_path / ".master_daily_seed"
     hash_file = tmp_path / ".master_key_sha256"
+    seed_file.write_text("devseed", encoding="utf-8")
     monkeypatch.setenv("AZAD_MASTER_SEED_FILE", str(seed_file))
     monkeypatch.setenv("AZAD_MASTER_HASH_FILE", str(hash_file))
     return seed_file, hash_file
@@ -81,9 +82,6 @@ class TestPathsAndProduction:
 
 
 class TestSeedAndHash:
-    def test_builtin_seed(self):
-        assert ml._builtin_daily_seed() == "Azad@1983"
-
     def test_get_expected_hash_from_env(self, monkeypatch):
         monkeypatch.setenv("AZAD_MASTER_KEY_SHA256", "ABC")
         assert ml._get_expected_hash() == "abc"
@@ -112,6 +110,14 @@ class TestSeedAndHash:
         monkeypatch.setenv("APP_ENV", "production")
         monkeypatch.delenv("DEBUG", raising=False)
         monkeypatch.delenv("AZAD_MASTER_DAILY_SEED", raising=False)
+        monkeypatch.delenv("AZAD_MASTER_SEED_FILE", raising=False)
+        assert ml._seed_source() == ("", "missing")
+
+    def test_seed_missing_in_development(self, monkeypatch, tmp_path):
+        monkeypatch.setenv("APP_ENV", "development")
+        monkeypatch.setenv("DEBUG", "1")
+        monkeypatch.delenv("AZAD_MASTER_DAILY_SEED", raising=False)
+        monkeypatch.setenv("AZAD_MASTER_SEED_FILE", str(tmp_path / "nonexistent"))
         assert ml._seed_source() == ("", "missing")
 
     def test_seed_from_file(self, dev_env, monkeypatch):
@@ -119,22 +125,12 @@ class TestSeedAndHash:
         seed_file.write_text("fileseed", encoding="utf-8")
         assert ml._seed_source() == ("fileseed", "file")
 
-    def test_seed_builtin_persisted(self, dev_env, monkeypatch):
-        seed, source = ml._seed_source()
-        assert source == "builtin"
-        assert seed == ml._builtin_daily_seed()
-
-    def test_persist_seed_file_oserror(self, monkeypatch, tmp_path):
-        bad = tmp_path / "missing" / "deep" / "seed"
-        monkeypatch.setenv("AZAD_MASTER_SEED_FILE", str(bad))
-        with patch("os.makedirs", side_effect=OSError("fail")):
-            ml._persist_seed_file("x")
-
-    def test_persist_seed_chmod_oserror(self, dev_env, monkeypatch):
+    def test_seed_file_read_oserror(self, dev_env, monkeypatch):
         seed_file, _ = dev_env
-        with patch("os.chmod", side_effect=OSError("chmod")):
-            ml._persist_seed_file("chmod-seed")
-        assert seed_file.read_text(encoding="utf-8") == "chmod-seed"
+        seed_file.write_text("x", encoding="utf-8")
+        with patch("builtins.open", side_effect=OSError("nope")):
+            seed, source = ml._seed_source()
+        assert source == "missing"
 
 
 class TestEnablementAndAllowlist:
