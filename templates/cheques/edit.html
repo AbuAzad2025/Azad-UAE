@@ -217,7 +217,7 @@
 
 {% block extra_js %}
 {% include 'partials/select2_assets.html' %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 // {{ t('Change') }} {{ t('الحقول') }} {{ t('حسب') }} {{ t('نوع') }} {{ t('Cheque') }}
 $('#cheque_type').change(function() {
   const type = $(this).val();

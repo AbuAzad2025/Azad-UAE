@@ -267,7 +267,7 @@
 </div>
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 $(document).on('click', '[data-action="cancel-purchase"]', confirmCancel);
 
 function confirmCancel() {

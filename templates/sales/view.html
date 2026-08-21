@@ -62,7 +62,7 @@
 
 {% block extra_css %}
 
-<style>
+<style nonce="{{ csp_nonce() }}">
 
 .invoice-header {
 
@@ -968,7 +968,7 @@
 
 
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 
 const RETURN_CSRF_TOKEN = document.querySelector('#returnForm [name="csrf_token"]').value;
 const RETURN_QTY_ALERT = {{ t('return_qty_alert') | tojson }};

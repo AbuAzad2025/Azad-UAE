@@ -18,7 +18,7 @@
 {% block extra_css %}
 {% include 'partials/select2_assets.html' %}
 {% include 'partials/datatables_assets.html' %}
-<style>
+<style nonce="{{ csp_nonce() }}">
 .movement-in {
   border-right: 4px solid #28a745;
   background: linear-gradient(90deg, rgba(40, 167, 69, 0.05) 0%, transparent 100%);
@@ -216,7 +216,7 @@
 {% block extra_js %}
 {% include 'partials/datatables_assets.html' %}
 {% include 'partials/select2_assets.html' %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 $(document).ready(() => {
   if ($.fn.select2) {
     $('#warehouseFilter').select2({

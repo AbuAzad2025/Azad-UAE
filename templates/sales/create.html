@@ -19,7 +19,7 @@
 
 {% block extra_css %}
 {% include 'partials/select2_assets.html' %}
-<style>
+<style nonce="{{ csp_nonce() }}">
 @media print {
   .main-sidebar, .main-header, .main-footer, .content-header,
   .btn, .btn-group, .card-header, .nav-tabs, .no-print,
@@ -345,7 +345,7 @@
 
 {% block extra_js %}
 {% include 'partials/select2_assets.html' %}
-<script>
+<script nonce="{{ csp_nonce() }}">
   window._API_SEARCH_URL = {% if current_user.has_permission('view_reports') %}'{{ url_for('api.api_search') }}'{% else %}null{% endif %};
   window._PRESELECTED_CUSTOMER = {{ preselected_customer | tojson if preselected_customer else 'null' }};
   window._COMPANY_INFO = {{ company_info | tojson if company_info else '{}' }};
@@ -355,7 +355,7 @@
 <script src="{{ dist_url('js/ai-sales.js') }}"></script>
 <script src="{{ dist_url('js/sales-create.js') }}"></script>
 <script src="{{ dist_url('js/draft-autosave.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
   document.addEventListener('DOMContentLoaded', () => {
     window.DraftAutosave?.init('sales_create', '#saleForm');
   });

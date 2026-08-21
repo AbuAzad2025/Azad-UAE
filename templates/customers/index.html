@@ -25,7 +25,7 @@
 
 {% block extra_css %}
 {% include 'partials/datatables_assets.html' %}
-<style>
+<style nonce="{{ csp_nonce() }}">
 .vip-badge {
   background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
   color: #000;
@@ -230,7 +230,7 @@
 
 {% block extra_js %}
 {% include 'partials/datatables_assets.html' %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 $(document).ready(() => {
   const table = $('#customersTable').DataTable({
     language: { url: {{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json"))|tojson }} },

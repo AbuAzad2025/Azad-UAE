@@ -18,7 +18,7 @@
 
 {% block extra_css %}
 {% include 'partials/datatables_assets.html' %}
-<style>
+<style nonce="{{ csp_nonce() }}">
 #chequesTable thead.cheques-table-head th {
   background: linear-gradient(135deg, #0d6efd 0%, #1b4d89 100%);
   color: #ffffff;
@@ -346,7 +346,7 @@
 
 {% block extra_js %}
 {% include 'partials/datatables_assets.html' %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 (() => {
   const tableSelector = '#chequesTable';
   const printButtonSelector = '#printChequesBtn';

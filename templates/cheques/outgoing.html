@@ -2,7 +2,7 @@
 {% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Outgoing Cheques') }}{% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 </script>
 {% endblock %}
 {% block page_title %}

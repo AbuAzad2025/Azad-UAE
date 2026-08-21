@@ -11,7 +11,7 @@
 
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}">
     /* D6: externalized inline styles */
     .ic-1 { height: 25px; }
     .ic-2 { width: 0; }
@@ -135,7 +135,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 // Show file name
 $('.custom-file-input').on('change', function() {
   const fileName = $(this).val().split('\\').pop();

@@ -4,7 +4,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ dist_url('css/financial-ui.css') }}">
-<style>
+<style nonce="{{ csp_nonce() }}">
   @media print {
     @page { size: A4 {{ 'landscape' if request.args.get('orientation') == 'landscape' else 'portrait' }}; margin: 15mm; }
   }

@@ -23,7 +23,7 @@
 {% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}">
 .warehouse-row {
   transition: all 0.2s ease;
 }
@@ -39,7 +39,7 @@
 }
 </style>
 {% include 'partials/datatables_assets.html' %}
-<style>
+<style nonce="{{ csp_nonce() }}">
 .stat-card {
   border-radius: 16px;
   border: none;
@@ -315,7 +315,7 @@
 
 {% block extra_js %}
 {% include 'partials/datatables_assets.html' %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 $(document).ready(() => {
   const table = $('#warehouseTable').DataTable({
     language: { url: "{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}" },

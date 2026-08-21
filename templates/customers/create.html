@@ -17,7 +17,7 @@
 {% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}">
 .customer-create-form .form-control {
   min-height: 48px;
   height: auto;
@@ -160,7 +160,7 @@ a.btn.btn-outline-secondary span {
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 // {{ t('تفعيل') }} tooltips
 $(() => {
   $('[data-toggle="tooltip"]').tooltip({

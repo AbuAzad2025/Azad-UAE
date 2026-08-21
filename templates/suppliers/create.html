@@ -18,7 +18,7 @@
 
 {% block extra_css %}
 {% include 'partials/select2_assets.html' %}
-<style>
+<style nonce="{{ csp_nonce() }}">
 .btn-supplier-header {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
@@ -398,7 +398,7 @@
 
 {% block extra_js %}
 {% include 'partials/select2_assets.html' %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 $(document).ready(() => {
   // Initialize Tooltips
   $('[data-toggle="tooltip"]').tooltip({

@@ -76,7 +76,7 @@
 
 {% block extra_js %}
 <script src="{{ dist_url('js/products/category-controls.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 $(function() {
   $('.js-category-add').on('click', () => {
     $('#categoryModal').removeData('edit-id');

@@ -511,7 +511,7 @@
 
 {% block extra_js %}
 {% include 'partials/select2_assets.html' %}
-<script>
+<script nonce="{{ csp_nonce() }}">
   window._PRICES_INCLUDE_VAT = {{ 'true' if prices_include_vat else 'false' }};
   window._API_SEARCH_URL = {% if current_user.has_permission('view_reports') %}'{{ url_for('api.api_search') }}'{% else %}null{% endif %};
   window._PURCHASE_CALC_URL = '{{ url_for("purchases.api_calculate_purchase_totals") }}';

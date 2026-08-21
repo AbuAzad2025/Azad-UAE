@@ -24,7 +24,7 @@
 
 {% block extra_css %}
 {% include 'partials/datatables_assets.html' %}
-<style>
+<style nonce="{{ csp_nonce() }}">
 .alert-critical {
   background: linear-gradient(135deg, rgba(220, 53, 69, 0.1) 0%, rgba(206, 17, 38, 0.1) 100%);
   border-right: 4px solid #dc3545;
@@ -172,7 +172,7 @@
 
 {% block extra_js %}
 {% include 'partials/datatables_assets.html' %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 $(document).ready((() => {
   $('#outOfStockTable').DataTable({
     language: { url: "{{ url_for("static", filename=("datatables/Arabic.json" if is_rtl else "datatables/English.json")) }}" },

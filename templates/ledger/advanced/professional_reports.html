@@ -2,7 +2,7 @@
 {% block title %}{{ t('Professional Financial Reports') }}{% endblock %}
 
 {% block styles %}
-<style>
+<style nonce="{{ csp_nonce() }}">
 /* TODO: Rename .ic-* classes to descriptive names (e.g., .stat-gradient-primary) */
 .report-dashboard {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -397,7 +397,7 @@
 
 <script src="{{ url_for('static', filename='adminlte/plugins/chartjs/chart.min.js') }}"></script>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 // {{ t('Data_2') }} {{ t('الرسوم') }} {{ t('البيانية') }}
 const months = {{ months|tojson }};
 const revenueData = {{ revenue_data|tojson }};

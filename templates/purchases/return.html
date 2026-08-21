@@ -87,7 +87,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.getElementById('selectAll').addEventListener('change', function() {
   document.querySelectorAll('.line-check').forEach(cb => {
     cb.checked = this.checked;

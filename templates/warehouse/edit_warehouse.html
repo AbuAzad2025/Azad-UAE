@@ -3,7 +3,7 @@
 {% block title %}{{ t('edit_warehouse_form') }} - {{ warehouse.name_ar or warehouse.name }}{% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}">
   .warehouse-edit-form .form-control,
   .warehouse-edit-form textarea.form-control,
   .warehouse-edit-form select.form-control {

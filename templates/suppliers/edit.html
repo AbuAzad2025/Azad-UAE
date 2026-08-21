@@ -20,7 +20,7 @@
 {% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}">
   .supplier-edit-form .form-control,
   .supplier-edit-form textarea.form-control,
   .supplier-edit-form select.form-control {
@@ -324,7 +324,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 // Initialize Tooltips
 $(() => {
   $('[data-toggle="tooltip"]').tooltip({

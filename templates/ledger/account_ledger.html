@@ -78,7 +78,7 @@
 {% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}">
 @media print {
   @page {
     size: A4 {{ 'landscape' if request.args.get('orientation') == 'landscape' else 'portrait' }};
@@ -92,7 +92,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.addEventListener('change', (e) => {
   const el = e.target.closest('[data-action="submit-form"]');
   if (!el) return;

@@ -20,7 +20,7 @@
 {% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}">
 table.statement-table thead th {
   white-space: nowrap;
   background: #e4e7f0;

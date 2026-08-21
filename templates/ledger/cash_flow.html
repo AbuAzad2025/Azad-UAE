@@ -3,7 +3,7 @@
 {% block page_title %}{{ t('Cash Flow Statement') }}{% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}">
 @media print {
   @page {
     size: A4 landscape;
@@ -184,7 +184,7 @@
 </div>
 
 <script src="{{ url_for('static', filename='adminlte/plugins/chartjs/chart.min.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 const ctx = document.getElementById('cashFlowChart').getContext('2d');
 new Chart(ctx, {
     type: 'bar',

@@ -3,7 +3,7 @@
 {% block title %}{{ t('create_new_warehouse') }}{% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}">
   .warehouse-create-form .form-control,
   .warehouse-create-form textarea.form-control,
   .warehouse-create-form select.form-control {
@@ -227,7 +227,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 $(document).ready(() => {
   $('[data-toggle="tooltip"]').tooltip({
     placement: 'top',

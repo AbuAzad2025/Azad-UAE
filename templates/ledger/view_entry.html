@@ -3,7 +3,7 @@
 {% block page_title %}{{ t('Entry Details') }}{% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}">
 @media print {
   @page { size: A4 portrait; margin: 15mm; }
 }

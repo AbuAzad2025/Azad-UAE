@@ -3,7 +3,7 @@
 {% block page_title %}{{ title }}{% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}">
 .text-orange {
   color: #fd7e14 !important;
 }
@@ -229,7 +229,7 @@
 </div>
 {% endif %}
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 const baseCurrency = '{{ tenant_default_currency or 'ILS' }}';
 const pieCtx = document.getElementById('agingPieChart').getContext('2d');
 new Chart(pieCtx, {

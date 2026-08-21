@@ -2,7 +2,7 @@
 {% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('supplier_statement') }} {{ supplier.name }}{% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}">
 @media print {
   @page { size: A4 portrait; margin: 15mm; }
 }

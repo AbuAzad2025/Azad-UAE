@@ -210,7 +210,7 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='adminlte/plugins/chartjs/chart.min.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 // {{ t('رسم') }} {{ t('بياني') }} {{ t('Expenses_3') }}
 const expenseData = {{ expense_breakdown["items"]|tojson }};
 const expenseLabels = expenseData.slice(0, 5).map(item => item.account_name);
