@@ -747,6 +747,9 @@ class TestChequesApi:
         with _cheque_patches():
             resp = cheques_client.get("/cheques/api/stats")
         assert resp.status_code == 200
+        body = resp.get_json()
+        assert body["success"] is True
+        assert body["data"] is not None
 
     def test_api_alerts(self, cheques_client):
         due = [_mock_cheque(id=2)]
@@ -756,6 +759,8 @@ class TestChequesApi:
             patch("routes.cheques.Cheque.get_overdue_cheques", return_value=due),
         ):
             resp = cheques_client.get("/cheques/api/alerts")
-        data = resp.get_json()
+        body = resp.get_json()
+        assert body["success"] is True
+        data = body["data"]
         assert data["due_soon"] == 1
         assert len(data["cheques_due_soon"]) == 1

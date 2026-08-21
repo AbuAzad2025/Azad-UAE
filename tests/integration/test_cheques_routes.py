@@ -867,7 +867,9 @@ class TestChequesApi:
             )
             resp = client.get("/cheques/api/stats")
         assert resp.status_code == 200
-        data = resp.get_json()
+        body = resp.get_json()
+        assert body["success"] is True
+        data = body["data"]
         assert data is not None
         assert "total_incoming" in data
         assert "total_outgoing" in data

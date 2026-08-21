@@ -10,7 +10,6 @@ from flask import (
     Blueprint,
     current_app,
     flash,
-    jsonify,
     redirect,
     render_template,
     request,
@@ -34,6 +33,7 @@ from services.cheque_service import (
 from services.currency_service import CurrencyService
 from services.exchange_rate_service import ExchangeRateService
 from services.logging_core import LoggingCore
+from utils.api_response import success_response
 from utils.branching import should_show_all_branch_columns
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
@@ -831,7 +831,7 @@ def api_stats():
     scoped_branch_id = branch_scope_id()
     Cheque.update_all_statuses(tenant_id=tid, branch_id=scoped_branch_id)
     stats = Cheque.get_statistics(tenant_id=tid, branch_id=scoped_branch_id)
-    return jsonify(stats)
+    return success_response(data=stats)
 
 
 @cheques_bp.route("/api/alerts")
@@ -846,8 +846,8 @@ def api_alerts():
     due_soon = Cheque.get_due_soon_cheques(tenant_id=tid, branch_id=scoped_branch_id)
     overdue = Cheque.get_overdue_cheques(tenant_id=tid, branch_id=scoped_branch_id)
 
-    return jsonify(
-        {
+    return success_response(
+        data={
             "due_soon": len(due_soon),
             "overdue": len(overdue),
             "cheques_due_soon": [c.to_dict() for c in due_soon[:5]],
