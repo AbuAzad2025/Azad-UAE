@@ -5,7 +5,6 @@ from flask import (
     Blueprint,
     current_app,
     flash,
-    jsonify,
     redirect,
     render_template,
     request,
@@ -22,6 +21,7 @@ from services.exchange_rate_service import ExchangeRateService
 from services.gl_posting import post_or_fail
 from services.gl_service import GLService
 from services.logging_core import LoggingCore
+from utils.api_response import error_response, success_response
 from utils.branching import should_show_all_branch_columns
 from utils.currency_utils import convert_and_quantize_aed, get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
@@ -605,16 +605,15 @@ def create_category():
             db.session.flush()
 
         if request.is_json:
-            return jsonify(
-                {
-                    "success": True,
-                    "message": gettext("تم إضافة الفئة بنجاح"),
+            return success_response(
+                data={
                     "category": {
                         "id": category.id,
                         "name": category.name,
                         "name_ar": category.name_ar,
                     },
-                }
+                },
+                message=gettext("تم إضافة الفئة بنجاح"),
             )
 
         flash(gettext("✅ تم إضافة فئة المصروف بنجاح!"), "success")
@@ -622,7 +621,7 @@ def create_category():
 
     except Exception as e:
         if request.is_json:
-            return jsonify({"success": False, "error": str(e)}), 400
+            return error_response(message=str(e), status_code=400)
 
         flash(
             gettext(f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."),

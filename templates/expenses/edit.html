@@ -203,27 +203,28 @@ $(() => {
       }),
       success: (response) => {
         if (response.success) {
-          const displayName = response.category.name_ar ? 
-            response.category.name_ar + ' - ' + response.category.name : 
-            response.category.name;
-          const newOption = new Option(displayName, response.category.id, true, true);
+          const category = response.data.category;
+          const displayName = category.name_ar ?
+            category.name_ar + ' - ' + category.name :
+            category.name;
+          const newOption = new Option(displayName, category.id, true, true);
           $('#expense_category').append(newOption).trigger('change');
-          
+
           $('#addExpenseCategoryModal').modal('hide');
           $('#expense_category_name').val('');
           $('#expense_category_name_ar').val('');
-          
+
           if (typeof UI !== 'undefined') {
-            UI.success({{ t('تم إضافة الفئة بنجاح!')|tojson }});
+            UI.success(response.message || {{ t('تم إضافة الفئة بنجاح!')|tojson }});
           } else {
-            notify({{ t('تم إضافة الفئة بنجاح!')|tojson }});
+            notify(response.message || {{ t('تم إضافة الفئة بنجاح!')|tojson }});
           }
         } else {
-          notify({{ t('Error')|tojson }} + ': ' + (response.error || {{ t('فشل في إضافة الفئة')|tojson }}));
+          notify({{ t('Error')|tojson }} + ': ' + (response.message || {{ t('فشل في إضافة الفئة')|tojson }}));
         }
       },
       error: (xhr) => {
-        const error = xhr.responseJSON?.error || {{ t('حدث خطأ أثناء الحفظ')|tojson }};
+        const error = xhr.responseJSON?.message || {{ t('حدث خطأ أثناء الحفظ')|tojson }};
         notify({{ t('Error')|tojson }} + ': ' + error);
       }
     });
