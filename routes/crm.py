@@ -1,9 +1,10 @@
-from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_babel import gettext
 from flask_login import current_user, login_required
 
 from models import CRMStage, CRMTeam, Customer, User
 from services.crm_lead_service import CRMLeadService
+from utils.api_response import error_response, success_response
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
 from utils.tenanting import get_active_tenant_id
@@ -145,9 +146,9 @@ def api_move_stage():
     try:
         with atomic_transaction("crm_move_stage"):
             CRMLeadService.move_stage(data["lead_id"], data["stage_id"], current_user)
-        return jsonify({"success": True})
+        return success_response()
     except (ValueError, KeyError) as e:
-        return jsonify({"success": False, "error": str(e)}), 400
+        return error_response(message=str(e), status_code=400)
 
 
 @crm_bp.route("/api/stats")
@@ -155,7 +156,7 @@ def api_move_stage():
 @permission_required("crm.view")
 def api_stats():
     stats = CRMLeadService.get_pipeline_stats(current_user)
-    return jsonify(stats)
+    return success_response(data=stats)
 
 
 @crm_bp.route("/api/activities", methods=["POST"])
@@ -166,6 +167,6 @@ def api_add_activity():
     try:
         with atomic_transaction("crm_add_activity"):
             CRMLeadService.add_activity(data["lead_id"], data, current_user)
-        return jsonify({"success": True})
+        return success_response()
     except (ValueError, KeyError) as e:
-        return jsonify({"success": False, "error": str(e)}), 400
+        return error_response(message=str(e), status_code=400)

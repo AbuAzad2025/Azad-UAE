@@ -207,7 +207,9 @@ class TestCrmApi:
         ):
             resp = crm_client.get("/crm/api/stats")
         assert resp.status_code == 200
-        assert resp.get_json()[0]["count"] == 1
+        body = resp.get_json()
+        assert body["success"] is True
+        assert body["data"][0]["count"] == 1
 
     def test_add_activity_success(self, crm_client):
         with (
