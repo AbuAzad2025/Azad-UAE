@@ -22,6 +22,39 @@ class TestGetLocale:
         with app.test_request_context():
             assert get_locale() == "ar"
 
+    def test_get_locale_accept_language_ar(self):
+        from extensions import get_locale
+
+        app = Flask(__name__)
+        app.config["SECRET_KEY"] = "test"
+        with app.test_request_context("/", headers={"Accept-Language": "ar"}):
+            assert get_locale() == "ar"
+
+    def test_get_locale_accept_language_en(self):
+        from extensions import get_locale
+
+        app = Flask(__name__)
+        app.config["SECRET_KEY"] = "test"
+        with app.test_request_context("/", headers={"Accept-Language": "en-US,en;q=0.9"}):
+            assert get_locale() == "en"
+
+    def test_get_locale_session_overrides_accept_language(self):
+        from extensions import get_locale
+
+        app = Flask(__name__)
+        app.config["SECRET_KEY"] = "test"
+        with app.test_request_context("/", headers={"Accept-Language": "en"}):
+            session["language"] = "ar"
+            assert get_locale() == "ar"
+
+    def test_get_locale_unknown_language_falls_back_to_ar(self):
+        from extensions import get_locale
+
+        app = Flask(__name__)
+        app.config["SECRET_KEY"] = "test"
+        with app.test_request_context("/", headers={"Accept-Language": "fr-FR"}):
+            assert get_locale() == "ar"
+
 
 class TestRateLimitKey:
     def test_authenticated_user_key(self):
