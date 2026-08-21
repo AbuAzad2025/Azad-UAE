@@ -8,6 +8,7 @@ or 404 (ownership guard).
 
 from __future__ import annotations
 
+import uuid
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -76,11 +77,12 @@ class TestValidateTenantOwnership:
         from models import Product, Tenant
         from utils.tenant_security import validate_tenant_ownership
 
+        unique = uuid.uuid4().hex[:8]
         other = Tenant(
-            name="Other Co TS",
+            name=f"Other Co TS {unique}",
             name_ar="أخرى",
-            slug="other-co-ts",
-            email="other-ts@example.com",
+            slug=f"other-co-ts-{unique}",
+            email=f"other-ts-{unique}@example.com",
             country="AE",
             subscription_plan="basic",
         )

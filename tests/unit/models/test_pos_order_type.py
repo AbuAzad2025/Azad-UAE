@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import uuid
+
 import pytest
 from sqlalchemy.exc import IntegrityError
 
@@ -83,11 +85,12 @@ class TestPosOrderTypeConstraints:
         from models import Tenant
         from models.pos_order_type import PosOrderType
 
+        suffix = uuid.uuid4().hex[:8]
         other = Tenant(
-            name="Other Co OT",
+            name=f"Other Co OT {suffix}",
             name_ar="أخرى",
-            slug="other-co-ot",
-            email="other-ot@example.com",
+            slug=f"other-co-ot-{suffix}",
+            email=f"other-ot-{suffix}@example.com",
             country="AE",
             subscription_plan="basic",
         )

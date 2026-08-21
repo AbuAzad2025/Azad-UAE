@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock
@@ -168,11 +169,12 @@ class TestLeaveWorkflow:
     def test_request_leave_wrong_tenant_type(self, db_session, hr_user, sample_tenant, mocker):
         from models import Tenant
 
+        suffix = uuid.uuid4().hex[:8]
         other_tenant = Tenant(
-            name="Other Co",
+            name=f"Other Co {suffix}",
             name_ar="أخرى",
-            slug="other-co-hr-test",
-            email="other@hr.test",
+            slug=f"other-co-hr-test-{suffix}",
+            email=f"other-{suffix}@hr.test",
             country="AE",
             is_active=True,
         )

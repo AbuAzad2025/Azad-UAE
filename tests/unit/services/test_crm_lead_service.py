@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock
+import uuid
 
 import pytest
 
@@ -99,13 +100,12 @@ def crm_lead(db_session, sample_tenant, sample_branch, crm_stage, sample_user):
 
 @pytest.fixture
 def other_tenant_stage(db_session):
-    import uuid
-
     from models import Tenant
 
-    slug = f"other-{uuid.uuid4().hex[:6]}"
+    suffix = uuid.uuid4().hex[:8]
+    slug = f"other-{suffix}"
     tenant = Tenant(
-        name="Other Co",
+        name=f"Other Co {suffix}",
         name_ar="شركة أخرى",
         slug=slug,
         email=f"{slug}@test.com",

@@ -27,7 +27,27 @@ class TestDepreciationScheduleTenantIsolation:
 
     def test_fixed_asset_status_enum_values(self, db_session, sample_tenant, sample_branch):
         """Test that FixedAsset has correct enum/status values"""
-        # Create GL account
+        # Create GL accounts required by FixedAsset FKs
+        asset_account = GLAccount(
+            tenant_id=sample_tenant.id,
+            code="ASSET_001",
+            name="Asset Account",
+            name_ar="حساب الأصول",
+            type="asset",
+            sub_type="fixed_asset",
+            currency="ILS",
+            is_active=True,
+        )
+        depreciation_account = GLAccount(
+            tenant_id=sample_tenant.id,
+            code="DEPREC_001",
+            name="Depreciation Account",
+            name_ar="حساب الإهلاك",
+            type="asset",
+            sub_type="accumulated_depreciation",
+            currency="ILS",
+            is_active=True,
+        )
         expense_account = GLAccount(
             tenant_id=sample_tenant.id,
             code="EXPENSE_001",
@@ -38,7 +58,7 @@ class TestDepreciationScheduleTenantIsolation:
             currency="ILS",
             is_active=True,
         )
-        db_session.add(expense_account)
+        db_session.add_all([asset_account, depreciation_account, expense_account])
         db_session.flush()
 
         # Test all status values
@@ -50,8 +70,8 @@ class TestDepreciationScheduleTenantIsolation:
                 name_ar=f"Asset {status}",
                 name_en=f"Asset {status}",
                 category="equipment",
-                asset_account_id=1,
-                depreciation_account_id=1,
+                asset_account_id=asset_account.id,
+                depreciation_account_id=depreciation_account.id,
                 expense_account_id=expense_account.id,
                 purchase_date=date(2023, 1, 1),
                 purchase_price=Decimal("10000.00"),

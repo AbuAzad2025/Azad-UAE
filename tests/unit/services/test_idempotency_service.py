@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import uuid
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -72,11 +73,12 @@ class TestBeginCompleteReplay:
     def test_same_key_different_tenant_is_independent(self, db_session, sample_tenant):
         from models import Tenant
 
+        suffix = uuid.uuid4().hex[:8]
         other = Tenant(
-            name="Other Co",
+            name=f"Other Co {suffix}",
             name_ar="أخرى",
-            slug="other-co-idem",
-            email="other-idem@example.com",
+            slug=f"other-co-idem-{suffix}",
+            email=f"other-idem-{suffix}@example.com",
             country="AE",
             subscription_plan="pro",
             default_currency="AED",

@@ -600,6 +600,10 @@ _POLLUTED_MODEL_SPECS = (
 def _cleanup_db_connections(app):
     """Dispose db connections after each test to prevent connection exhaustion."""
     yield
+    # If the previous test left an invalidated transaction, roll it back before
+    # closing the session so the next test starts with a clean connection.
+    with contextlib.suppress(Exception):
+        db.session.rollback()
     with contextlib.suppress(Exception):
         db.session.remove()
     with contextlib.suppress(Exception):
@@ -861,8 +865,19 @@ def db_session(app):
             session.rollback()
         except Exception:
             session.remove()
-        session.expire_all()
-        nested = session.begin_nested()
+            session = db.session
+        try:
+            session.expire_all()
+        except Exception:
+            pass
+        try:
+            nested = session.begin_nested()
+        except Exception:
+            # Connection may have been invalidated between tests; purge the
+            # stale session and start fresh.
+            session.remove()
+            session = db.session
+            nested = session.begin_nested()
         try:
             yield session
         finally:
@@ -873,7 +888,8 @@ def db_session(app):
                 pass
             with contextlib.suppress(Exception):
                 session.rollback()
-            session.remove()
+            with contextlib.suppress(Exception):
+                session.remove()
 
 
 @pytest.fixture
