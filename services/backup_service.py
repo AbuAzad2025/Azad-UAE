@@ -279,10 +279,8 @@ class BackupService:
         except Exception as exc:
             logger.error("Backup encryption failed for %s: %s", archive_path, exc)
             if os.path.exists(encrypted_path):
-                try:
+                with contextlib.suppress(OSError):
                     os.remove(encrypted_path)
-                except OSError:
-                    pass
             return archive_path, False
 
     @classmethod
@@ -1431,9 +1429,8 @@ This archive does NOT include secrets, .env, or AI runtime memory.
                 logging.getLogger(__name__).debug("backup sidecar: %s", exc)
         if filename.endswith(".tar.gz") or filename.endswith(".tar.gz.enc"):
             try:
-                with cls._open_archive_for_read(path) as readable_path:
-                    with tarfile.open(readable_path, "r:gz") as tar:
-                        if "manifest.json" in tar.getnames():
+                with cls._open_archive_for_read(path) as readable_path, tarfile.open(readable_path, "r:gz") as tar:
+                    if "manifest.json" in tar.getnames():
                             member = tar.extractfile("manifest.json")
                             if member:
                                 info["manifest"] = json.loads(member.read().decode("utf-8"))
@@ -1808,11 +1805,10 @@ This archive does NOT include secrets, .env, or AI runtime memory.
         work = tempfile.mkdtemp(prefix="azad_restore_")
         try:
             if (filename.endswith(".tar.gz") or filename.endswith(".tar.gz.enc")) and filename.startswith(cls.BACKUP_PREFIX):
-                with cls._open_archive_for_read(path) as readable_path:
-                    with tarfile.open(readable_path, "r:gz") as tar:
-                        tar.extract("db.dump", work, filter="data")
-                        if restore_uploads and "uploads.tar.gz" in tar.getnames():
-                            tar.extract("uploads.tar.gz", work, filter="data")
+                with cls._open_archive_for_read(path) as readable_path, tarfile.open(readable_path, "r:gz") as tar:
+                    tar.extract("db.dump", work, filter="data")
+                    if restore_uploads and "uploads.tar.gz" in tar.getnames():
+                        tar.extract("uploads.tar.gz", work, filter="data")
                 dump_path = os.path.join(work, "db.dump")
             elif filename.endswith(".dump"):
                 dump_path = os.path.join(work, "legacy.dump")
@@ -1898,9 +1894,8 @@ This archive does NOT include secrets, .env, or AI runtime memory.
 
         work = tempfile.mkdtemp(prefix="azad_scoped_restore_")
         try:
-            with cls._open_archive_for_read(path) as readable_path:
-                with tarfile.open(readable_path, "r:gz") as tar:
-                    tar.extractall(work, filter="data")
+            with cls._open_archive_for_read(path) as readable_path, tarfile.open(readable_path, "r:gz") as tar:
+                tar.extractall(work, filter="data")
             outcome = restore_scoped_to_target(
                 work,
                 manifest,

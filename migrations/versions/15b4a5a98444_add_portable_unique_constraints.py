@@ -5,9 +5,8 @@ Revises: 2c0e342be9c6
 Create Date: 2026-08-21 01:06:59.782223
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = '15b4a5a98444'
@@ -59,7 +58,7 @@ def _deduplicate_column(table: str, column: str):
         else:
             seen[key] = row.id
 
-    for row_id, (tenant_id, value) in duplicates:
+    for row_id, (_tenant_id, value) in duplicates:
         new_value = f"{value}-dup-{row_id}"[:200]  # cap at 200 chars
         op.execute(
             sa.text(f"UPDATE {table} SET {column} = :val WHERE id = :id").bindparams(

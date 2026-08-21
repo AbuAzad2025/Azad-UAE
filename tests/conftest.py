@@ -866,10 +866,8 @@ def db_session(app):
         except Exception:
             session.remove()
             session = db.session
-        try:
+        with contextlib.suppress(Exception):
             session.expire_all()
-        except Exception:
-            pass
         try:
             nested = session.begin_nested()
         except Exception:

@@ -14,7 +14,8 @@ from __future__ import annotations
 import contextlib
 import functools
 import logging
-from typing import Callable, Iterator, TypeVar
+from collections.abc import Callable, Iterator
+from typing import TypeVar
 
 from flask import current_app
 from sqlalchemy.orm import Session

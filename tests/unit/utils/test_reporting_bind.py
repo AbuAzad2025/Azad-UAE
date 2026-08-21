@@ -1,6 +1,5 @@
 """Tests for utils.reporting_bind."""
 
-import pytest
 
 from utils.reporting_bind import reporting_bind, use_reporting_bind
 

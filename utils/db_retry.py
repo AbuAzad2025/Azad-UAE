@@ -12,7 +12,8 @@ import functools
 import logging
 import secrets
 import time
-from typing import Callable, TypeVar
+from collections.abc import Callable
+from typing import TypeVar
 
 from sqlalchemy.exc import DBAPIError, OperationalError
 
