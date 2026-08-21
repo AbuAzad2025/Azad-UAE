@@ -29,9 +29,7 @@ class TestPosSessionCashLedgerFlow:
         unit_price = Decimal("100")
         quantity = Decimal("1")
         tax_rate = Decimal("5")
-        sale_total = (unit_price * quantity * (Decimal("1") + tax_rate / Decimal("100"))).quantize(
-            Decimal("0.001")
-        )
+        sale_total = (unit_price * quantity * (Decimal("1") + tax_rate / Decimal("100"))).quantize(Decimal("0.001"))
 
         with app.app_context():
             with atomic_transaction("pos_session_open"):

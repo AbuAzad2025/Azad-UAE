@@ -42,13 +42,9 @@ class TestFinancialPrecision:
     ):
         """subtotal + tax + shipping - discount is always non-negative for valid inputs."""
         subtotal = (quantity * unit_price).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
-        discount = (subtotal * (discount_rate / Decimal("100"))).quantize(
-            Decimal("0.001"), rounding=ROUND_HALF_UP
-        )
+        discount = (subtotal * (discount_rate / Decimal("100"))).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         taxable = subtotal - discount + shipping
-        tax = (taxable * (tax_rate / Decimal("100"))).quantize(
-            Decimal("0.01"), rounding=ROUND_HALF_UP
-        )
+        tax = (taxable * (tax_rate / Decimal("100"))).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         total = (taxable + tax).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         assert total >= Decimal("0")
 

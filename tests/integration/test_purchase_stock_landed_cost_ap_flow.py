@@ -85,9 +85,7 @@ class TestPurchaseStockLandedCostApFlow:
         total_credit = sum(Decimal(str(line.credit or 0)) for line in gl_entry.lines)
         assert total_debit == total_credit, f"PURCHASE GL entry unbalanced: {total_debit} != {total_credit}"
 
-        inventory_lines = [
-            line for line in gl_entry.lines if line.account and line.account.code == "1140"
-        ]
+        inventory_lines = [line for line in gl_entry.lines if line.account and line.account.code == "1140"]
         assert len(inventory_lines) == 1
         assert inventory_lines[0].debit == inventory_debit
 

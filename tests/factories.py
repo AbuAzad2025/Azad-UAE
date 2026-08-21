@@ -110,9 +110,7 @@ class UserFactory(factory.alchemy.SQLAlchemyModelFactory):
     full_name = Faker("name")
     password = factory.LazyAttribute(lambda _: "password123")
     password_hash = LazyAttribute(
-        lambda o: generate_password_hash(
-            o.password, method="pbkdf2:sha256:260000", salt_length=16
-        )
+        lambda o: generate_password_hash(o.password, method="pbkdf2:sha256:260000", salt_length=16)
     )
     is_active = True
     is_owner = False
@@ -224,7 +222,8 @@ class SaleLineFactory(factory.alchemy.SQLAlchemyModelFactory):
     discount_percent = Decimal("0")
     line_total = LazyAttribute(
         lambda o: (
-            Decimal(str(o.quantity)) * Decimal(str(o.unit_price))
+            Decimal(str(o.quantity))
+            * Decimal(str(o.unit_price))
             * (Decimal("1") - Decimal(str(o.discount_percent)) / Decimal("100"))
         ).quantize(Decimal("0.001"))
     )

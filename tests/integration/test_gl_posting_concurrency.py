@@ -129,9 +129,9 @@ class TestGLPostingConcurrency:
         from models import SaleLine
 
         SaleLine.query.filter(SaleLine.sale_id.in_(sale_ids)).delete(synchronize_session=False)
-        GLJournalLine.query.filter(
-            GLJournalLine.entry_id.in_([e.id for e in entries])
-        ).delete(synchronize_session=False)
+        GLJournalLine.query.filter(GLJournalLine.entry_id.in_([e.id for e in entries])).delete(
+            synchronize_session=False
+        )
         GLJournalEntry.query.filter(
             GLJournalEntry.reference_type == GLRef.SALE,
             GLJournalEntry.reference_id.in_(sale_ids),

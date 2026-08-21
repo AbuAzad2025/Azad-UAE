@@ -36,8 +36,7 @@ class TestTaxRounding:
             per_line_tax += line_tax
 
         subtotal = sum(
-            (unit_price * quantity).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
-            for unit_price, quantity in lines
+            (unit_price * quantity).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP) for unit_price, quantity in lines
         )
         total_tax = (subtotal * rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
