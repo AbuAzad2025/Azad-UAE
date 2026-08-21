@@ -59,7 +59,7 @@ def upgrade():
     with op.batch_alter_table("package_purchases", schema=None) as batch_op:
         batch_op.add_column(sa.Column("tenant_id", sa.Integer(), nullable=True))
         batch_op.create_index(batch_op.f("ix_package_purchases_tenant_id"), ["tenant_id"], unique=False)
-        batch_op.create_foreign_key(None, "tenants", ["tenant_id"], ["id"])
+        batch_op.create_foreign_key("fk_package_purchases_tenant_id", "tenants", ["tenant_id"], ["id"])
 
     with op.batch_alter_table("tenants", schema=None) as batch_op:
         batch_op.add_column(sa.Column("subscription_plan_duration", sa.String(length=20), nullable=True))
@@ -75,7 +75,7 @@ def downgrade():
         batch_op.drop_column("subscription_plan_duration")
 
     with op.batch_alter_table("package_purchases", schema=None) as batch_op:
-        batch_op.drop_constraint(None, type_="foreignkey")
+        batch_op.drop_constraint("fk_package_purchases_tenant_id", type_="foreignkey")
         batch_op.drop_index(batch_op.f("ix_package_purchases_tenant_id"))
         batch_op.drop_column("tenant_id")
 

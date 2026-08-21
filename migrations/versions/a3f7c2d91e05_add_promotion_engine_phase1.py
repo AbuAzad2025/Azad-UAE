@@ -23,7 +23,7 @@ def upgrade():
         batch_op.add_column(sa.Column("rule_config", sa.JSON(), nullable=True))
         batch_op.create_index(batch_op.f("ix_campaigns_applies_to_pos"), ["applies_to_pos"], unique=False)
         batch_op.create_index(batch_op.f("ix_campaigns_branch_id"), ["branch_id"], unique=False)
-        batch_op.create_foreign_key(None, "branches", ["branch_id"], ["id"], ondelete="CASCADE")
+        batch_op.create_foreign_key("fk_campaigns_branch_id", "branches", ["branch_id"], ["id"], ondelete="CASCADE")
 
     with op.batch_alter_table("sales", schema=None) as batch_op:
         batch_op.add_column(
@@ -38,7 +38,7 @@ def downgrade():
         batch_op.drop_column("promotion_discount_amount")
 
     with op.batch_alter_table("campaigns", schema=None) as batch_op:
-        batch_op.drop_constraint(None, type_="foreignkey")
+        batch_op.drop_constraint("fk_campaigns_branch_id", type_="foreignkey")
         batch_op.drop_index(batch_op.f("ix_campaigns_branch_id"))
         batch_op.drop_index(batch_op.f("ix_campaigns_applies_to_pos"))
         batch_op.drop_column("rule_config")
