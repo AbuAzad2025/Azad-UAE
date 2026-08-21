@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import functools
 import logging
-import random
+import secrets
 import time
 from typing import Callable, TypeVar
 
@@ -19,6 +19,7 @@ from sqlalchemy.exc import DBAPIError, OperationalError
 logger = logging.getLogger(__name__)
 
 F = TypeVar("F", bound=Callable)
+_SYS_RAND = secrets.SystemRandom()
 
 
 def _is_serialization_error(exc: BaseException) -> bool:
@@ -60,7 +61,7 @@ def _retry_callable(
             if attempt >= max_retries or not _is_serialization_error(exc):
                 raise
             delay = min(base_delay * (2**attempt), max_delay)
-            jitter = random.uniform(0, delay)
+            jitter = _SYS_RAND.uniform(0, delay)
             logger.warning(
                 "Serialization failure (40001) on %s attempt %s; retrying in %.3fs",
                 getattr(func, "__name__", "<callable>"),
