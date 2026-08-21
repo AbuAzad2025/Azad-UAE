@@ -251,7 +251,7 @@ class BackupService:
     @classmethod
     def _get_crypto(cls) -> BackupCrypto:
         """Return a cached BackupCrypto instance for the current process."""
-        if not hasattr(cls, "_crypto_instance"):
+        if cls._crypto_instance is None:
             key = ""
             try:
                 from flask import current_app

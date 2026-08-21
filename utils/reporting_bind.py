@@ -15,10 +15,9 @@ import contextlib
 import functools
 import logging
 from collections.abc import Callable, Iterator
-from typing import TypeVar
+from typing import Any, TypeVar
 
 from flask import current_app
-from sqlalchemy.orm import Session, scoped_session
 
 from extensions import db
 
@@ -26,7 +25,7 @@ logger = logging.getLogger(__name__)
 F = TypeVar("F", bound=Callable)
 
 
-def _get_session() -> scoped_session[Session]:
+def _get_session() -> Any:
     return db.session
 
 
@@ -38,7 +37,7 @@ def _bind_is_configured(bind_name: str) -> bool:
         return False
 
 
-def _set_bind(session: Session, bind_name: str | None) -> None:
+def _set_bind(session: Any, bind_name: str | None) -> None:
     """Set the session's active bind (None means default)."""
     if bind_name:
         bind = db.engines[bind_name]
