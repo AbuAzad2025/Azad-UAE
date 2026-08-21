@@ -1165,3 +1165,104 @@ table .custom-select {
 		border-color: #64748b !important;
 	}
 }
+
+/* ── High Contrast / prefers-contrast ── */
+@media (prefers-contrast: more) {
+	:root {
+		--color-text-strong: #000000;
+		--color-text-regular: #111111;
+		--color-text-muted: #333333;
+		--color-text-soft: #555555;
+		--color-border: #000000;
+		--color-surface: #ffffff;
+		--color-surface-elevated: #ffffff;
+		--color-surface-strong: #ffffff;
+		--color-focus-ring: rgba(0, 0, 0, 0.6);
+		--color-input-bg: #ffffff;
+	}
+
+	.card,
+	.table,
+	.alert,
+	.modal-content,
+	.dropdown-menu {
+		border-width: 2px !important;
+		border-color: #000000 !important;
+	}
+
+	a:focus-visible,
+	button:focus-visible,
+	input:focus-visible,
+	select:focus-visible,
+	textarea:focus-visible {
+		outline: 3px solid #000000 !important;
+		outline-offset: 2px !important;
+	}
+
+	.sidebar .nav-link:focus-visible,
+	.main-header .nav-link:focus-visible,
+	.dropdown-item:focus-visible {
+		outline: 3px solid #000000 !important;
+	}
+}
+
+/* ── Windows High Contrast Mode ── */
+@media (forced-colors: active) {
+	.sidebar .nav-link:focus-visible,
+	.main-header .nav-link:focus-visible,
+	.dropdown-item:focus-visible,
+	a:focus-visible,
+	button:focus-visible {
+		outline: 3px solid Highlight !important;
+		outline-offset: 2px !important;
+		forced-color-adjust: none;
+	}
+
+	.btn-primary,
+	.swal2-styled.swal2-confirm {
+		forced-color-adjust: none;
+		border: 1px solid ButtonText;
+	}
+
+	.card,
+	.modal-content {
+		forced-color-adjust: none;
+		border: 1px solid CanvasText;
+	}
+
+	/* Ensure the sidebar active state is visible in high contrast */
+	.sidebar .nav-link.active,
+	.sidebar .nav-link.active > i {
+		forced-color-adjust: none;
+		background-color: Highlight !important;
+		color: HighlightText !important;
+	}
+
+	/* Preserve badge colors */
+	.badge {
+		forced-color-adjust: none;
+		border: 1px solid ButtonText;
+	}
+
+	/* Loading spinner visibility */
+	.loading::before {
+		forced-color-adjust: none;
+		background: Highlight;
+		color: HighlightText;
+	}
+}
+
+/* ── Reduced Contrast ── */
+@media (prefers-contrast: less) {
+	.card,
+	.table,
+	.alert {
+		border-color: transparent !important;
+		box-shadow: none !important;
+	}
+
+	.sidebar .nav-link.active {
+		background-color: var(--color-primary);
+		color: var(--color-on-primary);
+	}
+}

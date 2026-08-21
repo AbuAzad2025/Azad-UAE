@@ -26,10 +26,15 @@ except ImportError:
 
 def get_locale():
     try:
-        from flask import has_request_context
+        from flask import has_request_context, request
 
-        if has_request_context() and "language" in session:
-            return session.get("language", "ar")
+        if has_request_context():
+            if "language" in session:
+                return session.get("language", "ar")
+            accept = request.accept_languages
+            best = accept.best_match(["ar", "en"])
+            if best:
+                return best
     except RuntimeError:
         logging.getLogger(__name__).debug("get_locale called outside request context", exc_info=True)
     return "ar"
