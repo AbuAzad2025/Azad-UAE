@@ -1,0 +1,83 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Alembic Round-Trip
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'migrations/**'
+      - 'models/**'
+      - 'requirements.txt'
+      - '.github/workflows/alembic_roundtrip.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'migrations/**'
+      - 'models/**'
+      - 'requirements.txt'
+      - '.github/workflows/alembic_roundtrip.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  alembic-roundtrip:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: azad_test
+          POSTGRES_PASSWORD: azad_test
+          POSTGRES_DB: azad_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Alembic upgrade/downgrade round-trip
+        env:
+          DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
+          SECRET_KEY: test-secret-key-not-for-production
+          APP_ENV: testing
+          DEBUG: "true"
+          SKIP_SYSTEM_INTEGRITY: "1"
+        run: |
+          set -e
+          echo "=== Upgrade to head ==="
+          flask db upgrade head
+          echo "=== Downgrade to base one step at a time ==="
+          while flask db current | grep -v base; do
+            flask db downgrade -1
+          done
+          echo "=== Upgrade back to head ==="
+          flask db upgrade head
+          echo "=== Current version ==="
+          flask db current
