@@ -22,6 +22,7 @@ from services.aging_analysis_service import AgingAnalysisService
 from services.cash_flow_service import CashFlowService
 from services.gl_service import GLService
 from services.logging_core import LoggingCore
+from services.print_service import PrintService
 from utils.branching import get_accessible_branches, user_can_access_branch
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
@@ -801,6 +802,63 @@ def aging_analysis():
             "danger",
         )
         return redirect(url_for("ledger.index"))
+
+
+@ledger_bp.route("/aging-analysis/export")
+@login_required
+@permission_required("view_ledger")
+def aging_analysis_export():
+    """تصدير تحليل عمر الذمم كملف PDF حقيقي."""
+    analysis_type = request.args.get("type", "payables", type=str)
+    as_of_date = request.args.get("as_of_date", type=str)
+    branch_id = _effective_branch_id()
+
+    if analysis_type not in ("receivables", "payables"):
+        flash(gettext("نوع التحليل غير صالح."), "danger")
+        return redirect(url_for("ledger.aging_analysis"))
+
+    try:
+        if analysis_type == "receivables":
+            report = AgingAnalysisService.get_receivables_aging(as_of_date, branch_id=branch_id)
+            title = gettext("تحليل عمر الذمم المدينة")
+            gl_verify = AgingAnalysisService.verify_receivables_with_gl(as_of_date, branch_id=branch_id)
+        else:
+            report = AgingAnalysisService.get_payables_aging(as_of_date, branch_id=branch_id)
+            title = gettext("تحليل عمر الذمم الدائنة")
+            gl_verify = AgingAnalysisService.verify_payables_with_gl(as_of_date, branch_id=branch_id)
+
+        context = {
+            "report": report,
+            "analysis_type": analysis_type,
+            "title": title,
+            "gl_verify": gl_verify,
+            "as_of_date": as_of_date or date.today().strftime("%Y-%m-%d"),
+            "selected_branch": branch_id,
+        }
+        pdf_bytes = PrintService.render_pdf(
+            "ledger/aging_analysis_pdf.html",
+            extra_context=context,
+            filename=f"aging_analysis_{analysis_type}_{as_of_date or date.today().strftime('%Y%m%d')}.pdf",
+        )
+        from flask import Response
+
+        return Response(
+            pdf_bytes,
+            mimetype="application/pdf",
+            headers={
+                "Content-Disposition": (
+                    f"attachment; filename=aging_analysis_{analysis_type}_"
+                    f"{as_of_date or date.today().strftime('%Y%m%d')}.pdf"
+                )
+            },
+        )
+    except Exception as e:
+        current_app.logger.error("Aging analysis PDF export failed: %s", e)
+        flash(
+            gettext(f"❌ فشل تصدير PDF: {str(e)}\n💡 حاول مرة أخرى."),
+            "danger",
+        )
+        return redirect(url_for("ledger.aging_analysis", type=analysis_type, as_of_date=as_of_date))
 
 
 @ledger_bp.route("/admin-dashboard")

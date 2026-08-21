@@ -432,6 +432,42 @@ class TestLedgerPages:
             resp = ledger_client.get("/ledger/aging-analysis", follow_redirects=False)
         assert resp.status_code == 302
 
+    def test_aging_payables_pdf_export(self, ledger_client):
+        with _ledger_patches(), patch(
+            "routes.ledger.PrintService.render_pdf",
+            return_value=b"%PDF-1.4 fake pdf bytes",
+        ):
+            resp = ledger_client.get("/ledger/aging-analysis/export?type=payables&as_of_date=2026-08-22")
+        assert resp.status_code == 200
+        assert resp.content_type == "application/pdf"
+        assert resp.headers["Content-Disposition"].startswith("attachment")
+        assert b"%PDF" in resp.data
+
+    def test_aging_receivables_pdf_export(self, ledger_client):
+        with _ledger_patches(), patch(
+            "routes.ledger.PrintService.render_pdf",
+            return_value=b"%PDF-1.4 fake pdf bytes",
+        ):
+            resp = ledger_client.get("/ledger/aging-analysis/export?type=receivables")
+        assert resp.status_code == 200
+        assert resp.content_type == "application/pdf"
+
+    def test_aging_pdf_export_invalid_type_redirects(self, ledger_client):
+        with _ledger_patches():
+            resp = ledger_client.get("/ledger/aging-analysis/export?type=invalid", follow_redirects=False)
+        assert resp.status_code == 302
+
+    def test_aging_pdf_export_error_redirects(self, ledger_client):
+        with (
+            _ledger_patches(),
+            patch(
+                "routes.ledger.AgingAnalysisService.get_payables_aging",
+                side_effect=RuntimeError("fail"),
+            ),
+        ):
+            resp = ledger_client.get("/ledger/aging-analysis/export?type=payables", follow_redirects=False)
+        assert resp.status_code == 302
+
     def test_budget_vs_actual(self, ledger_client):
         budget = MagicMock(
             status="active",

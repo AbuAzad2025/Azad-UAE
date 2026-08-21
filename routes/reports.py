@@ -323,12 +323,11 @@ def partners():
         ]
         receipt_scope = [Receipt.customer_id.in_(customer_ids), payment_affects_balance(Receipt)]
 
-        def _date_filters(q, *pairs):
-            for col, d_from, d_to in pairs:
-                if d_from:
-                    q = q.filter(func.date(col) >= d_from)
-                if d_to:
-                    q = q.filter(func.date(col) <= d_to)
+        def _date_filters(q, col, d_from, d_to):
+            if d_from:
+                q = q.filter(func.date(col) >= d_from)
+            if d_to:
+                q = q.filter(func.date(col) <= d_to)
             return q
 
         def _tenant_branch_filters(q, tenant_col, branch_col):
@@ -441,12 +440,11 @@ def partners():
         supplier_ids = [s.id for s in suppliers]
         supplier_tenant_ids = {s.tenant_id for s in suppliers}
 
-        def _sup_date_filters(q, *pairs):
-            for col, d_from, d_to in pairs:
-                if d_from:
-                    q = q.filter(func.date(col) >= d_from)
-                if d_to:
-                    q = q.filter(func.date(col) <= d_to)
+        def _sup_date_filters(q, col, d_from, d_to):
+            if d_from:
+                q = q.filter(func.date(col) >= d_from)
+            if d_to:
+                q = q.filter(func.date(col) <= d_to)
             return q
 
         def _sup_branch_filter(q, branch_col):
