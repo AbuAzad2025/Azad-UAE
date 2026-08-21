@@ -1,10 +1,11 @@
 from datetime import date
 
-from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_babel import gettext
 from flask_login import login_required
 
 from services.budget_service import BudgetService
+from utils.api_response import error_response, success_response
 from utils.decorators import permission_required
 
 budget_bp = Blueprint("budget", __name__, url_prefix="/budgets")
@@ -125,9 +126,13 @@ def api_create():
     data = request.get_json(silent=True) or {}
     try:
         budget = BudgetService.create_budget(data, None)
-        return jsonify({"ok": True, "id": budget.id, "budget_number": budget.budget_number})
+        return success_response(
+            data={"id": budget.id, "budget_number": budget.budget_number},
+            message=gettext("تم إنشاء الميزانية"),
+            status_code=201,
+        )
     except (ValueError, KeyError) as e:
-        return jsonify({"ok": False, "error": str(e)}), 400
+        return error_response(message=str(e), status_code=400)
 
 
 def _parse_budget_form(form):
