@@ -10,8 +10,8 @@
 		rgba(14, 90, 58, 0.08) 0%,
 		rgba(201, 162, 39, 0.06) 100%
 	);
-	border: 1px solid var(--ui-border);
-	border-radius: var(--ui-radius-md);
+	border: 1px solid var(--az-border);
+	border-radius: var(--az-radius-md);
 	padding: 0.65rem 1rem;
 	margin-bottom: 1rem;
 }
@@ -19,7 +19,7 @@
 /* purgecss end ignore */
 .product-create-page .pc-hero p {
 	margin: 0;
-	color: var(--ui-muted);
+	color: var(--az-text-muted);
 	font-size: 0.85rem;
 }
 
@@ -31,7 +31,7 @@
 
 .product-create-page .pc-price-input .input-group-text {
 	font-weight: 700;
-	color: var(--ui-primary);
+	color: var(--az-primary);
 	min-width: 3.2rem;
 	justify-content: center;
 }
@@ -44,28 +44,28 @@ html[dir="rtl"] .product-create-page .pc-price-input .input-group-prepend {
 /* purgecss end ignore */
 html[dir="rtl"] .product-create-page .pc-price-input .form-control {
 	order: 1;
-	border-radius: 0 var(--ui-radius-sm) var(--ui-radius-sm) 0 !important;
+	border-radius: 0 var(--az-radius-sm) var(--az-radius-sm) 0 !important;
 }
 
 html[dir="rtl"] .product-create-page .pc-price-input .input-group-text {
-	border-radius: var(--ui-radius-sm) 0 0 var(--ui-radius-sm) !important;
+	border-radius: var(--az-radius-sm) 0 0 var(--az-radius-sm) !important;
 }
 
 .product-create-page .pc-card {
-	border: 1px solid var(--ui-border);
-	border-radius: var(--ui-radius-md);
-	background: var(--ui-surface);
-	box-shadow: var(--ui-shadow);
+	border: 1px solid var(--az-border);
+	border-radius: var(--az-radius-md);
+	background: var(--az-surface);
+	box-shadow: var(--az-shadow);
 	margin-bottom: 1.25rem;
 	overflow: hidden;
 }
 
 .product-create-page .pc-card-header {
-	background: var(--ui-surface-2);
-	border-bottom: 1px solid var(--ui-border);
+	background: var(--az-surface-2);
+	border-bottom: 1px solid var(--az-border);
 	padding: 0.75rem 1.1rem;
 	font-weight: 700;
-	color: var(--ui-primary-2);
+	color: var(--az-primary-2);
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
@@ -79,18 +79,18 @@ html[dir="rtl"] .product-create-page .pc-price-input .input-group-text {
 	font-weight: 600;
 	font-size: 0.88rem;
 	margin-bottom: 0.35rem;
-	color: var(--ui-text);
+	color: var(--az-text);
 }
 
 /* purgecss start ignore */
 .product-create-page .form-group label .req {
-	color: var(--ui-danger);
+	color: var(--az-danger);
 	margin-left: 2px;
 }
 
 .product-create-page .field-hint {
 	font-size: 0.78rem;
-	color: var(--ui-muted);
+	color: var(--az-text-muted);
 	margin-top: 0.25rem;
 	line-height: 1.4;
 }
@@ -98,8 +98,8 @@ html[dir="rtl"] .product-create-page .pc-price-input .input-group-text {
 /* purgecss end ignore */
 .product-create-page .pc-empty-categories {
 	background: #fff8e6;
-	border: 1px dashed var(--ui-gold);
-	border-radius: var(--ui-radius-sm);
+	border: 1px dashed var(--az-gold);
+	border-radius: var(--az-radius-sm);
 	padding: 0.85rem;
 	margin-bottom: 0.75rem;
 }
@@ -107,12 +107,12 @@ html[dir="rtl"] .product-create-page .pc-price-input .input-group-text {
 .product-create-page .pc-advanced-toggle {
 	width: 100%;
 	text-align: right;
-	background: var(--ui-surface-2);
-	border: 1px solid var(--ui-border);
-	border-radius: var(--ui-radius-sm);
+	background: var(--az-surface-2);
+	border: 1px solid var(--az-border);
+	border-radius: var(--az-radius-sm);
 	padding: 0.65rem 1rem;
 	font-weight: 600;
-	color: var(--ui-primary);
+	color: var(--az-primary);
 }
 
 .product-create-page .pc-advanced-toggle:hover {
@@ -128,8 +128,8 @@ html[dir="rtl"] .product-create-page .pc-price-input .input-group-text {
 .product-create-page .pc-actions {
 	position: sticky;
 	bottom: 0;
-	background: var(--ui-surface);
-	border-top: 1px solid var(--ui-border);
+	background: var(--az-surface);
+	border-top: 1px solid var(--az-border);
 	padding: 1rem 1.25rem;
 	box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.06);
 	z-index: 10;

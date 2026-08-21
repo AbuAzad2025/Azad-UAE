@@ -112,23 +112,7 @@
   --az-mobile-nav-height: 68px;
 }
 
-:root {
-  --ui-border: var(--az-border);
-  --ui-danger: var(--az-danger);
-  --ui-focus-ring: var(--az-focus-ring);
-  --ui-gold: var(--az-gold);
-  --ui-muted: var(--az-text-muted);
-  --ui-primary: var(--az-primary);
-  --ui-primary-2: var(--az-primary-2);
-  --ui-radius-md: var(--az-radius-md);
-  --ui-radius-sm: var(--az-radius-sm);
-  --ui-shadow: var(--az-shadow);
-  --ui-success: var(--az-success);
-  --ui-surface: var(--az-surface);
-  --ui-surface-2: var(--az-surface-2);
-  --ui-text: var(--az-text);
-  --ui-warning: var(--az-warning);
-}
+
 
 /* ── Palestinian Light ── */
 html[data-ui-variant="palestinian"][data-ui-mode="light"],

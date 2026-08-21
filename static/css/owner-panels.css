@@ -2,29 +2,29 @@
    Colors, radius, shadows and focus ring are bound to the global
    --ui-* design tokens (erp-theme.css) with safe fallbacks. */
 .owner-panel-card {
-	border-radius: var(--ui-radius-sm, 10px);
+	border-radius: var(--az-radius-sm, 10px);
 	border: 0;
-	box-shadow: var(--ui-shadow, 0 2px 12px rgba(0, 0, 0, 0.06));
+	box-shadow: var(--az-shadow, 0 2px 12px rgba(0, 0, 0, 0.06));
 }
 
 /* purgecss start ignore */
 .owner-badge-active {
-	background: var(--ui-success, #188a4c);
+	background: var(--az-success, #188a4c);
 	color: #fff;
 }
 
 .owner-badge-suspended {
-	background: var(--ui-muted, #6c757d);
+	background: var(--az-text-muted, #6c757d);
 	color: #fff;
 }
 
 .owner-badge-missing {
-	background: var(--ui-danger, #b11e2b);
+	background: var(--az-danger, #b11e2b);
 	color: #fff;
 }
 
 .owner-badge-warn {
-	background: var(--ui-warning, #c97c10);
+	background: var(--az-warning, #c97c10);
 	color: #fff;
 }
 
@@ -33,8 +33,8 @@
 	width: 40px;
 	height: 40px;
 	object-fit: contain;
-	border-radius: var(--ui-radius-sm, 6px);
-	background: var(--ui-surface-2, #f8f9fa);
+	border-radius: var(--az-radius-sm, 6px);
+	background: var(--az-surface-2, #f8f9fa);
 }
 
 .owner-table-tenants td {
@@ -58,9 +58,9 @@ a:focus-visible,
 .custom-select:focus-visible,
 .page-link:focus-visible,
 [tabindex]:focus-visible {
-	outline: 3px solid var(--ui-primary, #0e5a3a);
+	outline: 3px solid var(--az-primary, #0e5a3a);
 	outline-offset: 2px;
-	box-shadow: var(--ui-focus-ring, 0 0 0 3px rgba(14, 90, 58, 0.22));
+	box-shadow: var(--az-focus-ring, 0 0 0 3px rgba(14, 90, 58, 0.22));
 }
 
 .btn:focus-visible {

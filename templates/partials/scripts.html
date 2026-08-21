@@ -22,7 +22,7 @@
 
 <!-- POS Module (lazy-loaded only on POS pages) -->
 {% if request.endpoint and 'pos' in request.endpoint %}
-<script defer src="{{ url_for('static', filename='js/pos/index.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/pos/index.js') }}"></script>
 <script defer src="{{ url_for('static', filename='js/pos/grid.js') }}"></script>
 <script defer src="{{ url_for('static', filename='js/pos/cashier-logic.js') }}"></script>
 <script defer src="{{ url_for('static', filename='js/pos/cfd-broadcast.js') }}"></script>
