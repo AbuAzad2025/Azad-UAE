@@ -18,7 +18,7 @@ from collections.abc import Callable, Iterator
 from typing import TypeVar
 
 from flask import current_app
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, scoped_session
 
 from extensions import db
 
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 F = TypeVar("F", bound=Callable)
 
 
-def _get_session() -> Session:
+def _get_session() -> scoped_session[Session]:
     return db.session
 
 

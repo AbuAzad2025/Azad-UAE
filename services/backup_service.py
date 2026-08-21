@@ -63,6 +63,7 @@ class BackupService:
     BACKUP_PREFIX = "azad_backup_"
     LEGACY_MANUAL_PREFIX = "manual_backup_"
     LEGACY_AUTO_PREFIX = "auto_backup_"
+    _crypto_instance: BackupCrypto | None = None
 
     @classmethod
     def get_list_backups_context(cls, user) -> dict[str, Any]:
