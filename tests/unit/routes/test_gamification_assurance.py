@@ -23,7 +23,9 @@ class TestGamificationRoutes:
         )
         resp = auth_client.get("/gamification/my-stats")
         assert resp.status_code == 200
-        assert resp.get_json() == stats
+        body = resp.get_json()
+        assert body["success"] is True
+        assert body["data"] == stats
 
     def test_award_points_returns_result(self, auth_client, mocker):
         result = {"awarded": 10, "action": "sale"}
@@ -33,7 +35,9 @@ class TestGamificationRoutes:
         )
         resp = auth_client.get("/gamification/award/sale")
         assert resp.status_code == 200
-        assert resp.get_json() == result
+        body = resp.get_json()
+        assert body["success"] is True
+        assert body["data"] == result
 
     def test_routes_require_login(self, client):
         for path in (
