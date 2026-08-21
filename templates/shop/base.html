@@ -21,10 +21,10 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/shop-theme.css') }}">
+  <link rel="stylesheet" href="{{ dist_url('css/shop-theme.css') }}">
    <style>:root { --theme-primary: {{ theme_primary }}; --theme-secondary: {{ theme_secondary }}; }</style>
   {% block extra_head %}{% endblock %}
-  {% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/shop-utilities.css') }}">{% endblock %}
+  {% block extra_css %}<link rel="stylesheet" href="{{ dist_url('css/shop-utilities.css') }}">{% endblock %}
   {% if analytics_id %}
 {# SRI omitted for Google Tag Manager — Google rotates script hashes frequently; verify via CSP connect-src instead #}
 <script async src="https://www.googletagmanager.com/gtag/js?id={{ analytics_id }}"></script>
@@ -201,17 +201,17 @@
     </div>
   </footer>
 
-  <script src="{{ url_for('static', filename='js/telemetry.js') }}" defer></script>
-  <script src="{{ url_for('static', filename='js/shop-storefront.js') }}" defer></script>
+  <script src="{{ dist_url('js/telemetry.js') }}" defer></script>
+  <script src="{{ dist_url('js/shop-storefront.js') }}" defer></script>
   <script>
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('{{ url_for("static", filename="sw.js") }}');
   }
   </script>
-  <script src="{{ url_for('static', filename='js/shop-cart.js') }}" defer></script>
-  <script src="{{ url_for('static', filename='js/shop-search.js') }}" defer></script>
-  <script src="{{ url_for('static', filename='js/shop-gallery.js') }}" defer></script>
-  <script src="{{ url_for('static', filename='js/shop-quickview.js') }}" defer></script>
+  <script src="{{ dist_url('js/shop-cart.js') }}" defer></script>
+  <script src="{{ dist_url('js/shop-search.js') }}" defer></script>
+  <script src="{{ dist_url('js/shop-gallery.js') }}" defer></script>
+  <script src="{{ dist_url('js/shop-quickview.js') }}" defer></script>
   {% block extra_js %}{% endblock %}
 <div id="ps-cookie-banner" class="ps-cookie-banner" style="display:none">
   <p>{{ t('cookie_notice') }}</p>

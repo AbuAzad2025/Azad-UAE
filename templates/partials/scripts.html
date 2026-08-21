@@ -3,74 +3,77 @@
 <script src="{{ url_for('static', filename='adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <script src="{{ url_for('static', filename='adminlte/js/adminlte.min.js') }}"></script>
 
+<!-- Central API client with double-submit guard -->
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
+
 <!-- Deferred Utility Scripts -->
-<script defer src="{{ url_for('static', filename='js/telemetry.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/base-helpers.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/i18n.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/ui-theme.js') }}"></script>
+<script defer src="{{ dist_url('js/telemetry.js') }}"></script>
+<script defer src="{{ dist_url('js/base-helpers.js') }}"></script>
+<script defer src="{{ dist_url('js/i18n.js') }}"></script>
+<script defer src="{{ dist_url('js/ui-theme.js') }}"></script>
 
 <!-- Deferred Feature Scripts -->
-<script defer src="{{ url_for('static', filename='js/app.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/customer-select.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/payment-fields.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/delete-manager.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/action-helpers.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/notifications.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/keyboard-shortcuts.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/performance.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/smart-print.js') }}"></script>
+<script defer src="{{ dist_url('js/app.js') }}"></script>
+<script defer src="{{ dist_url('js/customer-select.js') }}"></script>
+<script defer src="{{ dist_url('js/payment-fields.js') }}"></script>
+<script defer src="{{ dist_url('js/delete-manager.js') }}"></script>
+<script defer src="{{ dist_url('js/action-helpers.js') }}"></script>
+<script defer src="{{ dist_url('js/notifications.js') }}"></script>
+<script defer src="{{ dist_url('js/keyboard-shortcuts.js') }}"></script>
+<script defer src="{{ dist_url('js/performance.js') }}"></script>
+<script defer src="{{ dist_url('js/smart-print.js') }}"></script>
 
 <!-- POS Module (lazy-loaded only on POS pages) -->
 {% if request.endpoint and 'pos' in request.endpoint %}
-<script type="module" src="{{ url_for('static', filename='js/pos/index.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/pos/grid.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/pos/cashier-logic.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/pos/cfd-broadcast.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/pos/escpos-printer.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/pos/offline.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/pos/offline-catalog.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/pos/print-tickets.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/pos/scale-serial.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/pos/terminal.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/pos/pos-config.js') }}"></script>
+<script type="module" src="{{ dist_url('js/pos/index.js') }}"></script>
+<script defer src="{{ dist_url('js/pos/grid.js') }}"></script>
+<script defer src="{{ dist_url('js/pos/cashier-logic.js') }}"></script>
+<script defer src="{{ dist_url('js/pos/cfd-broadcast.js') }}"></script>
+<script defer src="{{ dist_url('js/pos/escpos-printer.js') }}"></script>
+<script defer src="{{ dist_url('js/pos/offline.js') }}"></script>
+<script defer src="{{ dist_url('js/pos/offline-catalog.js') }}"></script>
+<script defer src="{{ dist_url('js/pos/print-tickets.js') }}"></script>
+<script defer src="{{ dist_url('js/pos/scale-serial.js') }}"></script>
+<script defer src="{{ dist_url('js/pos/terminal.js') }}"></script>
+<script defer src="{{ dist_url('js/pos/pos-config.js') }}"></script>
 {% endif %}
 
 <!-- Sales Module (lazy-loaded only on sales pages) -->
 {% if request.endpoint and 'sales' in request.endpoint %}
-<script defer src="{{ url_for('static', filename='js/sales.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/sales-enhanced.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/sales-create.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/sales-index.js') }}"></script>
+<script defer src="{{ dist_url('js/sales.js') }}"></script>
+<script defer src="{{ dist_url('js/sales-enhanced.js') }}"></script>
+<script defer src="{{ dist_url('js/sales-create.js') }}"></script>
+<script defer src="{{ dist_url('js/sales-index.js') }}"></script>
 {% endif %}
 
 <!-- Purchases Module -->
 {% if request.endpoint and 'purchases' in request.endpoint %}
-<script defer src="{{ url_for('static', filename='js/purchases/create.js') }}"></script>
+<script defer src="{{ dist_url('js/purchases/create.js') }}"></script>
 {% endif %}
 
 <!-- Products Module -->
 {% if request.endpoint and 'products' in request.endpoint %}
-<script defer src="{{ url_for('static', filename='js/products/category-controls.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/products/industry-fields.js') }}"></script>
+<script defer src="{{ dist_url('js/products/category-controls.js') }}"></script>
+<script defer src="{{ dist_url('js/products/industry-fields.js') }}"></script>
 {% endif %}
 
 <!-- CRM Module -->
 {% if request.endpoint and 'crm' in request.endpoint %}
-<script defer src="{{ url_for('static', filename='js/crm/pipeline.js') }}"></script>
+<script defer src="{{ dist_url('js/crm/pipeline.js') }}"></script>
 {% endif %}
 
 <!-- Projects Module -->
 {% if request.endpoint and 'projects' in request.endpoint %}
-<script defer src="{{ url_for('static', filename='js/projects/kanban.js') }}"></script>
+<script defer src="{{ dist_url('js/projects/kanban.js') }}"></script>
 {% endif %}
 
 <!-- Shop Module -->
 {% if request.endpoint and 'shop' in request.endpoint %}
-<script defer src="{{ url_for('static', filename='js/shop-storefront.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/shop-search.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/shop-quickview.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/shop-gallery.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/shop-cart.js') }}"></script>
+<script defer src="{{ dist_url('js/shop-storefront.js') }}"></script>
+<script defer src="{{ dist_url('js/shop-search.js') }}"></script>
+<script defer src="{{ dist_url('js/shop-quickview.js') }}"></script>
+<script defer src="{{ dist_url('js/shop-gallery.js') }}"></script>
+<script defer src="{{ dist_url('js/shop-cart.js') }}"></script>
 {% endif %}
 
 <!-- SweetAlert2 (lazy-loaded when needed) -->

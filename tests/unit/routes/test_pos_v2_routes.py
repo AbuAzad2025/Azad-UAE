@@ -98,7 +98,7 @@ def _pos_enabled_patches(**kwargs):
         stack.enter_context(patch("routes.pos.get_active_tenant_id", return_value=1))
         stack.enter_context(patch("routes.pos.db.session", session_mock))
         stack.enter_context(patch("routes.pos.render_template", return_value="ok"))
-        stack.enter_context(patch("routes.pos.LoggingCore.log_audit"))
+        stack.enter_context(patch("services.pos_checkout_service.LoggingCore.log_audit"))
         stack.enter_context(patch("routes.pos.log_pos_fraud_signal"))
         stack.enter_context(patch("extensions.limiter.limit", return_value=lambda f: f))
         # Mock PosShift.query so _get_active_shift() and checkout work
@@ -107,12 +107,12 @@ def _pos_enabled_patches(**kwargs):
         for m in ("filter", "filter_by", "order_by"):
             getattr(pos_shift_q, m).return_value = pos_shift_q
         stack.enter_context(patch("routes.pos.PosShift.query", pos_shift_q))
-        yield
+        yield session_mock
 
 
 @contextmanager
 def _pos_api_patches(**kwargs):
-    with _pos_enabled_patches(**kwargs) as ctx, ExitStack() as stack:
+    with _pos_enabled_patches(**kwargs) as session_mock, ExitStack() as stack:
         stack.enter_context(
             patch(
                 "routes.pos.get_accessible_warehouses",
@@ -215,17 +215,65 @@ def _pos_api_patches(**kwargs):
                 ),
             )
         )
-        stack.enter_context(patch("routes.pos.ensure_warehouse_access", return_value=MagicMock(id=3)))
-        stack.enter_context(patch("routes.pos.context_aware_default_currency", return_value="AED"))
         stack.enter_context(
             patch(
                 "routes.pos.get_active_branch_id",
                 return_value=kwargs.get("branch_id", 2),
             )
         )
+        stack.enter_context(patch("routes.pos.log_mutation"))
+
+        # Patch the service-layer internals that PosCheckoutService imports.
+        service_module = "services.pos_checkout_service"
+        stack.enter_context(patch(f"{service_module}.db.session", session_mock))
         stack.enter_context(
             patch(
-                "routes.pos.SaleService.create_sale",
+                f"{service_module}.get_pos_walkin_customer",
+                return_value=kwargs.get("walkin", _walkin_customer()),
+            )
+        )
+        stack.enter_context(
+            patch(
+                f"{service_module}.tenant_get",
+                side_effect=kwargs.get("tenant_get", lambda m, i: _mock_product(i)),
+            )
+        )
+        stack.enter_context(patch(f"{service_module}.ensure_warehouse_access", return_value=MagicMock(id=3)))
+        stack.enter_context(patch(f"{service_module}.context_aware_default_currency", return_value="AED"))
+        stack.enter_context(
+            patch(
+                f"{service_module}.get_active_branch_id",
+                return_value=kwargs.get("branch_id", 2),
+            )
+        )
+        stack.enter_context(
+            patch(
+                f"{service_module}.merge_checkout_lines",
+                return_value=kwargs.get(
+                    "merged_lines",
+                    [
+                        {
+                            "product_id": 1,
+                            "quantity": Decimal("1"),
+                            "discount_percent": Decimal("0"),
+                            "unit_price": None,
+                        }
+                    ],
+                ),
+            )
+        )
+        stack.enter_context(
+            patch(
+                "utils.pos_checkout_helpers.PricingService.get_price",
+                side_effect=lambda product, customer_type="regular", qty=1: product.get_price_for_customer(
+                    customer_type
+                ),
+            )
+        )
+        stack.enter_context(patch(f"{service_module}.PromotionService.evaluate_cart", return_value=None))
+        stack.enter_context(
+            patch(
+                f"{service_module}.SaleService.create_sale",
                 return_value=kwargs.get(
                     "sale",
                     MagicMock(
@@ -237,18 +285,33 @@ def _pos_api_patches(**kwargs):
                 ),
             )
         )
-        # Tier-aware pricing is exercised against the real DB in service
-        # tests; at the route boundary keep the legacy baseline semantics.
+        stack.enter_context(
+            patch(f"{service_module}.PosOverrideService.require_permission_or_override", return_value=None)
+        )
+        stack.enter_context(patch(f"{service_module}.PosOrderType.get_by_code", return_value=None))
+        stack.enter_context(patch(f"{service_module}.PosOrderType.default_for_tenant", return_value=None))
         stack.enter_context(
             patch(
-                "routes.pos.PricingService.get_price",
-                side_effect=lambda product, customer_type="regular", qty=1: product.get_price_for_customer(
-                    customer_type
-                ),
+                f"{service_module}.PosWriteService.create_kds_order",
+                return_value=MagicMock(id=1, order_number="S-100"),
             )
         )
-        stack.enter_context(patch("routes.pos.log_mutation"))
-        yield ctx
+        stack.enter_context(patch(f"{service_module}.log_mutation"))
+        stack.enter_context(patch(f"{service_module}.LoggingCore.log_audit"))
+        _default_order_type = MagicMock(code="dine_in", kds_enabled=True, is_active=True)
+        stack.enter_context(
+            patch(
+                f"{service_module}.PosOrderType.get_by_code",
+                return_value=_default_order_type,
+            )
+        )
+        stack.enter_context(
+            patch(
+                f"{service_module}.PosOrderType.default_for_tenant",
+                return_value=_default_order_type,
+            )
+        )
+        yield
 
 
 @pytest.fixture
@@ -443,7 +506,7 @@ class TestPosCheckout:
     def test_checkout_invalid_lines(self, pos_client):
         with (
             _pos_api_patches(),
-            patch("routes.pos.merge_checkout_lines", side_effect=ValueError("bad")),
+            patch("services.pos_checkout_service.merge_checkout_lines", side_effect=ValueError("bad")),
         ):
             resp = pos_client.post("/pos/api/checkout", json=self._checkout_payload())
         assert resp.status_code == 400
@@ -498,17 +561,21 @@ class TestPosCheckout:
         ]
         with (
             _pos_api_patches(tenant_get=lambda m, i: product),
-            patch("routes.pos.merge_checkout_lines", return_value=merged),
+            patch("services.pos_checkout_service.merge_checkout_lines", return_value=merged),
         ):
             resp = pos_client.post("/pos/api/checkout", json=self._checkout_payload())
         assert resp.status_code == 403
 
     def test_checkout_kds_order(self, pos_client):
         product = _mock_product()
+        kds_order = MagicMock(id=7, order_number="KDS-100")
         with (
             _pos_api_patches(tenant_get=lambda m, i: product),
             patch("routes.pos._notify_kds") as notify,
-            patch("models.PosKdsOrder", return_value=MagicMock(id=7, order_number="S-100")),
+            patch(
+                "services.pos_checkout_service.PosWriteService.create_kds_order",
+                return_value=kds_order,
+            ),
         ):
             resp = pos_client.post("/pos/api/checkout", json=self._checkout_payload(order_type="dine_in"))
         assert resp.get_json()["success"] is True
@@ -517,7 +584,7 @@ class TestPosCheckout:
     def test_checkout_sale_service_error(self, pos_client):
         with (
             _pos_api_patches(),
-            patch("routes.pos.SaleService.create_sale", side_effect=ValueError("stock")),
+            patch("services.pos_checkout_service.SaleService.create_sale", side_effect=ValueError("stock")),
         ):
             resp = pos_client.post("/pos/api/checkout", json=self._checkout_payload())
         assert resp.status_code == 400
@@ -525,7 +592,7 @@ class TestPosCheckout:
     def test_checkout_server_error(self, pos_client):
         with (
             _pos_api_patches(),
-            patch("routes.pos.SaleService.create_sale", side_effect=RuntimeError("db")),
+            patch("services.pos_checkout_service.SaleService.create_sale", side_effect=RuntimeError("db")),
         ):
             resp = pos_client.post("/pos/api/checkout", json=self._checkout_payload())
         assert resp.status_code == 500
@@ -533,7 +600,7 @@ class TestPosCheckout:
     def test_checkout_invalid_warehouse(self, pos_client):
         with (
             _pos_api_patches(),
-            patch("routes.pos.ensure_warehouse_access", side_effect=ValueError("bad")),
+            patch("services.pos_checkout_service.ensure_warehouse_access", side_effect=ValueError("bad")),
         ):
             resp = pos_client.post("/pos/api/checkout", json=self._checkout_payload(warehouse_id=99))
         assert resp.status_code == 400
@@ -551,8 +618,8 @@ class TestPosCheckout:
         customer.is_active = False
         with (
             _pos_api_patches(),
-            patch("routes.pos.get_pos_walkin_customer", return_value=customer),
-            patch("routes.pos.tenant_get", return_value=customer),
+            patch("services.pos_checkout_service.get_pos_walkin_customer", return_value=customer),
+            patch("services.pos_checkout_service.tenant_get", return_value=customer),
         ):
             resp = pos_client.post(
                 "/pos/api/checkout",
@@ -567,7 +634,7 @@ class TestPosCheckout:
         with (
             _pos_api_patches(),
             patch(
-                "routes.pos.get_pos_walkin_customer",
+                "services.pos_checkout_service.get_pos_walkin_customer",
                 side_effect=ValueError("no tenant"),
             ),
         ):
@@ -613,7 +680,7 @@ class TestPosCheckout:
         ]
         with (
             _pos_api_patches(tenant_get=lambda m, i: product),
-            patch("routes.pos.merge_checkout_lines", return_value=merged),
+            patch("services.pos_checkout_service.merge_checkout_lines", return_value=merged),
         ):
             resp = pos_client.post("/pos/api/checkout", json=self._checkout_payload())
         assert resp.get_json()["success"] is True
@@ -631,8 +698,8 @@ class TestPosCheckout:
         ]
         with (
             _pos_api_patches(tenant_get=lambda m, i: product),
-            patch("routes.pos.merge_checkout_lines", return_value=merged),
-            patch("routes.pos.LoggingCore.log_audit") as audit,
+            patch("services.pos_checkout_service.merge_checkout_lines", return_value=merged),
+            patch("services.pos_checkout_service.LoggingCore.log_audit") as audit,
         ):
             resp = pos_client.post("/pos/api/checkout", json=self._checkout_payload())
         assert resp.get_json()["success"] is True
@@ -649,7 +716,7 @@ class TestPosCheckout:
     def test_checkout_qa_marker_notes(self, pos_client):
         with (
             _pos_api_patches(),
-            patch("routes.pos.SaleService.create_sale") as create_sale,
+            patch("services.pos_checkout_service.SaleService.create_sale") as create_sale,
         ):
             create_sale.return_value = MagicMock(id=100, sale_number="S-100", tenant_id=1, total_amount=Decimal("50"))
             resp = pos_client.post(
@@ -781,7 +848,10 @@ class TestPosHardware:
 
     def test_open_drawer_denied_without_permission(self, pos_client, bypass_permission_auth):
         bypass_permission_auth.has_permission.return_value = False
-        with _pos_api_patches():
+        with (
+            _pos_api_patches(),
+            patch("utils.decorators.is_global_owner_user", return_value=False),
+        ):
             resp = pos_client.post("/pos/api/hardware/open-drawer", json={})
         assert resp.status_code == 403
 

@@ -12,7 +12,7 @@
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/product-form.css') }}">
+<link rel="stylesheet" href="{{ dist_url('css/product-form.css') }}">
 {% include 'partials/select2_assets.html' %}
 <style>#merchantShareContainer { display: none; }</style>
 {% endblock %}
@@ -340,7 +340,7 @@
 
 {% block extra_js %}
 {% include 'partials/select2_assets.html' %}
-<script src="{{ url_for('static', filename='js/products/category-controls.js') }}"></script>
+<script src="{{ dist_url('js/products/category-controls.js') }}"></script>
 <script>
 $(function() {
   const partnersList = $('#partnersList');
@@ -382,8 +382,8 @@ $(function() {
   });
 });
 </script>
-<script src="{{ url_for('static', filename='js/products/industry-fields.js') }}"></script>
-<script src="{{ url_for('static', filename='js/draft-autosave.js') }}"></script>
+<script src="{{ dist_url('js/products/industry-fields.js') }}"></script>
+<script src="{{ dist_url('js/draft-autosave.js') }}"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     window.DraftAutosave?.init('products_create', '.product-create-page form');

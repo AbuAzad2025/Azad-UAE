@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}{{ project.name_ar or project.name }}{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/projects/kanban.css') }}">
+<link rel="stylesheet" href="{{ dist_url('css/projects/kanban.css') }}">
 {% endblock %}
 {% block content %}
 <div class="container-fluid">
@@ -113,5 +113,5 @@ document.addEventListener('click', (e) => {
   $(el.dataset.target).modal('show');
 });
 </script>
-<script src="{{ url_for('static', filename='js/projects/kanban.js') }}"></script>
+<script src="{{ dist_url('js/projects/kanban.js') }}"></script>
 {% endblock %}

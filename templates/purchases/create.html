@@ -34,8 +34,8 @@
 
 {% block extra_css %}
 {% include 'partials/select2_assets.html' %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/form-select-common.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/purchases.css') }}">
+<link rel="stylesheet" href="{{ dist_url('css/form-select-common.css') }}">
+<link rel="stylesheet" href="{{ dist_url('css/purchases.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -517,6 +517,6 @@
   window._PURCHASE_CALC_URL = '{{ url_for("purchases.api_calculate_purchase_totals") }}';
   window._PURCHASE_LABELS = {{ {'quantity': t('Quantity'), 'delete': t('Delete')} | tojson }};
 </script>
-<script src="{{ url_for('static', filename='js/purchases/create.js') }}"></script>
+<script src="{{ dist_url('js/purchases/create.js') }}"></script>
 {% endblock %}
 

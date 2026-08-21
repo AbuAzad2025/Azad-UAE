@@ -10,7 +10,7 @@
     {# TODO: Add <link rel="manifest"> when static/manifest.json is created #}
     <title>{% block title %}POS — {{ tenant_name_ar or company_name_ar or 'Azad' }}{% endblock %}</title>
     {% include 'partials/head.html' %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/pos-unified.css') }}">
+    <link rel="stylesheet" href="{{ dist_url('css/pos-unified.css') }}">
     {% block extra_css %}{% endblock %}
 </head>
 <body class="pos-layout{% block body_class %}{% endblock %}">
@@ -44,7 +44,7 @@
     <script src="{{ url_for('static', filename='adminlte/plugins/jquery/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename='adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ url_for('static', filename='adminlte/js/adminlte.min.js') }}"></script>
-    <script defer src="{{ url_for('static', filename='js/telemetry.js') }}"></script>
+    <script defer src="{{ dist_url('js/telemetry.js') }}"></script>
     <script type="application/json" id="app-enums-data">{{ app_enums|tojson }}</script>
     <script type="application/json" id="user-permissions-data">{{ current_user_permissions|tojson }}</script>
     <script>
@@ -62,8 +62,8 @@
 
         window.CURRENT_USER_PERMISSIONS = JSON.parse(document.getElementById('user-permissions-data').textContent || '[]');
     </script>
-    <script src="{{ url_for('static', filename='js/pos-permissions.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
+    <script src="{{ dist_url('js/pos-permissions.js') }}"></script>
+    <script src="{{ dist_url('js/i18n.js') }}"></script>
     <script>
         window.I18N_LANG = "{{ current_language or 'ar' }}";
         window.I18N_TRANSLATIONS = {{ translation_dict | tojson }};

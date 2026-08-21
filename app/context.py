@@ -13,6 +13,7 @@ from utils.currency_utils import (
     get_currency_symbol,
     get_system_default_currency,
 )
+from utils.static_assets import dist_url, static_v
 
 
 def register_context_processors(app):
@@ -23,6 +24,9 @@ def register_context_processors(app):
         from utils.tenant_branding import document_logo_relative_path
 
         return document_logo_relative_path(settings, tenant_id)
+
+    app.jinja_env.globals.setdefault("static_v", static_v)
+    app.jinja_env.globals.setdefault("dist_url", dist_url)
 
     # make t() available as a Jinja2 global so macros can use it
     app.jinja_env.globals.setdefault("t", __import__("utils.i18n", fromlist=["t"]).t)

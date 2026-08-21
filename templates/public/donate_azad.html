@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ vault.donation_title_ar if not is_en else vault.donation_title_en }} — {{ config.COMPANY_NAME }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/azad-donation-palestine.css') }}">
+  <link rel="stylesheet" href="{{ dist_url('css/azad-donation-palestine.css') }}">
 </head>
 <body class="az-donate {{ 'ltr' if is_en else 'rtl' }}">
   <div class="az-donate-bg">

@@ -351,10 +351,10 @@
   window._COMPANY_INFO = {{ company_info | tojson if company_info else '{}' }};
   window._COMPANY_PHONE = {{ (current_user.phone or '') | e | tojson }};
 </script>
-<script src="{{ url_for('static', filename='js/sales-enhanced.js') }}"></script>
-<script src="{{ url_for('static', filename='js/ai-sales.js') }}"></script>
-<script src="{{ url_for('static', filename='js/sales-create.js') }}"></script>
-<script src="{{ url_for('static', filename='js/draft-autosave.js') }}"></script>
+<script src="{{ dist_url('js/sales-enhanced.js') }}"></script>
+<script src="{{ dist_url('js/ai-sales.js') }}"></script>
+<script src="{{ dist_url('js/sales-create.js') }}"></script>
+<script src="{{ dist_url('js/draft-autosave.js') }}"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     window.DraftAutosave?.init('sales_create', '#saleForm');

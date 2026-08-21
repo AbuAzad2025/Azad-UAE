@@ -38,25 +38,22 @@ from services.idempotency_service import (
 from services.logging_core import LoggingCore
 from services.pos_cart_service import PosCartConflictError, PosCartService
 from services.pos_cash_service import PosCashMovementService
+from services.pos_checkout_service import PosCheckoutError, PosCheckoutService
 from services.pos_override_service import PosOverrideError, PosOverrideService
 from services.pos_rma_service import PosRmaService
-from services.pricing_service import PricingService
 from services.promotion_service import PromotionService
-from services.sale_service import SaleService
 from utils import sse_backplane
 from utils.branching import (
-    ensure_warehouse_access,
     get_accessible_warehouses,
     get_active_branch_id,
 )
-from utils.currency_utils import context_aware_default_currency, convert_and_quantize_aed
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
 from utils.helpers import generate_number
 from utils.logger import log_hardware, log_security
+from utils.pos_checkout_helpers import _pos_standard_price, _promotion_evaluation_json
 from utils.pos_features import pos_feature_enabled
 from utils.pos_helpers import (
-    POS_QA_MARKER,
     build_cfd_order_payload,
     build_print_tickets,
     close_pos_session,
@@ -90,145 +87,6 @@ from utils.tenant_limits import TenantLimitError
 from utils.tenanting import get_active_tenant_id, tenant_get, tenant_query
 
 pos_bp = Blueprint("pos", __name__, url_prefix="/pos")
-
-
-def _pos_standard_price(product, customer_type, quantity):
-    """Tier-aware standard POS price via PricingService, quantized to 0.001."""
-    price = PricingService.get_price(product, customer_type, quantity)
-    return Decimal(str(price)).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
-
-
-def _promotion_evaluation_json(evaluation):
-    """Serialize PromotionService.evaluate_cart output for JSON responses."""
-    if not evaluation:
-        return {
-            "lines": [],
-            "subtotal_before": 0.0,
-            "total_discount": 0.0,
-            "subtotal_after": 0.0,
-            "applied_rules": [],
-            "upsell_prompts": [],
-        }
-    return {
-        "lines": [
-            {
-                "product_id": line["product_id"],
-                "quantity": float(line["quantity"]),
-                "unit_price": float(line["unit_price"]),
-                "original_total": float(line["original_total"]),
-                "discount_amount": float(line["discount_amount"]),
-                "adjusted_total": float(line["adjusted_total"]),
-            }
-            for line in evaluation["lines"]
-        ],
-        "subtotal_before": float(evaluation["subtotal_before"]),
-        "total_discount": float(evaluation["total_discount"]),
-        "subtotal_after": float(evaluation["subtotal_after"]),
-        "applied_rules": [
-            {
-                "campaign_id": rule["campaign_id"],
-                "name": rule["name"],
-                "campaign_type": rule["campaign_type"],
-                "discount_amount": float(rule["discount_amount"]),
-            }
-            for rule in evaluation["applied_rules"]
-        ],
-        "upsell_prompts": evaluation["upsell_prompts"],
-    }
-
-
-_TENDER_CASH_METHOD = "cash"
-_TENDER_CARD_METHODS = ("card", "bank_transfer", "e_wallet")
-
-
-def _parse_split_tenders(raw_payments, default_currency, default_rate):
-    """Validate the Phase 2 ``payments`` array into tender chunk dicts.
-
-    Returns ``(chunks, error_message)`` — exactly one of the two is set.
-    Amounts stay ``Decimal``; conversion happens per chunk in SaleService.
-    """
-    if not isinstance(raw_payments, list) or not raw_payments:
-        return None, gettext("قائمة الدفعات غير صالحة.")
-    chunks = []
-    for chunk in raw_payments:
-        if not isinstance(chunk, dict):
-            return None, gettext("بيانات الدفعة غير صالحة.")
-        try:
-            amount = Decimal(str(chunk.get("amount") or "0"))
-        except (InvalidOperation, TypeError, ValueError):
-            return None, gettext("مبلغ الدفعة غير صالح.")
-        if amount <= Decimal("0"):
-            return None, gettext("مبلغ الدفعة يجب أن يكون أكبر من صفر.")
-        method = (chunk.get("payment_method") or chunk.get("method") or "").strip()
-        if not method:
-            return None, gettext("يرجى اختيار طريقة الدفع لكل دفعة.")
-        try:
-            rate = Decimal(str(chunk.get("exchange_rate") or default_rate or "1"))
-        except (InvalidOperation, TypeError, ValueError):
-            return None, gettext("سعر الصرف غير صالح.")
-        chunks.append(
-            {
-                "amount": amount,
-                "payment_method": method,
-                "currency": (chunk.get("currency") or default_currency).strip().upper(),
-                "exchange_rate": rate,
-                "reference_number": (chunk.get("reference_number") or "").strip() or None,
-                "cheque_number": chunk.get("cheque_number"),
-                "cheque_date": chunk.get("cheque_date"),
-                "bank_name": chunk.get("bank_name"),
-                "notes": chunk.get("notes"),
-            }
-        )
-    return chunks, None
-
-
-def _tender_chunk_aed(chunk, tenant_id):
-    """Exact base-currency amount of a parsed tender chunk."""
-    return convert_and_quantize_aed(
-        chunk["amount"],
-        chunk["currency"],
-        chunk["exchange_rate"],
-        tenant_id=tenant_id,
-    )
-
-
-def _accumulate_session_tender(session, chunk, tenant_id):
-    """Accumulate per-tender session totals for a split-tender chunk."""
-    method = chunk.get("payment_method")
-    chunk_aed = _tender_chunk_aed(chunk, tenant_id)
-    if method == _TENDER_CASH_METHOD:
-        session.total_cash_sales = Decimal(str(session.total_cash_sales or 0)) + chunk_aed
-    elif method in _TENDER_CARD_METHODS:
-        session.total_card_sales = Decimal(str(session.total_card_sales or 0)) + chunk_aed
-
-
-def _compute_change_due(sale, payments_data, payment_data, payment_currency, payment_exchange_rate, tenant_id):
-    """Cash change owed when the tender exceeds the invoice total.
-
-    Reporting metadata only — the overpayment itself is still booked as
-    customer prepayment credit by SaleService (unchanged behavior).
-    """
-    sale_total_aed = getattr(sale, "amount_aed", None)
-    if not isinstance(sale_total_aed, Decimal):
-        return Decimal("0")
-    tendered_aed = Decimal("0")
-    cash_tendered = False
-    if payments_data:
-        for chunk in payments_data:
-            tendered_aed += _tender_chunk_aed(chunk, tenant_id)
-            if chunk.get("payment_method") == _TENDER_CASH_METHOD:
-                cash_tendered = True
-    elif payment_data and payment_data.get("payment_method") == _TENDER_CASH_METHOD:
-        cash_tendered = True
-        tendered_aed = convert_and_quantize_aed(
-            payment_data.get("amount", 0),
-            payment_currency,
-            payment_exchange_rate,
-            tenant_id=tenant_id,
-        )
-    if not cash_tendered:
-        return Decimal("0")
-    return max(tendered_aed - sale_total_aed, Decimal("0"))
 
 
 # ─── Phase 3 — session tokens, blind-close visibility, override plumbing ───
@@ -909,224 +767,11 @@ def api_checkout():
             403,
         )
 
-    use_quick = bool(payload.get("quick_customer") or payload.get("walkin"))
-    customer_id = payload.get("customer_id")
+    tenant_id = get_active_tenant_id(current_user)
+    branch_id = get_active_branch_id(current_user)
+    promotions_enabled = _pos_feature_denied("pos_promotions") is None
+    multi_tender_allowed = _pos_feature_denied("pos_multi_tender") is None
 
-    if use_quick or not customer_id:
-        try:
-            customer = get_pos_walkin_customer()
-        except ValueError:
-            return jsonify({"success": False, "error": gettext("بيانات العميل غير صالحة.")}), 400
-    else:
-        customer = tenant_get(Customer, int(customer_id or 0))
-        if not customer or not customer.is_active:
-            return (
-                jsonify({"success": False, "error": gettext("العميل غير صالح أو غير نشط.")}),
-                400,
-            )
-
-    warehouse_id = payload.get("warehouse_id")
-    if warehouse_id:
-        try:
-            warehouse = ensure_warehouse_access(int(warehouse_id or 0), user=current_user)
-            warehouse_id = warehouse.id
-        except ValueError:
-            return (
-                jsonify({"success": False, "error": gettext("بيانات المستودع غير صالحة.")}),
-                400,
-            )
-    else:
-        warehouse_id = None
-
-    currency = (payload.get("currency") or context_aware_default_currency()).strip().upper()
-    exchange_rate = payload.get("exchange_rate", 1.0)
-
-    lines = payload.get("lines") or []
-    if not isinstance(lines, list) or not lines:
-        return jsonify({"success": False, "error": gettext("يرجى إضافة منتجات للسلة.")}), 400
-
-    try:
-        merged = merge_checkout_lines(lines)
-    except ValueError:
-        return jsonify({"success": False, "error": gettext("بيانات السلة غير صالحة.")}), 400
-
-    # Phase 3 — manual discounts (header discount_amount or any line
-    # discount_percent) are gated: the acting cashier needs
-    # pos_discount_override or a one-time supervisor override token.
-    discount_requested = False
-    try:
-        discount_requested = Decimal(str(payload.get("discount_amount") or "0")) > Decimal("0")
-    except (InvalidOperation, TypeError, ValueError):
-        discount_requested = False
-    if not discount_requested:
-        discount_requested = any(Decimal(str(row.get("discount_percent") or 0)) > Decimal("0") for row in merged)
-
-    lines_data = []
-    product_ids = [int(r["product_id"]) for r in merged]
-    if product_ids:
-        tid = get_active_tenant_id(current_user)
-        locked = {
-            p.id: p
-            for p in db.session.query(Product)
-            .filter(Product.id.in_(product_ids), Product.tenant_id == tid)
-            .with_for_update()
-            .all()
-        }
-    else:
-        locked = {}
-
-    for row in merged:
-        product = locked.get(int(row["product_id"]))
-        if not product or not product.is_active:
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "error": gettext("يوجد منتج غير صالح داخل السلة."),
-                    }
-                ),
-                400,
-            )
-
-        if getattr(product, "has_serial_number", False):
-            serials = row.get("serials") or payload.get("serials", {}).get(str(product.id)) or []
-            clean_serials = [s.strip() for s in serials if s and s.strip()]
-            expected_qty = int(row["quantity"])
-            if len(clean_serials) != expected_qty:
-                return (
-                    jsonify(
-                        {
-                            "success": False,
-                            "error": gettext(
-                                f'⚠️ المنتج "{product.name}" يتطلب {expected_qty} أرقاماً تسلسلية، ولكن تم إدخال {len(clean_serials)} فقط.'
-                            ),
-                        }
-                    ),
-                    400,
-                )
-            row["serials"] = clean_serials
-
-        standard_price = _pos_standard_price(product, customer.customer_type, row["quantity"])
-        if row["unit_price"] is not None:
-            unit_price = Decimal(str(row["unit_price"])).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
-        else:
-            unit_price = standard_price
-
-        lines_data.append(
-            {
-                "product": product,
-                "quantity": row["quantity"],
-                "discount_percent": float(row["discount_percent"]),
-                "unit_price": unit_price,
-                "standard_price": standard_price,
-                "serials": row.get("serials", []),
-            }
-        )
-
-    for ld in lines_data:
-        product = ld["product"]
-        standard_price = ld["standard_price"]
-        unit_price = Decimal(str(ld["unit_price"]))
-        if abs(unit_price - standard_price) > Decimal("0.001"):
-            if not current_user.has_permission(PermissionEnum.OVERRIDE_SALE_PRICE) and not current_user.is_owner:
-                return (
-                    jsonify(
-                        {
-                            "success": False,
-                            "error": gettext(
-                                f'⚠️ ليس لديك صلاحية تغيير سعر المنتج "{product.name}".\nالسعر القياسي: {float(standard_price)}'
-                            ),
-                        }
-                    ),
-                    403,
-                )
-            LoggingCore.log_audit(
-                "price_override",
-                "pos",
-                product.id,
-                {
-                    "product": product.name,
-                    "standard_price": float(standard_price),
-                    "override_price": float(unit_price),
-                    "user_id": current_user.id,
-                },
-            )
-
-    # Phase 1 — evaluate automatic promotions on the merged, tier-priced cart.
-    # A promotion engine failure must never block a sale; log and continue.
-    # Phase 4 — promotions are a pro-tier sub-feature; on the basic tier the
-    # cart checks out at tier prices with no automatic discounts.
-    promotion_evaluation = None
-    if _pos_feature_denied("pos_promotions") is None:
-        try:
-            promotion_evaluation = PromotionService.evaluate_cart(
-                [
-                    {
-                        "product_id": ld["product"].id,
-                        "quantity": ld["quantity"],
-                        "unit_price": ld["unit_price"],
-                        "category_id": getattr(ld["product"], "category_id", None),
-                    }
-                    for ld in lines_data
-                ],
-                tenant_id=get_active_tenant_id(current_user),
-                branch_id=get_active_branch_id(current_user),
-            )
-        except Exception:
-            current_app.logger.exception("POS promotion evaluation failed")
-            promotion_evaluation = None
-
-    payment_method = (payload.get("payment_method") or "").strip()
-    paid_amount = payload.get("paid_amount", 0) or 0
-    payment_currency = (payload.get("payment_currency") or currency).strip().upper()
-    payment_exchange_rate = payload.get("payment_exchange_rate", exchange_rate) or exchange_rate
-    reference_number = (payload.get("reference_number") or "").strip() or None
-
-    payment_data = None
-    try:
-        paid_amount_decimal = Decimal(str(paid_amount))
-    except Exception:
-        paid_amount_decimal = Decimal("0")
-
-    if paid_amount_decimal > 0:
-        if not payment_method:
-            return jsonify({"success": False, "error": gettext("يرجى اختيار طريقة الدفع.")}), 400
-        payment_data = {
-            "amount": float(paid_amount_decimal),
-            "payment_method": payment_method,
-            "currency": payment_currency,
-            "exchange_rate": float(payment_exchange_rate),
-            "reference_number": reference_number,
-        }
-
-    # Phase 2 — split tenders. A non-null `payments` array takes precedence
-    # over the legacy single-payment fields and replaces them entirely.
-    payments_data = None
-    if payload.get("payments") is not None:
-        payments_data, tenders_error = _parse_split_tenders(
-            payload.get("payments"),
-            payment_currency,
-            payment_exchange_rate,
-        )
-        if tenders_error:
-            return jsonify({"success": False, "error": tenders_error}), 400
-        payment_data = None
-
-    # Phase 4 — true split tenders (more than one chunk) are a pro-tier
-    # sub-feature. A single-chunk payments array is just a typed single
-    # payment and stays available on the basic tier.
-    if payments_data and len(payments_data) > 1:
-        multi_tender_denied = _pos_feature_denied("pos_multi_tender")
-        if multi_tender_denied:
-            return multi_tender_denied
-
-    notes = (payload.get("notes") or "").strip() or None
-    if payload.get("qa_marker"):
-        tag = f"{POS_QA_MARKER}"
-        notes = f"{tag} {notes}".strip() if notes else tag
-
-    change_due = Decimal("0")
-    response = None
     try:
         with atomic_transaction("pos_checkout_flow"):
             # Phase 4 — offline-first idempotency. The ledger row is created
@@ -1141,150 +786,20 @@ def api_checkout():
                     stored_body, stored_status = idem_stored
                     return jsonify(stored_body), stored_status
 
-            override_supervisor_id = None
-            if discount_requested:
-                override_supervisor_id = PosOverrideService.require_permission_or_override(
-                    user=current_user,
-                    action="discount_override",
-                    override_token=payload.get("override_token"),
-                )
-            sale = SaleService.create_sale(
-                customer=customer,
-                seller=current_user,
-                lines_data=lines_data,
-                warehouse_id=warehouse_id,
-                currency=currency,
-                user_exchange_rate=exchange_rate,
-                discount_amount=payload.get("discount_amount", 0) or 0,
-                shipping_cost=payload.get("shipping_cost", 0) or 0,
-                tax_rate=payload.get("tax_rate", 0) or 0,
-                notes=notes,
-                payment_data=payment_data,
-                payments_data=payments_data,
-                promotion_evaluation=promotion_evaluation,
+            response, kds_order = PosCheckoutService.checkout(
+                payload=payload,
+                user=current_user,
+                session=session,
+                shift=shift,
+                tenant_id=int(tenant_id or 0),
+                branch_id=branch_id,
+                promotions_enabled=promotions_enabled,
+                multi_tender_allowed=multi_tender_allowed,
             )
-            # Resolve the configured order type (legacy fallback preserved).
-            tid = get_active_tenant_id(current_user)
-            order_type = (payload.get("order_type") or "").strip()
-            ot = PosOrderType.get_by_code(tid, order_type, active_only=True) if order_type else None
-            if not ot:
-                ot = PosOrderType.default_for_tenant(tid)
-                order_type = ot.code if ot else ""
-            sale.order_type = order_type
-            # Restaurant mode (P3-2): persist the selected table for dine-in
-            # orders after validating it belongs to the active tenant.
-            table_id_raw = payload.get("table_id")
-            if table_id_raw:
-                try:
-                    from models import PosTable
-
-                    _table = tenant_query(PosTable).filter_by(id=int(table_id_raw), is_active=True).first()
-                    sale.table_id = _table.id if _table else None
-                except (ValueError, TypeError):
-                    sale.table_id = None
-            sale.pos_session_id = session.id
-            db.session.add(sale)
-            session.total_sales = Decimal(str(session.total_sales or 0)) + Decimal(str(sale.total_amount or 0))
-            if payment_data and payment_data.get("payment_method") == "cash":
-                session.total_cash_sales = Decimal(str(session.total_cash_sales or 0)) + convert_and_quantize_aed(
-                    payment_data.get("amount", 0),
-                    payment_currency,
-                    payment_exchange_rate,
-                    tenant_id=tid,
-                )
-            if payments_data:
-                for tender_chunk in payments_data:
-                    _accumulate_session_tender(session, tender_chunk, tid)
-            change_due = _compute_change_due(
-                sale,
-                payments_data,
-                payment_data,
-                payment_currency,
-                payment_exchange_rate,
-                tid,
-            )
-            if change_due > Decimal("0"):
-                # Drawer math: gross tender is booked above; the change handed
-                # back is tracked so expected = tender − change.
-                session.total_change_given = safe_decimal(session.total_change_given) + change_due
-                if shift is not None:
-                    shift.total_change_given = safe_decimal(getattr(shift, "total_change_given", None)) + change_due
-            if override_supervisor_id is not None:
-                LoggingCore.log_audit(
-                    "pos_discount_override",
-                    "pos",
-                    sale.id,
-                    {
-                        "sale_number": sale.sale_number,
-                        "cashier_user_id": current_user.id,
-                        "supervisor_user_id": override_supervisor_id,
-                    },
-                    severity="medium",
-                )
-            db.session.add(session)
-            log_mutation(
-                "create",
-                "Sale",
-                sale.id,
-                {
-                    "sale_number": sale.sale_number,
-                    "source": "pos",
-                    "amount": float(sale.total_amount or 0),
-                },
-            )
-
-            kds_enabled = bool(ot.kds_enabled) if ot else (order_type in ("dine_in", "takeaway", "delivery"))
-            if kds_enabled:
-                from services.pos_write_service import PosWriteService
-
-                kds_order = PosWriteService.create_kds_order(
-                    tenant_id=sale.tenant_id,
-                    sale_id=sale.id,
-                    session_id=session.id,
-                    branch_id=get_active_branch_id(),
-                    order_number=sale.sale_number,
-                    items_json=json.dumps(
-                        [
-                            {
-                                "name": getattr(ld["product"], "name_ar", None) or ld["product"].name,
-                                "quantity": float(ld["quantity"]),
-                                "unit_price": float(ld.get("unit_price") or 0),
-                                "notes": ld.get("notes", ""),
-                            }
-                            for ld in lines_data
-                        ]
-                    ),
-                )
-
-            # Build the response INSIDE the transaction so the idempotency
-            # ledger stores exactly what the client received for this sale.
-            promo_json = _promotion_evaluation_json(promotion_evaluation)
-            payment_status = getattr(sale, "payment_status", None)
-            response = {
-                "success": True,
-                "sale_id": sale.id,
-                "sale_number": sale.sale_number,
-                "customer_id": customer.id,
-                "customer_name": customer.name,
-                "view_url": f"/sales/{sale.id}",
-                "print_url": f"/sales/{sale.id}/print",
-                "promotion_discount": promo_json["total_discount"],
-                "promotions_applied": promo_json["applied_rules"],
-                "upsell_prompts": promo_json["upsell_prompts"],
-                "payment_status": payment_status if isinstance(payment_status, str) else None,
-                "change_due": float(change_due),
-            }
-            if payments_data:
-                response["tenders"] = [
-                    {
-                        "method": tender_chunk["payment_method"],
-                        "amount": float(tender_chunk["amount"]),
-                        "currency": tender_chunk["currency"],
-                    }
-                    for tender_chunk in payments_data
-                ]
             if idem_record is not None:
                 IdempotencyService.complete(idem_record, response, 200)
+    except PosCheckoutError as exc:
+        return jsonify({"success": False, "error": exc.message, **exc.payload}), exc.status_code
     except PosOverrideError as exc:
         return jsonify({"success": False, "error": str(exc)}), 403
     except TenantLimitError as exc:
@@ -1318,18 +833,18 @@ def api_checkout():
             500,
         )
 
-    if order_type in ("dine_in", "takeaway", "delivery"):
+    if response.get("order_type") in ("dine_in", "takeaway", "delivery"):
         _notify_kds(
             {
                 "type": "new_order",
                 "order_id": kds_order.id,
                 "order_number": kds_order.order_number,
-                "tenant_id": sale.tenant_id,
+                "tenant_id": response.get("tenant_id"),
             },
-            tenant_id=sale.tenant_id,
+            tenant_id=response.get("tenant_id"),
         )
 
-    _publish_cfd_refresh(sale.tenant_id, session.id)
+    _publish_cfd_refresh(response.get("tenant_id"), session.id)
 
     return jsonify(response)
 

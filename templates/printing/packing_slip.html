@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ settings.company_name_ar or tenant_name_ar or company_name_ar }} - {{ _('Delivery_Note') }} #{{ delivery.number or sale.sale_number }}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme-unified.css') }}">
+  <link rel="stylesheet" href="{{ dist_url('css/erp-theme-unified.css') }}">
   {% include 'partials/print_styles.html' %}
   <style>
     body { font-family: 'Tajawal', 'Arial', sans-serif; background: #95a5a6; }

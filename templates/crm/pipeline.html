@@ -2,7 +2,7 @@
 {% block title %}خط {{ t('أنابيب') }} CRM{% endblock %}
 {% block page_title %}خط {{ t('أنابيب') }} {{ t('Sales') }}{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/crm/pipeline.css') }}">
+<link rel="stylesheet" href="{{ dist_url('css/crm/pipeline.css') }}">
 {% endblock %}
 {% block content %}
 <div class="container-fluid">
@@ -43,5 +43,5 @@
 </div>
 {% endblock %}
 {% block extra_js %}
-<script src="{{ url_for('static', filename='js/crm/pipeline.js') }}"></script>
+<script src="{{ dist_url('js/crm/pipeline.js') }}"></script>
 {% endblock %}

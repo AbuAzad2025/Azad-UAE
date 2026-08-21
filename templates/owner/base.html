@@ -8,7 +8,7 @@
 {% block extra_css %}
 {{ super() }}
 <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/bootstrap-icons/bootstrap-icons.min.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/owner-panels.css') }}">
+<link rel="stylesheet" href="{{ dist_url('css/owner-panels.css') }}">
 {% endblock %}
 
 {% block extra_js %}

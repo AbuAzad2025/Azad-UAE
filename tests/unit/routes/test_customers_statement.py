@@ -45,7 +45,7 @@ class TestCustomersStatementBuilder:
         sale.seller = None
         sale.payments.order_by.return_value.all.return_value = []
         with (
-            patch("routes.customers.Sale") as SaleMod,
+            patch("services.customer_statement_service.Sale") as SaleMod,
             patch("models.Payment") as PayMod,
             patch("models.Receipt") as RcvMod,
             patch("routes.customers.branch_scope_id", return_value=None),
@@ -91,7 +91,7 @@ class TestCustomersStatementBuilder:
         payment.get_method_display.return_value = "شيك"
         payment.user = user
         with (
-            patch("routes.customers.Sale") as SaleMod,
+            patch("services.customer_statement_service.Sale") as SaleMod,
             patch("models.Payment") as PayMod,
             patch("models.Receipt") as RcvMod,
             patch("routes.customers.branch_scope_id", return_value=None),
@@ -123,7 +123,7 @@ class TestCustomersStatementBuilder:
         payment.user = None
         payment.cheque = None
         with (
-            patch("routes.customers.Sale") as SaleMod,
+            patch("services.customer_statement_service.Sale") as SaleMod,
             patch("models.Payment") as PayMod,
             patch("models.Receipt") as RcvMod,
             patch("routes.customers.branch_scope_id", return_value=None),
@@ -163,7 +163,7 @@ class TestCustomersStatementBuilder:
             payment_confirmed=True,
         )
         with (
-            patch("routes.customers.Sale") as SaleMod,
+            patch("services.customer_statement_service.Sale") as SaleMod,
             patch("models.Payment") as PayMod,
             patch("models.Receipt") as RcvMod,
             patch("routes.customers.branch_scope_id", return_value=None),
@@ -207,7 +207,7 @@ class TestCustomersStatementBuilder:
             rejection_reason=None,
         )
         with (
-            patch("routes.customers.Sale") as SaleMod,
+            patch("services.customer_statement_service.Sale") as SaleMod,
             patch("models.Payment") as PayMod,
             patch("models.Receipt") as RcvMod,
             patch("routes.customers.branch_scope_id", return_value=None),
@@ -290,7 +290,7 @@ class TestCustomersStatementBuilder:
         sale.seller.get_display_name.return_value = "Rep"
         sale.payments.order_by.return_value.all.return_value = [p1, p2]
         with (
-            patch("routes.customers.Sale") as SaleMod,
+            patch("services.customer_statement_service.Sale") as SaleMod,
             patch("models.Payment") as PayMod,
             patch("models.Receipt") as RcvMod,
             patch("routes.customers.branch_scope_id", return_value=1),
@@ -365,7 +365,7 @@ class TestCustomersStatementBuilder:
         sale.seller = None
         sale.payments.order_by.return_value.all.return_value = [early, late]
         with (
-            patch("routes.customers.Sale") as SaleMod,
+            patch("services.customer_statement_service.Sale") as SaleMod,
             patch("models.Payment") as PayMod,
             patch("models.Receipt") as RcvMod,
             patch("routes.customers.branch_scope_id", return_value=None),

@@ -3,7 +3,7 @@
 {% block page_title %}{{ t('Trial Balance') }}{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/financial-ui.css') }}">
+<link rel="stylesheet" href="{{ dist_url('css/financial-ui.css') }}">
 <style>
   @media print {
     @page { size: A4 {{ 'landscape' if request.args.get('orientation') == 'landscape' else 'portrait' }}; margin: 15mm; }

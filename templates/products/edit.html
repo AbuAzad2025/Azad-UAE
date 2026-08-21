@@ -363,7 +363,7 @@
 
 {% block extra_js %}
 {% include 'partials/select2_assets.html' %}
-<script src="{{ url_for('static', filename='js/products/category-controls.js') }}"></script>
+<script src="{{ dist_url('js/products/category-controls.js') }}"></script>
 <script>
 $(function() {
   // Initialize tooltips
@@ -443,5 +443,5 @@ $(function() {
   });
 });
 </script>
-<script src="{{ url_for('static', filename='js/products/industry-fields.js') }}"></script>
+<script src="{{ dist_url('js/products/industry-fields.js') }}"></script>
 {% endblock %}

@@ -19,9 +19,9 @@
   {% block extra_css %}{% endblock %}
 
   <!-- Critical CSS preload (inlined via preload for fastest first paint) -->
-  <link rel="preload" href="{{ url_for('static', filename='css/critical.css') }}" as="style">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/critical.css') }}" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="{{ url_for('static', filename='css/critical.css') }}"></noscript>
+  <link rel="preload" href="{{ dist_url('css/critical.css') }}" as="style">
+  <link rel="stylesheet" href="{{ dist_url('css/critical.css') }}" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="{{ dist_url('css/critical.css') }}"></noscript>
 </head>
 <body class="hold-transition sidebar-mini layout-fixed" data-sidebar-side="{{ 'right' if is_rtl else 'left' }}">
 
@@ -42,7 +42,7 @@
     {% include 'partials/navbar.html' %}
     {% include 'partials/sidebar.html' %}
 
-    <div class="content-wrapper" id="main-content" tabindex="-1">
+    <main class="content-wrapper" id="main-content" tabindex="-1">
       <div class="content-header az-enter">
         <div class="container-fluid">
           <nav aria-label="breadcrumb" class="breadcrumb-nav mb-2">
@@ -92,7 +92,7 @@
           </div>
         </div>
       </section>
-    </div>
+    </main>
 
     {% include 'partials/footer.html' %}
 
@@ -248,6 +248,6 @@
   {% include 'partials/scripts.html' %}
   {% include 'partials/modals.html' %}
   {% block extra_js %}{% endblock %}
-  <script src="{{ url_for('static', filename='js/form_validation.js') }}"></script>
+  <script src="{{ dist_url('js/form_validation.js') }}"></script>
 </body>
 </html>

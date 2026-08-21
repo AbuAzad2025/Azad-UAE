@@ -40,11 +40,11 @@
 
     <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+    <link rel="stylesheet" href="{{ dist_url('css/landing.css') }}">
     {% if is_en %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing-page-en.css') }}">
+    <link rel="stylesheet" href="{{ dist_url('css/landing-page-en.css') }}">
     {% else %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
+    <link rel="stylesheet" href="{{ dist_url('css/accessibility.css') }}">
     {% endif %}
     {% include 'partials/seo-landing.html' %}
 
@@ -656,7 +656,7 @@
 {# ──────────────────────────────────────────────── #}
 {# SCRIPTS                                          #}
 {# ──────────────────────────────────────────────── #}
-<script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+<script src="{{ dist_url('js/landing.js') }}"></script>
 <script>
 (function() {
   // Hide broken images globally (replaces inline onerror handlers)
