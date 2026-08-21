@@ -1198,24 +1198,24 @@
 			});
 	}
 
-	const HOLD_KEY = "pos_held_carts";
+	const HOLD_ID = "pos_held_carts";
 	const heldCount = () => {
 		try {
-			return JSON.parse(localStorage.getItem(HOLD_KEY) || "[]").length;
+			return JSON.parse(localStorage.getItem(HOLD_ID) || "[]").length;
 		} catch (_) {
 			return 0;
 		}
 	};
 	if (holdBtn) {
 		holdBtn.addEventListener("click", async () => {
-			const list = JSON.parse(localStorage.getItem(HOLD_KEY) || "[]");
+			const list = JSON.parse(localStorage.getItem(HOLD_ID) || "[]");
 			if (!state.cart.length) {
 				if (!list.length) {
 					showAlert("لا توجد فواتير معلّقة", "warning");
 					return;
 				}
 				const last = list.pop();
-				localStorage.setItem(HOLD_KEY, JSON.stringify(list));
+				localStorage.setItem(HOLD_ID, JSON.stringify(list));
 				state.cart = last.cart || [];
 				state.idemKey = newCartKey();
 				state.customer = last.customer || null;
@@ -1233,7 +1233,7 @@
 				note: qs("#orderNote") ? qs("#orderNote").value || "" : "",
 				ts: Date.now(),
 			});
-			localStorage.setItem(HOLD_KEY, JSON.stringify(list));
+			localStorage.setItem(HOLD_ID, JSON.stringify(list));
 			state.cart = [];
 			state.idemKey = newCartKey();
 			await renderCart();

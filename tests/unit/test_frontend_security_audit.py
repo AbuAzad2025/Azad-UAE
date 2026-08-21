@@ -1,4 +1,5 @@
 import contextlib
+import os
 import re
 from pathlib import Path
 
@@ -14,6 +15,9 @@ class TestFrontendSecurityAudit:
             if ".min." in path.name:
                 continue
             if path.name.startswith("_"):
+                continue
+            # Build output is generated from source; audit the source files only.
+            if f"{os.sep}dist{os.sep}" in str(path) or "/dist/" in str(path):
                 continue
             with contextlib.suppress(UnicodeDecodeError):
                 files[path] = path.read_text(encoding="utf-8")
