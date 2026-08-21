@@ -23,6 +23,7 @@ from utils.branching import (
     get_active_branch_id,
     should_show_all_branch_columns,
 )
+from utils.api_response import error_response, success_response
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
@@ -465,12 +466,10 @@ def purchase_return(**kwargs):
 @permission_required("manage_purchases")
 def api_calculate_purchase_totals():
     """API لحساب إجماليات فاتورة المشتريات - Backend Calculation"""
-    from flask import jsonify
-
     try:
         data = request.get_json(silent=True)
         if not data:
-            return jsonify({"success": False, "error": "No data provided"}), 400
+            return error_response(message="No data provided", status_code=400)
 
         lines = data.get("lines", [])
         tax_rate = Decimal(str(data.get("tax_rate", 0)))
@@ -524,25 +523,21 @@ def api_calculate_purchase_totals():
                 current_app.logger.debug("Skipping invalid quantity line: %r", line, exc_info=True)
                 continue
 
-        return (
-            jsonify(
-                {
-                    "success": True,
-                    "subtotal": float(subtotal),
-                    "tax_rate": float(tax_rate),
-                    "tax_amount": float(tax_amount),
-                    "landed_cost": float(landed_total),
-                    "total": float(total),
-                    "prices_include_vat": prices_include_vat,
-                    "line_count": positive_lines,
-                }
-            ),
-            200,
+        return success_response(
+            data={
+                "subtotal": float(subtotal),
+                "tax_rate": float(tax_rate),
+                "tax_amount": float(tax_amount),
+                "landed_cost": float(landed_total),
+                "total": float(total),
+                "prices_include_vat": prices_include_vat,
+                "line_count": positive_lines,
+            }
         )
 
     except Exception:
         current_app.logger.exception("calculate_purchase_totals failed")
-        return jsonify({"success": False, "error": gettext("تعذر حساب الإجماليات حالياً")}), 500
+        return error_response(message=gettext("تعذر حساب الإجماليات حالياً"), status_code=500)
 
 
 # ---------------------------------------------------------------------------

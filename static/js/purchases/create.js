@@ -503,8 +503,9 @@ async function calculateTotalsClientSide() {
 				prices_include_vat: pricesIncludeVat,
 			}),
 		});
-		const data = await r.json();
-		if (data.success) {
+		const response = await r.json();
+		const data = response && response.data ? response.data : response;
+		if (response.success) {
 			const $summarySubtotal = $("#summary_subtotal");
 			const $summaryTax = $("#summary_tax");
 			const $summaryLandedCost = $("#summary_landed_cost");

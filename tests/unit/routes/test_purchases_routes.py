@@ -330,8 +330,9 @@ class TestPurchasesApiCalculateTotals:
         ):
             resp = purchases_client.post("/purchases/api/calculate-totals", json=payload)
         assert resp.status_code == 200
-        data = resp.get_json()
-        assert data["success"] is True
+        body = resp.get_json()
+        assert body["success"] is True
+        data = body["data"]
         assert data["subtotal"] == 200.0
         assert data["total"] == 220.0
 
@@ -347,8 +348,9 @@ class TestPurchasesApiCalculateTotals:
         ):
             resp = purchases_client.post("/purchases/api/calculate-totals", json=payload)
         assert resp.status_code == 200
-        data = resp.get_json()
-        assert data["success"] is True
+        body = resp.get_json()
+        assert body["success"] is True
+        data = body["data"]
         assert data["prices_include_vat"] is True
         assert data["subtotal"] == 105.0
 
@@ -506,7 +508,7 @@ class TestPurchasesExtended:
         ):
             resp = purchases_client.post("/purchases/api/calculate-totals", json=payload)
         assert resp.status_code == 200
-        assert resp.get_json()["line_count"] == 0
+        assert resp.get_json()["data"]["line_count"] == 0
 
     def test_api_calculate_totals_zero_tax_included(self, purchases_client):
         payload = {
@@ -520,7 +522,7 @@ class TestPurchasesExtended:
         ):
             resp = purchases_client.post("/purchases/api/calculate-totals", json=payload)
         assert resp.status_code == 200
-        data = resp.get_json()
+        data = resp.get_json()["data"]
         assert data["tax_amount"] == 0.0
 
     def test_api_calculate_totals_server_error(self, purchases_client):
@@ -570,4 +572,4 @@ class TestPurchasesExtended:
         ):
             resp = purchases_client.post("/purchases/api/calculate-totals", json=payload)
         assert resp.status_code == 200
-        assert resp.get_json()["line_count"] == 0
+        assert resp.get_json()["data"]["line_count"] == 0
