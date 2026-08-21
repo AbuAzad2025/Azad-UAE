@@ -31,7 +31,7 @@ class TestSeedTranslations:
         sys.path.insert(0, os.path.join(ROOT, "scripts"))
         from seed_translations import escape_po
 
-        assert escape_po('hello "world"') == r'hello \"world\"'
+        assert escape_po('hello "world"') == r"hello \"world\""
         assert escape_po("line1\nline2") == 'line1\\n"\n"line2'
         assert escape_po("back\\slash") == "back\\\\slash"
 
