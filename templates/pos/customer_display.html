@@ -47,7 +47,7 @@
 </div>
 {% endblock %}
 {% block extra_js %}
-<script nonce="{{ csp_nonce() }}>
+<script nonce="{{ csp_nonce() }}">
 (()=> {
   const params = new URLSearchParams(window.location.search);
   const sessionId = params.get('session_id');

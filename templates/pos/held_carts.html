@@ -76,7 +76,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script nonce="{{ csp_nonce() }}>
+<script nonce="{{ csp_nonce() }}">
 document.querySelectorAll('[data-delete-cart]').forEach(btn => {
   btn.addEventListener('click', async () => {
     const cartId = btn.dataset.deleteCart;

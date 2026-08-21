@@ -4,7 +4,7 @@
 
 {% block extra_css %}
 {% include 'partials/select2_assets.html' %}
-<style nonce="{{ csp_nonce() }}>
+<style nonce="{{ csp_nonce() }}">
 .voucher-form .form-control,
 .voucher-form .form-select {
   min-height: 48px;
@@ -203,7 +203,7 @@
 
 {% block extra_js %}
 {% include 'partials/select2_assets.html' %}
-<script nonce="{{ csp_nonce() }}>
+<script nonce="{{ csp_nonce() }}">
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-action="select-direction"]');
   if (!el) return;

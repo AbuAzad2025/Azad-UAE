@@ -15,7 +15,7 @@
 {% endblock %}
 
 {% block extra_css %}
-<style nonce="{{ csp_nonce() }}>
+<style nonce="{{ csp_nonce() }}">
     .purchase-stats {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -214,7 +214,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script nonce="{{ csp_nonce() }}>
+<script nonce="{{ csp_nonce() }}">
     document.addEventListener('click', (e) => {
         const el = e.target.closest('[data-action]');
         if (!el) return;
