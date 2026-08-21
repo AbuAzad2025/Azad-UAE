@@ -824,7 +824,8 @@ class TestApiSearch:
         with _products_patches(products=items, visible_query=query):
             resp = products_client.get("/products/api/search?q=alp")
         assert resp.status_code == 200
-        data = resp.get_json()
+        body = resp.get_json()
+        data = body["data"]
         assert len(data) == 1
         assert data[0]["name"] == "Alpha"
 
@@ -834,7 +835,7 @@ class TestApiSearch:
         with _products_patches(products=items, visible_query=query):
             resp = products_client.get("/products/api/search")
         assert resp.status_code == 200
-        assert len(resp.get_json()) == 1
+        assert len(resp.get_json()["data"]) == 1
 
     def test_api_search_with_warehouse_id(self, products_client):
         items = [_product()]
@@ -845,7 +846,7 @@ class TestApiSearch:
         ):
             resp = products_client.get("/products/api/search?q=a&warehouse_id=1")
         assert resp.status_code == 200
-        assert resp.get_json()[0]["stock"] == 42.0
+        assert resp.get_json()["data"][0]["stock"] == 42.0
 
 
 class TestCategories:
@@ -936,7 +937,7 @@ class TestCategories:
         assert resp.status_code == 400
         body = resp.get_json()
         assert body["success"] is False
-        assert body.get("product_count") == 3
+        assert body["meta"].get("product_count") == 3
 
     def test_delete_category_json_success(self, products_client):
         cat = _category(7, name="Empty")
@@ -961,7 +962,7 @@ class TestAdjustStock:
         assert resp.status_code == 200
         body = resp.get_json()
         assert body["success"] is True
-        assert body["new_stock"] == 15.0
+        assert body["data"]["new_stock"] == 15.0
 
     def test_adjust_stock_subtract(self, products_client):
         with _products_patches():
@@ -974,7 +975,7 @@ class TestAdjustStock:
                 },
             )
         assert resp.status_code == 200
-        assert resp.get_json()["new_stock"] == 7.0
+        assert resp.get_json()["data"]["new_stock"] == 7.0
 
     def test_adjust_stock_set(self, products_client):
         with _products_patches():
@@ -983,7 +984,7 @@ class TestAdjustStock:
                 data={"adjustment_type": "set", "quantity": "25", "warehouse_id": "1"},
             )
         assert resp.status_code == 200
-        assert resp.get_json()["new_stock"] == 25.0
+        assert resp.get_json()["data"]["new_stock"] == 25.0
 
     def test_adjust_stock_invalid_quantity(self, products_client):
         with _products_patches():
@@ -1008,7 +1009,7 @@ class TestAdjustStock:
             )
         assert resp.status_code == 400
         body = resp.get_json()
-        assert body["insufficient"] is True
+        assert body["meta"]["insufficient"] is True
 
     def test_adjust_stock_branch_requires_warehouse(self, products_client):
         with (
@@ -1442,7 +1443,7 @@ class TestProductsExtendedCoverage:
                 data={"adjustment_type": "add", "quantity": "1"},
             )
         assert resp.status_code == 200
-        assert resp.get_json()["new_stock"] == 5.0
+        assert resp.get_json()["data"]["new_stock"] == 5.0
 
     def test_adjust_stock_zero_quantity(self, products_client):
         with _products_patches():
@@ -1469,7 +1470,7 @@ class TestProductsExtendedCoverage:
                 },
             )
         assert resp.status_code == 400
-        assert resp.get_json()["alternative_locations"] == []
+        assert resp.get_json()["meta"]["alternative_locations"] == []
 
     def test_annotate_visible_stock_no_warehouses(self):
         from routes.products import _annotate_visible_stock

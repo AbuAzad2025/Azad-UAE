@@ -5,7 +5,6 @@ from flask import (
     abort,
     current_app,
     flash,
-    jsonify,
     redirect,
     render_template,
     request,
@@ -17,6 +16,7 @@ from flask_login import current_user, login_required
 from extensions import db
 from models import Branch, Product, StockMovement, Warehouse
 from services.stock_service import StockService
+from utils.api_response import error_response, success_response
 from utils.branching import (
     ensure_warehouse_access,
     get_accessible_branches_query,
@@ -553,14 +553,9 @@ def add_stock(product_id):
         warehouse_id = request.form.get("warehouse_id", type=int)
 
         if quantity <= 0:
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "message": gettext("الكمية يجب أن تكون أكبر من صفر"),
-                    }
-                ),
-                400,
+            return error_response(
+                message=gettext("الكمية يجب أن تكون أكبر من صفر"),
+                status_code=400,
             )
 
         if not warehouse_id:
@@ -573,7 +568,7 @@ def add_stock(product_id):
             if not warehouse:
                 warehouse = accessible_query.order_by(Warehouse.name).first()
             if not warehouse:
-                return jsonify({"success": False, "message": gettext("لا يوجد مستودع نشط")}), 400
+                return error_response(message=gettext("لا يوجد مستودع نشط"), status_code=400)
             warehouse_id = warehouse.id
         else:
             ensure_warehouse_access(warehouse_id, current_user)
@@ -587,19 +582,16 @@ def add_stock(product_id):
             )
             product = movement.product
 
-        return jsonify(
-            {
-                "success": True,
-                "message": gettext(f"تم إضافة {quantity} وحدة للمنتج {product.name}"),
-                "new_stock": float(product.current_stock),
-            }
+        return success_response(
+            data={"new_stock": float(product.current_stock)},
+            message=gettext(f"تم إضافة {quantity} وحدة للمنتج {product.name}"),
         )
 
     except Exception as e:
         current_app.logger.error(f"Error adding stock: {e}")
-        return (
-            jsonify({"success": False, "message": ErrorMessages.unexpected_error()}),
-            500,
+        return error_response(
+            message=ErrorMessages.unexpected_error(),
+            status_code=500,
         )
 
 
@@ -609,9 +601,9 @@ def add_stock(product_id):
 def api_transfer():
     """نقل مخزون بين مستودعين (API)"""
     if not request.is_json:
-        return (
-            jsonify({"success": False, "message": "Content-Type must be application/json"}),
-            415,
+        return error_response(
+            message="Content-Type must be application/json",
+            status_code=415,
         )
     payload = request.get_json(silent=True) or {}
     product_id = payload.get("product_id")
@@ -621,14 +613,9 @@ def api_transfer():
     notes = (payload.get("notes") or "").strip()
 
     if not all([product_id, source_id, destination_id, quantity]):
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "message": gettext("المنتج، المصدر، الوجهة، والكمية مطلوبة"),
-                }
-            ),
-            400,
+        return error_response(
+            message=gettext("المنتج، المصدر، الوجهة، والكمية مطلوبة"),
+            status_code=400,
         )
 
     try:
@@ -654,18 +641,17 @@ def api_transfer():
                 warehouse_id=destination_id,
             ).first()
 
-        return jsonify(
-            {
-                "success": True,
+        return success_response(
+            data={
                 "source_onhand": float(src_pws.quantity) if src_pws else 0,
                 "destination_onhand": float(dst_pws.quantity) if dst_pws else 0,
             }
         )
     except ValueError as e:
-        return jsonify({"success": False, "message": str(e)}), 400
+        return error_response(message=str(e), status_code=400)
     except Exception as e:
         current_app.logger.error(f"Stock transfer error: {e}")
-        return jsonify({"success": False, "message": gettext("فشل نقل المخزون")}), 500
+        return error_response(message=gettext("فشل نقل المخزون"), status_code=500)
 
 
 @warehouse_bp.route("/exchange", methods=["POST"])
@@ -674,9 +660,9 @@ def api_transfer():
 def api_exchange():
     """إضافة أو سحب مخزون من مستودع (تسوية)"""
     if not request.is_json:
-        return (
-            jsonify({"success": False, "message": "Content-Type must be application/json"}),
-            415,
+        return error_response(
+            message="Content-Type must be application/json",
+            status_code=415,
         )
     payload = request.get_json(silent=True) or {}
     warehouse_id = payload.get("warehouse_id")
@@ -687,14 +673,9 @@ def api_exchange():
     payload.get("unit_cost")
 
     if not warehouse_id or not product_id or not quantity:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "message": gettext("المستودع، المنتج، والكمية مطلوبة"),
-                }
-            ),
-            400,
+        return error_response(
+            message=gettext("المستودع، المنتج، والكمية مطلوبة"),
+            status_code=400,
         )
 
     try:
@@ -702,14 +683,9 @@ def api_exchange():
         if direction == "OUT":
             qty = -qty
         elif direction != "IN":
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "message": gettext("الاتجاه يجب أن يكون IN أو OUT"),
-                    }
-                ),
-                400,
+            return error_response(
+                message=gettext("الاتجاه يجب أن يكون IN أو OUT"),
+                status_code=400,
             )
 
         with atomic_transaction("warehouse_api_exchange"):
@@ -727,17 +703,12 @@ def api_exchange():
                 warehouse_id=warehouse_id,
             ).first()
 
-        return jsonify(
-            {
-                "success": True,
-                "new_quantity": float(pws.quantity) if pws else 0,
-            }
-        )
+        return success_response(data={"new_quantity": float(pws.quantity) if pws else 0})
     except ValueError as e:
-        return jsonify({"success": False, "message": str(e)}), 400
+        return error_response(message=str(e), status_code=400)
     except Exception as e:
         current_app.logger.error(f"Stock exchange error: {e}")
-        return jsonify({"success": False, "message": gettext("فشل تسوية المخزون")}), 500
+        return error_response(message=gettext("فشل تسوية المخزون"), status_code=500)
 
 
 @warehouse_bp.route("/api/upload_product_image", methods=["POST"])
@@ -749,7 +720,7 @@ def upload_product_image():
 
     file = request.files.get("file")
     if not file:
-        return jsonify({"ok": False, "error": gettext("لم يتم إرسال ملف")}), 400
+        return error_response(message=gettext("لم يتم إرسال ملف"), status_code=400)
     try:
         path = save_uploaded_file(
             file,
@@ -757,11 +728,11 @@ def upload_product_image():
             allowed_extensions={"png", "jpg", "jpeg", "gif", "webp"},
         )
         if not path:
-            return jsonify({"ok": False, "error": gettext("فشل حفظ الملف")}), 500
+            return error_response(message=gettext("فشل حفظ الملف"), status_code=500)
         url = "/" + path
-        return jsonify({"ok": True, "url": url, "thumb_url": url})
+        return success_response(data={"url": url, "thumb_url": url})
     except ValueError as e:
-        return jsonify({"ok": False, "error": str(e)}), 400
+        return error_response(message=str(e), status_code=400)
     except Exception as e:
         current_app.logger.error(f"upload_product_image error: {e}")
-        return jsonify({"ok": False, "error": gettext("حدث خطأ أثناء رفع الصورة")}), 500
+        return error_response(message=gettext("حدث خطأ أثناء رفع الصورة"), status_code=500)

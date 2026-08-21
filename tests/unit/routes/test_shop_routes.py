@@ -120,7 +120,9 @@ class TestShopWishlist:
                 content_type="application/json",
             )
         assert resp.status_code == 200
-        assert resp.get_json()["success"] is True
+        body = resp.get_json()
+        assert body["success"] is True
+        assert body["data"]["wishlisted"] is True
 
     def test_wishlist_add_redirect_when_not_json(self, shop_client):
         account = _mock_account()
@@ -163,7 +165,7 @@ class TestShopWishlist:
                 content_type="application/json",
             )
         assert resp.status_code == 200
-        assert resp.get_json()["wishlisted"] is False
+        assert resp.get_json()["data"]["wishlisted"] is False
 
     def test_wishlist_view_redirects_when_anonymous(self, shop_client):
         with patch(
@@ -407,7 +409,7 @@ class TestShopCatalogAndSearch:
         with patch("routes.shop.StoreService.get_public_catalog"):
             resp = shop_client.get(f"{BASE}/api/search?q=a")
         assert resp.status_code == 200
-        assert resp.get_json()["results"] == []
+        assert resp.get_json()["data"]["results"] == []
 
     def test_api_search_returns_results(self, shop_client):
         product = _mock_product()
@@ -417,7 +419,7 @@ class TestShopCatalogAndSearch:
         ):
             resp = shop_client.get(f"{BASE}/api/search?q=test")
         assert resp.status_code == 200
-        data = resp.get_json()
+        data = resp.get_json()["data"]
         assert len(data["results"]) == 1
         assert data["results"][0]["id"] == product.id
 
@@ -480,7 +482,7 @@ class TestShopProduct:
         with patch("routes.shop.ShopReview.query", rq):
             resp = shop_client.get(f"{BASE}/p/10/reviews")
         assert resp.status_code == 200
-        assert len(resp.get_json()["reviews"]) == 1
+        assert len(resp.get_json()["data"]["reviews"]) == 1
 
     def test_add_review_requires_login(self, shop_client):
         with patch(
@@ -590,7 +592,9 @@ class TestShopCart:
                 headers={"X-Requested-With": "XMLHttpRequest"},
             )
         assert resp.status_code == 200
-        assert resp.get_json()["success"] is True
+        body = resp.get_json()
+        assert body["success"] is True
+        assert body["data"]["cart_count"] == 2
 
     def test_cart_add_invalid_product(self, shop_client):
         pq = MagicMock()
@@ -637,7 +641,9 @@ class TestShopCart:
                 headers={"X-Requested-With": "XMLHttpRequest"},
             )
         assert resp.status_code == 200
-        assert resp.get_json()["success"] is True
+        body = resp.get_json()
+        assert body["success"] is True
+        assert body["data"]["cart_count"] == 1
 
     def test_cart_remove(self, shop_client):
         with (
@@ -664,7 +670,7 @@ class TestShopCart:
         with patch("routes.shop.StoreService.get_cart", return_value={"10": 2, "11": 1}):
             resp = shop_client.get(f"{BASE}/cart/count")
         assert resp.status_code == 200
-        assert resp.get_json()["count"] == 3
+        assert resp.get_json()["data"]["count"] == 3
 
 
 class TestShopCheckout:

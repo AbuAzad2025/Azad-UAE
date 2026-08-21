@@ -6,13 +6,13 @@ from flask import (
     abort,
     current_app,
     flash,
-    jsonify,
     redirect,
     render_template,
     request,
     send_file,
     url_for,
 )
+from utils.api_response import error_response, success_response
 from flask_babel import gettext
 from flask_login import current_user, login_required
 from sqlalchemy import select
@@ -1130,16 +1130,11 @@ def edit(**kwargs):
                     total_stock = StockService.get_product_stock(product.id)
                     if total_stock > 0:
                         if _wants_json():
-                            return (
-                                jsonify(
-                                    {
-                                        "success": False,
-                                        "error": gettext(
-                                            "لا يمكن تعديل سعر التكلفة لوجود مخزون. قم بتسوية المخزون أولاً."
-                                        ),
-                                    }
+                            return error_response(
+                                message=gettext(
+                                    "لا يمكن تعديل سعر التكلفة لوجود مخزون. قم بتسوية المخزون أولاً."
                                 ),
-                                400,
+                                status_code=400,
                             )
                         flash(
                             gettext("⚠️ لا يمكن تعديل سعر التكلفة لوجود مخزون. قم بتسوية المخزون أولاً."),
@@ -1274,7 +1269,7 @@ def delete(**kwargs):
     product = tenant_get_or_404(Product, record_id)
     if not _ensure_product_scope(product):
         if _wants_json():
-            return jsonify({"success": False, "error": gettext("المنتج خارج النطاق")}), 403
+            return error_response(message=gettext("المنتج خارج النطاق"), status_code=403)
         return render_template("errors/403.html"), 403
 
     try:
@@ -1283,14 +1278,9 @@ def delete(**kwargs):
         total_stock = StockService.get_product_stock(product.id, user=current_user)
         if total_stock > 0:
             if _wants_json():
-                return (
-                    jsonify(
-                        {
-                            "success": False,
-                            "error": gettext("لا يمكن حذف منتج لديه مخزون. قم بتسوية المخزون أولاً."),
-                        }
-                    ),
-                    400,
+                return error_response(
+                    message=gettext("لا يمكن حذف منتج لديه مخزون. قم بتسوية المخزون أولاً."),
+                    status_code=400,
                 )
             flash(
                 gettext("⚠️ لا يمكن حذف منتج لديه مخزون. قم بتسوية المخزون أولاً."),
@@ -1319,11 +1309,8 @@ def delete(**kwargs):
 
         if sales_count > 0 or purchases_count > 0:
             if _wants_json():
-                return jsonify(
-                    {
-                        "success": True,
-                        "message": gettext(f'تم إلغاء تفعيل المنتج "{product.name}" (لديه عمليات مسجلة).'),
-                    }
+                return success_response(
+                    message=gettext(f'تم إلغاء تفعيل المنتج "{product.name}" (لديه عمليات مسجلة).'),
                 )
             flash(
                 gettext(
@@ -1333,11 +1320,8 @@ def delete(**kwargs):
             )
         else:
             if _wants_json():
-                return jsonify(
-                    {
-                        "success": True,
-                        "message": gettext(f'تم حذف المنتج "{product.name}" نهائياً!'),
-                    }
+                return success_response(
+                    message=gettext(f'تم حذف المنتج "{product.name}" نهائياً!'),
                 )
             flash(gettext(f'✅ تم حذف المنتج "{product.name}" نهائياً!'), "success")
 
@@ -1346,14 +1330,9 @@ def delete(**kwargs):
     except Exception as e:
         current_app.logger.error(f"Error deleting product {record_id}: {e}")
         if _wants_json():
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "error": gettext("فشل حذف المنتج. حدث خطأ غير متوقع."),
-                    }
-                ),
-                500,
+            return error_response(
+                message=gettext("فشل حذف المنتج. حدث خطأ غير متوقع."),
+                status_code=500,
             )
         flash(gettext("❌ فشل حذف المنتج. حدث خطأ غير متوقع."), "danger")
         return redirect(url_for("products.view", id=record_id))
@@ -1404,7 +1383,7 @@ def api_search():
         for p in products
     ]
 
-    return jsonify(results)
+    return success_response(data=results)
 
 
 @products_bp.route("/categories")
@@ -1426,13 +1405,13 @@ def create_category():
     try:
         data = request.get_json(silent=True) if request.is_json else dict(request.form)
         if request.is_json and data is None:
-            return jsonify({"success": False, "error": gettext("بيانات غير صحيحة")}), 400
+            return error_response(message=gettext("بيانات غير صحيحة"), status_code=400)
 
         name, name_ar, description, err = _category_payload(data)
         if err:
             message = err
             if request.is_json:
-                return jsonify({"success": False, "error": message}), 400
+                return error_response(message=message, status_code=400)
             flash(message, "warning")
             return redirect(url_for("products.categories"))
 
@@ -1440,7 +1419,7 @@ def create_category():
         if _category_name_taken(tid, name):
             message = gettext("⚠️ هذه الفئة موجودة مسبقاً.")
             if request.is_json:
-                return jsonify({"success": False, "error": message}), 400
+                return error_response(message=message, status_code=400)
             flash(message, "warning")
             return redirect(url_for("products.categories"))
 
@@ -1455,12 +1434,9 @@ def create_category():
             db.session.flush()
 
         if request.is_json:
-            return jsonify(
-                {
-                    "success": True,
-                    "message": gettext("تم إضافة الفئة بنجاح"),
-                    "category": _category_json(category),
-                }
+            return success_response(
+                data={"category": _category_json(category)},
+                message=gettext("تم إضافة الفئة بنجاح"),
             )
 
         flash(gettext("✅ تم إضافة التصنيف بنجاح!"), "success")
@@ -1468,7 +1444,7 @@ def create_category():
 
     except Exception as e:
         if request.is_json:
-            return jsonify({"success": False, "error": str(e)}), 400
+            return error_response(message=str(e), status_code=400)
 
         flash(gettext(f"❌ حدث خطأ: {str(e)}"), "danger")
         return redirect(url_for("products.categories"))
@@ -1480,7 +1456,7 @@ def create_category():
 def get_category(**kwargs):
     record_id = kwargs.pop("id")
     category = _tenant_category_or_404(record_id)
-    return jsonify({"success": True, "category": _category_json(category)})
+    return success_response(data={"category": _category_json(category)})
 
 
 @products_bp.route("/categories/<int:id>/update", methods=["POST", "PUT"])
@@ -1492,12 +1468,12 @@ def update_category(**kwargs):
         category = _tenant_category_or_404(record_id)
         data = request.get_json(silent=True) if request.is_json else dict(request.form)
         if request.is_json and data is None:
-            return jsonify({"success": False, "error": gettext("بيانات غير صحيحة")}), 400
+            return error_response(message=gettext("بيانات غير صحيحة"), status_code=400)
 
         name, name_ar, description, err = _category_payload(data)
         if err:
             if request.is_json:
-                return jsonify({"success": False, "error": err}), 400
+                return error_response(message=err, status_code=400)
             flash(err, "warning")
             return redirect(url_for("products.categories"))
 
@@ -1505,7 +1481,7 @@ def update_category(**kwargs):
         if _category_name_taken(tid, name, exclude_id=category.id):
             message = gettext("⚠️ هذه الفئة موجودة مسبقاً.")
             if request.is_json:
-                return jsonify({"success": False, "error": message}), 400
+                return error_response(message=message, status_code=400)
             flash(message, "warning")
             return redirect(url_for("products.categories"))
 
@@ -1516,18 +1492,15 @@ def update_category(**kwargs):
         LoggingCore.log_audit("update", "product_categories", category.id)
 
         if request.is_json:
-            return jsonify(
-                {
-                    "success": True,
-                    "message": gettext("تم تحديث الفئة بنجاح"),
-                    "category": _category_json(category),
-                }
+            return success_response(
+                data={"category": _category_json(category)},
+                message=gettext("تم تحديث الفئة بنجاح"),
             )
         flash(gettext("✅ تم تحديث الفئة بنجاح!"), "success")
         return redirect(url_for("products.categories"))
     except Exception as e:
         if request.is_json:
-            return jsonify({"success": False, "error": str(e)}), 400
+            return error_response(message=str(e), status_code=400)
         flash(gettext(f"❌ حدث خطأ: {str(e)}"), "danger")
         return redirect(url_for("products.categories"))
 
@@ -1549,15 +1522,10 @@ def delete_category(**kwargs):
                 f"⚠️ لا يمكن حذف الفئة لأنها مرتبطة بـ {product_count} منتج. انقل المنتجات لفئة أخرى أولاً."
             )
             if request.is_json:
-                return (
-                    jsonify(
-                        {
-                            "success": False,
-                            "error": message,
-                            "product_count": product_count,
-                        }
-                    ),
-                    400,
+                return error_response(
+                    message=message,
+                    status_code=400,
+                    meta={"product_count": product_count},
                 )
             flash(message, "warning")
             return redirect(url_for("products.categories"))
@@ -1567,12 +1535,12 @@ def delete_category(**kwargs):
         LoggingCore.log_audit("delete", "product_categories", category.id)
 
         if request.is_json:
-            return jsonify({"success": True, "message": gettext("تم حذف الفئة بنجاح")})
+            return success_response(message=gettext("تم حذف الفئة بنجاح"))
         flash(gettext("✅ تم حذف الفئة بنجاح!"), "success")
         return redirect(url_for("products.categories"))
     except Exception as e:
         if request.is_json:
-            return jsonify({"success": False, "error": str(e)}), 400
+            return error_response(message=str(e), status_code=400)
         flash(gettext(f"❌ حدث خطأ: {str(e)}"), "danger")
         return redirect(url_for("products.categories"))
 
@@ -1618,9 +1586,9 @@ def adjust_stock(**kwargs):
     record_id = kwargs.pop("id")
     product = tenant_get_or_404(Product, record_id)
     if not _ensure_product_scope(product):
-        return (
-            jsonify({"success": False, "message": gettext("المنتج خارج نطاق الفرع الحالي")}),
-            403,
+        return error_response(
+            message=gettext("المنتج خارج نطاق الفرع الحالي"),
+            status_code=403,
         )
 
     try:
@@ -1628,7 +1596,7 @@ def adjust_stock(**kwargs):
         try:
             quantity = require_float(str(request.form.get("quantity", 0)))
         except ValueError:
-            return jsonify({"success": False, "message": gettext("الكمية غير صحيحة")}), 422
+            return error_response(message=gettext("الكمية غير صحيحة"), status_code=422)
         reason = request.form.get("reason", "adjustment")
         notes = request.form.get("notes", "")
         warehouse_id = request.form.get("warehouse_id", type=int)
@@ -1641,25 +1609,15 @@ def adjust_stock(**kwargs):
             if len(accessible_warehouses) == 1:
                 warehouse = accessible_warehouses[0]
             else:
-                return (
-                    jsonify(
-                        {
-                            "success": False,
-                            "message": gettext("يجب اختيار مستودع داخل الفرع الحالي لتعديل المخزون"),
-                        }
-                    ),
-                    400,
+                return error_response(
+                    message=gettext("يجب اختيار مستودع داخل الفرع الحالي لتعديل المخزون"),
+                    status_code=400,
                 )
 
         if quantity <= 0:
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "message": gettext("الكمية يجب أن تكون أكبر من صفر"),
-                    }
-                ),
-                400,
+            return error_response(
+                message=gettext("الكمية يجب أن تكون أكبر من صفر"),
+                status_code=400,
             )
 
         old_stock = (
@@ -1681,24 +1639,21 @@ def adjust_stock(**kwargs):
                     alternatives = _get_alternative_warehouses(product.id, warehouse.id if warehouse else None)
                 except Exception:
                     alternatives = []
-                return (
-                    jsonify(
-                        {
-                            "success": False,
-                            "message": gettext("لا يمكن أن يكون المخزون سالباً — المخزون المتاح غير كافٍ"),
-                            "insufficient": True,
-                            "current_warehouse_id": warehouse.id if warehouse else None,
-                            "requested_quantity": quantity,
-                            "available_stock": float(old_stock),
-                            "alternative_locations": alternatives,
-                        }
-                    ),
-                    400,
+                return error_response(
+                    message=gettext("لا يمكن أن يكون المخزون سالباً — المخزون المتاح غير كافٍ"),
+                    status_code=400,
+                    meta={
+                        "insufficient": True,
+                        "current_warehouse_id": warehouse.id if warehouse else None,
+                        "requested_quantity": quantity,
+                        "available_stock": float(old_stock),
+                        "alternative_locations": alternatives,
+                    },
                 )
         elif adjustment_type == "set":
             new_stock = quantity
         else:
-            return jsonify({"success": False, "message": gettext("نوع التعديل غير صحيح")}), 400
+            return error_response(message=gettext("نوع التعديل غير صحيح"), status_code=400)
 
         with atomic_transaction("product_adjust_stock"):
             delta = quantity if adjustment_type != "set" else (new_stock - old_stock)
@@ -1716,17 +1671,14 @@ def adjust_stock(**kwargs):
             {"message": gettext(f"تعديل مخزون: {old_stock} → {new_stock}")},
         )
 
-        return jsonify(
-            {
-                "success": True,
-                "message": gettext(f"تم تعديل المخزون من {old_stock} إلى {new_stock}"),
-                "new_stock": new_stock,
-            }
+        return success_response(
+            data={"new_stock": new_stock},
+            message=gettext(f"تم تعديل المخزون من {old_stock} إلى {new_stock}"),
         )
 
     except Exception:
         current_app.logger.exception("Product stock update failed")
-        return jsonify({"success": False, "message": gettext("تعذر تحديث المخزون حالياً")}), 500
+        return error_response(message=gettext("تعذر تحديث المخزون حالياً"), status_code=500)
 
 
 @products_bp.route("/<int:id>/print-label")

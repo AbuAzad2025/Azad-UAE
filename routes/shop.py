@@ -6,13 +6,13 @@ from flask import (
     abort,
     current_app,
     flash,
-    jsonify,
     redirect,
     render_template,
     request,
     session,
     url_for,
 )
+from utils.api_response import error_response, success_response
 from flask_babel import gettext
 
 from extensions import db, limiter
@@ -204,7 +204,7 @@ def wishlist_add(slug, product_id):
     store = _resolve_store(slug)
     account = _shop_account(store)
     if not account:
-        return jsonify({"success": False, "message": "Login required"}), 401
+        return error_response(message="Login required", status_code=401)
     if request.content_type and "application/json" in request.content_type:
         existing = ShopWishlist.query.filter_by(
             account_id=account.id, product_id=product_id, tenant_id=store.tenant_id
@@ -218,7 +218,7 @@ def wishlist_add(slug, product_id):
                 )
                 db.session.add(wl)
         count = ShopWishlist.query.filter_by(account_id=account.id, tenant_id=store.tenant_id).count()
-        return jsonify({"success": True, "wishlisted": True, "count": count})
+        return success_response(data={"wishlisted": True, "count": count})
     return redirect(safe_redirect_target(request.referrer, "shop.catalog", slug=store.store_slug))
 
 
@@ -227,11 +227,11 @@ def wishlist_remove(slug, product_id):
     store = _resolve_store(slug)
     account = _shop_account(store)
     if not account:
-        return jsonify({"success": False}), 401
+        return error_response(message="Login required", status_code=401)
     with atomic_transaction("wishlist_remove"):
         ShopWishlist.query.filter_by(account_id=account.id, product_id=product_id, tenant_id=store.tenant_id).delete()
     if request.content_type and "application/json" in request.content_type:
-        return jsonify({"success": True, "wishlisted": False})
+        return success_response(data={"wishlisted": False})
     return redirect(safe_redirect_target(request.referrer, "shop.catalog", slug=store.store_slug))
 
 
@@ -493,7 +493,7 @@ def api_search(slug):
     store = _resolve_store(slug)
     q = (request.args.get("q") or "").strip()
     if not q or len(q) < 2:
-        return jsonify({"results": []})
+        return success_response(data={"results": []})
     items = StoreService.get_public_catalog(store.tenant_id, search=q, page=1, per_page=5)
     from services.store_pricing_service import StorePricingService
 
@@ -512,7 +512,7 @@ def api_search(slug):
                 "url": url_for("shop.product_detail", slug=store.store_slug, product_id=product.id),
             }
         )
-    return jsonify({"results": results})
+    return success_response(data={"results": results})
 
 
 @shop_bp.route("/<slug>/p/<int:product_id>")
@@ -587,8 +587,8 @@ def product_reviews(slug, product_id):
         .order_by(ShopReview.created_at.desc())
         .all()
     )
-    return jsonify(
-        {
+    return success_response(
+        data={
             "reviews": [
                 {
                     "id": r.id,
@@ -709,9 +709,9 @@ def cart_add(slug):
 
     if not product_id or quantity <= 0:
         if _is_ajax():
-            return (
-                jsonify({"success": False, "message": t("out_of_stock", shop_lang())}),
-                400,
+            return error_response(
+                message=t("out_of_stock", shop_lang()),
+                status_code=400,
             )
 
         flash(t("out_of_stock", shop_lang()), "warning")
@@ -725,9 +725,9 @@ def cart_add(slug):
     ).first()
     if not product or product.has_serial_number:
         if _is_ajax():
-            return (
-                jsonify({"success": False, "message": t("out_of_stock", shop_lang())}),
-                400,
+            return error_response(
+                message=t("out_of_stock", shop_lang()),
+                status_code=400,
             )
         flash(t("out_of_stock", shop_lang()), "warning")
         return redirect(safe_redirect_target(request.referrer, "shop.catalog", slug=store.store_slug))
@@ -744,9 +744,9 @@ def cart_add(slug):
 
     if new_qty <= 0:
         if _is_ajax():
-            return (
-                jsonify({"success": False, "message": t("out_of_stock", shop_lang())}),
-                400,
+            return error_response(
+                message=t("out_of_stock", shop_lang()),
+                status_code=400,
             )
 
         flash(t("out_of_stock", shop_lang()), "warning")
@@ -761,7 +761,7 @@ def cart_add(slug):
     if _is_ajax():
         cart_ajax = StoreService.get_cart(session, store.tenant_id)
         count = int(sum(cart_ajax.values()) or 0)
-        return jsonify({"success": True, "cart_count": count, "message": "Added to cart"})
+        return success_response(data={"cart_count": count}, message="Added to cart")
 
     return redirect(url_for("shop.cart_view", slug=store.store_slug))
 
@@ -810,9 +810,8 @@ def cart_update(slug):
         currency_ajax = StorePricingService.resolve_display_currency(store, tenant_ajax)
         totals_ajax = StoreService.cart_totals(store.tenant_id, cart_ajax, display_currency=currency_ajax)
         count = int(sum(cart_ajax.values()) or 0)
-        return jsonify(
-            {
-                "success": True,
+        return success_response(
+            data={
                 "cart_count": count,
                 "subtotal": float(totals_ajax.get("display_subtotal", totals_ajax["subtotal"])),
                 "currency": currency_ajax,
@@ -839,7 +838,7 @@ def cart_remove(slug, product_id):
     if _is_ajax():
         cart_ajax = StoreService.get_cart(session, store.tenant_id)
         count = int(sum(cart_ajax.values()) or 0)
-        return jsonify({"success": True, "cart_count": count})
+        return success_response(data={"cart_count": count})
 
     return redirect(url_for("shop.cart_view", slug=store.store_slug))
 
@@ -849,7 +848,7 @@ def cart_count(slug):
     store = _resolve_store(slug)
     cart = StoreService.get_cart(session, store.tenant_id)
     count = int(sum(cart.values()) or 0)
-    return jsonify({"count": count})
+    return success_response(data={"count": count})
 
 
 @shop_bp.route("/<slug>/checkout", methods=["GET", "POST"])
@@ -1187,7 +1186,7 @@ def save_payment(slug):
     store = _resolve_store(slug)
     account = _shop_account(store)
     if not account:
-        return jsonify({"success": False}), 401
+        return error_response(message="Login required", status_code=401)
     method_code = request.form.get("method_code", "").strip()
     label = (request.form.get("label") or "").strip() or method_code
     from models.shop_saved_payment import ShopSavedPayment
@@ -1210,7 +1209,7 @@ def delete_saved_payment(slug, payment_id):
     store = _resolve_store(slug)
     account = _shop_account(store)
     if not account:
-        return jsonify({"success": False}), 401
+        return error_response(message="Login required", status_code=401)
     from models.shop_saved_payment import ShopSavedPayment
 
     pm = ShopSavedPayment.query.filter_by(

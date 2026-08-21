@@ -480,7 +480,7 @@ class TestWarehouseUploadImage:
         mock_user.has_permission.side_effect = lambda code: code == "manage_products"
         resp = warehouse_client.post("/warehouse/api/upload_product_image")
         assert resp.status_code == 400
-        assert resp.get_json()["ok"] is False
+        assert resp.get_json()["success"] is False
 
     def test_upload_success(self, warehouse_client, mock_user):
         mock_user.has_permission.side_effect = lambda code: code == "manage_products"
@@ -491,7 +491,9 @@ class TestWarehouseUploadImage:
                 content_type="multipart/form-data",
             )
         assert resp.status_code == 200
-        assert resp.get_json()["ok"] is True
+        body = resp.get_json()
+        assert body["success"] is True
+        assert body["data"]["url"] == "/uploads/products/p.jpg"
 
 
 class TestWarehouseExtended:
@@ -731,7 +733,7 @@ class TestWarehouseExtended:
                 content_type="multipart/form-data",
             )
         assert resp.status_code == 500
-        assert resp.get_json()["ok"] is False
+        assert resp.get_json()["success"] is False
 
     def test_index_pagination_iter_pages(self, warehouse_client, warehouse_mocks):
         many = [_product(i) for i in range(1, 21)]
