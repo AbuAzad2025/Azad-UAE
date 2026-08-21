@@ -3,13 +3,9 @@
  * إدارة عمليات الحذف في كل النظام مع تأكيد وأرشفة
  */
 
-/* global Swal, toastr, lazyLoad */
+/* global Swal, toastr */
 
-(async ($) => {
-  // Ensure SweetAlert2 is loaded
-  if (typeof Swal === 'undefined' && window.lazyLoad) {
-    await window.lazyLoad.sweetalert2();
-  }
+(($) => {
 	const ENDPOINTS = {
 		customers: {
 			method: "POST",

@@ -1,13 +1,4 @@
 ((window, $) => {
-  async function ensureDataTables() {
-    if (typeof $.fn.dataTable === 'undefined' && window.lazyLoad) {
-      await window.lazyLoad.datatables();
-    }
-  }
-  
-  // Initialize after DataTables is available
-  (async () => {
-    await ensureDataTables();
 	function _spEsc(s) {
 		return String(s == null ? "" : s)
 			.replace(/&/g, "&amp;")
@@ -620,5 +611,4 @@
 	SmartPrint._resetModal = resetModal;
 	SmartPrint._applyPrintStyles = applyPrintStyles;
 	SmartPrint._fallbackPrint = fallbackPrint;
-  })();
 })(window, window.jQuery);
