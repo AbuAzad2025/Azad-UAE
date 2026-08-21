@@ -134,12 +134,12 @@ def upgrade():
         batch_op.create_foreign_key("fk_bank_statement_lines_matched_cheque_id_rest", "cheques", ["matched_cheque_id"], ["id"], ondelete="RESTRICT")
         batch_op.create_foreign_key("fk_bank_statement_lines_created_by_rest", "users", ["created_by"], ["id"], ondelete="RESTRICT")
         batch_op.create_foreign_key(
-            None, "gl_journal_entries", ["matched_journal_entry_id"], ["id"], ondelete="RESTRICT"
+            "fk_bank_statement_lines_matched_journal_entry_id_rest", "gl_journal_entries", ["matched_journal_entry_id"], ["id"], ondelete="RESTRICT"
         )
         batch_op.create_foreign_key("fk_bank_statement_lines_matched_by_rest", "users", ["matched_by"], ["id"], ondelete="RESTRICT")
         batch_op.create_foreign_key("fk_bank_statement_lines_bank_account_id_rest", "gl_accounts", ["bank_account_id"], ["id"], ondelete="RESTRICT")
         batch_op.create_foreign_key(
-            None, "bank_reconciliation_items", ["reconciliation_item_id"], ["id"], ondelete="RESTRICT"
+            "fk_bank_statement_lines_reconciliation_item_id_rest", "bank_reconciliation_items", ["reconciliation_item_id"], ["id"], ondelete="RESTRICT"
         )
 
     with op.batch_alter_table("budget_lines", schema=None) as batch_op:
@@ -416,7 +416,7 @@ def upgrade():
         batch_op.drop_constraint(batch_op.f("fk_partner_transactions_distribution_id"), type_="foreignkey")
         batch_op.create_foreign_key("fk_partner_transactions_created_by_rest", "users", ["created_by"], ["id"], ondelete="RESTRICT")
         batch_op.create_foreign_key(
-            None, "partner_profit_distributions", ["distribution_id"], ["id"], ondelete="RESTRICT"
+            "fk_partner_transactions_distribution_id_rest", "partner_profit_distributions", ["distribution_id"], ["id"], ondelete="RESTRICT"
         )
         batch_op.create_foreign_key("fk_partner_transactions_partner_id_rest", "partners", ["partner_id"], ["id"], ondelete="RESTRICT")
 
@@ -854,7 +854,7 @@ def downgrade():
         batch_op.create_foreign_key(batch_op.f("fk_system_settings_updated_by"), "users", ["updated_by"], ["id"])
 
     with op.batch_alter_table("sync_batches", schema=None) as batch_op:
-        batch_op.drop_constraint("sync_batches_tenant_id_fkey_rest", type_="foreignkey")
+        batch_op.drop_constraint("fk_sync_batches_tenant_id_rest", type_="foreignkey")
         batch_op.create_foreign_key(batch_op.f("sync_batches_tenant_id_fkey"), "tenants", ["tenant_id"], ["id"])
 
     with op.batch_alter_table("suppliers", schema=None) as batch_op:
@@ -870,8 +870,8 @@ def downgrade():
         )
 
     with op.batch_alter_table("stock_batches", schema=None) as batch_op:
-        batch_op.drop_constraint("stock_batches_product_id_fkey_rest", type_="foreignkey")
-        batch_op.drop_constraint("stock_batches_warehouse_id_fkey_rest", type_="foreignkey")
+        batch_op.drop_constraint("fk_stock_batches_product_id_rest", type_="foreignkey")
+        batch_op.drop_constraint("fk_stock_batches_warehouse_id_rest", type_="foreignkey")
         batch_op.create_foreign_key(batch_op.f("stock_batches_product_id_fkey"), "products", ["product_id"], ["id"])
         batch_op.create_foreign_key(
             batch_op.f("stock_batches_warehouse_id_fkey"), "warehouses", ["warehouse_id"], ["id"]
@@ -1149,7 +1149,7 @@ def downgrade():
         batch_op.create_foreign_key(batch_op.f("fk_pos_table_orders_sale_id"), "sales", ["sale_id"], ["id"])
 
     with op.batch_alter_table("pos_shifts", schema=None) as batch_op:
-        batch_op.drop_constraint("pos_shifts_user_id_fkey_rest", type_="foreignkey")
+        batch_op.drop_constraint("fk_pos_shifts_user_id_rest", type_="foreignkey")
         batch_op.create_foreign_key(batch_op.f("pos_shifts_user_id_fkey"), "users", ["user_id"], ["id"])
         batch_op.drop_index("idx_pos_shift_user_status")
         batch_op.create_index(batch_op.f("idx_pos_shift_user_status"), ["user_id", "status"], unique=False)
@@ -1167,14 +1167,14 @@ def downgrade():
         batch_op.create_index(batch_op.f("idx_pos_session_branch_status"), ["branch_id", "status"], unique=False)
 
     with op.batch_alter_table("pos_printers", schema=None) as batch_op:
-        batch_op.drop_constraint("pos_printers_branch_id_fkey_rest", type_="foreignkey")
-        batch_op.drop_constraint("pos_printers_tenant_id_fkey_rest", type_="foreignkey")
+        batch_op.drop_constraint("fk_pos_printers_branch_id_rest", type_="foreignkey")
+        batch_op.drop_constraint("fk_pos_printers_tenant_id_rest", type_="foreignkey")
         batch_op.create_foreign_key(batch_op.f("pos_printers_branch_id_fkey"), "branches", ["branch_id"], ["id"])
         batch_op.create_foreign_key(batch_op.f("pos_printers_tenant_id_fkey"), "tenants", ["tenant_id"], ["id"])
 
     with op.batch_alter_table("pos_override_tokens", schema=None) as batch_op:
-        batch_op.drop_constraint("pos_override_tokens_cashier_user_id_fkey_rest", type_="foreignkey")
-        batch_op.drop_constraint("pos_override_tokens_supervisor_user_id_fkey_rest", type_="foreignkey")
+        batch_op.drop_constraint("fk_pos_override_tokens_cashier_user_id_rest", type_="foreignkey")
+        batch_op.drop_constraint("fk_pos_override_tokens_supervisor_user_id_rest", type_="foreignkey")
         batch_op.create_foreign_key(
             batch_op.f("pos_override_tokens_cashier_user_id_fkey"), "users", ["cashier_user_id"], ["id"]
         )
@@ -1187,7 +1187,7 @@ def downgrade():
         batch_op.create_index(batch_op.f("ix_pos_override_tokens_nonce"), ["nonce"], unique=True)
 
     with op.batch_alter_table("pos_order_types", schema=None) as batch_op:
-        batch_op.drop_constraint("pos_order_types_tenant_id_fkey_rest", type_="foreignkey")
+        batch_op.drop_constraint("fk_pos_order_types_tenant_id_rest", type_="foreignkey")
         batch_op.create_foreign_key(batch_op.f("pos_order_types_tenant_id_fkey"), "tenants", ["tenant_id"], ["id"])
 
     with op.batch_alter_table("pos_kds_orders", schema=None) as batch_op:
@@ -1199,16 +1199,16 @@ def downgrade():
         batch_op.create_foreign_key(batch_op.f("fk_pos_kds_orders_sale_id"), "sales", ["sale_id"], ["id"])
 
     with op.batch_alter_table("pos_fraud_signals", schema=None) as batch_op:
-        batch_op.drop_constraint("pos_fraud_signals_user_id_fkey_rest", type_="foreignkey")
-        batch_op.drop_constraint("pos_fraud_signals_branch_id_fkey_rest", type_="foreignkey")
+        batch_op.drop_constraint("fk_pos_fraud_signals_user_id_rest", type_="foreignkey")
+        batch_op.drop_constraint("fk_pos_fraud_signals_branch_id_rest", type_="foreignkey")
         batch_op.create_foreign_key(batch_op.f("pos_fraud_signals_user_id_fkey"), "users", ["user_id"], ["id"])
         batch_op.create_foreign_key(batch_op.f("pos_fraud_signals_branch_id_fkey"), "branches", ["branch_id"], ["id"])
 
     with op.batch_alter_table("pos_cash_movements", schema=None) as batch_op:
-        batch_op.drop_constraint("pos_cash_movements_branch_id_fkey_rest", type_="foreignkey")
-        batch_op.drop_constraint("pos_cash_movements_user_id_fkey_rest", type_="foreignkey")
-        batch_op.drop_constraint("pos_cash_movements_gl_entry_id_fkey_rest", type_="foreignkey")
-        batch_op.drop_constraint("pos_cash_movements_authorized_by_user_id_fkey_rest", type_="foreignkey")
+        batch_op.drop_constraint("fk_pos_cash_movements_branch_id_rest", type_="foreignkey")
+        batch_op.drop_constraint("fk_pos_cash_movements_user_id_rest", type_="foreignkey")
+        batch_op.drop_constraint("fk_pos_cash_movements_gl_entry_id_rest", type_="foreignkey")
+        batch_op.drop_constraint("fk_pos_cash_movements_authorized_by_user_id_rest", type_="foreignkey")
         batch_op.create_foreign_key(batch_op.f("pos_cash_movements_branch_id_fkey"), "branches", ["branch_id"], ["id"])
         batch_op.create_foreign_key(batch_op.f("pos_cash_movements_user_id_fkey"), "users", ["user_id"], ["id"])
         batch_op.create_foreign_key(
@@ -1225,7 +1225,7 @@ def downgrade():
         )
 
     with op.batch_alter_table("pos_carts", schema=None) as batch_op:
-        batch_op.drop_constraint("pos_carts_user_id_fkey_rest", type_="foreignkey")
+        batch_op.drop_constraint("fk_pos_carts_user_id_rest", type_="foreignkey")
         batch_op.create_foreign_key(batch_op.f("pos_carts_user_id_fkey"), "users", ["user_id"], ["id"])
         batch_op.drop_index("idx_pos_cart_user_session_status")
         batch_op.create_index(
@@ -1331,7 +1331,7 @@ def downgrade():
 
     with op.batch_alter_table("package_purchases", schema=None) as batch_op:
         batch_op.drop_constraint("fk_package_purchases_package_id_rest", type_="foreignkey")
-        batch_op.drop_constraint("package_purchases_tenant_id_fkey_rest", type_="foreignkey")
+        batch_op.drop_constraint("fk_package_purchases_tenant_id_rest", type_="foreignkey")
         batch_op.create_foreign_key(batch_op.f("fk_package_purchases_package_id"), "packages", ["package_id"], ["id"])
         batch_op.create_foreign_key(batch_op.f("package_purchases_tenant_id_fkey"), "tenants", ["tenant_id"], ["id"])
 
@@ -1365,7 +1365,7 @@ def downgrade():
         batch_op.create_foreign_key(batch_op.f("fk_integration_settings_updated_by"), "users", ["updated_by"], ["id"])
 
     with op.batch_alter_table("idempotency_keys", schema=None) as batch_op:
-        batch_op.drop_constraint("idempotency_keys_user_id_fkey_rest", type_="foreignkey")
+        batch_op.drop_constraint("fk_idempotency_keys_user_id_rest", type_="foreignkey")
         batch_op.create_foreign_key(batch_op.f("idempotency_keys_user_id_fkey"), "users", ["user_id"], ["id"])
 
     with op.batch_alter_table("hr_contracts", schema=None) as batch_op:
@@ -1720,7 +1720,7 @@ def downgrade():
         batch_op.create_foreign_key(batch_op.f("fk_archived_records_archived_by"), "users", ["archived_by"], ["id"])
 
     with op.batch_alter_table("api_keys", schema=None) as batch_op:
-        batch_op.drop_constraint("api_keys_tenant_id_fkey_rest", type_="foreignkey")
+        batch_op.drop_constraint("fk_api_keys_tenant_id_rest", type_="foreignkey")
         batch_op.drop_constraint("fk_api_keys_created_by_rest", type_="foreignkey")
         batch_op.create_foreign_key(batch_op.f("api_keys_tenant_id_fkey"), "tenants", ["tenant_id"], ["id"])
         batch_op.create_foreign_key(batch_op.f("fk_api_keys_created_by"), "users", ["created_by"], ["id"])
