@@ -99,6 +99,8 @@ pytest-mock>=3.14
 pytest-github-actions-annotate-failures>=0.4.2
 bandit>=1.9.4
 tinycss2>=1.5.1
+factory-boy>=3.3.0
+hypothesis>=6.100.0
 
 # Monitoring (system metrics used by services/health_service.py)
 psutil>=5.9.8,<8
