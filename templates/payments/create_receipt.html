@@ -936,7 +936,9 @@ function loadCustomerBalance() {
     $('#customerInfo').hide();
 
     return;
-  }  $.get('{{ url_for("customers.customer_balance", id=0) }}'.replace('0', customerId), (data) => {    // Display balance with appropriate color
+  }  $.get('{{ url_for("customers.customer_balance", id=0) }}'.replace('0', customerId), (response) => {    // Unwrap standardized API envelope
+    const data = response && response.data ? response.data : response;
+    // Display balance with appropriate color
 
     const balanceClass = data.balance > 0 ? 'text-success' : (data.balance < 0 ? 'text-danger' : 'text-muted');
 

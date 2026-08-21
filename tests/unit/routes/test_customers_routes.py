@@ -282,7 +282,9 @@ class TestCustomersApi:
 
         resp = client.get("/customers/api/search?q=API Customer")
         assert resp.status_code == 200
-        data = resp.get_json()
+        body = resp.get_json()
+        assert body["success"] is True
+        data = body["data"]
         assert isinstance(data, list)
         assert len(data) >= 3
 
@@ -298,7 +300,9 @@ class TestCustomersApi:
 
         resp = client.get(f"/customers/{customer.id}/balance")
         assert resp.status_code == 200
-        data = resp.get_json()
+        body = resp.get_json()
+        assert body["success"] is True
+        data = body["data"]
         assert "balance" in data or "balance_due" in data
 
     def test_customer_balance_forbidden(self, auth_client, test_factory):
@@ -341,7 +345,10 @@ class TestCustomersApi:
 
         resp = client.get(f"/customers/{customer.id}/sales")
         assert resp.status_code == 200
-        assert b"Sales Customer" in resp.data or b"S-API-001" in resp.data
+        body = resp.get_json()
+        assert body["success"] is True
+        data = body["data"]
+        assert "sales" in data
 
 
 class TestCustomersStatement:

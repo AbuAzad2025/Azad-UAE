@@ -5,7 +5,6 @@ from flask import (
     Blueprint,
     current_app,
     flash,
-    jsonify,
     redirect,
     render_template,
     request,
@@ -21,6 +20,7 @@ from models import Customer, Sale
 from services.customer_statement_service import CustomerStatementService
 from services.logging_core import LoggingCore
 from services.payment_service import PaymentService
+from utils.api_response import error_response, success_response
 from utils.branching import should_show_all_branch_columns
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
@@ -758,7 +758,7 @@ def api_search():
         for c in customers
     ]
 
-    return jsonify(results)
+    return success_response(data=results)
 
 
 @customers_bp.route("/<int:id>/balance")
@@ -769,13 +769,13 @@ def customer_balance(**kwargs):
     record_id = kwargs.pop("id")
     tenant_get_or_404(Customer, record_id)
     if not _customer_in_scope(record_id):
-        return jsonify({"error": "forbidden"}), 403
+        return error_response(message="forbidden", status_code=403)
     try:
         default_currency = resolve_default_currency()
     except Exception:
         default_currency = get_system_default_currency()
-    return jsonify(
-        {
+    return success_response(
+        data={
             "balance_aed": float(_get_customer_balance(record_id)),
             "balance": float(_get_customer_balance(record_id)),
             "currency": default_currency,
@@ -825,4 +825,4 @@ def customer_sales(**kwargs):
                 }
             )
 
-    return jsonify({"sales": sales_data})
+    return success_response(data={"sales": sales_data})
