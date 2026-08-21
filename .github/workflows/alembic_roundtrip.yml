@@ -73,8 +73,8 @@ jobs:
           set -e
           echo "=== Upgrade to head ==="
           flask db upgrade head
-          echo "=== Downgrade to base ==="
-          flask db downgrade base
+          echo "=== Downgrade to earliest migration (squash_001) ==="
+          flask db downgrade squash_001
           echo "=== Upgrade back to head ==="
           flask db upgrade head
           echo "=== Current version ==="
