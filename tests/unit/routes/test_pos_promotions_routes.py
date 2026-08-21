@@ -175,8 +175,8 @@ class TestCheckoutPromotionIntegration:
         evaluation = _evaluation()
         with (
             _pos_api_patches(),
-            patch("routes.pos.PromotionService.evaluate_cart", return_value=evaluation),
-            patch("routes.pos.SaleService.create_sale") as create_sale,
+            patch("services.pos_checkout_service.PromotionService.evaluate_cart", return_value=evaluation),
+            patch("services.pos_checkout_service.SaleService.create_sale") as create_sale,
         ):
             create_sale.return_value = MagicMock(id=100, sale_number="S-100", tenant_id=1, total_amount=Decimal("45"))
             resp = pos_client.post("/pos/api/checkout", json=self._checkout_payload())
@@ -190,7 +190,7 @@ class TestCheckoutPromotionIntegration:
     def test_checkout_uses_tier_aware_pricing_for_lines(self, pos_client):
         with (
             _pos_api_patches(),
-            patch("routes.pos.SaleService.create_sale") as create_sale,
+            patch("services.pos_checkout_service.SaleService.create_sale") as create_sale,
         ):
             create_sale.return_value = MagicMock(id=100, sale_number="S-100", tenant_id=1, total_amount=Decimal("50"))
             resp = pos_client.post("/pos/api/checkout", json=self._checkout_payload())
@@ -202,8 +202,8 @@ class TestCheckoutPromotionIntegration:
     def test_checkout_survives_promotion_engine_failure(self, pos_client):
         with (
             _pos_api_patches(),
-            patch("routes.pos.PromotionService.evaluate_cart", side_effect=RuntimeError("boom")),
-            patch("routes.pos.SaleService.create_sale") as create_sale,
+            patch("services.pos_checkout_service.PromotionService.evaluate_cart", side_effect=RuntimeError("boom")),
+            patch("services.pos_checkout_service.SaleService.create_sale") as create_sale,
         ):
             create_sale.return_value = MagicMock(id=100, sale_number="S-100", tenant_id=1, total_amount=Decimal("50"))
             resp = pos_client.post("/pos/api/checkout", json=self._checkout_payload())
@@ -227,7 +227,7 @@ class TestCheckoutPromotionIntegration:
         ]
         with (
             _pos_api_patches(),
-            patch("routes.pos.merge_checkout_lines", return_value=merged),
+            patch("services.pos_checkout_service.merge_checkout_lines", return_value=merged),
         ):
             resp = pos_client.post("/pos/api/checkout", json=self._checkout_payload())
         assert resp.status_code == 403

@@ -224,7 +224,7 @@ class TestSplitTenderCheckout:
     def test_split_payments_reach_sale_service(self, pos_client):
         with (
             _pos_api_patches(),
-            patch("routes.pos.SaleService.create_sale") as create_sale,
+            patch("services.pos_checkout_service.SaleService.create_sale") as create_sale,
         ):
             create_sale.return_value = MagicMock(
                 id=100,
@@ -255,7 +255,7 @@ class TestSplitTenderCheckout:
     def test_payments_array_takes_precedence_over_legacy_fields(self, pos_client):
         with (
             _pos_api_patches(),
-            patch("routes.pos.SaleService.create_sale") as create_sale,
+            patch("services.pos_checkout_service.SaleService.create_sale") as create_sale,
         ):
             create_sale.return_value = MagicMock(
                 id=100,
@@ -275,7 +275,7 @@ class TestSplitTenderCheckout:
     def test_legacy_single_payment_still_works(self, pos_client):
         with (
             _pos_api_patches(),
-            patch("routes.pos.SaleService.create_sale") as create_sale,
+            patch("services.pos_checkout_service.SaleService.create_sale") as create_sale,
         ):
             create_sale.return_value = MagicMock(
                 id=100,
@@ -310,7 +310,7 @@ class TestSplitTenderCheckout:
     def test_change_due_reported_for_cash_overpay(self, pos_client):
         with (
             _pos_api_patches(),
-            patch("routes.pos.SaleService.create_sale") as create_sale,
+            patch("services.pos_checkout_service.SaleService.create_sale") as create_sale,
         ):
             create_sale.return_value = MagicMock(
                 id=100,
@@ -329,7 +329,7 @@ class TestSplitTenderCheckout:
     def test_no_change_due_for_card_overpay(self, pos_client):
         with (
             _pos_api_patches(),
-            patch("routes.pos.SaleService.create_sale") as create_sale,
+            patch("services.pos_checkout_service.SaleService.create_sale") as create_sale,
         ):
             create_sale.return_value = MagicMock(
                 id=100,
@@ -387,7 +387,7 @@ class TestSplitTenderCheckout:
     def test_mixed_currency_chunks_keep_own_rate(self, pos_client):
         with (
             _pos_api_patches(),
-            patch("routes.pos.SaleService.create_sale") as create_sale,
+            patch("services.pos_checkout_service.SaleService.create_sale") as create_sale,
         ):
             create_sale.return_value = MagicMock(
                 id=100,

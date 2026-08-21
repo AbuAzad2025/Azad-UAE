@@ -349,7 +349,9 @@ class TestCheckoutIdempotency:
             ) as begin,
             patch("routes.pos.IdempotencyService.complete") as complete,
             patch("routes.pos.hash_request_payload", return_value="h"),
-            patch("routes.pos.SaleService.create_sale", return_value=_checkout_sale_mock()) as create_sale,
+            patch(
+                "services.pos_checkout_service.SaleService.create_sale", return_value=_checkout_sale_mock()
+            ) as create_sale,
         ):
             first = pos_client.post("/pos/api/checkout", json=self._PAYLOAD, headers={"Idempotency-Key": "abc"})
             second = pos_client.post("/pos/api/checkout", json=self._PAYLOAD, headers={"Idempotency-Key": "abc"})
@@ -367,7 +369,9 @@ class TestCheckoutIdempotency:
             patch("routes.pos.IdempotencyService.begin", return_value=(record, None)),
             patch("routes.pos.IdempotencyService.complete"),
             patch("routes.pos.hash_request_payload", return_value="h"),
-            patch("routes.pos.SaleService.create_sale", return_value=_checkout_sale_mock()) as create_sale,
+            patch(
+                "services.pos_checkout_service.SaleService.create_sale", return_value=_checkout_sale_mock()
+            ) as create_sale,
         ):
             pos_client.post("/pos/api/checkout", json=self._PAYLOAD, headers={"Idempotency-Key": "k1"})
             pos_client.post("/pos/api/checkout", json=self._PAYLOAD, headers={"Idempotency-Key": "k2"})
