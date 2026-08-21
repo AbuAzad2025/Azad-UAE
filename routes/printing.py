@@ -9,7 +9,6 @@ from flask import (
     Blueprint,
     current_app,
     flash,
-    jsonify,
     redirect,
     render_template,
     request,
@@ -22,6 +21,7 @@ from flask_login import current_user, login_required
 from models.invoice_settings import InvoiceSettings
 from models.print_history import PrintHistory
 from services.print_service import PrintService
+from utils.api_response import error_response, success_response
 from utils.branching import branch_scope_id
 from utils.db_safety import atomic_transaction
 from utils.decorators import admin_required, permission_required
@@ -261,7 +261,7 @@ def bulk_print():
     doc_type = _normalize_doc_type(doc_type)
     entry = PrintService.PRINTABLE_DOCUMENTS.get(doc_type)
     if not entry:
-        return jsonify({"error": f"Unknown document type: {doc_type}"}), 400
+        return error_response(message=f"Unknown document type: {doc_type}", status_code=400)
 
     tid = get_active_tenant_id(current_user)
     model_cls = PrintService._get_model(entry["model"])
@@ -305,22 +305,22 @@ def print_preview_api():
     doc_type = request.json.get("type")
     doc_id = request.json.get("id")
     if not doc_type or not doc_id:
-        return jsonify({"error": "Missing type or id"}), 400
+        return error_response(message="Missing type or id", status_code=400)
 
     doc_type = _normalize_doc_type(doc_type)
     entry = PrintService.PRINTABLE_DOCUMENTS.get(doc_type)
     if not entry:
-        return jsonify({"error": f"Unsupported type: {doc_type}"}), 400
+        return error_response(message=f"Unsupported type: {doc_type}", status_code=400)
 
     tid = get_active_tenant_id(current_user)
     model_cls = PrintService._get_model(entry["model"])
 
     obj = model_cls.query.filter_by(id=doc_id, tenant_id=tid).first()
     if not obj:
-        return jsonify({"error": "Document not found"}), 404
+        return error_response(message="Document not found", status_code=404)
 
     html = PrintService.render_print(entry["template"], {entry["context_key"]: obj}, tenant_id=tid)
-    return jsonify({"html": html})
+    return success_response(data={"html": html})
 
 
 @printing_bp.route("/api/print-history", methods=["GET"])
@@ -330,8 +330,8 @@ def api_print_history():
     tid = get_active_tenant_id(current_user)
     limit = request.args.get("limit", 20, type=int)
     records = PrintHistory.query.filter_by(tenant_id=tid).order_by(PrintHistory.created_at.desc()).limit(limit).all()
-    return jsonify(
-        [
+    return success_response(
+        data=[
             {
                 "id": r.id,
                 "document_type": r.document_type,

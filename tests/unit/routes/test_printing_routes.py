@@ -290,7 +290,7 @@ class TestBulkPrint:
             content_type="application/json",
         )
         assert resp.status_code == 400
-        assert "Unknown document type" in resp.get_json()["error"]
+        assert "Unknown document type" in resp.get_json()["message"]
 
 
 class TestPrintHistory:
@@ -319,7 +319,7 @@ class TestPrintApiPreview:
             content_type="application/json",
         )
         assert resp.status_code == 400
-        assert "Missing type or id" in resp.get_json()["error"]
+        assert "Missing type or id" in resp.get_json()["message"]
 
     def test_preview_unsupported_type_returns_400(self, printing_client):
         resp = printing_client.post(
@@ -328,7 +328,7 @@ class TestPrintApiPreview:
             content_type="application/json",
         )
         assert resp.status_code == 400
-        assert "Unsupported type" in resp.get_json()["error"]
+        assert "Unsupported type" in resp.get_json()["message"]
 
     def test_preview_document_not_found_returns_404(self, printing_client):
         mocks = printing_client._printing_mocks
@@ -354,7 +354,7 @@ class TestPrintApiPreview:
             content_type="application/json",
         )
         assert resp.status_code == 200
-        assert "html" in resp.get_json()
+        assert "html" in resp.get_json()["data"]
 
     def test_preview_expense_success(self, printing_client):
         expense = _doc_mock(expense_number="EX-PREV")
@@ -368,7 +368,7 @@ class TestPrintApiPreview:
             content_type="application/json",
         )
         assert resp.status_code == 200
-        assert "html" in resp.get_json()
+        assert "html" in resp.get_json()["data"]
 
     def test_preview_cheque_success(self, printing_client):
         cheque = _doc_mock(id=7)
@@ -382,7 +382,7 @@ class TestPrintApiPreview:
             content_type="application/json",
         )
         assert resp.status_code == 200
-        assert "html" in resp.get_json()
+        assert "html" in resp.get_json()["data"]
 
 
 class TestPrintApiHistory:
@@ -400,7 +400,9 @@ class TestPrintApiHistory:
         printing_client._printing_mocks["history_model"].query = hist_q
         resp = printing_client.get("/printing/api/print-history")
         assert resp.status_code == 200
-        data = resp.get_json()
+        body = resp.get_json()
+        assert body["success"] is True
+        data = body["data"]
         assert len(data) == 1
         assert data[0]["document_type"] == "purchase"
         assert data[0]["user_name"] == "Tester"
@@ -412,6 +414,8 @@ class TestPrintApiHistory:
         printing_client._printing_mocks["history_model"].query = hist_q
         resp = printing_client.get("/printing/api/print-history?limit=5")
         assert resp.status_code == 200
+        body = resp.get_json()
+        assert body["success"] is True
         hist_q.order_by.return_value.limit.assert_called_with(5)
 
 
@@ -543,4 +547,4 @@ class TestPrintingCoverageGaps:
             content_type="application/json",
         )
         assert resp.status_code == 400
-        assert "Unknown document type" in resp.get_json()["error"]
+        assert "Unknown document type" in resp.get_json()["message"]
