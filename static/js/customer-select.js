@@ -1,4 +1,8 @@
-(($) => {
+(async ($) => {
+  // Ensure Select2 is loaded
+  if ($ && $.fn && typeof $.fn.select2 === 'undefined' && window.lazyLoad) {
+    await window.lazyLoad.select2();
+  }
 	// =====================================
 	// UNIVERSAL SMART SEARCH SYSTEM
 	// =====================================
@@ -282,4 +286,4 @@
 	window.initCustomerSelect = SmartSearch.initCustomerSearch;
 	window.initSupplierSelect = SmartSearch.initSupplierSearch;
 	window.initProductSelect = SmartSearch.initProductSearch;
-})(jQuery);
+})();

@@ -10,7 +10,7 @@
 /* global StripeTerminal */
 
 const _TERMINAL_SDK_URL = "https://js.stripe.com/terminal/v1/";
-const _READER_STORAGE_KEY = "pos.terminal.reader_id";
+const _READER_STORAGE_ID = "pos.terminal.reader_id";
 // Stripe charges default to the tenant's base currency (POS templates expose it
 // via meta), never a hardcoded code.
 const _DEFAULT_CURRENCY =
@@ -82,7 +82,7 @@ class PosTerminal {
 
 	async _connectReader(terminal) {
 		if (this._reader) return this._reader;
-		const savedId = localStorage.getItem(_READER_STORAGE_KEY);
+		const savedId = localStorage.getItem(_READER_STORAGE_ID);
 		const discovered = await terminal.discoverReaders();
 		if (discovered.error) throw new Error(t("تعذر البحث عن قارئ البطاقات."));
 		const readers = discovered.discoveredReaders || [];
@@ -91,7 +91,7 @@ class PosTerminal {
 		const connected = await terminal.connectReader(reader);
 		if (connected.error) throw new Error(t("تعذر الاتصال بقارئ البطاقات."));
 		this._reader = connected.reader;
-		localStorage.setItem(_READER_STORAGE_KEY, this._reader.id || "");
+		localStorage.setItem(_READER_STORAGE_ID, this._reader.id || "");
 		return this._reader;
 	}
 
