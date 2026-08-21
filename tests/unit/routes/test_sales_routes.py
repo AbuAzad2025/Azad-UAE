@@ -562,13 +562,17 @@ class TestSalesApiPrice:
         with _sales_patches():
             resp = sales_client.get("/sales/api/get-price?product_id=10&customer_id=5&warehouse_id=1")
         assert resp.status_code == 200
-        assert resp.get_json()["price"] == 99.0
+        body = resp.get_json()
+        assert body["success"] is True
+        assert body["data"]["price"] == 99.0
 
     def test_api_get_price_hides_cost(self, sales_client, bypass_permission_auth):
         bypass_permission_auth.can_see_costs.return_value = False
         with _sales_patches():
             resp = sales_client.get("/sales/api/get-price?product_id=10&customer_id=5")
-        assert resp.get_json()["cost_price"] is None
+        body = resp.get_json()
+        assert body["success"] is True
+        assert body["data"]["cost_price"] is None
 
     def test_api_get_price_not_found_guard(self, sales_client):
         with (
@@ -703,9 +707,10 @@ class TestSalesCalculateTotals:
                     "tax_rate": 5,
                 },
             )
-        data = resp.get_json()
+        body = resp.get_json()
+        data = body["data"]
         assert resp.status_code == 200
-        assert data["success"] is True
+        assert body["success"] is True
         assert data["total"] > 0
 
     def test_calculate_totals_vat_inclusive(self, sales_client):
@@ -736,9 +741,9 @@ class TestSalesCalculateTotals:
                     "prices_include_vat": True,
                 },
             )
-        data = resp.get_json()
-        assert data["success"] is True
-        assert data["tax_amount"] > 0
+        body = resp.get_json()
+        assert body["success"] is True
+        assert body["data"]["tax_amount"] > 0
 
     def test_calculate_zero_price_line(self, sales_client):
         with _sales_patches():
@@ -748,7 +753,7 @@ class TestSalesCalculateTotals:
                     "lines": [{"quantity": 3, "unit_price": 0, "discount_percent": 0}],
                 },
             )
-        assert resp.get_json()["subtotal"] == 0
+        assert resp.get_json()["data"]["subtotal"] == 0
 
     def test_calculate_negative_qty_ignored(self, sales_client):
         with _sales_patches():
@@ -758,7 +763,7 @@ class TestSalesCalculateTotals:
                     "lines": [{"quantity": -2, "unit_price": 10}],
                 },
             )
-        assert resp.get_json()["line_count"] == 0
+        assert resp.get_json()["data"]["line_count"] == 0
 
     def test_calculate_invalid_line_skipped(self, sales_client):
         with _sales_patches():

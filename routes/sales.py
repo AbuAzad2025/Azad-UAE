@@ -4,7 +4,6 @@ from flask import (
     Blueprint,
     current_app,
     flash,
-    jsonify,
     redirect,
     render_template,
     request,
@@ -24,6 +23,7 @@ from utils.branching import (
     get_accessible_warehouses,
     should_show_all_branch_columns,
 )
+from utils.api_response import error_response, success_response
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
 from utils.decorators import enforce_resource_limit, permission_required
@@ -519,19 +519,19 @@ def api_get_price():
     warehouse_id = request.args.get("warehouse_id", type=int)
 
     if not product_id or not customer_id:
-        return jsonify({"error": "Missing parameters"}), 400
+        return error_response(message="Missing parameters", status_code=400)
 
     product = tenant_get_or_404(Product, product_id)
     customer = tenant_get_or_404(Customer, customer_id)
 
     if not product or not customer:
-        return jsonify({"error": "Not found"}), 404
+        return error_response(message="Not found", status_code=404)
 
     price = product.get_price_for_customer(customer.customer_type)
     current_stock = StockService.get_product_stock(product.id, warehouse_id=warehouse_id, user=current_user)
 
-    return jsonify(
-        {
+    return success_response(
+        data={
             "price": float(price),
             "cost_price": (float(product.cost_price) if current_user.can_see_costs() else None),
             "current_stock": float(current_stock),
@@ -718,7 +718,7 @@ def api_calculate_sale_totals():
 
         data = request.get_json(silent=True)
         if not data:
-            return jsonify({"success": False, "error": "No data provided"}), 400
+            return error_response(message="No data provided", status_code=400)
 
         lines = data.get("lines", [])
         discount_amount = Decimal(str(data.get("discount_amount", 0)))
@@ -775,25 +775,21 @@ def api_calculate_sale_totals():
             except (InvalidOperation, ValueError, TypeError):
                 current_app.logger.debug("Skipping invalid quantity line: %r", line, exc_info=True)
                 continue
-        return (
-            jsonify(
-                {
-                    "success": True,
-                    "subtotal": float(subtotal),
-                    "discount": float(discount_amount),
-                    "shipping": float(shipping_cost),
-                    "tax_rate": float(tax_rate),
-                    "tax_amount": float(tax_amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)),
-                    "total": float(
-                        total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) if isinstance(total, Decimal) else total
-                    ),
-                    "prices_include_vat": prices_include_vat,
-                    "line_count": positive_lines,
-                }
-            ),
-            200,
+        return success_response(
+            data={
+                "subtotal": float(subtotal),
+                "discount": float(discount_amount),
+                "shipping": float(shipping_cost),
+                "tax_rate": float(tax_rate),
+                "tax_amount": float(tax_amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)),
+                "total": float(
+                    total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) if isinstance(total, Decimal) else total
+                ),
+                "prices_include_vat": prices_include_vat,
+                "line_count": positive_lines,
+            }
         )
 
     except Exception:
         current_app.logger.exception("calculate_sale_totals failed")
-        return jsonify({"success": False, "error": gettext("تعذر حساب الإجماليات حالياً")}), 500
+        return error_response(message=gettext("تعذر حساب الإجماليات حالياً"), status_code=500)

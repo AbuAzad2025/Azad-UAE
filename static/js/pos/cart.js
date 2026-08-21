@@ -83,8 +83,9 @@ const recalc = async () => {
 					prices_include_vat: pricesIncludeVatMeta,
 				}),
 			});
-			const data = await r.json();
-			if (data.success) {
+			const response = await r.json();
+			const data = response && response.data ? response.data : response;
+			if (response.success) {
 				qs("#kpiSubtotal").textContent = fmt(data.subtotal);
 				qs("#kpiDiscount").textContent = fmt(data.discount);
 				qs("#kpiTotal").textContent = fmt(data.total);
