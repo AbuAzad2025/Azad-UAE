@@ -1,6 +1,6 @@
 (async ($) => {
   // Ensure Select2 is loaded
-  if (typeof $.fn.select2 === 'undefined' && window.lazyLoad) {
+  if ($ && $.fn && typeof $.fn.select2 === 'undefined' && window.lazyLoad) {
     await window.lazyLoad.select2();
   }
 	// =====================================
