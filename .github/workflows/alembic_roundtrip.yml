@@ -75,7 +75,7 @@ jobs:
           flask db upgrade head
           echo "=== Downgrade to base one step at a time ==="
           while flask db current | grep -v base; do
-            flask db downgrade -1
+            flask db downgrade -- -1
           done
           echo "=== Upgrade back to head ==="
           flask db upgrade head
