@@ -5,7 +5,6 @@ from flask import (
     Blueprint,
     current_app,
     flash,
-    jsonify,
     redirect,
     render_template,
     request,
@@ -16,6 +15,7 @@ from flask_login import current_user, login_required
 
 from extensions import db
 from models import Cheque, GLAccount, GLJournalEntry
+from utils.api_response import error_response, success_response
 from models.advanced_accounting import AdvancedExpense, CustomsTax
 from models.expense import ExpenseCategory
 from services.advanced_analytics import AdvancedFinancialAnalytics
@@ -529,7 +529,7 @@ def events_stream_api():
     else:
         events = accounting_event_stream.get_recent_events(limit)
 
-    return jsonify({"success": True, "events": events, "total": len(events)})
+    return success_response(data={"events": events, "total": len(events)})
 
 
 @advanced_ledger_bp.route("/api/cheque/<int:cheque_id>/accounting-summary")
@@ -540,9 +540,9 @@ def cheque_accounting_summary_api(cheque_id):
     cheque = tenant_get_or_404(Cheque, cheque_id)
     try:
         summary = ChequeAccountingIntegration.get_cheque_accounting_summary(cheque.id)
-        return jsonify({"success": True, "summary": summary})
+        return success_response(data={"summary": summary})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 400
+        return error_response(message=str(e), status_code=400)
 
 
 @advanced_ledger_bp.route("/professional-reports")
@@ -660,7 +660,7 @@ def api_financial_ratios():
 
     ratios = AdvancedFinancialAnalytics.get_financial_ratios(date_from, date_to)
 
-    return jsonify({"success": True, "ratios": ratios})
+    return success_response(data={"ratios": ratios})
 
 
 @advanced_ledger_bp.route("/api/trend-analysis")
@@ -672,7 +672,7 @@ def api_trend_analysis():
 
     trends = AdvancedFinancialAnalytics.get_trend_analysis(months=months)
 
-    return jsonify({"success": True, "trends": trends})
+    return success_response(data={"trends": trends})
 
 
 @advanced_ledger_bp.route("/api/forecasting")
@@ -684,4 +684,4 @@ def api_forecasting():
 
     forecast = AdvancedFinancialAnalytics.get_forecasting_data(months_ahead=months_ahead)
 
-    return jsonify({"success": True, "forecast": forecast})
+    return success_response(data={"forecast": forecast})

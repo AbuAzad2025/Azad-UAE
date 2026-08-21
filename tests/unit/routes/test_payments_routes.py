@@ -200,12 +200,12 @@ class TestPaymentHelpers:
                 "source_type": "manual",
             }
         ]
-        pag = MagicMock(page=1, pages=1)
+        pag = MagicMock(page=1, per_page=20, total=1, pages=1)
         with app.test_request_context():
-            resp = _build_receipts_json_response(items, pag)
+            resp, _status = _build_receipts_json_response(items, pag)
             data = resp.get_json()
-        assert data["totals"]["total_incoming"] == 100.0
-        assert data["payments"][0]["status"] == "COMPLETED"
+        assert data["data"]["totals"]["total_incoming"] == 100.0
+        assert data["data"]["payments"][0]["status"] == "COMPLETED"
 
     def test_resolve_transaction_rate(self, mocker):
         mocker.patch(
@@ -243,8 +243,11 @@ class TestReceiptsList:
         with _payments_patches(receipts=[receipt], payments=[payment]):
             resp = payments_client.get("/payments/receipts?format=json&direction=incoming")
         body = resp.get_json()
-        assert "payments" in body
-        assert body["totals"]["net_total"] == body["totals"]["total_incoming"] - body["totals"]["total_outgoing"]
+        assert "payments" in body["data"]
+        assert (
+            body["data"]["totals"]["net_total"]
+            == body["data"]["totals"]["total_incoming"] - body["data"]["totals"]["total_outgoing"]
+        )
 
     def test_receipts_direction_outgoing_filter(self, payments_client):
         with _payments_patches():
@@ -267,7 +270,7 @@ class TestSearchEntities:
         with patch("routes.payments._scoped_customers_query", return_value=q):
             resp = payments_client.get("/payments/search-entities?type=customer&q=Ali")
         data = resp.get_json()
-        assert data[0]["name"] == "Ali"
+        assert data["data"][0]["name"] == "Ali"
 
     def test_search_suppliers(self, payments_client):
         supplier = SimpleNamespace(id=2, name="Sup", phone="", email="")
@@ -276,11 +279,11 @@ class TestSearchEntities:
         q.order_by.return_value.limit.return_value.all.return_value = [supplier]
         with patch("routes.payments._scoped_suppliers_query", return_value=q):
             resp = payments_client.get("/payments/search-entities?type=supplier")
-        assert resp.get_json()[0]["name"] == "Sup"
+        assert resp.get_json()["data"][0]["name"] == "Sup"
 
     def test_search_unknown_type(self, payments_client):
         resp = payments_client.get("/payments/search-entities?type=other")
-        assert resp.get_json() == []
+        assert resp.get_json()["data"] == []
 
 
 class TestViewAndPrint:
@@ -635,8 +638,8 @@ class TestApiCustomerBalance:
         ):
             resp = payments_client.get("/payments/api/customer-balance/1")
         body = resp.get_json()
-        assert body["balance"] == 500.0
-        assert len(body["unpaid_sales"]) == 1
+        assert body["data"]["balance"] == 500.0
+        assert len(body["data"]["unpaid_sales"]) == 1
 
 
 class TestCreateFromSaleAndPurchase:
@@ -903,7 +906,7 @@ class TestPaymentsExtendedCoverage:
         ):
             resp = payments_client.get("/payments/api/customer-balance/1")
         body = resp.get_json()
-        assert body["unpaid_sales"][0]["currency"] == "USD"
+        assert body["data"]["unpaid_sales"][0]["currency"] == "USD"
 
     def test_scoped_suppliers_search_with_query(self, payments_client):
         supplier = SimpleNamespace(id=3, name="Vendor", phone="05", email="v@t.com")
@@ -912,14 +915,14 @@ class TestPaymentsExtendedCoverage:
         q.order_by.return_value.limit.return_value.all.return_value = [supplier]
         with patch("routes.payments._scoped_suppliers_query", return_value=q):
             resp = payments_client.get("/payments/search-entities?type=suppliers&q=Ven")
-        assert resp.get_json()[0]["name"] == "Vendor"
+        assert resp.get_json()["data"][0]["name"] == "Vendor"
 
     def test_receipts_accept_json_header(self, payments_client):
         receipt = _mock_receipt()
         with _payments_patches(receipts=[receipt]):
             resp = payments_client.get("/payments/receipts", headers={"Accept": "application/json"})
         assert resp.status_code == 200
-        assert "payments" in resp.get_json()
+        assert "payments" in resp.get_json()["data"]
 
 
 class TestPaymentsDeepCoverage:
@@ -1370,7 +1373,7 @@ class TestPaymentsDeepCoverage:
         ):
             resp = payments_client.get("/payments/api/customer-balance/1")
         assert resp.status_code == 200
-        assert resp.get_json()["currency"] == "AED"
+        assert resp.get_json()["data"]["currency"] == "AED"
 
     def test_print_payment_currency_fallback(self, payments_client):
         payment = _mock_payment(branch_id=1)

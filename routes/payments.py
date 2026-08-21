@@ -5,7 +5,6 @@ from flask import (
     abort,
     current_app,
     flash,
-    jsonify,
     redirect,
     render_template,
     request,
@@ -31,6 +30,7 @@ from utils.decorators import permission_required
 from utils.gl_reference_types import GLRef
 from utils.number_to_arabic import number_to_arabic_words
 from utils.qr_generator import generate_qr_data_url
+from utils.api_response import error_response, success_response
 from utils.tenanting import (
     assert_tenant_record,
     get_active_tenant_id,
@@ -181,13 +181,16 @@ def _build_receipts_json_response(paginated_items, pagination):
         "net_total": total_incoming - total_outgoing,
         "grand_total": total_incoming + total_outgoing,
     }
-    return jsonify(
-        {
-            "payments": payload,
-            "current_page": pagination.page,
-            "total_pages": pagination.pages or 1,
-            "totals": totals,
-        }
+    return success_response(
+        data={"payments": payload, "totals": totals},
+        meta={
+            "pagination": {
+                "page": pagination.page,
+                "per_page": pagination.per_page,
+                "total": pagination.total,
+                "pages": pagination.pages or 1,
+            }
+        },
     )
 
 
@@ -401,8 +404,8 @@ def search_entities():
                 )
             )
         rows = query.order_by(Customer.name).limit(limit).all()
-        return jsonify(
-            [
+        return success_response(
+            data=[
                 {
                     "id": r.id,
                     "name": r.name,
@@ -425,8 +428,8 @@ def search_entities():
                 )
             )
         rows = query.order_by(Supplier.name).limit(limit).all()
-        return jsonify(
-            [
+        return success_response(
+            data=[
                 {
                     "id": r.id,
                     "name": r.name,
@@ -437,7 +440,7 @@ def search_entities():
             ]
         )
 
-    return jsonify([])
+    return success_response(data=[])
 
 
 @payments_bp.route("/payments/<int:id>")
@@ -1723,8 +1726,8 @@ def api_customer_balance(customer_id):
                 "currency": sale.currency or default_currency,
             }
         )
-    return jsonify(
-        {
+    return success_response(
+        data={
             "balance_aed": _scoped_customer_balance(customer.id),
             "balance": _scoped_customer_balance(customer.id),
             "currency": default_currency,

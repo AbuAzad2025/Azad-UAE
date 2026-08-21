@@ -6,7 +6,6 @@ from flask import (
     abort,
     current_app,
     flash,
-    jsonify,
     redirect,
     render_template,
     request,
@@ -18,6 +17,7 @@ from sqlalchemy import desc, func
 
 from extensions import db
 from models import Cheque, GLAccount, GLJournalEntry, GLJournalLine, PaymentVault
+from utils.api_response import error_response, success_response
 from services.aging_analysis_service import AgingAnalysisService
 from services.cash_flow_service import CashFlowService
 from services.gl_service import GLService
@@ -683,8 +683,8 @@ def api_search_accounts():
         .all()
     )
 
-    return jsonify(
-        [
+    return success_response(
+        data=[
             {
                 "id": acc.id,
                 "code": acc.code,
@@ -706,7 +706,7 @@ def api_calculate_journal_balance():
     try:
         data = request.get_json(silent=True)
         if not data:
-            return jsonify({"success": False, "error": "No data provided"}), 400
+            return error_response(message="No data provided", status_code=400)
 
         lines = data.get("lines", [])
 
@@ -722,9 +722,8 @@ def api_calculate_journal_balance():
         difference = abs(total_debit - total_credit)
         is_balanced = difference < Decimal("0.01") and total_debit > 0 and total_credit > 0
 
-        return jsonify(
-            {
-                "success": True,
+        return success_response(
+            data={
                 "total_debit": float(total_debit),
                 "total_credit": float(total_credit),
                 "difference": float(difference),
@@ -732,7 +731,7 @@ def api_calculate_journal_balance():
             }
         )
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 400
+        return error_response(message=str(e), status_code=400)
 
 
 @ledger_bp.route("/cash-flow")
@@ -1286,16 +1285,16 @@ def fiscal_year_preview():
 
     tenant_id = get_active_tenant_id(current_user)
     if not tenant_id:
-        return jsonify({"error": "tenant required"}), 400
+        return error_response(message="tenant required", status_code=400)
 
     fiscal_year = request.args.get("fiscal_year", type=int)
     if not fiscal_year:
-        return jsonify({"error": "fiscal_year required"}), 400
+        return error_response(message="fiscal_year required", status_code=400)
 
     try:
         preview = FiscalYearService.calculate_pl_balance(tenant_id, fiscal_year)
-        return jsonify(
-            {
+        return success_response(
+            data={
                 "fiscal_year": fiscal_year,
                 "total_revenue": str(preview["total_revenue"]),
                 "total_expense": str(preview["total_expense"]),
@@ -1304,4 +1303,4 @@ def fiscal_year_preview():
             }
         )
     except Exception as exc:
-        return jsonify({"error": str(exc)}), 400
+        return error_response(message=str(exc), status_code=400)

@@ -89,7 +89,7 @@ class TestSendInvoice:
         assert resp.status_code == 200
         data = resp.get_json()
         assert data["success"] is False
-        assert "phone" in data["error"].lower()
+        assert "phone" in data["message"].lower()
         mocks["wa_svc"].send_invoice.assert_not_called()
 
     def test_customer_without_phone(self, whatsapp_client):
@@ -114,7 +114,9 @@ class TestSendInvoice:
                 "error": "gateway down",
             }
             resp = whatsapp_client.post("/whatsapp/send-invoice/5")
-        assert resp.get_json()["success"] is False
+        data = resp.get_json()
+        assert data["success"] is True
+        assert data["data"]["success"] is False
         mocks["flash"].assert_called()
 
     def test_tenant_isolation_404(self, whatsapp_client):
@@ -162,7 +164,9 @@ class TestSendReminder:
                 "error": "rate limit",
             }
             resp = whatsapp_client.post("/whatsapp/send-reminder/3")
-        assert resp.get_json()["success"] is False
+        data = resp.get_json()
+        assert data["success"] is True
+        assert data["data"]["success"] is False
 
     def test_tenant_isolation_404(self, whatsapp_client):
         with _whatsapp_patches(customer_not_found=True):
@@ -177,7 +181,7 @@ class TestConnection:
         assert resp.status_code == 200
         data = resp.get_json()
         assert data["success"] is False
-        assert "WHATSAPP_API_KEY" in data["error"]
+        assert "WHATSAPP_API_KEY" in data["message"]
 
     def test_configured(self, whatsapp_client):
         with patch("routes.whatsapp.WhatsAppService.is_enabled", return_value=True):

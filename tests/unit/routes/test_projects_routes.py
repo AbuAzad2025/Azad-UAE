@@ -233,7 +233,7 @@ class TestTimesheetApi:
         assert resp.status_code == 200
         data = resp.get_json()
         assert data["success"] is True
-        assert data["hours"] == 2.0
+        assert data["data"]["hours"] == 2.0
 
     def test_log_timesheet_error(self, projects_client):
         with (
@@ -252,7 +252,7 @@ class TestGanttAndMembers:
         with _projects_patches():
             resp = projects_client.get("/projects/1/gantt")
         assert resp.status_code == 200
-        assert "project" in resp.get_json()
+        assert "project" in resp.get_json()["data"]
 
     def test_gantt_not_found(self, projects_client):
         with (

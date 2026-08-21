@@ -1,9 +1,10 @@
-from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_babel import gettext
 from flask_login import current_user, login_required
 
 from models import Customer, ProjectMember, Task, TaskStage, User
 from services.project_service import ProjectService
+from utils.api_response import error_response, success_response
 from utils.decorators import permission_required
 from utils.tenanting import get_active_tenant_id, tenant_query
 
@@ -96,9 +97,9 @@ def api_move_task():
     data = request.get_json(silent=True) or {}
     try:
         ProjectService.move_task(data["task_id"], data["stage_id"], current_user)
-        return jsonify({"success": True})
+        return success_response()
     except (ValueError, KeyError) as e:
-        return jsonify({"success": False, "error": str(e)}), 400
+        return error_response(message=str(e), status_code=400)
 
 
 @projects_bp.route("/api/log-timesheet", methods=["POST"])
@@ -108,9 +109,9 @@ def api_log_timesheet():
     data = request.get_json(silent=True) or {}
     try:
         ts = ProjectService.log_timesheet(data["task_id"], data, current_user)
-        return jsonify({"success": True, "id": ts.id, "hours": float(ts.hours)})
+        return success_response(data={"id": ts.id, "hours": float(ts.hours)})
     except (ValueError, KeyError) as e:
-        return jsonify({"success": False, "error": str(e)}), 400
+        return error_response(message=str(e), status_code=400)
 
 
 @projects_bp.route("/<int:project_id>/gantt")
@@ -119,9 +120,9 @@ def api_log_timesheet():
 def api_gantt(project_id):
     try:
         data = ProjectService.get_gantt_data(project_id, current_user)
-        return jsonify(data)
+        return success_response(data=data)
     except ValueError as e:
-        return jsonify({"error": str(e)}), 404
+        return error_response(message=str(e), status_code=404)
 
 
 @projects_bp.route("/<int:project_id>/members", methods=["POST"])

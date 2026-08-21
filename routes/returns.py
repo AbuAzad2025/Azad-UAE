@@ -1,4 +1,4 @@
-from flask import Blueprint, abort, current_app, jsonify, render_template, request
+from flask import Blueprint, abort, current_app, render_template, request
 from flask_babel import gettext
 from flask_login import current_user, login_required
 from sqlalchemy import or_
@@ -7,6 +7,7 @@ from extensions import limiter
 from models import ProductReturn, Sale
 from services.logging_core import LoggingCore
 from services.return_service import ReturnService
+from utils.api_response import error_response, paginated_response, success_response
 from utils.branching import should_show_all_branch_columns
 from utils.db_safety import atomic_transaction
 from utils.decorators import branch_scope_id, permission_required
@@ -66,7 +67,7 @@ def api_create_return():
     try:
         data = request.get_json(silent=True)
         if not data:
-            return jsonify({"success": False, "message": "No data provided"}), 400
+            return error_response(message="No data provided", status_code=400)
 
         sale_id = data.get("sale_id")
         lines = data.get("lines", [])
@@ -74,10 +75,7 @@ def api_create_return():
         manual_refund_amount = data.get("manual_refund_amount", data.get("refund_amount"))
 
         if not sale_id or not lines:
-            return (
-                jsonify({"success": False, "message": "Missing sale_id or lines"}),
-                400,
-            )
+            return error_response(message="Missing sale_id or lines", status_code=400)
 
         from utils.tenanting import tenant_get_or_404
 
@@ -104,22 +102,21 @@ def api_create_return():
             },
         )
 
-        return jsonify(
-            {
-                "success": True,
-                "message": "Return processed successfully",
+        return success_response(
+            data={
                 "return_id": result.id,
                 "return_number": result.return_number,
                 "refund_amount": float(result.refund_amount or 0),
                 "amount_aed": float(result.amount_aed or 0),
-            }
+            },
+            message="Return processed successfully",
         )
 
     except ValueError:
-        return jsonify({"success": False, "message": gettext("بيانات المرتجع غير صالحة")}), 400
+        return error_response(message=gettext("بيانات المرتجع غير صالحة"), status_code=400)
     except Exception as e:
         current_app.logger.error(f"Error creating return: {e}")
-        return jsonify({"success": False, "message": "Internal server error"}), 500
+        return error_response(message="Internal server error", status_code=500)
 
 
 @returns_bp.route("/api/search_sales")
@@ -132,7 +129,7 @@ def api_search_sales():
     per_page = 20
 
     if not q:
-        return jsonify({"items": [], "has_more": False})
+        return success_response(data=[])
 
     query = tenant_query(Sale).filter(Sale.status == "completed")
     if q.isdigit():
@@ -154,7 +151,12 @@ def api_search_sales():
         for s in pagination.items
     ]
 
-    return jsonify({"items": items, "has_more": pagination.has_next})
+    return paginated_response(
+        items=items,
+        page=pagination.page,
+        per_page=per_page,
+        total=pagination.total,
+    )
 
 
 @returns_bp.route("/api/get_sale_lines")
@@ -164,7 +166,7 @@ def api_get_sale_lines():
     """Get sale lines for return creation."""
     sale_id = request.args.get("sale_id", type=int)
     if not sale_id:
-        return jsonify({"lines": []}), 400
+        return error_response(message="Missing sale_id", status_code=400)
 
     from utils.tenanting import tenant_get_or_404
 
@@ -190,7 +192,7 @@ def api_get_sale_lines():
             }
         )
 
-    return jsonify({"lines": lines})
+    return success_response(data={"lines": lines})
 
 
 @returns_bp.route("/view/<int:id>")

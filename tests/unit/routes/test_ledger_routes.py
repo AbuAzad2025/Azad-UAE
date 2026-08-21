@@ -735,7 +735,7 @@ class TestLedgerApi:
             resp = ledger_client.get("/ledger/api/accounts/search?q=110")
         assert resp.status_code == 200
         data = resp.get_json()
-        assert data[0]["code"] == "1101"
+        assert data["data"][0]["code"] == "1101"
 
     def test_calculate_journal_balance_balanced(self, ledger_client):
         resp = ledger_client.post(
@@ -745,7 +745,7 @@ class TestLedgerApi:
         assert resp.status_code == 200
         data = resp.get_json()
         assert data["success"] is True
-        assert data["is_balanced"] is True
+        assert data["data"]["is_balanced"] is True
 
     def test_calculate_journal_balance_unbalanced(self, ledger_client):
         resp = ledger_client.post(
@@ -753,7 +753,7 @@ class TestLedgerApi:
             json={"lines": [{"debit": 100, "credit": 0}, {"debit": 0, "credit": 50}]},
         )
         data = resp.get_json()
-        assert data["is_balanced"] is False
+        assert data["data"]["is_balanced"] is False
 
     def test_calculate_journal_balance_no_data(self, ledger_client):
         resp = ledger_client.post("/ledger/api/calculate-journal-balance", json=None)

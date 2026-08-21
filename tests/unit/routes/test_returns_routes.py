@@ -202,7 +202,7 @@ class TestReturnsApiCreate:
         data = resp.get_json()
         assert resp.status_code == 200
         assert data["success"] is True
-        assert data["return_number"] == "RET-005"
+        assert data["data"]["return_number"] == "RET-005"
 
     def test_create_value_error(self, returns_client):
         with (

@@ -1,8 +1,9 @@
-from flask import Blueprint, flash, jsonify, request
+from flask import Blueprint, flash, request
 from flask_babel import gettext
 from flask_login import current_user, login_required
 
 from services.whatsapp_service import WhatsAppService
+from utils.api_response import error_response, success_response
 from utils.decorators import admin_required, permission_required
 
 whatsapp_bp = Blueprint("whatsapp", __name__, url_prefix="/whatsapp")
@@ -22,7 +23,7 @@ def send_invoice(sale_id):
     sale = sale_query.first_or_404()
 
     if not sale.customer or not sale.customer.phone:
-        return jsonify({"success": False, "error": "Customer phone not available"})
+        return error_response(message="Customer phone not available", status_code=200)
 
     pdf_url = request.form.get("pdf_url")
 
@@ -38,7 +39,7 @@ def send_invoice(sale_id):
 
         flash(ErrorMessages.whatsapp_failed(), "danger")
 
-    return jsonify(result)
+    return success_response(data=result)
 
 
 @whatsapp_bp.route("/send-reminder/<int:customer_id>", methods=["POST"])
@@ -55,7 +56,7 @@ def send_reminder(customer_id):
     customer = customer_query.first_or_404()
 
     if not customer.phone:
-        return jsonify({"success": False, "error": "Customer phone not available"})
+        return error_response(message="Customer phone not available", status_code=200)
 
     balance = float(customer.get_balance_aed())
 
@@ -73,7 +74,7 @@ def send_reminder(customer_id):
 
         flash(ErrorMessages.whatsapp_failed(), "danger")
 
-    return jsonify(result)
+    return success_response(data=result)
 
 
 @whatsapp_bp.route("/test")
@@ -81,11 +82,9 @@ def send_reminder(customer_id):
 @admin_required
 def test_connection():
     if not WhatsAppService.is_enabled():
-        return jsonify(
-            {
-                "success": False,
-                "error": "WhatsApp not configured. Set WHATSAPP_API_KEY in .env",
-            }
+        return error_response(
+            message="WhatsApp not configured. Set WHATSAPP_API_KEY in .env",
+            status_code=200,
         )
 
-    return jsonify({"success": True, "message": "WhatsApp is configured and ready"})
+    return success_response(message="WhatsApp is configured and ready")

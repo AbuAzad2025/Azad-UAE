@@ -122,18 +122,19 @@ class TestPaymentHelperAssurance:
                 "source_type": "manual",
             },
         ]
-        pag = MagicMock(page=2, pages=3)
+        pag = MagicMock(page=2, per_page=20, total=2, pages=3)
         with app.test_request_context():
-            data = _build_receipts_json_response(items, pag).get_json()
-        assert data["totals"]["total_outgoing"] == 80.0
-        assert data["totals"]["total_incoming"] == 20.0
-        assert data["totals"]["grand_total"] == 100.0
-        assert data["totals"]["net_total"] == -60.0
-        assert data["payments"][0]["status"] == "PENDING"
-        assert data["payments"][0]["entity_display"] == "Vendor X"
-        assert data["payments"][0]["payment_date"] is None
-        assert data["current_page"] == 2
-        assert data["total_pages"] == 3
+            resp, _status = _build_receipts_json_response(items, pag)
+            data = resp.get_json()
+        assert data["data"]["totals"]["total_outgoing"] == 80.0
+        assert data["data"]["totals"]["total_incoming"] == 20.0
+        assert data["data"]["totals"]["grand_total"] == 100.0
+        assert data["data"]["totals"]["net_total"] == -60.0
+        assert data["data"]["payments"][0]["status"] == "PENDING"
+        assert data["data"]["payments"][0]["entity_display"] == "Vendor X"
+        assert data["data"]["payments"][0]["payment_date"] is None
+        assert data["meta"]["pagination"]["page"] == 2
+        assert data["meta"]["pagination"]["pages"] == 3
 
 
 class TestVoucherSubmitAssurance:
@@ -661,7 +662,7 @@ class TestApiCustomerBalanceAssurance:
             patch("routes.payments.resolve_default_currency", return_value="AED"),
         ):
             body = payments_client.get("/payments/api/customer-balance/1").get_json()
-        row = body["unpaid_sales"][0]
+        row = body["data"]["unpaid_sales"][0]
         assert row["currency"] == "USD"
         assert row["balance_due_aed"] == 367.0
         assert abs(row["balance_due"] - 100.0) < 0.01
@@ -684,7 +685,7 @@ class TestReceiptsListAssurance:
         q.order_by.return_value.limit.return_value.all.return_value = [customer]
         with patch("routes.payments._scoped_customers_query", return_value=q):
             data = payments_client.get("/payments/search-entities?type=customers&q=Ali").get_json()
-        assert data[0]["display"] == "Ali - 050"
+        assert data["data"][0]["display"] == "Ali - 050"
 
 
 class TestPaymentsGapCoverage:
@@ -917,6 +918,7 @@ class TestPaymentsGapCoverage:
         ):
             resp = payments_client.get("/payments/api/customer-balance/1")
         assert resp.status_code == 200
+        assert resp.get_json()["data"]["currency"] == "AED"
 
 
 class TestReceiptsPaginationGap:

@@ -50,6 +50,6 @@ class TestPaymentsReceipts:
         resp = auth_client.get("/payments/search-entities?type=customer&q=Test")
         assert resp.status_code == 200
         data = resp.get_json()
-        assert len(data) >= 1
-        assert data[0]["name"] == "Test Customer"
-        assert data[0]["phone"] == "0555000001"
+        assert len(data["data"]) >= 1
+        assert data["data"][0]["name"] == "Test Customer"
+        assert data["data"][0]["phone"] == "0555000001"

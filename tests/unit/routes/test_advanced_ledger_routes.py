@@ -474,7 +474,7 @@ class TestAdvancedLedgerAPI:
         assert resp.status_code == 200
         body = resp.get_json()
         assert body["success"] is True
-        assert body["total"] >= 1
+        assert body["data"]["total"] >= 1
 
     def test_events_stream_by_type(self, advanced_ledger_client):
         with _advanced_ledger_patches():
@@ -518,12 +518,12 @@ class TestAdvancedLedgerAPI:
             resp = advanced_ledger_client.get(
                 "/ledger/advanced/api/financial-ratios?date_from=2026-01-01&date_to=2026-06-01"
             )
-        assert resp.get_json()["ratios"]["current_ratio"] == 1.5
+        assert resp.get_json()["data"]["ratios"]["current_ratio"] == 1.5
 
     def test_api_trend_analysis(self, advanced_ledger_client):
         with _advanced_ledger_patches():
             resp = advanced_ledger_client.get("/ledger/advanced/api/trend-analysis?months=6")
-        assert len(resp.get_json()["trends"]) == 1
+        assert len(resp.get_json()["data"]["trends"]) == 1
 
     def test_api_forecasting(self, advanced_ledger_client):
         with _advanced_ledger_patches():
