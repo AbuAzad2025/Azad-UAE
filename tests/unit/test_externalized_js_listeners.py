@@ -32,6 +32,6 @@ def test_purchases_js_fallback_warns_once_and_resets():
 
 
 def test_pos_js_reads_currency_from_meta():
-    js = read_file("static/js/pos/index.js")
-    assert "window.POS_BASE_CURRENCY" not in js, "pos/index.js should not use window.POS_BASE_CURRENCY"
-    assert 'meta[name="pos-base-currency"]' in js, "pos/index.js should read currency from meta tag"
+    js = read_file("static/js/pos/core.js")
+    assert "window.POS_BASE_CURRENCY" not in js, "pos/core.js should not use window.POS_BASE_CURRENCY"
+    assert 'meta[name="pos-base-currency"]' in js, "pos/core.js should read currency from meta tag"

@@ -4,8 +4,6 @@ import ast
 import os
 import sys
 
-import pytest
-
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 
@@ -56,7 +54,7 @@ class TestSeedTranslations:
 
     def test_i18n_py_has_translations_dict(self):
         i18n_path = os.path.join(ROOT, "utils", "i18n.py")
-        with open(i18n_path, "r", encoding="utf-8") as f:
+        with open(i18n_path, encoding="utf-8") as f:
             source = f.read()
         tree = ast.parse(source)
         found = False

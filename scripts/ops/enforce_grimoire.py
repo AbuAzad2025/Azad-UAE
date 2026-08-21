@@ -665,6 +665,7 @@ ALLOWED_ROOT_FILES: frozenset[str] = frozenset(
         "postcss.config.js",
         "postcss.config.min.js",
         "templates_rendered.json",
+        "babel.cfg",
         "nul",
     }
 )
