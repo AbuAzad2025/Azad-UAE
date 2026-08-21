@@ -89,8 +89,10 @@ class TestFactoryRoutes:
             assert "'nonce-testnonce'" in csp
             # Phase 1e complete: unsafe-inline is dropped in strict mode.
             assert "'unsafe-inline'" not in csp
+            # Phase 2 complete: no eval paths found, unsafe-eval is dropped in strict mode.
+            assert "'unsafe-eval'" not in csp
 
-    def test_csp_header_keeps_unsafe_inline_when_not_strict(self, monkeypatch):
+    def test_csp_header_keeps_unsafe_directives_when_not_strict(self, monkeypatch):
         monkeypatch.setenv("SKIP_SYSTEM_INTEGRITY", "1")
         from flask import g, make_response
 
@@ -107,8 +109,9 @@ class TestFactoryRoutes:
                 resp = func(resp)
             csp = resp.headers.get("Content-Security-Policy", "")
             assert "'nonce-testnonce'" in csp
-            # Rollback mode retains unsafe-inline for compatibility.
+            # Rollback mode retains unsafe-inline/unsafe-eval for compatibility.
             assert "'unsafe-inline'" in csp
+            assert "'unsafe-eval'" in csp
 
     def test_is_migration_command(self):
         import sys

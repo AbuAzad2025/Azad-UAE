@@ -280,9 +280,12 @@ def create_app(config_class=Config) -> Flask:
         # Phase 1 complete: all inline blocks now carry a nonce, so unsafe-inline
         # is dropped when CSP_STRICT is True. Keep it only as an emergency rollback.
         unsafe_inline = "'unsafe-inline' " if not csp_strict else ""
+        # Phase 2: no eval/new Function usage found in application code or bundled
+        # vendor libs under static/, so unsafe-eval is dropped in strict mode.
+        unsafe_eval = "'unsafe-eval' " if not csp_strict else ""
         csp = (
             "default-src 'self'; "
-            f"script-src 'self' {nonce_directive}{unsafe_inline}'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+            f"script-src 'self' {nonce_directive}{unsafe_inline}{unsafe_eval}https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
             f"style-src 'self' {nonce_directive}{unsafe_inline}https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
             "img-src 'self' data: blob:; "
@@ -292,7 +295,6 @@ def create_app(config_class=Config) -> Flask:
             "object-src 'none'; "
             "base-uri 'self'; "
             "form-action 'self'; "
-            # unsafe-eval remains until dynamic eval paths are refactored (Phase 2).
             # CSP_STRICT=false provides an instant rollback if anything breaks.
         )
         response.headers["Content-Security-Policy"] = csp
