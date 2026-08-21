@@ -1750,4 +1750,10 @@ def downgrade():
             batch_op.f("fk_advanced_expenses_supplier_id"), "suppliers", ["supplier_id"], ["id"]
         )
 
+    # Drop tables that were created in this migration's upgrade
+    op.drop_index("ix_sync_batches_tenant_id", table_name="sync_batches")
+    op.drop_table("sync_batches")
+    op.drop_index("ix_pos_order_types_tenant_id", table_name="pos_order_types")
+    op.drop_table("pos_order_types")
+
     # ### end Alembic commands ###
