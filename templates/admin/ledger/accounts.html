@@ -142,7 +142,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 function deleteAccount(accountId, accountName) {
   document.getElementById('accountName').textContent = accountName;
   document.getElementById('deleteForm').action = "{{ url_for('admin_ledger.delete_account', id=0) }}".replace('/0/delete', '/' + accountId + '/delete');

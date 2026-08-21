@@ -219,11 +219,6 @@ def _criteria_for_model(tid: int | None):
     return _criteria
 
 
-# Per-request cache of the (tid -> criteria closure) so we don't rebuild /
-# re-resolve current_user on every single query execution within a request.
-_CRITERIA_CACHE: dict = {}
-
-
 def _get_criteria(tid: int | None):
     try:
         from flask import g

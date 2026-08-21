@@ -364,7 +364,7 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='adminlte/plugins/sweetalert2/sweetalert2.all.min.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 const i18n = {{ {
   'confirm_delete': t('Confirm_Delete'),
   'yes_delete': t('Yes_Delete_All'),

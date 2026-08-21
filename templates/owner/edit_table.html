@@ -94,7 +94,7 @@
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 const i18n = {{ {
   'No_Changes': t('No_Changes'),
   'No_Data_Modified': t('No_Data_Modified'),
@@ -112,7 +112,7 @@ const i18n = {{ {
 }|tojson }};
 </script>
 <script src="{{ url_for('static', filename='adminlte/plugins/sweetalert2/sweetalert2.all.min.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-action]');
   if (!el) return;

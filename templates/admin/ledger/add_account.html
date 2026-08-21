@@ -218,7 +218,7 @@
 {% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}">
   .ledger-account-form .form-control,
   .ledger-account-form textarea.form-control,
   .ledger-account-form select.form-control {
@@ -265,7 +265,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 $(document).ready(() => {
   function toggleBankFields() {
     const accountType = $('select[name="type"]').val();

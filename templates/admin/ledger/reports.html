@@ -240,7 +240,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 // {{ t('ملء') }} {{ t('List') }} {{ t('Accounts') }}
 document.addEventListener('DOMContentLoaded', () => {
   const select = document.querySelector('select[name="account_id"]');
@@ -283,7 +283,7 @@ document.getElementById('accountStatementForm').addEventListener('submit', funct
 {% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}">
   .ledger-reports-form .form-control,
   .ledger-reports-form textarea.form-control,
   .ledger-reports-form select.form-control {

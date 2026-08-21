@@ -118,9 +118,9 @@
 </div>
 </div>
 {% endblock %}
-{% block extra_css %}<style>@media print{@page{size:A4 landscape;margin:10mm}}</style>{% endblock %}
+{% block extra_css %}<style nonce="{{ csp_nonce() }}">@media print{@page{size:A4 landscape;margin:10mm}}</style>{% endblock %}
 {% block extra_js %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-action="confirm-submit"]');
   if (!el) return;

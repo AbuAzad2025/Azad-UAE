@@ -457,7 +457,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 $(document).ready(() => {
   setTimeout(() => {
     $('.alert:not(.alert-danger)').fadeOut('slow');

@@ -1,4 +1,5 @@
 import logging
+import os
 from datetime import datetime
 
 from flask import Flask
@@ -37,12 +38,21 @@ def init_socketio(app: Flask):
     global socketio
 
     cors_origins = _socketio_cors_origins(app)
+    message_queue = (os.environ.get("REDIS_URL") or "").strip() or None
+    if message_queue:
+        logger.info("[WebSocket] Socket.IO message queue enabled via REDIS_URL for multi-worker fan-out")
+    else:
+        logger.warning(
+            "[WebSocket] REDIS_URL unset — Socket.IO emits stay per-worker; "
+            "set REDIS_URL in multi-worker deployments"
+        )
     socketio = SocketIO(
         app,
         cors_allowed_origins=cors_origins,
         async_mode="threading",
         logger=False,
         engineio_logger=False,
+        message_queue=message_queue,
     )
 
     @socketio.on("connect")

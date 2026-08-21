@@ -183,12 +183,12 @@
 
 {% block extra_js %}
 {{ super() }}
-<script>
+<script nonce="{{ csp_nonce() }}">
 const i18n = {{ {
   'Confirm_Activate_Tenant': t('Confirm_Activate_Tenant'),
 }|tojson }};
 </script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.addEventListener('submit', (e) => {
   const el = e.target.closest('[data-action="confirm-submit"]');
   if (!el) return;

@@ -209,12 +209,12 @@
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 const i18n = {{ {
   'Confirm_Disable_User': t('Confirm_Disable_User'),
 }|tojson }};
 </script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-action="reset-table-search"]');
   if (!el) return;

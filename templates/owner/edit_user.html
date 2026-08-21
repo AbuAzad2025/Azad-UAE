@@ -175,7 +175,7 @@
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 const i18n = {{ {
   'Branch_Required_For_Role': t('Branch_Required_For_Role'),
   'Branch_Not_Required': t('Branch_Not_Required'),
@@ -186,7 +186,7 @@ const i18n = {{ {
   'Are_You_Sure': t('Are_You_Sure'),
 }|tojson }};
 </script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 $(document).ready(() => {
   function branchRequiredForSelectedRole() {
     const slug = $('#role_select option:selected').data('role-slug');

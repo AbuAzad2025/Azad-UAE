@@ -1,0 +1,23 @@
+# See https://pre-commit.com for more information
+# Install: pip install pre-commit && pre-commit install
+# Run on all files: pre-commit run --all-files
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude_types: [svg]
+      - id: end-of-file-fixer
+        exclude_types: [svg]
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Pin matches CI (.github/workflows/ci.yml) — do not bump independently.
+    rev: v0.15.22
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format

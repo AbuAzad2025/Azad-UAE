@@ -23,7 +23,7 @@
 <div class="card"><div class="card-header"><h3>{{ t('Financial_Performance_12_Months') }}</h3></div><div class="card-body"><canvas id="financialChart" height="80"></canvas></div></div>
 </div>
 <script src="{{ url_for('static', filename='adminlte/plugins/chartjs/chart.min.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 const i18n = {{ {
   'revenue': t('Revenue'),
   'expenses': t('Expenses'),

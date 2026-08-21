@@ -311,7 +311,7 @@
 
 {% block extra_js %}
 {{ super() }}
-<script>
+<script nonce="{{ csp_nonce() }}">
 const i18n = {{ {
   'error_details': t('Error_Details'),
   'first_seen': t('First_Seen'),

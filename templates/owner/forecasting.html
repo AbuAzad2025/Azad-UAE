@@ -44,7 +44,7 @@
   </div>
 </div>
 <script src="{{ url_for('static', filename='adminlte/plugins/chartjs/chart.min.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 new Chart(document.getElementById('forecastChart'), {
   type: 'line',
   data: {

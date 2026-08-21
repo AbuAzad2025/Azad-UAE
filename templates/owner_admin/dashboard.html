@@ -4,7 +4,7 @@
 {% block page_title %}{{ _('دليل المستأجرين والتحكم بالاشتراكات') }}{% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}">
 .sa-stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -316,7 +316,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 $(() => {
     $('#activateModal').on('show.bs.modal', (event) => {
       const btn = $(event.relatedTarget);

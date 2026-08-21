@@ -471,7 +471,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 const i18n = {{ {
   'verify_success': t('Verify_Success'),
   'verify_failed': t('Verify_Failed'),

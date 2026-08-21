@@ -74,8 +74,8 @@ class ShopCustomerAuthService:
             raise ValueError(gettext("الاسم مطلوب."))
         email = ShopCustomerAuthService.normalize_email(email)
         phone_norm = ShopCustomerAuthService.normalize_phone(phone)
-        if not password or len(password) < 6:
-            raise ValueError(gettext("كلمة المرور 6 أحرف على الأقل."))
+        if not password or len(password) < 8:
+            raise ValueError(gettext("كلمة المرور 8 أحرف على الأقل."))
 
         existing = ShopCustomerAccount.query.filter_by(tenant_id=tenant_id, email=email).first()
         if existing:
@@ -161,8 +161,8 @@ class ShopCustomerAuthService:
         token = (token or "").strip()
         if not token:
             raise ValueError(gettext("رمز الاستعادة غير صالح."))
-        if not new_password or len(new_password) < 6:
-            raise ValueError(gettext("كلمة المرور 6 أحرف على الأقل."))
+        if not new_password or len(new_password) < 8:
+            raise ValueError(gettext("كلمة المرور 8 أحرف على الأقل."))
 
         account = ShopCustomerAccount.query.filter_by(
             tenant_id=int(tenant_id),

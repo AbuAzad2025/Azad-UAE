@@ -353,7 +353,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-action="create-backup"]');
   if (!el) return;

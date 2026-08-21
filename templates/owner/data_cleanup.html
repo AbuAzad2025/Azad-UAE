@@ -105,12 +105,12 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 const i18n = {{ {
   'Confirm_Data_Cleanup': t('Confirm_Data_Cleanup'),
 }|tojson }};
 </script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-action="confirm-submit"]');
   if (!el) return;

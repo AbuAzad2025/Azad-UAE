@@ -178,7 +178,7 @@ class User(UserMixin, db.Model):
         Older hashes stored with a different count still verify via
         werkzeug's check_password_hash (which reads the count from the hash).
         """
-        self.password_hash = generate_password_hash(password, method="pbkdf2:sha256:260000", salt_length=16)
+        self.password_hash = generate_password_hash(password, method="pbkdf2:sha256:600000", salt_length=16)
 
     def check_password(self, password):
         """Verify password"""
@@ -186,7 +186,7 @@ class User(UserMixin, db.Model):
 
     def set_supervisor_pin(self, pin):
         """Hash and set the POS supervisor override PIN (same pbkdf2 scheme as passwords)."""
-        self.supervisor_pin_hash = generate_password_hash(str(pin), method="pbkdf2:sha256:260000", salt_length=16)
+        self.supervisor_pin_hash = generate_password_hash(str(pin), method="pbkdf2:sha256:600000", salt_length=16)
 
     def check_supervisor_pin(self, pin) -> bool:
         """Constant-time verify against the stored supervisor PIN hash."""

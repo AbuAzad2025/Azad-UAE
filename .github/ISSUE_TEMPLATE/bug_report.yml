@@ -1,0 +1,82 @@
+name: 🐞 تقرير خطأ / Bug Report
+description: أبلغ عن مشكلة في نظام AZAD — Report a problem with the AZAD system
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        شكراً لإبلاغك! املأ التفاصيل بدقة ليتمكن الفريق من إعادة إنتاج المشكلة.
+        Thanks for reporting! Please fill in details so we can reproduce.
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: الوحدة المتأثرة / Affected Module
+      options:
+        - نقطة البيع / POS
+        - المبيعات / Sales
+        - المشتريات / Purchases
+        - المخزون والمستودعات / Inventory & Warehouse
+        - المحاسبة والدفتر / Ledger & GL
+        - المدفوعات / Payments
+        - الموارد البشرية / HR
+        - لوحة المالك / Owner Panel
+        - المتجر الإلكتروني / Shop
+        - أخرى / Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: خطوات إعادة الإنتاج / Steps to Reproduce
+      placeholder: |
+        1. اذهب إلى...
+        2. اضغط على...
+        3. لاحظ الخطأ
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: السلوك المتوقع / Expected Behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: السلوك الفعلي / Actual Behavior
+      description: Include error messages / screenshots if possible.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: الأثر / Impact Severity
+      options:
+        - حرج — توقف كامل أو خسارة بيانات / Critical (blocker or data loss)
+        - عالٍ — وظيفة أساسية معطلة / High (core flow broken)
+        - متوسط — حل بديل موجود / Medium (workaround exists)
+        - منخفض — تجربة استخدام / Low (cosmetic or minor UX)
+    validations:
+      required: true
+
+  - type: input
+    id: env
+    attributes:
+      label: البيئة / Environment
+      placeholder: "Production / Staging / Dev — browser + version"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: attestation
+    attributes:
+      label: إقرار / Attestation
+      options:
+        - label: بحثت في القضايا الموجودة ولم أجد تكراراً / I searched existing issues
+          required: true
