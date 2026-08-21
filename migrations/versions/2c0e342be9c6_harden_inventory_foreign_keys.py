@@ -120,16 +120,17 @@ def downgrade():
         with op.batch_alter_table(table, schema=None) as batch_op:
             batch_op.drop_index(batch_op.f(index_name))
 
-    # Restore CASCADE FKs (drop named RESTRICT, recreate unnamed CASCADE)
+    # Restore CASCADE FKs (drop named RESTRICT, recreate named CASCADE)
     for fk in FK_CHANGES:
         table = fk["table"]
         column = fk["column"]
         if not _table_exists(table) or not _column_exists(table, column):
             continue
+        cascade_name = f"{fk['new_name']}_cascade"
         with op.batch_alter_table(table, schema=None) as batch_op:
             batch_op.drop_constraint(fk["new_name"], type_="foreignkey")
             batch_op.create_foreign_key(
-                None,
+                cascade_name,
                 fk["ref_table"],
                 [column],
                 [fk["ref_column"]],
