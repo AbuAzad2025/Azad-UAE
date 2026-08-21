@@ -506,7 +506,9 @@ class TestAdminLedgerApi:
         with _ledger_patches(accounts_query=q):
             resp = ledger_client.get("/admin/ledger/api/account-balance/15")
         assert resp.status_code == 200
-        data = resp.get_json()
+        body = resp.get_json()
+        assert body["success"] is True
+        data = body["data"]
         assert data["account_code"] == "1105"
         assert data["balance"] == 1234.56
 
@@ -520,7 +522,9 @@ class TestAdminLedgerApi:
                 query_string={"date_from": "2025-01-01", "branch_id": 2},
             )
         assert resp.status_code == 200
-        data = resp.get_json()
+        body = resp.get_json()
+        assert body["success"] is True
+        data = body["data"]
         assert data["statement"] == statement
         assert data["branch_id"] == 2
 

@@ -4,7 +4,6 @@ from flask import (
     Blueprint,
     current_app,
     flash,
-    jsonify,
     redirect,
     render_template,
     request,
@@ -18,6 +17,7 @@ from models import GLAccount, GLJournalEntry, GLJournalLine
 from models.gl_account_registry import PROTECTED_ACCOUNT_CODES, validate_account_code_type
 from services.gl_service import GLService
 from services.logging_core import LoggingCore
+from utils.api_response import success_response
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
 from utils.decorators import admin_required
@@ -517,8 +517,8 @@ def api_account_balance(account_id):
     account = _accounts().filter_by(id=account_id).first_or_404()
     balance = account.get_balance()
 
-    return jsonify(
-        {
+    return success_response(
+        data={
             "account_code": account.code,
             "account_name": account.full_name,
             "balance": float(balance),
@@ -537,8 +537,8 @@ def api_account_statement(account_id):
     date_to = request.args.get("date_to")
     branch_id = request.args.get("branch_id", type=int)
     statement = GLService.get_account_statement(account_id, date_from, date_to, branch_id)
-    return jsonify(
-        {
+    return success_response(
+        data={
             "account": {"code": account.code, "name": account.full_name},
             "statement": statement,
             "branch_id": branch_id,
