@@ -73,15 +73,8 @@ jobs:
           set -e
           echo "=== Upgrade to head ==="
           flask db upgrade head
-          echo "=== Downgrade to base one step at a time ==="
-          while true; do
-            current=$(flask db current 2>/dev/null || true)
-            echo "Current revision: $current"
-            if [ -z "$current" ] || [ "$current" = "None" ]; then
-              break
-            fi
-            flask db downgrade -- -1
-          done
+          echo "=== Downgrade to base ==="
+          flask db downgrade base
           echo "=== Upgrade back to head ==="
           flask db upgrade head
           echo "=== Current version ==="
