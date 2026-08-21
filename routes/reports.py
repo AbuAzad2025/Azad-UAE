@@ -344,8 +344,7 @@ def partners():
                     db.session.query(
                         Payment.customer_id.label("cid"),
                         func.coalesce(func.sum(Payment.amount_aed), 0).label("amt"),
-                    )
-                    .filter(
+                    ).filter(
                         Payment.direction == "outgoing",
                         *payment_scope,
                     ),
@@ -438,43 +437,95 @@ def partners():
     suppliers = _scoped_supplier_query().all()
     suppliers_summary = []
 
-    for sup in suppliers:
-        purchases_query = db.session.query(func.sum(Purchase.amount_aed)).filter(
-            Purchase.supplier_id == sup.id,
-            Purchase.tenant_id == sup.tenant_id,
-            Purchase.status == "confirmed",
-        )
-        # Paid TO Supplier (Outgoing)
-        paid_query_total = db.session.query(func.sum(Payment.amount_aed)).filter(
-            Payment.supplier_id == sup.id,
-            Payment.tenant_id == sup.tenant_id,
-            Payment.direction == "outgoing",
-            payment_affects_balance(Payment),
-        )
-        # Received FROM Supplier (Incoming - Refunds)
-        received_query = db.session.query(func.sum(Payment.amount_aed)).filter(
-            Payment.supplier_id == sup.id,
-            Payment.tenant_id == sup.tenant_id,
-            Payment.direction == "incoming",
-            payment_affects_balance(Payment),
-        )
+    if suppliers:
+        supplier_ids = [s.id for s in suppliers]
+        supplier_tenant_ids = {s.tenant_id for s in suppliers}
 
-        if date_from:
-            purchases_query = purchases_query.filter(func.date(Purchase.purchase_date) >= date_from)
-            paid_query_total = paid_query_total.filter(func.date(Payment.payment_date) >= date_from)
-            received_query = received_query.filter(func.date(Payment.payment_date) >= date_from)
-        if date_to:
-            purchases_query = purchases_query.filter(func.date(Purchase.purchase_date) <= date_to)
-            paid_query_total = paid_query_total.filter(func.date(Payment.payment_date) <= date_to)
-            received_query = received_query.filter(func.date(Payment.payment_date) <= date_to)
-        if scoped_branch_id is not None:
-            purchases_query = purchases_query.filter(Purchase.branch_id == scoped_branch_id)
-            paid_query_total = paid_query_total.filter(Payment.branch_id == scoped_branch_id)
-            received_query = received_query.filter(Payment.branch_id == scoped_branch_id)
+        def _sup_date_filters(q, *pairs):
+            for col, d_from, d_to in pairs:
+                if d_from:
+                    q = q.filter(func.date(col) >= d_from)
+                if d_to:
+                    q = q.filter(func.date(col) <= d_to)
+            return q
 
-        total_purchases = purchases_query.scalar() or Decimal("0")
-        total_paid_to = paid_query_total.scalar() or Decimal("0")
-        total_refunds = received_query.scalar() or Decimal("0")
+        def _sup_branch_filter(q, branch_col):
+            if scoped_branch_id is not None:
+                q = q.filter(branch_col == scoped_branch_id)
+            return q
+
+        sup_purchase_rows = (
+            _sup_branch_filter(
+                _sup_date_filters(
+                    db.session.query(
+                        Purchase.supplier_id.label("sid"),
+                        func.coalesce(func.sum(Purchase.amount_aed), 0).label("amt"),
+                    ).filter(
+                        Purchase.supplier_id.in_(supplier_ids),
+                        Purchase.tenant_id.in_(supplier_tenant_ids),
+                        Purchase.status == "confirmed",
+                    ),
+                    Purchase.purchase_date,
+                    date_from,
+                    date_to,
+                ),
+                Purchase.branch_id,
+            )
+            .group_by(Purchase.supplier_id)
+            .all()
+        )
+        purchases_map = {r.sid: r.amt or Decimal("0") for r in sup_purchase_rows}
+
+        sup_paid_rows = (
+            _sup_branch_filter(
+                _sup_date_filters(
+                    db.session.query(
+                        Payment.supplier_id.label("sid"),
+                        func.coalesce(func.sum(Payment.amount_aed), 0).label("amt"),
+                    ).filter(
+                        Payment.supplier_id.in_(supplier_ids),
+                        Payment.tenant_id.in_(supplier_tenant_ids),
+                        Payment.direction == "outgoing",
+                        payment_affects_balance(Payment),
+                    ),
+                    Payment.payment_date,
+                    date_from,
+                    date_to,
+                ),
+                Payment.branch_id,
+            )
+            .group_by(Payment.supplier_id)
+            .all()
+        )
+        paid_map = {r.sid: r.amt or Decimal("0") for r in sup_paid_rows}
+
+        sup_refund_rows = (
+            _sup_branch_filter(
+                _sup_date_filters(
+                    db.session.query(
+                        Payment.supplier_id.label("sid"),
+                        func.coalesce(func.sum(Payment.amount_aed), 0).label("amt"),
+                    ).filter(
+                        Payment.supplier_id.in_(supplier_ids),
+                        Payment.tenant_id.in_(supplier_tenant_ids),
+                        Payment.direction == "incoming",
+                        payment_affects_balance(Payment),
+                    ),
+                    Payment.payment_date,
+                    date_from,
+                    date_to,
+                ),
+                Payment.branch_id,
+            )
+            .group_by(Payment.supplier_id)
+            .all()
+        )
+        refunds_map = {r.sid: r.amt or Decimal("0") for r in sup_refund_rows}
+
+        for sup in suppliers:
+            total_purchases = purchases_map.get(sup.id, Decimal("0"))
+            total_paid_to = paid_map.get(sup.id, Decimal("0"))
+            total_refunds = refunds_map.get(sup.id, Decimal("0"))
 
         # Balance = Purchases - (Paid - Refunds)
         # Or: Purchases - Net Paid

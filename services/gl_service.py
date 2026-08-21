@@ -1066,9 +1066,9 @@ class GLService:
         opening_rows = opening_q.group_by(GLJournalLine.account_id).all()
         opening_by_account = {row.account_id: (row.debit or 0, row.credit or 0) for row in opening_rows}
 
-        lines_query = _entry_filters(
-            GLJournalLine.query.options(joinedload(GLJournalLine.entry))
-        ).order_by(GLJournalLine.account_id, GLJournalEntry.entry_date, GLJournalEntry.id)
+        lines_query = _entry_filters(GLJournalLine.query.options(joinedload(GLJournalLine.entry))).order_by(
+            GLJournalLine.account_id, GLJournalEntry.entry_date, GLJournalEntry.id
+        )
         if date_from:
             lines_query = lines_query.filter(func.date(GLJournalEntry.entry_date) >= date_from)
         if date_to:

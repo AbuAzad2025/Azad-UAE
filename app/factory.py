@@ -271,16 +271,19 @@ def create_app(config_class=Config) -> Flask:
         if not app.debug and app.config.get("APP_ENV", "").lower() == "production":
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
-        csp_strict = app.config.get("CSP_STRICT", False)
+        csp_strict = app.config.get("CSP_STRICT", True)
         nonce = getattr(g, "csp_nonce", None)
-        if nonce is None and csp_strict:
+        if nonce is None:
             nonce = secrets.token_urlsafe(16)
             g.csp_nonce = nonce
-        nonce_directive = f"'nonce-{nonce}' " if nonce else ""
+        nonce_directive = f"'nonce-{nonce}' "
+        # Phase 1 complete: all inline blocks now carry a nonce, so unsafe-inline
+        # is dropped when CSP_STRICT is True. Keep it only as an emergency rollback.
+        unsafe_inline = "'unsafe-inline' " if not csp_strict else ""
         csp = (
             "default-src 'self'; "
-            f"script-src 'self' {nonce_directive}'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
-            f"style-src 'self' {nonce_directive}'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
+            f"script-src 'self' {nonce_directive}{unsafe_inline}'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+            f"style-src 'self' {nonce_directive}{unsafe_inline}https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
             "img-src 'self' data: blob:; "
             "media-src 'self' data: blob:; "
@@ -289,10 +292,7 @@ def create_app(config_class=Config) -> Flask:
             "object-src 'none'; "
             "base-uri 'self'; "
             "form-action 'self'; "
-            # NOTE: unsafe-inline is retained because ~300 templates still contain inline
-            # scripts/styles without a nonce. Phase 1 adds nonces to all inline blocks;
-            # once 1e is complete we can drop 'unsafe-inline' from script-src/style-src.
-            # unsafe-eval remains until dynamic eval paths are refactored.
+            # unsafe-eval remains until dynamic eval paths are refactored (Phase 2).
             # CSP_STRICT=false provides an instant rollback if anything breaks.
         )
         response.headers["Content-Security-Policy"] = csp

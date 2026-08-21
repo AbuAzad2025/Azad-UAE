@@ -227,9 +227,10 @@ class Config:
     ENABLE_LOAD_TESTING = _bool(os.environ.get("ENABLE_LOAD_TESTING"))
     ENABLE_FULL_REGRESSION = _bool(os.environ.get("ENABLE_FULL_REGRESSION"))
 
-    # CSP hardening: when True, inline scripts/styles must carry a request nonce.
-    # Default False preserves legacy behaviour until Phase 1e completes.
-    CSP_STRICT = _bool(os.environ.get("CSP_STRICT"))
+    # CSP hardening: when True, inline scripts/styles must carry a request nonce
+    # and 'unsafe-inline' is removed from script-src/style-src.
+    # Default True now that Phase 1e has tagged all inline blocks.
+    CSP_STRICT = _bool(os.environ.get("CSP_STRICT"), True)
 
     CURRENCY_API_PROVIDER = os.environ.get("CURRENCY_API_PROVIDER", "exchangerate-api")
     CURRENCY_API_KEY = os.environ.get("CURRENCY_API_KEY", "")

@@ -87,7 +87,28 @@ class TestFactoryRoutes:
                 resp = func(resp)
             csp = resp.headers.get("Content-Security-Policy", "")
             assert "'nonce-testnonce'" in csp
-            assert "'unsafe-inline'" in csp  # kept for rollback until Phase 1e
+            # Phase 1e complete: unsafe-inline is dropped in strict mode.
+            assert "'unsafe-inline'" not in csp
+
+    def test_csp_header_keeps_unsafe_inline_when_not_strict(self, monkeypatch):
+        monkeypatch.setenv("SKIP_SYSTEM_INTEGRITY", "1")
+        from flask import g, make_response
+
+        from config import Config
+
+        class RollbackConfig(Config):
+            CSP_STRICT = False
+
+        with _minimal_app(config_class=RollbackConfig) as app, app.test_request_context("/"):
+            g.csp_nonce = "testnonce"
+            resp = make_response("ok")
+            resp.content_type = "text/html"
+            for func in app.after_request_funcs[None]:
+                resp = func(resp)
+            csp = resp.headers.get("Content-Security-Policy", "")
+            assert "'nonce-testnonce'" in csp
+            # Rollback mode retains unsafe-inline for compatibility.
+            assert "'unsafe-inline'" in csp
 
     def test_is_migration_command(self):
         import sys
