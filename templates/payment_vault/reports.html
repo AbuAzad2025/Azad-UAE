@@ -13,7 +13,7 @@
 {% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}>
     .report-card {
         background: white;
         border-radius: 10px;
@@ -199,7 +199,7 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='adminlte/plugins/chartjs/chart.min.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}>
     // Revenue Chart
     const revenueCtx = document.getElementById('revenueChart').getContext('2d');
     new Chart(revenueCtx, {

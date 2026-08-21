@@ -6,7 +6,7 @@
   <title>{{ _('طباعة الإيصال') }} - {{ doc_number or receipt.receipt_number or receipt.payment_number }}</title>
   <link rel="stylesheet" href="{{ dist_url('css/erp-theme-unified.css') }}">
   {% include 'partials/print_styles.html' %}
-  <style>
+  <style nonce="{{ csp_nonce() }}>
     * { box-sizing: border-box; }
     body {
       margin: 0;

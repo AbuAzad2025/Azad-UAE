@@ -14,7 +14,7 @@
 
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}>
     /* D6: externalized inline styles */
     .inline-form { font-size: 2rem; }
     .inline-form { border-color:#006233!important; }

@@ -26,7 +26,7 @@
 {% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}>
     .stat-card {
         border-radius: 15px;
         padding: 25px;
@@ -390,7 +390,7 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='adminlte/plugins/chartjs/chart.min.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}>
     document.addEventListener('click', (e) => {
         const el = e.target.closest('[data-action]');
         if (!el) return;

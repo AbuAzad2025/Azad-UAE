@@ -255,7 +255,7 @@
 {% block extra_js %}
 {% include 'partials/datatables_assets.html' %}
 
-<script>
+<script nonce="{{ csp_nonce() }}>
 
 $(document).ready(() => {
 

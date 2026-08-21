@@ -4,7 +4,7 @@
 
 {% block extra_css %}
 {% include 'partials/select2_assets.html' %}
-<style>
+<style nonce="{{ csp_nonce() }}>
 .voucher-form .form-control,
 .voucher-form .form-select {
   min-height: 48px;
@@ -196,14 +196,14 @@
 </div>
 
 
-<script id="customers-data" type="application/json">{{ customers_json|tojson }}</script>
-<script id="suppliers-data" type="application/json">{{ suppliers_json|tojson }}</script>
+<script id="customers-data" type="application/json" nonce="{{ csp_nonce() }}">{{ customers_json|tojson }}</script>
+<script id="suppliers-data" type="application/json" nonce="{{ csp_nonce() }}">{{ suppliers_json|tojson }}</script>
 
 {% endblock %}
 
 {% block extra_js %}
 {% include 'partials/select2_assets.html' %}
-<script>
+<script nonce="{{ csp_nonce() }}>
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-action="select-direction"]');
   if (!el) return;
