@@ -5,12 +5,13 @@ Revises: f0d6a3c015ab
 Create Date: 2026-08-21 01:08:49.600231
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = 'fd3c5d0bb42e'
-down_revision = 'f0d6a3c015ab'
+revision = "fd3c5d0bb42e"
+down_revision = "f0d6a3c015ab"
 branch_labels = None
 depends_on = None
 
@@ -19,17 +20,37 @@ depends_on = None
 NEW_INDEXES = [
     ("payments", "idx_payments_tenant_sale_date", ["tenant_id", "sale_id", "payment_date"], False),
     ("payments", "idx_payments_tenant_purchase_date", ["tenant_id", "purchase_id", "payment_date"], False),
-    ("payments", "idx_payments_tenant_customer_date", ["tenant_id", "customer_id", "payment_date", "payment_confirmed"], False),
-    ("payments", "idx_payments_tenant_supplier_date", ["tenant_id", "supplier_id", "payment_date", "payment_confirmed"], False),
+    (
+        "payments",
+        "idx_payments_tenant_customer_date",
+        ["tenant_id", "customer_id", "payment_date", "payment_confirmed"],
+        False,
+    ),
+    (
+        "payments",
+        "idx_payments_tenant_supplier_date",
+        ["tenant_id", "supplier_id", "payment_date", "payment_confirmed"],
+        False,
+    ),
     ("purchases", "idx_purchases_tenant_supplier_date", ["tenant_id", "supplier_id", "purchase_date"], False),
     ("purchases", "idx_purchases_tenant_status_date", ["tenant_id", "status", "purchase_date"], False),
-    ("stock_movements", "idx_stock_movements_tenant_product_warehouse_date", ["tenant_id", "product_id", "warehouse_id", "created_at"], False),
+    (
+        "stock_movements",
+        "idx_stock_movements_tenant_product_warehouse_date",
+        ["tenant_id", "product_id", "warehouse_id", "created_at"],
+        False,
+    ),
     ("gl_journal_entries", "idx_gl_entries_tenant_date_status", ["tenant_id", "entry_date", "status"], False),
     ("gl_journal_lines", "idx_gl_lines_tenant_account_entry", ["tenant_id", "account_id", "entry_id"], False),
     ("audit_logs", "idx_audit_logs_tenant_table_created", ["tenant_id", "table_name", "created_at"], False),
     ("audit_logs", "idx_audit_logs_tenant_action_created", ["tenant_id", "action", "created_at"], False),
     ("sales", "idx_sales_tenant_pos_session", ["tenant_id", "pos_session_id"], False),
-    ("pos_cash_movements", "idx_pos_cash_movements_tenant_shift_session", ["tenant_id", "shift_id", "session_id"], False),
+    (
+        "pos_cash_movements",
+        "idx_pos_cash_movements_tenant_shift_session",
+        ["tenant_id", "shift_id", "session_id"],
+        False,
+    ),
     ("cheques", "idx_cheques_tenant_status_due_date", ["tenant_id", "status", "due_date"], False),
 ]
 

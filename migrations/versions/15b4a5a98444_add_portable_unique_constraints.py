@@ -5,12 +5,13 @@ Revises: 2c0e342be9c6
 Create Date: 2026-08-21 01:06:59.782223
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = '15b4a5a98444'
-down_revision = '2c0e342be9c6'
+revision = "15b4a5a98444"
+down_revision = "2c0e342be9c6"
 branch_labels = None
 depends_on = None
 
@@ -39,9 +40,7 @@ def _deduplicate_column(table: str, column: str):
         return
 
     # Normalize empty strings to NULL
-    op.execute(
-        sa.text(f"UPDATE {table} SET {column} = NULL WHERE {column} = '' OR TRIM({column}) = ''")
-    )
+    op.execute(sa.text(f"UPDATE {table} SET {column} = NULL WHERE {column} = '' OR TRIM({column}) = ''"))
 
     # Deduplicate using Python for portability (PG + SQLite)
     bind = op.get_bind()
@@ -60,19 +59,12 @@ def _deduplicate_column(table: str, column: str):
 
     for row_id, (_tenant_id, value) in duplicates:
         new_value = f"{value}-dup-{row_id}"[:200]  # cap at 200 chars
-        op.execute(
-            sa.text(f"UPDATE {table} SET {column} = :val WHERE id = :id").bindparams(
-                val=new_value, id=row_id
-            )
-        )
+        op.execute(sa.text(f"UPDATE {table} SET {column} = :val WHERE id = :id").bindparams(val=new_value, id=row_id))
 
 
 def _drop_index_if_exists(table: str, index_name: str):
     if _index_exists(table, index_name):
         op.drop_index(index_name, table_name=table)
-
-
-
 
 
 def upgrade():
@@ -96,9 +88,7 @@ def upgrade():
         _deduplicate_column("shop_product_variants", "sku")
         _drop_index_if_exists("shop_product_variants", "ix_shop_product_variants_sku")
         with op.batch_alter_table("shop_product_variants", schema=None) as batch_op:
-            batch_op.create_unique_constraint(
-                "uq_shop_product_variants_tenant_sku", ["tenant_id", "sku"]
-            )
+            batch_op.create_unique_constraint("uq_shop_product_variants_tenant_sku", ["tenant_id", "sku"])
 
     # ── 3. Tenant-scoped contact email uniqueness ───────────────────────────
     if _table_exists("customers") and _column_exists("customers", "email"):
@@ -119,9 +109,7 @@ def upgrade():
         _deduplicate_column("card_payments", "transaction_id")
         _drop_index_if_exists("card_payments", "ix_card_payments_transaction_id")
         with op.batch_alter_table("card_payments", schema=None) as batch_op:
-            batch_op.create_unique_constraint(
-                "uq_card_payments_tenant_transaction", ["tenant_id", "transaction_id"]
-            )
+            batch_op.create_unique_constraint("uq_card_payments_tenant_transaction", ["tenant_id", "transaction_id"])
 
 
 def downgrade():

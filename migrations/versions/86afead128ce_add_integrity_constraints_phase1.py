@@ -5,12 +5,13 @@ Revises: e1f2a3b4c5d6
 Create Date: 2026-08-21 01:05:22.001375
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = '86afead128ce'
-down_revision = 'e1f2a3b4c5d6'
+revision = "86afead128ce"
+down_revision = "e1f2a3b4c5d6"
 branch_labels = None
 depends_on = None
 
@@ -68,8 +69,18 @@ def upgrade():
         ("sales", "ck_sales_payment_status", "payment_status", "('unpaid','partial','paid','pending_cheque')"),
         ("purchases", "ck_purchases_status", "status", "('draft','confirmed','cancelled')"),
         ("gl_accounts", "ck_gl_accounts_type", "type", "('asset','liability','equity','revenue','expense')"),
-        ("gl_journal_entries", "ck_gl_entries_status", "status", "('draft','validated','posted','reversed','cancelled','error')"),
-        ("stock_movements", "ck_stock_movement_type", "movement_type", "('purchase','sale','adjustment','return','damage','transfer')"),
+        (
+            "gl_journal_entries",
+            "ck_gl_entries_status",
+            "status",
+            "('draft','validated','posted','reversed','cancelled','error')",
+        ),
+        (
+            "stock_movements",
+            "ck_stock_movement_type",
+            "movement_type",
+            "('purchase','sale','adjustment','return','damage','transfer')",
+        ),
     ]
     for table, name, column, predicate in enum_checks:
         if _table_exists(table) and _column_exists(table, column):

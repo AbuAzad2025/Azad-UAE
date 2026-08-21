@@ -294,9 +294,7 @@ class BackupService:
             return archive_path, False
         crypto = cls._get_crypto()
         if not crypto.enabled:
-            raise BackupCryptoError(
-                "Encrypted backup found but BACKUP_ENCRYPTION_KEY is not configured"
-            )
+            raise BackupCryptoError("Encrypted backup found but BACKUP_ENCRYPTION_KEY is not configured")
         work = tempfile.mkdtemp(prefix="azad_decrypt_")
         decrypted_path = os.path.join(work, os.path.basename(archive_path)[: -len(".enc")])
         crypto.decrypt_file(archive_path, decrypted_path)
@@ -1431,9 +1429,9 @@ This archive does NOT include secrets, .env, or AI runtime memory.
             try:
                 with cls._open_archive_for_read(path) as readable_path, tarfile.open(readable_path, "r:gz") as tar:
                     if "manifest.json" in tar.getnames():
-                            member = tar.extractfile("manifest.json")
-                            if member:
-                                info["manifest"] = json.loads(member.read().decode("utf-8"))
+                        member = tar.extractfile("manifest.json")
+                        if member:
+                            info["manifest"] = json.loads(member.read().decode("utf-8"))
             except Exception as e:
                 info["manifest_error"] = str(e)[:200]
         return info
@@ -1467,7 +1465,9 @@ This archive does NOT include secrets, .env, or AI runtime memory.
             except Exception:
                 result["warnings"].append("sidecar unreadable")
 
-        if (filename.endswith(".tar.gz") or filename.endswith(".tar.gz.enc")) and filename.startswith(cls.BACKUP_PREFIX):
+        if (filename.endswith(".tar.gz") or filename.endswith(".tar.gz.enc")) and filename.startswith(
+            cls.BACKUP_PREFIX
+        ):
             return cls._verify_modern_archive(path, result)
 
         if filename.endswith(".gz") or filename.endswith(".dump") or filename.endswith(".enc"):
@@ -1804,7 +1804,9 @@ This archive does NOT include secrets, .env, or AI runtime memory.
 
         work = tempfile.mkdtemp(prefix="azad_restore_")
         try:
-            if (filename.endswith(".tar.gz") or filename.endswith(".tar.gz.enc")) and filename.startswith(cls.BACKUP_PREFIX):
+            if (filename.endswith(".tar.gz") or filename.endswith(".tar.gz.enc")) and filename.startswith(
+                cls.BACKUP_PREFIX
+            ):
                 with cls._open_archive_for_read(path) as readable_path, tarfile.open(readable_path, "r:gz") as tar:
                     tar.extract("db.dump", work, filter="data")
                     if restore_uploads and "uploads.tar.gz" in tar.getnames():
