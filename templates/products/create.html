@@ -383,4 +383,10 @@ $(function() {
 });
 </script>
 <script src="{{ url_for('static', filename='js/products/industry-fields.js') }}"></script>
+<script src="{{ url_for('static', filename='js/draft-autosave.js') }}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    window.DraftAutosave?.init('products_create', '.product-create-page form');
+  });
+</script>
 {% endblock %}

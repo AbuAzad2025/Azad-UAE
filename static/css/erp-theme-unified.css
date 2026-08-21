@@ -2140,6 +2140,64 @@ body.view-mobile .main-header .navbar-nav .nav-link[data-widget="pushmenu"] { di
     white-space: nowrap;
   }
 
+  .erp-mobile-more {
+    flex: 0 0 auto;
+    width: 56px;
+  }
+
+  .erp-mobile-more-btn {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--az-text-muted);
+    font-size: 1.2rem;
+    padding: 0;
+  }
+
+  .erp-mobile-more-btn:focus-visible {
+    outline: 2px solid var(--az-primary);
+    outline-offset: 2px;
+    border-radius: 50%;
+  }
+
+  .erp-mobile-more-menu {
+    position: absolute;
+    bottom: 100%;
+    inset-inline-end: 0;
+    margin-bottom: 8px;
+    min-width: 180px;
+    max-width: 90vw;
+    box-shadow: var(--az-shadow-lg);
+    border: 1px solid var(--az-border);
+    border-radius: var(--az-radius-lg);
+    padding: 8px;
+    z-index: var(--az-z-dropdown);
+  }
+
+  .erp-mobile-more-menu .dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: var(--az-radius-md);
+    color: var(--az-text);
+  }
+
+  .erp-mobile-more-menu .dropdown-item:hover,
+  .erp-mobile-more-menu .dropdown-item:focus,
+  .erp-mobile-more-menu .dropdown-item.active {
+    background: var(--az-surface-2);
+    color: var(--az-primary);
+  }
+
+  .erp-mobile-more-menu .dropdown-item i {
+    width: 20px;
+    text-align: center;
+  }
+
   .sale-line-row > div { margin-bottom: 0.5rem; }
   .btn-sale { width: 100%; margin-bottom: 0.5rem; }
   .summary-card { margin-top: 1rem; }

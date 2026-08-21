@@ -45,6 +45,12 @@
     <div class="content-wrapper" id="main-content" tabindex="-1">
       <div class="content-header az-enter">
         <div class="container-fluid">
+          <nav aria-label="breadcrumb" class="breadcrumb-nav mb-2">
+            <ol class="breadcrumb mb-0">
+              <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">{{ _('الرئيسية') }}</a></li>
+              {% block breadcrumb_items %}{% endblock %}
+            </ol>
+          </nav>
           <h1 class="m-0">{% block page_title %}{% endblock %}</h1>
         </div>
       </div>
@@ -90,30 +96,42 @@
 
     {% include 'partials/footer.html' %}
 
-    <!-- Mobile Bottom Navigation -->
+    <!-- Mobile Bottom Navigation (dynamic, permission-aware, with overflow) -->
     <nav class="erp-mobile-nav d-md-none" aria-label="{{ _('التنقل السريع') }}">
-      <a href="{{ url_for('main.dashboard') }}" class="{% if request.endpoint == 'main.dashboard' %}active{% endif %}">
-        <i class="fas fa-home"></i><span>{{ _('الرئيسية') }}</span>
-      </a>
-      {% if current_user.is_authenticated and current_user.has_permission('manage_sales') %}
-      <a href="{{ url_for('sales.index') }}" class="{% if request.endpoint and 'sales' in request.endpoint %}active{% endif %}">
-        <i class="fas fa-file-invoice"></i><span>{{ _('المبيعات') }}</span>
-      </a>
-      {% endif %}
-      {% if current_user.is_authenticated and current_user.has_permission('manage_purchases') %}
-      <a href="{{ url_for('purchases.index') }}" class="{% if request.endpoint and 'purchases' in request.endpoint %}active{% endif %}">
-        <i class="fas fa-shopping-cart"></i><span>{{ _('المشتريات') }}</span>
-      </a>
-      {% endif %}
-      {% if current_user.is_authenticated and current_user.has_permission('manage_products') %}
-      <a href="{{ url_for('products.index') }}" class="{% if request.endpoint and 'products' in request.endpoint %}active{% endif %}">
-        <i class="fas fa-box"></i><span>{{ _('المنتجات') }}</span>
-      </a>
-      {% endif %}
-      {% if current_user.is_authenticated and current_user.has_permission('view_reports') %}
-      <a href="{{ url_for('reports.sales') }}" class="{% if request.endpoint and 'reports' in request.endpoint %}active{% endif %}">
-        <i class="fas fa-chart-bar"></i><span>{{ _('التقارير') }}</span>
-      </a>
+      {% set mobile_nav_modules = [
+        ('main.dashboard', 'fas fa-home', _('الرئيسية'), ''),
+        ('sales.index', 'fas fa-file-invoice', _('المبيعات'), 'manage_sales'),
+        ('purchases.index', 'fas fa-shopping-cart', _('المشتريات'), 'manage_purchases'),
+        ('products.index', 'fas fa-box', _('المنتجات'), 'manage_products'),
+        ('reports.sales', 'fas fa-chart-bar', _('التقارير'), 'view_reports'),
+        ('payments.receipts', 'fas fa-money-bill-wave', _('المالية'), 'manage_payments')
+      ] %}
+      {% set visible_modules = [] %}
+      {% for endpoint, icon, label, perm in mobile_nav_modules %}
+        {% if not perm or (current_user.is_authenticated and current_user.has_permission(perm)) %}
+          {% set _ = visible_modules.append((endpoint, icon, label)) %}
+        {% endif %}
+      {% endfor %}
+      {% set primary_modules = visible_modules[:4] %}
+      {% set overflow_modules = visible_modules[4:] %}
+      {% for endpoint, icon, label in primary_modules %}
+        <a href="{{ url_for(endpoint) }}" class="{% if request.endpoint and endpoint.split('.')[0] in request.endpoint %}active{% endif %}">
+          <i class="{{ icon }}"></i><span>{{ label }}</span>
+        </a>
+      {% endfor %}
+      {% if overflow_modules %}
+      <div class="erp-mobile-more position-relative">
+        <button type="button" class="erp-mobile-more-btn" data-toggle="dropdown" aria-expanded="false" aria-haspopup="true" aria-label="{{ _('المزيد') }}">
+          <i class="fas fa-ellipsis-h"></i>
+        </button>
+        <div class="dropdown-menu dropdown-menu-right erp-mobile-more-menu">
+          {% for endpoint, icon, label in overflow_modules %}
+            <a href="{{ url_for(endpoint) }}" class="dropdown-item {% if request.endpoint and endpoint.split('.')[0] in request.endpoint %}active{% endif %}">
+              <i class="{{ icon }} mr-2"></i>{{ label }}
+            </a>
+          {% endfor %}
+        </div>
+      </div>
       {% endif %}
     </nav>
   </div>

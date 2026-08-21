@@ -354,6 +354,12 @@
 <script src="{{ url_for('static', filename='js/sales-enhanced.js') }}"></script>
 <script src="{{ url_for('static', filename='js/ai-sales.js') }}"></script>
 <script src="{{ url_for('static', filename='js/sales-create.js') }}"></script>
+<script src="{{ url_for('static', filename='js/draft-autosave.js') }}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    window.DraftAutosave?.init('sales_create', '#saleForm');
+  });
+</script>
 
 <div id="serials_container"></div>
 <div id="customer_analysis"></div>

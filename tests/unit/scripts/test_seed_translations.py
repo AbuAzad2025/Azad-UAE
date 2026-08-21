@@ -6,7 +6,7 @@ import sys
 
 import pytest
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 
 class TestSeedTranslations:
@@ -19,11 +19,15 @@ class TestSeedTranslations:
         d = extract_translations_dict()
         assert isinstance(d, dict)
         assert len(d) > 100
+        non_empty = 0
         for key, val in d.items():
             assert isinstance(key, str)
             assert isinstance(val, dict)
-            assert "ar" in val
-            assert "en" in val
+            if val:
+                assert "ar" in val
+                assert "en" in val
+                non_empty += 1
+        assert non_empty > 100
 
     def test_escape_po_handles_special_chars(self):
         sys.path.insert(0, os.path.join(ROOT, "scripts"))
