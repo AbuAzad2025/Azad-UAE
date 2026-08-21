@@ -211,7 +211,7 @@ async function loadFxRates() {
 	const tbody = document.getElementById("fx-rates-body");
 	if (tbody) {
 		tbody.innerHTML =
-			'<tr><td colspan="3" class="text-center py-4"><div class="spinner-border spinner-border-sm text-muted" role="status"></div><span class="mr-2"> جارٍ التحميل...</span></td></tr>';
+			`<tr><td colspan="3" class="text-center py-4"><div class="spinner-border spinner-border-sm text-muted" role="status"></div><span class="mr-2"> ${window.t("loading_ellipsis")}</span></td></tr>`;
 	}
 
 	try {
@@ -258,14 +258,14 @@ function populateFxDisplay(data) {
 	const source = data.source || "unknown";
 
 	const labels = {
-		USD: { ar: "دولار أمريكي", sym: "$" },
-		ILS: { ar: "شيكل فلسطيني", sym: "₪" },
-		JOD: { ar: "دينار أردني", sym: "JD" },
-		EUR: { ar: "يورو", sym: "€" },
-		AED: { ar: "درهم إماراتي", sym: "د.إ" },
-		SAR: { ar: "ريال سعودي", sym: "ر.س" },
-		EGP: { ar: "جنيه مصري", sym: "ج.م" },
-		GBP: { ar: "جنيه إسترليني", sym: "£" },
+		USD: { ar: window.t("currency_usd"), sym: "$" },
+		ILS: { ar: window.t("currency_ils"), sym: "₪" },
+		JOD: { ar: window.t("currency_jod"), sym: "JD" },
+		EUR: { ar: window.t("currency_eur"), sym: "€" },
+		AED: { ar: window.t("currency_aed"), sym: "د.إ" },
+		SAR: { ar: window.t("currency_sar"), sym: "ر.س" },
+		EGP: { ar: window.t("currency_egp"), sym: "ج.م" },
+		GBP: { ar: window.t("currency_gbp"), sym: "£" },
 	};
 	labels[window._FX_FALLBACK_BASE || "USD"] = {
 		ar: window._CURRENCY_NAME_AR,
@@ -291,13 +291,13 @@ function populateFxDisplay(data) {
 		badge.style.display = "inline-block";
 		if (source === "fallback_static") {
 			badge.className = "badge badge-warning ml-1";
-			badge.textContent = "سعر تقديري";
+			badge.textContent = window.t("estimated_rate");
 		} else if (stale) {
 			badge.className = "badge badge-warning ml-1";
-			badge.textContent = "آخر سعر محفوظ";
+			badge.textContent = window.t("last_saved_rate");
 		} else {
 			badge.className = "badge badge-success ml-1";
-			badge.textContent = "مباشر";
+			badge.textContent = window.t("live_rate");
 		}
 	}
 
@@ -307,7 +307,7 @@ function populateFxDisplay(data) {
 		const timeStr = Number.isNaN(d.getTime())
 			? "--"
 			: d.toLocaleTimeString("ar-AE", { hour: "2-digit", minute: "2-digit" });
-		updatedEl.innerHTML = `<i class="fas fa-clock mr-1"></i>آخر تحديث: ${timeStr}`;
+		updatedEl.innerHTML = `<i class="fas fa-clock mr-1"></i>${window.t("last_updated")}: ${timeStr}`;
 	}
 }
 
@@ -583,7 +583,7 @@ function initNavbarCalculator() {
 
 			if (!(p > 0) || !(months > 0)) {
 				out.className = "alert alert-warning mt-2 mb-0";
-				out.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>أدخل قيم صحيحة.';
+				out.innerHTML = `<i class="fas fa-exclamation-triangle mr-1"></i>${window.t("enter_valid_values")}.`;
 				return;
 			}
 
@@ -595,9 +595,9 @@ function initNavbarCalculator() {
 			out.className = "alert alert-info mt-2 mb-0";
 			out.innerHTML = `
         <div class="d-flex justify-content-between flex-wrap">
-          <span><i class="fas fa-hand-holding-usd mr-1"></i>القسط: <strong>${emi.toFixed(2)}</strong></span>
-          <span><i class="fas fa-coins mr-1"></i>الفائدة: <strong>${interest.toFixed(2)}</strong></span>
-          <span><i class="fas fa-wallet mr-1"></i>الإجمالي: <strong>${total.toFixed(2)}</strong></span>
+          <span><i class="fas fa-hand-holding-usd mr-1"></i>${window.t("monthly_installment")}: <strong>${emi.toFixed(2)}</strong></span>
+          <span><i class="fas fa-coins mr-1"></i>${window.t("interest_amount")}: <strong>${interest.toFixed(2)}</strong></span>
+          <span><i class="fas fa-wallet mr-1"></i>${window.t("total_label")}: <strong>${total.toFixed(2)}</strong></span>
         </div>`;
 		});
 	}
@@ -610,7 +610,7 @@ function initNavbarCalculator() {
 
 			if (!(cost >= 0) || !(sell > 0)) {
 				out.className = "alert alert-warning mt-2 mb-0";
-				out.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>أدخل قيم صحيحة.';
+				out.innerHTML = `<i class="fas fa-exclamation-triangle mr-1"></i>${window.t("enter_valid_values")}.`;
 				return;
 			}
 
@@ -621,7 +621,7 @@ function initNavbarCalculator() {
 			out.className = "alert alert-success mt-2 mb-0";
 			out.innerHTML = `
         <div class="d-flex justify-content-between flex-wrap">
-          <span><i class="fas fa-dollar-sign mr-1 text-success"></i>الربح: <strong>${profit.toFixed(2)}</strong></span>
+          <span><i class="fas fa-dollar-sign mr-1 text-success"></i>${window.t("profit")}: <strong>${profit.toFixed(2)}</strong></span>
           <span><i class="fas fa-percentage mr-1 text-info"></i>Margin: <strong>${margin.toFixed(2)}%</strong></span>
           <span><i class="fas fa-chart-line mr-1 text-warning"></i>Markup: <strong>${markup.toFixed(2)}%</strong></span>
         </div>`;
@@ -631,7 +631,11 @@ function initNavbarCalculator() {
 
 // ── 9. View Mode System ──
 const VIEW_MODES = ["auto", "desktop", "mobile"];
-const VIEW_MODE_LABELS = { auto: "تلقائي", desktop: "كمبيوتر", mobile: "جوال" };
+const VIEW_MODE_LABELS = {
+	auto: window.t("automatic"),
+	desktop: window.t("desktop"),
+	mobile: window.t("mobile"),
+};
 const VIEW_MODE_ICONS = { auto: "fa-desktop", desktop: "fa-desktop", mobile: "fa-mobile-alt" };
 
 function getSavedViewMode() {
@@ -663,7 +667,7 @@ function updateViewModeButton(mode) {
 		icon.classList.remove("fa-desktop", "fa-mobile-alt");
 		icon.classList.add(VIEW_MODE_ICONS[mode] || "fa-desktop");
 	}
-	if (label) label.textContent = VIEW_MODE_LABELS[mode] || "تلقائي";
+	if (label) label.textContent = VIEW_MODE_LABELS[mode] || window.t("automatic");
 }
 
 function cycleViewMode() {

@@ -279,6 +279,29 @@
 					.map((i, _el) => i)
 					.get();
 
+				const actionIdx = $tbl
+					.find("thead th")
+					.map((i, el) => {
+						const $th = $(el);
+						const cls = $th.attr("class") || "";
+						const txt = $th.text().trim();
+						const hasCog = $th.find(".fa-cog").length > 0;
+						if (/actions|erp-col-actions/.test(cls) || /action|إجراء/i.test(txt) || hasCog) {
+							return i;
+						}
+						return null;
+					})
+					.get()
+					.filter((i) => i !== null);
+
+				const columnDefs = [];
+				if (noSortIdx.length) {
+					columnDefs.push({ orderable: false, targets: noSortIdx });
+				}
+				if (actionIdx.length) {
+					columnDefs.push({ responsivePriority: 1, targets: actionIdx });
+				}
+
 				$tbl.DataTable({
 					dom: hasButtons ? "Bfrtip" : "frtip",
 					buttons: hasButtons
@@ -289,7 +312,7 @@
 								},
 								{
 									extend: "print",
-									text: '<i class="fas fa-print"></i> طباعة',
+									text: `<i class="fas fa-print"></i> ${window.t("Print")}`,
 									customize: (win) => {
 										applyDataTablePrintStyles(win);
 									},
@@ -302,7 +325,7 @@
 					language:
 						getCurrentLanguage() === "ar" ? { url: "/static/datatables/Arabic.json" } : undefined,
 					order,
-					columnDefs: noSortIdx.length ? [{ orderable: false, targets: noSortIdx }] : [],
+					columnDefs: columnDefs.length ? columnDefs : [],
 				});
 			});
 	}
@@ -339,8 +362,7 @@
 					dir: getCurrentLanguage() === "ar" ? "rtl" : "ltr",
 					width: "100%",
 					language: getCurrentLanguage(),
-					placeholder:
-						$el.attr("placeholder") || (getCurrentLanguage() === "ar" ? "اختر..." : "Select..."),
+					placeholder: $el.attr("placeholder") || window.t("select_placeholder"),
 					allowClear:
 						String($el.data("allow-clear") || "").toLowerCase() === "true" ||
 						$el.data("allowClear") === 1,
@@ -371,8 +393,7 @@
 					dir: getCurrentLanguage() === "ar" ? "rtl" : "ltr",
 					width: "100%",
 					language: getCurrentLanguage(),
-					placeholder:
-						$el.attr("placeholder") || (getCurrentLanguage() === "ar" ? "اختر..." : "Select..."),
+					placeholder: $el.attr("placeholder") || window.t("select_placeholder"),
 					allowClear:
 						String($el.data("allow-clear") || "").toLowerCase() === "true" ||
 						$el.data("allowClear") === 1,
@@ -432,7 +453,7 @@
 						.prop("disabled", true)
 						.attr("aria-busy", "true")
 						.html(
-							'<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> جاري المعالجة...',
+							`<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ${window.t("processing")}`,
 						);
 					setTimeout(() => {
 						if (!$btn.closest("form").length) {
@@ -515,11 +536,11 @@
 							"</ul>",
 					);
 				} else {
-					$container.html("لا توجد نتائج");
+					$container.html(window.t("no_results"));
 				}
 			})
 			.fail(() => {
-				$container.html('<div class="alert alert-danger">خطأ في البحث</div>');
+				$container.html(`<div class="alert alert-danger">${window.t("search_error")}</div>`);
 			});
 	}
 
@@ -531,7 +552,7 @@
 			)
 			.serialize();
 		localStorage.setItem(`form_${$form.attr("id")}`, formData);
-		showNotification("تم الحفظ محلياً", "تم حفظ البيانات تلقائياً على هذا الجهاز فقط", "success");
+		showNotification(window.t("saved_locally"), window.t("autosaved_locally"), "success");
 	}
 
 	function debounce(func, wait) {
@@ -634,7 +655,7 @@
 		const $alert = $(`
       <div class="alert ${alertClass} alert-dismissible fade show system-alert" role="alert">
         <i class="${icon} me-2"></i>
-        <strong>تنبيه النظام:</strong> ${message}
+        <strong>${window.t("system_alert")}:</strong> ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
       </div>
     `);
@@ -683,7 +704,7 @@
 			const _printDoc = $printWin.document;
 			_printDoc.open();
 			_printDoc.write(
-				`<!DOCTYPE html><html dir="rtl"><head><title>${options?.title || "طباعة"}</title>`,
+				`<!DOCTYPE html><html dir="rtl"><head><title>${options?.title || window.t("Print")}</title>`,
 			);
 			_printDoc.write(
 				'<style>body { font-family: "Cairo", Tahoma, sans-serif; font-size: 10pt; direction: rtl; background: #fff; padding: 10mm; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #adb5bd; padding: 2mm 3mm; text-align: center; word-break: break-word; overflow-wrap: anywhere; } thead th { background: ' +
@@ -739,22 +760,22 @@
 		try {
 			resp = await fetch(url, opts);
 		} catch {
-			throw new Error("تعذر الاتصال بالخادم — تحقق من اتصالك بالإنترنت");
+			throw new Error(window.t("connection_error"));
 		}
 		const data = await resp.json().catch(() => ({}));
 		if (!resp.ok) {
 			const fallback = {
-				400: "طلب غير صالح",
-				401: "انتهت الجلسة — يرجى تسجيل الدخول مجدداً",
-				403: "ليس لديك صلاحية لتنفيذ هذا الإجراء",
-				404: "العنصر المطلوب غير موجود",
-				409: "تعارض في البيانات — حدّث الصفحة وحاول مجدداً",
-				419: "انتهت صلاحية النموذج — حدّث الصفحة",
-				429: "طلبات كثيرة — انتظر قليلاً ثم أعد المحاولة",
-				500: "خطأ في الخادم — حاول مرة أخرى لاحقاً",
+				400: window.t("bad_request"),
+				401: window.t("session_expired"),
+				403: window.t("permission_denied"),
+				404: window.t("not_found"),
+				409: window.t("conflict"),
+				419: window.t("form_expired"),
+				429: window.t("too_many_requests"),
+				500: window.t("server_error"),
 			};
 			throw new Error(
-				data.error || data.message || fallback[resp.status] || `خطأ غير متوقع (${resp.status})`,
+				data.error || data.message || fallback[resp.status] || `${window.t("unexpected_error")} (${resp.status})`,
 			);
 		}
 		return data;
@@ -766,8 +787,8 @@
 		console.error("Unhandled async error:", event.reason);
 		const message =
 			event.reason instanceof TypeError
-				? "تعذر الاتصال بالخادم — تحقق من اتصالك بالإنترنت"
-				: event.reason?.message || "حدث خطأ غير متوقع — حاول مرة أخرى";
+				? window.t("connection_error")
+				: event.reason?.message || window.t("unexpected_error");
 		if (window.notify?.show) {
 			window.notify.show({ type: "error", message });
 		} else if (typeof Swal !== "undefined") {

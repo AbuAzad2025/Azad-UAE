@@ -1,7 +1,7 @@
 $(document).ready(() => {
 	const $tableEl = $("#salesTable");
 	const printOptions = {
-		title: "سجل المبيعات",
+		title: window.t("sales_register"),
 		headerColor: "#007A3D",
 	};
 	let table;
@@ -17,6 +17,7 @@ $(document).ready(() => {
 			responsive: true,
 			dom: "Bfrtip",
 			buttons: SmartPrint.buildButtons(printOptions),
+			columnDefs: [{ responsivePriority: 1, targets: -1 }],
 			// noinspection JSUnusedGlobalSymbols
 			footerCallback: function () {
 				const api = this.api();
@@ -33,9 +34,10 @@ $(document).ready(() => {
 					.column(4, { page: "current" })
 					.data()
 					.reduce((a, b) => a + firstNumber(b), 0);
+				const info = `${window.t("page_total")}: ${total.toFixed(2)} | ${window.t("paid_status")}: ${paid.toFixed(2)}`;
 				window.azad && typeof window.azad.showInfo === "function"
-					? window.azad.showInfo(`إجمالي الصفحة: ${total.toFixed(2)} | مدفوع: ${paid.toFixed(2)}`)
-					: console.info(`إجمالي الصفحة: ${total.toFixed(2)} | مدفوع: ${paid.toFixed(2)}`);
+					? window.azad.showInfo(info)
+					: console.info(info);
 			},
 		});
 	}
@@ -53,21 +55,21 @@ $(document).ready(() => {
 	$("#filterPaid")
 		.off("click.smartPrint")
 		.on("click.smartPrint", function () {
-			table.column(8).search("مدفوع").draw();
+			table.column(8).search(window.t("paid_status")).draw();
 			$(".btn-group .btn").removeClass("active");
 			$(this).addClass("active");
 		});
 	$("#filterPartial")
 		.off("click.smartPrint")
 		.on("click.smartPrint", function () {
-			table.column(8).search("جزئي").draw();
+			table.column(8).search(window.t("partial")).draw();
 			$(".btn-group .btn").removeClass("active");
 			$(this).addClass("active");
 		});
 	$("#filterUnpaid")
 		.off("click.smartPrint")
 		.on("click.smartPrint", function () {
-			table.column(8).search("آجل").draw();
+			table.column(8).search(window.t("unpaid_status")).draw();
 			$(".btn-group .btn").removeClass("active");
 			$(this).addClass("active");
 		});

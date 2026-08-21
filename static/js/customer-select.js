@@ -24,6 +24,9 @@
 				if ($select.hasClass("select2-hidden-accessible")) {
 					$select.select2("destroy");
 				}
+				if (!$select.attr("aria-label") && !$select.attr("aria-labelledby")) {
+					$select.attr("aria-label", window.t("search_customers"));
+				}
 
 				$select.select2({
 					ajax: {
@@ -51,7 +54,7 @@
 						},
 						cache: true,
 					},
-					placeholder: "ابحث عن زبون...",
+					placeholder: window.t("search_customers"),
 					allowClear: true,
 					minimumInputLength: 0,
 					dir: "rtl",
@@ -70,6 +73,9 @@
 				const $select = $(this);
 				if ($select.hasClass("select2-hidden-accessible")) {
 					$select.select2("destroy");
+				}
+				if (!$select.attr("aria-label") && !$select.attr("aria-labelledby")) {
+					$select.attr("aria-label", window.t("search_suppliers"));
 				}
 
 				$select.select2({
@@ -98,7 +104,7 @@
 						},
 						cache: true,
 					},
-					placeholder: "ابحث عن مورد...",
+					placeholder: window.t("search_suppliers"),
 					allowClear: true,
 					minimumInputLength: 0,
 					dir: "rtl",
@@ -117,6 +123,9 @@
 				const $select = $(this);
 				if ($select.hasClass("select2-hidden-accessible")) {
 					$select.select2("destroy");
+				}
+				if (!$select.attr("aria-label") && !$select.attr("aria-labelledby")) {
+					$select.attr("aria-label", window.t("search_products"));
 				}
 
 				$select.select2({
@@ -147,7 +156,7 @@
 						},
 						cache: true,
 					},
-					placeholder: "ابحث عن منتج...",
+					placeholder: window.t("search_products"),
 					allowClear: true,
 					minimumInputLength: 0,
 					dir: "rtl",
@@ -162,7 +171,7 @@
 		// FORMATTING FUNCTIONS
 		// =====================================
 		formatCustomerResult: (item) => {
-			if (item.loading) return "جاري البحث...";
+			if (item.loading) return window.t("searching");
 			if (!item.id) return item.text;
 
 			const balance = parseFloat(item.balance || 0);
@@ -191,7 +200,7 @@
 		},
 
 		formatSupplierResult: (item) => {
-			if (item.loading) return "جاري البحث...";
+			if (item.loading) return window.t("searching");
 			if (!item.id) return item.text;
 
 			const balance = parseFloat(item.balance || 0);
@@ -220,11 +229,11 @@
 		},
 
 		formatProductResult: (item) => {
-			if (item.loading) return "جاري البحث...";
+			if (item.loading) return window.t("searching");
 			if (!item.id) return item.text;
 
 			const stock = parseFloat(item.stock || 0);
-			const stockText = stock > 0 ? `${stock} متوفر` : "غير متوفر";
+			const stockText = stock > 0 ? `${stock} ${window.t("in_stock")}` : window.t("out_of_stock");
 			const stockClass = stock > 0 ? "text-success" : "text-danger";
 
 			return $(`

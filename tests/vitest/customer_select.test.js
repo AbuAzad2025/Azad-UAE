@@ -32,6 +32,15 @@ function makeJQuery() {
         if (el) el.addEventListener(evt, fn);
         return this;
       },
+      attr(name, val) {
+        const el = getEl();
+        if (!el) return val !== undefined ? this : undefined;
+        if (val !== undefined) {
+          el.setAttribute(name, val);
+          return this;
+        }
+        return el.getAttribute(name);
+      },
     };
   };
 

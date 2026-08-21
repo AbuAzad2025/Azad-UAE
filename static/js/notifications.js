@@ -28,9 +28,13 @@ class NotificationManager {
 			this.container = document.createElement("div");
 			this.container.id = "toast-container";
 			this.container.className = "toast-container";
+			this.container.setAttribute("role", "region");
+			this.container.setAttribute("aria-label", window.t("notifications"));
 			document.body.appendChild(this.container);
 		} else {
 			this.container = document.getElementById("toast-container");
+			this.container.setAttribute("role", "region");
+			this.container.setAttribute("aria-label", window.t("notifications"));
 		}
 
 		// Inject CSS
@@ -225,6 +229,8 @@ class NotificationManager {
 		// Create toast element
 		const toast = document.createElement("div");
 		toast.className = `toast toast-${type}`;
+		toast.setAttribute("role", "alert");
+		toast.setAttribute("aria-live", "polite");
 
 		// Icon
 		const icons = {
@@ -258,11 +264,15 @@ class NotificationManager {
 			className: "toast-icon",
 			textContent: icons[type],
 		});
+		iconEl.setAttribute("aria-hidden", "true");
 		const closeBtn = Object.assign(document.createElement("button"), {
 			className: "toast-close",
 			textContent: "\u00d7",
 		});
+		closeBtn.setAttribute("aria-label", window.t("close_notification"));
 		closeBtn.addEventListener("click", () => toast.remove());
+
+		progress.setAttribute("aria-hidden", "true");
 
 		toast.appendChild(iconEl);
 		toast.appendChild(contentEl);
@@ -301,31 +311,19 @@ class NotificationManager {
 	}
 
 	success(message, title) {
-		const defaultTitle =
-			typeof getCurrentLanguage === "function" && getCurrentLanguage() === "ar"
-				? "نجاح"
-				: "Success";
-		return this.show({ type: "success", title: title || defaultTitle, message });
+		return this.show({ type: "success", title: title || window.t("success"), message });
 	}
 
 	error(message, title) {
-		const defaultTitle =
-			typeof getCurrentLanguage === "function" && getCurrentLanguage() === "ar" ? "خطأ" : "Error";
-		return this.show({ type: "error", title: title || defaultTitle, message, duration: 20000 });
+		return this.show({ type: "error", title: title || window.t("error"), message, duration: 20000 });
 	}
 
 	warning(message, title) {
-		const defaultTitle =
-			typeof getCurrentLanguage === "function" && getCurrentLanguage() === "ar"
-				? "تحذير"
-				: "Warning";
-		return this.show({ type: "warning", title: title || defaultTitle, message });
+		return this.show({ type: "warning", title: title || window.t("warning"), message });
 	}
 
 	info(message, title) {
-		const defaultTitle =
-			typeof getCurrentLanguage === "function" && getCurrentLanguage() === "ar" ? "معلومة" : "Info";
-		return this.show({ type: "info", title: title || defaultTitle, message });
+		return this.show({ type: "info", title: title || window.t("info"), message });
 	}
 }
 
