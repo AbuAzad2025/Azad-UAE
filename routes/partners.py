@@ -18,7 +18,6 @@ from decimal import Decimal
 from flask import (
     Blueprint,
     flash,
-    jsonify,
     redirect,
     render_template,
     request,
@@ -30,6 +29,7 @@ from flask_login import current_user, login_required
 from extensions import db
 from models import Partner, PartnerProfitDistribution, PartnerTransaction
 from services.partner_service import PartnerService
+from utils.api_response import success_response
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
 from utils.tenanting import get_active_tenant_id, tenant_query
@@ -354,4 +354,4 @@ def api_preview_pnl():
     scope_id = request.args.get("scope_id", type=int)
 
     pnl = PartnerService.calculate_scope_profit(int(tid or 0), start, end, scope, scope_id)
-    return jsonify(pnl)
+    return success_response(data=pnl)

@@ -376,7 +376,9 @@ class TestPartnersApiPreviewPnl:
             },
         )
         assert resp.status_code == 200
-        assert resp.get_json() == pnl
+        body = resp.get_json()
+        assert body["success"] is True
+        assert body["data"] == pnl
         partners_client._partners_mocks["service"].calculate_scope_profit.assert_called_once()
 
 
