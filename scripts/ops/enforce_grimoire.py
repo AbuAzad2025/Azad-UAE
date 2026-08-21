@@ -662,6 +662,8 @@ ALLOWED_ROOT_FILES: frozenset[str] = frozenset(
         ".yamllint.yml",
         "ruff.toml",
         "vitest.config.js",
+        "postcss.config.js",
+        "postcss.config.min.js",
         "templates_rendered.json",
         "nul",
     }
