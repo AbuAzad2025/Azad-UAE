@@ -112,7 +112,7 @@ describe("pos/payments.js — settlePin + requestOverrideToken", () => {
   it("shows modal and resolves with token", async () => {
     const { settlePin, requestOverrideToken } = await loadModule();
     const promise = requestOverrideToken("discount_override");
-    vi.advanceTimersByTimeAsync = undefined;
+    vi.runOnlyPendingTimers();
     settlePin("token-123");
     await expect(promise).resolves.toBe("token-123");
     expect(window.$("#posPinModal").modal).toHaveBeenCalledWith("show");
@@ -194,7 +194,7 @@ describe("pos/payments.js — postWithOverride", () => {
     });
     const { postWithOverride, settlePin } = await loadModule();
     const promise = postWithOverride("/test", { amount: 10 }, "x");
-    await new Promise((r) => setTimeout(r, 0));
+    await vi.advanceTimersByTimeAsync(0);
     settlePin("override-tok");
     const result = await promise;
     expect(result.r.ok).toBe(true);
