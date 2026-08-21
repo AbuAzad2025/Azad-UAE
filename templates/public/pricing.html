@@ -15,7 +15,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}">
     <link rel="stylesheet" href="{{ dist_url('css/accessibility.css') }}">
-    <style>
+    <style nonce="{{ csp_nonce() }}">
         :root {
             --azad-bg: #070b14;
             --azad-surface: #0f1724;
@@ -434,7 +434,7 @@
 {# ──────────────────────────────────────────────── #}
 {# SCRIPTS                                          #}
 {# ──────────────────────────────────────────────── #}
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function() {
     const nav = document.getElementById('azadNav');
     if (nav) {

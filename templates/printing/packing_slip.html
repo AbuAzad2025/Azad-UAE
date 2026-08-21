@@ -6,7 +6,7 @@
   <title>{{ settings.company_name_ar or tenant_name_ar or company_name_ar }} - {{ _('Delivery_Note') }} #{{ delivery.number or sale.sale_number }}</title>
   <link rel="stylesheet" href="{{ dist_url('css/erp-theme-unified.css') }}">
   {% include 'partials/print_styles.html' %}
-  <style>
+  <style nonce="{{ csp_nonce() }}">
     body { font-family: 'Tajawal', 'Arial', sans-serif; background: #95a5a6; }
     .invoice { background: #fff; box-shadow: 0 0 20px rgba(0,0,0,0.3); position: relative; }
     .header {

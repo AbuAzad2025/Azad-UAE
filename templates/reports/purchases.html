@@ -5,7 +5,7 @@
 {% block page_title %}{{ t('Report_2') }} {{ t('Purchases') }}{% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}">
 @media print {
   @page { size: A4 landscape; margin: 10mm; }
   .main-sidebar, .main-header, .main-footer, .content-header, .btn, .card-header, .card-footer, .no-print, .filters, .pagination { display: none !important; }

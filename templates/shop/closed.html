@@ -2,7 +2,7 @@
 {% block title %}{{ t('store_closed') }}{% endblock %}
 
 {% block extra_css %}{{ super() }}
-<style>
+<style nonce="{{ csp_nonce() }}">
     .ic-1 { font-size:3rem; color:var(--ps-red); margin-bottom:1rem; }
     .ic-2 { margin:0 0 0.75rem; font-weight:800; }
     .ic-3 { color:var(--ps-muted); margin:0; }

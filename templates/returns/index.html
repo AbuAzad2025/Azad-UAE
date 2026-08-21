@@ -5,7 +5,7 @@
 {% block extra_css %}
 {% include 'partials/datatables_assets.html' %}
 {% include 'partials/select2_assets.html' %}
-<style>
+<style nonce="{{ csp_nonce() }}">
   #returnsTable th,
   #returnsTable td {
     vertical-align: middle;

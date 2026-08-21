@@ -4,7 +4,7 @@
 {% block title %}{{ tenant_name_ar or company_name_ar or '' }} - {{ t('Invoice') }} {{ t('Sales_2') }} #{{ sale.sale_number }}{% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}">
   :root {
     --header-color: {{ settings.header_color or '#2c3e50' }};
     --accent-color: {{ settings.accent_color or '#3498db' }};

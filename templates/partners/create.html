@@ -112,7 +112,7 @@
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.addEventListener('change', (e) => {
   const el = e.target.closest('[data-action="update-scope-options"]');
   if (!el) return;

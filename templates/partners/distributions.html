@@ -12,7 +12,7 @@
 {% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}">
     .inline-form { display:inline; }
 </style>
 {% endblock %}

@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" integrity="sha384-SQmEOkBgKgEIh61hWWvG/unqqDDppl6UsaeOX71NjfnDB32XCcgWtNdUamQ7ics0" crossorigin="anonymous" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}">
     <link rel="stylesheet" href="{{ dist_url('css/accessibility.css') }}">
-    <style>
+    <style nonce="{{ csp_nonce() }}">
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #f8f9fa; }
         
@@ -200,7 +200,7 @@
         </main>
     </div>
 
-    <script>
+    <script nonce="{{ csp_nonce() }}">
 document.addEventListener('click', (e) => {
     const el = e.target.closest('[data-action="scroll-to-section"]');
     if (!el) return;

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ store.title | e }} — {{ t('invoice') }} #{{ sale.sale_number }}</title>
   {% include 'partials/print_styles.html' %}
-  <style>
+  <style nonce="{{ csp_nonce() }}">
     body { font-family: 'Tajawal', 'Arial', sans-serif; background: #95a5a6; margin: 0; padding: 0; display: flex; justify-content: center; }
     .invoice {
       width: 210mm; min-height: 297mm; background: #fff; margin: 0 auto;

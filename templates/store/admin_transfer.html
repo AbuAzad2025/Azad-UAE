@@ -92,7 +92,7 @@
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.addEventListener('change', (e) => {
   const el = e.target.closest('[data-action="filter-by-warehouse"]');
   if (!el) return;

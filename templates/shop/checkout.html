@@ -117,7 +117,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 (() => {
   const hintEl = document.getElementById('ps-pay-hint');
   const radios = document.querySelectorAll('input[name="payment_method"]');

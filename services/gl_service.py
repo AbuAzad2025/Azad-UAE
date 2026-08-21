@@ -1029,8 +1029,13 @@ class GLService:
 
     @staticmethod
     def get_general_ledger(date_from=None, date_to=None, branch_id=None, tenant_id=None):
-        """كشف حساب عام — running balance لكل حساب مع رصيد افتتاحي."""
+        """كشف حساب عام — running balance لكل حساب مع رصيد افتتاحي.
+
+        Bulk implementation: exactly three queries (accounts, opening aggregate,
+        period lines with joined entry) regardless of account/line counts.
+        """
         from sqlalchemy import func
+        from sqlalchemy.orm import joinedload
 
         tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id)
 
@@ -1038,45 +1043,53 @@ class GLService:
         if tenant_id is not None:
             accounts = accounts.filter_by(tenant_id=int(tenant_id))
         accounts = accounts.order_by(GLAccount.code).all()
+        if not accounts:
+            return []
+
+        def _entry_filters(q):
+            q = q.join(GLJournalEntry).filter(GLJournalEntry.status == "posted")
+            if branch_id:
+                q = q.filter(GLJournalEntry.branch_id == branch_id)
+            if tenant_id is not None:
+                q = q.filter(GLJournalEntry.tenant_id == int(tenant_id))
+            return q
+
+        opening_q = _entry_filters(
+            db.session.query(
+                GLJournalLine.account_id,
+                func.coalesce(func.sum(GLJournalLine.debit), 0).label("debit"),
+                func.coalesce(func.sum(GLJournalLine.credit), 0).label("credit"),
+            )
+        )
+        if date_from:
+            opening_q = opening_q.filter(func.date(GLJournalEntry.entry_date) < date_from)
+        opening_rows = opening_q.group_by(GLJournalLine.account_id).all()
+        opening_by_account = {row.account_id: (row.debit or 0, row.credit or 0) for row in opening_rows}
+
+        lines_query = _entry_filters(
+            GLJournalLine.query.options(joinedload(GLJournalLine.entry))
+        ).order_by(GLJournalLine.account_id, GLJournalEntry.entry_date, GLJournalEntry.id)
+        if date_from:
+            lines_query = lines_query.filter(func.date(GLJournalEntry.entry_date) >= date_from)
+        if date_to:
+            lines_query = lines_query.filter(func.date(GLJournalEntry.entry_date) <= date_to)
+        all_lines = lines_query.all()
+
+        lines_by_account = {}
+        for line in all_lines:
+            lines_by_account.setdefault(line.account_id, []).append(line)
 
         result = []
         for account in accounts:
-            lines_query = (
-                GLJournalLine.query.filter_by(account_id=account.id)
-                .join(GLJournalEntry)
-                .filter(GLJournalEntry.status == "posted")
-            )
-
-            opening_query = (
-                GLJournalLine.query.filter_by(account_id=account.id)
-                .join(GLJournalEntry)
-                .filter(GLJournalEntry.status == "posted")
-            )
-
-            if branch_id:
-                lines_query = lines_query.filter(GLJournalEntry.branch_id == branch_id)
-                opening_query = opening_query.filter(GLJournalEntry.branch_id == branch_id)
-            if tenant_id is not None:
-                lines_query = lines_query.filter(GLJournalEntry.tenant_id == int(tenant_id))
-                opening_query = opening_query.filter(GLJournalEntry.tenant_id == int(tenant_id))
-            if date_from:
-                lines_query = lines_query.filter(func.date(GLJournalEntry.entry_date) >= date_from)
-                opening_query = opening_query.filter(func.date(GLJournalEntry.entry_date) < date_from)
-            if date_to:
-                lines_query = lines_query.filter(func.date(GLJournalEntry.entry_date) <= date_to)
-
-            opening_lines = opening_query.all()
-            opening_debit = sum(line.debit for line in opening_lines)
-            opening_credit = sum(line.credit for line in opening_lines)
+            opening_debit, opening_credit = opening_by_account.get(account.id, (0, 0))
             if account.type in ("asset", "expense"):
                 opening_balance = opening_debit - opening_credit
             else:
                 opening_balance = opening_credit - opening_debit
 
-            lines = lines_query.order_by(GLJournalEntry.entry_date, GLJournalEntry.id).all()
             running = opening_balance
             transactions = []
-            for line in lines:
+            for line in lines_by_account.get(account.id, []):
                 d = line.debit
                 c = line.credit
                 if account.type in ("asset", "expense"):

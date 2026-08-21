@@ -5,7 +5,7 @@
 
 {% block extra_css %}
 <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;700&display=swap" integrity="sha384-HawRoIeHua0HgT8ujak6xStdSgtdpRTO0teUXhJDDmzp3SaGgHGHpFBbDWdbpniy" crossorigin="anonymous" rel="stylesheet">
-<style>
+<style nonce="{{ csp_nonce() }}">
   :root {
     --header-color: {{ settings.header_color or '#c9a961' }};
     --accent-color: {{ settings.accent_color or '#8b7355' }};

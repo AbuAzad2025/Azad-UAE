@@ -3,7 +3,7 @@
 {% block title %}VAT Return — {{ t('return_filing') }} {{ t('tax') }}{% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}">
   @media print {
     @page { size: A4 landscape; margin: 15mm; }
     .main-sidebar, .main-header, .main-footer, .content-header,

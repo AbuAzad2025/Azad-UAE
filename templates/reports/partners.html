@@ -3,7 +3,7 @@
 {% block title %}{{ t('Report_2') }} {{ t('Partners') }} {{ t('and_merchants') }}{% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}">
     /* D6: externalized inline styles */
     .ic-1 { z-index: 1000; display: none; max-height: 300px; overflow-y: auto; }
     @media print {
@@ -361,7 +361,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ csp_nonce() }}">
     $(document).ready(() => {
         // Force tab switching for mixed Bootstrap environments
         $('#reportTabs button').on('click', function (e) {

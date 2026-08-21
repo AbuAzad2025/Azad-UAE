@@ -186,7 +186,7 @@
     </div>
   </nav>
 
-  <script>
+  <script nonce="{{ csp_nonce() }}">
   // Sidebar direction toggle (delegated, single listener)
   if (!window.__navbarDelegationBound) {
       window.__navbarDelegationBound = true;

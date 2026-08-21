@@ -22,13 +22,13 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}">
   <link rel="stylesheet" href="{{ dist_url('css/shop-theme.css') }}">
-   <style>:root { --theme-primary: {{ theme_primary }}; --theme-secondary: {{ theme_secondary }}; }</style>
+   <style nonce="{{ csp_nonce() }}">:root { --theme-primary: {{ theme_primary }}; --theme-secondary: {{ theme_secondary }}; }</style>
   {% block extra_head %}{% endblock %}
   {% block extra_css %}<link rel="stylesheet" href="{{ dist_url('css/shop-utilities.css') }}">{% endblock %}
   {% if analytics_id %}
 {# SRI omitted for Google Tag Manager — Google rotates script hashes frequently; verify via CSP connect-src instead #}
 <script async src="https://www.googletagmanager.com/gtag/js?id={{ analytics_id }}"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','{{ analytics_id }}');</script>
+<script nonce="{{ csp_nonce() }}">window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','{{ analytics_id }}');</script>
 {% endif %}
   {% block tracking_head %}{% endblock %}
 </head>
@@ -203,7 +203,7 @@
 
   <script src="{{ dist_url('js/telemetry.js') }}" defer></script>
   <script src="{{ dist_url('js/shop-storefront.js') }}" defer></script>
-  <script>
+  <script nonce="{{ csp_nonce() }}">
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('{{ url_for("static", filename="sw.js") }}');
   }
@@ -217,7 +217,7 @@
   <p>{{ t('cookie_notice') }}</p>
   <button data-action="accept-cookies" data-banner="ps-cookie-banner" class="ps-btn ps-btn-sm">{{ t('cookie_accept') }}</button>
 </div>
-<script>
+<script nonce="{{ csp_nonce() }}">
 if (!localStorage.getItem('cookie_consent')) { document.getElementById('ps-cookie-banner').style.display='flex'; }
 // Hide broken images globally (replaces inline onerror handlers)
 document.addEventListener('error', (e) => {

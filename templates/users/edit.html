@@ -121,7 +121,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 $(function() {
   function branchRequiredForSelectedRole() {
     const slug = $('#role_id option:selected').data('role-slug');

@@ -166,9 +166,9 @@
   </div>
 </div>
 {% endblock %}
-{% block extra_css %}<style>
+{% block extra_css %}<style nonce="{{ csp_nonce() }}">
     /* D6: externalized inline styles */
     .ic-1 { min-width: 140px; }
     .ic-2 { min-width: 160px; }
 </style>
-<style>@media print{@page{size:A4 landscape;margin:10mm}}</style>{% endblock %}
+<style nonce="{{ csp_nonce() }}">@media print{@page{size:A4 landscape;margin:10mm}}</style>{% endblock %}

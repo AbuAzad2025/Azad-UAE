@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ _('Product_Labels') }}</title>
   {% include 'partials/print_styles.html' %}
-  <style>
+  <style nonce="{{ csp_nonce() }}">
     @page { size: A4; margin: 8mm; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Tajawal', 'Arial', sans-serif; background: #fff; }

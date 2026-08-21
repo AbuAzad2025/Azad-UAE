@@ -1,5 +1,5 @@
 <link rel="preload" href="{{ url_for('static', filename='adminlte/plugins/select2/css/select2.min.css') }}" as="style" data-action="load-stylesheet">
-<script>
+<script nonce="{{ csp_nonce() }}">
 if (!window.__select2AssetsDelegationBound) {
     window.__select2AssetsDelegationBound = true;
     document.addEventListener('load', (e) => {

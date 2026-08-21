@@ -18,7 +18,7 @@
 
 {% block extra_css %}
 {% include 'partials/select2_assets.html' %}
-<style>
+<style nonce="{{ csp_nonce() }}">
 .expense-create-form .form-control,
 .expense-create-form .form-select {
   min-height: 48px;
@@ -243,7 +243,7 @@
 
 {% block extra_js %}
 {% include 'partials/select2_assets.html' %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 const TENANT_BASE_CURRENCY = {{ tenant_default_currency|tojson }} || 'ILS';
 
 $(() => {

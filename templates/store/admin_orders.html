@@ -263,7 +263,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.addEventListener('submit', (e) => {
   const el = e.target.closest('[data-action="confirm-order-number"]');
   if (!el) return;

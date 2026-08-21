@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" integrity="sha384-i/MU8rSFPCGh+nV0UkwJ/uFXJ/S0mrH1ZKIiNdWk4WKZBTMmlN1C3RjnKDce2V2z" crossorigin="anonymous" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}">
   <link rel="stylesheet" href="{{ dist_url('css/accessibility.css') }}">
-    <style>
+    <style nonce="{{ csp_nonce() }}">
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Tajawal', sans-serif; background: #f8f9fa; }
         
@@ -235,7 +235,7 @@
         <p class="ic-5">{{ developer_credit or config.DEVELOPER_CREDIT }}</p>
     </footer>
 
-    <script>
+    <script nonce="{{ csp_nonce() }}">
 document.addEventListener('click', (e) => {
     const el = e.target.closest('[data-action="scroll-to-section"]');
     if (!el) return;

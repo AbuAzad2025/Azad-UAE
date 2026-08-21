@@ -63,7 +63,7 @@
 </div>
 {% endblock %}
 {% block extra_js %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.getElementById('add-grn-line')?.addEventListener('click', function() {
   var idx = document.querySelectorAll('.grn-line-row').length;
   var html = '<div class="row g-2 mb-2 grn-line-row"><div class="col-md-3"><input type="number" name="line_'+idx+'_po_line_id" class="form-control" placeholder="{{ t("PO Line ID") }}" required></div><div class="col-md-3"><input type="number" step="0.001" name="line_'+idx+'_received_quantity" class="form-control" placeholder="{{ t("Received Qty") }}" required></div><div class="col-md-3"><select name="line_'+idx+'_condition" class="form-select"><option value="acceptable">{{ t("Acceptable") }}</option><option value="damaged">{{ t("Damaged") }}</option></select></div><div class="col-md-3"><button type="button" class="btn btn-sm btn-danger remove-line">X</button></div></div>';

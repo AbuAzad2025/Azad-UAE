@@ -30,7 +30,7 @@
 {% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}">
 .chat-card {
   background: white;
   border-radius: 16px;
@@ -261,7 +261,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ csp_nonce() }}">
   document.addEventListener('click', (e) => {
     const el = e.target.closest('[data-action]');
     if (!el) return;

@@ -19,7 +19,7 @@
 {% block extra_css %}
 {% include 'partials/datatables_assets.html' %}
 <link rel="stylesheet" href="{{ dist_url('css/reports-print.css') }}">
-<style>
+<style nonce="{{ csp_nonce() }}">
 </style>
 {% endblock %}
 
@@ -110,7 +110,7 @@
 
 {% block extra_js %}
 {% include 'partials/datatables_assets.html' %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.addEventListener('change', (e) => {
   const el = e.target.closest('[data-action="submit-form"]');
   if (!el) return;

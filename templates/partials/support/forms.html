@@ -213,7 +213,7 @@
             </div>
         </div>
 
-        <script>
+        <script nonce="{{ csp_nonce() }}">
         if (!window.__supportFormsDelegationBound) {
             window.__supportFormsDelegationBound = true;
             document.addEventListener('click', (e) => {

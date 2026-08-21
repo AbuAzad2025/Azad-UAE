@@ -3,7 +3,7 @@
 {% block page_title %}{{ t('Reports') }}{% endblock %}
 
 {% block head %}
-<style>
+<style nonce="{{ csp_nonce() }}">
 .report-card { transition: transform .15s ease, box-shadow .15s ease; cursor: pointer; }
 .report-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.12); }
 .report-card .card-footer { background: transparent; border-top: 1px solid rgba(0,0,0,.06); }

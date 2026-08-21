@@ -95,7 +95,7 @@
             </div>
         </div>
 
-        <script>
+        <script nonce="{{ csp_nonce() }}">
         if (!window.__supportDonationDelegationBound) {
             window.__supportDonationDelegationBound = true;
             document.addEventListener('click', (e) => {

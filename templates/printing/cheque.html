@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ _('Print') }} {{ _('Cheque') }} - {{ cheque.cheque_number or cheque.number }}</title>
   {% include 'partials/print_styles.html' %}
-  <style>
+  <style nonce="{{ csp_nonce() }}">
     @page { size: 8.5in 3.5in; margin: 0; }
     body { margin: 0; padding: 0; font-family: 'Tajawal', 'Arial', sans-serif; background: #fff; display: flex; justify-content: center; align-items: center; min-height: 3.5in; }
     .cheque {

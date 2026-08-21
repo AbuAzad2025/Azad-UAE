@@ -117,7 +117,7 @@
             </div>
         </div>
 
-        <script>
+        <script nonce="{{ csp_nonce() }}">
         if (!window.__supportPurchaseDelegationBound) {
             window.__supportPurchaseDelegationBound = true;
             document.addEventListener('click', (e) => {

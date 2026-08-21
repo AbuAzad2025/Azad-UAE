@@ -4,7 +4,7 @@
 {% block title %}{{ t('Voucher_2') }} {{ t('Receipt') }} - {{ receipt.receipt_number }}{% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}">
   body {
     font-family: 'Arial', sans-serif;
     padding: 8px;

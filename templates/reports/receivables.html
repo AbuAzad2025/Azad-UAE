@@ -142,7 +142,7 @@
 
 {% block extra_js %}
 {% include 'partials/datatables_assets.html' %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 $(document).ready(() => {
   const $tableEl = $('#receivablesTable');
   const printOptions = {
@@ -172,7 +172,7 @@ $(document).ready(() => {
 {% endblock %}
 {% block extra_css %}
 {% include 'partials/datatables_assets.html' %}
-<style>
+<style nonce="{{ csp_nonce() }}">
 @media print {
   @page {
     size: A4 landscape;

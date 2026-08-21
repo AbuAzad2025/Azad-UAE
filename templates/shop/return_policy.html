@@ -3,7 +3,7 @@
 {% block title %}{{ t('return_policy') }} — {{ store.title }}{% endblock %}
 
 {% block extra_css %}{{ super() }}
-<style>
+<style nonce="{{ csp_nonce() }}">
     .ic-1 { white-space:pre-wrap; line-height:1.75; color:var(--ps-muted); }
     .ic-2 { margin-top:1.25rem; }
 </style>

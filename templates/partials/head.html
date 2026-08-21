@@ -94,7 +94,7 @@
   {% block extra_css %}{% endblock %}
 
   <!-- Structured Data: Organization -->
-  <script type="application/ld+json">
+  <script type="application/ld+json" nonce="{{ csp_nonce() }}">
   {
     "@context": "https://schema.org",
     "@type": "Organization",

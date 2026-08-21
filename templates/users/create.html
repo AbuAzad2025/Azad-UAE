@@ -17,7 +17,7 @@
 {% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}">
 .required-field { position: relative; }
 .required-field label { font-weight: 600; color: #2c3e50; }
 .required-field::before {
@@ -267,7 +267,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 $(function() {
   $('[data-toggle="tooltip"]').tooltip({
     placement: 'top',

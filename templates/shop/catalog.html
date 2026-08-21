@@ -171,7 +171,7 @@
 {% include 'shop/partials/quick_view_modal.html' %}
 {% endblock %}
 {% block extra_js %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.addEventListener('change', (e) => {
   const el = e.target.closest('[data-action="submit-form"]');
   if (!el) return;

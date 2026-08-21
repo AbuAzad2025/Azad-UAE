@@ -6,7 +6,7 @@
   <title>{{ tenant.name_ar or tenant.name }} — معلومات الشركة</title>
   <link href="{{ url_for('static', filename='adminlte/plugins/bootstrap/css/bootstrap5.rtl.min.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='adminlte/plugins/bootstrap-icons/bootstrap-icons.min.css') }}" rel="stylesheet">
-  <style>
+  <style nonce="{{ csp_nonce() }}">
     :root {
       --primary: {{ tenant.brand_color_primary or '#1B7A4E' }};
       --secondary: {{ tenant.brand_color_secondary or '#CE1126' }};
@@ -294,7 +294,7 @@
     </div>
   </div>
 
-  <script>
+  <script nonce="{{ csp_nonce() }}">
   document.addEventListener('submit', (e) => {
     const el = e.target.closest('[data-action="confirm-submit"]');
     if (!el) return;

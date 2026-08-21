@@ -4,7 +4,7 @@
 {% block title %}{{ t('Voucher_2') }} {{ t('Receipt') }} - {{ receipt.receipt_number }}{% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}">
   :root {
     --header-color: {{ settings.header_color or '#28a745' }};
     --accent-color: {{ settings.accent_color or '#20c997' }};

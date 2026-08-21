@@ -68,7 +68,7 @@
 </div>
 {% endblock %}
 {% block extra_js %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.getElementById('add-pr-line')?.addEventListener('click', function() {
   var idx = document.querySelectorAll('.pr-line-row').length;
   var html = '<div class="row g-2 mb-2 pr-line-row"><div class="col-md-4"><select name="line_'+idx+'_product_id" class="form-select" required><option value="">{{ t("Product") }}</option></select></div><div class="col-md-2"><input type="number" step="0.001" name="line_'+idx+'_quantity" class="form-control" placeholder="{{ t("Qty") }}" required></div><div class="col-md-2"><input type="number" step="0.001" name="line_'+idx+'_unit_cost" class="form-control" placeholder="{{ t("Est. Cost") }}"></div><div class="col-md-3"><input type="text" name="line_'+idx+'_notes" class="form-control" placeholder="{{ t("Notes") }}"></div><div class="col-md-1"><button type="button" class="btn btn-sm btn-danger remove-line">X</button></div></div>';

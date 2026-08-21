@@ -6,7 +6,7 @@
   <title>{{ settings.company_name_ar if settings else tenant_name_ar or company_name_ar }} - {{ _('قسيمة راتب') }}</title>
   <link rel="stylesheet" href="{{ dist_url('css/erp-theme-unified.css') }}">
   {% include 'partials/print_styles.html' %}
-  <style>
+  <style nonce="{{ csp_nonce() }}">
     body { font-family: 'Tajawal', 'Arial', sans-serif; background: #95a5a6; }
     .invoice {
       width: 210mm; min-height: 148mm; border-radius: 0; overflow: auto;

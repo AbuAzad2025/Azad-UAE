@@ -2,7 +2,7 @@
 {% block title %}{{ t('login') }} — {{ store.title }}{% endblock %}
 
 {% block extra_css %}{{ super() }}
-<style>
+<style nonce="{{ csp_nonce() }}">
     .ic-1 { max-width:420px; margin:2rem auto; }
     .ic-2 { margin:0 0 1rem; font-weight:800; }
     .ic-3 { margin-top:0.75rem; text-align:center; font-size:0.85rem; }

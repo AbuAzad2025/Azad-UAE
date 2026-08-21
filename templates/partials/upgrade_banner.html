@@ -19,7 +19,7 @@
     </div>
   </div>
 </div>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function() {
   const usage = {{ tenant_usage | tojson }};
   const sub = {{ tenant_subscription | tojson }};

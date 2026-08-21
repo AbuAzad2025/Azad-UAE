@@ -18,7 +18,7 @@
 {% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}">
 @media print {
   .main-sidebar, .main-header, .main-footer, .btn, .content-header { display: none !important; }
   .content-wrapper { margin: 0 !important; padding: 0 !important; }

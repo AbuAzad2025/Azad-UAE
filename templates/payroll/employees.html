@@ -3,7 +3,7 @@
 
 {% block extra_css %}
 {% include 'partials/datatables_assets.html' %}
-<style>
+<style nonce="{{ csp_nonce() }}">
   #employeesTable th,
   #employeesTable td {
     vertical-align: middle;
@@ -21,7 +21,7 @@
 
 {% block extra_js %}
 {% include 'partials/datatables_assets.html' %}
-<script>
+<script nonce="{{ csp_nonce() }}">
   (() => {
     const tableSelector = '#employeesTable';
     const languageUrl = "{{ url_for('static', filename=('datatables/Arabic.json' if is_rtl else 'datatables/English.json')) }}";

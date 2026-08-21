@@ -6,7 +6,7 @@
   <title>{{ _('الخدمة غير متاحة') }}</title>
   <link href="{{ url_for('static', filename='adminlte/plugins/bootstrap/css/bootstrap5.rtl.min.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='adminlte/plugins/bootstrap-icons/bootstrap-icons.min.css') }}" rel="stylesheet">
-  <style>
+  <style nonce="{{ csp_nonce() }}">
     body {
       min-height: 100vh;
       display: flex;

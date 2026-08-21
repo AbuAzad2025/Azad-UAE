@@ -45,8 +45,8 @@
     <script src="{{ url_for('static', filename='adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ url_for('static', filename='adminlte/js/adminlte.min.js') }}"></script>
     <script defer src="{{ dist_url('js/telemetry.js') }}"></script>
-    <script type="application/json" id="app-enums-data">{{ app_enums|tojson }}</script>
-    <script type="application/json" id="user-permissions-data">{{ current_user_permissions|tojson }}</script>
+    <script type="application/json" id="app-enums-data" nonce="{{ csp_nonce() }}">{{ app_enums|tojson }}</script>
+    <script type="application/json" id="user-permissions-data" nonce="{{ csp_nonce() }}">{{ current_user_permissions|tojson }}</script>
     <script nonce="{{ csp_nonce() }}">
         window.APP_ENUMS = JSON.parse(document.getElementById('app-enums-data').textContent || '{}');
         // Unified UI notification — replaces raw alert() with the design-system toast

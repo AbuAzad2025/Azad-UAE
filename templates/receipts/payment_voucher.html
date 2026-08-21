@@ -4,7 +4,7 @@
 {% block title %}{{ t('Voucher') }} — {{ payment.payment_number }}{% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce() }}">
   :root {
     --header-color: {{ settings.header_color if settings else '#0f172a' }};
     --accent-color: {{ settings.accent_color if settings else '#15803d' }};

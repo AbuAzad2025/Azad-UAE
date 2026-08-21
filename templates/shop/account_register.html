@@ -2,7 +2,7 @@
 {% block title %}{{ t('register') }} — {{ store.title }}{% endblock %}
 
 {% block extra_css %}{{ super() }}
-<style>
+<style nonce="{{ csp_nonce() }}">
     .ic-1 { max-width:480px; margin:2rem auto; }
     .ic-2 { margin:0 0 1rem; font-weight:800; }
     .ic-3 { margin-top:1rem; text-align:center; }

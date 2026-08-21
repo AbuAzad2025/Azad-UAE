@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/bootstrap/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ dist_url('css/accessibility.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='fonts/tajawal/tajawal.css') }}">
-    <style>
+    <style nonce="{{ csp_nonce() }}">
         * { font-family: 'Tajawal', system-ui, sans-serif; }
         body {
             background: linear-gradient(135deg, #1a5fb4 0%, #1557a0 100%);
@@ -209,7 +209,7 @@
     <script src="{{ url_for('static', filename='adminlte/plugins/jquery/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename='adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ url_for('static', filename='adminlte/plugins/sweetalert2/sweetalert2.all.min.js') }}"></script>
-    <script>
+    <script nonce="{{ csp_nonce() }}">
         // Poll payment status every 30 seconds if pending
         const shouldPollPayment = {{ should_poll_payment | tojson }};
         if (shouldPollPayment) {

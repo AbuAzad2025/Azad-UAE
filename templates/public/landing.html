@@ -48,7 +48,7 @@
     {% endif %}
     {% include 'partials/seo-landing.html' %}
 
-    <style>
+    <style nonce="{{ csp_nonce() }}">
         :root {
             --azad-text: #FFFFFF;
             --azad-text-muted: #CBD5E1;
@@ -657,7 +657,7 @@
 {# SCRIPTS                                          #}
 {# ──────────────────────────────────────────────── #}
 <script src="{{ dist_url('js/landing.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function() {
   // Hide broken images globally (replaces inline onerror handlers)
   document.addEventListener('error', function(e) {

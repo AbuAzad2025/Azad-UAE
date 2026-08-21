@@ -313,42 +313,100 @@ def partners():
     # --- 2. FINANCIAL SUMMARIES (Partners & Merchants) ---
     def get_financials(customer_type, share_totals_dict):
         customers = _scoped_customer_query().filter_by(customer_type=customer_type).all()
-        summary_list = []
+        if not customers:
+            return []
 
-        for cust in customers:
-            paid_query_total = db.session.query(func.sum(Payment.amount_aed)).filter(
-                Payment.customer_id == cust.id,
-                Payment.direction == "outgoing",
-                payment_affects_balance(Payment),
-            )
-            receipts_query = db.session.query(func.sum(Receipt.amount_aed)).filter(
-                Receipt.customer_id == cust.id, payment_affects_balance(Receipt)
-            )
-            payment_in_query = db.session.query(func.sum(Payment.amount_aed)).filter(
-                Payment.customer_id == cust.id,
-                Payment.direction == "incoming",
-                payment_affects_balance(Payment),
-            )
+        customer_ids = [c.id for c in customers]
+        payment_scope = [
+            Payment.customer_id.in_(customer_ids),
+            payment_affects_balance(Payment),
+        ]
+        receipt_scope = [Receipt.customer_id.in_(customer_ids), payment_affects_balance(Receipt)]
+
+        def _date_filters(q, *pairs):
+            for col, d_from, d_to in pairs:
+                if d_from:
+                    q = q.filter(func.date(col) >= d_from)
+                if d_to:
+                    q = q.filter(func.date(col) <= d_to)
+            return q
+
+        def _tenant_branch_filters(q, tenant_col, branch_col):
             if tenant_id is not None:
-                paid_query_total = paid_query_total.filter(Payment.tenant_id == tenant_id)
-                receipts_query = receipts_query.filter(Receipt.tenant_id == tenant_id)
-                payment_in_query = payment_in_query.filter(Payment.tenant_id == tenant_id)
-            if date_from:
-                paid_query_total = paid_query_total.filter(func.date(Payment.payment_date) >= date_from)
-                receipts_query = receipts_query.filter(func.date(Receipt.receipt_date) >= date_from)
-                payment_in_query = payment_in_query.filter(func.date(Payment.payment_date) >= date_from)
-            if date_to:
-                paid_query_total = paid_query_total.filter(func.date(Payment.payment_date) <= date_to)
-                receipts_query = receipts_query.filter(func.date(Receipt.receipt_date) <= date_to)
-                payment_in_query = payment_in_query.filter(func.date(Payment.payment_date) <= date_to)
+                q = q.filter(tenant_col == tenant_id)
             if scoped_branch_id is not None:
-                paid_query_total = paid_query_total.filter(Payment.branch_id == scoped_branch_id)
-                receipts_query = receipts_query.filter(Receipt.branch_id == scoped_branch_id)
-                payment_in_query = payment_in_query.filter(Payment.branch_id == scoped_branch_id)
+                q = q.filter(branch_col == scoped_branch_id)
+            return q
 
-            total_paid_to = paid_query_total.scalar() or Decimal("0")
-            total_receipts = receipts_query.scalar() or Decimal("0")
-            total_payment_in = payment_in_query.scalar() or Decimal("0")
+        paid_rows = (
+            _tenant_branch_filters(
+                _date_filters(
+                    db.session.query(
+                        Payment.customer_id.label("cid"),
+                        func.coalesce(func.sum(Payment.amount_aed), 0).label("amt"),
+                    )
+                    .filter(
+                        Payment.direction == "outgoing",
+                        *payment_scope,
+                    ),
+                    Payment.payment_date,
+                    date_from,
+                    date_to,
+                ),
+                Payment.tenant_id,
+                Payment.branch_id,
+            )
+            .group_by(Payment.customer_id)
+            .all()
+        )
+        total_paid_to_map = {r.cid: r.amt or Decimal("0") for r in paid_rows}
+
+        received_rows = (
+            _tenant_branch_filters(
+                _date_filters(
+                    db.session.query(
+                        Receipt.customer_id.label("cid"),
+                        func.coalesce(func.sum(Receipt.amount_aed), 0).label("amt"),
+                    ).filter(*receipt_scope),
+                    Receipt.receipt_date,
+                    date_from,
+                    date_to,
+                ),
+                Receipt.tenant_id,
+                Receipt.branch_id,
+            )
+            .group_by(Receipt.customer_id)
+            .all()
+        )
+        receipts_map = {r.cid: r.amt or Decimal("0") for r in received_rows}
+
+        incoming_rows = (
+            _tenant_branch_filters(
+                _date_filters(
+                    db.session.query(
+                        Payment.customer_id.label("cid"),
+                        func.coalesce(func.sum(Payment.amount_aed), 0).label("amt"),
+                    ).filter(
+                        Payment.direction == "incoming",
+                        *payment_scope,
+                    ),
+                    Payment.payment_date,
+                    date_from,
+                    date_to,
+                ),
+                Payment.tenant_id,
+                Payment.branch_id,
+            )
+            .group_by(Payment.customer_id)
+            .all()
+        )
+        payment_in_map = {r.cid: r.amt or Decimal("0") for r in incoming_rows}
+
+        summary_list = []
+        for cust in customers:
+            total_paid_to = total_paid_to_map.get(cust.id, Decimal("0"))
+            total_receipts = receipts_map.get(cust.id, Decimal("0"))
+            total_payment_in = payment_in_map.get(cust.id, Decimal("0"))
             total_received_from = total_receipts + total_payment_in
 
             total_share = share_totals_dict.get(cust.id, Decimal("0"))
