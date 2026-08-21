@@ -70,7 +70,7 @@ class SaleCampaign(db.Model):
     )
     sale_id = db.Column(
         db.Integer,
-        db.ForeignKey("sales.id", ondelete="CASCADE"),
+        db.ForeignKey("sales.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
     )

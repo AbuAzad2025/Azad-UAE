@@ -24,6 +24,10 @@ class Purchase(db.Model):
         db.Integer, db.ForeignKey("branches.id", ondelete="RESTRICT"), nullable=True, index=True
     )  # New Branch ID
 
+    # Procurement linkage — PO/GRN that this supplier invoice is matched against.
+    po_id = db.Column(db.Integer, db.ForeignKey("purchase_orders.id", ondelete="SET NULL"), nullable=True, index=True)
+    grn_id = db.Column(db.Integer, db.ForeignKey("goods_receipts.id", ondelete="SET NULL"), nullable=True, index=True)
+
     supplier_name = db.Column(db.String(200), nullable=False)
     supplier_phone = db.Column(db.String(20))
     supplier_email = db.Column(db.String(120))
@@ -110,6 +114,8 @@ class Purchase(db.Model):
     branch = db.relationship("Branch", backref="purchases", foreign_keys=[branch_id])
     lines = db.relationship("PurchaseLine", back_populates="purchase", lazy="joined")
     tenant = db.relationship("Tenant", backref="purchases", foreign_keys=[tenant_id])
+    purchase_order = db.relationship("PurchaseOrder", backref="invoices", foreign_keys=[po_id])
+    goods_receipt = db.relationship("GoodsReceipt", backref="invoices", foreign_keys=[grn_id])
 
     @property
     def warehouse(self):

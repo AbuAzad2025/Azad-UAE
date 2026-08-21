@@ -75,36 +75,24 @@ def register_validation_event_listeners():
     @event.listens_for(Sale, "before_insert")
     @event.listens_for(Sale, "before_update")
     def _validate_sale(mapper, connection, target):
-        try:
-            if target.amount_aed and target.amount_aed < 0:
-                logger.error(f"Sale {target.sale_number}: Negative amount detected!")
-        except Exception as e:
-            logger.error(f"Failed to validate sale: {e}")
+        if target.amount_aed and target.amount_aed < 0:
+            raise ValueError(gettext(f"Sale {target.sale_number}: Negative amount detected!"))
 
     @event.listens_for(Purchase, "before_insert")
     @event.listens_for(Purchase, "before_update")
     def _validate_purchase(mapper, connection, target):
-        try:
-            if target.amount_aed and target.amount_aed < 0:
-                logger.error(f"Purchase {target.purchase_number}: Negative amount detected!")
-        except Exception as e:
-            logger.error(f"Failed to validate purchase: {e}")
+        if target.amount_aed and target.amount_aed < 0:
+            raise ValueError(gettext(f"Purchase {target.purchase_number}: Negative amount detected!"))
 
     @event.listens_for(Receipt, "before_insert")
     def _validate_receipt(mapper, connection, target):
-        try:
-            if target.amount_aed and target.amount_aed <= 0:
-                logger.error(f"Receipt {target.receipt_number}: Invalid amount!")
-        except Exception as e:
-            logger.error(f"Failed to validate receipt: {e}")
+        if target.amount_aed is not None and target.amount_aed <= 0:
+            raise ValueError(gettext(f"Receipt {target.receipt_number}: Invalid amount!"))
 
     @event.listens_for(Payment, "before_insert")
     def _validate_payment(mapper, connection, target):
-        try:
-            if target.amount_aed and target.amount_aed <= 0:
-                logger.error("Payment: Invalid amount!")
-        except Exception as e:
-            logger.error(f"Failed to validate payment: {e}")
+        if target.amount_aed is not None and target.amount_aed <= 0:
+            raise ValueError(gettext("Payment: Invalid amount!"))
 
     @event.listens_for(Product, "before_update")
     def _validate_product_stock(mapper, connection, target):

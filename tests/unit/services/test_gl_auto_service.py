@@ -108,135 +108,90 @@ class TestRegisterEventListeners:
             gl_auto_service.register_validation_event_listeners()
             assert mock_listens.call_count >= 5
 
-    def test_sale_negative_amount_logs_error(self, caplog):
-        with patch("sqlalchemy.event.listens_for", side_effect=lambda *a, **k: lambda fn: fn):
-            gl_auto_service.register_validation_event_listeners()
-
+    def _capture_handlers(self):
         handlers = []
         with patch(
             "sqlalchemy.event.listens_for",
             side_effect=lambda model, event: lambda fn: handlers.append(fn) or fn,
         ):
             gl_auto_service.register_validation_event_listeners()
+        return handlers
 
+    def test_sale_negative_amount_raises_value_error(self):
+        handlers = self._capture_handlers()
         sale_handler = handlers[0]
         target = MagicMock(sale_number="S-1", amount_aed=Decimal("-5"))
-        with caplog.at_level("ERROR"):
+        with pytest.raises(ValueError, match="Negative amount"):
             sale_handler(None, None, target)
 
-    def test_receipt_invalid_amount_logs_error(self, caplog):
-        handlers = []
-        with patch(
-            "sqlalchemy.event.listens_for",
-            side_effect=lambda model, event: lambda fn: handlers.append(fn) or fn,
-        ):
-            gl_auto_service.register_validation_event_listeners()
+    def test_purchase_negative_amount_raises_value_error(self):
+        handlers = self._capture_handlers()
+        purchase_handler = handlers[2]
+        target = MagicMock(purchase_number="P-1", amount_aed=Decimal("-1"))
+        with pytest.raises(ValueError, match="Negative amount"):
+            purchase_handler(None, None, target)
 
+    def test_receipt_zero_amount_raises_value_error(self):
+        handlers = self._capture_handlers()
         receipt_handler = handlers[4]
         target = MagicMock(receipt_number="R-1", amount_aed=Decimal("0"))
-        with caplog.at_level("ERROR"):
+        with pytest.raises(ValueError, match="Invalid amount"):
             receipt_handler(None, None, target)
 
-    def test_product_negative_stock_logs_warning(self, caplog):
-        handlers = []
-        with patch(
-            "sqlalchemy.event.listens_for",
-            side_effect=lambda model, event: lambda fn: handlers.append(fn) or fn,
-        ):
-            gl_auto_service.register_validation_event_listeners()
+    def test_payment_negative_amount_raises_value_error(self):
+        handlers = self._capture_handlers()
+        payment_handler = handlers[5]
+        target = MagicMock(amount_aed=Decimal("-1"))
+        with pytest.raises(ValueError, match="Invalid amount"):
+            payment_handler(None, None, target)
 
+    def test_product_negative_stock_logs_warning(self, caplog):
+        handlers = self._capture_handlers()
         product_handler = handlers[-1]
         target = MagicMock(name="Widget", current_stock=Decimal("-1"))
         with caplog.at_level("WARNING"):
             product_handler(None, None, target)
+        assert "Negative stock" in caplog.text
 
-    def test_purchase_negative_amount_logs_error(self, caplog):
-        handlers = []
-        with patch(
-            "sqlalchemy.event.listens_for",
-            side_effect=lambda model, event: lambda fn: handlers.append(fn) or fn,
-        ):
-            gl_auto_service.register_validation_event_listeners()
-        purchase_handler = handlers[1]
-        target = MagicMock(purchase_number="P-1", amount_aed=Decimal("-1"))
-        with caplog.at_level("ERROR"):
-            purchase_handler(None, None, target)
-
-    def test_payment_invalid_amount_logs_error(self, caplog):
-        handlers = []
-        with patch(
-            "sqlalchemy.event.listens_for",
-            side_effect=lambda model, event: lambda fn: handlers.append(fn) or fn,
-        ):
-            gl_auto_service.register_validation_event_listeners()
-        payment_handler = handlers[5]
-        target = MagicMock(amount_aed=Decimal("-1"))
-        with caplog.at_level("ERROR"):
-            payment_handler(None, None, target)
-
-    def test_sale_validation_exception_logged(self, caplog):
-        handlers = []
-        with patch(
-            "sqlalchemy.event.listens_for",
-            side_effect=lambda model, event: lambda fn: handlers.append(fn) or fn,
-        ):
-            gl_auto_service.register_validation_event_listeners()
+    def test_sale_validation_exception_propagates(self):
+        handlers = self._capture_handlers()
         sale_handler = handlers[0]
         target = MagicMock()
         type(target).amount_aed = property(lambda _self: (_ for _ in ()).throw(RuntimeError("boom")))
-        with caplog.at_level("ERROR"):
+        with pytest.raises(RuntimeError, match="boom"):
             sale_handler(None, None, target)
 
-    def test_receipt_validation_exception_logged(self, caplog):
-        handlers = []
-        with patch(
-            "sqlalchemy.event.listens_for",
-            side_effect=lambda model, event: lambda fn: handlers.append(fn) or fn,
-        ):
-            gl_auto_service.register_validation_event_listeners()
+    def test_receipt_validation_exception_propagates(self):
+        handlers = self._capture_handlers()
         receipt_handler = handlers[4]
         target = MagicMock()
         type(target).amount_aed = property(lambda _self: (_ for _ in ()).throw(RuntimeError("boom")))
-        with caplog.at_level("ERROR"):
+        with pytest.raises(RuntimeError, match="boom"):
             receipt_handler(None, None, target)
 
-    def test_product_validation_exception_logged(self, caplog):
-        handlers = []
-        with patch(
-            "sqlalchemy.event.listens_for",
-            side_effect=lambda model, event: lambda fn: handlers.append(fn) or fn,
-        ):
-            gl_auto_service.register_validation_event_listeners()
+    def test_product_validation_exception_is_logged(self, caplog):
+        handlers = self._capture_handlers()
         product_handler = handlers[-1]
         target = MagicMock()
         type(target).current_stock = property(lambda _self: (_ for _ in ()).throw(RuntimeError("boom")))
         with caplog.at_level("ERROR"):
             product_handler(None, None, target)
+        assert "Failed to validate product stock" in caplog.text
 
-    def test_purchase_validation_exception_logged(self, caplog):
-        handlers = []
-        with patch(
-            "sqlalchemy.event.listens_for",
-            side_effect=lambda model, event: lambda fn: handlers.append(fn) or fn,
-        ):
-            gl_auto_service.register_validation_event_listeners()
-        purchase_handler = handlers[1]
+    def test_purchase_validation_exception_propagates(self):
+        handlers = self._capture_handlers()
+        purchase_handler = handlers[2]
         target = MagicMock()
         type(target).amount_aed = property(lambda _self: (_ for _ in ()).throw(RuntimeError("boom")))
-        with caplog.at_level("ERROR"):
+        with pytest.raises(RuntimeError, match="boom"):
             purchase_handler(None, None, target)
 
-    def test_payment_validation_exception_logged(self, caplog):
-        handlers = []
-        with patch(
-            "sqlalchemy.event.listens_for",
-            side_effect=lambda model, event: lambda fn: handlers.append(fn) or fn,
-        ):
-            gl_auto_service.register_validation_event_listeners()
+    def test_payment_validation_exception_propagates(self):
+        handlers = self._capture_handlers()
         payment_handler = handlers[5]
         target = MagicMock()
         type(target).amount_aed = property(lambda _self: (_ for _ in ()).throw(RuntimeError("boom")))
-        with caplog.at_level("ERROR"):
+        with pytest.raises(RuntimeError, match="boom"):
             payment_handler(None, None, target)
 
     def test_gl_validate_balance_passes_balanced(self):

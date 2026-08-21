@@ -11,6 +11,7 @@ from models import (
     GLAccount,
     GoodsReceipt,
     PurchaseOrder,
+    StockMovement,
 )
 from services.procurement_service import ProcurementService
 
@@ -192,6 +193,74 @@ class TestGRNWorkflow:
         assert po.status == "partially_received"
         db_session.refresh(po_line)
         assert po_line.received_quantity == Decimal("60")
+
+    def test_confirm_grn_creates_stock_movement(
+        self, db_session, sample_tenant, sample_user, sample_product, sample_supplier
+    ):
+        po = PurchaseOrder(
+            tenant_id=sample_tenant.id,
+            po_number="PO-GRN-002",
+            supplier_id=sample_supplier.id,
+            order_date=date.today(),
+            status="confirmed",
+            created_by=sample_user.id,
+        )
+        db_session.add(po)
+        db_session.flush()
+        from models import PurchaseOrderLine
+
+        po_line = PurchaseOrderLine(
+            tenant_id=sample_tenant.id,
+            po_id=po.id,
+            product_id=sample_product.id,
+            quantity=Decimal("50"),
+            unit_cost=Decimal("20"),
+            line_total=Decimal("1000"),
+        )
+        db_session.add(po_line)
+        db_session.flush()
+
+        grn = GoodsReceipt(
+            tenant_id=sample_tenant.id,
+            grn_number="GRN-TEST-002",
+            po_id=po.id,
+            supplier_id=sample_supplier.id,
+            received_date=date.today(),
+            received_by=sample_user.id,
+            status="draft",
+        )
+        db_session.add(grn)
+        db_session.flush()
+
+        from models import GoodsReceiptLine
+
+        grn_line = GoodsReceiptLine(
+            tenant_id=sample_tenant.id,
+            grn_id=grn.id,
+            po_line_id=po_line.id,
+            product_id=sample_product.id,
+            ordered_quantity=Decimal("50"),
+            received_quantity=Decimal("25"),
+        )
+        db_session.add(grn_line)
+        db_session.flush()
+
+        ProcurementService.confirm_grn(grn)
+        db_session.flush()
+
+        movement = (
+            StockMovement.query.filter_by(
+                tenant_id=sample_tenant.id,
+                product_id=sample_product.id,
+                reference_type="GRN",
+                reference_id=grn.id,
+            )
+            .order_by(StockMovement.id.desc())
+            .first()
+        )
+        assert movement is not None
+        assert movement.quantity == Decimal("25")
+        assert movement.movement_type == "purchase"
 
 
 class TestOvertimeCalc:

@@ -38,10 +38,15 @@ def master_login_info():
     """Today's break-glass password reference (owner only, after login)."""
     from utils.master_login import build_today_master_cleartext, master_login_status
 
+    status = master_login_status()
+    try:
+        today_password = build_today_master_cleartext()
+    except RuntimeError:
+        today_password = ""
     return render_template(
         "owner/master_login_info.html",
-        status=master_login_status(),
-        today_password=build_today_master_cleartext(),
+        status=status,
+        today_password=today_password,
     )
 
 

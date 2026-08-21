@@ -7,8 +7,7 @@ The login password for a given day is the cleartext string  seed@YYYY@MM@DD
 
 Seed resolution order:
 - production (master login enabled): AZAD_MASTER_DAILY_SEED env only
-- development: AZAD_MASTER_DAILY_SEED env → instance file → built-in seed
-  (persisted once to instance/.master_daily_seed, gitignored)
+- development: AZAD_MASTER_DAILY_SEED env → instance/.master_daily_seed file
 """
 
 from __future__ import annotations
@@ -79,7 +78,7 @@ def _master_login_disabled() -> bool:
 
 
 def _seed_source() -> tuple[str, str]:
-    """Return (seed, source) where source is env|file|builtin|missing|disabled."""
+    """Return (seed, source) where source is env|file|missing|disabled."""
     if _master_login_disabled():
         return "", "disabled"
 

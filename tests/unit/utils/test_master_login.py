@@ -323,12 +323,12 @@ class TestTryMasterLogin:
         ):
             ml._log_audit_log("127.0.0.1", "u", "static_hash")
 
-    def test_seed_file_read_oserror(self, dev_env, monkeypatch):
+    def test_seed_file_read_oserror_returns_missing(self, dev_env, monkeypatch):
         seed_file, _ = dev_env
         seed_file.write_text("x", encoding="utf-8")
         with patch("builtins.open", side_effect=OSError("nope")):
             seed, source = ml._seed_source()
-        assert source == "builtin"
+        assert source == "missing"
 
     def test_prune_old_rate_limit_entries(self):
         old = datetime.now() - timedelta(hours=5)

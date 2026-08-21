@@ -12,6 +12,7 @@ from models import (
     PurchaseRequisition,
     PurchaseRequisitionLine,
 )
+from utils.db_safety import atomic_transaction
 from utils.helpers import generate_number
 
 
@@ -198,18 +199,31 @@ class ProcurementService:
         if grn.status != "draft":
             raise ValueError(gettext("فقط المسودات يمكن تأكيدها."))
 
-        po = grn.purchase_order
-        for grn_line in grn.lines:
-            po_line = grn_line.po_line
-            po_line.received_quantity = (po_line.received_quantity or Decimal("0")) + grn_line.received_quantity
+        with atomic_transaction("confirm_grn"):
+            po = grn.purchase_order
+            for grn_line in grn.lines:
+                po_line = grn_line.po_line
+                po_line.received_quantity = (po_line.received_quantity or Decimal("0")) + grn_line.received_quantity
 
-        if po.is_fully_received:
-            po.status = "received"
-        else:
-            po.status = "partially_received"
+                # Create an immediate stock-in movement for every received line.
+                from services.stock_service import StockService
 
-        grn.status = "confirmed"
-        db.session.flush()
+                StockService.add_stock(
+                    product_id=po_line.product_id,
+                    quantity=grn_line.received_quantity,
+                    warehouse_id=grn.warehouse_id,
+                    reference_type="GRN",
+                    reference_id=grn.id,
+                    notes=gettext(f"استلام بضاعة من {grn.grn_number}"),
+                )
+
+            if po.is_fully_received:
+                po.status = "received"
+            else:
+                po.status = "partially_received"
+
+            grn.status = "confirmed"
+            db.session.flush()
         return grn
 
     @classmethod
