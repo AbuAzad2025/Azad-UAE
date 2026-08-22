@@ -85,3 +85,30 @@ class ProductService:
             tier.tenant_id = tenant_id
         db.session.add(tier)
         return tier
+
+    @staticmethod
+    def get_tenant_product(product_id, tenant_id):
+        """Fetch a product scoped to tenant; returns None when absent."""
+        from models import Product
+
+        return Product.query.filter_by(id=product_id, tenant_id=tenant_id).first()
+
+    @staticmethod
+    def search_active_products(query_text, tid, limit=20):
+        """Active-product search across name/name_ar/sku/barcode, tenant-scoped."""
+        from sqlalchemy import or_
+
+        from models import Product
+
+        q = Product.query.filter(
+            Product.is_active,
+            or_(
+                Product.name.ilike(f"%{query_text}%"),
+                Product.name_ar.ilike(f"%{query_text}%"),
+                Product.sku.ilike(f"%{query_text}%"),
+                Product.barcode.ilike(f"%{query_text}%"),
+            ),
+        )
+        if tid:
+            q = q.filter(Product.tenant_id == tid)
+        return q.limit(limit).all()

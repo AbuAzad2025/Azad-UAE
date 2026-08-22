@@ -50,3 +50,12 @@ class ShipmentService:
         from models.shipment import Shipment
 
         return Shipment.query.filter_by(source_type="purchase", source_id=purchase_id).all()
+
+    @staticmethod
+    def list_shipments(tid):
+        """All shipments for a tenant; empty list without scope."""
+        from models.shipment import Shipment
+
+        if not tid:
+            return []
+        return Shipment.query.filter_by(tenant_id=tid).order_by(Shipment.created_at.desc()).all()

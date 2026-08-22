@@ -50,11 +50,7 @@ def partners_client(app_factory, bypass_permission_auth):
         ),
         patch("routes.partners.db.session", MagicMock()) as session,
         patch("routes.partners.PartnerService") as service,
-        patch("routes.partners.PartnerProfitDistribution") as dist_model,
-        patch("routes.partners.PartnerTransaction") as tx_model,
     ):
-        dist_model.query = _dist_tx_query_chain()
-        tx_model.query = _dist_tx_query_chain()
         from routes.partners import partners_bp
 
         app = app_factory(partners_bp)
@@ -63,8 +59,6 @@ def partners_client(app_factory, bypass_permission_auth):
             "render": render,
             "session": session,
             "service": service,
-            "dist_model": dist_model,
-            "tx_model": tx_model,
         }
         yield client
 
@@ -125,6 +119,7 @@ class TestPartnersCreate:
 class TestPartnersView:
     def test_view_returns_200(self, partners_client):
         partner = _partner_mock(5)
+        partners_client._partners_mocks["service"].get_partner_activity.return_value = ([], [])
         with patch(
             "routes.partners.tenant_query",
             return_value=_tenant_query_chain(first=partner),
@@ -134,23 +129,25 @@ class TestPartnersView:
         partners_client._partners_mocks["render"].assert_called()
         kwargs = partners_client._partners_mocks["render"].call_args[1]
         assert kwargs["partner"] is partner
+        partners_client._partners_mocks["service"].get_partner_activity.assert_called_once()
 
     def test_view_includes_distributions_and_transactions(self, partners_client):
         partner = _partner_mock(3)
-        dist_q = _dist_tx_query_chain([MagicMock()])
-        tx_q = _dist_tx_query_chain([MagicMock()])
-        with (
-            patch(
-                "routes.partners.tenant_query",
-                return_value=_tenant_query_chain(first=partner),
-            ),
-            patch("routes.partners.PartnerProfitDistribution") as dist_model,
-            patch("routes.partners.PartnerTransaction") as tx_model,
+        dists = [MagicMock(name="dist")]
+        txs = [MagicMock(name="tx")]
+        with patch(
+            "routes.partners.tenant_query",
+            return_value=_tenant_query_chain(first=partner),
         ):
-            dist_model.query = dist_q
-            tx_model.query = tx_q
+            partners_client._partners_mocks["service"].get_partner_activity.return_value = (
+                dists,
+                txs,
+            )
             resp = partners_client.get("/partners/3")
         assert resp.status_code == 200
+        kwargs = partners_client._partners_mocks["render"].call_args[1]
+        assert kwargs["latest_distributions"] == dists
+        assert kwargs["latest_transactions"] == txs
 
 
 class TestPartnersEdit:
@@ -233,24 +230,19 @@ class TestPartnersStatement:
 
 class TestPartnersDistributions:
     def test_distributions_returns_200(self, partners_client):
-        dist_q = MagicMock()
-        dist_q.filter_by.return_value = dist_q
-        dist_q.order_by.return_value.limit.return_value.all.return_value = []
-        with patch("routes.partners.PartnerProfitDistribution") as dist_model:
-            dist_model.query = dist_q
-            resp = partners_client.get("/partners/distributions")
+        svc = partners_client._partners_mocks["service"]
+        svc.list_distributions.return_value = []
+        resp = partners_client.get("/partners/distributions")
         assert resp.status_code == 200
         assert "partners/distributions.html" in partners_client._partners_mocks["render"].call_args[0][0]
+        svc.list_distributions.assert_called_once()
 
     def test_distributions_with_status_filter(self, partners_client):
-        dist_q = MagicMock()
-        dist_q.filter_by.return_value = dist_q
-        dist_q.order_by.return_value.limit.return_value.all.return_value = []
-        with patch("routes.partners.PartnerProfitDistribution") as dist_model:
-            dist_model.query = dist_q
-            resp = partners_client.get("/partners/distributions?status=draft")
+        svc = partners_client._partners_mocks["service"]
+        svc.list_distributions.return_value = []
+        resp = partners_client.get("/partners/distributions?status=draft")
         assert resp.status_code == 200
-        dist_q.filter_by.assert_any_call(status="draft")
+        svc.list_distributions.assert_called_once_with(1, status="draft")
 
 
 class TestPartnersDistribute:

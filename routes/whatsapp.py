@@ -1,6 +1,6 @@
 from flask import Blueprint, flash, request
 from flask_babel import gettext
-from flask_login import current_user, login_required
+from flask_login import login_required
 
 from services.whatsapp_service import WhatsAppService
 from utils.api_response import error_response, success_response
@@ -14,13 +14,9 @@ whatsapp_bp = Blueprint("whatsapp", __name__, url_prefix="/whatsapp")
 @permission_required("manage_sales")
 def send_invoice(sale_id):
     from models import Sale
-    from utils.tenanting import get_active_tenant_id
+    from utils.tenanting import tenant_get_or_404
 
-    tid = get_active_tenant_id(current_user)
-    sale_query = Sale.query.filter_by(id=sale_id)
-    if tid is not None:
-        sale_query = sale_query.filter(Sale.tenant_id == tid)
-    sale = sale_query.first_or_404()
+    sale = tenant_get_or_404(Sale, sale_id)
 
     if not sale.customer or not sale.customer.phone:
         return error_response(message="Customer phone not available", status_code=200)
@@ -47,13 +43,9 @@ def send_invoice(sale_id):
 @admin_required
 def send_reminder(customer_id):
     from models import Customer
-    from utils.tenanting import get_active_tenant_id
+    from utils.tenanting import tenant_get_or_404
 
-    tid = get_active_tenant_id(current_user)
-    customer_query = Customer.query.filter_by(id=customer_id)
-    if tid is not None:
-        customer_query = customer_query.filter(Customer.tenant_id == tid)
-    customer = customer_query.first_or_404()
+    customer = tenant_get_or_404(Customer, customer_id)
 
     if not customer.phone:
         return error_response(message="Customer phone not available", status_code=200)

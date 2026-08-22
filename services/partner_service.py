@@ -501,3 +501,30 @@ class PartnerService:
             "opening_balance": (float(txs[0].balance_after) - float(txs[0].amount_base) if txs else 0),
             "closing_balance": (float(txs[-1].balance_after) if txs else float(partner.current_balance or 0)),
         }
+
+    @staticmethod
+    def get_partner_activity(partner_id, tid):
+        """Latest distributions (12) and transactions (20), tenant-scoped."""
+        from models import PartnerProfitDistribution, PartnerTransaction
+
+        dists_q = PartnerProfitDistribution.query.filter_by(partner_id=partner_id)
+        if tid is not None:
+            dists_q = dists_q.filter(PartnerProfitDistribution.tenant_id == tid)
+        latest_dists = dists_q.order_by(PartnerProfitDistribution.period_end.desc()).limit(12).all()
+
+        txs_q = PartnerTransaction.query.filter_by(partner_id=partner_id)
+        if tid is not None:
+            txs_q = txs_q.filter(PartnerTransaction.tenant_id == tid)
+        latest_txs = txs_q.order_by(PartnerTransaction.transaction_date.desc()).limit(20).all()
+
+        return latest_dists, latest_txs
+
+    @staticmethod
+    def list_distributions(tid, status=""):
+        """Tenant-scoped distribution history (latest 200)."""
+        from models import PartnerProfitDistribution
+
+        q = PartnerProfitDistribution.query.filter_by(tenant_id=tid)
+        if status:
+            q = q.filter_by(status=status)
+        return q.order_by(PartnerProfitDistribution.period_end.desc()).limit(200).all()

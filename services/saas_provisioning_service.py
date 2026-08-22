@@ -282,3 +282,10 @@ class SaaSProvisioningService:
     @staticmethod
     def is_demo_tenant(tenant) -> bool:
         return getattr(tenant, "is_trial", False) and getattr(tenant, "subscription_plan", "") == "demo"
+
+    @staticmethod
+    def list_active_packages():
+        """Public pricing catalog — active packages in display order."""
+        from models.package import Package
+
+        return Package.query.filter_by(is_active=True).order_by(Package.sort_order).all()

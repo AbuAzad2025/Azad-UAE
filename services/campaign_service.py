@@ -145,3 +145,12 @@ class CampaignService:
             )
             .first()
         )
+
+    @staticmethod
+    def list_active_campaigns(tid):
+        """Active campaigns for a tenant; empty list when no tenant scope."""
+        from models.campaign import Campaign
+
+        if not tid:
+            return []
+        return Campaign.query.filter_by(tenant_id=tid, is_active=True).order_by(Campaign.created_at.desc()).all()

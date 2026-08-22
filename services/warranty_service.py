@@ -57,3 +57,12 @@ class WarrantyService:
             .order_by(WarrantyClaim.warranty_end_date.asc())
             .all()
         )
+
+    @staticmethod
+    def list_claims(tid):
+        """All warranty claims for a tenant; empty list without scope."""
+        from models.warranty_claim import WarrantyClaim
+
+        if not tid:
+            return []
+        return WarrantyClaim.query.filter_by(tenant_id=tid).order_by(WarrantyClaim.claim_date.desc()).all()

@@ -71,3 +71,17 @@ class CustomerService:
         customer.adjust_balance(delta_aed)
         db.session.flush()
         return customer.balance
+
+    @staticmethod
+    def list_active_paginated(tid, page, per_page):
+        """Active customers ordered by name, tenant-scoped, optimized pagination."""
+        from models import Customer
+
+        query = Customer.query.filter_by(is_active=True)
+        if tid:
+            query = query.filter(Customer.tenant_id == tid)
+        query = query.order_by(Customer.name)
+
+        from utils.query_optimizer import paginate_optimized
+
+        return paginate_optimized(query, page=page, per_page=per_page)

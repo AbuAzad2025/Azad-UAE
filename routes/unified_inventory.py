@@ -18,10 +18,9 @@ uinv_bp = Blueprint("unified_inventory", __name__, url_prefix="/uinv")
 @permission_required("manage_products")
 def campaigns_index():
     tid = get_active_tenant_id(current_user)
-    if tid:
-        campaigns = Campaign.query.filter_by(tenant_id=tid, is_active=True).order_by(Campaign.created_at.desc()).all()
-    else:
-        campaigns = []
+    from services.campaign_service import CampaignService
+
+    campaigns = CampaignService.list_active_campaigns(tid)
     return render_template("unified_inventory/campaigns.html", campaigns=campaigns)
 
 
@@ -59,7 +58,9 @@ def campaigns_create():
 @permission_required("manage_products")
 def warranty_index():
     tid = get_active_tenant_id(current_user)
-    claims = WarrantyClaim.query.filter_by(tenant_id=tid).order_by(WarrantyClaim.claim_date.desc()).all() if tid else []
+    from services.warranty_service import WarrantyService
+
+    claims = WarrantyService.list_claims(tid)
     return render_template("unified_inventory/warranty.html", claims=claims)
 
 
@@ -95,7 +96,9 @@ def warranty_create():
 @permission_required("manage_warehouse")
 def shipments_index():
     tid = get_active_tenant_id(current_user)
-    shipments = Shipment.query.filter_by(tenant_id=tid).order_by(Shipment.created_at.desc()).all() if tid else []
+    from services.shipment_service import ShipmentService
+
+    shipments = ShipmentService.list_shipments(tid)
     return render_template("unified_inventory/shipments.html", shipments=shipments)
 
 

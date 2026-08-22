@@ -50,9 +50,9 @@ def _safe_vault_for_public(vault):
 def landing():
     """Landing Page الفخمة"""
     lang = session.get("language", "ar")
-    from models.package import Package
+    from services.saas_provisioning_service import SaaSProvisioningService
 
-    packages = Package.query.filter_by(is_active=True).order_by(Package.sort_order).all()
+    packages = SaaSProvisioningService.list_active_packages()
     return render_template("public/landing.html", packages=packages, is_en=lang == "en")
 
 
@@ -60,9 +60,9 @@ def landing():
 def pricing():
     """صفحة الأسعار والعروض"""
     lang = session.get("language", "ar")
-    from models.package import Package
+    from services.saas_provisioning_service import SaaSProvisioningService
 
-    packages = Package.query.filter_by(is_active=True).order_by(Package.sort_order).all()
+    packages = SaaSProvisioningService.list_active_packages()
     ctx = {
         "packages": packages,
         "is_en": lang == "en",

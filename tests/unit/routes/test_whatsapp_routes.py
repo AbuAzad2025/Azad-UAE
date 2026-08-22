@@ -12,35 +12,28 @@ from tests.unit.routes.conftest import (
 )
 
 
-def _sale_query(sale=None, not_found=False):
-    q = MagicMock()
-    inner = MagicMock()
-    if not_found:
-        inner.first_or_404.side_effect = NotFound()
-    else:
-        inner.first_or_404.return_value = sale
-    inner.filter.return_value = inner
-    q.filter_by.return_value = inner
-    q.filter.return_value = inner
-    return q
-
-
-def _customer_query(customer=None, not_found=False):
-    return _sale_query(customer, not_found)
-
-
 @contextmanager
 def _whatsapp_patches(sale=None, customer=None, sale_not_found=False, customer_not_found=False):
+    from models import Customer as RealCustomer
+    from models import Sale as RealSale
+
+    def _resolver(model, ident):
+        if model is RealSale:
+            if sale_not_found:
+                raise NotFound()
+            return sale
+        if model is RealCustomer:
+            if customer_not_found:
+                raise NotFound()
+            return customer
+        return MagicMock()
+
     with (
-        patch("utils.tenanting.get_active_tenant_id", return_value=1),
-        patch("models.Sale") as sale_cls,
-        patch("models.Customer") as customer_cls,
+        patch("utils.tenanting.tenant_get_or_404", side_effect=_resolver),
         patch("routes.whatsapp.WhatsAppService") as wa_svc,
         patch("routes.whatsapp.flash") as flash,
         patch("flask.current_app") as app,
     ):
-        sale_cls.query = _sale_query(sale, sale_not_found)
-        customer_cls.query = _customer_query(customer, customer_not_found)
         app.logger = MagicMock()
         yield {"wa_svc": wa_svc, "flash": flash}
 

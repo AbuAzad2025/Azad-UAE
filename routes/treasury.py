@@ -132,14 +132,13 @@ def wps_export():
     from flask import Response
 
     from utils.localization import get_strategy
-    from utils.tenanting import tenant_query
 
     tenant_id = get_active_tenant_id(current_user)
     if not tenant_id:
         flash(gettext("يجب تحديد الشركة أولاً."), "warning")
         return redirect(url_for("treasury.treasury"))
 
-    from models import PayrollTransaction, Tenant
+    from models import Tenant
 
     tenant = db.session.get(Tenant, tenant_id) if tenant_id else None
     country = (getattr(tenant, "vat_country", None) or "AE").strip().upper()
@@ -154,46 +153,9 @@ def wps_export():
     month = request.args.get("month", type=int) or datetime.now().month
     year = request.args.get("year", type=int) or datetime.now().year
 
-    from models import Employee
+    from services.payroll_service import PayrollService
 
-    employees = (
-        tenant_query(Employee)
-        .filter(
-            Employee.is_active.is_(True),
-            Employee.bank_code.isnot(None),
-            Employee.iban.isnot(None),
-        )
-        .all()
-    )
-
-    if not employees:
-        flash(gettext("لا يوجد موظفين مرتبطين بحسابات بنكية."), "warning")
-        return redirect(url_for("treasury.treasury"))
-
-    employee_data = []
-    for emp in employees:
-        txn = PayrollTransaction.query.filter_by(
-            tenant_id=tenant_id,
-            employee_id=emp.id,
-            month=month,
-            year=year,
-        ).first()
-        if not txn:
-            continue
-        employee_data.append(
-            {
-                "wps_id": f"{emp.id:08d}",
-                "employee_id": emp.id,
-                "name": emp.name,
-                "iban": emp.iban,
-                "bank_code": emp.bank_code,
-                "basic_salary": str(txn.basic_amount),
-                "allowances": str(txn.allowances),
-                "net_salary": str(txn.net_salary),
-                "currency": emp.currency or "AED",
-                "payment_date": txn.payment_date.isoformat() if txn.payment_date else "",
-            }
-        )
+    employee_data = PayrollService.get_wps_rows(tenant_id, month, year)
 
     if not employee_data:
         flash(gettext("لا توجد معاملات رواتب لهذا الشهر."), "warning")

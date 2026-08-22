@@ -54,9 +54,7 @@ def get_sale(sale_id):
 
     sale = query.first_or_404()
 
-    return success_response(
-        data={"sale": sale.to_dict(include_lines=True, include_cost=current_user.can_see_costs())}
-    )
+    return success_response(data={"sale": sale.to_dict(include_lines=True, include_cost=current_user.can_see_costs())})
 
 
 @api_enhanced_bp.route("/customers", methods=["GET"])
@@ -65,17 +63,14 @@ def get_sale(sale_id):
 @limiter.limit("100 per minute")
 @cached_query(timeout=60, key_prefix="api_customers_list")
 def get_customers():
-    from models import Customer
-
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 20, type=int)
 
     tid = get_active_tenant_id(current_user)
-    query = Customer.query.filter_by(is_active=True)
-    if tid:
-        query = query.filter(Customer.tenant_id == tid)
-    query = query.order_by(Customer.name)
-    pagination = paginate_optimized(query, page=page, per_page=per_page)
+
+    from services.customer_service import CustomerService
+
+    pagination = CustomerService.list_active_paginated(tid, page, per_page)
 
     return paginated_response(
         items=[c.to_dict() for c in pagination.items],
@@ -90,10 +85,6 @@ def get_customers():
 @permission_required("manage_products")
 @limiter.limit("200 per minute")
 def search_products():
-    from sqlalchemy import or_
-
-    from models import Product
-
     query_text = request.args.get("q", "")
     limit = request.args.get("limit", 20, type=int)
 
@@ -101,22 +92,12 @@ def search_products():
         return error_response("Query required", status_code=200)
 
     tid = get_active_tenant_id(current_user)
-    products = Product.query.filter(
-        Product.is_active,
-        or_(
-            Product.name.ilike(f"%{query_text}%"),
-            Product.name_ar.ilike(f"%{query_text}%"),
-            Product.sku.ilike(f"%{query_text}%"),
-            Product.barcode.ilike(f"%{query_text}%"),
-        ),
-    )
-    if tid:
-        products = products.filter(Product.tenant_id == tid)
-    products = products.limit(limit).all()
 
-    return success_response(
-        data={"products": [p.to_dict() for p in products], "count": len(products)}
-    )
+    from services.product_service import ProductService
+
+    products = ProductService.search_active_products(query_text, tid, limit)
+
+    return success_response(data={"products": [p.to_dict() for p in products], "count": len(products)})
 
 
 @api_enhanced_bp.route("/analytics/sales-forecast", methods=["GET"])

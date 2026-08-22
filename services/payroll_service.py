@@ -683,3 +683,44 @@ class PayrollService:
                 skipped_count += 1
 
         return generated_count, skipped_count
+
+    @staticmethod
+    def get_wps_rows(tenant_id, month, year):
+        """Employees with bank details joined to their payroll transaction
+        for the given period — single bulk query (fixes per-employee N+1)."""
+        from models import Employee, PayrollTransaction
+
+        rows = (
+            db.session.query(Employee, PayrollTransaction)
+            .join(
+                PayrollTransaction,
+                (PayrollTransaction.employee_id == Employee.id)
+                & (PayrollTransaction.tenant_id == Employee.tenant_id)
+                & (PayrollTransaction.month == month)
+                & (PayrollTransaction.year == year),
+            )
+            .filter(
+                Employee.tenant_id == tenant_id,
+                Employee.is_active.is_(True),
+                Employee.bank_code.isnot(None),
+                Employee.iban.isnot(None),
+            )
+            .all()
+        )
+        out = []
+        for emp, txn in rows:
+            out.append(
+                {
+                    "wps_id": f"{emp.id:08d}",
+                    "employee_id": emp.id,
+                    "name": emp.name,
+                    "iban": emp.iban,
+                    "bank_code": emp.bank_code,
+                    "basic_salary": str(txn.basic_amount),
+                    "allowances": str(txn.allowances),
+                    "net_salary": str(txn.net_salary),
+                    "currency": emp.currency or "AED",
+                    "payment_date": txn.payment_date.isoformat() if txn.payment_date else "",
+                }
+            )
+        return out

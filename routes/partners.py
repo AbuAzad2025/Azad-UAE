@@ -27,7 +27,7 @@ from flask_babel import gettext
 from flask_login import current_user, login_required
 
 from extensions import db
-from models import Partner, PartnerProfitDistribution, PartnerTransaction
+from models import Partner
 from services.partner_service import PartnerService
 from utils.api_response import success_response
 from utils.db_safety import atomic_transaction
@@ -129,17 +129,7 @@ def view(**kwargs):
     partner = tenant_query(Partner).filter_by(id=record_id).first_or_404()
     tid = _tenant_id()
 
-    # Latest distributions
-    latest_dists = PartnerProfitDistribution.query.filter_by(partner_id=record_id)
-    if tid is not None:
-        latest_dists = latest_dists.filter(PartnerProfitDistribution.tenant_id == tid)
-    latest_dists = latest_dists.order_by(PartnerProfitDistribution.period_end.desc()).limit(12).all()
-
-    # Latest transactions
-    latest_txs = PartnerTransaction.query.filter_by(partner_id=record_id)
-    if tid is not None:
-        latest_txs = latest_txs.filter(PartnerTransaction.tenant_id == tid)
-    latest_txs = latest_txs.order_by(PartnerTransaction.transaction_date.desc()).limit(20).all()
+    latest_dists, latest_txs = PartnerService.get_partner_activity(record_id, tid)
 
     return render_template(
         "partners/view.html",
@@ -231,11 +221,8 @@ def statement(**kwargs):
 @permission_required("view_reports")
 def distributions():
     tid = _tenant_id()
-    q = PartnerProfitDistribution.query.filter_by(tenant_id=tid)
     status = request.args.get("status", "")
-    if status:
-        q = q.filter_by(status=status)
-    dists = q.order_by(PartnerProfitDistribution.period_end.desc()).limit(200).all()
+    dists = PartnerService.list_distributions(tid, status=status)
     return render_template("partners/distributions.html", distributions=dists)
 
 
