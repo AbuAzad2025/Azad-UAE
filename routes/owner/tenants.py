@@ -13,16 +13,17 @@ from .common import (
     Tenant,
     User,
     db,
+    error_response,
     flash,
     get_system_default_currency,
     get_tenant_ai_level,
-    jsonify,
     owner_bp,
     owner_required,
     redirect,
     render_template,
     request,
     set_tenant_ai_level,
+    success_response,
     url_for,
 )
 from .shared import _audit_owner_db_action, _invalidate_owner_changes
@@ -470,20 +471,15 @@ def tenant_delete(tenant_id):
 def api_tenant_toggle_status(tenant_id):
     """AJAX endpoint to toggle tenant active/suspended status from super admin dashboard."""
     if not request.is_json:
-        return jsonify({"success": False, "error": "JSON required"}), 400
+        return error_response(message="JSON required", status_code=400)
     try:
         tenant = db.session.get(Tenant, tenant_id)
         if not tenant:
-            return jsonify({"success": False, "error": "Tenant not found"}), 404
+            return error_response(message="Tenant not found", status_code=404)
         if tenant.id == 1:
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "error": gettext("لا يمكن تعطيل التينانت الرئيسي"),
-                    }
-                ),
-                400,
+            return error_response(
+                message=gettext("لا يمكن تعطيل التينانت الرئيسي"),
+                status_code=400,
             )
         with atomic_transaction("api_tenant_toggle_status"):
             tenant.is_active = not tenant.is_active
@@ -499,15 +495,12 @@ def api_tenant_toggle_status(tenant_id):
             {"tenant_id": tenant_id, "is_active": tenant.is_active},
         )
         status_label = gettext("مفعل") if tenant.is_active else gettext("معطل")
-        return jsonify(
-            {
-                "success": True,
-                "is_active": tenant.is_active,
-                "message": gettext(f'تم {status_label} التينانت "{tenant.name_ar or tenant.name}" بنجاح'),
-            }
+        return success_response(
+            message=gettext(f'تم {status_label} التينانت "{tenant.name_ar or tenant.name}" بنجاح'),
+            data={"is_active": tenant.is_active},
         )
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)
 
 
 @owner_bp.route("/api/tenant/<int:tenant_id>/update-package", methods=["POST"])
@@ -515,12 +508,12 @@ def api_tenant_toggle_status(tenant_id):
 def api_tenant_update_package(tenant_id):
     """AJAX endpoint to update tenant package limits from super admin dashboard."""
     if not request.is_json:
-        return jsonify({"success": False, "error": "JSON required"}), 400
+        return error_response(message="JSON required", status_code=400)
     try:
         data = request.get_json(silent=True)
         tenant = db.session.get(Tenant, tenant_id)
         if not tenant:
-            return jsonify({"success": False, "error": "Tenant not found"}), 404
+            return error_response(message="Tenant not found", status_code=404)
         field = data.get("field")
         value = data.get("value")
         allowed_fields = [
@@ -534,11 +527,11 @@ def api_tenant_update_package(tenant_id):
             "max_sales_per_month",
         ]
         if field not in allowed_fields:
-            return jsonify({"success": False, "error": f"Unknown field: {field}"}), 400
+            return error_response(message=f"Unknown field: {field}", status_code=400)
         try:
             val = int(value)
         except (ValueError, TypeError):
-            return jsonify({"success": False, "error": "Invalid integer value"}), 400
+            return error_response(message="Invalid integer value", status_code=400)
         with atomic_transaction("api_tenant_update_package"):
             setattr(tenant, field, val)
             tenant.updated_at = datetime.now(UTC)
@@ -547,14 +540,9 @@ def api_tenant_update_package(tenant_id):
             "api_tenant_update_package",
             {"tenant_id": tenant_id, "field": field, "value": value},
         )
-        return jsonify(
-            {
-                "success": True,
-                "message": gettext(f"تم تحديث {field} إلى {value}"),
-            }
-        )
+        return success_response(message=gettext(f"تم تحديث {field} إلى {value}"))
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)
 
 
 @owner_bp.route("/tenants/<int:tenant_id>/extend-subscription", methods=["POST"])
@@ -610,17 +598,17 @@ def tenant_extend_subscription(tenant_id):
 def api_tenant_extend_subscription(tenant_id):
     """AJAX endpoint to extend or adjust a tenant subscription."""
     if not request.is_json:
-        return jsonify({"success": False, "error": "JSON required"}), 400
+        return error_response(message="JSON required", status_code=400)
     data = request.get_json(silent=True) or {}
     tenant = db.session.get(Tenant, tenant_id)
     if not tenant:
-        return jsonify({"success": False, "error": "Tenant not found"}), 404
+        return error_response(message="Tenant not found", status_code=404)
 
     days_raw = str(data.get("days", "0") or "0").strip()
     try:
         days = int(days_raw)
     except (ValueError, TypeError):
-        return jsonify({"success": False, "error": "Invalid days value"}), 400
+        return error_response(message="Invalid days value", status_code=400)
 
     explicit_end = data.get("subscription_end") or None
     plan = data.get("subscription_plan") or None
@@ -647,9 +635,9 @@ def api_tenant_extend_subscription(tenant_id):
                 "is_trial": is_trial,
             },
         )
-        return jsonify(
-            {
-                "success": True,
+        return success_response(
+            message=gettext(f"تم تحديث اشتراك التينانت '{tenant.name_ar or tenant.name}'"),
+            data={
                 "subscription_end": (
                     tenant.subscription_end.isoformat() if isinstance(tenant.subscription_end, datetime) else None
                 ),
@@ -658,8 +646,7 @@ def api_tenant_extend_subscription(tenant_id):
                     tenant.subscription_plan_duration if isinstance(tenant.subscription_plan_duration, str) else None
                 ),
                 "is_trial": bool(tenant.is_trial),
-                "message": gettext(f"تم تحديث اشتراك التينانت '{tenant.name_ar or tenant.name}'"),
-            }
+            },
         )
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)

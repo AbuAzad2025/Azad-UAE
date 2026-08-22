@@ -4,9 +4,10 @@ import logging
 import re
 from datetime import UTC, datetime
 
-from flask import jsonify
 from flask_babel import gettext
 from flask_login import current_user
+
+from utils.api_response import error_response
 
 from ai_knowledge.core.conversation_store import (
     clear_context as _clear_conversation_context,
@@ -220,18 +221,18 @@ def _sanitize_ai_prompt(message, context):
     Returns (sanitized_message, error_response_tuple_or_None).
     """
     if not message or not message.strip():
-        return None, (jsonify({"error": "Message required", "code": "EMPTY"}), 400)
+        return None, error_response(
+            message="Message required",
+            status_code=400,
+            meta={"code": "EMPTY"},
+        )
 
     # 1. Length guard - prevent token exhaustion attacks
     if len(message) > 8000:
-        return None, (
-            jsonify(
-                {
-                    "error": gettext("الرسالة طويلة جداً. الحد الأقصى هو 8000 حرف."),
-                    "code": "TOO_LONG",
-                }
-            ),
-            413,
+        return None, error_response(
+            message=gettext("الرسالة طويلة جداً. الحد الأقصى هو 8000 حرف."),
+            status_code=413,
+            meta={"code": "TOO_LONG"},
         )
 
     # 2. Prompt injection detection
@@ -248,14 +249,10 @@ def _sanitize_ai_prompt(message, context):
                 "user_id": getattr(current_user, "id", None),
             },
         )
-        return None, (
-            jsonify(
-                {
-                    "error": gettext("تم اكتشاف نمط غير مسموح به في الرسالة. يرجى إعادة صياغة سؤالك."),
-                    "code": "INJECTION_DETECTED",
-                }
-            ),
-            422,
+        return None, error_response(
+            message=gettext("تم اكتشاف نمط غير مسموح به في الرسالة. يرجى إعادة صياغة سؤالك."),
+            status_code=422,
+            meta={"code": "INJECTION_DETECTED"},
         )
 
     # 3. HTML/XSS sanitization via existing InputSanitizer

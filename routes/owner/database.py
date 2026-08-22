@@ -23,14 +23,15 @@ from .common import (
     current_app,
     current_user,
     db,
+    error_response,
     flash,
     inspect,
-    jsonify,
     owner_bp,
     owner_required,
     redirect,
     render_template,
     request,
+    success_response,
     text,
     url_for,
 )
@@ -107,7 +108,7 @@ def execute_query():
     query_text = request.form.get("query", "").strip()
 
     if not query_text:
-        return jsonify({"error": "Query is empty"}), 400
+        return error_response(message="Query is empty", status_code=400)
 
     ok, validation_error = _validate_select_only_sql(query_text)
     if not ok:
@@ -116,7 +117,7 @@ def execute_query():
             current_user.id,
             validation_error,
         )
-        return jsonify({"error": validation_error}), 400
+        return error_response(message=validation_error, status_code=400)
 
     try:
         result = db.session.execute(text(query_text))
@@ -128,11 +129,11 @@ def execute_query():
 
         _audit_owner_db_action("execute_query", {"query_prefix": query_text[:200], "row_count": len(data)})
 
-        return jsonify({"success": True, "rows": data, "count": len(data)})
+        return success_response(data={"rows": data, "count": len(data)})
 
     except Exception:
         current_app.logger.exception("Owner database query failed")
-        return jsonify({"error": gettext("تعذر تنفيذ الاستعلام حالياً")}), 400
+        return error_response(message=gettext("تعذر تنفيذ الاستعلام حالياً"), status_code=400)
 
 
 @owner_bp.route("/clear-cache", methods=["POST"])
@@ -260,18 +261,18 @@ def update_row(table_name, row_id):
     """تحديث صف في جدول — للتعديل المرئي من أدوات قاعدة البيانات."""
     safe_table = _resolve_browsable_table(table_name)
     if not safe_table:
-        return jsonify({"success": False, "error": gettext("جدول غير مسموح")}), 403
+        return error_response(message=gettext("جدول غير مسموح"), status_code=403)
 
     updates = request.get_json(silent=True) or {}
     if not updates:
-        return jsonify({"success": False, "error": gettext("لا توجد بيانات للتحديث")}), 400
+        return error_response(message=gettext("لا توجد بيانات للتحديث"), status_code=400)
 
     try:
         inspector = inspect(db.engine)
         columns = {col["name"] for col in inspector.get_columns(safe_table)}
         pk_cols = inspector.get_pk_constraint(safe_table).get("constrained_columns") or []
         if not pk_cols:
-            return jsonify({"success": False, "error": gettext("الجدول بدون مفتاح أساسي")}), 400
+            return error_response(message=gettext("الجدول بدون مفتاح أساسي"), status_code=400)
         pk_name = pk_cols[0]
 
         safe_updates = {}
@@ -281,7 +282,7 @@ def update_row(table_name, row_id):
             safe_updates[col] = val if val != "" else None
 
         if not safe_updates:
-            return jsonify({"success": False, "error": gettext("لا حقول صالحة للتحديث")}), 400
+            return error_response(message=gettext("لا حقول صالحة للتحديث"), status_code=400)
 
         with atomic_transaction("update_table_row"):
             db.session.execute(update_row_query(db.engine, safe_table, pk_name, row_id, safe_updates))
@@ -292,10 +293,10 @@ def update_row(table_name, row_id):
             row_id,
             {"table": safe_table, "columns": list(safe_updates.keys())},
         )
-        return jsonify({"success": True})
+        return success_response()
     except Exception:
         current_app.logger.exception("Owner table row update failed")
-        return jsonify({"success": False, "error": gettext("تعذر تحديث السجل حالياً")}), 500
+        return error_response(message=gettext("تعذر تحديث السجل حالياً"), status_code=500)
 
 
 @owner_bp.route("/edit-table-data/<table_name>")
@@ -648,8 +649,8 @@ def api_recent_audit_logs():
         .all()
     )
 
-    return jsonify(
-        {
+    return success_response(
+        data={
             "logs": [
                 {
                     "timestamp": log.created_at.strftime("%Y-%m-%d %H:%M:%S"),

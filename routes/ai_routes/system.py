@@ -2,11 +2,12 @@
 
 import logging
 
-from flask import jsonify, request
+from flask import request
 from flask_login import login_required
 
 from ai_knowledge.analytics.data_analyzer import data_analyzer
 from ai_knowledge.core.system_integration import system_integrator
+from utils.api_response import error_response, success_response
 from utils.decorators import permission_required
 
 from .blueprint import ai_bp
@@ -21,9 +22,9 @@ def get_customer_balance(customer_name):
     """جلب رصيد العميل بدقة"""
     try:
         result = system_integrator.get_customer_balance(customer_name)
-        return jsonify(result)
+        return success_response(data=result)
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)
 
 
 @ai_bp.route("/system/customer-debt/<int:customer_id>")
@@ -33,9 +34,9 @@ def analyze_customer_debt(customer_id):
     """تحليل ديون العميل بالتفصيل"""
     try:
         result = data_analyzer.analyze_customer_debt(customer_id)
-        return jsonify(result)
+        return success_response(data=result)
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)
 
 
 @ai_bp.route("/system/product-stock/<product_name>")
@@ -45,9 +46,9 @@ def get_product_stock(product_name):
     """جلب مخزون المنتج بدقة"""
     try:
         result = system_integrator.get_product_stock(product_name)
-        return jsonify(result)
+        return success_response(data=result)
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)
 
 
 @ai_bp.route("/system/summary")
@@ -59,15 +60,14 @@ def get_system_summary():
         result = system_integrator.get_system_summary()
         financial_result = system_integrator.get_financial_summary()
 
-        return jsonify(
-            {
-                "success": True,
+        return success_response(
+            data={
                 "summary": result.get("summary", {}),
                 "financial": financial_result.get("financial", {}),
-            }
+            },
         )
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)
 
 
 @ai_bp.route("/system/search/<search_term>")
@@ -77,9 +77,9 @@ def search_system_data(search_term):
     """البحث في بيانات النظام"""
     try:
         result = system_integrator.search_data(search_term)
-        return jsonify(result)
+        return success_response(data=result)
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)
 
 
 @ai_bp.route("/system/add-customer", methods=["POST"])
@@ -90,9 +90,9 @@ def add_customer():
     try:
         data = request.get_json(silent=True)
         result = system_integrator.add_customer(data)
-        return jsonify(result)
+        return success_response(data=result)
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)
 
 
 @ai_bp.route("/data/analyze-sales")
@@ -103,9 +103,9 @@ def analyze_sales_performance():
     try:
         period_days = request.args.get("period", 30, type=int)
         result = data_analyzer.analyze_sales_performance(period_days)
-        return jsonify(result)
+        return success_response(data=result)
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)
 
 
 @ai_bp.route("/data/analyze-products")
@@ -116,9 +116,9 @@ def analyze_product_performance():
     try:
         product_id = request.args.get("product_id", type=int)
         result = data_analyzer.analyze_product_performance(product_id)
-        return jsonify(result)
+        return success_response(data=result)
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)
 
 
 @ai_bp.route("/data/financial-ratios")
@@ -128,6 +128,6 @@ def get_financial_ratios():
     """النسب المالية"""
     try:
         result = data_analyzer.get_financial_ratios()
-        return jsonify(result)
+        return success_response(data=result)
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)

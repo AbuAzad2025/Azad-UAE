@@ -30,7 +30,7 @@ class TestGraphQLValidation:
         _dev_env(monkeypatch)
         resp = graphql_client.post("/graphql", json={"query": ""})
         assert resp.status_code == 400
-        assert "required" in resp.get_json()["errors"][0].lower()
+        assert "required" in resp.get_json()["message"].lower()
 
     def test_query_too_long_413(self, graphql_client, monkeypatch):
         _dev_env(monkeypatch)
@@ -42,7 +42,7 @@ class TestGraphQLValidation:
         deep = "{" * 12 + "id" + "}" * 12
         resp = graphql_client.post("/graphql", json={"query": deep})
         assert resp.status_code == 400
-        assert "depth" in resp.get_json()["errors"][0].lower()
+        assert "depth" in resp.get_json()["message"].lower()
 
     def test_introspection_blocked_in_production(self, graphql_client, monkeypatch):
         _prod_env(monkeypatch)
@@ -72,7 +72,7 @@ class TestGraphQLExecution:
         with patch("routes.graphql.build_schema", return_value=mock_schema):
             resp = graphql_client.post("/graphql", json={"query": "{ __typename }"})
         assert resp.status_code == 200
-        assert resp.get_json()["data"]["__typename"] == "Query"
+        assert resp.get_json()["data"]["data"]["__typename"] == "Query"
 
     def test_execution_errors_in_response(self, graphql_client, monkeypatch):
         _dev_env(monkeypatch)
@@ -84,8 +84,8 @@ class TestGraphQLExecution:
         with patch("routes.graphql.build_schema", return_value=mock_schema):
             resp = graphql_client.post("/graphql", json={"query": "{ allSales { id } }"})
         body = resp.get_json()
-        assert "errors" in body
-        assert "resolver failed" in body["errors"][0]
+        assert "errors" in body["data"]
+        assert "resolver failed" in body["data"]["errors"][0]
 
 
 class TestGraphQLPlayground:

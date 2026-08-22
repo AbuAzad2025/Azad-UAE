@@ -1,11 +1,12 @@
 import os
 import re
 
-from flask import Blueprint, abort, current_app, jsonify, request
+from flask import Blueprint, abort, current_app, request
 from flask_login import current_user, login_required
 
 from extensions import limiter
 from services.graphql_service import build_schema
+from utils.api_response import error_response, success_response
 
 graphql_bp = Blueprint("graphql", __name__, url_prefix="/graphql")
 
@@ -72,13 +73,17 @@ def graphql_query():
     variables = data.get("variables")
 
     if not query:
-        return jsonify({"errors": ["Query is required"]}), 400
+        return error_response(message="Query is required", errors=["Query is required"], status_code=400)
 
     if len(query) > _MAX_QUERY_LENGTH:
-        return jsonify({"errors": ["Query too long"]}), 413
+        return error_response(message="Query too long", errors=["Query too long"], status_code=413)
 
     if _query_depth(query) > _MAX_QUERY_DEPTH:
-        return jsonify({"errors": ["Query exceeds maximum depth"]}), 400
+        return error_response(
+            message="Query exceeds maximum depth",
+            errors=["Query exceeds maximum depth"],
+            status_code=400,
+        )
 
     if _is_production_env() and _is_introspection_query(query):
         current_app.logger.warning(
@@ -86,12 +91,17 @@ def graphql_query():
             getattr(current_user, "id", None),
         )
 
-        return jsonify({"errors": ["Introspection is disabled in production"]}), 403
+        return error_response(
+            message="Introspection is disabled in production",
+            errors=["Introspection is disabled in production"],
+            status_code=403,
+        )
 
     if not _mutations_allowed() and "mutation" in query.lower():
-        return (
-            jsonify({"errors": ["GraphQL mutations are disabled in this environment"]}),
-            403,
+        return error_response(
+            message="GraphQL mutations are disabled in this environment",
+            errors=["GraphQL mutations are disabled in this environment"],
+            status_code=403,
         )
 
     schema = build_schema(allow_mutations=_mutations_allowed())
@@ -106,7 +116,7 @@ def graphql_query():
     if result.errors:
         response["errors"] = [str(e) for e in result.errors]
 
-    return jsonify(response)
+    return success_response(data=response)
 
 
 @graphql_bp.route("/playground", methods=["GET"])

@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import cast
 
 import pandas as pd
-from flask import current_app, jsonify, render_template, request
+from flask import current_app, render_template, request
 from flask_babel import gettext
 from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
@@ -14,6 +14,7 @@ from werkzeug.utils import secure_filename
 from extensions import db
 from services.stock_service import StockService
 from utils.ai_access import get_ai_access_state
+from utils.api_response import error_response, success_response
 from utils.db_safety import atomic_transaction
 from utils.decorators import owner_required, permission_required
 from utils.gl_reference_types import GLRef
@@ -62,7 +63,7 @@ def config():
         provider = request.form.get("provider", "groq")
 
         if not api_key:
-            return jsonify({"success": False, "message": gettext("المفتاح مطلوب")})
+            return error_response(message=gettext("المفتاح مطلوب"), status_code=200)
 
         try:
             from pathlib import Path
@@ -102,18 +103,20 @@ def config():
 
             current_app.logger.info(f"✅ {key_name} updated successfully by user {current_user.username}")
 
-            return jsonify(
-                {
-                    "success": True,
-                    "message": gettext(f"تم حفظ مفتاح {provider.upper()} بنجاح! ✅"),
+            return success_response(
+                data={
                     "provider": provider,
                     "expires_in": gettext("24 ساعة") if provider == "groq" else gettext("حسب اشتراكك"),
-                }
+                },
+                message=gettext(f"تم حفظ مفتاح {provider.upper()} بنجاح! ✅"),
             )
 
         except Exception:
             current_app.logger.exception("Failed to save AI API key")
-            return jsonify({"success": False, "message": gettext("تعذر حفظ إعدادات AI حالياً")})
+            return error_response(
+                message=gettext("تعذر حفظ إعدادات AI حالياً"),
+                status_code=200,
+            )
 
     current_groq = os.environ.get("GROQ_API_KEY", "")
     current_openai = os.environ.get("OPENAI_API_KEY", "")
@@ -136,10 +139,16 @@ def upload_excel():
     try:
         max_bytes = int(current_app.config.get("MAX_CONTENT_LENGTH") or (16 * 1024 * 1024))
         if request.content_length and request.content_length > max_bytes:
-            return jsonify({"success": False, "error": gettext("حجم الملف كبير جداً")}), 413
+            return error_response(
+                message=gettext("حجم الملف كبير جداً"),
+                status_code=413,
+            )
 
         if "file" not in request.files:
-            return jsonify({"success": False, "error": gettext("لم يتم رفع ملف")}), 400
+            return error_response(
+                message=gettext("لم يتم رفع ملف"),
+                status_code=400,
+            )
 
         file = request.files["file"]
         warehouse_id = request.form.get("warehouse_id", type=int)
@@ -155,33 +164,34 @@ def upload_excel():
 
         filename = secure_filename(file.filename or "")
         if not filename:
-            return jsonify({"success": False, "error": gettext("لم يتم اختيار ملف")}), 400
+            return error_response(
+                message=gettext("لم يتم اختيار ملف"),
+                status_code=400,
+            )
 
         if not filename.lower().endswith((".xlsx", ".xls")):
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "error": gettext("الملف يجب أن يكون Excel (.xlsx أو .xls)"),
-                    }
-                ),
-                400,
+            return error_response(
+                message=gettext("الملف يجب أن يكون Excel (.xlsx أو .xls)"),
+                status_code=400,
             )
 
         file.stream.seek(0, 2)
         file_size = file.stream.tell()
         file.stream.seek(0)
         if file_size > max_bytes:
-            return jsonify({"success": False, "error": gettext("حجم الملف كبير جداً")}), 413
+            return error_response(
+                message=gettext("حجم الملف كبير جداً"),
+                status_code=413,
+            )
 
         result = _process_excel_intelligently(file, warehouse_id, current_user)
 
-        return jsonify(result)
+        return success_response(data=result)
 
     except Exception as e:
-        return (
-            jsonify({"success": False, "error": gettext(f"خطأ في معالجة الملف: {str(e)}")}),
-            500,
+        return error_response(
+            message=gettext(f"خطأ في معالجة الملف: {str(e)}"),
+            status_code=500,
         )
 
 

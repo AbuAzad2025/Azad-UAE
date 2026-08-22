@@ -61,7 +61,7 @@ def _integration_row(service, config):
 
 def _mock_config_lookup(mocker, row):
     return mocker.patch(
-        "models.integration_settings.IntegrationSettings.get_service_config",
+        "routes.owner.common.IntegrationSettings.get_service_config",
         return_value=row,
     )
 
@@ -93,7 +93,7 @@ class TestEmailConnection:
         resp = platform_owner_client.post(self._URL)
 
         assert resp.status_code == 200
-        payload = resp.get_json()
+        payload = resp.get_json()["data"]
         assert payload["success"] is True
         assert payload["message"]
         send.assert_called_once()
@@ -111,7 +111,7 @@ class TestEmailConnection:
         resp = platform_owner_client.post(self._URL)
 
         assert resp.status_code == 200
-        payload = resp.get_json()
+        payload = resp.get_json()["data"]
         assert payload["success"] is False
         assert "smtp down" in payload["message"]
         assert row.last_test_status == "failed"
@@ -125,7 +125,7 @@ class TestEmailConnection:
         resp = platform_owner_client.post(self._URL)
 
         assert resp.status_code == 200
-        assert resp.get_json()["success"] is False
+        assert resp.get_json()["data"]["success"] is False
         send.assert_not_called()
         assert row.last_test_status == "failed"
 
@@ -146,7 +146,7 @@ class TestCurrencyApiConnection:
         resp = platform_owner_client.post(self._URL)
 
         assert resp.status_code == 200
-        payload = resp.get_json()
+        payload = resp.get_json()["data"]
         assert payload["success"] is True
         get.assert_called_once()
         args, kwargs = get.call_args
@@ -169,7 +169,7 @@ class TestCurrencyApiConnection:
         resp = platform_owner_client.post(self._URL)
 
         assert resp.status_code == 200
-        payload = resp.get_json()
+        payload = resp.get_json()["data"]
         assert payload["success"] is False
         assert row.last_test_status == "failed"
         assert row.last_tested_at is not None
@@ -183,7 +183,7 @@ class TestCurrencyApiConnection:
         resp = platform_owner_client.post(self._URL)
 
         assert resp.status_code == 200
-        payload = resp.get_json()
+        payload = resp.get_json()["data"]
         assert payload["success"] is False
         assert "429" in payload["message"]
         assert row.last_test_status == "failed"
@@ -196,7 +196,7 @@ class TestCurrencyApiConnection:
         resp = platform_owner_client.post(self._URL)
 
         assert resp.status_code == 200
-        assert resp.get_json()["success"] is False
+        assert resp.get_json()["data"]["success"] is False
         get.assert_not_called()
         assert row.last_test_status == "failed"
 

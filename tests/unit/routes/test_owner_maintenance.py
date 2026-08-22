@@ -142,8 +142,8 @@ class TestHappyPaths:
         )
         resp = auth_client.post(_GL, data={"confirm": "REBUILD_GL_TREE", "cleanup_extra": "on"})
         assert resp.status_code == 200
-        data = resp.get_json()
-        assert data["success"] is True
+        data = resp.get_json()["data"]
+        assert resp.get_json()["success"] is True
         assert data["result"]["tenants"][0]["created"] == 3
         service.assert_called_once_with(cleanup_extra=True)
 
@@ -187,8 +187,8 @@ class TestHappyPaths:
         )
         resp = auth_client.post(_CLEAN, data={"confirm": "CLEANUP_TEST_DBS"})
         assert resp.status_code == 200
-        data = resp.get_json()
-        assert data["success"] is True
+        data = resp.get_json()["data"]
+        assert resp.get_json()["success"] is True
         assert data["result"]["dropped"] == ["azad_repro"]
         service.assert_called_once_with(dry_run=False)
 

@@ -3,7 +3,6 @@
 from flask import (
     flash,
     g,
-    jsonify,
     redirect,
     render_template,
     request,
@@ -26,6 +25,7 @@ from services.ai_service import AIService
 from services.logging_core import LoggingCore
 from services.stock_service import StockService
 from utils.ai_access import ai_level_allows, get_ai_access_state
+from utils.api_response import error_response
 from utils.context_managers import AutoSaveCtx as _AutoSaveCtx
 from utils.tenanting import assign_tenant_id, get_active_tenant_id
 
@@ -98,9 +98,10 @@ def _enforce_ai_access_policy():
                 request.is_json or "application/json" in (request.headers.get("Accept") or "")
             )
             if wants_json:
-                return (
-                    jsonify({"success": False, "error": msg, "required": required_cap}),
-                    403,
+                return error_response(
+                    message=msg,
+                    status_code=403,
+                    meta={"required": required_cap},
                 )
             flash(msg, "warning")
             return redirect(url_for("ai.assistant_page"))
@@ -119,7 +120,11 @@ def _enforce_ai_access_policy():
         request.is_json or "application/json" in (request.headers.get("Accept") or "")
     )
     if wants_json:
-        return jsonify({"success": False, "error": message, "reason": reason}), 403
+        return error_response(
+            message=message,
+            status_code=403,
+            meta={"reason": reason},
+        )
 
     flash(message, "warning")
     return redirect(url_for("ai.assistant_page"))

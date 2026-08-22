@@ -2,7 +2,7 @@
 
 import logging
 
-from flask import jsonify, request
+from flask import request
 from flask_babel import gettext
 from flask_login import current_user, login_required
 
@@ -11,6 +11,7 @@ from ai_knowledge.expansion.global_knowledge import expertise_updater, global_co
 from ai_knowledge.expansion.knowledge_expansion import knowledge_expander
 from ai_knowledge.improvement.self_improvement import self_improvement
 from services.ai_service import AIService
+from utils.api_response import error_response, success_response
 from utils.decorators import admin_required, permission_required
 
 from .blueprint import ai_bp
@@ -25,7 +26,7 @@ def contextual_help(page):
     """❓ API: مساعدة سياقية"""
     user_role = current_user.role.name if current_user.role else "user"
     help_content = AIService.contextual_help(page, user_role)
-    return jsonify(help_content)
+    return success_response(data=help_content)
 
 
 @ai_bp.route("/learning/status")
@@ -35,9 +36,9 @@ def learning_status():
     """حالة التعلم الذاتي"""
     try:
         insights = learning_system.get_learning_insights()
-        return jsonify({"success": True, "learning_insights": insights})
+        return success_response(data={"learning_insights": insights})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)
 
 
 @ai_bp.route("/learning/evolve", methods=["POST"])
@@ -47,9 +48,9 @@ def evolve_knowledge():
     """تطوير المعرفة تلقائياً"""
     try:
         evolution = learning_system.evolve_knowledge()
-        return jsonify({"success": True, "evolution": evolution})
+        return success_response(data={"evolution": evolution})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)
 
 
 @ai_bp.route("/improvement/status")
@@ -59,9 +60,9 @@ def improvement_status():
     """حالة التحسين الذاتي"""
     try:
         status = self_improvement.get_improvement_status()
-        return jsonify({"success": True, "improvement_status": status})
+        return success_response(data={"improvement_status": status})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)
 
 
 @ai_bp.route("/improvement/auto-improve", methods=["POST"])
@@ -71,9 +72,9 @@ def auto_improve():
     """التحسين التلقائي"""
     try:
         improvements = self_improvement.auto_improve()
-        return jsonify({"success": True, "improvements": improvements})
+        return success_response(data={"improvements": improvements})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)
 
 
 @ai_bp.route("/improvement/progress")
@@ -83,9 +84,9 @@ def improvement_progress():
     """تتبع تقدم التحسين"""
     try:
         progress = self_improvement.track_progress()
-        return jsonify({"success": True, "progress": progress})
+        return success_response(data={"progress": progress})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)
 
 
 @ai_bp.route("/improvement/set-goal", methods=["POST"])
@@ -100,12 +101,15 @@ def set_improvement_goal():
         timeframe = data.get("timeframe", "30_days")
 
         if not area or not target_score:
-            return jsonify({"success": False, "error": gettext("المجال والهدف مطلوبان")}), 400
+            return error_response(
+                message=gettext("المجال والهدف مطلوبان"),
+                status_code=400,
+            )
 
         result = self_improvement.set_improvement_goal(area, target_score, timeframe)
-        return jsonify(result)
+        return success_response(data=result)
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)
 
 
 @ai_bp.route("/global/insights")
@@ -115,9 +119,9 @@ def global_insights():
     """رؤى عالمية"""
     try:
         insights = global_connector.get_global_insights()
-        return jsonify({"success": True, "global_insights": insights})
+        return success_response(data={"global_insights": insights})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)
 
 
 @ai_bp.route("/global/expertise-update")
@@ -127,9 +131,9 @@ def update_global_expertise():
     """تحديث الخبرة العالمية"""
     try:
         updates = expertise_updater.update_expertise()
-        return jsonify({"success": True, "expertise_updates": updates})
+        return success_response(data={"expertise_updates": updates})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)
 
 
 @ai_bp.route("/performance/analysis")
@@ -146,19 +150,18 @@ def performance_analysis():
 
         global_insights_data = global_connector.get_global_insights()
 
-        return jsonify(
-            {
-                "success": True,
+        return success_response(
+            data={
                 "performance_analysis": {
                     "performance": performance,
                     "learning": learning_insights,
                     "evolution": evolution,
                     "global": global_insights_data,
                 },
-            }
+            },
         )
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)
 
 
 @ai_bp.route("/knowledge/add-website", methods=["POST"])
@@ -173,12 +176,15 @@ def add_knowledge_website():
         description = data.get("description", "")
 
         if not url:
-            return jsonify({"success": False, "error": gettext("الرابط مطلوب")}), 400
+            return error_response(
+                message=gettext("الرابط مطلوب"),
+                status_code=400,
+            )
 
         result = knowledge_expander.add_website(url, category, description)
-        return jsonify(result)
+        return success_response(data=result)
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)
 
 
 @ai_bp.route("/knowledge/add-document", methods=["POST"])
@@ -194,12 +200,15 @@ def add_knowledge_document():
         description = data.get("description", "")
 
         if not content or not title:
-            return jsonify({"success": False, "error": gettext("المحتوى والعنوان مطلوبان")}), 400
+            return error_response(
+                message=gettext("المحتوى والعنوان مطلوبان"),
+                status_code=400,
+            )
 
         result = knowledge_expander.add_document(content, title, category, description)
-        return jsonify(result)
+        return success_response(data=result)
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)
 
 
 @ai_bp.route("/knowledge/search")
@@ -212,12 +221,15 @@ def search_knowledge():
         category = request.args.get("category")
 
         if not query:
-            return jsonify({"success": False, "error": gettext("كلمة البحث مطلوبة")}), 400
+            return error_response(
+                message=gettext("كلمة البحث مطلوبة"),
+                status_code=400,
+            )
 
         result = knowledge_expander.search_knowledge(query, category)
-        return jsonify(result)
+        return success_response(data=result)
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)
 
 
 @ai_bp.route("/knowledge/summary")
@@ -227,6 +239,6 @@ def get_knowledge_summary():
     """📚 API: ملخص المعرفة الموسعة"""
     try:
         result = knowledge_expander.get_knowledge_summary()
-        return jsonify(result)
+        return success_response(data=result)
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)

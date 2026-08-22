@@ -8,9 +8,10 @@ from __future__ import annotations
 import logging
 from datetime import UTC, datetime
 
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, current_app, request
 
 from extensions import limiter
+from utils.api_response import error_response, success_response
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ def _reject_stale_timestamp(data: dict | None):
         event_time = datetime.fromtimestamp(int(ts or 0), tz=UTC)
         if (datetime.now(UTC) - event_time).total_seconds() > _WEBHOOK_MAX_AGE:
             logger.warning("Billing webhook rejected: stale timestamp %s", ts)
-            return jsonify({"error": "Stale event"}), 400
+            return error_response(message="Stale event", status_code=400)
     except (ValueError, TypeError):
         logger.debug("Could not parse webhook timestamp: %s", ts)
     return None
@@ -61,7 +62,7 @@ def stripe_webhook():
         secret = current_app.config.get("STRIPE_WEBHOOK_SECRET")
         if not secret:
             logger.warning("Stripe webhook secret not configured")
-            return jsonify({"error": "Webhook not configured"}), 503
+            return error_response(message="Webhook not configured", status_code=503)
 
         import stripe as stripe_lib
 
@@ -69,11 +70,11 @@ def stripe_webhook():
             event = stripe_lib.Webhook.construct_event(payload, sig, secret)
         except stripe_lib.error.SignatureVerificationError:
             logger.warning("Stripe webhook signature verification failed")
-            return jsonify({"error": "Invalid signature"}), 403
+            return error_response(message="Invalid signature", status_code=403)
 
         event_id = event.get("id")
         if _is_duplicate("stripe", event_id):
-            return jsonify({"status": "duplicate"}), 200
+            return success_response(data={"status": "duplicate"})
 
         stale = _reject_stale_timestamp(event.get("data", {}).get("object", {}))
         if stale:
@@ -94,7 +95,7 @@ def stripe_webhook():
                     tenant_id,
                     package_id,
                 )
-                return jsonify({"error": "Missing metadata"}), 400
+                return error_response(message="Missing metadata", status_code=400)
 
             from services.saas_provisioning_service import (
                 SaaSProvisioningError,
@@ -112,17 +113,17 @@ def stripe_webhook():
                     tenant_id,
                     package_id,
                 )
-                return jsonify({"success": True, "provisioning": result}), 200
+                return success_response(data={"provisioning": result})
             except SaaSProvisioningError as exc:
                 logger.error("Stripe provisioning failed: %s", exc)
-                return jsonify({"error": str(exc)}), 422
+                return error_response(message=str(exc), status_code=422)
 
         logger.info("Stripe webhook unhandled event type: %s", event_type)
-        return jsonify({"status": "acknowledged"}), 200
+        return success_response(data={"status": "acknowledged"})
 
     except Exception:
         logger.exception("Stripe billing webhook failed")
-        return jsonify({"error": "Webhook processing failed"}), 500
+        return error_response(message="Webhook processing failed", status_code=500)
 
 
 @billing_webhook_bp.route("/generic", methods=["POST"])
@@ -154,15 +155,15 @@ def generic_webhook():
         secret = current_app.config.get("BILLING_WEBHOOK_SECRET")
         if not secret:
             logger.warning("Generic webhook rejected: BILLING_WEBHOOK_SECRET not configured")
-            return jsonify({"error": "Webhook not configured"}), 503
+            return error_response(message="Webhook not configured", status_code=503)
         provided = request.headers.get("X-Webhook-Secret", "")
         if provided != secret:
             logger.warning("Generic webhook rejected: invalid secret")
-            return jsonify({"error": "Forbidden"}), 403
+            return error_response(message="Forbidden", status_code=403)
 
         data = request.get_json(silent=True)
         if not data:
-            return jsonify({"error": "Invalid JSON"}), 400
+            return error_response(message="Invalid JSON", status_code=400)
 
         stale = _reject_stale_timestamp(data)
         if stale:
@@ -173,7 +174,7 @@ def generic_webhook():
         provider = data.get("provider", "generic")
 
         if _is_duplicate(provider, transaction_id):
-            return jsonify({"status": "duplicate"}), 200
+            return success_response(data={"status": "duplicate"})
 
         if event not in (
             "payment_succeeded",
@@ -181,14 +182,14 @@ def generic_webhook():
             "invoice.payment_succeeded",
         ):
             logger.info("Generic webhook unhandled event: %s", event)
-            return jsonify({"status": "acknowledged"}), 200
+            return success_response(data={"status": "acknowledged"})
 
         tenant_id = data.get("tenant_id")
         package_id = data.get("package_id")
         duration_type = data.get("duration_type", "monthly")
 
         if not tenant_id or not package_id:
-            return jsonify({"error": "tenant_id and package_id required"}), 400
+            return error_response(message="tenant_id and package_id required", status_code=400)
 
         result = SaaSProvisioningService.activate_purchased_package(
             tenant_id=int(tenant_id),
@@ -202,14 +203,14 @@ def generic_webhook():
             package_id,
             transaction_id,
         )
-        return jsonify({"success": True, "provisioning": result}), 200
+        return success_response(data={"provisioning": result})
 
     except SaaSProvisioningError as exc:
         logger.error("Generic webhook provisioning failed: %s", exc)
-        return jsonify({"error": str(exc)}), 422
+        return error_response(message=str(exc), status_code=422)
     except Exception:
         logger.exception("Generic billing webhook failed")
-        return jsonify({"error": "Webhook processing failed"}), 500
+        return error_response(message="Webhook processing failed", status_code=500)
 
 
 @billing_webhook_bp.route("/api/cron/check-subscriptions", methods=["POST"])
@@ -230,7 +231,7 @@ def cron_check_subscriptions():
 
     try:
         result = run_subscription_check()
-        return jsonify({"success": True, **result}), 200
+        return success_response(data=result)
     except Exception:
         logger.exception("Subscription cron check failed")
-        return jsonify({"error": "Cron check failed"}), 500
+        return error_response(message="Cron check failed", status_code=500)

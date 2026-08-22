@@ -8,14 +8,15 @@ from flask_babel import gettext
 from .common import (
     abort,
     current_user,
+    error_response,
     flash,
-    jsonify,
     owner_bp,
     owner_required,
     redirect,
     render_template,
     request,
     safe_redirect_target,
+    success_response,
     url_for,
 )
 from .shared import (
@@ -58,17 +59,13 @@ def backup_now():
 
     if request.is_json:
         if backup:
-            return jsonify(
-                {
-                    "success": True,
+            return success_response(
+                data={
                     "filename": backup.get("filename"),
                     "size_mb": backup.get("size_mb"),
                 }
             )
-        return (
-            jsonify({"success": False, "message": gettext("فشل إنشاء النسخة الاحتياطية")}),
-            400,
-        )
+        return error_response(message=gettext("فشل إنشاء النسخة الاحتياطية"), status_code=400)
     else:
         if backup:
             flash(
@@ -191,11 +188,11 @@ def backup_info(filename):
 
     safe = _owner_backup_filename(filename)
     if not safe or not BackupService.user_may_access_backup(current_user, safe):
-        return jsonify({"success": False, "message": "Invalid filename"}), 400
+        return error_response(message="Invalid filename", status_code=400)
     info = BackupService.get_backup_info(safe)
     if not info:
-        return jsonify({"success": False, "message": "Backup not found"}), 404
-    return jsonify({"success": True, "info": info})
+        return error_response(message="Backup not found", status_code=404)
+    return success_response(data={"info": info})
 
 
 @owner_bp.route("/backups/verify/<filename>", methods=["POST"])
@@ -206,13 +203,13 @@ def verify_backup(filename):
 
     safe = _owner_backup_filename(filename)
     if not safe or not BackupService.user_may_access_backup(current_user, safe):
-        return jsonify({"success": False, "message": "Invalid filename"}), 403
+        return error_response(message="Invalid filename", status_code=403)
 
     result = BackupService.verify_backup(safe)
     if result.get("valid"):
         _audit_owner_db_action("verify_backup", {"filename": safe, "format": result.get("format")})
-        return jsonify({"success": True, "verified": True, "result": result})
-    return jsonify({"success": True, "verified": False, "result": result}), 200
+        return success_response(data={"verified": True, "result": result})
+    return success_response(data={"verified": False, "result": result})
 
 
 @owner_bp.route("/backups/prepare-restore/<filename>", methods=["GET", "POST"])
@@ -236,7 +233,7 @@ def prepare_restore_backup(filename):
         remap=remap,
     )
     if request.method == "POST" or request.args.get("format") == "json":
-        return jsonify(payload)
+        return success_response(data=payload)
     if not payload.get("ok"):
         flash(payload.get("error", gettext("فشل تجهيز الأوامر")), "danger")
         return redirect(url_for("owner.list_backups"))

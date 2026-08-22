@@ -60,7 +60,7 @@ class TestStripeWebhook:
     def test_unconfigured_secret_returns_503(self, client):
         resp = client.post("/billing-webhook/stripe", data=b"{}")
         assert resp.status_code == 503
-        assert resp.get_json()["error"] == "Webhook not configured"
+        assert resp.get_json()["message"] == "Webhook not configured"
 
     def test_bad_signature_returns_403(self, client, stripe_secret, mocker):
         stripe_mod = _fake_stripe(mocker)
@@ -71,7 +71,7 @@ class TestStripeWebhook:
             headers={"Stripe-Signature": "t=1,v1=bad"},
         )
         assert resp.status_code == 403
-        assert resp.get_json()["error"] == "Invalid signature"
+        assert resp.get_json()["message"] == "Invalid signature"
 
     def test_missing_metadata_returns_400(self, client, stripe_secret, mocker):
         event = _checkout_event()
@@ -79,7 +79,7 @@ class TestStripeWebhook:
         _fake_stripe(mocker, event=event)
         resp = client.post("/billing-webhook/stripe", data=b"payload")
         assert resp.status_code == 400
-        assert resp.get_json()["error"] == "Missing metadata"
+        assert resp.get_json()["message"] == "Missing metadata"
 
     def test_valid_event_provisions_tenant(self, client, stripe_secret, mocker):
         _fake_stripe(mocker, event=_checkout_event())
@@ -91,7 +91,7 @@ class TestStripeWebhook:
         assert resp.status_code == 200
         data = resp.get_json()
         assert data["success"] is True
-        assert data["provisioning"] == {"tenant_id": 3}
+        assert data["data"]["provisioning"] == {"tenant_id": 3}
         provision.assert_called_once_with(tenant_id=3, package_id=4, duration_type="annual")
 
     def test_provisioning_error_returns_422(self, client, stripe_secret, mocker):
@@ -102,13 +102,14 @@ class TestStripeWebhook:
         )
         resp = client.post("/billing-webhook/stripe", data=b"payload")
         assert resp.status_code == 422
-        assert "Tenant 3 not found" in resp.get_json()["error"]
+        assert "Tenant 3 not found" in resp.get_json()["message"]
 
     def test_unhandled_event_type_acknowledged(self, client, stripe_secret, mocker):
         _fake_stripe(mocker, event=_checkout_event(type="customer.created"))
         resp = client.post("/billing-webhook/stripe", data=b"payload")
         assert resp.status_code == 200
-        assert resp.get_json()["status"] == "acknowledged"
+        assert resp.get_json()["data"]["status"] == "acknowledged"
+
 
     def test_duplicate_event_short_circuits(self, client, stripe_secret, mocker):
         _fake_stripe(mocker, event=_checkout_event())
@@ -118,7 +119,7 @@ class TestStripeWebhook:
         )
         resp = client.post("/billing-webhook/stripe", data=b"payload")
         assert resp.status_code == 200
-        assert resp.get_json()["status"] == "duplicate"
+        assert resp.get_json()["data"]["status"] == "duplicate"
         provision.assert_not_called()
 
     def test_stale_event_rejected(self, client, stripe_secret, mocker):
@@ -127,7 +128,7 @@ class TestStripeWebhook:
         _fake_stripe(mocker, event=event)
         resp = client.post("/billing-webhook/stripe", data=b"payload")
         assert resp.status_code == 400
-        assert resp.get_json()["error"] == "Stale event"
+        assert resp.get_json()["message"] == "Stale event"
 
 
 class TestGenericWebhook:
@@ -153,7 +154,7 @@ class TestGenericWebhook:
             headers={"X-Webhook-Secret": self._SECRET},
         )
         assert resp.status_code == 400
-        assert resp.get_json()["error"] == "Invalid JSON"
+        assert resp.get_json()["message"] == "Invalid JSON"
 
     def test_missing_ids_returns_400(self, client):
         resp = client.post(
@@ -162,7 +163,7 @@ class TestGenericWebhook:
             headers={"X-Webhook-Secret": self._SECRET},
         )
         assert resp.status_code == 400
-        assert "tenant_id and package_id required" in resp.get_json()["error"]
+        assert "tenant_id and package_id required" in resp.get_json()["message"]
 
     def test_unhandled_event_acknowledged(self, client):
         resp = client.post(
@@ -171,7 +172,7 @@ class TestGenericWebhook:
             headers={"X-Webhook-Secret": self._SECRET},
         )
         assert resp.status_code == 200
-        assert resp.get_json()["status"] == "acknowledged"
+        assert resp.get_json()["data"]["status"] == "acknowledged"
 
     def test_valid_payment_provisions(self, client, mocker):
         provision = mocker.patch(
@@ -216,7 +217,7 @@ class TestGenericWebhook:
             headers={"X-Webhook-Secret": self._SECRET},
         )
         assert resp.status_code == 400
-        assert resp.get_json()["error"] == "Stale event"
+        assert resp.get_json()["message"] == "Stale event"
 
 
 class TestCronCheckSubscriptions:

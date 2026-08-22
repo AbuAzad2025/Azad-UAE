@@ -152,8 +152,8 @@ class TestExecuteQuery:
                 data={"query": "SELECT id FROM exchange_rate_records"},
             )
         assert resp.status_code == 200
-        data = resp.get_json()
-        assert data["success"] is True
+        data = resp.get_json()["data"]
+        assert resp.get_json()["success"] is True
         assert data["count"] == 2
 
     def test_query_db_error_returns_400(self, app_factory, bypass_owner_auth):
@@ -737,7 +737,7 @@ class TestApiRecentAuditLogs:
         ):
             resp = app.test_client().get("/owner/api/recent-audit-logs")
         assert resp.status_code == 200
-        data = resp.get_json()
+        data = resp.get_json()["data"]
         assert len(data["logs"]) == 1
         assert data["logs"][0]["action"] == "rebuild_gl_tree"
 
@@ -753,7 +753,7 @@ class TestApiRecentAuditLogs:
         ):
             resp = app.test_client().get("/owner/api/recent-audit-logs")
         assert resp.status_code == 200
-        assert resp.get_json()["logs"] == []
+        assert resp.get_json()["data"]["logs"] == []
 
     def test_api_log_with_none_metadata(self, app_factory, bypass_owner_auth):
         app = app_factory(owner_bp)
@@ -772,5 +772,5 @@ class TestApiRecentAuditLogs:
         ):
             resp = app.test_client().get("/owner/api/recent-audit-logs")
         assert resp.status_code == 200
-        data = resp.get_json()
+        data = resp.get_json()["data"]
         assert data["logs"][0]["success"] is True

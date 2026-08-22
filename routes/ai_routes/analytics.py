@@ -2,10 +2,11 @@
 
 import logging
 
-from flask import jsonify, request
+from flask import request
 from flask_login import login_required
 
 from services.ai_service import AIService
+from utils.api_response import error_response, success_response
 from utils.decorators import permission_required
 
 from .blueprint import ai_bp
@@ -20,7 +21,7 @@ def predict_sales():
     """🔮 API: توقع المبيعات"""
     days = request.args.get("days", 7, type=int)
     prediction = AIService.predict_sales_trend(days)
-    return jsonify(prediction)
+    return success_response(data=prediction)
 
 
 @ai_bp.route("/analyze-margins", methods=["GET"])
@@ -29,7 +30,7 @@ def predict_sales():
 def analyze_margins():
     """💰 API: تحليل هوامش الربح"""
     analysis = AIService.analyze_profit_margins()
-    return jsonify(analysis)
+    return success_response(data=analysis)
 
 
 @ai_bp.route("/detect-patterns", methods=["GET"])
@@ -38,7 +39,7 @@ def analyze_margins():
 def detect_patterns():
     """🔍 API: كشف الأنماط"""
     patterns = AIService.detect_sales_patterns()
-    return jsonify(patterns)
+    return success_response(data=patterns)
 
 
 @ai_bp.route("/inventory-health", methods=["GET"])
@@ -47,7 +48,7 @@ def detect_patterns():
 def inventory_health():
     """📦 API: صحة المخزون"""
     health = AIService.analyze_inventory_health()
-    return jsonify(health)
+    return success_response(data=health)
 
 
 @ai_bp.route("/deep-analysis", methods=["GET"])
@@ -56,7 +57,7 @@ def inventory_health():
 def deep_analysis():
     """📊 API: تحليل عميق شامل"""
     analysis = AIService.deep_business_analysis()
-    return jsonify(analysis)
+    return success_response(data=analysis)
 
 
 @ai_bp.route("/cash-flow-prediction", methods=["GET"])
@@ -66,7 +67,7 @@ def cash_flow_prediction():
     """💵 API: توقع التدفق النقدي"""
     days = request.args.get("days", 30, type=int)
     prediction = AIService.predict_cash_flow(days)
-    return jsonify(prediction)
+    return success_response(data=prediction)
 
 
 @ai_bp.route("/smart-price", methods=["POST"])
@@ -80,14 +81,17 @@ def smart_price():
     quantity = data.get("quantity", 1)
 
     if not product_id or not customer_id:
-        return jsonify({"error": "Product and Customer required"}), 400
+        return error_response(
+            message="Product and Customer required",
+            status_code=400,
+        )
 
     pricing = AIService.smart_pricing_engine(product_id, customer_id, quantity)
 
     if not pricing:
-        return jsonify({"error": "Not found"}), 404
+        return error_response(message="Not found", status_code=404)
 
-    return jsonify(pricing)
+    return success_response(data=pricing)
 
 
 @ai_bp.route("/churn-prediction", methods=["GET"])
@@ -96,7 +100,7 @@ def smart_price():
 def churn_prediction():
     """⚠️ API: توقع فقدان العملاء"""
     prediction = AIService.predict_customer_churn()
-    return jsonify(prediction)
+    return success_response(data=prediction)
 
 
 @ai_bp.route("/optimize-inventory", methods=["GET"])
@@ -105,7 +109,7 @@ def churn_prediction():
 def optimize_inventory():
     """📦 API: تحسين مستويات المخزون"""
     optimization = AIService.optimize_inventory_levels()
-    return jsonify(optimization)
+    return success_response(data=optimization)
 
 
 @ai_bp.route("/business-insights", methods=["GET"])
@@ -126,4 +130,4 @@ def business_insights():
             }
         )
 
-    return jsonify({"success": True, "insights": formatted_insights})
+    return success_response(data={"insights": formatted_insights})

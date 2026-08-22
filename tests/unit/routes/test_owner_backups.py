@@ -116,8 +116,8 @@ class TestBackupNow:
         }
         resp = platform_owner_client.post("/owner/backup-now", json={})
         assert resp.status_code == 200
-        data = resp.get_json()
-        assert data["success"] is True
+        data = resp.get_json()["data"]
+        assert resp.get_json()["success"] is True
         assert data["filename"] == "b.sql.gz"
         assert backup_svc.create_backup.call_args.kwargs["scope"] == "system"
         assert backup_svc.create_backup.call_args.kwargs["manual"] is True
@@ -182,7 +182,7 @@ class TestBackupInfoAndVerify:
         backup_svc.get_backup_info.return_value = {"size_mb": 3}
         resp = platform_owner_client.get("/owner/backups/info/b.sql.gz")
         assert resp.status_code == 200
-        assert resp.get_json()["info"] == {"size_mb": 3}
+        assert resp.get_json()["data"]["info"] == {"size_mb": 3}
 
     def test_verify_access_denied_403(self, platform_owner_client, backup_svc):
         backup_svc.sanitize_filename.return_value = "b.sql.gz"
@@ -196,7 +196,7 @@ class TestBackupInfoAndVerify:
         backup_svc.verify_backup.return_value = {"valid": True, "format": "pg"}
         resp = platform_owner_client.post("/owner/backups/verify/b.sql.gz")
         assert resp.status_code == 200
-        assert resp.get_json()["verified"] is True
+        assert resp.get_json()["data"]["verified"] is True
 
     def test_verify_invalid_result_still_200(self, platform_owner_client, backup_svc):
         backup_svc.sanitize_filename.return_value = "b.sql.gz"
@@ -204,7 +204,7 @@ class TestBackupInfoAndVerify:
         backup_svc.verify_backup.return_value = {"valid": False}
         resp = platform_owner_client.post("/owner/backups/verify/b.sql.gz")
         assert resp.status_code == 200
-        assert resp.get_json()["verified"] is False
+        assert resp.get_json()["data"]["verified"] is False
 
 
 class TestDownloadAndDelete:
@@ -250,7 +250,7 @@ class TestRestoreFlows:
         backup_svc.prepare_restore.return_value = {"ok": True, "commands": ["psql"]}
         resp = platform_owner_client.post("/owner/backups/prepare-restore/b.sql.gz")
         assert resp.status_code == 200
-        assert resp.get_json() == {"ok": True, "commands": ["psql"]}
+        assert resp.get_json()["data"] == {"ok": True, "commands": ["psql"]}
 
     def test_restore_target_without_url_redirects(self, platform_owner_client, backup_svc, monkeypatch):
         monkeypatch.delenv("TARGET_TEST_DATABASE_URL", raising=False)

@@ -16,9 +16,10 @@ from utils.db_safety import atomic_transaction
 from .common import (
     company_admin_required,
     current_app,
-    jsonify,
+    error_response,
     owner_bp,
     request,
+    success_response,
 )
 
 
@@ -28,14 +29,9 @@ def maintenance_fix_cost_centers():
     """إصلاح فهارس مراكز التكلفة وإزالة السجلات المهجورة (NULL tenant_id)"""
     confirm = request.form.get("confirm")
     if confirm != "FIX_COST_CENTERS":
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("يجب كتابة FIX_COST_CENTERS للتأكيد"),
-                }
-            ),
-            400,
+        return error_response(
+            message=gettext("يجب كتابة FIX_COST_CENTERS للتأكيد"),
+            status_code=400,
         )
 
     try:
@@ -48,11 +44,8 @@ def maintenance_fix_cost_centers():
             0,
             {"status": "completed", "result": str(result)},
         )
-        return jsonify(
-            {
-                "success": True,
-                "message": gettext("✅ تم إصلاح فهارس مراكز التكلفة بنجاح"),
-            }
+        return success_response(
+            message=gettext("✅ تم إصلاح فهارس مراكز التكلفة بنجاح")
         )
     except Exception as e:
         current_app.logger.error("maintenance_fix_cost_centers failed: %s", e)
@@ -63,7 +56,7 @@ def maintenance_fix_cost_centers():
             source="routes.owner.maintenance_fix_cost_centers",
             exception=e,
         )
-        return jsonify({"success": False, "error": gettext(f"خطأ: {str(e)}")}), 500
+        return error_response(message=gettext(f"خطأ: {str(e)}"), status_code=500)
 
 
 @owner_bp.route("/maintenance/rebuild-gl-tree", methods=["POST"])
@@ -72,14 +65,9 @@ def maintenance_rebuild_gl_tree():
     """إعادة بناء شجرة الحسابات المحاسبية لجميع المستأجرين"""
     confirm = request.form.get("confirm")
     if confirm != "REBUILD_GL_TREE":
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("يجب كتابة REBUILD_GL_TREE للتأكيد"),
-                }
-            ),
-            400,
+        return error_response(
+            message=gettext("يجب كتابة REBUILD_GL_TREE للتأكيد"),
+            status_code=400,
         )
 
     cleanup_extra = request.form.get("cleanup_extra") == "on"
@@ -96,14 +84,11 @@ def maintenance_rebuild_gl_tree():
         )
         total_created = sum(t.get("created", 0) for t in result.get("tenants", []))
         total_updated = sum(t.get("updated", 0) for t in result.get("tenants", []))
-        return jsonify(
-            {
-                "success": True,
-                "message": gettext(
-                    f"✅ تم إعادة بناء شجرة الحسابات - تمت إضافة {total_created} وتحديث {total_updated} حساب"
-                ),
-                "result": result,
-            }
+        return success_response(
+            message=gettext(
+                f"✅ تم إعادة بناء شجرة الحسابات - تمت إضافة {total_created} وتحديث {total_updated} حساب"
+            ),
+            data={"result": result},
         )
     except Exception as e:
         current_app.logger.error("maintenance_rebuild_gl_tree failed: %s", e)
@@ -114,7 +99,7 @@ def maintenance_rebuild_gl_tree():
             source="routes.owner.maintenance_rebuild_gl_tree",
             exception=e,
         )
-        return jsonify({"success": False, "error": gettext(f"خطأ: {str(e)}")}), 500
+        return error_response(message=gettext(f"خطأ: {str(e)}"), status_code=500)
 
 
 @owner_bp.route("/maintenance/fix-default-tenant", methods=["POST"])
@@ -123,14 +108,9 @@ def maintenance_fix_default_tenant():
     """تصحيح بيانات المستأجر الافتراضي (patch NOT NULL columns)"""
     confirm = request.form.get("confirm")
     if confirm != "FIX_DEFAULT_TENANT":
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("يجب كتابة FIX_DEFAULT_TENANT للتأكيد"),
-                }
-            ),
-            400,
+        return error_response(
+            message=gettext("يجب كتابة FIX_DEFAULT_TENANT للتأكيد"),
+            status_code=400,
         )
 
     dry_run = request.form.get("dry_run") == "on"
@@ -147,19 +127,13 @@ def maintenance_fix_default_tenant():
         )
         patched = len(result.get("patched", []))
         if dry_run:
-            return jsonify(
-                {
-                    "success": True,
-                    "message": gettext(f"🔍 تجربة جافة: سيتم تصحيح {patched} عمود"),
-                    "result": result,
-                }
+            return success_response(
+                message=gettext(f"🔍 تجربة جافة: سيتم تصحيح {patched} عمود"),
+                data={"result": result},
             )
-        return jsonify(
-            {
-                "success": True,
-                "message": gettext(f"✅ تم تصحيح {patched} عمود في بيانات المستأجر الافتراضي"),
-                "result": result,
-            }
+        return success_response(
+            message=gettext(f"✅ تم تصحيح {patched} عمود في بيانات المستأجر الافتراضي"),
+            data={"result": result},
         )
     except Exception as e:
         current_app.logger.error("maintenance_fix_default_tenant failed: %s", e)
@@ -170,7 +144,7 @@ def maintenance_fix_default_tenant():
             source="routes.owner.maintenance_fix_default_tenant",
             exception=e,
         )
-        return jsonify({"success": False, "error": gettext(f"خطأ: {str(e)}")}), 500
+        return error_response(message=gettext(f"خطأ: {str(e)}"), status_code=500)
 
 
 @owner_bp.route("/maintenance/regenerate-default-backup", methods=["POST"])
@@ -179,14 +153,9 @@ def maintenance_regenerate_default_backup():
     """تجديد النسخة الاحتياطية للمستأجر الافتراضي"""
     confirm = request.form.get("confirm")
     if confirm != "REGENERATE_DEFAULT_BACKUP":
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("يجب كتابة REGENERATE_DEFAULT_BACKUP للتأكيد"),
-                }
-            ),
-            400,
+        return error_response(
+            message=gettext("يجب كتابة REGENERATE_DEFAULT_BACKUP للتأكيد"),
+            status_code=400,
         )
 
     dry_run = request.form.get("dry_run") == "on"
@@ -202,19 +171,13 @@ def maintenance_regenerate_default_backup():
             {"dry_run": dry_run, "backup": result},
         )
         if dry_run:
-            return jsonify(
-                {
-                    "success": True,
-                    "message": gettext("🔍 تجربة جافة: ستتم إعادة إنشاء النسخة الاحتياطية"),
-                    "result": result,
-                }
+            return success_response(
+                message=gettext("🔍 تجربة جافة: ستتم إعادة إنشاء النسخة الاحتياطية"),
+                data={"result": result},
             )
-        return jsonify(
-            {
-                "success": True,
-                "message": gettext(f"✅ تم تجديد النسخة الاحتياطية: {result}"),
-                "result": result,
-            }
+        return success_response(
+            message=gettext(f"✅ تم تجديد النسخة الاحتياطية: {result}"),
+            data={"result": result},
         )
     except Exception as e:
         current_app.logger.error("maintenance_regenerate_default_backup failed: %s", e)
@@ -225,7 +188,7 @@ def maintenance_regenerate_default_backup():
             source="routes.owner.maintenance_regenerate_default_backup",
             exception=e,
         )
-        return jsonify({"success": False, "error": gettext(f"خطأ: {str(e)}")}), 500
+        return error_response(message=gettext(f"خطأ: {str(e)}"), status_code=500)
 
 
 @owner_bp.route("/maintenance/run-default-tenant-maintenance", methods=["POST"])
@@ -234,14 +197,9 @@ def maintenance_run_default_tenant_maintenance():
     """تشغيل الصيانة الكاملة للمستأجر الافتراضي (patch + backup)"""
     confirm = request.form.get("confirm")
     if confirm != "RUN_DEFAULT_TENANT_MAINTENANCE":
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("يجب كتابة RUN_DEFAULT_TENANT_MAINTENANCE للتأكيد"),
-                }
-            ),
-            400,
+        return error_response(
+            message=gettext("يجب كتابة RUN_DEFAULT_TENANT_MAINTENANCE للتأكيد"),
+            status_code=400,
         )
 
     dry_run = request.form.get("dry_run") == "on"
@@ -258,20 +216,14 @@ def maintenance_run_default_tenant_maintenance():
         )
         patched = len(result.get("patched", []))
         if dry_run:
-            return jsonify(
-                {
-                    "success": True,
-                    "message": gettext(f"🔍 تجربة جافة: سيتم تصحيح {patched} عمود وتجديد النسخة"),
-                    "result": result,
-                }
+            return success_response(
+                message=gettext(f"🔍 تجربة جافة: سيتم تصحيح {patched} عمود وتجديد النسخة"),
+                data={"result": result},
             )
         backup = result.get("backup_regenerated", "completed")
-        return jsonify(
-            {
-                "success": True,
-                "message": gettext(f"✅ صيانة كاملة: {patched} عمود مصحح، نسخة احتياطية: {backup}"),
-                "result": result,
-            }
+        return success_response(
+            message=gettext(f"✅ صيانة كاملة: {patched} عمود مصحح، نسخة احتياطية: {backup}"),
+            data={"result": result},
         )
     except Exception as e:
         current_app.logger.error("maintenance_run_default_tenant_maintenance failed: %s", e)
@@ -282,7 +234,7 @@ def maintenance_run_default_tenant_maintenance():
             source="routes.owner.maintenance_run_default_tenant_maintenance",
             exception=e,
         )
-        return jsonify({"success": False, "error": gettext(f"خطأ: {str(e)}")}), 500
+        return error_response(message=gettext(f"خطأ: {str(e)}"), status_code=500)
 
 
 @owner_bp.route("/maintenance/cleanup-test-dbs", methods=["POST"])
@@ -291,14 +243,9 @@ def maintenance_cleanup_test_dbs():
     """تنظيف قواعد البيانات الاختبارية القديمة"""
     confirm = request.form.get("confirm")
     if confirm != "CLEANUP_TEST_DBS":
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("يجب كتابة CLEANUP_TEST_DBS للتأكيد"),
-                }
-            ),
-            400,
+        return error_response(
+            message=gettext("يجب كتابة CLEANUP_TEST_DBS للتأكيد"),
+            status_code=400,
         )
 
     dry_run = request.form.get("dry_run") == "on"
@@ -315,19 +262,13 @@ def maintenance_cleanup_test_dbs():
         )
         dropped = len(result.get("dropped", []))
         if dry_run:
-            return jsonify(
-                {
-                    "success": True,
-                    "message": gettext(f"🔍 تجربة جافة: سيتم حذف {dropped} قاعدة بيانات"),
-                    "result": result,
-                }
+            return success_response(
+                message=gettext(f"🔍 تجربة جافة: سيتم حذف {dropped} قاعدة بيانات"),
+                data={"result": result},
             )
-        return jsonify(
-            {
-                "success": True,
-                "message": gettext(f"✅ تم حذف {dropped} قاعدة بيانات اختبار"),
-                "result": result,
-            }
+        return success_response(
+            message=gettext(f"✅ تم حذف {dropped} قاعدة بيانات اختبار"),
+            data={"result": result},
         )
     except Exception as e:
         current_app.logger.error("maintenance_cleanup_test_dbs failed: %s", e)
@@ -338,4 +279,4 @@ def maintenance_cleanup_test_dbs():
             source="routes.owner.maintenance_cleanup_test_dbs",
             exception=e,
         )
-        return jsonify({"success": False, "error": gettext(f"خطأ: {str(e)}")}), 500
+        return error_response(message=gettext(f"خطأ: {str(e)}"), status_code=500)

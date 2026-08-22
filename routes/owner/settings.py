@@ -26,10 +26,10 @@ from .common import (
     current_app,
     current_user,
     db,
+    error_response,
     flash,
     get_active_tenant_id,
     get_system_default_currency,
-    jsonify,
     login_required,
     owner_bp,
     owner_or_company_admin,
@@ -38,6 +38,7 @@ from .common import (
     render_template,
     request,
     resolve_default_currency,
+    success_response,
     url_for,
 )
 
@@ -132,8 +133,8 @@ def test_integration(service):
             ok, message = IntegrationService.test_currency_api()
     except Exception as exc:
         current_app.logger.exception("Integration test failed for %s", service)
-        return jsonify({"success": False, "message": str(exc)}), 500
-    return jsonify({"success": ok, "message": message}), 200
+        return error_response(message=str(exc), status_code=500)
+    return success_response(data={"success": ok, "message": message})
 
 
 @owner_bp.route("/reports")
@@ -1127,26 +1128,23 @@ def notification_templates():
 def api_update_tenant_settings():
     """AJAX endpoint to update tenant-level settings from the company dashboard."""
     if not request.is_json:
-        return jsonify({"success": False, "error": "JSON required"}), 400
+        return error_response(message="JSON required", status_code=400)
     try:
         data = request.get_json(silent=True)
         if not data:
-            return jsonify({"success": False, "error": "Invalid JSON"}), 400
+            return error_response(message="Invalid JSON", status_code=400)
         tenant = db.session.get(Tenant, get_active_tenant_id())
         if not tenant:
-            return jsonify({"success": False, "error": "Tenant not found"}), 404
+            return error_response(message="Tenant not found", status_code=404)
         field = data.get("field")
         value = data.get("value")
         if field not in ("default_tax_rate", "prices_include_vat", "logo_url"):
-            return jsonify({"success": False, "error": f"Unknown field: {field}"}), 400
+            return error_response(message=f"Unknown field: {field}", status_code=400)
         if field == "default_tax_rate":
             try:
                 parsed = Decimal(str(value))
             except Exception:
-                return (
-                    jsonify({"success": False, "error": "Invalid tax rate value"}),
-                    400,
-                )
+                return error_response(message="Invalid tax rate value", status_code=400)
             with atomic_transaction("api_update_tenant_settings"):
                 tenant.default_tax_rate = parsed
         else:
@@ -1158,9 +1156,9 @@ def api_update_tenant_settings():
                 tenant.updated_at = datetime.now(UTC)
         _invalidate_owner_changes()
         _audit_owner_db_action("api_update_tenant_settings", {"field": field, "tenant_id": tenant.id})
-        return jsonify({"success": True, "message": gettext(f"تم تحديث {field} بنجاح")})
+        return success_response(message=gettext(f"تم تحديث {field} بنجاح"))
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)
 
 
 @owner_bp.route("/api/toggle-warehouse-negative", methods=["POST"])
@@ -1169,29 +1167,26 @@ def api_update_tenant_settings():
 def api_toggle_warehouse_negative():
     """AJAX endpoint to toggle allow_negative_inventory for a warehouse."""
     if not request.is_json:
-        return jsonify({"success": False, "error": "JSON required"}), 400
+        return error_response(message="JSON required", status_code=400)
     try:
         data = request.get_json(silent=True)
         if not data:
-            return jsonify({"success": False, "error": "Invalid JSON"}), 400
+            return error_response(message="Invalid JSON", status_code=400)
         warehouse_id = data.get("warehouse_id")
         if not warehouse_id:
-            return jsonify({"success": False, "error": "warehouse_id required"}), 400
+            return error_response(message="warehouse_id required", status_code=400)
         tenant_id = get_active_tenant_id()
         warehouse = Warehouse.query.filter_by(id=warehouse_id, tenant_id=tenant_id).first()
         if not warehouse:
-            return jsonify({"success": False, "error": "Warehouse not found"}), 404
+            return error_response(message="Warehouse not found", status_code=404)
         with atomic_transaction("api_toggle_warehouse_negative"):
             warehouse.allow_negative_inventory = not warehouse.allow_negative_inventory
         _invalidate_owner_changes()
-        return jsonify(
-            {
-                "success": True,
-                "allow_negative_inventory": warehouse.allow_negative_inventory,
-            }
+        return success_response(
+            data={"allow_negative_inventory": warehouse.allow_negative_inventory}
         )
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)
 
 
 @owner_bp.route("/api/supervisor-override", methods=["POST"])
@@ -1199,34 +1194,29 @@ def api_toggle_warehouse_negative():
 def api_supervisor_override():
     """Verify supervisor credentials for cashier override actions."""
     if not request.is_json:
-        return jsonify({"success": False, "error": "JSON required"}), 400
+        return error_response(message="JSON required", status_code=400)
     try:
         data = request.get_json(silent=True)
         if not data:
-            return jsonify({"success": False, "error": "Invalid JSON"}), 400
+            return error_response(message="Invalid JSON", status_code=400)
         action = data.get("action", "")
         supervisor_id = data.get("supervisor_id")
         password = data.get("password", "")
         if not supervisor_id or not password:
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "error": gettext("معرّف المشرف وكلمة المرور مطلوبان"),
-                    }
-                ),
-                400,
+            return error_response(
+                message=gettext("معرّف المشرف وكلمة المرور مطلوبان"),
+                status_code=400,
             )
         supervisor = db.session.get(User, supervisor_id)
         if not supervisor or not supervisor.is_active:
-            return (
-                jsonify({"success": False, "error": gettext("المشرف غير موجود أو غير نشط")}),
-                404,
+            return error_response(
+                message=gettext("المشرف غير موجود أو غير نشط"),
+                status_code=404,
             )
         if not supervisor.is_manager() and not supervisor.is_admin():
-            return jsonify({"success": False, "error": gettext("المستخدم ليس مشرفاً")}), 403
+            return error_response(message=gettext("المستخدم ليس مشرفاً"), status_code=403)
         if not supervisor.check_password(password):
-            return jsonify({"success": False, "error": gettext("كلمة المرور غير صحيحة")}), 403
+            return error_response(message=gettext("كلمة المرور غير صحيحة"), status_code=403)
         LoggingCore.log_audit(
             "supervisor_override",
             "system",
@@ -1237,12 +1227,9 @@ def api_supervisor_override():
                 "cashier_id": current_user.id,
             },
         )
-        return jsonify(
-            {
-                "success": True,
-                "message": gettext("تم تفويض المشرف بنجاح"),
-                "supervisor_username": supervisor.username,
-            }
+        return success_response(
+            message=gettext("تم تفويض المشرف بنجاح"),
+            data={"supervisor_username": supervisor.username},
         )
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)

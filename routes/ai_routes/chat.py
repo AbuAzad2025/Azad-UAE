@@ -4,7 +4,7 @@ import logging
 from collections.abc import Iterator
 from typing import cast
 
-from flask import Response, g, jsonify, request, stream_with_context
+from flask import Response, g, request, stream_with_context
 from flask_babel import gettext
 from flask_login import current_user, login_required
 
@@ -13,6 +13,7 @@ from routes.ai_routes.actions import _process_user_action, _user_can_ai_execute_
 from routes.ai_routes.shared import _sanitize_ai_prompt, _stream_ai_response
 from services.ai_service import AIService
 from utils.ai_access import ai_level_allows, get_ai_access_state
+from utils.api_response import error_response, success_response
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
 from utils.tenanting import get_active_tenant_id
@@ -30,25 +31,37 @@ def recommend_price():
     """API: توصية السعر"""
     data = request.get_json(silent=True)
     if not data:
-        return jsonify({"error": "Request body must be JSON"}), 400
+        return error_response(
+            message="Request body must be JSON",
+            status_code=400,
+        )
 
     product_id = data.get("product_id")
     customer_id = data.get("customer_id")
 
     if not product_id or not customer_id:
-        return jsonify({"error": "Product and Customer required"}), 400
+        return error_response(
+            message="Product and Customer required",
+            status_code=400,
+        )
 
     try:
         recommendation = AIService.recommend_price(product_id, customer_id)
     except TimeoutError:
-        return jsonify({"error": "AI service timed out, please try again"}), 503
+        return error_response(
+            message="AI service timed out, please try again",
+            status_code=503,
+        )
     except Exception:
-        return jsonify({"error": "AI service error, please try again"}), 503
+        return error_response(
+            message="AI service error, please try again",
+            status_code=503,
+        )
 
     if not recommendation:
-        return jsonify({"error": "Not found"}), 404
+        return error_response(message="Not found", status_code=404)
 
-    return jsonify(recommendation)
+    return success_response(data=recommendation)
 
 
 @ai_bp.route("/check-stock", methods=["POST"])
@@ -59,29 +72,46 @@ def check_stock():
     """API: فحص المخزون"""
     data = request.get_json(silent=True)
     if not data:
-        return jsonify({"error": "Request body must be JSON"}), 400
+        return error_response(
+            message="Request body must be JSON",
+            status_code=400,
+        )
 
     product_id = data.get("product_id")
 
     if not product_id:
-        return jsonify({"error": "Product required"}), 400
+        return error_response(
+            message="Product required",
+            status_code=400,
+        )
 
     try:
         quantity = int(data.get("quantity", 0))
     except (TypeError, ValueError):
-        return jsonify({"error": "Quantity must be a number"}), 422
+        return error_response(
+            message="Quantity must be a number",
+            status_code=422,
+        )
 
     try:
         alert = AIService.check_stock_alert(product_id, quantity)
     except TimeoutError:
-        return jsonify({"error": "AI service timed out, please try again"}), 503
+        return error_response(
+            message="AI service timed out, please try again",
+            status_code=503,
+        )
     except Exception:
-        return jsonify({"error": "AI service error, please try again"}), 503
+        return error_response(
+            message="AI service error, please try again",
+            status_code=503,
+        )
 
     if alert:
-        return jsonify(alert)
+        return success_response(data=alert)
 
-    return jsonify({"type": "success", "message": gettext("المخزون كافٍ")})
+    return success_response(
+        data={"type": "success", "message": gettext("المخزون كافٍ")},
+    )
 
 
 @ai_bp.route("/analyze-customer/<int:customer_id>", methods=["GET"])
@@ -92,14 +122,20 @@ def analyze_customer(customer_id):
     try:
         analysis = AIService.analyze_customer_behavior(customer_id)
     except TimeoutError:
-        return jsonify({"error": "AI service timed out, please try again"}), 503
+        return error_response(
+            message="AI service timed out, please try again",
+            status_code=503,
+        )
     except Exception:
-        return jsonify({"error": "AI service error, please try again"}), 503
+        return error_response(
+            message="AI service error, please try again",
+            status_code=503,
+        )
 
     if not analysis:
-        return jsonify({"error": "Customer not found"}), 404
+        return error_response(message="Customer not found", status_code=404)
 
-    return jsonify(analysis)
+    return success_response(data=analysis)
 
 
 @ai_bp.route("/exchange-rate/<currency>", methods=["GET"])
@@ -108,7 +144,7 @@ def analyze_customer(customer_id):
 def exchange_rate(currency):
     """API: اقتراح سعر الصرف"""
     suggestion = AIService.get_exchange_rate_suggestion(currency)
-    return jsonify(suggestion)
+    return success_response(data=suggestion)
 
 
 @ai_bp.route("/search-market-price/<int:product_id>", methods=["GET"])
@@ -121,13 +157,12 @@ def search_market_price(product_id):
     tid = get_active_tenant_id(current_user)
     product = Product.query.filter_by(id=product_id, tenant_id=tid).first_or_404()
 
-    return jsonify(
-        {
-            "success": True,
+    return success_response(
+        data={
             "product": product.name,
-            "message": gettext("ميزة البحث العالمي قيد التطوير"),
             "suggestions": [],
-        }
+        },
+        message=gettext("ميزة البحث العالمي قيد التطوير"),
     )
 
 
@@ -141,13 +176,12 @@ def find_compatible(product_id):
     tid = get_active_tenant_id(current_user)
     product = Product.query.filter_by(id=product_id, tenant_id=tid).first_or_404()
 
-    return jsonify(
-        {
-            "success": True,
+    return success_response(
+        data={
             "product": product.name,
-            "message": gettext("ميزة البحث عن المركبات المتوافقة قيد التطوير"),
             "compatible_vehicles": [],
-        }
+        },
+        message=gettext("ميزة البحث عن المركبات المتوافقة قيد التطوير"),
     )
 
 
@@ -159,7 +193,10 @@ def chat():
     """API: الدردشة مع المساعد الذكي"""
     data = request.get_json(silent=True)
     if not data:
-        return jsonify({"error": "Request body must be JSON"}), 400
+        return error_response(
+            message="Request body must be JSON",
+            status_code=400,
+        )
 
     message = data.get("message", "").strip()
     ai_mode = data.get("ai_mode", "groq")
@@ -175,9 +212,9 @@ def chat():
     context["force_local"] = ai_mode == "local"
 
     # Apply input validation / sanitization
-    safe_message, error_response = _sanitize_ai_prompt(message, context)
-    if error_response:
-        return error_response
+    safe_message, prompt_error = _sanitize_ai_prompt(message, context)
+    if prompt_error:
+        return prompt_error
     message = safe_message
 
     # Check if client prefers SSE streaming (to prevent Gunicorn timeouts)
@@ -229,7 +266,13 @@ def chat():
         action_result = _process_user_action(message, current_user)
 
     if action_result:
-        return jsonify({"response": action_result, "ai_enabled": True, "action_executed": True})
+        return success_response(
+            data={
+                "response": action_result,
+                "ai_enabled": True,
+                "action_executed": True,
+            },
+        )
 
     import time
 
@@ -268,13 +311,13 @@ def chat():
         logger.exception("Failed to learn from AI chat interaction")
 
     state = get_ai_access_state(current_user)
-    return jsonify(
-        {
+    return success_response(
+        data={
             "response": response,
             "ai_enabled": bool(
                 state.get("allowed") and state.get("global_enabled") and state.get("tenant_enabled") is not False
             ),
             "ai_mode": ai_mode,
             "user_role": "owner" if current_user.is_owner else "user",
-        }
+        },
     )

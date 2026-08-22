@@ -1045,7 +1045,7 @@ class TestOwnerPostRoutes:
         assert resp.status_code == 200
         data = resp.get_json()
         assert data["success"] is True
-        assert "filename" in data
+        assert "filename" in data["data"]
 
     def test_backup_now_form_redirect(self, owner_client):
         resp = owner_client.post(
@@ -1105,7 +1105,7 @@ class TestOwnerPostRoutes:
     def test_execute_query_empty(self, owner_client):
         resp = owner_client.post("/owner/execute-query", data={"query": ""})
         assert resp.status_code == 400
-        assert "empty" in resp.get_json()["error"].lower()
+        assert "empty" in resp.get_json()["message"].lower()
 
     def test_execute_query_invalid_mutation(self, owner_client):
         resp = owner_client.post(
@@ -1122,7 +1122,8 @@ class TestOwnerPostRoutes:
         )
         assert resp.status_code == 400
         data = resp.get_json()
-        assert "error" in data
+        assert data["success"] is False
+        assert data["message"]
 
     def test_api_tenant_toggle_status(self, owner_client):
         resp = owner_client.post(

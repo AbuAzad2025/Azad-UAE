@@ -61,7 +61,7 @@ class TestApiUpdateTenantSettings:
             content_type="application/x-www-form-urlencoded",
         )
         assert resp.status_code == 400
-        assert resp.json["error"] == "JSON required"
+        assert resp.json["message"] == "JSON required"
 
     def test_unknown_field_returns_400(self, company_admin_client, mocker, mock_settings_db):
         mocker.patch("routes.owner.settings.Tenant")
@@ -71,7 +71,7 @@ class TestApiUpdateTenantSettings:
             json={"field": "bogus", "value": "x"},
         )
         assert resp.status_code == 400
-        assert "Unknown" in resp.json["error"]
+        assert "Unknown" in resp.json["message"]
 
     def test_invalid_tax_rate_returns_400(
         self,
@@ -86,7 +86,7 @@ class TestApiUpdateTenantSettings:
             json={"field": "default_tax_rate", "value": "not-a-number"},
         )
         assert resp.status_code == 400
-        assert "Invalid tax rate" in resp.json["error"]
+        assert "Invalid tax rate" in resp.json["message"]
 
     def test_tenant_not_found_returns_404(
         self,
@@ -101,7 +101,7 @@ class TestApiUpdateTenantSettings:
             json={"field": "default_tax_rate", "value": "10"},
         )
         assert resp.status_code == 404
-        assert resp.json["error"] == "Tenant not found"
+        assert resp.json["message"] == "Tenant not found"
 
     def test_success_default_tax_rate(
         self,
@@ -196,7 +196,7 @@ class TestApiUpdateTenantSettings:
             json={"value": "x"},
         )
         assert resp.status_code == 400
-        assert "Unknown" in resp.json["error"]
+        assert "Unknown" in resp.json["message"]
 
     def test_none_value_defaults_to_none_string_for_logo(
         self,
@@ -228,7 +228,7 @@ class TestApiTenantToggleStatus:
             content_type="application/x-www-form-urlencoded",
         )
         assert resp.status_code == 400
-        assert resp.json["error"] == "JSON required"
+        assert resp.json["message"] == "JSON required"
 
     def test_tenant_not_found_returns_404(
         self,
@@ -244,7 +244,7 @@ class TestApiTenantToggleStatus:
             json={},
         )
         assert resp.status_code == 404
-        assert resp.json["error"] == "Tenant not found"
+        assert resp.json["message"] == "Tenant not found"
 
     def test_master_tenant_cannot_be_toggled(
         self,
@@ -262,7 +262,7 @@ class TestApiTenantToggleStatus:
             json={},
         )
         assert resp.status_code == 400
-        assert "لا يمكن تعطيل" in resp.json["error"]
+        assert "لا يمكن تعطيل" in resp.json["message"]
 
     def test_success_toggle_active_to_inactive(
         self,
@@ -286,7 +286,7 @@ class TestApiTenantToggleStatus:
         )
         assert resp.status_code == 200
         assert resp.json["success"] is True
-        assert resp.json["is_active"] is False
+        assert resp.json["data"]["is_active"] is False
         assert inst.is_active is False
         assert inst.is_suspended is True
         assert inst.suspension_reason == "Disabled via API"
@@ -313,7 +313,7 @@ class TestApiTenantToggleStatus:
         )
         assert resp.status_code == 200
         assert resp.json["success"] is True
-        assert resp.json["is_active"] is True
+        assert resp.json["data"]["is_active"] is True
         assert inst.is_active is True
         assert inst.is_suspended is False
         assert inst.suspension_reason is None
@@ -358,7 +358,7 @@ class TestApiTenantUpdatePackage:
             content_type="application/x-www-form-urlencoded",
         )
         assert resp.status_code == 400
-        assert resp.json["error"] == "JSON required"
+        assert resp.json["message"] == "JSON required"
 
     def test_tenant_not_found_returns_404(
         self,
@@ -374,7 +374,7 @@ class TestApiTenantUpdatePackage:
             json={},
         )
         assert resp.status_code == 404
-        assert resp.json["error"] == "Tenant not found"
+        assert resp.json["message"] == "Tenant not found"
 
     def test_unknown_field_returns_400(
         self,
@@ -390,7 +390,7 @@ class TestApiTenantUpdatePackage:
             json={"field": "bogus", "value": "10"},
         )
         assert resp.status_code == 400
-        assert "Unknown" in resp.json["error"]
+        assert "Unknown" in resp.json["message"]
 
     def test_invalid_value_returns_400(
         self,
@@ -406,7 +406,7 @@ class TestApiTenantUpdatePackage:
             json={"field": "max_users", "value": "not-a-number"},
         )
         assert resp.status_code == 400
-        assert "Invalid integer" in resp.json["error"]
+        assert "Invalid integer" in resp.json["message"]
 
     def test_none_field_returns_400(
         self,
@@ -422,7 +422,7 @@ class TestApiTenantUpdatePackage:
             json={"value": "10"},
         )
         assert resp.status_code == 400
-        assert "Unknown" in resp.json["error"]
+        assert "Unknown" in resp.json["message"]
 
     def test_success_each_allowed_field(
         self,

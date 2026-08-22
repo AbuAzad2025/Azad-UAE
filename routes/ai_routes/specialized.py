@@ -2,7 +2,7 @@
 
 import logging
 
-from flask import jsonify, request
+from flask import request
 from flask_babel import gettext
 from flask_login import current_user, login_required
 
@@ -13,6 +13,7 @@ from ai_knowledge.learning.external_learning import (
 )
 from extensions import limiter
 from services.ai_service import AIService
+from utils.api_response import error_response, success_response
 from utils.decorators import permission_required
 
 from .blueprint import ai_bp
@@ -27,9 +28,9 @@ def neural_status():
     """🧠 API: حالة الشبكات العصبية"""
     try:
         status = AIService.get_neural_status()
-        return jsonify({"success": True, "status": status})
+        return success_response(data={"status": status})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)})
+        return error_response(message=str(e), status_code=200)
 
 
 @ai_bp.route("/automotive-ecu/<code>", methods=["GET"])
@@ -41,9 +42,9 @@ def automotive_ecu_code(code):
         ecu_expert = get_automotive_ecu_knowledge()
         diagnosis = ecu_expert.diagnose_code(code.upper())
 
-        return jsonify({"success": True, "diagnosis": diagnosis})
+        return success_response(data={"diagnosis": diagnosis})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)})
+        return error_response(message=str(e), status_code=200)
 
 
 @ai_bp.route("/automotive-sensor/<sensor>", methods=["GET"])
@@ -55,9 +56,9 @@ def automotive_sensor(sensor):
         ecu_expert = get_automotive_ecu_knowledge()
         info = ecu_expert.get_sensor_info(sensor)
 
-        return jsonify({"success": True, "sensor_info": info})
+        return success_response(data={"sensor_info": info})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)})
+        return error_response(message=str(e), status_code=200)
 
 
 @ai_bp.route("/external-sources", methods=["GET"])
@@ -70,16 +71,15 @@ def external_sources():
         sources = learning.get_knowledge_sources_list()
         stats = learning.get_statistics()
 
-        return jsonify(
-            {
-                "success": True,
+        return success_response(
+            data={
                 "sources": sources,
                 "statistics": stats,
                 "catalog": LEARNING_SOURCES_CATALOG,
-            }
+            },
         )
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)})
+        return error_response(message=str(e), status_code=200)
 
 
 @ai_bp.route("/ask-genius", methods=["POST"])
@@ -94,13 +94,16 @@ def ask_genius():
         context = data.get("context", {})
 
         if not question:
-            return jsonify({"success": False, "error": gettext("السؤال مطلوب")}), 400
+            return error_response(
+                message=gettext("السؤال مطلوب"),
+                status_code=400,
+            )
 
         result = AIService.ask_genius(question=question, context=context, user_id=current_user.id)
 
-        return jsonify({"success": True, "result": result})
+        return success_response(data={"result": result})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)})
+        return error_response(message=str(e), status_code=200)
 
 
 @ai_bp.route("/quick-calc", methods=["POST"])
@@ -114,13 +117,18 @@ def quick_calc():
         params = data.get("params", {})
 
         if not formula:
-            return jsonify({"success": False, "error": gettext("الصيغة مطلوبة")}), 400
+            return error_response(
+                message=gettext("الصيغة مطلوبة"),
+                status_code=400,
+            )
 
         result = AIService.quick_calculate(formula, **params)
 
-        return jsonify({"success": result.get("success", False), "result": result})
+        return success_response(
+            data={"success": result.get("success", False), "result": result},
+        )
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)})
+        return error_response(message=str(e), status_code=200)
 
 
 @ai_bp.route("/transformers-understand", methods=["POST"])
@@ -133,10 +141,13 @@ def transformers_understand():
         text = data.get("text", "")
 
         if not text:
-            return jsonify({"success": False, "error": gettext("النص مطلوب")}), 400
+            return error_response(
+                message=gettext("النص مطلوب"),
+                status_code=400,
+            )
 
         understanding = AIService.understand_with_transformers(text)
 
-        return jsonify({"success": True, "understanding": understanding})
+        return success_response(data={"understanding": understanding})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)})
+        return error_response(message=str(e), status_code=200)
