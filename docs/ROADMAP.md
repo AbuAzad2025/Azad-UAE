@@ -26,6 +26,14 @@
 | Bank reconciliation | تسوية بنكية | Treasury | الخزينة | Released | مُصدّر |
 | Webhooks and GraphQL | Webhooks و GraphQL | Integration | التكامل | Released | مُصدّر |
 | OpenAPI documentation | مستندات OpenAPI | Developer | المطور | Released | مُصدّر |
+| Procurement chain: PR → PO → GRN with 3-way match | سلسلة المشتريات: طلب ← أمر ← استلام مع مطابقة ثلاثية | Purchasing | المشتريات | Released | مُصدّر |
+| Budgeting with approvals and variance reports | الموازنات مع الموافقات وتقارير الانحراف | Accounting | المحاسبة | Released | مُصدّر |
+| Quotations lifecycle with sale conversion | دورة عروض الأسعار والتحويل إلى فاتورة | Sales | المبيعات | Released | مُصدّر |
+| Inter-warehouse transfers | التحويلات بين المستودعات | Inventory | المخزون | Released | مُصدّر |
+| Payment vault: encrypted cards, NOWPayments & Stripe webhooks | خزنة الدفع: بطاقات مشفرة وويبهوكس NOWPayments وStripe | Payments | المدفوعات | Released | مُصدّر |
+| Encrypted scoped backups (AES-256-GCM) | نسخ احتياطية مشفرة حسب النطاق | Platform | المنصة | Released | مُصدّر |
+| WPS payroll SIF export | تصدير رواتب WPS بصيغة SIF | HR | الموارد البشرية | Released | مُصدّر |
+| Strict CSP with per-request nonce | سياسة CSP صارمة بنونس لكل طلب | Security | الأمان | Released | مُصدّر |
 
 ## Q4 2026
 
@@ -33,12 +41,20 @@
 |--------------|-------------|--------|--------|--------|--------|
 | Mobile app (iOS / Android) | تطبيق جوال (iOS / Android) | Platform | المنصة | In Progress | قيد التنفيذ |
 | Advanced BI dashboard (charts, drill-down) | لوحة BI متقدمة (مخططات، drill-down) | Analytics | التحليلات | Planned | مخطط |
-| WPS payroll export | تصدير رواتب WPS | HR | الموارد البشرية | Planned | مخطط |
 | Shopify integration | تكامل Shopify | E-commerce | التجارة الإلكترونية | Planned | مخطط |
 | API rate limiting per tenant | تحديد معدل API لكل مستأجر | Developer | المطور | Planned | مخطط |
+| Two-factor authentication (TOTP) | المصادقة الثنائية (TOTP) | Security | الأمان | Under Evaluation | قيد التقييم |
 | Prometheus + Grafana monitoring | مراقبة Prometheus + Grafana | DevOps | DevOps | Planned | مخطط |
 | Sentry error tracking | تتبع أخطاء Sentry | DevOps | DevOps | Planned | مخطط |
 | PCI DSS Level 1 compliance | امتثال PCI DSS Level 1 | Compliance | الامتثال | In Progress | قيد التنفيذ |
+
+## Out of Scope (as of Aug 2026) | خارج النطاق
+
+| Module (EN) | الوحدة (AR) | Rationale | السبب |
+|-------------|-------------|-----------|-------|
+| Manufacturing / MRP (BOM, work orders) | التصنيع (قوائم المواد، أوامر الإنتاج) | Target market is trading & services; revisit on customer demand | السوق المستهدف تجاري وخدمي؛ يُعاد النظر عند طلب العملاء |
+| Recruitment module | وحدة التوظيف | Out of product perimeter; HR covers payroll-grade needs | خارج محيط المنتج؛ HR يغطي احتياجات الرواتب |
+| Delivery note as standalone document | سند التسليم كوثيقة مستقلة | Shipment model exists for logistics; not part of sale flow today | نموذج الشحن موجود للوجستيات؛ ليس ضمن تدفق البيع حالياً |
 
 ## Q1 2027
 

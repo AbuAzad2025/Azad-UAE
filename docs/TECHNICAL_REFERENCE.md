@@ -4,7 +4,7 @@
 
 AZADEXA هو نظام ERP SaaS متعدد المستأجرين (multi-tenant) مبني على Flask + SQLAlchemy + PostgreSQL. يدير: المبيعات والمشتريات والفواتير، المخزون والمستودعات والتتبع التسلسلي، المحاسبة العامة (GL) والشجرة المحاسبية، نقاط البيع (POS) متعدد القنوات، العملاء والموردين وCRM، الموارد البشرية والرواتب، المشاريع والمهام وجداول العمل، التذاكر وخدمة العملاء، المتجر الإلكتروني، التسويق بالبريد الإلكتروني، المساعد الذكي المُعزز بالذكاء الاصطناعي، التكامل مع أنظمة خارجية (POS sync، webhooks، GraphQL).
 
-النظام يحتوي على 96 ملف نموذج (models/*.py)، 110+ خدمة (services/*.py)، 55+ ملف مسارات (routes/*.py)، 80+ أداة مساعدة (utils/*.py)، و10,000+ اختبار.
+النظام يحتوي على 100+ ملف نموذج (models/*.py)، 130+ خدمة (services/*.py)، 70+ ملف مسارات (routes/*.py)، 80+ أداة مساعدة (utils/*.py)، و11,000+ اختبار.
 
 الميزات الرئيسية المُفعّلة حالياً:
 - POS متعدد القنوات (promotion engine، parked carts، manager overrides، cash movements، RMA، split tender)
@@ -172,14 +172,15 @@ AZADEXA هو نظام ERP SaaS متعدد المستأجرين (multi-tenant) م
 - المسارات: `routes/payments.py`، `routes/cheques.py`، `routes/payment_vault.py`
 
 ### المبيعات والمشتريات
-- النماذج: `Sale` / `SaleLine`، `Purchase` / `PurchaseLine`، `PurchaseReturn` / `PurchaseReturnLine`، `ProductReturn` / `ProductReturnLine`، `SalesRepCommission`
-- الخدمات: `sale_service.py`، `purchase_service.py`، `return_service.py`، `commission_gl_service.py`
-- المسارات: `routes/sales.py`، `routes/purchases.py`، `routes/returns.py`
+- النماذج: `Sale` / `SaleLine`، `Quotation` / `QuotationLine`، `Purchase` / `PurchaseLine`، `PurchaseReturn` / `PurchaseReturnLine`، `ProductReturn` / `ProductReturnLine`، `SalesRepCommission`
+- سلسلة المشتريات: `PurchaseRequisition` / `PurchaseRequisitionLine` → `PurchaseOrder` / `PurchaseOrderLine` → `GoodsReceipt` / `GoodsReceiptLine` مع المطابقة الثلاثية وربط الفاتورة بالـPO/GRN (`Purchase.po_id` / `grn_id`) وترحيل مخزون فوري عند تأكيد الاستلام
+- الخدمات: `sale_service.py`، `purchase_service.py`، `procurement_service.py`، `quotation_service.py`، `return_service.py`، `commission_gl_service.py`
+- المسارات: `routes/sales.py`، `routes/purchases.py`، `routes/quotations.py`، `routes/returns.py`
 
 ### المخزون
-- النماذج: `Product`، `ProductCategory`، `ProductPartner`، `Warehouse`، `ProductWarehouseStock`، `ProductWarehouseCost`، `ProductCostHistory`، `ProductPriceTier`، `ProductSerial`، `ProductImage`، `Shipment`
+- النماذج: `Product`، `ProductCategory`، `ProductPartner`، `Warehouse`، `ProductWarehouseStock`، `ProductWarehouseCost`، `ProductCostHistory`، `ProductPriceTier`، `ProductSerial`، `ProductImage`، `Shipment`، `WarehouseTransfer` / `WarehouseTransferLine`
 - الخدمات: `stock_service.py`، `serial_tracking_service.py`، `inventory_reconciliation_service.py`، `label_print_service.py`، `product_image_service.py`، `shipment_service.py`
-- المسارات: `routes/products.py`، `routes/warehouse.py`، `routes/unified_inventory.py`
+- المسارات: `routes/products.py`، `routes/warehouse.py`، `routes/unified_inventory.py`، `routes/transfers.py`
 
 ### العملات المتعددة
 - النماذج: `Currency`، `ExchangeRate`، `ExchangeRateRecord`
@@ -203,7 +204,7 @@ AZADEXA هو نظام ERP SaaS متعدد المستأجرين (multi-tenant) م
 - المسارات: `routes/customers.py`، `routes/suppliers.py`، `routes/crm.py`، `routes/partners.py`
 
 ### الموارد البشرية والرواتب
-- النماذج: `Department`، `JobPosition`، `HRContract`، `Attendance`، `LeaveType` / `LeaveRequest`، `Employee`، `PayrollTransaction`، `SalaryAdvance`، `PayrollSettings`، `EmployeeLeave`
+- النماذج: `Department`، `JobPosition`، `HRContract`، `Attendance`، `LeaveType` / `LeaveRequest`، `LeaveBalance`، `OvertimeEntry`، `Employee`، `PayrollTransaction`، `SalaryAdvance`، `PayrollSettings`، `EmployeeLeave`
 - الخدمات: `hr_service.py`، `payroll_service.py`
 - المسارات: `routes/hr.py`، `routes/payroll.py`
 

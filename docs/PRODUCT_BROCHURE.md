@@ -34,9 +34,9 @@
 
 ### 2.3 Sales & Purchases | المبيعات والمشتريات
 
-**EN:** Sales invoices, quotations, and delivery notes. Purchase orders, goods receipts, and supplier returns. Customer and supplier balance tracking. Sales representative commissions with GL posting. Multi-price tiers per product.
+**EN:** Sales invoices and quotations. Purchase requisitions, purchase orders, goods receipts with 3-way matching, and supplier returns. Customer and supplier balance tracking. Sales representative commissions with GL posting. Multi-price tiers per product.
 
-**AR:** فواتير مبيعات، عروض أسعار، ومذكرات تسليم. أوامر شراء، إيصالات بضائع، وإرجاعات موردين. تتبع رصيد العملاء والموردين. عمولات مندوبي المبيعات مع ترحيل GL. مستويات أسعار متعددة لكل منتج.
+**AR:** فواتير مبيعات وعروض أسعار. طلبات شراء وأوامر شراء وإيصالات استلام مع مطابقة ثلاثية، وإرجاعات موردين. تتبع رصيد العملاء والموردين. عمولات مندوبي المبيعات مع ترحيل GL. مستويات أسعار متعددة لكل منتج.
 
 ### 2.4 Point of Sale (POS) | نقاط البيع
 

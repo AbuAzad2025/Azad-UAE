@@ -672,23 +672,38 @@ new_avg   = new_value / new_qty
 ## 7. المشتريات
 
 > **الملف الرئيسي:** `routes/purchases.py`
-> **الخدمة:** `services/purchase_service.py`
+> **الخدمة:** `services/purchase_service.py`، `services/procurement_service.py`
 
-### 7.1 أمر الشراء
+### 7.1 طلب الشراء (Purchase Requisition)
+**الحقول الرئيسية:**
+- `requisition_number` — تلقائي
+- `warehouse_id` / `branch_id` — المستودع والفرع
+- البنود: `product_id` / `quantity` / `estimated_price`
+- `po_id` — يُربط تلقائياً عند التحويل إلى أمر شراء
+
+**المسار:** الطلب بحالة `approved` فقط يمكن تحويله إلى أمر شراء عبر `ProcurementService.convert_to_po()`.
+
+### 7.2 أمر الشراء (Purchase Order)
 **الحقول:**
-- `purchase_number` — تلقائي
+- `order_number` — تلقائي
 - `supplier_id` — المورد
 - `warehouse_id` — مستودع الاستلام
-- `total_amount` — الإجمالي
-- `currency` / `exchange_rate` / `amount_aed`
-- `freight` / `insurance` / `customs_duty` — تكاليف الشحن والتأمين والجمارك
-- `prices_include_vat` — هل الأسعار شاملة VAT؟
+- البنود مع `received_quantity` لتتبع الاستلام الجزئي
+- بعد التأكيد: `status = confirmed` ويصبح جاهزاً للاستلام
 
-### 7.2 استلام المخزون
-عند تأكيد أمر الشراء:
-1. إضافة مخزون عبر `StockService.add_stock()`
+### 7.3 إيصال استلام البضاعة (GRN) والمطابقة الثلاثية
+1. أنشئ GRN من أمر شراء مؤكد (`create_grn`) وحدّد الكميات المستلمة فعلياً
+2. عند تأكيد GRN (`confirm_grn`) يحدث تلقائياً:
+   - **إضافة مخزون فوري** عبر `StockService.add_stock()` وتحديث MWAC بالتكلفة
+   - تحديث `received_quantity` على بنود الأمر وحالة الأمر
+   - ربط الفاتورة اللاحقة بالأمر والإيصال عبر `purchase.po_id` / `grn_id`
+3. **المطابقة الثلاثية** (`three_way_match`): مقارنة قيمة الفاتورة مقابل إجمالي الأمر والاستلام قبل الاعتماد
+
+### 7.4 فاتورة المورد والاستلام للمخزون
+عند إنشاء فاتورة شراء مؤكدة:
+1. ترحيل GL: Dr Inventory (+ تكاليف الشحن والجمارك) / Cr AP
 2. تحديث MWAC بتكلفة الشراء
-3. ترحيل GL: Dr Inventory / Cr AP
+3. الحقول المالية: `freight` / `insurance` / `customs_duty` / `prices_include_vat`
 
 ---
 

@@ -21,7 +21,7 @@
 
 | Layer (EN) | الطبقة (AR) | Mechanism | الآلية |
 |------------|-------------|-----------|--------|
-| Application | التطبيق | Username + password + optional 2FA | اسم المستخدم + كلمة المرور + 2FA اختياري |
+| Application | التطبيق | Username + password (PBKDF2-SHA256), brute-force lockout, hardened sessions; 2FA under evaluation | اسم المستخدم + كلمة المرور (PBKDF2-SHA256)، قفل ضد المحاولات، جلسات محصّنة؛ المصادقة الثنائية قيد التقييم |
 | API | API | API key + secret (HMAC-signed requests) | مفتاح API + سر (طلبات موقعة HMAC) |
 | Owner panel | لوحة المالك | Separate owner credentials with IP allowlisting | بيانات اعتماد مالك منفصلة مع قائمة سماح IP |
 

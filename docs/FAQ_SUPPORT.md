@@ -12,10 +12,10 @@
 **A (EN):** Accounts lock after 5 failed login attempts. Wait 15 minutes or contact your admin to unlock. If you are the owner, contact support with proof of identity.
 **A (AR):** تُقفل الحسابات بعد 5 محاولات فاشلة لتسجيل الدخول. انتظر 15 دقيقة أو اتصل بمسؤولك لفتح القفل. إذا كنت المالك، اتصل بالدعم بإثبات هوية.
 
-**Q (EN):** How do I enable two-factor authentication?
-**Q (AR):** كيف أفعّل المصادقة الثنائية؟
-**A (EN):** 2FA is available for owner and admin accounts. Go to Settings → Security → Enable 2FA. Scan the QR code with Google Authenticator or Authy.
-**A (AR):** 2FA متاحة لحسابات المالك والمسؤول. اذهب إلى الإعدادات → الأمان → تفعيل 2FA. امسح QR Code بـ Google Authenticator أو Authy.
+**Q (EN):** Is two-factor authentication available?
+**Q (AR):** هل المصادقة الثنائية متاحة؟
+**A (EN):** Not yet. Accounts are protected today by a strong password policy, brute-force lockout (5 attempts → 15-minute lock), and hardened session controls. 2FA is under evaluation for an upcoming release.
+**A (AR):** ليست متاحة بعد. تُحمى الحسابات اليوم بسياسة كلمات مرور قوية، وقفل تلقائي ضد المحاولات (5 محاولات → قفل 15 دقيقة)، وضبط صارم للجلسات. المصادقة الثنائية تحت الدراسة لإصدار قادم.
 
 ## 2. Data and Display | البيانات والعرض
 
@@ -111,8 +111,8 @@
 
 **Q (EN):** Can I export payroll to WPS?
 **Q (AR):** هل يمكنني تصدير الرواتب إلى WPS؟
-**A (EN):** WPS export is on the roadmap (Q4 2026). Currently, export to Excel and upload manually.
-**A (AR):** تصدير WPS في خارطة الطريق (Q4 2026). حالياً، صدّر إلى Excel وارفع يدوياً.
+**A (EN):** Yes — Treasury → WPS Export generates the UAE WPS SIF file ready for bank upload. Excel export remains available as a fallback.
+**A (AR):** نعم — من الخزينة → تصدير WPS يُولّد النظام ملف SIF جاهزاً للرفع إلى البنك. ويبقى تصدير Excel متاحاً كبديل.
 
 **Q (EN):** How do I record attendance?
 **Q (AR):** كيف أسجل الحضور؟

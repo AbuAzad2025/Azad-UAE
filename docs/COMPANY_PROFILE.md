@@ -48,14 +48,16 @@
 | General Ledger | دفتر الأستاذ العام | Double-entry accounting, dynamic GL mapping, trial balance, financial statements | محاسبة مزدوجة، تعيين GL ديناميكي، ميزان مراجعة، قوائم مالية |
 | Accounts Payable / Receivable | الذمم الدائنة/المدينة | Aging analysis, reconciliation, automated reminders | تحليل العمر، التسوية، التذكيرات الآلية |
 | Inventory | المخزون | Multi-warehouse, WAC/MWAC, serial tracking, reconciliation | متعدد المستودعات، WAC/MWAC، تتبع تسلسلي، تسوية |
-| Sales & Purchases | المبيعات والمشتريات | Invoicing, quotations, returns, commissions | الفوترة، عروض الأسعار، الإرجاعات، العمولات |
+| Sales & Purchases | المبيعات والمشتريات | Invoicing, quotations, returns, commissions; purchase requisitions → POs → goods receipts with 3-way matching | الفوترة، عروض الأسعار، الإرجاعات، العمولات؛ طلبات وأوامر شراء وإيصالات استلام مع مطابقة ثلاثية |
+| Budgeting | الموازنات | Budget lines, approval workflow, variance vs actual reports | بنود موازنة، مسار موافقات، تقارير الانحراف عن الفعلي |
 | POS | نقاط البيع | Multi-channel POS, promotions (tiered/BOGO/bundle/combo), split tender, RMA | POS متعدد القنوات، عروض (طبقية/BOGO/حزم/مجموعات)، دفع مقسّم، RMA |
 | HR & Payroll | الموارد البشرية والرواتب | Attendance, leave, contracts, payroll processing, accruals | الحضور، الإجازة، العقود، معالجة الرواتب، الاستحقاقات |
 | CRM | إدارة العملاء | Lead pipeline, stages, teams, activities | خط أنابيب العملاء المحتملين، المراحل، الفرق، الأنشطة |
 | Projects | المشاريع | Tasks, timesheets, billing, member management | المهام، جداول العمل، الفوترة، إدارة الأعضاء |
 | E-commerce | التجارة الإلكترونية | Storefront, abandoned cart, wishlist, reviews, loyalty | واجهة المتجر، السلة المهجورة، قائمة الأمنيات، التقييمات، الولاء |
 | AI Assistant | المساعد الذكي | RBAC-hardened action dispatcher, pricing recommendations, forecasting | موزع إجراءات مُقوّى بـ RBAC، توصيات أسعار، التنبؤ |
-| Treasury | الخزينة | Cash flow, liquidity position, bank reconciliation | التدفق النقدي، الوضعية السائلة، التسوية البنكية |
+| Treasury | الخزينة | Cash flow, liquidity position, bank reconciliation, WPS SIF export | التدفق النقدي، الوضعية السائلة، التسوية البنكية، تصدير WPS SIF |
+| Payment Vault | خزنة الدفع | Encrypted card storage, NOWPayments & Stripe webhooks, public purchase/donation APIs with idempotency | تخزين بطاقات مشفّر، ويبهوكس NOWPayments وStripe، واجهات شراء/تبرع عامة مع حماية التكرار |
 | Fixed Assets | الأصول الثابتة | Depreciation schedules (straight-line, declining balance) | جداول الإهلاك (الخط المستقيم، التناقصي) |
 | Cheques | الشيكات | Full lifecycle: receive, deposit, clear, bounce, cancel | دورة حياة كاملة: استلام، إيداع، تصفية، رد، إلغاء |
 | Multi-currency | العملات المتعددة | FX rates, AED quantization, unrealized revaluation | أسعار الصرف، التكميم AED، إعادة التقييم غير المحقق |
