@@ -30,13 +30,13 @@ def _returns_patches(**kwargs):
         stack.enter_context(patch("routes.returns.render_template", return_value="ok"))
         stack.enter_context(
             patch(
-                "routes.returns.get_active_tenant_id",
+                "services.return_service.get_active_tenant_id",
                 return_value=kwargs.get("tenant_id", 1),
             )
         )
         stack.enter_context(
             patch(
-                "routes.returns.is_platform_owner",
+                "services.return_service.is_platform_owner",
                 return_value=kwargs.get("is_platform_owner", False),
             )
         )
@@ -62,66 +62,55 @@ def returns_client(app_factory, bypass_permission_auth):
 
 
 class TestReturnsScopedQuery:
-    def test_scoped_query_seller_filter(self, bypass_permission_auth):
-        from routes.returns import _scoped_returns_query
+    def _scoped(self, user, **patches):
+        from services.return_service import ReturnService
 
+        with (
+            patch("services.return_service.ProductReturn.query", patches["q"]),
+            patch(
+                "services.return_service.get_active_tenant_id",
+                return_value=patches.get("tenant_id"),
+            ),
+            patch(
+                "services.return_service.is_platform_owner",
+                return_value=patches.get("is_platform_owner", False),
+            ),
+        ):
+            return ReturnService.get_scoped_returns_query(user, patches.get("branch_scope"))
+
+    def test_scoped_query_seller_filter(self, bypass_permission_auth):
         bypass_permission_auth.is_seller.return_value = True
         q = MagicMock()
         q.join.return_value = q
         q.filter.return_value = q
-        with (
-            patch("routes.returns.ProductReturn.query", q),
-            patch("routes.returns.get_active_tenant_id", return_value=1),
-            patch("routes.returns.branch_scope_id", return_value=None),
-            patch("routes.returns.is_platform_owner", return_value=False),
-        ):
-            result = _scoped_returns_query()
+        result = self._scoped(bypass_permission_auth, q=q, tenant_id=1)
         assert result is q
         q.filter.assert_called()
 
     def test_scoped_query_platform_owner_no_tenant(self, bypass_permission_auth):
-        from routes.returns import _scoped_returns_query
-
         q = MagicMock()
         q.join.return_value = q
         q.filter.return_value = q
-        with (
-            patch("routes.returns.ProductReturn.query", q),
-            patch("routes.returns.get_active_tenant_id", return_value=None),
-            patch("routes.returns.is_platform_owner", return_value=True),
-            patch("routes.returns.branch_scope_id", return_value=None),
-        ):
-            _scoped_returns_query()
+        self._scoped(
+            bypass_permission_auth,
+            q=q,
+            tenant_id=None,
+            is_platform_owner=True,
+        )
         q.filter.assert_called()
 
     def test_scoped_query_non_owner_no_tenant(self, bypass_permission_auth):
-        from routes.returns import _scoped_returns_query
-
         q = MagicMock()
         q.join.return_value = q
         q.filter.return_value = q
-        with (
-            patch("routes.returns.ProductReturn.query", q),
-            patch("routes.returns.get_active_tenant_id", return_value=None),
-            patch("routes.returns.is_platform_owner", return_value=False),
-            patch("routes.returns.branch_scope_id", return_value=None),
-        ):
-            _scoped_returns_query()
+        self._scoped(bypass_permission_auth, q=q, tenant_id=None, is_platform_owner=False)
         q.filter.assert_called()
 
     def test_scoped_query_branch_filter(self, bypass_permission_auth):
-        from routes.returns import _scoped_returns_query
-
         q = MagicMock()
         q.join.return_value = q
         q.filter.return_value = q
-        with (
-            patch("routes.returns.ProductReturn.query", q),
-            patch("routes.returns.get_active_tenant_id", return_value=1),
-            patch("routes.returns.is_platform_owner", return_value=False),
-            patch("routes.returns.branch_scope_id", return_value=7),
-        ):
-            _scoped_returns_query()
+        self._scoped(bypass_permission_auth, q=q, tenant_id=1, branch_scope=7)
         assert q.filter.call_count >= 2
 
 

@@ -584,3 +584,60 @@ class ReturnService:
         except Exception as e:
             current_app.logger.error(f"Failed to create return: {e}")
             raise
+
+    @staticmethod
+    def get_scoped_returns_query(user, scoped_branch_id=None):
+        """Build tenant/branch/seller scoped ProductReturn query for route listing."""
+        query = ProductReturn.query.join(Sale, ProductReturn.sale_id == Sale.id)
+
+        active_tenant_id = get_active_tenant_id(user)
+        if active_tenant_id is not None:
+            query = query.filter(Sale.tenant_id == active_tenant_id, ProductReturn.tenant_id == active_tenant_id)
+        elif not is_platform_owner(user):
+            query = query.filter(Sale.tenant_id < 0)
+        else:
+            query = query.filter(ProductReturn.tenant_id < 0)
+
+        is_seller = getattr(user, "is_seller", None)
+        if callable(is_seller) and is_seller():
+            query = query.filter(Sale.seller_id == user.id)
+
+        if scoped_branch_id is not None:
+            query = query.filter(Sale.branch_id == scoped_branch_id)
+
+        return query
+
+    @staticmethod
+    def search_sales_for_return(q, page, per_page, user):
+        """Return paginated Sale candidates matching q for return creation."""
+        from sqlalchemy import or_
+
+        from utils.helpers import format_currency
+        from utils.tenanting import tenant_query
+
+        query = tenant_query(Sale, user=user).filter(Sale.status == "completed")
+        if q.isdigit():
+            query = query.filter(Sale.id == int(q))
+        else:
+            query = query.filter(
+                or_(
+                    Sale.sale_number.ilike(f"%{q}%"),
+                    Sale.invoice_number.ilike(f"%{q}%"),
+                )
+            )
+
+        pagination = query.order_by(Sale.sale_date.desc()).paginate(page=page, per_page=per_page, error_out=False)
+
+        items = [
+            {
+                "id": s.id,
+                "text": f"{s.sale_number} — {s.customer.name if s.customer else '—'} — {format_currency(s.total_amount or 0, s.currency)}",
+                "sale_number": s.sale_number,
+                "customer": s.customer.name if s.customer else "",
+                "total": float(s.total_amount or 0),
+                "currency": s.currency,
+            }
+            for s in pagination.items
+        ]
+
+        return items, pagination

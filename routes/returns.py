@@ -1,7 +1,6 @@
 from flask import Blueprint, abort, current_app, render_template, request
 from flask_babel import gettext
 from flask_login import current_user, login_required
-from sqlalchemy import or_
 
 from extensions import limiter
 from models import ProductReturn, Sale
@@ -11,31 +10,13 @@ from utils.api_response import error_response, paginated_response, success_respo
 from utils.branching import should_show_all_branch_columns
 from utils.db_safety import atomic_transaction
 from utils.decorators import branch_scope_id, permission_required
-from utils.helpers import format_currency
-from utils.tenanting import get_active_tenant_id, is_platform_owner, tenant_query
+from utils.tenanting import tenant_get_or_404
 
 returns_bp = Blueprint("returns", __name__, url_prefix="/returns")
 
 
 def _scoped_returns_query():
-    query = ProductReturn.query.join(Sale, ProductReturn.sale_id == Sale.id)
-
-    tenant_id = get_active_tenant_id(current_user)
-    if tenant_id is not None:
-        query = query.filter(Sale.tenant_id == tenant_id, ProductReturn.tenant_id == tenant_id)
-    elif not is_platform_owner(current_user):
-        query = query.filter(Sale.tenant_id < 0)
-    else:
-        query = query.filter(ProductReturn.tenant_id < 0)
-
-    if current_user.is_seller():
-        query = query.filter(Sale.seller_id == current_user.id)
-
-    scoped_branch_id = branch_scope_id()
-    if scoped_branch_id is not None:
-        query = query.filter(Sale.branch_id == scoped_branch_id)
-
-    return query
+    return ReturnService.get_scoped_returns_query(current_user, branch_scope_id())
 
 
 @returns_bp.route("/")
@@ -131,25 +112,7 @@ def api_search_sales():
     if not q:
         return success_response(data=[])
 
-    query = tenant_query(Sale).filter(Sale.status == "completed")
-    if q.isdigit():
-        query = query.filter(Sale.id == int(q))
-    else:
-        query = query.filter(or_(Sale.sale_number.ilike(f"%{q}%"), Sale.invoice_number.ilike(f"%{q}%")))
-
-    pagination = query.order_by(Sale.sale_date.desc()).paginate(page=page, per_page=per_page, error_out=False)
-
-    items = [
-        {
-            "id": s.id,
-            "text": f"{s.sale_number} — {s.customer.name if s.customer else '—'} — {format_currency(s.total_amount or 0, s.currency)}",
-            "sale_number": s.sale_number,
-            "customer": s.customer.name if s.customer else "",
-            "total": float(s.total_amount or 0),
-            "currency": s.currency,
-        }
-        for s in pagination.items
-    ]
+    items, pagination = ReturnService.search_sales_for_return(q, page, per_page, user=current_user)
 
     return paginated_response(
         items=items,
@@ -167,8 +130,6 @@ def api_get_sale_lines():
     sale_id = request.args.get("sale_id", type=int)
     if not sale_id:
         return error_response(message="Missing sale_id", status_code=400)
-
-    from utils.tenanting import tenant_get_or_404
 
     sale = tenant_get_or_404(Sale, sale_id)
 
