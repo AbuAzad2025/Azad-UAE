@@ -59,8 +59,8 @@ class TestParkedCartRoutes:
         data = resp.get_json()
         assert resp.status_code == 200
         assert data["success"] is True
-        assert data["carts"][0]["id"] == 5
-        assert "payload" not in data["carts"][0]
+        assert data["data"]["carts"][0]["id"] == 5
+        assert "payload" not in data["data"]["carts"][0]
         list_carts.assert_called_once()
 
     def test_list_empty_without_session(self, pos_client):
@@ -69,7 +69,7 @@ class TestParkedCartRoutes:
             patch("routes.pos.PosCartService.list_carts", return_value=[]),
         ):
             resp = pos_client.get("/pos/api/carts")
-        assert resp.get_json()["carts"] == []
+        assert resp.get_json()["data"]["carts"] == []
 
     def test_park_success(self, pos_client):
         payload = {"lines": [{"product_id": 1, "quantity": "2", "unit_price": "25"}]}
@@ -80,7 +80,7 @@ class TestParkedCartRoutes:
             resp = pos_client.post("/pos/api/carts/park", json={"payload": payload, "label": "طاولة ٥"})
         data = resp.get_json()
         assert resp.status_code == 201
-        assert data["cart"]["label"] == "طاولة ٥"
+        assert data["data"]["cart"]["label"] == "طاولة ٥"
         assert park_cart.call_args.kwargs["payload"] == payload
         assert park_cart.call_args.kwargs["label"] == "طاولة ٥"
 
@@ -121,7 +121,7 @@ class TestParkedCartRoutes:
             resp = pos_client.get("/pos/api/carts/5")
         data = resp.get_json()
         assert resp.status_code == 200
-        assert data["cart"]["payload"]["lines"][0]["product_id"] == 1
+        assert data["data"]["cart"]["payload"]["lines"][0]["product_id"] == 1
 
     def test_retrieve_double_resume_conflict(self, pos_client):
         with (
@@ -167,12 +167,12 @@ class TestFastCashRoute:
         data = resp.get_json()
         assert resp.status_code == 200
         assert data["success"] is True
-        assert data["currency"] == "AED"
-        amounts = [o["amount"] for o in data["options"]]
+        assert data["data"]["currency"] == "AED"
+        amounts = [o["amount"] for o in data["data"]["options"]]
         assert amounts == [37.0, 40.0, 50.0, 100.0, 200.0, 500.0, 1000.0]
-        assert data["options"][0]["is_exact"] is True
-        assert data["options"][0]["change"] == 0.0
-        assert data["options"][1]["change"] == 3.0
+        assert data["data"]["options"][0]["is_exact"] is True
+        assert data["data"]["options"][0]["change"] == 0.0
+        assert data["data"]["options"][1]["change"] == 3.0
 
     def test_fast_cash_default_currency_from_tenant(self, pos_client):
         with (
@@ -181,8 +181,8 @@ class TestFastCashRoute:
         ):
             resp = pos_client.get("/pos/api/fast-cash?total=10")
         data = resp.get_json()
-        assert data["currency"] == "AED"
-        assert data["options"][0]["amount"] == 10.0
+        assert data["data"]["currency"] == "AED"
+        assert data["data"]["options"][0]["amount"] == 10.0
 
     def test_fast_cash_missing_total(self, pos_client):
         with _pos_api_patches():
@@ -203,7 +203,7 @@ class TestFastCashRoute:
         with _pos_api_patches():
             resp = pos_client.get("/pos/api/fast-cash?total=7.555&currency=AED")
         data = resp.get_json()
-        by_amount = {o["amount"]: o["change"] for o in data["options"]}
+        by_amount = {o["amount"]: o["change"] for o in data["data"]["options"]}
         assert by_amount[10.0] == 2.445
 
 
@@ -245,12 +245,12 @@ class TestSplitTenderCheckout:
         assert payments[0]["payment_method"] == "cash"
         assert payments[0]["currency"] == "AED"
         assert payments[1]["payment_method"] == "card"
-        assert data["tenders"] == [
+        assert data["data"]["tenders"] == [
             {"method": "cash", "amount": 30.0, "currency": "AED"},
             {"method": "card", "amount": 20.0, "currency": "AED"},
         ]
-        assert data["payment_status"] == "paid"
-        assert data["change_due"] == 0.0
+        assert data["data"]["payment_status"] == "paid"
+        assert data["data"]["change_due"] == 0.0
 
     def test_payments_array_takes_precedence_over_legacy_fields(self, pos_client):
         with (
@@ -324,7 +324,7 @@ class TestSplitTenderCheckout:
                 "/pos/api/checkout",
                 json=self._payload(payments=[{"amount": "100", "payment_method": "cash"}]),
             )
-        assert resp.get_json()["change_due"] == 50.0
+        assert resp.get_json()["data"]["change_due"] == 50.0
 
     def test_no_change_due_for_card_overpay(self, pos_client):
         with (
@@ -343,7 +343,7 @@ class TestSplitTenderCheckout:
                 "/pos/api/checkout",
                 json=self._payload(payments=[{"amount": "100", "payment_method": "card"}]),
             )
-        assert resp.get_json()["change_due"] == 0.0
+        assert resp.get_json()["data"]["change_due"] == 0.0
 
     def test_empty_payments_rejected(self, pos_client):
         with _pos_api_patches():

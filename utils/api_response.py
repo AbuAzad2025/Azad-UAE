@@ -51,19 +51,29 @@ def error_response(
     return jsonify(response), status_code
 
 
-def paginated_response(items: list, page: int, per_page: int, total: int, message: str | None = None):
+def paginated_response(
+    items: list,
+    page: int,
+    per_page: int,
+    total: int,
+    message: str | None = None,
+    meta: dict | None = None,
+):
     """Return a paginated success response with metadata."""
+    pagination_meta = {
+        "pagination": {
+            "page": page,
+            "per_page": per_page,
+            "total": total,
+            "pages": (total + per_page - 1) // per_page,
+            "has_next": page * per_page < total,
+            "has_prev": page > 1,
+        }
+    }
+    if meta:
+        pagination_meta.update(meta)
     return success_response(
         data=items,
         message=message,
-        meta={
-            "pagination": {
-                "page": page,
-                "per_page": per_page,
-                "total": total,
-                "pages": (total + per_page - 1) // per_page,
-                "has_next": page * per_page < total,
-                "has_prev": page > 1,
-            }
-        },
+        meta=pagination_meta,
     )

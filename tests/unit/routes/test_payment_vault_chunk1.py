@@ -196,7 +196,7 @@ class TestProcessPayment:
         assert resp.status_code == 200
         body = resp.get_json()
         assert body["success"] is True
-        assert body["payment_id"] == "np_123"
+        assert body["data"]["payment_id"] == "np_123"
         mock_nowpayments.create_payment.assert_called_once()
         assert mock_nowpayments.create_payment.call_args.kwargs["amount"] == 100.0
 
@@ -243,7 +243,7 @@ class TestProcessPayment:
         assert resp.status_code == 200
         body = resp.get_json()
         assert body["success"] is True
-        assert body["transaction_id"] == "CARD_1700000000"
+        assert body["data"]["transaction_id"] == "CARD_1700000000"
         mock_card_payment.encrypt_card_data.assert_called_once()
         call_kwargs = mock_card_payment.encrypt_card_data.call_args.kwargs
         assert "cipher" in call_kwargs
@@ -261,7 +261,7 @@ class TestProcessPayment:
             },
         )
         assert resp.status_code == 400
-        assert "الحد الأدنى" in resp.get_json()["error"]
+        assert "الحد الأدنى" in resp.get_json()["message"]
 
     def test_card_invalid_amount_returns_422(self, vault_owner_client):
         resp = vault_owner_client.post(
@@ -368,7 +368,7 @@ class TestPackageStats:
 
         resp = vault_owner_client.get("/payment-vault/api/package-stats/1")
         assert resp.status_code == 200
-        stats = resp.get_json()
+        stats = resp.get_json()["data"]
         assert stats["total_sales"] == 4
         assert stats["total_revenue"] == 150
         assert stats["completed"] == 2
@@ -378,7 +378,7 @@ class TestPackageStats:
     def test_zero_sales(self, vault_owner_client, _mock_package_purchase, mock_package):
         resp = vault_owner_client.get("/payment-vault/api/package-stats/1")
         assert resp.status_code == 200
-        stats = resp.get_json()
+        stats = resp.get_json()["data"]
         assert stats["total_sales"] == 0
         assert stats["total_revenue"] == 0
 
@@ -394,8 +394,8 @@ class TestNotifications:
         assert resp.status_code == 200
         body = resp.get_json()
         assert body["success"] is True
-        assert len(body["notifications"]) == 2
-        assert body["count"] == 2
+        assert len(body["data"]["notifications"]) == 2
+        assert body["data"]["count"] == 2
 
     def test_custom_limit(self, vault_owner_client, mocker):
         notes = [{"id": i, "text": f"n{i}"} for i in range(5)]
@@ -406,7 +406,7 @@ class TestNotifications:
         resp = vault_owner_client.get("/payment-vault/api/notifications?limit=5")
         assert resp.status_code == 200
         body = resp.get_json()
-        assert len(body["notifications"]) == 5
+        assert len(body["data"]["notifications"]) == 5
 
 
 # =============================================================================
@@ -423,9 +423,9 @@ class TestLiveStats:
         assert resp.status_code == 200
         body = resp.get_json()
         assert body["success"] is True
-        assert body["daily_revenue"] == 500.0
-        assert body["daily_transactions"] == 10
-        assert body["security_level"] == "high"
+        assert body["data"]["daily_revenue"] == 500.0
+        assert body["data"]["daily_transactions"] == 10
+        assert body["data"]["security_level"] == "high"
 
 
 # =============================================================================
@@ -458,10 +458,10 @@ class TestV2Purchases:
         resp = vault_owner_client.get("/payment-vault/api/v2/purchases")
         assert resp.status_code == 200
         body = resp.get_json()
-        assert body["version"] == "2.0"
+        assert body["meta"]["version"] == "2.0"
         assert body["success"] is True
         assert len(body["data"]) == 1
-        assert body["pagination"]["total"] == 1
+        assert body["meta"]["pagination"]["total"] == 1
 
     def test_filter_by_status(self, vault_owner_client, _mock_pp):
         _mock_pp.paginate.return_value.items = []
@@ -517,7 +517,7 @@ class TestV2Donations:
         resp = vault_owner_client.get("/payment-vault/api/v2/donations")
         assert resp.status_code == 200
         body = resp.get_json()
-        assert body["version"] == "2.0"
+        assert body["meta"]["version"] == "2.0"
         assert body["success"] is True
         assert len(body["data"]) == 1
 

@@ -134,11 +134,11 @@ class TestPromotionEvaluateEndpoint:
         data = resp.get_json()
         assert resp.status_code == 200
         assert data["success"] is True
-        assert data["total_discount"] == 5.0
-        assert data["subtotal_after"] == 95.0
-        assert data["applied_rules"][0]["campaign_type"] == "bundle"
-        assert data["upsell_prompts"][0]["needed_quantity"] == "1"
-        assert data["lines"][0]["adjusted_total"] == 95.0
+        assert data["data"]["total_discount"] == 5.0
+        assert data["data"]["subtotal_after"] == 95.0
+        assert data["data"]["applied_rules"][0]["campaign_type"] == "bundle"
+        assert data["data"]["upsell_prompts"][0]["needed_quantity"] == "1"
+        assert data["data"]["lines"][0]["adjusted_total"] == 95.0
         # Engine received the tier-priced, tenant-scoped cart
         evaluate.assert_called_once()
         cart = evaluate.call_args.args[0]
@@ -183,9 +183,9 @@ class TestCheckoutPromotionIntegration:
         data = resp.get_json()
         assert data["success"] is True
         assert create_sale.call_args.kwargs["promotion_evaluation"] is evaluation
-        assert data["promotion_discount"] == 5.0
-        assert data["promotions_applied"][0]["name"] == "Bundle Deal"
-        assert data["upsell_prompts"][0]["type"] == "bundle"
+        assert data["data"]["promotion_discount"] == 5.0
+        assert data["data"]["promotions_applied"][0]["name"] == "Bundle Deal"
+        assert data["data"]["upsell_prompts"][0]["type"] == "bundle"
 
     def test_checkout_uses_tier_aware_pricing_for_lines(self, pos_client):
         with (
@@ -210,9 +210,9 @@ class TestCheckoutPromotionIntegration:
         data = resp.get_json()
         assert data["success"] is True
         assert create_sale.call_args.kwargs["promotion_evaluation"] is None
-        assert data["promotion_discount"] == 0.0
-        assert data["promotions_applied"] == []
-        assert data["upsell_prompts"] == []
+        assert data["data"]["promotion_discount"] == 0.0
+        assert data["data"]["promotions_applied"] == []
+        assert data["data"]["upsell_prompts"] == []
 
     def test_checkout_manual_price_override_still_guarded(self, pos_client, bypass_permission_auth):
         bypass_permission_auth.has_permission.return_value = False

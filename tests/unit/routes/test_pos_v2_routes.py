@@ -390,7 +390,7 @@ class TestPosCatalogApi:
         with _pos_api_patches(), patch("routes.pos.tenant_query", return_value=cq):
             resp = pos_client.get("/pos/api/categories")
         assert resp.status_code == 200
-        assert resp.get_json()[0]["name"] == "Food"
+        assert resp.get_json()["data"][0]["name"] == "Food"
 
     def test_products(self, pos_client):
         product = _mock_product()
@@ -420,7 +420,7 @@ class TestPosCatalogApi:
         product.is_active = False
         with _pos_api_patches(lookup_result=(product, {1: 0})):
             resp = pos_client.get("/pos/api/product?code=BC1")
-        assert "warning" in resp.get_json()
+        assert "warning" in resp.get_json()["data"]
 
     def test_product_lookup_out_of_stock_warning(self, pos_client):
         product = _mock_product()
@@ -432,7 +432,7 @@ class TestPosCatalogApi:
             ),
         ):
             resp = pos_client.get("/pos/api/product?code=BC1")
-        assert resp.get_json().get("warning") == "لا يوجد مخزون في المستودع المحدد."
+        assert resp.get_json()["data"].get("warning") == "لا يوجد مخزون في المستودع المحدد."
 
     def test_product_lookup_scale_barcode_enriches_payload(self, pos_client):
         product = _mock_product()
@@ -441,8 +441,8 @@ class TestPosCatalogApi:
             resp = pos_client.get("/pos/api/product?code=2012345067899")
         data = resp.get_json()
         assert data["success"] is True
-        assert data["is_scale_item"] is True
-        assert data["scale_weight_kg"] == pytest.approx(6.789)
+        assert data["data"]["is_scale_item"] is True
+        assert data["data"]["scale_weight_kg"] == pytest.approx(6.789)
 
     def test_customers(self, pos_client):
         customer = MagicMock()
@@ -458,7 +458,7 @@ class TestPosCatalogApi:
         with _pos_api_patches(), patch("routes.pos.tenant_query", return_value=cq):
             resp = pos_client.get("/pos/api/customers?q=ali")
         assert resp.status_code == 200
-        assert resp.get_json()[0]["text"].startswith("Ali")
+        assert resp.get_json()["data"][0]["text"].startswith("Ali")
 
 
 class TestPosWalkin:
@@ -524,7 +524,7 @@ class TestPosCheckout:
             resp = pos_client.post("/pos/api/checkout", json=self._checkout_payload())
         data = resp.get_json()
         assert data["success"] is True
-        assert data["sale_number"] == "S-100"
+        assert data["data"]["sale_number"] == "S-100"
 
     def test_checkout_serial_validation(self, pos_client):
         product = _mock_product()
@@ -731,7 +731,7 @@ class TestPosSessionApi:
     def test_session_current_none(self, pos_client):
         with _pos_api_patches(session=None):
             resp = pos_client.get("/pos/api/session/current")
-        assert resp.get_json()["session"] is None
+        assert resp.get_json()["data"]["session"] is None
 
     def test_session_current_open(self, pos_client):
         with _pos_api_patches():
@@ -812,7 +812,7 @@ class TestPosSessionApi:
         with _pos_api_patches(session=None):
             resp = pos_client.get("/pos/api/session/report")
         data = resp.get_json()
-        assert data["session"] is None
+        assert data["data"]["session"] is None
         assert resp.status_code == 200
 
 
@@ -881,7 +881,7 @@ class TestPosHardware:
             patch("routes.pos.requests.get", return_value=response),
         ):
             resp = pos_client.get("/pos/api/hardware/status")
-        assert resp.get_json()["status"] == "ok"
+        assert resp.get_json()["data"]["status"] == "ok"
 
     def test_hardware_status_agent_down(self, pos_client):
         with (
@@ -893,7 +893,7 @@ class TestPosHardware:
         ):
             resp = pos_client.get("/pos/api/hardware/status")
         data = resp.get_json()
-        assert data["status"] == "disconnected"
+        assert data["data"]["status"] == "disconnected"
 
     def test_hardware_status_generic_error(self, pos_client):
         with (
@@ -902,7 +902,7 @@ class TestPosHardware:
         ):
             resp = pos_client.get("/pos/api/hardware/status")
         data = resp.get_json()
-        assert data["status"] == "error"
+        assert data["data"]["status"] == "error"
 
 
 class TestPosKds:
@@ -1314,7 +1314,7 @@ class TestPosTerminal:
         assert resp.status_code == 200
         data = resp.get_json()
         assert data["success"] is True
-        assert data["configured"] is False
+        assert data["data"]["configured"] is False
 
     def test_connection_token_success(self, pos_client):
         with (
@@ -1326,7 +1326,7 @@ class TestPosTerminal:
         ):
             resp = pos_client.post("/pos/api/terminal/connection_token")
         assert resp.status_code == 200
-        assert resp.get_json()["secret"] == "pst_tok_1"
+        assert resp.get_json()["data"]["secret"] == "pst_tok_1"
 
     def test_connection_token_provider_failure(self, pos_client):
         from services.pos_terminal_service import PosTerminalError
@@ -1368,7 +1368,7 @@ class TestPosTerminal:
             )
         assert resp.status_code == 200
         data = resp.get_json()
-        assert data["id"] == "pi_1"
+        assert data["data"]["id"] == "pi_1"
         assert captured["tenant_id"] == 1
         assert captured["amount"] == "10"
 
@@ -1404,9 +1404,9 @@ class TestPosCatalogSnapshot:
         assert resp.status_code == 200
         data = resp.get_json()
         assert data["success"] is True
-        assert data["count"] == 1
-        assert data["products"][0]["id"] == 1
-        assert data["products"][0]["name"] == "Item"
+        assert data["data"]["count"] == 1
+        assert data["data"]["products"][0]["id"] == 1
+        assert data["data"]["products"][0]["name"] == "Item"
 
     def test_snapshot_requires_login(self, pos_client):
         with _pos_enabled_patches(), unauthenticated_client(pos_client):

@@ -39,7 +39,7 @@ class TestReplayProtection:
         with app.app_context():
             resp, code = _reject_stale_webhook_timestamp(payload)
         assert code == 401
-        assert "stale" in resp.get_json()["error"].lower()
+        assert "stale" in resp.get_json()["message"].lower()
 
     def test_future_timestamp_returns_401(self, app_factory):
         from routes.payment_vault import (
@@ -110,7 +110,7 @@ class TestIdempotencyKey:
         assert result is not None
         resp, code = result
         assert code == 400
-        assert "Idempotency-Key" in resp.get_json()["error"]
+        assert "Idempotency-Key" in resp.get_json()["message"]
 
     def test_fresh_key_begins_ledger_and_returns_none(self, app_factory, mocker):
         from routes.payment_vault import _check_idempotency_key, payment_vault_bp
@@ -158,7 +158,7 @@ class TestIdempotencyKey:
 
         assert code == 201
         assert resp.get_json()["success"] is True
-        assert resp.get_json()["idempotent_replay"] is True
+        assert resp.get_json()["meta"]["idempotent_replay"] is True
 
     def test_in_flight_returns_409(self, app_factory, mocker):
         from routes.payment_vault import _check_idempotency_key, payment_vault_bp
@@ -227,7 +227,7 @@ class TestApiKeyValidation:
         with app.test_request_context():
             resp, code = _validate_api_key(required_scope="write")
         assert code == 401
-        assert "API key" in resp.get_json()["error"]
+        assert "API key" in resp.get_json()["message"]
 
     def test_invalid_key_returns_403(self, app_factory, mock_db, mocker):
         from routes.payment_vault import _validate_api_key, payment_vault_bp
@@ -243,7 +243,7 @@ class TestApiKeyValidation:
         ):
             resp, code = _validate_api_key(required_scope="write")
         assert code == 403
-        assert "Invalid" in resp.get_json()["error"]
+        assert "Invalid" in resp.get_json()["message"]
 
     def test_read_only_key_blocked_on_write(self, app_factory, mock_db, mocker):
         from routes.payment_vault import _validate_api_key, payment_vault_bp
@@ -264,7 +264,7 @@ class TestApiKeyValidation:
         ):
             resp, code = _validate_api_key(required_scope="write")
         assert code == 403
-        assert "Read-only" in resp.get_json()["error"]
+        assert "Read-only" in resp.get_json()["message"]
 
     def test_valid_write_key_passes(self, app_factory, mock_db, mocker):
         from routes.payment_vault import _validate_api_key, payment_vault_bp
@@ -483,14 +483,13 @@ class TestDonationEndpointSecurity:
         save_spy.assert_called_once()
 
     def test_donation_readonly_key_blocked(self, vault_owner_client, mocker):
+        from utils.api_response import error_response
+
         mocker.patch(
             "routes.payment_vault._validate_api_key",
-            return_value=(
-                {
-                    "success": False,
-                    "error": "Read-only API key cannot perform this action",
-                },
-                403,
+            return_value=error_response(
+                message="Read-only API key cannot perform this action",
+                status_code=403,
             ),
         )
         resp = vault_owner_client.post(
@@ -499,7 +498,7 @@ class TestDonationEndpointSecurity:
             headers={"X-API-Key": "read-key"},
         )
         assert resp.status_code == 403
-        assert "Read-only" in resp.get_json()["error"]
+        assert "Read-only" in resp.get_json()["message"]
 
     def test_donation_replay_via_cache(self, vault_owner_client, mocker):
         mocker.patch(

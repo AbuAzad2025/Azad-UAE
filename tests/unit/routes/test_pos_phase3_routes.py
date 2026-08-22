@@ -174,7 +174,7 @@ class TestPausedSessionBlocking:
                 json={"lines": [{"product_id": 1, "quantity": 1}]},
             )
         assert resp.status_code == 409
-        assert "موقوفة" in resp.get_json()["error"]
+        assert "موقوفة" in resp.get_json()["message"]
 
     def test_cart_park_blocked_while_paused(self, pos_client):
         with _pos_api_patches(session=None, paused_session=_mock_session()):
@@ -188,7 +188,7 @@ class TestBlindCloseRoutes:
         mock_user.role.slug = "cashier"
         with _pos_api_patches():
             resp = pos_client.get("/pos/api/session/report")
-        session = resp.get_json()["session"]
+        session = resp.get_json()["data"]["session"]
         assert "expected_balance" not in session
         assert "total_cash_sales" not in session
         assert "difference" not in session
@@ -197,7 +197,7 @@ class TestBlindCloseRoutes:
     def test_report_shows_expected_to_manager(self, pos_client):
         with _pos_api_patches():
             resp = pos_client.get("/pos/api/session/report")
-        session = resp.get_json()["session"]
+        session = resp.get_json()["data"]["session"]
         assert session["expected_balance"] == 150.0
         assert "total_cash_sales" in session
 
@@ -206,7 +206,7 @@ class TestBlindCloseRoutes:
         mock_user.role.slug = "cashier"
         with _pos_api_patches():
             resp = pos_client.get("/pos/api/session/current")
-        session = resp.get_json()["session"]
+        session = resp.get_json()["data"]["session"]
         assert "total_cash_sales" not in session
         assert "total_sales" not in session
 
@@ -214,7 +214,7 @@ class TestBlindCloseRoutes:
         with _pos_api_patches():
             resp = pos_client.post("/pos/api/session/close", json={})
         assert resp.status_code == 400
-        assert "counted_cash" in resp.get_json()["error"]
+        assert "counted_cash" in resp.get_json()["message"]
 
     def test_close_accepts_counted_cash(self, pos_client):
         closed = _mock_session()
@@ -237,7 +237,7 @@ class TestBlindCloseRoutes:
         with _pos_api_patches():
             resp = pos_client.post("/pos/api/shift/reconcile", json={})
         assert resp.status_code == 400
-        assert "actual_cash" in resp.get_json()["error"]
+        assert "actual_cash" in resp.get_json()["message"]
 
 
 class TestAuthorizeOverrideRoute:
@@ -251,8 +251,8 @@ class TestAuthorizeOverrideRoute:
         data = resp.get_json()
         assert resp.status_code == 200
         assert data["success"] is True
-        assert data["expires_in"] == 60
-        assert data["override_token"].startswith("5.ab12cd34.")
+        assert data["data"]["expires_in"] == 60
+        assert data["data"]["override_token"].startswith("5.ab12cd34.")
 
     def test_wrong_pin_403(self, pos_client):
         with (
@@ -303,7 +303,7 @@ class TestDrawerOpenRoute:
         ):
             resp = pos_client.post("/pos/api/drawer/open", json={"reason": "تغيير فكة"})
         assert resp.status_code == 200
-        assert resp.get_json()["drawer_kicked"] is True
+        assert resp.get_json()["data"]["drawer_kicked"] is True
         call = next(c for c in audit.call_args_list if c.args[0] == "pos_no_sale_drawer")
         changes = call.args[3]
         assert changes["cashier_user_id"] == mock_user.id
@@ -335,7 +335,7 @@ class TestDrawerOpenRoute:
         ):
             resp = pos_client.post("/pos/api/drawer/open", json={})
         assert resp.status_code == 200
-        assert resp.get_json()["drawer_kicked"] is False
+        assert resp.get_json()["data"]["drawer_kicked"] is False
 
 
 class TestCashMovementRoutes:
@@ -410,7 +410,7 @@ class TestCashMovementRoutes:
         ):
             resp = pos_client.get("/pos/api/cash-movements")
         assert resp.status_code == 200
-        assert resp.get_json()["movements"] == [{"id": 1, "movement_type": "pay_in"}]
+        assert resp.get_json()["data"]["movements"] == [{"id": 1, "movement_type": "pay_in"}]
 
     def test_list_other_session_forbidden_for_cashier(self, pos_client, mock_user):
         mock_user.has_permission.return_value = False

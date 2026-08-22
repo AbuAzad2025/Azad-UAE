@@ -11,7 +11,7 @@ from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from urllib.parse import urlparse
 
-from flask import Blueprint, flash, g, jsonify, redirect, render_template, request, url_for
+from flask import Blueprint, flash, g, redirect, render_template, request, url_for
 from flask_babel import gettext
 from flask_login import current_user
 
@@ -33,6 +33,7 @@ from services.idempotency_service import (
 )
 from services.logging_core import LoggingCore
 from services.nowpayments_service import NOWPaymentsService
+from utils.api_response import error_response, paginated_response, success_response
 from utils.db_safety import atomic_transaction
 from utils.decorators import owner_only
 from utils.tenanting import tenant_get_or_404, tenant_query
@@ -113,7 +114,7 @@ def _validate_public_api_origin():
     trusted = _payment_vault_trusted_origins()
     if not trusted:
         logger.warning("Payment vault public API rejected: trusted origins not configured")
-        return jsonify({"success": False, "error": "Origin policy not configured"}), 503
+        return error_response(message="Origin policy not configured", status_code=503)
 
     origin = (request.headers.get("Origin") or "").strip().rstrip("/")
     referer = (request.headers.get("Referer") or "").strip()
@@ -121,7 +122,7 @@ def _validate_public_api_origin():
     if origin:
         if origin not in trusted:
             logger.warning("Payment vault public API rejected: origin=%s", origin)
-            return jsonify({"success": False, "error": gettext("Origin غير مسموح")}), 403
+            return error_response(message=gettext("Origin غير مسموح"), status_code=403)
         return None
 
     if referer:
@@ -129,9 +130,9 @@ def _validate_public_api_origin():
         if ref_origin and ref_origin in trusted:
             return None
         logger.warning("Payment vault public API rejected: referer=%s", referer[:120])
-        return jsonify({"success": False, "error": gettext("Referer غير مسموح")}), 403
+        return error_response(message=gettext("Referer غير مسموح"), status_code=403)
 
-    return jsonify({"success": False, "error": gettext("Origin أو Referer مطلوب")}), 403
+    return error_response(message=gettext("Origin أو Referer مطلوب"), status_code=403)
 
 
 # Replay protection — reject webhook payloads older than 5 minutes
@@ -159,10 +160,10 @@ def _reject_stale_webhook_timestamp(data: dict | None) -> tuple | None:
         age = (datetime.now(UTC) - ts).total_seconds()
         if age > _WEBHOOK_MAX_AGE:
             logger.warning("Webhook replay blocked: age=%.0fs", age)
-            return jsonify({"error": "Stale webhook — timestamp too old"}), 401
+            return error_response(message="Stale webhook — timestamp too old", status_code=401)
         if age < 0:
             logger.warning("Webhook replay blocked: future timestamp")
-            return jsonify({"error": "Invalid timestamp"}), 401
+            return error_response(message="Invalid timestamp", status_code=401)
     except (ValueError, TypeError, AttributeError):
         logger.exception("Webhook timestamp parse failed")
     return None
@@ -196,11 +197,11 @@ def _check_idempotency_key(
     """
     key = (request.headers.get("Idempotency-Key") or "").strip()
     if not key:
-        return jsonify({"success": False, "error": gettext("Idempotency-Key header is required")}), 400
+        return error_response(message=gettext("Idempotency-Key header is required"), status_code=400)
 
     endpoint = endpoint or request.endpoint
     if not endpoint:
-        return jsonify({"success": False, "error": "Idempotency endpoint context missing"}), 500
+        return error_response(message="Idempotency endpoint context missing", status_code=500)
 
     api_key = getattr(g, "vault_api_key", None)
     tenant_id = getattr(api_key, "tenant_id", None) or 0
@@ -219,29 +220,20 @@ def _check_idempotency_key(
             request_hash=request_hash,
         )
     except IdempotencyInFlightError:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("طلب مكرر قيد المعالجة حالياً. أعد المحاولة بعد لحظات."),
-                }
-            ),
-            409,
+        return error_response(
+            message=gettext("طلب مكرر قيد المعالجة حالياً. أعد المحاولة بعد لحظات."),
+            status_code=409,
         )
     except IdempotencyHashMismatchError:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("مفتاح عدم التكرار استُخدم مع بيانات مختلفة."),
-                }
-            ),
-            422,
+        return error_response(
+            message=gettext("مفتاح عدم التكرار استُخدم مع بيانات مختلفة."),
+            status_code=422,
         )
 
     if stored is not None:
         body, status = stored
-        return jsonify({**body, "idempotent_replay": True}), status
+        replay_data = {k: v for k, v in body.items() if k != "success"}
+        return success_response(data=replay_data, meta={"idempotent_replay": True}, status_code=status)
 
     g.vault_idempotency_record = record
     return None
@@ -266,24 +258,19 @@ def _validate_api_key(*, required_scope: str = "write") -> tuple | None:
     """
     raw_key = (request.headers.get("X-API-Key") or "").strip()
     if not raw_key:
-        return jsonify({"success": False, "error": "API key is required"}), 401
+        return error_response(message="API key is required", status_code=401)
 
     from models import APIKey
 
     api_key = APIKey.query.filter_by(key=raw_key, is_active=True).first()
     if not api_key:
-        return jsonify({"success": False, "error": "Invalid or inactive API key"}), 403
+        return error_response(message="Invalid or inactive API key", status_code=403)
 
     scope = getattr(api_key, "scope", "write") or "write"
     if required_scope == "write" and scope == "read":
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": "Read-only API key cannot perform this action",
-                }
-            ),
-            403,
+        return error_response(
+            message="Read-only API key cannot perform this action",
+            status_code=403,
         )
 
     # Make the validated key available to idempotency helpers.
@@ -838,7 +825,7 @@ def delete_package(package_id):
     """حذف باقة"""
     vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
-        return jsonify({"success": False, "error": gettext("الخزينة مقفلة")}), 403
+        return error_response(message=gettext("الخزينة مقفلة"), status_code=403)
 
     package = Package.query.get_or_404(package_id)
 
@@ -852,13 +839,10 @@ def delete_package(package_id):
                 changes={"deleted": f"Package {package.name_ar} deleted"},
             )
 
-        return jsonify({"success": True, "message": gettext("تم حذف الباقة بنجاح!")})
+        return success_response(message=gettext("تم حذف الباقة بنجاح!"))
     except Exception:
         logger.exception("Payment vault package delete failed")
-        return (
-            jsonify({"success": False, "error": "Could not delete package at this time"}),
-            400,
-        )
+        return error_response(message="Could not delete package at this time", status_code=400)
 
 
 @payment_vault_bp.route("/reports")
@@ -992,7 +976,7 @@ def decrypt_card(card_id):
     """فك تشفير بيانات البطاقة (للمالك فقط)"""
     vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
-        return jsonify({"success": False, "error": gettext("الخزينة مقفلة")}), 403
+        return error_response(message=gettext("الخزينة مقفلة"), status_code=403)
 
     card = tenant_get_or_404(CardPayment, card_id)
     PaymentLog.log_action(
@@ -1009,7 +993,7 @@ def decrypt_card(card_id):
     from services.card_encryption_service import CardEncryptionService
 
     cipher = CardEncryptionService(encryption_key=current_app.config.get("CARD_ENCRYPTION_KEY"))
-    return jsonify({"success": True, "card": card.to_dict(cipher=cipher)})
+    return success_response(data={"card": card.to_dict(cipher=cipher)})
 
 
 @payment_vault_bp.route("/process-payment", methods=["POST"])
@@ -1021,7 +1005,7 @@ def process_payment():
         data = request.get_json(silent=True)
 
         if not data:
-            return jsonify({"success": False, "error": gettext("بيانات غير صحيحة")}), 400
+            return error_response(message=gettext("بيانات غير صحيحة"), status_code=400)
 
         payment_method = data.get("payment_method", "crypto")
 
@@ -1029,7 +1013,7 @@ def process_payment():
             try:
                 amount = float(data.get("amount", 0))
             except (ValueError, TypeError):
-                return jsonify({"success": False, "error": gettext("المبلغ غير صحيح")}), 422
+                return error_response(message=gettext("المبلغ غير صحيح"), status_code=422)
 
             nowpayments = NOWPaymentsService()
             result = nowpayments.create_payment(
@@ -1045,23 +1029,23 @@ def process_payment():
                 donor_email=data.get("donor_email", ""),
                 donor_message=data.get("donor_message", ""),
             )
-            return jsonify(result)
+            return success_response(data=result)
 
         elif payment_method == "card":
             try:
                 amount = float(data.get("amount", 0))
             except (ValueError, TypeError):
-                return jsonify({"success": False, "error": gettext("المبلغ غير صحيح")}), 422
+                return error_response(message=gettext("المبلغ غير صحيح"), status_code=422)
 
             if amount < 1:
-                return jsonify({"success": False, "error": gettext("الحد الأدنى هو $1")}), 400
+                return error_response(message=gettext("الحد الأدنى هو $1"), status_code=400)
 
             card_number = data.get("card_number", "").replace(" ", "")
             cvv = data.get("cvv", "")
             expiry = data.get("expiry", "")
 
             if not card_number or len(card_number) < 13:
-                return jsonify({"success": False, "error": gettext("رقم البطاقة غير صحيح")}), 400
+                return error_response(message=gettext("رقم البطاقة غير صحيح"), status_code=400)
 
             card_payment = CardPayment(
                 customer_name=data.get("customer_name", ""),
@@ -1094,27 +1078,23 @@ def process_payment():
                         user_agent=request.headers.get("User-Agent"),
                     )
 
-                return jsonify(
-                    {
-                        "success": True,
-                        "message": gettext("تم حفظ معلومات البطاقة بشكل آمن ومشفر"),
+                return success_response(
+                    data={
                         "transaction_id": card_payment.transaction_id,
                         "whatsapp": "0598953362",
                         "next_step": gettext("سيتم التواصل معك عبر WhatsApp خلال 24 ساعة"),
-                    }
+                    },
+                    message=gettext("تم حفظ معلومات البطاقة بشكل آمن ومشفر"),
                 )
             else:
-                return jsonify({"success": False, "error": gettext("فشل تشفير البيانات")}), 500
+                return error_response(message=gettext("فشل تشفير البيانات"), status_code=500)
 
         else:
-            return jsonify({"success": False, "error": gettext("طريقة دفع غير مدعومة")}), 400
+            return error_response(message=gettext("طريقة دفع غير مدعومة"), status_code=400)
 
     except Exception:
         logger.exception("Payment vault process-payment failed")
-        return (
-            jsonify({"success": False, "error": "Could not process payment at this time"}),
-            500,
-        )
+        return error_response(message="Could not process payment at this time", status_code=500)
 
 
 @payment_vault_bp.route("/change-password", methods=["GET", "POST"])
@@ -1181,10 +1161,7 @@ def api_create_purchase():
             return api_key_err
 
         if not request.is_json:
-            return (
-                jsonify({"success": False, "error": "Content-Type must be application/json"}),
-                400,
-            )
+            return error_response(message="Content-Type must be application/json", status_code=400)
 
         data = request.get_json(silent=True) or {}
 
@@ -1197,13 +1174,13 @@ def api_create_purchase():
         ]
         for field in required_fields:
             if not data.get(field):
-                return jsonify({"success": False, "error": gettext(f"الحقل {field} مطلوب")}), 400
+                return error_response(message=gettext(f"الحقل {field} مطلوب"), status_code=400)
 
         import re
 
         email_pattern = r"^[\w\.-]+@[\w\.-]+\.\w+$"
         if not re.match(email_pattern, data["customer_email"]):
-            return jsonify({"success": False, "error": gettext("بريد إلكتروني غير صحيح")}), 400
+            return error_response(message=gettext("بريد إلكتروني غير صحيح"), status_code=400)
 
         from html import escape
 
@@ -1219,21 +1196,16 @@ def api_create_purchase():
 
         package = db.session.get(Package, data["package_id"])
         if not package or not package.is_active:
-            return jsonify({"success": False, "error": gettext("الباقة غير متاحة")}), 404
+            return error_response(message=gettext("الباقة غير متاحة"), status_code=404)
 
         try:
             amount_paid_value = Decimal(str(data["amount_paid"]))
         except (InvalidOperation, TypeError, ValueError):
-            return jsonify({"success": False, "error": gettext("المبلغ المدفوع غير صالح")}), 400
+            return error_response(message=gettext("المبلغ المدفوع غير صالح"), status_code=400)
         if amount_paid_value < Decimal(str(package.price or 0)):
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "error": gettext("المبلغ المدفوع أقل من سعر الباقة"),
-                    }
-                ),
-                400,
+            return error_response(
+                message=gettext("المبلغ المدفوع أقل من سعر الباقة"),
+                status_code=400,
             )
 
         with atomic_transaction("api_purchase"):
@@ -1342,14 +1314,15 @@ def api_create_purchase():
                 )
 
             _save_idempotency_key(response_data, 201)
-            return jsonify(response_data), 201
+            return success_response(
+                data={k: v for k, v in response_data.items() if k != "success"},
+                message=response_data.get("message"),
+                status_code=201,
+            )
 
     except Exception:
         logger.exception("Payment vault purchase API failed")
-        return (
-            jsonify({"success": False, "error": "Could not create purchase at this time"}),
-            500,
-        )
+        return error_response(message="Could not create purchase at this time", status_code=500)
 
 
 @payment_vault_bp.route("/api/donation", methods=["POST"])
@@ -1367,21 +1340,15 @@ def api_create_donation():
             return api_key_err
 
         if not request.is_json:
-            return (
-                jsonify({"success": False, "error": "Content-Type must be application/json"}),
-                400,
-            )
+            return error_response(message="Content-Type must be application/json", status_code=400)
 
         data = request.get_json(silent=True) or {}
 
         if not data.get("amount") or not data.get("payment_method"):
-            return (
-                jsonify({"success": False, "error": gettext("المبلغ وطريقة الدفع مطلوبة")}),
-                400,
-            )
+            return error_response(message=gettext("المبلغ وطريقة الدفع مطلوبة"), status_code=400)
 
         if float(data["amount"]) < 15:
-            return jsonify({"success": False, "error": gettext("الحد الأدنى للتبرع $15")}), 400
+            return error_response(message=gettext("الحد الأدنى للتبرع $15"), status_code=400)
 
         from html import escape
 
@@ -1472,14 +1439,15 @@ def api_create_donation():
                 )
 
             _save_idempotency_key(response_data, 201)
-            return jsonify(response_data), 201
+            return success_response(
+                data={k: v for k, v in response_data.items() if k != "success"},
+                message=response_data.get("message"),
+                status_code=201,
+            )
 
     except Exception:
         logger.exception("Payment vault donation API failed")
-        return (
-            jsonify({"success": False, "error": "Could not create donation at this time"}),
-            500,
-        )
+        return error_response(message="Could not create donation at this time", status_code=500)
 
 
 @payment_vault_bp.route("/purchases")
@@ -1542,11 +1510,11 @@ def send_email(id):
     """إرسال إيصال الشراء إلى البريد الإلكتروني للعميل"""
     vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
-        return jsonify({"success": False, "error": gettext("الخزينة مقفلة")}), 403
+        return error_response(message=gettext("الخزينة مقفلة"), status_code=403)
 
     purchase = PackagePurchase.query.get_or_404(id)
     if not purchase.customer_email:
-        return jsonify({"success": False, "error": gettext("لا يوجد بريد إلكتروني للعميل")}), 400
+        return error_response(message=gettext("لا يوجد بريد إلكتروني للعميل"), status_code=400)
 
     try:
         from flask_mail import Message
@@ -1566,10 +1534,10 @@ def send_email(id):
             ),
         )
         mail.send(msg)
-        return jsonify({"success": True})
+        return success_response()
     except Exception as exc:
         logger.error("Failed to send purchase receipt email: %s", exc)
-        return jsonify({"success": False, "error": gettext("فشل إرسال البريد")}), 500
+        return error_response(message=gettext("فشل إرسال البريد"), status_code=500)
 
 
 @payment_vault_bp.route("/purchase/<int:id>/activate", methods=["POST"])
@@ -1619,7 +1587,7 @@ def api_package_stats(package_id):
         "failed": len([p for p in purchases if p.payment_status == "failed"]),
     }
 
-    return jsonify(stats)
+    return success_response(data=stats)
 
 
 @payment_vault_bp.route("/package/<int:package_id>/toggle", methods=["POST"])
@@ -1633,18 +1601,12 @@ def toggle_package_status(package_id):
         with atomic_transaction("package_toggle"):
             pass
         status_text = gettext("تم تنشيط") if package.is_active else gettext("تم تعطيل")
-        return jsonify(
-            {
-                "success": True,
-                "message": gettext(f"{status_text} الباقة {package.name_ar}"),
-            }
+        return success_response(
+            message=gettext(f"{status_text} الباقة {package.name_ar}"),
         )
     except Exception:
         logger.exception("Payment vault package toggle failed")
-        return (
-            jsonify({"success": False, "error": "Could not update package at this time"}),
-            500,
-        )
+        return error_response(message="Could not update package at this time", status_code=500)
 
 
 @payment_vault_bp.route("/donation/<int:donation_id>")
@@ -1719,11 +1681,11 @@ def send_donation_thank_you(donation_id):
     """إرسال رسالة شكر إلى البريد الإلكتروني للمتبرع"""
     vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
-        return jsonify({"success": False, "error": gettext("الخزينة مقفلة")}), 403
+        return error_response(message=gettext("الخزينة مقفلة"), status_code=403)
 
     donation = Donation.query.filter_by(id=donation_id).first_or_404()
     if not donation.donor_email:
-        return jsonify({"success": False, "error": gettext("لا يوجد بريد إلكتروني للمتبرع")}), 400
+        return error_response(message=gettext("لا يوجد بريد إلكتروني للمتبرع"), status_code=400)
 
     try:
         from flask_mail import Message
@@ -1741,10 +1703,10 @@ def send_donation_thank_you(donation_id):
             ),
         )
         mail.send(msg)
-        return jsonify({"success": True})
+        return success_response()
     except Exception as exc:
         logger.error("Failed to send donation thank-you email: %s", exc)
-        return jsonify({"success": False, "error": gettext("فشل إرسال البريد")}), 500
+        return error_response(message=gettext("فشل إرسال البريد"), status_code=500)
 
 
 @payment_vault_bp.route("/auto-approve", methods=["POST"])
@@ -1777,7 +1739,7 @@ def api_notifications():
     limit = request.args.get("limit", 10, type=int)
     notifications = NotificationService.get_recent_notifications(limit)
 
-    return jsonify({"success": True, "notifications": notifications, "count": len(notifications)})
+    return success_response(data={"notifications": notifications, "count": len(notifications)})
 
 
 @payment_vault_bp.route("/api/live-stats", methods=["GET"])
@@ -1793,9 +1755,8 @@ def api_live_stats():
     tid = None
     pending_count = Donation.query.filter_by(tenant_id=tid, status="pending").count()
 
-    return jsonify(
-        {
-            "success": True,
+    return success_response(
+        data={
             "daily_revenue": daily_stats["today_revenue"],
             "daily_transactions": daily_stats["today_transactions"],
             "pending_count": pending_count,
@@ -1929,16 +1890,16 @@ def nowpayments_webhook():
         ipn_secret = resolve_nowpayments_ipn_secret(vault)
         if not ipn_secret:
             logger.warning("NOWPayments webhook rejected: IPN secret not configured")
-            return jsonify({"error": "Webhook not configured"}), 503
+            return error_response(message="Webhook not configured", status_code=503)
         if not signature:
-            return jsonify({"error": "Missing signature"}), 400
+            return error_response(message="Missing signature", status_code=400)
         if not WebhookService.verify_nowpayments_signature(payload, signature, ipn_secret):
             logger.warning("NOWPayments webhook signature verification failed")
-            return jsonify({"error": "Invalid signature"}), 403
+            return error_response(message="Invalid signature", status_code=403)
 
         event_id = data.get("payment_id") if data else None
         if _is_duplicate_webhook("nowpayments", event_id):
-            return jsonify({"status": "duplicate"}), 200
+            return success_response(data={"status": "duplicate"})
 
         result = WebhookService.process_nowpayments_webhook(data)
 
@@ -1953,11 +1914,11 @@ def nowpayments_webhook():
                 user_agent=request.headers.get("User-Agent"),
             )
 
-        return jsonify(result), 200 if result.get("success") else 400
+        return success_response(data=result, status_code=200 if result.get("success") else 400)
 
     except Exception:
         logger.exception("NOWPayments webhook failed")
-        return jsonify({"error": "Webhook processing failed"}), 500
+        return error_response(message="Webhook processing failed", status_code=500)
 
 
 @payment_vault_bp.route("/webhook/stripe", methods=["POST"])
@@ -1979,16 +1940,16 @@ def stripe_webhook():
         vault = _get_vault_for_current_tenant()
         if not vault or not vault.stripe_webhook_secret:
             logger.warning("Stripe webhook rejected: webhook secret not configured")
-            return jsonify({"error": "Webhook not configured"}), 503
+            return error_response(message="Webhook not configured", status_code=503)
         if not signature:
-            return jsonify({"error": "Missing signature"}), 400
+            return error_response(message="Missing signature", status_code=400)
         if not WebhookService.verify_stripe_signature(payload, signature, vault.stripe_webhook_secret):
             logger.warning("Stripe webhook signature verification failed")
-            return jsonify({"error": "Invalid signature"}), 403
+            return error_response(message="Invalid signature", status_code=403)
 
         event_id = data.get("id") if data else None
         if _is_duplicate_webhook("stripe", event_id):
-            return jsonify({"status": "duplicate"}), 200
+            return success_response(data={"status": "duplicate"})
 
         result = WebhookService.process_stripe_webhook(data)
 
@@ -2002,11 +1963,11 @@ def stripe_webhook():
                 user_agent=request.headers.get("User-Agent"),
             )
 
-        return jsonify(result), 200 if result.get("success") else 400
+        return success_response(data=result, status_code=200 if result.get("success") else 400)
 
     except Exception:
         logger.exception("Stripe webhook failed")
-        return jsonify({"error": "Webhook processing failed"}), 500
+        return error_response(message="Webhook processing failed", status_code=500)
 
 
 @payment_vault_bp.route("/health", methods=["GET"])
@@ -2018,7 +1979,7 @@ def health_check():
     result = HealthCheckService.run_full_health_check()
     status_code = 200 if result["overall_status"] == "healthy" else 503
 
-    return jsonify(result), status_code
+    return success_response(data=result, status_code=status_code)
 
 
 @payment_vault_bp.route("/metrics", methods=["GET"])
@@ -2028,7 +1989,7 @@ def system_metrics():
     from services.health_service import HealthCheckService
 
     metrics = HealthCheckService.get_system_metrics()
-    return jsonify(metrics)
+    return success_response(data=metrics)
 
 
 # ==================== API v2 - Enhanced API with Versioning ====================
@@ -2070,25 +2031,19 @@ def api_v2_purchases():
     # Pagination
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
 
-    return jsonify(
-        {
+    return paginated_response(
+        items=[p.to_dict() for p in pagination.items],
+        page=pagination.page,
+        per_page=pagination.per_page,
+        total=pagination.total,
+        meta={
             "version": "2.0",
-            "success": True,
-            "data": [p.to_dict() for p in pagination.items],
-            "pagination": {
-                "page": pagination.page,
-                "per_page": pagination.per_page,
-                "total": pagination.total,
-                "pages": pagination.pages,
-                "has_next": pagination.has_next,
-                "has_prev": pagination.has_prev,
-            },
             "filters_applied": {
                 "status": status,
                 "package_id": package_id,
                 "search": search,
             },
-        }
+        },
     )
 
 
@@ -2134,18 +2089,12 @@ def api_v2_donations():
             }
         )
 
-    return jsonify(
-        {
-            "version": "2.0",
-            "success": True,
-            "data": donations_data,
-            "pagination": {
-                "page": pagination.page,
-                "per_page": pagination.per_page,
-                "total": pagination.total,
-                "pages": pagination.pages,
-            },
-        }
+    return paginated_response(
+        items=donations_data,
+        page=pagination.page,
+        per_page=pagination.per_page,
+        total=pagination.total,
+        meta={"version": "2.0"},
     )
 
 
@@ -2164,18 +2113,14 @@ def api_v2_stats():
     package_performance = AnalyticsService.get_package_performance()
     security_status = SecurityService.get_security_status()
 
-    return jsonify(
-        {
-            "version": "2.0",
-            "success": True,
-            "data": {
-                "daily": daily_stats,
-                "revenue_trend": revenue_data,
-                "payment_methods": payment_methods,
-                "customers": customer_behavior,
-                "packages": package_performance,
-                "security": security_status,
-            },
-            "generated_at": datetime.now(UTC).isoformat(),
-        }
+    return success_response(
+        data={
+            "daily": daily_stats,
+            "revenue_trend": revenue_data,
+            "payment_methods": payment_methods,
+            "customers": customer_behavior,
+            "packages": package_performance,
+            "security": security_status,
+        },
+        meta={"version": "2.0", "generated_at": datetime.now(UTC).isoformat()},
     )

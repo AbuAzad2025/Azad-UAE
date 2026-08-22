@@ -13,7 +13,6 @@ from flask import (
     current_app,
     flash,
     g,
-    jsonify,
     redirect,
     render_template,
     request,
@@ -43,6 +42,7 @@ from services.pos_override_service import PosOverrideError, PosOverrideService
 from services.pos_rma_service import PosRmaService
 from services.promotion_service import PromotionService
 from utils import sse_backplane
+from utils.api_response import error_response, paginated_response, success_response
 from utils.branching import (
     get_accessible_warehouses,
     get_active_branch_id,
@@ -110,10 +110,7 @@ def _require_session_token(session, payload=None):
         return None
     token = _extract_session_token(payload)
     if not token or not verify_pos_session_token(session, token):
-        return (
-            jsonify({"success": False, "error": gettext("رمز أمان الجلسة غير صالح أو مفقود.")}),
-            403,
-        )
+        return error_response(message=gettext("رمز أمان الجلسة غير صالح أو مفقود."), status_code=403)
     return None
 
 
@@ -142,15 +139,10 @@ def _pos_feature_denied(feature: str):
         return None
     if pos_feature_enabled(tenant, feature):
         return None
-    return (
-        jsonify(
-            {
-                "success": False,
-                "error": gettext(f'ميزة "{feature}" غير مفعلة لخطة اشتراكك الحالية.'),
-                "feature": feature,
-            }
-        ),
-        403,
+    return error_response(
+        message=gettext(f'ميزة "{feature}" غير مفعلة لخطة اشتراكك الحالية.'),
+        status_code=403,
+        meta={"feature": feature},
     )
 
 
@@ -182,30 +174,24 @@ def _idempotent_begin(endpoint: str, payload, key):
         return (
             None,
             None,
-            (
-                jsonify({"success": False, "error": gettext("طلب مكرر قيد المعالجة حالياً. أعد المحاولة بعد لحظات.")}),
-                409,
-            ),
+            error_response(message=gettext("طلب مكرر قيد المعالجة حالياً. أعد المحاولة بعد لحظات."), status_code=409),
         )
     except IdempotencyHashMismatchError:
         return (
             None,
             None,
-            (
-                jsonify({"success": False, "error": gettext("مفتاح عدم التكرار استُخدم مع بيانات مختلفة.")}),
-                422,
-            ),
+            error_response(message=gettext("مفتاح عدم التكرار استُخدم مع بيانات مختلفة."), status_code=422),
         )
     if stored is not None:
         body, status = stored
-        return None, ({**body, "idempotent_replay": True}, status), None
+        return None, (body, status), None
     return record, None, None
 
 
 def _idempotency_conflict_response():
-    return (
-        jsonify({"success": False, "error": gettext("طلب مكرر قيد المعالجة حالياً. أعد المحاولة بعد لحظات.")}),
-        409,
+    return error_response(
+        message=gettext("طلب مكرر قيد المعالجة حالياً. أعد المحاولة بعد لحظات."),
+        status_code=409,
     )
 
 
@@ -229,13 +215,14 @@ def _idempotent_replay_only(endpoint: str, payload, key):
     except IdempotencyInFlightError:
         return _idempotency_conflict_response()
     except IdempotencyHashMismatchError:
-        return (
-            jsonify({"success": False, "error": gettext("مفتاح عدم التكرار استُخدم مع بيانات مختلفة.")}),
-            422,
+        return error_response(
+            message=gettext("مفتاح عدم التكرار استُخدم مع بيانات مختلفة."),
+            status_code=422,
         )
     if stored is not None:
         body, status = stored
-        return jsonify({**body, "idempotent_replay": True}), status
+        replay_data = {k: v for k, v in body.items() if k != "success"}
+        return success_response(data=replay_data, meta={"idempotent_replay": True}, status_code=status)
     return None
 
 
@@ -286,15 +273,7 @@ def _get_closable_session(user):
 
 
 def _paused_session_error_response():
-    return (
-        jsonify(
-            {
-                "success": False,
-                "error": gettext("الجلسة موقوفة مؤقتاً. يرجى استئناف الجلسة قبل المتابعة."),
-            }
-        ),
-        409,
-    )
+    return error_response(message=gettext("الجلسة موقوفة مؤقتاً. يرجى استئناف الجلسة قبل المتابعة."), status_code=409)
 
 
 def _pos_register_context():
@@ -335,30 +314,14 @@ def _require_pos_enabled():
     global_setting = SystemSettings.query.order_by(SystemSettings.id.desc()).first()
     if global_setting and not global_setting.enable_pos:
         if request.is_json or request.path.startswith("/pos/api/"):
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "error": gettext("POS غير مفعل على مستوى النظام."),
-                    }
-                ),
-                403,
-            )
+            return error_response(message=gettext("POS غير مفعل على مستوى النظام."), status_code=403)
         return render_template("pos/disabled.html", reason="system"), 403
     tid = get_active_tenant_id(current_user)
     if tid:
         tenant = db.session.get(Tenant, tid)
         if tenant and not tenant.enable_pos:
             if request.is_json or request.path.startswith("/pos/api/"):
-                return (
-                    jsonify(
-                        {
-                            "success": False,
-                            "error": gettext("POS غير مفعل لهذه الشركة."),
-                        }
-                    ),
-                    403,
-                )
+                return error_response(message=gettext("POS غير مفعل لهذه الشركة."), status_code=403)
             return render_template("pos/disabled.html", reason="tenant"), 403
     return None
 
@@ -394,16 +357,12 @@ def api_order_types():
     """Return the tenant's configured, active POS order types."""
     tid = get_active_tenant_id(current_user)
     if not tid:
-        return jsonify({"success": False, "error": gettext("لا يوجد فرع/شركة نشطة")}), 400
+        return error_response(message=gettext("لا يوجد فرع/شركة نشطة"), status_code=400)
     types = PosOrderType.for_tenant(tid, active_only=True)
     default = PosOrderType.default_for_tenant(tid)
-    return jsonify(
-        {
-            "success": True,
-            "order_types": [t.to_dict() for t in types],
+    return success_response(data={"order_types": [t.to_dict() for t in types],
             "default_code": default.code if default else None,
-        }
-    )
+        })
 
 
 @pos_bp.route("/settings/order-types", methods=["GET", "POST"])
@@ -591,7 +550,7 @@ def api_categories():
 
     query = tenant_query(ProductCategory).filter_by(is_active=True)
     cats = query.order_by(ProductCategory.sort_order, ProductCategory.name).all()
-    return jsonify([{"id": c.id, "name": c.name, "name_ar": c.name_ar} for c in cats])
+    return success_response(data=[{"id": c.id, "name": c.name, "name_ar": c.name_ar} for c in cats])
 
 
 @pos_bp.route("/api/products")
@@ -611,7 +570,7 @@ def api_products():
         category_id=category_id,
     )
     results = [serialize_pos_product(p, stock_map, warehouse_id=warehouse_id) for p in products]
-    return jsonify(results)
+    return success_response(data=results)
 
 
 @pos_bp.route("/api/catalog/snapshot")
@@ -622,7 +581,7 @@ def api_catalog_snapshot():
     warehouse_id = request.args.get("warehouse_id", type=int)
     products, stock_map = snapshot_pos_products(user=current_user, warehouse_id=warehouse_id)
     results = [serialize_pos_product(p, stock_map, warehouse_id=warehouse_id) for p in products]
-    return jsonify({"success": True, "count": len(results), "products": results})
+    return success_response(data={"count": len(results), "products": results})
 
 
 @pos_bp.route("/api/product")
@@ -632,7 +591,7 @@ def api_product_lookup():
     """Exact barcode/SKU lookup — JSON 404 when not found."""
     code = (request.args.get("code") or request.args.get("barcode") or "").strip()
     if not code:
-        return jsonify({"success": False, "error": gettext("رمز المنتج مطلوب.")}), 400
+        return error_response(message=gettext("رمز المنتج مطلوب."), status_code=400)
 
     warehouse_id = request.args.get("warehouse_id", type=int)
     product, stock_map = lookup_pos_product_exact(
@@ -641,7 +600,7 @@ def api_product_lookup():
         warehouse_id=warehouse_id,
     )
     if not product:
-        return jsonify({"success": False, "error": gettext("المنتج غير موجود.")}), 404
+        return error_response(message=gettext("المنتج غير موجود."), status_code=404)
 
     payload = serialize_pos_product(product, stock_map, warehouse_id=warehouse_id)
     payload["success"] = True
@@ -653,7 +612,7 @@ def api_product_lookup():
         payload["warning"] = gettext("المنتج غير نشط.")
     elif payload.get("is_out_of_stock"):
         payload["warning"] = gettext("لا يوجد مخزون في المستودع المحدد.")
-    return jsonify(payload)
+    return success_response(data=payload)
 
 
 @pos_bp.route("/api/customers")
@@ -691,7 +650,7 @@ def api_customers():
                 "text": label,
             }
         )
-    return jsonify(results)
+    return success_response(data=results)
 
 
 @pos_bp.route("/api/walkin-customer")
@@ -703,18 +662,14 @@ def api_walkin_customer():
         with atomic_transaction("pos_walkin_customer"):
             customer = get_pos_walkin_customer()
     except Exception as exc:
-        return jsonify({"success": False, "error": str(exc)}), 400
+        return error_response(message=str(exc), status_code=400)
 
-    return jsonify(
-        {
-            "success": True,
-            "id": customer.id,
+    return success_response(data={"id": customer.id,
             "name": customer.name,
             "text": customer.name,
             "customer_type": customer.customer_type,
             "is_walkin": True,
-        }
-    )
+        })
 
 
 @pos_bp.route("/api/checkout", methods=["POST"])
@@ -722,30 +677,14 @@ def api_walkin_customer():
 @permission_required(PermissionEnum.MANAGE_SALES)
 def api_checkout():
     if not request.is_json:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("Content-Type يجب أن يكون application/json."),
-                }
-            ),
-            415,
-        )
+        return error_response(message=gettext("Content-Type يجب أن يكون application/json."), status_code=415)
     payload = request.get_json(silent=True) or {}
 
     session = get_active_session(current_user)
     if not session:
         if get_paused_session(current_user):
             return _paused_session_error_response()
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً."),
-                }
-            ),
-            403,
-        )
+        return error_response(message=gettext("لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً."), status_code=403)
 
     token_error = _require_session_token(session, payload)
     if token_error:
@@ -757,15 +696,7 @@ def api_checkout():
     # Phase 4 — shifts are a pro-tier sub-feature. On the basic tier the POS
     # runs shiftless: core checkout stays available without an open shift.
     if not shift and _pos_feature_denied("pos_shifts") is None:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("لا توجد وردية مفتوحة. يرجى فتح وردية أولاً."),
-                }
-            ),
-            403,
-        )
+        return error_response(message=gettext("لا توجد وردية مفتوحة. يرجى فتح وردية أولاً."), status_code=403)
 
     tenant_id = get_active_tenant_id(current_user)
     branch_id = get_active_branch_id(current_user)
@@ -784,7 +715,12 @@ def api_checkout():
                     return idem_error
                 if idem_stored is not None:
                     stored_body, stored_status = idem_stored
-                    return jsonify(stored_body), stored_status
+                    replay_data = {k: v for k, v in stored_body.items() if k != "success"}
+                    return success_response(
+                        data=replay_data,
+                        meta={"idempotent_replay": True},
+                        status_code=stored_status,
+                    )
 
             response, kds_order = PosCheckoutService.checkout(
                 payload=payload,
@@ -799,39 +735,23 @@ def api_checkout():
             if idem_record is not None:
                 IdempotencyService.complete(idem_record, response, 200)
     except PosCheckoutError as exc:
-        return jsonify({"success": False, "error": exc.message, **exc.payload}), exc.status_code
+        return error_response(message=exc.message, status_code=exc.status_code, meta=exc.payload)
     except PosOverrideError as exc:
-        return jsonify({"success": False, "error": str(exc)}), 403
+        return error_response(message=str(exc), status_code=403)
     except TenantLimitError as exc:
-        return jsonify({"success": False, "error": str(exc), "code": "PLAN_LIMIT"}), 403
+        return error_response(message=str(exc), status_code=403, meta={"code": "PLAN_LIMIT"})
     except ValueError as exc:
-        return jsonify({"success": False, "error": str(exc)}), 400
+        return error_response(message=str(exc), status_code=400)
     except IntegrityError:
         # Concurrent duplicate: the unique (tenant, endpoint, key) constraint
         # rejected our in-flight insert — the other request owns the key.
         if idempotency_key:
             return _idempotency_conflict_response()
         current_app.logger.error("POS checkout integrity error", exc_info=True)
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("فشل إنشاء الفاتورة. تحقق من البيانات وحاول مرة أخرى."),
-                }
-            ),
-            500,
-        )
+        return error_response(message=gettext("فشل إنشاء الفاتورة. تحقق من البيانات وحاول مرة أخرى."), status_code=500)
     except Exception as exc:
         current_app.logger.error(f"POS checkout error: {exc}")
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("فشل إنشاء الفاتورة. تحقق من البيانات وحاول مرة أخرى."),
-                }
-            ),
-            500,
-        )
+        return error_response(message=gettext("فشل إنشاء الفاتورة. تحقق من البيانات وحاول مرة أخرى."), status_code=500)
 
     if response.get("order_type") in ("dine_in", "takeaway", "delivery"):
         _notify_kds(
@@ -846,7 +766,7 @@ def api_checkout():
 
     _publish_cfd_refresh(response.get("tenant_id"), session.id)
 
-    return jsonify(response)
+    return success_response(data=response)
 
 
 @pos_bp.route("/api/promotions/evaluate", methods=["POST"])
@@ -862,27 +782,19 @@ def api_promotions_evaluate():
     if promotions_denied:
         return promotions_denied
     if not request.is_json:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("Content-Type يجب أن يكون application/json."),
-                }
-            ),
-            415,
-        )
+        return error_response(message=gettext("Content-Type يجب أن يكون application/json."), status_code=415)
     payload = request.get_json(silent=True)
     if payload is None:
-        return jsonify({"success": False, "error": gettext("بيانات غير صالحة.")}), 400
+        return error_response(message=gettext("بيانات غير صالحة."), status_code=400)
 
     lines = payload.get("lines") or []
     if not isinstance(lines, list) or not lines:
-        return jsonify({"success": False, "error": gettext("يرجى إضافة منتجات للسلة.")}), 400
+        return error_response(message=gettext("يرجى إضافة منتجات للسلة."), status_code=400)
 
     try:
         merged = merge_checkout_lines(lines)
     except ValueError:
-        return jsonify({"success": False, "error": gettext("بيانات السلة غير صالحة.")}), 400
+        return error_response(message=gettext("بيانات السلة غير صالحة."), status_code=400)
 
     customer_type = "regular"
     customer_id = payload.get("customer_id")
@@ -901,10 +813,7 @@ def api_promotions_evaluate():
     for row in merged:
         product = products.get(int(row["product_id"]))
         if not product or not product.is_active:
-            return (
-                jsonify({"success": False, "error": gettext("يوجد منتج غير صالح داخل السلة.")}),
-                400,
-            )
+            return error_response(message=gettext("يوجد منتج غير صالح داخل السلة."), status_code=400)
         if row["unit_price"] is not None:
             unit_price = Decimal(str(row["unit_price"])).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         else:
@@ -925,9 +834,9 @@ def api_promotions_evaluate():
             branch_id=get_active_branch_id(current_user),
         )
     except ValueError as exc:
-        return jsonify({"success": False, "error": str(exc)}), 400
+        return error_response(message=str(exc), status_code=400)
 
-    return jsonify({"success": True, **_promotion_evaluation_json(evaluation)})
+    return success_response(data=_promotion_evaluation_json(evaluation))
 
 
 @pos_bp.route("/api/carts")
@@ -941,7 +850,7 @@ def api_carts_list():
     session = get_active_session(current_user)
     limit = request.args.get("limit", 25, type=int)
     carts = PosCartService.list_carts(user=current_user, session=session, limit=limit)
-    return jsonify({"success": True, "carts": [c.to_summary_dict() for c in carts]})
+    return success_response(data={"carts": [c.to_summary_dict() for c in carts]})
 
 
 @pos_bp.route("/api/terminal/status")
@@ -951,7 +860,7 @@ def api_terminal_status():
     """Report whether a push-to-terminal provider is configured."""
     from services import pos_terminal_service
 
-    return jsonify({"success": True, **pos_terminal_service.terminal_status()})
+    return success_response(data=pos_terminal_service.terminal_status())
 
 
 @pos_bp.route("/api/terminal/connection_token", methods=["POST"])
@@ -964,8 +873,8 @@ def api_terminal_connection_token():
     try:
         secret = pos_terminal_service.create_connection_token()
     except pos_terminal_service.PosTerminalError as exc:
-        return jsonify({"success": False, "error": str(exc)}), 503
-    return jsonify({"success": True, "secret": secret})
+        return error_response(message=str(exc), status_code=503)
+    return success_response(data={"secret": secret})
 
 
 @pos_bp.route("/api/terminal/payment_intent", methods=["POST"])
@@ -986,8 +895,8 @@ def api_terminal_payment_intent():
             sale_reference=payload.get("sale_reference"),
         )
     except pos_terminal_service.PosTerminalError as exc:
-        return jsonify({"success": False, "error": str(exc)}), 503
-    return jsonify({"success": True, **intent})
+        return error_response(message=str(exc), status_code=503)
+    return success_response(data=intent)
 
 
 @pos_bp.route("/api/carts/park", methods=["POST"])
@@ -996,32 +905,16 @@ def api_terminal_payment_intent():
 def api_carts_park():
     """Park (create) or re-park (update) a server-side cart tab."""
     if not request.is_json:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("Content-Type يجب أن يكون application/json."),
-                }
-            ),
-            415,
-        )
+        return error_response(message=gettext("Content-Type يجب أن يكون application/json."), status_code=415)
     payload = request.get_json(silent=True)
     if payload is None:
-        return jsonify({"success": False, "error": gettext("بيانات غير صالحة.")}), 400
+        return error_response(message=gettext("بيانات غير صالحة."), status_code=400)
 
     session = get_active_session(current_user)
     if not session:
         if get_paused_session(current_user):
             return _paused_session_error_response()
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً."),
-                }
-            ),
-            403,
-        )
+        return error_response(message=gettext("لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً."), status_code=403)
 
     token_error = _require_session_token(session, payload)
     if token_error:
@@ -1037,11 +930,11 @@ def api_carts_park():
                 cart_id=payload.get("cart_id"),
             )
     except LookupError as exc:
-        return jsonify({"success": False, "error": str(exc)}), 404
+        return error_response(message=str(exc), status_code=404)
     except ValueError as exc:
-        return jsonify({"success": False, "error": str(exc)}), 400
+        return error_response(message=str(exc), status_code=400)
 
-    return jsonify({"success": True, "cart": cart.to_summary_dict()}), 201
+    return success_response(data={"cart": cart.to_summary_dict()}, status_code=201)
 
 
 @pos_bp.route("/api/carts/<int:cart_id>")
@@ -1053,11 +946,11 @@ def api_cart_retrieve(cart_id):
         with atomic_transaction("pos_cart_resume"):
             cart = PosCartService.resume_cart(user=current_user, cart_id=cart_id)
     except LookupError as exc:
-        return jsonify({"success": False, "error": str(exc)}), 404
+        return error_response(message=str(exc), status_code=404)
     except PosCartConflictError as exc:
-        return jsonify({"success": False, "error": str(exc)}), 409
+        return error_response(message=str(exc), status_code=409)
 
-    return jsonify({"success": True, "cart": cart.to_detail_dict()})
+    return success_response(data={"cart": cart.to_detail_dict()})
 
 
 @pos_bp.route("/api/carts/<int:cart_id>", methods=["DELETE"])
@@ -1068,9 +961,9 @@ def api_cart_delete(cart_id):
         with atomic_transaction("pos_cart_delete"):
             PosCartService.delete_cart(user=current_user, cart_id=cart_id)
     except LookupError as exc:
-        return jsonify({"success": False, "error": str(exc)}), 404
+        return error_response(message=str(exc), status_code=404)
 
-    return jsonify({"success": True})
+    return success_response()
 
 
 @pos_bp.route("/api/fast-cash")
@@ -1080,13 +973,13 @@ def api_fast_cash():
     """Dynamic fast-cash keys for a cart total + precomputed change per key."""
     total_raw = (request.args.get("total") or "").strip()
     if not total_raw:
-        return jsonify({"success": False, "error": gettext("الإجمالي مطلوب.")}), 400
+        return error_response(message=gettext("الإجمالي مطلوب."), status_code=400)
     try:
         total = Decimal(str(total_raw))
     except InvalidOperation:
-        return jsonify({"success": False, "error": gettext("الإجمالي غير صالح.")}), 400
+        return error_response(message=gettext("الإجمالي غير صالح."), status_code=400)
     if total < 0:
-        return jsonify({"success": False, "error": gettext("الإجمالي لا يمكن أن يكون سالباً.")}), 400
+        return error_response(message=gettext("الإجمالي لا يمكن أن يكون سالباً."), status_code=400)
 
     currency = (request.args.get("currency") or "").strip().upper()
     if not currency:
@@ -1095,9 +988,8 @@ def api_fast_cash():
         currency = get_tenant_base_currency(get_active_tenant_id(current_user))
 
     options = compute_fast_cash_options(total, currency=currency)
-    return jsonify(
-        {
-            "success": True,
+    return success_response(
+        data={
             "total": float(total),
             "currency": currency,
             "options": [
@@ -1118,7 +1010,7 @@ def api_fast_cash():
 def api_session_current():
     session = get_active_session(current_user)
     if not session:
-        return jsonify({"success": False, "session": None}), 200
+        return success_response(data={"session": None})
     payload = {
         "id": session.id,
         "number": session.session_number,
@@ -1143,7 +1035,7 @@ def api_session_current():
                 "total_card_sales": float(session.total_card_sales or 0),
             }
         )
-    return jsonify({"success": True, "session": payload})
+    return success_response(data={"session": payload})
 
 
 @pos_bp.route("/api/session/open", methods=["POST"])
@@ -1151,15 +1043,7 @@ def api_session_current():
 @permission_required("manage_sales")
 def api_session_open():
     if not request.is_json:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("Content-Type يجب أن يكون application/json."),
-                }
-            ),
-            415,
-        )
+        return error_response(message=gettext("Content-Type يجب أن يكون application/json."), status_code=415)
     payload = request.get_json(silent=True) or {}
     opening_balance = safe_decimal(payload.get("opening_balance"))
     notes = (payload.get("notes") or "").strip() or None
@@ -1167,22 +1051,11 @@ def api_session_open():
 
     existing = get_active_session(current_user)
     if existing:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext(f"توجد جلسة مفتوحة بالفعل: {existing.session_number}. يرجى إغلاقها أولاً."),
-                }
-            ),
-            409,
-        )
+        return error_response(message=gettext(f"توجد جلسة مفتوحة بالفعل: {existing.session_number}. يرجى إغلاقها أولاً."), status_code=409)
 
     branch_id = get_active_branch_id(current_user)
     if not branch_id:
-        return (
-            jsonify({"success": False, "error": gettext("لا يوجد فرع نشط. يرجى تحديد فرع.")}),
-            400,
-        )
+        return error_response(message=gettext("لا يوجد فرع نشط. يرجى تحديد فرع."), status_code=400)
 
     idempotency_key = _extract_idempotency_key(payload)
     try:
@@ -1196,7 +1069,12 @@ def api_session_open():
                     return idem_error
                 if idem_stored is not None:
                     stored_body, stored_status = idem_stored
-                    return jsonify(stored_body), stored_status
+                    replay_data = {k: v for k, v in stored_body.items() if k != "success"}
+                    return success_response(
+                        data=replay_data,
+                        meta={"idempotent_replay": True},
+                        status_code=stored_status,
+                    )
             session = create_pos_session(current_user, branch_id, opening_balance, notes, terminal_id=terminal_id)
 
             session_token = None
@@ -1219,11 +1097,11 @@ def api_session_open():
     except IntegrityError:
         if idempotency_key:
             return _idempotency_conflict_response()
-        return jsonify({"success": False, "error": gettext("تعذر فتح الجلسة. حاول مرة أخرى.")}), 500
+        return error_response(message=gettext("تعذر فتح الجلسة. حاول مرة أخرى."), status_code=500)
     except Exception as exc:
-        return jsonify({"success": False, "error": str(exc)}), 400
+        return error_response(message=str(exc), status_code=400)
 
-    return jsonify(response), 201
+    return success_response(data=response, status_code=201)
 
 
 @pos_bp.route("/api/session/pause", methods=["POST"])
@@ -1233,7 +1111,7 @@ def api_session_pause():
     payload = request.get_json(silent=True) or {}
     session = get_active_session(current_user)
     if not session:
-        return jsonify({"success": False, "error": gettext("لا توجد جلسة مفتوحة لإيقافها.")}), 404
+        return error_response(message=gettext("لا توجد جلسة مفتوحة لإيقافها."), status_code=404)
     token_error = _require_session_token(session, payload)
     if token_error:
         return token_error
@@ -1242,8 +1120,8 @@ def api_session_pause():
             session.pause()
             db.session.flush()
     except ValueError as exc:
-        return jsonify({"success": False, "error": str(exc)}), 400
-    return jsonify({"success": True, "session": {"id": session.id, "status": session.status}})
+        return error_response(message=str(exc), status_code=400)
+    return success_response(data={"session": {"id": session.id, "status": session.status}})
 
 
 @pos_bp.route("/api/session/resume", methods=["POST"])
@@ -1253,7 +1131,7 @@ def api_session_resume():
     payload = request.get_json(silent=True) or {}
     session = get_paused_session(current_user)
     if not session:
-        return jsonify({"success": False, "error": gettext("لا توجد جلسة موقوفة لاستئنافها.")}), 404
+        return error_response(message=gettext("لا توجد جلسة موقوفة لاستئنافها."), status_code=404)
     token_error = _require_session_token(session, payload)
     if token_error:
         return token_error
@@ -1262,17 +1140,13 @@ def api_session_resume():
             session.resume()
             db.session.flush()
     except ValueError as exc:
-        return jsonify({"success": False, "error": str(exc)}), 400
+        return error_response(message=str(exc), status_code=400)
     session_token = None
     if session.terminal_id:
         session_token = issue_pos_session_token(session.id, session.user_id, session.terminal_id)
-    return jsonify(
-        {
-            "success": True,
-            "session": {"id": session.id, "status": session.status},
+    return success_response(data={"session": {"id": session.id, "status": session.status},
             "session_token": session_token,
-        }
-    )
+        })
 
 
 @pos_bp.route("/api/session/close", methods=["POST"])
@@ -1280,28 +1154,20 @@ def api_session_resume():
 @permission_required("manage_sales")
 def api_session_close():
     if not request.is_json:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("Content-Type يجب أن يكون application/json."),
-                }
-            ),
-            415,
-        )
+        return error_response(message=gettext("Content-Type يجب أن يكون application/json."), status_code=415)
     payload = request.get_json(silent=True) or {}
     # Blind close: the cashier's physical count is mandatory. The legacy
     # ``closing_balance`` key is still accepted as an alias.
     counted_raw = payload.get("counted_cash", payload.get("closing_balance"))
     if counted_raw is None:
-        return (
-            jsonify({"success": False, "error": gettext("المبلغ المعدود (counted_cash) مطلوب لإغلاق الجلسة.")}),
-            400,
+        return error_response(
+            message=gettext("المبلغ المعدود (counted_cash) مطلوب لإغلاق الجلسة."),
+            status_code=400,
         )
     try:
         closing_cash = Decimal(str(counted_raw or "0"))
     except (InvalidOperation, TypeError, ValueError):
-        return jsonify({"success": False, "error": gettext("المبلغ المعدود غير صالح.")}), 400
+        return error_response(message=gettext("المبلغ المعدود غير صالح."), status_code=400)
     notes = (payload.get("notes") or "").strip() or None
 
     idempotency_key = _extract_idempotency_key(payload)
@@ -1314,10 +1180,7 @@ def api_session_close():
 
     session = _get_closable_session(current_user)
     if not session:
-        return (
-            jsonify({"success": False, "error": gettext("لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً.")}),
-            404,
-        )
+        return error_response(message=gettext("لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً."), status_code=404)
 
     token_error = _require_session_token(session, payload)
     if token_error:
@@ -1332,7 +1195,12 @@ def api_session_close():
                     return idem_error
                 if idem_stored is not None:
                     stored_body, stored_status = idem_stored
-                    return jsonify(stored_body), stored_status
+                    replay_data = {k: v for k, v in stored_body.items() if k != "success"}
+                    return success_response(
+                        data=replay_data,
+                        meta={"idempotent_replay": True},
+                        status_code=stored_status,
+                    )
             close_pos_session(session, closing_cash, notes)
             response = {"success": True, "session": _session_report_payload(session, _can_view_expected())}
             if idem_record is not None:
@@ -1340,11 +1208,11 @@ def api_session_close():
     except IntegrityError:
         if idempotency_key:
             return _idempotency_conflict_response()
-        return jsonify({"success": False, "error": gettext("تعذر إغلاق الجلسة. حاول مرة أخرى.")}), 500
+        return error_response(message=gettext("تعذر إغلاق الجلسة. حاول مرة أخرى."), status_code=500)
     except Exception as exc:
-        return jsonify({"success": False, "error": str(exc)}), 400
+        return error_response(message=str(exc), status_code=400)
 
-    return jsonify(response)
+    return success_response(data=response)
 
 
 @pos_bp.route("/api/session/report")
@@ -1355,22 +1223,16 @@ def api_session_report():
     if session_id:
         session = tenant_get(PosSession, session_id)
         if not session:
-            return jsonify({"success": False, "error": gettext("الجلسة غير موجودة.")}), 404
+            return error_response(message=gettext("الجلسة غير موجودة."), status_code=404)
     else:
         session = get_active_session(current_user) or get_paused_session(current_user)
         if not session:
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "session": None,
-                        "error": gettext("لا توجد جلسة مفتوحة."),
-                    }
-                ),
-                200,
+            return success_response(
+                data={"session": None},
+                message=gettext("لا توجد جلسة مفتوحة."),
             )
 
-    return jsonify({"success": True, "session": _session_report_payload(session, _can_view_expected())})
+    return success_response(data={"session": _session_report_payload(session, _can_view_expected())})
 
 
 def _get_active_shift(user=None) -> PosShift | None:
@@ -1403,8 +1265,8 @@ def api_shift_current():
         return shifts_denied
     shift = _get_active_shift(current_user)
     if not shift:
-        return jsonify({"success": False, "shift": None}), 200
-    return jsonify({"success": True, "shift": shift.to_dict(include_sensitive=_can_view_expected())})
+        return success_response(data={"shift": None})
+    return success_response(data={"shift": shift.to_dict(include_sensitive=_can_view_expected())})
 
 
 @pos_bp.route("/api/shift/open", methods=["POST"])
@@ -1415,41 +1277,17 @@ def api_shift_open():
     if shifts_denied:
         return shifts_denied
     if not request.is_json:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("Content-Type يجب أن يكون application/json."),
-                }
-            ),
-            415,
-        )
+        return error_response(message=gettext("Content-Type يجب أن يكون application/json."), status_code=415)
     payload = request.get_json(silent=True) or {}
     starting_cash = payload.get("starting_cash", 0) or 0
 
     session = get_active_session(current_user)
     if not session:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً."),
-                }
-            ),
-            403,
-        )
+        return error_response(message=gettext("لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً."), status_code=403)
 
     existing = _get_active_shift(current_user)
     if existing:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext(f"يوجد وردية مفتوحة: {existing.shift_number}."),
-                }
-            ),
-            409,
-        )
+        return error_response(message=gettext(f"يوجد وردية مفتوحة: {existing.shift_number}."), status_code=409)
 
     try:
         with atomic_transaction("pos_shift_open"):
@@ -1474,9 +1312,12 @@ def api_shift_open():
             shift.status = PosShift.SHIFT_OPEN
             db.session.flush()
     except Exception as exc:
-        return jsonify({"success": False, "error": str(exc)}), 400
+        return error_response(message=str(exc), status_code=400)
 
-    return jsonify({"success": True, "shift": shift.to_dict(include_sensitive=_can_view_expected())}), 201
+    return success_response(
+        data={"shift": shift.to_dict(include_sensitive=_can_view_expected())},
+        status_code=201,
+    )
 
 
 @pos_bp.route("/api/shift/reconcile", methods=["POST"])
@@ -1487,31 +1328,23 @@ def api_shift_reconcile():
     if shifts_denied:
         return shifts_denied
     if not request.is_json:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("Content-Type يجب أن يكون application/json."),
-                }
-            ),
-            415,
-        )
+        return error_response(message=gettext("Content-Type يجب أن يكون application/json."), status_code=415)
     payload = request.get_json(silent=True) or {}
     # Blind close: the cashier's physical count is mandatory — no silent zero.
     if payload.get("actual_cash") is None:
-        return (
-            jsonify({"success": False, "error": gettext("المبلغ المعدود (actual_cash) مطلوب لتسوية الوردية.")}),
-            400,
+        return error_response(
+            message=gettext("المبلغ المعدود (actual_cash) مطلوب لتسوية الوردية."),
+            status_code=400,
         )
     try:
         actual_cash = Decimal(str(payload.get("actual_cash") or "0"))
     except (InvalidOperation, TypeError, ValueError):
-        return jsonify({"success": False, "error": gettext("المبلغ المعدود غير صالح.")}), 400
+        return error_response(message=gettext("المبلغ المعدود غير صالح."), status_code=400)
     notes = (payload.get("notes") or "").strip() or None
 
     shift = _get_active_shift(current_user)
     if not shift:
-        return jsonify({"success": False, "error": gettext("لا توجد وردية مفتوحة.")}), 404
+        return error_response(message=gettext("لا توجد وردية مفتوحة."), status_code=404)
 
     try:
         with atomic_transaction("pos_shift_reconcile"):
@@ -1519,9 +1352,9 @@ def api_shift_reconcile():
             shift.reconcile(actual_cash, notes)
             db.session.flush()
     except Exception as exc:
-        return jsonify({"success": False, "error": str(exc)}), 400
+        return error_response(message=str(exc), status_code=400)
 
-    return jsonify({"success": True, "shift": shift.to_dict(include_sensitive=_can_view_expected())})
+    return success_response(data={"shift": shift.to_dict(include_sensitive=_can_view_expected())})
 
 
 @pos_bp.route("/api/shift/close", methods=["POST"])
@@ -1533,22 +1366,19 @@ def api_shift_close():
         return shifts_denied
     shift = _get_active_shift(current_user)
     if not shift:
-        return jsonify({"success": False, "error": gettext("لا توجد وردية مفتوحة.")}), 404
+        return error_response(message=gettext("لا توجد وردية مفتوحة."), status_code=404)
 
     if shift.status == PosShift.SHIFT_OPEN:
-        return (
-            jsonify({"success": False, "error": gettext("يرجى تسوية الوردية قبل إغلاقها.")}),
-            400,
-        )
+        return error_response(message=gettext("يرجى تسوية الوردية قبل إغلاقها."), status_code=400)
 
     try:
         with atomic_transaction("pos_shift_close"):
             shift.close()
             db.session.flush()
     except Exception as exc:
-        return jsonify({"success": False, "error": str(exc)}), 400
+        return error_response(message=str(exc), status_code=400)
 
-    return jsonify({"success": True, "shift": shift.to_dict(include_sensitive=_can_view_expected())})
+    return success_response(data={"shift": shift.to_dict(include_sensitive=_can_view_expected())})
 
 
 def _accumulate_shift_totals(shift: PosShift):
@@ -1609,18 +1439,10 @@ def _accumulate_shift_totals(shift: PosShift):
 def api_authorize_override():
     """Exchange a supervisor PIN for a short-lived, single-use override token."""
     if not request.is_json:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("Content-Type يجب أن يكون application/json."),
-                }
-            ),
-            415,
-        )
+        return error_response(message=gettext("Content-Type يجب أن يكون application/json."), status_code=415)
     payload = request.get_json(silent=True)
     if payload is None:
-        return jsonify({"success": False, "error": gettext("بيانات غير صالحة.")}), 400
+        return error_response(message=gettext("بيانات غير صالحة."), status_code=400)
     pin = str(payload.get("pin") or "")
     action = (payload.get("action") or "").strip()
 
@@ -1635,18 +1457,14 @@ def api_authorize_override():
             )
             override_token = sign_override_token(token_row)
     except PosOverrideError as exc:
-        return jsonify({"success": False, "error": str(exc)}), 403
+        return error_response(message=str(exc), status_code=403)
     except ValueError as exc:
-        return jsonify({"success": False, "error": str(exc)}), 400
+        return error_response(message=str(exc), status_code=400)
 
-    return jsonify(
-        {
-            "success": True,
-            "override_token": override_token,
+    return success_response(data={"override_token": override_token,
             "action": token_row.action,
             "expires_in": OVERRIDE_TOKEN_TTL_SECONDS,
-        }
-    )
+        })
 
 
 @pos_bp.route("/api/supervisor-pin", methods=["POST"])
@@ -1655,24 +1473,13 @@ def api_authorize_override():
 def api_supervisor_pin_set():
     """Set/rotate the current supervisor's own override PIN."""
     if not request.is_json:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("Content-Type يجب أن يكون application/json."),
-                }
-            ),
-            415,
-        )
+        return error_response(message=gettext("Content-Type يجب أن يكون application/json."), status_code=415)
     payload = request.get_json(silent=True)
     if payload is None:
-        return jsonify({"success": False, "error": gettext("بيانات غير صالحة.")}), 400
+        return error_response(message=gettext("بيانات غير صالحة."), status_code=400)
     pin = str(payload.get("pin") or "").strip()
     if not pin.isdigit() or not (4 <= len(pin) <= 8):
-        return (
-            jsonify({"success": False, "error": gettext("الرمز السري يجب أن يكون 4-8 أرقام.")}),
-            400,
-        )
+        return error_response(message=gettext("الرمز السري يجب أن يكون 4-8 أرقام."), status_code=400)
     with atomic_transaction("pos_supervisor_pin_set"):
         current_user.set_supervisor_pin(pin)
         db.session.flush()
@@ -1683,7 +1490,7 @@ def api_supervisor_pin_set():
             {"user_id": current_user.id},
             severity="medium",
         )
-    return jsonify({"success": True})
+    return success_response()
 
 
 @pos_bp.route("/api/drawer/open", methods=["POST"])
@@ -1693,25 +1500,14 @@ def api_drawer_open():
     """No-sale cash drawer open — always requires pos_no_sale_drawer or a
     supervisor override token, and is audit-logged with both actors."""
     if not request.is_json:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("Content-Type يجب أن يكون application/json."),
-                }
-            ),
-            415,
-        )
+        return error_response(message=gettext("Content-Type يجب أن يكون application/json."), status_code=415)
     payload = request.get_json(silent=True) or {}
 
     session = get_active_session(current_user)
     if not session:
         if get_paused_session(current_user):
             return _paused_session_error_response()
-        return (
-            jsonify({"success": False, "error": gettext("لا توجد جلسة كاشير مفتوحة.")}),
-            403,
-        )
+        return error_response(message=gettext("لا توجد جلسة كاشير مفتوحة."), status_code=403)
     token_error = _require_session_token(session, payload)
     if token_error:
         return token_error
@@ -1752,7 +1548,7 @@ def api_drawer_open():
             cashier_user_id=current_user.id,
             channel="json",
         )
-        return jsonify({"success": False, "error": str(exc)}), 403
+        return error_response(message=str(exc), status_code=403)
 
     # Best-effort hardware kick — a drawer hardware failure must not undo the
     # audit record, and must not leak internals to the client.
@@ -1770,7 +1566,7 @@ def api_drawer_open():
         )
         current_app.logger.warning("POS drawer hardware agent unreachable", exc_info=True)
 
-    return jsonify({"success": True, "drawer_kicked": drawer_kicked})
+    return success_response(data={"drawer_kicked": drawer_kicked})
 
 
 @pos_bp.route("/api/cash-movements", methods=["GET"])
@@ -1788,18 +1584,18 @@ def api_cash_movements_list():
     session_id = request.args.get("session_id", type=int)
     if session_id:
         if not _can_view_expected():
-            return jsonify({"success": False, "error": gettext("ليس لديك صلاحية عرض حركات هذه الجلسة.")}), 403
+            return error_response(message=gettext("ليس لديك صلاحية عرض حركات هذه الجلسة."), status_code=403)
         session = tenant_get(PosSession, session_id)
         if not session:
-            return jsonify({"success": False, "error": gettext("الجلسة غير موجودة.")}), 404
+            return error_response(message=gettext("الجلسة غير موجودة."), status_code=404)
     else:
         session = get_active_session(current_user)
         if not session:
-            return jsonify({"success": True, "movements": []})
+            return success_response(data={"movements": []})
 
     limit = request.args.get("limit", 100, type=int)
     movements = PosCashMovementService.list_movements(user=current_user, session=session, limit=limit)
-    return jsonify({"success": True, "movements": [m.to_dict() for m in movements]})
+    return success_response(data={"movements": [m.to_dict() for m in movements]})
 
 
 @pos_bp.route("/api/cash-movements", methods=["POST"])
@@ -1815,41 +1611,25 @@ def api_cash_movement_create():
     if shifts_denied:
         return shifts_denied
     if not request.is_json:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("Content-Type يجب أن يكون application/json."),
-                }
-            ),
-            415,
-        )
+        return error_response(message=gettext("Content-Type يجب أن يكون application/json."), status_code=415)
     payload = request.get_json(silent=True)
     if payload is None:
-        return jsonify({"success": False, "error": gettext("بيانات غير صالحة.")}), 400
+        return error_response(message=gettext("بيانات غير صالحة."), status_code=400)
 
     movement_type = (payload.get("type") or payload.get("movement_type") or "").strip()
     if movement_type not in ("pay_in", "pay_out"):
-        return jsonify({"success": False, "error": gettext("نوع الحركة يجب أن يكون pay_in أو pay_out.")}), 400
+        return error_response(message=gettext("نوع الحركة يجب أن يكون pay_in أو pay_out."), status_code=400)
     try:
         amount = Decimal(str(payload.get("amount") or "0"))
     except (InvalidOperation, TypeError, ValueError):
-        return jsonify({"success": False, "error": gettext("مبلغ الحركة غير صالح.")}), 400
+        return error_response(message=gettext("مبلغ الحركة غير صالح."), status_code=400)
     reason = (payload.get("reason") or "").strip()
 
     session = get_active_session(current_user)
     if not session:
         if get_paused_session(current_user):
             return _paused_session_error_response()
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً."),
-                }
-            ),
-            403,
-        )
+        return error_response(message=gettext("لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً."), status_code=403)
     token_error = _require_session_token(session, payload)
     if token_error:
         return token_error
@@ -1872,11 +1652,11 @@ def api_cash_movement_create():
                 authorized_by_user_id=supervisor_id,
             )
     except PosOverrideError as exc:
-        return jsonify({"success": False, "error": str(exc)}), 403
+        return error_response(message=str(exc), status_code=403)
     except ValueError as exc:
-        return jsonify({"success": False, "error": str(exc)}), 400
+        return error_response(message=str(exc), status_code=400)
 
-    return jsonify({"success": True, "movement": movement.to_dict()}), 201
+    return success_response(data={"movement": movement.to_dict()}, status_code=201)
 
 
 @pos_bp.route("/api/carts/<int:cart_id>/void-line", methods=["POST"])
@@ -1886,27 +1666,16 @@ def api_cart_void_line(cart_id):
     """Void a single line from a parked cart — requires pos_void_line or a
     supervisor override token; both actors are audit-logged."""
     if not request.is_json:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("Content-Type يجب أن يكون application/json."),
-                }
-            ),
-            415,
-        )
+        return error_response(message=gettext("Content-Type يجب أن يكون application/json."), status_code=415)
     payload = request.get_json(silent=True)
     if payload is None:
-        return jsonify({"success": False, "error": gettext("بيانات غير صالحة.")}), 400
+        return error_response(message=gettext("بيانات غير صالحة."), status_code=400)
 
     session = get_active_session(current_user)
     if not session:
         if get_paused_session(current_user):
             return _paused_session_error_response()
-        return (
-            jsonify({"success": False, "error": gettext("لا توجد جلسة كاشير مفتوحة.")}),
-            403,
-        )
+        return error_response(message=gettext("لا توجد جلسة كاشير مفتوحة."), status_code=403)
     token_error = _require_session_token(session, payload)
     if token_error:
         return token_error
@@ -1914,9 +1683,9 @@ def api_cart_void_line(cart_id):
     try:
         product_id = int(payload.get("product_id") or 0)
     except (TypeError, ValueError):
-        return jsonify({"success": False, "error": gettext("معرف المنتج غير صالح.")}), 400
+        return error_response(message=gettext("معرف المنتج غير صالح."), status_code=400)
     if not product_id:
-        return jsonify({"success": False, "error": gettext("معرف المنتج مطلوب.")}), 400
+        return error_response(message=gettext("معرف المنتج مطلوب."), status_code=400)
 
     try:
         with atomic_transaction("pos_void_line"):
@@ -1951,15 +1720,15 @@ def api_cart_void_line(cart_id):
                 },
             )
     except PosOverrideError as exc:
-        return jsonify({"success": False, "error": str(exc)}), 403
+        return error_response(message=str(exc), status_code=403)
     except LookupError as exc:
-        return jsonify({"success": False, "error": str(exc)}), 404
+        return error_response(message=str(exc), status_code=404)
     except PosCartConflictError as exc:
-        return jsonify({"success": False, "error": str(exc)}), 409
+        return error_response(message=str(exc), status_code=409)
     except ValueError as exc:
-        return jsonify({"success": False, "error": str(exc)}), 400
+        return error_response(message=str(exc), status_code=400)
 
-    return jsonify({"success": True, "cart": cart.to_summary_dict()})
+    return success_response(data={"cart": cart.to_summary_dict()})
 
 
 # ─── Phase 4 — omnichannel: receipt lookup, smart returns, cross-branch stock ───
@@ -1984,10 +1753,10 @@ def api_receipt_lookup():
     try:
         receipt = PosRmaService.lookup_receipt(current_user, number)
     except ValueError as exc:
-        return jsonify({"success": False, "error": str(exc)}), 400
+        return error_response(message=str(exc), status_code=400)
     if receipt is None:
-        return jsonify({"success": False, "error": gettext("الإيصال غير موجود.")}), 404
-    return jsonify({"success": True, "receipt": receipt})
+        return error_response(message=gettext("الإيصال غير موجود."), status_code=404)
+    return success_response(data={"receipt": receipt})
 
 
 @pos_bp.route("/api/returns", methods=["POST"])
@@ -2006,32 +1775,16 @@ def api_pos_return_create():
         return returns_denied
 
     if not request.is_json:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("Content-Type يجب أن يكون application/json."),
-                }
-            ),
-            415,
-        )
+        return error_response(message=gettext("Content-Type يجب أن يكون application/json."), status_code=415)
     payload = request.get_json(silent=True)
     if payload is None:
-        return jsonify({"success": False, "error": gettext("بيانات غير صالحة.")}), 400
+        return error_response(message=gettext("بيانات غير صالحة."), status_code=400)
 
     session = get_active_session(current_user)
     if not session:
         if get_paused_session(current_user):
             return _paused_session_error_response()
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً."),
-                }
-            ),
-            403,
-        )
+        return error_response(message=gettext("لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً."), status_code=403)
     token_error = _require_session_token(session, payload)
     if token_error:
         return token_error
@@ -2039,7 +1792,7 @@ def api_pos_return_create():
     refund_method = (payload.get("refund_method") or "credit").strip().lower()
     return_lines = payload.get("lines") or []
     if not isinstance(return_lines, list) or not return_lines:
-        return jsonify({"success": False, "error": gettext("يرجى تحديد أصناف المرتجع.")}), 400
+        return error_response(message=gettext("يرجى تحديد أصناف المرتجع."), status_code=400)
     notes = (payload.get("notes") or "").strip() or None
 
     # Resolve OUTSIDE the transaction: a 404 here must not commit an
@@ -2050,7 +1803,7 @@ def api_pos_return_create():
         sale_number=payload.get("sale_number") or payload.get("receipt_number"),
     )
     if sale_id is None:
-        return jsonify({"success": False, "error": gettext("الإيصال غير موجود.")}), 404
+        return error_response(message=gettext("الإيصال غير موجود."), status_code=404)
 
     idempotency_key = _extract_idempotency_key(payload)
     try:
@@ -2062,7 +1815,12 @@ def api_pos_return_create():
                     return idem_error
                 if idem_stored is not None:
                     stored_body, stored_status = idem_stored
-                    return jsonify(stored_body), stored_status
+                    replay_data = {k: v for k, v in stored_body.items() if k != "success"}
+                    return success_response(
+                        data=replay_data,
+                        meta={"idempotent_replay": True},
+                        status_code=stored_status,
+                    )
 
             product_return, refund_payment = PosRmaService.create_pos_return(
                 user=current_user,
@@ -2103,14 +1861,14 @@ def api_pos_return_create():
         if idempotency_key:
             return _idempotency_conflict_response()
         current_app.logger.error("POS return integrity error", exc_info=True)
-        return jsonify({"success": False, "error": gettext("فشل إنشاء المرتجع. حاول مرة أخرى.")}), 500
+        return error_response(message=gettext("فشل إنشاء المرتجع. حاول مرة أخرى."), status_code=500)
     except ValueError as exc:
-        return jsonify({"success": False, "error": str(exc)}), 400
+        return error_response(message=str(exc), status_code=400)
     except Exception as exc:
         current_app.logger.error(f"POS return error: {exc}")
-        return jsonify({"success": False, "error": gettext("فشل إنشاء المرتجع. تحقق من البيانات وحاول مرة أخرى.")}), 500
+        return error_response(message=gettext("فشل إنشاء المرتجع. تحقق من البيانات وحاول مرة أخرى."), status_code=500)
 
-    return jsonify(response), 201
+    return success_response(data=response, status_code=201)
 
 
 @pos_bp.route("/api/stock/lookup")
@@ -2122,14 +1880,14 @@ def api_stock_lookup():
     product_id = request.args.get("product_id", type=int)
     barcode = (request.args.get("barcode") or request.args.get("sku") or "").strip() or None
     if not product_id and not barcode:
-        return jsonify({"success": False, "error": gettext("معرف المنتج أو الباركود مطلوب.")}), 400
+        return error_response(message=gettext("معرف المنتج أو الباركود مطلوب."), status_code=400)
     try:
         result = PosRmaService.stock_breakdown(current_user, product_id=product_id, barcode=barcode)
     except (TypeError, ValueError):
-        return jsonify({"success": False, "error": gettext("معرف المنتج غير صالح.")}), 400
+        return error_response(message=gettext("معرف المنتج غير صالح."), status_code=400)
     if result is None:
-        return jsonify({"success": False, "error": gettext("المنتج غير موجود.")}), 404
-    return jsonify({"success": True, **result})
+        return error_response(message=gettext("المنتج غير موجود."), status_code=404)
+    return success_response(data=result)
 
 
 _HARDWARE_AGENT_URL = _os.environ.get("POS_HARDWARE_AGENT_URL", "http://127.0.0.1:8567")
@@ -2205,8 +1963,8 @@ def kds_orders():
     from models import PosKdsOrder
 
     orders = tenant_query(PosKdsOrder).order_by(PosKdsOrder.created_at.desc()).limit(50).all()
-    return jsonify(
-        [
+    return success_response(
+        data=[
             {
                 "id": o.id,
                 "order_number": o.order_number,
@@ -2230,11 +1988,11 @@ def kds_update_status(order_id):
     tid = get_active_tenant_id(current_user)
     order = tenant_query(PosKdsOrder).filter_by(id=order_id).first()
     if not order:
-        return jsonify({"error": gettext("الطلب غير موجود")}), 404
+        return error_response(message=gettext("الطلب غير موجود"), status_code=404)
     payload = request.get_json(silent=True) or {}
     new_status = payload.get("status", "")
     if new_status not in ("pending", "preparing", "ready", "served", "cancelled"):
-        return jsonify({"error": gettext("حالة غير صالحة")}), 400
+        return error_response(message=gettext("حالة غير صالحة"), status_code=400)
     with atomic_transaction("pos_kds_status"):
         order.status = new_status
         if new_status in ("served", "cancelled"):
@@ -2251,7 +2009,7 @@ def kds_update_status(order_id):
     )
     if order.sale is not None and order.sale.pos_session_id:
         _publish_cfd_refresh(tid, order.sale.pos_session_id)
-    return jsonify({"success": True})
+    return success_response()
 
 
 @pos_bp.route("/kds")
@@ -2266,7 +2024,7 @@ def customer_display_stream(session_id):
     display_tenant_id = request.args.get("tenant_id", type=int)
     display_token = request.args.get("token", "")
     if not display_tenant_id or not verify_customer_display_token(session_id, display_tenant_id, display_token):
-        return jsonify({"error": gettext("رابط شاشة العرض غير صالح.")}), 403
+        return error_response(message=gettext("رابط شاشة العرض غير صالح."), status_code=403)
 
     def _current_payload():
         session = db.session.get(PosSession, session_id)
@@ -2378,12 +2136,12 @@ def api_sale_print_tickets(sale_id):
 
     sale = tenant_get(Sale, sale_id)
     if not sale:
-        return jsonify({"success": False, "error": gettext("الفاتورة غير موجودة.")}), 404
+        return error_response(message=gettext("الفاتورة غير موجودة."), status_code=404)
     printers = PosPrinter.for_tenant(sale.tenant_id)
     if not printers:
-        return jsonify({"success": True, "tickets": []})
+        return success_response(data={"tickets": []})
     tickets = build_print_tickets(sale, printers)
-    return jsonify({"success": True, "tickets": tickets})
+    return success_response(data={"tickets": tickets})
 
 
 @pos_bp.route("/api/hardware/print-receipt", methods=["POST"])
@@ -2401,7 +2159,7 @@ def hardware_print_receipt():
             verify=True,
         )
         result = resp.json()
-        return jsonify(result), resp.status_code
+        return success_response(data=result, status_code=resp.status_code)
     except requests.RequestException:
         log_hardware(
             "POS hardware agent unreachable on print-receipt",
@@ -2409,12 +2167,9 @@ def hardware_print_receipt():
             event="hardware_agent_unreachable",
             agent_operation="print-receipt",
         )
-        return (
-            jsonify({"error": gettext("وكيل الأجهزة غير متصل. تأكد من تشغيل pos_hardware_agent.py")}),
-            503,
-        )
+        return error_response(message=gettext("وكيل الأجهزة غير متصل. تأكد من تشغيل pos_hardware_agent.py"), status_code=503)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)
 
 
 @pos_bp.route("/api/hardware/open-drawer", methods=["POST"])
@@ -2427,10 +2182,7 @@ def hardware_open_drawer():
     if not session:
         if get_paused_session(current_user):
             return _paused_session_error_response()
-        return (
-            jsonify({"success": False, "error": gettext("لا توجد جلسة كاشير مفتوحة.")}),
-            403,
-        )
+        return error_response(message=gettext("لا توجد جلسة كاشير مفتوحة."), status_code=403)
     token_error = _require_session_token(session, payload)
     if token_error:
         return token_error
@@ -2475,7 +2227,7 @@ def hardware_open_drawer():
             cashier_user_id=current_user.id,
             channel="hardware_agent",
         )
-        return jsonify({"success": False, "error": str(exc)}), 403
+        return error_response(message=str(exc), status_code=403)
 
     try:
         body = request.get_data()
@@ -2487,7 +2239,7 @@ def hardware_open_drawer():
             verify=True,
         )
         result = resp.json()
-        return jsonify(result), resp.status_code
+        return success_response(data=result, status_code=resp.status_code)
     except requests.RequestException:
         log_hardware(
             "POS hardware agent unreachable on open-drawer",
@@ -2496,9 +2248,9 @@ def hardware_open_drawer():
             agent_operation="open-drawer",
             session_id=session.id,
         )
-        return jsonify({"error": gettext("وكيل الأجهزة غير متصل")}), 503
+        return error_response(message=gettext("وكيل الأجهزة غير متصل"), status_code=503)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return error_response(message=str(e), status_code=500)
 
 
 @pos_bp.route("/api/hardware/status")
@@ -2513,11 +2265,11 @@ def hardware_status():
             verify=True,
         )
         result = resp.json()
-        return jsonify(result)
+        return success_response(data=result)
     except requests.RequestException:
-        return jsonify({"status": "disconnected", "error": gettext("غير متصل")}), 200
+        return success_response(data={"status": "disconnected", "error": gettext("غير متصل")})
     except Exception as e:
-        return jsonify({"status": "error", "error": str(e)}), 200
+        return success_response(data={"status": "error", "error": str(e)})
 
 
 @pos_bp.route("/api/floors")
@@ -2527,8 +2279,8 @@ def api_floors():
     from models import PosFloor
 
     floors = tenant_query(PosFloor).order_by(PosFloor.sort_order).all()
-    return jsonify(
-        [
+    return success_response(
+        data=[
             {
                 "id": f.id,
                 "name": f.name_ar or f.name,
@@ -2548,8 +2300,8 @@ def api_tables():
     from models import PosTable
 
     tables = tenant_query(PosTable).filter_by(is_active=True).order_by(PosTable.sort_order).all()
-    return jsonify(
-        [
+    return success_response(
+        data=[
             {
                 "id": t.id,
                 "label": t.label,
@@ -2570,14 +2322,14 @@ def api_floor_create():
     name = (payload.get("name") or "").strip()
     name_ar = (payload.get("name_ar") or "").strip()
     if not name:
-        return jsonify({"error": gettext("اسم الطابق مطلوب")}), 400
+        return error_response(message=gettext("اسم الطابق مطلوب"), status_code=400)
     tid = get_active_tenant_id(current_user)
     from services.pos_write_service import PosWriteService
 
     floor = PosWriteService.create_floor(tenant_id=tid, name=name, name_ar=name_ar)
     with atomic_transaction("pos_floor_create"):
         db.session.flush()
-    return jsonify({"success": True, "floor_id": floor.id})
+    return success_response(data={"floor_id": floor.id})
 
 
 @pos_bp.route("/api/floors/<int:floor_id>/tables")
@@ -2588,10 +2340,10 @@ def api_floor_tables(floor_id):
 
     floor = tenant_query(PosFloor).filter_by(id=floor_id).first()
     if not floor:
-        return jsonify({"error": gettext("الطابق غير موجود")}), 404
+        return error_response(message=gettext("الطابق غير موجود"), status_code=404)
     tables = tenant_query(PosTable).filter_by(floor_id=floor_id, is_active=True).order_by(PosTable.sort_order).all()
-    return jsonify(
-        [
+    return success_response(
+        data=[
             {
                 "id": t.id,
                 "label": t.label,
@@ -2616,11 +2368,11 @@ def api_table_create():
     floor_id = payload.get("floor_id")
     label = (payload.get("label") or "").strip()
     if not floor_id or not label:
-        return jsonify({"error": gettext("الطابق والتسمية مطلوبان")}), 400
+        return error_response(message=gettext("الطابق والتسمية مطلوبان"), status_code=400)
     tid = get_active_tenant_id(current_user)
     floor = tenant_query(PosFloor).filter_by(id=floor_id).first()
     if not floor:
-        return jsonify({"error": gettext("الطابق غير موجود")}), 404
+        return error_response(message=gettext("الطابق غير موجود"), status_code=404)
     from services.pos_write_service import PosWriteService
 
     table = PosWriteService.create_table(
@@ -2633,7 +2385,7 @@ def api_table_create():
     )
     with atomic_transaction("pos_table_create"):
         db.session.flush()
-    return jsonify({"success": True, "table_id": table.id})
+    return success_response(data={"table_id": table.id})
 
 
 @pos_bp.route("/api/tables/<int:table_id>/status", methods=["POST"])
@@ -2644,14 +2396,14 @@ def api_table_update_status(table_id):
 
     table = tenant_query(PosTable).filter_by(id=table_id).first()
     if not table:
-        return jsonify({"error": gettext("الطاولة غير موجودة")}), 404
+        return error_response(message=gettext("الطاولة غير موجودة"), status_code=404)
     payload = request.get_json(silent=True) or {}
     new_status = payload.get("status", "")
     if new_status not in ("free", "occupied", "reserved"):
-        return jsonify({"error": gettext("حالة غير صالحة")}), 400
+        return error_response(message=gettext("حالة غير صالحة"), status_code=400)
     with atomic_transaction("pos_table_status"):
         table.status = new_status
-    return jsonify({"success": True})
+    return success_response()
 
 
 @pos_bp.route("/api/tables/<int:table_id>/assign", methods=["POST"])
@@ -2663,16 +2415,16 @@ def api_table_assign(table_id):
     tid = get_active_tenant_id(current_user)
     table = tenant_query(PosTable).filter_by(id=table_id).first()
     if not table:
-        return jsonify({"error": gettext("الطاولة غير موجودة")}), 404
+        return error_response(message=gettext("الطاولة غير موجودة"), status_code=404)
     payload = request.get_json(silent=True) or {}
     sale_id = payload.get("sale_id")
     if not sale_id:
-        return jsonify({"error": gettext("رقم الفاتورة مطلوب")}), 400
+        return error_response(message=gettext("رقم الفاتورة مطلوب"), status_code=400)
     from models import Sale
 
     sale = tenant_query(Sale).filter(Sale.id == sale_id).first()
     if sale is None:
-        return jsonify({"error": gettext("الفاتورة غير موجودة")}), 404
+        return error_response(message=gettext("الفاتورة غير موجودة"), status_code=404)
     from services.pos_write_service import PosWriteService
 
     PosWriteService.create_table_order_model(
@@ -2684,4 +2436,4 @@ def api_table_assign(table_id):
     with atomic_transaction("pos_table_assign"):
         table.status = "occupied"
         db.session.flush()
-    return jsonify({"success": True})
+    return success_response()

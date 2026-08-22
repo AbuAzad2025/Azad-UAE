@@ -174,7 +174,7 @@ class TestSecurityHelperGaps:
         with app.test_request_context("/", headers={"Referer": "https://evil.example/pay"}):
             resp, code = _validate_public_api_origin()
         assert code == 403
-        assert "Referer" in resp.get_json()["error"]
+        assert "Referer" in resp.get_json()["message"]
 
     def test_validate_api_key_commit_rollback(self, app_factory, mock_db, mocker):
         from routes.payment_vault import _validate_api_key, payment_vault_bp
@@ -330,7 +330,7 @@ class TestWebhookEdgePaths:
             headers={"x-nowpayments-sig": "sig"},
         )
         assert resp.status_code == 200
-        assert resp.get_json()["status"] == "duplicate"
+        assert resp.get_json()["data"]["status"] == "duplicate"
 
     def test_nowpayments_stale_timestamp_rejected(self, vault_owner_client, mock_unlocked_vault, mocker):
         mocker.patch("routes.payment_vault._is_duplicate_webhook", return_value=False)
@@ -397,7 +397,7 @@ class TestWebhookEdgePaths:
             headers={"Stripe-Signature": "sig"},
         )
         assert resp.status_code == 200
-        assert resp.get_json()["status"] == "duplicate"
+        assert resp.get_json()["data"]["status"] == "duplicate"
 
 
 class TestPublicApiErrorPaths:
@@ -464,7 +464,7 @@ class TestPublicApiErrorPaths:
         assert resp.status_code == 201
         body = resp.get_json()
         assert body["success"] is True
-        assert body["payment_address"] == "addr"
+        assert body["data"]["payment_address"] == "addr"
 
     def test_donation_strips_invalid_email(self, vault_owner_client, mocker, mock_db):
         mocker.patch("routes.payment_vault._validate_public_api_origin", return_value=None)

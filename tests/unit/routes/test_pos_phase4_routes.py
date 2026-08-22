@@ -67,7 +67,7 @@ class TestReceiptLookup:
         ):
             resp = pos_client.get("/pos/api/receipts/lookup?number=S-1")
         assert resp.status_code == 200
-        assert resp.get_json()["receipt"]["sale_id"] == 55
+        assert resp.get_json()["data"]["receipt"]["sale_id"] == 55
         lookup.assert_called_once()
 
     def test_not_found_404(self, pos_client):
@@ -95,7 +95,7 @@ class TestReceiptLookup:
         ):
             resp = pos_client.get("/pos/api/receipts/lookup?number=S-1")
         assert resp.status_code == 403
-        assert resp.get_json()["feature"] == "pos_returns"
+        assert resp.get_json()["meta"]["feature"] == "pos_returns"
         lookup.assert_not_called()
 
     def test_permission_gated(self, pos_client, bypass_permission_auth):
@@ -124,9 +124,9 @@ class TestPosReturns:
             resp = pos_client.post("/pos/api/returns", json=self._PAYLOAD)
         assert resp.status_code == 201
         data = resp.get_json()
-        assert data["return_number"] == "R-100"
-        assert data["refund_method"] == "credit"
-        assert data["refund_payment_number"] is None
+        assert data["data"]["return_number"] == "R-100"
+        assert data["data"]["refund_method"] == "credit"
+        assert data["data"]["refund_payment_number"] is None
         assert create.call_args.kwargs["refund_method"] == "credit"
 
     def test_cash_refund_returns_payment_number(self, pos_client):
@@ -142,7 +142,7 @@ class TestPosReturns:
         ):
             resp = pos_client.post("/pos/api/returns", json={**self._PAYLOAD, "refund_method": "cash"})
         assert resp.status_code == 201
-        assert resp.get_json()["refund_payment_number"] == "PAY-500"
+        assert resp.get_json()["data"]["refund_payment_number"] == "PAY-500"
 
     def test_sale_not_found_404(self, pos_client):
         with (
@@ -203,8 +203,8 @@ class TestStockLookup:
             resp = pos_client.get("/pos/api/stock/lookup?product_id=11")
         assert resp.status_code == 200
         data = resp.get_json()
-        assert data["total_on_hand"] == 10.0
-        assert len(data["warehouses"]) == 2
+        assert data["data"]["total_on_hand"] == 10.0
+        assert len(data["data"]["warehouses"]) == 2
 
     def test_barcode_lookup(self, pos_client):
         with (
@@ -240,7 +240,7 @@ class TestFeatureFlagGating:
                 json={"lines": [{"product_id": 1, "quantity": 1}]},
             )
         assert resp.status_code == 403
-        assert resp.get_json()["feature"] == "pos_promotions"
+        assert resp.get_json()["meta"]["feature"] == "pos_promotions"
 
     def test_promotions_evaluate_allowed_on_pro(self, pos_client):
         from tests.unit.routes.test_pos_v2_routes import _mock_product
@@ -283,7 +283,7 @@ class TestFeatureFlagGating:
         with _pos_api_patches(tenant=tenant):
             resp = pos_client.post("/pos/api/checkout", json=payload)
         assert resp.status_code == 403
-        assert resp.get_json()["feature"] == "pos_multi_tender"
+        assert resp.get_json()["meta"]["feature"] == "pos_multi_tender"
 
     def test_split_tender_allowed_on_pro(self, pos_client):
         payload = {
@@ -305,7 +305,7 @@ class TestFeatureFlagGating:
                 json={"type": "pay_out", "amount": 10, "reason": "test"},
             )
         assert resp.status_code == 403
-        assert resp.get_json()["feature"] == "pos_shifts"
+        assert resp.get_json()["meta"]["feature"] == "pos_shifts"
 
     def test_core_checkout_works_on_basic_without_shift(self, pos_client):
         """Basic tier: shiftless core checkout must stay available."""
@@ -357,7 +357,7 @@ class TestCheckoutIdempotency:
             second = pos_client.post("/pos/api/checkout", json=self._PAYLOAD, headers={"Idempotency-Key": "abc"})
         assert first.status_code == 200
         assert second.status_code == 200
-        assert second.get_json()["idempotent_replay"] is True
+        assert second.get_json()["meta"]["idempotent_replay"] is True
         create_sale.assert_called_once()
         complete.assert_called_once()
         assert begin.call_count == 2
@@ -438,5 +438,5 @@ class TestReturnsIdempotency:
             second = pos_client.post("/pos/api/returns", json=self._PAYLOAD, headers={"Idempotency-Key": "r1"})
         assert first.status_code == 201
         assert second.status_code == 201
-        assert second.get_json()["idempotent_replay"] is True
+        assert second.get_json()["meta"]["idempotent_replay"] is True
         create.assert_called_once()
