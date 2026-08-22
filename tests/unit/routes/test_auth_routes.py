@@ -948,7 +948,7 @@ class TestPaymentRoutes:
                         headers={"x-nowpayments-sig": "sig"},
                     )
         assert resp.status_code == 200
-        assert resp.get_json()["status"] == "already_processed"
+        assert resp.get_json()["data"]["status"] == "already_processed"
 
     def test_payment_callback_no_ipn_secret(self, auth_client):
         with patch("extensions.limiter.limit", return_value=lambda f: f):
@@ -988,7 +988,7 @@ class TestPaymentRoutes:
                         headers={"x-nowpayments-sig": "sig"},
                     )
         assert resp.status_code == 200
-        assert resp.get_json()["status"] == "success"
+        assert resp.get_json()["data"]["status"] == "success"
 
     def test_payment_callback_process_failure(self, auth_client):
         with patch("extensions.limiter.limit", return_value=lambda f: f):

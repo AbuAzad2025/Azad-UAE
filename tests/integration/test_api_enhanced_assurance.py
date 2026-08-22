@@ -36,7 +36,7 @@ class TestEnhancedSalesCustomers:
         assert resp.status_code == 200
         data = resp.get_json()
         assert data["success"] is True
-        assert isinstance(data["sales"], list)
+        assert isinstance(data["data"], list)
 
     def test_sale_detail_not_found(self, app, auth_client):
         from werkzeug.exceptions import NotFound
@@ -55,7 +55,7 @@ class TestEnhancedSalesCustomers:
         assert resp.status_code == 200
         data = resp.get_json()
         assert data["success"] is True
-        assert data["total"] >= 1
+        assert data["meta"]["pagination"]["total"] >= 1
 
     def test_product_search_requires_query(self, app, auth_client):
         with app.app_context():
@@ -69,7 +69,7 @@ class TestEnhancedSalesCustomers:
         assert resp.status_code == 200
         data = resp.get_json()
         assert data["success"] is True
-        assert data["count"] >= 1
+        assert data["data"]["count"] >= 1
 
 
 class TestEnhancedAnalytics:
@@ -127,4 +127,4 @@ class TestEnhancedAnalytics:
         with app.app_context():
             resp = auth_client.get(f"/api/v2/sales/{sale.id}")
         assert resp.status_code == 200
-        assert resp.get_json()["sale"]["id"] == sale.id
+        assert resp.get_json()["data"]["sale"]["id"] == sale.id

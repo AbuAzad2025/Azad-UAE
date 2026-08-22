@@ -15,13 +15,13 @@ class TestPublicApi:
             resp = client.get("/api/health")
         assert resp.status_code == 200
         data = resp.get_json()
-        assert data["status"] == "ok"
+        assert data["data"]["status"] == "ok"
 
     def test_version(self, app, client):
         with app.app_context():
             resp = client.get("/api/version")
         assert resp.status_code == 200
-        assert "version" in resp.get_json()
+        assert "version" in resp.get_json()["data"]
 
 
 class TestAuthGuards:
@@ -51,15 +51,15 @@ class TestAuthenticatedApi:
         assert resp.status_code == 200
         data = resp.get_json()
         assert data["success"] is True
-        assert "AED" in data["currencies"] or len(data["currencies"]) >= 0
+        assert "AED" in data["data"]["currencies"] or len(data["data"]["currencies"]) >= 0
 
     def test_payment_fields_cash_and_unknown(self, app, auth_client):
         with app.app_context():
             cash = auth_client.get("/api/payment-fields/cash")
             unknown = auth_client.get("/api/payment-fields/unknown_method")
         assert cash.status_code == 200
-        assert cash.get_json()["en_title"] == "Cash Payment"
-        assert unknown.get_json()["fields"] == []
+        assert cash.get_json()["data"]["en_title"] == "Cash Payment"
+        assert unknown.get_json()["data"]["fields"] == []
 
     def test_search_customers_suppliers_products(
         self,
@@ -76,7 +76,7 @@ class TestAuthenticatedApi:
         assert cust.status_code == 200
         assert supp.status_code == 200
         assert prod.status_code == 200
-        assert isinstance(cust.get_json()["results"], list)
+        assert isinstance(cust.get_json()["data"]["results"], list)
 
     def test_check_username_validation_matrix(self, app, auth_client):
         import uuid
@@ -86,15 +86,15 @@ class TestAuthenticatedApi:
             bad = auth_client.get("/api/check-username?username=bad@name")
             unique = f"user_{uuid.uuid4().hex[:8]}"
             avail = auth_client.get(f"/api/check-username?username={unique}")
-        assert short.get_json()["available"] is False
-        assert bad.get_json()["available"] is False
-        assert avail.get_json()["available"] is True
+        assert short.get_json()["data"]["available"] is False
+        assert bad.get_json()["data"]["available"] is False
+        assert avail.get_json()["data"]["available"] is True
 
     def test_industry_fields_default(self, app, auth_client):
         with app.app_context():
             resp = auth_client.get("/api/industry-fields")
         assert resp.status_code == 200
-        assert resp.get_json()["industry"] == "general"
+        assert resp.get_json()["data"]["industry"] == "general"
 
     def test_product_info_and_barcode(
         self,
@@ -119,8 +119,8 @@ class TestAuthenticatedApi:
         assert info.get_json()["success"] is True
         assert missing.status_code == 404
         assert barcode.get_json()["success"] is True
-        assert validate_empty.get_json()["valid"] is False
-        assert validate_dup.get_json()["exists"] is True
+        assert validate_empty.get_json()["data"]["valid"] is False
+        assert validate_dup.get_json()["data"]["exists"] is True
 
     def test_echo_dev_only(self, app, auth_client):
         with app.app_context():
@@ -151,7 +151,7 @@ class TestAuthenticatedApi:
         with app.app_context():
             resp = auth_client.get("/api/products/low-stock")
         assert resp.status_code == 200
-        assert resp.get_json()["count"] == 1
+        assert resp.get_json()["data"]["count"] == 1
 
     def test_products_low_stock_failure(self, app, auth_client, mocker):
         mocker.patch(
@@ -187,7 +187,7 @@ class TestAuthenticatedApi:
         with app.app_context():
             resp = auth_client.get("/api/warehouses?q=Main")
         assert resp.status_code == 200
-        assert resp.get_json()["results"][0]["id"] == 1
+        assert resp.get_json()["data"]["results"][0]["id"] == 1
 
 
 class TestClientErrorTelemetry:

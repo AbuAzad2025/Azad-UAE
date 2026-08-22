@@ -120,10 +120,11 @@ class TestSalesList:
         assert resp.status_code == 200
         data = resp.get_json()
         assert data["success"] is True
-        assert {"sales", "total", "page", "pages"} <= set(data)
-        assert data["page"] == 1
-        assert data["total"] >= 1
-        assert sample_sale.id in [s["id"] for s in data["sales"]]
+        pagination = data["meta"]["pagination"]
+        assert {"page", "per_page", "total", "pages"} <= set(pagination)
+        assert pagination["page"] == 1
+        assert pagination["total"] >= 1
+        assert sample_sale.id in [s["id"] for s in data["data"]]
 
 
 class TestSaleDetailTenantIsolation:
@@ -143,8 +144,8 @@ class TestProductSearch:
         assert resp.status_code == 200
         data = resp.get_json()
         assert data["success"] is True
-        assert data["count"] >= 1
-        assert sample_product.id in [p["id"] for p in data["products"]]
+        assert data["data"]["count"] >= 1
+        assert sample_product.id in [p["id"] for p in data["data"]["products"]]
 
     def test_cross_tenant_product_not_returned(self, auth_client, db_session):
         from decimal import Decimal
@@ -181,8 +182,8 @@ class TestProductSearch:
         resp = auth_client.get(f"/api/v2/products/search?q=FOREIGN-SKU-{unique}")
         assert resp.status_code == 200
         data = resp.get_json()
-        assert data["count"] == 0
-        assert data["products"] == []
+        assert data["data"]["count"] == 0
+        assert data["data"]["products"] == []
 
 
 class TestCustomersList:
@@ -196,7 +197,7 @@ class TestCustomersList:
 
         resp = auth_client.get("/api/v2/customers?per_page=50")
         assert resp.status_code == 200
-        names = [c["name"] for c in resp.get_json()["customers"]]
+        names = [c["name"] for c in resp.get_json()["data"]]
         assert names.index("Alpha Customer") < names.index("Zeta Customer")
 
 

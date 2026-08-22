@@ -5,13 +5,14 @@ from flask import (
     Blueprint,
     current_app,
     flash,
-    jsonify,
     redirect,
     render_template,
     request,
     session,
     url_for,
 )
+
+from utils.api_response import error_response, success_response
 from flask_babel import gettext, lazy_gettext
 from flask_login import current_user, login_user, logout_user
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
@@ -473,16 +474,19 @@ def payment_status(payment_id):
             "payment_status rejected: invalid or missing token (ip=%s)",
             request.remote_addr,
         )
-        return jsonify({"success": False, "error": gettext("غير مصرح")}), 403
+        return error_response(gettext("غير مصرح"), status_code=403)
 
     try:
         nowpayments = NOWPaymentsService()
         result = nowpayments.get_payment_status(payment_id)
 
         if result["success"]:
-            return jsonify(result)
+            return success_response(data=result)
         else:
-            return jsonify(result), 400
+            return error_response(
+                result.get("error") or gettext("فشل في الحصول على حالة الدفعة"),
+                status_code=400,
+            )
 
     except Exception:
         current_app.logger.exception(
@@ -490,9 +494,9 @@ def payment_status(payment_id):
             payment_id,
             request.remote_addr,
         )
-        return (
-            jsonify({"success": False, "error": gettext("خطأ في الحصول على حالة الدفعة")}),
-            500,
+        return error_response(
+            gettext("خطأ في الحصول على حالة الدفعة"),
+            status_code=500,
         )
 
 
@@ -553,7 +557,7 @@ def payment_callback():
                 "NOWPayments callback rejected: IP not in whitelist (ip=%s)",
                 remote_addr,
             )
-            return jsonify({"error": gettext("غير مصرح")}), 403
+            return error_response(gettext("غير مصرح"), status_code=403)
 
         signature = request.headers.get("x-nowpayments-sig")
         if not signature:
@@ -561,7 +565,7 @@ def payment_callback():
                 "NOWPayments callback rejected: missing signature (ip=%s)",
                 remote_addr,
             )
-            return jsonify({"error": gettext("توقيع مفقود")}), 400
+            return error_response(gettext("توقيع مفقود"), status_code=400)
 
         payment_data = request.get_json(silent=True)
         if not isinstance(payment_data, dict):
@@ -569,7 +573,7 @@ def payment_callback():
                 "NOWPayments callback rejected: invalid JSON body (ip=%s)",
                 remote_addr,
             )
-            return jsonify({"error": gettext("بيانات غير صحيحة")}), 400
+            return error_response(gettext("بيانات غير صحيحة"), status_code=400)
 
         payment_id = payment_data.get("payment_id")
         if not payment_id:
@@ -577,7 +581,7 @@ def payment_callback():
                 "NOWPayments callback rejected: missing payment_id (ip=%s)",
                 remote_addr,
             )
-            return jsonify({"error": gettext("payment_id مطلوب")}), 400
+            return error_response(gettext("payment_id مطلوب"), status_code=400)
 
         current_status = payment_data.get("payment_status", "")
         if _is_duplicate_callback(str(payment_id), str(current_status)):
@@ -586,12 +590,12 @@ def payment_callback():
                 payment_id,
                 current_status,
             )
-            return jsonify({"status": "already_processed"}), 200
+            return success_response(data={"status": "already_processed"})
 
         nowpayments = NOWPaymentsService()
         if not nowpayments.ipn_secret:
             current_app.logger.warning("NOWPayments callback rejected: IPN secret not configured")
-            return jsonify({"error": "Webhook not configured"}), 503
+            return error_response("Webhook not configured", status_code=503)
 
         if not nowpayments.verify_ipn(payment_data, signature):
             current_app.logger.warning(
@@ -599,18 +603,18 @@ def payment_callback():
                 remote_addr,
                 payment_id,
             )
-            return jsonify({"error": gettext("توقيع غير صحيح")}), 400
+            return error_response(gettext("توقيع غير صحيح"), status_code=400)
 
         success = nowpayments.process_payment_callback(payment_data)
 
         if success:
-            return jsonify({"status": "success"})
+            return success_response(data={"status": "success"})
         else:
-            return jsonify({"error": gettext("فشل في معالجة الدفعة")}), 500
+            return error_response(gettext("فشل في معالجة الدفعة"), status_code=500)
 
     except Exception:
         current_app.logger.exception("Legacy NOWPayments callback failed")
-        return jsonify({"error": gettext("خطأ في معالجة callback")}), 500
+        return error_response(gettext("خطأ في معالجة callback"), status_code=500)
 
 
 @auth_bp.route("/payment/currencies")
@@ -622,13 +626,19 @@ def available_currencies():
         result = nowpayments.get_available_currencies()
 
         if result["success"]:
-            return jsonify(result)
+            return success_response(data=result)
         else:
-            return jsonify(result), 400
+            return error_response(
+                result.get("error") or gettext("فشل في الحصول على العملات"),
+                status_code=400,
+            )
 
     except Exception:
         current_app.logger.exception("available_currencies failed")
-        return jsonify({"success": False, "error": gettext("خطأ في الحصول على العملات")}), 500
+        return error_response(
+            gettext("خطأ في الحصول على العملات"),
+            status_code=500,
+        )
 
 
 @auth_bp.route("/payment/estimate")
@@ -641,19 +651,22 @@ def estimate_amount():
         to_currency = request.args.get("to", "btc")
 
         if amount < 1:
-            return jsonify({"success": False, "error": gettext("الحد الأدنى للتبرع هو $1")}), 400
+            return error_response(gettext("الحد الأدنى للتبرع هو $1"), status_code=400)
 
         nowpayments = NOWPaymentsService()
         result = nowpayments.get_estimated_amount(amount, from_currency, to_currency)
 
         if result["success"]:
-            return jsonify(result)
+            return success_response(data=result)
         else:
-            return jsonify(result), 400
+            return error_response(
+                result.get("error") or gettext("فشل في التقدير"),
+                status_code=400,
+            )
 
     except Exception:
         current_app.logger.exception("estimate_amount failed")
-        return jsonify({"success": False, "error": gettext("خطأ في التقدير")}), 500
+        return error_response(gettext("خطأ في التقدير"), status_code=500)
 
 
 @auth_bp.route("/thank-you")

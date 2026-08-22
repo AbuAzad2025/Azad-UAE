@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, request
 from flask_login import current_user, login_required
 
 from extensions import limiter
+from utils.api_response import success_response
 from utils.branching import branch_scope_id_for
 from utils.cache_decorators import cached_query
 from utils.decorators import permission_required
@@ -39,9 +40,8 @@ def overdue_payments():
     customers = customers.all()
     overdue = [c for c in customers if c.get_balance_aed() > Decimal("1000")]
 
-    return jsonify(
-        {
-            "success": True,
+    return success_response(
+        data={
             "count": len(overdue),
             "total_amount": sum(float(c.get_balance_aed()) for c in overdue),
             "customers": [{"id": c.id, "name": c.name, "balance": float(c.get_balance_aed())} for c in overdue[:10]],
@@ -72,9 +72,8 @@ def daily_stats():
     today_payments = _apply_branch_scope(today_payments, Payment)
     today_payments = today_payments.all()
 
-    return jsonify(
-        {
-            "success": True,
+    return success_response(
+        data={
             "sales": {
                 "count": len(today_sales),
                 "total": sum(float(s.amount_aed) for s in today_sales),
@@ -103,9 +102,8 @@ def top_customers():
     customers = _apply_branch_scope(customers, Customer)
     customers = customers.order_by(Customer.total_purchases.desc()).limit(limit).all()
 
-    return jsonify(
-        {
-            "success": True,
+    return success_response(
+        data={
             "customers": [
                 {
                     "id": c.id,
@@ -134,9 +132,8 @@ def low_stock_products():
     products = _apply_branch_scope(products, Product)
     products = products.all()
 
-    return jsonify(
-        {
-            "success": True,
+    return success_response(
+        data={
             "count": len(products),
             "products": [
                 {
@@ -175,9 +172,6 @@ def revenue_trend():
     daily_revenue = _apply_branch_scope(daily_revenue, Sale)
     daily_revenue = daily_revenue.group_by(func.date(Sale.sale_date)).all()
 
-    return jsonify(
-        {
-            "success": True,
-            "data": [{"date": str(row.date), "revenue": float(row.total or 0)} for row in daily_revenue],
-        }
+    return success_response(
+        data={"data": [{"date": str(row.date), "revenue": float(row.total or 0)} for row in daily_revenue]}
     )

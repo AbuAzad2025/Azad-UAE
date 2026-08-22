@@ -1,7 +1,8 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, request
 from flask_login import current_user, login_required
 
 from extensions import limiter
+from utils.api_response import error_response, paginated_response, success_response
 from utils.cache_decorators import cached_query
 from utils.decorators import permission_required
 from utils.query_optimizer import optimize_query, paginate_optimized
@@ -31,14 +32,11 @@ def get_sales():
 
     pagination = paginate_optimized(query, page=page, per_page=per_page)
 
-    return jsonify(
-        {
-            "success": True,
-            "sales": [sale.to_dict(include_lines=True) for sale in pagination.items],
-            "total": pagination.total,
-            "page": pagination.page,
-            "pages": pagination.pages,
-        }
+    return paginated_response(
+        items=[sale.to_dict(include_lines=True) for sale in pagination.items],
+        page=pagination.page,
+        per_page=pagination.per_page,
+        total=pagination.total,
     )
 
 
@@ -56,11 +54,8 @@ def get_sale(sale_id):
 
     sale = query.first_or_404()
 
-    return jsonify(
-        {
-            "success": True,
-            "sale": sale.to_dict(include_lines=True, include_cost=current_user.can_see_costs()),
-        }
+    return success_response(
+        data={"sale": sale.to_dict(include_lines=True, include_cost=current_user.can_see_costs())}
     )
 
 
@@ -82,14 +77,11 @@ def get_customers():
     query = query.order_by(Customer.name)
     pagination = paginate_optimized(query, page=page, per_page=per_page)
 
-    return jsonify(
-        {
-            "success": True,
-            "customers": [c.to_dict() for c in pagination.items],
-            "total": pagination.total,
-            "page": pagination.page,
-            "pages": pagination.pages,
-        }
+    return paginated_response(
+        items=[c.to_dict() for c in pagination.items],
+        page=pagination.page,
+        per_page=pagination.per_page,
+        total=pagination.total,
     )
 
 
@@ -106,7 +98,7 @@ def search_products():
     limit = request.args.get("limit", 20, type=int)
 
     if not query_text:
-        return jsonify({"success": False, "error": "Query required"})
+        return error_response("Query required", status_code=200)
 
     tid = get_active_tenant_id(current_user)
     products = Product.query.filter(
@@ -122,12 +114,8 @@ def search_products():
         products = products.filter(Product.tenant_id == tid)
     products = products.limit(limit).all()
 
-    return jsonify(
-        {
-            "success": True,
-            "products": [p.to_dict() for p in products],
-            "count": len(products),
-        }
+    return success_response(
+        data={"products": [p.to_dict() for p in products], "count": len(products)}
     )
 
 
@@ -141,7 +129,7 @@ def sales_forecast():
     days = request.args.get("days", 7, type=int)
     forecast = AIService.predict_sales_trend(days_ahead=days)
 
-    return jsonify(forecast)
+    return success_response(data=forecast)
 
 
 @api_enhanced_bp.route("/analytics/profit-margins", methods=["GET"])
@@ -152,4 +140,4 @@ def profit_margins():
     from services.ai_service import AIService
 
     analysis = AIService.analyze_profit_margins()
-    return jsonify(analysis)
+    return success_response(data=analysis)

@@ -2,7 +2,9 @@ import os
 from datetime import UTC, datetime
 from urllib.parse import urlparse
 
-from flask import Blueprint, abort, current_app, jsonify, make_response, request
+from flask import Blueprint, abort, current_app, make_response, request
+
+from utils.api_response import error_response, paginated_response, success_response
 from flask_babel import gettext
 from flask_login import current_user, login_required
 from sqlalchemy import select
@@ -98,22 +100,22 @@ def _validate_public_telemetry_origin():
     trusted = _trusted_telemetry_origins()
     if not trusted:
         current_app.logger.warning("client_error telemetry rejected: no trusted origins configured")
-        return jsonify({"success": False, "error": "Origin policy not configured"}), 503
+        return error_response("Origin policy not configured", status_code=503)
 
     if origin:
         if origin in trusted:
             return None
         current_app.logger.warning("client_error telemetry rejected: origin=%s", origin[:120])
-        return jsonify({"success": False, "error": gettext("Origin غير مسموح")}), 403
+        return error_response(gettext("Origin غير مسموح"), status_code=403)
 
     if referer:
         ref_origin = _origin_from_referer(referer)
         if ref_origin and ref_origin in trusted:
             return None
         current_app.logger.warning("client_error telemetry rejected: referer=%s", referer[:120])
-        return jsonify({"success": False, "error": gettext("Referer غير مسموح")}), 403
+        return error_response(gettext("Referer غير مسموح"), status_code=403)
 
-    return jsonify({"success": False, "error": gettext("Origin أو Referer مطلوب")}), 403
+    return error_response(gettext("Origin أو Referer مطلوب"), status_code=403)
 
 
 def _scoped_customer_query():
@@ -176,12 +178,14 @@ def _supplier_balance(supplier_id):
 
 @api_bp.route("/health")
 def health():
-    return jsonify({"status": "ok", "message": "API is running"})
+    return success_response(data={"status": "ok", "message": "API is running"})
 
 
 @api_bp.route("/version")
 def version():
-    return jsonify({"version": "1.0.0", "name": "Warehouse & Sales Management System"})
+    return success_response(
+        data={"version": "1.0.0", "name": "Warehouse & Sales Management System"}
+    )
 
 
 @api_bp.route("/payment-fields/<payment_method>")
@@ -304,7 +308,7 @@ def payment_fields(payment_method):
         },
     }
 
-    return jsonify(fields.get(payment_method, {"fields": []}))
+    return success_response(data=fields.get(payment_method, {"fields": []}))
 
 
 @api_bp.route("/currency-rate/<from_currency>/<to_currency>")
@@ -318,29 +322,25 @@ def currency_rate(from_currency, to_currency):
             "from": from_currency,
             "to": to_currency,
             "rate": float(details["rate"]),
-            "success": True,
             "source": details.get("source", "unknown"),
             "cached": bool(details.get("cached", False)),
             "age_seconds": int(details.get("age_seconds") or 0),
             "fetched_at": datetime.now(UTC).isoformat(),
         }
-        resp = make_response(jsonify(payload), 200)
+        body, code = success_response(data=payload)
+        resp = make_response(body, code)
         resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
         resp.headers["Pragma"] = "no-cache"
         resp.headers["Expires"] = "0"
         return resp
     except Exception:
         current_app.logger.exception("currency_rate failed from=%s to=%s", from_currency, to_currency)
-        resp = make_response(
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("تعذر جلب سعر الصرف الآن. الرجاء المحاولة لاحقاً أو إدخال السعر يدوياً."),
-                    "manual_input_required": True,
-                }
-            ),
-            400,
+        body, code = error_response(
+            gettext("تعذر جلب سعر الصرف الآن. الرجاء المحاولة لاحقاً أو إدخال السعر يدوياً."),
+            meta={"manual_input_required": True},
+            status_code=400,
         )
+        resp = make_response(body, code)
         resp.headers["Cache-Control"] = "no-store"
         return resp
 
@@ -352,9 +352,8 @@ def currencies():
 
     codes = CurrencyService.get_supported_currencies()
     currency_items = [{"code": c, "label": CurrencyService.get_currency_label(c)} for c in codes]
-    return jsonify(
-        {
-            "success": True,
+    return success_response(
+        data={
             "currencies": codes,
             "currency_items": currency_items,
             "common": list(CurrencyService.COMMON_CURRENCIES),
@@ -421,7 +420,7 @@ def api_search():
             for p in products
         ]
 
-        return jsonify({"results": results, "has_more": len(results) >= per_page})
+        return success_response(data={"results": results, "has_more": len(results) >= per_page})
 
     elif search_type == "suppliers":
         base_query = _scoped_supplier_query().filter(Supplier.is_active).order_by(Supplier.name)
@@ -460,7 +459,7 @@ def api_search():
             for s in suppliers
         ]
 
-        return jsonify({"results": results, "has_more": has_more})
+        return success_response(data={"results": results, "has_more": has_more})
 
     else:
         base_query = _scoped_customer_query().filter(Customer.is_active).order_by(Customer.name)
@@ -492,7 +491,7 @@ def api_search():
             for c in customers
         ]
 
-        return jsonify({"results": results, "has_more": has_more})
+        return success_response(data={"results": results, "has_more": has_more})
 
 
 @api_bp.route("/check-username")
@@ -502,12 +501,14 @@ def check_username():
     username = request.args.get("username", "").strip()
 
     if not username or len(username) < 3:
-        return jsonify({"available": False, "error": gettext("اسم المستخدم قصير جداً")})
+        return success_response(data={"available": False, "error": gettext("اسم المستخدم قصير جداً")})
 
     import re
 
     if not re.match(r"^[a-zA-Z0-9_]{3,20}$", username):
-        return jsonify({"available": False, "error": gettext("استخدم حروف إنجليزية وأرقام و_ فقط")})
+        return success_response(
+            data={"available": False, "error": gettext("استخدم حروف إنجليزية وأرقام و_ فقط")}
+        )
 
     tid = get_active_tenant_id(current_user)
     existing = User.query.filter_by(username=username)
@@ -519,15 +520,15 @@ def check_username():
         year = datetime.now().year
         suggestions = [f"{username}_{year}", f"{username}_2024", f"{username}_admin"]
 
-        return jsonify(
-            {
+        return success_response(
+            data={
                 "available": False,
                 "message": gettext(f'اسم المستخدم "{username}" موجود مسبقاً'),
                 "suggestions": suggestions,
             }
         )
 
-    return jsonify({"available": True, "message": gettext("اسم المستخدم متاح ✓")})
+    return success_response(data={"available": True, "message": gettext("اسم المستخدم متاح ✓")})
 
 
 @api_bp.route("/products/low-stock")
@@ -553,18 +554,13 @@ def products_low_stock():
                 }
             )
 
-        return jsonify({"success": True, "products": products_data, "count": len(products_data)})
+        return success_response(data={"products": products_data, "count": len(products_data)})
 
     except Exception:
         current_app.logger.exception("products_low_stock failed")
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("تعذر تحميل المنتجات قليلة المخزون حالياً"),
-                }
-            ),
-            500,
+        return error_response(
+            gettext("تعذر تحميل المنتجات قليلة المخزون حالياً"),
+            status_code=500,
         )
 
 
@@ -603,7 +599,8 @@ def exchange_rates_display():
     result = ExchangeRateService.get_online_rates_for_display(base=base, symbols=symbols)
     # Add tenant base currency info for the UI
     result["tenant_base_currency"] = base
-    resp = make_response(jsonify(result), 200)
+    body, code = success_response(data=result)
+    resp = make_response(body, code)
     resp.headers["Cache-Control"] = "private, max-age=300"
     return resp
 
@@ -615,7 +612,7 @@ def echo():
     if _is_production_env():
         abort(404)
     payload = request.get_json(silent=True) or {}
-    return jsonify({"success": True, "data": payload}), 200
+    return success_response(data=payload)
 
 
 @api_bp.route("/log-client-error", methods=["POST"])
@@ -770,12 +767,12 @@ def ingest_telemetry_logs():
 
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
-        return jsonify({"success": False, "error": "malformed payload"}), 400
+        return error_response("malformed payload", status_code=400)
     events = data.get("events")
     if not isinstance(events, list) or not events:
-        return jsonify({"success": False, "error": "events must be a non-empty list"}), 400
+        return error_response("events must be a non-empty list", status_code=400)
     if len(events) > _TELEMETRY_BATCH_MAX_EVENTS:
-        return jsonify({"success": False, "error": "batch too large (max 50)"}), 400
+        return error_response("batch too large (max 50)", status_code=400)
 
     tenant_id = get_active_tenant_id(current_user)
     user_id = getattr(current_user, "id", None) if getattr(current_user, "is_authenticated", False) else None
@@ -814,7 +811,7 @@ def ingest_telemetry_logs():
             current_app.logger.warning("Dropped malformed client telemetry event", exc_info=True)
             continue
 
-    return jsonify({"success": True, "accepted": accepted}), 202
+    return success_response(data={"accepted": accepted}, status_code=202)
 
 
 @api_bp.route("/industry-fields")
@@ -824,8 +821,8 @@ def industry_fields():
     from services.industry_service import IndustryService
 
     fields = IndustryService.get_fields_for(industry_code)
-    return jsonify(
-        {
+    return success_response(
+        data={
             "industry": industry_code,
             "fields": [
                 {
@@ -889,7 +886,7 @@ def _query_products(warehouse_id=None):
 @api_bp.route("/warehouses")
 @login_required
 def api_warehouses():
-    return jsonify({"results": _query_accessible_warehouses()})
+    return success_response(data={"results": _query_accessible_warehouses()})
 
 
 @api_bp.route("/products")
@@ -897,20 +894,20 @@ def api_warehouses():
 @permission_required("view_reports")
 def api_products():
     wid = request.args.get("warehouse_id", type=int)
-    return jsonify({"results": _query_products(wid)})
+    return success_response(data={"results": _query_products(wid)})
 
 
 @api_bp.route("/search_warehouses")
 @login_required
 def api_search_warehouses():
-    return jsonify({"results": _query_accessible_warehouses()})
+    return success_response(data={"results": _query_accessible_warehouses()})
 
 
 @api_bp.route("/warehouses/<int:wid>/products")
 @login_required
 def api_warehouse_products(wid):
     """منتجات مستودع محدد (Select2)"""
-    return jsonify({"results": _query_products(wid)})
+    return success_response(data={"results": _query_products(wid)})
 
 
 @api_bp.route("/products/<int:pid>/info")
@@ -919,10 +916,10 @@ def api_product_info(pid):
     """معلومات منتج (سعر، مخزون)"""
     product = db.session.get(Product, pid)
     if not product:
-        return jsonify({"success": False, "error": gettext("المنتج غير موجود")}), 404
+        return error_response(gettext("المنتج غير موجود"), status_code=404)
     tid = get_active_tenant_id(current_user)
     if tid is not None and product.tenant_id != tid:
-        return jsonify({"success": False, "error": gettext("المنتج غير موجود")}), 404
+        return error_response(gettext("المنتج غير موجود"), status_code=404)
     warehouse_id = request.args.get("warehouse_id", type=int)
     if warehouse_id:
         from utils.branching import ensure_warehouse_access
@@ -930,14 +927,9 @@ def api_product_info(pid):
         try:
             ensure_warehouse_access(warehouse_id, user=current_user)
         except Exception:
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "error": gettext("غير مصرح بالوصول إلى المستودع"),
-                    }
-                ),
-                403,
+            return error_response(
+                gettext("غير مصرح بالوصول إلى المستودع"),
+                status_code=403,
             )
     stock = float(product.current_stock or 0)
     if warehouse_id:
@@ -946,9 +938,8 @@ def api_product_info(pid):
             warehouse_ids=[warehouse_id],
         )
         stock = float(stock_map.get(product.id, stock))
-    return jsonify(
-        {
-            "success": True,
+    return success_response(
+        data={
             "id": product.id,
             "name": product.name,
             "sku": product.sku,
@@ -971,18 +962,12 @@ def api_product_by_barcode(code):
         query = query.filter(Product.tenant_id == tid)
     product = query.first()
     if not product:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": gettext("لم يتم العثور على منتج بهذا الباركود"),
-                }
-            ),
-            404,
+        return error_response(
+            gettext("لم يتم العثور على منتج بهذا الباركود"),
+            status_code=404,
         )
-    return jsonify(
-        {
-            "success": True,
+    return success_response(
+        data={
             "id": product.id,
             "name": product.name,
             "text": f"{product.name} ({product.sku})" if product.sku else product.name,
@@ -997,15 +982,15 @@ def api_barcode_validate():
     """التحقق من صلاحية الباركود"""
     code = request.args.get("code", "").strip()
     if not code:
-        return jsonify({"valid": False, "exists": False, "normalized": ""})
+        return success_response(data={"valid": False, "exists": False, "normalized": ""})
     normalized = code
     tid = get_active_tenant_id(current_user)
     query = Product.query.filter(Product.barcode == code)
     if tid is not None:
         query = query.filter(Product.tenant_id == tid)
     exists = query.first() is not None
-    return jsonify(
-        {
+    return success_response(
+        data={
             "valid": not exists,
             "exists": exists,
             "normalized": normalized,
