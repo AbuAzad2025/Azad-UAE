@@ -79,7 +79,7 @@ Pillow==12.3.0
 qrcode[pil]>=8.2
 
 # Server
-gunicorn>=22.0.0,<27
+gunicorn>=26.1.0,<27
 
 # HTML Parsing (AI / scraping helpers)
 beautifulsoup4==4.15.0
